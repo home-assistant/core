@@ -57,9 +57,7 @@ SERVICE_PURGE_SCHEMA = vol.Schema(
     }
 )
 
-# DEFAULT_URL = "sqlite:///{hass_config_path}"
-# AIS performance fix
-DEFAULT_URL = "sqlite:///:memory:"
+DEFAULT_URL = "sqlite:///{hass_config_path}"
 DEFAULT_DB_FILE = "home-assistant_v2.db"
 DEFAULT_DB_MAX_RETRIES = 10
 DEFAULT_DB_RETRY_WAIT = 3
@@ -70,6 +68,7 @@ CONF_DB_RETRY_WAIT = "db_retry_wait"
 CONF_PURGE_KEEP_DAYS = "purge_keep_days"
 CONF_PURGE_INTERVAL = "purge_interval"
 CONF_EVENT_TYPES = "event_types"
+CONF_COMMIT_INTERVAL = "commit_interval"
 
 FILTER_SCHEMA = vol.Schema(
     {
@@ -93,13 +92,16 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(DOMAIN, default=dict): FILTER_SCHEMA.extend(
             {
-                vol.Optional(CONF_PURGE_KEEP_DAYS, default=2): vol.All(
+                vol.Optional(CONF_PURGE_KEEP_DAYS, default=10): vol.All(
                     vol.Coerce(int), vol.Range(min=1)
                 ),
                 vol.Optional(CONF_PURGE_INTERVAL, default=1): vol.All(
                     vol.Coerce(int), vol.Range(min=0)
                 ),
                 vol.Optional(CONF_DB_URL): cv.string,
+                vol.Optional(CONF_COMMIT_INTERVAL, default=1): vol.All(
+                    vol.Coerce(int), vol.Range(min=0)
+                ),
                 vol.Optional(
                     CONF_DB_MAX_RETRIES, default=DEFAULT_DB_MAX_RETRIES
                 ): cv.positive_int,
@@ -143,21 +145,248 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
     keep_days = conf.get(CONF_PURGE_KEEP_DAYS)
     purge_interval = conf.get(CONF_PURGE_INTERVAL)
+    commit_interval = conf[CONF_COMMIT_INTERVAL]
     db_max_retries = conf[CONF_DB_MAX_RETRIES]
     db_retry_wait = conf[CONF_DB_RETRY_WAIT]
 
     # db_url = conf.get(CONF_DB_URL, None)
     # if not db_url:
     #     db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
-    # AIS dom fix
-    db_url = DEFAULT_URL
+    # AIS dom fix - get recorder config from file
+    try:
+        import json
+
+        with open(
+            "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_settings_info"
+        ) as json_file:
+            db_settings = json.load(json_file)
+        db_url = db_settings["dbUrl"]
+        if db_url == "sqlite:///:memory:":
+            keep_days = 2
+            purge_interval = 1
+            commit_interval = 60
+            db_max_retries = 10
+            db_retry_wait = 3
+        else:
+            keep_days = 10
+            if "dbKeepDays" in db_settings:
+                keep_days = int(db_settings["dbKeepDays"])
+            purge_interval = 1
+            commit_interval = 60
+            db_max_retries = 10
+            db_retry_wait = 3
+        include = conf.get(CONF_INCLUDE, {})
+    except Exception:
+        # enable recorder in memory
+        db_url = "sqlite:///:memory:"
+        keep_days = 1
+        purge_interval = 1
+        commit_interval = 60
+        db_max_retries = 10
+        db_retry_wait = 3
 
     include = conf.get(CONF_INCLUDE, {})
-    exclude = conf.get(CONF_EXCLUDE, {})
+    exclude = {
+        "domains": [
+            "ais_dom" "ais_ai_service",
+            "ais_amplifier_service",
+            "ais_audiobooks_service",
+            "ais_bookmarks",
+            "ais_cloud",
+            "ais_device_search_mqtt",
+            "ais_dom_device",
+            "ais_drives_service",
+            "ais_exo_player",
+            "ais_files",
+            "ais_gm_service",
+            "ais_google_home," "ais_help",
+            "ais_host",
+            "ais_ingress",
+            "ais_knowledge_service",
+            "ais_mdns",
+            "ais_qrcode",
+            "ais_shell_command",
+            "ais_spotify_service",
+            "ais_updater",
+            "ais_usb",
+            "ais_wifi_service",
+            "ais_yt_service",
+            "media_player",
+            "group",
+        ],
+        "entities": [
+            "sun.sun",
+            "sensor.nextsunrise",
+            "sensor.nextsunset",
+            "sensor.date",
+            "sensor.time",
+            "automation.ais_ask_the_question",
+            "automation.ais_asystent_domowy_witamy",
+            "automation.ais_change_audio_to_mono",
+            "automation.ais_change_equalizer_mode",
+            "automation.ais_change_player_speed",
+            "automation.ais_change_remote_web_access",
+            "automation.ais_check_wifi_connection",
+            "automation.ais_discovery_info_to_dom_devices",
+            "automation.ais_execute_process_command_web_hook",
+            "automation.ais_flush_logs",
+            "automation.ais_get_books",
+            "automation.ais_get_podcast_names",
+            "automation.ais_get_radio_names",
+            "automation.ais_get_rss_help_items_for_selected_topic",
+            "automation.ais_get_rss_news_channels",
+            "automation.ais_get_rss_news_items",
+            "automation.ais_ifttt_info",
+            "automation.ais_search_spotify_tracks",
+            "automation.ais_search_youtube_tracks",
+            "automation.ais_select_bookmark_to_play",
+            "automation.ais_select_device_to_add",
+            "automation.ais_set_wifi_config_for_devices",
+            "binary_sensor.ais_remote_button",
+            "group.ais_add_iot_device",
+            "group.ais_bookmarks",
+            "group.ais_favorites",
+            "group.ais_pogoda",
+            "group.ais_rss_help_remote",
+            "group.ais_rss_news_remote",
+            "group.ais_tts_configuration",
+            "group.all_ais_automations",
+            "group.all_ais_cameras",
+            "group.all_ais_climates",
+            "group.all_ais_covers",
+            "group.all_ais_devices",
+            "group.all_ais_fans",
+            "group.all_ais_lights",
+            "group.all_ais_locks",
+            "group.all_ais_persons",
+            "group.all_ais_scenes",
+            "group.all_ais_sensors",
+            "group.all_ais_switches",
+            "group.all_ais_vacuums",
+            "input_boolean.ais_audio_mono",
+            "input_boolean.ais_auto_update",
+            "input_boolean.ais_quiet_mode",
+            "input_boolean.ais_remote_access",
+            "input_datetime.ais_quiet_mode_start",
+            "input_datetime.ais_quiet_mode_stop",
+            "input_select.ais_android_wifi_network",
+            "input_select.ais_iot_devices_in_network",
+            "input_select.ais_music_service",
+            "input_select.ais_rss_help_topic",
+            "input_select.ais_system_logs_level",
+            "input_select.ais_usb_flash_drives",
+            "input_text.ais_android_wifi_password",
+            "input_text.ais_iot_device_name",
+            "input_text.ais_iot_device_wifi_password",
+            "input_text.ais_knowledge_query",
+            "input_text.ais_music_query",
+            "input_text.ais_spotify_query",
+            "script.ais_add_item_to_bookmarks",
+            "script.ais_add_item_to_favorites",
+            "script.ais_button_click",
+            "script.ais_cloud_sync",
+            "script.ais_connect_android_wifi_network",
+            "script.ais_connect_iot_device_to_network",
+            "script.ais_restart_system",
+            "script.ais_scan_android_wifi_network",
+            "script.ais_scan_iot_devices_in_network",
+            "script.ais_scan_network_devices",
+            "script.ais_stop_system",
+            "script.ais_update_system",
+            "sensor.ais_all_files",
+            "sensor.ais_connect_iot_device_info",
+            "sensor.ais_db_connection_info",
+            "sensor.ais_dom_mqtt_rf_sensor",
+            "sensor.ais_drives",
+            "sensor.ais_gallery_img",
+            "sensor.ais_logs_settings_info",
+            "sensor.ais_player_mode",
+            "sensor.ais_secure_android_id_dom",
+            "sensor.ais_wifi_service_current_network_info",
+            "sensor.aisbackupinfo",
+            "sensor.aisbookmarkslist",
+            "sensor.aisfavoriteslist",
+            "sensor.aisknowledgeanswer",
+            "sensor.aisrsshelptext",
+            "timer.ais_dom_pin",
+            "input_select.book_autor",
+            "group.audiobooks_player",
+            "input_select.podcast_type",
+            "input_select.radio_type",
+            "sensor.dayofyear",
+            "sensor.weekofyear",
+            "sensor.daytodisplay",
+            "group.day_info",
+            "group.local_audio",
+            "group.radio_player",
+            "group.podcast_player",
+            "group.music_player",
+            "group.internet_status",
+            "group.audio_player",
+            "group.dom_system_version",
+            "sensor.radiolist",
+            "sensor.podcastnamelist",
+            "sensor.youtubelist",
+            "sensor.spotifysearchlist",
+            "sensor.spotifylist",
+            "sensor.rssnewslist",
+            "input_select.rss_news_category",
+            "input_select.rss_news_channel",
+            "sensor.selected_entity",
+            "sensor.wersja_kordynatora",
+            "sensor.status_serwisu_zigbee2mqtt",
+            "sensor.gate_pairing_pin",
+            "persistent_notification.config_entry_discovery",
+            "sensor.audiobookschapterslist",
+            "automation.zigbee_tryb_parowania",
+            "automation.zigbee_wylaczenie_trybu_parowania",
+            "input_number.assistant_rate",
+            "input_number.media_player_speed",
+            "timer.ais_dom_pin_join",
+            "media_player.wbudowany_glosnik",
+            "input_number.assistant_tone",
+            "timer.zigbee_permit_join",
+            "input_select.book_name",
+            "sensor.podcastlist",
+            "sensor.audiobookslist",
+            "sensor.rssnewstext",
+            "sensor.wersja_zigbee2mqtt",
+            "switch.zigbee_tryb_parowania",
+            "input_select.book_chapter",
+            "input_select.assistant_voice",
+            "sensor.network_devices_info_value",
+            "input_text.zigbee2mqtt_old_name",
+            "input_text.zigbee2mqtt_new_name",
+            "sensor.zigbee2mqtt_networkmap",
+            "input_text.zigbee2mqtt_remove",
+            "input_select.media_player_sound_mode",
+            "weather.openweathermap",
+            "binary_sensor.updater",
+            "weather.dom",
+            "camera.remote_access",
+            "binary_sensor.selected_entity",
+            # "sensor.dark_sky_daily_summary",
+            # "sensor.dark_sky_hourly_summary",
+            # "sensor.dark_sky_visibility",
+            # "sensor.dark_sky_visibility_0d",
+            # "sensor.dark_sky_apparent_temperature",
+            # "sensor.dark_sky_cloud_coverage",
+            # "sensor.dark_sky_cloud_coverage_0d",
+            # "sensor.dark_sky_humidity",
+            # "sensor.dark_sky_humidity_0d",
+            # "sensor.dark_sky_pressure",
+            # "sensor.dark_sky_pressure_0d",
+            # "sensor.dark_sky_temperature",
+            # "sensor.dark_sky_wind_speed",
+            # "sensor.dark_sky_wind_speed_0d",
+        ],
+    }
+
     instance = hass.data[DATA_INSTANCE] = Recorder(
         hass=hass,
         keep_days=keep_days,
         purge_interval=purge_interval,
+        commit_interval=commit_interval,
         uri=db_url,
         db_max_retries=db_max_retries,
         db_retry_wait=db_retry_wait,
@@ -189,6 +418,7 @@ class Recorder(threading.Thread):
         hass: HomeAssistant,
         keep_days: int,
         purge_interval: int,
+        commit_interval: int,
         uri: str,
         db_max_retries: int,
         db_retry_wait: int,
@@ -201,6 +431,7 @@ class Recorder(threading.Thread):
         self.hass = hass
         self.keep_days = keep_days
         self.purge_interval = purge_interval
+        self.commit_interval = commit_interval
         self.queue: Any = queue.Queue()
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
@@ -218,6 +449,8 @@ class Recorder(threading.Thread):
         )
         self.exclude_t = exclude.get(CONF_EVENT_TYPES, [])
 
+        self._timechanges_seen = 0
+        self.event_session = None
         self.get_session = None
 
     @callback
@@ -330,9 +563,12 @@ class Recorder(threading.Thread):
 
             self.hass.helpers.event.track_point_in_time(async_purge, run)
 
+        self.event_session = self.get_session()
+        # Use a session for the event read loop
+        # with a commit every time the event time
+        # has changed.  This reduces the disk io.
         while True:
             event = self.queue.get()
-
             if event is None:
                 self._close_run()
                 self._close_connection()
@@ -344,6 +580,11 @@ class Recorder(threading.Thread):
                 continue
             if event.event_type == EVENT_TIME_CHANGED:
                 self.queue.task_done()
+                if self.commit_interval:
+                    self._timechanges_seen += 1
+                    if self._timechanges_seen >= self.commit_interval:
+                        self._timechanges_seen = 0
+                        self._commit_event_session_or_retry()
                 continue
             if event.event_type in self.exclude_t:
                 self.queue.task_done()
@@ -355,54 +596,91 @@ class Recorder(threading.Thread):
                     self.queue.task_done()
                     continue
 
-            tries = 1
-            updated = False
-            while not updated and tries <= self.db_max_retries:
-                if tries != 1:
-                    time.sleep(self.db_retry_wait)
+            try:
+                dbevent = Events.from_event(event)
+                self.event_session.add(dbevent)
+                self.event_session.flush()
+            except (TypeError, ValueError):
+                _LOGGER.warning("Event is not JSON serializable: %s", event)
+            except Exception as err:  # pylint: disable=broad-except
+                # Must catch the exception to prevent the loop from collapsing
+                _LOGGER.exception("Error adding event: %s", err)
+
+            if dbevent and event.event_type == EVENT_STATE_CHANGED:
                 try:
-                    with session_scope(session=self.get_session()) as session:
-                        try:
-                            dbevent = Events.from_event(event)
-                            session.add(dbevent)
-                            session.flush()
-                        except (TypeError, ValueError):
-                            _LOGGER.warning("Event is not JSON serializable: %s", event)
+                    dbstate = States.from_event(event)
+                    dbstate.event_id = dbevent.event_id
+                    self.event_session.add(dbstate)
+                except (TypeError, ValueError):
+                    _LOGGER.warning(
+                        "State is not JSON serializable: %s",
+                        event.data.get("new_state"),
+                    )
+                except Exception as err:  # pylint: disable=broad-except
+                    # Must catch the exception to prevent the loop from collapsing
+                    _LOGGER.exception("Error adding state change: %s", err)
 
-                        if event.event_type == EVENT_STATE_CHANGED:
-                            try:
-                                dbstate = States.from_event(event)
-                                dbstate.event_id = dbevent.event_id
-                                session.add(dbstate)
-                            except (TypeError, ValueError):
-                                _LOGGER.warning(
-                                    "State is not JSON serializable: %s",
-                                    event.data.get("new_state"),
-                                )
+            # If they do not have a commit interval
+            # than we commit right away
+            if not self.commit_interval:
+                self._commit_event_session_or_retry()
 
-                    updated = True
+            self.queue.task_done()
 
-                except exc.OperationalError as err:
+    def _commit_event_session_or_retry(self):
+        tries = 1
+        while tries <= self.db_max_retries:
+            if tries != 1:
+                time.sleep(self.db_retry_wait)
+
+            try:
+                self._commit_event_session()
+                return
+            except (exc.InternalError, exc.OperationalError) as err:
+                if err.connection_invalidated:
+                    _LOGGER.error(
+                        "Database connection invalidated: %s. "
+                        "(retrying in %s seconds)",
+                        err,
+                        self.db_retry_wait,
+                    )
+                else:
                     _LOGGER.error(
                         "Error in database connectivity: %s. "
                         "(retrying in %s seconds)",
                         err,
                         self.db_retry_wait,
                     )
-                    tries += 1
+                tries += 1
 
-                except exc.SQLAlchemyError:
-                    updated = True
-                    _LOGGER.exception("Error saving event: %s", event)
+            except Exception as err:  # pylint: disable=broad-except
+                # Must catch the exception to prevent the loop from collapsing
+                _LOGGER.exception("Error saving events: %s", err)
+                return
 
-            if not updated:
-                _LOGGER.error(
-                    "Error in database update. Could not save "
-                    "after %d tries. Giving up",
-                    tries,
-                )
+        _LOGGER.error(
+            "Error in database update. Could not save " "after %d tries. Giving up",
+            tries,
+        )
+        try:
+            self.event_session.close()
+        except Exception as err:  # pylint: disable=broad-except
+            # Must catch the exception to prevent the loop from collapsing
+            _LOGGER.exception("Error while closing event session: %s", err)
 
-            self.queue.task_done()
+        try:
+            self.event_session = self.get_session()
+        except Exception as err:  # pylint: disable=broad-except
+            # Must catch the exception to prevent the loop from collapsing
+            _LOGGER.exception("Error while creating new event session: %s", err)
+
+    def _commit_event_session(self):
+        try:
+            self.event_session.commit()
+        except Exception as err:
+            _LOGGER.error("Error executing query: %s", err)
+            self.event_session.rollback()
+            raise
 
     @callback
     def event_listener(self, event):
@@ -469,7 +747,10 @@ class Recorder(threading.Thread):
 
     def _close_run(self):
         """Save end time for current run."""
-        with session_scope(session=self.get_session()) as session:
+        if self.event_session is not None:
             self.run_info.end = dt_util.utcnow()
-            session.add(self.run_info)
+            self.event_session.add(self.run_info)
+            self._commit_event_session_or_retry()
+            self.event_session.close()
+
         self.run_info = None

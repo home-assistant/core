@@ -45,7 +45,7 @@ CUSTOM_WARNING = (
     "You are using a custom integration for %s which has not "
     "been tested by Home Assistant. This component might "
     "cause stability problems, be sure to disable it if you "
-    "do experience issues with Home Assistant."
+    "experience issues with Home Assistant."
 )
 _UNDEF = object()
 

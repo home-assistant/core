@@ -5,7 +5,7 @@ import logging
 import pyvera as veraApi
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import convert
 
@@ -54,7 +54,7 @@ class VeraSensor(VeraDevice, Entity):
         if self.vera_device.category == veraApi.CATEGORY_UV_SENSOR:
             return "level"
         if self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
-            return "%"
+            return UNIT_PERCENTAGE
         if self.vera_device.category == veraApi.CATEGORY_POWER_METER:
             return "watts"
 

@@ -2,9 +2,6 @@
 Flux for Home-Assistant.
 
 The idea was taken from https://github.com/KpaBap/hue-flux/
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.flux/
 """
 import datetime
 import logging
@@ -167,7 +164,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         """Update lights."""
         await flux.async_flux_update()
 
-    service_name = slugify("{} {}".format(name, "update"))
+    service_name = slugify(f"{name} update")
     hass.services.async_register(DOMAIN, service_name, async_update)
 
 

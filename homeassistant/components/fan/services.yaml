@@ -48,7 +48,7 @@ set_direction:
   description: Set the fan rotation.
   fields:
     entity_id:
-      description: Name(s) of the entities to toggle
+      description: Name(s) of the entities to set
       example: 'fan.living_room'
     direction:
       description: The direction to rotate. Either 'forward' or 'reverse'

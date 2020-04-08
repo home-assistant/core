@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Questo nome utente \u00e8 gi\u00e0 in uso."
+        },
         "error": {
             "identifier_exists": "Nome utente gi\u00e0 registrato",
             "invalid_credentials": "Nome utente o password non validi",

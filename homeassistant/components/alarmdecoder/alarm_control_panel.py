@@ -177,7 +177,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanel):
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
         if code:
-            self.hass.data[DATA_AD].send(f"{code!s}33")
+            self.hass.data[DATA_AD].send(f"{code!s}7")
 
     def alarm_toggle_chime(self, code=None):
         """Send toggle chime command."""

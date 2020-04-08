@@ -3,7 +3,7 @@
   "name": "Cover",
   "documentation": "https://www.home-assistant.io/integrations/cover",
   "requirements": [],
-  "dependencies": ["group"],
+  "dependencies": [],
   "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal"
 }

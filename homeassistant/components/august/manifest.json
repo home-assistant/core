@@ -2,7 +2,14 @@
   "domain": "august",
   "name": "August",
   "documentation": "https://www.home-assistant.io/integrations/august",
-  "requirements": ["py-august==0.14.0"],
-  "dependencies": ["configurator"],
-  "codeowners": ["@bdraco"]
+  "requirements": [
+    "py-august==0.25.0"
+  ],
+  "dependencies": [
+    "configurator"
+  ],
+  "codeowners": [
+    "@bdraco"
+  ],
+  "config_flow": true
 }

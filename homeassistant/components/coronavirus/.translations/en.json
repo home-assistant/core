@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "This country is already configured."
+        },
         "step": {
             "user": {
                 "data": {

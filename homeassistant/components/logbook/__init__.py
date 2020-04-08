@@ -8,7 +8,6 @@ from sqlalchemy.exc import SQLAlchemyError
 import voluptuous as vol
 
 from homeassistant.components import sun
-from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
     ATTR_VALUE,
@@ -90,7 +89,6 @@ ALL_EVENT_TYPES = [
     EVENT_LOGBOOK_ENTRY,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_ALEXA_SMART_HOME,
     EVENT_HOMEKIT_CHANGED,
     EVENT_AUTOMATION_TRIGGERED,
     EVENT_SCRIPT_STARTED,
@@ -122,6 +120,12 @@ def async_log_entry(hass, name, message, domain=None, entity_id=None):
     if entity_id is not None:
         data[ATTR_ENTITY_ID] = entity_id
     hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, data)
+
+
+@bind_hass
+def async_describe_event(hass, domain, event_name, describe_callback):
+    """Teach logbook how to describe a new event."""
+    hass.data.setdefault(DOMAIN, {})[event_name] = (domain, describe_callback)
 
 
 async def async_setup(hass, config):
@@ -199,9 +203,6 @@ def humanify(hass, events):
     """
     domain_prefixes = tuple(f"{dom}." for dom in CONTINUOUS_DOMAINS)
 
-    # Track last states to filter out duplicates
-    last_state = {}
-
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
         events, lambda event: event.time_fired.minute // GROUP_BY_MINUTES
@@ -237,16 +238,19 @@ def humanify(hass, events):
                 start_stop_events[event.time_fired.minute] = 2
 
         # Yield entries
+        external_events = hass.data.get(DOMAIN, {})
         for event in events_batch:
+            if event.event_type in external_events:
+                domain, describe_event = external_events[event.event_type]
+                data = describe_event(event)
+                data["when"] = event.time_fired
+                data["domain"] = domain
+                data["context_id"] = event.context.id
+                data["context_user_id"] = event.context.user_id
+                yield data
+
             if event.event_type == EVENT_STATE_CHANGED:
                 to_state = State.from_dict(event.data.get("new_state"))
-
-                # Filter out states that become same state again (force_update=True)
-                # or light becoming different color
-                if last_state.get(to_state.entity_id) == to_state.state:
-                    continue
-
-                last_state[to_state.entity_id] = to_state.state
 
                 domain = to_state.domain
 
@@ -320,40 +324,13 @@ def humanify(hass, events):
                     "context_user_id": event.context.user_id,
                 }
 
-            elif event.event_type == EVENT_ALEXA_SMART_HOME:
-                data = event.data
-                entity_id = data["request"].get("entity_id")
-
-                if entity_id:
-                    state = hass.states.get(entity_id)
-                    name = state.name if state else entity_id
-                    message = "send command {}/{} for {}".format(
-                        data["request"]["namespace"], data["request"]["name"], name
-                    )
-                else:
-                    message = "send command {}/{}".format(
-                        data["request"]["namespace"], data["request"]["name"]
-                    )
-
-                yield {
-                    "when": event.time_fired,
-                    "name": "Amazon Alexa",
-                    "message": message,
-                    "domain": "alexa",
-                    "entity_id": entity_id,
-                    "context_id": event.context.id,
-                    "context_user_id": event.context.user_id,
-                }
-
             elif event.event_type == EVENT_HOMEKIT_CHANGED:
                 data = event.data
                 entity_id = data.get(ATTR_ENTITY_ID)
                 value = data.get(ATTR_VALUE)
 
                 value_msg = f" to {value}" if value else ""
-                message = "send command {}{} for {}".format(
-                    data[ATTR_SERVICE], value_msg, data[ATTR_DISPLAY_NAME]
-                )
+                message = f"send command {data[ATTR_SERVICE]}{value_msg} for {data[ATTR_DISPLAY_NAME]}"
 
                 yield {
                     "when": event.time_fired,
@@ -442,7 +419,7 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
         """Yield Events that are not filtered away."""
         for row in query.yield_per(500):
             event = row.to_native()
-            if _keep_event(event, entities_filter):
+            if _keep_event(hass, event, entities_filter):
                 yield event
 
     with session_scope(hass=hass) as session:
@@ -455,7 +432,9 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
             session.query(Events)
             .order_by(Events.time_fired)
             .outerjoin(States, (Events.event_id == States.event_id))
-            .filter(Events.event_type.in_(ALL_EVENT_TYPES))
+            .filter(
+                Events.event_type.in_(ALL_EVENT_TYPES + list(hass.data.get(DOMAIN, {})))
+            )
             .filter((Events.time_fired > start_day) & (Events.time_fired < end_day))
             .filter(
                 (
@@ -469,7 +448,7 @@ def _get_events(hass, config, start_day, end_day, entity_id=None):
         return list(humanify(hass, yield_events(query)))
 
 
-def _keep_event(event, entities_filter):
+def _keep_event(hass, event, entities_filter):
     domain, entity_id = None, None
 
     if event.event_type == EVENT_STATE_CHANGED:
@@ -479,25 +458,21 @@ def _keep_event(event, entities_filter):
             return False
 
         # Do not report on new entities
-        if event.data.get("old_state") is None:
+        old_state = event.data.get("old_state")
+        if old_state is None:
             return False
-
-        new_state = event.data.get("new_state")
 
         # Do not report on entity removal
-        if not new_state:
+        new_state = event.data.get("new_state")
+        if new_state is None:
             return False
 
-        attributes = new_state.get("attributes", {})
-
-        # If last_changed != last_updated only attributes have changed
-        # we do not report on that yet.
-        last_changed = new_state.get("last_changed")
-        last_updated = new_state.get("last_updated")
-        if last_changed != last_updated:
+        # Do not report on only attribute changes
+        if new_state.get("state") == old_state.get("state"):
             return False
 
         domain = split_entity_id(entity_id)[0]
+        attributes = new_state.get("attributes", {})
 
         # Also filter auto groups.
         if domain == "group" and attributes.get("auto", False):
@@ -520,8 +495,8 @@ def _keep_event(event, entities_filter):
         domain = "script"
         entity_id = event.data.get(ATTR_ENTITY_ID)
 
-    elif event.event_type == EVENT_ALEXA_SMART_HOME:
-        domain = "alexa"
+    elif event.event_type in hass.data.get(DOMAIN, {}):
+        domain = hass.data[DOMAIN][event.event_type][0]
 
     elif event.event_type == EVENT_HOMEKIT_CHANGED:
         domain = DOMAIN_HOMEKIT

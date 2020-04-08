@@ -12,8 +12,7 @@ from .common import (
     async_enable_traffic,
     async_test_rejoin,
     find_entity_id,
-    make_attribute,
-    make_zcl_header,
+    send_attributes_report,
 )
 
 from tests.common import mock_coro
@@ -53,16 +52,11 @@ async def test_switch(hass, zha_device_joined_restored, zigpy_device):
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # turn on at switch
-    attr = make_attribute(0, 1)
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+    await send_attributes_report(hass, cluster, {1: 0, 0: 1, 2: 2})
     assert hass.states.get(entity_id).state == STATE_ON
 
     # turn off at switch
-    attr.value.value = 0
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+    await send_attributes_report(hass, cluster, {1: 1, 0: 0, 2: 2})
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # turn on from HA
@@ -76,7 +70,7 @@ async def test_switch(hass, zha_device_joined_restored, zigpy_device):
         )
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args == call(
-            False, ON, (), expect_reply=True, manufacturer=None
+            False, ON, (), expect_reply=True, manufacturer=None, tsn=None
         )
 
     # turn off from HA
@@ -90,7 +84,7 @@ async def test_switch(hass, zha_device_joined_restored, zigpy_device):
         )
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args == call(
-            False, OFF, (), expect_reply=True, manufacturer=None
+            False, OFF, (), expect_reply=True, manufacturer=None, tsn=None
         )
 
     # test joining a new switch to the network and HA

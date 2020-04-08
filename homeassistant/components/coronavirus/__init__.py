@@ -3,7 +3,6 @@ import asyncio
 from datetime import timedelta
 import logging
 
-import aiohttp
 import async_timeout
 import coronavirus
 
@@ -73,16 +72,13 @@ async def get_coordinator(hass):
         return hass.data[DOMAIN]
 
     async def async_get_cases():
-        try:
-            with async_timeout.timeout(10):
-                return {
-                    case.country: case
-                    for case in await coronavirus.get_cases(
-                        aiohttp_client.async_get_clientsession(hass)
-                    )
-                }
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            raise update_coordinator.UpdateFailed
+        with async_timeout.timeout(10):
+            return {
+                case.country: case
+                for case in await coronavirus.get_cases(
+                    aiohttp_client.async_get_clientsession(hass)
+                )
+            }
 
     hass.data[DOMAIN] = update_coordinator.DataUpdateCoordinator(
         hass,

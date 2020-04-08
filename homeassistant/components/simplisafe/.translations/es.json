@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Esta cuenta SimpliSafe ya est\u00e1 en uso."
+        },
         "error": {
             "identifier_exists": "Cuenta ya registrada",
             "invalid_credentials": "Credenciales no v\u00e1lidas"

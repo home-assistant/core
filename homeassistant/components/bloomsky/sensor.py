@@ -4,7 +4,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -25,7 +30,7 @@ SENSOR_TYPES = [
 # Sensor units - these do not currently align with the API documentation
 SENSOR_UNITS_IMPERIAL = {
     "Temperature": TEMP_FAHRENHEIT,
-    "Humidity": "%",
+    "Humidity": UNIT_PERCENTAGE,
     "Pressure": "inHg",
     "Luminance": "cd/m²",
     "Voltage": "mV",
@@ -34,7 +39,7 @@ SENSOR_UNITS_IMPERIAL = {
 # Metric units
 SENSOR_UNITS_METRIC = {
     "Temperature": TEMP_CELSIUS,
-    "Humidity": "%",
+    "Humidity": UNIT_PERCENTAGE,
     "Pressure": "mbar",
     "Luminance": "cd/m²",
     "Voltage": "mV",
@@ -70,7 +75,7 @@ class BloomSkySensor(Entity):
         self._bloomsky = bs
         self._device_id = device["DeviceID"]
         self._sensor_name = sensor_name
-        self._name = "{} {}".format(device["DeviceName"], sensor_name)
+        self._name = f"{device['DeviceName']} {sensor_name}"
         self._state = None
         self._unique_id = f"{self._device_id}-{self._sensor_name}"
 

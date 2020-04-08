@@ -3,7 +3,6 @@ import pytest
 import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.automation as automation
-from homeassistant.components.zha.core.const import CHANNEL_EVENT_RELAY
 from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.setup import async_setup_component
 
@@ -173,8 +172,8 @@ async def test_if_fires_on_event(hass, mock_devices, calls):
 
     await hass.async_block_till_done()
 
-    channel = {ch.name: ch for ch in zha_device.all_channels}[CHANNEL_EVENT_RELAY]
-    channel.zha_send_event(channel.cluster, COMMAND_SINGLE, [])
+    channel = zha_device.channels.pools[0].relay_channels["1:0x0006"]
+    channel.zha_send_event(COMMAND_SINGLE, [])
     await hass.async_block_till_done()
 
     assert len(calls) == 1

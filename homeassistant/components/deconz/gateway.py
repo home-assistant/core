@@ -19,8 +19,9 @@ from .const import (
     DEFAULT_ALLOW_DECONZ_GROUPS,
     DOMAIN,
     LOGGER,
-    NEW_DEVICE,
     NEW_GROUP,
+    NEW_LIGHT,
+    NEW_SCENE,
     NEW_SENSOR,
     SUPPORTED_PLATFORMS,
 )
@@ -186,7 +187,13 @@ class DeconzGateway:
     @callback
     def async_signal_new_device(self, device_type) -> str:
         """Gateway specific event to signal new device."""
-        return NEW_DEVICE[device_type].format(self.bridgeid)
+        new_device = {
+            NEW_GROUP: f"deconz_new_group_{self.bridgeid}",
+            NEW_LIGHT: f"deconz_new_light_{self.bridgeid}",
+            NEW_SCENE: f"deconz_new_scene_{self.bridgeid}",
+            NEW_SENSOR: f"deconz_new_sensor_{self.bridgeid}",
+        }
+        return new_device[device_type]
 
     @property
     def signal_remove_entity(self) -> str:

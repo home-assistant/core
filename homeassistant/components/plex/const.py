@@ -15,7 +15,6 @@ PLATFORMS_COMPLETED = "platforms_completed"
 SERVERS = "servers"
 WEBSOCKETS = "websockets"
 
-PLEX_CONFIG_FILE = "plex.conf"
 PLEX_MEDIA_PLAYER_OPTIONS = "plex_mp_options"
 PLEX_SERVER_CONFIG = "server_config"
 

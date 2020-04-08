@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -43,9 +44,9 @@ SCAN_INTERVAL = timedelta(seconds=1200)
 SENSOR_TYPES = {
     "temperature": ["Temperature", "°C", "mdi:thermometer"],
     "light": ["Light intensity", "lx", "mdi:white-balance-sunny"],
-    "moisture": ["Moisture", "%", "mdi:water-percent"],
+    "moisture": ["Moisture", UNIT_PERCENTAGE, "mdi:water-percent"],
     "conductivity": ["Conductivity", "µS/cm", "mdi:flash-circle"],
-    "battery": ["Battery", "%", "mdi:battery-charging"],
+    "battery": ["Battery", UNIT_PERCENTAGE, "mdi:battery-charging"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

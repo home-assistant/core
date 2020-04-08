@@ -400,7 +400,10 @@ class CoverCapabilities(AlexaEntity):
 
     def interfaces(self):
         """Yield the supported interfaces."""
-        yield AlexaPowerController(self.entity)
+        device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
+        if device_class != cover.DEVICE_CLASS_GARAGE:
+            yield AlexaPowerController(self.entity)
+
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & cover.SUPPORT_SET_POSITION:
             yield AlexaRangeController(
@@ -724,6 +727,7 @@ class TimerCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         yield AlexaTimeHoldController(self.entity, allow_remote_resume=True)
+        yield AlexaPowerController(self.entity)
         yield Alexa(self.entity)
 
 
@@ -738,8 +742,11 @@ class VacuumCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if (supported & vacuum.SUPPORT_TURN_ON) and (
-            supported & vacuum.SUPPORT_TURN_OFF
+        if (
+            (supported & vacuum.SUPPORT_TURN_ON) or (supported & vacuum.SUPPORT_START)
+        ) and (
+            (supported & vacuum.SUPPORT_TURN_OFF)
+            or (supported & vacuum.SUPPORT_RETURN_HOME)
         ):
             yield AlexaPowerController(self.entity)
 

@@ -41,17 +41,17 @@ CONF_FRONTEND_REPO = "development_repo"
 CONF_JS_VERSION = "javascript_version"
 EVENT_PANELS_UPDATED = "panels_updated"
 
-DEFAULT_THEME_COLOR = "#03A9F4"
+DEFAULT_THEME_COLOR = "#FF9800"
 
 MANIFEST_JSON = {
-    "background_color": "#FFFFFF",
+    "background_color": "#4c4c4c",
     "description": "Home automation platform that puts local control and privacy first.",
     "dir": "ltr",
     "display": "standalone",
     "icons": [
         {
-            "src": "/static/icons/favicon-{size}x{size}.png".format(size=size),
-            "sizes": "{size}x{size}".format(size=size),
+            "src": f"/static/icons/favicon-{size}x{size}.png",
+            "sizes": f"{size}x{size}",
             "type": "image/png",
             "purpose": "maskable any",
         }
@@ -171,6 +171,8 @@ def async_register_built_in_panel(
     frontend_url_path=None,
     config=None,
     require_admin=False,
+    *,
+    update=False,
 ):
     """Register a built-in panel."""
     panel = Panel(
@@ -184,8 +186,8 @@ def async_register_built_in_panel(
 
     panels = hass.data.setdefault(DATA_PANELS, {})
 
-    if panel.frontend_url_path in panels:
-        _LOGGER.warning("Overwriting integration %s", panel.frontend_url_path)
+    if not update and panel.frontend_url_path in panels:
+        raise ValueError(f"Overwriting panel {panel.frontend_url_path}")
 
     panels[panel.frontend_url_path] = panel
 
@@ -274,8 +276,7 @@ async def async_setup(hass, config):
 
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
-    for panel in ("kiosk", "states", "profile"):
-        async_register_built_in_panel(hass, panel)
+    async_register_built_in_panel(hass, "profile")
 
     # To smooth transition to new urls, add redirects to new urls of dev tools
     # Added June 27, 2019. Can be removed in 2021.

@@ -1,4 +1,5 @@
 """Viessmann ViCare water_heater device."""
+from datetime import timedelta
 import logging
 
 import requests
@@ -41,6 +42,9 @@ HA_TO_VICARE_HVAC_DHW = {
 }
 
 PYVICARE_ERROR = "error"
+
+# Scan interval of 15 minutes seems to be safe to not hit the ViCare server rate limit
+SCAN_INTERVAL = timedelta(seconds=900)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

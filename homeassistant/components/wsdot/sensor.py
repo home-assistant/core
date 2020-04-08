@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,
     CONF_NAME,
+    TIME_MINUTES,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -137,7 +138,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "min"
+        return TIME_MINUTES
 
 
 def _parse_wsdot_timestamp(timestamp):

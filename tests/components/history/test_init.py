@@ -14,6 +14,7 @@ from tests.common import (
     init_recorder_component,
     mock_state_change_event,
 )
+from tests.components.recorder.common import wait_recording_done
 
 
 class TestComponentHistory(unittest.TestCase):
@@ -31,12 +32,7 @@ class TestComponentHistory(unittest.TestCase):
         """Initialize the recorder."""
         init_recorder_component(self.hass)
         self.hass.start()
-        self.wait_recording_done()
-
-    def wait_recording_done(self):
-        """Block till recording is done."""
-        self.hass.block_till_done()
-        self.hass.data[recorder.DATA_INSTANCE].block_till_done()
+        wait_recording_done(self.hass)
 
     def test_setup(self):
         """Test setup method of history."""
@@ -78,7 +74,7 @@ class TestComponentHistory(unittest.TestCase):
 
                 states.append(state)
 
-            self.wait_recording_done()
+            wait_recording_done(self.hass)
 
         future = now + timedelta(seconds=1)
         with patch(
@@ -93,7 +89,7 @@ class TestComponentHistory(unittest.TestCase):
 
                 mock_state_change_event(self.hass, state)
 
-            self.wait_recording_done()
+            wait_recording_done(self.hass)
 
         # Get states returns everything before POINT
         for state1, state2 in zip(
@@ -115,7 +111,7 @@ class TestComponentHistory(unittest.TestCase):
         def set_state(state):
             """Set the state."""
             self.hass.states.set(entity_id, state)
-            self.wait_recording_done()
+            wait_recording_done(self.hass)
             return self.hass.states.get(entity_id)
 
         start = dt_util.utcnow()
@@ -156,7 +152,7 @@ class TestComponentHistory(unittest.TestCase):
         def set_state(state):
             """Set the state."""
             self.hass.states.set(entity_id, state)
-            self.wait_recording_done()
+            wait_recording_done(self.hass)
             return self.hass.states.get(entity_id)
 
         start = dt_util.utcnow() - timedelta(minutes=2)
@@ -559,7 +555,7 @@ class TestComponentHistory(unittest.TestCase):
         def set_state(entity_id, state, **kwargs):
             """Set the state."""
             self.hass.states.set(entity_id, state, **kwargs)
-            self.wait_recording_done()
+            wait_recording_done(self.hass)
             return self.hass.states.get(entity_id)
 
         zero = dt_util.utcnow()
@@ -615,6 +611,7 @@ class TestComponentHistory(unittest.TestCase):
             )
             # state will be skipped since entity is hidden
             set_state(therm, 22, attributes={"current_temperature": 21, "hidden": True})
+
         return zero, four, states
 
 

@@ -11,8 +11,12 @@
         },
         "step": {
             "confirm": {
-                "description": "Model: {model}\nV\u00e6rt: {host}\nPort: {port}\n\nDu kan konfigurere IO og panelfunktionsm\u00e5den i indstillingerne for Konnected-alarmpanel.",
+                "description": "Model: {model}\nID: {id}\nV\u00e6rt: {host}\nPort: {port}\n\nDu kan konfigurere IO og panelfunktionsm\u00e5den i indstillingerne for Konnected-alarmpanel.",
                 "title": "Konnected-enhed klar"
+            },
+            "import_confirm": {
+                "description": "Et Konnected-alarmpanel med id {id} er blevet fundet i configuration.yaml. Dette flow giver dig mulighed for at importere det til en konfigurationspost.",
+                "title": "Importer Konnected-enhed"
             },
             "user": {
                 "data": {

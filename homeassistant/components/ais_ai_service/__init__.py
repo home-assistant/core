@@ -3039,7 +3039,7 @@ def _process_command_from_frame(hass, service):
         return
     elif service.data["topic"] == "ais/speech_status":
         # TODO pause/resume, service.data["payload"] can be: START -> DONE/ERROR
-        _LOGGER.info("speech_status: " + str(service.data["payload"]))
+        _LOGGER.debug("speech_status: " + str(service.data["payload"]))
         return
     elif service.data["topic"] == "ais/add_bookmark":
         try:

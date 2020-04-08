@@ -1,0 +1,803 @@
+{
+    "data": {
+        "config": {
+            "resources": [],
+            "title": "Asystent domowy",
+            "views": [
+                {
+                    "badges": [
+                        {
+                            "entity": "sensor.time"
+                        },
+                        {
+                            "entity": "sensor.daytodisplay"
+                        }
+                    ],
+                    "cards": [
+                        {
+                            "content": "# Super [[ {user} ]]!\n\n## Masz nowy pulpit <ha-icon icon=\"mdi:desktop-mac-dashboard\" ></ha-icon> \n\nMo\u017cesz go teraz skonfigurowa\u0107, je\u015bli nie wiesz jak, to sprawd\u017a jak to dzia\u0142a w [<ha-icon icon=\"mdi:information-outline\" ></ha-icon> instrukcji](https://www.ai-speaker.com/docs/ais_app_ui_config). \n\nTa funkcjonalno\u015b\u0107 jest jeszcze rozwijana, do wersji 1.0 dodamy mo\u017cliwo\u015b\u0107 przeci\u0105gania i upuszczania kart - b\u0119dzie jeszcze \u0142atwiej.<ha-icon icon=\"mdi:emoticon-cool-outline\" ></ha-icon>\n",
+                            "type": "markdown"
+                        }
+                    ],
+                    "icon": "mdi:new-box",
+                    "path": "default_view",
+                    "title": "Dom"
+                },
+                {
+                    "badges": [],
+                    "cards": [
+                        {
+                            "entities": [
+                                {
+                                    "entity": "sensor.status_serwisu_zigbee2mqtt"
+                                },
+                                {
+                                    "entity": "sensor.wersja_zigbee2mqtt"
+                                },
+                                {
+                                    "entity": "sensor.wersja_kordynatora"
+                                },
+                                {
+                                    "type": "divider"
+                                },
+                                {
+                                    "entity": "switch.zigbee_tryb_parowania"
+                                },
+                                {
+                                    "entity": "timer.zigbee_permit_join"
+                                },
+                                {
+                                    "type": "divider"
+                                },
+                                {
+                                    "entity": "input_text.zigbee2mqtt_old_name"
+                                },
+                                {
+                                    "entity": "input_text.zigbee2mqtt_new_name"
+                                },
+                                {
+                                    "entity": "script.zigbee2mqtt_rename"
+                                },
+                                {
+                                    "type": "divider"
+                                },
+                                {
+                                    "entity": "input_text.zigbee2mqtt_remove"
+                                },
+                                {
+                                    "entity": "script.zigbee2mqtt_remove"
+                                }
+                            ],
+                            "show_header_toggle": false,
+                            "title": "Zigbee",
+                            "type": "entities"
+                        },
+                        {
+                            "entity": "sensor.zigbee2mqtt_networkmap",
+                            "type": "ais-zigbee2mqtt"
+                        }
+                    ],
+                    "icon": "mdi:zigbee",
+                    "path": "ais_zigbee",
+                    "title": "zigbee",
+                    "visible": false
+                },
+                {
+                    "badges": [],
+                    "cards": [
+                        {
+                            "cards": [
+                                {
+                                    "artwork": "full-cover",
+                                    "entity": "media_player.wbudowany_glosnik",
+                                    "hide": {
+                                        "power": true,
+                                        "runtime": false,
+                                        "shuffle": false,
+                                        "source": true
+                                    },
+                                    "icon": "mdi:monitor-speaker",
+                                    "more_info": false,
+                                    "name": " ",
+                                    "shortcuts": {
+                                        "buttons": [
+                                            {
+                                                "icon": "mdi:bookmark-music",
+                                                "id": "script.ais_add_item_to_bookmarks",
+                                                "type": "script"
+                                            },
+                                            {
+                                                "icon": "mdi:thumb-up",
+                                                "id": "script.ais_add_item_to_favorites",
+                                                "type": "script"
+                                            }
+                                        ],
+                                        "columns": 2,
+                                        "list": []
+                                    },
+                                    "show_progress": true,
+                                    "speaker_group": {
+                                        "platform": "ais",
+                                        "show_group_count": true
+                                    },
+                                    "tts": {
+                                        "platform": "ais"
+                                    },
+                                    "type": "ais-mini-media-player"
+                                },
+                                {
+                                    "cards": [
+                                        {
+                                            "cards": [
+                                                {
+                                                    "color": "#727272",
+                                                    "color_type": "icon",
+                                                    "entity": "sensor.ais_player_mode",
+                                                    "icon": "mdi:heart",
+                                                    "name": " ",
+                                                    "show_state": false,
+                                                    "size": "30%",
+                                                    "state": [
+                                                        {
+                                                            "color": "var(--primary-color)",
+                                                            "value": "ais_favorites"
+                                                        }
+                                                    ],
+                                                    "tap_action": {
+                                                        "action": "call-service",
+                                                        "service": "ais_ai_service.set_context",
+                                                        "service_data": {
+                                                            "text": "ulubione"
+                                                        }
+                                                    },
+                                                    "type": "ais-button"
+                                                },
+                                                {
+                                                    "color": "#727272",
+                                                    "color_type": "icon",
+                                                    "entity": "sensor.ais_player_mode",
+                                                    "icon": "mdi:bookmark",
+                                                    "name": " ",
+                                                    "show_state": false,
+                                                    "size": "30%",
+                                                    "state": [
+                                                        {
+                                                            "color": "var(--primary-color)",
+                                                            "value": "ais_bookmarks"
+                                                        }
+                                                    ],
+                                                    "tap_action": {
+                                                        "action": "call-service",
+                                                        "service": "ais_ai_service.set_context",
+                                                        "service_data": {
+                                                            "text": "zak\u0142adki"
+                                                        }
+                                                    },
+                                                    "type": "ais-button"
+                                                },
+                                                {
+                                                    "color": "#727272",
+                                                    "color_type": "icon",
+                                                    "entity": "sensor.ais_player_mode",
+                                                    "icon": "mdi:newspaper",
+                                                    "name": " ",
+                                                    "show_state": false,
+                                                    "size": "30%",
+                                                    "state": [
+                                                        {
+                                                            "color": "var(--primary-color)",
+                                                            "value": "ais_rss_news_remote"
+                                                        }
+                                                    ],
+                                                    "tap_action": {
+                                                        "action": "call-service",
+                                                        "service": "ais_ai_service.set_context",
+                                                        "service_data": {
+                                                            "text": "wiadomo\u015bci"
+                                                        }
+                                                    },
+                                                    "type": "ais-button"
+                                                },
+                                                {
+                                                    "color": "#727272",
+                                                    "color_type": "icon",
+                                                    "entity": "sensor.ais_player_mode",
+                                                    "icon": "mdi:folder",
+                                                    "name": " ",
+                                                    "show_state": false,
+                                                    "size": "30%",
+                                                    "state": [
+                                                        {
+                                                            "color": "var(--primary-color)",
+                                                            "value": "local_audio"
+                                                        }
+                                                    ],
+                                                    "tap_action": {
+                                                        "action": "call-service",
+                                                        "service": "ais_ai_service.set_context",
+                                                        "service_data": {
+                                                            "text": "dyski"
+                                                        }
+                                                    },
+                                                    "type": "ais-button"
+                                                }
+                                            ],
+                                            "type": "horizontal-stack"
+                                        },
+                                        {
+                                            "cards": [
+                                                {
+                                                    "color": "#727272",
+                                                    "color_type": "icon",
+                                                    "entity": "sensor.ais_player_mode",
+                                                    "icon": "mdi:radio",
+                                                    "name": " ",
+                                                    "show_state": false,
+                                                    "size": "30%",
+                                                    "state": [
+                                                        {
+                                                            "color": "var(--primary-color)",
+                                                            "value": "radio_player"
+                                                        }
+                                                    ],
+                                                    "tap_action": {
+                                                        "action": "call-service",
+                                                        "service": "ais_ai_service.set_context",
+                                                        "service_data": {
+                                                            "text": "radio"
+                                                        }
+                                                    },
+                                                    "type": "ais-button"
+                                                },
+                                                {
+                                                    "color": "#727272",
+                                                    "color_type": "icon",
+                                                    "entity": "sensor.ais_player_mode",
+                                                    "icon": "mdi:podcast",
+                                                    "name": " ",
+                                                    "show_state": false,
+                                                    "size": "30%",
+                                                    "state": [
+                                                        {
+                                                            "color": "var(--primary-color)",
+                                                            "value": "podcast_player"
+                                                        }
+                                                    ],
+                                                    "tap_action": {
+                                                        "action": "call-service",
+                                                        "service": "ais_ai_service.set_context",
+                                                        "service_data": {
+                                                            "text": "podcast"
+                                                        }
+                                                    },
+                                                    "type": "ais-button"
+                                                },
+                                                {
+                                                    "color": "#727272",
+                                                    "color_type": "icon",
+                                                    "entity": "sensor.ais_player_mode",
+                                                    "icon": "mdi:audiobook",
+                                                    "name": " ",
+                                                    "show_state": false,
+                                                    "size": "30%",
+                                                    "state": [
+                                                        {
+                                                            "color": "var(--primary-color)",
+                                                            "value": "audiobooks_player"
+                                                        }
+                                                    ],
+                                                    "tap_action": {
+                                                        "action": "call-service",
+                                                        "service": "ais_ai_service.set_context",
+                                                        "service_data": {
+                                                            "text": "audiobook"
+                                                        }
+                                                    },
+                                                    "type": "ais-button"
+                                                },
+                                                {
+                                                    "color": "#727272",
+                                                    "color_type": "icon",
+                                                    "entity": "sensor.ais_player_mode",
+                                                    "icon": "mdi:music",
+                                                    "name": " ",
+                                                    "show_state": false,
+                                                    "size": "30%",
+                                                    "state": [
+                                                        {
+                                                            "color": "var(--primary-color)",
+                                                            "value": "music_player"
+                                                        }
+                                                    ],
+                                                    "tap_action": {
+                                                        "action": "call-service",
+                                                        "service": "ais_ai_service.set_context",
+                                                        "service_data": {
+                                                            "text": "muzyka"
+                                                        }
+                                                    },
+                                                    "type": "ais-button"
+                                                }
+                                            ],
+                                            "type": "horizontal-stack"
+                                        }
+                                    ],
+                                    "type": "vertical-stack"
+                                },
+                                {
+                                    "content": "[[ sensor.aisknowledgeanswer.state ]]\n",
+                                    "type": "markdown"
+                                },
+                                {
+                                    "card": {
+                                        "cards": [
+                                            {
+                                                "cards": [
+                                                    {
+                                                        "color": "#727272",
+                                                        "color_type": "icon",
+                                                        "entity": "input_select.ais_music_service",
+                                                        "icon": "mdi:youtube",
+                                                        "name": " ",
+                                                        "show_state": false,
+                                                        "size": "12%",
+                                                        "state": [
+                                                            {
+                                                                "color": "var(--primary-color)",
+                                                                "value": "YouTube"
+                                                            }
+                                                        ],
+                                                        "tap_action": {
+                                                            "action": "call-service",
+                                                            "service": "ais_cloud.change_audio_service"
+                                                        },
+                                                        "type": "ais-button"
+                                                    },
+                                                    {
+                                                        "color": "#727272",
+                                                        "color_type": "icon",
+                                                        "entity": "input_select.ais_music_service",
+                                                        "icon": "mdi:spotify",
+                                                        "name": " ",
+                                                        "show_state": false,
+                                                        "size": "12%",
+                                                        "state": [
+                                                            {
+                                                                "color": "var(--primary-color)",
+                                                                "value": "Spotify"
+                                                            }
+                                                        ],
+                                                        "tap_action": {
+                                                            "action": "call-service",
+                                                            "service": "ais_cloud.change_audio_service"
+                                                        },
+                                                        "type": "ais-button"
+                                                    }
+                                                ],
+                                                "type": "horizontal-stack"
+                                            },
+                                            {
+                                                "card": {
+                                                    "cards": [
+                                                        {
+                                                            "entities": [
+                                                                {
+                                                                    "entity": "input_text.ais_music_query"
+                                                                }
+                                                            ],
+                                                            "show_header_toggle": false,
+                                                            "title": "Wyszukiwanie Muzyki",
+                                                            "type": "entities"
+                                                        }
+                                                    ],
+                                                    "type": "vertical-stack"
+                                                },
+                                                "conditions": [
+                                                    {
+                                                        "entity": "sensor.ais_player_mode",
+                                                        "state": "music_player"
+                                                    },
+                                                    {
+                                                        "entity": "input_select.ais_music_service",
+                                                        "state": "YouTube"
+                                                    }
+                                                ],
+                                                "type": "conditional"
+                                            },
+                                            {
+                                                "card": {
+                                                    "cards": [
+                                                        {
+                                                            "entities": [
+                                                                {
+                                                                    "entity": "input_text.ais_spotify_query"
+                                                                }
+                                                            ],
+                                                            "show_header_toggle": false,
+                                                            "title": "Wyszukiwanie Muzyki",
+                                                            "type": "entities"
+                                                        }
+                                                    ],
+                                                    "type": "vertical-stack"
+                                                },
+                                                "conditions": [
+                                                    {
+                                                        "entity": "sensor.ais_player_mode",
+                                                        "state": "music_player"
+                                                    },
+                                                    {
+                                                        "entity": "input_select.ais_music_service",
+                                                        "state": "Spotify"
+                                                    }
+                                                ],
+                                                "type": "conditional"
+                                            }
+                                        ],
+                                        "type": "vertical-stack"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "music_player"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                },
+                                {
+                                    "cards": [
+                                        {
+                                            "entities": [
+                                                {
+                                                    "entity": "input_boolean.ais_audio_mono"
+                                                }
+                                            ],
+                                            "show_header_toggle": false,
+                                            "title": "Equalizer",
+                                            "type": "entities"
+                                        },
+                                        {
+                                            "card": {
+                                                "show_header_toggle": false,
+                                                "title": "Odtwarzacze",
+                                                "type": "entities"
+                                            },
+                                            "filter": {
+                                                "include": [
+                                                    {
+                                                        "domain": "media_player"
+                                                    }
+                                                ]
+                                            },
+                                            "type": "ais-auto-entities"
+                                        }
+                                    ],
+                                    "show_header_toggle": false,
+                                    "type": "vertical-stack"
+                                },
+                                {
+                                    "card": {
+                                        "cards": [
+                                            {
+                                                "entity": "input_select.rss_news_category",
+                                                "type": "ais-easy-picker"
+                                            }
+                                        ],
+                                        "type": "vertical-stack"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "ais_rss_news_remote"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                },
+                                {
+                                    "card": {
+                                        "cards": [
+                                            {
+                                                "entity": "input_select.book_autor",
+                                                "type": "ais-easy-picker"
+                                            }
+                                        ],
+                                        "type": "vertical-stack"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "audiobooks_player"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                }
+                            ],
+                            "show_header_toggle": false,
+                            "type": "vertical-stack"
+                        },
+                        {
+                            "cards": [
+                                {
+                                    "card": {
+                                        "entity": "sensor.ais_drives",
+                                        "title": "Przegl\u0105danie Dysk\u00f3w",
+                                        "type": "ais-files-list"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "local_audio"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                },
+                                {
+                                    "card": {
+                                        "cards": [
+                                            {
+                                                "entity": "input_select.rss_news_channel",
+                                                "type": "ais-easy-picker"
+                                            },
+                                            {
+                                                "card": {
+                                                    "entity": [
+                                                        "sensor.rssnewslist"
+                                                    ],
+                                                    "media_source": "News",
+                                                    "type": "ais-list"
+                                                },
+                                                "conditions": [
+                                                    {
+                                                        "entity": "sensor.ais_player_mode",
+                                                        "state": "ais_rss_news_remote"
+                                                    }
+                                                ],
+                                                "type": "conditional"
+                                            }
+                                        ],
+                                        "type": "vertical-stack"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "ais_rss_news_remote"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                },
+                                {
+                                    "card": {
+                                        "entity": [
+                                            "sensor.aisbookmarkslist"
+                                        ],
+                                        "media_source": "Bookmark",
+                                        "show_delete_icon": true,
+                                        "type": "ais-list"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "ais_bookmarks"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                },
+                                {
+                                    "card": {
+                                        "entity": [
+                                            "sensor.aisfavoriteslist"
+                                        ],
+                                        "media_source": "Favorite",
+                                        "show_delete_icon": true,
+                                        "type": "ais-list"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "ais_favorites"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                },
+                                {
+                                    "card": {
+                                        "entity": [
+                                            "sensor.youtubelist"
+                                        ],
+                                        "media_source": "Music",
+                                        "show_delete_icon": true,
+                                        "type": "ais-list"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "music_player"
+                                        },
+                                        {
+                                            "entity": "input_select.ais_music_service",
+                                            "state": "YouTube"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                },
+                                {
+                                    "card": {
+                                        "entity": [
+                                            "sensor.spotifysearchlist"
+                                        ],
+                                        "media_source": "SpotifySearch",
+                                        "show_delete_icon": true,
+                                        "type": "ais-list"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "music_player"
+                                        },
+                                        {
+                                            "entity": "input_select.ais_music_service",
+                                            "state": "Spotify"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                },
+                                {
+                                    "card": {
+                                        "entity": "input_select.radio_type",
+                                        "type": "ais-easy-picker"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "radio_player"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                },
+                                {
+                                    "card": {
+                                        "entity": "input_select.podcast_type",
+                                        "type": "ais-easy-picker"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "podcast_player"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                },
+                                {
+                                    "card": {
+                                        "entity": [
+                                            "sensor.podcastnamelist"
+                                        ],
+                                        "media_source": "PodcastName",
+                                        "type": "ais-list"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "podcast_player"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                },
+                                {
+                                    "card": {
+                                        "entity": [
+                                            "sensor.audiobookslist"
+                                        ],
+                                        "media_source": "AudioBook",
+                                        "type": "ais-list"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "audiobooks_player"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                }
+                            ],
+                            "type": "vertical-stack"
+                        },
+                        {
+                            "cards": [
+                                {
+                                    "card": {
+                                        "entity": [
+                                            "sensor.spotifylist"
+                                        ],
+                                        "media_source": "Spotify",
+                                        "show_delete_icon": true,
+                                        "type": "ais-list"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "music_player"
+                                        },
+                                        {
+                                            "entity": "input_select.ais_music_service",
+                                            "state": "Spotify"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                },
+                                {
+                                    "card": {
+                                        "entity": [
+                                            "sensor.radiolist"
+                                        ],
+                                        "media_source": "Radio",
+                                        "type": "ais-list"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "radio_player"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                },
+                                {
+                                    "card": {
+                                        "entity": [
+                                            "sensor.podcastlist"
+                                        ],
+                                        "media_source": "Podcast",
+                                        "type": "ais-list"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "podcast_player"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                },
+                                {
+                                    "card": {
+                                        "entity": [
+                                            "sensor.audiobookschapterslist"
+                                        ],
+                                        "media_source": "AudioBookChapter",
+                                        "type": "ais-list"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "audiobooks_player"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                },
+                                {
+                                    "card": {
+                                        "content": "[[ sensor.rssnewstext.attributes.text ]]\n",
+                                        "title": "Tre\u015b\u0107 artyku\u0142u",
+                                        "type": "markdown"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "ais_rss_news_remote"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                }
+                            ],
+                            "type": "vertical-stack"
+                        }
+                    ],
+                    "icon": "mdi:music",
+                    "path": "ais_audio",
+                    "title": "Audio",
+                    "visible": false
+                }
+            ]
+        }
+    },
+    "key": "lovelace.lovelace_test",
+    "version": 1
+}

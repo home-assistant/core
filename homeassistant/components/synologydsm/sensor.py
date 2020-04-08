@@ -21,6 +21,7 @@ from homeassistant.const import (
     DATA_RATE_KILOBYTES_PER_SECOND,
     EVENT_HOMEASSISTANT_START,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -37,14 +38,14 @@ DEFAULT_PORT = 5001
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 _UTILISATION_MON_COND = {
-    "cpu_other_load": ["CPU Load (Other)", "%", "mdi:chip"],
-    "cpu_user_load": ["CPU Load (User)", "%", "mdi:chip"],
-    "cpu_system_load": ["CPU Load (System)", "%", "mdi:chip"],
-    "cpu_total_load": ["CPU Load (Total)", "%", "mdi:chip"],
-    "cpu_1min_load": ["CPU Load (1 min)", "%", "mdi:chip"],
-    "cpu_5min_load": ["CPU Load (5 min)", "%", "mdi:chip"],
-    "cpu_15min_load": ["CPU Load (15 min)", "%", "mdi:chip"],
-    "memory_real_usage": ["Memory Usage (Real)", "%", "mdi:memory"],
+    "cpu_other_load": ["CPU Load (Other)", UNIT_PERCENTAGE, "mdi:chip"],
+    "cpu_user_load": ["CPU Load (User)", UNIT_PERCENTAGE, "mdi:chip"],
+    "cpu_system_load": ["CPU Load (System)", UNIT_PERCENTAGE, "mdi:chip"],
+    "cpu_total_load": ["CPU Load (Total)", UNIT_PERCENTAGE, "mdi:chip"],
+    "cpu_1min_load": ["CPU Load (1 min)", UNIT_PERCENTAGE, "mdi:chip"],
+    "cpu_5min_load": ["CPU Load (5 min)", UNIT_PERCENTAGE, "mdi:chip"],
+    "cpu_15min_load": ["CPU Load (15 min)", UNIT_PERCENTAGE, "mdi:chip"],
+    "memory_real_usage": ["Memory Usage (Real)", UNIT_PERCENTAGE, "mdi:memory"],
     "memory_size": ["Memory Size", DATA_MEGABYTES, "mdi:memory"],
     "memory_cached": ["Memory Cached", DATA_MEGABYTES, "mdi:memory"],
     "memory_available_swap": ["Memory Available (Swap)", DATA_MEGABYTES, "mdi:memory"],
@@ -59,7 +60,7 @@ _STORAGE_VOL_MON_COND = {
     "volume_device_type": ["Type", None, "mdi:harddisk"],
     "volume_size_total": ["Total Size", None, "mdi:chart-pie"],
     "volume_size_used": ["Used Space", None, "mdi:chart-pie"],
-    "volume_percentage_used": ["Volume Used", "%", "mdi:chart-pie"],
+    "volume_percentage_used": ["Volume Used", UNIT_PERCENTAGE, "mdi:chart-pie"],
     "volume_disk_temp_avg": ["Average Disk Temp", None, "mdi:thermometer"],
     "volume_disk_temp_max": ["Maximum Disk Temp", None, "mdi:thermometer"],
 }

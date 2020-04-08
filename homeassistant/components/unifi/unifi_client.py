@@ -2,12 +2,29 @@
 
 import logging
 
+from aiounifi.api import SOURCE_EVENT
+from aiounifi.events import (
+    WIRED_CLIENT_BLOCKED,
+    WIRED_CLIENT_CONNECTED,
+    WIRED_CLIENT_DISCONNECTED,
+    WIRED_CLIENT_UNBLOCKED,
+    WIRELESS_CLIENT_BLOCKED,
+    WIRELESS_CLIENT_CONNECTED,
+    WIRELESS_CLIENT_DISCONNECTED,
+    WIRELESS_CLIENT_UNBLOCKED,
+)
+
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 LOGGER = logging.getLogger(__name__)
+
+CLIENT_BLOCKED = (WIRED_CLIENT_BLOCKED, WIRELESS_CLIENT_BLOCKED)
+CLIENT_UNBLOCKED = (WIRED_CLIENT_UNBLOCKED, WIRELESS_CLIENT_UNBLOCKED)
+WIRED_CLIENT = (WIRED_CLIENT_CONNECTED, WIRED_CLIENT_DISCONNECTED)
+WIRELESS_CLIENT = (WIRELESS_CLIENT_CONNECTED, WIRELESS_CLIENT_DISCONNECTED)
 
 
 class UniFiClient(Entity):
@@ -18,7 +35,11 @@ class UniFiClient(Entity):
         self.client = client
         self.controller = controller
         self.listeners = []
+
         self.is_wired = self.client.mac not in controller.wireless_clients
+        self.is_blocked = self.client.blocked
+        self.wired_connection = None
+        self.wireless_connection = None
 
     async def async_added_to_hass(self) -> None:
         """Client entity created."""
@@ -41,6 +62,22 @@ class UniFiClient(Entity):
         """Update the clients state."""
         if self.is_wired and self.client.mac in self.controller.wireless_clients:
             self.is_wired = False
+
+        if self.client.last_updated == SOURCE_EVENT:
+
+            if self.client.event.event in WIRELESS_CLIENT:
+                self.wireless_connection = (
+                    self.client.event.event == WIRELESS_CLIENT_CONNECTED
+                )
+
+            elif self.client.event.event in WIRED_CLIENT:
+                self.wired_connection = (
+                    self.client.event.event == WIRED_CLIENT_CONNECTED
+                )
+
+            elif self.client.event.event in CLIENT_BLOCKED + CLIENT_UNBLOCKED:
+                self.is_blocked = self.client.event.event in CLIENT_BLOCKED
+
         LOGGER.debug("Updating client %s %s", self.entity_id, self.client.mac)
         self.async_schedule_update_ha_state()
 

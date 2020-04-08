@@ -7,7 +7,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt
 
-from .const import DOMAIN, FEED, SIGNAL_STATUS
+from .const import DOMAIN, FEED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,11 +22,14 @@ ATTR_REMOVED = "removed"
 DEFAULT_ICON = "mdi:pulse"
 DEFAULT_UNIT_OF_MEASUREMENT = "quakes"
 
+# An update of this entity is not making a web request, but uses internal data only.
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the GeoNet NZ Quakes Feed platform."""
     manager = hass.data[DOMAIN][FEED][entry.entry_id]
-    sensor = GeonetnzQuakesSensor(entry.entry_id, entry.title, manager)
+    sensor = GeonetnzQuakesSensor(entry.entry_id, entry.unique_id, entry.title, manager)
     async_add_entities([sensor])
     _LOGGER.debug("Sensor setup done")
 
@@ -34,9 +37,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class GeonetnzQuakesSensor(Entity):
     """This is a status sensor for the GeoNet NZ Quakes integration."""
 
-    def __init__(self, config_entry_id, config_title, manager):
+    def __init__(self, config_entry_id, config_unique_id, config_title, manager):
         """Initialize entity."""
         self._config_entry_id = config_entry_id
+        self._config_unique_id = config_unique_id
         self._config_title = config_title
         self._manager = manager
         self._status = None
@@ -53,7 +57,7 @@ class GeonetnzQuakesSensor(Entity):
         """Call when entity is added to hass."""
         self._remove_signal_status = async_dispatcher_connect(
             self.hass,
-            SIGNAL_STATUS.format(self._config_entry_id),
+            f"geonetnz_quakes_status_{self._config_entry_id}",
             self._update_status_callback,
         )
         _LOGGER.debug("Waiting for updates %s", self._config_entry_id)
@@ -90,11 +94,10 @@ class GeonetnzQuakesSensor(Entity):
         self._last_update = (
             dt.as_utc(status_info.last_update) if status_info.last_update else None
         )
-        self._last_update_successful = (
-            dt.as_utc(status_info.last_update_successful)
-            if status_info.last_update_successful
-            else None
-        )
+        if status_info.last_update_successful:
+            self._last_update_successful = dt.as_utc(status_info.last_update_successful)
+        else:
+            self._last_update_successful = None
         self._last_timestamp = status_info.last_timestamp
         self._total = status_info.total
         self._created = status_info.created
@@ -105,6 +108,11 @@ class GeonetnzQuakesSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._total
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID containing latitude/longitude."""
+        return self._config_unique_id
 
     @property
     def name(self) -> Optional[str]:

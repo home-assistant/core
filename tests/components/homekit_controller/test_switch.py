@@ -1,12 +1,25 @@
 """Basic checks for HomeKitSwitch."""
+
+from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
+
 from tests.components.homekit_controller.common import setup_test_component
+
+
+def create_switch_service(accessory):
+    """Define outlet characteristics."""
+    service = accessory.add_service(ServicesTypes.OUTLET)
+
+    on_char = service.add_char(CharacteristicsTypes.ON)
+    on_char.value = False
+
+    outlet_in_use = service.add_char(CharacteristicsTypes.OUTLET_IN_USE)
+    outlet_in_use.value = False
 
 
 async def test_switch_change_outlet_state(hass, utcnow):
     """Test that we can turn a HomeKit outlet on and off again."""
-    from homekit.model.services import OutletService
-
-    helper = await setup_test_component(hass, [OutletService()])
+    helper = await setup_test_component(hass, create_switch_service)
 
     await hass.services.async_call(
         "switch", "turn_on", {"entity_id": "switch.testdevice"}, blocking=True
@@ -21,9 +34,7 @@ async def test_switch_change_outlet_state(hass, utcnow):
 
 async def test_switch_read_outlet_state(hass, utcnow):
     """Test that we can read the state of a HomeKit outlet accessory."""
-    from homekit.model.services import OutletService
-
-    helper = await setup_test_component(hass, [OutletService()])
+    helper = await setup_test_component(hass, create_switch_service)
 
     # Initial state is that the switch is off and the outlet isn't in use
     switch_1 = await helper.poll_and_get_state()

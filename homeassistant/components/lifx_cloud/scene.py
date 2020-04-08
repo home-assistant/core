@@ -14,7 +14,6 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-LIFX_API_URL = "https://api.lifx.com/v1/{0}"
 DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = vol.Schema(
@@ -33,7 +32,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     headers = {AUTHORIZATION: f"Bearer {token}"}
 
-    url = LIFX_API_URL.format("scenes")
+    url = "https://api.lifx.com/v1/scenes"
 
     try:
         httpsession = async_get_clientsession(hass)
@@ -78,7 +77,7 @@ class LifxCloudScene(Scene):
 
     async def async_activate(self):
         """Activate the scene."""
-        url = LIFX_API_URL.format("scenes/scene_id:%s/activate" % self._uuid)
+        url = f"https://api.lifx.com/v1/scenes/scene_id:{self._uuid}/activate"
 
         try:
             httpsession = async_get_clientsession(self.hass)

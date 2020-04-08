@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
     DATA_GIGABYTES,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -22,13 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "TekSavvy"
 CONF_TOTAL_BANDWIDTH = "total_bandwidth"
 
-PERCENT = "%"
-
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 REQUEST_TIMEOUT = 5  # seconds
 
 SENSOR_TYPES = {
-    "usage": ["Usage Ratio", PERCENT, "mdi:percent"],
+    "usage": ["Usage Ratio", UNIT_PERCENTAGE, "mdi:percent"],
     "usage_gb": ["Usage", DATA_GIGABYTES, "mdi:download"],
     "limit": ["Data limit", DATA_GIGABYTES, "mdi:download"],
     "onpeak_download": ["On Peak Download", DATA_GIGABYTES, "mdi:download"],

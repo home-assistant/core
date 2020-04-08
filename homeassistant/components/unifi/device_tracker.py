@@ -8,6 +8,7 @@ from homeassistant.components.unifi.config_flow import get_controller_from_confi
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.dt as dt_util
 
 from .const import ATTR_MANUFACTURER
@@ -175,6 +176,8 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         """Set up tracked client."""
         super().__init__(client, controller)
 
+        self.cancel_scheduled_update = None
+        self.is_disconnected = None
         self.wired_bug = None
         if self.is_wired != self.client.is_wired:
             self.wired_bug = dt_util.utcnow() - self.controller.option_detection_time
@@ -186,12 +189,42 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         If connected to unwanted ssid return False.
         If is_wired and client.is_wired differ it means that the device is offline and UniFi bug shows device as wired.
         """
+
+        @callback
+        def _scheduled_update(now):
+            """Scheduled callback for update."""
+            self.is_disconnected = True
+            self.cancel_scheduled_update = None
+            self.async_schedule_update_ha_state()
+
         if (
             not self.is_wired
             and self.controller.option_ssid_filter
             and self.client.essid not in self.controller.option_ssid_filter
         ):
             return False
+
+        if (self.is_wired and self.wired_connection) or (
+            not self.is_wired and self.wireless_connection
+        ):
+            if self.cancel_scheduled_update:
+                self.cancel_scheduled_update()
+                self.cancel_scheduled_update = None
+
+            self.is_disconnected = False
+
+        if (self.is_wired and self.wired_connection is False) or (
+            not self.is_wired and self.wireless_connection is False
+        ):
+            if not self.is_disconnected and not self.cancel_scheduled_update:
+                self.cancel_scheduled_update = async_track_point_in_utc_time(
+                    self.hass,
+                    _scheduled_update,
+                    dt_util.utcnow() + self.controller.option_detection_time,
+                )
+
+        if self.is_disconnected is not None:
+            return not self.is_disconnected
 
         if self.is_wired != self.client.is_wired:
             if not self.wired_bug:

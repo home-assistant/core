@@ -1,0 +1,17 @@
+{
+    "data": {
+        "items": [
+            {
+                "icon": "mdi:monitor-dashboard",
+                "id": "lovelace_dom",
+                "mode": "storage",
+                "require_admin": false,
+                "show_in_sidebar": true,
+                "title": "Pulpit",
+                "url_path": "lovelace-dom"
+            }
+        ]
+    },
+    "key": "lovelace_dashboards",
+    "version": 1
+}

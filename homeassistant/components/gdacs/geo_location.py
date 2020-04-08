@@ -13,13 +13,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
-from .const import (
-    DEFAULT_ICON,
-    DOMAIN,
-    FEED,
-    SIGNAL_DELETE_ENTITY,
-    SIGNAL_UPDATE_ENTITY,
-)
+from .const import DEFAULT_ICON, DOMAIN, FEED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,9 +49,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     manager = hass.data[DOMAIN][FEED][entry.entry_id]
 
     @callback
-    def async_add_geolocation(feed_manager, external_id):
+    def async_add_geolocation(feed_manager, integration_id, external_id):
         """Add gelocation entity from feed."""
-        new_entity = GdacsEvent(feed_manager, external_id)
+        new_entity = GdacsEvent(feed_manager, integration_id, external_id)
         _LOGGER.debug("Adding geolocation %s", new_entity)
         async_add_entities([new_entity], True)
 
@@ -75,9 +69,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class GdacsEvent(GeolocationEvent):
     """This represents an external event with GDACS feed data."""
 
-    def __init__(self, feed_manager, external_id):
+    def __init__(self, feed_manager, integration_id, external_id):
         """Initialize entity with data from feed entry."""
         self._feed_manager = feed_manager
+        self._integration_id = integration_id
         self._external_id = external_id
         self._title = None
         self._distance = None
@@ -102,14 +97,10 @@ class GdacsEvent(GeolocationEvent):
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
-            self.hass,
-            SIGNAL_DELETE_ENTITY.format(self._external_id),
-            self._delete_callback,
+            self.hass, f"gdacs_delete_{self._external_id}", self._delete_callback
         )
         self._remove_signal_update = async_dispatcher_connect(
-            self.hass,
-            SIGNAL_UPDATE_ENTITY.format(self._external_id),
-            self._update_callback,
+            self.hass, f"gdacs_update_{self._external_id}", self._update_callback
         )
 
     async def async_will_remove_from_hass(self) -> None:
@@ -171,6 +162,11 @@ class GdacsEvent(GeolocationEvent):
         if isinstance(self._vulnerability, float):
             self._vulnerability = round(self._vulnerability, 1)
         self._version = feed_entry.version
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID containing latitude/longitude and external id."""
+        return f"{self._integration_id}_{self._external_id}"
 
     @property
     def icon(self):

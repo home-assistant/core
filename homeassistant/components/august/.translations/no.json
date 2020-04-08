@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "login_method": "P\u00e5loggingsmetode",
+                    "password": "Passord",
+                    "timeout": "Tidsavbrudd (sekunder)",
+                    "username": "Brukernavn"
+                },
+                "description": "Hvis p\u00e5loggingsmetoden er 'e-post', er brukernavnet e-postadressen. Hvis p\u00e5loggingsmetoden er 'telefon', er brukernavn telefonnummeret i formatet '+ NNNNNNNNN'.",
+                "title": "Sett opp en August konto"
+            },
+            "validation": {
+                "data": {
+                    "code": "Bekreftelseskode"
+                },
+                "description": "Kontroller {login_method} ( {username} ) og skriv inn bekreftelseskoden nedenfor",
+                "title": "To-faktor autentisering"
+            }
+        },
+        "title": "August"
+    }
+}

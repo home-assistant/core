@@ -8,6 +8,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -39,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             state_proxy=state_proxy,
             metric_key="A_CYC_FAN_SPEED",
             device_class=None,
-            unit_of_measurement="%",
+            unit_of_measurement=UNIT_PERCENTAGE,
             icon="mdi:fan",
         ),
         ValloxSensor(
@@ -79,7 +80,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             state_proxy=state_proxy,
             metric_key="A_CYC_RH_VALUE",
             device_class=DEVICE_CLASS_HUMIDITY,
-            unit_of_measurement="%",
+            unit_of_measurement=UNIT_PERCENTAGE,
             icon=None,
         ),
         ValloxFilterRemainingSensor(

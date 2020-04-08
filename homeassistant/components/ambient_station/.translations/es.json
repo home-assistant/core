@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Esta clave API ya est\u00e1 en uso."
+        },
         "error": {
             "identifier_exists": "La clave API y/o la clave de aplicaci\u00f3n ya est\u00e1 registrada",
             "invalid_key": "Clave API y/o clave de aplicaci\u00f3n no v\u00e1lida",

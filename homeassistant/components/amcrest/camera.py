@@ -491,9 +491,7 @@ class AmcrestCam(Camera):
         """Enable or disable indicator light."""
         try:
             self._api.command(
-                "configManager.cgi?action=setConfig&LightGlobal[0].Enable={}".format(
-                    str(enable).lower()
-                )
+                f"configManager.cgi?action=setConfig&LightGlobal[0].Enable={str(enable).lower()}"
             )
         except AmcrestError as error:
             log_update_error(

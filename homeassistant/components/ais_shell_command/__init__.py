@@ -156,7 +156,7 @@ def _change_host_name(hass, call):
 def _change_remote_access(hass, call):
     import os
 
-    text = " dostęp z Internetu"
+    text = " zdalny dostęp do bramki z Internetu"
     access = hass.states.get("input_boolean.ais_remote_access").state
     gate_id = hass.states.get("sensor.ais_secure_android_id_dom").state
     if access == "on":
@@ -164,8 +164,7 @@ def _change_remote_access(hass, call):
     else:
         text = "Zatrzymuje " + text
 
-    if ais_global.G_AIS_START_IS_DONE:
-        hass.services.call("ais_ai_service", "say_it", {"text": text})
+    hass.services.call("ais_ai_service", "say_it", {"text": text})
 
     if access == "on":
         os.system("pm2 stop tunnel")
@@ -707,8 +706,16 @@ def _flush_logs(hass, call):
     os.system("rm -rf /data/data/pl.sviete.dom/files/home/.cache/pip")
     # recorder.purge if recorder exists
     if hass.services.has_service("recorder", "purge"):
+        import homeassistant.components.ais_files as ais_files
+
+        keep_days = 2
+        if ais_files.G_DB_SETTINGS_INFO is not None:
+            # take keep days from settings
+            if "dbKeepDays" in ais_files.G_DB_SETTINGS_INFO:
+                keep_days = int(ais_files.G_DB_SETTINGS_INFO["dbKeepDays"])
+
         yield from hass.services.async_call(
-            "recorder", "purge", {"keep_days": 3, "repack": True}
+            "recorder", "purge", {"keep_days": keep_days, "repack": True}
         )
 
 

@@ -168,7 +168,7 @@ class MetWeather(WeatherEntity):
         if self.track_home:
             return "home"
 
-        return "{}-{}".format(self._config[CONF_LATITUDE], self._config[CONF_LONGITUDE])
+        return f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}"
 
     @property
     def name(self):

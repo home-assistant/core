@@ -109,8 +109,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             entry.data[CONF_OAUTH_CLIENT_SECRET],
             entry.data[CONF_REFRESH_TOKEN],
         )
-        entry.data[CONF_REFRESH_TOKEN] = token.refresh_token
-        hass.config_entries.async_update_entry(entry)
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_REFRESH_TOKEN: token.refresh_token}
+        )
 
         # Get devices and their current status
         devices = await api.devices(location_ids=[installed_app.location_id])
@@ -304,8 +305,13 @@ class DeviceBroker:
                 self._entry.data[CONF_OAUTH_CLIENT_ID],
                 self._entry.data[CONF_OAUTH_CLIENT_SECRET],
             )
-            self._entry.data[CONF_REFRESH_TOKEN] = self._token.refresh_token
-            self._hass.config_entries.async_update_entry(self._entry)
+            self._hass.config_entries.async_update_entry(
+                self._entry,
+                data={
+                    **self._entry.data,
+                    CONF_REFRESH_TOKEN: self._token.refresh_token,
+                },
+            )
             _LOGGER.debug(
                 "Regenerated refresh token for installed app: %s",
                 self._installed_app_id,

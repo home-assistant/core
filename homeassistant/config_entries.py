@@ -2,6 +2,7 @@
 import asyncio
 import functools
 import logging
+from types import MappingProxyType
 from typing import Any, Callable, Dict, List, Optional, Set, Union, cast
 import uuid
 import weakref
@@ -139,10 +140,10 @@ class ConfigEntry:
         self.title = title
 
         # Config data
-        self.data = data
+        self.data = MappingProxyType(data)
 
         # Entry options
-        self.options = options or {}
+        self.options = MappingProxyType(options or {})
 
         # Entry system options
         self.system_options = SystemOptions(**system_options)
@@ -396,8 +397,8 @@ class ConfigEntry:
             "version": self.version,
             "domain": self.domain,
             "title": self.title,
-            "data": self.data,
-            "options": self.options,
+            "data": dict(self.data),
+            "options": dict(self.options),
             "system_options": self.system_options.as_dict(),
             "source": self.source,
             "connection_class": self.connection_class,
@@ -720,6 +721,7 @@ class ConfigEntries:
         entry: ConfigEntry,
         *,
         unique_id: Union[str, dict, None] = _UNDEF,
+        title: Union[str, dict] = _UNDEF,
         data: dict = _UNDEF,
         options: dict = _UNDEF,
         system_options: dict = _UNDEF,
@@ -728,11 +730,14 @@ class ConfigEntries:
         if unique_id is not _UNDEF:
             entry.unique_id = cast(Optional[str], unique_id)
 
+        if title is not _UNDEF:
+            entry.title = cast(str, title)
+
         if data is not _UNDEF:
-            entry.data = data
+            entry.data = MappingProxyType(data)
 
         if options is not _UNDEF:
-            entry.options = options
+            entry.options = MappingProxyType(options)
 
         if system_options is not _UNDEF:
             entry.system_options.update(**system_options)
@@ -818,7 +823,9 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         raise data_entry_flow.UnknownHandler
 
     @callback
-    def _abort_if_unique_id_configured(self, updates: Dict[Any, Any] = None) -> None:
+    def _abort_if_unique_id_configured(
+        self, updates: Optional[Dict[Any, Any]] = None
+    ) -> None:
         """Abort if the unique ID is already configured."""
         assert self.hass
         if self.unique_id is None:

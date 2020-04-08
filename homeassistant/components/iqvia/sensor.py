@@ -66,7 +66,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     }
 
     sensors = []
-    for sensor_type in iqvia.sensor_types:
+    for sensor_type in SENSORS:
         klass = sensor_class_mapping[sensor_type]
         name, icon = SENSORS[sensor_type]
         sensors.append(klass(iqvia, sensor_type, name, icon, iqvia.zip_code))
@@ -134,21 +134,34 @@ class IndexSensor(IQVIAEntity):
     async def async_update(self):
         """Update the sensor."""
         if not self._iqvia.data:
+            _LOGGER.warning(
+                "IQVIA didn't return data for %s; trying again later", self.name
+            )
             return
 
-        data = {}
-        if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW):
-            data = self._iqvia.data[TYPE_ALLERGY_INDEX].get("Location")
-        elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
-            data = self._iqvia.data[TYPE_ASTHMA_INDEX].get("Location")
-        elif self._type == TYPE_DISEASE_TODAY:
-            data = self._iqvia.data[TYPE_DISEASE_INDEX].get("Location")
-
-        if not data:
+        try:
+            if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW):
+                data = self._iqvia.data[TYPE_ALLERGY_INDEX].get("Location")
+            elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
+                data = self._iqvia.data[TYPE_ASTHMA_INDEX].get("Location")
+            elif self._type == TYPE_DISEASE_TODAY:
+                data = self._iqvia.data[TYPE_DISEASE_INDEX].get("Location")
+        except KeyError:
+            _LOGGER.warning(
+                "IQVIA didn't return data for %s; trying again later", self.name
+            )
             return
 
         key = self._type.split("_")[-1].title()
-        [period] = [p for p in data["periods"] if p["Type"] == key]
+
+        try:
+            [period] = [p for p in data["periods"] if p["Type"] == key]
+        except ValueError:
+            _LOGGER.warning(
+                "IQVIA didn't return data for %s; trying again later", self.name
+            )
+            return
+
         [rating] = [
             i["label"]
             for i in RATING_MAPPING
@@ -185,6 +198,6 @@ class IndexSensor(IQVIAEntity):
                 )
         elif self._type == TYPE_DISEASE_TODAY:
             for attrs in period["Triggers"]:
-                self._attrs["{0}_index".format(attrs["Name"].lower())] = attrs["Index"]
+                self._attrs[f"{attrs['Name'].lower()}_index"] = attrs["Index"]
 
         self._state = period["Index"]

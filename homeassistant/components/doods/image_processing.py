@@ -3,7 +3,7 @@ import io
 import logging
 import time
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, UnidentifiedImageError
 from pydoods import PyDOODS
 import voluptuous as vol
 
@@ -274,7 +274,11 @@ class Doods(ImageProcessingEntity):
 
     def process_image(self, image):
         """Process the image."""
-        img = Image.open(io.BytesIO(bytearray(image)))
+        try:
+            img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
+        except UnidentifiedImageError:
+            _LOGGER.warning("Unable to process image, bad data")
+            return
         img_width, img_height = img.size
 
         if self._aspect and abs((img_width / img_height) - self._aspect) > 0.1:

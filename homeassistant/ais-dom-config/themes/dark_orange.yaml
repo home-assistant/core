@@ -6,7 +6,7 @@ ais:
   text-primary-color: "#ffffff"
   primary-background-color: "#4c4c4c"
   sidebar-text_-_background: "#727272"
-  paper-card-background-color: "#323232cc"
+  paper-card-background-color: "#323232"
   paper-card-header-color: "var(--text-primary-color)"
   secondary-background-color: "var(--primary-background-color)"
   primary-text-color: "var(--text-primary-color)"

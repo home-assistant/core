@@ -2,7 +2,6 @@
 import pytest
 import zigpy.zcl.clusters.measurement as measurement
 import zigpy.zcl.clusters.security as security
-import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.binary_sensor import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
@@ -11,8 +10,7 @@ from .common import (
     async_enable_traffic,
     async_test_rejoin,
     find_entity_id,
-    make_attribute,
-    make_zcl_header,
+    send_attributes_report,
 )
 
 DEVICE_IAS = {
@@ -36,17 +34,11 @@ DEVICE_OCCUPANCY = {
 async def async_test_binary_sensor_on_off(hass, cluster, entity_id):
     """Test getting on and off messages for binary sensors."""
     # binary sensor on
-    attr = make_attribute(0, 1)
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
-
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+    await send_attributes_report(hass, cluster, {1: 0, 0: 1, 2: 2})
     assert hass.states.get(entity_id).state == STATE_ON
 
     # binary sensor off
-    attr.value.value = 0
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+    await send_attributes_report(hass, cluster, {1: 1, 0: 0, 2: 2})
     assert hass.states.get(entity_id).state == STATE_OFF
 
 

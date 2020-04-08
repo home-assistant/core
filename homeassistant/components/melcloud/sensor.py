@@ -1,7 +1,8 @@
 """Support for MelCloud device sensors."""
 import logging
 
-from pymelcloud import DEVICE_TYPE_ATA
+from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW
+from pymelcloud.atw_device import Zone
 
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
@@ -16,7 +17,7 @@ ATTR_DEVICE_CLASS = "device_class"
 ATTR_VALUE_FN = "value_fn"
 ATTR_ENABLED_FN = "enabled"
 
-SENSORS = {
+ATA_SENSORS = {
     "room_temperature": {
         ATTR_MEASUREMENT_NAME: "Room Temperature",
         ATTR_ICON: "mdi:thermometer",
@@ -34,6 +35,34 @@ SENSORS = {
         ATTR_ENABLED_FN: lambda x: x.device.has_energy_consumed_meter,
     },
 }
+ATW_SENSORS = {
+    "outside_temperature": {
+        ATTR_MEASUREMENT_NAME: "Outside Temperature",
+        ATTR_ICON: "mdi:thermometer",
+        ATTR_UNIT_FN: lambda x: TEMP_UNIT_LOOKUP.get(x.device.temp_unit, TEMP_CELSIUS),
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+        ATTR_VALUE_FN: lambda x: x.device.outside_temperature,
+        ATTR_ENABLED_FN: lambda x: True,
+    },
+    "tank_temperature": {
+        ATTR_MEASUREMENT_NAME: "Tank Temperature",
+        ATTR_ICON: "mdi:thermometer",
+        ATTR_UNIT_FN: lambda x: TEMP_UNIT_LOOKUP.get(x.device.temp_unit, TEMP_CELSIUS),
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+        ATTR_VALUE_FN: lambda x: x.device.tank_temperature,
+        ATTR_ENABLED_FN: lambda x: True,
+    },
+}
+ATW_ZONE_SENSORS = {
+    "room_temperature": {
+        ATTR_MEASUREMENT_NAME: "Room Temperature",
+        ATTR_ICON: "mdi:thermometer",
+        ATTR_UNIT_FN: lambda x: TEMP_UNIT_LOOKUP.get(x.device.temp_unit, TEMP_CELSIUS),
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+        ATTR_VALUE_FN: lambda zone: zone.room_temperature,
+        ATTR_ENABLED_FN: lambda x: True,
+    }
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,22 +72,35 @@ async def async_setup_entry(hass, entry, async_add_entities):
     mel_devices = hass.data[DOMAIN].get(entry.entry_id)
     async_add_entities(
         [
-            MelCloudSensor(mel_device, measurement, definition)
-            for measurement, definition in SENSORS.items()
+            MelDeviceSensor(mel_device, measurement, definition)
+            for measurement, definition in ATA_SENSORS.items()
             for mel_device in mel_devices[DEVICE_TYPE_ATA]
             if definition[ATTR_ENABLED_FN](mel_device)
+        ]
+        + [
+            MelDeviceSensor(mel_device, measurement, definition)
+            for measurement, definition in ATW_SENSORS.items()
+            for mel_device in mel_devices[DEVICE_TYPE_ATW]
+            if definition[ATTR_ENABLED_FN](mel_device)
+        ]
+        + [
+            AtwZoneSensor(mel_device, zone, measurement, definition)
+            for mel_device in mel_devices[DEVICE_TYPE_ATW]
+            for zone in mel_device.device.zones
+            for measurement, definition, in ATW_ZONE_SENSORS.items()
+            if definition[ATTR_ENABLED_FN](zone)
         ],
         True,
     )
 
 
-class MelCloudSensor(Entity):
+class MelDeviceSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, device: MelCloudDevice, measurement, definition):
+    def __init__(self, api: MelCloudDevice, measurement, definition):
         """Initialize the sensor."""
-        self._api = device
-        self._name_slug = device.name
+        self._api = api
+        self._name_slug = api.name
         self._measurement = measurement
         self._def = definition
 
@@ -100,3 +142,20 @@ class MelCloudSensor(Entity):
     def device_info(self):
         """Return a device description for device registry."""
         return self._api.device_info
+
+
+class AtwZoneSensor(MelDeviceSensor):
+    """Air-to-Air device sensor."""
+
+    def __init__(
+        self, api: MelCloudDevice, zone: Zone, measurement, definition,
+    ):
+        """Initialize the sensor."""
+        super().__init__(api, measurement, definition)
+        self._zone = zone
+        self._name_slug = f"{api.name} {zone.name}"
+
+    @property
+    def state(self):
+        """Return zone based state."""
+        return self._def[ATTR_VALUE_FN](self._zone)

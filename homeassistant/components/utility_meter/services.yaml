@@ -23,3 +23,13 @@ select_tariff:
     tariff:
       description: Name of the tariff to switch to
       example: 'offpeak'
+
+calibrate:
+  description: calibrates an utility meter.
+  fields:
+    entity_id:
+      description: Name of the entity to calibrate
+      example: 'utility_meter.energy'
+    value:
+      description: Value to which set the meter
+      example: '100'

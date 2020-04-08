@@ -1,6 +1,4 @@
 """Config flow for the Abode Security System component."""
-import logging
-
 from abodepy import Abode
 from abodepy.exceptions import AbodeException
 from requests.exceptions import ConnectTimeout, HTTPError
@@ -10,11 +8,9 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
-from .const import DEFAULT_CACHEDB, DOMAIN  # pylint: disable=unused-import
+from .const import DEFAULT_CACHEDB, DOMAIN, LOGGER  # pylint: disable=unused-import
 
 CONF_POLLING = "polling"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -32,7 +28,6 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
@@ -50,7 +45,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         except (AbodeException, ConnectTimeout, HTTPError) as ex:
-            _LOGGER.error("Unable to connect to Abode: %s", str(ex))
+            LOGGER.error("Unable to connect to Abode: %s", str(ex))
             if ex.errcode == 400:
                 return self._show_form({"base": "invalid_credentials"})
             return self._show_form({"base": "connection_error"})
@@ -76,7 +71,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
         if self._async_current_entries():
-            _LOGGER.warning("Only one configuration of abode is allowed.")
+            LOGGER.warning("Only one configuration of abode is allowed.")
             return self.async_abort(reason="single_instance_allowed")
 
         return await self.async_step_user(import_config)

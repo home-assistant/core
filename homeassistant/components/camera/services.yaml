@@ -68,18 +68,3 @@ record:
       description: (Optional) Target lookback period (in seconds) to include in addition to duration.  Only available if there is currently an active HLS stream.
       example: 4
 
-onvif_ptz:
-  description: Pan/Tilt/Zoom service for ONVIF camera.
-  fields:
-    entity_id:
-      description: Name(s) of entities to pan, tilt or zoom.
-      example: 'camera.living_room_camera'
-    pan:
-      description: "Direction of pan. Allowed values: LEFT, RIGHT."
-      example: 'LEFT'
-    tilt:
-      description: "Direction of tilt. Allowed values: DOWN, UP."
-      example: 'DOWN'
-    zoom:
-      description: "Zoom. Allowed values: ZOOM_IN, ZOOM_OUT"
-      example: "ZOOM_IN"

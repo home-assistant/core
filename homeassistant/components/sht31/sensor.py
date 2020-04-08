@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_NAME,
     PRECISION_TENTHS,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -140,7 +141,7 @@ class SHTSensorHumidity(SHTSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     def update(self):
         """Fetch humidity from the sensor."""

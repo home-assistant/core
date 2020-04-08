@@ -12,11 +12,27 @@
         },
         "error": {
             "cant_connect": "Konnt sech net mam Apparat verbannen. [Iwwerpr\u00e9ift Dokumentatioun] (https://www.home-assistant.io/integrations/vizio/) a stellt s\u00e9cher dass:\n- Den Apparat ass un\n- Den Apparat ass mam Netzwierk verbonnen\n- D'Optiounen d\u00e9i dir aginn hutt si korrekt\nier dir d'Verbindung nees prob\u00e9iert",
+            "complete_pairing failed": "Feeler beim ofschl\u00e9isse vun der Kopplung. Iwwerpr\u00e9if dass de PIN korrekt an da de Fernsee nach \u00ebmmer ugeschalt a mam Netzwierk verbonnen ass ier de n\u00e4chste Versuch gestart g\u00ebtt.",
             "host_exists": "Vizio Apparat mat d\u00ebsem Host ass scho konfigur\u00e9iert.",
             "name_exists": "Vizio Apparat mat d\u00ebsen Numm ass scho konfigur\u00e9iert.",
             "tv_needs_token": "Wann den Typ vum Apparat `tv`ass da g\u00ebtt ee g\u00ebltegen Acc\u00e8s Jeton ben\u00e9idegt."
         },
         "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "Um TV sollt e Code ugewisen ginn. G\u00ebff d\u00ebse Code an d'Form a fuer weider mam n\u00e4chste Schr\u00ebtt fir d'Kopplung ofzeschl\u00e9issen.",
+                "title": "Kopplungs Prozess ofschl\u00e9issen"
+            },
+            "pairing_complete": {
+                "description": "D\u00e4in Visio SmartCast Apparat ass elo mam Home Assistant verbonnen.",
+                "title": "Kopplung ofgeschloss"
+            },
+            "pairing_complete_import": {
+                "description": "D\u00e4in Visio SmartCast Apparat ass elo mam Home Assistant verbonnen.\n\nD\u00e4in Acc\u00e8s Jeton ass '**{access_token}**'.",
+                "title": "Kopplung ofgeschloss"
+            },
             "user": {
                 "data": {
                     "access_token": "Acc\u00e8ss Jeton",
@@ -24,6 +40,7 @@
                     "host": "<Host/IP>:<Port>",
                     "name": "Numm"
                 },
+                "description": "All Felder sinn noutwendeg ausser Acc\u00e8s Jeton. Wann keen Acc\u00e8s Jeton uginn ass, an den Typ vun Apparat ass 'TV', da g\u00ebtt e Kopplungs Prozess mam Apparat gestart fir een Acc\u00e8s Jeton z'erstellen.\n\nFir de Kopplung Prozess ofzesch\u00e9issen,ier op \"ofsch\u00e9cken\" klickt, pr\u00e9ift datt de Fernsee ugeschalt a mam Netzwierk verbonnen ass. Du muss och k\u00ebnnen op de Bildschierm gesinn.",
                 "title": "Vizo Smartcast ariichten"
             }
         },

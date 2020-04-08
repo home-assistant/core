@@ -2,6 +2,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from homeassistant.const import TIME_SECONDS
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -181,7 +182,7 @@ async def test_suffix(hass):
             "source": "sensor.bytes_per_second",
             "round": 2,
             "unit_prefix": "k",
-            "unit_time": "s",
+            "unit_time": TIME_SECONDS,
         }
     }
 

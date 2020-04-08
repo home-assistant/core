@@ -183,7 +183,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         encryption = config.get(CONF_PROXY_SSL)
         websocket = config.get(CONF_ENABLE_WEBSOCKET)
     else:
-        name = "{} ({})".format(DEFAULT_NAME, discovery_info.get("hostname"))
+        name = f"{DEFAULT_NAME} ({discovery_info.get('hostname')})"
         host = discovery_info.get("host")
         port = discovery_info.get("port")
         tcp_port = DEFAULT_TCP_PORT
@@ -286,9 +286,7 @@ class KodiDevice(MediaPlayerDevice):
         ws_protocol = "wss" if encryption else "ws"
 
         self._http_url = f"{http_protocol}://{host}:{port}/jsonrpc"
-        self._image_url = "{}://{}{}:{}/image".format(
-            http_protocol, image_auth_string, host, port
-        )
+        self._image_url = f"{http_protocol}://{image_auth_string}{host}:{port}/image"
         self._ws_url = f"{ws_protocol}://{host}:{tcp_port}/jsonrpc"
 
         self._http_server = jsonrpc_async.Server(self._http_url, **kwargs)
@@ -577,7 +575,7 @@ class KodiDevice(MediaPlayerDevice):
 
         url_components = urllib.parse.urlparse(thumbnail)
         if url_components.scheme == "image":
-            return "{}/{}".format(self._image_url, urllib.parse.quote_plus(thumbnail))
+            return f"{self._image_url}/{urllib.parse.quote_plus(thumbnail)}"
 
     @property
     def media_title(self):

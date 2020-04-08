@@ -8,7 +8,6 @@ import homeassistant.components.group as group
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
-    ATTR_HIDDEN,
     ATTR_ICON,
     STATE_HOME,
     STATE_NOT_HOME,
@@ -44,10 +43,7 @@ class TestComponentsGroup(unittest.TestCase):
         )
 
         assert (
-            STATE_ON
-            == self.hass.states.get(
-                group.ENTITY_ID_FORMAT.format("person_and_light")
-            ).state
+            STATE_ON == self.hass.states.get(f"{group.DOMAIN}.person_and_light").state
         )
 
     def test_setup_group_with_a_non_existing_state(self):
@@ -291,38 +287,28 @@ class TestComponentsGroup(unittest.TestCase):
         group_conf["second_group"] = {
             "entities": "light.Bowl, " + test_group.entity_id,
             "icon": "mdi:work",
-            "view": True,
-            "control": "hidden",
         }
         group_conf["test_group"] = "hello.world,sensor.happy"
         group_conf["empty_group"] = {"name": "Empty Group", "entities": None}
 
         setup_component(self.hass, "group", {"group": group_conf})
 
-        group_state = self.hass.states.get(
-            group.ENTITY_ID_FORMAT.format("second_group")
-        )
+        group_state = self.hass.states.get(f"{group.DOMAIN}.second_group")
         assert STATE_ON == group_state.state
         assert set((test_group.entity_id, "light.bowl")) == set(
             group_state.attributes["entity_id"]
         )
         assert group_state.attributes.get(group.ATTR_AUTO) is None
         assert "mdi:work" == group_state.attributes.get(ATTR_ICON)
-        assert group_state.attributes.get(group.ATTR_VIEW)
-        assert "hidden" == group_state.attributes.get(group.ATTR_CONTROL)
-        assert group_state.attributes.get(ATTR_HIDDEN)
         assert 1 == group_state.attributes.get(group.ATTR_ORDER)
 
-        group_state = self.hass.states.get(group.ENTITY_ID_FORMAT.format("test_group"))
+        group_state = self.hass.states.get(f"{group.DOMAIN}.test_group")
         assert STATE_UNKNOWN == group_state.state
         assert set(("sensor.happy", "hello.world")) == set(
             group_state.attributes["entity_id"]
         )
         assert group_state.attributes.get(group.ATTR_AUTO) is None
         assert group_state.attributes.get(ATTR_ICON) is None
-        assert group_state.attributes.get(group.ATTR_VIEW) is None
-        assert group_state.attributes.get(group.ATTR_CONTROL) is None
-        assert group_state.attributes.get(ATTR_HIDDEN) is None
         assert 2 == group_state.attributes.get(group.ATTR_ORDER)
 
     def test_groups_get_unique_names(self):
@@ -382,10 +368,7 @@ class TestComponentsGroup(unittest.TestCase):
         )
         self.hass.states.set("device_tracker.Adam", "cool_state_not_home")
         self.hass.block_till_done()
-        assert (
-            STATE_NOT_HOME
-            == self.hass.states.get(group.ENTITY_ID_FORMAT.format("peeps")).state
-        )
+        assert STATE_NOT_HOME == self.hass.states.get(f"{group.DOMAIN}.peeps").state
 
     def test_reloading_groups(self):
         """Test reloading the group config."""
@@ -394,11 +377,7 @@ class TestComponentsGroup(unittest.TestCase):
             "group",
             {
                 "group": {
-                    "second_group": {
-                        "entities": "light.Bowl",
-                        "icon": "mdi:work",
-                        "view": True,
-                    },
+                    "second_group": {"entities": "light.Bowl", "icon": "mdi:work"},
                     "test_group": "hello.world,sensor.happy",
                     "empty_group": {"name": "Empty Group", "entities": None},
                 }
@@ -420,13 +399,7 @@ class TestComponentsGroup(unittest.TestCase):
         with patch(
             "homeassistant.config.load_yaml_config_file",
             return_value={
-                "group": {
-                    "hello": {
-                        "entities": "light.Bowl",
-                        "icon": "mdi:work",
-                        "view": True,
-                    }
-                }
+                "group": {"hello": {"entities": "light.Bowl", "icon": "mdi:work"}}
             },
         ):
             common.reload(self.hass)
@@ -437,26 +410,6 @@ class TestComponentsGroup(unittest.TestCase):
             "group.hello",
         ]
         assert self.hass.bus.listeners["state_changed"] == 2
-
-    def test_changing_group_visibility(self):
-        """Test that a group can be hidden and shown."""
-        assert setup_component(
-            self.hass, "group", {"group": {"test_group": "hello.world,sensor.happy"}}
-        )
-
-        group_entity_id = group.ENTITY_ID_FORMAT.format("test_group")
-
-        # Hide the group
-        common.set_visibility(self.hass, group_entity_id, False)
-        self.hass.block_till_done()
-        group_state = self.hass.states.get(group_entity_id)
-        assert group_state.attributes.get(ATTR_HIDDEN)
-
-        # Show it again
-        common.set_visibility(self.hass, group_entity_id, True)
-        self.hass.block_till_done()
-        group_state = self.hass.states.get(group_entity_id)
-        assert group_state.attributes.get(ATTR_HIDDEN) is None
 
     def test_modify_group(self):
         """Test modifying a group."""
@@ -470,9 +423,7 @@ class TestComponentsGroup(unittest.TestCase):
         common.set_group(self.hass, "modify_group", icon="mdi:play")
         self.hass.block_till_done()
 
-        group_state = self.hass.states.get(
-            group.ENTITY_ID_FORMAT.format("modify_group")
-        )
+        group_state = self.hass.states.get(f"{group.DOMAIN}.modify_group")
 
         assert self.hass.states.entity_ids() == ["group.modify_group"]
         assert group_state.attributes.get(ATTR_ICON) == "mdi:play"
@@ -502,20 +453,12 @@ async def test_service_group_set_group_remove_group(hass):
     assert group_state.attributes[group.ATTR_AUTO]
     assert group_state.attributes["friendly_name"] == "Test"
 
-    common.async_set_group(
-        hass,
-        "user_test_group",
-        view=True,
-        visible=False,
-        entity_ids=["test.entity_bla1"],
-    )
+    common.async_set_group(hass, "user_test_group", entity_ids=["test.entity_bla1"])
     await hass.async_block_till_done()
 
     group_state = hass.states.get("group.user_test_group")
     assert group_state
-    assert group_state.attributes[group.ATTR_VIEW]
     assert group_state.attributes[group.ATTR_AUTO]
-    assert group_state.attributes["hidden"]
     assert group_state.attributes["friendly_name"] == "Test"
     assert list(group_state.attributes["entity_id"]) == ["test.entity_bla1"]
 
@@ -524,19 +467,15 @@ async def test_service_group_set_group_remove_group(hass):
         "user_test_group",
         icon="mdi:camera",
         name="Test2",
-        control="hidden",
         add=["test.entity_id2"],
     )
     await hass.async_block_till_done()
 
     group_state = hass.states.get("group.user_test_group")
     assert group_state
-    assert group_state.attributes[group.ATTR_VIEW]
     assert group_state.attributes[group.ATTR_AUTO]
-    assert group_state.attributes["hidden"]
     assert group_state.attributes["friendly_name"] == "Test2"
     assert group_state.attributes["icon"] == "mdi:camera"
-    assert group_state.attributes[group.ATTR_CONTROL] == "hidden"
     assert sorted(list(group_state.attributes["entity_id"])) == sorted(
         ["test.entity_bla1", "test.entity_id2"]
     )

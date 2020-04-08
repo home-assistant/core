@@ -28,6 +28,7 @@ from homeassistant.components.here_travel_time.sensor import (
     ROUTE_MODE_FASTEST,
     ROUTE_MODE_SHORTEST,
     SCAN_INTERVAL,
+    TIME_MINUTES,
     TRAFFIC_MODE_DISABLED,
     TRAFFIC_MODE_ENABLED,
     TRAVEL_MODE_BICYCLE,
@@ -36,7 +37,6 @@ from homeassistant.components.here_travel_time.sensor import (
     TRAVEL_MODE_PUBLIC,
     TRAVEL_MODE_PUBLIC_TIME_TABLE,
     TRAVEL_MODE_TRUCK,
-    UNIT_OF_MEASUREMENT,
 )
 from homeassistant.const import ATTR_ICON, EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
@@ -83,7 +83,7 @@ def _build_mock_url(origin, destination, modes, api_key, departure):
 def _assert_truck_sensor(sensor):
     """Assert that states and attributes are correct for truck_response."""
     assert sensor.state == "14"
-    assert sensor.attributes.get("unit_of_measurement") == UNIT_OF_MEASUREMENT
+    assert sensor.attributes.get("unit_of_measurement") == TIME_MINUTES
 
     assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
     assert sensor.attributes.get(ATTR_DURATION) == 13.533333333333333
@@ -177,7 +177,7 @@ async def test_car(hass, requests_mock_car_disabled_response):
 
     sensor = hass.states.get("sensor.test")
     assert sensor.state == "30"
-    assert sensor.attributes.get("unit_of_measurement") == UNIT_OF_MEASUREMENT
+    assert sensor.attributes.get("unit_of_measurement") == TIME_MINUTES
     assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
     assert sensor.attributes.get(ATTR_DURATION) == 30.05
     assert sensor.attributes.get(ATTR_DISTANCE) == 23.903
@@ -381,7 +381,7 @@ async def test_public_transport(hass, requests_mock_credentials_check):
 
     sensor = hass.states.get("sensor.test")
     assert sensor.state == "89"
-    assert sensor.attributes.get("unit_of_measurement") == UNIT_OF_MEASUREMENT
+    assert sensor.attributes.get("unit_of_measurement") == TIME_MINUTES
 
     assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
     assert sensor.attributes.get(ATTR_DURATION) == 89.16666666666667
@@ -431,7 +431,7 @@ async def test_public_transport_time_table(hass, requests_mock_credentials_check
 
     sensor = hass.states.get("sensor.test")
     assert sensor.state == "80"
-    assert sensor.attributes.get("unit_of_measurement") == UNIT_OF_MEASUREMENT
+    assert sensor.attributes.get("unit_of_measurement") == TIME_MINUTES
 
     assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
     assert sensor.attributes.get(ATTR_DURATION) == 79.73333333333333
@@ -481,7 +481,7 @@ async def test_pedestrian(hass, requests_mock_credentials_check):
 
     sensor = hass.states.get("sensor.test")
     assert sensor.state == "211"
-    assert sensor.attributes.get("unit_of_measurement") == UNIT_OF_MEASUREMENT
+    assert sensor.attributes.get("unit_of_measurement") == TIME_MINUTES
 
     assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
     assert sensor.attributes.get(ATTR_DURATION) == 210.51666666666668
@@ -532,7 +532,7 @@ async def test_bicycle(hass, requests_mock_credentials_check):
 
     sensor = hass.states.get("sensor.test")
     assert sensor.state == "55"
-    assert sensor.attributes.get("unit_of_measurement") == UNIT_OF_MEASUREMENT
+    assert sensor.attributes.get("unit_of_measurement") == TIME_MINUTES
 
     assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
     assert sensor.attributes.get(ATTR_DURATION) == 54.86666666666667

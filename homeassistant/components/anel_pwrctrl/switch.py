@@ -75,9 +75,7 @@ class PwrCtrlSwitch(SwitchDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the device."""
-        return "{device}-{switch_idx}".format(
-            device=self._port.device.host, switch_idx=self._port.get_index()
-        )
+        return f"{self._port.device.host}-{self._port.get_index()}"
 
     @property
     def name(self):

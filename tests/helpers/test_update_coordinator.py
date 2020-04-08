@@ -1,7 +1,9 @@
 """Tests for the update coordinator."""
+import asyncio
 from datetime import timedelta
 import logging
 
+import aiohttp
 from asynctest import CoroutineMock, Mock
 import pytest
 
@@ -70,25 +72,30 @@ async def test_request_refresh(crd):
     assert crd.last_update_success is True
 
 
-async def test_refresh_fail(crd, caplog):
-    """Test a failing update function."""
-    crd.update_method = CoroutineMock(side_effect=update_coordinator.UpdateFailed)
+@pytest.mark.parametrize(
+    "err_msg",
+    [
+        (asyncio.TimeoutError, "Timeout fetching test data"),
+        (aiohttp.ClientError, "Error requesting test data"),
+        (update_coordinator.UpdateFailed, "Error fetching test data"),
+    ],
+)
+async def test_refresh_known_errors(err_msg, crd, caplog):
+    """Test raising known errors."""
+    crd.update_method = CoroutineMock(side_effect=err_msg[0])
 
     await crd.async_refresh()
 
     assert crd.data is None
     assert crd.last_update_success is False
-    assert "Error fetching test data" in caplog.text
+    assert err_msg[1] in caplog.text
 
-    crd.update_method = CoroutineMock(return_value=1)
 
+async def test_refresh_fail_unknown(crd, caplog):
+    """Test raising unknown error."""
     await crd.async_refresh()
 
-    assert crd.data == 1
-    assert crd.last_update_success is True
-
     crd.update_method = CoroutineMock(side_effect=ValueError)
-    caplog.clear()
 
     await crd.async_refresh()
 

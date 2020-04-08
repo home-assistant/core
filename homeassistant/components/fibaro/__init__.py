@@ -247,8 +247,8 @@ class FibaroController:
                 room_name = self._room_map[device.roomID].name
             device.room_name = room_name
             device.friendly_name = f"{room_name} {device.name}"
-            device.ha_id = "scene_{}_{}_{}".format(
-                slugify(room_name), slugify(device.name), device.id
+            device.ha_id = (
+                f"scene_{slugify(room_name)}_{slugify(device.name)}_{device.id}"
             )
             device.unique_id_str = f"{self.hub_serial}.scene.{device.id}"
             self._scene_map[device.id] = device
@@ -269,8 +269,8 @@ class FibaroController:
                     room_name = self._room_map[device.roomID].name
                 device.room_name = room_name
                 device.friendly_name = f"{room_name} {device.name}"
-                device.ha_id = "{}_{}_{}".format(
-                    slugify(room_name), slugify(device.name), device.id
+                device.ha_id = (
+                    f"{slugify(room_name)}_{slugify(device.name)}_{device.id}"
                 )
                 if (
                     device.enabled
@@ -312,6 +312,14 @@ class FibaroController:
 
 def setup(hass, base_config):
     """Set up the Fibaro Component."""
+    if DOMAIN not in base_config:
+        # AIS new config_flow way
+        hass.data[DOMAIN] = {}
+        hass.data[DOMAIN][CONF_GATEWAYS] = {}
+        hass.data[FIBARO_CONTROLLERS] = {}
+        return True
+
+    # old configuration.yaml way
     gateways = base_config[DOMAIN][CONF_GATEWAYS]
     hass.data[FIBARO_CONTROLLERS] = {}
 
@@ -362,6 +370,25 @@ class FibaroDevice(Entity):
     def _update_callback(self):
         """Update the state."""
         self.schedule_update_ha_state(True)
+
+    @property
+    def device_info(self):
+        sw_version = 1
+        manufacturer = "Fibaro"
+        if "properties" in self.fibaro_device:
+            if "zwaveVersion" in self.fibaro_device.properties:
+                sw_version = self.fibaro_device.properties.zwaveVersion
+            if "zwaveCompany" in self.fibaro_device.properties:
+                manufacturer = self.fibaro_device.properties.zwaveCompany
+
+        return {
+            "identifiers": {(DOMAIN, self.ha_id)},
+            "name": self._name,
+            "manufacturer": manufacturer,
+            "model": self.fibaro_device.type,
+            "sw_version": sw_version,
+            "via_device": None,
+        }
 
     @property
     def level(self):
@@ -491,3 +518,69 @@ class FibaroDevice(Entity):
 
         attr["fibaro_id"] = self.fibaro_device.id
         return attr
+
+
+# AIS
+async def async_setup_entry(hass, config_entry):
+    """Set up config entry."""
+    import threading
+
+    # discover_devices is a sync function.
+    t = threading.Thread(target=discover_devices, args=(hass, config_entry))
+    t.start()
+
+    return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload a config entry."""
+    # TODO await hass.config_entries.async_forward_entry_unload(config_entry, "xxx")
+    return True
+
+
+def discover_devices(hass, config_entry):
+    """
+    Run periodically to discover new devices.
+
+    Currently it's only run at startup.
+    """
+    # ------------
+    gateway = {
+        CONF_URL: config_entry.data[CONF_URL],
+        CONF_USERNAME: config_entry.data[CONF_USERNAME],
+        CONF_PASSWORD: config_entry.data[CONF_PASSWORD],
+        CONF_PLUGINS: False,
+        CONF_DEVICE_CONFIG: {},
+        CONF_EXCLUDE: [],
+    }
+
+    def stop_fibaro(event):
+        """Stop Fibaro Thread."""
+        _LOGGER.info("Shutting down Fibaro connection")
+        for controller in hass.data[FIBARO_CONTROLLERS].values():
+            controller.disable_state_handler()
+
+    hass.data[FIBARO_DEVICES] = {}
+    for component in FIBARO_COMPONENTS:
+        hass.data[FIBARO_DEVICES][component] = []
+
+    controller = FibaroController(gateway)
+    if controller.connect():
+        hass.data[FIBARO_CONTROLLERS][controller.hub_serial] = controller
+        for component in FIBARO_COMPONENTS:
+            hass.data[FIBARO_DEVICES][component].extend(
+                controller.fibaro_devices[component]
+            )
+
+    if hass.data[FIBARO_CONTROLLERS]:
+        for component in FIBARO_COMPONENTS:
+            # discovery.load_platform(hass, component, DOMAIN, {}, config_entry)
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(config_entry, component)
+            )
+        for controller in hass.data[FIBARO_CONTROLLERS].values():
+            controller.enable_state_handler()
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_fibaro)
+        return True
+
+    return False

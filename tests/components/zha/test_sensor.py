@@ -6,7 +6,6 @@ import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.homeautomation as homeautomation
 import zigpy.zcl.clusters.measurement as measurement
 import zigpy.zcl.clusters.smartenergy as smartenergy
-import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.sensor import DOMAIN
 import homeassistant.config as config_util
@@ -19,6 +18,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers import restore_state
 from homeassistant.util import dt as dt_util
@@ -27,38 +27,41 @@ from .common import (
     async_enable_traffic,
     async_test_rejoin,
     find_entity_id,
-    make_attribute,
-    make_zcl_header,
+    send_attribute_report,
+    send_attributes_report,
 )
 
 
 async def async_test_humidity(hass, cluster, entity_id):
     """Test humidity sensor."""
-    await send_attribute_report(hass, cluster, 0, 1000)
-    assert_state(hass, entity_id, "10.0", "%")
+    await send_attributes_report(hass, cluster, {1: 1, 0: 1000, 2: 100})
+    assert_state(hass, entity_id, "10.0", UNIT_PERCENTAGE)
 
 
 async def async_test_temperature(hass, cluster, entity_id):
     """Test temperature sensor."""
-    await send_attribute_report(hass, cluster, 0, 2900)
+    await send_attributes_report(hass, cluster, {1: 1, 0: 2900, 2: 100})
     assert_state(hass, entity_id, "29.0", "°C")
 
 
 async def async_test_pressure(hass, cluster, entity_id):
     """Test pressure sensor."""
-    await send_attribute_report(hass, cluster, 0, 1000)
+    await send_attributes_report(hass, cluster, {1: 1, 0: 1000, 2: 10000})
+    assert_state(hass, entity_id, "1000", "hPa")
+
+    await send_attributes_report(hass, cluster, {0: 1000, 20: -1, 16: 10000})
     assert_state(hass, entity_id, "1000", "hPa")
 
 
 async def async_test_illuminance(hass, cluster, entity_id):
     """Test illuminance sensor."""
-    await send_attribute_report(hass, cluster, 0, 10)
+    await send_attributes_report(hass, cluster, {1: 1, 0: 10, 2: 20})
     assert_state(hass, entity_id, "1.0", "lx")
 
 
 async def async_test_metering(hass, cluster, entity_id):
     """Test metering sensor."""
-    await send_attribute_report(hass, cluster, 1024, 12345)
+    await send_attributes_report(hass, cluster, {1025: 1, 1024: 12345, 1026: 100})
     assert_state(hass, entity_id, "12345.0", "unknown")
 
 
@@ -72,17 +75,17 @@ async def async_test_electrical_measurement(hass, cluster, entity_id):
         new_callable=mock.PropertyMock,
     ) as divisor_mock:
         divisor_mock.return_value = 1
-        await send_attribute_report(hass, cluster, 1291, 100)
+        await send_attributes_report(hass, cluster, {0: 1, 1291: 100, 10: 1000})
         assert_state(hass, entity_id, "100", "W")
 
-        await send_attribute_report(hass, cluster, 1291, 99)
+        await send_attributes_report(hass, cluster, {0: 1, 1291: 99, 10: 1000})
         assert_state(hass, entity_id, "99", "W")
 
         divisor_mock.return_value = 10
-        await send_attribute_report(hass, cluster, 1291, 1000)
+        await send_attributes_report(hass, cluster, {0: 1, 1291: 1000, 10: 5000})
         assert_state(hass, entity_id, "100", "W")
 
-        await send_attribute_report(hass, cluster, 1291, 99)
+        await send_attributes_report(hass, cluster, {0: 1, 1291: 99, 10: 5000})
         assert_state(hass, entity_id, "9.9", "W")
 
 
@@ -138,18 +141,6 @@ async def test_sensor(
 
     # test rejoin
     await async_test_rejoin(hass, zigpy_device, [cluster], (report_count,))
-
-
-async def send_attribute_report(hass, cluster, attrid, value):
-    """Cause the sensor to receive an attribute report from the network.
-
-    This is to simulate the normal device communication that happens when a
-    device is paired to the zigbee network.
-    """
-    attr = make_attribute(attrid, value)
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
 
 
 def assert_state(hass, entity_id, state, unit_of_measurement):

@@ -7,7 +7,7 @@ change_setting:
   fields:
     setting: {description: Setting to change., example: beeper_mute}
     value: {description: Value of the setting., example: '1'}
-trigger_quick_action:
-  description: Trigger an Abode quick action.
+trigger_automation:
+  description: Trigger an Abode automation.
   fields:
-    entity_id: {description: Entity id of the quick action to trigger., example: binary_sensor.home_quick_action}
+    entity_id: {description: Entity id of the automation to trigger., example: switch.my_automation}

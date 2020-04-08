@@ -1,13 +1,15 @@
 """Support for Fibaro sensors."""
 import logging
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -20,13 +22,31 @@ SENSOR_TYPES = {
         None,
         DEVICE_CLASS_TEMPERATURE,
     ],
-    "com.fibaro.smokeSensor": ["Smoke", "ppm", "mdi:fire", None],
-    "CO2": ["CO2", "ppm", "mdi:cloud", None],
-    "com.fibaro.humiditySensor": ["Humidity", "%", None, DEVICE_CLASS_HUMIDITY],
+    "com.fibaro.smokeSensor": [
+        "Smoke",
+        CONCENTRATION_PARTS_PER_MILLION,
+        "mdi:fire",
+        None,
+    ],
+    "CO2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:cloud", None],
+    "com.fibaro.humiditySensor": [
+        "Humidity",
+        UNIT_PERCENTAGE,
+        None,
+        DEVICE_CLASS_HUMIDITY,
+    ],
     "com.fibaro.lightSensor": ["Light", "lx", None, DEVICE_CLASS_ILLUMINANCE],
 }
 
 _LOGGER = logging.getLogger(__name__)
+
+
+# Ais dom
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Fibaro switches."""
+    async_add_entities(
+        [FibaroSensor(device) for device in hass.data[FIBARO_DEVICES]["sensor"]], True
+    )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -47,7 +67,7 @@ class FibaroSensor(FibaroDevice, Entity):
         self.current_value = None
         self.last_changed_time = None
         super().__init__(fibaro_device)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        self.entity_id = f"{DOMAIN}.{self.ha_id}"
         if fibaro_device.type in SENSOR_TYPES:
             self._unit = SENSOR_TYPES[fibaro_device.type][1]
             self._icon = SENSOR_TYPES[fibaro_device.type][2]

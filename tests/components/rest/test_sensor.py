@@ -559,6 +559,39 @@ class TestRestSensor(unittest.TestCase):
         assert "12556" == self.sensor.device_state_attributes["ver"]
         assert "bogus" == self.sensor.state
 
+    def test_update_with_application_xml_convert_json_attrs_with_jsonattr_template(
+        self,
+    ):
+        """Test attributes get extracted from a JSON result that was converted from XML with application/xml mime type."""
+        json_attrs_path = "$.main"
+        value_template = template("{{ value_json.main.dog }}")
+        value_template.hass = self.hass
+
+        self.rest.update = Mock(
+            "rest.RestData.update",
+            side_effect=self.update_side_effect(
+                "<main><dog>1</dog><cat>3</cat></main>",
+                CaseInsensitiveDict({"Content-Type": "application/xml"}),
+            ),
+        )
+        self.sensor = rest.RestSensor(
+            self.hass,
+            self.rest,
+            self.name,
+            self.unit_of_measurement,
+            self.device_class,
+            value_template,
+            ["dog", "cat"],
+            self.force_update,
+            self.resource_template,
+            json_attrs_path,
+        )
+
+        self.sensor.update()
+        assert "3" == self.sensor.device_state_attributes["cat"]
+        assert "1" == self.sensor.device_state_attributes["dog"]
+        assert "1" == self.sensor.state
+
     @patch("homeassistant.components.rest.sensor._LOGGER")
     def test_update_with_xml_convert_bad_xml(self, mock_logger):
         """Test attributes get extracted from a XML result with bad xml."""
@@ -639,7 +672,7 @@ class TestRestData(unittest.TestCase):
         self.rest.update()
         assert "test data" == self.rest.data
 
-    @patch("requests.request", side_effect=RequestException)
+    @patch("requests.Session.request", side_effect=RequestException)
     def test_update_request_exception(self, mock_req):
         """Test update when a request exception occurs."""
         self.rest.update()

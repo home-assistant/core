@@ -423,7 +423,10 @@ async def test_event_handler_dispatches_updated_devices(
         data={"codeId": "1"},
     )
     request = event_request_factory(device_ids=device_ids, events=[event])
-    config_entry.data[CONF_INSTALLED_APP_ID] = request.installed_app_id
+    config_entry.data = {
+        **config_entry.data,
+        CONF_INSTALLED_APP_ID: request.installed_app_id,
+    }
     called = False
 
     def signal(ids):
@@ -479,7 +482,10 @@ async def test_event_handler_fires_button_events(
         device.device_id, capability="button", attribute="button", value="pushed"
     )
     request = event_request_factory(events=[event])
-    config_entry.data[CONF_INSTALLED_APP_ID] = request.installed_app_id
+    config_entry.data = {
+        **config_entry.data,
+        CONF_INSTALLED_APP_ID: request.installed_app_id,
+    }
     called = False
 
     def handler(evt):

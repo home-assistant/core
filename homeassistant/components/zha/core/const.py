@@ -13,11 +13,14 @@ from homeassistant.components.switch import DOMAIN as SWITCH
 
 ATTR_ARGS = "args"
 ATTR_ATTRIBUTE = "attribute"
+ATTR_ATTRIBUTE_ID = "attribute_id"
+ATTR_ATTRIBUTE_NAME = "attribute_name"
 ATTR_AVAILABLE = "available"
 ATTR_CLUSTER_ID = "cluster_id"
 ATTR_CLUSTER_TYPE = "cluster_type"
 ATTR_COMMAND = "command"
 ATTR_COMMAND_TYPE = "command_type"
+ATTR_DEVICE_IEEE = "device_ieee"
 ATTR_DEVICE_TYPE = "device_type"
 ATTR_ENDPOINT_ID = "endpoint_id"
 ATTR_IEEE = "ieee"
@@ -36,6 +39,7 @@ ATTR_QUIRK_CLASS = "quirk_class"
 ATTR_RSSI = "rssi"
 ATTR_SIGNATURE = "signature"
 ATTR_TYPE = "type"
+ATTR_UNIQUE_ID = "unique_id"
 ATTR_VALUE = "value"
 ATTR_WARNING_DEVICE_DURATION = "duration"
 ATTR_WARNING_DEVICE_MODE = "mode"
@@ -47,6 +51,7 @@ BAUD_RATES = [2400, 4800, 9600, 14400, 19200, 38400, 57600, 115200, 128000, 2560
 BINDINGS = "bindings"
 
 CHANNEL_ACCELEROMETER = "accelerometer"
+CHANNEL_ANALOG_INPUT = "analog_input"
 CHANNEL_ATTRIBUTE = "attribute"
 CHANNEL_BASIC = "basic"
 CHANNEL_COLOR = "light_color"
@@ -57,6 +62,7 @@ CHANNEL_EVENT_RELAY = "event_relay"
 CHANNEL_FAN = "fan"
 CHANNEL_HUMIDITY = "humidity"
 CHANNEL_IAS_WD = "ias_wd"
+CHANNEL_IDENTIFY = "identify"
 CHANNEL_ILLUMINANCE = "illuminance"
 CHANNEL_LEVEL = ATTR_LEVEL
 CHANNEL_MULTISTATE_INPUT = "multistate_input"
@@ -92,6 +98,7 @@ DATA_ZHA_BRIDGE_ID = "zha_bridge_id"
 DATA_ZHA_CORE_EVENTS = "zha_core_events"
 DATA_ZHA_DISPATCHERS = "zha_dispatchers"
 DATA_ZHA_GATEWAY = "zha_gateway"
+DATA_ZHA_PLATFORM_LOADED = "platform_loaded"
 
 DEBUG_COMP_BELLOWS = "bellows"
 DEBUG_COMP_ZHA = "homeassistant.components.zha"
@@ -192,6 +199,7 @@ SENSOR_PRESSURE = CHANNEL_PRESSURE
 SENSOR_TEMPERATURE = CHANNEL_TEMPERATURE
 SENSOR_TYPE = "sensor_type"
 
+SIGNAL_ADD_ENTITIES = "zha_add_new_entities"
 SIGNAL_ATTR_UPDATED = "attribute_updated"
 SIGNAL_AVAILABLE = "available"
 SIGNAL_MOVE_LEVEL = "move_level"
@@ -243,3 +251,9 @@ ZHA_GW_MSG_LOG_OUTPUT = "log_output"
 ZHA_GW_MSG_RAW_INIT = "raw_device_initialized"
 ZHA_GW_RADIO = "radio"
 ZHA_GW_RADIO_DESCRIPTION = "radio_description"
+
+EFFECT_BLINK = 0x00
+EFFECT_BREATHE = 0x01
+EFFECT_OKAY = 0x02
+
+EFFECT_DEFAULT_VARIANT = 0x00

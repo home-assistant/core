@@ -109,7 +109,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-# pylint: disable=too-many-ancestors
 class AmcrestChecker(Http):
     """amcrest.Http wrapper for catching errors."""
 

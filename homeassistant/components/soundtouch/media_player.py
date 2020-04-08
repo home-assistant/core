@@ -22,11 +22,13 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    EVENT_HOMEASSISTANT_START,
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -47,6 +49,8 @@ MAP_STATUS = {
 }
 
 DATA_SOUNDTOUCH = "soundtouch"
+ATTR_SOUNDTOUCH_GROUP = "soundtouch_group"
+ATTR_SOUNDTOUCH_ZONE = "soundtouch_zone"
 
 SOUNDTOUCH_PLAY_EVERYWHERE = vol.Schema({vol.Required("master"): cv.entity_id})
 
@@ -103,7 +107,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         remote_config = {"id": "ha.component.soundtouch", "host": host, "port": port}
         bose_soundtouch_entity = SoundTouchDevice(None, remote_config)
         hass.data[DATA_SOUNDTOUCH].append(bose_soundtouch_entity)
-        add_entities([bose_soundtouch_entity])
+        add_entities([bose_soundtouch_entity], True)
     else:
         name = config.get(CONF_NAME)
         remote_config = {
@@ -113,7 +117,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         }
         bose_soundtouch_entity = SoundTouchDevice(name, remote_config)
         hass.data[DATA_SOUNDTOUCH].append(bose_soundtouch_entity)
-        add_entities([bose_soundtouch_entity])
+        add_entities([bose_soundtouch_entity], True)
 
     def service_handle(service):
         """Handle the applying of a service."""
@@ -191,9 +195,10 @@ class SoundTouchDevice(MediaPlayerDevice):
             self._name = self._device.config.name
         else:
             self._name = name
-        self._status = self._device.status()
-        self._volume = self._device.volume()
+        self._status = None
+        self._volume = None
         self._config = config
+        self._zone = None
 
     @property
     def config(self):
@@ -209,6 +214,7 @@ class SoundTouchDevice(MediaPlayerDevice):
         """Retrieve the latest data."""
         self._status = self._device.status()
         self._volume = self._device.volume()
+        self._zone = self.get_zone_info()
 
     @property
     def volume_level(self):
@@ -317,6 +323,18 @@ class SoundTouchDevice(MediaPlayerDevice):
         """Album name of current playing media."""
         return self._status.album
 
+    async def async_added_to_hass(self):
+        """Populate zone info which requires entity_id."""
+
+        @callback
+        def async_update_on_start(event):
+            """Schedule an update when all platform entities have been added."""
+            self.async_schedule_update_ha_state(True)
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, async_update_on_start
+        )
+
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         _LOGGER.debug("Starting media with media_id: %s", media_id)
@@ -369,7 +387,13 @@ class SoundTouchDevice(MediaPlayerDevice):
             _LOGGER.info(
                 "Removing slaves from zone with master %s", self._device.config.name
             )
-            self._device.remove_zone_slave([slave.device for slave in slaves])
+            # SoundTouch API seems to have a bug and won't remove slaves if there are
+            # more than one in the payload. Therefore we have to loop over all slaves
+            # and remove them individually
+            for slave in slaves:
+                # make sure to not try to remove the master (aka current device)
+                if slave.entity_id != self.entity_id:
+                    self._device.remove_zone_slave([slave.device])
 
     def add_zone_slave(self, slaves):
         """
@@ -387,3 +411,62 @@ class SoundTouchDevice(MediaPlayerDevice):
                 "Adding slaves to zone with master %s", self._device.config.name
             )
             self._device.add_zone_slave([slave.device for slave in slaves])
+
+    @property
+    def device_state_attributes(self):
+        """Return entity specific state attributes."""
+        attributes = {}
+
+        if self._zone and "master" in self._zone:
+            attributes[ATTR_SOUNDTOUCH_ZONE] = self._zone
+            # Compatibility with how other components expose their groups (like SONOS).
+            # First entry is the master, others are slaves
+            group_members = [self._zone["master"]] + self._zone["slaves"]
+            attributes[ATTR_SOUNDTOUCH_GROUP] = group_members
+
+        return attributes
+
+    def get_zone_info(self):
+        """Return the current zone info."""
+        zone_status = self._device.zone_status()
+        if not zone_status:
+            return None
+
+        # Due to a bug in the SoundTouch API itself client devices do NOT return their
+        # siblings as part of the "slaves" list. Only the master has the full list of
+        # slaves for some reason. To compensate for this shortcoming we have to fetch
+        # the zone info from the master when the current device is a slave until this is
+        # fixed in the SoundTouch API or libsoundtouch, or of course until somebody has a
+        # better idea on how to fix this
+        if zone_status.is_master:
+            return self._build_zone_info(self.entity_id, zone_status.slaves)
+
+        master_instance = self._get_instance_by_ip(zone_status.master_ip)
+        master_zone_status = master_instance.device.zone_status()
+        return self._build_zone_info(
+            master_instance.entity_id, master_zone_status.slaves
+        )
+
+    def _get_instance_by_ip(self, ip_address):
+        """Search and return a SoundTouchDevice instance by it's IP address."""
+        for instance in self.hass.data[DATA_SOUNDTOUCH]:
+            if instance and instance.config["host"] == ip_address:
+                return instance
+        return None
+
+    def _build_zone_info(self, master, zone_slaves):
+        """Build the exposed zone attributes."""
+        slaves = []
+
+        for slave in zone_slaves:
+            slave_instance = self._get_instance_by_ip(slave.device_ip)
+            if slave_instance:
+                slaves.append(slave_instance.entity_id)
+
+        attributes = {
+            "master": master,
+            "is_master": master == self.entity_id,
+            "slaves": slaves,
+        }
+
+        return attributes

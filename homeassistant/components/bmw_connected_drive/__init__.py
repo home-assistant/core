@@ -120,7 +120,6 @@ class BMWConnectedDriveAccount:
         self, username: str, password: str, region_str: str, name: str, read_only
     ) -> None:
         """Initialize account."""
-
         region = get_region_from_name(region_str)
 
         self.read_only = read_only

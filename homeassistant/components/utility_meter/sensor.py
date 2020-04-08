@@ -3,6 +3,8 @@ from datetime import date, timedelta
 from decimal import Decimal, DecimalException
 import logging
 
+import voluptuous as vol
+
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -11,6 +13,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
     async_track_state_change,
@@ -20,6 +23,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
 from .const import (
+    ATTR_VALUE,
     CONF_METER,
     CONF_METER_NET_CONSUMPTION,
     CONF_METER_OFFSET,
@@ -32,6 +36,7 @@ from .const import (
     HOURLY,
     MONTHLY,
     QUARTERLY,
+    SERVICE_CALIBRATE_METER,
     SIGNAL_RESET_METER,
     WEEKLY,
     YEARLY,
@@ -85,6 +90,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
     async_add_entities(meters)
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_CALIBRATE_METER,
+        {vol.Required(ATTR_VALUE): vol.Coerce(float)},
+        "async_calibrate",
+    )
 
 
 class UtilityMeterSensor(RestoreEntity):
@@ -205,6 +218,12 @@ class UtilityMeterSensor(RestoreEntity):
         self._last_period = str(self._state)
         self._state = 0
         await self.async_update_ha_state()
+
+    async def async_calibrate(self, value):
+        """Calibrate the Utility Meter with a given value."""
+        _LOGGER.debug("Calibrate %s = %s", self._name, value)
+        self._state = Decimal(value)
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""

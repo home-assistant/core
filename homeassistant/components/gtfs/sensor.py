@@ -143,7 +143,7 @@ def get_next_departure(
         tomorrow_where = f"OR calendar.{tomorrow_name} = 1"
         tomorrow_order = f"calendar.{tomorrow_name} DESC,"
 
-    sql_query = """
+    sql_query = f"""
         SELECT trip.trip_id, trip.route_id,
                time(origin_stop_time.arrival_time) AS origin_arrival_time,
                time(origin_stop_time.departure_time) AS origin_depart_time,
@@ -162,8 +162,8 @@ def get_next_departure(
                destination_stop_time.stop_headsign AS dest_stop_headsign,
                destination_stop_time.stop_sequence AS dest_stop_sequence,
                destination_stop_time.timepoint AS dest_stop_timepoint,
-               calendar.{yesterday_name} AS yesterday,
-               calendar.{today_name} AS today,
+               calendar.{yesterday.strftime("%A").lower()} AS yesterday,
+               calendar.{now.strftime("%A").lower()} AS today,
                {tomorrow_select}
                calendar.start_date AS start_date,
                calendar.end_date AS end_date
@@ -178,8 +178,8 @@ def get_next_departure(
                    ON trip.trip_id = destination_stop_time.trip_id
         INNER JOIN stops end_station
                    ON destination_stop_time.stop_id = end_station.stop_id
-        WHERE (calendar.{yesterday_name} = 1
-               OR calendar.{today_name} = 1
+        WHERE (calendar.{yesterday.strftime("%A").lower()} = 1
+               OR calendar.{now.strftime("%A").lower()} = 1
                {tomorrow_where}
                )
         AND start_station.stop_id = :origin_station_id
@@ -187,18 +187,12 @@ def get_next_departure(
         AND origin_stop_sequence < dest_stop_sequence
         AND calendar.start_date <= :today
         AND calendar.end_date >= :today
-        ORDER BY calendar.{yesterday_name} DESC,
-                 calendar.{today_name} DESC,
+        ORDER BY calendar.{yesterday.strftime("%A").lower()} DESC,
+                 calendar.{now.strftime("%A").lower()} DESC,
                  {tomorrow_order}
                  origin_stop_time.departure_time
         LIMIT :limit
-        """.format(
-        yesterday_name=yesterday.strftime("%A").lower(),
-        today_name=now.strftime("%A").lower(),
-        tomorrow_select=tomorrow_select,
-        tomorrow_where=tomorrow_where,
-        tomorrow_order=tomorrow_order,
-    )
+        """
     result = schedule.engine.execute(
         text(sql_query),
         origin_station_id=start_station_id,
@@ -220,7 +214,7 @@ def get_next_departure(
             if yesterday_start is None:
                 yesterday_start = row["origin_depart_date"]
             if yesterday_start != row["origin_depart_date"]:
-                idx = "{} {}".format(now_date, row["origin_depart_time"])
+                idx = f"{now_date} {row['origin_depart_time']}"
                 timetable[idx] = {**row, **extras}
                 yesterday_last = idx
 
@@ -233,7 +227,7 @@ def get_next_departure(
                 idx_prefix = now_date
             else:
                 idx_prefix = tomorrow_date
-            idx = "{} {}".format(idx_prefix, row["origin_depart_time"])
+            idx = f"{idx_prefix} {row['origin_depart_time']}"
             timetable[idx] = {**row, **extras}
             today_last = idx
 
@@ -247,7 +241,7 @@ def get_next_departure(
                 tomorrow_start = row["origin_depart_date"]
                 extras["first"] = True
             if tomorrow_start == row["origin_depart_date"]:
-                idx = "{} {}".format(tomorrow_date, row["origin_depart_time"])
+                idx = f"{tomorrow_date} {row['origin_depart_time']}"
                 timetable[idx] = {**row, **extras}
 
     # Flag last departures.
@@ -273,24 +267,27 @@ def get_next_departure(
     origin_arrival = now
     if item["origin_arrival_time"] > item["origin_depart_time"]:
         origin_arrival -= datetime.timedelta(days=1)
-    origin_arrival_time = "{} {}".format(
-        origin_arrival.strftime(dt_util.DATE_STR_FORMAT), item["origin_arrival_time"]
+    origin_arrival_time = (
+        f"{origin_arrival.strftime(dt_util.DATE_STR_FORMAT)} "
+        f"{item['origin_arrival_time']}"
     )
 
-    origin_depart_time = "{} {}".format(now_date, item["origin_depart_time"])
+    origin_depart_time = f"{now_date} {item['origin_depart_time']}"
 
     dest_arrival = now
     if item["dest_arrival_time"] < item["origin_depart_time"]:
         dest_arrival += datetime.timedelta(days=1)
-    dest_arrival_time = "{} {}".format(
-        dest_arrival.strftime(dt_util.DATE_STR_FORMAT), item["dest_arrival_time"]
+    dest_arrival_time = (
+        f"{dest_arrival.strftime(dt_util.DATE_STR_FORMAT)} "
+        f"{item['dest_arrival_time']}"
     )
 
     dest_depart = dest_arrival
     if item["dest_depart_time"] < item["dest_arrival_time"]:
         dest_depart += datetime.timedelta(days=1)
-    dest_depart_time = "{} {}".format(
-        dest_depart.strftime(dt_util.DATE_STR_FORMAT), item["dest_depart_time"]
+    dest_depart_time = (
+        f"{dest_depart.strftime(dt_util.DATE_STR_FORMAT)} "
+        f"{item['dest_depart_time']}"
     )
 
     depart_time = dt_util.parse_datetime(origin_depart_time)
@@ -511,15 +508,13 @@ class GTFSDepartureSensor(Entity):
             else:
                 self._icon = ICON
 
-            name = "{agency} {origin} to {destination} next departure"
-            if not self._departure:
-                name = "{default}"
-            self._name = self._custom_name or name.format(
-                agency=getattr(self._agency, "agency_name", DEFAULT_NAME),
-                default=DEFAULT_NAME,
-                origin=self.origin,
-                destination=self.destination,
+            name = (
+                f"{getattr(self._agency, 'agency_name', DEFAULT_NAME)} "
+                f"{self.origin} to {self.destination} next departure"
             )
+            if not self._departure:
+                name = f"{DEFAULT_NAME}"
+            self._name = self._custom_name or name
 
     def update_attributes(self) -> None:
         """Update state attributes."""

@@ -8,7 +8,7 @@ from pyownet import protocol
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_PORT, TEMP_CELSIUS
+from homeassistant.const import CONF_HOST, CONF_PORT, TEMP_CELSIUS, UNIT_PERCENTAGE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -60,14 +60,14 @@ HOBBYBOARD_EF = {
 SENSOR_TYPES = {
     # SensorType: [ Measured unit, Unit ]
     "temperature": ["temperature", TEMP_CELSIUS],
-    "humidity": ["humidity", "%"],
-    "humidity_raw": ["humidity", "%"],
+    "humidity": ["humidity", UNIT_PERCENTAGE],
+    "humidity_raw": ["humidity", UNIT_PERCENTAGE],
     "pressure": ["pressure", "mb"],
     "illuminance": ["illuminance", "lux"],
-    "wetness_0": ["wetness", "%"],
-    "wetness_1": ["wetness", "%"],
-    "wetness_2": ["wetness", "%"],
-    "wetness_3": ["wetness", "%"],
+    "wetness_0": ["wetness", UNIT_PERCENTAGE],
+    "wetness_1": ["wetness", UNIT_PERCENTAGE],
+    "wetness_2": ["wetness", UNIT_PERCENTAGE],
+    "wetness_3": ["wetness", UNIT_PERCENTAGE],
     "moisture_0": ["moisture", "cb"],
     "moisture_1": ["moisture", "cb"],
     "moisture_2": ["moisture", "cb"],

@@ -1,9 +1,6 @@
 """
 Volumio Platform.
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.volumio/
-
 Volumio rest API: https://volumio.github.io/docs/API/REST_API.html
 """
 import asyncio

@@ -147,7 +147,7 @@ class MediaroomDevice(MediaPlayerDevice):
         self._channel = None
         self._optimistic = optimistic
         self._state = STATE_PLAYING if optimistic else STATE_STANDBY
-        self._name = "Mediaroom {}".format(device_id if device_id else host)
+        self._name = f"Mediaroom {device_id if device_id else host}"
         self._available = True
         if device_id:
             self._unique_id = device_id

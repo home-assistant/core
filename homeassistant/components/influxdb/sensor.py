@@ -196,9 +196,7 @@ class InfluxSensorData:
             _LOGGER.error("Could not render where clause template: %s", ex)
             return
 
-        self.query = "select {}({}) as value from {} where {}".format(
-            self.group, self.field, self.measurement, where_clause
-        )
+        self.query = f"select {self.group}({self.field}) as value from {self.measurement} where {where_clause}"
 
         _LOGGER.info("Running query: %s", self.query)
 

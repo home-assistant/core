@@ -34,7 +34,7 @@ from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, EVO_FOLLOW, GWS, STORAGE_KEY, STORAGE_VERSION, TCS
+from .const import DOMAIN, EVO_FOLLOW, GWS, STORAGE_KEY, STORAGE_VER, TCS, UTC_OFFSET
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,22 +93,22 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
 # system mode schemas are built dynamically, below
 
 
-def _local_dt_to_aware(dt_naive: dt) -> dt:
+def _dt_local_to_aware(dt_naive: dt) -> dt:
     dt_aware = dt_util.now() + (dt_naive - dt.now())
     if dt_aware.microsecond >= 500000:
         dt_aware += timedelta(seconds=1)
     return dt_aware.replace(microsecond=0)
 
 
-def _dt_to_local_naive(dt_aware: dt) -> dt:
+def _dt_aware_to_naive(dt_aware: dt) -> dt:
     dt_naive = dt.now() + (dt_aware - dt_util.now())
     if dt_naive.microsecond >= 500000:
         dt_naive += timedelta(seconds=1)
     return dt_naive.replace(microsecond=0)
 
 
-def convert_until(status_dict, until_key) -> str:
-    """Convert datetime string from "%Y-%m-%dT%H:%M:%SZ" to local/aware/isoformat."""
+def convert_until(status_dict: dict, until_key: str) -> str:
+    """Reformat a dt str from "%Y-%m-%dT%H:%M:%SZ" as local/aware/isoformat."""
     if until_key in status_dict:  # only present for certain modes
         dt_utc_naive = dt_util.parse_datetime(status_dict[until_key])
         status_dict[until_key] = dt_util.as_local(dt_utc_naive).isoformat()
@@ -190,14 +190,14 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
         # evohomeasync2 requires naive/local datetimes as strings
         if tokens.get(ACCESS_TOKEN_EXPIRES) is not None:
-            tokens[ACCESS_TOKEN_EXPIRES] = _dt_to_local_naive(
+            tokens[ACCESS_TOKEN_EXPIRES] = _dt_aware_to_naive(
                 dt_util.parse_datetime(tokens[ACCESS_TOKEN_EXPIRES])
             )
 
         user_data = tokens.pop(USER_DATA, None)
         return (tokens, user_data)
 
-    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    store = hass.helpers.storage.Store(STORAGE_VER, STORAGE_KEY)
     tokens, user_data = await load_auth_tokens(store)
 
     client_v2 = evohomeasync2.EvohomeClient(
@@ -217,7 +217,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     loc_idx = config[DOMAIN][CONF_LOCATION_IDX]
     try:
-        loc_config = client_v2.installation_info[loc_idx][GWS][0][TCS][0]
+        loc_config = client_v2.installation_info[loc_idx]
     except IndexError:
         _LOGGER.error(
             "Config error: '%s' = %s, but the valid range is 0-%s. "
@@ -228,7 +228,11 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         )
         return False
 
-    _LOGGER.debug("Config = %s", loc_config)
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        _config = {"locationInfo": {"timeZone": None}, GWS: [{TCS: None}]}
+        _config["locationInfo"]["timeZone"] = loc_config["locationInfo"]["timeZone"]
+        _config[GWS][0][TCS] = loc_config[GWS][0][TCS]
+        _LOGGER.debug("Config = %s", _config)
 
     client_v1 = evohomeasync.EvohomeClient(
         client_v2.username,
@@ -393,12 +397,15 @@ class EvoBroker:
         loc_idx = params[CONF_LOCATION_IDX]
         self.config = client.installation_info[loc_idx][GWS][0][TCS][0]
         self.tcs = client.locations[loc_idx]._gateways[0]._control_systems[0]
+        self.tcs_utc_offset = timedelta(
+            minutes=client.locations[loc_idx].timeZone[UTC_OFFSET]
+        )
         self.temps = {}
 
     async def save_auth_tokens(self) -> None:
         """Save access tokens and session IDs to the store for later use."""
         # evohomeasync2 uses naive/local datetimes
-        access_token_expires = _local_dt_to_aware(self.client.access_token_expires)
+        access_token_expires = _dt_local_to_aware(self.client.access_token_expires)
 
         app_storage = {CONF_USERNAME: self.client.username}
         app_storage[REFRESH_TOKEN] = self.client.refresh_token
@@ -481,7 +488,7 @@ class EvoBroker:
         else:
             async_dispatcher_send(self.hass, DOMAIN)
 
-            _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
+            _LOGGER.debug("Status = %s", status)
 
         if access_token != self.client.access_token:
             await self.save_auth_tokens()
@@ -621,6 +628,11 @@ class EvoChild(EvoDevice):
 
         Only Zones & DHW controllers (but not the TCS) can have schedules.
         """
+
+        def _dt_evo_to_aware(dt_naive: dt, utc_offset: timedelta) -> dt:
+            dt_aware = dt_naive.replace(tzinfo=dt_util.UTC) - utc_offset
+            return dt_util.as_local(dt_aware)
+
         if not self._schedule["DailySchedules"]:
             return {}  # no schedule {'DailySchedules': []}, so no scheduled setpoints
 
@@ -650,11 +662,12 @@ class EvoChild(EvoDevice):
                 day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
                 switchpoint = day["Switchpoints"][idx]
 
-                dt_local_aware = _local_dt_to_aware(
-                    dt_util.parse_datetime(f"{sp_date}T{switchpoint['TimeOfDay']}")
+                dt_aware = _dt_evo_to_aware(
+                    dt_util.parse_datetime(f"{sp_date}T{switchpoint['TimeOfDay']}"),
+                    self._evo_broker.tcs_utc_offset,
                 )
 
-                self._setpoints[f"{key}_sp_from"] = dt_local_aware.isoformat()
+                self._setpoints[f"{key}_sp_from"] = dt_aware.isoformat()
                 try:
                     self._setpoints[f"{key}_sp_temp"] = switchpoint["heatSetpoint"]
                 except KeyError:

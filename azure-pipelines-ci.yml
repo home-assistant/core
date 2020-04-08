@@ -148,7 +148,7 @@ stages:
 
         . venv/bin/activate
         pytest --timeout=9 --durations=10 -n auto --dist=loadfile --cov homeassistant --cov-report html -qq -o console_output_style=count -p no:sugar tests
-        codecov --token $(codecovToken)
+        #codecov --token $(codecovToken)
         script/check_dirty
       displayName: 'Run pytest for python $(python.container) / coverage'
       condition: and(succeeded(), eq(variables['python.container'], variables['PythonMain']))

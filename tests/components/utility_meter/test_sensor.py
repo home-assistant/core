@@ -7,7 +7,9 @@ from unittest.mock import patch
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.utility_meter.const import (
     ATTR_TARIFF,
+    ATTR_VALUE,
     DOMAIN,
+    SERVICE_CALIBRATE_METER,
     SERVICE_SELECT_TARIFF,
 )
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
@@ -95,6 +97,17 @@ async def test_state(hass):
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state is not None
     assert state.state == "3"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CALIBRATE_METER,
+        {ATTR_ENTITY_ID: "sensor.energy_bill_midpeak", ATTR_VALUE: "100"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.energy_bill_midpeak")
+    assert state is not None
+    assert state.state == "100"
 
 
 async def test_net_consumption(hass):

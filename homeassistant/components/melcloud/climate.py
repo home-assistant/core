@@ -1,14 +1,26 @@
 """Platform for climate integration."""
 from datetime import timedelta
 import logging
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
-from pymelcloud import DEVICE_TYPE_ATA
+from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW, AtaDevice, AtwDevice
+import pymelcloud.ata_device as ata
+import pymelcloud.atw_device as atw
+from pymelcloud.atw_device import (
+    PROPERTY_ZONE_1_OPERATION_MODE,
+    PROPERTY_ZONE_2_OPERATION_MODE,
+    Zone,
+)
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
+    HVAC_MODE_COOL,
+    HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
@@ -19,11 +31,28 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.temperature import convert as convert_temperature
 
 from . import MelCloudDevice
-from .const import DOMAIN, HVAC_MODE_LOOKUP, HVAC_MODE_REVERSE_LOOKUP, TEMP_UNIT_LOOKUP
+from .const import ATTR_STATUS, DOMAIN, TEMP_UNIT_LOOKUP
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+ATA_HVAC_MODE_LOOKUP = {
+    ata.OPERATION_MODE_HEAT: HVAC_MODE_HEAT,
+    ata.OPERATION_MODE_DRY: HVAC_MODE_DRY,
+    ata.OPERATION_MODE_COOL: HVAC_MODE_COOL,
+    ata.OPERATION_MODE_FAN_ONLY: HVAC_MODE_FAN_ONLY,
+    ata.OPERATION_MODE_HEAT_COOL: HVAC_MODE_HEAT_COOL,
+}
+ATA_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATA_HVAC_MODE_LOOKUP.items()}
+
+
+ATW_ZONE_HVAC_MODE_LOOKUP = {
+    atw.ZONE_OPERATION_MODE_HEAT: HVAC_MODE_HEAT,
+    atw.ZONE_OPERATION_MODE_COOL: HVAC_MODE_COOL,
+}
+ATW_ZONE_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATW_ZONE_HVAC_MODE_LOOKUP.items()}
 
 
 async def async_setup_entry(
@@ -32,38 +61,60 @@ async def async_setup_entry(
     """Set up MelCloud device climate based on config_entry."""
     mel_devices = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [AtaDeviceClimate(mel_device) for mel_device in mel_devices[DEVICE_TYPE_ATA]],
+        [
+            AtaDeviceClimate(mel_device, mel_device.device)
+            for mel_device in mel_devices[DEVICE_TYPE_ATA]
+        ]
+        + [
+            AtwDeviceZoneClimate(mel_device, mel_device.device, zone)
+            for mel_device in mel_devices[DEVICE_TYPE_ATW]
+            for zone in mel_device.device.zones
+        ],
         True,
     )
 
 
-class AtaDeviceClimate(ClimateDevice):
-    """Air-to-Air climate device."""
+class MelCloudClimate(ClimateDevice):
+    """Base climate device."""
 
     def __init__(self, device: MelCloudDevice):
         """Initialize the climate."""
-        self._api = device
-        self._device = self._api.device
+        self.api = device
+        self._base_device = self.api.device
         self._name = device.name
-
-    @property
-    def unique_id(self) -> Optional[str]:
-        """Return a unique ID."""
-        return f"{self._device.serial}-{self._device.mac}"
-
-    @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._name
 
     async def async_update(self):
         """Update state from MELCloud."""
-        await self._api.async_update()
+        await self.api.async_update()
 
     @property
     def device_info(self):
         """Return a device description for device registry."""
-        return self._api.device_info
+        return self.api.device_info
+
+    @property
+    def target_temperature_step(self) -> Optional[float]:
+        """Return the supported step of target temperature."""
+        return self._base_device.temperature_increment
+
+
+class AtaDeviceClimate(MelCloudClimate):
+    """Air-to-Air climate device."""
+
+    def __init__(self, device: MelCloudDevice, ata_device: AtaDevice) -> None:
+        """Initialize the climate."""
+        super().__init__(device)
+        self._device = ata_device
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return f"{self.api.device.serial}-{self.api.device.mac}"
+
+    @property
+    def name(self):
+        """Return the display name of this entity."""
+        return self._name
 
     @property
     def temperature_unit(self) -> str:
@@ -76,7 +127,7 @@ class AtaDeviceClimate(ClimateDevice):
         mode = self._device.operation_mode
         if not self._device.power or mode is None:
             return HVAC_MODE_OFF
-        return HVAC_MODE_LOOKUP.get(mode)
+        return ATA_HVAC_MODE_LOOKUP.get(mode)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
@@ -84,7 +135,7 @@ class AtaDeviceClimate(ClimateDevice):
             await self._device.set({"power": False})
             return
 
-        operation_mode = HVAC_MODE_REVERSE_LOOKUP.get(hvac_mode)
+        operation_mode = ATA_HVAC_MODE_REVERSE_LOOKUP.get(hvac_mode)
         if operation_mode is None:
             raise ValueError(f"Invalid hvac_mode [{hvac_mode}]")
 
@@ -97,7 +148,7 @@ class AtaDeviceClimate(ClimateDevice):
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes."""
         return [HVAC_MODE_OFF] + [
-            HVAC_MODE_LOOKUP.get(mode) for mode in self._device.operation_modes
+            ATA_HVAC_MODE_LOOKUP.get(mode) for mode in self._device.operation_modes
         ]
 
     @property
@@ -117,11 +168,6 @@ class AtaDeviceClimate(ClimateDevice):
         )
 
     @property
-    def target_temperature_step(self) -> Optional[float]:
-        """Return the supported step of target temperature."""
-        return self._device.target_temperature_step
-
-    @property
     def fan_mode(self) -> Optional[str]:
         """Return the fan setting."""
         return self._device.fan_speed
@@ -135,6 +181,11 @@ class AtaDeviceClimate(ClimateDevice):
         """Return the list of available fan modes."""
         return self._device.fan_speeds
 
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_FAN_MODE | SUPPORT_TARGET_TEMPERATURE
+
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         await self._device.set({"power": True})
@@ -142,11 +193,6 @@ class AtaDeviceClimate(ClimateDevice):
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         await self._device.set({"power": False})
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_FAN_MODE | SUPPORT_TARGET_TEMPERATURE
 
     @property
     def min_temp(self) -> float:
@@ -169,3 +215,108 @@ class AtaDeviceClimate(ClimateDevice):
         return convert_temperature(
             DEFAULT_MAX_TEMP, TEMP_CELSIUS, self.temperature_unit
         )
+
+
+class AtwDeviceZoneClimate(MelCloudClimate):
+    """Air-to-Water zone climate device."""
+
+    def __init__(
+        self, device: MelCloudDevice, atw_device: AtwDevice, atw_zone: Zone
+    ) -> None:
+        """Initialize the climate."""
+        super().__init__(device)
+        self._device = atw_device
+        self._zone = atw_zone
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return f"{self.api.device.serial}-{self._zone.zone_index}"
+
+    @property
+    def name(self) -> str:
+        """Return the display name of this entity."""
+        return f"{self._name} {self._zone.name}"
+
+    @property
+    def device_state_attributes(self) -> Dict[str, Any]:
+        """Return the optional state attributes with device specific additions."""
+        data = {
+            ATTR_STATUS: ATW_ZONE_HVAC_MODE_LOOKUP.get(
+                self._zone.status, self._zone.status
+            )
+        }
+        return data
+
+    @property
+    def temperature_unit(self) -> str:
+        """Return the unit of measurement used by the platform."""
+        return TEMP_UNIT_LOOKUP.get(self._device.temp_unit, TEMP_CELSIUS)
+
+    @property
+    def hvac_mode(self) -> str:
+        """Return hvac operation ie. heat, cool mode."""
+        mode = self._zone.operation_mode
+        if not self._device.power or mode is None:
+            return HVAC_MODE_OFF
+        return ATW_ZONE_HVAC_MODE_LOOKUP.get(mode, HVAC_MODE_OFF)
+
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+        """Set new target hvac mode."""
+        if hvac_mode == HVAC_MODE_OFF:
+            await self._device.set({"power": False})
+            return
+
+        operation_mode = ATW_ZONE_HVAC_MODE_REVERSE_LOOKUP.get(hvac_mode)
+        if operation_mode is None:
+            raise ValueError(f"Invalid hvac_mode [{hvac_mode}]")
+
+        if self._zone.zone_index == 1:
+            props = {PROPERTY_ZONE_1_OPERATION_MODE: operation_mode}
+        else:
+            props = {PROPERTY_ZONE_2_OPERATION_MODE: operation_mode}
+        if self.hvac_mode == HVAC_MODE_OFF:
+            props["power"] = True
+        await self._device.set(props)
+
+    @property
+    def hvac_modes(self) -> List[str]:
+        """Return the list of available hvac operation modes."""
+        return [self.hvac_mode]
+
+    @property
+    def current_temperature(self) -> Optional[float]:
+        """Return the current temperature."""
+        return self._zone.room_temperature
+
+    @property
+    def target_temperature(self) -> Optional[float]:
+        """Return the temperature we try to reach."""
+        return self._zone.target_temperature
+
+    async def async_set_temperature(self, **kwargs) -> None:
+        """Set new target temperature."""
+        await self._zone.set_target_temperature(
+            kwargs.get("temperature", self.target_temperature)
+        )
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_TARGET_TEMPERATURE
+
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature.
+
+        MELCloud API does not expose radiator zone temperature limits.
+        """
+        return convert_temperature(10, TEMP_CELSIUS, self.temperature_unit)
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature.
+
+        MELCloud API does not expose radiator zone temperature limits.
+        """
+        return convert_temperature(30, TEMP_CELSIUS, self.temperature_unit)

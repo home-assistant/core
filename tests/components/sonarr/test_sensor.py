@@ -6,7 +6,7 @@ import unittest
 import pytest
 
 import homeassistant.components.sonarr.sensor as sonarr
-from homeassistant.const import DATA_GIGABYTES
+from homeassistant.const import DATA_GIGABYTES, UNIT_PERCENTAGE
 
 from tests.common import get_test_home_assistant
 
@@ -569,7 +569,10 @@ class TestSonarrSetup(unittest.TestCase):
             assert "mdi:download" == device.icon
             assert "Episodes" == device.unit_of_measurement
             assert "Sonarr Queue" == device.name
-            assert "100.00%" == device.device_state_attributes["Game of Thrones S03E08"]
+            assert (
+                f"100.00{UNIT_PERCENTAGE}"
+                == device.device_state_attributes["Game of Thrones S03E08"]
+            )
 
     @unittest.mock.patch("requests.get", side_effect=mocked_requests_get)
     def test_series(self, req_mock):

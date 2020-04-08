@@ -1,10 +1,10 @@
 """Support to manage a shopping list."""
-import asyncio
 import logging
 import uuid
 
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import HTTP_BAD_REQUEST, HTTP_NOT_FOUND
@@ -12,9 +12,10 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
+from .const import DOMAIN
+
 ATTR_NAME = "name"
 
-DOMAIN = "shopping_list"
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
 EVENT = "shopping_list_updated"
@@ -53,20 +54,32 @@ SCHEMA_WEBSOCKET_CLEAR_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 )
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Initialize the shopping list."""
 
-    @asyncio.coroutine
-    def add_item_service(call):
+    if DOMAIN not in config:
+        return True
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+        )
+    )
+
+    return True
+
+
+async def async_setup_entry(hass, config_entry):
+    """Set up shopping list from config flow."""
+
+    async def add_item_service(call):
         """Add an item with `name`."""
         data = hass.data[DOMAIN]
         name = call.data.get(ATTR_NAME)
         if name is not None:
             data.async_add(name)
 
-    @asyncio.coroutine
-    def complete_item_service(call):
+    async def complete_item_service(call):
         """Mark the item provided via `name` as completed."""
         data = hass.data[DOMAIN]
         name = call.data.get(ATTR_NAME)
@@ -80,7 +93,7 @@ def async_setup(hass, config):
             data.async_update(item["id"], {"name": name, "complete": True})
 
     data = hass.data[DOMAIN] = ShoppingData(hass)
-    yield from data.async_load()
+    await data.async_load()
 
     hass.services.async_register(
         DOMAIN, SERVICE_ADD_ITEM, add_item_service, schema=SERVICE_ITEM_SCHEMA
@@ -206,8 +219,7 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     name = "api:shopping_list:item"
 
     @RequestDataValidator(vol.Schema({vol.Required("name"): str}))
-    @asyncio.coroutine
-    def post(self, request, data):
+    async def post(self, request, data):
         """Create a new shopping list item."""
         item = request.app["hass"].data[DOMAIN].async_add(data["name"])
         request.app["hass"].bus.async_fire(EVENT)
@@ -241,7 +253,7 @@ def websocket_handle_items(hass, connection, msg):
 def websocket_handle_add(hass, connection, msg):
     """Handle add item to shopping_list."""
     item = hass.data[DOMAIN].async_add(msg["name"])
-    hass.bus.async_fire(EVENT)
+    hass.bus.async_fire(EVENT, {"action": "add", "item": item})
     connection.send_message(websocket_api.result_message(msg["id"], item))
 
 
@@ -255,7 +267,7 @@ async def websocket_handle_update(hass, connection, msg):
 
     try:
         item = hass.data[DOMAIN].async_update(item_id, data)
-        hass.bus.async_fire(EVENT)
+        hass.bus.async_fire(EVENT, {"action": "update", "item": item})
         connection.send_message(websocket_api.result_message(msg_id, item))
     except KeyError:
         connection.send_message(
@@ -267,5 +279,5 @@ async def websocket_handle_update(hass, connection, msg):
 def websocket_handle_clear(hass, connection, msg):
     """Handle clearing shopping_list items."""
     hass.data[DOMAIN].async_clear_completed()
-    hass.bus.async_fire(EVENT)
+    hass.bus.async_fire(EVENT, {"action": "clear"})
     connection.send_message(websocket_api.result_message(msg["id"]))

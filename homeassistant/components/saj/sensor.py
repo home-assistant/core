@@ -22,6 +22,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    TIME_HOURS,
 )
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import PlatformNotReady
@@ -34,13 +35,11 @@ _LOGGER = logging.getLogger(__name__)
 MIN_INTERVAL = 5
 MAX_INTERVAL = 300
 
-UNIT_OF_MEASUREMENT_HOURS = "h"
-
 INVERTER_TYPES = ["ethernet", "wifi"]
 
 SAJ_UNIT_MAPPINGS = {
     "": None,
-    "h": UNIT_OF_MEASUREMENT_HOURS,
+    "h": TIME_HOURS,
     "kg": MASS_KILOGRAMS,
     "kWh": ENERGY_KILO_WATT_HOUR,
     "W": POWER_WATT,

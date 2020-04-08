@@ -67,9 +67,7 @@ def _thresholds(config):
     if error_threshold and warning_threshold:
         if error_threshold <= warning_threshold:
             raise vol.Invalid(
-                "{} must be larger than {}".format(
-                    CONF_ERROR_THRESHOLD, CONF_WARNING_THRESHOLD
-                )
+                f"{CONF_ERROR_THRESHOLD} must be larger than {CONF_WARNING_THRESHOLD}"
             )
     elif not error_threshold and warning_threshold:
         config[CONF_ERROR_THRESHOLD] = warning_threshold + 1

@@ -1,6 +1,8 @@
 """Constants for the pi_hole integration."""
 from datetime import timedelta
 
+from homeassistant.const import UNIT_PERCENTAGE
+
 DOMAIN = "pi_hole"
 
 CONF_LOCATION = "location"
@@ -26,7 +28,7 @@ SENSOR_DICT = {
     "ads_blocked_today": ["Ads Blocked Today", "ads", "mdi:close-octagon-outline"],
     "ads_percentage_today": [
         "Ads Percentage Blocked Today",
-        "%",
+        UNIT_PERCENTAGE,
         "mdi:close-octagon-outline",
     ],
     "clients_ever_seen": ["Seen Clients", "clients", "mdi:account-outline"],

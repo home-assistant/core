@@ -52,12 +52,7 @@ def setup(hass, config):
 
     def checkin_user(call):
         """Check a user in on Swarm."""
-        url = (
-            "https://api.foursquare.com/v2/checkins/add"
-            "?oauth_token={}"
-            "&v=20160802"
-            "&m=swarm"
-        ).format(config[CONF_ACCESS_TOKEN])
+        url = f"https://api.foursquare.com/v2/checkins/add?oauth_token={config[CONF_ACCESS_TOKEN]}&v=20160802&m=swarm"
         response = requests.post(url, data=call.data, timeout=10)
 
         if response.status_code not in (200, 201):

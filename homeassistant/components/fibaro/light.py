@@ -7,7 +7,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     ATTR_WHITE_VALUE,
-    ENTITY_ID_FORMAT,
+    DOMAIN,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_WHITE_VALUE,
@@ -36,6 +36,14 @@ def scaleto100(value):
     if 0 < value < 3:
         return 1
     return max(0, min(100, ((value * 100.0) / 255.0)))
+
+
+# Ais dom
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Fibaro switches."""
+    async_add_entities(
+        [FibaroLight(device) for device in hass.data[FIBARO_DEVICES]["light"]], True
+    )
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -77,7 +85,7 @@ class FibaroLight(FibaroDevice, Light):
             self._supported_flags |= SUPPORT_WHITE_VALUE
 
         super().__init__(fibaro_device)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        self.entity_id = f"{DOMAIN}.{self.ha_id}"
 
     @property
     def brightness(self):

@@ -52,8 +52,8 @@ MANIFEST_SCHEMA = vol.Schema(
             vol.Url(), documentation_url  # pylint: disable=no-value-for-parameter
         ),
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
-        vol.Required("requirements"): [str],
-        vol.Required("dependencies"): [str],
+        vol.Optional("requirements"): [str],
+        vol.Optional("dependencies"): [str],
         vol.Optional("after_dependencies"): [str],
         vol.Required("codeowners"): [str],
         vol.Optional("logo"): vol.Url(),  # pylint: disable=no-value-for-parameter

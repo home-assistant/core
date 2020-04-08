@@ -53,7 +53,7 @@ class AbstractConfig(ABC):
             )
         try:
             await self._unsub_proactive_report
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self._unsub_proactive_report = None
             raise
 

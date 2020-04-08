@@ -10,6 +10,7 @@ from unittest.mock import Mock
 import asynctest
 from asynctest import CoroutineMock, patch
 import pytest
+import voluptuous as vol
 from voluptuous import Invalid, MultipleInvalid
 import yaml
 
@@ -721,7 +722,7 @@ async def test_merge_id_schema(hass):
     for domain, expected_type in types.items():
         integration = await async_get_integration(hass, domain)
         module = integration.get_component()
-        typ, _ = config_util._identify_config_schema(module)
+        typ = config_util._identify_config_schema(module)
         assert typ == expected_type, f"{domain} expected {expected_type}, got {typ}"
 
 
@@ -989,3 +990,35 @@ async def test_component_config_exceptions(hass, caplog):
             "Unknown error validating config for test_platform platform for test_domain component with PLATFORM_SCHEMA"
             in caplog.text
         )
+
+
+@pytest.mark.parametrize(
+    "domain, schema, expected",
+    [
+        ("zone", vol.Schema({vol.Optional("zone", default=list): [int]}), "list"),
+        ("zone", vol.Schema({vol.Optional("zone", default=[]): [int]}), "list"),
+        (
+            "zone",
+            vol.Schema({vol.Optional("zone", default={}): {vol.Optional("hello"): 1}}),
+            "dict",
+        ),
+        (
+            "zone",
+            vol.Schema(
+                {vol.Optional("zone", default=dict): {vol.Optional("hello"): 1}}
+            ),
+            "dict",
+        ),
+        ("zone", vol.Schema({vol.Optional("zone"): int}), None),
+        ("zone", vol.Schema({"zone": int}), None),
+        ("not_existing", vol.Schema({vol.Optional("zone", default=dict): dict}), None,),
+        ("non_existing", vol.Schema({"zone": int}), None),
+        ("zone", vol.Schema({}), None),
+    ],
+)
+def test_identify_config_schema(domain, schema, expected):
+    """Test identify config schema."""
+    assert (
+        config_util._identify_config_schema(Mock(DOMAIN=domain, CONFIG_SCHEMA=schema))
+        == expected
+    )

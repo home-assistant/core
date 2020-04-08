@@ -1,7 +1,11 @@
 """Monitor the NZBGet API."""
 import logging
 
-from homeassistant.const import DATA_MEGABYTES, DATA_RATE_MEGABYTES_PER_SECOND
+from homeassistant.const import (
+    DATA_MEGABYTES,
+    DATA_RATE_MEGABYTES_PER_SECOND,
+    TIME_MINUTES,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -26,7 +30,7 @@ SENSOR_TYPES = {
     "post_job_count": ["PostJobCount", "Post Processing Jobs", "Jobs"],
     "post_paused": ["PostPaused", "Post Processing Paused", None],
     "remaining_size": ["RemainingSizeMB", "Queue Size", DATA_MEGABYTES],
-    "uptime": ["UpTimeSec", "Uptime", "min"],
+    "uptime": ["UpTimeSec", "Uptime", TIME_MINUTES],
 }
 
 

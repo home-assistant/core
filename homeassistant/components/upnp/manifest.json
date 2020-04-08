@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/upnp",
   "requirements": ["async-upnp-client==0.14.12"],
   "dependencies": [],
-  "codeowners": ["@robbiet480"]
+  "codeowners": ["@StevenLooman"]
 }

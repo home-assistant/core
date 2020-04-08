@@ -92,7 +92,7 @@ DEMO_DEVICES = [
         "id": "switch.ac",
         "name": {"name": "AC"},
         "traits": ["action.devices.traits.OnOff"],
-        "type": "action.devices.types.SWITCH",
+        "type": "action.devices.types.OUTLET",
         "willReportState": False,
     },
     {

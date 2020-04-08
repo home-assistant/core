@@ -259,3 +259,54 @@ class TestBayesianBinarySensor(unittest.TestCase):
             prior = bayesian.update_probability(prior, pt, pf)
 
         assert round(abs(0.9130434782608695 - prior), 7) == 0
+
+    def test_observed_entities(self):
+        """Test sensor on observed entities."""
+        config = {
+            "binary_sensor": {
+                "name": "Test_Binary",
+                "platform": "bayesian",
+                "observations": [
+                    {
+                        "platform": "state",
+                        "entity_id": "sensor.test_monitored",
+                        "to_state": "off",
+                        "prob_given_true": 0.8,
+                        "prob_given_false": 0.4,
+                    },
+                    {
+                        "platform": "template",
+                        "value_template": "{{is_state('sensor.test_monitored1','on') and is_state('sensor.test_monitored','off')}}",
+                        "prob_given_true": 0.9,
+                    },
+                ],
+                "prior": 0.2,
+                "probability_threshold": 0.32,
+            }
+        }
+
+        assert setup_component(self.hass, "binary_sensor", config)
+
+        self.hass.states.set("sensor.test_monitored", "on")
+        self.hass.block_till_done()
+        self.hass.states.set("sensor.test_monitored1", "off")
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("binary_sensor.test_binary")
+        assert [] == state.attributes.get("occurred_observation_entities")
+
+        self.hass.states.set("sensor.test_monitored", "off")
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("binary_sensor.test_binary")
+        assert ["sensor.test_monitored"] == state.attributes.get(
+            "occurred_observation_entities"
+        )
+
+        self.hass.states.set("sensor.test_monitored1", "on")
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("binary_sensor.test_binary")
+        assert ["sensor.test_monitored", "sensor.test_monitored1"] == sorted(
+            state.attributes.get("occurred_observation_entities")
+        )

@@ -523,7 +523,7 @@ DEVICES = [
                 "channels": ["ias_zone"],
                 "entity_class": "IASZone",
                 "entity_id": "binary_sensor.heiman_co_v16_77665544_ias_zone",
-            },
+            }
         },
         "event_channels": [],
         "manufacturer": "Heiman",
@@ -547,7 +547,7 @@ DEVICES = [
                 "channels": ["ias_zone"],
                 "entity_class": "IASZone",
                 "entity_id": "binary_sensor.heiman_warningdevice_77665544_ias_zone",
-            },
+            }
         },
         "event_channels": [],
         "manufacturer": "Heiman",
@@ -627,7 +627,7 @@ DEVICES = [
                 "entity_id": "light.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_77665544_level_light_color_on_off",
             }
         },
-        "event_channels": [],
+        "event_channels": ["1:0x0005"],
         "manufacturer": "IKEA of Sweden",
         "model": "TRADFRI bulb E12 WS opal 600lm",
         "node_descriptor": b"\x01@\x8e|\x11RR\x00\x00,R\x00\x00",
@@ -653,7 +653,7 @@ DEVICES = [
                 "entity_id": "light.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_77665544_level_light_color_on_off",
             }
         },
-        "event_channels": [],
+        "event_channels": ["1:0x0005"],
         "manufacturer": "IKEA of Sweden",
         "model": "TRADFRI bulb E26 CWS opal 600lm",
         "node_descriptor": b"\x01@\x8e|\x11RR\x00\x00\x00R\x00\x00",
@@ -679,7 +679,7 @@ DEVICES = [
                 "entity_id": "light.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_77665544_level_on_off",
             }
         },
-        "event_channels": [],
+        "event_channels": ["1:0x0005"],
         "manufacturer": "IKEA of Sweden",
         "model": "TRADFRI bulb E26 W opal 1000lm",
         "node_descriptor": b"\x01@\x8e|\x11RR\x00\x00\x00R\x00\x00",
@@ -705,7 +705,7 @@ DEVICES = [
                 "entity_id": "light.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_77665544_level_light_color_on_off",
             }
         },
-        "event_channels": [],
+        "event_channels": ["1:0x0005"],
         "manufacturer": "IKEA of Sweden",
         "model": "TRADFRI bulb E26 WS opal 980lm",
         "node_descriptor": b"\x01@\x8e|\x11RR\x00\x00\x00R\x00\x00",
@@ -731,7 +731,7 @@ DEVICES = [
                 "entity_id": "light.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_77665544_level_on_off",
             }
         },
-        "event_channels": [],
+        "event_channels": ["1:0x0005"],
         "manufacturer": "IKEA of Sweden",
         "model": "TRADFRI bulb E26 opal 1000lm",
         "node_descriptor": b"\x01@\x8e|\x11RR\x00\x00\x00R\x00\x00",
@@ -755,7 +755,7 @@ DEVICES = [
                 "entity_id": "switch.ikea_of_sweden_tradfri_control_outlet_77665544_on_off",
             }
         },
-        "event_channels": [],
+        "event_channels": ["1:0x0005"],
         "manufacturer": "IKEA of Sweden",
         "model": "TRADFRI control outlet",
         "node_descriptor": b"\x01@\x8e|\x11RR\x00\x00,R\x00\x00",
@@ -838,7 +838,7 @@ DEVICES = [
                 "entity_id": "sensor.ikea_of_sweden_tradfri_remote_control_77665544_power",
             }
         },
-        "event_channels": ["1:0x0006", "1:0x0008"],
+        "event_channels": ["1:0x0005", "1:0x0006", "1:0x0008"],
         "manufacturer": "IKEA of Sweden",
         "model": "TRADFRI remote control",
         "node_descriptor": b"\x02@\x80|\x11RR\x00\x00\x00R\x00\x00",
@@ -1036,7 +1036,6 @@ DEVICES = [
             }
         },
         "entities": [
-            "binary_sensor.keen_home_inc_sv02_610_mp_1_3_77665544_manufacturer_specific",
             "light.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
             "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_power",
             "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_pressure",
@@ -1062,12 +1061,6 @@ DEVICES = [
                 "channels": ["pressure"],
                 "entity_class": "Pressure",
                 "entity_id": "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_pressure",
-            },
-            ("binary_sensor", "00:11:22:33:44:55:66:77-1-64514"): {
-                "channels": ["manufacturer_specific"],
-                "entity_class": "BinarySensor",
-                "entity_id": "binary_sensor.keen_home_inc_sv02_610_mp_1_3_77665544_manufacturer_specific",
-                "default_match": True,
             },
         },
         "event_channels": [],
@@ -1101,7 +1094,6 @@ DEVICES = [
             }
         },
         "entities": [
-            "binary_sensor.keen_home_inc_sv02_612_mp_1_2_77665544_manufacturer_specific",
             "light.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
             "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_power",
             "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_pressure",
@@ -1127,12 +1119,6 @@ DEVICES = [
                 "channels": ["pressure"],
                 "entity_class": "Pressure",
                 "entity_id": "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_pressure",
-            },
-            ("binary_sensor", "00:11:22:33:44:55:66:77-1-64514"): {
-                "channels": ["manufacturer_specific"],
-                "entity_class": "BinarySensor",
-                "entity_id": "binary_sensor.keen_home_inc_sv02_612_mp_1_2_77665544_manufacturer_specific",
-                "default_match": True,
             },
         },
         "event_channels": [],
@@ -1166,7 +1152,6 @@ DEVICES = [
             }
         },
         "entities": [
-            "binary_sensor.keen_home_inc_sv02_612_mp_1_3_77665544_manufacturer_specific",
             "light.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
             "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_power",
             "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_pressure",
@@ -1192,12 +1177,6 @@ DEVICES = [
                 "channels": ["pressure"],
                 "entity_class": "Pressure",
                 "entity_id": "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_pressure",
-            },
-            ("binary_sensor", "00:11:22:33:44:55:66:77-1-64514"): {
-                "channels": ["manufacturer_specific"],
-                "entity_class": "BinarySensor",
-                "entity_id": "binary_sensor.keen_home_inc_sv02_612_mp_1_3_77665544_manufacturer_specific",
-                "default_match": True,
             },
         },
         "event_channels": [],
@@ -1531,7 +1510,7 @@ DEVICES = [
                 "entity_id": "sensor.lumi_lumi_remote_b186acn01_77665544_multistate_input",
             },
         },
-        "event_channels": [],
+        "event_channels": ["1:0x0005", "2:0x0005", "3:0x0005"],
         "manufacturer": "LUMI",
         "model": "lumi.remote.b186acn01",
         "node_descriptor": b"\x02@\x807\x10\x7fd\x00\x00\x00d\x00\x00",
@@ -1590,7 +1569,7 @@ DEVICES = [
                 "entity_id": "sensor.lumi_lumi_remote_b286acn01_77665544_multistate_input",
             },
         },
-        "event_channels": [],
+        "event_channels": ["1:0x0005", "2:0x0005", "3:0x0005"],
         "manufacturer": "LUMI",
         "model": "lumi.remote.b286acn01",
         "node_descriptor": b"\x02@\x807\x10\x7fd\x00\x00\x00d\x00\x00",
@@ -1784,13 +1763,21 @@ DEVICES = [
                 "profile_id": 260,
             }
         },
-        "entities": ["light.lumi_lumi_router_77665544_on_off_on_off"],
+        "entities": [
+            "binary_sensor.lumi_lumi_router_77665544_on_off",
+            "light.lumi_lumi_router_77665544_on_off",
+        ],
         "entity_map": {
+            ("binary_sensor", "00:11:22:33:44:55:66:77-8-6"): {
+                "channels": ["on_off", "on_off"],
+                "entity_class": "Opening",
+                "entity_id": "binary_sensor.lumi_lumi_router_77665544_on_off",
+            },
             ("light", "00:11:22:33:44:55:66:77-8"): {
                 "channels": ["on_off", "on_off"],
                 "entity_class": "Light",
-                "entity_id": "light.lumi_lumi_router_77665544_on_off_on_off",
-            }
+                "entity_id": "light.lumi_lumi_router_77665544_on_off",
+            },
         },
         "event_channels": ["8:0x0006"],
         "manufacturer": "LUMI",
@@ -1808,13 +1795,21 @@ DEVICES = [
                 "profile_id": 260,
             }
         },
-        "entities": ["light.lumi_lumi_router_77665544_on_off_on_off"],
+        "entities": [
+            "binary_sensor.lumi_lumi_router_77665544_on_off",
+            "light.lumi_lumi_router_77665544_on_off",
+        ],
         "entity_map": {
+            ("binary_sensor", "00:11:22:33:44:55:66:77-8-6"): {
+                "channels": ["on_off", "on_off"],
+                "entity_class": "Opening",
+                "entity_id": "binary_sensor.lumi_lumi_router_77665544_on_off",
+            },
             ("light", "00:11:22:33:44:55:66:77-8"): {
                 "channels": ["on_off", "on_off"],
                 "entity_class": "Light",
-                "entity_id": "light.lumi_lumi_router_77665544_on_off_on_off",
-            }
+                "entity_id": "light.lumi_lumi_router_77665544_on_off",
+            },
         },
         "event_channels": ["8:0x0006"],
         "manufacturer": "LUMI",
@@ -1832,13 +1827,21 @@ DEVICES = [
                 "profile_id": 260,
             }
         },
-        "entities": ["light.lumi_lumi_router_77665544_on_off_on_off"],
+        "entities": [
+            "binary_sensor.lumi_lumi_router_77665544_on_off",
+            "light.lumi_lumi_router_77665544_on_off",
+        ],
         "entity_map": {
+            ("binary_sensor", "00:11:22:33:44:55:66:77-8-6"): {
+                "channels": ["on_off", "on_off"],
+                "entity_class": "Opening",
+                "entity_id": "binary_sensor.lumi_lumi_router_77665544_on_off",
+            },
             ("light", "00:11:22:33:44:55:66:77-8"): {
                 "channels": ["on_off", "on_off"],
                 "entity_class": "Light",
-                "entity_id": "light.lumi_lumi_router_77665544_on_off_on_off",
-            }
+                "entity_id": "light.lumi_lumi_router_77665544_on_off",
+            },
         },
         "event_channels": ["8:0x0006"],
         "manufacturer": "LUMI",
@@ -1862,7 +1865,7 @@ DEVICES = [
                 "channels": ["illuminance"],
                 "entity_class": "Illuminance",
                 "entity_id": "sensor.lumi_lumi_sen_ill_mgl01_77665544_illuminance",
-            },
+            }
         },
         "event_channels": [],
         "manufacturer": "LUMI",
@@ -1922,7 +1925,7 @@ DEVICES = [
                 "entity_id": "sensor.lumi_lumi_sensor_86sw1_77665544_multistate_input",
             },
         },
-        "event_channels": [],
+        "event_channels": ["1:0x0005", "2:0x0005", "3:0x0005"],
         "manufacturer": "LUMI",
         "model": "lumi.sensor_86sw1",
         "node_descriptor": b"\x02@\x807\x10\x7fd\x00\x00\x00d\x00\x00",
@@ -1975,7 +1978,7 @@ DEVICES = [
                 "entity_id": "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_analog_input",
             },
         },
-        "event_channels": [],
+        "event_channels": ["1:0x0005", "2:0x0005", "3:0x0005"],
         "manufacturer": "LUMI",
         "model": "lumi.sensor_cube.aqgl01",
         "node_descriptor": b"\x02@\x807\x10\x7fd\x00\x00\x00d\x00\x00",
@@ -2028,7 +2031,7 @@ DEVICES = [
                 "entity_id": "sensor.lumi_lumi_sensor_ht_77665544_humidity",
             },
         },
-        "event_channels": [],
+        "event_channels": ["1:0x0005", "2:0x0005", "3:0x0005"],
         "manufacturer": "LUMI",
         "model": "lumi.sensor_ht",
         "node_descriptor": b"\x02@\x807\x10\x7fd\x00\x00\x00d\x00\x00",
@@ -2061,7 +2064,7 @@ DEVICES = [
                 "entity_id": "binary_sensor.lumi_lumi_sensor_magnet_77665544_on_off",
             },
         },
-        "event_channels": ["1:0x0006", "1:0x0008"],
+        "event_channels": ["1:0x0005", "1:0x0006", "1:0x0008"],
         "manufacturer": "LUMI",
         "model": "lumi.sensor_magnet",
         "node_descriptor": b"\x02@\x807\x10\x7fd\x00\x00\x00d\x00\x00",
@@ -2209,7 +2212,7 @@ DEVICES = [
                 "entity_id": "sensor.lumi_lumi_sensor_switch_77665544_power",
             }
         },
-        "event_channels": ["1:0x0006", "1:0x0008"],
+        "event_channels": ["1:0x0005", "1:0x0006", "1:0x0008"],
         "manufacturer": "LUMI",
         "model": "lumi.sensor_switch",
         "node_descriptor": b"\x02@\x807\x10\x7fd\x00\x00\x00d\x00\x00",
@@ -2346,7 +2349,7 @@ DEVICES = [
                 "entity_id": "binary_sensor.lumi_lumi_vibration_aq1_77665544_ias_zone",
             },
         },
-        "event_channels": [],
+        "event_channels": ["1:0x0005", "2:0x0005"],
         "manufacturer": "LUMI",
         "model": "lumi.vibration.aq1",
         "node_descriptor": b"\x02@\x807\x10\x7fd\x00\x00\x00d\x00\x00",
@@ -2701,21 +2704,27 @@ DEVICES = [
             }
         },
         "event_channels": [
+            "1:0x0005",
             "1:0x0006",
             "1:0x0008",
             "1:0x0300",
+            "2:0x0005",
             "2:0x0006",
             "2:0x0008",
             "2:0x0300",
+            "3:0x0005",
             "3:0x0006",
             "3:0x0008",
             "3:0x0300",
+            "4:0x0005",
             "4:0x0006",
             "4:0x0008",
             "4:0x0300",
+            "5:0x0005",
             "5:0x0006",
             "5:0x0008",
             "5:0x0300",
+            "6:0x0005",
             "6:0x0006",
             "6:0x0008",
             "6:0x0300",
@@ -2751,7 +2760,7 @@ DEVICES = [
                 "entity_id": "sensor.philips_rwl020_77665544_power",
             }
         },
-        "event_channels": ["1:0x0006", "1:0x0008"],
+        "event_channels": ["1:0x0005", "1:0x0006", "1:0x0008"],
         "manufacturer": "Philips",
         "model": "RWL020",
         "node_descriptor": b"\x02@\x80\x0b\x10G-\x00\x00\x00-\x00\x00",
@@ -2907,7 +2916,7 @@ DEVICES = [
                 "entity_id": "sensor.securifi_ltd_unk_model_77665544_electrical_measurement",
             },
         },
-        "event_channels": ["1:0x0006"],
+        "event_channels": ["1:0x0005", "1:0x0006"],
         "manufacturer": "Securifi Ltd.",
         "model": None,
         "node_descriptor": b"\x01@\x8e\x02\x10RR\x00\x00\x00R\x00\x00",

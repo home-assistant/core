@@ -8,14 +8,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import (
-    CONF_ADDR,
-    CONF_DIMMERS,
-    CONF_RATE,
-    ENTITY_SIGNAL,
-    HOMEWORKS_CONTROLLER,
-    HomeworksDevice,
-)
+from . import CONF_ADDR, CONF_DIMMERS, CONF_RATE, HOMEWORKS_CONTROLLER, HomeworksDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +40,7 @@ class HomeworksLight(HomeworksDevice, Light):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        signal = ENTITY_SIGNAL.format(self._addr)
+        signal = f"homeworks_entity_{self._addr}"
         _LOGGER.debug("connecting %s", signal)
         async_dispatcher_connect(self.hass, signal, self._update_callback)
         self._controller.request_dimmer_level(self._addr)

@@ -1,6 +1,4 @@
 """Test init of Coronavirus integration."""
-from asynctest import Mock, patch
-
 from homeassistant.components.coronavirus.const import DOMAIN, OPTION_WORLDWIDE
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
@@ -33,15 +31,8 @@ async def test_migration(hass):
             ),
         },
     )
-    with patch(
-        "coronavirus.get_cases",
-        return_value=[
-            Mock(country="Netherlands", confirmed=10, recovered=8, deaths=1, current=1),
-            Mock(country="Germany", confirmed=1, recovered=0, deaths=0, current=0),
-        ],
-    ):
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
 
     ent_reg = await entity_registry.async_get_registry(hass)
 

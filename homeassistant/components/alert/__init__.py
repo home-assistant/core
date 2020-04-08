@@ -31,7 +31,6 @@ from homeassistant.util.dt import now
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "alert"
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 CONF_CAN_ACK = "can_acknowledge"
 CONF_NOTIFIERS = "notifiers"
@@ -200,7 +199,7 @@ class Alert(ToggleEntity):
         self._ack = False
         self._cancel = None
         self._send_done_message = False
-        self.entity_id = ENTITY_ID_FORMAT.format(entity_id)
+        self.entity_id = f"{DOMAIN}.{entity_id}"
 
         event.async_track_state_change(
             hass, watched_entity_id, self.watched_entity_change

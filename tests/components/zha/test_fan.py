@@ -3,7 +3,6 @@ from unittest.mock import call
 
 import pytest
 import zigpy.zcl.clusters.hvac as hvac
-import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components import fan
 from homeassistant.components.fan import ATTR_SPEED, DOMAIN, SERVICE_SET_SPEED
@@ -20,8 +19,7 @@ from .common import (
     async_enable_traffic,
     async_test_rejoin,
     find_entity_id,
-    make_attribute,
-    make_zcl_header,
+    send_attributes_report,
 )
 
 
@@ -52,16 +50,11 @@ async def test_fan(hass, zha_device_joined_restored, zigpy_device):
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # turn on at fan
-    attr = make_attribute(0, 1)
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+    await send_attributes_report(hass, cluster, {1: 2, 0: 1, 2: 3})
     assert hass.states.get(entity_id).state == STATE_ON
 
     # turn off at fan
-    attr.value.value = 0
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+    await send_attributes_report(hass, cluster, {1: 1, 0: 0, 2: 2})
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # turn on from HA

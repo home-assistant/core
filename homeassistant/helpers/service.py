@@ -10,6 +10,8 @@ from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_ENTITY_ID,
+    CONF_SERVICE,
+    CONF_SERVICE_TEMPLATE,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
 )
@@ -29,8 +31,6 @@ from homeassistant.util.yaml.loader import JSON_TYPE
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
-CONF_SERVICE = "service"
-CONF_SERVICE_TEMPLATE = "service_template"
 CONF_SERVICE_ENTITY_ID = "entity_id"
 CONF_SERVICE_DATA = "data"
 CONF_SERVICE_DATA_TEMPLATE = "data_template"

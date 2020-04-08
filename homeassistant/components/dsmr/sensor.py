@@ -9,7 +9,12 @@ import serial
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+    TIME_HOURS,
+)
 from homeassistant.core import CoreState
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -303,4 +308,4 @@ class DerivativeDSMREntity(DSMREntity):
         """Return the unit of measurement of this entity, per hour, if any."""
         unit = self.get_dsmr_object_attr("unit")
         if unit:
-            return unit + "/h"
+            return f"{unit}/{TIME_HOURS}"

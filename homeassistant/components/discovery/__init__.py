@@ -37,7 +37,6 @@ SERVICE_KONNECTED = "konnected"
 SERVICE_MOBILE_APP = "hass_mobile_app"
 SERVICE_NETGEAR = "netgear_router"
 SERVICE_OCTOPRINT = "octoprint"
-SERVICE_PLEX = "plex_mediaserver"
 SERVICE_ROKU = "roku"
 SERVICE_SABNZBD = "sabnzbd"
 SERVICE_SAMSUNG_PRINTER = "samsung_printer"
@@ -51,7 +50,6 @@ CONFIG_ENTRY_HANDLERS = {
     SERVICE_DAIKIN: "daikin",
     SERVICE_TELLDUSLIVE: "tellduslive",
     SERVICE_IGD: "upnp",
-    SERVICE_PLEX: "plex",
 }
 
 SERVICE_HANDLERS = {

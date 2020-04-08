@@ -306,6 +306,7 @@ class KonnectedView(HomeAssistantView):
             [
                 entry.data[CONF_ACCESS_TOKEN]
                 for entry in hass.config_entries.async_entries(DOMAIN)
+                if entry.data.get(CONF_ACCESS_TOKEN)
             ]
         )
         if auth is None or not next(

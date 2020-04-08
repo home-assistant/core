@@ -335,7 +335,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        if self._min_temp:
+        if self._min_temp is not None:
             return self._min_temp
 
         # get default temp from super class
@@ -344,7 +344,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        if self._max_temp:
+        if self._max_temp is not None:
             return self._max_temp
 
         # Get default temp from super class

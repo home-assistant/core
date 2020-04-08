@@ -485,7 +485,7 @@ def file_tags_extract(path):
                 mp4 = mutagen.mp4.MP4(path)
                 open(G_COVER_FILE, "wb").write(mp4["covr"][0])
             except Exception as e:
-                _LOGGER.error("Error " + str(e))
+                _LOGGER.info("Error " + str(e))
 
     return ret_path, f_length
 
@@ -520,8 +520,10 @@ class LocalData:
             self.say("Czytam: ")
             with open(self.current_path) as file:
                 self.say(file.read())
-        elif mime_type.startswith("audio/"):
+        elif mime_type.startswith("audio/") or mime_type.startswith("video/"):
             _url = self.current_path
+            if _url.startswith("/data/data/pl.sviete.dom/files/home/dom/dyski-zdalne/"):
+                self.say("Pobieram i odtwarzam")
             # TODO search the album and title ...
             album_cover_path, file_length = file_tags_extract(self.current_path)
             _audio_info = {
@@ -551,7 +553,9 @@ class LocalData:
                 self.seek_position = 0
         else:
             _LOGGER.info(
-                "Tego typu plików jeszcze nie obsługuję." + str(self.current_path)
+                mime_type
+                + "Tego typu plików jeszcze nie obsługuję."
+                + str(self.current_path)
             )
             self.say("Tego typu plików jeszcze nie obsługuję.")
 

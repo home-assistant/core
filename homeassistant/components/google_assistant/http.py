@@ -53,7 +53,7 @@ def _get_homegraph_jwt(time, iss, key):
 
 async def _get_homegraph_token(hass, jwt_signed):
     headers = {
-        "Authorization": "Bearer {}".format(jwt_signed),
+        "Authorization": f"Bearer {jwt_signed}",
         "Content-Type": "application/x-www-form-urlencoded",
     }
     data = {
@@ -185,7 +185,7 @@ class GoogleConfig(AbstractConfig):
 
         async def _call():
             headers = {
-                "Authorization": "Bearer {}".format(self._access_token),
+                "Authorization": f"Bearer {self._access_token}",
                 "X-GFE-SSL": "yes",
             }
             async with session.post(url, headers=headers, json=data) as res:

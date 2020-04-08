@@ -14,11 +14,11 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     EVENT_HOMEASSISTANT_START,
+    TIME_MINUTES,
 )
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ CONF_TRAVEL_MODE = "travel_mode"
 
 DEFAULT_NAME = "Google Travel Time"
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 ALL_LANGUAGES = [
     "ar",
@@ -162,7 +162,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
                 options[CONF_MODE] = travel_mode
 
         titled_mode = options.get(CONF_MODE).title()
-        formatted_name = "{} - {}".format(DEFAULT_NAME, titled_mode)
+        formatted_name = f"{DEFAULT_NAME} - {titled_mode}"
         name = config.get(CONF_NAME, formatted_name)
         api_key = config.get(CONF_API_KEY)
         origin = config.get(CONF_ORIGIN)
@@ -188,7 +188,7 @@ class GoogleTravelTimeSensor(Entity):
         self._hass = hass
         self._name = name
         self._options = options
-        self._unit_of_measurement = "min"
+        self._unit_of_measurement = TIME_MINUTES
         self._matrix = None
         self.valid_api_connection = True
 
@@ -255,7 +255,6 @@ class GoogleTravelTimeSensor(Entity):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Google."""
         options_copy = self._options.copy()

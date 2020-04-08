@@ -125,14 +125,11 @@ async def test_hap_create(hass, hmip_config_entry, simple_mock_home):
     hass.config.components.add(HMIPC_DOMAIN)
     hap = HomematicipHAP(hass, hmip_config_entry)
     assert hap
-    with patch(
-        "homeassistant.components.homematicip_cloud.hap.AsyncHome",
-        return_value=simple_mock_home,
-    ), patch.object(hap, "async_connect"):
+    with patch.object(hap, "async_connect"):
         assert await hap.async_setup()
 
 
-async def test_hap_create_exception(hass, hmip_config_entry):
+async def test_hap_create_exception(hass, hmip_config_entry, mock_connection_init):
     """Mock AsyncHome to execute get_hap."""
     hass.config.components.add(HMIPC_DOMAIN)
 

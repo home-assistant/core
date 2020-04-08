@@ -85,6 +85,21 @@ async def async_setup_entry(
     return True
 
 
+def _return_on_connection_error(ret=None):
+    def wrap(func):
+        def wrapped_f(*args, **kwargs):
+            if not args[0].available:
+                return ret
+            try:
+                return func(*args, **kwargs)
+            except ConnectionError:
+                return ret
+
+        return wrapped_f
+
+    return wrap
+
+
 class ControllerDevice(ClimateDevice):
     """Representation of iZone Controller."""
 
@@ -161,6 +176,8 @@ class ControllerDevice(ClimateDevice):
             if ctrl is not self._controller:
                 return
             self.async_schedule_update_ha_state()
+            for zone in self.zones.values():
+                zone.async_schedule_update_ha_state()
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -259,12 +276,15 @@ class ControllerDevice(ClimateDevice):
         if not self._controller.is_on:
             return HVAC_MODE_OFF
         mode = self._controller.mode
+        if mode == Controller.Mode.FREE_AIR:
+            return HVAC_MODE_FAN_ONLY
         for (key, value) in self._state_to_pizone.items():
             if value == mode:
                 return key
         assert False, "Should be unreachable"
 
     @property
+    @_return_on_connection_error([])
     def hvac_modes(self) -> List[str]:
         """Return the list of available operation modes."""
         if self._controller.free_air:
@@ -272,11 +292,13 @@ class ControllerDevice(ClimateDevice):
         return [HVAC_MODE_OFF, *self._state_to_pizone]
 
     @property
+    @_return_on_connection_error(PRESET_NONE)
     def preset_mode(self):
         """Eco mode is external air."""
         return PRESET_ECO if self._controller.free_air else PRESET_NONE
 
     @property
+    @_return_on_connection_error([PRESET_NONE])
     def preset_modes(self):
         """Available preset modes, normal or eco."""
         if self._controller.free_air_enabled:
@@ -284,6 +306,7 @@ class ControllerDevice(ClimateDevice):
         return [PRESET_NONE]
 
     @property
+    @_return_on_connection_error()
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
         if self._controller.mode == Controller.Mode.FREE_AIR:
@@ -291,6 +314,7 @@ class ControllerDevice(ClimateDevice):
         return self._controller.temp_return
 
     @property
+    @_return_on_connection_error()
     def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
         if not self._supported_features & SUPPORT_TARGET_TEMPERATURE:
@@ -318,11 +342,13 @@ class ControllerDevice(ClimateDevice):
         return list(self._fan_to_pizone)
 
     @property
+    @_return_on_connection_error(0.0)
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._controller.temp_min
 
     @property
+    @_return_on_connection_error(50.0)
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._controller.temp_max
@@ -437,7 +463,7 @@ class ZoneDevice(ClimateDevice):
     @property
     def unique_id(self):
         """Return the ID of the controller device."""
-        return "{}_z{}".format(self._controller.unique_id, self._zone.index + 1)
+        return f"{self._controller.unique_id}_z{self._zone.index + 1}"
 
     @property
     def name(self) -> str:
@@ -453,14 +479,12 @@ class ZoneDevice(ClimateDevice):
         return False
 
     @property
+    @_return_on_connection_error(0)
     def supported_features(self):
         """Return the list of supported features."""
-        try:
-            if self._zone.mode == Zone.Mode.AUTO:
-                return self._supported_features
-            return self._supported_features & ~SUPPORT_TARGET_TEMPERATURE
-        except ConnectionError:
-            return None
+        if self._zone.mode == Zone.Mode.AUTO:
+            return self._supported_features
+        return self._supported_features & ~SUPPORT_TARGET_TEMPERATURE
 
     @property
     def temperature_unit(self):

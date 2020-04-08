@@ -1,0 +1,14 @@
+{
+    "config": {
+        "title": "Shopping List",
+        "step": {
+          "user": {
+            "title": "Shopping List",
+            "description": "Do you want to configure the shopping list?"
+          }
+        },
+        "abort": {
+          "already_configured": "The shopping list is already configured."
+        }
+    }
+}

@@ -7,7 +7,8 @@
                 "description": "Enter your credentials",
                 "data": {
                     "username": "Email",
-                    "password": "Password"
+                    "password": "Password",
+                    "with_family": "With family"
                 }
             },
             "trusted_device": {
@@ -31,7 +32,8 @@
             "validate_verification_code": "Failed to verify your verification code, choose a trust device and start the verification again"
         },
         "abort": {
-            "already_configured": "Account already configured"
+            "already_configured": "Account already configured",
+            "no_device": "None of your devices have \"Find my iPhone\" activated"
         }
     }
 }

@@ -88,9 +88,7 @@ def setup_platform(hass, config, add_entities, disc_info=None):
                 continue
 
             name = cust_calendar[CONF_NAME]
-            device_id = "{} {}".format(
-                cust_calendar[CONF_CALENDAR], cust_calendar[CONF_NAME]
-            )
+            device_id = f"{cust_calendar[CONF_CALENDAR]} {cust_calendar[CONF_NAME]}"
             entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             calendar_devices.append(
                 WebDavCalendarEventDevice(

@@ -239,7 +239,8 @@ class Timer(RestoreEntity):
         state = await self.async_get_last_state()
         self._state = state and state.state == state
 
-    async def async_start(self, duration):
+    @callback
+    def async_start(self, duration):
         """Start a timer."""
         if self._listener:
             self._listener()
@@ -267,11 +268,12 @@ class Timer(RestoreEntity):
         self.hass.bus.async_fire(event, {"entity_id": self.entity_id})
 
         self._listener = async_track_point_in_utc_time(
-            self.hass, self.async_finished, self._end
+            self.hass, self._async_finished, self._end
         )
         self.async_write_ha_state()
 
-    async def async_pause(self):
+    @callback
+    def async_pause(self):
         """Pause a timer."""
         if self._listener is None:
             return
@@ -284,7 +286,8 @@ class Timer(RestoreEntity):
         self.hass.bus.async_fire(EVENT_TIMER_PAUSED, {"entity_id": self.entity_id})
         self.async_write_ha_state()
 
-    async def async_cancel(self):
+    @callback
+    def async_cancel(self):
         """Cancel a timer."""
         if self._listener:
             self._listener()
@@ -295,7 +298,8 @@ class Timer(RestoreEntity):
         self.hass.bus.async_fire(EVENT_TIMER_CANCELLED, {"entity_id": self.entity_id})
         self.async_write_ha_state()
 
-    async def async_finish(self):
+    @callback
+    def async_finish(self):
         """Reset and updates the states, fire finished event."""
         if self._state != STATUS_ACTIVE:
             return
@@ -306,7 +310,8 @@ class Timer(RestoreEntity):
         self.hass.bus.async_fire(EVENT_TIMER_FINISHED, {"entity_id": self.entity_id})
         self.async_write_ha_state()
 
-    async def async_finished(self, time):
+    @callback
+    def _async_finished(self, time):
         """Reset and updates the states, fire finished event."""
         if self._state != STATUS_ACTIVE:
             return

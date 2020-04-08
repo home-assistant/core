@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "DirecTV receiver is already configured",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, please try again"
+        },
+        "flow_title": "DirecTV: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "data": {},
+                "description": "Do you want to set up {name}?",
+                "title": "Connect to the DirecTV receiver"
+            },
+            "user": {
+                "data": {
+                    "host": "Host or IP address"
+                },
+                "title": "Connect to the DirecTV receiver"
+            }
+        },
+        "title": "DirecTV"
+    }
+}

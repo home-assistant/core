@@ -1,12 +1,20 @@
 """Support for Fibaro switches."""
 import logging
 
-from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
+from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.util import convert
 
 from . import FIBARO_DEVICES, FibaroDevice
 
 _LOGGER = logging.getLogger(__name__)
+
+
+# Ais dom
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Fibaro switches."""
+    async_add_entities(
+        [FibaroSwitch(device) for device in hass.data[FIBARO_DEVICES]["switch"]], True
+    )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -26,7 +34,7 @@ class FibaroSwitch(FibaroDevice, SwitchDevice):
         """Initialize the Fibaro device."""
         self._state = False
         super().__init__(fibaro_device)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        self.entity_id = f"{DOMAIN}.{self.ha_id}"
 
     def turn_on(self, **kwargs):
         """Turn device on."""

@@ -1565,3 +1565,72 @@ async def test_restore_state(hass, hass_client):
     assert state_1.attributes["longitude"] == state_2.attributes["longitude"]
     assert state_1.attributes["battery_level"] == state_2.attributes["battery_level"]
     assert state_1.attributes["source_type"] == state_2.attributes["source_type"]
+
+
+async def test_returns_empty_friends(hass, hass_client):
+    """Test that an empty list of persons' locations is returned."""
+    entry = MockConfigEntry(
+        domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/webhook/owntracks_test",
+        json=LOCATION_MESSAGE,
+        headers={"X-Limit-u": "Paulus", "X-Limit-d": "Pixel"},
+    )
+
+    assert resp.status == 200
+    assert await resp.text() == "[]"
+
+
+async def test_returns_array_friends(hass, hass_client):
+    """Test that a list of persons' current locations is returned."""
+    otracks = MockConfigEntry(
+        domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
+    )
+    otracks.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(otracks.entry_id)
+    await hass.async_block_till_done()
+
+    # Setup device_trackers
+    assert await async_setup_component(
+        hass,
+        "person",
+        {
+            "person": [
+                {
+                    "name": "person 1",
+                    "id": "person1",
+                    "device_trackers": ["device_tracker.person_1_tracker_1"],
+                },
+                {
+                    "name": "person2",
+                    "id": "person2",
+                    "device_trackers": ["device_tracker.person_2_tracker_1"],
+                },
+            ]
+        },
+    )
+    hass.states.async_set(
+        "device_tracker.person_1_tracker_1", "home", {"latitude": 10, "longitude": 20}
+    )
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/webhook/owntracks_test",
+        json=LOCATION_MESSAGE,
+        headers={"X-Limit-u": "Paulus", "X-Limit-d": "Pixel"},
+    )
+
+    assert resp.status == 200
+    response_json = json.loads(await resp.text())
+
+    assert response_json[0]["lat"] == 10
+    assert response_json[0]["lon"] == 20
+    assert response_json[0]["tid"] == "p1"

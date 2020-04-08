@@ -36,6 +36,7 @@ from .const import (
     AUTH,
     DOMAIN,
     MANUFACTURER,
+    MODELS,
     SERVICE_SETSCHEDULE,
 )
 
@@ -187,7 +188,7 @@ class NetatmoThermostat(ClimateDevice):
             "identifiers": {(DOMAIN, self._room_id)},
             "name": self._room_name,
             "manufacturer": MANUFACTURER,
-            "model": self._module_type,
+            "model": MODELS[self._module_type],
         }
 
     @property
@@ -440,6 +441,11 @@ class ThermostatData:
         except TypeError:
             _LOGGER.error("ThermostatData::setup() got error")
             return False
+        except pyatmo.exceptions.NoDevice:
+            _LOGGER.debug(
+                "No climate devices for %s (%s)", self.home_name, self.home_id
+            )
+            return False
         return True
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -447,6 +453,9 @@ class ThermostatData:
         """Call the NetAtmo API to update the data."""
         try:
             self.homestatus = pyatmo.HomeStatus(self.auth, home_id=self.home_id)
+        except pyatmo.exceptions.NoDevice:
+            _LOGGER.error("No device found")
+            return
         except TypeError:
             _LOGGER.error("Error when getting homestatus")
             return

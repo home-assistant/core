@@ -68,8 +68,3 @@ class TeslaDeviceEntity(TeslaDevice, TrackerEntity):
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
         return SOURCE_TYPE_GPS
-
-    @property
-    def force_update(self):
-        """All updates do not need to be written to the state machine."""
-        return False

@@ -2,9 +2,8 @@
 from copy import deepcopy
 import json
 
-from homeassistant.components import mqtt, vacuum
+from homeassistant.components import vacuum
 from homeassistant.components.mqtt import CONF_COMMAND_TOPIC
-from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.components.mqtt.vacuum import schema_legacy as mqttvacuum
 from homeassistant.components.mqtt.vacuum.schema import services_to_strings
 from homeassistant.components.mqtt.vacuum.schema_legacy import (
@@ -26,11 +25,21 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_mqtt_message,
-    async_mock_mqtt_component,
+from .common import (
+    help_test_discovery_broken,
+    help_test_discovery_removal,
+    help_test_discovery_update,
+    help_test_discovery_update_attr,
+    help_test_entity_device_info_update,
+    help_test_entity_device_info_with_identifier,
+    help_test_entity_id_update,
+    help_test_setting_attribute_via_mqtt_json_message,
+    help_test_unique_id,
+    help_test_update_with_json_attrs_bad_JSON,
+    help_test_update_with_json_attrs_not_dict,
 )
+
+from tests.common import async_fire_mqtt_message
 from tests.components.vacuum import common
 
 DEFAULT_CONFIG = {
@@ -52,6 +61,29 @@ DEFAULT_CONFIG = {
     mqttvacuum.CONF_FAN_SPEED_TEMPLATE: "{{ value_json.fan_speed }}",
     mqttvacuum.CONF_SET_FAN_SPEED_TOPIC: "vacuum/set_fan_speed",
     mqttvacuum.CONF_FAN_SPEED_LIST: ["min", "medium", "high", "max"],
+}
+
+DEFAULT_CONFIG_ATTR = {
+    vacuum.DOMAIN: {
+        "platform": "mqtt",
+        "name": "test",
+        "json_attributes_topic": "attr-topic",
+    }
+}
+
+DEFAULT_CONFIG_DEVICE_INFO = {
+    "platform": "mqtt",
+    "name": "Test 1",
+    "command_topic": "test-command-topic",
+    "device": {
+        "identifiers": ["helloworld"],
+        "connections": [["mac", "02:5b:26:a8:dc:12"]],
+        "manufacturer": "Whatever",
+        "name": "Beer",
+        "model": "Glass",
+        "sw_version": "0.1-beta",
+    },
+    "unique_id": "veryunique",
 }
 
 
@@ -514,273 +546,116 @@ async def test_custom_availability_payload(hass, mqtt_mock):
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_discovery_removal_vacuum(hass, mqtt_mock):
-    """Test removal of discovered vacuum."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, "homeassistant", {}, entry)
-
-    data = '{ "name": "Beer",' '  "command_topic": "test_topic" }'
-
-    async_fire_mqtt_message(hass, "homeassistant/vacuum/bla/config", data)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("vacuum.beer")
-    assert state is not None
-    assert state.name == "Beer"
-
-    async_fire_mqtt_message(hass, "homeassistant/vacuum/bla/config", "")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("vacuum.beer")
-    assert state is None
-
-
-async def test_discovery_broken(hass, mqtt_mock, caplog):
-    """Test handling of bad discovery message."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, "homeassistant", {}, entry)
-
-    data1 = '{ "name": "Beer",' '  "command_topic": "test_topic#" }'
-    data2 = '{ "name": "Milk",' '  "command_topic": "test_topic" }'
-
-    async_fire_mqtt_message(hass, "homeassistant/vacuum/bla/config", data1)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("vacuum.beer")
-    assert state is None
-
-    async_fire_mqtt_message(hass, "homeassistant/vacuum/bla/config", data2)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("vacuum.milk")
-    assert state is not None
-    assert state.name == "Milk"
-    state = hass.states.get("vacuum.beer")
-    assert state is None
-
-
-async def test_discovery_update_vacuum(hass, mqtt_mock):
-    """Test update of discovered vacuum."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, "homeassistant", {}, entry)
-
-    data1 = '{ "name": "Beer",' '  "command_topic": "test_topic" }'
-    data2 = '{ "name": "Milk",' '  "command_topic": "test_topic" }'
-
-    async_fire_mqtt_message(hass, "homeassistant/vacuum/bla/config", data1)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("vacuum.beer")
-    assert state is not None
-    assert state.name == "Beer"
-
-    async_fire_mqtt_message(hass, "homeassistant/vacuum/bla/config", data2)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("vacuum.beer")
-    assert state is not None
-    assert state.name == "Milk"
-    state = hass.states.get("vacuum.milk")
-    assert state is None
-
-
 async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
-    assert await async_setup_component(
-        hass,
-        vacuum.DOMAIN,
-        {
-            vacuum.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "json_attributes_topic": "attr-topic",
-            }
-        },
+    await help_test_setting_attribute_via_mqtt_json_message(
+        hass, mqtt_mock, vacuum.DOMAIN, DEFAULT_CONFIG_ATTR
     )
-
-    async_fire_mqtt_message(hass, "attr-topic", '{ "val": "100" }')
-    state = hass.states.get("vacuum.test")
-
-    assert state.attributes.get("val") == "100"
 
 
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
-    assert await async_setup_component(
-        hass,
-        vacuum.DOMAIN,
-        {
-            vacuum.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "json_attributes_topic": "attr-topic",
-            }
-        },
+    await help_test_update_with_json_attrs_not_dict(
+        hass, mqtt_mock, caplog, vacuum.DOMAIN, DEFAULT_CONFIG_ATTR
     )
 
-    async_fire_mqtt_message(hass, "attr-topic", '[ "list", "of", "things"]')
-    state = hass.states.get("vacuum.test")
 
-    assert state.attributes.get("val") is None
-    assert "JSON result was not a dictionary" in caplog.text
-
-
-async def test_update_with_json_attrs_bad_json(hass, mqtt_mock, caplog):
+async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
-    assert await async_setup_component(
-        hass,
-        vacuum.DOMAIN,
-        {
-            vacuum.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "json_attributes_topic": "attr-topic",
-            }
-        },
+    await help_test_update_with_json_attrs_bad_JSON(
+        hass, mqtt_mock, caplog, vacuum.DOMAIN, DEFAULT_CONFIG_ATTR
     )
-
-    async_fire_mqtt_message(hass, "attr-topic", "This is not JSON")
-
-    state = hass.states.get("vacuum.test")
-    assert state.attributes.get("val") is None
-    assert "Erroneous JSON: This is not JSON" in caplog.text
 
 
 async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     """Test update of discovered MQTTAttributes."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, "homeassistant", {}, entry)
     data1 = (
-        '{ "name": "Beer",'
+        '{ "name": "test",'
         '  "command_topic": "test_topic",'
         '  "json_attributes_topic": "attr-topic1" }'
     )
     data2 = (
-        '{ "name": "Beer",'
+        '{ "name": "test",'
         '  "command_topic": "test_topic",'
         '  "json_attributes_topic": "attr-topic2" }'
     )
-    async_fire_mqtt_message(hass, "homeassistant/vacuum/bla/config", data1)
-    await hass.async_block_till_done()
-    async_fire_mqtt_message(hass, "attr-topic1", '{ "val": "100" }')
-    state = hass.states.get("vacuum.beer")
-    assert state.attributes.get("val") == "100"
-
-    # Change json_attributes_topic
-    async_fire_mqtt_message(hass, "homeassistant/vacuum/bla/config", data2)
-    await hass.async_block_till_done()
-
-    # Verify we are no longer subscribing to the old topic
-    async_fire_mqtt_message(hass, "attr-topic1", '{ "val": "50" }')
-    state = hass.states.get("vacuum.beer")
-    assert state.attributes.get("val") == "100"
-
-    # Verify we are subscribing to the new topic
-    async_fire_mqtt_message(hass, "attr-topic2", '{ "val": "75" }')
-    state = hass.states.get("vacuum.beer")
-    assert state.attributes.get("val") == "75"
+    await help_test_discovery_update_attr(
+        hass, mqtt_mock, caplog, vacuum.DOMAIN, data1, data2
+    )
 
 
 async def test_unique_id(hass, mqtt_mock):
     """Test unique id option only creates one vacuum per unique_id."""
-    await async_mock_mqtt_component(hass)
-    assert await async_setup_component(
-        hass,
-        vacuum.DOMAIN,
-        {
-            vacuum.DOMAIN: [
-                {
-                    "platform": "mqtt",
-                    "name": "Test 1",
-                    "command_topic": "command-topic",
-                    "unique_id": "TOTALLY_UNIQUE",
-                },
-                {
-                    "platform": "mqtt",
-                    "name": "Test 2",
-                    "command_topic": "command-topic",
-                    "unique_id": "TOTALLY_UNIQUE",
-                },
-            ]
-        },
+    config = {
+        vacuum.DOMAIN: [
+            {
+                "platform": "mqtt",
+                "name": "Test 1",
+                "command_topic": "test_topic",
+                "unique_id": "TOTALLY_UNIQUE",
+            },
+            {
+                "platform": "mqtt",
+                "name": "Test 2",
+                "command_topic": "test_topic",
+                "unique_id": "TOTALLY_UNIQUE",
+            },
+        ]
+    }
+    await help_test_unique_id(hass, vacuum.DOMAIN, config)
+
+
+async def test_discovery_removal_vacuum(hass, mqtt_mock, caplog):
+    """Test removal of discovered vacuum."""
+    data = json.dumps(DEFAULT_CONFIG_ATTR[vacuum.DOMAIN])
+    await help_test_discovery_removal(hass, mqtt_mock, caplog, vacuum.DOMAIN, data)
+
+
+async def test_discovery_update_vacuum(hass, mqtt_mock, caplog):
+    """Test update of discovered vacuum."""
+    data1 = '{ "name": "Beer",' '  "command_topic": "test_topic" }'
+    data2 = '{ "name": "Milk",' '  "command_topic": "test_topic" }'
+    await help_test_discovery_update(
+        hass, mqtt_mock, caplog, vacuum.DOMAIN, data1, data2
     )
 
-    async_fire_mqtt_message(hass, "test-topic", "payload")
 
-    assert len(hass.states.async_entity_ids()) == 1
+async def test_discovery_broken(hass, mqtt_mock, caplog):
+    """Test handling of bad discovery message."""
+    data1 = '{ "name": "Beer",' '  "command_topic": "test_topic#" }'
+    data2 = '{ "name": "Milk",' '  "command_topic": "test_topic" }'
+    await help_test_discovery_broken(
+        hass, mqtt_mock, caplog, vacuum.DOMAIN, data1, data2
+    )
 
 
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     """Test MQTT vacuum device registry integration."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    entry.add_to_hass(hass)
-    await async_start(hass, "homeassistant", {}, entry)
-    registry = await hass.helpers.device_registry.async_get_registry()
-
-    data = json.dumps(
-        {
-            "platform": "mqtt",
-            "name": "Test 1",
-            "command_topic": "test-command-topic",
-            "device": {
-                "identifiers": ["helloworld"],
-                "connections": [["mac", "02:5b:26:a8:dc:12"]],
-                "manufacturer": "Whatever",
-                "name": "Beer",
-                "model": "Glass",
-                "sw_version": "0.1-beta",
-            },
-            "unique_id": "veryunique",
-        }
+    await help_test_entity_device_info_with_identifier(
+        hass, mqtt_mock, vacuum.DOMAIN, DEFAULT_CONFIG_DEVICE_INFO
     )
-    async_fire_mqtt_message(hass, "homeassistant/vacuum/bla/config", data)
-    await hass.async_block_till_done()
-
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
-    assert device is not None
-    assert device.identifiers == {("mqtt", "helloworld")}
-    assert device.connections == {("mac", "02:5b:26:a8:dc:12")}
-    assert device.manufacturer == "Whatever"
-    assert device.name == "Beer"
-    assert device.model == "Glass"
-    assert device.sw_version == "0.1-beta"
 
 
 async def test_entity_device_info_update(hass, mqtt_mock):
     """Test device registry update."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    entry.add_to_hass(hass)
-    await async_start(hass, "homeassistant", {}, entry)
-    registry = await hass.helpers.device_registry.async_get_registry()
+    await help_test_entity_device_info_update(
+        hass, mqtt_mock, vacuum.DOMAIN, DEFAULT_CONFIG_DEVICE_INFO
+    )
 
+
+async def test_entity_id_update(hass, mqtt_mock):
+    """Test MQTT subscriptions are managed when entity_id is updated."""
     config = {
-        "platform": "mqtt",
-        "name": "Test 1",
-        "command_topic": "test-command-topic",
-        "device": {
-            "identifiers": ["helloworld"],
-            "connections": [["mac", "02:5b:26:a8:dc:12"]],
-            "manufacturer": "Whatever",
-            "name": "Beer",
-            "model": "Glass",
-            "sw_version": "0.1-beta",
-        },
-        "unique_id": "veryunique",
+        vacuum.DOMAIN: [
+            {
+                "platform": "mqtt",
+                "name": "beer",
+                "battery_level_topic": "test-topic",
+                "battery_level_template": "{{ value_json.battery_level }}",
+                "command_topic": "command-topic",
+                "availability_topic": "avty-topic",
+                "unique_id": "TOTALLY_UNIQUE",
+            }
+        ]
     }
-
-    data = json.dumps(config)
-    async_fire_mqtt_message(hass, "homeassistant/vacuum/bla/config", data)
-    await hass.async_block_till_done()
-
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
-    assert device is not None
-    assert device.name == "Beer"
-
-    config["device"]["name"] = "Milk"
-    data = json.dumps(config)
-    async_fire_mqtt_message(hass, "homeassistant/vacuum/bla/config", data)
-    await hass.async_block_till_done()
-
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
-    assert device is not None
-    assert device.name == "Milk"
+    await help_test_entity_id_update(hass, mqtt_mock, vacuum.DOMAIN, config)

@@ -11,9 +11,7 @@ from homeassistant.components import (
     group,
     light,
 )
-from homeassistant.components.device_tracker.const import (
-    ENTITY_ID_FORMAT as DT_ENTITY_ID_FORMAT,
-)
+from homeassistant.components.device_tracker.const import DOMAIN
 from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -36,7 +34,6 @@ def scanner(hass):
         "homeassistant.components.device_tracker.legacy.load_yaml_config_file",
         return_value={
             "device_1": {
-                "hide_if_away": False,
                 "mac": "DEV1",
                 "name": "Unnamed Device",
                 "picture": "http://example.com/dev1.jpg",
@@ -44,7 +41,6 @@ def scanner(hass):
                 "vendor": None,
             },
             "device_2": {
-                "hide_if_away": False,
                 "mac": "DEV2",
                 "name": "Unnamed Device",
                 "picture": "http://example.com/dev2.jpg",
@@ -122,7 +118,7 @@ async def test_lights_turn_on_when_coming_home_after_sun_set(hass, scanner):
             hass, device_sun_light_trigger.DOMAIN, {device_sun_light_trigger.DOMAIN: {}}
         )
 
-        hass.states.async_set(DT_ENTITY_ID_FORMAT.format("device_2"), STATE_HOME)
+        hass.states.async_set(f"{DOMAIN}.device_2", STATE_HOME)
 
         await hass.async_block_till_done()
 
@@ -133,8 +129,8 @@ async def test_lights_turn_on_when_coming_home_after_sun_set(hass, scanner):
 
 async def test_lights_turn_on_when_coming_home_after_sun_set_person(hass, scanner):
     """Test lights turn on when coming home after sun set."""
-    device_1 = DT_ENTITY_ID_FORMAT.format("device_1")
-    device_2 = DT_ENTITY_ID_FORMAT.format("device_2")
+    device_1 = f"{DOMAIN}.device_1"
+    device_2 = f"{DOMAIN}.device_2"
 
     test_time = datetime(2017, 4, 5, 3, 2, 3, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=test_time):

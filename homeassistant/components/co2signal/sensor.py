@@ -65,9 +65,7 @@ class CO2Sensor(Entity):
         if country_code is not None:
             device_name = country_code
         else:
-            device_name = "{lat}/{lon}".format(
-                lat=round(self._latitude, 2), lon=round(self._longitude, 2)
-            )
+            device_name = f"{round(self._latitude, 2)}/{round(self._longitude, 2)}"
 
         self._friendly_name = f"CO2 intensity - {device_name}"
 

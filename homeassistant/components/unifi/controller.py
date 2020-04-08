@@ -31,9 +31,7 @@ from .const import (
     CONF_TRACK_WIRED_CLIENTS,
     CONTROLLER_ID,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
-    DEFAULT_BLOCK_CLIENTS,
     DEFAULT_DETECTION_TIME,
-    DEFAULT_SSID_FILTER,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
@@ -99,7 +97,7 @@ class UniFiController:
     @property
     def option_block_clients(self):
         """Config entry option with list of clients to control network access."""
-        return self.config_entry.options.get(CONF_BLOCK_CLIENT, DEFAULT_BLOCK_CLIENTS)
+        return self.config_entry.options.get(CONF_BLOCK_CLIENT, [])
 
     @property
     def option_track_clients(self):
@@ -130,7 +128,7 @@ class UniFiController:
     @property
     def option_ssid_filter(self):
         """Config entry option listing what SSIDs are being used to track clients."""
-        return self.config_entry.options.get(CONF_SSID_FILTER, DEFAULT_SSID_FILTER)
+        return self.config_entry.options.get(CONF_SSID_FILTER, [])
 
     @property
     def mac(self):
@@ -164,7 +162,7 @@ class UniFiController:
                     WIRELESS_GUEST_CONNECTED,
                 ):
                     self.update_wireless_clients()
-            elif data.get("clients") or data.get("devices"):
+            elif "clients" in data or "devices" in data:
                 async_dispatcher_send(self.hass, self.signal_update)
 
     @property

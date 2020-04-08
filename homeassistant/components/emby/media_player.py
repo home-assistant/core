@@ -190,9 +190,7 @@ class EmbyDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return (
-            f"Emby - {self.device.client} - {self.device.name}" or DEVICE_DEFAULT_NAME
-        )
+        return f"Emby {self.device.name}" or DEVICE_DEFAULT_NAME
 
     @property
     def should_poll(self):

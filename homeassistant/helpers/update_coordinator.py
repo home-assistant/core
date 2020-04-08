@@ -5,6 +5,8 @@ import logging
 from time import monotonic
 from typing import Any, Awaitable, Callable, List, Optional
 
+import aiohttp
+
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
@@ -113,6 +115,16 @@ class DataUpdateCoordinator:
         try:
             start = monotonic()
             self.data = await self.update_method()
+
+        except asyncio.TimeoutError:
+            if self.last_update_success:
+                self.logger.error("Timeout fetching %s data", self.name)
+                self.last_update_success = False
+
+        except aiohttp.ClientError as err:
+            if self.last_update_success:
+                self.logger.error("Error requesting %s data: %s", self.name, err)
+                self.last_update_success = False
 
         except UpdateFailed as err:
             if self.last_update_success:

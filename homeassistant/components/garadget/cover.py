@@ -251,9 +251,7 @@ class GaradgetCover(CoverDevice):
 
     def _get_variable(self, var):
         """Get latest status."""
-        url = "{}/v1/devices/{}/{}?access_token={}".format(
-            self.particle_url, self.device_id, var, self.access_token
-        )
+        url = f"{self.particle_url}/v1/devices/{self.device_id}/{var}?access_token={self.access_token}"
         ret = requests.get(url, timeout=10)
         result = {}
         for pairs in ret.json()["result"].split("|"):

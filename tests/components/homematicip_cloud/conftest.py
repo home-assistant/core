@@ -1,5 +1,5 @@
 """Initializer helpers for HomematicIP fake server."""
-from asynctest import CoroutineMock, MagicMock, Mock
+from asynctest import CoroutineMock, MagicMock, Mock, patch
 from homematicip.aio.auth import AsyncAuth
 from homematicip.aio.connection import AsyncConnection
 from homematicip.aio.home import AsyncHome
@@ -106,9 +106,10 @@ async def mock_hap_with_service_fixture(
 
 
 @pytest.fixture(name="simple_mock_home")
-def simple_mock_home_fixture() -> AsyncHome:
-    """Return a simple AsyncHome Mock."""
-    return Mock(
+def simple_mock_home_fixture():
+    """Return a simple mocked connection."""
+
+    mock_home = Mock(
         spec=AsyncHome,
         name="Demo",
         devices=[],
@@ -119,6 +120,27 @@ def simple_mock_home_fixture() -> AsyncHome:
         dutyCycle=88,
         connected=True,
     )
+
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.AsyncHome",
+        autospec=True,
+        return_value=mock_home,
+    ):
+        yield
+
+
+@pytest.fixture(name="mock_connection_init")
+def mock_connection_init_fixture():
+    """Return a simple mocked connection."""
+
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.AsyncHome.init",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.homematicip_cloud.hap.AsyncAuth.init",
+        return_value=None,
+    ):
+        yield
 
 
 @pytest.fixture(name="simple_mock_auth")

@@ -11,8 +11,12 @@
         },
         "step": {
             "confirm": {
-                "description": "Modello: {model}\nHost: {host}\nPorta: {port}\n\n\u00c8 possibile configurare il comportamento di I/O e del pannello nelle impostazioni del Pannello Allarmi di Konnected.",
+                "description": "Modello: {model}\nID: {id}\nHost: {host}\nPorta: {port}\n\n\u00c8 possibile configurare il comportamento di I/O e del pannello nelle impostazioni del Pannello Allarmi di Konnected.",
                 "title": "Dispositivo Konnected pronto"
+            },
+            "import_confirm": {
+                "description": "In configuration.yaml \u00e8 stato individuato un pannello di allarme Konnected con ID {id}. Questo flusso consentir\u00e0 di importarlo in una voce di configurazione.",
+                "title": "Importa dispositivo Konnected"
             },
             "user": {
                 "data": {
