@@ -22,7 +22,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, HTTP_OK
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
@@ -507,7 +507,7 @@ def _get_cache_files(cache_dir):
         record = _RE_VOICE_FILE.match(file_data)
         if record:
             key = KEY_PATTERN.format(
-                record.group(1), record.group(2), record.group(3), record.group(4),
+                record.group(1), record.group(2), record.group(3), record.group(4)
             )
             cache[key.lower()] = file_data.lower()
     return cache
@@ -543,7 +543,7 @@ class TextToSpeechUrlView(HomeAssistantView):
             url = await self.tts.async_get_url(
                 p_type, message, cache=cache, language=language, options=options
             )
-            resp = self.json({"url": url}, 200)
+            resp = self.json({"url": url}, HTTP_OK)
         except HomeAssistantError as err:
             _LOGGER.error("Error on init tts: %s", err)
             resp = self.json({"error": err}, 400)

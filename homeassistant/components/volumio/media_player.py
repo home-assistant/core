@@ -31,6 +31,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    HTTP_OK,
     STATE_IDLE,
     STATE_PAUSED,
     STATE_PLAYING,
@@ -127,7 +128,7 @@ class Volumio(MediaPlayerDevice):
         try:
             websession = async_get_clientsession(self.hass)
             response = await websession.get(url, params=params)
-            if response.status == 200:
+            if response.status == HTTP_OK:
                 data = await response.json()
             else:
                 _LOGGER.error(

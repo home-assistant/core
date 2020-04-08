@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
+    HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -195,7 +196,7 @@ class RestNotificationService(BaseNotificationService):
             _LOGGER.exception(
                 "Client error. Response %d: %s:", response.status_code, response.reason
             )
-        elif response.status_code >= 200 and response.status_code < 300:
+        elif response.status_code >= HTTP_OK and response.status_code < 300:
             _LOGGER.debug(
                 "Success. Response %d: %s:", response.status_code, response.reason
             )

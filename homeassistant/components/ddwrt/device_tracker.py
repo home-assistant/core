@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -152,7 +153,7 @@ class DdWrtDeviceScanner(DeviceScanner):
         except requests.exceptions.Timeout:
             _LOGGER.exception("Connection to the router timed out")
             return
-        if response.status_code == 200:
+        if response.status_code == HTTP_OK:
             return _parse_ddwrt_response(response.text)
         if response.status_code == 401:
             # Authentication error
