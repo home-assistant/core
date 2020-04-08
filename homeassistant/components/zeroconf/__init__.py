@@ -132,7 +132,11 @@ def handle_homekit(hass, info) -> bool:
         return False
 
     for test_model in HOMEKIT:
-        if model != test_model and not model.startswith(test_model + " "):
+        if (
+            model != test_model
+            and not model.startswith(test_model + " ")
+            and not model.startswith(test_model + "-")
+        ):
             continue
 
         hass.add_job(

@@ -1,6 +1,5 @@
 """Support for Abode Security System switches."""
 import abodepy.helpers.constants as CONST
-import abodepy.helpers.timeline as TIMELINE
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -24,9 +23,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(AbodeSwitch(data, device))
 
     for automation in data.abode.get_automations():
-        entities.append(
-            AbodeAutomationSwitch(data, automation, TIMELINE.AUTOMATION_EDIT_GROUP)
-        )
+        entities.append(AbodeAutomationSwitch(data, automation))
 
     async_add_entities(entities)
 
@@ -52,7 +49,7 @@ class AbodeAutomationSwitch(AbodeAutomation, SwitchDevice):
     """A switch implementation for Abode automations."""
 
     async def async_added_to_hass(self):
-        """Subscribe Abode events."""
+        """Set up trigger automation service."""
         await super().async_added_to_hass()
 
         signal = f"abode_trigger_automation_{self.entity_id}"

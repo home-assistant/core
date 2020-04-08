@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Schl\u00ebssel fir den Racchio Kont."
+                },
+                "description": "Du brauchs een API Schl\u00ebssel vun https://app.rach.io/. Wiel 'Account Settings', a klick dann op 'GET API KEY'.",
+                "title": "Mam Rachio Apparat verbannen"
+            }
+        },
+        "title": "Rachio"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual_run_mins": "Fir w\u00e9i laang, a Minutten, soll eng Statioun ugeschalt gi wann de Schalter ageschalt ass."
+                }
+            }
+        }
+    }
+}

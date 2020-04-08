@@ -54,6 +54,7 @@ from .const import (
     POWER_BATTERY_OR_UNKNOWN,
     POWER_MAINS_POWERED,
     SIGNAL_AVAILABLE,
+    SIGNAL_UPDATE_DEVICE,
     UNKNOWN,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
@@ -92,8 +93,11 @@ class ZHADevice(LogMixin):
             self.name, self.ieee, SIGNAL_AVAILABLE
         )
         self._checkins_missed_count = 0
-        self._unsub = async_dispatcher_connect(
-            self.hass, self._available_signal, self.async_initialize
+        self.unsubs = []
+        self.unsubs.append(
+            async_dispatcher_connect(
+                self.hass, self._available_signal, self.async_initialize
+            )
         )
         self.quirk_applied = isinstance(self._zigpy_device, zigpy.quirks.CustomDevice)
         self.quirk_class = "{}.{}".format(
@@ -105,8 +109,10 @@ class ZHADevice(LogMixin):
         else:
             self._consider_unavailable_time = _CONSIDER_UNAVAILABLE_BATTERY
         keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
-        self._cancel_available_check = async_track_time_interval(
-            self.hass, self._check_available, timedelta(seconds=keep_alive_interval)
+        self.unsubs.append(
+            async_track_time_interval(
+                self.hass, self._check_available, timedelta(seconds=keep_alive_interval)
+            )
         )
         self._ha_device_id = None
         self.status = DeviceStatus.CREATED
@@ -276,7 +282,23 @@ class ZHADevice(LogMixin):
         """Create new device."""
         zha_dev = cls(hass, zigpy_dev, gateway)
         zha_dev.channels = channels.Channels.new(zha_dev)
+        zha_dev.unsubs.append(
+            async_dispatcher_connect(
+                hass,
+                SIGNAL_UPDATE_DEVICE.format(zha_dev.channels.unique_id),
+                zha_dev.async_update_sw_build_id,
+            )
+        )
         return zha_dev
+
+    @callback
+    def async_update_sw_build_id(self, sw_version: int):
+        """Update device sw version."""
+        if self.device_id is None:
+            return
+        self._zha_gateway.ha_device_registry.async_update_device(
+            self.device_id, sw_version=f"0x{sw_version:08x}"
+        )
 
     async def _check_available(self, *_):
         if self.last_seen is None:
@@ -351,7 +373,7 @@ class ZHADevice(LogMixin):
         self.debug("started configuration")
         await self._channels.async_configure()
         self.debug("completed configuration")
-        entry = self.gateway.zha_storage.async_create_or_update(self)
+        entry = self.gateway.zha_storage.async_create_or_update_device(self)
         self.debug("stored in registry: %s", entry)
 
         if self._channels.identify_ch is not None:
@@ -370,13 +392,14 @@ class ZHADevice(LogMixin):
     @callback
     def async_cleanup_handles(self) -> None:
         """Unsubscribe the dispatchers and timers."""
-        self._unsub()
-        self._cancel_available_check()
+        for unsubscribe in self.unsubs:
+            unsubscribe()
 
     @callback
     def async_update_last_seen(self, last_seen):
         """Set last seen on the zigpy device."""
-        self._zigpy_device.last_seen = last_seen
+        if self._zigpy_device.last_seen is None and last_seen is not None:
+            self._zigpy_device.last_seen = last_seen
 
     @callback
     def async_get_info(self):

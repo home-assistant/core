@@ -51,7 +51,7 @@ class IasWd(ZigbeeChannel):
         """Get the specified bit from the value."""
         return (value & (1 << bit)) != 0
 
-    async def squawk(
+    async def issue_squawk(
         self,
         mode=WARNING_DEVICE_SQUAWK_MODE_ARMED,
         strobe=WARNING_DEVICE_STROBE_YES,
@@ -76,7 +76,7 @@ class IasWd(ZigbeeChannel):
 
         await self.squawk(value)
 
-    async def start_warning(
+    async def issue_start_warning(
         self,
         mode=WARNING_DEVICE_MODE_EMERGENCY,
         strobe=WARNING_DEVICE_STROBE_YES,

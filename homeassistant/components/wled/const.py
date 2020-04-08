@@ -3,11 +3,6 @@
 # Integration domain
 DOMAIN = "wled"
 
-# Home Assistant data keys
-DATA_WLED_CLIENT = "wled_client"
-DATA_WLED_TIMER = "wled_timer"
-DATA_WLED_UPDATED = "wled_updated"
-
 # Attributes
 ATTR_COLOR_PRIMARY = "color_primary"
 ATTR_DURATION = "duration"
@@ -22,6 +17,7 @@ ATTR_ON = "on"
 ATTR_PALETTE = "palette"
 ATTR_PLAYLIST = "playlist"
 ATTR_PRESET = "preset"
+ATTR_REVERSE = "reverse"
 ATTR_SEGMENT_ID = "segment_id"
 ATTR_SOFTWARE_VERSION = "sw_version"
 ATTR_SPEED = "speed"
@@ -30,3 +26,7 @@ ATTR_UDP_PORT = "udp_port"
 
 # Units of measurement
 CURRENT_MA = "mA"
+SIGNAL_DBM = "dBm"
+
+# Services
+SERVICE_EFFECT = "effect"

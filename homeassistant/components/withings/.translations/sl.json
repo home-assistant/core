@@ -2,11 +2,10 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "\u010casovna omejitev za generiranje potrditvenega URL-ja je potekla.",
-            "missing_configuration": "Integracija Withings ni konfigurirana. Prosimo, upo\u0161tevajte dokumentacijo.",
-            "no_flows": "Withings morate prvo konfigurirati, preden ga boste lahko uporabili za overitev. Prosimo, preberite dokumentacijo."
+            "missing_configuration": "Integracija Withings ni konfigurirana. Prosimo, upo\u0161tevajte dokumentacijo."
         },
         "create_entry": {
-            "default": "Uspe\u0161no overjen z Withings za izbrani profil."
+            "default": "Uspe\u0161no overjen z Withings."
         },
         "step": {
             "pick_implementation": {
@@ -17,13 +16,6 @@
                     "profile": "Profil"
                 },
                 "description": "Kateri profil ste izbrali na spletni strani Withings? Pomembno je, da se profili ujemajo, sicer bodo podatki napa\u010dno ozna\u010deni.",
-                "title": "Uporabni\u0161ki profil."
-            },
-            "user": {
-                "data": {
-                    "profile": "Profil"
-                },
-                "description": "Izberite uporabni\u0161ki profil, za katerega \u017eelite, da se Home Assistant prika\u017ee s profilom Withings. Na Withings strani ne pozabite izbrati istega uporabnika sicer podatki ne bodo pravilno ozna\u010deni.",
                 "title": "Uporabni\u0161ki profil."
             }
         },

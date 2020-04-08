@@ -3,7 +3,6 @@
   "name": "SimpliSafe",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/simplisafe",
-  "requirements": ["simplisafe-python==9.0.4"],
-  "dependencies": [],
+  "requirements": ["simplisafe-python==9.0.6"],
   "codeowners": ["@bachya"]
 }

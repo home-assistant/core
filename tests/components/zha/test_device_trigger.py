@@ -172,7 +172,7 @@ async def test_if_fires_on_event(hass, mock_devices, calls):
 
     await hass.async_block_till_done()
 
-    channel = zha_device.channels.pools[0].relay_channels["1:0x0006"]
+    channel = zha_device.channels.pools[0].client_channels["1:0x0006"]
     channel.zha_send_event(COMMAND_SINGLE, [])
     await hass.async_block_till_done()
 

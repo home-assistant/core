@@ -1,6 +1,0 @@
-resume_program:
-  description: Resume the programmed schedule.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'

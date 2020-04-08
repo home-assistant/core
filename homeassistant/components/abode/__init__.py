@@ -263,7 +263,6 @@ def setup_abode_events(hass):
         TIMELINE.TEST_GROUP,
         TIMELINE.CAPTURE_GROUP,
         TIMELINE.DEVICE_GROUP,
-        TIMELINE.AUTOMATION_EDIT_GROUP,
     ]
 
     for event in events:
@@ -343,21 +342,14 @@ class AbodeDevice(Entity):
 class AbodeAutomation(Entity):
     """Representation of an Abode automation."""
 
-    def __init__(self, data, automation, event=None):
+    def __init__(self, data, automation):
         """Initialize for Abode automation."""
         self._data = data
         self._automation = automation
-        self._event = event
 
     async def async_added_to_hass(self):
-        """Subscribe to a group of Abode timeline events."""
-        if self._event:
-            self.hass.async_add_job(
-                self._data.abode.events.add_event_callback,
-                self._event,
-                self._update_callback,
-            )
-            self.hass.data[DOMAIN].entity_ids.add(self.entity_id)
+        """Set up automation entity."""
+        self.hass.data[DOMAIN].entity_ids.add(self.entity_id)
 
     @property
     def should_poll(self):
@@ -385,8 +377,3 @@ class AbodeAutomation(Entity):
     def unique_id(self):
         """Return a unique ID to use for this automation."""
         return self._automation.automation_id
-
-    def _update_callback(self, device):
-        """Update the automation state."""
-        self._automation.refresh()
-        self.schedule_update_ha_state()

@@ -309,4 +309,13 @@ GARMIN_ENTITY_LIST = {
         DEVICE_CLASS_TIMESTAMP,
         False,
     ],
+    "weight": ["Weight", "kg", "mdi:weight-kilogram", None, False],
+    "bmi": ["BMI", "", "mdi:food", None, False],
+    "bodyFat": ["Body Fat", "%", "mdi:food", None, False],
+    "bodyWater": ["Body Water", "%", "mdi:water-percent", None, False],
+    "bodyMass": ["Body Mass", "kg", "mdi:food", None, False],
+    "muscleMass": ["Muscle Mass", "kg", "mdi:dumbbell", None, False],
+    "physiqueRating": ["Physique Rating", "", "mdi:numeric", None, False],
+    "visceralFat": ["Visceral Fat", "", "mdi:food", None, False],
+    "metabolicAge": ["Metabolic Age", "", "mdi:calendar-heart", None, False],
 }

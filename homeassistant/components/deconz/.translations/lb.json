@@ -14,10 +14,6 @@
         "flow_title": "deCONZ Zigbee gateway ({host})",
         "step": {
             "hassio_confirm": {
-                "data": {
-                    "allow_clip_sensor": "Erlaabt den Import vun virtuellen Sensoren",
-                    "allow_deconz_groups": "Erlaabt den Import vun deCONZ Gruppen"
-                },
                 "description": "W\u00ebllt dir Home Assistant konfigur\u00e9iere fir sech mat der deCONZ gateway ze verbannen d\u00e9i vum hass.io add-on {addon} bereet gestallt g\u00ebtt?",
                 "title": "deCONZ Zigbee gateway via Hass.io add-on"
             },
@@ -31,13 +27,6 @@
             "link": {
                 "description": "Entsperrt \u00e4r deCONZ gateway fir se mat Home Assistant ze registr\u00e9ieren.\n\n1. Gidd op deCONZ System Astellungen\n2. Dr\u00e9ckt \"Unlock\" Gateway Kn\u00e4ppchen",
                 "title": "Link mat deCONZ"
-            },
-            "options": {
-                "data": {
-                    "allow_clip_sensor": "Erlaabt den Import vun virtuellen Sensoren",
-                    "allow_deconz_groups": "Erlaabt den Import vun deCONZ Gruppen"
-                },
-                "title": "Extra Konfiguratiouns Optiounen fir deCONZ"
             }
         },
         "title": "deCONZ Zigbee gateway"
@@ -96,13 +85,6 @@
     },
     "options": {
         "step": {
-            "async_step_deconz_devices": {
-                "data": {
-                    "allow_clip_sensor": "deCONZ Clip Sensoren erlaben",
-                    "allow_deconz_groups": "deCONZ Luucht Gruppen erlaben"
-                },
-                "description": "Visibilit\u00e9it vun deCONZ Apparater konfigur\u00e9ieren"
-            },
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "deCONZ Clip Sensoren erlaben",

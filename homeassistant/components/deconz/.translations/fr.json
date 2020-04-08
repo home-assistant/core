@@ -14,10 +14,6 @@
         "flow_title": "Passerelle deCONZ Zigbee ({host})",
         "step": {
             "hassio_confirm": {
-                "data": {
-                    "allow_clip_sensor": "Autoriser l'importation de capteurs virtuels",
-                    "allow_deconz_groups": "Autoriser l'importation des groupes deCONZ"
-                },
                 "description": "Voulez-vous configurer Home Assistant pour qu'il se connecte \u00e0 la passerelle deCONZ fournie par l'add-on hass.io {addon} ?",
                 "title": "Passerelle deCONZ Zigbee via l'add-on Hass.io"
             },
@@ -31,13 +27,6 @@
             "link": {
                 "description": "D\u00e9verrouillez votre passerelle deCONZ pour vous enregistrer avec Home Assistant. \n\n 1. Acc\u00e9dez aux param\u00e8tres avanc\u00e9s du syst\u00e8me deCONZ \n 2. Cliquez sur \"D\u00e9verrouiller la passerelle\"",
                 "title": "Lien vers deCONZ"
-            },
-            "options": {
-                "data": {
-                    "allow_clip_sensor": "Autoriser l'importation de capteurs virtuels",
-                    "allow_deconz_groups": "Autoriser l'importation des groupes deCONZ"
-                },
-                "title": "Options de configuration suppl\u00e9mentaires pour deCONZ"
             }
         },
         "title": "Passerelle deCONZ Zigbee"
@@ -62,20 +51,20 @@
             "side_5": "Face 5",
             "side_6": "Face 6",
             "turn_off": "\u00c9teint",
-            "turn_on": "Allum\u00e9"
+            "turn_on": "Allumer"
         },
         "trigger_type": {
             "remote_awakened": "Appareil r\u00e9veill\u00e9",
-            "remote_button_double_press": "Bouton \"{subtype}\" double cliqu\u00e9",
-            "remote_button_long_press": "Bouton \"{subtype}\" appuy\u00e9 continuellement",
+            "remote_button_double_press": "Double clic sur le bouton \" {subtype} \"",
+            "remote_button_long_press": "Appuyer en continu sur le bouton \" {subtype} \"",
             "remote_button_long_release": "Bouton \"{subtype}\" rel\u00e2ch\u00e9 apr\u00e8s appui long",
-            "remote_button_quadruple_press": "Bouton \"{subtype}\" quadruple cliqu\u00e9",
-            "remote_button_quintuple_press": "Bouton \"{subtype}\" quintuple cliqu\u00e9",
+            "remote_button_quadruple_press": "Quadruple clic sur le bouton \" {subtype} \"",
+            "remote_button_quintuple_press": "Quintuple clic sur le bouton \" {subtype} \"",
             "remote_button_rotated": "Bouton \"{subtype}\" tourn\u00e9",
             "remote_button_rotation_stopped": "La rotation du bouton \" {subtype} \" s'est arr\u00eat\u00e9e",
             "remote_button_short_press": "Bouton \"{subtype}\" appuy\u00e9",
             "remote_button_short_release": "Bouton \"{subtype}\" rel\u00e2ch\u00e9",
-            "remote_button_triple_press": "Bouton \"{subtype}\" triple cliqu\u00e9",
+            "remote_button_triple_press": "Triple clic sur le bouton \" {subtype} \"",
             "remote_double_tap": "Appareil \"{subtype}\" tapot\u00e9 deux fois",
             "remote_double_tap_any_side": "Appareil double tap\u00e9 de n\u2019importe quel c\u00f4t\u00e9",
             "remote_falling": "Appareil en chute libre",
@@ -96,19 +85,13 @@
     },
     "options": {
         "step": {
-            "async_step_deconz_devices": {
-                "data": {
-                    "allow_clip_sensor": "Autoriser les capteurs deCONZ CLIP",
-                    "allow_deconz_groups": "Autoriser les groupes de lumi\u00e8res deCONZ"
-                },
-                "description": "Configurer la visibilit\u00e9 des appareils de type deCONZ"
-            },
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Autoriser les capteurs deCONZ CLIP",
                     "allow_deconz_groups": "Autoriser les groupes de lumi\u00e8res deCONZ"
                 },
-                "description": "Configurer la visibilit\u00e9 des appareils de type deCONZ"
+                "description": "Configurer la visibilit\u00e9 des appareils de type deCONZ",
+                "title": "Options deCONZ"
             }
         }
     }

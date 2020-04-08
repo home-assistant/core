@@ -6,7 +6,8 @@
         },
         "error": {
             "faulty_credentials": "Ung\u00fcltige Anmeldeinformationen",
-            "service_unavailable": "Kein Dienst verf\u00fcgbar"
+            "service_unavailable": "Kein Dienst verf\u00fcgbar",
+            "unknown_client_mac": "Unter dieser MAC-Adresse ist kein Client verf\u00fcgbar."
         },
         "step": {
             "user": {
@@ -23,8 +24,20 @@
         },
         "title": "UniFi-Controller"
     },
+    "error": {
+        "unknown_client_mac": "Unter dieser MAC-Adresse ist in UniFi kein Client verf\u00fcgbar"
+    },
     "options": {
         "step": {
+            "client_control": {
+                "data": {
+                    "block_client": "Clients mit Netzwerkzugriffskontrolle",
+                    "new_client": "F\u00fcgen Sie einen neuen Client f\u00fcr die Netzwerkzugangskontrolle hinzu",
+                    "poe_clients": "POE-Kontrolle von Clients zulassen"
+                },
+                "description": "Konfigurieren Sie Client-Steuerelemente \n\nErstellen Sie Switches f\u00fcr Seriennummern, f\u00fcr die Sie den Netzwerkzugriff steuern m\u00f6chten.",
+                "title": "UniFi-Optionen 2/3"
+            },
             "device_tracker": {
                 "data": {
                     "detection_time": "Zeit in Sekunden vom letzten Gesehenen bis zur Entfernung",
@@ -34,7 +47,7 @@
                     "track_wired_clients": "Einbinden von kabelgebundenen Netzwerk-Clients"
                 },
                 "description": "Konfigurieren Sie die Ger\u00e4teverfolgung",
-                "title": "UniFi-Optionen"
+                "title": "UniFi-Optionen 1/3"
             },
             "init": {
                 "data": {
@@ -44,10 +57,10 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Erstellen von Bandbreiten-Nutzungssensoren f\u00fcr Netzwerk-Clients"
+                    "allow_bandwidth_sensors": "Bandbreitennutzungssensoren f\u00fcr Netzwerkclients"
                 },
                 "description": "Konfigurieren Sie Statistiksensoren",
-                "title": "UniFi-Optionen"
+                "title": "UniFi-Optionen 3/3"
             }
         }
     }

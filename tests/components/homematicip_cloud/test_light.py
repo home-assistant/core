@@ -27,11 +27,11 @@ async def test_manually_configured_platform(hass):
 
 async def test_hmip_light(hass, default_mock_hap_factory):
     """Test HomematicipLight."""
-    entity_id = "light.treppe"
-    entity_name = "Treppe"
+    entity_id = "light.treppe_ch"
+    entity_name = "Treppe CH"
     device_model = "HmIP-BSL"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=[entity_name]
+        test_devices=["Treppe"]
     )
 
     ha_state, hmip_device = get_and_check_entity_basics(
@@ -66,8 +66,8 @@ async def test_hmip_light(hass, default_mock_hap_factory):
 
 async def test_hmip_notification_light(hass, default_mock_hap_factory):
     """Test HomematicipNotificationLight."""
-    entity_id = "light.treppe_top_notification"
-    entity_name = "Treppe Top Notification"
+    entity_id = "light.alarm_status"
+    entity_name = "Alarm Status"
     device_model = "HmIP-BSL"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Treppe"]

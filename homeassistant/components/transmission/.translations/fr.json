@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'h\u00f4te est d\u00e9j\u00e0 configur\u00e9.",
-            "one_instance_allowed": "Une seule instance est n\u00e9cessaire."
+            "already_configured": "L'h\u00f4te est d\u00e9j\u00e0 configur\u00e9."
         },
         "error": {
             "cannot_connect": "Impossible de se connecter \u00e0 l'h\u00f4te",
@@ -10,12 +9,6 @@
             "wrong_credentials": "Mauvais nom d'utilisateur ou mot de passe"
         },
         "step": {
-            "options": {
-                "data": {
-                    "scan_interval": "Fr\u00e9quence de mise \u00e0 jour"
-                },
-                "title": "Configurer les options"
-            },
             "user": {
                 "data": {
                     "host": "H\u00f4te",
@@ -35,7 +28,6 @@
                 "data": {
                     "scan_interval": "Fr\u00e9quence de mise \u00e0 jour"
                 },
-                "description": "Configurer les options pour Transmission",
                 "title": "Configurer les options pour Transmission"
             }
         }

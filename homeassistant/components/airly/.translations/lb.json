@@ -5,7 +5,6 @@
         },
         "error": {
             "auth": "Api Schl\u00ebssel ass net korrekt.",
-            "name_exists": "Numm g\u00ebtt et schonn",
             "wrong_location": "Keng Airly Moos Statioun an d\u00ebsem Ber\u00e4ich"
         },
         "step": {

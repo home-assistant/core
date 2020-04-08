@@ -1,10 +1,13 @@
 """Device discovery functions for Zigbee Home Automation."""
 
+from collections import Counter
 import logging
 from typing import Callable, List, Tuple
 
 from homeassistant import const as ha_const
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import const as zha_const, registries as zha_regs, typing as zha_typing
@@ -157,4 +160,94 @@ class ProbeEndpoint:
             self._device_configs.update(overrides)
 
 
+class GroupProbe:
+    """Determine the appropriate component for a group."""
+
+    def __init__(self):
+        """Initialize instance."""
+        self._hass = None
+
+    def initialize(self, hass: HomeAssistantType) -> None:
+        """Initialize the group probe."""
+        self._hass = hass
+
+    @callback
+    def discover_group_entities(self, group: zha_typing.ZhaGroupType) -> None:
+        """Process a group and create any entities that are needed."""
+        # only create a group entity if there are 2 or more members in a group
+        if len(group.members) < 2:
+            _LOGGER.debug(
+                "Group: %s:0x%04x has less than 2 members - skipping entity discovery",
+                group.name,
+                group.group_id,
+            )
+            return
+
+        entity_domains = GroupProbe.determine_entity_domains(self._hass, group)
+
+        if not entity_domains:
+            return
+
+        zha_gateway = self._hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
+        for domain in entity_domains:
+            entity_class = zha_regs.ZHA_ENTITIES.get_group_entity(domain)
+            if entity_class is None:
+                continue
+            self._hass.data[zha_const.DATA_ZHA][domain].append(
+                (
+                    entity_class,
+                    (
+                        group.get_domain_entity_ids(domain),
+                        f"{domain}_zha_group_0x{group.group_id:04x}",
+                        group.group_id,
+                        zha_gateway.coordinator_zha_device,
+                    ),
+                )
+            )
+        async_dispatcher_send(self._hass, zha_const.SIGNAL_ADD_ENTITIES)
+
+    @staticmethod
+    def determine_entity_domains(
+        hass: HomeAssistantType, group: zha_typing.ZhaGroupType
+    ) -> List[str]:
+        """Determine the entity domains for this group."""
+        entity_domains: List[str] = []
+        if len(group.members) < 2:
+            _LOGGER.debug(
+                "Group: %s:0x%04x has less than 2 members so cannot default an entity domain",
+                group.name,
+                group.group_id,
+            )
+            return entity_domains
+
+        zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
+        all_domain_occurrences = []
+        for device in group.members:
+            if device.is_coordinator:
+                continue
+            entities = async_entries_for_device(
+                zha_gateway.ha_entity_registry, device.device_id
+            )
+            all_domain_occurrences.extend(
+                [
+                    entity.domain
+                    for entity in entities
+                    if entity.domain in zha_regs.GROUP_ENTITY_DOMAINS
+                ]
+            )
+        if not all_domain_occurrences:
+            return entity_domains
+        # get all domains we care about if there are more than 2 entities of this domain
+        counts = Counter(all_domain_occurrences)
+        entity_domains = [domain[0] for domain in counts.items() if domain[1] >= 2]
+        _LOGGER.debug(
+            "The entity domains are: %s for group: %s:0x%04x",
+            entity_domains,
+            group.name,
+            group.group_id,
+        )
+        return entity_domains
+
+
 PROBE = ProbeEndpoint()
+GROUP_PROBE = GroupProbe()

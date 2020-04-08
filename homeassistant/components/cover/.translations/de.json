@@ -1,5 +1,13 @@
 {
     "device_automation": {
+        "action_type": {
+            "close": "Schlie\u00dfe {entity_name}",
+            "close_tilt": "{entity_name} gekippt schlie\u00dfen",
+            "open": "\u00d6ffne {entity_name}",
+            "open_tilt": "{entity_name} gekippt \u00f6ffnen",
+            "set_position": "Position von {entity_name} setzen",
+            "set_tilt_position": "Neigeposition von {entity_name} einstellen"
+        },
         "condition_type": {
             "is_closed": "{entity_name} ist geschlossen",
             "is_closing": "{entity_name} wird geschlossen",

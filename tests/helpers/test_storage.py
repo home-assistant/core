@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.helpers import storage
 from homeassistant.util import dt
 
@@ -85,7 +85,7 @@ async def test_saving_on_stop(hass, hass_storage):
     store.async_delay_save(lambda: MOCK_DATA, 1)
     assert store.key not in hass_storage
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
     await hass.async_block_till_done()
     assert hass_storage[store.key] == {
         "version": MOCK_VERSION,
