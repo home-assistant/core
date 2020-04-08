@@ -59,29 +59,45 @@ async def test_access_from_banned_ip(hass, aiohttp_client):
 
 
 @pytest.mark.parametrize(
-    "remote_addr, status", list(zip(BANNED_IPS_WITH_SUPERVISOR, [403, 403, 404])),
+    "remote_addr, bans, status",
+    list(zip(BANNED_IPS_WITH_SUPERVISOR, [1, 1, 0], [403, 403, 401])),
 )
 async def test_access_from_supervisor_ip(
-    remote_addr, status, hass, aiohttp_client, hassio_env
+    remote_addr, bans, status, hass, aiohttp_client, hassio_env
 ):
     """Test accessing to server from supervisor IP."""
     app = web.Application()
     app["hass"] = hass
-    setup_bans(hass, app, 5)
-    set_real_ip = mock_real_ip(app)
+
+    async def unauth_handler(request):
+        """Return a mock web response."""
+        raise HTTPUnauthorized
+
+    app.router.add_get("/", unauth_handler)
+    setup_bans(hass, app, 1)
+    mock_real_ip(app)(remote_addr)
 
     with patch(
-        "homeassistant.components.http.ban.async_load_ip_bans_config",
-        return_value=[IpBan(banned_ip) for banned_ip in BANNED_IPS_WITH_SUPERVISOR],
+        "homeassistant.components.http.ban.async_load_ip_bans_config", return_value=[],
     ):
         client = await aiohttp_client(app)
 
     assert await async_setup_component(hass, "hassio", {"hassio": {}})
 
-    with patch.dict(os.environ, {"SUPERVISOR": SUPERVISOR_IP}):
-        set_real_ip(remote_addr)
+    m_open = mock_open()
+
+    with patch.dict(os.environ, {"SUPERVISOR": SUPERVISOR_IP}), patch(
+        "homeassistant.components.http.ban.open", m_open, create=True
+    ):
+        resp = await client.get("/")
+        assert resp.status == 401
+        assert len(app[KEY_BANNED_IPS]) == bans
+        assert m_open.call_count == bans
+
+        # second request should be forbidden if banned
         resp = await client.get("/")
         assert resp.status == status
+        assert len(app[KEY_BANNED_IPS]) == bans
 
 
 async def test_ban_middleware_not_loaded_by_config(hass):

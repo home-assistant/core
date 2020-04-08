@@ -59,20 +59,12 @@ async def ban_middleware(request, handler):
         _LOGGER.error("IP Ban middleware loaded but banned IPs not loaded")
         return await handler(request)
 
-    hass = request.app["hass"]
-
     # Verify if IP is not banned
     ip_address_ = request[KEY_REAL_IP]
 
-    # Supervisor IP should never be banned
-    if "hassio" in hass.config.components and hass.components.hassio.get_supervisor_ip() == str(
-        ip_address_
-    ):
-        is_banned = False
-    else:
-        is_banned = any(
-            ip_ban.ip_address == ip_address_ for ip_ban in request.app[KEY_BANNED_IPS]
-        )
+    is_banned = any(
+        ip_ban.ip_address == ip_address_ for ip_ban in request.app[KEY_BANNED_IPS]
+    )
 
     if is_banned:
         raise HTTPForbidden()
@@ -118,6 +110,12 @@ async def process_wrong_login(request):
         return
 
     request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
+
+    # Supervisor IP should never be banned
+    if "hassio" in hass.config.components and hass.components.hassio.get_supervisor_ip() == str(
+        remote_addr
+    ):
+        return
 
     if (
         request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr]
