@@ -146,12 +146,9 @@ def is_hassio(hass):
 @callback
 def get_supervisor_ip():
     """Return the supervisor ip address."""
-    if "SUPERVISOR" in os.environ:
-        supervisor_ip = os.environ["SUPERVISOR"].split(":")[0]
-    else:
-        supervisor_ip = None
-
-    return supervisor_ip
+    if "SUPERVISOR" not in os.environ:
+        return None
+    return os.environ["SUPERVISOR"].partition(":")[0]
 
 
 async def async_setup(hass, config):
