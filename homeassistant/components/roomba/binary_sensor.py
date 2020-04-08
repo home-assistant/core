@@ -37,7 +37,7 @@ class RoombaBinStatus(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._name} bin full"
+        return f"{self._name} Bin Full"
 
     @property
     def unique_id(self):
