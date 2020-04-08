@@ -7,11 +7,7 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Union, cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import (
-    Integration,
-    IntegrationNotFound,
-    async_get_integration,
-)
+from homeassistant.loader import Integration, IntegrationNotFound, async_get_integration
 import homeassistant.util.package as pkg_util
 
 DATA_PIP_LOCK = "pip_lock"
