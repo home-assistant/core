@@ -1,0 +1,25 @@
+{
+    "config": {
+        "title": "Bosch Smart Home Controller",
+        "step": {
+            "user": {
+                "title": "SHC Parameter",
+                "data": {
+                    "name": "Name",
+                    "ip_address": "IP Adresse",
+                    "ssl_certificate": "SSL Zertifikat",
+                    "ssl_key": "SSL Schlüssel",
+                    "icon": "Symbol"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Verbindungsfehler, bitte erneut versuchen",
+            "invalid_auth": "Ungültige Authentifikation",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "abort": {
+            "already_configured": "Gerät ist bereits konfiguriert"
+        }
+    }
+}

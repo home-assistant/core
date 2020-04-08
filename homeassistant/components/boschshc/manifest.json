@@ -1,0 +1,15 @@
+{
+  "domain": "boschshc",
+  "name": "Bosch Smart Home Controller Interface API",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/boschshc",
+  "requirements": ["boschshcpy==0.1.2"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@tschamm",
+    "@cabrust"
+  ]
+}
