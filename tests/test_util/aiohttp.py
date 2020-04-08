@@ -56,6 +56,7 @@ class AiohttpClientMocker:
             text = _json.dumps(json)
         if text is not None:
             content = text.encode("utf-8")
+        content_not_empty = content is not None
         if content is None:
             content = b""
 
@@ -67,10 +68,14 @@ class AiohttpClientMocker:
         new_response = AiohttpClientMockResponse(
             method, url, status, content, cookies, exc, headers, long_poll
         )
-        if long_poll and content != b"":
+        if long_poll and content_not_empty:
             for response in self._mocks:
                 if response.long_poll and response.match_request(method, url, params):
                     response.set_long_poll_response(new_response)
+                    return
+            assert (
+                False
+            ), "First call with with long_poll has to be with empty content to set up queue."
         else:
             self._mocks.append(new_response)
 
