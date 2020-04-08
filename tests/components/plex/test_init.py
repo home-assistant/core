@@ -73,12 +73,6 @@ async def test_setup_with_config(hass):
 
     assert loaded_server.plex_server == mock_plex_server
 
-    assert server_id in hass.data[const.DOMAIN][const.DISPATCHERS]
-    assert server_id in hass.data[const.DOMAIN][const.WEBSOCKETS]
-    assert (
-        hass.data[const.DOMAIN][const.PLATFORMS_COMPLETED][server_id] == const.PLATFORMS
-    )
-
 
 class TestClockedPlex(ClockedTestCase):
     """Create clock-controlled asynctest class."""
@@ -128,13 +122,6 @@ class TestClockedPlex(ClockedTestCase):
         loaded_server = hass.data[const.DOMAIN][const.SERVERS][server_id]
 
         assert loaded_server.plex_server == mock_plex_server
-
-        assert server_id in hass.data[const.DOMAIN][const.DISPATCHERS]
-        assert server_id in hass.data[const.DOMAIN][const.WEBSOCKETS]
-        assert (
-            hass.data[const.DOMAIN][const.PLATFORMS_COMPLETED][server_id]
-            == const.PLATFORMS
-        )
 
         async_dispatcher_send(
             hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id)
@@ -290,21 +277,11 @@ async def test_unload_config_entry(hass):
 
     assert loaded_server.plex_server == mock_plex_server
 
-    assert server_id in hass.data[const.DOMAIN][const.DISPATCHERS]
-    assert server_id in hass.data[const.DOMAIN][const.WEBSOCKETS]
-    assert (
-        hass.data[const.DOMAIN][const.PLATFORMS_COMPLETED][server_id] == const.PLATFORMS
-    )
-
     with patch("homeassistant.components.plex.PlexWebsocket.close") as mock_close:
         await hass.config_entries.async_unload(entry.entry_id)
         assert mock_close.called
 
     assert entry.state == ENTRY_STATE_NOT_LOADED
-
-    assert server_id not in hass.data[const.DOMAIN][const.SERVERS]
-    assert server_id not in hass.data[const.DOMAIN][const.DISPATCHERS]
-    assert server_id not in hass.data[const.DOMAIN][const.WEBSOCKETS]
 
 
 async def test_setup_with_photo_session(hass):
