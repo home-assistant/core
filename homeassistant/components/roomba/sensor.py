@@ -34,7 +34,7 @@ class RoombaBattery(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._name} battery level"
+        return f"{self._name} Battery Level"
 
     @property
     def unique_id(self):
