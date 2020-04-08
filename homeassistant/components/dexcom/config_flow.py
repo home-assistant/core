@@ -38,9 +38,9 @@ class DexcomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_USERNAME], data=user_input
                 )
             except SessionError:
-                errors["base"] = "session"
+                errors["base"] = "session_error"
             except AccountError:
-                errors["base"] = "account"
+                errors["base"] = "account_error"
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
 

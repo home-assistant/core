@@ -66,6 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         try:
             return await hass.async_add_executor_job(dexcom.get_current_glucose_reading)
         except SessionError:
+            _LOGGER.debug("Session error, attempting to fetch new session id")
             await hass.async_add_executor_job(dexcom.create_session())
             return await hass.async_add_executor_job(dexcom.get_current_glucose_reading)
 

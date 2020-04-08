@@ -1,8 +1,8 @@
 {
     "config": {
         "error": {
-            "account": "Invalid authentication, please try again.",
-            "session": "Failed to connect, please try again.",
+            "account_error": "Invalid authentication, please try again.",
+            "session_error": "Failed to connect, please try again.",
             "unknown": "Unexpected error occured."
         },
         "flow_title": "Dexcom",
