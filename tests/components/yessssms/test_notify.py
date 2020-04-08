@@ -8,7 +8,12 @@ import requests_mock
 
 from homeassistant.components.yessssms.const import CONF_PROVIDER
 import homeassistant.components.yessssms.notify as yessssms
-from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_RECIPIENT,
+    CONF_USERNAME,
+    HTTP_INTERNAL_SERVER_ERROR,
+)
 from homeassistant.setup import async_setup_component
 
 
@@ -318,7 +323,7 @@ class TestNotifyYesssSMS(unittest.TestCase):
             "POST",
             # pylint: disable=protected-access
             self.yessssms.yesss._websms_url,
-            status_code=500,
+            status_code=HTTP_INTERNAL_SERVER_ERROR,
         )
 
         message = "Testing YesssSMS platform :)"
