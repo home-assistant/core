@@ -1,10 +1,10 @@
 {
+  "title": "Griddy",
   "config": {
     "error": {
       "cannot_connect": "Failed to connect, please try again",
       "unknown": "Unexpected error"
     },
-    "title": "Griddy",
     "step": {
       "user": {
         "description": "Your Load Zone is in your Griddy account under “Account > Meter > Load Zone.”",

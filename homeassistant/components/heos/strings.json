@@ -1,6 +1,6 @@
 {
+  "title": "HEOS",
   "config": {
-    "title": "HEOS",
     "step": {
       "user": {
         "title": "Connect to Heos",

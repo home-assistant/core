@@ -1,4 +1,5 @@
 {
+  "title": "Google Hangouts",
   "config": {
     "abort": {
       "already_configured": "Google Hangouts is already configured",
@@ -24,7 +25,6 @@
         },
         "title": "2-Factor-Authentication"
       }
-    },
-    "title": "Google Hangouts"
+    }
   }
 }

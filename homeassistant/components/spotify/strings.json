@@ -1,4 +1,5 @@
 {
+  "title": "Spotify",
   "config": {
     "step": {
       "pick_implementation": {
@@ -12,7 +13,6 @@
     },
     "create_entry": {
       "default": "Successfully authenticated with Spotify."
-    },
-    "title": "Spotify"
+    }
   }
 }

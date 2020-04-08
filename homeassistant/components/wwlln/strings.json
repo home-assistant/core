@@ -1,6 +1,6 @@
 {
+  "title": "World Wide Lightning Location Network (WWLLN)",
   "config": {
-    "title": "World Wide Lightning Location Network (WWLLN)",
     "step": {
       "user": {
         "title": "Fill in your location information.",

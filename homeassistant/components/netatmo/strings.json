@@ -1,6 +1,6 @@
 {
+  "title": "Netatmo",
   "config": {
-    "title": "Netatmo",
     "step": {
       "pick_implementation": {
         "title": "Pick Authentication Method"

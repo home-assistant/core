@@ -1,6 +1,6 @@
 {
+  "title": "UPnP/IGD",
   "config": {
-    "title": "UPnP/IGD",
     "step": {
       "init": {
         "title": "UPnP/IGD"

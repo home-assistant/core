@@ -1,6 +1,6 @@
 {
+  "title": "Ring",
   "config": {
-    "title": "Ring",
     "step": {
       "user": {
         "title": "Sign-in with Ring account",

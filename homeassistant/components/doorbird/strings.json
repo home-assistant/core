@@ -1,4 +1,5 @@
 {
+  "title": "DoorBird",
   "options": {
     "step": {
       "init": {
@@ -26,7 +27,6 @@
       "link_local_address": "Link local addresses are not supported",
       "not_doorbird_device": "This device is not a DoorBird"
     },
-    "title": "DoorBird",
     "flow_title": "DoorBird {name} ({host})",
     "error": {
       "invalid_auth": "Invalid authentication",

@@ -1,6 +1,6 @@
 {
+  "title": "Brother Printer",
   "config": {
-    "title": "Brother Printer",
     "flow_title": "Brother Printer: {model} {serial_number}",
     "step": {
       "user": {
