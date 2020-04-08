@@ -3,14 +3,14 @@
         "abort": {
             "already_configured": "D\u00ebs Samsung TV ass scho konfigur\u00e9iert.",
             "already_in_progress": "Konfiguratioun fir d\u00ebs Samsung TV ass schonn am gaang.",
-            "auth_missing": "Home Assistant ass net authentifiz\u00e9iert fir sech mat d\u00ebsem Samsung TV ze verbannen.",
+            "auth_missing": "Home Assistant ass net authentifiz\u00e9iert fir sech mat d\u00ebsem Samsung TV ze verbannen. Iwwerpr\u00e9if d'Astellunge vum Fernseh fir Home Assistant z'erlaben.",
             "not_successful": "Keng Verbindung mat d\u00ebsem Samsung TV Apparat m\u00e9iglech.",
             "not_supported": "D\u00ebsen Samsung TV Modell g\u00ebtt momentan net \u00ebnnerst\u00ebtzt"
         },
         "flow_title": "Samsnung TV:{model}",
         "step": {
             "confirm": {
-                "description": "W\u00ebllt dir de Samsung TV {model} ariichten?. Falls dir Home Assistant nach ni domat verbonnen hutt misst den TV eng Meldung mat enger Authentifiz\u00e9ierung uweisen. Manuell Konfiguratioun g\u00ebtt iwwerschriwwen.",
+                "description": "W\u00ebllt dir de Samsung TV {model} ariichten?. Falls dir Home Assistant nach ni domat verbonnen hutt misst den TV eng Meldung mat enger Authentifiz\u00e9ierung uweisen. Manuell Konfiguratioun fir d\u00ebse TV g\u00ebtt iwwerschriwwen.",
                 "title": "Samsnung TV"
             },
             "user": {

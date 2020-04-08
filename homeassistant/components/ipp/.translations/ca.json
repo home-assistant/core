@@ -3,10 +3,12 @@
         "abort": {
             "already_configured": "Aquesta impressora ja est\u00e0 configurada.",
             "connection_error": "No s'ha pogut connectar amb la impressora.",
-            "connection_upgrade": "No s'ha pogut connectar amb la impressora, es necessita actualitzar la connexi\u00f3."
+            "connection_upgrade": "No s'ha pogut connectar amb la impressora, es necessita actualitzar la connexi\u00f3.",
+            "parse_error": "No s'ha pogut analitzar la resposta de la impressora."
         },
         "error": {
-            "connection_error": "No s'ha pogut connectar amb la impressora."
+            "connection_error": "No s'ha pogut connectar amb la impressora.",
+            "connection_upgrade": "No s'ha pogut connectar amb la impressora. Prova-ho novament amb l'opci\u00f3 SSL/TLS activada."
         },
         "flow_title": "Impressora: {name}",
         "step": {

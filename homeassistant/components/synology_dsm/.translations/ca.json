@@ -7,7 +7,19 @@
             "login": "Error d\u2019inici de sessi\u00f3: comprova el nom d'usuari i la contrasenya",
             "unknown": "Error desconegut: torna-ho a provar m\u00e9s tard o revisa la configuraci\u00f3"
         },
+        "flow_title": "Synology DSM {name} ({host})",
         "step": {
+            "link": {
+                "data": {
+                    "api_version": "Versi\u00f3 DSM",
+                    "password": "Contrasenya",
+                    "port": "Port (opcional)",
+                    "ssl": "Utilitza SSL/TLS per connectar-te al servidor NAS",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Vols configurar {name} ({host})?",
+                "title": "Synology DSM"
+            },
             "user": {
                 "data": {
                     "api_version": "Versi\u00f3 DSM",
