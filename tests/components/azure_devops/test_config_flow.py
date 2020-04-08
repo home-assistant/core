@@ -20,7 +20,7 @@ async def test_show_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_authorization_error(hass, aioclient_mock):
+async def test_authorization_error(hass):
     """Test we show user form on Azure DevOps connection error."""
     flow = config_flow.AzureDevOpsFlowHandler()
     flow.hass = hass
