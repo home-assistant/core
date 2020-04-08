@@ -81,6 +81,8 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_BLID])
+            self._abort_if_unique_id_configured()
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
@@ -90,8 +92,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if "base" not in errors:
                 await async_disconnect_or_timeout(self.hass, info[ROOMBA_SESSION])
-                await self.async_set_unique_id(user_input[CONF_BLID])
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info[CONF_NAME], data=user_input)
 
         # If there was no user input, do not show the errors.

@@ -118,6 +118,8 @@ async def async_connect_or_timeout(hass, roomba):
             while not roomba.roomba_connected or name is None:
                 # Waiting for connection and check datas ready
                 name = roomba_reported_state(roomba).get("name", None)
+                if name:
+                    break
                 await asyncio.sleep(1)
     except RoombaConnectionError:
         _LOGGER.error("Error to connect to vacuum")
@@ -136,7 +138,6 @@ async def async_disconnect_or_timeout(hass, roomba):
     _LOGGER.debug("Disconnect vacuum")
     with async_timeout.timeout(3):
         await hass.async_add_job(roomba.disconnect)
-    await asyncio.sleep(1)
     return True
 
 
