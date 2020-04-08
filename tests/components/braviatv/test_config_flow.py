@@ -105,7 +105,7 @@ async def test_import_duplicate_error(hass):
     ), patch(
         "bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO
     ), patch(
-        "socket.socket.connect", return_value=None
+        "socket.socket.connect"
     ):
         config_entry.add_to_hass(hass)
 
@@ -141,7 +141,7 @@ async def test_user_host_unreachable(hass):
 async def test_authorize_cannot_connect(hass):
     """Test that errors are shown when cannot connect to host at the authorize step."""
     with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
-        "socket.socket.connect", return_value=None
+        "socket.socket.connect"
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG,
@@ -158,7 +158,7 @@ async def test_authorize_model_unsupported(hass):
     with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
         "bravia_tv.BraviaRC.is_connected", return_value=True
     ), patch("bravia_tv.BraviaRC.get_system_info", side_effect=KeyError), patch(
-        "socket.socket.connect", return_value=None
+        "socket.socket.connect"
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -179,7 +179,7 @@ async def test_duplicate_error(hass):
     ), patch(
         "bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO
     ), patch(
-        "socket.socket.connect", return_value=None
+        "socket.socket.connect"
     ):
         config_entry.add_to_hass(hass)
 
@@ -201,7 +201,7 @@ async def test_create_entry(hass):
     ), patch(
         "bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO
     ), patch(
-        "socket.socket.connect", return_value=None
+        "socket.socket.connect"
     ):
 
         result = await hass.config_entries.flow.async_init(
@@ -231,10 +231,11 @@ async def test_options_flow(hass):
     ), patch(
         "bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO
     ), patch(
-        "socket.socket.connect", return_value=None
+        "socket.socket.connect"
     ):
-
         config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     with patch("bravia_tv.BraviaRC.load_source_list", return_value=BRAVIA_SOURCE_LIST):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
