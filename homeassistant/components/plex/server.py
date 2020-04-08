@@ -61,13 +61,13 @@ class PlexServer:
         self._accounts = []
         self._owner_username = None
         self._version = None
-        self._update_platforms_debouncer = Debouncer(
+        self.async_update_platforms = Debouncer(
             hass,
             _LOGGER,
             cooldown=DEBOUNCE_TIMEOUT,
             immediate=True,
             function=self._async_update_platforms,
-        )
+        ).async_call
 
         # Header conditionally added as it is not available in config entry v1
         if CONF_CLIENT_IDENTIFIER in server_config:
@@ -172,10 +172,6 @@ class PlexServer:
     def _fetch_platform_data(self):
         """Fetch all data from the Plex server in a single method."""
         return (self._plex_server.clients(), self._plex_server.sessions())
-
-    async def async_update_platforms(self):
-        """Wrap the Debouncer call."""
-        await self._update_platforms_debouncer.async_call()
 
     async def _async_update_platforms(self):
         """Update the platform entities."""
