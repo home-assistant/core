@@ -5,7 +5,6 @@
         },
         "error": {
             "auth": "API-n\u00f8kkelen er ikke korrekt.",
-            "name_exists": "Navnet finnes allerede.",
             "wrong_location": "Ingen Airly m\u00e5lestasjoner i dette omr\u00e5det."
         },
         "step": {

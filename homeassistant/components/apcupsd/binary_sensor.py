@@ -32,7 +32,7 @@ class OnlineStatus(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the UPS online status sensor."""
-        return self._config.get(CONF_NAME)
+        return self._config[CONF_NAME]
 
     @property
     def is_on(self):

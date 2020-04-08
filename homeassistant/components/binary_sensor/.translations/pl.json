@@ -46,7 +46,6 @@
         },
         "trigger_type": {
             "bat_low": "nast\u0105pi roz\u0142adowanie baterii {entity_name}",
-            "closed": "nast\u0105pi zamkni\u0119cie {entity_name}",
             "cold": "sensor {entity_name} wykryje zimno",
             "connected": "nast\u0105pi pod\u0142\u0105czenie {entity_name}",
             "gas": "sensor {entity_name} wykryje gaz",
@@ -54,7 +53,6 @@
             "light": "sensor {entity_name} wykryje \u015bwiat\u0142o",
             "locked": "nast\u0105pi zamkni\u0119cie {entity_name}",
             "moist": "nast\u0105pi wykrycie wilgoci {entity_name}",
-            "moist\u00a7": "sensor {entity_name} wykryje wilgo\u0107",
             "motion": "sensor {entity_name} wykryje ruch",
             "moving": "sensor {entity_name} zacznie porusza\u0107 si\u0119",
             "no_gas": "sensor {entity_name} przestanie wykrywa\u0107 gaz",

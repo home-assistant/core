@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Applicatiesleutel en/of API-sleutel al geregistreerd",
             "invalid_key": "Ongeldige API-sleutel en/of applicatiesleutel",
             "no_devices": "Geen apparaten gevonden in account"
         },

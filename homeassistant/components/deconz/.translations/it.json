@@ -14,10 +14,6 @@
         "flow_title": "Gateway Zigbee deCONZ ({host})",
         "step": {
             "hassio_confirm": {
-                "data": {
-                    "allow_clip_sensor": "Consenti l'importazione di sensori virtuali",
-                    "allow_deconz_groups": "Consenti l'importazione di gruppi deCONZ"
-                },
                 "description": "Vuoi configurare Home Assistant per connettersi al gateway deCONZ fornito dal componente aggiuntivo di Hass.io: {addon}?",
                 "title": "Gateway Pigmee deCONZ tramite il componente aggiuntivo di Hass.io"
             },
@@ -31,13 +27,6 @@
             "link": {
                 "description": "Sblocca il tuo gateway deCONZ per registrarti con Home Assistant.\n\n1. Vai a Impostazioni deCONZ -> Gateway -> Avanzate\n2. Premere il pulsante \"Autentica app\"",
                 "title": "Collega con deCONZ"
-            },
-            "options": {
-                "data": {
-                    "allow_clip_sensor": "Consenti l'importazione di sensori virtuali",
-                    "allow_deconz_groups": "Consenti l'importazione di gruppi deCONZ"
-                },
-                "title": "Opzioni di configurazione extra per deCONZ"
             }
         },
         "title": "Gateway Zigbee deCONZ"
@@ -96,13 +85,6 @@
     },
     "options": {
         "step": {
-            "async_step_deconz_devices": {
-                "data": {
-                    "allow_clip_sensor": "Consentire sensori CLIP deCONZ",
-                    "allow_deconz_groups": "Consentire gruppi luce deCONZ"
-                },
-                "description": "Configurare la visibilit\u00e0 dei tipi di dispositivi deCONZ"
-            },
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Consentire sensori CLIP deCONZ",

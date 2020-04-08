@@ -204,7 +204,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             await self._async_load()
             assert self._user_settings is not None
 
-        notify_setting = self._user_settings.get(user_id, None)
+        notify_setting = self._user_settings.get(user_id)
         if notify_setting is None:
             return False
 
@@ -222,7 +222,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             await self._async_load()
             assert self._user_settings is not None
 
-        notify_setting = self._user_settings.get(user_id, None)
+        notify_setting = self._user_settings.get(user_id)
         if notify_setting is None:
             raise ValueError("Cannot find user_id")
 
@@ -246,7 +246,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             await self._async_load()
             assert self._user_settings is not None
 
-        notify_setting = self._user_settings.get(user_id, None)
+        notify_setting = self._user_settings.get(user_id)
         if notify_setting is None:
             _LOGGER.error("Cannot find user %s", user_id)
             return

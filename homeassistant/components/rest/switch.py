@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     HTTP_BAD_REQUEST,
+    HTTP_OK,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -154,7 +155,7 @@ class RestSwitch(SwitchDevice):
         try:
             req = await self.set_device_state(body_on_t)
 
-            if req.status == 200:
+            if req.status == HTTP_OK:
                 self._state = True
             else:
                 _LOGGER.error(
@@ -169,7 +170,7 @@ class RestSwitch(SwitchDevice):
 
         try:
             req = await self.set_device_state(body_off_t)
-            if req.status == 200:
+            if req.status == HTTP_OK:
                 self._state = False
             else:
                 _LOGGER.error(

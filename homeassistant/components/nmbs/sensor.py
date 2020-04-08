@@ -159,8 +159,8 @@ class NMBSLiveBoard(Entity):
         next_departure = liveboard["departures"]["departure"][0]
 
         self._attrs = next_departure
-        self._state = "Track {} - {}".format(
-            next_departure["platform"], next_departure["station"]
+        self._state = (
+            f"Track {next_departure['platform']} - {next_departure['station']}"
         )
 
 

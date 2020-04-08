@@ -7,9 +7,7 @@
         },
         "condition_type": {
             "is_off": "{entity_name} ist ausgeschaltet",
-            "is_on": "{entity_name} ist eingeschaltet",
-            "turn_off": "{entity_name} ausgeschaltet",
-            "turn_on": "{entity_name} eingeschaltet"
+            "is_on": "{entity_name} ist eingeschaltet"
         },
         "trigger_type": {
             "turned_off": "{entity_name} ausgeschaltet",

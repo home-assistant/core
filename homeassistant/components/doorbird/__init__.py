@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_USERNAME,
+    HTTP_OK,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -71,7 +72,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=doorstation_config,
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=doorstation_config
                 )
             )
 
@@ -359,10 +360,10 @@ class DoorBirdRequestView(HomeAssistantView):
             hass.bus.async_fire(RESET_DEVICE_FAVORITES, {"token": token})
 
             message = f"HTTP Favorites cleared for {device.slug}"
-            return web.Response(status=200, text=message)
+            return web.Response(status=HTTP_OK, text=message)
 
         hass.bus.async_fire(f"{DOMAIN}_{event}", event_data)
 
         log_entry(hass, f"Doorbird {event}", "event was fired.", DOMAIN)
 
-        return web.Response(status=200, text="OK")
+        return web.Response(status=HTTP_OK, text="OK")

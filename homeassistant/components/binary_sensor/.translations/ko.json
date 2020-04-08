@@ -46,7 +46,6 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} \ubc30\ud130\ub9ac \uc794\ub7c9\uc774 \ubd80\uc871\ud574\uc9c8 \ub54c",
-            "closed": "{entity_name} \uc774(\uac00) \ub2eb\ud790 \ub54c",
             "cold": "{entity_name} \uc774(\uac00) \ucc28\uac00\uc6cc\uc9c8 \ub54c",
             "connected": "{entity_name} \uc774(\uac00) \uc5f0\uacb0\ub420 \ub54c",
             "gas": "{entity_name} \uc774(\uac00) \uac00\uc2a4\ub97c \uac10\uc9c0\ud560 \ub54c",
@@ -54,7 +53,6 @@
             "light": "{entity_name} \uc774(\uac00) \ube5b\uc744 \uac10\uc9c0\ud560 \ub54c",
             "locked": "{entity_name} \uc774(\uac00) \uc7a0\uae38 \ub54c",
             "moist": "{entity_name} \uc774(\uac00) \uc2b5\ud574\uc9c8 \ub54c",
-            "moist\u00a7": "{entity_name} \uc774(\uac00) \uc2b5\ud574\uc9c8 \ub54c",
             "motion": "{entity_name} \uc774(\uac00) \uc6c0\uc9c1\uc784\uc744 \uac10\uc9c0\ud560 \ub54c",
             "moving": "{entity_name} \uc774(\uac00) \uc6c0\uc9c1\uc77c \ub54c",
             "no_gas": "{entity_name} \uc774(\uac00) \uac00\uc2a4\ub97c \uac10\uc9c0\ud558\uc9c0 \uc54a\uac8c \ub420 \ub54c",
