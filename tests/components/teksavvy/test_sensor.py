@@ -1,7 +1,7 @@
 """Tests for the TekSavvy sensor platform."""
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.teksavvy.sensor import TekSavvyData
-from homeassistant.const import DATA_GIGABYTES, UNIT_PERCENTAGE
+from homeassistant.const import DATA_GIGABYTES, HTTP_NOT_FOUND, UNIT_PERCENTAGE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
@@ -173,7 +173,7 @@ async def test_bad_return_code(hass, aioclient_mock):
         "https://api.teksavvy.com/"
         "web/Usage/UsageSummaryRecords?"
         "$filter=IsCurrent%20eq%20true",
-        status=404,
+        status=HTTP_NOT_FOUND,
     )
 
     tsd = TekSavvyData(hass.loop, async_get_clientsession(hass), "notakey", 400)

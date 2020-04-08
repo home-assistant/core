@@ -5,7 +5,7 @@ import pytest
 
 from homeassistant.bootstrap import async_setup_component
 import homeassistant.components.mailbox as mailbox
-from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
+from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR, HTTP_NOT_FOUND
 
 
 @pytest.fixture
@@ -73,7 +73,7 @@ async def test_get_messages_from_invalid_mailbox(mock_http_client):
     url = "/api/mailbox/messages/mailbox.invalid_mailbox"
 
     req = await mock_http_client.get(url)
-    assert req.status == 404
+    assert req.status == HTTP_NOT_FOUND
 
 
 async def test_get_media_from_invalid_mailbox(mock_http_client):
@@ -82,7 +82,7 @@ async def test_get_media_from_invalid_mailbox(mock_http_client):
     url = "/api/mailbox/media/mailbox.invalid_mailbox/%s" % (msgsha)
 
     req = await mock_http_client.get(url)
-    assert req.status == 404
+    assert req.status == HTTP_NOT_FOUND
 
 
 async def test_get_media_from_invalid_msgid(mock_http_client):
@@ -100,4 +100,4 @@ async def test_delete_from_invalid_mailbox(mock_http_client):
     url = "/api/mailbox/delete/mailbox.invalid_mailbox/%s" % (msgsha)
 
     req = await mock_http_client.delete(url)
-    assert req.status == 404
+    assert req.status == HTTP_NOT_FOUND

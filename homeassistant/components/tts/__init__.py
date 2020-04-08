@@ -22,7 +22,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, HTTP_OK
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, HTTP_NOT_FOUND, HTTP_OK
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
@@ -568,6 +568,6 @@ class TextToSpeechView(HomeAssistantView):
             content, data = await self.tts.async_read_tts(filename)
         except HomeAssistantError as err:
             _LOGGER.error("Error on load tts: %s", err)
-            return web.Response(status=404)
+            return web.Response(status=HTTP_NOT_FOUND)
 
         return web.Response(body=data, content_type=content)
