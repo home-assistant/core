@@ -28,6 +28,7 @@ from .const import (
     GOOGLE_ASSISTANT_API_ENDPOINT,
     HOMEGRAPH_SCOPE,
     HOMEGRAPH_TOKEN_URL,
+    HTTP_INTERNAL_SERVER_ERROR,
     REPORT_STATE_BASE_URL,
     REQUEST_SYNC_BASE_URL,
     SOURCE_CLOUD,
@@ -177,7 +178,7 @@ class GoogleConfig(AbstractConfig):
             return error.status
         except (asyncio.TimeoutError, ClientError):
             _LOGGER.error("Could not contact %s", url)
-            return 500
+            return HTTP_INTERNAL_SERVER_ERROR
 
     async def async_call_homegraph_api(self, url, data):
         """Call a homegraph api with authentication."""
@@ -212,7 +213,7 @@ class GoogleConfig(AbstractConfig):
             return error.status
         except (asyncio.TimeoutError, ClientError):
             _LOGGER.error("Could not contact %s", url)
-            return 500
+            return HTTP_INTERNAL_SERVER_ERROR
 
     async def async_report_state(self, message, agent_user_id: str):
         """Send a state report to Google."""
