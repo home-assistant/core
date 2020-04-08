@@ -1,5 +1,5 @@
 """Test the Dexcom config flow."""
-from asynctest import patch
+from asynctest import MagicMock, patch
 from pydexcom import AccountError, SessionError
 
 from homeassistant import config_entries, setup
@@ -16,8 +16,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.dexcom.config_flow.async_step_user",
-        return_value=True,
+        "homeassistant.components.dexcom.config_flow.Dexcom", return_value=MagicMock(),
     ), patch(
         "homeassistant.components.dexcom.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -29,7 +28,7 @@ async def test_form(hass):
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Dexcom"
+    assert result2["title"] == "test-username"
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
@@ -46,8 +45,7 @@ async def test_form_account_error(hass):
     )
 
     with patch(
-        "homeassistant.components.dexcom.config_flow.async_step_user",
-        side_effect=AccountError,
+        "homeassistant.components.dexcom.config_flow.Dexcom", side_effect=AccountError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -55,7 +53,7 @@ async def test_form_account_error(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "account"}
+    assert result2["errors"] == {"base": "account_error"}
 
 
 async def test_form_session_error(hass):
@@ -65,8 +63,7 @@ async def test_form_session_error(hass):
     )
 
     with patch(
-        "homeassistant.components.dexcom.config_flow.async_step_user",
-        side_effect=SessionError,
+        "homeassistant.components.dexcom.config_flow.Dexcom", side_effect=SessionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -74,4 +71,4 @@ async def test_form_session_error(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "session"}
+    assert result2["errors"] == {"base": "session_error"}
