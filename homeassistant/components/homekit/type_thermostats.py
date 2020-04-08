@@ -175,7 +175,7 @@ class Thermostat(HomeAccessory):
 
         self.char_target_heat_cool = serv_thermostat.configure_char(
             CHAR_TARGET_HEATING_COOLING,
-            value=0,
+            value=list(hc_valid_values.values())[0],
             setter_callback=self.set_heat_cool,
             valid_values=hc_valid_values,
         )
