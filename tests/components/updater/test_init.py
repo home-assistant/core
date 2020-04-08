@@ -1,5 +1,4 @@
 """The tests for the Updater component."""
-from unittest.mock import Mock
 
 from asynctest import patch
 import pytest
