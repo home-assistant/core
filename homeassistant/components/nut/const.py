@@ -18,8 +18,9 @@ DEFAULT_PORT = 3493
 KEY_STATUS = "ups.status"
 KEY_STATUS_DISPLAY = "ups.status.display"
 
+COORDINATOR = "coordinator"
+
 PYNUT_DATA = "data"
-PYNUT_STATUS = "status"
 PYNUT_UNIQUE_ID = "unique_id"
 PYNUT_MANUFACTURER = "manufacturer"
 PYNUT_MODEL = "model"

@@ -1,5 +1,4 @@
 """Provides a sensor to track various status aspects of a UPS."""
-from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -21,6 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from .const import (
+    COORDINATOR,
     DEFAULT_HOST,
     DEFAULT_NAME,
     DEFAULT_PORT,
@@ -32,7 +32,6 @@ from .const import (
     PYNUT_MANUFACTURER,
     PYNUT_MODEL,
     PYNUT_NAME,
-    PYNUT_STATUS,
     PYNUT_UNIQUE_ID,
     SENSOR_DEVICE_CLASS,
     SENSOR_ICON,
@@ -43,9 +42,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-SCAN_INTERVAL = timedelta(seconds=60)
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -75,13 +71,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the NUT sensors."""
 
     pynut_data = hass.data[DOMAIN][config_entry.entry_id]
-    data = pynut_data[PYNUT_DATA]
-    status = pynut_data[PYNUT_STATUS]
     unique_id = pynut_data[PYNUT_UNIQUE_ID]
     manufacturer = pynut_data[PYNUT_MANUFACTURER]
     model = pynut_data[PYNUT_MODEL]
     firmware = pynut_data[PYNUT_FIRMWARE]
     name = pynut_data[PYNUT_NAME]
+    coordinator = pynut_data[COORDINATOR]
+    data = pynut_data[PYNUT_DATA]
+    status = data.status
 
     entities = []
 
@@ -100,8 +97,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         ):
             entities.append(
                 NUTSensor(
-                    name.title(),
+                    coordinator,
                     data,
+                    name.title(),
                     sensor_type,
                     unique_id,
                     manufacturer,
@@ -123,10 +121,18 @@ class NUTSensor(Entity):
     """Representation of a sensor entity for NUT status values."""
 
     def __init__(
-        self, name, data, sensor_type, unique_id, manufacturer, model, firmware
+        self,
+        coordinator,
+        data,
+        name,
+        sensor_type,
+        unique_id,
+        manufacturer,
+        model,
+        firmware,
     ):
         """Initialize the sensor."""
-        self._data = data
+        self._coordinator = coordinator
         self._type = sensor_type
         self._manufacturer = manufacturer
         self._firmware = firmware
@@ -134,10 +140,8 @@ class NUTSensor(Entity):
         self._device_name = name
         self._name = f"{name} {SENSOR_TYPES[sensor_type][SENSOR_NAME]}"
         self._unit = SENSOR_TYPES[sensor_type][SENSOR_UNIT]
-        self._state = None
+        self._data = data
         self._unique_id = unique_id
-        self._display_state = None
-        self._available = False
 
     @property
     def device_info(self):
@@ -185,7 +189,9 @@ class NUTSensor(Entity):
     @property
     def state(self):
         """Return entity state from ups."""
-        return self._state
+        if self._type == KEY_STATUS_DISPLAY:
+            return _format_display_state(self._data.status)
+        return self._data.status.get(self._type)
 
     @property
     def unit_of_measurement(self):
@@ -193,33 +199,32 @@ class NUTSensor(Entity):
         return self._unit
 
     @property
+    def should_poll(self):
+        """No need to poll. Coordinator notifies entity of updates."""
+        return False
+
+    @property
     def available(self):
-        """Return if the device is polling successfully."""
-        return self._available
+        """Return if entity is available."""
+        return self._coordinator.last_update_success
 
     @property
     def device_state_attributes(self):
         """Return the sensor attributes."""
-        return {ATTR_STATE: self._display_state}
+        return {ATTR_STATE: _format_display_state(self._data.status)}
 
-    def update(self):
-        """Get the latest status and use it to update our sensor state."""
-        status = self._data.status
+    async def async_update(self):
+        """Update the entity.
 
-        if status is None:
-            self._available = False
-            return
+        Only used by the generic entity update service.
+        """
+        await self._coordinator.async_request_refresh()
 
-        self._available = True
-        self._display_state = _format_display_state(status)
-        # In case of the display status sensor, keep a human-readable form
-        # as the sensor state.
-        if self._type == KEY_STATUS_DISPLAY:
-            self._state = self._display_state
-        elif self._type not in status:
-            self._state = None
-        else:
-            self._state = status[self._type]
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
 
 def _format_display_state(status):

@@ -1,7 +1,9 @@
 """The nut component."""
 import asyncio
+from datetime import timedelta
 import logging
 
+import async_timeout
 from pynut2.nut2 import PyNUTClient, PyNUTError
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,8 +17,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
+    COORDINATOR,
     DOMAIN,
     PLATFORMS,
     PYNUT_DATA,
@@ -24,7 +28,6 @@ from .const import (
     PYNUT_MANUFACTURER,
     PYNUT_MODEL,
     PYNUT_NAME,
-    PYNUT_STATUS,
     PYNUT_UNIQUE_ID,
 )
 
@@ -51,7 +54,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     data = PyNUTData(host, port, alias, username, password)
 
-    status = await hass.async_add_executor_job(pynutdata_status, data)
+    async def async_update_data():
+        """Fetch data from NUT."""
+        async with async_timeout.timeout(10):
+            return await hass.async_add_executor_job(data.update)
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="NUT resource status",
+        update_method=async_update_data,
+        update_interval=timedelta(seconds=60),
+    )
+
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator.async_refresh()
+    status = data.status
 
     if not status:
         _LOGGER.error("NUT Sensor has no data, unable to set up")
@@ -60,8 +78,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     _LOGGER.debug("NUT Sensors Available: %s", status)
 
     hass.data[DOMAIN][entry.entry_id] = {
+        COORDINATOR: coordinator,
         PYNUT_DATA: data,
-        PYNUT_STATUS: status,
         PYNUT_UNIQUE_ID: _unique_id_from_status(status),
         PYNUT_MANUFACTURER: _manufacturer_from_status(status),
         PYNUT_MODEL: _model_from_status(status),
@@ -143,11 +161,6 @@ def find_resources_in_config_entry(config_entry):
     return config_entry.data[CONF_RESOURCES]
 
 
-def pynutdata_status(data):
-    """Wrap for data update as a callable."""
-    return data.status
-
-
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     unload_ok = all(
@@ -180,12 +193,12 @@ class PyNUTData:
         # Establish client with persistent=False to open/close connection on
         # each update call.  This is more reliable with async.
         self._client = PyNUTClient(self._host, port, username, password, 5, False)
+        self._ups_list = {}
         self._status = None
 
     @property
     def status(self):
         """Get latest update if throttle allows. Return status."""
-        self.update()
         return self._status
 
     @property
@@ -193,14 +206,21 @@ class PyNUTData:
         """Return the name of the ups."""
         return self._alias
 
-    def list_ups(self):
+    @property
+    def ups_list(self):
+        """Return the list of upses."""
+        return self._ups_list
+
+    def _update_ups_list(self) -> dict:
         """List UPSes connected to the NUT server."""
-        return self._client.list_ups()
+        self._ups_list = self._client.list_ups()
+        return self._ups_list
 
     def _get_alias(self):
         """Get the ups alias from NUT."""
         try:
-            return next(iter(self.list_ups()))
+            ups_list = self._update_ups_list()
+            return list(ups_list.keys())[0]
         except PyNUTError as err:
             _LOGGER.error("Failure getting NUT ups alias, %s", err)
             return None
