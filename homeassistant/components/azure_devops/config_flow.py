@@ -2,6 +2,7 @@
 import logging
 
 from azure.devops.connection import Connection
+from azure.devops.exceptions import AzureDevOpsServiceError
 from msrest.authentication import BasicAuthentication
 from msrest.exceptions import ClientRequestError
 import voluptuous as vol
@@ -59,8 +60,12 @@ class AzureDevOpsFlowHandler(ConfigFlow):
             if not project:
                 errors["base"] = "project_error"
                 return await self._show_setup_form(errors)
+        except AzureDevOpsServiceError as exception:
+            _LOGGER.warning(exception)
+            errors["base"] = "authorization_error"
+            return await self._show_setup_form(errors)
         except ClientRequestError as exception:
-            _LOGGER.warning("Could not connect to Azure DevOps: %s", exception)
+            _LOGGER.warning(exception)
             errors["base"] = "connection_error"
             return await self._show_setup_form(errors)
 

@@ -165,6 +165,9 @@ axis==33
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.1.0
 
+# homeassistant.components.azure_devops
+azure-devops==6.0.0b2
+
 # homeassistant.components.homekit
 base36==0.1.1
 
