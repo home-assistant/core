@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "D\u00ebse Printer ass scho konfigur\u00e9iert.",
             "connection_error": "Feeler beim verbannen mam Printer.",
-            "connection_upgrade": "Feeler beim verbannen mam Printer well eng Aktualis\u00e9ierung vun der Verbindung erfuerderlech ass."
+            "connection_upgrade": "Feeler beim verbannen mam Printer well eng Aktualis\u00e9ierung vun der Verbindung erfuerderlech ass.",
+            "parse_error": "Feeler beim ausliesen vun der \u00c4ntwert vum Printer."
         },
         "error": {
             "connection_error": "Feeler beim verbannen mam Printer.",

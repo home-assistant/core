@@ -5,7 +5,7 @@
             "missing_configuration": "Withings Integratioun ass nach net konfigur\u00e9iert. Follegt w.e.g der Dokumentatioun."
         },
         "create_entry": {
-            "default": "Erfollegr\u00e4ich mam ausgewielte Profile mat Withings authentifiz\u00e9iert."
+            "default": "Erfollegr\u00e4ich mat Withings authentifiz\u00e9iert."
         },
         "step": {
             "pick_implementation": {
