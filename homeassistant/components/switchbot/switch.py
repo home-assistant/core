@@ -7,7 +7,7 @@ import switchbot
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.const import CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -19,6 +19,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MAC): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
     }
 )
 
@@ -27,20 +28,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Switchbot devices."""
     name = config.get(CONF_NAME)
     mac_addr = config[CONF_MAC]
-    add_entities([SwitchBot(mac_addr, name)])
+    password = config.get(CONF_PASSWORD)
+    add_entities([SwitchBot(mac_addr, name, password)])
 
 
 class SwitchBot(SwitchDevice, RestoreEntity):
     """Representation of a Switchbot."""
 
-    def __init__(self, mac, name) -> None:
+    def __init__(self, mac, name, password) -> None:
         """Initialize the Switchbot."""
 
         self._state = None
         self._last_run_success = None
         self._name = name
         self._mac = mac
-        self._device = switchbot.Switchbot(mac=mac)
+        self._device = switchbot.Switchbot(mac=mac, password=password)
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""

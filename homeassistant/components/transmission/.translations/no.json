@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Verten er allerede konfigurert.",
-            "one_instance_allowed": "Bare en enkel instans er n\u00f8dvendig."
+            "already_configured": "Verten er allerede konfigurert."
         },
         "error": {
             "cannot_connect": "Kan ikke koble til vert",
@@ -10,24 +9,18 @@
             "wrong_credentials": "Ugyldig brukernavn eller passord"
         },
         "step": {
-            "options": {
-                "data": {
-                    "scan_interval": "Oppdater frekvens"
-                },
-                "title": "Konfigurer alternativer"
-            },
             "user": {
                 "data": {
                     "host": "Vert",
                     "name": "Navn",
                     "password": "Passord",
-                    "port": "Port",
+                    "port": "",
                     "username": "Brukernavn"
                 },
                 "title": "Oppsett av Transmission-klient"
             }
         },
-        "title": "Transmission"
+        "title": ""
     },
     "options": {
         "step": {
@@ -35,7 +28,6 @@
                 "data": {
                     "scan_interval": "Oppdater frekvens"
                 },
-                "description": "Konfigurer alternativer for Transmission",
                 "title": "Konfigurer alternativer for Transmission"
             }
         }

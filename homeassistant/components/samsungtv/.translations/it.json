@@ -4,7 +4,6 @@
             "already_configured": "Questo Samsung TV \u00e8 gi\u00e0 configurato.",
             "already_in_progress": "La configurazione di Samsung TV \u00e8 gi\u00e0 in corso.",
             "auth_missing": "Home Assistant non \u00e8 autorizzato a connettersi a questo Samsung TV. Controlla le impostazioni del tuo TV per autorizzare Home Assistant.",
-            "not_found": "Nessun dispositivo Samsung TV supportato trovato sulla rete.",
             "not_successful": "Impossibile connettersi a questo dispositivo Samsung TV.",
             "not_supported": "Questo dispositivo Samsung TV non \u00e8 attualmente supportato."
         },

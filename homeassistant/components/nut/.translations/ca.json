@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "alias": "\u00c0lies",
+                    "host": "Amfitri\u00f3",
+                    "name": "Nom",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "resources": "Recursos",
+                    "username": "Nom d'usuari"
+                },
+                "title": "No s'ha pogut connectar amb el servidor NUT"
+            }
+        },
+        "title": "Eines de xarxa UPS (NUT)"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "Recursos"
+                },
+                "description": "Selecciona els recursos del sensor"
+            }
+        }
+    }
+}

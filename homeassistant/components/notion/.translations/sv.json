@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Anv\u00e4ndarnamn \u00e4r redan anv\u00e4nt",
             "invalid_credentials": "Felaktigt anv\u00e4ndarnamn eller l\u00f6senord",
             "no_devices": "Inga enheter hittades p\u00e5 kontot"
         },

@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import RainMachineEntity
@@ -129,9 +130,15 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
             async_dispatcher_connect(self.hass, SENSOR_UPDATE_TOPIC, self._update_state)
         )
         await self.rainmachine.async_register_sensor_api_interest(self._api_category)
-        await self.async_update()
+        self.update_from_latest_data()
 
-    async def async_update(self):
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listeners and deregister API interest."""
+        super().async_will_remove_from_hass()
+        self.rainmachine.async_deregister_sensor_api_interest(self._api_category)
+
+    @callback
+    def update_from_latest_data(self):
         """Update the state."""
         if self._sensor_type == TYPE_FLOW_SENSOR:
             self._state = self.rainmachine.data[DATA_PROVISION_SETTINGS]["system"].get(
@@ -157,8 +164,3 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
             self._state = self.rainmachine.data[DATA_RESTRICTIONS_CURRENT]["rainSensor"]
         elif self._sensor_type == TYPE_WEEKDAY:
             self._state = self.rainmachine.data[DATA_RESTRICTIONS_CURRENT]["weekDay"]
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listeners and deregister API interest."""
-        super().async_will_remove_from_hass()
-        self.rainmachine.async_deregister_sensor_api_interest(self._api_category)

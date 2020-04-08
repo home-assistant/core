@@ -2,8 +2,6 @@
 from datetime import timedelta
 import logging
 
-from sense_energy import SenseAPITimeoutException
-
 from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR, POWER_WATT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -24,6 +22,7 @@ from .const import (
     SENSE_DEVICE_UPDATE,
     SENSE_DEVICES_DATA,
     SENSE_DISCOVERED_DEVICES_DATA,
+    SENSE_TIMEOUT_EXCEPTIONS,
 )
 
 MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=300)
@@ -256,7 +255,7 @@ class SenseTrendsSensor(Entity):
 
         try:
             await self.update_sensor()
-        except SenseAPITimeoutException:
+        except SENSE_TIMEOUT_EXCEPTIONS:
             _LOGGER.error("Timeout retrieving data")
             return
 

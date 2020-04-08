@@ -10,10 +10,8 @@
             "init": {
                 "data": {
                     "device": "Pot ali URL",
-                    "floor_temperature": "Temperatura nadstropja",
                     "id": "ID",
-                    "name": "Ime",
-                    "precision": "Natan\u010dnost temperature"
+                    "name": "Ime"
                 },
                 "title": "OpenTherm Prehod"
             }

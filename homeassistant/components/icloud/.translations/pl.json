@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto jest ju\u017c skonfigurowane."
+            "already_configured": "Konto jest ju\u017c skonfigurowane.",
+            "no_device": "\u017badne z Twoich urz\u0105dze\u0144 nie ma aktywowanej funkcji \"Znajd\u017a m\u00f3j iPhone\""
         },
         "error": {
             "login": "B\u0142\u0105d logowania: sprawd\u017a adres e-mail i has\u0142o",
@@ -19,7 +20,8 @@
             "user": {
                 "data": {
                     "password": "Has\u0142o",
-                    "username": "E-mail"
+                    "username": "E-mail",
+                    "with_family": "Z rodzin\u0105"
                 },
                 "description": "Wprowad\u017a dane uwierzytelniaj\u0105ce",
                 "title": "Dane uwierzytelniaj\u0105ce iCloud"

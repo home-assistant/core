@@ -3,7 +3,7 @@
   "name": "SMHI",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smhi",
-  "requirements": ["smhi-pkg==1.0.10"],
+  "requirements": ["smhi-pkg==1.0.13"],
   "dependencies": [],
   "codeowners": []
 }

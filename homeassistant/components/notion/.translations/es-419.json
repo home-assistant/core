@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Nombre de usuario ya registrado",
             "invalid_credentials": "Nombre de usuario o contrase\u00f1a inv\u00e1lidos",
             "no_devices": "No se han encontrado dispositivos en la cuenta."
         },

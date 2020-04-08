@@ -74,7 +74,7 @@ async def _async_get_custom_components(
     except ImportError:
         return {}
 
-    def get_sub_directories(paths: List) -> List:
+    def get_sub_directories(paths: List[str]) -> List[pathlib.Path]:
         """Return all sub directories in a set of paths."""
         return [
             entry
@@ -506,7 +506,7 @@ async def async_component_dependencies(hass: "HomeAssistant", domain: str) -> Se
 
 
 async def _async_component_dependencies(
-    hass: "HomeAssistant", domain: str, loaded: Set[str], loading: Set
+    hass: "HomeAssistant", domain: str, loaded: Set[str], loading: Set[str]
 ) -> Set[str]:
     """Recursive function to get component dependencies.
 

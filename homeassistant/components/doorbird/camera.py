@@ -10,46 +10,69 @@ from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.dt as dt_util
 
-from . import DOMAIN as DOORBIRD_DOMAIN
+from .const import DOMAIN, DOOR_STATION, DOOR_STATION_INFO
+from .entity import DoorBirdEntity
 
-_LAST_VISITOR_INTERVAL = datetime.timedelta(minutes=1)
-_LAST_MOTION_INTERVAL = datetime.timedelta(minutes=1)
-_LIVE_INTERVAL = datetime.timedelta(seconds=1)
+_LAST_VISITOR_INTERVAL = datetime.timedelta(minutes=2)
+_LAST_MOTION_INTERVAL = datetime.timedelta(seconds=30)
+_LIVE_INTERVAL = datetime.timedelta(seconds=45)
 _LOGGER = logging.getLogger(__name__)
-_TIMEOUT = 10  # seconds
+_TIMEOUT = 15  # seconds
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the DoorBird camera platform."""
-    for doorstation in hass.data[DOORBIRD_DOMAIN]:
-        device = doorstation.device
-        async_add_entities(
-            [
-                DoorBirdCamera(
-                    device.live_image_url,
-                    f"{doorstation.name} Live",
-                    _LIVE_INTERVAL,
-                    device.rtsp_live_video_url,
-                ),
-                DoorBirdCamera(
-                    device.history_image_url(1, "doorbell"),
-                    f"{doorstation.name} Last Ring",
-                    _LAST_VISITOR_INTERVAL,
-                ),
-                DoorBirdCamera(
-                    device.history_image_url(1, "motionsensor"),
-                    f"{doorstation.name} Last Motion",
-                    _LAST_MOTION_INTERVAL,
-                ),
-            ]
-        )
+    config_entry_id = config_entry.entry_id
+    doorstation = hass.data[DOMAIN][config_entry_id][DOOR_STATION]
+    doorstation_info = hass.data[DOMAIN][config_entry_id][DOOR_STATION_INFO]
+    device = doorstation.device
+
+    async_add_entities(
+        [
+            DoorBirdCamera(
+                doorstation,
+                doorstation_info,
+                device.live_image_url,
+                "live",
+                f"{doorstation.name} Live",
+                _LIVE_INTERVAL,
+                device.rtsp_live_video_url,
+            ),
+            DoorBirdCamera(
+                doorstation,
+                doorstation_info,
+                device.history_image_url(1, "doorbell"),
+                "last_ring",
+                f"{doorstation.name} Last Ring",
+                _LAST_VISITOR_INTERVAL,
+            ),
+            DoorBirdCamera(
+                doorstation,
+                doorstation_info,
+                device.history_image_url(1, "motionsensor"),
+                "last_motion",
+                f"{doorstation.name} Last Motion",
+                _LAST_MOTION_INTERVAL,
+            ),
+        ]
+    )
 
 
-class DoorBirdCamera(Camera):
+class DoorBirdCamera(DoorBirdEntity, Camera):
     """The camera on a DoorBird device."""
 
-    def __init__(self, url, name, interval=None, stream_url=None):
+    def __init__(
+        self,
+        doorstation,
+        doorstation_info,
+        url,
+        camera_id,
+        name,
+        interval=None,
+        stream_url=None,
+    ):
         """Initialize the camera on a DoorBird device."""
+        super().__init__(doorstation, doorstation_info)
         self._url = url
         self._stream_url = stream_url
         self._name = name
@@ -57,11 +80,16 @@ class DoorBirdCamera(Camera):
         self._supported_features = SUPPORT_STREAM if self._stream_url else 0
         self._interval = interval or datetime.timedelta
         self._last_update = datetime.datetime.min
-        super().__init__()
+        self._unique_id = f"{self._mac_addr}_{camera_id}"
 
     async def stream_source(self):
         """Return the stream source."""
         return self._stream_url
+
+    @property
+    def unique_id(self):
+        """Camera Unique id."""
+        return self._unique_id
 
     @property
     def supported_features(self):
@@ -89,8 +117,10 @@ class DoorBirdCamera(Camera):
             self._last_update = now
             return self._last_image
         except asyncio.TimeoutError:
-            _LOGGER.error("Camera image timed out")
+            _LOGGER.error("DoorBird %s: Camera image timed out", self._name)
             return self._last_image
         except aiohttp.ClientError as error:
-            _LOGGER.error("Error getting camera image: %s", error)
+            _LOGGER.error(
+                "DoorBird %s: Error getting camera image: %s", self._name, error
+            )
             return self._last_image

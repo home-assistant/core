@@ -1,0 +1,31 @@
+{
+  "config": {
+    "title": "Rachio",
+    "step": {
+      "user": {
+        "title": "Connect to your Rachio device",
+        "description" : "You will need the API Key from https://app.rach.io/. Select 'Account Settings, and then click on 'GET API KEY'.",
+        "data": {
+          "api_key": "The API key for the Rachio account."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "manual_run_mins": "For how long, in minutes, to turn on a station when the switch is enabled."
+        }
+      }
+    }
+  }
+}
