@@ -16,6 +16,7 @@ from homeassistant.components.media_player.const import (
 )
 import homeassistant.components.tts as tts
 from homeassistant.components.tts import _get_cache_files
+from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_mock_service
@@ -500,7 +501,7 @@ async def test_setup_component_and_web_view_wrong_file(hass, hass_client):
     url = "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
 
     req = await client.get(url)
-    assert req.status == 404
+    assert req.status == HTTP_NOT_FOUND
 
 
 async def test_setup_component_and_web_view_wrong_filename(hass, hass_client):
@@ -515,7 +516,7 @@ async def test_setup_component_and_web_view_wrong_filename(hass, hass_client):
     url = "/api/tts_proxy/265944dsk32c1b2a621be5930510bb2cd_en_-_demo.mp3"
 
     req = await client.get(url)
-    assert req.status == 404
+    assert req.status == HTTP_NOT_FOUND
 
 
 async def test_setup_component_test_without_cache(hass, empty_cache_dir):
