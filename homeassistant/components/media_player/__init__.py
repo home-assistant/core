@@ -19,6 +19,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.const import (
     HTTP_INTERNAL_SERVER_ERROR,
+    HTTP_NOT_FOUND,
     HTTP_OK,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -865,7 +866,7 @@ class MediaPlayerImageView(HomeAssistantView):
         """Start a get request."""
         player = self.component.get_entity(entity_id)
         if player is None:
-            status = 404 if request[KEY_AUTHENTICATED] else 401
+            status = HTTP_NOT_FOUND if request[KEY_AUTHENTICATED] else 401
             return web.Response(status=status)
 
         authenticated = (
