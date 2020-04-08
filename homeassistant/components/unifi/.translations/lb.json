@@ -57,7 +57,7 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Bandbreet Benotzung Sensore fir Netzwierk Cliente erstellen"
+                    "allow_bandwidth_sensors": "Bandbreet Benotzung Sensore fir Netzwierk Cliente"
                 },
                 "description": "Statistik Sensoren konfigur\u00e9ieren",
                 "title": "UniFi Optiounen 3/3"

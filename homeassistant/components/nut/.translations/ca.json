@@ -18,6 +18,7 @@
                     "resources": "Recursos",
                     "username": "Nom d'usuari"
                 },
+                "description": "Si m\u00faltiples SAI (UPS) connectats al servidor NUT, introdueix el nom UPS per consultar al camp 'Alies'.",
                 "title": "No s'ha pogut connectar amb el servidor NUT"
             }
         },

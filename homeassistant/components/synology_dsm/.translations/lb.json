@@ -7,14 +7,26 @@
             "login": "Feeler beim Login: iwwerpr\u00e9if de Benotzernumm & Passwuert",
             "unknown": "Onbekannte Feeler: prob\u00e9ier sp\u00e9ider nach emol oder mat enger aner Konfiguratioun"
         },
+        "flow_title": "Synology DSM {name} ({host})",
         "step": {
+            "link": {
+                "data": {
+                    "api_version": "DSM Versioun",
+                    "password": "Passwuert",
+                    "port": "Port (Optionell)",
+                    "ssl": "Benotz SSL/TLS fir d'Verbindung mam NAS",
+                    "username": "Benotzernumm"
+                },
+                "description": "Soll {name} ({host}) konfigur\u00e9iert ginn?",
+                "title": "Synology DSM"
+            },
             "user": {
                 "data": {
                     "api_version": "DSM Versioun",
                     "host": "Apparat",
                     "name": "Numm",
                     "password": "Passwuert",
-                    "port": "Port",
+                    "port": "Port (Optionell)",
                     "ssl": "Benotzt SSL/TLS fir sech mam NAS ze verbannen",
                     "username": "Benotzernumm"
                 },

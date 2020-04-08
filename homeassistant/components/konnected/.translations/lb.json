@@ -103,7 +103,7 @@
                     "pause": "Pausen zw\u00ebscht den Impulser (ms) (optional)",
                     "repeat": "Unzuel vu Widderhuelungen (-1= onendlech) (optional)"
                 },
-                "description": "Wielt w.e.g. d'Ausgaboptiounen fir {zone}",
+                "description": "Wielt w.e.g. d'Ausgaboptiounen fir {zone}: Status {state}",
                 "title": "\u00cbmschltbaren Ausgang konfigur\u00e9ieren"
             }
         },
