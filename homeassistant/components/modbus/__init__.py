@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from async_timeout import timeout
 from pymodbus.client.asynchronous import schedulers
 from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient as ClientSerial
 from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient as ClientTCP
@@ -242,7 +243,12 @@ class ModbusHub:
         await self._connect_delay()
         async with self._lock:
             kwargs = {"unit": unit} if unit else {}
-            result = await func(address, count, **kwargs)
+            try:
+                async with timeout(self._config_timeout):
+                    result = await func(address, count, **kwargs)
+            except asyncio.TimeoutError:
+                result = None
+
             if isinstance(result, (ModbusException, ExceptionResponse)):
                 _LOGGER.error("Hub %s Exception (%s)", self._config_name, result)
             return result
@@ -252,7 +258,11 @@ class ModbusHub:
         await self._connect_delay()
         async with self._lock:
             kwargs = {"unit": unit} if unit else {}
-            await func(address, value, **kwargs)
+            try:
+                async with timeout(self._config_timeout):
+                    func(address, value, **kwargs)
+            except asyncio.TimeoutError:
+                return
 
     async def read_coils(self, unit, address, count):
         """Read coils."""
