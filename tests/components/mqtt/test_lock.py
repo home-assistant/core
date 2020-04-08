@@ -1,6 +1,13 @@
 """The tests for the MQTT lock platform."""
 from homeassistant.components import lock
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_ENTITY_ID,
+    SERVICE_LOCK,
+    SERVICE_UNLOCK,
+    STATE_LOCKED,
+    STATE_UNLOCKED,
+)
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -26,7 +33,6 @@ from .test_common import (
 )
 
 from tests.common import async_fire_mqtt_message
-from tests.components.lock import common
 
 DEFAULT_CONFIG = {
     lock.DOMAIN: {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
@@ -193,7 +199,9 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     assert state.state is STATE_UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_lock(hass, "lock.test")
+    await hass.services.async_call(
+        lock.DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+    )
 
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
     mqtt_mock.async_publish.reset_mock()
@@ -201,7 +209,9 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     assert state.state is STATE_LOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_unlock(hass, "lock.test")
+    await hass.services.async_call(
+        lock.DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+    )
 
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "UNLOCK", 0, False)
     mqtt_mock.async_publish.reset_mock()
@@ -234,7 +244,9 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     assert state.state is STATE_UNLOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_lock(hass, "lock.test")
+    await hass.services.async_call(
+        lock.DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+    )
 
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
     mqtt_mock.async_publish.reset_mock()
@@ -242,7 +254,9 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     assert state.state is STATE_LOCKED
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_unlock(hass, "lock.test")
+    await hass.services.async_call(
+        lock.DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+    )
 
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "UNLOCK", 0, False)
     mqtt_mock.async_publish.reset_mock()
