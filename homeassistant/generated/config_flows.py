@@ -30,6 +30,7 @@ FLOWS = [
     "daikin",
     "deconz",
     "devolo_home_control",
+    "dexcom",
     "dialogflow",
     "directv",
     "doorbird",

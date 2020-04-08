@@ -1,0 +1,21 @@
+{
+  "config": {
+    "title": "Dexcom",
+    "flow_title": "Dexcom",
+    "step": {
+      "user": {
+        "title": "Setup Dexcom integration",
+        "description": "Enter Dexcom Share credentials, note that Dexcom Share must be enabled on your Dexcom app.",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "session": "Failed to connect, please try again.",
+      "account": "Invalid authentication, please try again.",
+      "unknown": "Unexpected error occured."
+    }
+  }
+}
