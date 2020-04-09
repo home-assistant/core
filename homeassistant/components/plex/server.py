@@ -1,5 +1,4 @@
 """Shared class to maintain Plex server instances."""
-from functools import partial, wraps
 import logging
 import ssl
 from urllib.parse import urlparse
@@ -13,8 +12,8 @@ import requests.exceptions
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_call_later
 
 from .const import (
     CONF_CLIENT_IDENTIFIER,
@@ -43,31 +42,6 @@ plexapi.X_PLEX_PRODUCT = X_PLEX_PRODUCT
 plexapi.X_PLEX_VERSION = X_PLEX_VERSION
 
 
-def debounce(func):
-    """Decorate function to debounce callbacks from Plex websocket."""
-
-    unsub = None
-
-    async def call_later_listener(self, _):
-        """Handle call_later callback."""
-        nonlocal unsub
-        unsub = None
-        await func(self)
-
-    @wraps(func)
-    async def wrapper(self):
-        """Schedule async callback."""
-        nonlocal unsub
-        if unsub:
-            _LOGGER.debug("Throttling update of %s", self.friendly_name)
-            unsub()  # pylint: disable=not-callable
-        unsub = async_call_later(
-            self.hass, DEBOUNCE_TIMEOUT, partial(call_later_listener, self),
-        )
-
-    return wrapper
-
-
 class PlexServer:
     """Manages a single Plex server connection."""
 
@@ -87,6 +61,13 @@ class PlexServer:
         self._accounts = []
         self._owner_username = None
         self._version = None
+        self.async_update_platforms = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=DEBOUNCE_TIMEOUT,
+            immediate=True,
+            function=self._async_update_platforms,
+        ).async_call
 
         # Header conditionally added as it is not available in config entry v1
         if CONF_CLIENT_IDENTIFIER in server_config:
@@ -192,8 +173,7 @@ class PlexServer:
         """Fetch all data from the Plex server in a single method."""
         return (self._plex_server.clients(), self._plex_server.sessions())
 
-    @debounce
-    async def async_update_platforms(self):
+    async def _async_update_platforms(self):
         """Update the platform entities."""
         _LOGGER.debug("Updating devices")
 
