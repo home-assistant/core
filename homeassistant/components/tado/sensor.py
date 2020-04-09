@@ -94,7 +94,7 @@ class TadoZoneSensor(TadoZoneEntity, Entity):
     def __init__(self, tado, zone_name, zone_id, zone_variable, device_info):
         """Initialize of the Tado Sensor."""
         self._tado = tado
-        super().__init__(zone_name, device_info)
+        super().__init__(zone_name, device_info, tado.device_id, zone_id)
 
         self.zone_id = zone_id
         self.zone_variable = zone_variable
@@ -235,6 +235,7 @@ class TadoDeviceSensor(Entity):
         """Initialize of the Tado Sensor."""
         self._tado = tado
 
+        self._device_info = device_info
         self.device_name = device_name
         self.device_id = device_id
         self.device_variable = device_variable

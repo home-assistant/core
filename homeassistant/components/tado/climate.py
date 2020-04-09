@@ -184,7 +184,7 @@ class TadoClimate(TadoZoneEntity, ClimateDevice):
     ):
         """Initialize of Tado climate entity."""
         self._tado = tado
-        super().__init__(zone_name, device_info)
+        super().__init__(zone_name, device_info, tado.device_id, zone_id)
 
         self.zone_id = zone_id
         self.zone_type = zone_type

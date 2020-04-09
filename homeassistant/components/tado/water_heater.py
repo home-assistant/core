@@ -114,7 +114,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterDevice):
         """Initialize of Tado water heater entity."""
 
         self._tado = tado
-        super().__init__(zone_name, device_info)
+        super().__init__(zone_name, device_info, tado.device_id, zone_id)
 
         self.zone_id = zone_id
         self._unique_id = f"{zone_id} {tado.device_id}"
