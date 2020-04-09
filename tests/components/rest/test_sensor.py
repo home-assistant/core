@@ -111,7 +111,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     }
                 },
             )
-    
+
     @requests_mock.Mocker()
     def test_setup_duplicate_payload(self, mock_req):
         """Test setup with duplicate payload."""
@@ -125,7 +125,7 @@ class TestRestSensorSetup(unittest.TestCase):
                         "platform": "rest",
                         "resource": "http://localhost",
                         "payload": '{ "device": "toaster"}',
-                        "payload_template": '{ "device": "toaster"}'
+                        "payload_template": '{ "device": "toaster"}',
                     }
                 },
             )
