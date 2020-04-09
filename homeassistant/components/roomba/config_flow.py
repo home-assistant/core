@@ -5,7 +5,7 @@ from roomba import Roomba
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import callback
 
 from . import CannotConnect, async_connect_or_timeout, async_disconnect_or_timeout
@@ -73,7 +73,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info):
         """Set the config entry up from yaml."""
-        import_info[CONF_BLID] = import_info.pop(CONF_USERNAME)
         return await self.async_step_user(import_info)
 
     async def async_step_user(self, user_input=None):

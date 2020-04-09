@@ -7,7 +7,7 @@ from roomba import Roomba, RoombaConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
 from .const import (
     BLID,
@@ -31,7 +31,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_HOST): str,
-                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_BLID): str,
                 vol.Required(CONF_PASSWORD): str,
                 vol.Optional(CONF_CERT, default=DEFAULT_CERT): str,
                 vol.Optional(CONF_CONTINUOUS, default=DEFAULT_CONTINUOUS): bool,
