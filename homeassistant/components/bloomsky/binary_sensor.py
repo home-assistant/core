@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available BloomSky weather binary sensors."""
     # Default needed in case of discovery
-    sensors = config.get(CONF_MONITORED_CONDITIONS, SENSOR_TYPES)
+    sensors = config[CONF_MONITORED_CONDITIONS]
     bloomsky = hass.data[DOMAIN]
 
     for device in bloomsky.devices.values():
