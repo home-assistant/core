@@ -74,7 +74,7 @@ class DiscordNotificationService(BaseNotificationService):
                     channelid = int(channelid)
                     channel = discord_bot.get_channel(
                         channelid
-                    ) or discord_bot.get_user(channelid)
+                    ) or discord_bot.get_user(channelid) # tests the target as a channel and user
 
                     if channel is None:
                         _LOGGER.warning("Channel not found for id: %s", channelid)
