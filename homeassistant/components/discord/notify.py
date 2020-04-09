@@ -20,10 +20,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_TOKEN): cv.string})
 
 ATTR_IMAGES = "images"
 
+
 def get_service(hass, config, discovery_info=None):
     """Get the Discord notification service."""
     token = config.get(CONF_TOKEN)
     return DiscordNotificationService(hass, token)
+
 
 class DiscordNotificationService(BaseNotificationService):
     """Implement the notification service for Discord."""
