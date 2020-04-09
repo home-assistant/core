@@ -1,5 +1,6 @@
 """The tests for the Mikrotik device tracker platform."""
 from datetime import timedelta
+from itertools import cycle
 
 from homeassistant.components import mikrotik
 import homeassistant.components.device_tracker as device_tracker
@@ -7,23 +8,19 @@ from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from . import DEVICE_2_WIRELESS, DHCP_DATA, MOCK_DATA, MOCK_OPTIONS, WIRELESS_DATA
-from .test_hub import setup_mikrotik_entry
+from . import (
+    DEVICE_1_WIRELESS,
+    DEVICE_3_WIRELESS,
+    ENTRY_CONFIG,
+    HUB1_WIRELESS_DATA,
+    HUB2_WIRELESS_DATA,
+    MOCK_HUB1,
+    MOCK_HUB2,
+    MOCK_OPTIONS,
+)
+from .test_hub import DATA_RETURN, setup_mikrotik_integration
 
 from tests.common import MockConfigEntry, patch
-
-DEFAULT_DETECTION_TIME = timedelta(seconds=300)
-
-
-def mock_command(self, cmd, params=None):
-    """Mock the Mikrotik command method."""
-    if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_WIRELESS]:
-        return True
-    if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.DHCP]:
-        return DHCP_DATA
-    if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.WIRELESS]:
-        return WIRELESS_DATA
-    return {}
 
 
 async def test_platform_manually_configured(hass):
@@ -39,55 +36,109 @@ async def test_platform_manually_configured(hass):
     assert mikrotik.DOMAIN not in hass.data
 
 
-async def test_device_trackers(hass):
+async def test_device_trackers(hass, api):
     """Test device_trackers created by mikrotik."""
+    i = cycle([0, 1])
+    hub_index = 0
+
+    def mock_command(self, cmd, params=None):
+        nonlocal i
+        nonlocal hub_index
+
+        # check for first cmd by each hub and set hub_index accordingly
+        if cmd in [
+            mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IDENTITY],
+            mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.DHCP],
+        ]:
+            hub_index = next(i)
+        return DATA_RETURN[cmd][hub_index]
 
     # test devices are added from wireless list only
-    hub = await setup_mikrotik_entry(hass)
+    mikrotik_mock = await setup_mikrotik_integration(hass, support_wireless=True)
 
+    # test device_1 is added from HUB1
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1 is not None
     assert device_1.state == "home"
+    # test device_2 is added from HUB2
     device_2 = hass.states.get("device_tracker.device_2")
-    assert device_2 is None
+    assert device_2 is not None
+    assert device_1.state == "home"
+    # test device_3 is not added because it is not connected yet
+    device_3 = hass.states.get("device_tracker.device_3")
+    assert device_3 is None
 
-    with patch.object(mikrotik.hub.MikrotikData, "command", new=mock_command):
-        # test device_2 is added after connecting to wireless network
-        WIRELESS_DATA.append(DEVICE_2_WIRELESS)
-
-        await hub.async_update()
+    with patch.object(mikrotik.hub.MikrotikHub, "command", new=mock_command):
+        # test device_3 is added after connecting to wireless network
+        HUB1_WIRELESS_DATA.append(DEVICE_3_WIRELESS)
+        await mikrotik_mock.async_update()
         await hass.async_block_till_done()
 
-        device_2 = hass.states.get("device_tracker.device_2")
-        assert device_2 is not None
+        device_3 = hass.states.get("device_tracker.device_3")
+        assert device_3 is not None
         assert device_2.state == "home"
 
-        # test state remains home if last_seen  consider_home_interval
-        del WIRELESS_DATA[1]  # device 2 is removed from wireless list
-        hub.api.devices["00:00:00:00:00:02"]._last_seen = dt_util.utcnow() - timedelta(
-            minutes=4
-        )
-        await hub.async_update()
+        # test state remains home if last_seen < consider_home_interval
+        del HUB1_WIRELESS_DATA[0]  # device_1 is removed from wireless list
+        mikrotik_mock.clients[
+            "00:00:00:00:00:01"
+        ]._last_seen = dt_util.utcnow() - timedelta(minutes=4)
+        await mikrotik_mock.async_update()
         await hass.async_block_till_done()
 
-        device_2 = hass.states.get("device_tracker.device_2")
-        assert device_2.state != "not_home"
+        device_1 = hass.states.get("device_tracker.device_1")
+        assert device_2.state == "home"
 
         # test state changes to away if last_seen > consider_home_interval
-        hub.api.devices["00:00:00:00:00:02"]._last_seen = dt_util.utcnow() - timedelta(
-            minutes=5
-        )
-        await hub.async_update()
+        mikrotik_mock.clients[
+            "00:00:00:00:00:01"
+        ]._last_seen = dt_util.utcnow() - timedelta(minutes=5)
+        await mikrotik_mock.async_update()
         await hass.async_block_till_done()
 
-        device_2 = hass.states.get("device_tracker.device_2")
-        assert device_2.state == "not_home"
+        device_1 = hass.states.get("device_tracker.device_1")
+        assert device_1.state == "not_home"
 
 
-async def test_restoring_devices(hass):
+async def test_device_tracker_switching_hubs(hass, api):
+    """Test device tracker moving to another hub."""
+    i = cycle([0, 1])
+    hub_index = 0
+
+    def mock_command(self, cmd, params=None):
+        nonlocal i
+        nonlocal hub_index
+
+        # check for first cmd by each hub and set hub_index accordingly
+        if cmd in [
+            mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IDENTITY],
+            mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.DHCP],
+        ]:
+            hub_index = next(i)
+        return DATA_RETURN[cmd][hub_index]
+
+    mikrotik_mock = await setup_mikrotik_integration(hass, support_wireless=True)
+
+    assert mikrotik_mock.hubs[MOCK_HUB1[mikrotik.CONF_HOST]].serial_number == "11111"
+    assert mikrotik_mock.hubs[MOCK_HUB2[mikrotik.CONF_HOST]].serial_number == "11112"
+
+    assert mikrotik_mock.clients["00:00:00:00:00:01"].hub_id == "11111"
+
+    with patch.object(mikrotik.hub.MikrotikHub, "command", new=mock_command):
+        # device_1 is disconnected from HUB1 and connected to HUB2
+        del HUB1_WIRELESS_DATA[0]
+        HUB2_WIRELESS_DATA.append(DEVICE_1_WIRELESS)
+
+        await mikrotik_mock.async_update()
+        await hass.async_block_till_done()
+
+    assert mikrotik_mock.clients["00:00:00:00:00:01"].hub_id == "11112"
+
+
+async def test_restoring_devices(hass, api):
     """Test restoring existing device_tracker entities if not detected on startup."""
     config_entry = MockConfigEntry(
-        domain=mikrotik.DOMAIN, data=MOCK_DATA, options=MOCK_OPTIONS
+        domain=mikrotik.DOMAIN, data=ENTRY_CONFIG, options=MOCK_OPTIONS
     )
     config_entry.add_to_hass(hass)
 
@@ -106,13 +157,17 @@ async def test_restoring_devices(hass):
         suggested_object_id="device_2",
         config_entry=config_entry,
     )
+    registry.async_get_or_create(
+        device_tracker.DOMAIN,
+        mikrotik.DOMAIN,
+        "00:00:00:00:00:03",
+        suggested_object_id="device_3",
+        config_entry=config_entry,
+    )
 
-    await setup_mikrotik_entry(hass)
+    await setup_mikrotik_integration(hass, support_wireless=True)
 
-    # test device_2 which is not in wireless list is restored
-    device_1 = hass.states.get("device_tracker.device_1")
-    assert device_1 is not None
-    assert device_1.state == "home"
-    device_2 = hass.states.get("device_tracker.device_2")
-    assert device_2 is not None
-    assert device_2.state == "not_home"
+    # test device_3 which is not in wireless list is restored
+    device_3 = hass.states.get("device_tracker.device_3")
+    assert device_3 is not None
+    assert device_3.state == "not_home"

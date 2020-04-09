@@ -71,7 +71,7 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
             if user_input[CONF_HOST] not in self.config[CONF_HUBS]:
-                errors = await self.test_connecting_to_hub(user_input)
+                errors = await self.errors_connecting_to_hub(user_input)
             else:
                 errors[CONF_HOST] = "hub_exists"
 
@@ -106,7 +106,7 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return True
         return False
 
-    async def test_connecting_to_hub(self, entry):
+    async def errors_connecting_to_hub(self, entry):
         """Return errors if connection to hub fails."""
         errors = {}
         try:
@@ -125,15 +125,15 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if len(hubs) > MAX_NUM_HUBS:
             return self.async_abort(reason="config_error")
 
-        for entry in hubs:
-            if await self.check_hub_exists(entry[CONF_HOST]):
-                return self.async_abort(reason="already_configured")
-
         import_config[CONF_HUBS] = {}
         for entry in hubs:
-            if entry[CONF_HOST] not in import_config[
-                CONF_HUBS
-            ] and not await self.test_connecting_to_hub(entry):
+            if (
+                await self.check_hub_exists(entry[CONF_HOST])
+                or entry[CONF_HOST] in import_config[CONF_HUBS]
+            ):
+                return self.async_abort(reason="already_configured")
+
+            if await self.errors_connecting_to_hub(entry):
                 return self.async_abort(reason="conn_error")
 
             import_config[CONF_HUBS][entry[CONF_HOST]] = entry

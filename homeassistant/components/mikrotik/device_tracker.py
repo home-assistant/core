@@ -31,10 +31,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if (
             entity.config_entry_id == config_entry.entry_id
             and entity.domain == DEVICE_TRACKER
+            and entity.unique_id not in mikrotik.clients
         ):
-
-            if entity.unique_id in mikrotik.clients:
-                continue
 
             mikrotik.restore_client(entity.unique_id)
 

@@ -1,39 +1,21 @@
 """Test Mikrotik setup process."""
 from datetime import timedelta
-from unittest.mock import patch
 
 import librouteros
-import pytest
 
+# from homeassistant.components.mikrotik import const
 from homeassistant import data_entry_flow
 from homeassistant.components import mikrotik
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+
+from . import MOCK_HUB1, MOCK_HUB2
+from .test_hub import setup_mikrotik_integration
 
 from tests.common import MockConfigEntry
 
-DEMO_USER_INPUT = {
-    CONF_NAME: "Home router",
-    CONF_HOST: "0.0.0.0",
-    CONF_USERNAME: "username",
-    CONF_PASSWORD: "password",
-    CONF_PORT: 8278,
-    CONF_VERIFY_SSL: False,
-}
-
 DEMO_CONFIG = {
     CONF_NAME: "Home router",
-    CONF_HOST: "0.0.0.0",
-    CONF_USERNAME: "username",
-    CONF_PASSWORD: "password",
-    CONF_PORT: 8278,
-    CONF_VERIFY_SSL: False,
+    mikrotik.const.CONF_HUBS: [MOCK_HUB1, MOCK_HUB2],
     mikrotik.const.CONF_FORCE_DHCP: False,
     mikrotik.CONF_ARP_PING: False,
     mikrotik.CONF_DETECTION_TIME: timedelta(seconds=30),
@@ -41,44 +23,17 @@ DEMO_CONFIG = {
 
 DEMO_CONFIG_ENTRY = {
     CONF_NAME: "Home router",
-    CONF_HOST: "0.0.0.0",
-    CONF_USERNAME: "username",
-    CONF_PASSWORD: "password",
-    CONF_PORT: 8278,
-    CONF_VERIFY_SSL: False,
+    mikrotik.const.CONF_HUBS: {
+        MOCK_HUB1[CONF_HOST]: MOCK_HUB1,
+        MOCK_HUB2[CONF_HOST]: MOCK_HUB2,
+    },
     mikrotik.const.CONF_FORCE_DHCP: False,
-    mikrotik.CONF_ARP_PING: False,
-    mikrotik.CONF_DETECTION_TIME: 30,
+    mikrotik.const.CONF_ARP_PING: False,
+    mikrotik.const.CONF_DETECTION_TIME: 30,
 }
 
 
-@pytest.fixture(name="api")
-def mock_mikrotik_api():
-    """Mock an api."""
-    with patch("librouteros.connect"):
-        yield
-
-
-@pytest.fixture(name="auth_error")
-def mock_api_authentication_error():
-    """Mock an api."""
-    with patch(
-        "librouteros.connect",
-        side_effect=librouteros.exceptions.TrapError("invalid user name or password"),
-    ):
-        yield
-
-
-@pytest.fixture(name="conn_error")
-def mock_api_connection_error():
-    """Mock an api."""
-    with patch(
-        "librouteros.connect", side_effect=librouteros.exceptions.ConnectionClosed
-    ):
-        yield
-
-
-async def test_import(hass, api):
+async def test_import_successfull(hass, api):
     """Test import step."""
     result = await hass.config_entries.flow.async_init(
         mikrotik.DOMAIN, context={"source": "import"}, data=DEMO_CONFIG
@@ -87,11 +42,42 @@ async def test_import(hass, api):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Home router"
     assert result["data"][CONF_NAME] == "Home router"
-    assert result["data"][CONF_HOST] == "0.0.0.0"
-    assert result["data"][CONF_USERNAME] == "username"
-    assert result["data"][CONF_PASSWORD] == "password"
-    assert result["data"][CONF_PORT] == 8278
-    assert result["data"][CONF_VERIFY_SSL] is False
+    assert result["data"][mikrotik.const.CONF_HUBS][MOCK_HUB1[CONF_HOST]] == MOCK_HUB1
+    assert result["data"][mikrotik.const.CONF_HUBS][MOCK_HUB2[CONF_HOST]] == MOCK_HUB2
+
+
+async def test_import_conn_error(hass, api):
+    """Import fails in case of connection error."""
+    api.side_effect = librouteros.exceptions.LibRouterosError
+
+    result = await hass.config_entries.flow.async_init(
+        mikrotik.DOMAIN, context={"source": "import"}, data=DEMO_CONFIG
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "conn_error"
+
+
+async def test_import_existing_host(hass, api):
+    """Test importing existing hosts fails."""
+    # if same host is mentioned the import fails
+    config = {**DEMO_CONFIG, mikrotik.const.CONF_HUBS: [MOCK_HUB1, MOCK_HUB1]}
+
+    result = await hass.config_entries.flow.async_init(
+        mikrotik.DOMAIN, context={"source": "import"}, data=config
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+    # if host is configured in a different entry then abort
+    entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=DEMO_CONFIG_ENTRY)
+    entry.add_to_hass(hass)
+
+    config = {**DEMO_CONFIG, mikrotik.const.CONF_HUBS: [MOCK_HUB1]}
+    result = await hass.config_entries.flow.async_init(
+        mikrotik.DOMAIN, context={"source": "import"}, data=config
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_flow_works(hass, api):
@@ -104,27 +90,178 @@ async def test_flow_works(hass, api):
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=DEMO_USER_INPUT
+        result["flow_id"],
+        user_input={CONF_NAME: "Mikrotik", mikrotik.const.CONF_NUM_HUBS: 1},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "hub"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_HUB1
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Home router"
-    assert result["data"][CONF_NAME] == "Home router"
-    assert result["data"][CONF_HOST] == "0.0.0.0"
-    assert result["data"][CONF_USERNAME] == "username"
-    assert result["data"][CONF_PASSWORD] == "password"
-    assert result["data"][CONF_PORT] == 8278
+    assert result["title"] == "Mikrotik"
+    assert result["data"][CONF_NAME] == "Mikrotik"
+    assert result["data"][mikrotik.const.CONF_HUBS][MOCK_HUB1[CONF_HOST]] == MOCK_HUB1
 
 
-async def test_options(hass):
-    """Test updating options."""
+async def test_flow_multiple_hubs(hass, api):
+    """Test config flow with multiple hubs."""
+
+    result = await hass.config_entries.flow.async_init(
+        mikrotik.DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_NAME: "Mikrotik", mikrotik.const.CONF_NUM_HUBS: 2},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "hub"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_HUB1
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "hub"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_HUB2
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "Mikrotik"
+    assert result["data"][CONF_NAME] == "Mikrotik"
+    assert len(result["data"][mikrotik.const.CONF_HUBS]) == 2
+    assert result["data"][mikrotik.const.CONF_HUBS][MOCK_HUB1[CONF_HOST]] == MOCK_HUB1
+    assert result["data"][mikrotik.const.CONF_HUBS][MOCK_HUB2[CONF_HOST]] == MOCK_HUB2
+
+
+async def test_entering_same_host_twice(hass, api):
+    """Test entering same host twice."""
+    result = await hass.config_entries.flow.async_init(
+        mikrotik.DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_NAME: "Mikrotik", mikrotik.const.CONF_NUM_HUBS: 2},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "hub"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_HUB1
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "hub"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_HUB1
+    )
+
+    assert result["errors"] == {"host": "hub_exists"}
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "hub"
+
+
+async def test_entered_host_exists(hass, api):
+    """Test entered host exists in another config entry."""
+
     entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=DEMO_CONFIG_ENTRY)
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.flow.async_init(
+        mikrotik.DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_NAME: "Mikrotik", mikrotik.const.CONF_NUM_HUBS: 1},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_HUB1
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
+async def test_connection_error(hass, api):
+    """Test error when connection is unsuccessful."""
+    api.side_effect = librouteros.exceptions.LibRouterosError
+
+    result = await hass.config_entries.flow.async_init(
+        mikrotik.DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_NAME: "Mikrotik", mikrotik.const.CONF_NUM_HUBS: 1},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_HUB1
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["step_id"] == "hub"
+
+
+async def test_wrong_credentials(hass, api):
+    """Test error when credentials are wrong."""
+
+    api.side_effect = librouteros.exceptions.LibRouterosError(
+        "invalid user name or password"
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        mikrotik.DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_NAME: "Mikrotik", mikrotik.const.CONF_NUM_HUBS: 1},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_HUB1
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "device_tracker"
+    assert result["errors"] == {
+        CONF_USERNAME: "wrong_credentials",
+        CONF_PASSWORD: "wrong_credentials",
+    }
+    assert result["step_id"] == "hub"
+
+
+async def test_options(hass, api):
+    """Test updating options."""
+    mikrotik_mock = await setup_mikrotik_integration(hass)
+    result = await hass.config_entries.options.async_init(
+        mikrotik_mock.config_entry.entry_id
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -140,69 +277,4 @@ async def test_options(hass):
         mikrotik.CONF_DETECTION_TIME: 30,
         mikrotik.CONF_ARP_PING: True,
         mikrotik.const.CONF_FORCE_DHCP: False,
-    }
-
-
-async def test_host_already_configured(hass, auth_error):
-    """Test host already configured."""
-
-    entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=DEMO_CONFIG_ENTRY)
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        mikrotik.DOMAIN, context={"source": "user"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=DEMO_USER_INPUT
-    )
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-
-
-async def test_name_exists(hass, api):
-    """Test name already configured."""
-
-    entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=DEMO_CONFIG_ENTRY)
-    entry.add_to_hass(hass)
-    user_input = DEMO_USER_INPUT.copy()
-    user_input[CONF_HOST] = "0.0.0.1"
-
-    result = await hass.config_entries.flow.async_init(
-        mikrotik.DOMAIN, context={"source": "user"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=user_input
-    )
-
-    assert result["type"] == "form"
-    assert result["errors"] == {CONF_NAME: "name_exists"}
-
-
-async def test_connection_error(hass, conn_error):
-    """Test error when connection is unsuccessful."""
-
-    result = await hass.config_entries.flow.async_init(
-        mikrotik.DOMAIN, context={"source": "user"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=DEMO_USER_INPUT
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_wrong_credentials(hass, auth_error):
-    """Test error when credentials are wrong."""
-
-    result = await hass.config_entries.flow.async_init(
-        mikrotik.DOMAIN, context={"source": "user"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=DEMO_USER_INPUT
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {
-        CONF_USERNAME: "wrong_credentials",
-        CONF_PASSWORD: "wrong_credentials",
     }

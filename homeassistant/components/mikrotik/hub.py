@@ -6,7 +6,13 @@ import ssl
 import librouteros
 from librouteros.login import plain as login_plain, token as login_token
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -149,11 +155,10 @@ class MikrotikHub:
                 mac_devices[mac] = device
         return mac_devices
 
-    def get_info(self, param):
+    def get_info(self, cmd):
         """Return param details."""
-        cmd = IDENTITY if param == NAME else INFO
         data = self.command(MIKROTIK_SERVICES[cmd])
-        return data[0].get(param) if data else None
+        return data[0] if data else None
 
     def get_list_from_interface(self, interface):
         """Return clients from interface."""
@@ -162,10 +167,11 @@ class MikrotikHub:
 
     def get_hub_details(self):
         """Get hub info."""
-        self._hostname = self.get_info(NAME)
-        self._model = self.get_info(ATTR_MODEL)
-        self._firmware = self.get_info(ATTR_FIRMWARE)
-        self._serial_number = self.get_info(ATTR_SERIAL_NUMBER)
+        self._hostname = self.get_info(IDENTITY).get(NAME)
+        info = self.get_info(INFO)
+        self._model = info.get(ATTR_MODEL)
+        self._firmware = info.get(ATTR_FIRMWARE)
+        self._serial_number = info.get(ATTR_SERIAL_NUMBER)
         self.support_capsman = bool(self.command(MIKROTIK_SERVICES[IS_CAPSMAN]))
         self.support_wireless = bool(self.command(MIKROTIK_SERVICES[IS_WIRELESS]))
 
@@ -252,10 +258,14 @@ class MikrotikHub:
             elif self.support_wireless:
                 _LOGGER.debug("Hub supports wireless Interface")
                 client_list = wireless_devices = self.get_list_from_interface(WIRELESS)
-
-            if not client_list or self.force_dhcp:
+            else:
+                _LOGGER.debug("Hub doesn't support wireless/capsman Interface")
                 client_list = self.all_clients
-                _LOGGER.debug("Falling back to DHCP for scanning devices")
+
+            if self.force_dhcp:
+                client_list = self.all_clients
+                _LOGGER.debug(client_list)
+                _LOGGER.debug("using DHCP for scanning devices")
 
             if self.arp_enabled:
                 _LOGGER.debug("Using arp-ping to check devices")
@@ -310,7 +320,7 @@ def get_api(hass, entry):
     _LOGGER.debug("Connecting to Mikrotik hub [%s]", entry[CONF_HOST])
 
     _login_method = (login_plain, login_token)
-    kwargs = {"login_methods": _login_method, "port": entry["port"]}
+    kwargs = {"login_methods": _login_method, "port": entry[CONF_PORT]}
 
     if entry[CONF_VERIFY_SSL]:
         ssl_context = ssl.create_default_context()

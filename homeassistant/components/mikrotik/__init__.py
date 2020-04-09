@@ -129,7 +129,7 @@ class Mikrotik:
     async def async_register_device(self, hub):
         """Register new hub device."""
         device_registry = await self.hass.helpers.device_registry.async_get_registry()
-        device = device_registry.async_get_or_create(
+        device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             identifiers={(DOMAIN, hub.serial_number)},
             manufacturer=ATTR_MANUFACTURER,
@@ -137,7 +137,6 @@ class Mikrotik:
             name=hub.name,
             sw_version=hub.firmware,
         )
-        return device.id
 
     async def async_add_options(self):
         """Populate default options for Mikrotik."""
@@ -189,20 +188,17 @@ class Mikrotik:
 
         await self.async_add_options()
 
-        config_entry_ready = False
         for hub in self.config_entry.data[CONF_HUBS]:
             new_hub = MikrotikHub(self.hass, self.config_entry, hub, self.clients)
             if await new_hub.async_setup():
                 self.hubs[hub] = new_hub
-                if new_hub.available:
-                    await self.async_register_device(new_hub)
-                    config_entry_ready = True
-
-        if not config_entry_ready:
-            raise ConfigEntryNotReady
+                await self.async_register_device(new_hub)
 
         if not self.hubs:
             return False
+
+        if not self.available:
+            raise ConfigEntryNotReady
 
         await self.async_update()
         return True
