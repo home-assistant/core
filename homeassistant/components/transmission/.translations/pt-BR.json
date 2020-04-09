@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "O host j\u00e1 est\u00e1 configurado.",
-            "one_instance_allowed": "Apenas uma \u00fanica inst\u00e2ncia \u00e9 necess\u00e1ria."
+            "already_configured": "O host j\u00e1 est\u00e1 configurado."
         },
         "error": {
             "cannot_connect": "N\u00e3o foi poss\u00edvel conectar ao host",
@@ -10,12 +9,6 @@
             "wrong_credentials": "Nome de usu\u00e1rio ou senha incorretos"
         },
         "step": {
-            "options": {
-                "data": {
-                    "scan_interval": "Frequ\u00eancia de atualiza\u00e7\u00e3o"
-                },
-                "title": "Op\u00e7\u00f5es de configura\u00e7\u00e3o"
-            },
             "user": {
                 "data": {
                     "host": "Host",
@@ -35,7 +28,6 @@
                 "data": {
                     "scan_interval": "Frequ\u00eancia de atualiza\u00e7\u00e3o"
                 },
-                "description": "Configurar op\u00e7\u00f5es para transmiss\u00e3o",
                 "title": "Configurar op\u00e7\u00f5es para Transmission"
             }
         }

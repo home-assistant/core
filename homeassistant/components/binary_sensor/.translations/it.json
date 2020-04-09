@@ -46,7 +46,6 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} batteria scarica",
-            "closed": "{entity_name} \u00e8 chiuso",
             "cold": "{entity_name} \u00e8 diventato freddo",
             "connected": "{entity_name} connesso",
             "gas": "{entity_name} ha iniziato a rilevare il gas",
@@ -54,7 +53,6 @@
             "light": "{entity_name} ha iniziato a rilevare la luce",
             "locked": "{entity_name} bloccato",
             "moist": "{entity_name} diventato umido",
-            "moist\u00a7": "{entity_name} \u00e8 diventato umido",
             "motion": "{entity_name} ha iniziato a rilevare il movimento",
             "moving": "{entity_name} ha iniziato a muoversi",
             "no_gas": "{entity_name} ha smesso la rilevazione di gas",

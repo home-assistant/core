@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from async_timeout import timeout
 from pymodbus.client.asynchronous import schedulers
 from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient as ClientSerial
 from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient as ClientTCP
@@ -97,7 +98,6 @@ async def async_setup(hass, config):
     """Set up Modbus component."""
     hass.data[MODBUS_DOMAIN] = hub_collect = {}
 
-    _LOGGER.debug("registering hubs")
     for client_config in config[MODBUS_DOMAIN]:
         hub_collect[client_config[CONF_NAME]] = ModbusHub(client_config, hass.loop)
 
@@ -109,7 +109,6 @@ async def async_setup(hass, config):
     def start_modbus(event):
         """Start Modbus service."""
         for client in hub_collect.values():
-            _LOGGER.debug("setup hub %s", client.name)
             client.setup()
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
@@ -161,7 +160,6 @@ class ModbusHub:
 
     def __init__(self, client_config, main_loop):
         """Initialize the Modbus hub."""
-        _LOGGER.debug("Preparing setup: %s", client_config)
 
         # generic configuration
         self._loop = main_loop
@@ -200,7 +198,6 @@ class ModbusHub:
         # Client* do deliver loop, client as result but
         # pylint does not accept that fact
 
-        _LOGGER.debug("doing setup")
         if self._config_type == "serial":
             _, self._client = ClientSerial(
                 schedulers.ASYNC_IO,
@@ -246,7 +243,12 @@ class ModbusHub:
         await self._connect_delay()
         async with self._lock:
             kwargs = {"unit": unit} if unit else {}
-            result = await func(address, count, **kwargs)
+            try:
+                async with timeout(self._config_timeout):
+                    result = await func(address, count, **kwargs)
+            except asyncio.TimeoutError:
+                result = None
+
             if isinstance(result, (ModbusException, ExceptionResponse)):
                 _LOGGER.error("Hub %s Exception (%s)", self._config_name, result)
             return result
@@ -256,7 +258,11 @@ class ModbusHub:
         await self._connect_delay()
         async with self._lock:
             kwargs = {"unit": unit} if unit else {}
-            await func(address, value, **kwargs)
+            try:
+                async with timeout(self._config_timeout):
+                    func(address, value, **kwargs)
+            except asyncio.TimeoutError:
+                return
 
     async def read_coils(self, unit, address, count):
         """Read coils."""

@@ -4,6 +4,7 @@ import pytest
 
 from homeassistant.components import konnected
 from homeassistant.components.konnected import config_flow
+from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -254,7 +255,7 @@ async def test_setup_defined_hosts_known_auth(hass):
                             config_flow.CONF_ID: "aabbccddeeff",
                             config_flow.CONF_HOST: "0.0.0.0",
                             config_flow.CONF_PORT: 1234,
-                        },
+                        }
                     ],
                 }
             },
@@ -303,11 +304,7 @@ async def test_setup_multiple(hass):
                         {
                             konnected.CONF_ID: "aabbccddeeff",
                             "binary_sensors": [
-                                {
-                                    "zone": 4,
-                                    "type": "motion",
-                                    "name": "Hallway Motion",
-                                },
+                                {"zone": 4, "type": "motion", "name": "Hallway Motion"},
                                 {
                                     "zone": 5,
                                     "type": "window",
@@ -334,7 +331,7 @@ async def test_setup_multiple(hass):
                                     "momentary": 65,
                                     "pause": 55,
                                     "repeat": 4,
-                                },
+                                }
                             ],
                         },
                     ],
@@ -469,23 +466,23 @@ async def test_api(hass, aiohttp_client, mock_panel):
 
     # Test the get endpoint for switch status polling
     resp = await client.get("/api/konnected")
-    assert resp.status == 404  # no device provided
+    assert resp.status == HTTP_NOT_FOUND  # no device provided
 
     resp = await client.get("/api/konnected/223344556677")
-    assert resp.status == 404  # unknown device provided
+    assert resp.status == HTTP_NOT_FOUND  # unknown device provided
 
     resp = await client.get("/api/konnected/device/112233445566")
-    assert resp.status == 404  # no zone provided
+    assert resp.status == HTTP_NOT_FOUND  # no zone provided
     result = await resp.json()
     assert result == {"message": "Switch on zone or pin unknown not configured"}
 
     resp = await client.get("/api/konnected/device/112233445566?zone=8")
-    assert resp.status == 404  # invalid zone
+    assert resp.status == HTTP_NOT_FOUND  # invalid zone
     result = await resp.json()
     assert result == {"message": "Switch on zone or pin 8 not configured"}
 
     resp = await client.get("/api/konnected/device/112233445566?pin=12")
-    assert resp.status == 404  # invalid pin
+    assert resp.status == HTTP_NOT_FOUND  # invalid pin
     result = await resp.json()
     assert result == {"message": "Switch on zone or pin 12 not configured"}
 
@@ -501,7 +498,7 @@ async def test_api(hass, aiohttp_client, mock_panel):
 
     # Test the post endpoint for sensor updates
     resp = await client.post("/api/konnected/device", json={"zone": "1", "state": 1})
-    assert resp.status == 404
+    assert resp.status == HTTP_NOT_FOUND
 
     resp = await client.post(
         "/api/konnected/device/112233445566", json={"zone": "1", "state": 1}
@@ -622,7 +619,7 @@ async def test_state_updates(hass, aiohttp_client, mock_panel):
     entry.add_to_hass(hass)
 
     # Add empty data field to ensure we process it correctly (possible if entry is ignored)
-    entry = MockConfigEntry(domain="konnected", title="Konnected Alarm Panel", data={},)
+    entry = MockConfigEntry(domain="konnected", title="Konnected Alarm Panel", data={})
     entry.add_to_hass(hass)
 
     assert (

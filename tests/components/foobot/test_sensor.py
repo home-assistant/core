@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    HTTP_INTERNAL_SERVER_ERROR,
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
 )
@@ -83,7 +84,7 @@ async def test_setup_temporary_error(hass, aioclient_mock):
     """Expected failures caused by temporary errors in API response."""
     fake_async_add_entities = MagicMock()
 
-    errors = [429, 500]
+    errors = [429, HTTP_INTERNAL_SERVER_ERROR]
     for error in errors:
         aioclient_mock.get(re.compile("api.foobot.io/v2/owner/.*"), status=error)
         with pytest.raises(PlatformNotReady):

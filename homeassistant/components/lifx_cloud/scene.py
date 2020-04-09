@@ -8,7 +8,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.scene import Scene
-from homeassistant.const import CONF_PLATFORM, CONF_TIMEOUT, CONF_TOKEN
+from homeassistant.const import CONF_PLATFORM, CONF_TIMEOUT, CONF_TOKEN, HTTP_OK
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -44,7 +44,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return False
 
     status = scenes_resp.status
-    if status == 200:
+    if status == HTTP_OK:
         data = await scenes_resp.json()
         devices = []
         for scene in data:

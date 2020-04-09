@@ -2,7 +2,6 @@
     "config": {
         "error": {
             "auth": "La clave API no es correcta.",
-            "name_exists": "El nombre ya existe.",
             "wrong_location": "No hay estaciones de medici\u00f3n Airly en esta \u00e1rea."
         },
         "step": {

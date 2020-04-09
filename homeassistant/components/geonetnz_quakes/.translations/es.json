@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "La ubicaci\u00f3n ya est\u00e1 configurada."
         },
-        "error": {
-            "identifier_exists": "Ubicaci\u00f3n ya registrada"
-        },
         "step": {
             "user": {
                 "data": {

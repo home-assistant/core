@@ -15,6 +15,7 @@ from homeassistant.components.alexa import errors as alexa_errors
 from homeassistant.components.alexa.entities import LightCapabilities
 from homeassistant.components.cloud.const import DOMAIN, RequireRelink
 from homeassistant.components.google_assistant.helpers import GoogleEntity
+from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.core import State
 
 from . import mock_cloud, mock_cloud_prefs
@@ -99,10 +100,10 @@ async def test_google_actions_sync_fails(mock_cognito, mock_cloud_login, cloud_c
     """Test syncing Google Actions gone bad."""
     with patch(
         "hass_nabucasa.cloud_api.async_google_actions_request_sync",
-        return_value=mock_coro(Mock(status=500)),
+        return_value=mock_coro(Mock(status=HTTP_INTERNAL_SERVER_ERROR)),
     ) as mock_request_sync:
         req = await cloud_client.post("/api/cloud/google_actions/sync")
-        assert req.status == 500
+        assert req.status == HTTP_INTERNAL_SERVER_ERROR
         assert len(mock_request_sync.mock_calls) == 1
 
 
@@ -436,7 +437,7 @@ async def test_websocket_subscription_fail(
     hass, hass_ws_client, aioclient_mock, mock_auth, mock_cloud_login
 ):
     """Test querying the status."""
-    aioclient_mock.get(SUBSCRIPTION_INFO_URL, status=500)
+    aioclient_mock.get(SUBSCRIPTION_INFO_URL, status=HTTP_INTERNAL_SERVER_ERROR)
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "cloud/subscription"})
     response = await client.receive_json()
@@ -611,7 +612,7 @@ async def test_enabling_remote_trusted_networks_local4(
         response = await client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["code"] == 500
+    assert response["error"]["code"] == HTTP_INTERNAL_SERVER_ERROR
     assert (
         response["error"]["message"]
         == "Remote UI not compatible with 127.0.0.1/::1 as a trusted network."
@@ -643,7 +644,7 @@ async def test_enabling_remote_trusted_networks_local6(
         response = await client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["code"] == 500
+    assert response["error"]["code"] == HTTP_INTERNAL_SERVER_ERROR
     assert (
         response["error"]["message"]
         == "Remote UI not compatible with 127.0.0.1/::1 as a trusted network."
@@ -744,7 +745,7 @@ async def test_enabling_remote_trusted_proxies_local4(
         response = await client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["code"] == 500
+    assert response["error"]["code"] == HTTP_INTERNAL_SERVER_ERROR
     assert (
         response["error"]["message"]
         == "Remote UI not compatible with 127.0.0.1/::1 as trusted proxies."
@@ -768,7 +769,7 @@ async def test_enabling_remote_trusted_proxies_local6(
         response = await client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["code"] == 500
+    assert response["error"]["code"] == HTTP_INTERNAL_SERVER_ERROR
     assert (
         response["error"]["message"]
         == "Remote UI not compatible with 127.0.0.1/::1 as trusted proxies."

@@ -5,7 +5,6 @@
         },
         "error": {
             "auth": "API-nyckeln \u00e4r inte korrekt.",
-            "name_exists": "Namnet finns redan.",
             "wrong_location": "Inga Airly m\u00e4tstationer i detta omr\u00e5de."
         },
         "step": {

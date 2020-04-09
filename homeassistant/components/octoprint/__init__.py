@@ -145,8 +145,9 @@ def setup(hass, config):
     for printer in config[DOMAIN]:
         name = printer[CONF_NAME]
         ssl = "s" if printer[CONF_SSL] else ""
-        base_url = "http{}://{}:{}{}api/".format(
-            ssl, printer[CONF_HOST], printer[CONF_PORT], printer[CONF_PATH]
+        base_url = (
+            f"http{ssl}://{printer[CONF_HOST]}:{printer[CONF_PORT]}"
+            f"{printer[CONF_PATH]}api/"
         )
         api_key = printer[CONF_API_KEY]
         number_of_tools = printer[CONF_NUMBER_OF_TOOLS]

@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Arduino platform."""
     board = hass.data[DOMAIN]
 
-    pins = config.get(CONF_PINS)
+    pins = config[CONF_PINS]
 
     sensors = []
     for pinnum, pin in pins.items():

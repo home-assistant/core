@@ -183,7 +183,7 @@ class ONVIFHassCamera(Camera):
             self._port,
             self._username,
             self._password,
-            "{}/wsdl/".format(os.path.dirname(onvif.__file__)),
+            f"{os.path.dirname(onvif.__file__)}/wsdl/",
             transport=transport,
         )
 
@@ -516,7 +516,8 @@ class ONVIFHassCamera(Camera):
                 """Read image from a URL."""
                 try:
                     response = requests.get(self._snapshot, timeout=5, auth=auth)
-                    return response.content
+                    if response.status_code < 300:
+                        return response.content
                 except requests.exceptions.RequestException as error:
                     _LOGGER.error(
                         "Fetch snapshot image failed from %s, falling back to FFmpeg; %s",

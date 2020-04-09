@@ -68,17 +68,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-
-            if "base" not in errors:
+            info, errors = await self._async_validate_or_error(user_input)
+            if not errors:
                 await self.async_set_unique_id(info["mac_addr"])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
@@ -119,7 +110,30 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
+        if user_input:
+            info, errors = await self._async_validate_or_error(user_input)
+            if not errors:
+                await self.async_set_unique_id(
+                    info["mac_addr"], raise_on_progress=False
+                )
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title=info["title"], data=user_input)
         return await self.async_step_user(user_input)
+
+    async def _async_validate_or_error(self, user_input):
+        """Validate doorbird or error."""
+        errors = {}
+        info = {}
+        try:
+            info = await validate_input(self.hass, user_input)
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except InvalidAuth:
+            errors["base"] = "invalid_auth"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        return info, errors
 
     @staticmethod
     @callback

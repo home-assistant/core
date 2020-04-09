@@ -25,8 +25,7 @@ from homeassistant.util import dt as dt_util
 from tests.common import async_mock_service
 
 
-@asyncio.coroutine
-def test_async_track_states(hass):
+async def test_async_track_states(hass):
     """Test AsyncTrackStates context manager."""
     point1 = dt_util.utcnow()
     point2 = point1 + timedelta(seconds=5)
@@ -50,8 +49,7 @@ def test_async_track_states(hass):
     assert [state2, state3] == sorted(states, key=lambda state: state.entity_id)
 
 
-@asyncio.coroutine
-def test_call_to_component(hass):
+async def test_call_to_component(hass):
     """Test calls to components state reproduction functions."""
     with patch(
         "homeassistant.components.media_player.reproduce_state.async_reproduce_states"
@@ -69,7 +67,7 @@ def test_call_to_component(hass):
             state_climate = ha.State("climate.test", "bad")
             context = "dummy_context"
 
-            yield from state.async_reproduce_state(
+            await state.async_reproduce_state(
                 hass,
                 [state_media_player, state_climate],
                 blocking=True,

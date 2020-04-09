@@ -1,6 +1,5 @@
 """Test config utils."""
 # pylint: disable=protected-access
-import asyncio
 from collections import OrderedDict
 import copy
 import os
@@ -740,8 +739,7 @@ async def test_merge_duplicate_keys(merge_log_err, hass):
     assert len(config["input_select"]) == 1
 
 
-@asyncio.coroutine
-def test_merge_customize(hass):
+async def test_merge_customize(hass):
     """Test loading core config onto hass object."""
     core_config = {
         "latitude": 60,
@@ -755,7 +753,7 @@ def test_merge_customize(hass):
             "pkg1": {"homeassistant": {"customize": {"b.b": {"friendly_name": "BB"}}}}
         },
     }
-    yield from config_util.async_process_ha_core_config(hass, core_config)
+    await config_util.async_process_ha_core_config(hass, core_config)
 
     assert hass.data[config_util.DATA_CUSTOMIZE].get("b.b") == {"friendly_name": "BB"}
 

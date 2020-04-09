@@ -14,10 +14,6 @@
         "flow_title": "Passerelle deCONZ Zigbee ({host})",
         "step": {
             "hassio_confirm": {
-                "data": {
-                    "allow_clip_sensor": "Autoriser l'importation de capteurs virtuels",
-                    "allow_deconz_groups": "Autoriser l'importation des groupes deCONZ"
-                },
                 "description": "Voulez-vous configurer Home Assistant pour qu'il se connecte \u00e0 la passerelle deCONZ fournie par l'add-on hass.io {addon} ?",
                 "title": "Passerelle deCONZ Zigbee via l'add-on Hass.io"
             },
@@ -31,13 +27,6 @@
             "link": {
                 "description": "D\u00e9verrouillez votre passerelle deCONZ pour vous enregistrer avec Home Assistant. \n\n 1. Acc\u00e9dez aux param\u00e8tres avanc\u00e9s du syst\u00e8me deCONZ \n 2. Cliquez sur \"D\u00e9verrouiller la passerelle\"",
                 "title": "Lien vers deCONZ"
-            },
-            "options": {
-                "data": {
-                    "allow_clip_sensor": "Autoriser l'importation de capteurs virtuels",
-                    "allow_deconz_groups": "Autoriser l'importation des groupes deCONZ"
-                },
-                "title": "Options de configuration suppl\u00e9mentaires pour deCONZ"
             }
         },
         "title": "Passerelle deCONZ Zigbee"
@@ -96,13 +85,6 @@
     },
     "options": {
         "step": {
-            "async_step_deconz_devices": {
-                "data": {
-                    "allow_clip_sensor": "Autoriser les capteurs deCONZ CLIP",
-                    "allow_deconz_groups": "Autoriser les groupes de lumi\u00e8res deCONZ"
-                },
-                "description": "Configurer la visibilit\u00e9 des appareils de type deCONZ"
-            },
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Autoriser les capteurs deCONZ CLIP",

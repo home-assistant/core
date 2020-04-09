@@ -46,7 +46,6 @@
         },
         "trigger_type": {
             "bat_low": "Bateria de {entity_name} baixa",
-            "closed": "{entity_name} est\u00e0 tancat",
             "cold": "{entity_name} es torna fred",
             "connected": "{entity_name} est\u00e0 connectat",
             "gas": "{entity_name} ha comen\u00e7at a detectar gas",
@@ -54,7 +53,6 @@
             "light": "{entity_name} ha comen\u00e7at a detectar llum",
             "locked": "{entity_name} est\u00e0 bloquejat",
             "moist": "{entity_name} es torna humit",
-            "moist\u00a7": "{entity_name} es torna humit",
             "motion": "{entity_name} ha comen\u00e7at a detectar moviment",
             "moving": "{entity_name} ha comen\u00e7at a moure's",
             "no_gas": "{entity_name} ha deixat de detectar gas",

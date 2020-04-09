@@ -2,17 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Denne verts- og portkombinasjonen er allerede konfigurert",
-            "host_port_exists": "Denne verts- og portkombinasjonen er allerede konfigurert",
             "import_failed": "Import fra config mislyktes"
         },
         "error": {
-            "certificate_error": "Sertifikatet kunne ikke valideres",
-            "certificate_fetch_failed": "Kan ikke hente sertifikat fra denne verts- og portkombinasjonen",
             "connection_refused": "Tilkoblingen ble nektet da den koblet til verten",
             "connection_timeout": "Tidsavbrudd n\u00e5r du kobler til denne verten",
-            "host_port_exists": "Denne verts- og portkombinasjonen er allerede konfigurert",
-            "resolve_failed": "Denne verten kan ikke l\u00f8ses",
-            "wrong_host": "Sertifikatet samsvarer ikke med vertsnavn"
+            "resolve_failed": "Denne verten kan ikke l\u00f8ses"
         },
         "step": {
             "user": {

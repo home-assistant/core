@@ -71,21 +71,12 @@ async def test_create_lock_with_linked_keypad(hass):
     assert entry
     assert entry.unique_id == "A6697750D607098BAE8D6BAA11EF8063_device_battery"
 
-    sensor_a6697750d607098bae8d6baa11ef8063_name_keypad_battery = hass.states.get(
-        "sensor.a6697750d607098bae8d6baa11ef8063_name_keypad_battery"
-    )
-    assert sensor_a6697750d607098bae8d6baa11ef8063_name_keypad_battery.state == "60"
-    assert (
-        sensor_a6697750d607098bae8d6baa11ef8063_name_keypad_battery.attributes[
-            "unit_of_measurement"
-        ]
-        == "%"
-    )
-    entry = entity_registry.async_get(
-        "sensor.a6697750d607098bae8d6baa11ef8063_name_keypad_battery"
-    )
+    state = hass.states.get("sensor.front_door_lock_keypad_battery")
+    assert state.state == "60"
+    assert state.attributes["unit_of_measurement"] == "%"
+    entry = entity_registry.async_get("sensor.front_door_lock_keypad_battery")
     assert entry
-    assert entry.unique_id == "A6697750D607098BAE8D6BAA11EF8063_linked_keypad_battery"
+    assert entry.unique_id == "5bc65c24e6ef2a263e1450a8_linked_keypad_battery"
 
 
 async def test_create_lock_with_low_battery_linked_keypad(hass):
@@ -110,21 +101,12 @@ async def test_create_lock_with_low_battery_linked_keypad(hass):
     assert entry
     assert entry.unique_id == "A6697750D607098BAE8D6BAA11EF8063_device_battery"
 
-    sensor_a6697750d607098bae8d6baa11ef8063_name_keypad_battery = hass.states.get(
-        "sensor.a6697750d607098bae8d6baa11ef8063_name_keypad_battery"
-    )
-    assert sensor_a6697750d607098bae8d6baa11ef8063_name_keypad_battery.state == "10"
-    assert (
-        sensor_a6697750d607098bae8d6baa11ef8063_name_keypad_battery.attributes[
-            "unit_of_measurement"
-        ]
-        == "%"
-    )
-    entry = entity_registry.async_get(
-        "sensor.a6697750d607098bae8d6baa11ef8063_name_keypad_battery"
-    )
+    state = hass.states.get("sensor.front_door_lock_keypad_battery")
+    assert state.state == "10"
+    assert state.attributes["unit_of_measurement"] == "%"
+    entry = entity_registry.async_get("sensor.front_door_lock_keypad_battery")
     assert entry
-    assert entry.unique_id == "A6697750D607098BAE8D6BAA11EF8063_linked_keypad_battery"
+    assert entry.unique_id == "5bc65c24e6ef2a263e1450a8_linked_keypad_battery"
 
     # No activity means it will be unavailable until someone unlocks/locks it
     lock_operator_sensor = entity_registry.async_get(

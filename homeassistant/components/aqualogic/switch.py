@@ -39,7 +39,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     switches = []
 
     processor = hass.data[DOMAIN]
-    for switch_type in config.get(CONF_MONITORED_CONDITIONS):
+    for switch_type in config[CONF_MONITORED_CONDITIONS]:
         switches.append(AquaLogicSwitch(processor, switch_type))
 
     async_add_entities(switches)
