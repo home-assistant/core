@@ -329,9 +329,6 @@ class Light(BaseLight, ZhaEntity):
         if self._color_channel:
             self._min_mireds: Optional[int] = self._color_channel.min_mireds
             self._max_mireds: Optional[int] = self._color_channel.max_mireds
-        else:
-            self._min_mireds: Optional[int] = 153
-            self._max_mireds: Optional[int] = 500
         self._cancel_refresh_handle = None
         effect_list = []
 
