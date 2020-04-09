@@ -19,7 +19,7 @@ from .const import (
     STATUS_ONLINE,
 )
 from .entity import RachioDevice
-from .webhooks import SUBTYPE_OFFLINE, SUBTYPE_ONLINE
+from .webhooks import SUBTYPE_OFFLINE, SUBTYPE_ONLINE, SUBTYPE_COLD_REBOOT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,7 +127,10 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle an update to the state of this sensor."""
-        if args[0][0][KEY_SUBTYPE] == SUBTYPE_ONLINE:
+        if (
+            args[0][0][KEY_SUBTYPE] == SUBTYPE_ONLINE
+            or args[0][0][KEY_SUBTYPE] == SUBTYPE_COLD_REBOOT
+        ):
             self._state = True
         elif args[0][0][KEY_SUBTYPE] == SUBTYPE_OFFLINE:
             self._state = False
