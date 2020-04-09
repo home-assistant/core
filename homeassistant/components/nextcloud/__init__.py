@@ -63,7 +63,7 @@ SENSORS = (
     "nextcloud_storage_num_files",
     "nextcloud_storage_num_storages",
     "nextcloud_storage_num_storages_local",
-    "nextcloud_storage_num_storage_home",
+    "nextcloud_storage_num_storages_home",
     "nextcloud_storage_num_storages_other",
     "nextcloud_shares_num_shares",
     "nextcloud_shares_num_shares_user",
@@ -83,9 +83,9 @@ SENSORS = (
     "nextcloud_database_type",
     "nextcloud_database_version",
     "nextcloud_database_version",
-    "nextcloud_activeusers_last5minutes",
-    "nextcloud_activeusers_last1hour",
-    "nextcloud_activeusers_last24hours",
+    "nextcloud_activeUsers_last5minutes",
+    "nextcloud_activeUsers_last1hour",
+    "nextcloud_activeUsers_last24hours",
 )
 
 
