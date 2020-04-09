@@ -188,18 +188,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     include = conf.get(CONF_INCLUDE, {})
     exclude = {
         "domains": [
-            "ais_dom" "ais_ai_service",
+            "ais_ai_service",
             "ais_amplifier_service",
             "ais_audiobooks_service",
             "ais_bookmarks",
             "ais_cloud",
             "ais_device_search_mqtt",
+            "ais_dom",
             "ais_dom_device",
             "ais_drives_service",
             "ais_exo_player",
             "ais_files",
             "ais_gm_service",
-            "ais_google_home," "ais_help",
+            "ais_google_home",
+            "ais_help",
             "ais_host",
             "ais_ingress",
             "ais_knowledge_service",
@@ -604,10 +606,11 @@ class Recorder(threading.Thread):
                 _LOGGER.warning("Event is not JSON serializable: %s", event)
             except Exception as err:  # pylint: disable=broad-except
                 # Must catch the exception to prevent the loop from collapsing
-                _LOGGER.exception("Error adding event: %s", err)
+                _LOGGER.error("1. ais Error adding event: %s", err)
 
             if dbevent and event.event_type == EVENT_STATE_CHANGED:
                 try:
+                    _LOGGER.error("2.ais Error adding event: %s", err)
                     dbstate = States.from_event(event)
                     dbstate.event_id = dbevent.event_id
                     self.event_session.add(dbstate)
@@ -622,10 +625,13 @@ class Recorder(threading.Thread):
 
             # If they do not have a commit interval
             # than we commit right away
+            _LOGGER.error("3. ais Error adding event: %s", err)
             if not self.commit_interval:
                 self._commit_event_session_or_retry()
 
+            _LOGGER.error("4. ais Error adding event: %s", err)
             self.queue.task_done()
+            _LOGGER.error("5. ais Error adding event: %s", err)
 
     def _commit_event_session_or_retry(self):
         tries = 1
@@ -678,9 +684,9 @@ class Recorder(threading.Thread):
         try:
             self.event_session.commit()
         except Exception as err:
-            _LOGGER.error("Error executing query: %s", err)
+            _LOGGER.error("Error executing query: %s ais no raise", err)
             self.event_session.rollback()
-            raise
+            # raise
 
     @callback
     def event_listener(self, event):

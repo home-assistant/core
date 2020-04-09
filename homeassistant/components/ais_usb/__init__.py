@@ -17,8 +17,12 @@ import homeassistant.components.ais_dom.ais_global as ais_global
 
 DOMAIN = "ais_usb"
 _LOGGER = logging.getLogger(__name__)
+
 G_ZIGBEE_ID = "0451:16a8"
+G_ZWAVE_ID = "0658:0200"
 G_AIS_REMOTE_ID = "0c45:5102"
+# ignore internal devices
+G_AIS_INTERNAL_DEVICES_ID = ["14cd:8608", "05e3:0608", "1d6b:0002", "1d6b:0003"]
 
 G_USB_DRIVES_PATH = "/mnt/media_rw"
 if platform.machine() == "x86_64":
@@ -246,8 +250,8 @@ async def async_setup(hass, config):
 
     async def lsusb(call):
         # check if the call was from scheduler or service / web app
-        devices = _lsusb()
-        for device in devices:
+        ais_global.G_USB_DEVICES = _lsusb()
+        for device in ais_global.G_USB_DEVICES:
             if device["id"] == G_ZIGBEE_ID:
                 # USB zigbee dongle
                 prepare_usb_device(hass, device)
@@ -302,7 +306,8 @@ def _lsusb():
             info = device_re.match(i)
             if info:
                 dinfo = info.groupdict()
-                devices.append(dinfo)
+                if dinfo["id"] not in G_AIS_INTERNAL_DEVICES_ID:
+                    devices.append(dinfo)
 
     di = subprocess.check_output("ls /sys/bus/usb/devices", shell=True)
     for d in di.decode("utf-8").split("\n"):
@@ -325,57 +330,72 @@ def _lsusb():
                     .decode("utf-8")
                     .strip()
                 )
-                product = (
-                    subprocess.check_output(
-                        "cat /sys/bus/usb/devices/" + d + "/product", shell=True
-                    )
-                    .decode("utf-8")
-                    .strip()
-                )
-                if os.path.exists("/sys/bus/usb/devices/" + d + "/manufacturer"):
-                    manufacturer = (
-                        subprocess.check_output(
-                            "cat /sys/bus/usb/devices/" + d + "/manufacturer",
-                            shell=True,
+                id_vendor_product = id_vendor + ":" + id_product
+                manufacturer = " "
+                product = ""
+                if id_vendor_product not in G_AIS_INTERNAL_DEVICES_ID:
+                    if id_vendor_product not in [
+                        G_ZIGBEE_ID,
+                        G_ZWAVE_ID,
+                        G_AIS_REMOTE_ID,
+                    ]:
+                        product = (
+                            subprocess.check_output(
+                                "cat /sys/bus/usb/devices/" + d + "/product", shell=True
+                            )
+                            .decode("utf-8")
+                            .strip()
                         )
-                        .decode("utf-8")
-                        .strip()
-                    )
-                    manufacturer = " producent " + manufacturer
-                else:
-                    manufacturer = " "
-
-                _LOGGER.info(
-                    "id_vendor: "
-                    + id_vendor
-                    + " id_product: "
-                    + id_product
-                    + " product: "
-                    + product
-                    + " manufacturer: "
-                    + manufacturer
-                )
-                for device in devices:
-                    if device["id"] == id_vendor + ":" + id_product:
-                        device["product"] = product
-                        device["manufacturer"] = manufacturer
-                        # special cases
-                        if device["id"] == G_ZIGBEE_ID:
-                            # USB zigbee dongle
-                            device["info"] = (
-                                "urządzenie Zigbee" + product + manufacturer
+                        if os.path.exists(
+                            "/sys/bus/usb/devices/" + d + "/manufacturer"
+                        ):
+                            manufacturer = (
+                                subprocess.check_output(
+                                    "cat /sys/bus/usb/devices/" + d + "/manufacturer",
+                                    shell=True,
+                                )
+                                .decode("utf-8")
+                                .strip()
                             )
-                        elif device["id"] == G_AIS_REMOTE_ID:
-                            # USB ais remote dongle
-                            device[
-                                "info"
-                            ] = "urządzenie Pilot radiowy z mikrofonem, producent AI-Speaker"
+                            manufacturer = " producent " + manufacturer
                         else:
-                            device["info"] = (
-                                "urządzenie " + str(product) + str(manufacturer)
-                            )
+                            manufacturer = " "
+
+                        _LOGGER.debug(
+                            "id_vendor: "
+                            + id_vendor
+                            + " id_product: "
+                            + id_product
+                            + " product: "
+                            + product
+                            + " manufacturer: "
+                            + manufacturer
+                        )
+                    #
+                    for device in devices:
+                        if device["id"] == id_vendor_product:
+                            device["product"] = product
+                            device["manufacturer"] = manufacturer
+                            # special cases
+                            if device["id"] == G_ZIGBEE_ID:
+                                # USB zigbee dongle
+                                device["info"] = (
+                                    "urządzenie Zigbee" + product + manufacturer
+                                )
+                            elif device["id"] == G_AIS_REMOTE_ID:
+                                # USB ais remote dongle
+                                device[
+                                    "info"
+                                ] = "urządzenie Pilot radiowy z mikrofonem, producent AI-Speaker"
+                            elif device["id"] == G_ZWAVE_ID:
+                                # USB ais zwave dongle
+                                device["info"] = "urządzenie Z-Wave Aeotec"
+                            else:
+                                device["info"] = (
+                                    "urządzenie " + str(product) + str(manufacturer)
+                                )
 
             except Exception as e:
-                _LOGGER.info("no info about usb in: /sys/bus/usb/devices/" + d)
+                _LOGGER.debug("no info about usb in: /sys/bus/usb/devices/" + d)
 
     return devices
