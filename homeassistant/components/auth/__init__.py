@@ -132,7 +132,7 @@ from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import HTTP_OK
+from homeassistant.const import HTTP_FORBIDDEN, HTTP_OK
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
@@ -313,7 +313,7 @@ class TokenView(HomeAssistantView):
         if not user.is_active:
             return self.json(
                 {"error": "access_denied", "error_description": "User is not active"},
-                status_code=403,
+                status_code=HTTP_FORBIDDEN,
             )
 
         refresh_token = await hass.auth.async_create_refresh_token(user, client_id)
