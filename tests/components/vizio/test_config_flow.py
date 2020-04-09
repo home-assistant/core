@@ -176,6 +176,36 @@ async def test_tv_options_flow_with_apps(hass: HomeAssistantType) -> None:
     assert result["data"][CONF_APPS] == {CONF_INCLUDE: [CURRENT_APP]}
 
 
+async def test_tv_options_flow_start_with_volume(hass: HomeAssistantType) -> None:
+    """Test options config flow for TV with providing apps option after providing volume step."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_USER_VALID_TV_CONFIG,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+    )
+    entry.add_to_hass(hass)
+
+    assert entry.options and entry.options == {CONF_VOLUME_STEP: VOLUME_STEP}
+
+    result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    options = {CONF_VOLUME_STEP: VOLUME_STEP}
+    options.update(MOCK_INCLUDE_APPS)
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input=options
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == ""
+    assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
+    assert CONF_APPS in result["data"]
+    assert result["data"][CONF_APPS] == {CONF_INCLUDE: [CURRENT_APP]}
+
+
 async def test_user_host_already_configured(
     hass: HomeAssistantType,
     vizio_connect: pytest.fixture,
