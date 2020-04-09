@@ -1,6 +1,6 @@
 """Tests for light platform."""
 from typing import Callable, NamedTuple
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
 from pyHS100 import SmartDeviceException
 import pytest
@@ -16,7 +16,11 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.components.tplink.common import CONF_DISCOVERY, CONF_LIGHT
+from homeassistant.components.tplink.common import (
+    CONF_DIMMER,
+    CONF_DISCOVERY,
+    CONF_LIGHT,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -39,6 +43,16 @@ class LightMockData(NamedTuple):
     get_sysinfo_mock: Mock
     get_emeter_daily_mock: Mock
     get_emeter_monthly_mock: Mock
+
+
+class SmartSwitchMockData(NamedTuple):
+    """Mock smart switch data."""
+
+    sys_info: dict
+    light_state: dict
+    state_mock: Mock
+    brightness_mock: Mock
+    get_sysinfo_mock: Mock
 
 
 @pytest.fixture(name="light_mock_data")
@@ -152,12 +166,171 @@ def light_mock_data_fixture() -> None:
         )
 
 
+@pytest.fixture(name="dimmer_switch_mock_data")
+def dimmer_switch_mock_data_fixture() -> None:
+    """Create dimmer switch mock data."""
+    sys_info = {
+        "sw_ver": "1.2.3",
+        "hw_ver": "2.3.4",
+        "mac": "aa:bb:cc:dd:ee:ff",
+        "mic_mac": "00:11:22:33:44",
+        "type": "switch",
+        "hwId": "1234",
+        "fwId": "4567",
+        "oemId": "891011",
+        "dev_name": "dimmer1",
+        "rssi": 11,
+        "latitude": "0",
+        "longitude": "0",
+        "is_color": False,
+        "is_dimmable": True,
+        "is_variable_color_temp": False,
+        "model": "HS220",
+        "alias": "dimmer1",
+        "feature": ":",
+    }
+
+    light_state = {
+        "on_off": 1,
+        "brightness": 13,
+    }
+
+    def state(*args, **kwargs):
+        nonlocal light_state
+        if len(args) == 0:
+            return light_state["on_off"]
+        light_state["on_off"] = args[0]
+
+    def brightness(*args, **kwargs):
+        nonlocal light_state
+        if len(args) == 0:
+            return light_state["brightness"]
+        if light_state["brightness"] == 0:
+            light_state["on_off"] = 0
+        else:
+            light_state["on_off"] = 1
+            light_state["brightness"] = args[0]
+
+    get_sysinfo_patch = patch(
+        "homeassistant.components.tplink.common.SmartDevice.get_sysinfo",
+        return_value=sys_info,
+    )
+    state_patch = patch(
+        "homeassistant.components.tplink.common.SmartPlug.state",
+        new_callable=PropertyMock,
+        side_effect=state,
+    )
+    brightness_patch = patch(
+        "homeassistant.components.tplink.common.SmartPlug.brightness",
+        new_callable=PropertyMock,
+        side_effect=brightness,
+    )
+    with brightness_patch as brightness_mock, state_patch as state_mock, get_sysinfo_patch as get_sysinfo_mock:
+        yield SmartSwitchMockData(
+            sys_info=sys_info,
+            light_state=light_state,
+            brightness_mock=brightness_mock,
+            state_mock=state_mock,
+            get_sysinfo_mock=get_sysinfo_mock,
+        )
+
+
 async def update_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Run an update action for an entity."""
     await hass.services.async_call(
         HA_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: entity_id}, blocking=True,
     )
     await hass.async_block_till_done()
+
+
+async def test_smartswitch(
+    hass: HomeAssistant, dimmer_switch_mock_data: SmartSwitchMockData
+) -> None:
+    """Test function."""
+    light_state = dimmer_switch_mock_data.light_state
+
+    await async_setup_component(hass, HA_DOMAIN, {})
+    await hass.async_block_till_done()
+
+    await async_setup_component(
+        hass,
+        tplink.DOMAIN,
+        {
+            tplink.DOMAIN: {
+                CONF_DISCOVERY: False,
+                CONF_DIMMER: [{CONF_HOST: "123.123.123.123"}],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.dimmer1")
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "light.dimmer1"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    await update_entity(hass, "light.dimmer1")
+
+    assert hass.states.get("light.dimmer1").state == "off"
+    assert light_state["on_off"] == 0
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.dimmer1", ATTR_BRIGHTNESS: 50},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    await update_entity(hass, "light.dimmer1")
+
+    state = hass.states.get("light.dimmer1")
+    assert state.state == "on"
+    assert state.attributes["brightness"] == 48.45
+    assert light_state["on_off"] == 1
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.dimmer1", ATTR_BRIGHTNESS: 55},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    await update_entity(hass, "light.dimmer1")
+
+    state = hass.states.get("light.dimmer1")
+    assert state.state == "on"
+    assert state.attributes["brightness"] == 53.55
+    assert light_state["brightness"] == 21
+
+    light_state["on_off"] = 0
+    light_state["brightness"] = 66
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "light.dimmer1"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    await update_entity(hass, "light.dimmer1")
+
+    state = hass.states.get("light.dimmer1")
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "light.dimmer1"}, blocking=True,
+    )
+    await hass.async_block_till_done()
+    await update_entity(hass, "light.dimmer1")
+
+    state = hass.states.get("light.dimmer1")
+    assert state.state == "on"
+    assert state.attributes["brightness"] == 168.3
+    assert light_state["brightness"] == 66
 
 
 async def test_light(hass: HomeAssistant, light_mock_data: LightMockData) -> None:
