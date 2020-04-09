@@ -1,7 +1,9 @@
 """Test APRS device tracker."""
+import datetime
 from unittest.mock import Mock, patch
 
 import aprslib
+import pytz
 
 import homeassistant.components.aprs.device_tracker as device_tracker
 from homeassistant.const import EVENT_HOMEASSISTANT_START
@@ -178,6 +180,7 @@ def test_aprs_listener_rx_msg():
             device_tracker.ATTR_LATITUDE: 0.0,
             device_tracker.ATTR_LONGITUDE: 0.0,
             device_tracker.ATTR_ALTITUDE: 0,
+            device_tracker.ATTR_TIMESTAMP: 1452383100,
         }
 
         listener = device_tracker.AprsListenerThread(
@@ -196,7 +199,10 @@ def test_aprs_listener_rx_msg():
         see.assert_called_with(
             dev_id=device_tracker.slugify("ZZ0FOOBAR-1"),
             gps=(0.0, 0.0),
-            attributes={"altitude": 0},
+            attributes={
+                "altitude": 0,
+                "last_beacon": datetime.datetime(2016, 1, 9, 23, 45, tzinfo=pytz.UTC),
+            },
         )
 
 
@@ -215,6 +221,7 @@ def test_aprs_listener_rx_msg_ambiguity():
             device_tracker.ATTR_LATITUDE: 0.0,
             device_tracker.ATTR_LONGITUDE: 0.0,
             device_tracker.ATTR_POS_AMBIGUITY: 1,
+            device_tracker.ATTR_TIMESTAMP: 1452383100,
         }
 
         listener = device_tracker.AprsListenerThread(
@@ -233,7 +240,10 @@ def test_aprs_listener_rx_msg_ambiguity():
         see.assert_called_with(
             dev_id=device_tracker.slugify("ZZ0FOOBAR-1"),
             gps=(0.0, 0.0),
-            attributes={device_tracker.ATTR_GPS_ACCURACY: 186},
+            attributes={
+                device_tracker.ATTR_GPS_ACCURACY: 186,
+                "last_beacon": datetime.datetime(2016, 1, 9, 23, 45, tzinfo=pytz.UTC),
+            },
         )
 
 
@@ -252,6 +262,7 @@ def test_aprs_listener_rx_msg_ambiguity_invalid():
             device_tracker.ATTR_LATITUDE: 0.0,
             device_tracker.ATTR_LONGITUDE: 0.0,
             device_tracker.ATTR_POS_AMBIGUITY: 5,
+            device_tracker.ATTR_TIMESTAMP: 1452383100,
         }
 
         listener = device_tracker.AprsListenerThread(
@@ -268,7 +279,11 @@ def test_aprs_listener_rx_msg_ambiguity_invalid():
         assert listener.start_success
         assert listener.start_message == "Connected to testhost with callsign testcall."
         see.assert_called_with(
-            dev_id=device_tracker.slugify("ZZ0FOOBAR-1"), gps=(0.0, 0.0), attributes={}
+            dev_id=device_tracker.slugify("ZZ0FOOBAR-1"),
+            gps=(0.0, 0.0),
+            attributes={
+                "last_beacon": datetime.datetime(2016, 1, 9, 23, 45, tzinfo=pytz.UTC)
+            },
         )
 
 
@@ -343,3 +358,75 @@ def test_setup_scanner_timeout():
         assert not device_tracker.setup_scanner(hass, config, see)
     finally:
         hass.stop()
+
+
+def test_aprs_listener_rx_msg_timestamp():
+    """Test rx_msg with timestamp."""
+    with patch("aprslib.IS"):
+        callsign = TEST_CALLSIGN
+        password = TEST_PASSWORD
+        host = TEST_HOST
+        server_filter = TEST_FILTER
+        see = Mock()
+
+        sample_msg = {
+            device_tracker.ATTR_FORMAT: "uncompressed",
+            device_tracker.ATTR_FROM: "ZZ0FOOBAR-1",
+            device_tracker.ATTR_LATITUDE: 0.0,
+            device_tracker.ATTR_LONGITUDE: 0.0,
+            device_tracker.ATTR_TIMESTAMP: 1452383100,
+        }
+
+        listener = device_tracker.AprsListenerThread(
+            callsign, password, host, server_filter, see
+        )
+        listener.run()
+        listener.rx_msg(sample_msg)
+
+        assert listener.callsign == callsign
+        assert listener.host == host
+        assert listener.server_filter == server_filter
+        assert listener.see == see
+        assert listener.start_event.is_set()
+        assert listener.start_success
+        assert listener.start_message == "Connected to testhost with callsign testcall."
+        see.assert_called_with(
+            dev_id=device_tracker.slugify("ZZ0FOOBAR-1"),
+            gps=(0.0, 0.0),
+            attributes={
+                "last_beacon": datetime.datetime(2016, 1, 9, 23, 45, tzinfo=pytz.UTC)
+            },
+        )
+
+
+def test_aprs_listener_rx_msg_no_timestamp():
+    """Test rx_msg without a timestamp."""
+    with patch("aprslib.IS"):
+        callsign = TEST_CALLSIGN
+        password = TEST_PASSWORD
+        host = TEST_HOST
+        server_filter = TEST_FILTER
+        see = Mock()
+
+        sample_msg = {
+            device_tracker.ATTR_FORMAT: "uncompressed",
+            device_tracker.ATTR_FROM: "ZZ0FOOBAR-1",
+            device_tracker.ATTR_LATITUDE: 0.0,
+            device_tracker.ATTR_LONGITUDE: 0.0,
+        }
+
+        listener = device_tracker.AprsListenerThread(
+            callsign, password, host, server_filter, see
+        )
+        listener.run()
+
+        listener.rx_msg(sample_msg)
+
+        assert listener.callsign == callsign
+        assert listener.host == host
+        assert listener.server_filter == server_filter
+        assert listener.see == see
+        assert listener.start_event.is_set()
+        assert listener.start_success
+        assert listener.start_message == "Connected to testhost with callsign testcall."
+        assert "last_beacon" in str(see.call_args)
