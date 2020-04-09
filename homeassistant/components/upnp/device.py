@@ -29,7 +29,7 @@ class Device:
 
     def __init__(self, igd_device):
         """Initialize UPnP/IGD device."""
-        self._igd_device = igd_device  # type: IgdDevice
+        self._igd_device: IgdDevice = igd_device
         self._mapped_ports = []
 
     @classmethod
@@ -164,7 +164,7 @@ class Device:
         except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
             _LOGGER.error("Could not delete port mapping")
 
-    async def async_get_traffic_data(self) -> Mapping[str, Mapping[str, any]]:
+    async def async_get_traffic_data(self) -> Mapping[str, any]:
         """
         Get all traffic data in one go.
 

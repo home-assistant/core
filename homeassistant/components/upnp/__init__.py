@@ -39,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ENABLE_PORT_MAPPING, default=False): cv.boolean,
                 vol.Optional(CONF_ENABLE_SENSORS, default=True): cv.boolean,
                 vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
-                vol.Optional(CONF_PORTS): vol.Schema(
+                vol.Optional(CONF_PORTS, default={}): vol.Schema(
                     {vol.Any(CONF_HASS, cv.port): vol.Any(CONF_HASS, cv.port)}
                 ),
             }
@@ -92,6 +92,7 @@ async def async_discover_and_construct(
     hass: HomeAssistantType, udn: str = None, st: str = None
 ) -> Device:
     """Discovery devices and construct a Device for one."""
+    # pylint: disable=invalid-name
     discovery_infos = await Device.async_discover(hass)
     if not discovery_infos:
         _LOGGER.info("No UPnP/IGD devices discovered")
@@ -134,7 +135,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         "config": conf,
         "devices": {},
         "local_ip": conf.get(CONF_LOCAL_IP, local_ip),
-        "ports": conf.get(CONF_PORTS, {}),
+        "ports": conf.get(CONF_PORTS),
     }
 
     if conf is not None:
@@ -154,7 +155,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
 
     # discover and construct
     udn = config_entry.data.get("udn")
-    st = config_entry.data.get("st")
+    st = config_entry.data.get("st")  # pylint: disable=invalid-name
     device = await async_discover_and_construct(hass, udn, st)
     if not device:
         _LOGGER.info("Unable to create UPnP/IGD, aborting")
@@ -191,7 +192,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     if conf.get(CONF_ENABLE_PORT_MAPPING):
         _LOGGER.debug("Enabling port mapping")
         local_ip = domain_data[CONF_LOCAL_IP]
-        ports = conf.get(CONF_PORTS, {})
+        ports = conf.get(CONF_PORTS)
 
         hass_port = None
         if hasattr(hass, "http"):

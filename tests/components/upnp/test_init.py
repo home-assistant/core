@@ -47,6 +47,11 @@ class MockDevice(Device):
         """Get the model name."""
         return "mock-model-name"
 
+    @property
+    def device_type(self) -> str:
+        """Get the device type."""
+        return "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
+
     async def _async_add_port_mapping(
         self, external_port: int, local_ip: str, internal_port: int
     ) -> None:

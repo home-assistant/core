@@ -63,7 +63,7 @@ SENSOR_TYPES = {
     },
 }
 
-SCAN_INTERVAL = timedelta(seconds=30)
+UPDATE_INTERVAL = timedelta(seconds=30)
 
 
 async def async_setup_platform(
@@ -84,7 +84,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
         # any device will do
         udn = list(hass.data[DOMAIN]["devices"].keys())[0]
 
-    device = hass.data[DOMAIN]["devices"][udn]  # type: Device
+    device: Device = hass.data[DOMAIN]["devices"][udn]
 
     _LOGGER.debug("Adding sensors")
     coordinator = DataUpdateCoordinator(
@@ -92,7 +92,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
         _LOGGER,
         name=device.name,
         update_method=device.async_get_traffic_data,
-        update_interval=timedelta(seconds=SCAN_INTERVAL.seconds),
+        update_interval=timedelta(seconds=UPDATE_INTERVAL.seconds),
     )
     await coordinator.async_refresh()
 
@@ -168,9 +168,17 @@ class UpnpSensor(Entity):
             "model": self._device.model_name,
         }
 
+    async def async_update(self):
+        """Request an update."""
+        await self._coordinator.async_request_refresh()
+
     async def async_added_to_hass(self) -> None:
         """Subscribe to sensors events."""
         self._coordinator.async_add_listener(self.async_write_ha_state)
+
+        self.async_on_remove(
+            self._coordinator.async_remove_listener(self.async_write_ha_state)
+        )
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -187,10 +195,6 @@ class UpnpSensor(Entity):
         _LOGGER.debug("Removing sensor: %s", self.unique_id)
         await self.async_remove()
 
-    async def async_will_remove_from_hass(self) -> None:
-        """When entity will be removed from hass."""
-        self._coordinator.async_remove_listener(self.async_write_ha_state)
-
 
 class RawUpnpSensor(UpnpSensor):
     """Representation of a UPnP/IGD sensor."""
@@ -204,7 +208,7 @@ class RawUpnpSensor(UpnpSensor):
 
 
 class DerivedUpnpSensor(UpnpSensor):
-    """Abstract representation of a UNIT Sent/Received per second sensor."""
+    """Representation of a UNIT Sent/Received per second sensor."""
 
     def __init__(self, coordinator, device, sensor_type) -> None:
         """Initialize sensor."""
@@ -248,6 +252,9 @@ class DerivedUpnpSensor(UpnpSensor):
         if self._sensor_type["unit"] == DATA_BYTES:
             delta_value /= KIBIBYTE
         delta_time = current_timestamp - self._last_timestamp
+        if delta_time.seconds == 0:
+            # Prevent division by 0.
+            return None
         derived = delta_value / delta_time.seconds
 
         # Store current values for future use.
