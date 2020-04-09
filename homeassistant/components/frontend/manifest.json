@@ -3,7 +3,7 @@
   "name": "Ais dom Frontend",
   "documentation": "https://www.ai-speaker.com",
   "requirements": [
-    "ais-dom-frontend==20200320.1"
+    "ais-dom-frontend==20200407.1"
   ],
   "dependencies": [
     "api",

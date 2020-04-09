@@ -31,6 +31,7 @@ rm /data/data/pl.sviete.dom/files/home/AIS/.storage/person
 
 
 # 5. clear .dom folder - remove tokens and bookmarks
+# logs and db settings
 echo [] > ~/../myConnHist.json
 rm -rf /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais*
 
