@@ -4,7 +4,9 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+from homeassistant import core
 from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
+
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -55,6 +57,18 @@ SUPPORT_SAMSUNGTV = (
 )
 
 
+@core.callback
+def async_get_on_script_from_mac(hass, mac):
+    """Create an on script from a mac address."""
+    script = cv.SCRIPT_SCHEMA(
+        {
+            CONF_SERVICE: "wake_on_lan.send_magic_packet",
+            CONF_SERVICE_DATA: {CONF_MAC: mac},
+        }
+    )
+    return Script(hass, script)
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Samsung TV from a config entry."""
     ip_address = config_entry.data[CONF_IP_ADDRESS]
@@ -62,13 +76,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     if CONF_MAC in config_entry.options:
         mac = config_entry.options[CONF_MAC]
-        script = cv.SCRIPT_SCHEMA(
-            {
-                CONF_SERVICE: "wake_on_lan.send_magic_packet",
-                CONF_SERVICE_DATA: {CONF_MAC: mac},
-            }
-        )
-        on_script = Script(hass, script)
+        on_script = async_get_on_script_from_mac(hass, mac)
     elif (
         DOMAIN in hass.data
         and ip_address in hass.data[DOMAIN]

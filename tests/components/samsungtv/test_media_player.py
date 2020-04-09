@@ -25,7 +25,10 @@ from homeassistant.components.samsungtv.const import (
     CONF_ON_ACTION,
     DOMAIN as SAMSUNGTV_DOMAIN,
 )
-from homeassistant.components.samsungtv.media_player import SUPPORT_SAMSUNGTV
+from homeassistant.components.samsungtv.media_player import (
+    SUPPORT_SAMSUNGTV,
+    async_get_on_script_from_mac,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -742,3 +745,13 @@ async def test_select_source_invalid_source(hass, remote):
         assert remote.control.call_count == 0
         assert remote.close.call_count == 0
         assert remote.call_count == 1
+
+
+async def test_on_script_from_mac(hass, remote):
+    """Test creation of on-script from mac address."""
+
+    result = async_get_on_script_from_mac(hass, "11:11:11")
+
+    assert len(result.sequence) == 1
+    assert result.sequence[0]["service"] == "wake_on_lan.send_magic_packet"
+    assert result.sequence[0]["data"] == {"mac": "11:11:11"}
