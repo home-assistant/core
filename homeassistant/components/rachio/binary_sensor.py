@@ -6,6 +6,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     BinarySensorDevice,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
@@ -43,7 +44,6 @@ class RachioControllerBinarySensor(RachioDevice, BinarySensorDevice):
     def __init__(self, controller, poll=True):
         """Set up a new Rachio controller binary sensor."""
         super().__init__(controller)
-        self._undo_dispatcher = None
         if poll:
             self._state = self._poll_update()
         else:
@@ -54,33 +54,31 @@ class RachioControllerBinarySensor(RachioDevice, BinarySensorDevice):
         """Return whether the sensor has a 'true' value."""
         return self._state
 
-    def _handle_any_update(self, *args, **kwargs) -> None:
+    @callback
+    def _async_handle_any_update(self, *args, **kwargs) -> None:
         """Determine whether an update event applies to this device."""
         if args[0][KEY_DEVICE_ID] != self._controller.controller_id:
             # For another device
             return
 
         # For this device
-        self._handle_update(args, kwargs)
+        self._async_handle_update(args, kwargs)
 
     @abstractmethod
     def _poll_update(self, data=None) -> bool:
         """Request the state from the API."""
 
     @abstractmethod
-    def _handle_update(self, *args, **kwargs) -> None:
+    def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle an update to the state of this sensor."""
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self._undo_dispatcher = async_dispatcher_connect(
-            self.hass, SIGNAL_RACHIO_CONTROLLER_UPDATE, self._handle_any_update
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_RACHIO_CONTROLLER_UPDATE, self._async_handle_any_update
+            )
         )
-
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe from updates."""
-        if self._undo_dispatcher:
-            self._undo_dispatcher()
 
 
 class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
@@ -94,7 +92,7 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
     @property
     def name(self) -> str:
         """Return the name of this sensor including the controller name."""
-        return f"{self._controller.name} online"
+        return f"{self._controller.name} status"
 
     @property
     def unique_id(self) -> str:
@@ -124,11 +122,12 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
             '"%s" reported in unknown state "%s"', self.name, data[KEY_STATUS]
         )
 
-    def _handle_update(self, *args, **kwargs) -> None:
+    @callback
+    def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle an update to the state of this sensor."""
         if args[0][0][KEY_SUBTYPE] == SUBTYPE_ONLINE:
             self._state = True
         elif args[0][0][KEY_SUBTYPE] == SUBTYPE_OFFLINE:
             self._state = False
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
