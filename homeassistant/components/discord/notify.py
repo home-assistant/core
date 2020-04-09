@@ -39,7 +39,6 @@ class DiscordNotificationService(BaseNotificationService):
         """Check if a file exists on disk and is in authorized path."""
         if not self.hass.config.is_allowed_path(filename):
             return False
-
         return os.path.isfile(filename)
 
     async def async_send_message(self, message, **kwargs):
@@ -52,7 +51,6 @@ class DiscordNotificationService(BaseNotificationService):
         if ATTR_TARGET not in kwargs:
             _LOGGER.error("No target specified")
             return None
-
         data = kwargs.get(ATTR_DATA) or {}
 
         if ATTR_IMAGES in data:
@@ -67,7 +65,6 @@ class DiscordNotificationService(BaseNotificationService):
                     images.append(image)
                 else:
                     _LOGGER.warning("Image not found: %s", image)
-
         # pylint: disable=unused-variable
         @discord_bot.event
         async def on_ready():
@@ -75,19 +72,19 @@ class DiscordNotificationService(BaseNotificationService):
             try:
                 for channelid in kwargs[ATTR_TARGET]:
                     channelid = int(channelid)
-                    channel = discord_bot.get_channel(channelid)
+                    channel = discord_bot.get_channel(
+                        channelid
+                    ) or discord_bot.get_user(channelid)
 
                     if channel is None:
                         _LOGGER.warning("Channel not found for id: %s", channelid)
                         continue
-
                     # Must create new instances of File for each channel.
                     files = None
                     if images:
                         files = []
                         for image in images:
                             files.append(discord.File(image))
-
                     await channel.send(message, files=files)
             except (discord.errors.HTTPException, discord.errors.NotFound) as error:
                 _LOGGER.warning("Communication error: %s", error)
