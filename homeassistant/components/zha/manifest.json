@@ -8,7 +8,7 @@
     "zha-quirks==0.0.38",
     "zigpy-cc==0.3.1",
     "zigpy-deconz==0.8.0",
-    "zigpy-homeassistant==0.18.1",
+    "zigpy-homeassistant==0.18.2",
     "zigpy-xbee-homeassistant==0.11.0",
     "zigpy-zigate==0.5.1"
   ],
