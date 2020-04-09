@@ -182,9 +182,7 @@ async def test_internal_discovery_callback_fill_out(hass):
 
     discover_cast, _ = await async_setup_cast_internal_discovery(hass)
     info = get_fake_chromecast_info(uuid=None)
-    full_info = attr.evolve(
-        info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
-    )
+    full_info = attr.evolve(info, model_name="", friendly_name="Speaker", uuid=FakeUUID)
 
     with patch(
         "homeassistant.components.cast.helpers.dial.get_device_status",
