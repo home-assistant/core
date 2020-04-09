@@ -6,7 +6,7 @@ from pysmartthings import APIResponseError, AppOAuth, SmartThings
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, HTTP_FORBIDDEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -122,7 +122,7 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
         except ClientResponseError as ex:
             if ex.status == 401:
                 errors[CONF_ACCESS_TOKEN] = "token_unauthorized"
-            elif ex.status == 403:
+            elif ex.status == HTTP_FORBIDDEN:
                 errors[CONF_ACCESS_TOKEN] = "token_forbidden"
             else:
                 errors["base"] = "app_setup_error"

@@ -17,7 +17,7 @@ from homeassistant.components.smartthings.const import (
     SIGNAL_SMARTTHINGS_UPDATE,
     SUPPORTED_PLATFORMS,
 )
-from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
+from homeassistant.const import HTTP_FORBIDDEN, HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
@@ -155,7 +155,7 @@ async def test_scenes_unauthorized_loads_platforms(
     smartthings_mock.installed_app.return_value = installed_app
     smartthings_mock.devices.return_value = [device]
     smartthings_mock.scenes.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=403
+        request_info=request_info, history=None, status=HTTP_FORBIDDEN
     )
     mock_token = Mock()
     mock_token.access_token = str(uuid4())
@@ -307,10 +307,10 @@ async def test_remove_entry_already_deleted(hass, config_entry, smartthings_mock
     request_info = Mock(real_url="http://example.com")
     # Arrange
     smartthings_mock.delete_installed_app.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=403
+        request_info=request_info, history=None, status=HTTP_FORBIDDEN
     )
     smartthings_mock.delete_app.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=403
+        request_info=request_info, history=None, status=HTTP_FORBIDDEN
     )
     # Act
     await smartthings.async_remove_entry(hass, config_entry)
