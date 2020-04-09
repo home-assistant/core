@@ -67,7 +67,7 @@ SERVICE_LOW_HZ = "set_low_hz"
 SERVICE_SUB_DB = "set_sub_db"
 SERVICE_UPDATE_DSP = "update_dsp"
 
-DSP_SCAN_INTERVAL = 3600
+DSP_SCAN_INTERVAL = timedelta(seconds=3600)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
