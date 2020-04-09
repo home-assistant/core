@@ -1,15 +1,16 @@
 """The tests for the Demo lock platform."""
 import pytest
 
-from homeassistant.components.lock import DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
+from homeassistant.components.demo import DOMAIN
+from homeassistant.components.lock import (
+    DOMAIN as LIGHT_DOMAIN,
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
     STATE_LOCKED,
     STATE_UNLOCKED,
 )
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -23,7 +24,7 @@ OPENABLE_LOCK = "lock.openable_lock"
 def setup_comp(hass):
     """Set up demo component."""
     hass.loop.run_until_complete(
-        async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": "demo"}})
+        async_setup_component(hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": DOMAIN}})
     )
 
 
@@ -33,7 +34,7 @@ async def test_locking(hass):
     assert state.state == STATE_UNLOCKED
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: KITCHEN}, blocking=True
+        LIGHT_DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: KITCHEN}, blocking=True
     )
 
     state = hass.states.get(KITCHEN)
@@ -46,7 +47,7 @@ async def test_unlocking(hass):
     assert state.state == STATE_LOCKED
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: FRONT}, blocking=True
+        LIGHT_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: FRONT}, blocking=True
     )
 
     state = hass.states.get(FRONT)
@@ -55,8 +56,8 @@ async def test_unlocking(hass):
 
 async def test_opening(hass):
     """Test the opening of a lock."""
-    calls = async_mock_service(hass, DOMAIN, SERVICE_OPEN)
+    calls = async_mock_service(hass, LIGHT_DOMAIN, SERVICE_OPEN)
     await hass.services.async_call(
-        DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: OPENABLE_LOCK}, blocking=True
+        LIGHT_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: OPENABLE_LOCK}, blocking=True
     )
     assert len(calls) == 1
