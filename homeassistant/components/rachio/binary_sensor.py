@@ -76,7 +76,9 @@ class RachioControllerBinarySensor(RachioDevice, BinarySensorDevice):
         """Subscribe to updates."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_RACHIO_CONTROLLER_UPDATE, self._async_handle_any_update
+                self.hass,
+                SIGNAL_RACHIO_CONTROLLER_UPDATE,
+                self._async_handle_any_update,
             )
         )
 
