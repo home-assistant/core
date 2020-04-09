@@ -19,7 +19,7 @@ from .const import (
     STATUS_ONLINE,
 )
 from .entity import RachioDevice
-from .webhooks import SUBTYPE_OFFLINE, SUBTYPE_ONLINE, SUBTYPE_COLD_REBOOT
+from .webhooks import SUBTYPE_COLD_REBOOT, SUBTYPE_OFFLINE, SUBTYPE_ONLINE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,7 +94,7 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
     @property
     def name(self) -> str:
         """Return the name of this sensor including the controller name."""
-        return f"{self._controller.name} status"
+        return self._controller.name
 
     @property
     def unique_id(self) -> str:
