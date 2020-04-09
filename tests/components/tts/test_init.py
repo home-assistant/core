@@ -1,6 +1,5 @@
 """The tests for the TTS component."""
 import ctypes
-import os
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -299,14 +298,11 @@ async def test_setup_component_and_test_with_service_options_def(hass, empty_cac
         ] == "{}/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{}_demo.mp3".format(
             hass.config.api.base_url, opt_hash
         )
-        assert os.path.isfile(
-            os.path.join(
-                empty_cache_dir,
-                "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{0}_demo.mp3".format(
-                    opt_hash
-                ),
-            )
-        )
+        await hass.async_block_till_done()
+        assert (
+            empty_cache_dir
+            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_demo.mp3"
+        ).is_file()
 
 
 async def test_setup_component_and_test_service_with_service_options_wrong(
