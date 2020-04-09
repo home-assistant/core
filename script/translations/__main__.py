@@ -11,9 +11,6 @@ def get_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Home Assistant Scaffolder")
     parser.add_argument("action", type=str, choices=["download"])
     parser.add_argument("--debug", action="store_true", help="Enable log output")
-    # parser.add_argument(
-    #     "--integration", type=valid_integration, help="Integration to target."
-    # )
 
     arguments = parser.parse_args()
 
