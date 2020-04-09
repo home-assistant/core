@@ -3,10 +3,51 @@
 import glob
 import json
 import os
+import pathlib
 import re
+import subprocess
 from typing import Dict, List, Union
 
+from .const import DOCKER_IMAGE, PROJECT_ID
+from .error import ExitApp
+from .util import get_lokalise_token
+
 FILENAME_FORMAT = re.compile(r"strings\.(?P<suffix>\w+)\.json")
+LOCAL_DIR = pathlib.Path("build/translations-download").absolute()
+
+
+def run_download_docker(args):
+    """Run the Docker image to download the translations."""
+    pipe_null = {} if args.debug else {"stdout": subprocess.DEVNULL}
+
+    print("Running Docker to download latest translations.")
+    run = subprocess.run(
+        [
+            "docker",
+            "run",
+            "-v",
+            f"{LOCAL_DIR}:/opt/dest/locale",
+            "--rm",
+            f"lokalise/lokalise-cli@sha256:{DOCKER_IMAGE}",
+            # Lokalise command
+            "lokalise",
+            "export",
+            PROJECT_ID,
+            "--token",
+            get_lokalise_token(),
+            "--export_empty",
+            "skip",
+            "--type",
+            "json",
+            "--unzip_to",
+            "/opt/dest",
+        ],
+        **pipe_null,
+    )
+    print()
+
+    if run.returncode != 0:
+        raise ExitApp("Failed to download translations")
 
 
 def load_json(filename: str) -> Union[List, Dict]:
@@ -95,18 +136,14 @@ def save_language_translations(lang, translations):
             save_json(path, platform_translations)
 
 
-def main():
+def run(args):
     """Run the script."""
-    if not os.path.isfile("requirements_all.txt"):
-        print("Run this from HA root dir")
-        return
+    LOCAL_DIR.mkdir(parents=True, exist_ok=True)
+
+    run_download_docker(args)
 
     paths = glob.iglob("build/translations-download/*.json")
     for path in paths:
         lang = get_language(path)
         translations = load_json(path)
         save_language_translations(lang, translations)
-
-
-if __name__ == "__main__":
-    main()
