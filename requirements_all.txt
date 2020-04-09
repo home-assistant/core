@@ -1336,7 +1336,7 @@ pyintesishome==1.7.1
 pyipma==2.0.5
 
 # homeassistant.components.ipp
-pyipp==0.9.0
+pyipp==0.9.1
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
@@ -1378,7 +1378,7 @@ pylitejet==0.1
 pyloopenergy==0.1.3
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.6.0
+pylutron-caseta==0.6.1
 
 # homeassistant.components.lutron
 pylutron==0.2.5
@@ -2191,7 +2191,7 @@ zigpy-cc==0.3.1
 zigpy-deconz==0.8.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.18.1
+zigpy-homeassistant==0.18.2
 
 # homeassistant.components.zha
 zigpy-xbee-homeassistant==0.11.0
