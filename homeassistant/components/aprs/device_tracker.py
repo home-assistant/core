@@ -180,18 +180,18 @@ class AprsListenerThread(threading.Thread):
                         "APRS message contained invalid posambiguity: %s", str(pos_amb)
                     )
             if ATTR_TIMESTAMP in msg:
-                timestamp = dt_util.utc_from_timestamp(msg[ATTR_TIMESTAMP])
-                if timestamp:
-                    attrs[ATTR_LAST_BEACON] = timestamp
-                else:
+                try:
+                    timestamp = dt_util.utc_from_timestamp(int(msg[ATTR_TIMESTAMP]))
+                except ValueError:
                     _LOGGER.warning(
-                        "APRS message contained invalid last_beacon timestamp: %s",
-                        str(timestamp),
+                        "APRS message contained invalid timestamp: %s",
+                        str(msg[ATTR_TIMESTAMP]),
                     )
-                    """Set the last_beacon to now if invalid dt_util parse."""
-                    attrs[ATTR_LAST_BEACON] = dt_util.utcnow()
+                    timestamp = dt_util.utcnow()
+
+                attrs[ATTR_LAST_BEACON] = timestamp
             else:
-                """APRS message did not contain a last_beacon field."""
+                """ APRS message didn't contain a timestamp. """
                 attrs[ATTR_LAST_BEACON] = dt_util.utcnow()
 
             for attr in [ATTR_ALTITUDE, ATTR_COMMENT, ATTR_COURSE, ATTR_SPEED]:
