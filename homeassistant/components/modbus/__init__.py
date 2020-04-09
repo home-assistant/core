@@ -35,7 +35,7 @@ from .const import (
     CONF_PARITY,
     CONF_STOPBITS,
     DEFAULT_HUB,
-    MODBUS_DOMAIN,
+    MODBUS_DOMAIN as DOMAIN,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
 )
@@ -68,7 +68,7 @@ ETHERNET_SCHEMA = BASE_SCHEMA.extend(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {MODBUS_DOMAIN: vol.All(cv.ensure_list, [vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)])},
+    {DOMAIN: vol.All(cv.ensure_list, [vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)])},
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -95,9 +95,9 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up Modbus component."""
-    hass.data[MODBUS_DOMAIN] = hub_collect = {}
+    hass.data[DOMAIN] = hub_collect = {}
 
-    for client_config in config[MODBUS_DOMAIN]:
+    for client_config in config[DOMAIN]:
         hub_collect[client_config[CONF_NAME]] = ModbusHub(client_config, hass.loop)
 
     def stop_modbus(event):
@@ -140,13 +140,13 @@ async def async_setup(hass, config):
 
     # Register services for modbus
     hass.services.async_register(
-        MODBUS_DOMAIN,
+        DOMAIN,
         SERVICE_WRITE_REGISTER,
         write_register,
         schema=SERVICE_WRITE_REGISTER_SCHEMA,
     )
     hass.services.async_register(
-        MODBUS_DOMAIN, SERVICE_WRITE_COIL, write_coil, schema=SERVICE_WRITE_COIL_SCHEMA,
+        DOMAIN, SERVICE_WRITE_COIL, write_coil, schema=SERVICE_WRITE_COIL_SCHEMA,
     )
     return True
 
@@ -204,7 +204,6 @@ class ModbusHub:
                 stopbits=self._config_stopbits,
                 bytesize=self._config_bytesize,
                 parity=self._config_parity,
-                timeout=self._config_timeout,
                 loop=self._loop,
             )
         elif self._config_type == "rtuovertcp":
