@@ -173,9 +173,8 @@ class TestClockedPlex(ClockedTestCase):
 
         server_id = mock_plex_server.machineIdentifier
 
-        with patch(
-            "homeassistant.components.plex.server.PlexServer._fetch_platform_data",
-            return_value=([], []),
+        with patch.object(mock_plex_server, "clients", return_value=[]), patch.object(
+            mock_plex_server, "sessions", return_value=[]
         ) as mock_update:
             # Called immediately
             async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
