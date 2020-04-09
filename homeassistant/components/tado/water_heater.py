@@ -50,7 +50,7 @@ SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
-    """Set up the Tado climate platform."""
+    """Set up the Tado water heater platform."""
 
     tado = hass.data[DOMAIN][entry.entry_id][DATA]
     entities = await hass.async_add_executor_job(_generate_entities, tado)
