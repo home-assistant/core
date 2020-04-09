@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     area = config.get(CONF_AREA)
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
 
     # Every Home Assistant instance should have their own unique
     # app parameter: https://brottsplatskartan.se/sida/api
