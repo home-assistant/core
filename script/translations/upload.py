@@ -49,25 +49,9 @@ def run_upload_docker():
         raise ExitApp("Failed to download translations")
 
 
-def get_translation_dict(translations, component, platform):
-    """Return the dict to hold component translations."""
-    translations["component"].setdefault(component, {})
-
-    if not platform:
-        return translations["component"][component]
-
-    platforms = translations["component"][component].setdefault("platform", {})
-
-    return platforms.setdefault(platform, {})
-
-
 def run(args):
     """Run the script."""
-    if (
-        False
-        and get_current_branch() != "dev"
-        and os.environ.get("AZURE_BRANCH") != "dev"
-    ):
+    if get_current_branch() != "dev" and os.environ.get("AZURE_BRANCH") != "dev":
         raise ExitApp(
             "Please only run the translations upload script from a clean checkout of dev."
         )
@@ -78,10 +62,16 @@ def run(args):
         component = path.parent.name
         match = FILENAME_FORMAT.search(path.name)
         platform = match.group("suffix") if match else None
-        parent = get_translation_dict(translations, component, platform)
+
+        parent = translations["component"].setdefault(component, {})
+
+        if platform:
+            platforms = parent.setdefault("platform", {})
+            parent = platforms.setdefault(platform, {})
+
         parent.update(json.loads(path.read_text()))
 
     LOCAL_FILE.parent.mkdir(parents=True, exist_ok=True)
     LOCAL_FILE.write_text(json.dumps(translations, indent=4, sort_keys=True))
 
-    run_upload_docker()
+    # run_upload_docker()
