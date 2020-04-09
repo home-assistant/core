@@ -135,8 +135,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 json_attrs,
                 force_update,
                 resource_template,
-                payload_template,
                 json_attrs_path,
+                payload_template,
             )
         ],
         True,
@@ -157,8 +157,8 @@ class RestSensor(Entity):
         json_attrs,
         force_update,
         resource_template,
-        payload_template,
         json_attrs_path,
+        payload_template=None,
     ):
         """Initialize the REST sensor."""
         self._hass = hass
@@ -172,8 +172,8 @@ class RestSensor(Entity):
         self._attributes = None
         self._force_update = force_update
         self._resource_template = resource_template
-        self._payload_template = payload_template
         self._json_attrs_path = json_attrs_path
+        self._payload_template = payload_template
 
     @property
     def name(self):
@@ -209,7 +209,7 @@ class RestSensor(Entity):
         """Get the latest data from REST API and update the state."""
         if self._resource_template is not None:
             self.rest.set_url(self._resource_template.render())
-                
+
         if self._payload_template is not None:
             self.rest.set_payload(self._payload_template.render())
 
