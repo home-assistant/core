@@ -46,7 +46,6 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} batteri l\u00e5gt",
-            "closed": "{entity_name} st\u00e4ngd",
             "cold": "{entity_name} blev kall",
             "connected": "{entity_name} ansluten",
             "gas": "{entity_name} b\u00f6rjade detektera gas",
@@ -54,7 +53,6 @@
             "light": "{entity_name} b\u00f6rjade uppt\u00e4cka ljus",
             "locked": "{entity_name} l\u00e5st",
             "moist": "{entity_name} blev fuktig",
-            "moist\u00a7": "{entity_name} blev fuktig",
             "motion": "{entity_name} b\u00f6rjade detektera r\u00f6relse",
             "moving": "{entity_name} b\u00f6rjade r\u00f6ra sig",
             "no_gas": "{entity_name} slutade uppt\u00e4cka gas",

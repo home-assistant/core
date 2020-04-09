@@ -110,6 +110,12 @@ async def process_wrong_login(request):
 
     request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
 
+    # Supervisor IP should never be banned
+    if "hassio" in hass.config.components and hass.components.hassio.get_supervisor_ip() == str(
+        remote_addr
+    ):
+        return
+
     if (
         request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr]
         >= request.app[KEY_LOGIN_THRESHOLD]

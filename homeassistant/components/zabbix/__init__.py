@@ -46,8 +46,8 @@ def setup(hass, config):
         schema = "http"
 
     url = urljoin("{}://{}".format(schema, conf[CONF_HOST]), conf[CONF_PATH])
-    username = conf.get(CONF_USERNAME, None)
-    password = conf.get(CONF_PASSWORD, None)
+    username = conf.get(CONF_USERNAME)
+    password = conf.get(CONF_PASSWORD)
 
     zapi = ZabbixAPI(url)
     try:

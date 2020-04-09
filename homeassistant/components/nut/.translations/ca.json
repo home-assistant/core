@@ -8,6 +8,19 @@
             "unknown": "Error inesperat"
         },
         "step": {
+            "resources": {
+                "data": {
+                    "resources": "Recursos"
+                },
+                "title": "Selecciona els recursos a monitoritzar"
+            },
+            "ups": {
+                "data": {
+                    "alias": "\u00c0lies",
+                    "resources": "Recursos"
+                },
+                "title": "Selecciona el SAI (UPS) a monitoritzar"
+            },
             "user": {
                 "data": {
                     "alias": "\u00c0lies",
@@ -18,6 +31,7 @@
                     "resources": "Recursos",
                     "username": "Nom d'usuari"
                 },
+                "description": "Si m\u00faltiples SAI (UPS) connectats al servidor NUT, introdueix el nom UPS per consultar al camp 'Alies'.",
                 "title": "No s'ha pogut connectar amb el servidor NUT"
             }
         },

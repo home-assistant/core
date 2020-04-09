@@ -109,7 +109,6 @@ LIGHT_2_CAPABILITIES = {
         "maxlumen": 600,
         "colorgamuttype": "A",
         "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
-        "ct": {"min": 153, "max": 500},
     },
     "streaming": {"renderer": True, "proxy": False},
 }

@@ -285,7 +285,7 @@ class TestComponentsGroup(unittest.TestCase):
 
         group_conf = OrderedDict()
         group_conf["second_group"] = {
-            "entities": "light.Bowl, " + test_group.entity_id,
+            "entities": f"light.Bowl, {test_group.entity_id}",
             "icon": "mdi:work",
         }
         group_conf["test_group"] = "hello.world,sensor.happy"

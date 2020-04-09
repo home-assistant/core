@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Enw eisoes wedi gofrestru"
-        },
         "step": {
             "user": {
                 "data": {

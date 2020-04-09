@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Korisni\u010dko ime je ve\u0107 registrirano",
             "invalid_credentials": "Neispravno korisni\u010dko ime ili lozinka",
             "no_devices": "Nisu prona\u0111eni ure\u0111aji na ra\u010dunu"
         },

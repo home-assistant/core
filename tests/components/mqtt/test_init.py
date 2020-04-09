@@ -1030,7 +1030,7 @@ async def test_mqtt_ws_get_device_debug_info(
         "entities": [
             {
                 "entity_id": "sensor.mqtt_sensor",
-                "topics": [{"topic": "foobar/sensor", "messages": []}],
+                "subscriptions": [{"topic": "foobar/sensor", "messages": []}],
                 "discovery_data": {
                     "payload": config,
                     "topic": "homeassistant/sensor/bla/config",
@@ -1110,10 +1110,10 @@ async def test_debug_info_multiple_devices(hass, mqtt_mock):
             assert len(debug_info_data["entities"]) == 1
             assert len(debug_info_data["triggers"]) == 0
             discovery_data = debug_info_data["entities"][0]["discovery_data"]
-            assert len(debug_info_data["entities"][0]["topics"]) == 1
+            assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
             topic = d["config"]["state_topic"]
             assert {"topic": topic, "messages": []} in debug_info_data["entities"][0][
-                "topics"
+                "subscriptions"
             ]
         else:
             assert len(debug_info_data["entities"]) == 0
@@ -1199,7 +1199,7 @@ async def test_debug_info_multiple_entities_triggers(hass, mqtt_mock):
             discovery_data = [e["discovery_data"] for e in debug_info_data["entities"]]
             topic = c["config"]["state_topic"]
             assert {"topic": topic, "messages": []} in [
-                t for e in debug_info_data["entities"] for t in e["topics"]
+                t for e in debug_info_data["entities"] for t in e["subscriptions"]
             ]
         else:
             discovery_data = [e["discovery_data"] for e in debug_info_data["triggers"]]
@@ -1260,15 +1260,16 @@ async def test_debug_info_wildcard(hass, mqtt_mock):
     assert device is not None
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)
-    assert len(debug_info_data["entities"][0]["topics"]) >= 1
+    assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
     assert {"topic": "sensor/#", "messages": []} in debug_info_data["entities"][0][
-        "topics"
+        "subscriptions"
     ]
 
     async_fire_mqtt_message(hass, "sensor/abc", "123")
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)
-    assert len(debug_info_data["entities"][0]["topics"]) >= 1
-    assert {"topic": "sensor/#", "messages": ["123"]} in debug_info_data["entities"][0][
-        "topics"
-    ]
+    assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
+    assert {
+        "topic": "sensor/#",
+        "messages": [{"topic": "sensor/abc", "payload": "123"}],
+    } in debug_info_data["entities"][0]["subscriptions"]

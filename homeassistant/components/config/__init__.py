@@ -6,7 +6,7 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import CONF_ID, EVENT_COMPONENT_LOADED
+from homeassistant.const import CONF_ID, EVENT_COMPONENT_LOADED, HTTP_NOT_FOUND
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import ATTR_COMPONENT
@@ -120,7 +120,7 @@ class BaseEditConfigView(HomeAssistantView):
             value = self._get_value(hass, current, config_key)
 
         if value is None:
-            return self.json_message("Resource not found", 404)
+            return self.json_message("Resource not found", HTTP_NOT_FOUND)
 
         return self.json(value)
 
@@ -172,7 +172,7 @@ class BaseEditConfigView(HomeAssistantView):
             path = hass.config.path(self.path)
 
             if value is None:
-                return self.json_message("Resource not found", 404)
+                return self.json_message("Resource not found", HTTP_NOT_FOUND)
 
             self._delete_value(hass, current, config_key)
             await hass.async_add_executor_job(_write, path, current)

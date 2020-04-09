@@ -53,9 +53,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if not arlo.base_stations:
         return
 
-    home_mode_name = config.get(CONF_HOME_MODE_NAME)
-    away_mode_name = config.get(CONF_AWAY_MODE_NAME)
-    night_mode_name = config.get(CONF_NIGHT_MODE_NAME)
+    home_mode_name = config[CONF_HOME_MODE_NAME]
+    away_mode_name = config[CONF_AWAY_MODE_NAME]
+    night_mode_name = config[CONF_NIGHT_MODE_NAME]
     base_stations = []
     for base_station in arlo.base_stations:
         base_stations.append(

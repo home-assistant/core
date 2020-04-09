@@ -20,6 +20,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    HTTP_OK,
     PRESSURE_HPA,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
@@ -185,7 +186,7 @@ class YrData:
             websession = async_get_clientsession(self.hass)
             with async_timeout.timeout(10):
                 resp = await websession.get(self._url, params=self._urlparams)
-            if resp.status != 200:
+            if resp.status != HTTP_OK:
                 try_again(f"{resp.url} returned {resp.status}")
                 return
             text = await resp.text()

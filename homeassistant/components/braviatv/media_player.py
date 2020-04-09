@@ -64,7 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Bravia TV platform."""
-    host = config.get(CONF_HOST)
+    host = config[CONF_HOST]
     if host is None:
         return
 

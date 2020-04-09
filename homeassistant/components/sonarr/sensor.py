@@ -23,6 +23,7 @@ from homeassistant.const import (
     DATA_TERABYTES,
     DATA_YOTTABYTES,
     DATA_ZETTABYTES,
+    HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -220,7 +221,7 @@ class SonarrSensor(Entity):
             self._state = None
             return
 
-        if res.status_code == 200:
+        if res.status_code == HTTP_OK:
             if self.type in ["upcoming", "queue", "series", "commands"]:
                 if self.days == 1 and self.type == "upcoming":
                     # Sonarr API returns an empty array if start and end dates

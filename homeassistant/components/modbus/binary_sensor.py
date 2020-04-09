@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Modbus binary sensors."""
     sensors = []
     for entry in config[CONF_INPUTS]:
@@ -70,7 +70,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
             )
         )
 
-    add_entities(sensors)
+    async_add_entities(sensors)
 
 
 class ModbusBinarySensor(BinarySensorDevice):
