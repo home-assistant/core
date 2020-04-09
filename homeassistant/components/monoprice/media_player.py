@@ -1,6 +1,8 @@
 """Support for interfacing with Monoprice 6 zone home audio controller."""
 import logging
 
+from serial import SerialException
+
 from homeassistant import core
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -17,6 +19,8 @@ from homeassistant.helpers import config_validation as cv, entity_platform, serv
 from .const import CONF_SOURCES, DOMAIN, SERVICE_RESTORE, SERVICE_SNAPSHOT
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 1
 
 SUPPORT_MONOPRICE = (
     SUPPORT_VOLUME_MUTE
@@ -127,9 +131,15 @@ class MonopriceZone(MediaPlayerDevice):
 
     def update(self):
         """Retrieve latest state."""
-        state = self._monoprice.zone_status(self._zone_id)
+        try:
+            state = self._monoprice.zone_status(self._zone_id)
+        except SerialException:
+            _LOGGER.warning("Could not update zone %d", self._zone_id)
+            return
+
         if not state:
-            return False
+            return
+
         self._state = STATE_ON if state.power else STATE_OFF
         self._volume = state.volume
         self._mute = state.mute
@@ -138,7 +148,6 @@ class MonopriceZone(MediaPlayerDevice):
             self._source = self._source_id_name[idx]
         else:
             self._source = None
-        return True
 
     @property
     def entity_registry_enabled_default(self):
