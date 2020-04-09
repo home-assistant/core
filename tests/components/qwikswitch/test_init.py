@@ -56,7 +56,7 @@ async def test_binary_sensor_device(hass, aioclient_mock):
     aioclient_mock.get(
         "http://127.0.0.1:2020/&listen",
         long_poll=True,
-        text='{"id":"@a00001","cmd":"","data":"4e0e1601","rssi":"61%"}',
+        json={"id": "@a00001", "cmd": "", "data": "4e0e1601", "rssi": "61%"},
     )
     await asyncio.sleep(0.01)
     await hass.async_block_till_done()
@@ -66,7 +66,7 @@ async def test_binary_sensor_device(hass, aioclient_mock):
     aioclient_mock.get(
         "http://127.0.0.1:2020/&listen",
         long_poll=True,
-        text='{"id":"@a00001","cmd":"","data":"4e0e1701","rssi":"61%"}',
+        json={"id": "@a00001", "cmd": "", "data": "4e0e1701", "rssi": "61%"},
     )
     await asyncio.sleep(0.01)
     await hass.async_block_till_done()
@@ -98,7 +98,7 @@ async def test_sensor_device(hass, aioclient_mock):
     aioclient_mock.get(
         "http://127.0.0.1:2020/&listen",
         long_poll=True,
-        text='{"id":"@a00001","name":"ss1","type":"rel",' '"val":"4733800001a00000"}',
+        json={"id": "@a00001", "name": "ss1", "type": "rel", "val": "4733800001a00000"},
     )
     await asyncio.sleep(0.01)
     await hass.async_block_till_done()
