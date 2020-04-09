@@ -33,8 +33,7 @@ class TradfriCover(TradfriBaseDevice, CoverDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {}
-        attr[ATTR_MODEL] = self._device_info.model_number
+        attr = {ATTR_MODEL: self._device.device_info.model_number}
         return attr
 
     @property
@@ -74,4 +73,3 @@ class TradfriCover(TradfriBaseDevice, CoverDevice):
         # Caching of BlindControl and cover object
         self._device_control = device.blind_control
         self._device_data = device.blind_control.blinds[0]
-        self._device_info = device.device_info
