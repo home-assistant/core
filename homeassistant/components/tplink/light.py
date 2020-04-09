@@ -345,7 +345,7 @@ class TPLinkSmartBulb(Light):
     def _get_light_state(self) -> LightState:
         """Get the light state."""
         self._update_emeter()
-        return self._light_state_from_params(self.smartbulb.get_light_state())
+        return self._light_state_from_params(self._get_device_state())
 
     def _update_emeter(self):
         if not self.smartbulb.has_emeter:
@@ -427,7 +427,40 @@ class TPLinkSmartBulb(Light):
         if not diff:
             return
 
-        return self.smartbulb.set_light_state(diff)
+        return self._set_device_state(diff)
+
+    def _get_device_state(self):
+        """State of the bulb or smart dimmer switch."""
+        if isinstance(self.smartbulb, SmartBulb):
+            return self.smartbulb.get_light_state()
+
+        # Its not really a bulb, its a dimmable SmartPlug (aka Wall Switch)
+        return {
+            LIGHT_STATE_ON_OFF: self.smartbulb.state,
+            LIGHT_STATE_BRIGHTNESS: self.smartbulb.brightness,
+            LIGHT_STATE_COLOR_TEMP: 0,
+            LIGHT_STATE_HUE: 0,
+            LIGHT_STATE_SATURATION: 0,
+        }
+
+    def _set_device_state(self, state):
+        """Set state of the bulb or smart dimmer switch."""
+        if isinstance(self.smartbulb, SmartBulb):
+            return self.smartbulb.set_light_state(state)
+
+        # Its not really a bulb, its a dimmable SmartPlug (aka Wall Switch)
+        if LIGHT_STATE_BRIGHTNESS in state:
+            # Brightness of 0 is accepted by the
+            # device but the underlying library rejects it
+            # so we turn off instead.
+            if state[LIGHT_STATE_BRIGHTNESS]:
+                self.smartbulb.brightness = state[LIGHT_STATE_BRIGHTNESS]
+            else:
+                self.smartbulb.state = 0
+        elif LIGHT_STATE_ON_OFF in state:
+            self.smartbulb.state = state[LIGHT_STATE_ON_OFF]
+
+        return self._get_device_state()
 
 
 def _light_state_diff(old_light_state: LightState, new_light_state: LightState):
