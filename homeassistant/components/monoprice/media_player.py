@@ -148,7 +148,6 @@ class MonopriceZone(MediaPlayerDevice):
             self._source = self._source_id_name[idx]
         else:
             self._source = None
-        return
 
     @property
     def entity_registry_enabled_default(self):
