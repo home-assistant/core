@@ -429,4 +429,4 @@ def test_aprs_listener_rx_msg_no_timestamp():
         assert listener.start_event.is_set()
         assert listener.start_success
         assert listener.start_message == "Connected to testhost with callsign testcall."
-        assert "last_beacon" in str(see.call_args)
+        assert type(see.call_args[1]["attributes"]["last_beacon"]) == datetime.datetime

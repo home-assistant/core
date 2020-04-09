@@ -181,7 +181,9 @@ class AprsListenerThread(threading.Thread):
                     )
             if ATTR_TIMESTAMP in msg:
                 timestamp = dt_util.utc_from_timestamp(msg[ATTR_TIMESTAMP])
-                if not timestamp:
+                if timestamp:
+                    attrs[ATTR_LAST_BEACON] = timestamp
+                else:
                     _LOGGER.warning(
                         "APRS message contained invalid last_beacon timestamp: %s",
                         str(timestamp),
