@@ -1,4 +1,5 @@
 """Tests for Samsung TV config flow."""
+import socket
 import pytest
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
 from samsungtvws.exceptions import ConnectionFailure
@@ -16,7 +17,16 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_MODEL_NAME,
     ATTR_UPNP_UDN,
 )
-from homeassistant.const import CONF_HOST, CONF_ID, CONF_METHOD, CONF_NAME, CONF_TOKEN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_ID,
+    CONF_MAC,
+    CONF_METHOD,
+    CONF_NAME,
+    CONF_TOKEN,
+)
+
+from tests.common import MockConfigEntry
 
 from tests.async_mock import DEFAULT as DEFAULT_MOCK, Mock, PropertyMock, call, patch
 
@@ -571,3 +581,69 @@ async def test_autodetect_none(hass, remote, remotews):
             call(**AUTODETECT_WEBSOCKET_PLAIN),
             call(**AUTODETECT_WEBSOCKET_SSL),
         ]
+
+
+async def test_options_with_obtained_mac(hass, remote):
+    """Test the options flow with obtained mac."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "hostname"},)
+
+    config_entry.add_to_hass(hass)
+
+    # by default, the mac address should be automatically obtained
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.get_mac_address",
+        return_value="11:11:11",
+    ):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={},
+    )
+
+    assert result["type"] == "create_entry"
+    assert config_entry.options[CONF_MAC] == "11:11:11"
+
+    # override the auto-obtained mac address
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_MAC: "22:22:22"},
+    )
+    assert result["type"] == "create_entry"
+    assert config_entry.options[CONF_MAC] == "22:22:22"
+
+
+async def test_options_without_obtained_mac(hass, remote):
+    """Test the options flow without obtained mac."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "hostname"},)
+
+    config_entry.add_to_hass(hass)
+
+    # simulate an error in getting the mac address
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.get_mac_address",
+        side_effect=socket.gaierror,
+    ):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={},
+    )
+
+    assert result["type"] == "create_entry"
+    assert config_entry.options[CONF_MAC] is None
+
+    # override the auto-obtained mac address
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_MAC: "22:22:22"},
+    )
+    assert result["type"] == "create_entry"
+    assert config_entry.options[CONF_MAC] == "22:22:22"

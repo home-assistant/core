@@ -1,4 +1,5 @@
 """Config flow for Samsung TV."""
+from functools import partial
 import socket
 from urllib.parse import urlparse
 
@@ -200,7 +201,12 @@ class SamsungTVOptionsFlowHandler(config_entries.OptionsFlow):
             current_mac = self.config_entry.options[CONF_MAC]
         else:
             hostname = self.config_entry.data[CONF_HOST]
-            current_mac = get_mac_address(hostname=hostname)
+            try:
+                current_mac = await self.hass.async_add_executor_job(
+                    partial(get_mac_address, **{"hostname": hostname})
+                )
+            except socket.gaierror:
+                current_mac = None
 
         schema = {vol.Optional(CONF_MAC, default=current_mac): str}
         return self.async_show_form(step_id="init", data_schema=vol.Schema(schema))
