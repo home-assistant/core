@@ -1,6 +1,8 @@
 """Support for interfacing with Monoprice 6 zone home audio controller."""
 import logging
 
+from serial import SerialException
+
 from homeassistant import core
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -127,7 +129,12 @@ class MonopriceZone(MediaPlayerDevice):
 
     def update(self):
         """Retrieve latest state."""
-        state = self._monoprice.zone_status(self._zone_id)
+        try:
+            state = self._monoprice.zone_status(self._zone_id)
+        except SerialException:
+            _LOGGER.warning("Could not update zone %d", self._zone_id)
+            return False
+
         if not state:
             return False
         self._state = STATE_ON if state.power else STATE_OFF
