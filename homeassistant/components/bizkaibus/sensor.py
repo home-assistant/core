@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Bizkaibus public transport sensor."""
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
     stop = config[CONF_STOP_ID]
     route = config[CONF_ROUTE]
 
