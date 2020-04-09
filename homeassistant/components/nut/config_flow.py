@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from . import PyNUTData, find_resources_in_config_entry, pynutdata_status
+from . import PyNUTData, find_resources_in_config_entry
 from .const import DEFAULT_HOST, DEFAULT_PORT, SENSOR_TYPES
 from .const import DOMAIN  # pylint:disable=unused-import
 
@@ -54,9 +54,7 @@ def _resource_schema(available_resources, selected_resources):
 
 def _ups_schema(ups_list):
     """UPS selection schema."""
-    ups_map = {ups: ups for ups in ups_list}
-
-    return vol.Schema({vol.Required(CONF_ALIAS): vol.In(ups_map)})
+    return vol.Schema({vol.Required(CONF_ALIAS): vol.In(ups_list)})
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -72,16 +70,12 @@ async def validate_input(hass: core.HomeAssistant, data):
     password = data.get(CONF_PASSWORD)
 
     data = PyNUTData(host, port, alias, username, password)
-
-    ups_list = await hass.async_add_executor_job(data.list_ups)
-    if not ups_list:
-        raise CannotConnect
-
-    status = await hass.async_add_executor_job(pynutdata_status, data)
+    await hass.async_add_executor_job(data.update)
+    status = data.status
     if not status:
         raise CannotConnect
 
-    return {"ups_list": ups_list, "available_resources": status}
+    return {"ups_list": data.ups_list, "available_resources": status}
 
 
 def _format_host_port_alias(user_input):
@@ -135,6 +129,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.ups_list = info["ups_list"]
                     return await self.async_step_ups()
 
+                if self._host_port_alias_already_configured(self.nut_config):
+                    return self.async_abort(reason="already_configured")
                 self.available_resources.update(info["available_resources"])
                 return await self.async_step_resources()
 

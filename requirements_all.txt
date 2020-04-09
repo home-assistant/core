@@ -1205,7 +1205,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==4.2.0
+pychromecast==4.2.3
 
 # homeassistant.components.cmus
 pycmus==0.1.1
@@ -1283,7 +1283,7 @@ pyflexit==0.3
 pyflic-homeassistant==0.4.dev0
 
 # homeassistant.components.flume
-pyflume==0.3.0
+pyflume==0.4.0
 
 # homeassistant.components.flunearyou
 pyflunearyou==1.0.7
@@ -2196,7 +2196,7 @@ zigpy-cc==0.3.1
 zigpy-deconz==0.8.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.18.1
+zigpy-homeassistant==0.18.2
 
 # homeassistant.components.zha
 zigpy-xbee-homeassistant==0.11.0

@@ -34,6 +34,7 @@ from homeassistant.components.emulated_hue.hue_api import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    HTTP_NOT_FOUND,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -450,7 +451,7 @@ async def test_put_light_state(hass_hue, hue_client):
     kitchen_result = await perform_put_light_state(
         hass_hue, hue_client, "light.kitchen_light", True
     )
-    assert kitchen_result.status == 404
+    assert kitchen_result.status == HTTP_NOT_FOUND
 
 
 async def test_put_light_state_script(hass_hue, hue_client):
@@ -684,11 +685,11 @@ async def test_entity_not_found(hue_client):
     """Test for entity which are not found."""
     result = await hue_client.get("/api/username/lights/not.existant_entity")
 
-    assert result.status == 404
+    assert result.status == HTTP_NOT_FOUND
 
     result = await hue_client.put("/api/username/lights/not.existant_entity/state")
 
-    assert result.status == 404
+    assert result.status == HTTP_NOT_FOUND
 
 
 async def test_allowed_methods(hue_client):

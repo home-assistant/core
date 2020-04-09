@@ -13,6 +13,7 @@ from homeassistant.components.frontend import (
     EVENT_PANELS_UPDATED,
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events, mock_coro
@@ -97,7 +98,7 @@ async def test_dont_cache_service_worker(mock_http_client):
 async def test_404(mock_http_client):
     """Test for HTTP 404 error."""
     resp = await mock_http_client.get("/not-existing")
-    assert resp.status == 404
+    assert resp.status == HTTP_NOT_FOUND
 
 
 async def test_we_cannot_POST_to_root(mock_http_client):
@@ -219,7 +220,7 @@ async def test_get_panels(hass, hass_ws_client, mock_http_client):
     events = async_capture_events(hass, EVENT_PANELS_UPDATED)
 
     resp = await mock_http_client.get("/map")
-    assert resp.status == 404
+    assert resp.status == HTTP_NOT_FOUND
 
     hass.components.frontend.async_register_built_in_panel(
         "map", "Map", "mdi:tooltip-account", require_admin=True
@@ -247,7 +248,7 @@ async def test_get_panels(hass, hass_ws_client, mock_http_client):
     hass.components.frontend.async_remove_panel("map")
 
     resp = await mock_http_client.get("/map")
-    assert resp.status == 404
+    assert resp.status == HTTP_NOT_FOUND
 
     assert len(events) == 2
 
