@@ -22,7 +22,6 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.loader import bind_hass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -43,12 +42,6 @@ SUPPORT_OPEN = 1
 _LOGGER = logging.getLogger(__name__)
 
 PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}
-
-
-@bind_hass
-def is_locked(hass, entity_id):
-    """Return if the lock is locked based on the statemachine."""
-    return hass.states.is_state(entity_id, STATE_LOCKED)
 
 
 async def async_setup(hass, config):
