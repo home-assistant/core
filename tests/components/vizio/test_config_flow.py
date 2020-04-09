@@ -9,6 +9,7 @@ from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_C
 from homeassistant.components.vizio.config_flow import _get_config_schema
 from homeassistant.components.vizio.const import (
     CONF_APPS,
+    CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
     CONF_INCLUDE,
     CONF_VOLUME_STEP,
     DEFAULT_NAME,
@@ -185,7 +186,10 @@ async def test_tv_options_flow_start_with_volume(hass: HomeAssistantType) -> Non
     )
     entry.add_to_hass(hass)
 
-    assert entry.options and entry.options == {CONF_VOLUME_STEP: VOLUME_STEP}
+    assert entry.options
+    assert entry.options == {CONF_VOLUME_STEP: VOLUME_STEP}
+    assert CONF_APPS not in entry.options
+    assert CONF_APPS_TO_INCLUDE_OR_EXCLUDE not in entry.options
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 
