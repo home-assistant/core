@@ -29,10 +29,10 @@ def run_download_docker():
             f"lokalise/lokalise-cli@sha256:{DOCKER_IMAGE}",
             # Lokalise command
             "lokalise",
-            "export",
-            PROJECT_ID,
             "--token",
             get_lokalise_token(),
+            "export",
+            PROJECT_ID,
             "--export_empty",
             "skip",
             "--type",
