@@ -1,25 +1,25 @@
 {
-   "config" : {
-      "error" : {
-         "unknown" : "Unexpected error",
-         "invalid_auth" : "Invalid authentication",
-         "cannot_connect" : "Failed to connect, please try again"
-      },
-      "step" : {
-         "user" : {
-            "description" : "In order to access the Flume Personal API, you will need to request a 'Client ID' and 'Client Secret' at https://portal.flumetech.com/settings#token",
-            "title" : "Connect to your Flume Account",
-            "data" : {
-               "username" : "Username",
-               "client_secret" : "Client Secret",
-               "client_id" : "Client ID",
-               "password" : "Password"
+    "config": {
+        "abort": {
+            "already_configured": "This account is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, please try again",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "Client ID",
+                    "client_secret": "Client Secret",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "In order to access the Flume Personal API, you will need to request a 'Client ID' and 'Client Secret' at https://portal.flumetech.com/settings#token",
+                "title": "Connect to your Flume Account"
             }
-         }
-      },
-      "abort" : {
-         "already_configured" : "This account is already configured"
-      },
-      "title" : "Flume"
-   }
+        },
+        "title": "Flume"
+    }
 }
