@@ -282,6 +282,11 @@ class OnkyoAVR(MediaPlayerDevice):
         """Return all active, configured inputs."""
         return self._source_list
 
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        return self._attributes
+
     async def async_select_source(self, source):
         """Change AVR to the designated source (by name)."""
         if source in self._source_list:
