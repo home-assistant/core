@@ -281,7 +281,7 @@ hole==0.5.1
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200407.1
+home-assistant-frontend==20200407.2
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -475,7 +475,7 @@ pyblackbird==0.5
 pybotvac==0.0.17
 
 # homeassistant.components.cast
-pychromecast==4.2.0
+pychromecast==4.2.3
 
 # homeassistant.components.coolmaster
 pycoolmasternet==0.0.4
@@ -494,6 +494,9 @@ pyeverlights==0.1.0
 
 # homeassistant.components.fido
 pyfido==2.1.1
+
+# homeassistant.components.flume
+pyflume==0.4.0
 
 # homeassistant.components.flunearyou
 pyflunearyou==1.0.7
@@ -818,7 +821,7 @@ zigpy-cc==0.3.1
 zigpy-deconz==0.8.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.18.1
+zigpy-homeassistant==0.18.2
 
 # homeassistant.components.zha
 zigpy-xbee-homeassistant==0.11.0

@@ -7,7 +7,13 @@ from asynctest import patch
 from homeassistant import data_entry_flow
 from homeassistant.components.airly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    HTTP_FORBIDDEN,
+)
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -33,7 +39,9 @@ async def test_invalid_api_key(hass):
     """Test that errors are shown when API key is invalid."""
     with patch(
         "airly._private._RequestsHandler.get",
-        side_effect=AirlyError(403, {"message": "Invalid authentication credentials"}),
+        side_effect=AirlyError(
+            HTTP_FORBIDDEN, {"message": "Invalid authentication credentials"}
+        ),
     ):
 
         result = await hass.config_entries.flow.async_init(
