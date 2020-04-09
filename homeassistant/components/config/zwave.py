@@ -6,7 +6,7 @@ from aiohttp.web import Response
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.zwave import DEVICE_CONFIG_SCHEMA_ENTRY, const
-from homeassistant.const import HTTP_NOT_FOUND, HTTP_OK
+from homeassistant.const import HTTP_BAD_REQUEST, HTTP_NOT_FOUND, HTTP_OK
 import homeassistant.core as ha
 import homeassistant.helpers.config_validation as cv
 
@@ -51,7 +51,7 @@ class ZWaveLogView(HomeAssistantView):
         try:
             lines = int(request.query.get("lines", 0))
         except ValueError:
-            return Response(text="Invalid datetime", status=400)
+            return Response(text="Invalid datetime", status=HTTP_BAD_REQUEST)
 
         hass = request.app["hass"]
         response = await hass.async_add_job(self._get_log, hass, lines)

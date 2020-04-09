@@ -19,7 +19,7 @@ from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.websocket_api import const as ws_const
-from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR, HTTP_OK
+from homeassistant.const import HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR, HTTP_OK
 from homeassistant.core import callback
 
 from .const import (
@@ -109,11 +109,17 @@ async def async_setup(hass):
 
     _CLOUD_ERRORS.update(
         {
-            auth.UserNotFound: (400, "User does not exist."),
-            auth.UserNotConfirmed: (400, "Email not confirmed."),
-            auth.UserExists: (400, "An account with the given email already exists."),
+            auth.UserNotFound: (HTTP_BAD_REQUEST, "User does not exist."),
+            auth.UserNotConfirmed: (HTTP_BAD_REQUEST, "Email not confirmed."),
+            auth.UserExists: (
+                HTTP_BAD_REQUEST,
+                "An account with the given email already exists.",
+            ),
             auth.Unauthenticated: (401, "Authentication failed."),
-            auth.PasswordChangeRequired: (400, "Password change required."),
+            auth.PasswordChangeRequired: (
+                HTTP_BAD_REQUEST,
+                "Password change required.",
+            ),
             asyncio.TimeoutError: (502, "Unable to reach the Home Assistant cloud."),
             aiohttp.ClientError: (
                 HTTP_INTERNAL_SERVER_ERROR,

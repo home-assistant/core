@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    HTTP_BAD_REQUEST,
     HTTP_OK,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -95,7 +96,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
         req = await switch.get_device_state(hass)
-        if req.status >= 400:
+        if req.status >= HTTP_BAD_REQUEST:
             _LOGGER.error("Got non-ok response from resource: %s", req.status)
         else:
             async_add_entities([switch])
