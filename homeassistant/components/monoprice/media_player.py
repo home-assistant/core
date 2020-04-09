@@ -135,10 +135,11 @@ class MonopriceZone(MediaPlayerDevice):
             state = self._monoprice.zone_status(self._zone_id)
         except SerialException:
             _LOGGER.warning("Could not update zone %d", self._zone_id)
-            return False
+            return
 
         if not state:
-            return False
+            return
+
         self._state = STATE_ON if state.power else STATE_OFF
         self._volume = state.volume
         self._mute = state.mute
@@ -147,7 +148,7 @@ class MonopriceZone(MediaPlayerDevice):
             self._source = self._source_id_name[idx]
         else:
             self._source = None
-        return True
+        return
 
     @property
     def entity_registry_enabled_default(self):
