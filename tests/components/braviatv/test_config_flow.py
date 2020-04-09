@@ -39,6 +39,7 @@ config_entry = MockConfigEntry(
     domain=DOMAIN,
     unique_id="very_unique_string",
     data={CONF_HOST: "bravia-host", CONF_PIN: "1234"},
+    title="TV-Model",
 )
 
 
@@ -228,11 +229,7 @@ async def test_options_flow(hass):
     """Test config flow options."""
     with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
         "bravia_tv.BraviaRC.is_connected", return_value=True
-    ), patch(
-        "bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO
-    ), patch(
-        "socket.socket.connect"
-    ):
+    ), patch("bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO):
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

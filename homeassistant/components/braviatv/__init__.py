@@ -31,8 +31,6 @@ async def async_setup_entry(hass, config_entry):
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = braviarc
 
-    config_entry.add_update_listener(update_listener)
-
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
@@ -55,10 +53,3 @@ async def async_unload_entry(hass, config_entry):
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
-
-
-async def update_listener(hass, config_entry):
-    """Handle an options update."""
-    for component in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, component)
-    hass.async_add_job(async_setup_entry(hass, config_entry))
