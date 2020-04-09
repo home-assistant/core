@@ -34,6 +34,8 @@ ATTR_FROM = "from"
 ATTR_FORMAT = "format"
 ATTR_POS_AMBIGUITY = "posambiguity"
 ATTR_SPEED = "speed"
+ATTR_TIMESTAMP = "timestamp"
+ATTR_LAST_BEACON = "last_beacon"
 
 CONF_CALLSIGNS = "callsigns"
 
@@ -177,9 +179,22 @@ class AprsListenerThread(threading.Thread):
                     _LOGGER.warning(
                         "APRS message contained invalid posambiguity: %s", str(pos_amb)
                     )
+            if ATTR_TIMESTAMP in msg:
+                timestamp = msg[ATTR_LAST_BEACON]
+                try:
+                    attrs[ATTR_LAST_BEACON] = dt_util.parse_datetime(timestamp)
+                except ValueError:
+                    _LOGGER.warning(
+                        "APRS message contained invalid last_beacon timestamp: %s", str(timestamp)
+                    )
+                    """Set the last_beacon to now if invalid dt_util parse."""
+                    attrs[ATTR_LAST_BEACON] = dt_util.utcnow()
+            else:
+                """APRS message did not contain a last_beacon field."""
+                attrs[ATTR_LAST_BEACON] = dt_util.utcnow()
+
             for attr in [ATTR_ALTITUDE, ATTR_COMMENT, ATTR_COURSE, ATTR_SPEED]:
                 if attr in msg:
                     attrs[attr] = msg[attr]
-                    attrs["last_beacon"] = dt_util.utcnow()
 
             self.see(dev_id=dev_id, gps=(lat, lon), attributes=attrs)
