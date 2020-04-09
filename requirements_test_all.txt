@@ -519,7 +519,7 @@ pyicloud==0.9.6.1
 pyipma==2.0.5
 
 # homeassistant.components.ipp
-pyipp==0.9.0
+pyipp==0.9.1
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
@@ -807,7 +807,7 @@ zigpy-cc==0.3.1
 zigpy-deconz==0.8.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.18.1
+zigpy-homeassistant==0.18.2
 
 # homeassistant.components.zha
 zigpy-xbee-homeassistant==0.11.0
