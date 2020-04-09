@@ -177,7 +177,7 @@ async def test_tv_options_flow_with_apps(hass: HomeAssistantType) -> None:
 
 
 async def test_tv_options_flow_start_with_volume(hass: HomeAssistantType) -> None:
-    """Test options config flow for TV with providing apps option after providing volume step."""
+    """Test options config flow for TV with providing apps option after providing volume step in initial config."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_USER_VALID_TV_CONFIG,
