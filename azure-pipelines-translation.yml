@@ -37,7 +37,7 @@ jobs:
       export LOKALISE_TOKEN="$(lokaliseToken)"
       export AZURE_BRANCH="$(Build.SourceBranchName)"
 
-      ./script/translations_upload
+      python3 -m script.translations upload
     displayName: 'Upload Translation'
 
 - job: 'Download'
