@@ -17,10 +17,10 @@ class SimpleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        if user_input is not None:
-            return self.async_create_entry(title=DOMAIN, data={})
+        if user_input is None:
+            return self.async_show_form(step_id="user")
 
-        return self.async_show_form(step_id="user")
+        return self.async_create_entry(title=DOMAIN, data=user_input)
 
     async def async_step_import(self, import_info):
         """Handle import from config file."""
