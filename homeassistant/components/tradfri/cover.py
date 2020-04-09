@@ -34,7 +34,6 @@ class TradfriCover(TradfriBaseDevice, CoverDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = {}
-        attr[ATTR_BATTERY_LEVEL] = self._device_info.battery_level
         attr[ATTR_MODEL] = self._device_info.model_number
         return attr
 
