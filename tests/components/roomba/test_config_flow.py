@@ -18,7 +18,7 @@ VALID_CONFIG = {CONF_HOST: "1.2.3.4", CONF_BLID: "blid", CONF_PASSWORD: "passwor
 
 VALID_YAML_CONFIG = {
     CONF_HOST: "1.2.3.4",
-    CONF_USERNAME: "blid",
+    CONF_BLID: "blid",
     CONF_PASSWORD: "password",
     CONF_CERT: "/etc/ssl/certs/ca-certificates.crt",
     CONF_CONTINUOUS: True,
