@@ -22,9 +22,12 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
     CONF_IP_ADDRESS,
+    CONF_MAC,
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
+    CONF_SERVICE,
+    CONF_SERVICE_DATA,
     CONF_TOKEN,
     STATE_OFF,
     STATE_ON,
@@ -56,7 +59,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Samsung TV from a config entry."""
     ip_address = config_entry.data[CONF_IP_ADDRESS]
     on_script = None
-    if (
+
+    if CONF_MAC in config_entry.options:
+        mac = config_entry.options[CONF_MAC]
+        script = cv.SCRIPT_SCHEMA(
+            {
+                CONF_SERVICE: "wake_on_lan.send_magic_packet",
+                CONF_SERVICE_DATA: {CONF_MAC: mac},
+            }
+        )
+        on_script = Script(hass, script)
+    elif (
         DOMAIN in hass.data
         and ip_address in hass.data[DOMAIN]
         and CONF_ON_ACTION in hass.data[DOMAIN][ip_address]

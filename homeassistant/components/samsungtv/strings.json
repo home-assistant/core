@@ -18,5 +18,15 @@
       "not_successful": "Unable to connect to this Samsung TV device.",
       "not_supported": "This Samsung TV device is currently not supported."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure MAC address",
+        "data": {
+          "mac": "MAC address"
+        }
+      }
+    }
   }
 }

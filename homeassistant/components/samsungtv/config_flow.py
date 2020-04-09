@@ -2,6 +2,7 @@
 import socket
 from urllib.parse import urlparse
 
+from getmac import get_mac_address
 import voluptuous as vol
 
 from homeassistant import config_entries, core
@@ -15,6 +16,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
     CONF_IP_ADDRESS,
+    CONF_MAC,
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
@@ -188,3 +190,17 @@ class SamsungTVOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         """Initialize."""
         self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        if CONF_MAC in self.config_entry.options:
+            current_mac = self.config_entry.options[CONF_MAC]
+        else:
+            hostname = self.config_entry.data[CONF_HOST]
+            current_mac = get_mac_address(hostname=hostname)
+
+        schema = {vol.Optional(CONF_MAC, default=current_mac): str}
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(schema))
