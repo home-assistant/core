@@ -494,6 +494,7 @@ async def test_import_existing_config_entry(hass, mock_panel):
         data={
             "host": "0.0.0.0",
             "port": 1111,
+            "access_token": "ORIGINALTOKEN",
             "id": "112233445566",
             "extra": "something",
         },
@@ -546,14 +547,14 @@ async def test_import_existing_config_entry(hass, mock_panel):
 
     assert result["type"] == "abort"
 
-    # We should have updated the entry
+    # We should have updated the host info but not the access token
     assert len(hass.config_entries.async_entries("konnected")) == 1
     assert hass.config_entries.async_entries("konnected")[0].data == {
         "host": "1.2.3.4",
         "port": 1234,
+        "access_token": "ORIGINALTOKEN",
         "id": "112233445566",
         "model": "Konnected Pro",
-        "access_token": "SUPERSECRETTOKEN",
         "extra": "something",
     }
 
