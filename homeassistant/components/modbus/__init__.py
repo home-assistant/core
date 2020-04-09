@@ -169,7 +169,7 @@ class ModbusHub:
         self._config_type = client_config[CONF_TYPE]
         self._config_port = client_config[CONF_PORT]
         self._config_timeout = client_config[CONF_TIMEOUT]
-        self._config_delay = client_config[CONF_DELAY]
+        self._config_delay = 0
 
         if self._config_type == "serial":
             # serial configuration
@@ -181,6 +181,7 @@ class ModbusHub:
         else:
             # network configuration
             self._config_host = client_config[CONF_HOST]
+            self._config_delay = client_config[CONF_DELAY]
 
     @property
     def name(self):
@@ -266,12 +267,16 @@ class ModbusHub:
 
     async def read_coils(self, unit, address, count):
         """Read coils."""
+        if self._client is None:
+            return None
         if self._client.protocol is None:
             return None
         return await self._read(unit, address, count, self._client.protocol.read_coils)
 
     async def read_discrete_inputs(self, unit, address, count):
         """Read discrete inputs."""
+        if self._client is None:
+            return None
         if self._client.protocol is None:
             return None
         return await self._read(
@@ -280,6 +285,8 @@ class ModbusHub:
 
     async def read_input_registers(self, unit, address, count):
         """Read input registers."""
+        if self._client is None:
+            return None
         if self._client.protocol is None:
             return None
         return await self._read(
@@ -288,6 +295,8 @@ class ModbusHub:
 
     async def read_holding_registers(self, unit, address, count):
         """Read holding registers."""
+        if self._client is None:
+            return None
         if self._client.protocol is None:
             return None
         return await self._read(
@@ -296,12 +305,16 @@ class ModbusHub:
 
     async def write_coil(self, unit, address, value):
         """Write coil."""
+        if self._client is None:
+            return None
         if self._client.protocol is None:
             return None
         return await self._write(unit, address, value, self._client.protocol.write_coil)
 
     async def write_register(self, unit, address, value):
         """Write register."""
+        if self._client is None:
+            return None
         if self._client.protocol is None:
             return None
         return await self._write(
@@ -310,6 +323,8 @@ class ModbusHub:
 
     async def write_registers(self, unit, address, values):
         """Write registers."""
+        if self._client is None:
+            return None
         if self._client.protocol is None:
             return None
         return await self._write(
