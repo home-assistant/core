@@ -94,10 +94,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await async_disconnect_or_timeout(self.hass, info[ROOMBA_SESSION])
                 return self.async_create_entry(title=info[CONF_NAME], data=user_input)
 
-        # If there was no user input, do not show the errors.
-        if user_input is None:
-            errors = {}
-
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
