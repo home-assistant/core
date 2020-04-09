@@ -54,9 +54,8 @@ jobs:
   - template: templates/azp-step-git-init.yaml@azure
   - script: |
       export LOKALISE_TOKEN="$(lokaliseToken)"
-      export AZURE_BRANCH="$(Build.SourceBranchName)"
 
-      ./script/translations_download
+      python3 -m script.translations download
     displayName: 'Download Translation'
   - script: |
       git checkout dev
