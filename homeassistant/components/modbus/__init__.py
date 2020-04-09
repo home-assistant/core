@@ -105,26 +105,10 @@ async def async_setup(hass, config):
         for client in hub_collect.values():
             del client
 
-    def start_modbus(event):
+    def start_modbus():
         """Start Modbus service."""
         for client in hub_collect.values():
             client.setup()
-
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
-
-        # Register services for modbus
-        hass.services.async_register(
-            MODBUS_DOMAIN,
-            SERVICE_WRITE_REGISTER,
-            write_register,
-            schema=SERVICE_WRITE_REGISTER_SCHEMA,
-        )
-        hass.services.async_register(
-            MODBUS_DOMAIN,
-            SERVICE_WRITE_COIL,
-            write_coil,
-            schema=SERVICE_WRITE_COIL_SCHEMA,
-        )
 
     async def write_register(service):
         """Write Modbus registers."""
@@ -150,7 +134,20 @@ async def async_setup(hass, config):
         await hub_collect[client_name].write_coil(unit, address, state)
 
     # do not wait for EVENT_HOMEASSISTANT_START, activate pymodbus now
-    start_modbus()
+    hass.async_add_executor_job(start_modbus)
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
+
+    # Register services for modbus
+    hass.services.async_register(
+        MODBUS_DOMAIN,
+        SERVICE_WRITE_REGISTER,
+        write_register,
+        schema=SERVICE_WRITE_REGISTER_SCHEMA,
+    )
+    hass.services.async_register(
+        MODBUS_DOMAIN, SERVICE_WRITE_COIL, write_coil, schema=SERVICE_WRITE_COIL_SCHEMA,
+    )
     return True
 
 
