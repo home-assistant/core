@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PAYLOAD,
+    CONF_PAYLOAD_TEMPLATE,
     CONF_RESOURCE,
     CONF_RESOURCE_TEMPLATE,
     CONF_TIMEOUT,
@@ -51,6 +52,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Exclusive(CONF_RESOURCE, CONF_RESOURCE): cv.url,
         vol.Exclusive(CONF_RESOURCE_TEMPLATE, CONF_RESOURCE): cv.template,
+        vol.Exclusive(CONF_PAYLOAD, CONF_PAYLOAD): cv.string,
+        vol.Exclusive(CONF_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.template,
         vol.Optional(CONF_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
@@ -59,7 +62,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PAYLOAD): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_USERNAME): cv.string,
@@ -83,6 +85,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     resource_template = config.get(CONF_RESOURCE_TEMPLATE)
     method = config.get(CONF_METHOD)
     payload = config.get(CONF_PAYLOAD)
+    payload_template = config.get(CONF_PAYLOAD_TEMPLATE)
     verify_ssl = config.get(CONF_VERIFY_SSL)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -101,6 +104,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if resource_template is not None:
         resource_template.hass = hass
         resource = resource_template.render()
+
+    if payload_template is not None:
+        payload_template.hass = hass
+        payload = payload_template.render()
 
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
@@ -128,6 +135,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 json_attrs,
                 force_update,
                 resource_template,
+                payload_template,
                 json_attrs_path,
             )
         ],
@@ -149,6 +157,7 @@ class RestSensor(Entity):
         json_attrs,
         force_update,
         resource_template,
+        payload_template,
         json_attrs_path,
     ):
         """Initialize the REST sensor."""
@@ -163,6 +172,7 @@ class RestSensor(Entity):
         self._attributes = None
         self._force_update = force_update
         self._resource_template = resource_template
+        self._payload_template = payload_template
         self._json_attrs_path = json_attrs_path
 
     @property
@@ -199,6 +209,9 @@ class RestSensor(Entity):
         """Get the latest data from REST API and update the state."""
         if self._resource_template is not None:
             self.rest.set_url(self._resource_template.render())
+                
+        if self._payload_template is not None:
+            self.rest.set_payload(self._payload_template.render())
 
         self.rest.update()
         value = self.rest.data
@@ -283,6 +296,10 @@ class RestData:
     def set_url(self, url):
         """Set url."""
         self._resource = url
+
+    def set_payload(self, payload):
+        """Set payload in the request."""
+        self._request_data = payload
 
     def update(self):
         """Get the latest data from REST service with provided method."""

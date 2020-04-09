@@ -111,6 +111,24 @@ class TestRestSensorSetup(unittest.TestCase):
                     }
                 },
             )
+    
+    @requests_mock.Mocker()
+    def test_setup_duplicate_payload(self, mock_req):
+        """Test setup with duplicate payload."""
+        mock_req.get("http://localhost", status_code=200)
+        with assert_setup_component(0, "sensor"):
+            assert setup_component(
+                self.hass,
+                "sensor",
+                {
+                    "sensor": {
+                        "platform": "rest",
+                        "resource": "http://localhost",
+                        "payload": '{ "device": "toaster"}',
+                        "payload_template": '{ "device": "toaster"}'
+                    }
+                },
+            )
 
     @requests_mock.Mocker()
     def test_setup_get(self, mock_req):
