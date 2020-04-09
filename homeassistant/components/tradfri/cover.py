@@ -1,7 +1,6 @@
 """Support for IKEA Tradfri covers."""
 
 from homeassistant.components.cover import ATTR_POSITION, CoverDevice
-from homeassistant.const import ATTR_BATTERY_LEVEL
 
 from .base_class import TradfriBaseDevice
 from .const import ATTR_MODEL, CONF_GATEWAY_ID, KEY_API, KEY_GATEWAY
