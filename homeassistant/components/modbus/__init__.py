@@ -21,7 +21,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TIMEOUT,
     CONF_TYPE,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
@@ -150,8 +149,8 @@ async def async_setup(hass, config):
         client_name = service.data[ATTR_HUB]
         await hub_collect[client_name].write_coil(unit, address, state)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_modbus)
-
+    # do not wait for EVENT_HOMEASSISTANT_START, activate pymodbus now
+    start_modbus()
     return True
 
 
@@ -267,16 +266,12 @@ class ModbusHub:
 
     async def read_coils(self, unit, address, count):
         """Read coils."""
-        if self._client is None:
-            return None
         if self._client.protocol is None:
             return None
         return await self._read(unit, address, count, self._client.protocol.read_coils)
 
     async def read_discrete_inputs(self, unit, address, count):
         """Read discrete inputs."""
-        if self._client is None:
-            return None
         if self._client.protocol is None:
             return None
         return await self._read(
@@ -285,8 +280,6 @@ class ModbusHub:
 
     async def read_input_registers(self, unit, address, count):
         """Read input registers."""
-        if self._client is None:
-            return None
         if self._client.protocol is None:
             return None
         return await self._read(
@@ -295,8 +288,6 @@ class ModbusHub:
 
     async def read_holding_registers(self, unit, address, count):
         """Read holding registers."""
-        if self._client is None:
-            return None
         if self._client.protocol is None:
             return None
         return await self._read(
@@ -305,16 +296,12 @@ class ModbusHub:
 
     async def write_coil(self, unit, address, value):
         """Write coil."""
-        if self._client is None:
-            return None
         if self._client.protocol is None:
             return None
         return await self._write(unit, address, value, self._client.protocol.write_coil)
 
     async def write_register(self, unit, address, value):
         """Write register."""
-        if self._client is None:
-            return None
         if self._client.protocol is None:
             return None
         return await self._write(
@@ -323,8 +310,6 @@ class ModbusHub:
 
     async def write_registers(self, unit, address, values):
         """Write registers."""
-        if self._client is None:
-            return None
         if self._client.protocol is None:
             return None
         return await self._write(
