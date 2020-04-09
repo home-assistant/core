@@ -11,7 +11,7 @@ from homeassistant.components.modbus.const import (
     CONF_REGISTER_TYPE,
     CONF_REGISTERS,
     DEFAULT_HUB,
-    DOMAIN,
+    MODBUS_DOMAIN as DOMAIN,
 )
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_SCAN_INTERVAL
 from homeassistant.setup import async_setup_component
