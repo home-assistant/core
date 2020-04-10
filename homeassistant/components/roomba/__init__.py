@@ -35,7 +35,7 @@ def _has_all_unique_prefixes(value):
 
     Uniqueness is determined case-independently.
     """
-    prefixes = [device[CONF_PREFIX] for device in value]
+    bilds = [device[CONF_BLID] for device in value]
     schema = vol.Schema(vol.Unique())
     schema(prefixes)
     return value
