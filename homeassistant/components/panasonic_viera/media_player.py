@@ -1,12 +1,9 @@
 """Support for interface with a Panasonic Viera TV."""
-import logging
-
-from panasonic_viera import RemoteControl, Keys, EncryptionRequired
-
 from functools import partial
-from homeassistant.helpers.script import Script
-
+import logging
 from urllib.request import URLError
+
+from panasonic_viera import EncryptionRequired, Keys, RemoteControl
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -23,21 +20,21 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_BROADCAST_ADDRESS,
     CONF_HOST,
-    CONF_PORT,
     CONF_NAME,
+    CONF_PORT,
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.helpers.script import Script
 
 from .const import (
-    CONF_ON_ACTION,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
+    CONF_ON_ACTION,
     DEVICE_MANUFACTURER,
     DOMAIN,
 )
