@@ -8,6 +8,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     BLID,
@@ -17,6 +19,7 @@ from .const import (
     CONF_CONTINUOUS,
     CONF_DELAY,
     CONF_NAME,
+    CONF_PREFIX,
     DEFAULT_CERT,
     DEFAULT_CONTINUOUS,
     DEFAULT_DELAY,
@@ -26,19 +29,33 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+
+def _has_all_unique_prefixes(value):
+    """Validate that each vacuum configured has a unique prefix.
+
+    Uniqueness is determined case-independently.
+    """
+    prefixes = [device[CONF_PREFIX] for device in value]
+    schema = vol.Schema(vol.Unique())
+    schema(prefixes)
+    return value
+
+
+DEVICE_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_BLID): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Optional(CONF_CERT, default=DEFAULT_CERT): str,
-                vol.Optional(CONF_CONTINUOUS, default=DEFAULT_CONTINUOUS): bool,
-                vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): int,
-            }
-        )
+        vol.Required(CONF_HOST): str,
+        vol.Optional(CONF_PREFIX, default=""): vol.All(cv.string, vol.Lower),
+        vol.Required(CONF_BLID): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Optional(CONF_CERT, default=DEFAULT_CERT): str,
+        vol.Optional(CONF_CONTINUOUS, default=DEFAULT_CONTINUOUS): bool,
+        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): int,
     },
+)
+
+
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.All(cv.ensure_list, [DEVICE_SCHEMA], _has_all_unique_prefixes)},
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -49,13 +66,17 @@ async def async_setup(hass, config):
 
     if DOMAIN not in config:
         return True
-
-    if not hass.config_entries.async_entries(DOMAIN):
+    for index, conf in enumerate(config[DOMAIN]):
+        _LOGGER.debug("Importing Roomba #%d - %s", index, conf[CONF_HOST])
+        current_config_entry = _async_find_matching_config_entry(
+            hass, conf[CONF_PREFIX]
+        )
+        if current_config_entry:
+            hass.config_entries.async_update_entry(current_config_entry, data=conf)
+            continue
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=config[DOMAIN],
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf,
             )
         )
 
@@ -167,6 +188,13 @@ async def async_unload_entry(hass, config_entry):
 def roomba_reported_state(roomba):
     """Roomba report."""
     return roomba.master_state.get("state", {}).get("reported", {})
+
+
+@callback
+def _async_find_matching_config_entry(hass, prefix):
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.unique_id == prefix:
+            return entry
 
 
 class CannotConnect(exceptions.HomeAssistantError):
