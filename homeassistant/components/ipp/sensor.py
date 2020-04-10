@@ -116,7 +116,12 @@ class IPPMarkerSensor(IPPSensor):
     @property
     def state(self) -> Union[None, str, int, float]:
         """Return the state of the sensor."""
-        return self.coordinator.data.markers[self.marker_index].level
+        level = self.coordinator.data.markers[self.marker_index].level
+
+        if level >= 0:
+            return level
+
+        return None
 
 
 class IPPPrinterSensor(IPPSensor):
