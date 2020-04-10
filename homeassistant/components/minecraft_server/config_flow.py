@@ -48,32 +48,8 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             # Remove '[' and ']' in case of an IPv6 address.
             host = host.strip("[]")
 
-            # Check if 'host' is a valid IP address and if so, get the MAC address.
-            ip_address = None
-            mac_address = None
-            try:
-                ip_address = ipaddress.ip_address(host)
-            except ValueError:
-                # Host is not a valid IP address.
-                # Continue with host and port.
-                pass
-            else:
-                # Host is a valid IP address.
-                if ip_address.version == 4:
-                    # Address type is IPv4.
-                    params = {"ip": host}
-                else:
-                    # Address type is IPv6.
-                    params = {"ip6": host}
-                mac_address = await self.hass.async_add_executor_job(
-                    partial(getmac.get_mac_address, **params)
-                )
-
-            # Validate IP address (MAC address must be available).
-            if ip_address is not None and mac_address is None:
-                errors["base"] = "invalid_ip"
             # Validate port configuration (limit to user and dynamic port range).
-            elif (port < 1024) or (port > 65535):
+            if (port < 1024) or (port > 65535):
                 errors["base"] = "invalid_port"
             # Validate host and port by checking the server connection.
             else:
@@ -92,26 +68,18 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     # Build unique_id and config entry title.
                     unique_id = ""
                     title = f"{host}:{port}"
-                    if ip_address is not None:
-                        # Since IP addresses can change and therefore are not allowed in a
-                        # unique_id, fall back to the MAC address and port (to support
-                        # servers with same MAC address but different ports).
-                        unique_id = f"{mac_address}-{port}"
-                        if ip_address.version == 6:
-                            title = f"[{host}]:{port}"
+                    # Check if 'host' is a valid SRV record.
+                    srv_record = await helpers.async_check_srv_record(
+                        self.hass, host
+                    )
+                    if srv_record is not None:
+                        # Use only SRV host name in unique_id (does not change).
+                        unique_id = f"{host}-srv"
+                        title = host
                     else:
-                        # Check if 'host' is a valid SRV record.
-                        srv_record = await helpers.async_check_srv_record(
-                            self.hass, host
-                        )
-                        if srv_record is not None:
-                            # Use only SRV host name in unique_id (does not change).
-                            unique_id = f"{host}-srv"
-                            title = host
-                        else:
-                            # Use host name and port in unique_id (to support servers with
-                            # same host name but different ports).
-                            unique_id = f"{host}-{port}"
+                        # Use host name and port in unique_id (to support servers with
+                        # same host name but different ports).
+                        unique_id = f"{host}-{port}"
 
                     # Abort in case the host was already configured before.
                     await self.async_set_unique_id(unique_id)
