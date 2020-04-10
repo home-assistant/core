@@ -2,6 +2,7 @@
 import logging
 
 from elkm1_lib.const import AlarmState, ArmedStatus, ArmLevel, ArmUpState
+from elkm1_lib.util import username
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
@@ -107,7 +108,11 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanel):
     def __init__(self, element, elk, elk_data):
         """Initialize Area as Alarm Control Panel."""
         super().__init__(element, elk, elk_data)
+        self._elk = elk
         self._changed_by_keypad = None
+        self._last_user_time = None
+        self._last_user = None
+        self._last_user_name = None
         self._state = None
 
     async def async_added_to_hass(self):
@@ -121,6 +126,9 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanel):
             return
         if changeset.get("last_user") is not None:
             self._changed_by_keypad = keypad.name
+            self._last_user_time = keypad.last_user_time.isoformat()
+            self._last_user = keypad.last_user + 1
+            self._last_user_name = username(self._elk, keypad.last_user)
             self.async_write_ha_state()
 
     @property
@@ -153,6 +161,9 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanel):
         if elmt.alarm_state is not None:
             attrs["alarm_state"] = AlarmState(elmt.alarm_state).name.lower()
         attrs["changed_by_keypad"] = self._changed_by_keypad
+        attrs["last_user_time"] = self._last_user_time
+        attrs["last_user"] = self._last_user
+        attrs["last_user_name"] = self._last_user_name
         return attrs
 
     def _element_changed(self, element, changeset):
