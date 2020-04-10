@@ -49,7 +49,6 @@ class SmartSwitchMockData(NamedTuple):
     """Mock smart switch data."""
 
     sys_info: dict
-    light_state: dict
     state_mock: Mock
     brightness_mock: Mock
     get_sysinfo_mock: Mock
@@ -188,28 +187,28 @@ def dimmer_switch_mock_data_fixture() -> None:
         "model": "HS220",
         "alias": "dimmer1",
         "feature": ":",
-    }
-
-    light_state = {
-        "on_off": 1,
+        "relay_state": 1,
         "brightness": 13,
     }
 
     def state(*args, **kwargs):
-        nonlocal light_state
+        nonlocal sys_info
         if len(args) == 0:
-            return light_state["on_off"]
-        light_state["on_off"] = args[0]
+            return sys_info["relay_state"]
+        if args[0] == "ON":
+            sys_info["relay_state"] = 1
+        else:
+            sys_info["relay_state"] = 0
 
     def brightness(*args, **kwargs):
-        nonlocal light_state
+        nonlocal sys_info
         if len(args) == 0:
-            return light_state["brightness"]
-        if light_state["brightness"] == 0:
-            light_state["on_off"] = 0
+            return sys_info["brightness"]
+        if sys_info["brightness"] == 0:
+            sys_info["relay_state"] = 0
         else:
-            light_state["on_off"] = 1
-            light_state["brightness"] = args[0]
+            sys_info["relay_state"] = 1
+            sys_info["brightness"] = args[0]
 
     get_sysinfo_patch = patch(
         "homeassistant.components.tplink.common.SmartDevice.get_sysinfo",
@@ -228,7 +227,6 @@ def dimmer_switch_mock_data_fixture() -> None:
     with brightness_patch as brightness_mock, state_patch as state_mock, get_sysinfo_patch as get_sysinfo_mock:
         yield SmartSwitchMockData(
             sys_info=sys_info,
-            light_state=light_state,
             brightness_mock=brightness_mock,
             state_mock=state_mock,
             get_sysinfo_mock=get_sysinfo_mock,
@@ -247,7 +245,7 @@ async def test_smartswitch(
     hass: HomeAssistant, dimmer_switch_mock_data: SmartSwitchMockData
 ) -> None:
     """Test function."""
-    light_state = dimmer_switch_mock_data.light_state
+    sys_info = dimmer_switch_mock_data.sys_info
 
     await async_setup_component(hass, HA_DOMAIN, {})
     await hass.async_block_till_done()
@@ -276,7 +274,7 @@ async def test_smartswitch(
     await update_entity(hass, "light.dimmer1")
 
     assert hass.states.get("light.dimmer1").state == "off"
-    assert light_state["on_off"] == 0
+    assert sys_info["relay_state"] == 0
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -290,7 +288,7 @@ async def test_smartswitch(
     state = hass.states.get("light.dimmer1")
     assert state.state == "on"
     assert state.attributes["brightness"] == 48.45
-    assert light_state["on_off"] == 1
+    assert sys_info["relay_state"] == 1
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -304,10 +302,10 @@ async def test_smartswitch(
     state = hass.states.get("light.dimmer1")
     assert state.state == "on"
     assert state.attributes["brightness"] == 53.55
-    assert light_state["brightness"] == 21
+    assert sys_info["brightness"] == 21
 
-    light_state["on_off"] = 0
-    light_state["brightness"] = 66
+    sys_info["relay_state"] = 0
+    sys_info["brightness"] = 66
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -330,7 +328,7 @@ async def test_smartswitch(
     state = hass.states.get("light.dimmer1")
     assert state.state == "on"
     assert state.attributes["brightness"] == 168.3
-    assert light_state["brightness"] == 66
+    assert sys_info["brightness"] == 66
 
 
 async def test_light(hass: HomeAssistant, light_mock_data: LightMockData) -> None:
