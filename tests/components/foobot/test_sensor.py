@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    HTTP_FORBIDDEN,
     HTTP_INTERNAL_SERVER_ERROR,
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
@@ -71,7 +72,7 @@ async def test_setup_permanent_error(hass, aioclient_mock):
     """Expected failures caused by permanent errors in API response."""
     fake_async_add_entities = MagicMock()
 
-    errors = [400, 401, 403]
+    errors = [400, 401, HTTP_FORBIDDEN]
     for error in errors:
         aioclient_mock.get(re.compile("api.foobot.io/v2/owner/.*"), status=error)
         result = await foobot.async_setup_platform(

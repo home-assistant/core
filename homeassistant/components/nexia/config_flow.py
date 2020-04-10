@@ -6,7 +6,12 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_INTERNAL_SERVER_ERROR
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    HTTP_BAD_REQUEST,
+    HTTP_INTERNAL_SERVER_ERROR,
+)
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
@@ -35,7 +40,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     except HTTPError as http_ex:
         _LOGGER.error("HTTP error from Nexia service: %s", http_ex)
         if (
-            http_ex.response.status_code >= 400
+            http_ex.response.status_code >= HTTP_BAD_REQUEST
             and http_ex.response.status_code < HTTP_INTERNAL_SERVER_ERROR
         ):
             raise InvalidAuth

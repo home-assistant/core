@@ -15,7 +15,7 @@ from homeassistant.components.smartthings.const import (
     CONF_REFRESH_TOKEN,
     DOMAIN,
 )
-from homeassistant.const import HTTP_NOT_FOUND
+from homeassistant.const import HTTP_FORBIDDEN, HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_coro
@@ -103,7 +103,7 @@ async def test_token_forbidden(hass, smartthings_mock):
 
     request_info = Mock(real_url="http://example.com")
     smartthings_mock.apps.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=403
+        request_info=request_info, history=None, status=HTTP_FORBIDDEN
     )
 
     result = await flow.async_step_user({"access_token": str(uuid4())})

@@ -4,6 +4,8 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.const import HTTP_BAD_REQUEST
+
 # mypy: allow-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,14 +40,16 @@ class RequestDataValidator:
             except ValueError:
                 if not self._allow_empty or (await request.content.read()) != b"":
                     _LOGGER.error("Invalid JSON received.")
-                    return view.json_message("Invalid JSON.", 400)
+                    return view.json_message("Invalid JSON.", HTTP_BAD_REQUEST)
                 data = {}
 
             try:
                 kwargs["data"] = self._schema(data)
             except vol.Invalid as err:
                 _LOGGER.error("Data does not match schema: %s", err)
-                return view.json_message(f"Message format incorrect: {err}", 400)
+                return view.json_message(
+                    f"Message format incorrect: {err}", HTTP_BAD_REQUEST
+                )
 
             result = await method(view, request, *args, **kwargs)
             return result
