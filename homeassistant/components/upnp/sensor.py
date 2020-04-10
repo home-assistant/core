@@ -73,7 +73,9 @@ async def async_setup_platform(
     )
 
 
-async def async_setup_entry(hass, config_entry: ConfigEntry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass, config_entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up the UPnP/IGD sensors."""
     data = config_entry.data
     if "udn" in data:
@@ -172,7 +174,9 @@ class UpnpSensor(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to sensors events."""
-        remove_from_coordinator = self._coordinator.async_add_listener(self.async_write_ha_state)
+        remove_from_coordinator = self._coordinator.async_add_listener(
+            self.async_write_ha_state
+        )
         self.async_on_remove(remove_from_coordinator)
 
 
