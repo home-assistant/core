@@ -21,7 +21,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TIMEOUT,
     CONF_TYPE,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
@@ -36,7 +35,7 @@ from .const import (
     CONF_PARITY,
     CONF_STOPBITS,
     DEFAULT_HUB,
-    MODBUS_DOMAIN,
+    MODBUS_DOMAIN as DOMAIN,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
 )
@@ -69,7 +68,7 @@ ETHERNET_SCHEMA = BASE_SCHEMA.extend(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {MODBUS_DOMAIN: vol.All(cv.ensure_list, [vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)])},
+    {DOMAIN: vol.All(cv.ensure_list, [vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)])},
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -96,10 +95,9 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up Modbus component."""
-    hass.data[MODBUS_DOMAIN] = hub_collect = {}
+    hass.data[DOMAIN] = hub_collect = {}
 
-    _LOGGER.debug("registering hubs")
-    for client_config in config[MODBUS_DOMAIN]:
+    for client_config in config[DOMAIN]:
         hub_collect[client_config[CONF_NAME]] = ModbusHub(client_config, hass.loop)
 
     def stop_modbus(event):
@@ -107,27 +105,12 @@ async def async_setup(hass, config):
         for client in hub_collect.values():
             del client
 
-    def start_modbus(event):
+    def start_modbus():
         """Start Modbus service."""
         for client in hub_collect.values():
-            _LOGGER.debug("setup hub %s", client.name)
             client.setup()
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
-
-        # Register services for modbus
-        hass.services.async_register(
-            MODBUS_DOMAIN,
-            SERVICE_WRITE_REGISTER,
-            write_register,
-            schema=SERVICE_WRITE_REGISTER_SCHEMA,
-        )
-        hass.services.async_register(
-            MODBUS_DOMAIN,
-            SERVICE_WRITE_COIL,
-            write_coil,
-            schema=SERVICE_WRITE_COIL_SCHEMA,
-        )
 
     async def write_register(service):
         """Write Modbus registers."""
@@ -152,8 +135,19 @@ async def async_setup(hass, config):
         client_name = service.data[ATTR_HUB]
         await hub_collect[client_name].write_coil(unit, address, state)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_modbus)
+    # do not wait for EVENT_HOMEASSISTANT_START, activate pymodbus now
+    await hass.async_add_executor_job(start_modbus)
 
+    # Register services for modbus
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_WRITE_REGISTER,
+        write_register,
+        schema=SERVICE_WRITE_REGISTER_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_WRITE_COIL, write_coil, schema=SERVICE_WRITE_COIL_SCHEMA,
+    )
     return True
 
 
@@ -162,7 +156,6 @@ class ModbusHub:
 
     def __init__(self, client_config, main_loop):
         """Initialize the Modbus hub."""
-        _LOGGER.debug("Preparing setup: %s", client_config)
 
         # generic configuration
         self._loop = main_loop
@@ -172,7 +165,7 @@ class ModbusHub:
         self._config_type = client_config[CONF_TYPE]
         self._config_port = client_config[CONF_PORT]
         self._config_timeout = client_config[CONF_TIMEOUT]
-        self._config_delay = client_config[CONF_DELAY]
+        self._config_delay = 0
 
         if self._config_type == "serial":
             # serial configuration
@@ -184,6 +177,7 @@ class ModbusHub:
         else:
             # network configuration
             self._config_host = client_config[CONF_HOST]
+            self._config_delay = client_config[CONF_DELAY]
 
     @property
     def name(self):
@@ -201,7 +195,6 @@ class ModbusHub:
         # Client* do deliver loop, client as result but
         # pylint does not accept that fact
 
-        _LOGGER.debug("doing setup")
         if self._config_type == "serial":
             _, self._client = ClientSerial(
                 schedulers.ASYNC_IO,
@@ -211,7 +204,6 @@ class ModbusHub:
                 stopbits=self._config_stopbits,
                 bytesize=self._config_bytesize,
                 parity=self._config_parity,
-                timeout=self._config_timeout,
                 loop=self._loop,
             )
         elif self._config_type == "rtuovertcp":

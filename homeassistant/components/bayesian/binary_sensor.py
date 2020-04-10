@@ -298,8 +298,6 @@ class BayesianBinarySensor(BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        print(self.current_observations)
-        print(self.observations_by_entity)
         return {
             ATTR_OBSERVATIONS: list(self.current_observations.values()),
             ATTR_OCCURRED_OBSERVATION_ENTITIES: list(
