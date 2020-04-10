@@ -45,7 +45,7 @@ async def test_binary_sensor_device(hass, aioclient_mock):
         }
     }
     aioclient_mock.get("http://127.0.0.1:2020/&device", json=DEVICES)
-    aioclient_mock.get("http://127.0.0.1:2020/&listen", long_poll=True)
+    listen_mock = aioclient_mock.get("http://127.0.0.1:2020/&listen", long_poll=True)
     await async_setup_component(hass, QWIKSWITCH, config)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -53,19 +53,15 @@ async def test_binary_sensor_device(hass, aioclient_mock):
     state_obj = hass.states.get("binary_sensor.s1")
     assert state_obj.state == "off"
 
-    aioclient_mock.get(
-        "http://127.0.0.1:2020/&listen",
-        long_poll=True,
-        json={"id": "@a00001", "cmd": "", "data": "4e0e1601", "rssi": "61%"},
+    listen_mock.queue_response(
+        json={"id": "@a00001", "cmd": "", "data": "4e0e1601", "rssi": "61%"}
     )
     await asyncio.sleep(0.01)
     await hass.async_block_till_done()
     state_obj = hass.states.get("binary_sensor.s1")
     assert state_obj.state == "on"
 
-    aioclient_mock.get(
-        "http://127.0.0.1:2020/&listen",
-        long_poll=True,
+    listen_mock.queue_response(
         json={"id": "@a00001", "cmd": "", "data": "4e0e1701", "rssi": "61%"},
     )
     await asyncio.sleep(0.01)
@@ -87,7 +83,7 @@ async def test_sensor_device(hass, aioclient_mock):
         }
     }
     aioclient_mock.get("http://127.0.0.1:2020/&device", json=DEVICES)
-    aioclient_mock.get("http://127.0.0.1:2020/&listen", long_poll=True)
+    listen_mock = aioclient_mock.get("http://127.0.0.1:2020/&listen", long_poll=True)
     await async_setup_component(hass, QWIKSWITCH, config)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -95,9 +91,7 @@ async def test_sensor_device(hass, aioclient_mock):
     state_obj = hass.states.get("sensor.ss1")
     assert state_obj.state == "None"
 
-    aioclient_mock.get(
-        "http://127.0.0.1:2020/&listen",
-        long_poll=True,
+    listen_mock.queue_response(
         json={"id": "@a00001", "name": "ss1", "type": "rel", "val": "4733800001a00000"},
     )
     await asyncio.sleep(0.01)

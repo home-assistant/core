@@ -56,7 +56,7 @@ class AiohttpClientMocker:
             text = _json.dumps(json)
         if text is not None:
             content = text.encode("utf-8")
-        content_not_empty = content is not None
+        content_empty = content is None
         if content is None:
             content = b""
 
@@ -68,20 +68,14 @@ class AiohttpClientMocker:
         new_response = AiohttpClientMockResponse(
             method, url, status, content, cookies, exc, headers, long_poll
         )
-        if long_poll and content_not_empty:
-            for response in self._mocks:
-                if response.long_poll and response.match_request(method, url, params):
-                    response.set_long_poll_response(new_response)
-                    return
-            assert (
-                False
-            ), "First call with with long_poll has to be with empty content to set up queue."
-        else:
-            self._mocks.append(new_response)
+        if long_poll:
+            assert content_empty, "Setting up long_poll has to be with an empty content"
+        self._mocks.append(new_response)
+        return new_response
 
     def get(self, *args, **kwargs):
         """Register a mock get request."""
-        self.request("get", *args, **kwargs)
+        return self.request("get", *args, **kwargs)
 
     def put(self, *args, **kwargs):
         """Register a mock put request."""
@@ -182,7 +176,7 @@ class AiohttpClientMockResponse:
         self.response = response
         self.exc = exc
         self.long_poll = long_poll
-        if self.long_poll and response == b"":
+        if self.long_poll:
             self.semaphore = asyncio.Semaphore(0)
             self.response_list = []
             self.stopping = False
@@ -287,16 +281,36 @@ class AiohttpClientMockResponse:
             raise response.exc
         return response
 
-    def set_long_poll_response(self, response):
+    def queue_response(
+        self,
+        status=200,
+        text=None,
+        content=None,
+        json=None,
+        params=None,
+        headers={},
+        exc=None,
+        cookies=None,
+    ):
         """Add a response to the long_poll queue."""
-        self.response_list.append(response)
+        if json is not None:
+            text = _json.dumps(json)
+        if text is not None:
+            content = text.encode("utf-8")
+        if content is None:
+            content = b""
+        self.response_list.append(
+            AiohttpClientMockResponse(
+                self.method, self._url, status, content, cookies, exc, headers
+            )
+        )
         self.semaphore.release()
 
     def stop(self):
         """Stop the current request and future ones."""
         if self.long_poll:
             self.stopping = True
-            self.set_long_poll_response(
+            self.queue_response(
                 AiohttpClientMockResponse(
                     self.method, self._url, self.status, b"", exc=ClientError()
                 )
