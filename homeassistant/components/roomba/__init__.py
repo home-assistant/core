@@ -30,7 +30,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _has_all_unique_prefixes(value):
+def _has_all_unique_blids(value):
     """Validate that each vacuum configured has a unique prefix.
 
     Uniqueness is determined case-independently.
