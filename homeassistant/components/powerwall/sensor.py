@@ -4,7 +4,6 @@ import logging
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_POWER,
-    ENERGY_KILO_WATT_HOUR,
     UNIT_PERCENTAGE,
 )
 
@@ -14,6 +13,7 @@ from .const import (
     ATTR_FREQUENCY,
     ATTR_INSTANT_AVERAGE_VOLTAGE,
     DOMAIN,
+    ENERGY_KILO_WATT,
     POWERWALL_API_CHARGE,
     POWERWALL_API_DEVICE_TYPE,
     POWERWALL_API_METERS,
@@ -87,7 +87,7 @@ class PowerWallEnergySensor(PowerWallEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return ENERGY_KILO_WATT_HOUR
+        return ENERGY_KILO_WATT
 
     @property
     def name(self):
@@ -106,7 +106,7 @@ class PowerWallEnergySensor(PowerWallEntity):
 
     @property
     def state(self):
-        """Get the current value in kWh."""
+        """Get the current value in kW."""
         meter = self._coordinator.data[POWERWALL_API_METERS][self._meter]
         return round(float(meter.instant_power / 1000), 3)
 
