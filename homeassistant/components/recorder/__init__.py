@@ -606,11 +606,10 @@ class Recorder(threading.Thread):
                 _LOGGER.warning("Event is not JSON serializable: %s", event)
             except Exception as err:  # pylint: disable=broad-except
                 # Must catch the exception to prevent the loop from collapsing
-                _LOGGER.error("1. ais Error adding event: %s", err)
+                _LOGGER.error("Error adding event: %s", err)
 
             if dbevent and event.event_type == EVENT_STATE_CHANGED:
                 try:
-                    _LOGGER.error("2.ais Error adding event: %s", err)
                     dbstate = States.from_event(event)
                     dbstate.event_id = dbevent.event_id
                     self.event_session.add(dbstate)
@@ -625,13 +624,9 @@ class Recorder(threading.Thread):
 
             # If they do not have a commit interval
             # than we commit right away
-            _LOGGER.error("3. ais Error adding event: %s", err)
             if not self.commit_interval:
                 self._commit_event_session_or_retry()
-
-            _LOGGER.error("4. ais Error adding event: %s", err)
             self.queue.task_done()
-            _LOGGER.error("5. ais Error adding event: %s", err)
 
     def _commit_event_session_or_retry(self):
         tries = 1
