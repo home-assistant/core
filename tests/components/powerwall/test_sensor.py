@@ -39,13 +39,14 @@ async def test_sensors(hass):
         "energy_exported": 10429451.9916853,
         "energy_imported": 4824191.60668611,
         "instant_average_voltage": 120.650001525879,
-        "unit_of_measurement": "kWh",
+        "unit_of_measurement": "kW",
         "friendly_name": "Powerwall Site Now",
         "device_class": "power",
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(item in state.attributes.items() for item in expected_attributes.items())
+    for key, value in expected_attributes.items():
+        assert state.attributes[key] == value
 
     state = hass.states.get("sensor.powerwall_load_now")
     assert state.state == "1.971"
@@ -54,13 +55,14 @@ async def test_sensors(hass):
         "energy_exported": 1056797.48917483,
         "energy_imported": 4692987.91889705,
         "instant_average_voltage": 120.650001525879,
-        "unit_of_measurement": "kWh",
+        "unit_of_measurement": "kW",
         "friendly_name": "Powerwall Load Now",
         "device_class": "power",
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(item in state.attributes.items() for item in expected_attributes.items())
+    for key, value in expected_attributes.items():
+        assert state.attributes[key] == value
 
     state = hass.states.get("sensor.powerwall_battery_now")
     assert state.state == "-8.55"
@@ -69,13 +71,14 @@ async def test_sensors(hass):
         "energy_exported": 3620010,
         "energy_imported": 4216170,
         "instant_average_voltage": 240.56,
-        "unit_of_measurement": "kWh",
+        "unit_of_measurement": "kW",
         "friendly_name": "Powerwall Battery Now",
         "device_class": "power",
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(item in state.attributes.items() for item in expected_attributes.items())
+    for key, value in expected_attributes.items():
+        assert state.attributes[key] == value
 
     state = hass.states.get("sensor.powerwall_solar_now")
     assert state.state == "10.49"
@@ -84,13 +87,14 @@ async def test_sensors(hass):
         "energy_exported": 9864205.82222448,
         "energy_imported": 28177.5358355867,
         "instant_average_voltage": 120.685001373291,
-        "unit_of_measurement": "kWh",
+        "unit_of_measurement": "kW",
         "friendly_name": "Powerwall Solar Now",
         "device_class": "power",
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(item in state.attributes.items() for item in expected_attributes.items())
+    for key, value in expected_attributes.items():
+        assert state.attributes[key] == value
 
     state = hass.states.get("sensor.powerwall_charge")
     assert state.state == "47.32"
@@ -101,4 +105,5 @@ async def test_sensors(hass):
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(item in state.attributes.items() for item in expected_attributes.items())
+    for key, value in expected_attributes.items():
+        assert state.attributes[key] == value
