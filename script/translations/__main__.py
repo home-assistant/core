@@ -3,13 +3,13 @@ import argparse
 from pathlib import Path
 import sys
 
-from . import download, error
+from . import download, error, upload
 
 
 def get_arguments() -> argparse.Namespace:
     """Get parsed passed in arguments."""
     parser = argparse.ArgumentParser(description="Home Assistant Scaffolder")
-    parser.add_argument("action", type=str, choices=["download"])
+    parser.add_argument("action", type=str, choices=["download", "upload"])
     parser.add_argument("--debug", action="store_true", help="Enable log output")
 
     arguments = parser.parse_args()
@@ -27,6 +27,8 @@ def main():
 
     if args.action == "download":
         download.run(args)
+    elif args.action == "upload":
+        upload.run(args)
 
     return 0
 

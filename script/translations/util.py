@@ -1,6 +1,7 @@
 """Translation utils."""
 import os
 import pathlib
+import subprocess
 
 from .error import ExitApp
 
@@ -20,3 +21,14 @@ def get_lokalise_token():
         )
 
     return token_file.read_text().strip()
+
+
+def get_current_branch():
+    """Get current branch."""
+    return (
+        subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"], stdout=subprocess.PIPE
+        )
+        .stdout.decode()
+        .strip()
+    )
