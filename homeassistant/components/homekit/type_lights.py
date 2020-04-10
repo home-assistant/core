@@ -115,7 +115,7 @@ class Light(HomeAccessory):
 
         if CHAR_BRIGHTNESS in char_values:
             if char_values[CHAR_BRIGHTNESS] == 0:
-                events[-1] = f"Set state to 0"
+                events[-1] = "Set state to 0"
                 service = SERVICE_TURN_OFF
             else:
                 params[ATTR_BRIGHTNESS_PCT] = char_values[CHAR_BRIGHTNESS]
