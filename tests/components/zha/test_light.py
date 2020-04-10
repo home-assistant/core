@@ -539,3 +539,21 @@ async def async_test_zha_group_light_entity(
     await zha_group.async_add_members([device_light_3.ieee])
     await dev3_cluster_on_off.on()
     assert hass.states.get(entity_id).state == STATE_ON
+
+    # make the group have only 1 member and now there should be no entity
+    await zha_group.async_remove_members([device_light_2.ieee, device_light_3.ieee])
+    assert len(zha_group.members) == 1
+    assert hass.states.get(entity_id).state is None
+    # make sure the entity registry entry is still there
+    assert zha_gateway.ha_entity_registry.async_get(entity_id) is not None
+
+    # add a member back and ensure that the group entity was created again
+    await zha_group.async_add_members([device_light_3.ieee])
+    await dev3_cluster_on_off.on()
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    # remove the group and ensure that there is no entity and that the entity registry is cleaned up
+    assert zha_gateway.ha_entity_registry.async_get(entity_id) is not None
+    await zha_gateway.async_remove_zigpy_group(zha_group.group_id)
+    assert hass.states.get(entity_id).state is None
+    assert zha_gateway.ha_entity_registry.async_get(entity_id) is None

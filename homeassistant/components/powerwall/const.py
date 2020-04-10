@@ -2,12 +2,10 @@
 
 DOMAIN = "powerwall"
 
-POWERWALL_SITE_NAME = "site_name"
-
 POWERWALL_OBJECT = "powerwall"
 POWERWALL_COORDINATOR = "coordinator"
 
-UPDATE_INTERVAL = 60
+UPDATE_INTERVAL = 30
 
 ATTR_REGION = "region"
 ATTR_GRID_CODE = "grid_code"
@@ -46,3 +44,5 @@ POWERWALL_RUNNING_KEY = "running"
 
 MODEL = "PowerWall 2"
 MANUFACTURER = "Tesla"
+
+ENERGY_KILO_WATT = "kW"

@@ -32,6 +32,7 @@ from .core.const import (
     SIGNAL_ADD_ENTITIES,
     RadioType,
 )
+from .core.discovery import GROUP_PROBE
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(ha_const.CONF_TYPE): cv.string})
 
@@ -138,6 +139,7 @@ async def async_unload_entry(hass, config_entry):
     """Unload ZHA config entry."""
     await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].shutdown()
 
+    GROUP_PROBE.cleanup()
     api.async_unload_api(hass)
 
     dispatchers = hass.data[DATA_ZHA].get(DATA_ZHA_DISPATCHERS, [])
