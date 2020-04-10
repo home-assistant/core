@@ -16,10 +16,8 @@ FILENAME_FORMAT = re.compile(r"strings\.(?P<suffix>\w+)\.json")
 LOCAL_DIR = pathlib.Path("build/translations-download").absolute()
 
 
-def run_download_docker(args):
+def run_download_docker():
     """Run the Docker image to download the translations."""
-    pipe_null = {} if args.debug else {"stdout": subprocess.DEVNULL}
-
     print("Running Docker to download latest translations.")
     run = subprocess.run(
         [
@@ -31,10 +29,10 @@ def run_download_docker(args):
             f"lokalise/lokalise-cli@sha256:{DOCKER_IMAGE}",
             # Lokalise command
             "lokalise",
-            "export",
-            PROJECT_ID,
             "--token",
             get_lokalise_token(),
+            "export",
+            PROJECT_ID,
             "--export_empty",
             "skip",
             "--type",
@@ -42,7 +40,6 @@ def run_download_docker(args):
             "--unzip_to",
             "/opt/dest",
         ],
-        **pipe_null,
     )
     print()
 
@@ -140,7 +137,7 @@ def run(args):
     """Run the script."""
     LOCAL_DIR.mkdir(parents=True, exist_ok=True)
 
-    run_download_docker(args)
+    run_download_docker()
 
     paths = glob.iglob("build/translations-download/*.json")
     for path in paths:
