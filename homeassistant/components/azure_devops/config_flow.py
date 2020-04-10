@@ -50,11 +50,15 @@ class AzureDevOpsFlowHandler(ConfigFlow):
 
         errors = {}
 
-        connection = Connection(
-            base_url=f"https://dev.azure.com/{user_input.get(CONF_ORG)}"
-        )
-        if user_input.get(CONF_PAT) is not None:
-            connection.creds = BasicAuthentication("", user_input.get(CONF_PAT))
+        if user_input.get(CONF_PAT) is None:
+            connection = Connection(
+                base_url=f"https://dev.azure.com/{user_input.get(CONF_ORG)}"
+            )
+        else:
+            connection = Connection(
+                base_url=f"https://dev.azure.com/{user_input.get(CONF_ORG)}",
+                creds=BasicAuthentication("", user_input.get(CONF_PAT)),
+            )
 
         try:
             core_client = connection.clients.get_core_client()

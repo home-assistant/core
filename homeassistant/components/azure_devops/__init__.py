@@ -13,7 +13,6 @@ from homeassistant.components.azure_devops.const import (
     CONF_PROJECT,
     DATA_AZURE_DEVOPS_CONNECTION,
     DATA_ORG,
-    DATA_PAT,
     DATA_PROJECT,
     DOMAIN,
 )
@@ -32,9 +31,15 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up Azure DevOps from a config entry."""
-    connection = Connection(base_url=f"https://dev.azure.com/{entry.data[CONF_ORG]}")
-    if entry.data[CONF_PAT] is not None:
-        connection.creds = BasicAuthentication("", entry.data[CONF_PAT])
+    if entry.data[CONF_PAT] is None:
+        connection = Connection(
+            base_url=f"https://dev.azure.com/{entry.data[CONF_ORG]}"
+        )
+    else:
+        connection = Connection(
+            base_url=f"https://dev.azure.com/{entry.data[CONF_ORG]}",
+            creds=BasicAuthentication("", entry.data[CONF_PAT]),
+        )
 
     try:
         core_client = connection.clients.get_core_client()
@@ -50,7 +55,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     hass.data.setdefault(instance_key, {})[DATA_AZURE_DEVOPS_CONNECTION] = connection
     hass.data.setdefault(instance_key, {})[DATA_ORG] = entry.data[CONF_ORG]
     hass.data.setdefault(instance_key, {})[DATA_PROJECT] = entry.data[CONF_PROJECT]
-    hass.data.setdefault(instance_key, {})[DATA_PAT] = entry.data[CONF_PAT]
 
     # Setup components
     hass.async_create_task(
