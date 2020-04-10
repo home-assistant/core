@@ -1,9 +1,20 @@
 """Translation utils."""
+import argparse
 import os
 import pathlib
 import subprocess
 
 from .error import ExitApp
+
+
+def get_base_arg_parser():
+    """Get a base argument parser."""
+    parser = argparse.ArgumentParser(description="Home Assistant Translations")
+    parser.add_argument(
+        "action", type=str, choices=["download", "clean", "upload", "develop"]
+    )
+    parser.add_argument("--debug", action="store_true", help="Enable log output")
+    return parser
 
 
 def get_lokalise_token():
