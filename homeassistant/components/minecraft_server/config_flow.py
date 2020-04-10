@@ -41,9 +41,6 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 except ValueError:
                     pass  # 'port' is already set to default value.
 
-            # Remove '[' and ']' in case of an IPv6 address.
-            host = host.strip("[]")
-
             # Validate port configuration (limit to user and dynamic port range).
             if (port < 1024) or (port > 65535):
                 errors["base"] = "invalid_port"
