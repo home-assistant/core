@@ -40,6 +40,7 @@ ATTR_MONTHLY_ENERGY_KWH = "monthly_energy_kwh"
 
 LIGHT_STATE_DFT_ON = "dft_on_state"
 LIGHT_STATE_ON_OFF = "on_off"
+LIGHT_STATE_RELAY_STATE = "relay_state"
 LIGHT_STATE_BRIGHTNESS = "brightness"
 LIGHT_STATE_COLOR_TEMP = "color_temp"
 LIGHT_STATE_HUE = "hue"
@@ -116,6 +117,7 @@ class LightFeatures(NamedTuple):
     supported_features: int
     min_mireds: float
     max_mireds: float
+    has_emeter: bool
 
 
 class TPLinkSmartBulb(Light):
@@ -273,8 +275,9 @@ class TPLinkSmartBulb(Light):
         model = sysinfo[LIGHT_SYSINFO_MODEL]
         min_mireds = None
         max_mireds = None
+        has_emeter = self.smartbulb.has_emeter
 
-        if sysinfo.get(LIGHT_SYSINFO_IS_DIMMABLE):
+        if sysinfo.get(LIGHT_SYSINFO_IS_DIMMABLE) or LIGHT_STATE_BRIGHTNESS in sysinfo:
             supported_features += SUPPORT_BRIGHTNESS
         if sysinfo.get(LIGHT_SYSINFO_IS_VARIABLE_COLOR_TEMP):
             supported_features += SUPPORT_COLOR_TEMP
@@ -294,6 +297,7 @@ class TPLinkSmartBulb(Light):
             supported_features=supported_features,
             min_mireds=min_mireds,
             max_mireds=max_mireds,
+            has_emeter=has_emeter,
         )
 
     def _get_light_state_retry(self) -> LightState:
@@ -348,7 +352,7 @@ class TPLinkSmartBulb(Light):
         return self._light_state_from_params(self._get_device_state())
 
     def _update_emeter(self):
-        if not self.smartbulb.has_emeter:
+        if not self._light_features.has_emeter:
             return
 
         now = dt_util.utcnow()
@@ -434,10 +438,11 @@ class TPLinkSmartBulb(Light):
         if isinstance(self.smartbulb, SmartBulb):
             return self.smartbulb.get_light_state()
 
+        sysinfo = self.smartbulb.sys_info
         # Its not really a bulb, its a dimmable SmartPlug (aka Wall Switch)
         return {
-            LIGHT_STATE_ON_OFF: self.smartbulb.state,
-            LIGHT_STATE_BRIGHTNESS: self.smartbulb.brightness,
+            LIGHT_STATE_ON_OFF: sysinfo[LIGHT_STATE_RELAY_STATE],
+            LIGHT_STATE_BRIGHTNESS: sysinfo.get(LIGHT_STATE_BRIGHTNESS, 0),
             LIGHT_STATE_COLOR_TEMP: 0,
             LIGHT_STATE_HUE: 0,
             LIGHT_STATE_SATURATION: 0,
@@ -456,9 +461,12 @@ class TPLinkSmartBulb(Light):
             if state[LIGHT_STATE_BRIGHTNESS]:
                 self.smartbulb.brightness = state[LIGHT_STATE_BRIGHTNESS]
             else:
-                self.smartbulb.state = 0
+                self.smartbulb.state = self.smartbulb.SWITCH_STATE_OFF
         elif LIGHT_STATE_ON_OFF in state:
-            self.smartbulb.state = state[LIGHT_STATE_ON_OFF]
+            if state[LIGHT_STATE_ON_OFF]:
+                self.smartbulb.state = self.smartbulb.SWITCH_STATE_ON
+            else:
+                self.smartbulb.state = self.smartbulb.SWITCH_STATE_OFF
 
         return self._get_device_state()
 
