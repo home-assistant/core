@@ -525,6 +525,8 @@ class ONVIFHassCamera(Camera):
                         error,
                     )
 
+                return None
+
             image = await self.hass.async_add_job(fetch)
 
         if image is None:
