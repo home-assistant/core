@@ -42,7 +42,6 @@ ATTR_END_DATE = "end_date"
 
 ATTR_LOWER_TEMP = "lower_temp"
 ATTR_UPPER_TEMP = "upper_temp"
-ATTR_AMBIENT_TEMP = "ambient_temp"
 ATTR_IS_ENABLED = "is_enabled"
 
 SUPPORT_FLAGS_HEATER = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
@@ -173,8 +172,6 @@ class EcoNetWaterHeater(WaterHeaterDevice):
             data[ATTR_LOWER_TEMP] = round(self.water_heater.lower_temp, 2)
         if self.water_heater.upper_temp is not None:
             data[ATTR_UPPER_TEMP] = round(self.water_heater.upper_temp, 2)
-        if self.water_heater.ambient_temp is not None:
-            data[ATTR_AMBIENT_TEMP] = round(self.water_heater.ambient_temp, 2)
         if self.water_heater.is_enabled is not None:
             data[ATTR_IS_ENABLED] = self.water_heater.is_enabled
 
