@@ -37,7 +37,7 @@ def _has_all_unique_blids(value):
     """
     bilds = [device[CONF_BLID] for device in value]
     schema = vol.Schema(vol.Unique())
-    schema(prefixes)
+    schema(bilds)
     return value
 
 
