@@ -8,6 +8,7 @@ from elkm1_lib.const import (
 from elkm1_lib.util import pretty_const, username
 
 from homeassistant.const import UNIT_VOLT
+
 from . import ElkAttachedEntity, create_elk_entities
 from .const import DOMAIN
 

@@ -1,8 +1,8 @@
 """SMA sensor tests."""
 import logging
 
-from homeassistant.const import UNIT_VOLT
 from homeassistant.components.sensor import DOMAIN
+from homeassistant.const import UNIT_VOLT
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
