@@ -516,13 +516,16 @@ class ONVIFHassCamera(Camera):
                 """Read image from a URL."""
                 try:
                     response = requests.get(self._snapshot, timeout=5, auth=auth)
-                    return response.content
+                    if response.status_code < 300:
+                        return response.content
                 except requests.exceptions.RequestException as error:
                     _LOGGER.error(
                         "Fetch snapshot image failed from %s, falling back to FFmpeg; %s",
                         self._name,
                         error,
                     )
+
+                return None
 
             image = await self.hass.async_add_job(fetch)
 

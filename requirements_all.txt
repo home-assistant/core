@@ -208,7 +208,7 @@ aiopvpc==1.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.switcher_kis
-aioswitcher==2019.4.26
+aioswitcher==1.1.0
 
 # homeassistant.components.unifi
 aiounifi==15
@@ -704,7 +704,7 @@ hole==0.5.1
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200407.1
+home-assistant-frontend==20200407.2
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1738,7 +1738,7 @@ pyversasense==0.0.6
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.44
+pyvizio==0.1.46
 
 # homeassistant.components.velux
 pyvlx==0.2.12
