@@ -1,36 +1,30 @@
 """Test the Panasonic Viera config flow."""
-from asynctest import patch
 from unittest.mock import Mock
-from tests.common import MockConfigEntry
-
-from panasonic_viera import (
-    RemoteControl,
-    SOAPError,
-    TV_TYPE_ENCRYPTED,
-    TV_TYPE_NONENCRYPTED,
-)
-
 from urllib.request import URLError
 
-from homeassistant import config_entries, setup
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PIN,
-    CONF_PORT,
+from asynctest import patch
+from panasonic_viera import (
+    TV_TYPE_ENCRYPTED,
+    TV_TYPE_NONENCRYPTED,
+    RemoteControl,
+    SOAPError,
 )
 
+from homeassistant import config_entries, setup
 from homeassistant.components.panasonic_viera.const import (
-    CONF_ON_ACTION,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
+    CONF_ON_ACTION,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DOMAIN,
-    ERROR_NOT_CONNECTED,
     ERROR_INVALID_PIN_CODE,
+    ERROR_NOT_CONNECTED,
     ERROR_UNKNOWN,
 )
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
+
+from tests.common import MockConfigEntry
 
 
 def get_mock_remote(host="1.2.3.4", encrypted=False, app_id=None, encryption_key=None):

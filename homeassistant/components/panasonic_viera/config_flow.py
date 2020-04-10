@@ -1,37 +1,29 @@
 """Config flow for Panasonic Viera TV integration."""
-import logging
-
-from panasonic_viera import (
-    RemoteControl,
-    SOAPError,
-    TV_TYPE_ENCRYPTED,
-    TV_TYPE_NONENCRYPTED,
-)
-
-import voluptuous as vol
-
 from functools import partial
-
+import logging
 from urllib.request import URLError
 
-from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PIN,
-    CONF_PORT,
+from panasonic_viera import (
+    TV_TYPE_ENCRYPTED,
+    TV_TYPE_NONENCRYPTED,
+    RemoteControl,
+    SOAPError,
 )
+import voluptuous as vol
+
+from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 from homeassistant.core import callback
 
 from .const import (
-    CONF_ON_ACTION,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
+    CONF_ON_ACTION,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DOMAIN,
-    ERROR_NOT_CONNECTED,
     ERROR_INVALID_PIN_CODE,
+    ERROR_NOT_CONNECTED,
     ERROR_UNKNOWN,
 )
 
