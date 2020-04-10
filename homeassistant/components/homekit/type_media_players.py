@@ -418,6 +418,9 @@ class TelevisionMediaPlayer(HomeAccessory):
 
         # Set active input
         if self.support_select_source:
+            self.sources = self.hass.states.get(self.entity_id).attributes.get(
+                ATTR_INPUT_SOURCE_LIST, []
+            )
             source_name = new_state.attributes.get(ATTR_INPUT_SOURCE)
             if self.sources and not self._flag[CHAR_ACTIVE_IDENTIFIER]:
                 _LOGGER.debug(
