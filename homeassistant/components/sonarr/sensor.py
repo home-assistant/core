@@ -111,7 +111,7 @@ class SonarrSensor(Entity):
         self.apikey = conf.get(CONF_API_KEY)
         self.included = conf.get(CONF_INCLUDED)
         self.days = int(conf.get(CONF_DAYS))
-        self.ssl = "https" if conf[CONF_SSL] else "http"
+        self.ssl = "https" if conf.get(CONF_SSL) else "http"
         self._state = None
         self.data = []
         self._tz = timezone(str(hass.config.time_zone))
