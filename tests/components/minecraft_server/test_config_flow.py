@@ -225,6 +225,6 @@ async def test_connection_succeeded_with_ip6(hass: HomeAssistantType) -> None:
             )
 
             assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-            assert result["title"] == USER_INPUT_IPV6[CONF_HOST]
+            assert result["title"] == "[::ffff:0101:0101]:25565"
             assert result["data"][CONF_NAME] == USER_INPUT_IPV6[CONF_NAME]
             assert result["data"][CONF_HOST] == "::ffff:0101:0101"
