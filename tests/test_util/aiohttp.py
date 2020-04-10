@@ -79,23 +79,23 @@ class AiohttpClientMocker:
 
     def put(self, *args, **kwargs):
         """Register a mock put request."""
-        self.request("put", *args, **kwargs)
+        return self.request("put", *args, **kwargs)
 
     def post(self, *args, **kwargs):
         """Register a mock post request."""
-        self.request("post", *args, **kwargs)
+        return self.request("post", *args, **kwargs)
 
     def delete(self, *args, **kwargs):
         """Register a mock delete request."""
-        self.request("delete", *args, **kwargs)
+        return self.request("delete", *args, **kwargs)
 
     def options(self, *args, **kwargs):
         """Register a mock options request."""
-        self.request("options", *args, **kwargs)
+        return self.request("options", *args, **kwargs)
 
     def patch(self, *args, **kwargs):
         """Register a mock patch request."""
-        self.request("patch", *args, **kwargs)
+        return self.request("patch", *args, **kwargs)
 
     @property
     def call_count(self):
