@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _has_all_unique_blids(value):
-    """Validate that each vacuum configured has a unique prefix.
+    """Validate that each vacuum configured has a unique bild.
 
     Uniqueness is determined case-independently.
     """
