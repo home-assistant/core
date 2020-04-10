@@ -1,52 +1,9 @@
 """Find translation keys that are in Lokalise but no longer defined in source."""
 import json
-import pathlib
-import sys
 
-import requests
-
-INTEGRATION_DIR = pathlib.Path("homeassistant/components")
-PROJECT_ID = "130246255a974bd3b5e8a1.51616605"
-
-
-class Lokalise:
-    """Lokalise API."""
-
-    def __init__(self, project_id, token):
-        """Initialize Lokalise API."""
-        self.project_id = project_id
-        self.token = token
-
-    def request(self, method, path, data):
-        """Make a request to the Lokalise API."""
-        method = method.upper()
-        kwargs = {"headers": {"x-api-token": self.token}}
-        if method == "GET":
-            kwargs["params"] = data
-        else:
-            kwargs["json"] = data
-
-        req = requests.request(
-            method,
-            f"https://api.lokalise.com/api2/projects/{self.project_id}/{path}",
-            **kwargs,
-        )
-        req.raise_for_status()
-        return req.json()
-
-    def keys_list(self, params={}):
-        """Fetch key ID from a name.
-
-        https://app.lokalise.com/api2docs/curl/#transition-list-all-keys-get
-        """
-        return self.request("GET", "keys", params)["keys"]
-
-    def keys_delete_multiple(self, key_ids):
-        """Delete multiple keys.
-
-        https://app.lokalise.com/api2docs/curl/#transition-delete-multiple-keys-delete
-        """
-        return self.request("DELETE", "keys", {"keys": key_ids})
+from .const import INTEGRATIONS_DIR, PROJECT_ID
+from .lokalise import Lokalise
+from .util import get_lokalise_token
 
 
 def find_extra(base, translations, path_prefix, missing_keys):
@@ -67,7 +24,7 @@ def find():
     """Find all missing keys."""
     missing_keys = []
 
-    for int_dir in INTEGRATION_DIR.iterdir():
+    for int_dir in INTEGRATIONS_DIR.iterdir():
         strings = int_dir / "strings.json"
 
         if not strings.is_file():
@@ -91,9 +48,9 @@ def run():
 
     if not missing_keys:
         print("No missing translations!")
-        return 0
+        return
 
-    lokalise = Lokalise(PROJECT_ID, pathlib.Path(".lokalise_token").read_text().strip())
+    lokalise = Lokalise(PROJECT_ID, get_lokalise_token())
 
     to_delete = []
 
@@ -107,10 +64,8 @@ def run():
             continue
         to_delete.append(key_data[0]["key_id"])
 
+    while input("Type YES to delete these keys: ") != "YES":
+        pass
+
     print("Deleting keys:", ", ".join(map(str, to_delete)))
     print(lokalise.keys_delete_multiple(to_delete))
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(run())
