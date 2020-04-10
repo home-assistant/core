@@ -55,7 +55,7 @@ DEVICE_SCHEMA = vol.Schema(
 
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [DEVICE_SCHEMA], _has_all_unique_prefixes)},
+    {DOMAIN: vol.All(cv.ensure_list, [DEVICE_SCHEMA], _has_all_unique_bilds)},
     extra=vol.ALLOW_EXTRA,
 )
 
