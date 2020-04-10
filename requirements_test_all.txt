@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.homekit
-HAP-python==2.8.1
+HAP-python==2.8.2
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
@@ -357,7 +357,7 @@ nessclient==0.9.15
 netdisco==2.6.0
 
 # homeassistant.components.nexia
-nexia==0.8.0
+nexia==0.8.2
 
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.0.10
@@ -519,7 +519,7 @@ pyicloud==0.9.6.1
 pyipma==2.0.5
 
 # homeassistant.components.ipp
-pyipp==0.9.1
+pyipp==0.9.2
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1

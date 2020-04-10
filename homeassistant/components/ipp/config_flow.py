@@ -116,7 +116,8 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("IPP Parse Error")
             return self.async_abort(reason="parse_error")
 
-        self.discovery_info[CONF_UUID] = info[CONF_UUID]
+        if info[CONF_UUID] is not None:
+            self.discovery_info[CONF_UUID] = info[CONF_UUID]
 
         await self.async_set_unique_id(self.discovery_info[CONF_UUID])
         self._abort_if_unique_id_configured(
