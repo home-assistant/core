@@ -198,7 +198,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 config.get(CONF_NAME),
                 config.get(CONF_HOST),
                 config.get(CONF_PORT),
-                config.get(CONF_SSL),
+                config[CONF_SSL],
                 add_entities,
             )
         ]
