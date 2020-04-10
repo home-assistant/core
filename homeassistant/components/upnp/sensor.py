@@ -2,9 +2,9 @@
 from datetime import timedelta
 from typing import Mapping
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -19,8 +19,8 @@ from .const import (
     LOGGER as _LOGGER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
-    SIGNAL_REMOVE_DEVICE,
     TIMESTAMP,
+    UPDATE_INTERVAL,
 )
 from .device import Device
 
@@ -63,8 +63,6 @@ SENSOR_TYPES = {
     },
 }
 
-UPDATE_INTERVAL = timedelta(seconds=30)
-
 
 async def async_setup_platform(
     hass: HomeAssistantType, config, async_add_entities, discovery_info=None
@@ -75,8 +73,8 @@ async def async_setup_platform(
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
-    """Set up the UPnP/IGD sensor."""
+async def async_setup_entry(hass, config_entry: ConfigEntry, async_add_entities) -> None:
+    """Set up the UPnP/IGD sensors."""
     data = config_entry.data
     if "udn" in data:
         udn = data["udn"]
@@ -174,26 +172,8 @@ class UpnpSensor(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to sensors events."""
-        self._coordinator.async_add_listener(self.async_write_ha_state)
-
-        self.async_on_remove(
-            self._coordinator.async_remove_listener(self.async_write_ha_state)
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_REMOVE_DEVICE, self._async_upnp_remove_sensor
-            )
-        )
-
-    async def _async_upnp_remove_sensor(self, device) -> None:
-        """Remove sensor."""
-        if self._device != device:
-            # not for us
-            return
-
-        _LOGGER.debug("Removing sensor: %s", self.unique_id)
-        await self.async_remove()
+        remove_from_coordinator = self._coordinator.async_add_listener(self.async_write_ha_state)
+        self.async_on_remove(remove_from_coordinator)
 
 
 class RawUpnpSensor(UpnpSensor):

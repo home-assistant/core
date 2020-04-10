@@ -12,7 +12,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
-    dispatcher,
 )
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import get_local_ip
@@ -25,7 +24,6 @@ from .const import (
     CONF_PORTS,
     DOMAIN,
     LOGGER as _LOGGER,
-    SIGNAL_REMOVE_DEVICE,
 )
 from .device import Device
 
@@ -192,7 +190,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     if conf.get(CONF_ENABLE_PORT_MAPPING):
         _LOGGER.debug("Enabling port mapping")
         local_ip = domain_data[CONF_LOCAL_IP]
-        ports = conf.get(CONF_PORTS)
+        ports = conf.get(CONF_PORTS, {})
 
         hass_port = None
         if hasattr(hass, "http"):
@@ -225,6 +223,8 @@ async def async_unload_entry(
 
     # remove sensors
     _LOGGER.debug("Deleting sensors")
-    dispatcher.async_dispatcher_send(hass, SIGNAL_REMOVE_DEVICE, device)
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
+    )
 
     return True
