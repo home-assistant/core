@@ -36,7 +36,7 @@ ENTITY_SUFFIX = "entity_suffix"
 RESTART_GRACE_PERIOD = 7200  # 2 hours
 
 
-class BaseZhaEntity(RestoreEntity, LogMixin, entity.Entity):
+class BaseZhaEntity(LogMixin, entity.Entity):
     """A base class for ZHA entities."""
 
     def __init__(self, unique_id: str, zha_device: ZhaDeviceType, **kwargs):
@@ -117,28 +117,11 @@ class BaseZhaEntity(RestoreEntity, LogMixin, entity.Entity):
     def async_set_state(self, attr_id: int, attr_name: str, value: Any) -> None:
         """Set the entity state."""
 
-    async def async_added_to_hass(self) -> None:
-        """Run when about to be added to hass."""
-        await super().async_added_to_hass()
-        self.remove_future = asyncio.Future()
-        await self.async_accept_signal(
-            None,
-            f"{SIGNAL_REMOVE}_{self.zha_device.ieee}",
-            self.async_remove,
-            signal_override=True,
-        )
-
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
         for unsub in self._unsubs[:]:
             unsub()
             self._unsubs.remove(unsub)
-        self.zha_device.gateway.remove_entity_reference(self)
-        self.remove_future.set_result(True)
-
-    @callback
-    def async_restore_last_state(self, last_state) -> None:
-        """Restore previous state."""
 
     async def async_accept_signal(
         self, channel: ChannelType, signal: str, func: CALLABLE_T, signal_override=False
@@ -160,7 +143,7 @@ class BaseZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         _LOGGER.log(level, msg, *args)
 
 
-class ZhaEntity(BaseZhaEntity):
+class ZhaEntity(BaseZhaEntity, RestoreEntity):
     """A base class for non group ZHA entities."""
 
     def __init__(
@@ -183,6 +166,13 @@ class ZhaEntity(BaseZhaEntity):
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
+        self.remove_future = asyncio.Future()
+        await self.async_accept_signal(
+            None,
+            f"{SIGNAL_REMOVE}_{self.zha_device.ieee}",
+            self.async_remove,
+            signal_override=True,
+        )
         await self.async_check_recently_seen()
         await self.async_accept_signal(
             None,
@@ -198,6 +188,16 @@ class ZhaEntity(BaseZhaEntity):
             self.device_info,
             self.remove_future,
         )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect entity object when removed."""
+        await super().async_will_remove_from_hass()
+        self.zha_device.gateway.remove_entity_reference(self)
+        self.remove_future.set_result(True)
+
+    @callback
+    def async_restore_last_state(self, last_state) -> None:
+        """Restore previous state."""
 
     async def async_check_recently_seen(self) -> None:
         """Check if the device was seen within the last 2 hours."""
