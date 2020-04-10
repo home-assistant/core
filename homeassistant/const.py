@@ -346,8 +346,8 @@ ATTR_TEMPERATURE = "temperature"
 POWER_WATT = "W"
 
 # Energy units
-ENERGY_KILO_WATT_HOUR = "kWh"
-ENERGY_WATT_HOUR = "Wh"
+ENERGY_WATT_HOUR = f"{POWER_WATT}h"
+ENERGY_KILO_WATT_HOUR = f"k{ENERGY_WATT_HOUR}"
 
 # Temperature units
 TEMP_CELSIUS = "°C"

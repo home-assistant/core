@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
+    POWER_WATT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
@@ -76,17 +77,17 @@ async def async_test_electrical_measurement(hass, cluster, entity_id):
     ) as divisor_mock:
         divisor_mock.return_value = 1
         await send_attributes_report(hass, cluster, {0: 1, 1291: 100, 10: 1000})
-        assert_state(hass, entity_id, "100", "W")
+        assert_state(hass, entity_id, "100", POWER_WATT)
 
         await send_attributes_report(hass, cluster, {0: 1, 1291: 99, 10: 1000})
-        assert_state(hass, entity_id, "99", "W")
+        assert_state(hass, entity_id, "99", POWER_WATT)
 
         divisor_mock.return_value = 10
         await send_attributes_report(hass, cluster, {0: 1, 1291: 1000, 10: 5000})
-        assert_state(hass, entity_id, "100", "W")
+        assert_state(hass, entity_id, "100", POWER_WATT)
 
         await send_attributes_report(hass, cluster, {0: 1, 1291: 99, 10: 5000})
-        assert_state(hass, entity_id, "9.9", "W")
+        assert_state(hass, entity_id, "9.9", POWER_WATT)
 
 
 @pytest.mark.parametrize(
