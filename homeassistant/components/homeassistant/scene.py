@@ -73,7 +73,7 @@ def _ensure_no_intersection(value):
 
 CONF_SCENE_ID = "scene_id"
 CONF_SNAPSHOT = "snapshot_entities"
-DATA_PLATFORM = f"homeassistant_scene"
+DATA_PLATFORM = "homeassistant_scene"
 STATES_SCHEMA = vol.All(dict, _convert_states)
 
 
