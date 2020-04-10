@@ -1,6 +1,7 @@
 """This platform provides support for sensor data from RainMachine."""
 import logging
 
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -57,7 +58,7 @@ SENSORS = {
     TYPE_FREEZE_TEMP: (
         "Freeze Protect Temperature",
         "mdi:thermometer",
-        "°C",
+        TEMP_CELSIUS,
         "temperature",
         True,
         DATA_RESTRICTIONS_UNIVERSAL,
@@ -84,7 +85,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 sensor_type,
                 (name, icon, unit, device_class, enabled_by_default, api_category),
             ) in SENSORS.items()
-        ],
+        ]
     )
 
 
