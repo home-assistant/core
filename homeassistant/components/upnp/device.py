@@ -183,7 +183,6 @@ class Device:
             self._igd_device.async_get_total_bytes_sent(),
             self._igd_device.async_get_total_packets_received(),
             self._igd_device.async_get_total_packets_sent(),
-            return_exceptions=True,
         )
 
         return {

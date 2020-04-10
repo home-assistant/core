@@ -27,37 +27,37 @@ from .device import Device
 SENSOR_TYPES = {
     BYTES_RECEIVED: {
         "device_value_key": BYTES_RECEIVED,
-        "name": DATA_BYTES + " received",
+        "name": f"{DATA_BYTES} received",
         "unit": DATA_BYTES,
         "unique_id": BYTES_RECEIVED,
-        "derived_name": DATA_RATE_KIBIBYTES_PER_SECOND + " received",
+        "derived_name": f"{DATA_RATE_KIBIBYTES_PER_SECOND} received",
         "derived_unit": DATA_RATE_KIBIBYTES_PER_SECOND,
         "derived_unique_id": "KiB/sec_received",
     },
     BYTES_SENT: {
         "device_value_key": BYTES_SENT,
-        "name": DATA_BYTES + " sent",
+        "name": f"{DATA_BYTES} sent",
         "unit": DATA_BYTES,
         "unique_id": BYTES_SENT,
-        "derived_name": DATA_RATE_KIBIBYTES_PER_SECOND + " sent",
+        "derived_name": f"{DATA_RATE_KIBIBYTES_PER_SECOND} sent",
         "derived_unit": DATA_RATE_KIBIBYTES_PER_SECOND,
         "derived_unique_id": "KiB/sec_sent",
     },
     PACKETS_RECEIVED: {
         "device_value_key": PACKETS_RECEIVED,
-        "name": DATA_PACKETS + " received",
+        "name": f"{DATA_PACKETS} received",
         "unit": DATA_PACKETS,
         "unique_id": PACKETS_RECEIVED,
-        "derived_name": DATA_RATE_PACKETS_PER_SECOND + " received",
+        "derived_name": f"{DATA_RATE_PACKETS_PER_SECOND} received",
         "derived_unit": DATA_RATE_PACKETS_PER_SECOND,
         "derived_unique_id": "packets/sec_received",
     },
     PACKETS_SENT: {
         "device_value_key": PACKETS_SENT,
-        "name": DATA_PACKETS + " sent",
+        "name": f"{DATA_PACKETS} sent",
         "unit": DATA_PACKETS,
         "unique_id": PACKETS_SENT,
-        "derived_name": DATA_RATE_PACKETS_PER_SECOND + " sent",
+        "derived_name": f"{DATA_RATE_PACKETS_PER_SECOND} sent",
         "derived_unit": DATA_RATE_PACKETS_PER_SECOND,
         "derived_unique_id": "packets/sec_sent",
     },
@@ -140,7 +140,6 @@ class UpnpSensor(Entity):
         return (
             self._coordinator.last_update_success
             and device_value_key in self._coordinator.data
-            and not isinstance(self._coordinator.data[device_value_key], Exception)
         )
 
     @property
