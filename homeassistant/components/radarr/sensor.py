@@ -53,11 +53,11 @@ SENSOR_TYPES = {
 }
 
 ENDPOINTS = {
-    "diskspace": "http{0}://{1}:{2}/{3}api/diskspace",
-    "upcoming": "http{0}://{1}:{2}/{3}api/calendar?start={4}&end={5}",
-    "movies": "http{0}://{1}:{2}/{3}api/movie",
-    "commands": "http{0}://{1}:{2}/{3}api/command",
-    "status": "http{0}://{1}:{2}/{3}api/system/status",
+    "diskspace": "{0}://{1}:{2}/{3}api/diskspace",
+    "upcoming": "{0}://{1}:{2}/{3}api/calendar?start={4}&end={5}",
+    "movies": "{0}://{1}:{2}/{3}api/movie",
+    "commands": "{0}://{1}:{2}/{3}api/command",
+    "status": "{0}://{1}:{2}/{3}api/system/status",
 }
 
 # Support to Yottabytes for the future, why not
@@ -110,7 +110,7 @@ class RadarrSensor(Entity):
         self.apikey = conf.get(CONF_API_KEY)
         self.included = conf.get(CONF_INCLUDED)
         self.days = int(conf.get(CONF_DAYS))
-        self.ssl = "s" if conf.get(CONF_SSL) else ""
+        self.ssl = "https" if conf.get(CONF_SSL) else "http"
         self._state = None
         self.data = []
         self._tz = timezone(str(hass.config.time_zone))
