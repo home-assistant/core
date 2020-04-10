@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_TOKEN,
+    ENERGY_KILO_WATT_HOUR,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -25,7 +26,7 @@ MSG_LOCATION = (
     "For the coordinates, "
     "you need to use both latitude and longitude."
 )
-CO2_INTENSITY_UNIT = "CO2eq/kWh"
+CO2_INTENSITY_UNIT = f"CO2eq/{ENERGY_KILO_WATT_HOUR}"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_TOKEN): cv.string,
