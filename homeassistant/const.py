@@ -349,9 +349,12 @@ POWER_WATT = "W"
 ENERGY_KILO_WATT_HOUR = "kWh"
 ENERGY_WATT_HOUR = "Wh"
 
+# Degree units
+UNIT_DEGREE = "°"
+
 # Temperature units
-TEMP_CELSIUS = "°C"
-TEMP_FAHRENHEIT = "°F"
+TEMP_CELSIUS = f"{UNIT_DEGREE}C"
+TEMP_FAHRENHEIT = f"{UNIT_DEGREE}F"
 
 # Time units
 TIME_MICROSECONDS = "μs"
@@ -407,6 +410,7 @@ UNIT_UV_INDEX: str = "UV index"
 
 # Percentage units
 UNIT_PERCENTAGE = "%"
+
 # Irradiation units
 IRRADIATION_WATTS_PER_SQUARE_METER = f"{POWER_WATT}/{AREA_SQUARE_METERS}"
 
