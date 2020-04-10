@@ -37,7 +37,7 @@ class AzureDevOpsFlowHandler(ConfigFlow):
                 {
                     vol.Required(CONF_ORG): str,
                     vol.Required(CONF_PROJECT): str,
-                    vol.Required(CONF_PAT): str,
+                    vol.Optional(CONF_PAT): str,
                 }
             ),
             errors=errors or {},
@@ -51,9 +51,11 @@ class AzureDevOpsFlowHandler(ConfigFlow):
         errors = {}
 
         connection = Connection(
-            base_url=f"https://dev.azure.com/{user_input.get(CONF_ORG)}",
-            creds=BasicAuthentication("", user_input.get(CONF_PAT)),
+            base_url=f"https://dev.azure.com/{user_input.get(CONF_ORG)}"
         )
+        if user_input.get(CONF_PAT) is not None:
+            connection.creds = BasicAuthentication("", user_input.get(CONF_PAT))
+
         try:
             core_client = connection.clients.get_core_client()
             project = core_client.get_project(user_input.get(CONF_PROJECT))

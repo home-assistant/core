@@ -12,8 +12,8 @@
           "project": "Project",
           "personal_access_token": "Personal Access Token (PAT)"
         },
-        "description": "Set up an Azure DevOps instance to access your project.",
-        "title": "Setup Azure DevOps"
+        "description": "Set up an Azure DevOps instance to access your project. A Personal Access Token is only required for a private project",
+        "title": "Add Azure DevOps Project"
       }
     },
     "title": "Azure DevOps"

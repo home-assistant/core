@@ -32,10 +32,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up Azure DevOps from a config entry."""
-    connection = Connection(
-        base_url=f"https://dev.azure.com/{entry.data[CONF_ORG]}",
-        creds=BasicAuthentication("", entry.data[CONF_PAT]),
-    )
+    connection = Connection(base_url=f"https://dev.azure.com/{entry.data[CONF_ORG]}")
+    if entry.data[CONF_PAT] is not None:
+        connection.creds = BasicAuthentication("", entry.data[CONF_PAT])
 
     try:
         core_client = connection.clients.get_core_client()
