@@ -647,3 +647,27 @@ async def test_options_without_obtained_mac(hass, remote):
     )
     assert result["type"] == "create_entry"
     assert config_entry.options[CONF_MAC] == "22:22:22"
+
+
+async def test_options_with_empty_mac(hass, remote):
+    """Test the options flow with an empty string for mac."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "hostname"},)
+
+    config_entry.add_to_hass(hass)
+
+    # simulate an error in getting the mac address
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.get_mac_address",
+        return_value="11:11:11",
+    ):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_MAC: " "},
+    )
+
+    assert result["type"] == "create_entry"
+    assert config_entry.options.get(CONF_MAC) is None

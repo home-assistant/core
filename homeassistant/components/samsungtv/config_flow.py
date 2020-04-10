@@ -195,6 +195,8 @@ class SamsungTVOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
+            if user_input[CONF_MAC].strip() == "":
+                user_input.pop(CONF_MAC, None)
             return self.async_create_entry(title="", data=user_input)
 
         if CONF_MAC in self.config_entry.options:
@@ -206,7 +208,7 @@ class SamsungTVOptionsFlowHandler(config_entries.OptionsFlow):
                     partial(get_mac_address, **{"hostname": hostname})
                 )
             except socket.gaierror:
-                current_mac = None
+                current_mac = ""
 
         schema = {vol.Optional(CONF_MAC, default=current_mac): str}
         return self.async_show_form(step_id="init", data_schema=vol.Schema(schema))
