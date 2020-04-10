@@ -228,7 +228,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state == 71.3
-        assert sensor.unit_of_measurement == "°F"
+        assert sensor.unit_of_measurement == TEMP_FAHRENHEIT
         assert sensor.name == "Device_name Temperature"
         assert sensor.entity_id == "sensor.dyson_1"
 
