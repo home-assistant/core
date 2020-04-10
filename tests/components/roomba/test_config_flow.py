@@ -10,7 +10,7 @@ from homeassistant.components.roomba.const import (
     CONF_DELAY,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
 from tests.common import MockConfigEntry
 
