@@ -19,6 +19,7 @@ from homeassistant.const import (
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
     TIME_HOURS,
     UNIT_DEGREE,
     UNIT_PERCENTAGE,
@@ -137,7 +138,7 @@ SENSOR_TYPES = {
     "temperature": [
         "Temperature",
         TEMP_CELSIUS,
-        "°F",
+        TEMP_FAHRENHEIT,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
@@ -147,7 +148,7 @@ SENSOR_TYPES = {
     "apparent_temperature": [
         "Apparent Temperature",
         TEMP_CELSIUS,
-        "°F",
+        TEMP_FAHRENHEIT,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
@@ -157,7 +158,7 @@ SENSOR_TYPES = {
     "dew_point": [
         "Dew Point",
         TEMP_CELSIUS,
-        "°F",
+        TEMP_FAHRENHEIT,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
@@ -247,7 +248,7 @@ SENSOR_TYPES = {
     "apparent_temperature_max": [
         "Daily High Apparent Temperature",
         TEMP_CELSIUS,
-        "°F",
+        TEMP_FAHRENHEIT,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
@@ -257,7 +258,7 @@ SENSOR_TYPES = {
     "apparent_temperature_high": [
         "Daytime High Apparent Temperature",
         TEMP_CELSIUS,
-        "°F",
+        TEMP_FAHRENHEIT,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
@@ -267,7 +268,7 @@ SENSOR_TYPES = {
     "apparent_temperature_min": [
         "Daily Low Apparent Temperature",
         TEMP_CELSIUS,
-        "°F",
+        TEMP_FAHRENHEIT,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
@@ -277,7 +278,7 @@ SENSOR_TYPES = {
     "apparent_temperature_low": [
         "Overnight Low Apparent Temperature",
         TEMP_CELSIUS,
-        "°F",
+        TEMP_FAHRENHEIT,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
@@ -287,7 +288,7 @@ SENSOR_TYPES = {
     "temperature_max": [
         "Daily High Temperature",
         TEMP_CELSIUS,
-        "°F",
+        TEMP_FAHRENHEIT,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
@@ -297,7 +298,7 @@ SENSOR_TYPES = {
     "temperature_high": [
         "Daytime High Temperature",
         TEMP_CELSIUS,
-        "°F",
+        TEMP_FAHRENHEIT,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
@@ -307,7 +308,7 @@ SENSOR_TYPES = {
     "temperature_min": [
         "Daily Low Temperature",
         TEMP_CELSIUS,
-        "°F",
+        TEMP_FAHRENHEIT,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
@@ -317,7 +318,7 @@ SENSOR_TYPES = {
     "temperature_low": [
         "Overnight Low Temperature",
         TEMP_CELSIUS,
-        "°F",
+        TEMP_FAHRENHEIT,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
         TEMP_CELSIUS,
