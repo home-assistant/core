@@ -2,6 +2,7 @@
 from homeassistant.components import mysensors
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
+    ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     MASS_KILOGRAMS,
     POWER_WATT,
@@ -36,7 +37,7 @@ SENSORS = {
         "S_LIGHT_LEVEL": ["lx", "mdi:white-balance-sunny"],
     },
     "V_VOLTAGE": ["V", "mdi:flash"],
-    "V_CURRENT": ["A", "mdi:flash-auto"],
+    "V_CURRENT": [ELECTRICAL_CURRENT_AMPERE, "mdi:flash-auto"],
     "V_PH": ["pH", None],
     "V_ORP": ["mV", None],
     "V_EC": ["μS/cm", None],

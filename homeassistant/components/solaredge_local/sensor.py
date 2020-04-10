@@ -12,6 +12,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
+    ELECTRICAL_CURRENT_AMPERE,
     ENERGY_WATT_HOUR,
     POWER_WATT,
     TEMP_CELSIUS,
@@ -101,7 +102,7 @@ SENSOR_TYPES = {
     "optimizer_current": [
         "optimizercurrent",
         "Average Optimizer Current",
-        "A",
+        ELECTRICAL_CURRENT_AMPERE,
         "mdi:solar-panel",
         None,
     ],

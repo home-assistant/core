@@ -349,6 +349,9 @@ POWER_WATT = "W"
 ENERGY_KILO_WATT_HOUR = "kWh"
 ENERGY_WATT_HOUR = "Wh"
 
+# Electrical current units
+ELECTRICAL_CURRENT_AMPERE = "A"
+
 # Temperature units
 TEMP_CELSIUS = "°C"
 TEMP_FAHRENHEIT = "°F"

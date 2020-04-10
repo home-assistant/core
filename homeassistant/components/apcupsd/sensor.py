@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_RESOURCES,
+    ELECTRICAL_CURRENT_AMPERE,
     POWER_WATT,
     TEMP_CELSIUS,
     TIME_MINUTES,
@@ -67,7 +68,7 @@ SENSOR_TYPES = {
     "nompower": ["Nominal Output Power", POWER_WATT, "mdi:flash"],
     "nomapnt": ["Nominal Apparent Power", "VA", "mdi:flash"],
     "numxfers": ["Transfer Count", "", "mdi:counter"],
-    "outcurnt": ["Output Current", "A", "mdi:flash"],
+    "outcurnt": ["Output Current", ELECTRICAL_CURRENT_AMPERE, "mdi:flash"],
     "outputv": ["Output Voltage", "V", "mdi:flash"],
     "reg1": ["Register 1 Fault", "", "mdi:information-outline"],
     "reg2": ["Register 2 Fault", "", "mdi:information-outline"],
@@ -96,8 +97,8 @@ INFERRED_UNITS = {
     " Seconds": TIME_SECONDS,
     " Percent": UNIT_PERCENTAGE,
     " Volts": "V",
-    " Ampere": "A",
-    " Volt-Ampere": "VA",
+    " Ampere": ELECTRICAL_CURRENT_AMPERE,
+    " Volt-Ampere": f"V{ELECTRICAL_CURRENT_AMPERE}",
     " Watts": POWER_WATT,
     " Hz": "Hz",
     " C": TEMP_CELSIUS,
