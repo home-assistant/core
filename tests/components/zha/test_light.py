@@ -552,6 +552,15 @@ async def async_test_zha_group_light_entity(
     await dev3_cluster_on_off.on()
     assert hass.states.get(entity_id).state == STATE_ON
 
+    # add a 3rd member and ensure we still have an entity and we track the new one
+    await dev1_cluster_on_off.off()
+    await dev3_cluster_on_off.off()
+    assert hass.states.get(entity_id).state == STATE_OFF
+    # this will test that _reprobe_group is used correctly
+    await zha_group.async_add_members([device_light_2.ieee])
+    await dev2_cluster_on_off.on()
+    assert hass.states.get(entity_id).state == STATE_ON
+
     # remove the group and ensure that there is no entity and that the entity registry is cleaned up
     assert zha_gateway.ha_entity_registry.async_get(entity_id) is not None
     await zha_gateway.async_remove_zigpy_group(zha_group.group_id)
