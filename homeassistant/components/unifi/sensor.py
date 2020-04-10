@@ -98,7 +98,7 @@ class UniFiRxBandwidthSensor(UniFiClient):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.is_wired:
+        if self._is_wired:
             return self.client.wired_rx_bytes / 1000000
         return self.client.raw.get("rx_bytes", 0) / 1000000
 
@@ -125,7 +125,7 @@ class UniFiTxBandwidthSensor(UniFiRxBandwidthSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.is_wired:
+        if self._is_wired:
             return self.client.wired_tx_bytes / 1000000
         return self.client.raw.get("tx_bytes", 0) / 1000000
 

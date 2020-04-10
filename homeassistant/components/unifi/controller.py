@@ -24,6 +24,7 @@ from .const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_IGNORE_WIRED_BUG,
     CONF_POE_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
@@ -33,6 +34,7 @@ from .const import (
     CONTROLLER_ID,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_DETECTION_TIME,
+    DEFAULT_IGNORE_WIRED_BUG,
     DEFAULT_POE_CLIENTS,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
@@ -99,6 +101,13 @@ class UniFiController:
     def option_block_clients(self):
         """Config entry option with list of clients to control network access."""
         return self.config_entry.options.get(CONF_BLOCK_CLIENT, [])
+
+    @property
+    def option_ignore_wired_bug(self):
+        """Config entry option to ignore wired bug."""
+        return self.config_entry.options.get(
+            CONF_IGNORE_WIRED_BUG, DEFAULT_IGNORE_WIRED_BUG
+        )
 
     @property
     def option_poe_clients(self):
