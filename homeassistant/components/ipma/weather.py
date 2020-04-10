@@ -13,13 +13,22 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
+    ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED,
     PLATFORM_SCHEMA,
     WeatherEntity,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_MODE,
+    CONF_NAME,
+    TEMP_CELSIUS,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
+from homeassistant.util.dt import now, parse_datetime
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,11 +53,14 @@ CONDITION_CLASSES = {
     "exceptional": [],
 }
 
+FORECAST_MODE = ["hourly", "daily"]
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_LATITUDE): cv.latitude,
         vol.Optional(CONF_LONGITUDE): cv.longitude,
+        vol.Optional(CONF_MODE, default="daily"): vol.In(FORECAST_MODE),
     }
 )
 
@@ -92,14 +104,16 @@ async def async_get_api(hass):
 
 async def async_get_location(hass, api, latitude, longitude):
     """Retrieve pyipma location, location name to be used as the entity name."""
-    with async_timeout.timeout(10):
+    with async_timeout.timeout(30):
         location = await Location.get(api, float(latitude), float(longitude))
 
     _LOGGER.debug(
-        "Initializing for coordinates %s, %s -> station %s",
+        "Initializing for coordinates %s, %s -> station %s (%d, %d)",
         latitude,
         longitude,
         location.station,
+        location.id_station,
+        location.global_id_local,
     )
 
     return location
@@ -112,6 +126,7 @@ class IPMAWeather(WeatherEntity):
         """Initialise the platform with a data instance and station name."""
         self._api = api
         self._location_name = config.get(CONF_NAME, location.name)
+        self._mode = config.get(CONF_MODE)
         self._location = location
         self._observation = None
         self._forecast = None
@@ -129,7 +144,7 @@ class IPMAWeather(WeatherEntity):
                 _LOGGER.warning("Could not update weather observation")
 
             if new_forecast:
-                self._forecast = [f for f in new_forecast if f.forecasted_hours == 24]
+                self._forecast = new_forecast
             else:
                 _LOGGER.warning("Could not update weather forecast")
 
@@ -220,22 +235,57 @@ class IPMAWeather(WeatherEntity):
         if not self._forecast:
             return []
 
-        fcdata_out = [
-            {
-                ATTR_FORECAST_TIME: data_in.forecast_date,
-                ATTR_FORECAST_CONDITION: next(
-                    (
-                        k
-                        for k, v in CONDITION_CLASSES.items()
-                        if int(data_in.weather_type) in v
+        if self._mode == "hourly":
+            forecast_filtered = [
+                x
+                for x in self._forecast
+                if x.forecasted_hours == 1
+                and parse_datetime(x.forecast_date)
+                > (now().utcnow() - timedelta(hours=1))
+            ]
+
+            fcdata_out = [
+                {
+                    ATTR_FORECAST_TIME: data_in.forecast_date,
+                    ATTR_FORECAST_CONDITION: next(
+                        (
+                            k
+                            for k, v in CONDITION_CLASSES.items()
+                            if int(data_in.weather_type) in v
+                        ),
+                        None,
                     ),
-                    None,
-                ),
-                ATTR_FORECAST_TEMP_LOW: data_in.min_temperature,
-                ATTR_FORECAST_TEMP: data_in.max_temperature,
-                ATTR_FORECAST_PRECIPITATION: data_in.precipitation_probability,
-            }
-            for data_in in self._forecast
-        ]
+                    ATTR_FORECAST_TEMP: float(data_in.feels_like_temperature),
+                    ATTR_FORECAST_PRECIPITATION: (
+                        data_in.precipitation_probability
+                        if float(data_in.precipitation_probability) >= 0
+                        else None
+                    ),
+                    ATTR_FORECAST_WIND_SPEED: data_in.wind_strength,
+                    ATTR_FORECAST_WIND_BEARING: data_in.wind_direction,
+                }
+                for data_in in forecast_filtered
+            ]
+        else:
+            forecast_filtered = [f for f in self._forecast if f.forecasted_hours == 24]
+            fcdata_out = [
+                {
+                    ATTR_FORECAST_TIME: data_in.forecast_date,
+                    ATTR_FORECAST_CONDITION: next(
+                        (
+                            k
+                            for k, v in CONDITION_CLASSES.items()
+                            if int(data_in.weather_type) in v
+                        ),
+                        None,
+                    ),
+                    ATTR_FORECAST_TEMP_LOW: data_in.min_temperature,
+                    ATTR_FORECAST_TEMP: data_in.max_temperature,
+                    ATTR_FORECAST_PRECIPITATION: data_in.precipitation_probability,
+                    ATTR_FORECAST_WIND_SPEED: data_in.wind_strength,
+                    ATTR_FORECAST_WIND_BEARING: data_in.wind_direction,
+                }
+                for data_in in forecast_filtered
+            ]
 
         return fcdata_out

@@ -147,12 +147,12 @@ class ProxmoxClient:
             verify_ssl=self._verify_ssl,
         )
 
-        self._connection_start_time = time.time()
+        self._connection_start_time = time.monotonic()
 
     def get_api_client(self):
         """Return the ProxmoxAPI client and rebuild it if necessary."""
 
-        connection_age = time.time() - self._connection_start_time
+        connection_age = time.monotonic() - self._connection_start_time
 
         # Workaround for the Proxmoxer bug where the connection stops working after some time
         if connection_age > 30 * 60:

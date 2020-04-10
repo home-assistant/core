@@ -12,27 +12,28 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
+    CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_POE_CLIENTS,
     CONF_SITE_ID,
+    CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
     CONTROLLER_ID,
-    DEFAULT_ALLOW_BANDWIDTH_SENSORS,
-    DEFAULT_DETECTION_TIME,
-    DEFAULT_TRACK_CLIENTS,
-    DEFAULT_TRACK_DEVICES,
-    DEFAULT_TRACK_WIRED_CLIENTS,
+    DEFAULT_POE_CLIENTS,
     DOMAIN,
     LOGGER,
 )
 from .controller import get_controller
 from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 
+CONF_NEW_CLIENT = "new_client"
 DEFAULT_PORT = 8443
 DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
@@ -174,16 +175,21 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize UniFi options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
+        self.controller = None
 
     async def async_step_init(self, user_input=None):
         """Manage the UniFi options."""
+        self.controller = get_controller_from_config_entry(self.hass, self.config_entry)
+        self.options[CONF_BLOCK_CLIENT] = self.controller.option_block_clients
         return await self.async_step_device_tracker()
 
     async def async_step_device_tracker(self, user_input=None):
         """Manage the device tracker options."""
         if user_input is not None:
             self.options.update(user_input)
-            return await self.async_step_statistics_sensors()
+            return await self.async_step_client_control()
+
+        ssid_filter = {wlan: wlan for wlan in self.controller.api.wlans}
 
         return self.async_show_form(
             step_id="device_tracker",
@@ -191,30 +197,84 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_TRACK_CLIENTS,
-                        default=self.config_entry.options.get(
-                            CONF_TRACK_CLIENTS, DEFAULT_TRACK_CLIENTS
-                        ),
+                        default=self.controller.option_track_clients,
                     ): bool,
                     vol.Optional(
                         CONF_TRACK_WIRED_CLIENTS,
-                        default=self.config_entry.options.get(
-                            CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
-                        ),
+                        default=self.controller.option_track_wired_clients,
                     ): bool,
                     vol.Optional(
                         CONF_TRACK_DEVICES,
-                        default=self.config_entry.options.get(
-                            CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES
-                        ),
+                        default=self.controller.option_track_devices,
                     ): bool,
                     vol.Optional(
+                        CONF_SSID_FILTER, default=self.controller.option_ssid_filter
+                    ): cv.multi_select(ssid_filter),
+                    vol.Optional(
                         CONF_DETECTION_TIME,
-                        default=self.config_entry.options.get(
-                            CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
+                        default=int(
+                            self.controller.option_detection_time.total_seconds()
                         ),
                     ): int,
                 }
             ),
+        )
+
+    async def async_step_client_control(self, user_input=None):
+        """Manage configuration of network access controlled clients."""
+        errors = {}
+
+        if user_input is not None:
+            new_client = user_input.pop(CONF_NEW_CLIENT, None)
+            self.options.update(user_input)
+
+            if new_client:
+                if (
+                    new_client in self.controller.api.clients
+                    or new_client in self.controller.api.clients_all
+                ):
+                    self.options[CONF_BLOCK_CLIENT].append(new_client)
+
+                else:
+                    errors["base"] = "unknown_client_mac"
+
+            else:
+                return await self.async_step_statistics_sensors()
+
+        clients_to_block = {}
+
+        for mac in self.options[CONF_BLOCK_CLIENT]:
+
+            name = None
+
+            for clients in [
+                self.controller.api.clients,
+                self.controller.api.clients_all,
+            ]:
+                if mac in clients:
+                    name = f"{clients[mac].name or clients[mac].hostname} ({mac})"
+                    break
+
+            if not name:
+                name = mac
+
+            clients_to_block[mac] = name
+
+        return self.async_show_form(
+            step_id="client_control",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_POE_CLIENTS,
+                        default=self.options.get(CONF_POE_CLIENTS, DEFAULT_POE_CLIENTS),
+                    ): bool,
+                    vol.Optional(
+                        CONF_BLOCK_CLIENT, default=self.options[CONF_BLOCK_CLIENT]
+                    ): cv.multi_select(clients_to_block),
+                    vol.Optional(CONF_NEW_CLIENT): str,
+                }
+            ),
+            errors=errors,
         )
 
     async def async_step_statistics_sensors(self, user_input=None):
@@ -229,10 +289,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_ALLOW_BANDWIDTH_SENSORS,
-                        default=self.config_entry.options.get(
-                            CONF_ALLOW_BANDWIDTH_SENSORS,
-                            DEFAULT_ALLOW_BANDWIDTH_SENSORS,
-                        ),
+                        default=self.controller.option_allow_bandwidth_sensors,
                     ): bool
                 }
             ),

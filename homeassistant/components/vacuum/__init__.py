@@ -304,11 +304,9 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
 
     async def async_pause(self):
         """Not supported."""
-        pass
 
     async def async_start(self):
         """Not supported."""
-        pass
 
 
 class StateVacuumDevice(_BaseVacuum):
@@ -373,12 +371,9 @@ class StateVacuumDevice(_BaseVacuum):
 
     async def async_turn_on(self, **kwargs):
         """Not supported."""
-        pass
 
     async def async_turn_off(self, **kwargs):
         """Not supported."""
-        pass
 
     async def async_toggle(self, **kwargs):
         """Not supported."""
-        pass

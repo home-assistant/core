@@ -53,7 +53,7 @@ def setup(hass, config):
 
     try:
         host_ip_pton = socket.inet_pton(socket.AF_INET, host_ip)
-    except socket.error:
+    except OSError:
         host_ip_pton = socket.inet_pton(socket.AF_INET6, host_ip)
 
     info = ServiceInfo(
@@ -108,7 +108,6 @@ def setup(hass, config):
 
     def stop_zeroconf(_):
         """Stop Zeroconf."""
-        zeroconf.unregister_service(info)
         zeroconf.close()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)
@@ -133,7 +132,11 @@ def handle_homekit(hass, info) -> bool:
         return False
 
     for test_model in HOMEKIT:
-        if model != test_model and not model.startswith(test_model + " "):
+        if (
+            model != test_model
+            and not model.startswith(f"{test_model} ")
+            and not model.startswith(f"{test_model}-")
+        ):
             continue
 
         hass.add_job(

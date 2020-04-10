@@ -3,12 +3,13 @@ import asyncio
 import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
-from typing import Awaitable, Callable, Dict, List, Optional
+from typing import Awaitable, Callable, List, Optional
 
 from homeassistant import config as conf_util, core, loader, requirements
 from homeassistant.config import async_notify_setup_error
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ DATA_DEPS_REQS = "deps_reqs_processed"
 SLOW_SETUP_WARNING = 10
 
 
-def setup_component(hass: core.HomeAssistant, domain: str, config: Dict) -> bool:
+def setup_component(hass: core.HomeAssistant, domain: str, config: ConfigType) -> bool:
     """Set up a component and all its dependencies."""
     return asyncio.run_coroutine_threadsafe(
         async_setup_component(hass, domain, config), hass.loop
@@ -28,7 +29,7 @@ def setup_component(hass: core.HomeAssistant, domain: str, config: Dict) -> bool
 
 
 async def async_setup_component(
-    hass: core.HomeAssistant, domain: str, config: Dict
+    hass: core.HomeAssistant, domain: str, config: ConfigType
 ) -> bool:
     """Set up a component and all its dependencies.
 
@@ -50,7 +51,7 @@ async def async_setup_component(
 
 
 async def _async_process_dependencies(
-    hass: core.HomeAssistant, config: Dict, name: str, dependencies: List[str]
+    hass: core.HomeAssistant, config: ConfigType, name: str, dependencies: List[str]
 ) -> bool:
     """Ensure all dependencies are set up."""
     blacklisted = [dep for dep in dependencies if dep in loader.DEPENDENCY_BLACKLIST]
@@ -85,7 +86,7 @@ async def _async_process_dependencies(
 
 
 async def _async_setup_component(
-    hass: core.HomeAssistant, domain: str, config: Dict
+    hass: core.HomeAssistant, domain: str, config: ConfigType
 ) -> bool:
     """Set up a component for Home Assistant.
 
@@ -212,7 +213,7 @@ async def _async_setup_component(
 
 
 async def async_prepare_setup_platform(
-    hass: core.HomeAssistant, hass_config: Dict, domain: str, platform_name: str
+    hass: core.HomeAssistant, hass_config: ConfigType, domain: str, platform_name: str
 ) -> Optional[ModuleType]:
     """Load a platform and makes sure dependencies are setup.
 
@@ -267,7 +268,7 @@ async def async_prepare_setup_platform(
 
 
 async def async_process_deps_reqs(
-    hass: core.HomeAssistant, config: Dict, integration: loader.Integration
+    hass: core.HomeAssistant, config: ConfigType, integration: loader.Integration
 ) -> None:
     """Process all dependencies and requirements for a module.
 

@@ -337,7 +337,7 @@ class Entity(ABC):
         if name is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
-        icon = self.icon
+        icon = (entry and entry.icon) or self.icon
         if icon is not None:
             attr[ATTR_ICON] = icon
 
@@ -365,17 +365,25 @@ class Entity(ABC):
 
         if end - start > 0.4 and not self._slow_reported:
             self._slow_reported = True
-            url = "https://github.com/home-assistant/home-assistant/issues?q=is%3Aopen+is%3Aissue"
-            if self.platform:
-                url += f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
+            extra = ""
+            if "custom_components" in type(self).__module__:
+                extra = "Please report it to the custom component author."
+            else:
+                extra = (
+                    "Please create a bug report at "
+                    "https://github.com/home-assistant/home-assistant/issues?q=is%3Aopen+is%3Aissue"
+                )
+                if self.platform:
+                    extra += (
+                        f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
+                    )
 
             _LOGGER.warning(
-                "Updating state for %s (%s) took %.3f seconds. "
-                "Please create a bug report at %s",
+                "Updating state for %s (%s) took %.3f seconds. %s",
                 self.entity_id,
                 type(self),
                 end - start,
-                url,
+                extra,
             )
 
         # Overwrite properties that have been set in the config file.
@@ -433,7 +441,10 @@ class Entity(ABC):
         If state is changed more than once before the ha state change task has
         been executed, the intermediate state transitions will be missed.
         """
-        self.hass.async_create_task(self.async_update_ha_state(force_refresh))
+        if force_refresh:
+            self.hass.async_create_task(self.async_update_ha_state(force_refresh))
+        else:
+            self.async_write_ha_state()
 
     async def async_device_update(self, warning=True):
         """Process 'update' or 'async_update' from entity.
@@ -477,6 +488,12 @@ class Entity(ABC):
             self._on_remove = []
         self._on_remove.append(func)
 
+    async def async_removed_from_registry(self) -> None:
+        """Run when entity has been removed from entity registry.
+
+        To be extended by integrations.
+        """
+
     async def async_remove(self) -> None:
         """Remove entity from Home Assistant."""
         assert self.hass is not None
@@ -487,7 +504,7 @@ class Entity(ABC):
             while self._on_remove:
                 self._on_remove.pop()()
 
-        self.hass.states.async_remove(self.entity_id)
+        self.hass.states.async_remove(self.entity_id, context=self._context)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass.
@@ -523,6 +540,10 @@ class Entity(ABC):
     async def _async_registry_updated(self, event):
         """Handle entity registry update."""
         data = event.data
+        if data["action"] == "remove" and data["entity_id"] == self.entity_id:
+            await self.async_removed_from_registry()
+            await self.async_remove()
+
         if (
             data["action"] != "update"
             or data.get("old_entity_id", data["entity_id"]) != self.entity_id

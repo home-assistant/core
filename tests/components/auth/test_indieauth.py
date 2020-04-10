@@ -169,7 +169,8 @@ async def test_find_link_tag_max_size(hass, mock_session):
 
 
 @pytest.mark.parametrize(
-    "client_id", ["https://home-assistant.io/android", "https://home-assistant.io/iOS"]
+    "client_id",
+    ["https://www.home-assistant.io/android", "https://www.home-assistant.io/iOS"],
 )
 async def test_verify_redirect_uri_android_ios(client_id):
     """Test that we verify redirect uri correctly for Android/iOS."""

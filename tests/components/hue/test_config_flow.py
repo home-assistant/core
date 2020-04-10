@@ -62,11 +62,9 @@ async def test_flow_works(hass):
     assert result["step_id"] == "link"
 
     flow = next(
-        (
-            flow
-            for flow in hass.config_entries.flow.async_progress()
-            if flow["flow_id"] == result["flow_id"]
-        )
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
     )
     assert flow["context"]["unique_id"] == "aabbccddeeff"
 
@@ -79,6 +77,7 @@ async def test_flow_works(hass):
     assert result["data"] == {
         "host": "1.2.3.4",
         "username": "home-assistant#test-home",
+        "allow_hue_groups": False,
     }
 
     assert len(mock_bridge.initialize.mock_calls) == 1
@@ -167,11 +166,9 @@ async def test_flow_two_bridges_discovered_one_new(hass, aioclient_mock):
     assert result["type"] == "form"
     assert result["step_id"] == "link"
     flow = next(
-        (
-            flow
-            for flow in hass.config_entries.flow.async_progress()
-            if flow["flow_id"] == result["flow_id"]
-        )
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
     )
     assert flow["context"]["unique_id"] == "beer"
 
@@ -440,6 +437,7 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(hass):
     assert result["data"] == {
         "host": "2.2.2.2",
         "username": "username-abc",
+        "allow_hue_groups": False,
     }
     entries = hass.config_entries.async_entries("hue")
     assert len(entries) == 2

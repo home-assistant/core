@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account already configured"
+            "already_configured": "Account already configured",
+            "no_device": "None of your devices have \"Find my iPhone\" activated"
         },
         "error": {
             "login": "Login error: please check your email & password",
@@ -19,7 +20,8 @@
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "Email"
+                    "username": "Email",
+                    "with_family": "With family"
                 },
                 "description": "Enter your credentials",
                 "title": "iCloud credentials"

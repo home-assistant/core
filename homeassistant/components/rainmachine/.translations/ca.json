@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Aquest controlador RainMachine ja est\u00e0 configurat."
+        },
         "error": {
             "identifier_exists": "Aquest compte ja est\u00e0 registrat",
             "invalid_credentials": "Credencials inv\u00e0lides"

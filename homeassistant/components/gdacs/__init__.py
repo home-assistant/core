@@ -28,10 +28,6 @@ from .const import (
     DOMAIN,
     FEED,
     PLATFORMS,
-    SIGNAL_DELETE_ENTITY,
-    SIGNAL_NEW_GEOLOCATION,
-    SIGNAL_STATUS,
-    SIGNAL_UPDATE_ENTITY,
     VALID_CATEGORIES,
 )
 
@@ -181,7 +177,7 @@ class GdacsFeedEntityManager:
     @callback
     def async_event_new_entity(self):
         """Return manager specific event to signal new entity."""
-        return SIGNAL_NEW_GEOLOCATION.format(self._config_entry_id)
+        return f"gdacs_new_geolocation_{self._config_entry_id}"
 
     def get_entry(self, external_id):
         """Get feed entry by external id."""
@@ -194,19 +190,23 @@ class GdacsFeedEntityManager:
     async def _generate_entity(self, external_id):
         """Generate new entity."""
         async_dispatcher_send(
-            self._hass, self.async_event_new_entity(), self, external_id
+            self._hass,
+            self.async_event_new_entity(),
+            self,
+            self._config_entry.unique_id,
+            external_id,
         )
 
     async def _update_entity(self, external_id):
         """Update entity."""
-        async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
+        async_dispatcher_send(self._hass, f"gdacs_update_{external_id}")
 
     async def _remove_entity(self, external_id):
         """Remove entity."""
-        async_dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
+        async_dispatcher_send(self._hass, f"gdacs_delete_{external_id}")
 
     async def _status_update(self, status_info):
         """Propagate status update."""
         _LOGGER.debug("Status update received: %s", status_info)
         self._status_info = status_info
-        async_dispatcher_send(self._hass, SIGNAL_STATUS.format(self._config_entry_id))
+        async_dispatcher_send(self._hass, f"gdacs_status_{self._config_entry_id}")

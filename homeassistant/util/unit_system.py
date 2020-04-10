@@ -109,10 +109,7 @@ class UnitSystem:
         if not isinstance(temperature, Number):
             raise TypeError(f"{temperature!s} is not a numeric value.")
 
-        # type ignore: https://github.com/python/mypy/issues/7207
-        return temperature_util.convert(  # type: ignore
-            temperature, from_unit, self.temperature_unit
-        )
+        return temperature_util.convert(temperature, from_unit, self.temperature_unit)
 
     def length(self, length: Optional[float], from_unit: str) -> float:
         """Convert the given length to this unit system."""

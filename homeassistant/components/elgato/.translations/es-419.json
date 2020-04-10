@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host o direcci\u00f3n IP",
+                    "port": "N\u00famero de puerto"
+                },
+                "description": "Configure su Elgato Key Light para integrarse con Home Assistant."
+            },
+            "zeroconf_confirm": {
+                "title": "Dispositivo Elgato Key Light descubierto"
+            }
+        },
+        "title": "Elgato Key Light"
+    }
+}

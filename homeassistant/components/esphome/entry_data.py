@@ -27,11 +27,6 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
 
 DATA_KEY = "esphome"
-DISPATCHER_UPDATE_ENTITY = "esphome_{entry_id}_update_{component_key}_{key}"
-DISPATCHER_REMOVE_ENTITY = "esphome_{entry_id}_remove_{component_key}_{key}"
-DISPATCHER_ON_LIST = "esphome_{entry_id}_on_list"
-DISPATCHER_ON_DEVICE_UPDATE = "esphome_{entry_id}_on_device_update"
-DISPATCHER_ON_STATE = "esphome_{entry_id}_on_state"
 
 # Mapping from ESPHome info type to HA platform
 INFO_TYPE_TO_PLATFORM = {
@@ -77,9 +72,7 @@ class RuntimeEntryData:
         self, hass: HomeAssistantType, component_key: str, key: int
     ) -> None:
         """Schedule the update of an entity."""
-        signal = DISPATCHER_UPDATE_ENTITY.format(
-            entry_id=self.entry_id, component_key=component_key, key=key
-        )
+        signal = f"esphome_{self.entry_id}_update_{component_key}_{key}"
         async_dispatcher_send(hass, signal)
 
     @callback
@@ -87,9 +80,7 @@ class RuntimeEntryData:
         self, hass: HomeAssistantType, component_key: str, key: int
     ) -> None:
         """Schedule the removal of an entity."""
-        signal = DISPATCHER_REMOVE_ENTITY.format(
-            entry_id=self.entry_id, component_key=component_key, key=key
-        )
+        signal = f"esphome_{self.entry_id}_remove_{component_key}_{key}"
         async_dispatcher_send(hass, signal)
 
     async def _ensure_platforms_loaded(
@@ -120,19 +111,19 @@ class RuntimeEntryData:
         await self._ensure_platforms_loaded(hass, entry, needed_platforms)
 
         # Then send dispatcher event
-        signal = DISPATCHER_ON_LIST.format(entry_id=self.entry_id)
+        signal = f"esphome_{self.entry_id}_on_list"
         async_dispatcher_send(hass, signal, infos)
 
     @callback
     def async_update_state(self, hass: HomeAssistantType, state: EntityState) -> None:
         """Distribute an update of state information to all platforms."""
-        signal = DISPATCHER_ON_STATE.format(entry_id=self.entry_id)
+        signal = f"esphome_{self.entry_id}_on_state"
         async_dispatcher_send(hass, signal, state)
 
     @callback
     def async_update_device_state(self, hass: HomeAssistantType) -> None:
         """Distribute an update of a core device state like availability."""
-        signal = DISPATCHER_ON_DEVICE_UPDATE.format(entry_id=self.entry_id)
+        signal = f"esphome_{self.entry_id}_on_device_update"
         async_dispatcher_send(hass, signal)
 
     async def async_load_from_store(self) -> Tuple[List[EntityInfo], List[UserService]]:

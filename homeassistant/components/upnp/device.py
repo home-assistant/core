@@ -142,16 +142,28 @@ class Device:
 
     async def async_get_total_bytes_received(self):
         """Get total bytes received."""
-        return await self._igd_device.async_get_total_bytes_received()
+        try:
+            return await self._igd_device.async_get_total_bytes_received()
+        except asyncio.TimeoutError:
+            _LOGGER.warning("Timeout during get_total_bytes_received")
 
     async def async_get_total_bytes_sent(self):
         """Get total bytes sent."""
-        return await self._igd_device.async_get_total_bytes_sent()
+        try:
+            return await self._igd_device.async_get_total_bytes_sent()
+        except asyncio.TimeoutError:
+            _LOGGER.warning("Timeout during get_total_bytes_sent")
 
     async def async_get_total_packets_received(self):
         """Get total packets received."""
-        return await self._igd_device.async_get_total_packets_received()
+        try:
+            return await self._igd_device.async_get_total_packets_received()
+        except asyncio.TimeoutError:
+            _LOGGER.warning("Timeout during get_total_packets_received")
 
     async def async_get_total_packets_sent(self):
         """Get total packets sent."""
-        return await self._igd_device.async_get_total_packets_sent()
+        try:
+            return await self._igd_device.async_get_total_packets_sent()
+        except asyncio.TimeoutError:
+            _LOGGER.warning("Timeout during get_total_packets_sent")

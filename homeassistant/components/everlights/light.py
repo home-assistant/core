@@ -32,8 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string])}
 )
 
-NAME_FORMAT = "EverLights {} Zone {}"
-
 
 def color_rgb_to_int(red: int, green: int, blue: int) -> int:
     """Return a RGB color as an integer."""
@@ -96,7 +94,7 @@ class EverLightsLight(Light):
     @property
     def name(self):
         """Return the name of the device."""
-        return NAME_FORMAT.format(self._mac, self._channel)
+        return f"EverLights {self._mac} Zone {self._channel}"
 
     @property
     def is_on(self):

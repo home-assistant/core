@@ -8,6 +8,7 @@
                 "data": {
                     "latitude": "Breedegrad",
                     "longitude": "L\u00e4ngegrad",
+                    "mode": "Modus",
                     "name": "Numm"
                 },
                 "description": "Instituto Portugu\u00eas do Mar e Atmosfera",

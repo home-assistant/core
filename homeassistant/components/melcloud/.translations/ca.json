@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La integraci\u00f3 MELCloud ja est\u00e0 configurada amb aquest correu electr\u00f2nic. El testimoni d'acc\u00e9s s'ha actualitzat."
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya de MELCloud.",
+                    "username": "Correu electr\u00f2nic d'inici de sessi\u00f3 a MELCloud."
+                },
+                "description": "Connecta\u2019t amb el teu compte de MELCloud.",
+                "title": "Connexi\u00f3 amb MELCloud"
+            }
+        },
+        "title": "MELCloud"
+    }
+}

@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONTENT_TYPE_JSON,
+    DATA_RATE_MEGABYTES_PER_SECOND,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -29,7 +30,7 @@ DEFAULT_PORT = 8000
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
-SENSOR_TYPES = {"speed": ["speed", "Speed", "MB/s"]}
+SENSOR_TYPES = {"speed": ["speed", "Speed", DATA_RATE_MEGABYTES_PER_SECOND]}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -50,12 +51,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the pyLoad sensors."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    ssl = "s" if config.get(CONF_SSL) else ""
+    protocol = "https" if config[CONF_SSL] else "http"
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     monitored_types = config.get(CONF_MONITORED_VARIABLES)
-    url = f"http{ssl}://{host}:{port}/api/"
+    url = f"{protocol}://{host}:{port}/api/"
 
     try:
         pyloadapi = PyLoadAPI(api_url=url, username=username, password=password)

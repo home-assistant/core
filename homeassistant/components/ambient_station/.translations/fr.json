@@ -1,7 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Cette cl\u00e9 d'application est d\u00e9j\u00e0 utilis\u00e9e."
+        },
         "error": {
-            "identifier_exists": "Cl\u00e9 d'application et / ou cl\u00e9 API d\u00e9j\u00e0 enregistr\u00e9e",
             "invalid_key": "Cl\u00e9 d'API et / ou cl\u00e9 d'application non valide",
             "no_devices": "Aucun appareil trouv\u00e9 dans le compte"
         },

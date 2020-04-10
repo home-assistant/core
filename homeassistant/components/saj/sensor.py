@@ -1,5 +1,4 @@
 """SAJ solar inverter interface."""
-import asyncio
 from datetime import date
 import logging
 
@@ -22,6 +21,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    TIME_HOURS,
 )
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import PlatformNotReady
@@ -34,13 +34,11 @@ _LOGGER = logging.getLogger(__name__)
 MIN_INTERVAL = 5
 MAX_INTERVAL = 300
 
-UNIT_OF_MEASUREMENT_HOURS = "h"
-
 INVERTER_TYPES = ["ethernet", "wifi"]
 
 SAJ_UNIT_MAPPINGS = {
     "": None,
-    "h": UNIT_OF_MEASUREMENT_HOURS,
+    "h": TIME_HOURS,
     "kg": MASS_KILOGRAMS,
     "kWh": ENERGY_KILO_WATT_HOUR,
     "W": POWER_WATT,
@@ -101,8 +99,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def async_saj():
         """Update all the SAJ sensors."""
-        tasks = []
-
         values = await saj.read(sensor_def)
 
         for sensor in hass_sensors:
@@ -119,11 +115,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     not sensor.per_day_basis and not sensor.per_total_basis
                 ):
                     state_unknown = True
-            task = sensor.async_update_values(unknown_state=state_unknown)
-            if task:
-                tasks.append(task)
-        if tasks:
-            await asyncio.wait(tasks)
+            sensor.async_update_values(unknown_state=state_unknown)
+
         return values
 
     def start_update_interval(event):
@@ -238,7 +231,8 @@ class SAJsensor(Entity):
             update = True
             self._state = None
 
-        return self.async_update_ha_state() if update else None
+        if update:
+            self.async_write_ha_state()
 
     @property
     def unique_id(self):

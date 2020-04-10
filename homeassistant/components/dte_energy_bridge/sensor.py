@@ -5,7 +5,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, HTTP_OK
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -47,11 +47,9 @@ class DteEnergyBridgeSensor(Entity):
         self._version = version
 
         if self._version == 1:
-            url_template = "http://{}/instantaneousdemand"
+            self._url = f"http://{ip_address}/instantaneousdemand"
         elif self._version == 2:
-            url_template = "http://{}:8888/zigbee/se/instantaneousdemand"
-
-        self._url = url_template.format(ip_address)
+            self._url = f"http://{ip_address}:8888/zigbee/se/instantaneousdemand"
 
         self._name = name
         self._unit_of_measurement = "kW"
@@ -87,7 +85,7 @@ class DteEnergyBridgeSensor(Entity):
             )
             return
 
-        if response.status_code != 200:
+        if response.status_code != HTTP_OK:
             _LOGGER.warning(
                 "Invalid status_code from DTE Energy Bridge: %s (%s)",
                 response.status_code,

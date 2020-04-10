@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ten kontroler RainMachine jest ju\u017c skonfigurowany."
+        },
         "error": {
             "identifier_exists": "Konto jest ju\u017c zarejestrowane.",
             "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce"

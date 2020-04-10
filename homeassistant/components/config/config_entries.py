@@ -7,7 +7,9 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.exceptions import Unauthorized
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
@@ -45,7 +47,9 @@ def _prepare_json(result):
     if schema is None:
         data["data_schema"] = []
     else:
-        data["data_schema"] = voluptuous_serialize.convert(schema)
+        data["data_schema"] = voluptuous_serialize.convert(
+            schema, custom_serializer=cv.custom_serializer
+        )
 
     return data
 
@@ -102,7 +106,7 @@ class ConfigManagerEntryResourceView(HomeAssistantView):
         try:
             result = await hass.config_entries.async_remove(entry_id)
         except config_entries.UnknownEntry:
-            return self.json_message("Invalid entry specified", 404)
+            return self.json_message("Invalid entry specified", HTTP_NOT_FOUND)
 
         return self.json(result)
 

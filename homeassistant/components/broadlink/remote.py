@@ -7,7 +7,6 @@ from datetime import timedelta
 from ipaddress import ip_address
 from itertools import product
 import logging
-import socket
 
 import broadlink
 import voluptuous as vol
@@ -44,9 +43,7 @@ DEFAULT_TIMEOUT = 5
 
 SCAN_INTERVAL = timedelta(minutes=2)
 
-CODE_STORAGE_KEY = "broadlink_{}_codes"
 CODE_STORAGE_VERSION = 1
-FLAG_STORAGE_KEY = "broadlink_{}_flags"
 FLAG_STORAGE_VERSION = 1
 FLAG_SAVE_DELAY = 15
 
@@ -96,8 +93,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     api = broadlink.rm((host, DEFAULT_PORT), mac_addr, None)
     api.timeout = timeout
-    code_storage = Store(hass, CODE_STORAGE_VERSION, CODE_STORAGE_KEY.format(unique_id))
-    flag_storage = Store(hass, FLAG_STORAGE_VERSION, FLAG_STORAGE_KEY.format(unique_id))
+    code_storage = Store(hass, CODE_STORAGE_VERSION, f"broadlink_{unique_id}_codes")
+    flag_storage = Store(hass, FLAG_STORAGE_VERSION, f"broadlink_{unique_id}_flags")
     remote = BroadlinkRemote(name, unique_id, api, code_storage, flag_storage)
 
     connected, loaded = (False, False)
@@ -105,7 +102,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         connected, loaded = await asyncio.gather(
             hass.async_add_executor_job(api.auth), remote.async_load_storage_files()
         )
-    except socket.error:
+    except OSError:
         pass
     if not connected:
         hass.data[DOMAIN][COMPONENT].remove(unique_id)
@@ -329,7 +326,7 @@ class BroadlinkRemote(RemoteDevice):
                 continue
             try:
                 await self.hass.async_add_executor_job(function, *args)
-            except socket.error:
+            except OSError:
                 continue
             return
         raise ConnectionError
@@ -338,7 +335,7 @@ class BroadlinkRemote(RemoteDevice):
         """Connect to the remote."""
         try:
             auth = await self.hass.async_add_executor_job(self._api.auth)
-        except socket.error:
+        except OSError:
             auth = False
         if auth and not self._available:
             _LOGGER.warning("Connected to the remote")

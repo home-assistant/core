@@ -1,7 +1,7 @@
 """Constants for the Solar-Log integration."""
 from datetime import timedelta
 
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT, UNIT_PERCENTAGE
 
 DOMAIN = "solarlog"
 
@@ -77,7 +77,7 @@ SENSOR_TYPES = {
         POWER_WATT,
         "mdi:solar-power",
     ],
-    "capacity": ["CAPACITY", "capacity", "%", "mdi:solar-power"],
+    "capacity": ["CAPACITY", "capacity", UNIT_PERCENTAGE, "mdi:solar-power"],
     "efficiency": ["EFFICIENCY", "efficiency", "% W/Wp", "mdi:solar-power"],
     "power_available": [
         "powerAVAILABLE",

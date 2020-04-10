@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "MELCloud integratie is al geconfigureerd voor deze e-mail. Toegangstoken is vernieuwd."
+        },
+        "error": {
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "MELCloud wachtwoord.",
+                    "username": "E-mail gebruikt om in te loggen op MELCloud."
+                },
+                "description": "Maak verbinding via uw MELCloud account.",
+                "title": "Maak verbinding met MELCloud"
+            }
+        },
+        "title": "MELCloud"
+    }
+}

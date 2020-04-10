@@ -5,7 +5,11 @@ from homeassistant import setup
 from homeassistant.components import climate, sensor
 from homeassistant.components.demo.sensor import DemoSensor
 import homeassistant.components.prometheus as prometheus
-from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    DEVICE_CLASS_POWER,
+    ENERGY_KILO_WATT_HOUR,
+)
 from homeassistant.setup import async_setup_component
 
 
@@ -36,7 +40,9 @@ async def prometheus_client(loop, hass, hass_client):
     sensor2.entity_id = "sensor.radio_energy"
     await sensor2.async_update_ha_state()
 
-    sensor3 = DemoSensor(None, "Electricity price", 0.123, None, "SEK/kWh", None)
+    sensor3 = DemoSensor(
+        None, "Electricity price", 0.123, None, f"SEK/{ENERGY_KILO_WATT_HOUR}", None
+    )
     sensor3.hass = hass
     sensor3.entity_id = "sensor.electricity_price"
     await sensor3.async_update_ha_state()
@@ -47,7 +53,12 @@ async def prometheus_client(loop, hass, hass_client):
     await sensor4.async_update_ha_state()
 
     sensor5 = DemoSensor(
-        None, "SPS30 PM <1µm Weight concentration", 3.7069, None, "µg/m³", None
+        None,
+        "SPS30 PM <1µm Weight concentration",
+        3.7069,
+        None,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        None,
     )
     sensor5.hass = hass
     sensor5.entity_id = "sensor.sps30_pm_1um_weight_concentration"

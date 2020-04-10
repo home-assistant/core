@@ -28,7 +28,7 @@ IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 
 
 @pytest.fixture
-async def device_switch(hass, zha_gateway, zigpy_device_mock, zha_device_joined):
+async def device_switch(hass, zigpy_device_mock, zha_device_joined):
     """Test zha switch platform."""
 
     zigpy_device = zigpy_device_mock(
@@ -47,7 +47,7 @@ async def device_switch(hass, zha_gateway, zigpy_device_mock, zha_device_joined)
 
 
 @pytest.fixture
-async def device_groupable(hass, zha_gateway, zigpy_device_mock, zha_device_joined):
+async def device_groupable(hass, zigpy_device_mock, zha_device_joined):
     """Test zha light platform."""
 
     zigpy_device = zigpy_device_mock(
@@ -78,7 +78,7 @@ async def zha_client(hass, hass_ws_client, device_switch, device_groupable):
     return await hass_ws_client(hass)
 
 
-async def test_device_clusters(hass, config_entry, zha_gateway, zha_client):
+async def test_device_clusters(hass, zha_client):
     """Test getting device cluster info."""
     await zha_client.send_json(
         {ID: 5, TYPE: "zha/devices/clusters", ATTR_IEEE: IEEE_SWITCH_DEVICE}

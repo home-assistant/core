@@ -9,6 +9,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
+    async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
     mock_device_registry,
@@ -85,6 +86,66 @@ async def test_get_actions(hass, device_reg, entity_reg):
     assert actions == expected_actions
 
 
+async def test_get_action_capabilities(hass, device_reg, entity_reg):
+    """Test we get the expected capabilities from a light action."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id,
+    )
+
+    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    assert len(actions) == 3
+    for action in actions:
+        capabilities = await async_get_device_automation_capabilities(
+            hass, "action", action
+        )
+        assert capabilities == {"extra_fields": []}
+
+
+async def test_get_action_capabilities_brightness(hass, device_reg, entity_reg):
+    """Test we get the expected capabilities from a light action."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        supported_features=SUPPORT_BRIGHTNESS,
+    )
+
+    expected_capabilities = {
+        "extra_fields": [
+            {
+                "name": "brightness_pct",
+                "optional": True,
+                "type": "integer",
+                "valueMax": 100,
+                "valueMin": 0,
+            }
+        ]
+    }
+    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    assert len(actions) == 5
+    for action in actions:
+        capabilities = await async_get_device_automation_capabilities(
+            hass, "action", action
+        )
+        if action["type"] == "turn_on":
+            assert capabilities == expected_capabilities
+        else:
+            assert capabilities == {"extra_fields": []}
+
+
 async def test_action(hass, calls):
     """Test for turn_on and turn_off actions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -100,7 +161,7 @@ async def test_action(hass, calls):
         {
             automation.DOMAIN: [
                 {
-                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "trigger": {"platform": "event", "event_type": "test_off"},
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "",
@@ -109,7 +170,7 @@ async def test_action(hass, calls):
                     },
                 },
                 {
-                    "trigger": {"platform": "event", "event_type": "test_event2"},
+                    "trigger": {"platform": "event", "event_type": "test_on"},
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "",
@@ -118,7 +179,7 @@ async def test_action(hass, calls):
                     },
                 },
                 {
-                    "trigger": {"platform": "event", "event_type": "test_event3"},
+                    "trigger": {"platform": "event", "event_type": "test_toggle"},
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "",
@@ -150,6 +211,16 @@ async def test_action(hass, calls):
                         "type": "brightness_decrease",
                     },
                 },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_brightness"},
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "",
+                        "entity_id": ent1.entity_id,
+                        "type": "turn_on",
+                        "brightness_pct": 75,
+                    },
+                },
             ]
         },
     )
@@ -157,27 +228,27 @@ async def test_action(hass, calls):
     assert hass.states.get(ent1.entity_id).state == STATE_ON
     assert len(calls) == 0
 
-    hass.bus.async_fire("test_event1")
+    hass.bus.async_fire("test_off")
     await hass.async_block_till_done()
     assert hass.states.get(ent1.entity_id).state == STATE_OFF
 
-    hass.bus.async_fire("test_event1")
+    hass.bus.async_fire("test_off")
     await hass.async_block_till_done()
     assert hass.states.get(ent1.entity_id).state == STATE_OFF
 
-    hass.bus.async_fire("test_event2")
+    hass.bus.async_fire("test_on")
     await hass.async_block_till_done()
     assert hass.states.get(ent1.entity_id).state == STATE_ON
 
-    hass.bus.async_fire("test_event2")
+    hass.bus.async_fire("test_on")
     await hass.async_block_till_done()
     assert hass.states.get(ent1.entity_id).state == STATE_ON
 
-    hass.bus.async_fire("test_event3")
+    hass.bus.async_fire("test_toggle")
     await hass.async_block_till_done()
     assert hass.states.get(ent1.entity_id).state == STATE_OFF
 
-    hass.bus.async_fire("test_event3")
+    hass.bus.async_fire("test_toggle")
     await hass.async_block_till_done()
     assert hass.states.get(ent1.entity_id).state == STATE_ON
 
@@ -196,3 +267,17 @@ async def test_action(hass, calls):
     assert len(turn_on_calls) == 2
     assert turn_on_calls[1].data["entity_id"] == ent1.entity_id
     assert turn_on_calls[1].data["brightness_step_pct"] == -10
+
+    hass.bus.async_fire("test_brightness")
+    await hass.async_block_till_done()
+
+    assert len(turn_on_calls) == 3
+    assert turn_on_calls[2].data["entity_id"] == ent1.entity_id
+    assert turn_on_calls[2].data["brightness_pct"] == 75
+
+    hass.bus.async_fire("test_on")
+    await hass.async_block_till_done()
+
+    assert len(turn_on_calls) == 4
+    assert turn_on_calls[3].data["entity_id"] == ent1.entity_id
+    assert "brightness_pct" not in turn_on_calls[3].data

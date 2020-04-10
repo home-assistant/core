@@ -1,9 +1,6 @@
 """
 Support for getting statistical data from a DWD Weather Warnings.
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.dwd_weather_warnings/
-
 Data is fetched from DWD:
 https://rcccm.dwd.de/DE/wetter/warnungen_aktuell/objekt_einbindung/objekteinbindung.html
 
@@ -136,9 +133,9 @@ class DwdWeatherWarningsSensor(Entity):
         else:
             raise Exception("Unknown warning type")
 
-        data["warning_count"] = self._api.data[prefix + "_warning_count"]
+        data["warning_count"] = self._api.data[f"{prefix}_warning_count"]
         i = 0
-        for event in self._api.data[prefix + "_warnings"]:
+        for event in self._api.data[f"{prefix}_warnings"]:
             i = i + 1
 
             data[f"warning_{i}_name"] = event["event"]
@@ -178,12 +175,7 @@ class DwdWeatherWarningsAPI:
 
     def __init__(self, region_name):
         """Initialize the data object."""
-        resource = "{}{}{}?{}".format(
-            "https://",
-            "www.dwd.de",
-            "/DWD/warnungen/warnapp_landkreise/json/warnings.json",
-            "jsonp=loadWarnings",
-        )
+        resource = "https://www.dwd.de/DWD/warnungen/warnapp_landkreise/json/warnings.json?jsonp=loadWarnings"
 
         # a User-Agent is necessary for this rest api endpoint (#29496)
         headers = {"User-Agent": HA_USER_AGENT}

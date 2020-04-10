@@ -1,6 +1,7 @@
 """Support for Huawei LTE router notifications."""
 
 import logging
+import time
 from typing import Any, List
 
 import attr
@@ -57,3 +58,5 @@ class HuaweiLteSmsNotificationService(BaseNotificationService):
             _LOGGER.debug("Sent to %s: %s", targets, resp)
         except ResponseErrorException as ex:
             _LOGGER.error("Could not send to %s: %s", targets, ex)
+        finally:
+            self.router.notify_last_attempt = time.monotonic()

@@ -144,6 +144,37 @@ def _decrypt_payload(secret, topic, ciphertext):
         return None
 
 
+def encrypt_message(secret, topic, message):
+    """Encrypt message."""
+
+    keylen = SecretBox.KEY_SIZE
+
+    if isinstance(secret, dict):
+        key = secret.get(topic)
+    else:
+        key = secret
+
+    if key is None:
+        _LOGGER.warning(
+            "Unable to encrypt payload because no decryption key known " "for topic %s",
+            topic,
+        )
+        return None
+
+    key = key.encode("utf-8")
+    key = key[:keylen]
+    key = key.ljust(keylen, b"\0")
+
+    try:
+        message = message.encode("utf-8")
+        payload = SecretBox(key).encrypt(message, encoder=Base64Encoder)
+        _LOGGER.debug("Encrypted message: %s to %s", message, payload)
+        return payload.decode("utf-8")
+    except ValueError:
+        _LOGGER.warning("Unable to encrypt message for topic %s", topic)
+        return None
+
+
 @HANDLERS.register("location")
 async def async_handle_location_message(hass, context, message):
     """Handle a location message."""
@@ -283,7 +314,7 @@ async def async_handle_waypoint(hass, name_base, waypoint):
     )
     zone.hass = hass
     zone.entity_id = entity_id
-    await zone.async_update_ha_state()
+    zone.async_write_ha_state()
 
 
 @HANDLERS.register("waypoint")

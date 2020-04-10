@@ -13,7 +13,7 @@
         "step": {
             "user": {
                 "data": {
-                    "access_token": "\u00c5tkomsttoken"
+                    "access_token": "\u00c5tkomstnyckel"
                 },
                 "description": "V\u00e4nligen ange en [personlig \u00e5tkomsttoken]({token_url}) f\u00f6r SmartThings som har skapats enligt [instruktionerna]({component_url}).",
                 "title": "Ange personlig \u00e5tkomsttoken"

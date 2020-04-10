@@ -6,6 +6,7 @@ from zlib import adler32
 import voluptuous as vol
 
 from homeassistant.components import cover
+from homeassistant.components.cover import DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -23,6 +24,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
@@ -199,7 +201,7 @@ def get_accessory(hass, driver, state, aid, config):
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if device_class == "garage" and features & (
+        if device_class in (DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE) and features & (
             cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE
         ):
             a_type = "GarageDoorOpener"
@@ -236,7 +238,7 @@ def get_accessory(hass, driver, state, aid, config):
             TEMP_FAHRENHEIT,
         ):
             a_type = "TemperatureSensor"
-        elif device_class == DEVICE_CLASS_HUMIDITY and unit == "%":
+        elif device_class == DEVICE_CLASS_HUMIDITY and unit == UNIT_PERCENTAGE:
             a_type = "HumiditySensor"
         elif device_class == DEVICE_CLASS_PM25 or DEVICE_CLASS_PM25 in state.entity_id:
             a_type = "AirQualitySensor"

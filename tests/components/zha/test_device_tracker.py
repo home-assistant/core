@@ -4,7 +4,6 @@ import time
 
 import pytest
 import zigpy.zcl.clusters.general as general
-import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.device_tracker import DOMAIN, SOURCE_TYPE_ROUTER
 from homeassistant.components.zha.core.registries import (
@@ -15,9 +14,9 @@ import homeassistant.util.dt as dt_util
 
 from .common import (
     async_enable_traffic,
+    async_test_rejoin,
     find_entity_id,
-    make_attribute,
-    make_zcl_header,
+    send_attributes_report,
 )
 
 from tests.common import async_fire_time_changed
@@ -42,9 +41,7 @@ def zigpy_device_dt(zigpy_device_mock):
     return zigpy_device_mock(endpoints)
 
 
-async def test_device_tracker(
-    hass, zha_gateway, zha_device_joined_restored, zigpy_device_dt
-):
+async def test_device_tracker(hass, zha_device_joined_restored, zigpy_device_dt):
     """Test zha device tracker platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device_dt)
@@ -61,18 +58,15 @@ async def test_device_tracker(
     await hass.async_block_till_done()
 
     # allow traffic to flow through the gateway and device
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
+    await async_enable_traffic(hass, [zha_device])
 
     # test that the state has changed from unavailable to not home
     assert hass.states.get(entity_id).state == STATE_NOT_HOME
 
     # turn state flip
-    attr = make_attribute(0x0020, 23)
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
-    cluster.handle_message(hdr, [[attr]])
-
-    attr = make_attribute(0x0021, 200)
-    cluster.handle_message(hdr, [[attr]])
+    await send_attributes_report(
+        hass, cluster, {0x0000: 0, 0x0020: 23, 0x0021: 200, 0x0001: 2}
+    )
 
     zigpy_device_dt.last_seen = time.time() + 10
     next_update = dt_util.utcnow() + timedelta(seconds=30)
@@ -88,12 +82,5 @@ async def test_device_tracker(
     assert entity.battery_level == 100
 
     # test adding device tracker to the network and HA
-    cluster.bind.reset_mock()
-    cluster.configure_reporting.reset_mock()
-    await zha_gateway.async_device_initialized(zigpy_device_dt)
-    await hass.async_block_till_done()
+    await async_test_rejoin(hass, zigpy_device_dt, [cluster], (2,))
     assert hass.states.get(entity_id).state == STATE_HOME
-    assert cluster.bind.call_count == 1
-    assert cluster.bind.await_count == 1
-    assert cluster.configure_reporting.call_count == 2
-    assert cluster.configure_reporting.await_count == 2

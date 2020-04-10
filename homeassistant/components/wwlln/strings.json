@@ -11,8 +11,8 @@
         }
       }
     },
-    "error": {
-      "identifier_exists": "Location already registered"
+    "abort": {
+      "already_configured": "This location is already registered."
     }
   }
 }

@@ -1,6 +1,7 @@
 """Test the Almond config flow."""
 import asyncio
-from unittest.mock import patch
+
+from asynctest import patch
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.almond import config_flow
@@ -55,7 +56,12 @@ async def test_hassio(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "hassio_confirm"
 
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    with patch(
+        "homeassistant.components.almond.async_setup_entry", return_value=True
+    ) as mock_setup:
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert len(mock_setup.mock_calls) == 1
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
@@ -128,7 +134,12 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
         },
     )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    with patch(
+        "homeassistant.components.almond.async_setup_entry", return_value=True
+    ) as mock_setup:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert len(mock_setup.mock_calls) == 1
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     entry = hass.config_entries.async_entries(DOMAIN)[0]

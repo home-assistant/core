@@ -1,12 +1,10 @@
 """Support to check for available updates."""
-import asyncio
 from datetime import timedelta
 from distutils.version import StrictVersion
 import json
 import logging
 import uuid
 
-import aiohttp
 import async_timeout
 from distro import linux_distribution  # pylint: disable=import-error
 import voluptuous as vol
@@ -156,29 +154,27 @@ async def get_newest_version(hass, huuid, include_components):
         info_object = {}
 
     session = async_get_clientsession(hass)
-    try:
-        with async_timeout.timeout(5):
-            req = await session.post(UPDATER_URL, json=info_object)
-        _LOGGER.info(
-            (
-                "Submitted analytics to Home Assistant servers. "
-                "Information submitted includes %s"
-            ),
-            info_object,
-        )
-    except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.error("Could not contact Home Assistant Update to check for updates")
-        raise update_coordinator.UpdateFailed
+
+    with async_timeout.timeout(15):
+        req = await session.post(UPDATER_URL, json=info_object)
+
+    _LOGGER.info(
+        (
+            "Submitted analytics to Home Assistant servers. "
+            "Information submitted includes %s"
+        ),
+        info_object,
+    )
 
     try:
         res = await req.json()
     except ValueError:
-        _LOGGER.error("Received invalid JSON from Home Assistant Update")
-        raise update_coordinator.UpdateFailed
+        raise update_coordinator.UpdateFailed(
+            "Received invalid JSON from Home Assistant Update"
+        )
 
     try:
         res = RESPONSE_SCHEMA(res)
         return res["version"], res["release-notes"]
-    except vol.Invalid:
-        _LOGGER.error("Got unexpected response: %s", res)
-        raise update_coordinator.UpdateFailed
+    except vol.Invalid as err:
+        raise update_coordinator.UpdateFailed(f"Got unexpected response: {err}")

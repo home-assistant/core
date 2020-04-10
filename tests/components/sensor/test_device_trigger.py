@@ -6,7 +6,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components.sensor.device_trigger import ENTITY_TRIGGERS
-from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN
+from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN, UNIT_PERCENTAGE
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -102,13 +102,13 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
     expected_capabilities = {
         "extra_fields": [
             {
-                "description": {"suffix": "%"},
+                "description": {"suffix": UNIT_PERCENTAGE},
                 "name": "above",
                 "optional": True,
                 "type": "float",
             },
             {
-                "description": {"suffix": "%"},
+                "description": {"suffix": UNIT_PERCENTAGE},
                 "name": "below",
                 "optional": True,
                 "type": "float",
@@ -426,6 +426,7 @@ async def test_if_fires_on_state_change_with_for(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 1
     await hass.async_block_till_done()
-    assert calls[0].data[
-        "some"
-    ] == "turn_off device - {} - unknown - 11 - 0:00:05".format(sensor1.entity_id)
+    assert (
+        calls[0].data["some"]
+        == f"turn_off device - {sensor1.entity_id} - unknown - 11 - 0:00:05"
+    )

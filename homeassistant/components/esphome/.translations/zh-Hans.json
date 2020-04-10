@@ -8,6 +8,7 @@
             "invalid_password": "\u65e0\u6548\u7684\u5bc6\u7801\uff01",
             "resolve_error": "\u65e0\u6cd5\u89e3\u6790 ESP \u7684\u5730\u5740\u3002\u5982\u679c\u6b64\u9519\u8bef\u6301\u7eed\u5b58\u5728\uff0c\u8bf7\u8bbe\u7f6e\u9759\u6001IP\u5730\u5740\uff1ahttps://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
+        "flow_title": "ESPHome: {name}",
         "step": {
             "authenticate": {
                 "data": {

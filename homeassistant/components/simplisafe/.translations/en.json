@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "This SimpliSafe account is already in use."
+        },
         "error": {
             "identifier_exists": "Account already registered",
             "invalid_credentials": "Invalid credentials"
@@ -7,7 +10,6 @@
         "step": {
             "user": {
                 "data": {
-                    "code": "Code (for Home Assistant)",
                     "password": "Password",
                     "username": "Email Address"
                 },
@@ -15,5 +17,15 @@
             }
         },
         "title": "SimpliSafe"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Code (used in Home Assistant UI)"
+                },
+                "title": "Configure SimpliSafe"
+            }
+        }
     }
 }

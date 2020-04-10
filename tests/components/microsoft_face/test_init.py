@@ -89,7 +89,7 @@ class TestMicrosoftFaceSetup:
 
         self.config = {mf.DOMAIN: {"api_key": "12345678abcdef"}}
 
-        self.endpoint_url = "https://westus.{0}".format(mf.FACE_API_URL)
+        self.endpoint_url = f"https://westus.{mf.FACE_API_URL}"
 
     def teardown_method(self):
         """Stop everything that was started."""

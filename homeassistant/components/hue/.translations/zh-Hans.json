@@ -5,7 +5,7 @@
             "already_configured": "\u98de\u5229\u6d66 Hue Bridge \u5df2\u914d\u7f6e\u5b8c\u6210",
             "already_in_progress": "\u7f51\u6865\u7684\u914d\u7f6e\u6d41\u5df2\u5728\u8fdb\u884c\u4e2d\u3002",
             "cannot_connect": "\u65e0\u6cd5\u8fde\u63a5\u5230 \u98de\u5229\u6d66 Hue Bridge",
-            "discover_timeout": "\u65e0\u6cd5\u55c5\u63a2 Hue \u6865\u63a5\u5668",
+            "discover_timeout": "\u65e0\u6cd5\u55c5\u63a2\u5230 Hue \u6865\u63a5\u5668",
             "no_bridges": "\u672a\u53d1\u73b0\u98de\u5229\u6d66 Hue Bridge",
             "unknown": "\u51fa\u73b0\u672a\u77e5\u7684\u9519\u8bef"
         },

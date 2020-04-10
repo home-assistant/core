@@ -2,10 +2,7 @@
 import socket
 from urllib.parse import urlparse
 
-from samsungctl import Remote
-from samsungctl.exceptions import AccessDenied, UnhandledResponse
 import voluptuous as vol
-from websocket import WebSocketException
 
 from homeassistant import config_entries
 from homeassistant.components.ssdp import (
@@ -21,23 +18,25 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
+    CONF_TOKEN,
 )
 
 # pylint:disable=unused-import
-from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN, LOGGER
+from .bridge import SamsungTVBridge
+from .const import (
+    CONF_MANUFACTURER,
+    CONF_MODEL,
+    DOMAIN,
+    LOGGER,
+    METHOD_LEGACY,
+    METHOD_WEBSOCKET,
+    RESULT_AUTH_MISSING,
+    RESULT_NOT_SUCCESSFUL,
+    RESULT_SUCCESS,
+)
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
-
-RESULT_AUTH_MISSING = "auth_missing"
-RESULT_SUCCESS = "success"
-RESULT_NOT_SUCCESSFUL = "not_successful"
-RESULT_NOT_SUPPORTED = "not_supported"
-
-SUPPORTED_METHODS = (
-    {"method": "websocket", "timeout": 1},
-    # We need this high timeout because waiting for auth popup is just an open socket
-    {"method": "legacy", "timeout": 31},
-)
+SUPPORTED_METHODS = [METHOD_LEGACY, METHOD_WEBSOCKET]
 
 
 def _get_ip(host):
@@ -59,61 +58,39 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._host = None
         self._ip = None
         self._manufacturer = None
-        self._method = None
         self._model = None
         self._name = None
-        self._port = None
         self._title = None
         self._id = None
+        self._bridge = None
 
     def _get_entry(self):
-        return self.async_create_entry(
-            title=self._title,
-            data={
-                CONF_HOST: self._host,
-                CONF_ID: self._id,
-                CONF_IP_ADDRESS: self._ip,
-                CONF_MANUFACTURER: self._manufacturer,
-                CONF_METHOD: self._method,
-                CONF_MODEL: self._model,
-                CONF_NAME: self._name,
-                CONF_PORT: self._port,
-            },
-        )
+        data = {
+            CONF_HOST: self._host,
+            CONF_ID: self._id,
+            CONF_IP_ADDRESS: self._ip,
+            CONF_MANUFACTURER: self._manufacturer,
+            CONF_METHOD: self._bridge.method,
+            CONF_MODEL: self._model,
+            CONF_NAME: self._name,
+            CONF_PORT: self._bridge.port,
+        }
+        if self._bridge.token:
+            data[CONF_TOKEN] = self._bridge.token
+        return self.async_create_entry(title=self._title, data=data,)
 
     def _try_connect(self):
         """Try to connect and check auth."""
-        for cfg in SUPPORTED_METHODS:
-            config = {
-                "name": "HomeAssistant",
-                "description": "HomeAssistant",
-                "id": "ha.component.samsung",
-                "host": self._host,
-                "port": self._port,
-            }
-            config.update(cfg)
-            try:
-                LOGGER.debug("Try config: %s", config)
-                with Remote(config.copy()):
-                    LOGGER.debug("Working config: %s", config)
-                    self._method = cfg["method"]
-                    return RESULT_SUCCESS
-            except AccessDenied:
-                LOGGER.debug("Working but denied config: %s", config)
-                return RESULT_AUTH_MISSING
-            except (UnhandledResponse, WebSocketException):
-                LOGGER.debug("Working but unsupported config: %s", config)
-                return RESULT_NOT_SUPPORTED
-            except OSError as err:
-                LOGGER.debug("Failing config: %s, error: %s", config, err)
-
+        for method in SUPPORTED_METHODS:
+            self._bridge = SamsungTVBridge.get_bridge(method, self._host)
+            result = self._bridge.try_connect()
+            if result != RESULT_NOT_SUCCESSFUL:
+                return result
         LOGGER.debug("No working config found")
         return RESULT_NOT_SUCCESSFUL
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
-        self._port = user_input.get(CONF_PORT)
-
         return await self.async_step_user(user_input)
 
     async def async_step_user(self, user_input=None):
@@ -158,13 +135,14 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._id.startswith("uuid:"):
             self._id = self._id[5:]
 
-        config_entry = await self.async_set_unique_id(ip_address)
-        if config_entry:
-            config_entry.data[CONF_ID] = self._id
-            config_entry.data[CONF_MANUFACTURER] = self._manufacturer
-            config_entry.data[CONF_MODEL] = self._model
-            self.hass.config_entries.async_update_entry(config_entry)
-            return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(ip_address)
+        self._abort_if_unique_id_configured(
+            {
+                CONF_ID: self._id,
+                CONF_MANUFACTURER: self._manufacturer,
+                CONF_MODEL: self._model,
+            }
+        )
 
         self.context["title_placeholders"] = {"model": self._model}
         return await self.async_step_confirm()
@@ -190,7 +168,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._manufacturer = user_input.get(CONF_MANUFACTURER)
         self._model = user_input.get(CONF_MODEL)
         self._name = user_input.get(CONF_NAME)
-        self._port = user_input.get(CONF_PORT)
         self._title = self._model or self._name
 
         await self.async_set_unique_id(self._ip)

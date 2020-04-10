@@ -37,9 +37,6 @@ DEFAULT_UNIT_OF_MEASUREMENT = "km"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-SIGNAL_DELETE_ENTITY = "ign_sismologia_delete_{}"
-SIGNAL_UPDATE_ENTITY = "ign_sismologia_update_{}"
-
 SOURCE = "ign_sismologia"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -124,11 +121,11 @@ class IgnSismologiaFeedEntityManager:
 
     def _update_entity(self, external_id):
         """Update entity."""
-        dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
+        dispatcher_send(self._hass, f"ign_sismologia_update_{external_id}")
 
     def _remove_entity(self, external_id):
         """Remove entity."""
-        dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
+        dispatcher_send(self._hass, f"ign_sismologia_delete_{external_id}")
 
 
 class IgnSismologiaLocationEvent(GeolocationEvent):
@@ -154,12 +151,12 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
             self.hass,
-            SIGNAL_DELETE_ENTITY.format(self._external_id),
+            f"ign_sismologia_delete_{self._external_id}",
             self._delete_callback,
         )
         self._remove_signal_update = async_dispatcher_connect(
             self.hass,
-            SIGNAL_UPDATE_ENTITY.format(self._external_id),
+            f"ign_sismologia_update_{self._external_id}",
             self._update_callback,
         )
 

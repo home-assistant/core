@@ -7,6 +7,13 @@
             "disarm": "Deaktivere {entity_name}",
             "trigger": "Ausl\u00f6ser {entity_name}"
         },
+        "condition_type": {
+            "is_armed_away": "{entity_name} ist aktiviert - Unterwegs",
+            "is_armed_home": "{entity_name} ist aktiviert - Zuhause",
+            "is_armed_night": "{entity_name} ist aktiviert - Nacht",
+            "is_disarmed": "{entity_name} ist deaktiviert",
+            "is_triggered": "{entity_name} wurde ausgel\u00f6st"
+        },
         "trigger_type": {
             "armed_away": "{entity_name} Unterwegs",
             "armed_home": "{entity_name} Zuhause",

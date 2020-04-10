@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto bereits konfiguriert"
+            "already_configured": "Konto bereits konfiguriert",
+            "no_device": "Auf keinem Ihrer Ger\u00e4te ist \"Find my iPhone\" aktiviert"
         },
         "error": {
             "login": "Login-Fehler: Bitte \u00fcberpr\u00fcfe deine E-Mail & Passwort",
@@ -19,7 +20,8 @@
             "user": {
                 "data": {
                     "password": "Passwort",
-                    "username": "E-Mail"
+                    "username": "E-Mail",
+                    "with_family": "Mit Familie"
                 },
                 "description": "Gib deine Zugangsdaten ein",
                 "title": "iCloud-Anmeldeinformationen"

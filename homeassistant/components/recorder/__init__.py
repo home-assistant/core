@@ -5,12 +5,11 @@ import concurrent.futures
 from datetime import datetime, timedelta
 import logging
 import queue
-from sqlite3 import Connection
 import threading
 import time
 from typing import Any, Dict, Optional
 
-from sqlalchemy import create_engine, exc
+from sqlalchemy import create_engine, exc, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.event import listens_for
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -61,6 +60,7 @@ DEFAULT_URL = "sqlite:///{hass_config_path}"
 DEFAULT_DB_FILE = "home-assistant_v2.db"
 DEFAULT_DB_MAX_RETRIES = 10
 DEFAULT_DB_RETRY_WAIT = 3
+KEEPALIVE_TIME = 30
 
 CONF_DB_URL = "db_url"
 CONF_DB_MAX_RETRIES = "db_max_retries"
@@ -68,6 +68,7 @@ CONF_DB_RETRY_WAIT = "db_retry_wait"
 CONF_PURGE_KEEP_DAYS = "purge_keep_days"
 CONF_PURGE_INTERVAL = "purge_interval"
 CONF_EVENT_TYPES = "event_types"
+CONF_COMMIT_INTERVAL = "commit_interval"
 
 FILTER_SCHEMA = vol.Schema(
     {
@@ -98,6 +99,9 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Coerce(int), vol.Range(min=0)
                 ),
                 vol.Optional(CONF_DB_URL): cv.string,
+                vol.Optional(CONF_COMMIT_INTERVAL, default=1): vol.All(
+                    vol.Coerce(int), vol.Range(min=0)
+                ),
                 vol.Optional(
                     CONF_DB_MAX_RETRIES, default=DEFAULT_DB_MAX_RETRIES
                 ): cv.positive_int,
@@ -141,10 +145,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
     keep_days = conf.get(CONF_PURGE_KEEP_DAYS)
     purge_interval = conf.get(CONF_PURGE_INTERVAL)
+    commit_interval = conf[CONF_COMMIT_INTERVAL]
     db_max_retries = conf[CONF_DB_MAX_RETRIES]
     db_retry_wait = conf[CONF_DB_RETRY_WAIT]
 
-    db_url = conf.get(CONF_DB_URL, None)
+    db_url = conf.get(CONF_DB_URL)
     if not db_url:
         db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
 
@@ -154,6 +159,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass=hass,
         keep_days=keep_days,
         purge_interval=purge_interval,
+        commit_interval=commit_interval,
         uri=db_url,
         db_max_retries=db_max_retries,
         db_retry_wait=db_retry_wait,
@@ -185,6 +191,7 @@ class Recorder(threading.Thread):
         hass: HomeAssistant,
         keep_days: int,
         purge_interval: int,
+        commit_interval: int,
         uri: str,
         db_max_retries: int,
         db_retry_wait: int,
@@ -197,6 +204,7 @@ class Recorder(threading.Thread):
         self.hass = hass
         self.keep_days = keep_days
         self.purge_interval = purge_interval
+        self.commit_interval = commit_interval
         self.queue: Any = queue.Queue()
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
@@ -214,6 +222,9 @@ class Recorder(threading.Thread):
         )
         self.exclude_t = exclude.get(CONF_EVENT_TYPES, [])
 
+        self._timechanges_seen = 0
+        self._keepalive_count = 0
+        self.event_session = None
         self.get_session = None
 
     @callback
@@ -326,9 +337,12 @@ class Recorder(threading.Thread):
 
             self.hass.helpers.event.track_point_in_time(async_purge, run)
 
+        self.event_session = self.get_session()
+        # Use a session for the event read loop
+        # with a commit every time the event time
+        # has changed.  This reduces the disk io.
         while True:
             event = self.queue.get()
-
             if event is None:
                 self._close_run()
                 self._close_connection()
@@ -340,6 +354,15 @@ class Recorder(threading.Thread):
                 continue
             if event.event_type == EVENT_TIME_CHANGED:
                 self.queue.task_done()
+                self._keepalive_count += 1
+                if self._keepalive_count >= KEEPALIVE_TIME:
+                    self._keepalive_count = 0
+                    self._send_keep_alive()
+                if self.commit_interval:
+                    self._timechanges_seen += 1
+                    if self._timechanges_seen >= self.commit_interval:
+                        self._timechanges_seen = 0
+                        self._commit_event_session_or_retry()
                 continue
             if event.event_type in self.exclude_t:
                 self.queue.task_done()
@@ -351,54 +374,112 @@ class Recorder(threading.Thread):
                     self.queue.task_done()
                     continue
 
-            tries = 1
-            updated = False
-            while not updated and tries <= self.db_max_retries:
-                if tries != 1:
-                    time.sleep(self.db_retry_wait)
+            try:
+                dbevent = Events.from_event(event)
+                self.event_session.add(dbevent)
+                self.event_session.flush()
+            except (TypeError, ValueError):
+                _LOGGER.warning("Event is not JSON serializable: %s", event)
+            except Exception as err:  # pylint: disable=broad-except
+                # Must catch the exception to prevent the loop from collapsing
+                _LOGGER.exception("Error adding event: %s", err)
+
+            if dbevent and event.event_type == EVENT_STATE_CHANGED:
                 try:
-                    with session_scope(session=self.get_session()) as session:
-                        try:
-                            dbevent = Events.from_event(event)
-                            session.add(dbevent)
-                            session.flush()
-                        except (TypeError, ValueError):
-                            _LOGGER.warning("Event is not JSON serializable: %s", event)
+                    dbstate = States.from_event(event)
+                    dbstate.event_id = dbevent.event_id
+                    self.event_session.add(dbstate)
+                except (TypeError, ValueError):
+                    _LOGGER.warning(
+                        "State is not JSON serializable: %s",
+                        event.data.get("new_state"),
+                    )
+                except Exception as err:  # pylint: disable=broad-except
+                    # Must catch the exception to prevent the loop from collapsing
+                    _LOGGER.exception("Error adding state change: %s", err)
 
-                        if event.event_type == EVENT_STATE_CHANGED:
-                            try:
-                                dbstate = States.from_event(event)
-                                dbstate.event_id = dbevent.event_id
-                                session.add(dbstate)
-                            except (TypeError, ValueError):
-                                _LOGGER.warning(
-                                    "State is not JSON serializable: %s",
-                                    event.data.get("new_state"),
-                                )
+            # If they do not have a commit interval
+            # than we commit right away
+            if not self.commit_interval:
+                self._commit_event_session_or_retry()
 
-                    updated = True
+            self.queue.task_done()
 
-                except exc.OperationalError as err:
+    def _send_keep_alive(self):
+        try:
+            _LOGGER.debug("Sending keepalive")
+            self.event_session.connection().scalar(select([1]))
+            return
+        except Exception as err:  # pylint: disable=broad-except
+            # Must catch the exception to prevent the loop from collapsing
+            _LOGGER.error(
+                "Error in database connectivity during keepalive: %s.", err,
+            )
+            self._reopen_event_session()
+
+    def _commit_event_session_or_retry(self):
+        tries = 1
+        while tries <= self.db_max_retries:
+            if tries != 1:
+                time.sleep(self.db_retry_wait)
+
+            try:
+                self._commit_event_session()
+                return
+            except (exc.InternalError, exc.OperationalError) as err:
+                if err.connection_invalidated:
                     _LOGGER.error(
-                        "Error in database connectivity: %s. "
+                        "Database connection invalidated: %s. "
                         "(retrying in %s seconds)",
                         err,
                         self.db_retry_wait,
                     )
-                    tries += 1
+                else:
+                    _LOGGER.error(
+                        "Error in database connectivity during commit: %s. "
+                        "(retrying in %s seconds)",
+                        err,
+                        self.db_retry_wait,
+                    )
+                tries += 1
 
-                except exc.SQLAlchemyError:
-                    updated = True
-                    _LOGGER.exception("Error saving event: %s", event)
+            except Exception as err:  # pylint: disable=broad-except
+                # Must catch the exception to prevent the loop from collapsing
+                _LOGGER.exception("Error saving events: %s", err)
+                return
 
-            if not updated:
-                _LOGGER.error(
-                    "Error in database update. Could not save "
-                    "after %d tries. Giving up",
-                    tries,
-                )
+        _LOGGER.error(
+            "Error in database update. Could not save " "after %d tries. Giving up",
+            tries,
+        )
+        self._reopen_event_session()
 
-            self.queue.task_done()
+    def _reopen_event_session(self):
+        try:
+            self.event_session.rollback()
+        except Exception as err:  # pylint: disable=broad-except
+            # Must catch the exception to prevent the loop from collapsing
+            _LOGGER.exception("Error while rolling back event session: %s", err)
+
+        try:
+            self.event_session.close()
+        except Exception as err:  # pylint: disable=broad-except
+            # Must catch the exception to prevent the loop from collapsing
+            _LOGGER.exception("Error while closing event session: %s", err)
+
+        try:
+            self.event_session = self.get_session()
+        except Exception as err:  # pylint: disable=broad-except
+            # Must catch the exception to prevent the loop from collapsing
+            _LOGGER.exception("Error while creating new event session: %s", err)
+
+    def _commit_event_session(self):
+        try:
+            self.event_session.commit()
+        except Exception as err:
+            _LOGGER.error("Error executing query: %s", err)
+            self.event_session.rollback()
+            raise
 
     @callback
     def event_listener(self, event):
@@ -415,15 +496,23 @@ class Recorder(threading.Thread):
 
         # pylint: disable=unused-variable
         @listens_for(Engine, "connect")
-        def set_sqlite_pragma(dbapi_connection, connection_record):
-            """Set sqlite's WAL mode."""
-            if isinstance(dbapi_connection, Connection):
+        def setup_connection(dbapi_connection, connection_record):
+            """Dbapi specific connection settings."""
+
+            # We do not import sqlite3 here so mysql/other
+            # users do not have to pay for it to be loaded in
+            # memory
+            if self.db_url == "sqlite://" or ":memory:" in self.db_url:
                 old_isolation = dbapi_connection.isolation_level
                 dbapi_connection.isolation_level = None
                 cursor = dbapi_connection.cursor()
                 cursor.execute("PRAGMA journal_mode=WAL")
                 cursor.close()
                 dbapi_connection.isolation_level = old_isolation
+            elif self.db_url.startswith("mysql"):
+                cursor = dbapi_connection.cursor()
+                cursor.execute("SET session wait_timeout=28800")
+                cursor.close()
 
         if self.db_url == "sqlite://" or ":memory:" in self.db_url:
             kwargs["connect_args"] = {"check_same_thread": False}
@@ -465,7 +554,10 @@ class Recorder(threading.Thread):
 
     def _close_run(self):
         """Save end time for current run."""
-        with session_scope(session=self.get_session()) as session:
+        if self.event_session is not None:
             self.run_info.end = dt_util.utcnow()
-            session.add(self.run_info)
+            self.event_session.add(self.run_info)
+            self._commit_event_session_or_retry()
+            self.event_session.close()
+
         self.run_info = None

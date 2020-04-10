@@ -28,6 +28,7 @@ from .const import (
     DOMAIN,
     DOMAIN_TO_GOOGLE_TYPES,
     ERR_FUNCTION_NOT_SUPPORTED,
+    NOT_EXPOSE_LOCAL,
     SOURCE_LOCAL,
     STORE_AGENT_USER_IDS,
 )
@@ -352,6 +353,18 @@ class GoogleEntity:
         return self.config.should_expose(self.state)
 
     @callback
+    def should_expose_local(self) -> bool:
+        """Return if the entity should be exposed locally."""
+        return (
+            self.should_expose()
+            and get_google_type(
+                self.state.domain, self.state.attributes.get(ATTR_DEVICE_CLASS)
+            )
+            not in NOT_EXPOSE_LOCAL
+            and not self.might_2fa()
+        )
+
+    @callback
     def is_supported(self) -> bool:
         """Return if the entity is supported by Google."""
         return bool(self.traits())
@@ -401,7 +414,7 @@ class GoogleEntity:
         if aliases:
             device["name"]["nicknames"] = [name] + aliases
 
-        if self.config.is_local_sdk_active:
+        if self.config.is_local_sdk_active and self.should_expose_local():
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
             device["customData"] = {
                 "webhookId": self.config.local_sdk_webhook_id,

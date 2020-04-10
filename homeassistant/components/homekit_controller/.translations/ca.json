@@ -3,7 +3,7 @@
         "abort": {
             "accessory_not_found_error": "No s'ha pogut vincular, no s'ha trobat el dispositiu.",
             "already_configured": "Accessori ja configurat amb aquest controlador.",
-            "already_in_progress": "El flux de dades pel dispositiu ja est\u00e0 en curs.",
+            "already_in_progress": "El flux de dades de configuraci\u00f3 pel dispositiu ja est\u00e0 en curs.",
             "already_paired": "Aquest accessori ja est\u00e0 vinculat amb un altre dispositiu. Reinicia l'accessori i torna-ho a provar.",
             "ignored_model": "La disponibilitat de HomeKit per aquest model est\u00e0 bloquejada ja que, de moment, no hi ha una integraci\u00f3 nativa completa.",
             "invalid_config_entry": "Aquest dispositiu s'est\u00e0 mostrant com a llest per a ser vinculat per\u00f2, hi ha una entrada de configuraci\u00f3 conflictiva a Home Assistant que s'ha d'eliminar primer.",

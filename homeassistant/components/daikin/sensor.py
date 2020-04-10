@@ -22,7 +22,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     Can only be called when a user accidentally mentions the platform in their
     config. But even in that case it would have been ignored.
     """
-    pass
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -47,9 +46,9 @@ class DaikinClimateSensor(Entity):
         self._api = api
         self._sensor = SENSOR_TYPES.get(monitored_state)
         if name is None:
-            name = "{} {}".format(self._sensor[CONF_NAME], api.name)
+            name = f"{self._sensor[CONF_NAME]} {api.name}"
 
-        self._name = "{} {}".format(name, monitored_state.replace("_", " "))
+        self._name = f"{name} {monitored_state.replace('_', ' ')}"
         self._device_attribute = monitored_state
 
         if self._sensor[CONF_TYPE] == SENSOR_TYPE_TEMPERATURE:

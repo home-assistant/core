@@ -12,8 +12,10 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -33,11 +35,11 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 SENSOR_TYPES = {
     "weather": ["Condition", None],
     "temperature": ["Temperature", None],
-    "wind_speed": ["Wind speed", "m/s"],
+    "wind_speed": ["Wind speed", SPEED_METERS_PER_SECOND],
     "wind_bearing": ["Wind bearing", "°"],
-    "humidity": ["Humidity", "%"],
+    "humidity": ["Humidity", UNIT_PERCENTAGE],
     "pressure": ["Pressure", "mbar"],
-    "clouds": ["Cloud coverage", "%"],
+    "clouds": ["Cloud coverage", UNIT_PERCENTAGE],
     "rain": ["Rain", "mm"],
     "snow": ["Snow", "mm"],
     "weather_code": ["Weather code", None],
@@ -161,8 +163,9 @@ class OpenWeatherMapSensor(Entity):
             elif self.type == "clouds":
                 self._state = data.get_clouds()
             elif self.type == "rain":
-                if data.get_rain():
-                    self._state = round(data.get_rain()["3h"], 0)
+                rain = data.get_rain()
+                if "3h" in rain:
+                    self._state = round(rain["3h"], 0)
                     self._unit_of_measurement = "mm"
                 else:
                     self._state = "not raining"

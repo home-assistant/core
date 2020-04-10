@@ -43,13 +43,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         GarminConnectAuthenticationError,
         GarminConnectTooManyRequestsError,
     ) as err:
-        _LOGGER.error("Error occurred during Garmin Connect login: %s", err)
+        _LOGGER.error("Error occurred during Garmin Connect login request: %s", err)
         return False
     except (GarminConnectConnectionError) as err:
-        _LOGGER.error("Error occurred during Garmin Connect login: %s", err)
+        _LOGGER.error(
+            "Connection error occurred during Garmin Connect login request: %s", err
+        )
         raise ConfigEntryNotReady
     except Exception:  # pylint: disable=broad-except
-        _LOGGER.error("Unknown error occurred during Garmin Connect login")
+        _LOGGER.exception("Unknown error occurred during Garmin Connect login request")
         return False
 
     garmin_data = GarminConnectData(hass, garmin_client)
@@ -93,16 +95,18 @@ class GarminConnectData:
         today = date.today()
 
         try:
-            self.data = self.client.get_stats(today.isoformat())
+            self.data = self.client.get_stats_and_body(today.isoformat())
         except (
             GarminConnectAuthenticationError,
             GarminConnectTooManyRequestsError,
+            GarminConnectConnectionError,
         ) as err:
-            _LOGGER.error("Error occurred during Garmin Connect get stats: %s", err)
-            return
-        except (GarminConnectConnectionError) as err:
-            _LOGGER.error("Error occurred during Garmin Connect get stats: %s", err)
+            _LOGGER.error(
+                "Error occurred during Garmin Connect get activity request: %s", err
+            )
             return
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.error("Unknown error occurred during Garmin Connect get stats")
+            _LOGGER.exception(
+                "Unknown error occurred during Garmin Connect get activity request"
+            )
             return

@@ -1,18 +1,14 @@
-"""
-Smart energy channels module for Zigbee Home Automation.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/zha/
-"""
+"""Smart energy channels module for Zigbee Home Automation."""
 import logging
 
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
+from homeassistant.const import TIME_HOURS, TIME_SECONDS
 from homeassistant.core import callback
 
-from .. import registries
-from ..channels import AttributeListeningChannel, ZigbeeChannel
+from .. import registries, typing as zha_typing
 from ..const import REPORT_CONFIG_DEFAULT
+from .base import ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,83 +17,69 @@ _LOGGER = logging.getLogger(__name__)
 class Calendar(ZigbeeChannel):
     """Calendar channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.DeviceManagement.cluster_id)
 class DeviceManagement(ZigbeeChannel):
     """Device Management channel."""
-
-    pass
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Drlc.cluster_id)
 class Drlc(ZigbeeChannel):
     """Demand Response and Load Control channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.EnergyManagement.cluster_id)
 class EnergyManagement(ZigbeeChannel):
     """Energy Management channel."""
-
-    pass
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Events.cluster_id)
 class Events(ZigbeeChannel):
     """Event channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.KeyEstablishment.cluster_id)
 class KeyEstablishment(ZigbeeChannel):
     """Key Establishment channel."""
-
-    pass
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.MduPairing.cluster_id)
 class MduPairing(ZigbeeChannel):
     """Pairing channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Messaging.cluster_id)
 class Messaging(ZigbeeChannel):
     """Messaging channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Metering.cluster_id)
-class Metering(AttributeListeningChannel):
+class Metering(ZigbeeChannel):
     """Metering channel."""
 
     REPORT_CONFIG = [{"attr": "instantaneous_demand", "config": REPORT_CONFIG_DEFAULT}]
 
     unit_of_measure_map = {
         0x00: "kW",
-        0x01: "m³/h",
-        0x02: "ft³/h",
-        0x03: "ccf/h",
-        0x04: "US gal/h",
-        0x05: "IMP gal/h",
-        0x06: "BTU/h",
-        0x07: "l/h",
+        0x01: f"m³/{TIME_HOURS}",
+        0x02: f"ft³/{TIME_HOURS}",
+        0x03: f"ccf/{TIME_HOURS}",
+        0x04: f"US gal/{TIME_HOURS}",
+        0x05: f"IMP gal/{TIME_HOURS}",
+        0x06: f"BTU/{TIME_HOURS}",
+        0x07: f"l/{TIME_HOURS}",
         0x08: "kPa",
         0x09: "kPa",
-        0x0A: "mcf/h",
+        0x0A: f"mcf/{TIME_HOURS}",
         0x0B: "unitless",
-        0x0C: "MJ/s",
+        0x0C: f"MJ/{TIME_SECONDS}",
     }
 
-    def __init__(self, cluster, device):
+    def __init__(
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
+    ) -> None:
         """Initialize Metering."""
-        super().__init__(cluster, device)
+        super().__init__(cluster, ch_pool)
         self._divisor = None
         self._multiplier = None
         self._unit_enum = None
@@ -165,18 +147,12 @@ class Metering(AttributeListeningChannel):
 class Prepayment(ZigbeeChannel):
     """Prepayment channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Price.cluster_id)
 class Price(ZigbeeChannel):
     """Price channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Tunneling.cluster_id)
 class Tunneling(ZigbeeChannel):
     """Tunneling channel."""
-
-    pass

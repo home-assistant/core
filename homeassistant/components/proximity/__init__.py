@@ -160,7 +160,7 @@ class Proximity(Entity):
             if (device_state.state).lower() == (self.friendly_name).lower():
                 device_friendly = device_state.name
                 if devices_in_zone != "":
-                    devices_in_zone = devices_in_zone + ", "
+                    devices_in_zone = f"{devices_in_zone}, "
                 devices_in_zone = devices_in_zone + device_friendly
 
         # No-one to track so reset the entity.

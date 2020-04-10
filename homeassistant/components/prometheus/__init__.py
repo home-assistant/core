@@ -17,6 +17,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers import entityfilter, state as state_helper
 import homeassistant.helpers.config_validation as cv
@@ -349,7 +350,7 @@ class PrometheusMetrics:
         units = {
             TEMP_CELSIUS: "c",
             TEMP_FAHRENHEIT: "c",  # F should go into C metric
-            "%": "percent",
+            UNIT_PERCENTAGE: "percent",
         }
         default = unit.replace("/", "_per_")
         default = default.lower()

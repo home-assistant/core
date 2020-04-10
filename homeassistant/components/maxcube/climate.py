@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for handler in hass.data[DATA_KEY].values():
         cube = handler.cube
         for device in cube.devices:
-            name = "{} {}".format(cube.room_by_id(device.room_id).name, device.name)
+            name = f"{cube.room_by_id(device.room_id).name} {device.name}"
 
             if cube.is_thermostat(device) or cube.is_wallthermostat(device):
                 devices.append(MaxCubeClimate(handler, name, device.rf_address))
@@ -122,7 +122,7 @@ class MaxCubeClimate(ClimateDevice):
         with self._cubehandle.mutex:
             try:
                 cube.set_target_temperature(device, target_temperature)
-            except (socket.timeout, socket.error):
+            except (socket.timeout, OSError):
                 _LOGGER.error("Setting target temperature failed")
                 return False
 
@@ -145,7 +145,7 @@ class MaxCubeClimate(ClimateDevice):
         with self._cubehandle.mutex:
             try:
                 self._cubehandle.cube.set_mode(device, mode)
-            except (socket.timeout, socket.error):
+            except (socket.timeout, OSError):
                 _LOGGER.error("Setting operation mode failed")
                 return False
 

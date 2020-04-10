@@ -82,7 +82,7 @@ class DeutscheBahnSensor(Entity):
         self.data.update()
         self._state = self.data.connections[0].get("departure", "Unknown")
         if self.data.connections[0].get("delay", 0) != 0:
-            self._state += " + {}".format(self.data.connections[0]["delay"])
+            self._state += f" + {self.data.connections[0]['delay']}"
 
 
 class SchieneData:

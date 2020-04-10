@@ -3,6 +3,5 @@
   "name": "Crime Reports",
   "documentation": "https://www.home-assistant.io/integrations/crimereports",
   "requirements": ["crimereports==1.0.1"],
-  "dependencies": [],
   "codeowners": []
 }

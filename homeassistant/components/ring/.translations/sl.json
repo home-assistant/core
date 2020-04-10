@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Naprava je \u017ee konfigurirana"
+        },
+        "error": {
+            "invalid_auth": "Neveljavna avtentikacija",
+            "unknown": "Nepri\u010dakovana napaka"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Dvofaktorska koda"
+                },
+                "title": "Dvofaktorska avtentikacija"
+            },
+            "user": {
+                "data": {
+                    "password": "Geslo",
+                    "username": "Uporabni\u0161ko ime"
+                },
+                "title": "Prijava s ra\u010dunom Ring"
+            }
+        },
+        "title": "Ring"
+    }
+}
