@@ -18,6 +18,7 @@ from homeassistant.const import (
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
+    TEMP_FAHRENHEIT,
     TIME_HOURS,
     UNIT_PERCENTAGE,
     UNIT_UV_INDEX,
@@ -135,7 +136,7 @@ SENSOR_TYPES = {
     "temperature": [
         "Temperature",
         "°C",
-        "°F",
+        TEMP_FAHRENHEIT,
         "°C",
         "°C",
         "°C",
@@ -145,7 +146,7 @@ SENSOR_TYPES = {
     "apparent_temperature": [
         "Apparent Temperature",
         "°C",
-        "°F",
+        TEMP_FAHRENHEIT,
         "°C",
         "°C",
         "°C",
@@ -155,7 +156,7 @@ SENSOR_TYPES = {
     "dew_point": [
         "Dew Point",
         "°C",
-        "°F",
+        TEMP_FAHRENHEIT,
         "°C",
         "°C",
         "°C",
@@ -245,7 +246,7 @@ SENSOR_TYPES = {
     "apparent_temperature_max": [
         "Daily High Apparent Temperature",
         "°C",
-        "°F",
+        TEMP_FAHRENHEIT,
         "°C",
         "°C",
         "°C",
@@ -255,7 +256,7 @@ SENSOR_TYPES = {
     "apparent_temperature_high": [
         "Daytime High Apparent Temperature",
         "°C",
-        "°F",
+        TEMP_FAHRENHEIT,
         "°C",
         "°C",
         "°C",
@@ -265,7 +266,7 @@ SENSOR_TYPES = {
     "apparent_temperature_min": [
         "Daily Low Apparent Temperature",
         "°C",
-        "°F",
+        TEMP_FAHRENHEIT,
         "°C",
         "°C",
         "°C",
@@ -275,7 +276,7 @@ SENSOR_TYPES = {
     "apparent_temperature_low": [
         "Overnight Low Apparent Temperature",
         "°C",
-        "°F",
+        TEMP_FAHRENHEIT,
         "°C",
         "°C",
         "°C",
@@ -285,7 +286,7 @@ SENSOR_TYPES = {
     "temperature_max": [
         "Daily High Temperature",
         "°C",
-        "°F",
+        TEMP_FAHRENHEIT,
         "°C",
         "°C",
         "°C",
@@ -295,7 +296,7 @@ SENSOR_TYPES = {
     "temperature_high": [
         "Daytime High Temperature",
         "°C",
-        "°F",
+        TEMP_FAHRENHEIT,
         "°C",
         "°C",
         "°C",
@@ -305,7 +306,7 @@ SENSOR_TYPES = {
     "temperature_min": [
         "Daily Low Temperature",
         "°C",
-        "°F",
+        TEMP_FAHRENHEIT,
         "°C",
         "°C",
         "°C",
@@ -315,7 +316,7 @@ SENSOR_TYPES = {
     "temperature_low": [
         "Overnight Low Temperature",
         "°C",
-        "°F",
+        TEMP_FAHRENHEIT,
         "°C",
         "°C",
         "°C",
