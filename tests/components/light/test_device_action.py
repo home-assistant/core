@@ -89,13 +89,7 @@ async def test_get_actions(hass, device_reg, entity_reg):
         },
         {
             "domain": DOMAIN,
-            "type": "flash_short",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-        },
-        {
-            "domain": DOMAIN,
-            "type": "flash_long",
+            "type": "flash",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
@@ -146,7 +140,7 @@ async def test_get_action_capabilities_brightness(hass, device_reg, entity_reg):
             {
                 "name": "brightness_pct",
                 "optional": True,
-                "type": "integer",
+                "type": "float",
                 "valueMax": 100,
                 "valueMin": 0,
             }
@@ -180,13 +174,27 @@ async def test_get_action_capabilities_flash(hass, device_reg, entity_reg):
         supported_features=SUPPORT_FLASH,
     )
 
+    expected_capabilities = {
+        "extra_fields": [
+            {
+                "name": "flash",
+                "optional": True,
+                "type": "select",
+                "options": [("short", "short"), ("long", "long")],
+            }
+        ]
+    }
+
     actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 5
+    assert len(actions) == 4
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action
         )
-        assert capabilities == {"extra_fields": []}
+        if action["type"] == "turn_on":
+            assert capabilities == expected_capabilities
+        else:
+            assert capabilities == {"extra_fields": []}
 
 
 async def test_action(hass, calls):
@@ -236,7 +244,7 @@ async def test_action(hass, calls):
                         "domain": DOMAIN,
                         "device_id": "",
                         "entity_id": ent1.entity_id,
-                        "type": "flash_short",
+                        "type": "flash",
                     },
                 },
                 {
@@ -245,7 +253,8 @@ async def test_action(hass, calls):
                         "domain": DOMAIN,
                         "device_id": "",
                         "entity_id": ent1.entity_id,
-                        "type": "flash_long",
+                        "type": "flash",
+                        "flash": "long",
                     },
                 },
                 {

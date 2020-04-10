@@ -6,9 +6,10 @@ import voluptuous as vol
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.light import (
     ATTR_FLASH,
-    FLASH_LONG,
     FLASH_SHORT,
     SUPPORT_FLASH,
+    VALID_BRIGHTNESS_PCT,
+    VALID_FLASH,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -25,8 +26,7 @@ from . import ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS_STEP_PCT, DOMAIN, SUPPORT_BRI
 
 TYPE_BRIGHTNESS_INCREASE = "brightness_increase"
 TYPE_BRIGHTNESS_DECREASE = "brightness_decrease"
-TYPE_FLASH_SHORT = "flash_short"
-TYPE_FLASH_LONG = "flash_long"
+TYPE_FLASH = "flash"
 
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
@@ -34,16 +34,10 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
         vol.Required(CONF_DOMAIN): DOMAIN,
         vol.Required(CONF_TYPE): vol.In(
             toggle_entity.DEVICE_ACTION_TYPES
-            + [
-                TYPE_BRIGHTNESS_INCREASE,
-                TYPE_BRIGHTNESS_DECREASE,
-                TYPE_FLASH_SHORT,
-                TYPE_FLASH_LONG,
-            ]
+            + [TYPE_BRIGHTNESS_INCREASE, TYPE_BRIGHTNESS_DECREASE, TYPE_FLASH]
         ),
-        vol.Optional(ATTR_BRIGHTNESS_PCT): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=100)
-        ),
+        vol.Optional(ATTR_BRIGHTNESS_PCT): VALID_BRIGHTNESS_PCT,
+        vol.Optional(ATTR_FLASH): VALID_FLASH,
     }
 )
 
@@ -72,10 +66,12 @@ async def async_call_action_from_config(
         data[ATTR_BRIGHTNESS_STEP_PCT] = -10
     elif ATTR_BRIGHTNESS_PCT in config:
         data[ATTR_BRIGHTNESS_PCT] = config[ATTR_BRIGHTNESS_PCT]
-    elif config[CONF_TYPE] == TYPE_FLASH_SHORT:
-        data[ATTR_FLASH] = FLASH_SHORT
-    elif config[CONF_TYPE] == TYPE_FLASH_LONG:
-        data[ATTR_FLASH] = FLASH_LONG
+
+    if config[CONF_TYPE] == TYPE_FLASH:
+        if ATTR_FLASH in config:
+            data[ATTR_FLASH] = config[ATTR_FLASH]
+        else:
+            data[ATTR_FLASH] = FLASH_SHORT
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, data, blocking=True, context=context
@@ -121,13 +117,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
             actions.extend(
                 (
                     {
-                        CONF_TYPE: TYPE_FLASH_SHORT,
-                        "device_id": device_id,
-                        "entity_id": entry.entity_id,
-                        "domain": DOMAIN,
-                    },
-                    {
-                        CONF_TYPE: TYPE_FLASH_LONG,
+                        CONF_TYPE: TYPE_FLASH,
                         "device_id": device_id,
                         "entity_id": entry.entity_id,
                         "domain": DOMAIN,
@@ -154,15 +144,14 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> di
     elif entry:
         supported_features = entry.supported_features
 
-    if not supported_features & SUPPORT_BRIGHTNESS:
-        return {}
+    extra_fields = vol.Schema({})
 
-    return {
-        "extra_fields": vol.Schema(
-            {
-                vol.Optional(ATTR_BRIGHTNESS_PCT): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=100)
-                )
-            }
+    if supported_features & SUPPORT_BRIGHTNESS:
+        extra_fields = extra_fields.extend(
+            {vol.Optional(ATTR_BRIGHTNESS_PCT): VALID_BRIGHTNESS_PCT}
         )
-    }
+
+    if supported_features & SUPPORT_FLASH:
+        extra_fields = extra_fields.extend({vol.Optional(ATTR_FLASH): VALID_FLASH})
+
+    return {"extra_fields": extra_fields}
