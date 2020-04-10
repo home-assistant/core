@@ -43,6 +43,7 @@ def cast_mock():
 
 # pylint: disable=invalid-name
 FakeUUID = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e2")
+FakeUUID2 = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e4")
 FakeGroupUUID = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e3")
 
 
@@ -268,6 +269,62 @@ async def test_replay_past_chromecasts(hass):
     )
     await hass.async_block_till_done()
     assert add_dev2.call_count == 1
+
+
+async def test_manual_cast_chromecasts(hass):
+    """Test only wanted casts are added for manual configuration."""
+    cast_1 = get_fake_chromecast_info(host="configured_host")
+    cast_2 = get_fake_chromecast_info(host="other_host", uuid=FakeUUID2)
+
+    # Manual configuration of media player with host "configured_host"
+    discover_cast, add_dev1 = await async_setup_cast_internal_discovery(
+        hass, config={"host": "configured_host"}
+    )
+    discover_cast("service2", cast_2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()  # having tasks that add jobs
+    assert add_dev1.call_count == 0
+
+    discover_cast("service1", cast_1)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()  # having tasks that add jobs
+    assert add_dev1.call_count == 1
+
+
+async def test_auto_cast_chromecasts(hass):
+    """Test all discovered casts are added for default configuration."""
+    cast_1 = get_fake_chromecast_info(host="some_host")
+    cast_2 = get_fake_chromecast_info(host="other_host", uuid=FakeUUID2)
+
+    # Manual configuration of media player with host "configured_host"
+    discover_cast, add_dev1 = await async_setup_cast_internal_discovery(hass)
+    discover_cast("service2", cast_2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()  # having tasks that add jobs
+    assert add_dev1.call_count == 1
+
+    discover_cast("service1", cast_1)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()  # having tasks that add jobs
+    assert add_dev1.call_count == 2
+
+
+async def test_update_cast_chromecasts(hass):
+    """Test discovery of same UUID twice only adds one cast."""
+    cast_1 = get_fake_chromecast_info(host="old_host")
+    cast_2 = get_fake_chromecast_info(host="new_host")
+
+    # Manual configuration of media player with host "configured_host"
+    discover_cast, add_dev1 = await async_setup_cast_internal_discovery(hass)
+    discover_cast("service1", cast_1)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()  # having tasks that add jobs
+    assert add_dev1.call_count == 1
+
+    discover_cast("service2", cast_2)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()  # having tasks that add jobs
+    assert add_dev1.call_count == 1
 
 
 async def test_entity_media_states(hass: HomeAssistantType):
