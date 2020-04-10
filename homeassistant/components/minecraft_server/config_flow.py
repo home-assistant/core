@@ -1,8 +1,4 @@
 """Config flow for Minecraft Server integration."""
-from functools import partial
-import ipaddress
-
-import getmac
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -69,9 +65,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     unique_id = ""
                     title = f"{host}:{port}"
                     # Check if 'host' is a valid SRV record.
-                    srv_record = await helpers.async_check_srv_record(
-                        self.hass, host
-                    )
+                    srv_record = await helpers.async_check_srv_record(self.hass, host)
                     if srv_record is not None:
                         # Use only SRV host name in unique_id (does not change).
                         unique_id = f"{host}-srv"
