@@ -1,7 +1,7 @@
 {
   "domain": "nexia",
   "name": "Nexia",
-  "requirements": ["nexia==0.8.1"],
+  "requirements": ["nexia==0.8.2"],
   "codeowners": ["@ryannazaretian", "@bdraco"],
   "documentation": "https://www.home-assistant.io/integrations/nexia",
   "config_flow": true
