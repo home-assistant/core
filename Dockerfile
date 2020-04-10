@@ -1,6 +1,9 @@
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
+ENV \
+    S6_SERVICES_GRACETIME=60000
+
 WORKDIR /usr/src
 
 ## Setup Home Assistant
@@ -16,5 +19,3 @@ RUN \
 COPY rootfs /
 
 WORKDIR /config
-ENV \
-    S6_SERVICES_GRACETIME=60000
