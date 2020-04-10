@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     SPEED_KILOMETERS_PER_HOUR,
+    TEMP_CELSIUS,
     UNIT_PERCENTAGE,
     __version__,
 )
@@ -56,9 +57,9 @@ SENSOR_TYPES = {
     ),
     "wind_max_bearing": ("Top Wind Bearing", "°", "WSR °", int),
     "sun_last_hour": ("Sun Last Hour", UNIT_PERCENTAGE, f"SO {UNIT_PERCENTAGE}", int),
-    "temperature": ("Temperature", "°C", "T °C", float),
+    "temperature": ("Temperature", TEMP_CELSIUS, f"T {TEMP_CELSIUS}", float),
     "precipitation": ("Precipitation", "l/m²", "N l/m²", float),
-    "dewpoint": ("Dew Point", "°C", "TP °C", float),
+    "dewpoint": ("Dew Point", TEMP_CELSIUS, f"TP {TEMP_CELSIUS}", float),
     # The following probably not useful for general consumption,
     # but we need them to fill in internal attributes
     "station_name": ("Station Name", None, "Name", str),

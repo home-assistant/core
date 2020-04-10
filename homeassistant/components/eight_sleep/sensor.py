@@ -1,7 +1,7 @@
 """Support for Eight Sleep sensors."""
 import logging
 
-from homeassistant.const import TEMP_FAHRENHEIT, UNIT_PERCENTAGE
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
 
 from . import (
     CONF_SENSORS,
@@ -166,7 +166,7 @@ class EightUserSensor(EightSleepUserEntity):
             return "Score"
         if "bed_temp" in self._sensor:
             if self._units == "si":
-                return "°C"
+                return TEMP_CELSIUS
             return TEMP_FAHRENHEIT
         return None
 
@@ -329,7 +329,7 @@ class EightRoomSensor(EightSleepUserEntity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         if self._units == "si":
-            return "°C"
+            return TEMP_CELSIUS
         return TEMP_FAHRENHEIT
 
     @property
