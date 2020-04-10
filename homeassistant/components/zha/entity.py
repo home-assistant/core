@@ -136,10 +136,6 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         self.zha_device.gateway.remove_entity_reference(self)
         self.remove_future.set_result(True)
 
-    @callback
-    def async_restore_last_state(self, last_state) -> None:
-        """Restore previous state."""
-
     async def async_accept_signal(
         self, channel: ChannelType, signal: str, func: CALLABLE_T, signal_override=False
     ):
