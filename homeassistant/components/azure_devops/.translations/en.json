@@ -2,8 +2,7 @@
   "config": {
     "error": {
       "authorization_error": "Authorization error. Check your credentials.",
-      "connection_error": "Could not connect to Azure DevOps.",
-      "project_error": "Could not find project on Azure DevOps."
+      "connection_error": "Could not connect to Azure DevOps."
     },
     "step": {
       "user": {

@@ -62,10 +62,7 @@ class AzureDevOpsFlowHandler(ConfigFlow):
 
         try:
             core_client = connection.clients.get_core_client()
-            project = core_client.get_project(user_input.get(CONF_PROJECT))
-            if not project:
-                errors["base"] = "project_error"
-                return await self._show_setup_form(errors)
+            core_client.get_project(user_input.get(CONF_PROJECT))
         except AzureDevOpsServiceError as exception:
             _LOGGER.warning(exception)
             errors["base"] = "authorization_error"
