@@ -208,7 +208,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state is None
-        assert sensor.unit_of_measurement == "°C"
+        assert sensor.unit_of_measurement == TEMP_CELSIUS
         assert sensor.name == "Device_name Temperature"
         assert sensor.entity_id == "sensor.dyson_1"
 
@@ -219,7 +219,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state == 21.9
-        assert sensor.unit_of_measurement == "°C"
+        assert sensor.unit_of_measurement == TEMP_CELSIUS
         assert sensor.name == "Device_name Temperature"
         assert sensor.entity_id == "sensor.dyson_1"
 
@@ -241,7 +241,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state == STATE_OFF
-        assert sensor.unit_of_measurement == "°C"
+        assert sensor.unit_of_measurement == TEMP_CELSIUS
         assert sensor.name == "Device_name Temperature"
         assert sensor.entity_id == "sensor.dyson_1"
 

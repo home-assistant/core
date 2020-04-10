@@ -7,7 +7,12 @@ from aionotion.errors import InvalidCredentialsError, NotionError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -57,7 +62,7 @@ BINARY_SENSOR_TYPES = {
     SENSOR_WINDOW_HINGED_HORIZONTAL: ("Hinged Window", "window"),
     SENSOR_WINDOW_HINGED_VERTICAL: ("Hinged Window", "window"),
 }
-SENSOR_TYPES = {SENSOR_TEMPERATURE: ("Temperature", "temperature", "°C")}
+SENSOR_TYPES = {SENSOR_TEMPERATURE: ("Temperature", "temperature", TEMP_CELSIUS)}
 
 CONFIG_SCHEMA = vol.Schema(
     {
