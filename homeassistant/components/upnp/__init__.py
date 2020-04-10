@@ -220,8 +220,4 @@ async def async_unload_entry(
 
     # remove sensors
     _LOGGER.debug("Deleting sensors")
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-    )
-
-    return True
+    return await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
