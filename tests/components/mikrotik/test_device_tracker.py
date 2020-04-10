@@ -79,25 +79,25 @@ async def test_device_trackers(hass, api):
         assert device_2.state == "home"
 
         # test state remains home if last_seen < consider_home_interval
-        del HUB1_WIRELESS_DATA[0]  # device_1 is removed from wireless list
+        del HUB1_WIRELESS_DATA[1]  # device_3 is removed from wireless list
         mikrotik_mock.clients[
-            "00:00:00:00:00:01"
+            "00:00:00:00:00:03"
         ]._last_seen = dt_util.utcnow() - timedelta(minutes=4)
         await mikrotik_mock.async_update()
         await hass.async_block_till_done()
 
-        device_1 = hass.states.get("device_tracker.device_1")
-        assert device_2.state == "home"
+        device_3 = hass.states.get("device_tracker.device_3")
+        assert device_3.state == "home"
 
         # test state changes to away if last_seen > consider_home_interval
         mikrotik_mock.clients[
-            "00:00:00:00:00:01"
+            "00:00:00:00:00:03"
         ]._last_seen = dt_util.utcnow() - timedelta(minutes=5)
         await mikrotik_mock.async_update()
         await hass.async_block_till_done()
 
-        device_1 = hass.states.get("device_tracker.device_1")
-        assert device_1.state == "not_home"
+        device_3 = hass.states.get("device_tracker.device_3")
+        assert device_3.state == "not_home"
 
 
 async def test_device_tracker_switching_hubs(hass, api):
@@ -133,6 +133,10 @@ async def test_device_tracker_switching_hubs(hass, api):
         await hass.async_block_till_done()
 
     assert mikrotik_mock.clients["00:00:00:00:00:01"].hub_id == "11112"
+
+    # revert the changes made for this test
+    del HUB2_WIRELESS_DATA[1]
+    HUB1_WIRELESS_DATA.append(DEVICE_1_WIRELESS)
 
 
 async def test_restoring_devices(hass, api):

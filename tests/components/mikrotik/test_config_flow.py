@@ -33,10 +33,21 @@ DEMO_CONFIG_ENTRY = {
 }
 
 
+async def test_import_conn_error(hass, api):
+    """Import fails in case of connection error."""
+    api.side_effect = librouteros.exceptions.LibRouterosError
+
+    result = await hass.config_entries.flow.async_init(
+        mikrotik.DOMAIN, context={"source": "import"}, data={**DEMO_CONFIG}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "conn_error"
+
+
 async def test_import_successfull(hass, api):
     """Test import step."""
     result = await hass.config_entries.flow.async_init(
-        mikrotik.DOMAIN, context={"source": "import"}, data=DEMO_CONFIG
+        mikrotik.DOMAIN, context={"source": "import"}, data={**DEMO_CONFIG}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -44,17 +55,6 @@ async def test_import_successfull(hass, api):
     assert result["data"][CONF_NAME] == "Home router"
     assert result["data"][mikrotik.const.CONF_HUBS][MOCK_HUB1[CONF_HOST]] == MOCK_HUB1
     assert result["data"][mikrotik.const.CONF_HUBS][MOCK_HUB2[CONF_HOST]] == MOCK_HUB2
-
-
-async def test_import_conn_error(hass, api):
-    """Import fails in case of connection error."""
-    api.side_effect = librouteros.exceptions.LibRouterosError
-
-    result = await hass.config_entries.flow.async_init(
-        mikrotik.DOMAIN, context={"source": "import"}, data=DEMO_CONFIG
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "conn_error"
 
 
 async def test_import_existing_host(hass, api):
@@ -69,7 +69,7 @@ async def test_import_existing_host(hass, api):
     assert result["reason"] == "already_configured"
 
     # if host is configured in a different entry then abort
-    entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=DEMO_CONFIG_ENTRY)
+    entry = MockConfigEntry(domain=mikrotik.DOMAIN, data={**DEMO_CONFIG_ENTRY})
     entry.add_to_hass(hass)
 
     config = {**DEMO_CONFIG, mikrotik.const.CONF_HUBS: [MOCK_HUB1]}
@@ -178,7 +178,7 @@ async def test_entering_same_host_twice(hass, api):
 async def test_entered_host_exists(hass, api):
     """Test entered host exists in another config entry."""
 
-    entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=DEMO_CONFIG_ENTRY)
+    entry = MockConfigEntry(domain=mikrotik.DOMAIN, data={**DEMO_CONFIG_ENTRY})
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(

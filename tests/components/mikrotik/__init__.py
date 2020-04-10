@@ -2,7 +2,7 @@
 from homeassistant.components import mikrotik
 
 MOCK_HUB1 = {
-    mikrotik.CONF_HOST: "0.0.0.0",
+    mikrotik.CONF_HOST: "0.0.0.1",
     mikrotik.CONF_USERNAME: "user",
     mikrotik.CONF_PASSWORD: "pass",
     mikrotik.CONF_PORT: 8278,
@@ -10,7 +10,7 @@ MOCK_HUB1 = {
 }
 
 MOCK_HUB2 = {
-    mikrotik.CONF_HOST: "0.0.0.1",
+    mikrotik.CONF_HOST: "0.0.0.2",
     mikrotik.CONF_USERNAME: "user",
     mikrotik.CONF_PASSWORD: "pass",
     mikrotik.CONF_PORT: 8278,
