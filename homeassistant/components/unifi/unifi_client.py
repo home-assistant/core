@@ -79,7 +79,7 @@ class UniFiClient(Entity):
                 self.is_blocked = self.client.event.event in CLIENT_BLOCKED
 
         LOGGER.debug("Updating client %s %s", self.entity_id, self.client.mac)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def name(self) -> str:

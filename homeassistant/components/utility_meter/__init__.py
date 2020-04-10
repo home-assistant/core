@@ -184,11 +184,11 @@ class TariffSelect(RestoreEntity):
             )
             return
         self._current_tariff = tariff
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_next_tariff(self):
         """Offset current index."""
         current_index = self._tariffs.index(self._current_tariff)
         new_index = (current_index + 1) % len(self._tariffs)
         self._current_tariff = self._tariffs[new_index]
-        await self.async_update_ha_state()
+        self.async_write_ha_state()

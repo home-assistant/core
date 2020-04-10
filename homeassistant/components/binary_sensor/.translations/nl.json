@@ -46,7 +46,6 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} batterij bijna leeg",
-            "closed": "{entity_name} gesloten",
             "cold": "{entity_name} werd koud",
             "connected": "{entity_name} verbonden",
             "gas": "{entity_name} begon gas te detecteren",
@@ -54,7 +53,6 @@
             "light": "{entity_name} begon licht te detecteren",
             "locked": "{entity_name} vergrendeld",
             "moist": "{entity_name} werd vochtig",
-            "moist\u00a7": "{entity_name} werd vochtig",
             "motion": "{entity_name} begon beweging te detecteren",
             "moving": "{entity_name} begon te bewegen",
             "no_gas": "{entity_name} is gestopt met het detecteren van gas",

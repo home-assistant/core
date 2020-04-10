@@ -63,7 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Bitcoin sensors."""
 
-    currency = config.get(CONF_CURRENCY)
+    currency = config[CONF_CURRENCY]
 
     if currency not in exchangerates.get_ticker():
         _LOGGER.warning("Currency %s is not available. Using USD", currency)

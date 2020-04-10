@@ -3,6 +3,5 @@
   "name": "Trafikverket Weather Station",
   "documentation": "https://www.home-assistant.io/integrations/trafikverket_weatherstation",
   "requirements": ["pytrafikverket==0.1.6.1"],
-  "dependencies": [],
   "codeowners": []
 }

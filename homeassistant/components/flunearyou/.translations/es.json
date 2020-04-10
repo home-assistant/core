@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Estas coordenadas ya est\u00e1n registradas."
+        },
+        "error": {
+            "general_error": "Se ha producido un error desconocido."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitud",
+                    "longitude": "Longitud"
+                },
+                "description": "Monitorizar reportes de usuarios y del CDC para un par de coordenadas",
+                "title": "Configurar Flu Near You"
+            }
+        },
+        "title": "Flu Near You"
+    }
+}

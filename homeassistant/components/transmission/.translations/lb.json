@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparat ass scho konfigur\u00e9iert",
-            "one_instance_allowed": "N\u00ebmmen eng eenzeg Instanz ass n\u00e9ideg."
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "error": {
             "cannot_connect": "Kann sech net mam Server verbannen.",
@@ -10,12 +9,6 @@
             "wrong_credentials": "Falsche Benotzernumm oder Passwuert"
         },
         "step": {
-            "options": {
-                "data": {
-                    "scan_interval": "Intervalle vun de Mise \u00e0 jour"
-                },
-                "title": "Optioune konfigur\u00e9ieren"
-            },
             "user": {
                 "data": {
                     "host": "Server",
@@ -35,7 +28,6 @@
                 "data": {
                     "scan_interval": "Intervalle vun de Mise \u00e0 jour"
                 },
-                "description": "Optioune fir Transmission konfigur\u00e9ieren",
                 "title": "Optioune fir Transmission konfigur\u00e9ieren"
             }
         }

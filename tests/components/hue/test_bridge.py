@@ -23,8 +23,8 @@ async def test_bridge_setup(hass):
 
     assert hue_bridge.api is api
     assert len(mock_forward.mock_calls) == 3
-    forward_entries = set(c[1][1] for c in mock_forward.mock_calls)
-    assert forward_entries == set(["light", "binary_sensor", "sensor"])
+    forward_entries = {c[1][1] for c in mock_forward.mock_calls}
+    assert forward_entries == {"light", "binary_sensor", "sensor"}
 
 
 async def test_bridge_setup_invalid_username(hass):

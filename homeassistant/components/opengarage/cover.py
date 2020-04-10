@@ -79,8 +79,9 @@ class OpenGarageCover(CoverDevice):
 
     def __init__(self, args):
         """Initialize the cover."""
-        self.opengarage_url = "{}://{}:{}".format(
-            "https" if args[CONF_SSL] else "http", args[CONF_HOST], args[CONF_PORT]
+        self.opengarage_url = (
+            f"http{'s' if args[CONF_SSL] else ''}://"
+            f"{args[CONF_HOST]}:{args[CONF_PORT]}"
         )
         self._name = args[CONF_NAME]
         self._device_key = args[CONF_DEVICE_KEY]

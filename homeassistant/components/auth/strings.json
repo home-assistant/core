@@ -1,5 +1,5 @@
 {
-  "mfa_setup":{
+  "mfa_setup": {
     "totp": {
       "title": "TOTP",
       "step": {

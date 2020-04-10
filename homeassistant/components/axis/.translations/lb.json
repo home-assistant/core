@@ -4,8 +4,7 @@
             "already_configured": "Apparat ass scho konfigur\u00e9iert",
             "bad_config_file": "Feelerhaft Donn\u00e9e\u00eb aus der Konfiguratioun's Datei",
             "link_local_address": "Lokal Link Adressen ginn net \u00ebnnerst\u00ebtzt",
-            "not_axis_device": "Entdeckten Apparat ass keen Axis Apparat",
-            "updated_configuration": "Konfiguratioun vum Apparat gouf mat der neier Adress aktualis\u00e9iert"
+            "not_axis_device": "Entdeckten Apparat ass keen Axis Apparat"
         },
         "error": {
             "already_configured": "Apparat ass scho konfigur\u00e9iert",

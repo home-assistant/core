@@ -12,8 +12,7 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "name": "Name",
-                    "port": "Port"
+                    "name": "Name"
                 },
                 "description": "Richte deine Minecraft Server-Instanz ein, um es \u00fcberwachen zu k\u00f6nnen.",
                 "title": "Verkn\u00fcpfe deinen Minecraft Server"

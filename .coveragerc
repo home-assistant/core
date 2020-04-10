@@ -219,6 +219,7 @@ omit =
     homeassistant/components/flic/binary_sensor.py
     homeassistant/components/flock/notify.py
     homeassistant/components/flume/*
+    homeassistant/components/flunearyou/__init__.py
     homeassistant/components/flunearyou/sensor.py
     homeassistant/components/flux_led/light.py
     homeassistant/components/folder/sensor.py
@@ -525,6 +526,8 @@ omit =
     homeassistant/components/pencom/switch.py
     homeassistant/components/philips_js/media_player.py
     homeassistant/components/pi_hole/sensor.py
+    homeassistant/components/pi4ioe5v9xxxx/binary_sensor.py
+    homeassistant/components/pi4ioe5v9xxxx/switch.py
     homeassistant/components/picotts/tts.py
     homeassistant/components/piglow/light.py
     homeassistant/components/pilight/*
@@ -687,8 +690,9 @@ omit =
     homeassistant/components/syncthru/sensor.py
     homeassistant/components/synology/camera.py
     homeassistant/components/synology_chat/notify.py
+    homeassistant/components/synology_dsm/__init__.py
+    homeassistant/components/synology_dsm/sensor.py
     homeassistant/components/synology_srm/device_tracker.py
-    homeassistant/components/synologydsm/sensor.py
     homeassistant/components/syslog/notify.py
     homeassistant/components/systemmonitor/sensor.py
     homeassistant/components/tado/*

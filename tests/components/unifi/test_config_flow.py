@@ -11,6 +11,7 @@ from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_POE_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
@@ -50,6 +51,8 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
         CONF_PORT: 8443,
         CONF_VERIFY_SSL: False,
     }
+
+    aioclient_mock.get("https://1.2.3.4:1234", status=302)
 
     aioclient_mock.post(
         "https://1.2.3.4:1234/api/login",
@@ -100,6 +103,8 @@ async def test_flow_works_multiple_sites(hass, aioclient_mock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
+    aioclient_mock.get("https://1.2.3.4:1234", status=302)
+
     aioclient_mock.post(
         "https://1.2.3.4:1234/api/login",
         json={"data": "login successful", "meta": {"rc": "ok"}},
@@ -149,6 +154,8 @@ async def test_flow_fails_site_already_configured(hass, aioclient_mock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
+    aioclient_mock.get("https://1.2.3.4:1234", status=302)
+
     aioclient_mock.post(
         "https://1.2.3.4:1234/api/login",
         json={"data": "login successful", "meta": {"rc": "ok"}},
@@ -187,6 +194,8 @@ async def test_flow_fails_user_credentials_faulty(hass, aioclient_mock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
+    aioclient_mock.get("https://1.2.3.4:1234", status=302)
+
     with patch("aiounifi.Controller.login", side_effect=aiounifi.errors.Unauthorized):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -212,6 +221,8 @@ async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
+    aioclient_mock.get("https://1.2.3.4:1234", status=302)
+
     with patch("aiounifi.Controller.login", side_effect=aiounifi.errors.RequestError):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -236,6 +247,8 @@ async def test_flow_fails_unknown_problem(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
+
+    aioclient_mock.get("https://1.2.3.4:1234", status=302)
 
     with patch("aiounifi.Controller.login", side_effect=Exception):
         result = await hass.config_entries.flow.async_configure(
@@ -287,6 +300,7 @@ async def test_option_flow(hass):
         user_input={
             CONF_BLOCK_CLIENT: clients_to_block,
             CONF_NEW_CLIENT: "00:00:00:00:00:01",
+            CONF_POE_CLIENTS: False,
         },
     )
 
@@ -327,5 +341,6 @@ async def test_option_flow(hass):
         CONF_DETECTION_TIME: 100,
         CONF_SSID_FILTER: ["SSID 1"],
         CONF_BLOCK_CLIENT: ["00:00:00:00:00:01"],
+        CONF_POE_CLIENTS: False,
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
     }

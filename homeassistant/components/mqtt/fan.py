@@ -40,6 +40,7 @@ from . import (
     MqttEntityDeviceInfo,
     subscription,
 )
+from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
@@ -249,6 +250,7 @@ class MqttFan(
                 templates[key] = tpl.async_render_with_possible_json_value
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new received MQTT message."""
             payload = templates[CONF_STATE](msg.payload)
@@ -266,6 +268,7 @@ class MqttFan(
             }
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def speed_received(msg):
             """Handle new received MQTT message for the speed."""
             payload = templates[ATTR_SPEED](msg.payload)
@@ -288,6 +291,7 @@ class MqttFan(
             self._speed = SPEED_OFF
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def oscillation_received(msg):
             """Handle new received MQTT message for the oscillation."""
             payload = templates[OSCILLATION](msg.payload)
@@ -397,9 +401,6 @@ class MqttFan(
 
         This method is a coroutine.
         """
-        if self._topic[CONF_SPEED_COMMAND_TOPIC] is None:
-            return
-
         if speed == SPEED_LOW:
             mqtt_payload = self._payload["SPEED_LOW"]
         elif speed == SPEED_MEDIUM:
@@ -428,9 +429,6 @@ class MqttFan(
 
         This method is a coroutine.
         """
-        if self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is None:
-            return
-
         if oscillating is False:
             payload = self._payload["OSCILLATE_OFF_PAYLOAD"]
         else:

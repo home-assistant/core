@@ -1,13 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieser DoorBird ist bereits konfiguriert"
+            "already_configured": "Dieser DoorBird ist bereits konfiguriert",
+            "link_local_address": "Lokale Linkadressen werden nicht unterst\u00fctzt",
+            "not_doorbird_device": "Dieses Ger\u00e4t ist kein DoorBird"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
+        "flow_title": "DoorBird {name} ({host})",
         "step": {
             "user": {
                 "data": {

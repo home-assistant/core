@@ -321,7 +321,7 @@ class GoogleTravelTimeSensor(Entity):
     def _get_location_from_attributes(entity):
         """Get the lat/long string from an entities attributes."""
         attr = entity.attributes
-        return "%s,%s" % (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
+        return f"{attr.get(ATTR_LATITUDE)},{attr.get(ATTR_LONGITUDE)}"
 
     def _resolve_zone(self, friendly_name):
         entities = self._hass.states.all()

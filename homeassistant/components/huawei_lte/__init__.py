@@ -600,7 +600,6 @@ class HuaweiLteBaseEntity(Entity):
 
     async def async_update_options(self, config_entry: ConfigEntry) -> None:
         """Update config entry options."""
-        pass
 
     async def async_added_to_hass(self) -> None:
         """Connect to update signals."""

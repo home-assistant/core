@@ -2,7 +2,6 @@
   "domain": "arwn",
   "name": "Ambient Radio Weather Network",
   "documentation": "https://www.home-assistant.io/integrations/arwn",
-  "requirements": [],
   "dependencies": ["mqtt"],
   "codeowners": []
 }

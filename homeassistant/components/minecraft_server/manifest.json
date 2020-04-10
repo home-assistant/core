@@ -4,7 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/minecraft_server",
   "requirements": ["aiodns==2.0.0", "getmac==0.8.1", "mcstatus==2.3.0"],
-  "dependencies": [],
   "codeowners": ["@elmurato"],
   "quality_scale": "silver"
 }

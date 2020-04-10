@@ -220,6 +220,11 @@ class NetatmoSensor(Entity):
         """Return the unique ID for this sensor."""
         return self._unique_id
 
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return bool(self._state)
+
     def update(self):
         """Get the latest data from Netatmo API and updates the states."""
         self.netatmo_data.update()
@@ -233,10 +238,11 @@ class NetatmoSensor(Entity):
         data = self.netatmo_data.data.get(self._module_id)
 
         if data is None:
-            _LOGGER.debug(
-                "No data found for %s (%s)", self.module_name, self._module_id
-            )
-            _LOGGER.debug("data: %s", self.netatmo_data.data)
+            if self._state:
+                _LOGGER.debug(
+                    "No data found for %s (%s)", self.module_name, self._module_id
+                )
+                _LOGGER.debug("data: %s", self.netatmo_data.data)
             self._state = None
             return
 
@@ -391,7 +397,8 @@ class NetatmoSensor(Entity):
                 elif data["health_idx"] == 4:
                     self._state = "Unhealthy"
         except KeyError:
-            _LOGGER.info("No %s data found for %s", self.type, self.module_name)
+            if self._state:
+                _LOGGER.info("No %s data found for %s", self.type, self.module_name)
             self._state = None
             return
 

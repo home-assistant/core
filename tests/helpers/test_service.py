@@ -1,5 +1,4 @@
 """Test service helpers."""
-import asyncio
 from collections import OrderedDict
 from copy import deepcopy
 import unittest
@@ -11,7 +10,7 @@ import voluptuous as vol
 # To prevent circular import when running just this file
 from homeassistant import core as ha, exceptions
 from homeassistant.auth.permissions import PolicyPermissions
-import homeassistant.components  # noqa: F401
+import homeassistant.components  # noqa: F401, pylint: disable=unused-import
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
@@ -144,10 +143,10 @@ class TestServiceHelpers(unittest.TestCase):
         service.call_from_config(self.hass, config)
         self.hass.block_till_done()
 
-        assert "goodbye" == self.calls[0].data["hello"]
-        assert "complex" == self.calls[0].data["data"]["value"]
-        assert "simple" == self.calls[0].data["data"]["simple"]
-        assert "list" == self.calls[0].data["list"][0]
+        assert self.calls[0].data["hello"] == "goodbye"
+        assert self.calls[0].data["data"]["value"] == "complex"
+        assert self.calls[0].data["data"]["simple"] == "simple"
+        assert self.calls[0].data["list"][0] == "list"
 
     def test_passing_variables_to_templates(self):
         """Test passing variables to templates."""
@@ -167,7 +166,7 @@ class TestServiceHelpers(unittest.TestCase):
         )
         self.hass.block_till_done()
 
-        assert "goodbye" == self.calls[0].data["hello"]
+        assert self.calls[0].data["hello"] == "goodbye"
 
     def test_bad_template(self):
         """Test passing bad template."""
@@ -223,13 +222,13 @@ class TestServiceHelpers(unittest.TestCase):
     def test_fail_silently_if_no_service(self, mock_log):
         """Test failing if service is missing."""
         service.call_from_config(self.hass, None)
-        assert 1 == mock_log.call_count
+        assert mock_log.call_count == 1
 
         service.call_from_config(self.hass, {})
-        assert 2 == mock_log.call_count
+        assert mock_log.call_count == 2
 
         service.call_from_config(self.hass, {"service": "invalid"})
-        assert 3 == mock_log.call_count
+        assert mock_log.call_count == 3
 
 
 async def test_extract_entity_ids(hass):
@@ -286,13 +285,12 @@ async def test_extract_entity_ids_from_area(hass, area_mock):
     )
 
 
-@asyncio.coroutine
-def test_async_get_all_descriptions(hass):
+async def test_async_get_all_descriptions(hass):
     """Test async_get_all_descriptions."""
     group = hass.components.group
     group_config = {group.DOMAIN: {}}
-    yield from async_setup_component(hass, group.DOMAIN, group_config)
-    descriptions = yield from service.async_get_all_descriptions(hass)
+    await async_setup_component(hass, group.DOMAIN, group_config)
+    descriptions = await service.async_get_all_descriptions(hass)
 
     assert len(descriptions) == 1
 
@@ -301,8 +299,8 @@ def test_async_get_all_descriptions(hass):
 
     logger = hass.components.logger
     logger_config = {logger.DOMAIN: {}}
-    yield from async_setup_component(hass, logger.DOMAIN, logger_config)
-    descriptions = yield from service.async_get_all_descriptions(hass)
+    await async_setup_component(hass, logger.DOMAIN, logger_config)
+    descriptions = await service.async_get_all_descriptions(hass)
 
     assert len(descriptions) == 2
 

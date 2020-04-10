@@ -126,7 +126,7 @@ async def test_mute_volume(player, state, mute):
     """Test mute functionality."""
     await player.async_mute_volume(mute)
     state.set_mute.assert_called_with(mute)
-    player.async_schedule_update_ha_state.assert_called_with()
+    player.async_write_ha_state.assert_called_with()
 
 
 async def test_name(player):
@@ -203,14 +203,14 @@ async def test_volume_up(player, state):
     """Test mute functionality."""
     await player.async_volume_up()
     state.inc_volume.assert_called_with()
-    player.async_schedule_update_ha_state.assert_called_with()
+    player.async_write_ha_state.assert_called_with()
 
 
 async def test_volume_down(player, state):
     """Test mute functionality."""
     await player.async_volume_down()
     state.dec_volume.assert_called_with()
-    player.async_schedule_update_ha_state.assert_called_with()
+    player.async_write_ha_state.assert_called_with()
 
 
 @pytest.mark.parametrize(

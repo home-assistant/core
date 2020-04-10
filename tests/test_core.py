@@ -304,10 +304,11 @@ class TestEvent(unittest.TestCase):
 
     def test_repr(self):
         """Test that repr method works."""
-        assert "<Event TestEvent[L]>" == str(ha.Event("TestEvent"))
+        assert str(ha.Event("TestEvent")) == "<Event TestEvent[L]>"
 
-        assert "<Event TestEvent[R]: beer=nice>" == str(
-            ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote)
+        assert (
+            str(ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote))
+            == "<Event TestEvent[R]: beer=nice>"
         )
 
     def test_as_dict(self):
@@ -402,7 +403,7 @@ class TestEventBus(unittest.TestCase):
         self.bus.fire("test_event")
 
         self.hass.block_till_done()
-        assert 1 == len(runs)
+        assert len(runs) == 1
 
     def test_listen_once_event_with_coroutine(self):
         """Test listen_once_event method."""
@@ -419,7 +420,7 @@ class TestEventBus(unittest.TestCase):
         self.bus.fire("test_event")
 
         self.hass.block_till_done()
-        assert 1 == len(runs)
+        assert len(runs) == 1
 
     def test_listen_once_event_with_thread(self):
         """Test listen_once_event method."""
@@ -435,7 +436,7 @@ class TestEventBus(unittest.TestCase):
         self.bus.fire("test_event")
 
         self.hass.block_till_done()
-        assert 1 == len(runs)
+        assert len(runs) == 1
 
     def test_thread_event_listener(self):
         """Test thread event listener."""
@@ -488,26 +489,26 @@ def test_state_init():
 def test_state_domain():
     """Test domain."""
     state = ha.State("some_domain.hello", "world")
-    assert "some_domain" == state.domain
+    assert state.domain == "some_domain"
 
 
 def test_state_object_id():
     """Test object ID."""
     state = ha.State("domain.hello", "world")
-    assert "hello" == state.object_id
+    assert state.object_id == "hello"
 
 
 def test_state_name_if_no_friendly_name_attr():
     """Test if there is no friendly name."""
     state = ha.State("domain.hello_world", "world")
-    assert "hello world" == state.name
+    assert state.name == "hello world"
 
 
 def test_state_name_if_friendly_name_attr():
     """Test if there is a friendly name."""
     name = "Some Unique Name"
     state = ha.State("domain.hello_world", "world", {ATTR_FRIENDLY_NAME: name})
-    assert name == state.name
+    assert state.name == name
 
 
 def test_state_dict_conversion():
@@ -535,14 +536,13 @@ def test_state_dict_conversion_with_wrong_data():
 
 def test_state_repr():
     """Test state.repr."""
-    assert "<state happy.happy=on @ 1984-12-08T12:00:00+00:00>" == str(
-        ha.State("happy.happy", "on", last_changed=datetime(1984, 12, 8, 12, 0, 0))
+    assert (
+        str(ha.State("happy.happy", "on", last_changed=datetime(1984, 12, 8, 12, 0, 0)))
+        == "<state happy.happy=on @ 1984-12-08T12:00:00+00:00>"
     )
 
     assert (
-        "<state happy.happy=on; brightness=144 @ "
-        "1984-12-08T12:00:00+00:00>"
-        == str(
+        str(
             ha.State(
                 "happy.happy",
                 "on",
@@ -550,6 +550,8 @@ def test_state_repr():
                 datetime(1984, 12, 8, 12, 0, 0),
             )
         )
+        == "<state happy.happy=on; brightness=144 @ "
+        "1984-12-08T12:00:00+00:00>"
     )
 
 
@@ -578,12 +580,12 @@ class TestStateMachine(unittest.TestCase):
     def test_entity_ids(self):
         """Test get_entity_ids method."""
         ent_ids = self.states.entity_ids()
-        assert 2 == len(ent_ids)
+        assert len(ent_ids) == 2
         assert "light.bowl" in ent_ids
         assert "switch.ac" in ent_ids
 
         ent_ids = self.states.entity_ids("light")
-        assert 1 == len(ent_ids)
+        assert len(ent_ids) == 1
         assert "light.bowl" in ent_ids
 
     def test_all(self):
@@ -606,16 +608,16 @@ class TestStateMachine(unittest.TestCase):
         self.hass.block_till_done()
 
         assert "light.bowl" not in self.states.entity_ids()
-        assert 1 == len(events)
-        assert "light.bowl" == events[0].data.get("entity_id")
+        assert len(events) == 1
+        assert events[0].data.get("entity_id") == "light.bowl"
         assert events[0].data.get("old_state") is not None
-        assert "light.bowl" == events[0].data["old_state"].entity_id
+        assert events[0].data["old_state"].entity_id == "light.bowl"
         assert events[0].data.get("new_state") is None
 
         # If it does not exist, we should get False
         assert not self.states.remove("light.Bowl")
         self.hass.block_till_done()
-        assert 1 == len(events)
+        assert len(events) == 1
 
     def test_case_insensitivty(self):
         """Test insensitivty."""
@@ -631,7 +633,7 @@ class TestStateMachine(unittest.TestCase):
         self.hass.block_till_done()
 
         assert self.states.is_state("light.bowl", "off")
-        assert 1 == len(runs)
+        assert len(runs) == 1
 
     def test_last_changed_not_updated_on_same_state(self):
         """Test to not update the existing, same state."""
@@ -659,11 +661,11 @@ class TestStateMachine(unittest.TestCase):
 
         self.states.set("light.bowl", "on")
         self.hass.block_till_done()
-        assert 0 == len(events)
+        assert len(events) == 0
 
         self.states.set("light.bowl", "on", None, True)
         self.hass.block_till_done()
-        assert 1 == len(events)
+        assert len(events) == 1
 
 
 def test_service_call_repr():
@@ -734,7 +736,7 @@ class TestServiceRegistry(unittest.TestCase):
         assert self.calls_register[-1].data["service"] == "register_calls"
 
         assert self.services.call("test_domain", "REGISTER_CALLS", blocking=True)
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
     def test_call_non_existing_with_blocking(self):
         """Test non-existing with blocking."""
@@ -758,7 +760,7 @@ class TestServiceRegistry(unittest.TestCase):
 
         assert self.services.call("test_domain", "REGISTER_CALLS", blocking=True)
         self.hass.block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
     def test_async_service_partial(self):
         """Test registering and calling an wrapped async service."""
@@ -799,7 +801,7 @@ class TestServiceRegistry(unittest.TestCase):
 
         assert self.services.call("test_domain", "REGISTER_CALLS", blocking=True)
         self.hass.block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
     def test_remove_service(self):
         """Test remove service."""
@@ -888,12 +890,12 @@ class TestConfig(unittest.TestCase):
     def test_path_with_file(self):
         """Test get_config_path method."""
         self.config.config_dir = "/test/ha-config"
-        assert "/test/ha-config/test.conf" == self.config.path("test.conf")
+        assert self.config.path("test.conf") == "/test/ha-config/test.conf"
 
     def test_path_with_dir_and_file(self):
         """Test get_config_path method."""
         self.config.config_dir = "/test/ha-config"
-        assert "/test/ha-config/dir/test.conf" == self.config.path("dir", "test.conf")
+        assert self.config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
 
     def test_as_dict(self):
         """Test as dict."""
@@ -920,7 +922,7 @@ class TestConfig(unittest.TestCase):
         with TemporaryDirectory() as tmp_dir:
             # The created dir is in /tmp. This is a symlink on OS X
             # causing this test to fail unless we resolve path first.
-            self.config.whitelist_external_dirs = set((os.path.realpath(tmp_dir),))
+            self.config.whitelist_external_dirs = {os.path.realpath(tmp_dir)}
 
             test_file = os.path.join(tmp_dir, "test.jpg")
             with open(test_file, "w") as tmp_file:
@@ -930,7 +932,7 @@ class TestConfig(unittest.TestCase):
             for path in valid:
                 assert self.config.is_allowed_path(path)
 
-            self.config.whitelist_external_dirs = set(("/home", "/var"))
+            self.config.whitelist_external_dirs = {"/home", "/var"}
 
             unvalid = [
                 "/hass/config/secure",
@@ -1056,7 +1058,7 @@ def test_timer_out_of_sync(mock_monotonic, loop):
         assert abs(event_data[ATTR_SECONDS] - 2.433333) < 0.001
 
         assert len(funcs) == 2
-        fire_time_event, stop_timer = funcs
+        fire_time_event, _ = funcs
 
     assert len(hass.loop.call_later.mock_calls) == 2
 
@@ -1212,6 +1214,42 @@ async def test_async_functions_with_callback(hass):
 
     await hass.services.async_call("test_domain", "test_service", blocking=True)
     assert len(runs) == 3
+
+
+@pytest.mark.parametrize("cancel_call", [True, False])
+async def test_cancel_service_task(hass, cancel_call):
+    """Test cancellation."""
+    service_called = asyncio.Event()
+    service_cancelled = False
+
+    async def service_handler(call):
+        nonlocal service_cancelled
+        service_called.set()
+        try:
+            await asyncio.sleep(10)
+        except asyncio.CancelledError:
+            service_cancelled = True
+            raise
+
+    hass.services.async_register("test_domain", "test_service", service_handler)
+    call_task = hass.async_create_task(
+        hass.services.async_call("test_domain", "test_service", blocking=True)
+    )
+
+    tasks_1 = asyncio.all_tasks()
+    await asyncio.wait_for(service_called.wait(), timeout=1)
+    tasks_2 = asyncio.all_tasks() - tasks_1
+    assert len(tasks_2) == 1
+    service_task = tasks_2.pop()
+
+    if cancel_call:
+        call_task.cancel()
+    else:
+        service_task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await call_task
+
+    assert service_cancelled
 
 
 def test_valid_entity_id():
