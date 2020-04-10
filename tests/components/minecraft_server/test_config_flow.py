@@ -90,17 +90,6 @@ async def test_show_config_form(hass: HomeAssistantType) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_invalid_ip(hass: HomeAssistantType) -> None:
-    """Test error in case of an invalid IP address."""
-    with patch("getmac.get_mac_address", return_value=None):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_IPV4
-        )
-
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "invalid_ip"}
-
-
 async def test_same_host(hass: HomeAssistantType) -> None:
     """Test abort in case of same host name."""
     with patch(
@@ -209,39 +198,33 @@ async def test_connection_succeeded_with_host(hass: HomeAssistantType) -> None:
 
 async def test_connection_succeeded_with_ip4(hass: HomeAssistantType) -> None:
     """Test config entry in case of a successful connection with an IPv4 address."""
-    with patch("getmac.get_mac_address", return_value="01:23:45:67:89:ab"):
+    with patch("aiodns.DNSResolver.query", side_effect=aiodns.error.DNSError):
         with patch(
-            "aiodns.DNSResolver.query", side_effect=aiodns.error.DNSError,
+            "mcstatus.server.MinecraftServer.status",
+            return_value=PingResponse(STATUS_RESPONSE_RAW),
         ):
-            with patch(
-                "mcstatus.server.MinecraftServer.status",
-                return_value=PingResponse(STATUS_RESPONSE_RAW),
-            ):
-                result = await hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_IPV4
-                )
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_IPV4
+            )
 
-                assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-                assert result["title"] == USER_INPUT_IPV4[CONF_HOST]
-                assert result["data"][CONF_NAME] == USER_INPUT_IPV4[CONF_NAME]
-                assert result["data"][CONF_HOST] == "1.1.1.1"
+            assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+            assert result["title"] == USER_INPUT_IPV4[CONF_HOST]
+            assert result["data"][CONF_NAME] == USER_INPUT_IPV4[CONF_NAME]
+            assert result["data"][CONF_HOST] == "1.1.1.1"
 
 
 async def test_connection_succeeded_with_ip6(hass: HomeAssistantType) -> None:
     """Test config entry in case of a successful connection with an IPv6 address."""
-    with patch("getmac.get_mac_address", return_value="01:23:45:67:89:ab"):
+    with patch("aiodns.DNSResolver.query", side_effect=aiodns.error.DNSError):
         with patch(
-            "aiodns.DNSResolver.query", side_effect=aiodns.error.DNSError,
+            "mcstatus.server.MinecraftServer.status",
+            return_value=PingResponse(STATUS_RESPONSE_RAW),
         ):
-            with patch(
-                "mcstatus.server.MinecraftServer.status",
-                return_value=PingResponse(STATUS_RESPONSE_RAW),
-            ):
-                result = await hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_IPV6
-                )
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_IPV6
+            )
 
-                assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-                assert result["title"] == USER_INPUT_IPV6[CONF_HOST]
-                assert result["data"][CONF_NAME] == USER_INPUT_IPV6[CONF_NAME]
-                assert result["data"][CONF_HOST] == "::ffff:0101:0101"
+            assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+            assert result["title"] == USER_INPUT_IPV6[CONF_HOST]
+            assert result["data"][CONF_NAME] == USER_INPUT_IPV6[CONF_NAME]
+            assert result["data"][CONF_HOST] == "::ffff:0101:0101"
