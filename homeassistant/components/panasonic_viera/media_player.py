@@ -37,11 +37,11 @@ from homeassistant.const import (
 )
 
 from .const import (
-    DOMAIN,
-    DEVICE_MANUFACTURER,
     CONF_ON_ACTION,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
+    DEVICE_MANUFACTURER,
+    DOMAIN,
 )
 
 SUPPORT_VIERATV = (
@@ -71,7 +71,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     name = config[CONF_NAME]
 
     on_action = config[CONF_ON_ACTION]
-    _LOGGER.error(on_action)
     if on_action:
         on_action = Script(hass, on_action)
 

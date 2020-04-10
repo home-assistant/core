@@ -118,7 +118,6 @@ FLOWS = [
     "synology_dsm",
     "tado",
     "tellduslive",
-    "temporary_integration",
     "tesla",
     "toon",
     "totalconnect",

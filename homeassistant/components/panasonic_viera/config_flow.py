@@ -7,11 +7,12 @@ from panasonic_viera import (
     TV_TYPE_ENCRYPTED,
     TV_TYPE_NONENCRYPTED,
 )
+
 import voluptuous as vol
 
-from urllib.request import URLError
-
 from functools import partial
+
+from urllib.request import URLError
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -158,4 +159,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="pairing",
             data_schema=vol.Schema({vol.Required(CONF_PIN): str,}),
             errors=self._errors,
+            description_placeholders={"tv_name": self._data[CONF_NAME],},
         )
