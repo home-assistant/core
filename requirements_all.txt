@@ -1341,7 +1341,7 @@ pyintesishome==1.7.1
 pyipma==2.0.5
 
 # homeassistant.components.ipp
-pyipp==0.9.1
+pyipp==0.9.2
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
