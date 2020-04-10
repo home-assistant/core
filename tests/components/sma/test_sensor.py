@@ -1,6 +1,7 @@
 """SMA sensor tests."""
 import logging
 
+from homeassistant.const import UNIT_VOLT
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.setup import async_setup_component
 
@@ -11,7 +12,7 @@ BASE_CFG = {
     "platform": "sma",
     "host": "1.1.1.1",
     "password": "",
-    "custom": {"my_sensor": {"key": "1234567890123", "unit": "V"}},
+    "custom": {"my_sensor": {"key": "1234567890123", "unit": UNIT_VOLT}},
 }
 
 
