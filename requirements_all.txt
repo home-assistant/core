@@ -2105,7 +2105,6 @@ vtjp==0.1.14
 # homeassistant.components.vultr
 vultr==0.1.2
 
-# homeassistant.components.panasonic_viera
 # homeassistant.components.wake_on_lan
 wakeonlan==1.1.6
 

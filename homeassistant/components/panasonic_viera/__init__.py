@@ -2,25 +2,20 @@
 import asyncio
 
 import voluptuous as vol
-
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_BROADCAST_ADDRESS,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-    CONF_PORT,
-)
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
-    CONF_APP_POWER,
-    DEFAULT_APP_POWER,
-    DEFAULT_BROADCAST_ADDRESS,
-    DEFAULT_MAC,
+    CONF_ON_ACTION,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DOMAIN,
+)
+
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -31,15 +26,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Schema(
                     {
                         vol.Required(CONF_HOST): cv.string,
-                        vol.Optional(CONF_MAC, default=DEFAULT_MAC): cv.string,
-                        vol.Optional(
-                            CONF_BROADCAST_ADDRESS, default=DEFAULT_BROADCAST_ADDRESS
-                        ): cv.string,
                         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                        vol.Optional(
-                            CONF_APP_POWER, default=DEFAULT_APP_POWER
-                        ): cv.boolean,
+                        vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
                     }
                 )
             ],

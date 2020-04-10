@@ -7,11 +7,7 @@
         "description": "Type your Panasonic Viera TV's IP address",
         "data": {
           "host": "IP address",
-          "port": "Port (optional)",
-          "name": "Name (optional)",
-          "mac": "MAC address (optional)",
-          "broadcast_address": "Broadcast address (optional)",
-          "app_power": "Turn on via App"
+          "name": "Name"
         }
       },
       "pairing": {
@@ -23,11 +19,12 @@
       }
     },
     "error": {
-      "not_connected": "Could not establish a remote connection with your Panasonic Viera TV"
+      "not_connected": "Could not establish a remote connection with your Panasonic Viera TV",
+      "invalid_pin_code": "The PIN code you typed is invalid",
+      "unknown": "An unknown error occured. Check the logs for more information."
     },
     "abort": {
-      "invalid_pin_code": "The PIN code you typed was invalid. Check the logs for more information.",
-      "not_connected": "Could not establish a remote connection with your Panasonic Viera TV. Check the logs for more information."
+      "already_configured": "This Panasonic Viera TV is already configured."
     }
   }
 }
