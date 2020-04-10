@@ -3,7 +3,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICES, CONF_UNIT_OF_MEASUREMENT, CONF_ZONE
+from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_ZONE,
+    LENGTH_KILOMETERS,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
@@ -28,7 +33,7 @@ DEFAULT_PROXIMITY_ZONE = "home"
 DEFAULT_TOLERANCE = 1
 DOMAIN = "proximity"
 
-UNITS = ["km", "m", "mi", "ft"]
+UNITS = [LENGTH_KILOMETERS, "m", "mi", "ft"]
 
 ZONE_SCHEMA = vol.Schema(
     {
