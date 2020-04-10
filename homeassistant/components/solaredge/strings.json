@@ -1,21 +1,21 @@
 {
-    "config": {
-        "title": "SolarEdge",
-        "step": {
-            "user": {
-                "title": "Define the API parameters for this installation",
-                "data": {
-                    "name": "The name of this installation",
-                    "site_id": "The SolarEdge site-id",
-                    "api_key": "The API key for this site"
-                }
-            }
-        },
-        "error": {
-            "site_exists": "This site_id is already configured"
-        },
-        "abort": {
-            "site_exists": "This site_id is already configured"
+  "config": {
+    "title": "SolarEdge",
+    "step": {
+      "user": {
+        "title": "Define the API parameters for this installation",
+        "data": {
+          "name": "The name of this installation",
+          "site_id": "The SolarEdge site-id",
+          "api_key": "The API key for this site"
         }
+      }
+    },
+    "error": {
+      "site_exists": "This site_id is already configured"
+    },
+    "abort": {
+      "site_exists": "This site_id is already configured"
     }
+  }
 }

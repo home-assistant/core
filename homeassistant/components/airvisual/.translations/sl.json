@@ -11,8 +11,7 @@
                 "data": {
                     "api_key": "API Klju\u010d",
                     "latitude": "Zemljepisna \u0161irina",
-                    "longitude": "Zemljepisna dol\u017eina",
-                    "show_on_map": "Prika\u017ei nadzorovano obmo\u010dje na zemljevidu"
+                    "longitude": "Zemljepisna dol\u017eina"
                 },
                 "description": "Spremljajte kakovost zraka na zemljepisni lokaciji.",
                 "title": "Nastavite AirVisual"

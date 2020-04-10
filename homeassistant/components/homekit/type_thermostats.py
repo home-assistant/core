@@ -16,6 +16,8 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_COOL,
+    CURRENT_HVAC_DRY,
+    CURRENT_HVAC_FAN,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
@@ -25,6 +27,7 @@ from homeassistant.components.climate.const import (
     DOMAIN as DOMAIN_CLIMATE,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
+    HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
@@ -70,9 +73,7 @@ from .util import temperature_to_homekit, temperature_to_states
 
 _LOGGER = logging.getLogger(__name__)
 
-HC_HOMEKIT_VALID_MODES_WATER_HEATER = {
-    "Heat": 1,
-}
+HC_HOMEKIT_VALID_MODES_WATER_HEATER = {"Heat": 1}
 UNIT_HASS_TO_HOMEKIT = {TEMP_CELSIUS: 0, TEMP_FAHRENHEIT: 1}
 
 UNIT_HOMEKIT_TO_HASS = {c: s for s, c in UNIT_HASS_TO_HOMEKIT.items()}
@@ -91,6 +92,8 @@ HC_HASS_TO_HOMEKIT_ACTION = {
     CURRENT_HVAC_IDLE: 0,
     CURRENT_HVAC_HEAT: 1,
     CURRENT_HVAC_COOL: 2,
+    CURRENT_HVAC_DRY: 2,
+    CURRENT_HVAC_FAN: 2,
 }
 
 
@@ -133,7 +136,7 @@ class Thermostat(HomeAccessory):
         )
 
         # Target mode characteristics
-        hc_modes = state.attributes.get(ATTR_HVAC_MODES, None)
+        hc_modes = state.attributes.get(ATTR_HVAC_MODES)
         if hc_modes is None:
             _LOGGER.error(
                 "%s: HVAC modes not yet available. Please disable auto start for homekit.",
@@ -146,15 +149,25 @@ class Thermostat(HomeAccessory):
                 HVAC_MODE_OFF,
             )
 
-        # determine available modes for this entity, prefer AUTO over HEAT_COOL and COOL over FAN_ONLY
+        # Determine available modes for this entity,
+        # Prefer HEAT_COOL over AUTO and COOL over FAN_ONLY, DRY
+        #
+        # HEAT_COOL is preferred over auto because HomeKit Accessory Protocol describes
+        # heating or cooling comes on to maintain a target temp which is closest to
+        # the Home Assistant spec
+        #
+        # HVAC_MODE_HEAT_COOL: The device supports heating/cooling to a range
         self.hc_homekit_to_hass = {
             c: s
             for s, c in HC_HASS_TO_HOMEKIT.items()
             if (
                 s in hc_modes
                 and not (
-                    (s == HVAC_MODE_HEAT_COOL and HVAC_MODE_AUTO in hc_modes)
-                    or (s == HVAC_MODE_FAN_ONLY and HVAC_MODE_COOL in hc_modes)
+                    (s == HVAC_MODE_AUTO and HVAC_MODE_HEAT_COOL in hc_modes)
+                    or (
+                        s in (HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY)
+                        and HVAC_MODE_COOL in hc_modes
+                    )
                 )
             )
         }
@@ -162,7 +175,7 @@ class Thermostat(HomeAccessory):
 
         self.char_target_heat_cool = serv_thermostat.configure_char(
             CHAR_TARGET_HEATING_COOLING,
-            value=0,
+            value=list(hc_valid_values.values())[0],
             setter_callback=self.set_heat_cool,
             valid_values=hc_valid_values,
         )
@@ -224,7 +237,7 @@ class Thermostat(HomeAccessory):
                 setter_callback=self.set_target_humidity,
             )
             self.char_current_humidity = serv_thermostat.configure_char(
-                CHAR_CURRENT_HUMIDITY, value=50,
+                CHAR_CURRENT_HUMIDITY, value=50
             )
 
     def get_temperature_range(self):
@@ -263,7 +276,7 @@ class Thermostat(HomeAccessory):
         _LOGGER.debug("%s: Set target humidity to %d", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: value}
         self.call_service(
-            DOMAIN_CLIMATE, SERVICE_SET_HUMIDITY, params, f"{value}{UNIT_PERCENTAGE}",
+            DOMAIN_CLIMATE, SERVICE_SET_HUMIDITY, params, f"{value}{UNIT_PERCENTAGE}"
         )
 
     @debounce
@@ -382,6 +395,7 @@ class Thermostat(HomeAccessory):
         # Set current operation mode for supported thermostats
         hvac_action = new_state.attributes.get(ATTR_HVAC_ACTION)
         if hvac_action:
+
             self.char_current_heat_cool.set_value(
                 HC_HASS_TO_HOMEKIT_ACTION[hvac_action]
             )

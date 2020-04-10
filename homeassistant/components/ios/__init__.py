@@ -195,7 +195,7 @@ def devices_with_push(hass):
 
 def enabled_push_ids(hass):
     """Return a list of push enabled target push IDs."""
-    push_ids = list()
+    push_ids = []
     for device in hass.data[DOMAIN][ATTR_DEVICES].values():
         if device.get(ATTR_PUSH_ID) is not None:
             push_ids.append(device.get(ATTR_PUSH_ID))

@@ -12,7 +12,9 @@
         "step": {
             "user": {
                 "data": {
+                    "address": "IP Adress oder Domain oder Serielle Port falls d'Verbindung seriell ass.",
                     "password": "Passwuert (n\u00ebmmen ges\u00e9chert)",
+                    "prefix": "Een eenzegaartege Pr\u00e4fix (eidel lossen wann et n\u00ebmmen 1 ElkM1 g\u00ebtt)",
                     "protocol": "Protokoll",
                     "temperature_unit": "Temperatur Eenheet d\u00e9i den ElkM1 benotzt.",
                     "username": "Benotzernumm (n\u00ebmmen ges\u00e9chert)"

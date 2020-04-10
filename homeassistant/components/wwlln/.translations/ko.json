@@ -1,11 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uc774 \uc704\uce58\ub294 \uc774\ubbf8 \ub4f1\ub85d\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
-            "window_too_small": "\ucc3d\uc774 \ub108\ubb34 \uc791\uc73c\uba74 Home Assistant \uac00 \uc774\ubca4\ud2b8\ub97c \ub193\uce60 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
-        },
-        "error": {
-            "identifier_exists": "\uc704\uce58\uac00 \uc774\ubbf8 \ub4f1\ub85d\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+            "already_configured": "\uc774 \uc704\uce58\ub294 \uc774\ubbf8 \ub4f1\ub85d\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "step": {
             "user": {

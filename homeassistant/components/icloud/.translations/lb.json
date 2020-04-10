@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kont ass scho konfigur\u00e9iert"
+            "already_configured": "Kont ass scho konfigur\u00e9iert",
+            "no_device": "Kee vun dengen Apparater huet \"Find my iPhone\" aktiv\u00e9iert"
         },
         "error": {
             "login": "Feeler beim Login: iwwerpr\u00e9ift \u00e4r E-Mail & Passwuert",

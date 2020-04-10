@@ -14,9 +14,6 @@
         "flow_title": "deCONZ Zigbee \u00e1tj\u00e1r\u00f3 ({host})",
         "step": {
             "hassio_confirm": {
-                "data": {
-                    "allow_clip_sensor": "Virtu\u00e1lis \u00e9rz\u00e9kel\u0151k import\u00e1l\u00e1s\u00e1nak enged\u00e9lyez\u00e9se"
-                },
                 "title": "deCONZ Zigbee \u00e1tj\u00e1r\u00f3 a Hass.io kieg\u00e9sz\u00edt\u0151 seg\u00edts\u00e9g\u00e9vel"
             },
             "init": {
@@ -29,13 +26,6 @@
             "link": {
                 "description": "Oldja fel a deCONZ \u00e1tj\u00e1r\u00f3t a Home Assistant-ban val\u00f3 regisztr\u00e1l\u00e1shoz.\n\n1. Menjen a deCONZ rendszer be\u00e1ll\u00edt\u00e1sokhoz\n2. Nyomja meg az \"\u00c1tj\u00e1r\u00f3 felold\u00e1sa\" gombot",
                 "title": "Kapcsol\u00f3d\u00e1s a deCONZ-hoz"
-            },
-            "options": {
-                "data": {
-                    "allow_clip_sensor": "Virtu\u00e1lis szenzorok import\u00e1l\u00e1s\u00e1nak enged\u00e9lyez\u00e9se",
-                    "allow_deconz_groups": "deCONZ csoportok import\u00e1l\u00e1s\u00e1nak enged\u00e9lyez\u00e9se"
-                },
-                "title": "Extra be\u00e1ll\u00edt\u00e1si lehet\u0151s\u00e9gek a deCONZhoz"
             }
         },
         "title": "deCONZ Zigbee gateway"
@@ -94,13 +84,6 @@
     },
     "options": {
         "step": {
-            "async_step_deconz_devices": {
-                "data": {
-                    "allow_clip_sensor": "Enged\u00e9lyezze a deCONZ CLIP \u00e9rz\u00e9kel\u0151ket",
-                    "allow_deconz_groups": "DeCONZ f\u00e9nycsoportok enged\u00e9lyez\u00e9se"
-                },
-                "description": "A deCONZ eszk\u00f6zt\u00edpusok l\u00e1that\u00f3s\u00e1g\u00e1nak konfigur\u00e1l\u00e1sa"
-            },
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Enged\u00e9lyezze a deCONZ CLIP \u00e9rz\u00e9kel\u0151ket",

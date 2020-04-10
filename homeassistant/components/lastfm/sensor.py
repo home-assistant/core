@@ -19,6 +19,8 @@ ATTR_PLAY_COUNT = "play_count"
 ATTR_TOP_PLAYED = "top_played"
 ATTRIBUTION = "Data provided by Last.fm"
 
+STATE_NOT_SCROBBLING = "Not Scrobbling"
+
 CONF_USERS = "users"
 
 ICON = "mdi:lastfm"
@@ -84,17 +86,25 @@ class LastfmSensor(Entity):
         """Update device state."""
         self._cover = self._user.get_image()
         self._playcount = self._user.get_playcount()
-        last = self._user.get_recent_tracks(limit=2)[0]
-        self._lastplayed = f"{last.track.artist} - {last.track.title}"
-        top = self._user.get_top_tracks(limit=1)[0]
-        toptitle = re.search("', '(.+?)',", str(top))
-        topartist = re.search("'(.+?)',", str(top))
-        self._topplayed = f"{topartist.group(1)} - {toptitle.group(1)}"
-        if self._user.get_now_playing() is None:
-            self._state = "Not Scrobbling"
+
+        recent_tracks = self._user.get_recent_tracks(limit=2)
+        if recent_tracks:
+            last = recent_tracks[0]
+            self._lastplayed = f"{last.track.artist} - {last.track.title}"
+
+        top_tracks = self._user.get_top_tracks(limit=1)
+        if top_tracks:
+            top = top_tracks[0]
+            toptitle = re.search("', '(.+?)',", str(top))
+            topartist = re.search("'(.+?)',", str(top))
+            self._topplayed = f"{topartist.group(1)} - {toptitle.group(1)}"
+
+        now_playing = self._user.get_now_playing()
+        if now_playing is None:
+            self._state = STATE_NOT_SCROBBLING
             return
-        now = self._user.get_now_playing()
-        self._state = f"{now.artist} - {now.title}"
+
+        self._state = f"{now_playing.artist} - {now_playing.title}"
 
     @property
     def device_state_attributes(self):

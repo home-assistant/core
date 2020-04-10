@@ -7,9 +7,7 @@
         },
         "condition_type": {
             "is_off": "prze\u0142\u0105cznik {entity_name} jest wy\u0142\u0105czony",
-            "is_on": "prze\u0142\u0105cznik {entity_name} jest w\u0142\u0105czony",
-            "turn_off": "prze\u0142\u0105cznik {entity_name} wy\u0142\u0105czony",
-            "turn_on": "prze\u0142\u0105cznik {entity_name} w\u0142\u0105czony"
+            "is_on": "prze\u0142\u0105cznik {entity_name} jest w\u0142\u0105czony"
         },
         "trigger_type": {
             "turned_off": "nast\u0105pi wy\u0142\u0105czenie {entity_name}",

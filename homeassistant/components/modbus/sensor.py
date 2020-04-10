@@ -89,7 +89,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Modbus sensors."""
     sensors = []
     data_types = {DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"}}
@@ -148,7 +148,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
     if not sensors:
         return False
-    add_entities(sensors)
+    async_add_entities(sensors)
 
 
 class ModbusRegisterSensor(RestoreEntity):
@@ -246,7 +246,7 @@ class ModbusRegisterSensor(RestoreEntity):
         if isinstance(val, int):
             self._value = str(val)
             if self._precision > 0:
-                self._value += "." + "0" * self._precision
+                self._value += f".{'0' * self._precision}"
         else:
             self._value = f"{val:.{self._precision}f}"
 

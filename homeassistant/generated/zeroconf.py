@@ -48,6 +48,7 @@ ZEROCONF = {
 HOMEKIT = {
     "819LMB": "myq",
     "BSB002": "hue",
+    "Healty Home Coach": "netatmo",
     "LIFX": "lifx",
     "Netatmo Relay": "netatmo",
     "Presence": "netatmo",

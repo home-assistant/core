@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "alias": "\u5225\u540d",
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "name": "\u540d\u7a31",
+                    "password": "\u5bc6\u78bc",
+                    "port": "\u901a\u8a0a\u57e0",
+                    "resources": "\u8cc7\u6e90",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u5047\u5982 NUT \u4f3a\u670d\u5668\u4e0b\u64c1\u6709\u591a\u7d44 UPS\uff0c\u65bc\u300c\u5225\u540d\u300d\u6b04\u4f4d\u8f38\u5165 UPS \u540d\u7a31\u3002",
+                "title": "\u9023\u7dda\u81f3 NUT \u4f3a\u670d\u5668"
+            }
+        },
+        "title": "Network UPS Tools (NUT)"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "\u8cc7\u6e90"
+                },
+                "description": "\u9078\u64c7\u50b3\u611f\u5668\u8cc7\u6e90"
+            }
+        }
+    }
+}

@@ -14,7 +14,7 @@
             "busy_error": "Den Apparat huet en Kupplungs Versuch refus\u00e9iert, well en scho mat engem anere Kontroller verbonnen ass.",
             "max_peers_error": "Den Apparat huet den Kupplungs Versuch refus\u00e9iert well et keng fr\u00e4i Pairing Memoire huet.",
             "max_tries_error": "Den Apparat huet den Kupplungs Versuch refus\u00e9iert well et m\u00e9i w\u00e9i 100 net erfollegr\u00e4ich Authentifikatioun's Versich erhalen huet.",
-            "pairing_failed": "Eng onerwaarte Feeler ass opgetruede beim Kupplung's Versuch mat d\u00ebsem Apparat. D\u00ebst kann e tempor\u00e4re Feeler sinn oder \u00c4ren Apparat g\u00ebtt aktuell net \u00ebnnerst\u00ebtzt.",
+            "pairing_failed": "Eng onerwaarte Feeler ass opgetruede beim Kupplung's Versuch mat d\u00ebsem Apparat. D\u00ebst kann e tempor\u00e4re Feeler sinn oder D\u00e4in Apparat g\u00ebtt aktuell net \u00ebnnerst\u00ebtzt.",
             "unable_to_pair": "Feeler beim verbannen, prob\u00e9iert w.e.g. nach emol.",
             "unknown_error": "Apparat mellt een onbekannte Feeler. Verbindung net m\u00e9iglech."
         },

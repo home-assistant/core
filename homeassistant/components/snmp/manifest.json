@@ -3,6 +3,5 @@
   "name": "SNMP",
   "documentation": "https://www.home-assistant.io/integrations/snmp",
   "requirements": ["pysnmp==4.4.12"],
-  "dependencies": [],
   "codeowners": []
 }

@@ -63,7 +63,7 @@ class XiaomiAqaraLock(LockDevice, XiaomiDevice):
     def clear_unlock_state(self, _):
         """Clear unlock state automatically."""
         self._state = STATE_LOCKED
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""

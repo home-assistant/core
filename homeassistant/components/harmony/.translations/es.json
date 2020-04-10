@@ -5,7 +5,6 @@
         },
         "error": {
             "cannot_connect": "No se ha podido conectar, por favor, int\u00e9ntalo de nuevo",
-            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },
         "flow_title": "Logitech Harmony Hub {name}",

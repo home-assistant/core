@@ -26,7 +26,8 @@
     "abort": {
       "already_configured": "This printer is already configured.",
       "connection_error": "Failed to connect to printer.",
-      "connection_upgrade": "Failed to connect to printer due to connection upgrade being required."
+      "connection_upgrade": "Failed to connect to printer due to connection upgrade being required.",
+      "parse_error": "Failed to parse response from printer."
     }
   }
 }

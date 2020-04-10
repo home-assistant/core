@@ -33,6 +33,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_STANDBY,
     STATE_UNKNOWN,
 )
 
@@ -190,7 +191,12 @@ class MediaPlayer(HomeAccessory):
         current_state = new_state.state
 
         if self.chars[FEATURE_ON_OFF]:
-            hk_state = current_state not in (STATE_OFF, STATE_UNKNOWN, "None")
+            hk_state = current_state not in (
+                STATE_OFF,
+                STATE_UNKNOWN,
+                STATE_STANDBY,
+                "None",
+            )
             if not self._flag[FEATURE_ON_OFF]:
                 _LOGGER.debug(
                     '%s: Set current state for "on_off" to %s', self.entity_id, hk_state

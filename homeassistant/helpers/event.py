@@ -118,7 +118,7 @@ def async_track_template(
     variables: Optional[Dict[str, Any]] = None,
 ) -> CALLBACK_TYPE:
     """Add a listener that track state changes with template condition."""
-    from . import condition
+    from . import condition  # pylint: disable=import-outside-toplevel
 
     # Local variable to keep track of if the action has already been triggered
     already_triggered = False

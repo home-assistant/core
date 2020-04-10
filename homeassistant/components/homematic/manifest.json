@@ -3,6 +3,5 @@
   "name": "Homematic",
   "documentation": "https://www.home-assistant.io/integrations/homematic",
   "requirements": ["pyhomematic==0.1.65"],
-  "dependencies": [],
   "codeowners": ["@pvizeli", "@danielperna84"]
 }

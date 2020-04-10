@@ -17,6 +17,7 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST,
     HTTP_CREATED,
     HTTP_NOT_FOUND,
+    HTTP_OK,
     MATCH_ALL,
     URL_API,
     URL_API_COMPONENTS,
@@ -250,7 +251,7 @@ class APIEntityStateView(HomeAssistantView):
         )
 
         # Read the state back for our response
-        status_code = HTTP_CREATED if is_new_state else 200
+        status_code = HTTP_CREATED if is_new_state else HTTP_OK
         resp = self.json(hass.states.get(entity_id), status_code)
 
         resp.headers.add("Location", f"/api/states/{entity_id}")

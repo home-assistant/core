@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from homeassistant.components import demo
+from homeassistant.components.demo import DOMAIN
 from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
@@ -28,14 +28,14 @@ def demo_cleanup(hass):
 
 async def test_setting_up_demo(hass):
     """Test if we can set up the demo and dump it to JSON."""
-    assert await async_setup_component(hass, demo.DOMAIN, {"demo": {}})
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_start()
 
     # This is done to make sure entity components don't accidentally store
     # non-JSON-serializable data in the state machine.
     try:
         json.dumps(hass.states.async_all(), cls=JSONEncoder)
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         pytest.fail(
             "Unable to convert all demo entities to JSON. "
             "Wrong data in state machine!"

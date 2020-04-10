@@ -356,7 +356,7 @@ class CastDevice(MediaPlayerDevice):
         self.cast_status = chromecast.status
         self.media_status = chromecast.media_controller.status
         self._chromecast.start()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_del_cast_info(self, cast_info):
         """Remove the service."""
@@ -411,7 +411,7 @@ class CastDevice(MediaPlayerDevice):
         self._dynamic_group_available = False
         self.dynamic_group_media_status = chromecast.media_controller.status
         self._dynamic_group_cast.start()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_del_dynamic_group(self):
         """Remove the dynamic group."""
@@ -432,7 +432,7 @@ class CastDevice(MediaPlayerDevice):
 
         self._dynamic_group_invalidate()
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def _async_disconnect(self):
         """Disconnect Chromecast object if it is set."""
@@ -447,7 +447,7 @@ class CastDevice(MediaPlayerDevice):
             self._cast_info.port,
         )
         self._available = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         await self.hass.async_add_executor_job(self._chromecast.disconnect)
         if self._dynamic_group_cast is not None:
@@ -455,7 +455,7 @@ class CastDevice(MediaPlayerDevice):
 
         self._invalidate()
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def _invalidate(self):
         """Invalidate some attributes."""

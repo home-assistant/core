@@ -3,6 +3,5 @@
   "name": "Global Caché GC-100",
   "documentation": "https://www.home-assistant.io/integrations/gc100",
   "requirements": ["python-gc100==1.0.3a"],
-  "dependencies": [],
   "codeowners": []
 }

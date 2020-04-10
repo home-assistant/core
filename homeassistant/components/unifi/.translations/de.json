@@ -32,7 +32,8 @@
             "client_control": {
                 "data": {
                     "block_client": "Clients mit Netzwerkzugriffskontrolle",
-                    "new_client": "F\u00fcgen Sie einen neuen Client f\u00fcr die Netzwerkzugangskontrolle hinzu"
+                    "new_client": "F\u00fcgen Sie einen neuen Client f\u00fcr die Netzwerkzugangskontrolle hinzu",
+                    "poe_clients": "POE-Kontrolle von Clients zulassen"
                 },
                 "description": "Konfigurieren Sie Client-Steuerelemente \n\nErstellen Sie Switches f\u00fcr Seriennummern, f\u00fcr die Sie den Netzwerkzugriff steuern m\u00f6chten.",
                 "title": "UniFi-Optionen 2/3"

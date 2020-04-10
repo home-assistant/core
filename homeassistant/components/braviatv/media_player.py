@@ -1,9 +1,7 @@
 """Support for interface with a Sony Bravia TV."""
-import ipaddress
 import logging
 
 from bravia_tv import BraviaRC
-from getmac import get_mac_address
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
@@ -21,7 +19,9 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.json import load_json, save_json
 
 BRAVIA_CONFIG_FILE = "bravia.conf"
@@ -61,7 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sony Bravia TV platform."""
-    host = config.get(CONF_HOST)
+    host = config[CONF_HOST]
 
     if host is None:
         return
@@ -74,10 +74,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if host_ip == host:
             pin = host_config["pin"]
             mac = host_config["mac"]
-            name = config.get(CONF_NAME)
+            name = config[CONF_NAME]
             braviarc = BraviaRC(host, mac)
-            braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
-            unique_id = braviarc.get_system_info()["cid"].lower()
+            if not braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME):
+                raise PlatformNotReady
+            try:
+                unique_id = braviarc.get_system_info()["cid"].lower()
+            except TypeError:
+                raise PlatformNotReady
 
             add_entities([BraviaTVDevice(braviarc, name, pin, unique_id)])
             return
@@ -87,21 +91,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def setup_bravia(config, pin, hass, add_entities):
     """Set up a Sony Bravia TV based on host parameter."""
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
+    host = config[CONF_HOST]
+    name = config[CONF_NAME]
 
     if pin is None:
         request_configuration(config, hass, add_entities)
         return
-
-    try:
-        if ipaddress.ip_address(host).version == 6:
-            mode = "ip6"
-        else:
-            mode = "ip"
-    except ValueError:
-        mode = "hostname"
-    mac = get_mac_address(**{mode: host})
 
     # If we came here and configuring this host, mark as done
     if host in _CONFIGURING:
@@ -110,22 +105,31 @@ def setup_bravia(config, pin, hass, add_entities):
         configurator.request_done(request_id)
         _LOGGER.info("Discovery configuration done")
 
+    braviarc = BraviaRC(host)
+    if not braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME):
+        _LOGGER.error("Cannot connect to %s", host)
+        return
+    try:
+        system_info = braviarc.get_system_info()
+    except TypeError:
+        _LOGGER.error("Cannot retrieve system info from %s", host)
+        return
+    mac = format_mac(system_info["macAddr"])
+    unique_id = system_info["cid"].lower()
+
     # Save config
     save_json(
         hass.config.path(BRAVIA_CONFIG_FILE),
         {host: {"pin": pin, "host": host, "mac": mac}},
     )
-    braviarc = BraviaRC(host, mac)
-    braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
-    unique_id = braviarc.get_system_info()["cid"].lower()
 
     add_entities([BraviaTVDevice(braviarc, name, pin, unique_id)])
 
 
 def request_configuration(config, hass, add_entities):
     """Request configuration steps from the user."""
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
+    host = config[CONF_HOST]
+    name = config[CONF_NAME]
 
     configurator = hass.components.configurator
 
@@ -150,8 +154,10 @@ def request_configuration(config, hass, add_entities):
     _CONFIGURING[host] = configurator.request_config(
         name,
         bravia_configuration_callback,
-        description="Enter the Pin shown on your Sony Bravia TV."
-        + "If no Pin is shown, enter 0000 to let TV show you a Pin.",
+        description=(
+            "Enter the Pin shown on your Sony Bravia TV."
+            "If no Pin is shown, enter 0000 to let TV show you a Pin."
+        ),
         description_image="/static/images/smart-tv.png",
         submit_caption="Confirm",
         fields=[{"id": "pin", "name": "Enter the pin", "type": ""}],
@@ -218,8 +224,8 @@ class BraviaTVDevice(MediaPlayerDevice):
                     self._channel_name = playing_info.get("title")
                     self._program_media_type = playing_info.get("programMediaType")
                     self._channel_number = playing_info.get("dispNum")
-                    self._source = playing_info.get("source")
                     self._content_uri = playing_info.get("uri")
+                    self._source = self._get_source()
                     self._duration = playing_info.get("durationSec")
                     self._start_date_time = playing_info.get("startDateTime")
             else:
@@ -228,6 +234,12 @@ class BraviaTVDevice(MediaPlayerDevice):
         except Exception as exception_instance:  # pylint: disable=broad-except
             _LOGGER.error(exception_instance)
             self._state = STATE_OFF
+
+    def _get_source(self):
+        """Return the name of the source."""
+        for key, value in self._content_mapping.items():
+            if value == self._content_uri:
+                return key
 
     def _reset_playing_info(self):
         self._program_name = None

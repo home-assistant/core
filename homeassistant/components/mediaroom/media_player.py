@@ -70,7 +70,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     known_hosts = hass.data.get(DATA_MEDIAROOM)
     if known_hosts is None:
         known_hosts = hass.data[DATA_MEDIAROOM] = []
-    host = config.get(CONF_HOST, None)
+    host = config.get(CONF_HOST)
     if host:
         async_add_entities(
             [
@@ -101,7 +101,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     if not config[CONF_OPTIMISTIC]:
 
-        already_installed = hass.data.get(DISCOVERY_MEDIAROOM, None)
+        already_installed = hass.data.get(DISCOVERY_MEDIAROOM)
         if not already_installed:
             hass.data[DISCOVERY_MEDIAROOM] = await install_mediaroom_protocol(
                 responses_callback=callback_notify
@@ -176,9 +176,13 @@ class MediaroomDevice(MediaPlayerDevice):
             self.set_state(stb_state)
             _LOGGER.debug("STB(%s) is [%s]", self.host, self._state)
             self._available = True
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
-        async_dispatcher_connect(self.hass, SIGNAL_STB_NOTIFY, async_notify_received)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_STB_NOTIFY, async_notify_received
+            )
+        )
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play media."""
@@ -200,7 +204,7 @@ class MediaroomDevice(MediaPlayerDevice):
             self._available = True
         except PyMediaroomError:
             self._available = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def unique_id(self):
@@ -242,7 +246,7 @@ class MediaroomDevice(MediaPlayerDevice):
             self._available = True
         except PyMediaroomError:
             self._available = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self):
         """Turn off the receiver."""
@@ -254,7 +258,7 @@ class MediaroomDevice(MediaPlayerDevice):
             self._available = True
         except PyMediaroomError:
             self._available = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_media_play(self):
         """Send play command."""
@@ -267,7 +271,7 @@ class MediaroomDevice(MediaPlayerDevice):
             self._available = True
         except PyMediaroomError:
             self._available = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_media_pause(self):
         """Send pause command."""
@@ -279,7 +283,7 @@ class MediaroomDevice(MediaPlayerDevice):
             self._available = True
         except PyMediaroomError:
             self._available = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_media_stop(self):
         """Send stop command."""
@@ -291,7 +295,7 @@ class MediaroomDevice(MediaPlayerDevice):
             self._available = True
         except PyMediaroomError:
             self._available = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_media_previous_track(self):
         """Send Program Down command."""
@@ -303,7 +307,7 @@ class MediaroomDevice(MediaPlayerDevice):
             self._available = True
         except PyMediaroomError:
             self._available = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_media_next_track(self):
         """Send Program Up command."""
@@ -315,7 +319,7 @@ class MediaroomDevice(MediaPlayerDevice):
             self._available = True
         except PyMediaroomError:
             self._available = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_volume_up(self):
         """Send volume up command."""
@@ -325,7 +329,7 @@ class MediaroomDevice(MediaPlayerDevice):
             self._available = True
         except PyMediaroomError:
             self._available = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_volume_down(self):
         """Send volume up command."""
@@ -334,7 +338,7 @@ class MediaroomDevice(MediaPlayerDevice):
             await self.stb.send_cmd("VolDown")
         except PyMediaroomError:
             self._available = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_mute_volume(self, mute):
         """Send mute command."""
@@ -343,4 +347,4 @@ class MediaroomDevice(MediaPlayerDevice):
             await self.stb.send_cmd("Mute")
         except PyMediaroomError:
             self._available = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

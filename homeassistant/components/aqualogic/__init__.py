@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "aqualogic"
-UPDATE_TOPIC = DOMAIN + "_update"
+UPDATE_TOPIC = f"{DOMAIN}_update"
 CONF_UNIT = "unit"
 RECONNECT_INTERVAL = timedelta(seconds=10)
 

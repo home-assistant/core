@@ -1,21 +1,21 @@
 {
-   "config" : {
-      "error" : {
-         "cannot_connect" : "Failed to connect, please try again",
-         "unknown" : "Unexpected error"
-      },
-      "title" : "Griddy",
-      "step" : {
-         "user" : {
-            "description" : "Your Load Zone is in your Griddy account under “Account > Meter > Load Zone.”",
-            "data" : {
-               "loadzone" : "Load Zone (Settlement Point)"
-            },
-            "title" : "Setup your Griddy Load Zone"
-         }
-      },
-      "abort" : {
-         "already_configured" : "This Load Zone is already configured"
+  "config": {
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "unknown": "Unexpected error"
+    },
+    "title": "Griddy",
+    "step": {
+      "user": {
+        "description": "Your Load Zone is in your Griddy account under “Account > Meter > Load Zone.”",
+        "data": {
+          "loadzone": "Load Zone (Settlement Point)"
+        },
+        "title": "Setup your Griddy Load Zone"
       }
-   }
+    },
+    "abort": {
+      "already_configured": "This Load Zone is already configured"
+    }
+  }
 }
