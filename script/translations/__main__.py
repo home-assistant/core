@@ -1,9 +1,10 @@
 """Validate manifests."""
 import argparse
+import importlib
 from pathlib import Path
 import sys
 
-from . import clean, develop, download, error, upload, util
+from . import error, util
 
 
 def get_arguments() -> argparse.Namespace:
@@ -19,14 +20,8 @@ def main():
 
     args = get_arguments()
 
-    if args.action == "download":
-        download.run()
-    elif args.action == "upload":
-        upload.run()
-    elif args.action == "clean":
-        clean.run()
-    elif args.action == "develop":
-        develop.run()
+    module = importlib.import_module(f".{args.action}", "script.translations")
+    module.run()
 
     return 0
 
