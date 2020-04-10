@@ -6,6 +6,8 @@ from homeassistant.components.qwikswitch import DOMAIN as QWIKSWITCH
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 
+from tests.test_util.aiohttp import MockLongPollSideEffect
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -45,7 +47,8 @@ async def test_binary_sensor_device(hass, aioclient_mock):
         }
     }
     aioclient_mock.get("http://127.0.0.1:2020/&device", json=DEVICES)
-    listen_mock = aioclient_mock.get("http://127.0.0.1:2020/&listen", long_poll=True)
+    listen_mock = MockLongPollSideEffect()
+    aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
     await async_setup_component(hass, QWIKSWITCH, config)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -69,6 +72,8 @@ async def test_binary_sensor_device(hass, aioclient_mock):
     state_obj = hass.states.get("binary_sensor.s1")
     assert state_obj.state == "off"
 
+    listen_mock.stop()
+
 
 async def test_sensor_device(hass, aioclient_mock):
     """Test a sensor device."""
@@ -83,7 +88,8 @@ async def test_sensor_device(hass, aioclient_mock):
         }
     }
     aioclient_mock.get("http://127.0.0.1:2020/&device", json=DEVICES)
-    listen_mock = aioclient_mock.get("http://127.0.0.1:2020/&listen", long_poll=True)
+    listen_mock = MockLongPollSideEffect()
+    aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
     await async_setup_component(hass, QWIKSWITCH, config)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -98,3 +104,5 @@ async def test_sensor_device(hass, aioclient_mock):
     await hass.async_block_till_done()
     state_obj = hass.states.get("sensor.ss1")
     assert state_obj.state == "416"
+
+    listen_mock.stop()
