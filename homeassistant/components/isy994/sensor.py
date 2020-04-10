@@ -96,7 +96,7 @@ UOM_FRIENDLY_NAME = {
     "73": POWER_WATT,
     "74": "W/m²",
     "75": "weekday",
-    "76": "Wind Direction (°)",
+    "76": f"Wind Direction ({UNIT_DEGREE})",
     "77": TIME_YEARS,
     "82": "mm",
     "83": "km",

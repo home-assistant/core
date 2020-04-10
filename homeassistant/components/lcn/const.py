@@ -149,7 +149,7 @@ VAR_UNITS = [
     "LCN",
     "NATIVE",
     TEMP_CELSIUS,
-    "°K",
+    f"{UNIT_DEGREE}K",
     TEMP_FAHRENHEIT,
     "LUX_T",
     "LX_T",
