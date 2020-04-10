@@ -8,7 +8,12 @@ import growattServer
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    ENERGY_KILO_WATT_HOUR,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -23,15 +28,35 @@ SCAN_INTERVAL = datetime.timedelta(minutes=5)
 TOTAL_SENSOR_TYPES = {
     "total_money_today": ("Total money today", "€", "plantMoneyText", None),
     "total_money_total": ("Money lifetime", "€", "totalMoneyText", None),
-    "total_energy_today": ("Energy Today", "kWh", "todayEnergy", "power"),
+    "total_energy_today": (
+        "Energy Today",
+        ENERGY_KILO_WATT_HOUR,
+        "todayEnergy",
+        "power",
+    ),
     "total_output_power": ("Output Power", "W", "invTodayPpv", "power"),
-    "total_energy_output": ("Lifetime energy output", "kWh", "totalEnergy", "power"),
+    "total_energy_output": (
+        "Lifetime energy output",
+        ENERGY_KILO_WATT_HOUR,
+        "totalEnergy",
+        "power",
+    ),
     "total_maximum_output": ("Maximum power", "W", "nominalPower", "power"),
 }
 
 INVERTER_SENSOR_TYPES = {
-    "inverter_energy_today": ("Energy today", "kWh", "e_today", "power"),
-    "inverter_energy_total": ("Lifetime energy output", "kWh", "e_total", "power"),
+    "inverter_energy_today": (
+        "Energy today",
+        ENERGY_KILO_WATT_HOUR,
+        "e_today",
+        "power",
+    ),
+    "inverter_energy_total": (
+        "Lifetime energy output",
+        ENERGY_KILO_WATT_HOUR,
+        "e_total",
+        "power",
+    ),
     "inverter_voltage_input_1": ("Input 1 voltage", "V", "vpv1", None),
     "inverter_amperage_input_1": ("Input 1 Amperage", "A", "ipv1", None),
     "inverter_wattage_input_1": ("Input 1 Wattage", "W", "ppv1", "power"),

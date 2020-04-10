@@ -2,7 +2,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.const import TIME_SECONDS
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, TIME_SECONDS
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -14,7 +14,7 @@ async def test_state(hass):
             "platform": "integration",
             "name": "integration",
             "source": "sensor.power",
-            "unit": "kWh",
+            "unit": ENERGY_KILO_WATT_HOUR,
             "round": 2,
         }
     }
@@ -36,7 +36,7 @@ async def test_state(hass):
     # Testing a power sensor at 1 KiloWatts for 1hour = 1kWh
     assert round(float(state.state), config["sensor"]["round"]) == 1.0
 
-    assert state.attributes.get("unit_of_measurement") == "kWh"
+    assert state.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
 
 
 async def test_trapezoidal(hass):
@@ -46,7 +46,7 @@ async def test_trapezoidal(hass):
             "platform": "integration",
             "name": "integration",
             "source": "sensor.power",
-            "unit": "kWh",
+            "unit": ENERGY_KILO_WATT_HOUR,
             "round": 2,
         }
     }
@@ -69,7 +69,7 @@ async def test_trapezoidal(hass):
 
     assert round(float(state.state), config["sensor"]["round"]) == 8.33
 
-    assert state.attributes.get("unit_of_measurement") == "kWh"
+    assert state.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
 
 
 async def test_left(hass):
@@ -80,7 +80,7 @@ async def test_left(hass):
             "name": "integration",
             "method": "left",
             "source": "sensor.power",
-            "unit": "kWh",
+            "unit": ENERGY_KILO_WATT_HOUR,
             "round": 2,
         }
     }
@@ -103,7 +103,7 @@ async def test_left(hass):
 
     assert round(float(state.state), config["sensor"]["round"]) == 7.5
 
-    assert state.attributes.get("unit_of_measurement") == "kWh"
+    assert state.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
 
 
 async def test_right(hass):
@@ -114,7 +114,7 @@ async def test_right(hass):
             "name": "integration",
             "method": "right",
             "source": "sensor.power",
-            "unit": "kWh",
+            "unit": ENERGY_KILO_WATT_HOUR,
             "round": 2,
         }
     }
@@ -137,7 +137,7 @@ async def test_right(hass):
 
     assert round(float(state.state), config["sensor"]["round"]) == 9.17
 
-    assert state.attributes.get("unit_of_measurement") == "kWh"
+    assert state.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
 
 
 async def test_prefix(hass):
@@ -170,7 +170,7 @@ async def test_prefix(hass):
 
     # Testing a power sensor at 1000 Watts for 1hour = 1kWh
     assert round(float(state.state), config["sensor"]["round"]) == 1.0
-    assert state.attributes.get("unit_of_measurement") == "kWh"
+    assert state.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
 
 
 async def test_suffix(hass):
