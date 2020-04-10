@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_SERVICE,
     EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_STOP,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -342,7 +343,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         mqtt.subscribe(self.hass, "test-topic", self.record_calls, encoding="ascii")
         mqtt.subscribe(self.hass, "test-topic", self.record_calls)
 
-        fire_mqtt_message(self.hass, "test-topic", "°C")
+        fire_mqtt_message(self.hass, "test-topic", TEMP_CELSIUS)
 
         self.hass.block_till_done()
         assert len(self.calls) == 1

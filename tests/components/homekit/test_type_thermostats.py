@@ -48,6 +48,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_TEMPERATURE_UNIT,
     EVENT_HOMEASSISTANT_START,
+    TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import CoreState
@@ -86,7 +87,7 @@ async def test_thermostat(hass, hk_driver, cls, events):
                 HVAC_MODE_COOL,
                 HVAC_MODE_OFF,
                 HVAC_MODE_AUTO,
-            ],
+            ]
         },
     )
     await hass.async_block_till_done()
@@ -418,14 +419,14 @@ async def test_thermostat_humidity(hass, hk_driver, cls, events):
     assert acc.char_target_humidity.properties[PROP_MIN_VALUE] == DEFAULT_MIN_HUMIDITY
 
     hass.states.async_set(
-        entity_id, HVAC_MODE_HEAT_COOL, {ATTR_HUMIDITY: 65, ATTR_CURRENT_HUMIDITY: 40},
+        entity_id, HVAC_MODE_HEAT_COOL, {ATTR_HUMIDITY: 65, ATTR_CURRENT_HUMIDITY: 40}
     )
     await hass.async_block_till_done()
     assert acc.char_current_humidity.value == 40
     assert acc.char_target_humidity.value == 65
 
     hass.states.async_set(
-        entity_id, HVAC_MODE_COOL, {ATTR_HUMIDITY: 35, ATTR_CURRENT_HUMIDITY: 70},
+        entity_id, HVAC_MODE_COOL, {ATTR_HUMIDITY: 35, ATTR_CURRENT_HUMIDITY: 70}
     )
     await hass.async_block_till_done()
     assert acc.char_current_humidity.value == 70
@@ -618,7 +619,7 @@ async def test_thermostat_restore(hass, hk_driver, cls, events):
     registry = await entity_registry.async_get_registry(hass)
 
     registry.async_get_or_create(
-        "climate", "generic", "1234", suggested_object_id="simple",
+        "climate", "generic", "1234", suggested_object_id="simple"
     )
     registry.async_get_or_create(
         "climate",
@@ -898,7 +899,7 @@ async def test_water_heater(hass, hk_driver, cls, events):
     assert call_set_temperature[0].data[ATTR_TEMPERATURE] == 52.0
     assert acc.char_target_temp.value == 52.0
     assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] == "52.0°C"
+    assert events[-1].data[ATTR_VALUE] == f"52.0{TEMP_CELSIUS}"
 
     await hass.async_add_executor_job(acc.char_target_heat_cool.client_update_value, 0)
     await hass.async_block_till_done()
@@ -975,7 +976,7 @@ async def test_water_heater_restore(hass, hk_driver, cls, events):
     registry = await entity_registry.async_get_registry(hass)
 
     registry.async_get_or_create(
-        "water_heater", "generic", "1234", suggested_object_id="simple",
+        "water_heater", "generic", "1234", suggested_object_id="simple"
     )
     registry.async_get_or_create(
         "water_heater",

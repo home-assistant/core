@@ -102,7 +102,7 @@ class TestStatisticsSensor(unittest.TestCase):
         assert self.mean == state.attributes.get("mean")
         assert self.count == state.attributes.get("count")
         assert self.total == state.attributes.get("total")
-        assert "°C" == state.attributes.get("unit_of_measurement")
+        assert TEMP_CELSIUS == state.attributes.get("unit_of_measurement")
         assert self.change == state.attributes.get("change")
         assert self.average_change == state.attributes.get("average_change")
 
