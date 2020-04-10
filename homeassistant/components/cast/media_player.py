@@ -55,7 +55,7 @@ from .const import (
     SIGNAL_CAST_REMOVED,
     SIGNAL_HASS_CAST_SHOW_VIEW,
 )
-from .discovery import discover_chromecast, setup_internal_discovery
+from .discovery import setup_internal_discovery
 from .helpers import (
     CastStatusListener,
     ChromecastInfo,
@@ -178,20 +178,7 @@ async def _async_setup_platform(
     for chromecast in list(hass.data[KNOWN_CHROMECAST_INFO_KEY]):
         async_cast_discovered(chromecast)
 
-    if info is None or info.is_audio_group:
-        # If we were a) explicitly told to enable discovery or
-        # b) have an audio group cast device, we need internal discovery.
-        hass.async_add_executor_job(setup_internal_discovery, hass)
-    else:
-        info = await hass.async_add_executor_job(info.fill_out_missing_chromecast_info)
-        if info.friendly_name is None:
-            _LOGGER.debug(
-                "Cannot retrieve detail information for chromecast"
-                " %s, the device may not be online",
-                info,
-            )
-
-        hass.async_add_executor_job(discover_chromecast, hass, info)
+    hass.async_add_executor_job(setup_internal_discovery, hass)
 
 
 class CastDevice(MediaPlayerDevice):
