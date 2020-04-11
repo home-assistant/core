@@ -29,5 +29,10 @@
       "connection_upgrade": "Failed to connect to printer due to connection upgrade being required.",
       "parse_error": "Failed to parse response from printer."
     }
+  },
+  "state": {
+    "idle": "Idle",
+    "printing": "Printing",
+    "stopped": "Stopped"
   }
 }
