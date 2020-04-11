@@ -5,6 +5,7 @@ from typing import Callable
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    LENGTH_KILOMETERS,
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
@@ -99,7 +100,7 @@ UOM_FRIENDLY_NAME = {
     "76": "Wind Direction (°)",
     "77": TIME_YEARS,
     "82": "mm",
-    "83": "km",
+    "83": LENGTH_KILOMETERS,
     "85": "ohm",
     "86": "kOhm",
     "87": "m³/m³",
