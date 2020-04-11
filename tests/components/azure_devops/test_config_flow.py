@@ -54,7 +54,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.azure_devops.config_flow.AzureDevOpsFlowHandler._test_connection",
-        return_value=mock_coro(return_value="connection_error",),
+        return_value=mock_coro(return_value="connection_error"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT,

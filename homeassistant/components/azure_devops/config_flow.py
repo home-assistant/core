@@ -74,7 +74,7 @@ class AzureDevOpsFlowHandler(ConfigFlow):
             },
         )
 
-    async def _test_connection(self, connection, project: str) -> str:
+    async def _test_connection(self, connection: Connection, project: str) -> str:
         try:
             core_client = connection.clients.get_core_client()
             core_client.get_project(project)
