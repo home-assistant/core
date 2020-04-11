@@ -35,10 +35,12 @@ async def async_setup_entry(
     sensors = []
 
     sensors.append(IPPPrinterSensor(entry.entry_id, coordinator, entry_unique_id=entry.unique_id))
-    sensors.append(IPPUptimeSensor(entry.entry_id, coordinator))
+    sensors.append(IPPUptimeSensor(entry.entry_id, coordinator, entry_unique_id=entry.unique_id))
 
     for marker_index in range(len(coordinator.data.markers)):
-        sensors.append(IPPMarkerSensor(entry.entry_id, coordinator, marker_index))
+        sensors.append(
+            IPPMarkerSensor(entry.entry_id, coordinator, marker_index, entry_unique_id=entry.unique_id)
+        )
 
     async_add_entities(sensors, True)
 
