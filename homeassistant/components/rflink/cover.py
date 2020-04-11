@@ -57,8 +57,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def entity_type_for_device_id(device_id):
-    """Return entity class for protocol of a given device_id.
+def entity_type_for_entity_id(entity_id):
+    """Return entity class for protocol of a given entity_id.
 
     Async friendly.
     """
@@ -66,7 +66,7 @@ def entity_type_for_device_id(device_id):
         # KlikAanKlikUit cover have the controls inverted
         "newkaku": TYPE_INVERTED
     }
-    protocol = device_id.split("_")[0]
+    protocol = entity_id.split("_")[0]
     return entity_type_mapping.get(protocol, TYPE_STANDARD)
 
 
@@ -89,7 +89,7 @@ def entity_class_for_type(entity_type):
 def devices_from_config(domain_config):
     """Parse configuration and add Rflink cover devices."""
     devices = []
-    for device_id, config in domain_config[CONF_DEVICES].items():
+    for entity_id, config in domain_config[CONF_DEVICES].items():
         # Determine what kind of entity to create, RflinkCover
         # or InvertedRflinkCover
         if CONF_TYPE in config:
@@ -97,11 +97,11 @@ def devices_from_config(domain_config):
             # to entity instantiation
             entity_type = config.pop(CONF_TYPE)
         else:
-            entity_type = entity_type_for_device_id(device_id)
+            entity_type = entity_type_for_entity_id(entity_id)
 
         entity_class = entity_class_for_type(entity_type)
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
-        device = entity_class(device_id, **device_config)
+        device = entity_class(entity_id, **device_config)
         devices.append(device)
 
     return devices
@@ -134,11 +134,6 @@ class RflinkCover(RflinkCommand, CoverEntity, RestoreEntity):
             self._state = False
 
     @property
-    def should_poll(self):
-        """No polling available in RFlink cover."""
-        return False
-
-    @property
     def is_closed(self):
         """Return if the cover is closed."""
         return not self._state
@@ -166,6 +161,6 @@ class InvertedRflinkCover(RflinkCover):
 
     async def _async_send_command(self, cmd, repetitions):
         """Will invert only the UP/DOWN commands."""
-        _LOGGER.debug("Getting command: %s for Rflink device: %s", cmd, self._device_id)
+        _LOGGER.debug("Getting command: %s for Rflink device: %s", cmd, self.entity_id)
         cmd_inv = {"UP": "DOWN", "DOWN": "UP"}
         await super()._async_send_command(cmd_inv.get(cmd, cmd), repetitions)

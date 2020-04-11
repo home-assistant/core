@@ -71,8 +71,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def entity_type_for_device_id(device_id):
-    """Return entity class for protocol of a given device_id.
+def entity_type_for_entity_id(entity_id):
+    """Return entity class for protocol of a given entity_id.
 
     Async friendly.
     """
@@ -81,7 +81,7 @@ def entity_type_for_device_id(device_id):
         # protocol
         "newkaku": TYPE_HYBRID
     }
-    protocol = device_id.split("_")[0]
+    protocol = entity_id.split("_")[0]
     return entity_type_mapping.get(protocol)
 
 
@@ -110,14 +110,14 @@ def entity_class_for_type(entity_type):
 def devices_from_config(domain_config):
     """Parse configuration and add Rflink light devices."""
     devices = []
-    for device_id, config in domain_config[CONF_DEVICES].items():
+    for entity_id, config in domain_config[CONF_DEVICES].items():
         # Determine which kind of entity to create
         if CONF_TYPE in config:
             # Remove type from config to not pass it as and argument to entity
             # instantiation
             entity_type = config.pop(CONF_TYPE)
         else:
-            entity_type = entity_type_for_device_id(device_id)
+            entity_type = entity_type_for_entity_id(entity_id)
         entity_class = entity_class_for_type(entity_type)
 
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
@@ -131,10 +131,10 @@ def devices_from_config(domain_config):
                 "Hybrid type for %s not compatible with signal "
                 "repetitions. Please set 'dimmable' or 'switchable' "
                 "type explicitly in configuration",
-                device_id,
+                entity_id,
             )
 
-        device = entity_class(device_id, **device_config)
+        device = entity_class(entity_id, **device_config)
         devices.append(device)
 
     return devices
@@ -146,13 +146,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def add_new_device(event):
         """Check if device is known, otherwise add to list of known devices."""
-        device_id = event[EVENT_KEY_ID]
+        entity_id = event[EVENT_KEY_ID]
 
-        entity_type = entity_type_for_device_id(event[EVENT_KEY_ID])
+        entity_type = entity_type_for_entity_id(event[EVENT_KEY_ID])
         entity_class = entity_class_for_type(entity_type)
 
         device_config = config[CONF_DEVICE_DEFAULTS]
-        device = entity_class(device_id, initial_event=event, **device_config)
+        device = entity_class(entity_id, initial_event=event, **device_config)
         async_add_entities([device])
 
     if config[CONF_AUTOMATIC_ADD]:

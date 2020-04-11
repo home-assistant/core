@@ -44,8 +44,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def devices_from_config(domain_config):
     """Parse configuration and add Rflink sensor devices."""
     devices = []
-    for device_id, config in domain_config[CONF_DEVICES].items():
-        device = RflinkBinarySensor(device_id, **config)
+    for entity_id, config in domain_config[CONF_DEVICES].items():
+        device = RflinkBinarySensor(entity_id, **config)
         devices.append(device)
 
     return devices
@@ -60,7 +60,7 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity):
     """Representation of an Rflink binary sensor."""
 
     def __init__(
-        self, device_id, device_class=None, force_update=False, off_delay=None, **kwargs
+        self, entity_id, device_class=None, force_update=False, off_delay=None, **kwargs
     ):
         """Handle sensor specific args and super init."""
         self._state = None
@@ -68,7 +68,7 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity):
         self._force_update = force_update
         self._off_delay = off_delay
         self._delay_listener = None
-        super().__init__(device_id, **kwargs)
+        super().__init__(entity_id, **kwargs)
 
     def _handle_event(self, event):
         """Domain specific event handler."""
