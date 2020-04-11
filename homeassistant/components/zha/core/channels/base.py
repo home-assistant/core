@@ -263,7 +263,7 @@ class ZigbeeChannel(LogMixin):
                 only_cache=from_cache,
                 manufacturer=manufacturer,
             )
-            results = result
+            return result
         except (asyncio.TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
             self.debug(
                 "failed to get attributes '%s' on '%s' cluster: %s",
@@ -271,8 +271,7 @@ class ZigbeeChannel(LogMixin):
                 self.cluster.ep_attribute,
                 str(ex),
             )
-            results = {}
-        return results
+            return {}
 
     def log(self, level, msg, *args):
         """Log a message."""
