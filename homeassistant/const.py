@@ -352,12 +352,16 @@ UNIT_VOLT = "V"
 ENERGY_WATT_HOUR = f"{POWER_WATT}h"
 ENERGY_KILO_WATT_HOUR = f"k{ENERGY_WATT_HOUR}"
 
-# Electrical current units
+# Electrical units
 ELECTRICAL_CURRENT_AMPERE = "A"
 
+# Degree units
+UNIT_DEGREE = "°"
+
 # Temperature units
-TEMP_CELSIUS = "°C"
-TEMP_FAHRENHEIT = "°F"
+TEMP_CELSIUS = f"{UNIT_DEGREE}C"
+TEMP_FAHRENHEIT = f"{UNIT_DEGREE}F"
+TEMP_KELVIN = f"{UNIT_DEGREE}K"
 
 # Time units
 TIME_MICROSECONDS = "μs"
@@ -413,6 +417,7 @@ UNIT_UV_INDEX: str = "UV index"
 
 # Percentage units
 UNIT_PERCENTAGE = "%"
+
 # Irradiation units
 IRRADIATION_WATTS_PER_SQUARE_METER = f"{POWER_WATT}/{AREA_SQUARE_METERS}"
 

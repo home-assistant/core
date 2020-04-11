@@ -6,6 +6,7 @@ from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
+    UNIT_DEGREE,
     UNIT_PERCENTAGE,
     UNIT_VOLT,
     VOLUME_CUBIC_METERS,
@@ -74,7 +75,7 @@ SENSOR_TYPES = {
         "Water Sensor Temperature",
         "mdi:temperature-celsius",
         "water",
-        "°",
+        UNIT_DEGREE,
         "temperature",
     ],
     "water_sensor_humidity": [

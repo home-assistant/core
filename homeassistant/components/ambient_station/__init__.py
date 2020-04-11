@@ -16,6 +16,7 @@ from homeassistant.const import (
     POWER_WATT,
     SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
+    UNIT_DEGREE,
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
@@ -218,10 +219,10 @@ SENSOR_TYPES = {
     TYPE_TOTALRAININ: ("Lifetime Rain", "in", TYPE_SENSOR, None),
     TYPE_UV: ("uv", "Index", TYPE_SENSOR, None),
     TYPE_WEEKLYRAININ: ("Weekly Rain", "in", TYPE_SENSOR, None),
-    TYPE_WINDDIR: ("Wind Dir", "°", TYPE_SENSOR, None),
-    TYPE_WINDDIR_AVG10M: ("Wind Dir Avg 10m", "°", TYPE_SENSOR, None),
+    TYPE_WINDDIR: ("Wind Dir", UNIT_DEGREE, TYPE_SENSOR, None),
+    TYPE_WINDDIR_AVG10M: ("Wind Dir Avg 10m", UNIT_DEGREE, TYPE_SENSOR, None),
     TYPE_WINDDIR_AVG2M: ("Wind Dir Avg 2m", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
-    TYPE_WINDGUSTDIR: ("Gust Dir", "°", TYPE_SENSOR, None),
+    TYPE_WINDGUSTDIR: ("Gust Dir", UNIT_DEGREE, TYPE_SENSOR, None),
     TYPE_WINDGUSTMPH: ("Wind Gust", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
     TYPE_WINDSPDMPH_AVG10M: ("Wind Avg 10m", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
     TYPE_WINDSPDMPH_AVG2M: ("Wind Avg 2m", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
