@@ -11,6 +11,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_HOURS,
     UNIT_PERCENTAGE,
+    UNIT_UV_INDEX,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -44,7 +45,7 @@ SENSOR_TYPES = {
     SENSOR_TYPE_WINDDIRECTION: ["Wind direction", "", "", None],
     SENSOR_TYPE_WINDAVERAGE: ["Wind average", SPEED_METERS_PER_SECOND, "", None],
     SENSOR_TYPE_WINDGUST: ["Wind gust", SPEED_METERS_PER_SECOND, "", None],
-    SENSOR_TYPE_UV: ["UV", "UV", "", None],
+    SENSOR_TYPE_UV: ["UV", UNIT_UV_INDEX, "", None],
     SENSOR_TYPE_WATT: ["Power", POWER_WATT, "", None],
     SENSOR_TYPE_LUMINANCE: ["Luminance", "lx", None, DEVICE_CLASS_ILLUMINANCE],
     SENSOR_TYPE_DEW_POINT: ["Dew Point", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
