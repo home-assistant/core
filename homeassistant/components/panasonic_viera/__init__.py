@@ -2,21 +2,12 @@
 import asyncio
 
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-
-from .const import (
-    CONF_ON_ACTION,
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-    DOMAIN,
-)
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+import homeassistant.helpers.config_validation as cv
+
+from .const import CONF_ON_ACTION, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {
