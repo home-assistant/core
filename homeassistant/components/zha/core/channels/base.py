@@ -263,7 +263,11 @@ class ZigbeeChannel(LogMixin):
                 only_cache=from_cache,
                 manufacturer=manufacturer,
             )
-            results = {attribute: result.get(attribute) for attribute in attributes}
+            results = {
+                attribute: result.get(attribute)
+                for attribute in attributes
+                if result.get(attribute) is not None
+            }
         except (asyncio.TimeoutError, zigpy.exceptions.DeliveryError) as ex:
             self.debug(
                 "failed to get attributes '%s' on '%s' cluster: %s",

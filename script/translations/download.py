@@ -13,7 +13,7 @@ from .error import ExitApp
 from .util import get_lokalise_token
 
 FILENAME_FORMAT = re.compile(r"strings\.(?P<suffix>\w+)\.json")
-LOCAL_DIR = pathlib.Path("build/translations-download").absolute()
+DOWNLOAD_DIR = pathlib.Path("build/translations-download").absolute()
 
 
 def run_download_docker():
@@ -24,7 +24,7 @@ def run_download_docker():
             "docker",
             "run",
             "-v",
-            f"{LOCAL_DIR}:/opt/dest/locale",
+            f"{DOWNLOAD_DIR}:/opt/dest/locale",
             "--rm",
             f"lokalise/lokalise-cli@sha256:{DOCKER_IMAGE}",
             # Lokalise command
@@ -133,14 +133,19 @@ def save_language_translations(lang, translations):
             save_json(path, platform_translations)
 
 
-def run(args):
-    """Run the script."""
-    LOCAL_DIR.mkdir(parents=True, exist_ok=True)
-
-    run_download_docker()
-
+def write_integration_translations():
+    """Write integration translations."""
     paths = glob.iglob("build/translations-download/*.json")
     for path in paths:
         lang = get_language(path)
         translations = load_json(path)
         save_language_translations(lang, translations)
+
+
+def run():
+    """Run the script."""
+    DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+    run_download_docker()
+
+    write_integration_translations()

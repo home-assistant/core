@@ -7,6 +7,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     UNIT_DEGREE,
     UNIT_PERCENTAGE,
+    UNIT_VOLT,
 )
 
 DOMAIN = "lcn"
@@ -163,7 +164,7 @@ VAR_UNITS = [
     "PERCENT",
     "PPM",
     "VOLT",
-    "V",
+    UNIT_VOLT,
     "AMPERE",
     "AMP",
     "A",

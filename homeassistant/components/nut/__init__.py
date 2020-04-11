@@ -29,6 +29,7 @@ from .const import (
     PYNUT_MODEL,
     PYNUT_NAME,
     PYNUT_UNIQUE_ID,
+    UNDO_UPDATE_LISTENER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,6 +78,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.debug("NUT Sensors Available: %s", status)
 
+    undo_listener = entry.add_update_listener(_async_update_listener)
+
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,
         PYNUT_DATA: data,
@@ -85,9 +88,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         PYNUT_MODEL: _model_from_status(status),
         PYNUT_FIRMWARE: _firmware_from_status(status),
         PYNUT_NAME: data.name,
+        UNDO_UPDATE_LISTENER: undo_listener,
     }
-
-    entry.add_update_listener(_async_update_listener)
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -171,6 +173,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+
+    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 

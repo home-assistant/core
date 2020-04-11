@@ -5,6 +5,7 @@ from typing import Callable
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    LENGTH_KILOMETERS,
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
@@ -21,6 +22,7 @@ from homeassistant.const import (
     UNIT_DEGREE,
     UNIT_PERCENTAGE,
     UNIT_UV_INDEX,
+    UNIT_VOLT,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -92,14 +94,14 @@ UOM_FRIENDLY_NAME = {
     "65": "SML",
     "69": "gal",
     "71": UNIT_UV_INDEX,
-    "72": "V",
+    "72": UNIT_VOLT,
     "73": POWER_WATT,
     "74": "W/m²",
     "75": "weekday",
     "76": f"Wind Direction ({UNIT_DEGREE})",
     "77": TIME_YEARS,
     "82": "mm",
-    "83": "km",
+    "83": LENGTH_KILOMETERS,
     "85": "ohm",
     "86": "kOhm",
     "87": "m³/m³",

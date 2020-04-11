@@ -2,9 +2,11 @@
 import logging
 
 from elkm1_lib.const import AlarmState, ArmedStatus, ArmLevel, ArmUpState
+from elkm1_lib.util import username
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
+    ATTR_CHANGED_BY,
     FORMAT_NUMBER,
     AlarmControlPanel,
 )
@@ -26,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
     SERVICE_ALARM_ARM_HOME_INSTANT,
@@ -35,7 +38,12 @@ from . import (
     ElkAttachedEntity,
     create_elk_entities,
 )
-from .const import DOMAIN
+from .const import (
+    ATTR_CHANGED_BY_ID,
+    ATTR_CHANGED_BY_KEYPAD,
+    ATTR_CHANGED_BY_TIME,
+    DOMAIN,
+)
 
 ELK_ALARM_SERVICE_SCHEMA = vol.Schema(
     {
@@ -101,13 +109,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class ElkArea(ElkAttachedEntity, AlarmControlPanel):
+class ElkArea(ElkAttachedEntity, AlarmControlPanel, RestoreEntity):
     """Representation of an Area / Partition within the ElkM1 alarm panel."""
 
     def __init__(self, element, elk, elk_data):
         """Initialize Area as Alarm Control Panel."""
         super().__init__(element, elk, elk_data)
+        self._elk = elk
         self._changed_by_keypad = None
+        self._changed_by_time = None
+        self._changed_by_id = None
+        self._changed_by = None
         self._state = None
 
     async def async_added_to_hass(self):
@@ -116,11 +128,28 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanel):
         for keypad in self._elk.keypads:
             keypad.add_callback(self._watch_keypad)
 
+        # We do not get changed_by back from resync.
+        last_state = await self.async_get_last_state()
+        if not last_state:
+            return
+
+        if ATTR_CHANGED_BY_KEYPAD in last_state.attributes:
+            self._changed_by_keypad = last_state.attributes[ATTR_CHANGED_BY_KEYPAD]
+        if ATTR_CHANGED_BY_TIME in last_state.attributes:
+            self._changed_by_time = last_state.attributes[ATTR_CHANGED_BY_TIME]
+        if ATTR_CHANGED_BY_ID in last_state.attributes:
+            self._changed_by_id = last_state.attributes[ATTR_CHANGED_BY_ID]
+        if ATTR_CHANGED_BY in last_state.attributes:
+            self._changed_by = last_state.attributes[ATTR_CHANGED_BY]
+
     def _watch_keypad(self, keypad, changeset):
         if keypad.area != self._element.index:
             return
         if changeset.get("last_user") is not None:
             self._changed_by_keypad = keypad.name
+            self._changed_by_time = keypad.last_user_time.isoformat()
+            self._changed_by_id = keypad.last_user + 1
+            self._changed_by = username(self._elk, keypad.last_user)
             self.async_write_ha_state()
 
     @property
@@ -152,8 +181,15 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanel):
             attrs["arm_up_state"] = ArmUpState(elmt.arm_up_state).name.lower()
         if elmt.alarm_state is not None:
             attrs["alarm_state"] = AlarmState(elmt.alarm_state).name.lower()
-        attrs["changed_by_keypad"] = self._changed_by_keypad
+        attrs[ATTR_CHANGED_BY_KEYPAD] = self._changed_by_keypad
+        attrs[ATTR_CHANGED_BY_TIME] = self._changed_by_time
+        attrs[ATTR_CHANGED_BY_ID] = self._changed_by_id
         return attrs
+
+    @property
+    def changed_by(self):
+        """Last change triggered by."""
+        return self._changed_by
 
     def _element_changed(self, element, changeset):
         elk_state_to_hass_state = {

@@ -3,6 +3,15 @@
   "name": "UPnP",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/upnp",
-  "requirements": ["async-upnp-client==0.14.12"],
-  "codeowners": ["@StevenLooman"]
+  "requirements": ["async-upnp-client==0.14.13"],
+  "dependencies": [],
+  "codeowners": ["@StevenLooman"],
+  "ssdp": [
+    {
+      "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
+    },
+    {
+      "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
+    }
+  ]
 }
