@@ -890,7 +890,7 @@ minio==4.0.9
 mitemp_bt==0.0.3
 
 # homeassistant.components.tts
-mutagen==1.43.0
+mutagen==1.44.0
 
 # homeassistant.components.mychevy
 mychevy==1.2.0
