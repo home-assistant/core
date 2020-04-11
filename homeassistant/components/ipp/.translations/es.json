@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Esta impresora ya est\u00e1 configurada.",
             "connection_error": "No se pudo conectar con la impresora.",
-            "connection_upgrade": "No se pudo conectar con la impresora debido a que se requiere una actualizaci\u00f3n de la conexi\u00f3n."
+            "connection_upgrade": "No se pudo conectar con la impresora debido a que se requiere una actualizaci\u00f3n de la conexi\u00f3n.",
+            "parse_error": "Error al analizar la respuesta de la impresora."
         },
         "error": {
             "connection_error": "No se pudo conectar con la impresora.",

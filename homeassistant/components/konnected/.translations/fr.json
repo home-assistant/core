@@ -68,6 +68,7 @@
             },
             "options_switch": {
                 "data": {
+                    "more_states": "Configurer des \u00e9tats suppl\u00e9mentaires pour cette zone",
                     "name": "Nom (facultatif)"
                 }
             }
