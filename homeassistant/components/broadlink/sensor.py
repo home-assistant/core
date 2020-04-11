@@ -23,12 +23,10 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from . import hostname, mac_address
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT
+from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_TIMEOUT, DEFAULT_TYPE
 
 _LOGGER = logging.getLogger(__name__)
 
-DEVICE_DEFAULT_NAME = "Broadlink sensor"
-DEFAULT_TYPE = 0x2714
 SCAN_INTERVAL = timedelta(seconds=300)
 
 SENSOR_TYPES = {
@@ -41,7 +39,7 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): vol.Coerce(str),
         vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]
         ),
@@ -55,11 +53,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Broadlink device sensors."""
-    host = config.get(CONF_HOST)
-    mac_addr = config.get(CONF_MAC)
-    name = config.get(CONF_NAME)
-    dev_type = config.get(CONF_TYPE)
-    timeout = config.get(CONF_TIMEOUT)
+    host = config[CONF_HOST]
+    mac_addr = config[CONF_MAC]
+    name = config[CONF_NAME]
+    dev_type = config[CONF_TYPE]
+    timeout = config[CONF_TIMEOUT]
     update_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     broadlink_data = BroadlinkData(update_interval, host, mac_addr, dev_type, timeout)
     dev = []
@@ -136,9 +134,7 @@ class BroadlinkData:
             _LOGGER.warning("Failed to connect to device")
 
     def _connect(self):
-        self._device = blk.gendevice(
-            self.dev_type, (self.host, DEFAULT_PORT), self.mac_addr
-        )
+        self._device = blk.a1((self.host, DEFAULT_PORT), self.mac_addr, self.dev_type)
         self._device.timeout = self.timeout
 
     def _update(self, retry=3):

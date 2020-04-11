@@ -33,13 +33,16 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util.dt import utcnow
 
 from . import DOMAIN, data_packet, hostname, mac_address
-from .const import DEFAULT_PORT, DEFAULT_RETRY, DEFAULT_TIMEOUT
+from .const import (
+    DEFAULT_LEARNING_TIMEOUT,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DEFAULT_RETRY,
+    DEFAULT_TIMEOUT,
+    DEFAULT_TYPE,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_LEARNING_TIMEOUT = 20
-DEFAULT_NAME = "Broadlink"
-DEFAULT_TYPE = 0x272A
 
 SCAN_INTERVAL = timedelta(minutes=2)
 
