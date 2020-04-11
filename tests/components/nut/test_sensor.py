@@ -1,5 +1,6 @@
 """The sensor tests for the nut platform."""
 
+from homeassistant.const import UNIT_PERCENTAGE
 
 from .util import async_init_integration
 
@@ -16,7 +17,7 @@ async def test_pr3000rt2u(hass):
         "device_class": "battery",
         "friendly_name": "Ups1 Battery Charge",
         "state": "Online",
-        "unit_of_measurement": "%",
+        "unit_of_measurement": UNIT_PERCENTAGE,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
@@ -37,7 +38,7 @@ async def test_cp1350c(hass):
         "device_class": "battery",
         "friendly_name": "Ups1 Battery Charge",
         "state": "Online",
-        "unit_of_measurement": "%",
+        "unit_of_measurement": UNIT_PERCENTAGE,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
@@ -58,7 +59,7 @@ async def test_5e850i(hass):
         "device_class": "battery",
         "friendly_name": "Ups1 Battery Charge",
         "state": "Online",
-        "unit_of_measurement": "%",
+        "unit_of_measurement": UNIT_PERCENTAGE,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
