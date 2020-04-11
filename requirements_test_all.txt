@@ -181,7 +181,7 @@ denonavr==0.8.1
 directv==0.3.0
 
 # homeassistant.components.updater
-distro==1.4.0
+distro==1.5.0
 
 # homeassistant.components.doorbird
 doorbirdpy==2.0.8
