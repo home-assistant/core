@@ -1,5 +1,7 @@
 """Config flow for Panasonic Viera TV integration."""
+from functools import partial
 import logging
+from urllib.request import URLError
 
 from panasonic_viera import (
     TV_TYPE_ENCRYPTED,
@@ -7,11 +9,7 @@ from panasonic_viera import (
     RemoteControl,
     SOAPError,
 )
-from urllib.request import URLError
-
 import voluptuous as vol
-
-from functools import partial
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
