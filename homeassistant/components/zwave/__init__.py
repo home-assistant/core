@@ -1183,10 +1183,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
 
     def __init__(self, values, domain):
         """Initialize the z-Wave device."""
-        # pylint: disable=import-error
         super().__init__()
-        from openzwave.network import ZWaveNetwork
-        from pydispatch import dispatcher
 
         self.values = values
         self.node = values.primary.node
@@ -1195,10 +1192,6 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         self._name = _value_name(self.values.primary)
         self._unique_id = self._compute_unique_id()
         self._update_attributes()
-
-        dispatcher.connect(
-            self.network_value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED
-        )
 
     def network_value_changed(self, value):
         """Handle a value change on the network."""
@@ -1236,6 +1229,14 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
 
     async def async_added_to_hass(self):
         """Add device to dict."""
+        # pylint: disable=import-error
+        from openzwave.network import ZWaveNetwork
+        from pydispatch import dispatcher
+
+        dispatcher.connect(
+            self.network_value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED
+        )
+
         async_dispatcher_connect(
             self.hass,
             SIGNAL_REFRESH_ENTITY_FORMAT.format(self.entity_id),

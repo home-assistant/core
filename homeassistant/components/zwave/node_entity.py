@@ -121,10 +121,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
     def __init__(self, node, network):
         """Initialize node."""
-        # pylint: disable=import-error
         super().__init__()
-        from openzwave.network import ZWaveNetwork
-        from pydispatch import dispatcher
 
         self._network = network
         self.node = node
@@ -138,6 +135,13 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self.wakeup_interval = None
         self.location = None
         self.battery_level = None
+
+    async def async_added_to_hass(self):
+        """Finish initializing once Home Assistant tells us we're added."""
+        # pylint: disable=import-error
+        from openzwave.network import ZWaveNetwork
+        from pydispatch import dispatcher
+
         dispatcher.connect(
             self.network_node_value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED
         )
