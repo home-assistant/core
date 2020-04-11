@@ -48,7 +48,7 @@ def ensure_unique_names_and_slugs(config):
                 f"Duplicate name '{conf[CONF_NAME]}' (or slug '{conf[CONF_SLUG]}') "
                 f"for '{conf[CONF_HOST]}' (already in use by "
                 f"'{names.get(conf[CONF_NAME], slugs[conf[CONF_SLUG]])}'). "
-                f"Each configured Pi-hole must have a unique name."
+                "Each configured Pi-hole must have a unique name."
             )
     return config
 
@@ -107,7 +107,7 @@ async def async_setup(hass, config):
             if (data[slug]).api.api_token is None:
                 raise vol.Invalid(
                     f"Pi-hole '{pi_hole.name}' must have an api_key "
-                    f"provided in configuration to be enabled."
+                    "provided in configuration to be enabled."
                 )
 
         return call_data

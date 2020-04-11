@@ -74,8 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         bridge = Lightify(host, log_level=logging.NOTSET)
     except OSError as err:
-        msg = f"Error connecting to bridge: {host} due to: {err}"
-        _LOGGER.exception(msg)
+        _LOGGER.exception("Error connecting to bridge: %s due to: %s", host, err)
         return
 
     setup_bridge(bridge, add_entities, config)
