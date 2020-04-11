@@ -326,3 +326,20 @@ async def test_non_relay_switch(hass, aioclient_mock, qs_devices, caplog):
     await hass.async_block_till_done()
     assert not hass.states.get("switch.dim_3")
     assert "You specified a switch that is not a relay @a00003" in caplog.text
+
+
+async def test_unknown_device(hass, aioclient_mock, qs_devices, caplog):
+    """Test that the system logs a warning when a network device has unknown type."""
+
+    config = {"qwikswitch": {}}
+    qs_devices[1]["type"] = "ERROR_TYPE"
+    aioclient_mock.get("http://127.0.0.1:2020/&device", json=qs_devices)
+    listen_mock = MockLongPollSideEffect()
+    aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
+    assert await async_setup_component(hass, QWIKSWITCH, config)
+    await asyncio.sleep(0.01)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.switch_1")
+    assert not hass.states.get("light.light_2")
+    assert hass.states.get("light.dim_3")
+    assert "Ignored unknown QSUSB device" in caplog.text
