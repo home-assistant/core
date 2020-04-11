@@ -6,6 +6,8 @@ from homeassistant.components.azure_devops import config_flow
 from homeassistant.components.azure_devops.const import CONF_ORG, CONF_PAT, CONF_PROJECT
 from homeassistant.core import HomeAssistant
 
+from tests.common import mock_coro
+
 FIXTURE_USER_INPUT_BAD = {
     CONF_ORG: "example",
     CONF_PROJECT: "something",
@@ -43,17 +45,13 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.azure_devops.config_flow.AzureDevOpsFlowHandler._test_connection",
-        return_value=_return_connection_error(),
+        return_value=mock_coro(return_value="connection_error",),
     ):
         result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "connection_error"}
-
-
-async def _return_connection_error() -> str:
-    return "connection_error"
 
 
 async def test_full_flow_implementation(hass: HomeAssistant) -> None:
