@@ -3,6 +3,7 @@
 from asynctest import patch
 
 from homeassistant.components.powerwall.const import DOMAIN
+from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.setup import async_setup_component
 
 from .mocks import _mock_get_config, _mock_powerwall_with_fixtures
@@ -17,7 +18,7 @@ async def test_sensors(hass):
         "homeassistant.components.powerwall.config_flow.PowerWall",
         return_value=mock_powerwall,
     ), patch(
-        "homeassistant.components.powerwall.PowerWall", return_value=mock_powerwall,
+        "homeassistant.components.powerwall.PowerWall", return_value=mock_powerwall
     ):
         assert await async_setup_component(hass, DOMAIN, _mock_get_config())
         await hass.async_block_till_done()
@@ -99,7 +100,7 @@ async def test_sensors(hass):
     state = hass.states.get("sensor.powerwall_charge")
     assert state.state == "47.32"
     expected_attributes = {
-        "unit_of_measurement": "%",
+        "unit_of_measurement": UNIT_PERCENTAGE,
         "friendly_name": "Powerwall Charge",
         "device_class": "battery",
     }
