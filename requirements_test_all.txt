@@ -122,7 +122,7 @@ arcam-fmj==0.4.3
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.upnp
-async-upnp-client==0.14.12
+async-upnp-client==0.14.13
 
 # homeassistant.components.stream
 av==6.1.2
@@ -181,7 +181,7 @@ denonavr==0.8.1
 directv==0.3.0
 
 # homeassistant.components.updater
-distro==1.4.0
+distro==1.5.0
 
 # homeassistant.components.doorbird
 doorbirdpy==2.0.8
@@ -239,7 +239,7 @@ georss_qld_bushfire_alert_client==0.3
 # homeassistant.components.kef
 # homeassistant.components.minecraft_server
 # homeassistant.components.nmap_tracker
-getmac==0.8.1
+getmac==0.8.2
 
 # homeassistant.components.gios
 gios==0.1.1
@@ -346,7 +346,7 @@ mficlient==0.3.0
 minio==4.0.9
 
 # homeassistant.components.tts
-mutagen==1.43.0
+mutagen==1.44.0
 
 # homeassistant.components.ness_alarm
 nessclient==0.9.15
@@ -368,7 +368,7 @@ nuheat==0.3.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.18.1
+numpy==1.18.2
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -661,7 +661,7 @@ pyvera==0.3.7
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.46
+pyvizio==0.1.47
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -821,7 +821,7 @@ zigpy-cc==0.3.1
 zigpy-deconz==0.8.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.18.2
+zigpy-homeassistant==0.19.0
 
 # homeassistant.components.zha
 zigpy-xbee-homeassistant==0.11.0

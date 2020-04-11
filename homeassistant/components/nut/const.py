@@ -10,12 +10,14 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_SECONDS,
     UNIT_PERCENTAGE,
+    UNIT_VOLT,
 )
 
 DOMAIN = "nut"
 
 PLATFORMS = ["sensor"]
 
+UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 DEFAULT_NAME = "NUT UPS"
 DEFAULT_HOST = "localhost"
@@ -99,10 +101,15 @@ SENSOR_TYPES = {
         None,
     ],
     "battery.charger.status": ["Charging Status", "", "mdi:information-outline", None],
-    "battery.voltage": ["Battery Voltage", "V", "mdi:flash", None],
-    "battery.voltage.nominal": ["Nominal Battery Voltage", "V", "mdi:flash", None],
-    "battery.voltage.low": ["Low Battery Voltage", "V", "mdi:flash", None],
-    "battery.voltage.high": ["High Battery Voltage", "V", "mdi:flash", None],
+    "battery.voltage": ["Battery Voltage", UNIT_VOLT, "mdi:flash", None],
+    "battery.voltage.nominal": [
+        "Nominal Battery Voltage",
+        UNIT_VOLT,
+        "mdi:flash",
+        None,
+    ],
+    "battery.voltage.low": ["Low Battery Voltage", UNIT_VOLT, "mdi:flash", None],
+    "battery.voltage.high": ["High Battery Voltage", UNIT_VOLT, "mdi:flash", None],
     "battery.capacity": ["Battery Capacity", "Ah", "mdi:flash", None],
     "battery.current": [
         "Battery Current",
@@ -152,16 +159,16 @@ SENSOR_TYPES = {
         "mdi:information-outline",
         None,
     ],
-    "input.transfer.low": ["Low Voltage Transfer", "V", "mdi:flash", None],
-    "input.transfer.high": ["High Voltage Transfer", "V", "mdi:flash", None],
+    "input.transfer.low": ["Low Voltage Transfer", UNIT_VOLT, "mdi:flash", None],
+    "input.transfer.high": ["High Voltage Transfer", UNIT_VOLT, "mdi:flash", None],
     "input.transfer.reason": [
         "Voltage Transfer Reason",
         "",
         "mdi:information-outline",
         None,
     ],
-    "input.voltage": ["Input Voltage", "V", "mdi:flash", None],
-    "input.voltage.nominal": ["Nominal Input Voltage", "V", "mdi:flash", None],
+    "input.voltage": ["Input Voltage", UNIT_VOLT, "mdi:flash", None],
+    "input.voltage.nominal": ["Nominal Input Voltage", UNIT_VOLT, "mdi:flash", None],
     "input.frequency": ["Input Line Frequency", "hz", "mdi:flash", None],
     "input.frequency.nominal": [
         "Nominal Input Line Frequency",
@@ -182,8 +189,8 @@ SENSOR_TYPES = {
         "mdi:flash",
         None,
     ],
-    "output.voltage": ["Output Voltage", "V", "mdi:flash", None],
-    "output.voltage.nominal": ["Nominal Output Voltage", "V", "mdi:flash", None],
+    "output.voltage": ["Output Voltage", UNIT_VOLT, "mdi:flash", None],
+    "output.voltage.nominal": ["Nominal Output Voltage", UNIT_VOLT, "mdi:flash", None],
     "output.frequency": ["Output Frequency", "hz", "mdi:flash", None],
     "output.frequency.nominal": ["Nominal Output Frequency", "hz", "mdi:flash", None],
 }

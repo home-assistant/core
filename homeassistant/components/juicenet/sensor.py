@@ -7,6 +7,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TIME_SECONDS,
+    UNIT_VOLT,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -17,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
     "status": ["Charging Status", None],
     "temperature": ["Temperature", TEMP_CELSIUS],
-    "voltage": ["Voltage", "V"],
+    "voltage": ["Voltage", UNIT_VOLT],
     "amps": ["Amps", ELECTRICAL_CURRENT_AMPERE],
     "watts": ["Watts", POWER_WATT],
     "charge_time": ["Charge time", TIME_SECONDS],

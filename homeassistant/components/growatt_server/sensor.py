@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
+    UNIT_VOLT,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -58,7 +59,7 @@ INVERTER_SENSOR_TYPES = {
         "e_total",
         "power",
     ),
-    "inverter_voltage_input_1": ("Input 1 voltage", "V", "vpv1", None),
+    "inverter_voltage_input_1": ("Input 1 voltage", UNIT_VOLT, "vpv1", None),
     "inverter_amperage_input_1": (
         "Input 1 Amperage",
         ELECTRICAL_CURRENT_AMPERE,
@@ -66,7 +67,7 @@ INVERTER_SENSOR_TYPES = {
         None,
     ),
     "inverter_wattage_input_1": ("Input 1 Wattage", "W", "ppv1", "power"),
-    "inverter_voltage_input_2": ("Input 2 voltage", "V", "vpv2", None),
+    "inverter_voltage_input_2": ("Input 2 voltage", UNIT_VOLT, "vpv2", None),
     "inverter_amperage_input_2": (
         "Input 2 Amperage",
         ELECTRICAL_CURRENT_AMPERE,
@@ -74,7 +75,7 @@ INVERTER_SENSOR_TYPES = {
         None,
     ),
     "inverter_wattage_input_2": ("Input 2 Wattage", "W", "ppv2", "power"),
-    "inverter_voltage_input_3": ("Input 3 voltage", "V", "vpv3", None),
+    "inverter_voltage_input_3": ("Input 3 voltage", UNIT_VOLT, "vpv3", None),
     "inverter_amperage_input_3": (
         "Input 3 Amperage",
         ELECTRICAL_CURRENT_AMPERE,
@@ -83,7 +84,7 @@ INVERTER_SENSOR_TYPES = {
     ),
     "inverter_wattage_input_3": ("Input 3 Wattage", "W", "ppv3", "power"),
     "inverter_internal_wattage": ("Internal wattage", "W", "ppv", "power"),
-    "inverter_reactive_voltage": ("Reactive voltage", "V", "vacr", None),
+    "inverter_reactive_voltage": ("Reactive voltage", UNIT_VOLT, "vacr", None),
     "inverter_inverter_reactive_amperage": (
         "Reactive amperage",
         ELECTRICAL_CURRENT_AMPERE,

@@ -9,6 +9,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UNIT_PERCENTAGE,
+    UNIT_VOLT,
 )
 
 SENSORS = {
@@ -36,7 +37,7 @@ SENSORS = {
         "S_VIBRATION": ["Hz", None],
         "S_LIGHT_LEVEL": ["lx", "mdi:white-balance-sunny"],
     },
-    "V_VOLTAGE": ["V", "mdi:flash"],
+    "V_VOLTAGE": [UNIT_VOLT, "mdi:flash"],
     "V_CURRENT": [ELECTRICAL_CURRENT_AMPERE, "mdi:flash-auto"],
     "V_PH": ["pH", None],
     "V_ORP": ["mV", None],
