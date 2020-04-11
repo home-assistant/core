@@ -247,7 +247,7 @@ async def test_button(hass, aioclient_mock, qs_devices):
     button_pressed = Mock()
     hass.bus.async_listen_once("qwikswitch.button.@a00002", button_pressed)
     listen_mock.queue_response(json={"id": "@a00002", "cmd": "TOGGLE"},)
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0.01)
     await hass.async_block_till_done()
     button_pressed.assert_called_once()
 
@@ -257,8 +257,57 @@ async def test_button(hass, aioclient_mock, qs_devices):
 async def test_failed_update_devices(hass, aioclient_mock):
     """Test that code behaves correctly when unable to get the devices."""
 
-    config = {"qwikswitch": {"button_events": "TOGGLE"}}
+    config = {"qwikswitch": {}}
     aioclient_mock.get("http://127.0.0.1:2020/&device", exc=ClientError())
     listen_mock = MockLongPollSideEffect()
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
     assert not await async_setup_component(hass, QWIKSWITCH, config)
+
+
+async def test_single_invalid_sensor(hass, aioclient_mock, qs_devices):
+    """Test that a single misconfigured sensor doesn't block the others."""
+
+    config = {
+        "qwikswitch": {
+            "sensors": [
+                {"name": "ss1", "id": "@a00001", "channel": 1, "type": "qwikcord"},
+                {"name": "ss2", "id": "@a00002", "channel": 1, "type": "ERROR_TYPE"},
+                {"name": "ss3", "id": "@a00003", "channel": 1, "type": "qwikcord"},
+            ]
+        }
+    }
+    aioclient_mock.get("http://127.0.0.1:2020/&device", json=qs_devices)
+    listen_mock = MockLongPollSideEffect()
+    aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
+    assert await async_setup_component(hass, QWIKSWITCH, config)
+    await asyncio.sleep(0.01)
+    assert hass.states.get("sensor.ss1")
+    assert not hass.states.get("sensor.ss2")
+    assert hass.states.get("sensor.ss3")
+
+
+async def test_non_binary_sensor_with_binary_args(
+    hass, aioclient_mock, qs_devices, caplog
+):
+    """Test that the system logs a warning when a non-binary device has binary specific args."""
+
+    config = {
+        "qwikswitch": {
+            "sensors": [
+                {
+                    "name": "ss1",
+                    "id": "@a00001",
+                    "channel": 1,
+                    "type": "qwikcord",
+                    "invert": True,
+                },
+            ]
+        }
+    }
+    aioclient_mock.get("http://127.0.0.1:2020/&device", json=qs_devices)
+    listen_mock = MockLongPollSideEffect()
+    aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
+    assert await async_setup_component(hass, QWIKSWITCH, config)
+    await asyncio.sleep(0.01)
+    assert hass.states.get("sensor.ss1")
+    assert "invert should only be used for binary_sensors" in caplog.text
