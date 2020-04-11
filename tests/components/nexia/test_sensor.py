@@ -1,6 +1,6 @@
 """The sensor tests for the nexia platform."""
 
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
 
 from .util import async_init_integration
 
@@ -69,7 +69,7 @@ async def test_create_sensors(hass):
     expected_attributes = {
         "attribution": "Data provided by mynexia.com",
         "friendly_name": "Master Suite Current Compressor Speed",
-        "unit_of_measurement": "%",
+        "unit_of_measurement": UNIT_PERCENTAGE,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
@@ -99,7 +99,7 @@ async def test_create_sensors(hass):
         "attribution": "Data provided by mynexia.com",
         "device_class": "humidity",
         "friendly_name": "Master Suite Relative Humidity",
-        "unit_of_measurement": "%",
+        "unit_of_measurement": UNIT_PERCENTAGE,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
@@ -113,7 +113,7 @@ async def test_create_sensors(hass):
     expected_attributes = {
         "attribution": "Data provided by mynexia.com",
         "friendly_name": "Master Suite Requested Compressor Speed",
-        "unit_of_measurement": "%",
+        "unit_of_measurement": UNIT_PERCENTAGE,
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
