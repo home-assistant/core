@@ -60,9 +60,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except RequestParametersError as error:
         _LOGGER.error("Could not fetch stations, please check configuration: %s", error)
         return
-    except Exception as error:
-        _LOGGER.error("Could not fetch stations due to error: %s", error)
-        return
 
     sensors = []
     for departure in config.get(CONF_ROUTES):
