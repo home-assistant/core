@@ -50,8 +50,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for _pwm in _pwms:
             try:
                 _sensor = _pwms[_pwm]["sensor"]
-            except Exception as ex:
-                _LOGGER.debug(ex)
+            except Exception:
                 _sensor = 0
             finally:
                 if _pwms[_pwm]["description"] != "" and _sensor == 0:
@@ -221,7 +220,6 @@ class MyIOlight(Light):
             self._name = self._server_data["PWM"][str(self._id - 101)]["description"]
         if self._state != 0:
             self._brightness = self._state
-        # _LOGGER.debug("Light update")
 
     @property
     def scan_interval(self):
@@ -288,8 +286,7 @@ class MyIOlightRGBW(Light):
                     if self._white_value != 0:
                         self._state = True
                     self._supported_features = RGBW_FEATURES
-            except Exception as ex:
-                _LOGGER.debug(ex)
+            except Exception:
                 continue
 
         # defining HSB values from RGB values"""
@@ -465,8 +462,7 @@ class MyIOlightRGBW(Light):
                     if self._white_value != 0:
                         self._state = True
                     continue
-            except Exception as ex:
-                _LOGGER.debug(ex)
+            except Exception:
                 continue
 
         # defining HSB values from RGB values"""
