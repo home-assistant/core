@@ -199,6 +199,7 @@ class SoundTouchDevice(MediaPlayerDevice):
         self._volume = None
         self._config = config
         self._zone = None
+        _LOGGER.info("Creating Soundtouch entity %s", self._device.config.name)
 
     @property
     def config(self):
