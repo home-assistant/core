@@ -17,13 +17,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_setup_platform(hass, {}, async_add_entities)
 
 
-def _load_image(image_path):
-    """Load camera image."""
-    _LOGGER.debug("Loading camera_image: %s", image_path)
-    with open(image_path, "rb") as file:
-        return file.read()
-
-
 class DemoCamera(Camera):
     """The representation of a Demo camera."""
 
@@ -40,7 +33,7 @@ class DemoCamera(Camera):
         self._images_index = (self._images_index + 1) % 4
         image_path = Path(__file__).parent / f"demo_{self._images_index}.jpg"
 
-        return await self.hass.async_add_executor_job(_load_image, str(image_path))
+        return await self.hass.async_add_executor_job(image_path.read_bytes)
 
     @property
     def name(self):

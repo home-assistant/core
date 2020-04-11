@@ -1,5 +1,5 @@
 """The tests for local file camera component."""
-from unittest.mock import mock_open, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -36,16 +36,11 @@ async def test_init_state_is_streaming(hass):
     state = hass.states.get(ENTITY_CAMERA)
     assert state.state == STATE_STREAMING
 
-    mock_on_img = mock_open(read_data=b"ON")
-    with patch("homeassistant.components.demo.camera.open", mock_on_img, create=True):
+    with patch(
+        "homeassistant.components.demo.camera.Path.read_bytes", return_value=b"ON"
+    ) as mock_read_bytes:
         image = await async_get_image(hass, ENTITY_CAMERA)
-        assert mock_on_img.called
-        assert mock_on_img.call_args_list[0][0][0][-6:] in [
-            "_0.jpg",
-            "_1.jpg",
-            "_2.jpg",
-            "_3.jpg",
-        ]
+        assert mock_read_bytes.call_count == 1
         assert image.content == b"ON"
 
 
