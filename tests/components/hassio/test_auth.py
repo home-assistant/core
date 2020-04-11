@@ -1,6 +1,7 @@
 """The tests for the hassio component."""
 from unittest.mock import Mock, patch
 
+from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import mock_coro
@@ -186,5 +187,5 @@ async def test_password_no_user(hass, hassio_client_supervisor):
         )
 
         # Check we got right response
-        assert resp.status == 500
+        assert resp.status == HTTP_INTERNAL_SERVER_ERROR
         assert not mock_save.called

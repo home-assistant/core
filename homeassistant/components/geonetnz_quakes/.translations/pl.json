@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "Lokalizacja jest ju\u017c skonfigurowana."
         },
-        "error": {
-            "identifier_exists": "Lokalizacja jest ju\u017c zarejestrowana."
-        },
         "step": {
             "user": {
                 "data": {

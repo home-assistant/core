@@ -11,8 +11,7 @@
                 "data": {
                     "api_key": "API \u5bc6\u9470",
                     "latitude": "\u7def\u5ea6",
-                    "longitude": "\u7d93\u5ea6",
-                    "show_on_map": "\u65bc\u5730\u5716\u4e0a\u986f\u793a\u76e3\u63a7\u4f4d\u7f6e\u3002"
+                    "longitude": "\u7d93\u5ea6"
                 },
                 "description": "\u4f9d\u5730\u7406\u4f4d\u7f6e\u76e3\u63a7\u7a7a\u6c23\u54c1\u8cea\u3002",
                 "title": "\u8a2d\u5b9a AirVisual"

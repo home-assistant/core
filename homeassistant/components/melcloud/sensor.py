@@ -4,7 +4,11 @@ import logging
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW
 from pymelcloud.atw_device import Zone
 
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import (
+    DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
+    TEMP_CELSIUS,
+)
 from homeassistant.helpers.entity import Entity
 
 from . import MelCloudDevice
@@ -29,7 +33,7 @@ ATA_SENSORS = {
     "energy": {
         ATTR_MEASUREMENT_NAME: "Energy",
         ATTR_ICON: "mdi:factory",
-        ATTR_UNIT_FN: lambda x: "kWh",
+        ATTR_UNIT_FN: lambda x: ENERGY_KILO_WATT_HOUR,
         ATTR_DEVICE_CLASS: None,
         ATTR_VALUE_FN: lambda x: x.device.total_energy_consumed,
         ATTR_ENABLED_FN: lambda x: x.device.has_energy_consumed_meter,
@@ -147,9 +151,7 @@ class MelDeviceSensor(Entity):
 class AtwZoneSensor(MelDeviceSensor):
     """Air-to-Air device sensor."""
 
-    def __init__(
-        self, api: MelCloudDevice, zone: Zone, measurement, definition,
-    ):
+    def __init__(self, api: MelCloudDevice, zone: Zone, measurement, definition):
         """Initialize the sensor."""
         super().__init__(api, measurement, definition)
         self._zone = zone

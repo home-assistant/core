@@ -25,8 +25,7 @@ from homeassistant.util import dt as dt_util
 from tests.common import async_mock_service
 
 
-@asyncio.coroutine
-def test_async_track_states(hass):
+async def test_async_track_states(hass):
     """Test AsyncTrackStates context manager."""
     point1 = dt_util.utcnow()
     point2 = point1 + timedelta(seconds=5)
@@ -50,17 +49,16 @@ def test_async_track_states(hass):
     assert [state2, state3] == sorted(states, key=lambda state: state.entity_id)
 
 
-@asyncio.coroutine
-def test_call_to_component(hass):
+async def test_call_to_component(hass):
     """Test calls to components state reproduction functions."""
     with patch(
-        ("homeassistant.components.media_player.reproduce_state.async_reproduce_states")
+        "homeassistant.components.media_player.reproduce_state.async_reproduce_states"
     ) as media_player_fun:
         media_player_fun.return_value = asyncio.Future()
         media_player_fun.return_value.set_result(None)
 
         with patch(
-            ("homeassistant.components.climate.reproduce_state.async_reproduce_states")
+            "homeassistant.components.climate.reproduce_state.async_reproduce_states"
         ) as climate_fun:
             climate_fun.return_value = asyncio.Future()
             climate_fun.return_value.set_result(None)
@@ -69,7 +67,7 @@ def test_call_to_component(hass):
             state_climate = ha.State("climate.test", "bad")
             context = "dummy_context"
 
-            yield from state.async_reproduce_state(
+            await state.async_reproduce_state(
                 hass,
                 [state_media_player, state_climate],
                 blocking=True,
@@ -129,8 +127,8 @@ async def test_reproduce_turn_on(hass):
     assert len(calls) > 0
     last_call = calls[-1]
     assert last_call.domain == "light"
-    assert SERVICE_TURN_ON == last_call.service
-    assert "light.test" == last_call.data.get("entity_id")
+    assert last_call.service == SERVICE_TURN_ON
+    assert last_call.data.get("entity_id") == "light.test"
 
 
 async def test_reproduce_turn_off(hass):
@@ -146,8 +144,8 @@ async def test_reproduce_turn_off(hass):
     assert len(calls) > 0
     last_call = calls[-1]
     assert last_call.domain == "light"
-    assert SERVICE_TURN_OFF == last_call.service
-    assert "light.test" == last_call.data.get("entity_id")
+    assert last_call.service == SERVICE_TURN_OFF
+    assert last_call.data.get("entity_id") == "light.test"
 
 
 async def test_reproduce_complex_data(hass):
@@ -167,8 +165,8 @@ async def test_reproduce_complex_data(hass):
     assert len(calls) > 0
     last_call = calls[-1]
     assert last_call.domain == "light"
-    assert SERVICE_TURN_ON == last_call.service
-    assert complex_data == last_call.data.get("rgb_color")
+    assert last_call.service == SERVICE_TURN_ON
+    assert last_call.data.get("rgb_color") == complex_data
 
 
 async def test_reproduce_bad_state(hass):

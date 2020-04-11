@@ -5,8 +5,7 @@
             "unknown": "Unerwarteter Fehler"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
-            "unknown": "Unerwarteter Fehler"
+            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut"
         },
         "flow_title": "DirecTV: {name}",
         "step": {

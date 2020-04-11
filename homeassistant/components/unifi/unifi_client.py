@@ -11,6 +11,7 @@ from aiounifi.events import (
     WIRELESS_CLIENT_BLOCKED,
     WIRELESS_CLIENT_CONNECTED,
     WIRELESS_CLIENT_DISCONNECTED,
+    WIRELESS_CLIENT_ROAM,
     WIRELESS_CLIENT_UNBLOCKED,
 )
 
@@ -24,7 +25,11 @@ LOGGER = logging.getLogger(__name__)
 CLIENT_BLOCKED = (WIRED_CLIENT_BLOCKED, WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (WIRED_CLIENT_UNBLOCKED, WIRELESS_CLIENT_UNBLOCKED)
 WIRED_CLIENT = (WIRED_CLIENT_CONNECTED, WIRED_CLIENT_DISCONNECTED)
-WIRELESS_CLIENT = (WIRELESS_CLIENT_CONNECTED, WIRELESS_CLIENT_DISCONNECTED)
+WIRELESS_CLIENT = (
+    WIRELESS_CLIENT_CONNECTED,
+    WIRELESS_CLIENT_DISCONNECTED,
+    WIRELESS_CLIENT_ROAM,
+)
 
 
 class UniFiClient(Entity):
@@ -66,8 +71,9 @@ class UniFiClient(Entity):
         if self.client.last_updated == SOURCE_EVENT:
 
             if self.client.event.event in WIRELESS_CLIENT:
-                self.wireless_connection = (
-                    self.client.event.event == WIRELESS_CLIENT_CONNECTED
+                self.wireless_connection = self.client.event.event in (
+                    WIRELESS_CLIENT_CONNECTED,
+                    WIRELESS_CLIENT_ROAM,
                 )
 
             elif self.client.event.event in WIRED_CLIENT:

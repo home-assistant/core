@@ -54,9 +54,8 @@ def _yaml_unsupported(
     constructor: ExtSafeConstructor, node: ruamel.yaml.nodes.Node
 ) -> None:
     raise UnsupportedYamlError(
-        "Unsupported YAML, you can not use {} in {}".format(
-            node.tag, os.path.basename(constructor.name or "(None)")
-        )
+        f"Unsupported YAML, you can not use {node.tag} in "
+        f"{os.path.basename(constructor.name or '(None)')}"
     )
 
 

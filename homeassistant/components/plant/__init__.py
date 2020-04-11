@@ -161,9 +161,9 @@ class Plant(Entity):
     def __init__(self, name, config):
         """Initialize the Plant component."""
         self._config = config
-        self._sensormap = dict()
-        self._readingmap = dict()
-        self._unit_of_measurement = dict()
+        self._sensormap = {}
+        self._readingmap = {}
+        self._unit_of_measurement = {}
         for reading, entity_id in config["sensors"].items():
             self._sensormap[entity_id] = reading
             self._readingmap[reading] = entity_id
@@ -371,7 +371,7 @@ class DailyHistory:
         """Create new DailyHistory with a maximum length of the history."""
         self.max_length = max_length
         self._days = None
-        self._max_dict = dict()
+        self._max_dict = {}
         self.max = None
 
     def add_measurement(self, value, timestamp=None):

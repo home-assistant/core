@@ -20,7 +20,7 @@ SENSOR_TYPES = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up ecobee (temperature and humidity) sensors."""
     data = hass.data[DOMAIN]
-    dev = list()
+    dev = []
     for index in range(len(data.ecobee.thermostats)):
         for sensor in data.ecobee.get_remote_sensors(index):
             for item in sensor["capability"]:

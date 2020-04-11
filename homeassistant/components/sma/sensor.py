@@ -131,7 +131,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     session = async_get_clientsession(hass, verify_ssl=config[CONF_VERIFY_SSL])
     grp = config[CONF_GROUP]
 
-    url = "http{}://{}".format("s" if config[CONF_SSL] else "", config[CONF_HOST])
+    protocol = "https" if config[CONF_SSL] else "http"
+    url = f"{protocol}://{config[CONF_HOST]}"
 
     sma = pysma.SMA(session, url, config[CONF_PASSWORD], group=grp)
 

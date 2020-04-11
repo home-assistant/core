@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.const import HTTP_FORBIDDEN
 from homeassistant.core import callback
 
 from .const import (
@@ -95,7 +96,7 @@ class UserOnboardingView(_BaseOnboardingView):
 
         async with self._lock:
             if self._async_is_done():
-                return self.json_message("User step already done", 403)
+                return self.json_message("User step already done", HTTP_FORBIDDEN)
 
             provider = _async_get_hass_provider(hass)
             await provider.async_initialize()
@@ -147,7 +148,9 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
 
         async with self._lock:
             if self._async_is_done():
-                return self.json_message("Core config step already done", 403)
+                return self.json_message(
+                    "Core config step already done", HTTP_FORBIDDEN
+                )
 
             await self._async_mark_done(hass)
 
@@ -173,7 +176,9 @@ class IntegrationOnboardingView(_BaseOnboardingView):
 
         async with self._lock:
             if self._async_is_done():
-                return self.json_message("Integration step already done", 403)
+                return self.json_message(
+                    "Integration step already done", HTTP_FORBIDDEN
+                )
 
             await self._async_mark_done(hass)
 

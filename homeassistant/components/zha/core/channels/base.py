@@ -56,7 +56,7 @@ def decorate_command(channel, command):
             )
             return result
 
-        except (zigpy.exceptions.DeliveryError, asyncio.TimeoutError) as ex:
+        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             channel.debug("command failed: %s exception: %s", command.__name__, str(ex))
             return ex
 
@@ -135,13 +135,13 @@ class ZigbeeChannel(LogMixin):
     async def bind(self):
         """Bind a zigbee cluster.
 
-        This also swallows DeliveryError exceptions that are thrown when
+        This also swallows ZigbeeException exceptions that are thrown when
         devices are unreachable.
         """
         try:
             res = await self.cluster.bind()
             self.debug("bound '%s' cluster: %s", self.cluster.ep_attribute, res[0])
-        except (zigpy.exceptions.DeliveryError, asyncio.TimeoutError) as ex:
+        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
                 "Failed to bind '%s' cluster: %s", self.cluster.ep_attribute, str(ex)
             )
@@ -149,7 +149,7 @@ class ZigbeeChannel(LogMixin):
     async def configure_reporting(self) -> None:
         """Configure attribute reporting for a cluster.
 
-        This also swallows DeliveryError exceptions that are thrown when
+        This also swallows ZigbeeException exceptions that are thrown when
         devices are unreachable.
         """
         kwargs = {}
@@ -173,7 +173,7 @@ class ZigbeeChannel(LogMixin):
                     reportable_change,
                     res,
                 )
-            except (zigpy.exceptions.DeliveryError, asyncio.TimeoutError) as ex:
+            except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
                 self.debug(
                     "failed to set reporting for '%s' attr on '%s' cluster: %s",
                     attr_name,
@@ -205,7 +205,6 @@ class ZigbeeChannel(LogMixin):
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
-        pass
 
     @callback
     def attribute_updated(self, attrid, value):
@@ -220,7 +219,6 @@ class ZigbeeChannel(LogMixin):
     @callback
     def zdo_command(self, *args, **kwargs):
         """Handle ZDO commands on this cluster."""
-        pass
 
     @callback
     def zha_send_event(self, command: str, args: Union[int, dict]) -> None:
@@ -236,7 +234,6 @@ class ZigbeeChannel(LogMixin):
 
     async def async_update(self):
         """Retrieve latest state from cluster."""
-        pass
 
     async def get_attribute_value(self, attribute, from_cache=True):
         """Get the value for an attribute."""
@@ -266,16 +263,15 @@ class ZigbeeChannel(LogMixin):
                 only_cache=from_cache,
                 manufacturer=manufacturer,
             )
-            results = {attribute: result.get(attribute) for attribute in attributes}
-        except (asyncio.TimeoutError, zigpy.exceptions.DeliveryError) as ex:
+            return result
+        except (asyncio.TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
             self.debug(
                 "failed to get attributes '%s' on '%s' cluster: %s",
                 attributes,
                 self.cluster.ep_attribute,
                 str(ex),
             )
-            results = {}
-        return results
+            return {}
 
     def log(self, level, msg, *args):
         """Log a message."""
@@ -322,12 +318,10 @@ class ZDOChannel(LogMixin):
     @callback
     def device_announce(self, zigpy_device):
         """Device announce handler."""
-        pass
 
     @callback
     def permit_duration(self, duration):
         """Permit handler."""
-        pass
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""

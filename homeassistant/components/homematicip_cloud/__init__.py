@@ -50,10 +50,10 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     accesspoints = config.get(DOMAIN, [])
 
     for conf in accesspoints:
-        if conf[CONF_ACCESSPOINT] not in set(
+        if conf[CONF_ACCESSPOINT] not in {
             entry.data[HMIPC_HAPID]
             for entry in hass.config_entries.async_entries(DOMAIN)
-        ):
+        }:
             hass.async_add_job(
                 hass.config_entries.flow.async_init(
                     DOMAIN,

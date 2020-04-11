@@ -7,10 +7,9 @@
             "user": {
                 "data": {
                     "host": "Kiszolg\u00e1l\u00f3",
-                    "name": "N\u00e9v",
-                    "port": "Port"
+                    "name": "N\u00e9v"
                 },
-                "title": "Kapcsolja \u00f6ssze a Minecraft szervert"
+                "title": "Kapcsold \u00f6ssze a Minecraft szervered"
             }
         },
         "title": "Minecraft szerver"

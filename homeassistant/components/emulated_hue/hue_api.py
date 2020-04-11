@@ -537,7 +537,7 @@ def get_entity_state(config, entity):
 
         if data[STATE_ON]:
             data[STATE_BRIGHTNESS] = entity.attributes.get(ATTR_BRIGHTNESS, 0)
-            hue_sat = entity.attributes.get(ATTR_HS_COLOR, None)
+            hue_sat = entity.attributes.get(ATTR_HS_COLOR)
             if hue_sat is not None:
                 hue = hue_sat[0]
                 sat = hue_sat[1]

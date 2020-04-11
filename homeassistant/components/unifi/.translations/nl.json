@@ -25,6 +25,11 @@
     },
     "options": {
         "step": {
+            "client_control": {
+                "data": {
+                    "poe_clients": "Sta POE-controle van gebruikers toe"
+                }
+            },
             "device_tracker": {
                 "data": {
                     "detection_time": "Tijd in seconden vanaf laatst gezien tot beschouwd als weg",

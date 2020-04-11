@@ -12,12 +12,7 @@ DOCUMENTATION_URL_HOST = "www.home-assistant.io"
 DOCUMENTATION_URL_PATH_PREFIX = "/integrations/"
 DOCUMENTATION_URL_EXCEPTIONS = ["https://www.home-assistant.io/hassio"]
 
-SUPPORTED_QUALITY_SCALES = [
-    "gold",
-    "internal",
-    "platinum",
-    "silver",
-]
+SUPPORTED_QUALITY_SCALES = ["gold", "internal", "platinum", "silver"]
 
 
 def documentation_url(value: str) -> str:
@@ -68,8 +63,7 @@ def validate_manifest(integration: Integration):
         MANIFEST_SCHEMA(integration.manifest)
     except vol.Invalid as err:
         integration.add_error(
-            "manifest",
-            "Invalid manifest: {}".format(humanize_error(integration.manifest, err)),
+            "manifest", f"Invalid manifest: {humanize_error(integration.manifest, err)}"
         )
         integration.manifest = None
         return

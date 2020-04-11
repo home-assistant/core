@@ -286,7 +286,7 @@ async def test_switches(hass):
     assert controller.mock_requests[4] == {
         "json": {"mac": "00:00:00:00:01:01", "cmd": "block-sta"},
         "method": "post",
-        "path": "s/{site}/cmd/stamgr/",
+        "path": "/cmd/stamgr",
     }
 
     await hass.services.async_call(
@@ -296,7 +296,7 @@ async def test_switches(hass):
     assert controller.mock_requests[5] == {
         "json": {"mac": "00:00:00:00:01:01", "cmd": "unblock-sta"},
         "method": "post",
-        "path": "s/{site}/cmd/stamgr/",
+        "path": "/cmd/stamgr",
     }
 
 
@@ -397,7 +397,7 @@ async def test_new_client_discovered_on_poe_control(hass):
             "port_overrides": [{"port_idx": 1, "portconf_id": "1a1", "poe_mode": "off"}]
         },
         "method": "put",
-        "path": "s/{site}/rest/device/mock-id",
+        "path": "/rest/device/mock-id",
     }
 
     await hass.services.async_call(
@@ -411,7 +411,7 @@ async def test_new_client_discovered_on_poe_control(hass):
             ]
         },
         "method": "put",
-        "path": "s/{site}/rest/device/mock-id",
+        "path": "/rest/device/mock-id",
     }
 
     switch_2 = hass.states.get("switch.poe_client_2")

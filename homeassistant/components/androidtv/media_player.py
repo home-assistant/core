@@ -137,7 +137,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ADB_SERVER_IP): cv.string,
         vol.Optional(CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT): cv.port,
         vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean,
-        vol.Optional(CONF_APPS, default=dict()): vol.Schema(
+        vol.Optional(CONF_APPS, default={}): vol.Schema(
             {cv.string: vol.Any(cv.string, None)}
         ),
         vol.Optional(CONF_TURN_ON_COMMAND): cv.string,
@@ -327,7 +327,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             target_device.adb_push(local_path, device_path)
 
     hass.services.register(
-        ANDROIDTV_DOMAIN, SERVICE_UPLOAD, service_upload, schema=SERVICE_UPLOAD_SCHEMA,
+        ANDROIDTV_DOMAIN, SERVICE_UPLOAD, service_upload, schema=SERVICE_UPLOAD_SCHEMA
     )
 
 

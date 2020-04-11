@@ -1,14 +1,14 @@
 """Test UPnP/IGD setup process."""
 
-from ipaddress import ip_address
-from unittest.mock import MagicMock, patch
+from ipaddress import IPv4Address
+from unittest.mock import patch
 
 from homeassistant.components import upnp
 from homeassistant.components.upnp.device import Device
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, MockDependency, mock_coro
+from tests.common import MockConfigEntry, mock_coro
 
 
 class MockDevice(Device):
@@ -16,11 +16,8 @@ class MockDevice(Device):
 
     def __init__(self, udn):
         """Initialize mock device."""
-        device = MagicMock()
-        device.manufacturer = "mock-manuf"
-        device.name = "mock-name"
-        device.model_name = "mock-model-name"
-        super().__init__(device)
+        igd_device = object()
+        super().__init__(igd_device)
         self._udn = udn
         self.added_port_mappings = []
         self.removed_port_mappings = []
@@ -31,16 +28,38 @@ class MockDevice(Device):
         return cls("UDN")
 
     @property
-    def udn(self):
+    def udn(self) -> str:
         """Get the UDN."""
         return self._udn
 
-    async def _async_add_port_mapping(self, external_port, local_ip, internal_port):
+    @property
+    def manufacturer(self) -> str:
+        """Get manufacturer."""
+        return "mock-manufacturer"
+
+    @property
+    def name(self) -> str:
+        """Get name."""
+        return "mock-name"
+
+    @property
+    def model_name(self) -> str:
+        """Get the model name."""
+        return "mock-model-name"
+
+    @property
+    def device_type(self) -> str:
+        """Get the device type."""
+        return "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
+
+    async def _async_add_port_mapping(
+        self, external_port: int, local_ip: str, internal_port: int
+    ) -> None:
         """Add a port mapping."""
         entry = [external_port, local_ip, internal_port]
         self.added_port_mappings.append(entry)
 
-    async def _async_delete_port_mapping(self, external_port):
+    async def _async_delete_port_mapping(self, external_port: int) -> None:
         """Remove a port mapping."""
         entry = external_port
         self.removed_port_mappings.append(entry)
@@ -52,18 +71,11 @@ async def test_async_setup_entry_default(hass):
     entry = MockConfigEntry(domain=upnp.DOMAIN)
 
     config = {
-        "http": {},
-        "discovery": {},
         # no upnp
     }
-    with MockDependency("netdisco.discovery"), patch(
-        "homeassistant.components.upnp.get_local_ip", return_value="192.168.1.10"
-    ), patch.object(Device, "async_create_device") as create_device, patch.object(
-        Device, "async_create_device"
-    ) as create_device, patch.object(
+    with patch.object(Device, "async_create_device") as create_device, patch.object(
         Device, "async_discover", return_value=mock_coro([])
     ) as async_discover:
-        await async_setup_component(hass, "http", config)
         await async_setup_component(hass, "upnp", config)
         await hass.async_block_till_done()
 
@@ -97,12 +109,13 @@ async def test_async_setup_entry_port_mapping(hass):
 
     config = {
         "http": {},
-        "discovery": {},
-        "upnp": {"port_mapping": True, "ports": {"hass": "hass"}},
+        "upnp": {
+            "local_ip": "192.168.1.10",
+            "port_mapping": True,
+            "ports": {"hass": "hass"},
+        },
     }
-    with MockDependency("netdisco.discovery"), patch(
-        "homeassistant.components.upnp.get_local_ip", return_value="192.168.1.10"
-    ), patch.object(Device, "async_create_device") as create_device, patch.object(
+    with patch.object(Device, "async_create_device") as create_device, patch.object(
         Device, "async_discover", return_value=mock_coro([])
     ) as async_discover:
         await async_setup_component(hass, "http", config)
@@ -124,7 +137,7 @@ async def test_async_setup_entry_port_mapping(hass):
 
         # ensure add-port-mapping-methods called
         assert mock_device.added_port_mappings == [
-            [8123, ip_address("192.168.1.10"), 8123]
+            [8123, IPv4Address("192.168.1.10"), 8123]
         ]
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)

@@ -774,9 +774,9 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
     res = await asyncio.gather(*(t[0] for t in bind_tasks), return_exceptions=True)
     for outcome, log_msg in zip(res, bind_tasks):
         if isinstance(outcome, Exception):
-            fmt = log_msg[1] + " failed: %s"
+            fmt = f"{log_msg[1]} failed: %s"
         else:
-            fmt = log_msg[1] + " completed: %s"
+            fmt = f"{log_msg[1]} completed: %s"
         zdo.debug(fmt, *(log_msg[2] + (outcome,)))
 
 

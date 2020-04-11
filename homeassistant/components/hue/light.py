@@ -68,7 +68,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     Can only be called when a user accidentally mentions hue platform in their
     config. But even in that case it would have been ignored.
     """
-    pass
 
 
 def create_light(item_class, coordinator, bridge, is_group, api, item_id):
@@ -277,6 +276,22 @@ class HueLight(Light):
         if self.is_group:
             return self.light.action.get("ct")
         return self.light.state.get("ct")
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        if self.is_group or "ct" not in self.light.controlcapabilities:
+            return super().min_mireds
+
+        return self.light.controlcapabilities["ct"]["min"]
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        if self.is_group or "ct" not in self.light.controlcapabilities:
+            return super().max_mireds
+
+        return self.light.controlcapabilities["ct"]["max"]
 
     @property
     def is_on(self):

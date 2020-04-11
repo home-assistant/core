@@ -8,10 +8,13 @@ from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA,
 )
 import homeassistant.components.tts as tts
+from homeassistant.const import HTTP_FORBIDDEN
 from homeassistant.setup import setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant, mock_service
-from tests.components.tts.test_init import mutagen_mock  # noqa: F401
+from tests.components.tts.test_init import (  # noqa: F401, pylint: disable=unused-import
+    mutagen_mock,
+)
 
 
 class TestTTSYandexPlatform:
@@ -196,7 +199,7 @@ class TestTTSYandexPlatform:
             "speed": 1,
         }
         aioclient_mock.get(
-            self._base_url, status=403, content=b"test", params=url_param
+            self._base_url, status=HTTP_FORBIDDEN, content=b"test", params=url_param
         )
 
         config = {tts.DOMAIN: {"platform": "yandextts", "api_key": "1234567xx"}}

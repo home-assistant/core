@@ -6,6 +6,7 @@ from zlib import adler32
 import voluptuous as vol
 
 from homeassistant.components import cover
+from homeassistant.components.cover import DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -200,7 +201,7 @@ def get_accessory(hass, driver, state, aid, config):
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if device_class == "garage" and features & (
+        if device_class in (DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE) and features & (
             cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE
         ):
             a_type = "GarageDoorOpener"

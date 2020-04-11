@@ -100,12 +100,12 @@ async def test_only_valid_components(hass, mqtt_mock, caplog):
         await async_start(hass, "homeassistant", {}, entry)
 
         async_fire_mqtt_message(
-            hass, "homeassistant/{}/bla/config".format(invalid_component), "{}"
+            hass, f"homeassistant/{invalid_component}/bla/config", "{}"
         )
 
     await hass.async_block_till_done()
 
-    assert "Integration {} is not supported".format(invalid_component) in caplog.text
+    assert f"Integration {invalid_component} is not supported" in caplog.text
 
     assert not mock_dispatcher_send.called
 

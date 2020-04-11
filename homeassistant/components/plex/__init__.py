@@ -100,10 +100,10 @@ def _async_setup_plex(hass, config):
     if MP_DOMAIN in server_config:
         hass.data.setdefault(PLEX_MEDIA_PLAYER_OPTIONS, server_config.pop(MP_DOMAIN))
     if CONF_HOST in server_config:
-        prefix = "https" if server_config.pop(CONF_SSL) else "http"
+        protocol = "https" if server_config.pop(CONF_SSL) else "http"
         server_config[
             CONF_URL
-        ] = f"{prefix}://{server_config.pop(CONF_HOST)}:{server_config.pop(CONF_PORT)}"
+        ] = f"{protocol}://{server_config.pop(CONF_HOST)}:{server_config.pop(CONF_PORT)}"
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             PLEX_DOMAIN,
@@ -175,7 +175,7 @@ async def async_setup_entry(hass, entry):
     unsub = async_dispatcher_connect(
         hass,
         PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id),
-        plex_server.update_platforms,
+        plex_server.async_update_platforms,
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS].setdefault(server_id, [])
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)

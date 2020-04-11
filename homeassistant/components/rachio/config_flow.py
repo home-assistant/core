@@ -5,7 +5,7 @@ from rachiopy import Rachio
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, HTTP_OK
 from homeassistant.core import callback
 
 from .const import (
@@ -33,13 +33,13 @@ async def validate_input(hass: core.HomeAssistant, data):
     try:
         data = await hass.async_add_executor_job(rachio.person.getInfo)
         _LOGGER.debug("rachio.person.getInfo: %s", data)
-        if int(data[0][KEY_STATUS]) != 200:
+        if int(data[0][KEY_STATUS]) != HTTP_OK:
             raise InvalidAuth
 
         rachio_id = data[1][KEY_ID]
         data = await hass.async_add_executor_job(rachio.person.get, rachio_id)
         _LOGGER.debug("rachio.person.get: %s", data)
-        if int(data[0][KEY_STATUS]) != 200:
+        if int(data[0][KEY_STATUS]) != HTTP_OK:
             raise CannotConnect
 
         username = data[1][KEY_USERNAME]
@@ -62,9 +62,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_API_KEY])
+            self._abort_if_unique_id_configured()
             try:
                 info = await validate_input(self.hass, user_input)
-
+                return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -72,11 +74,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-
-            if "base" not in errors:
-                await self.async_set_unique_id(user_input[CONF_API_KEY])
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors

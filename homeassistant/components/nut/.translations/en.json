@@ -8,6 +8,19 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "resources": {
+                "data": {
+                    "resources": "Resources"
+                },
+                "title": "Choose the Resources to Monitor"
+            },
+            "ups": {
+                "data": {
+                    "alias": "Alias",
+                    "resources": "Resources"
+                },
+                "title": "Choose the UPS to Monitor"
+            },
             "user": {
                 "data": {
                     "alias": "Alias",
@@ -30,7 +43,7 @@
                 "data": {
                     "resources": "Resources"
                 },
-                "description": "Choose Sensor Resources"
+                "description": "Choose Sensor Resources."
             }
         }
     }

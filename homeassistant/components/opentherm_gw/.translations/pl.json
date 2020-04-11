@@ -10,10 +10,8 @@
             "init": {
                 "data": {
                     "device": "\u015acie\u017cka lub adres URL",
-                    "floor_temperature": "Zaokr\u0105glanie warto\u015bci w d\u00f3\u0142",
                     "id": "Identyfikator",
-                    "name": "Nazwa",
-                    "precision": "Precyzja temperatury"
+                    "name": "Nazwa"
                 },
                 "title": "Bramka OpenTherm"
             }

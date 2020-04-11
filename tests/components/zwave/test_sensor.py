@@ -116,12 +116,14 @@ def test_multilevelsensor_value_changed_other_units(mock_openzwave):
             const.COMMAND_CLASS_METER,
         ]
     )
-    value = MockValue(data=190.95555, units="kWh", node=node)
+    value = MockValue(
+        data=190.95555, units=homeassistant.const.ENERGY_KILO_WATT_HOUR, node=node
+    )
     values = MockEntityValues(primary=value)
 
     device = sensor.get_device(node=node, values=values, node_config={})
     assert device.state == 190.96
-    assert device.unit_of_measurement == "kWh"
+    assert device.unit_of_measurement == homeassistant.const.ENERGY_KILO_WATT_HOUR
     value.data = 197.95555
     value_changed(value)
     assert device.state == 197.96
