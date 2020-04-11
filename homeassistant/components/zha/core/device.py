@@ -511,7 +511,7 @@ class ZHADevice(LogMixin):
                 response,
             )
             return response
-        except zigpy.exceptions.DeliveryError as exc:
+        except zigpy.exceptions.ZigbeeException as exc:
             self.debug(
                 "failed to set attribute: %s %s %s %s %s",
                 f"{ATTR_VALUE}: {value}",
@@ -563,7 +563,7 @@ class ZHADevice(LogMixin):
         """Remove this device from the provided zigbee group."""
         try:
             await self._zigpy_device.remove_from_group(group_id)
-        except (zigpy.exceptions.DeliveryError, asyncio.TimeoutError) as ex:
+        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
                 "Failed to remove device '%s' from group: 0x%04x ex: %s",
                 self._zigpy_device.ieee,
