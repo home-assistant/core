@@ -78,7 +78,6 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set the config entry up."""
     # Set up roomba platforms with config entry
-    if config_entry.data is None:
         return False
 
     if not config_entry.options:
