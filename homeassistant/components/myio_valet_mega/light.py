@@ -19,9 +19,6 @@ from homeassistant.util import slugify
 
 from . import DOMAIN
 
-# from homeassistant.components.myio_valet_mega.comms_thread import CommsThread
-
-
 _LOGGER = logging.getLogger(__name__)
 
 LIGHT_EFFECT_LIST = ["none"]

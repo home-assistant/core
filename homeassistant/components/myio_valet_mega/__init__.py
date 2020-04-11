@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import slugify
 
@@ -92,6 +93,7 @@ async def async_setup_entry(hass, config_entry):
         was_offline = False
 
         if server_status() == "Offline":
+            hass.states.async_set(f"{_server_name}.available", False)
             was_offline = True
             for component in PLATFORMS:
                 await hass.config_entries.async_forward_entry_unload(
@@ -108,7 +110,10 @@ async def async_setup_entry(hass, config_entry):
         hass.states.async_set(f"{_server_name}.state", _server_status)
 
         if server_status().startswith("Online") and was_offline:
+            hass.states.async_set(f"{_server_name}.available", True)
             await setup_config_entries()
+        elif not was_offline and server_status() == "Offline":
+            raise PlatformNotReady
 
     coordinator = DataUpdateCoordinator(
         hass,

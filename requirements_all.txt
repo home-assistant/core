@@ -881,7 +881,7 @@ mychevy==1.2.0
 mycroftapi==2.0
 
 # homeassistant.components.myio_valet_mega
-myio==0.0.2
+myio==0.0.5
 
 # homeassistant.components.n26
 n26==0.2.7
