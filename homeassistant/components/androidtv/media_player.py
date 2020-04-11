@@ -489,16 +489,8 @@ class ADBDevice(MediaPlayerDevice):
 
     @adb_decorator()
     def get_raw_media_data(self):
-        """Raw base64 image data."""
-        try:
-            response = self.aftv.adb_shell("screencap -p | base64")
-        except UnicodeDecodeError:
-            return None
-
-        if isinstance(response, str) and response.strip():
-            return binascii.a2b_base64(response.strip().replace("\n", ""))
-
-        return None
+        """Retrieve a screenshot as binary .png image data."""
+        return self.aftv.adb_screencap()
 
     @property
     def media_image_hash(self):
