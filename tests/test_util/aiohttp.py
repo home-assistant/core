@@ -322,6 +322,9 @@ class MockLongPollSideEffect:
         self.semaphore.release()
 
     def stop(self):
-        """Stop the current request and future ones. Avoids exception if there is someone waiting when exiting test."""
+        """Stop the current request and future ones.
+
+        This avoids an exception if there is someone waiting when exiting test.
+        """
         self.stopping = True
         self.queue_response(exc=ClientError())
