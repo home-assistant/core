@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_RESOURCES,
+    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
@@ -21,6 +22,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     COORDINATOR,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     PLATFORMS,
     PYNUT_DATA,
@@ -52,6 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     alias = config.get(CONF_ALIAS)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     data = PyNUTData(host, port, alias, username, password)
 
@@ -65,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER,
         name="NUT resource status",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=60),
+        update_interval=timedelta(seconds=scan_interval),
     )
 
     # Fetch initial data so we have data when entities subscribe
