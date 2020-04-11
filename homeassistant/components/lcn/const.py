@@ -3,6 +3,7 @@ from itertools import product
 
 from homeassistant.const import (
     TEMP_CELSIUS,
+    TEMP_KELVIN,
     TEMP_FAHRENHEIT,
     UNIT_DEGREE,
     UNIT_PERCENTAGE,
@@ -149,7 +150,7 @@ VAR_UNITS = [
     "LCN",
     "NATIVE",
     TEMP_CELSIUS,
-    f"{UNIT_DEGREE}K",
+    TEMP_KELVIN,
     TEMP_FAHRENHEIT,
     "LUX_T",
     "LX_T",
