@@ -309,5 +309,20 @@ async def test_non_binary_sensor_with_binary_args(
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
     assert await async_setup_component(hass, QWIKSWITCH, config)
     await asyncio.sleep(0.01)
+    await hass.async_block_till_done()
     assert hass.states.get("sensor.ss1")
     assert "invert should only be used for binary_sensors" in caplog.text
+
+
+async def test_non_relay_switch(hass, aioclient_mock, qs_devices, caplog):
+    """Test that the system logs a warning when a switch is configured for a device that is not a relay."""
+
+    config = {"qwikswitch": {"switches": ["@a00003"]}}
+    aioclient_mock.get("http://127.0.0.1:2020/&device", json=qs_devices)
+    listen_mock = MockLongPollSideEffect()
+    aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
+    assert await async_setup_component(hass, QWIKSWITCH, config)
+    await asyncio.sleep(0.01)
+    await hass.async_block_till_done()
+    assert not hass.states.get("switch.dim_3")
+    assert "You specified a switch that is not a relay @a00003" in caplog.text
