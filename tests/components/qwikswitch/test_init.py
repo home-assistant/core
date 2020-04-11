@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from asynctest import Mock
 import pytest
 from yarl import URL
 
@@ -224,5 +225,29 @@ async def test_light_device(hass, aioclient_mock, qs_devices):
         None,
         None,
     ) in aioclient_mock.mock_calls
+
+    listen_mock.stop()
+
+
+async def test_button(hass, aioclient_mock, qs_devices):
+    """Test that buttons fire an event."""
+
+    async def get_devices_json(method, url, data):
+        return AiohttpClientMockResponse(method=method, url=url, json=qs_devices)
+
+    config = {"qwikswitch": {"button_events": "TOGGLE"}}
+    aioclient_mock.get("http://127.0.0.1:2020/&device", side_effect=get_devices_json)
+    listen_mock = MockLongPollSideEffect()
+    aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
+    await async_setup_component(hass, QWIKSWITCH, config)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    button_pressed = Mock()
+    hass.bus.async_listen_once("qwikswitch.button.@a00002", button_pressed)
+    listen_mock.queue_response(json={"id": "@a00002", "cmd": "TOGGLE"},)
+    await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
+    button_pressed.assert_called_once()
 
     listen_mock.stop()
