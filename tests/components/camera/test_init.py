@@ -102,8 +102,15 @@ async def test_snapshot_service(hass, mock_camera):
     with patch(
         "homeassistant.components.camera.open", mopen, create=True
     ), patch.object(hass.config, "is_allowed_path", return_value=True):
-        common.async_snapshot(hass, "/test/snapshot.jpg")
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            camera.DOMAIN,
+            camera.SERVICE_SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: "camera.demo_camera",
+                camera.ATTR_FILENAME: "/test/snapshot.jpg",
+            },
+            blocking=True,
+        )
 
         mock_write = mopen().write
 
@@ -237,10 +244,6 @@ async def test_play_stream_service_no_source(hass, mock_camera, mock_stream):
 async def test_handle_play_stream_service(hass, mock_camera, mock_stream):
     """Test camera play_stream service."""
     await async_setup_component(hass, "media_player", {})
-    data = {
-        ATTR_ENTITY_ID: "camera.demo_camera",
-        camera.ATTR_MEDIA_PLAYER: "media_player.test",
-    }
     with patch(
         "homeassistant.components.camera.request_stream"
     ) as mock_request_stream, patch(
@@ -249,7 +252,13 @@ async def test_handle_play_stream_service(hass, mock_camera, mock_stream):
     ):
         # Call service
         await hass.services.async_call(
-            camera.DOMAIN, camera.SERVICE_PLAY_STREAM, data, blocking=True
+            camera.DOMAIN,
+            camera.SERVICE_PLAY_STREAM,
+            {
+                ATTR_ENTITY_ID: "camera.demo_camera",
+                camera.ATTR_MEDIA_PLAYER: "media_player.test",
+            },
+            blocking=True,
         )
         # So long as we request the stream, the rest should be covered
         # by the play_media service tests.
@@ -295,23 +304,23 @@ async def test_preload_stream(hass, mock_stream):
 
 async def test_record_service_invalid_path(hass, mock_camera):
     """Test record service with invalid path."""
-    data = {
-        ATTR_ENTITY_ID: "camera.demo_camera",
-        camera.CONF_FILENAME: "/my/invalid/path",
-    }
     with patch.object(
         hass.config, "is_allowed_path", return_value=False
     ), pytest.raises(HomeAssistantError):
         # Call service
         await hass.services.async_call(
-            camera.DOMAIN, camera.SERVICE_RECORD, data, blocking=True
+            camera.DOMAIN,
+            camera.SERVICE_RECORD,
+            {
+                ATTR_ENTITY_ID: "camera.demo_camera",
+                camera.CONF_FILENAME: "/my/invalid/path",
+            },
+            blocking=True,
         )
 
 
 async def test_record_service(hass, mock_camera, mock_stream):
     """Test record service."""
-    data = {ATTR_ENTITY_ID: "camera.demo_camera", camera.CONF_FILENAME: "/my/path"}
-
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         return_value=mock_coro("http://example.com"),
@@ -323,7 +332,10 @@ async def test_record_service(hass, mock_camera, mock_stream):
     ):
         # Call service
         await hass.services.async_call(
-            camera.DOMAIN, camera.SERVICE_RECORD, data, blocking=True
+            camera.DOMAIN,
+            camera.SERVICE_RECORD,
+            {ATTR_ENTITY_ID: "camera.demo_camera", camera.CONF_FILENAME: "/my/path"},
+            blocking=True,
         )
         # So long as we call stream.record, the rest should be covered
         # by those tests.
