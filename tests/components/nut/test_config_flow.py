@@ -1,9 +1,11 @@
 """Test the Network UPS Tools (NUT) config flow."""
-from asynctest import MagicMock, patch
+from asynctest import patch
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.const import CONF_RESOURCES
+
+from .util import _get_mock_pynutclient
 
 from tests.common import MockConfigEntry
 
@@ -13,13 +15,6 @@ VALID_CONFIG = {
     "name": "name",
     "resources": ["battery.charge"],
 }
-
-
-def _get_mock_pynutclient(list_vars=None, list_ups=None):
-    pynutclient = MagicMock()
-    type(pynutclient).list_ups = MagicMock(return_value=list_ups)
-    type(pynutclient).list_vars = MagicMock(return_value=list_vars)
-    return pynutclient
 
 
 async def test_form_user_one_ups(hass):
