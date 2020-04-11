@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from aiohttp.client_exceptions import ClientError
 from asynctest import Mock
 import pytest
 from yarl import URL
@@ -56,7 +57,7 @@ async def test_binary_sensor_device(hass, aioclient_mock, qs_devices):
     aioclient_mock.get("http://127.0.0.1:2020/&device", json=qs_devices)
     listen_mock = MockLongPollSideEffect()
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
-    await async_setup_component(hass, QWIKSWITCH, config)
+    assert await async_setup_component(hass, QWIKSWITCH, config)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
@@ -97,7 +98,7 @@ async def test_sensor_device(hass, aioclient_mock, qs_devices):
     aioclient_mock.get("http://127.0.0.1:2020/&device", json=qs_devices)
     listen_mock = MockLongPollSideEffect()
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
-    await async_setup_component(hass, QWIKSWITCH, config)
+    assert await async_setup_component(hass, QWIKSWITCH, config)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
@@ -125,7 +126,7 @@ async def test_switch_device(hass, aioclient_mock, qs_devices):
     aioclient_mock.get("http://127.0.0.1:2020/&device", side_effect=get_devices_json)
     listen_mock = MockLongPollSideEffect()
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
-    await async_setup_component(hass, QWIKSWITCH, config)
+    assert await async_setup_component(hass, QWIKSWITCH, config)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
@@ -178,7 +179,7 @@ async def test_light_device(hass, aioclient_mock, qs_devices):
     aioclient_mock.get("http://127.0.0.1:2020/&device", side_effect=get_devices_json)
     listen_mock = MockLongPollSideEffect()
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
-    await async_setup_component(hass, QWIKSWITCH, config)
+    assert await async_setup_component(hass, QWIKSWITCH, config)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
@@ -239,7 +240,7 @@ async def test_button(hass, aioclient_mock, qs_devices):
     aioclient_mock.get("http://127.0.0.1:2020/&device", side_effect=get_devices_json)
     listen_mock = MockLongPollSideEffect()
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
-    await async_setup_component(hass, QWIKSWITCH, config)
+    assert await async_setup_component(hass, QWIKSWITCH, config)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
@@ -251,3 +252,13 @@ async def test_button(hass, aioclient_mock, qs_devices):
     button_pressed.assert_called_once()
 
     listen_mock.stop()
+
+
+async def test_failed_update_devices(hass, aioclient_mock):
+    """Test that code behaves correctly when unable to get the devices."""
+
+    config = {"qwikswitch": {"button_events": "TOGGLE"}}
+    aioclient_mock.get("http://127.0.0.1:2020/&device", exc=ClientError())
+    listen_mock = MockLongPollSideEffect()
+    aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
+    assert not await async_setup_component(hass, QWIKSWITCH, config)
