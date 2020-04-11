@@ -2,8 +2,6 @@
   "domain": "pvoutput",
   "name": "PVOutput",
   "documentation": "https://www.home-assistant.io/integrations/pvoutput",
-  "requirements": [],
-  "dependencies": [],
   "after_dependencies": ["rest"],
   "codeowners": ["@fabaff"]
 }

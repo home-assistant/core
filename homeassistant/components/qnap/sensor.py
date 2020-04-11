@@ -175,7 +175,7 @@ class QNAPStatsAPI:
     def __init__(self, config):
         """Initialize the API wrapper."""
 
-        protocol = "https" if config.get(CONF_SSL) else "http"
+        protocol = "https" if config[CONF_SSL] else "http"
         self._api = QNAPStats(
             "{}://{}".format(protocol, config.get(CONF_HOST)),
             config.get(CONF_PORT),

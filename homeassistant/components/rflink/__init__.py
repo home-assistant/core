@@ -158,7 +158,7 @@ async def async_setup(hass, config):
             return
 
         # Lookup entities who registered this device id as device id or alias
-        event_id = event.get(EVENT_KEY_ID, None)
+        event_id = event.get(EVENT_KEY_ID)
 
         is_group_event = (
             event_type == EVENT_KEY_COMMAND
@@ -313,7 +313,7 @@ class RflinkDevice(Entity):
         self._handle_event(event)
 
         # Propagate changes through ha
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         # Put command onto bus for user to subscribe to
         if self._should_fire_event and identify_event_type(event) == EVENT_KEY_COMMAND:
@@ -360,7 +360,7 @@ class RflinkDevice(Entity):
     def _availability_callback(self, availability):
         """Update availability state."""
         self._available = availability
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Register update callback."""
@@ -404,13 +404,17 @@ class RflinkDevice(Entity):
                 self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_COMMAND][_id].append(
                     self.entity_id
                 )
-        async_dispatcher_connect(
-            self.hass, SIGNAL_AVAILABILITY, self._availability_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_AVAILABILITY, self._availability_callback
+            )
         )
-        async_dispatcher_connect(
-            self.hass,
-            SIGNAL_HANDLE_EVENT.format(self.entity_id),
-            self.handle_event_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_HANDLE_EVENT.format(self.entity_id),
+                self.handle_event_callback,
+            )
         )
 
         # Process the initial event now that the entity is created
@@ -494,7 +498,7 @@ class RflinkCommand(RflinkDevice):
         await self._async_send_command(cmd, self._signal_repetitions)
 
         # Update state of entity
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     def cancel_queued_send_commands(self):
         """Cancel queued signal repetition commands.

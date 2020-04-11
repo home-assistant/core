@@ -53,7 +53,7 @@ def setup(hass, config):
 
     try:
         host_ip_pton = socket.inet_pton(socket.AF_INET, host_ip)
-    except socket.error:
+    except OSError:
         host_ip_pton = socket.inet_pton(socket.AF_INET6, host_ip)
 
     info = ServiceInfo(
@@ -134,8 +134,8 @@ def handle_homekit(hass, info) -> bool:
     for test_model in HOMEKIT:
         if (
             model != test_model
-            and not model.startswith(test_model + " ")
-            and not model.startswith(test_model + "-")
+            and not model.startswith(f"{test_model} ")
+            and not model.startswith(f"{test_model}-")
         ):
             continue
 

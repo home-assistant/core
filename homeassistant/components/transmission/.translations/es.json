@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El host ya est\u00e1 configurado.",
-            "one_instance_allowed": "S\u00f3lo se necesita una sola instancia."
+            "already_configured": "El host ya est\u00e1 configurado."
         },
         "error": {
             "cannot_connect": "No se puede conectar al host",
@@ -10,12 +9,6 @@
             "wrong_credentials": "Nombre de usuario o contrase\u00f1a incorrectos"
         },
         "step": {
-            "options": {
-                "data": {
-                    "scan_interval": "Frecuencia de actualizaci\u00f3n"
-                },
-                "title": "Configurar opciones"
-            },
             "user": {
                 "data": {
                     "host": "Host",
@@ -35,7 +28,6 @@
                 "data": {
                     "scan_interval": "Frecuencia de actualizaci\u00f3n"
                 },
-                "description": "Configurar opciones para la transmisi\u00f3n",
                 "title": "Configurar opciones para la transmisi\u00f3n"
             }
         }

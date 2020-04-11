@@ -1,37 +1,37 @@
 {
-    "config": {
-        "title": "Glances",
-        "step": {
-            "user": {
-                "title": "Setup Glances",
-                "data": {
-                    "name": "Name",
-                    "host": "Host",
-                    "username": "Username",
-                    "password": "Password",
-                    "port": "Port",
-                    "version": "Glances API Version (2 or 3)",
-                    "ssl": "Use SSL/TLS to connect to the Glances system",
-                    "verify_ssl": "Verify the certification of the system"
-                }
-            }
-        },
-        "error": {
-            "cannot_connect": "Unable to connect to host",
-            "wrong_version": "Version not supported (2 or 3 only)"
-        },
-        "abort": {
-            "already_configured": "Host is already configured."
+  "config": {
+    "title": "Glances",
+    "step": {
+      "user": {
+        "title": "Setup Glances",
+        "data": {
+          "name": "Name",
+          "host": "Host",
+          "username": "Username",
+          "password": "Password",
+          "port": "Port",
+          "version": "Glances API Version (2 or 3)",
+          "ssl": "Use SSL/TLS to connect to the Glances system",
+          "verify_ssl": "Verify the certification of the system"
         }
+      }
     },
-    "options": {
-        "step": {
-            "init": {
-                "description": "Configure options for Glances",
-                "data": {
-                    "scan_interval": "Update frequency"
-                }
-            }
-        }
+    "error": {
+      "cannot_connect": "Unable to connect to host",
+      "wrong_version": "Version not supported (2 or 3 only)"
+    },
+    "abort": {
+      "already_configured": "Host is already configured."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Configure options for Glances",
+        "data": {
+          "scan_interval": "Update frequency"
+        }
+      }
+    }
+  }
 }

@@ -172,7 +172,7 @@ class IntegrationSensor(RestoreEntity):
                 _LOGGER.error("Could not calculate integral: %s", err)
             else:
                 self._state += integral
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
 
         async_track_state_change(self.hass, self._sensor_source_id, calc_integration)
 

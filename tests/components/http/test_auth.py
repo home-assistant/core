@@ -147,12 +147,12 @@ async def test_cannot_access_with_trusted_ip(
     for remote_addr in UNTRUSTED_ADDRESSES:
         set_mock_ip(remote_addr)
         resp = await client.get("/")
-        assert resp.status == 401, "{} shouldn't be trusted".format(remote_addr)
+        assert resp.status == 401, f"{remote_addr} shouldn't be trusted"
 
     for remote_addr in TRUSTED_ADDRESSES:
         set_mock_ip(remote_addr)
         resp = await client.get("/")
-        assert resp.status == 401, "{} shouldn't be trusted".format(remote_addr)
+        assert resp.status == 401, f"{remote_addr} shouldn't be trusted"
 
 
 async def test_auth_active_access_with_access_token_in_header(
@@ -164,27 +164,27 @@ async def test_auth_active_access_with_access_token_in_header(
     client = await aiohttp_client(app)
     refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
 
-    req = await client.get("/", headers={"Authorization": "Bearer {}".format(token)})
+    req = await client.get("/", headers={"Authorization": f"Bearer {token}"})
     assert req.status == 200
     assert await req.json() == {"user_id": refresh_token.user.id}
 
-    req = await client.get("/", headers={"AUTHORIZATION": "Bearer {}".format(token)})
+    req = await client.get("/", headers={"AUTHORIZATION": f"Bearer {token}"})
     assert req.status == 200
     assert await req.json() == {"user_id": refresh_token.user.id}
 
-    req = await client.get("/", headers={"authorization": "Bearer {}".format(token)})
+    req = await client.get("/", headers={"authorization": f"Bearer {token}"})
     assert req.status == 200
     assert await req.json() == {"user_id": refresh_token.user.id}
 
     req = await client.get("/", headers={"Authorization": token})
     assert req.status == 401
 
-    req = await client.get("/", headers={"Authorization": "BEARER {}".format(token)})
+    req = await client.get("/", headers={"Authorization": f"BEARER {token}"})
     assert req.status == 401
 
     refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
     refresh_token.user.is_active = False
-    req = await client.get("/", headers={"Authorization": "Bearer {}".format(token)})
+    req = await client.get("/", headers={"Authorization": f"Bearer {token}"})
     assert req.status == 401
 
 
@@ -200,12 +200,12 @@ async def test_auth_active_access_with_trusted_ip(
     for remote_addr in UNTRUSTED_ADDRESSES:
         set_mock_ip(remote_addr)
         resp = await client.get("/")
-        assert resp.status == 401, "{} shouldn't be trusted".format(remote_addr)
+        assert resp.status == 401, f"{remote_addr} shouldn't be trusted"
 
     for remote_addr in TRUSTED_ADDRESSES:
         set_mock_ip(remote_addr)
         resp = await client.get("/")
-        assert resp.status == 401, "{} shouldn't be trusted".format(remote_addr)
+        assert resp.status == 401, f"{remote_addr} shouldn't be trusted"
 
 
 async def test_auth_legacy_support_api_password_cannot_access(

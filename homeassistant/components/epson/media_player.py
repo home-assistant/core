@@ -90,7 +90,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    ssl = config.get(CONF_SSL)
+    ssl = config[CONF_SSL]
 
     epson_proj = EpsonProjector(
         async_get_clientsession(hass, verify_ssl=False), name, host, port, ssl

@@ -28,11 +28,13 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     IRRADIATION_WATTS_PER_SQUARE_METER,
+    LENGTH_KILOMETERS,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     TIME_HOURS,
     UNIT_PERCENTAGE,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
@@ -76,7 +78,7 @@ SENSOR_TYPES = {
     "winddirection": ["Wind direction", None, "mdi:compass-outline"],
     "windazimuth": ["Wind direction azimuth", "°", "mdi:compass-outline"],
     "pressure": ["Pressure", "hPa", "mdi:gauge"],
-    "visibility": ["Visibility", "km", None],
+    "visibility": ["Visibility", LENGTH_KILOMETERS, None],
     "windgust": ["Wind gust", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
     "precipitation": ["Precipitation", f"mm/{TIME_HOURS}", "mdi:weather-pouring"],
     "irradiance": ["Irradiance", IRRADIATION_WATTS_PER_SQUARE_METER, "mdi:sunglasses"],
@@ -254,13 +256,18 @@ class BrSensor(Entity):
     def uid(self, coordinates):
         """Generate a unique id using coordinates and sensor type."""
         # The combination of the location, name and sensor type is unique
-        return "%2.6f%2.6f%s" % (
-            coordinates[CONF_LATITUDE],
-            coordinates[CONF_LONGITUDE],
-            self.type,
+        return "{:2.6f}{:2.6f}{}".format(
+            coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE], self.type
         )
 
-    def load_data(self, data):
+    @callback
+    def data_updated(self, data):
+        """Update data."""
+        if self._load_data(data) and self.hass:
+            self.async_write_ha_state()
+
+    @callback
+    def _load_data(self, data):
         """Load the sensor with relevant data."""
         # Find sensor
 
@@ -301,17 +308,17 @@ class BrSensor(Entity):
                     return False
 
                 if condition:
-                    new_state = condition.get(CONDITION, None)
+                    new_state = condition.get(CONDITION)
                     if self.type.startswith(SYMBOL):
-                        new_state = condition.get(EXACTNL, None)
+                        new_state = condition.get(EXACTNL)
                     if self.type.startswith("conditioncode"):
-                        new_state = condition.get(CONDCODE, None)
+                        new_state = condition.get(CONDCODE)
                     if self.type.startswith("conditiondetailed"):
-                        new_state = condition.get(DETAILED, None)
+                        new_state = condition.get(DETAILED)
                     if self.type.startswith("conditionexact"):
-                        new_state = condition.get(EXACT, None)
+                        new_state = condition.get(EXACT)
 
-                    img = condition.get(IMAGE, None)
+                    img = condition.get(IMAGE)
 
                     if new_state != self._state or img != self._entity_picture:
                         self._state = new_state
@@ -340,20 +347,20 @@ class BrSensor(Entity):
 
         if self.type == SYMBOL or self.type.startswith(CONDITION):
             # update weather symbol & status text
-            condition = data.get(CONDITION, None)
+            condition = data.get(CONDITION)
             if condition:
                 if self.type == SYMBOL:
-                    new_state = condition.get(EXACTNL, None)
+                    new_state = condition.get(EXACTNL)
                 if self.type == CONDITION:
-                    new_state = condition.get(CONDITION, None)
+                    new_state = condition.get(CONDITION)
                 if self.type == "conditioncode":
-                    new_state = condition.get(CONDCODE, None)
+                    new_state = condition.get(CONDCODE)
                 if self.type == "conditiondetailed":
-                    new_state = condition.get(DETAILED, None)
+                    new_state = condition.get(DETAILED)
                 if self.type == "conditionexact":
-                    new_state = condition.get(EXACT, None)
+                    new_state = condition.get(EXACT)
 
-                img = condition.get(IMAGE, None)
+                img = condition.get(IMAGE)
 
                 if new_state != self._state or img != self._entity_picture:
                     self._state = new_state

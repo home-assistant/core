@@ -108,7 +108,7 @@ class BaseLight(LogMixin, light.Light):
         self._off_brightness: Optional[int] = None
         self._hs_color: Optional[Tuple[float, float]] = None
         self._color_temp: Optional[int] = None
-        self._min_mireds: Optional[int] = 154
+        self._min_mireds: Optional[int] = 153
         self._max_mireds: Optional[int] = 500
         self._white_value: Optional[int] = None
         self._effect_list: Optional[List[str]] = None
@@ -137,6 +137,16 @@ class BaseLight(LogMixin, light.Light):
     def brightness(self):
         """Return the brightness of this light."""
         return self._brightness
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return self._min_mireds
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return self._max_mireds
 
     def set_level(self, value):
         """Set the brightness of this light between 0..254.
@@ -316,6 +326,9 @@ class Light(BaseLight, ZhaEntity):
         self._level_channel = self.cluster_channels.get(CHANNEL_LEVEL)
         self._color_channel = self.cluster_channels.get(CHANNEL_COLOR)
         self._identify_channel = self.zha_device.channels.identify_ch
+        if self._color_channel:
+            self._min_mireds: Optional[int] = self._color_channel.min_mireds
+            self._max_mireds: Optional[int] = self._color_channel.max_mireds
         self._cancel_refresh_handle = None
         effect_list = []
 
@@ -501,7 +514,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
 
         self._color_temp = helpers.reduce_attribute(on_states, ATTR_COLOR_TEMP)
         self._min_mireds = helpers.reduce_attribute(
-            states, ATTR_MIN_MIREDS, default=154, reduce=min
+            states, ATTR_MIN_MIREDS, default=153, reduce=min
         )
         self._max_mireds = helpers.reduce_attribute(
             states, ATTR_MAX_MIREDS, default=500, reduce=max

@@ -4,6 +4,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hangouts",
   "requirements": ["hangups==0.4.9"],
-  "dependencies": [],
   "codeowners": []
 }

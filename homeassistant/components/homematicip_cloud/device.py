@@ -108,7 +108,7 @@ class HomematicipGenericDevice(Entity):
         # Don't update disabled entities
         if self.enabled:
             _LOGGER.debug("Event %s (%s)", self.name, self._device.modelType)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
         else:
             _LOGGER.debug(
                 "Device Changed Event for %s (%s) not fired. Entity is disabled.",
@@ -166,10 +166,17 @@ class HomematicipGenericDevice(Entity):
     def name(self) -> str:
         """Return the name of the generic device."""
         name = self._device.label
-        if self._home.name is not None and self._home.name != "":
+        if name and self._home.name:
             name = f"{self._home.name} {name}"
-        if self.post is not None and self.post != "":
+        if name and self.post:
             name = f"{name} {self.post}"
+        return name
+
+    def _get_label_by_channel(self, channel: int) -> str:
+        """Return the name of the channel."""
+        name = self._device.functionalChannels[channel].label
+        if name and self._home.name:
+            name = f"{self._home.name} {name}"
         return name
 
     @property

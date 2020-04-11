@@ -11,6 +11,7 @@ from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA,
 )
 import homeassistant.components.tts as tts
+from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.setup import setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant, mock_service
@@ -122,7 +123,7 @@ class TestTTSMaryTTSPlatform:
         conn = Mock()
         response = Mock()
         conn.getresponse.return_value = response
-        response.status = 500
+        response.status = HTTP_INTERNAL_SERVER_ERROR
         response.reason = "test"
         response.readline.return_value = "content"
 

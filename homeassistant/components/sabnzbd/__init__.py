@@ -134,7 +134,7 @@ async def async_setup(hass, config):
 
     conf = config.get(DOMAIN)
     if conf is not None:
-        use_ssl = conf.get(CONF_SSL)
+        use_ssl = conf[CONF_SSL]
         name = conf.get(CONF_NAME)
         api_key = conf.get(CONF_API_KEY)
         await async_configure_sabnzbd(hass, conf, use_ssl, name, api_key)

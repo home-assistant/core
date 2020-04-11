@@ -41,7 +41,7 @@ async def async_test_humidity(hass, cluster, entity_id):
 async def async_test_temperature(hass, cluster, entity_id):
     """Test temperature sensor."""
     await send_attributes_report(hass, cluster, {1: 1, 0: 2900, 2: 100})
-    assert_state(hass, entity_id, "29.0", "°C")
+    assert_state(hass, entity_id, "29.0", TEMP_CELSIUS)
 
 
 async def async_test_pressure(hass, cluster, entity_id):

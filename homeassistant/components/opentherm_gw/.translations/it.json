@@ -10,10 +10,8 @@
             "init": {
                 "data": {
                     "device": "Percorso o URL",
-                    "floor_temperature": "Temperatura climatica del pavimento",
                     "id": "ID",
-                    "name": "Nome",
-                    "precision": "Precisione della temperatura climatica"
+                    "name": "Nome"
                 },
                 "title": "OpenTherm Gateway"
             }

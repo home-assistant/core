@@ -70,7 +70,7 @@ class FFmpegBinarySensor(FFmpegBase, BinarySensorDevice):
     def _async_callback(self, state):
         """HA-FFmpeg callback for noise detection."""
         self._state = state
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def is_on(self):

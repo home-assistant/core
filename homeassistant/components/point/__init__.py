@@ -271,7 +271,6 @@ class MinutPointEntity(Entity):
 
     async def _update_callback(self):
         """Update the value of the sensor."""
-        pass
 
     @property
     def available(self):
@@ -319,7 +318,7 @@ class MinutPointEntity(Entity):
     @property
     def name(self):
         """Return the display name of this device."""
-        return "{} {}".format(self._name, self.device_class.capitalize())
+        return f"{self._name} {self.device_class.capitalize()}"
 
     @property
     def is_updated(self):

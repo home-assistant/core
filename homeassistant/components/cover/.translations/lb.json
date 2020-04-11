@@ -1,7 +1,10 @@
 {
     "device_automation": {
         "action_type": {
+            "close": "{entity_name} zoumaachen",
+            "close_tilt": "{entity_name} Kipp zoumaachen",
             "open": "{entity_name} opmaachen",
+            "open_tilt": "{entity_name} op Kipp stelle",
             "set_position": "{entity_name} positioun programm\u00e9ieren",
             "set_tilt_position": "{entity_name} kipp positioun programm\u00e9ieren"
         },
@@ -10,8 +13,8 @@
             "is_closing": "{entity_name} g\u00ebtt zougemaach",
             "is_open": "{entity_name} ass op",
             "is_opening": "{entity_name} g\u00ebtt opgemaach",
-            "is_position": "{entity_name} positioun ass",
-            "is_tilt_position": "{entity_name} kipp positioun ass"
+            "is_position": "Aktuell {entity_name} positioun ass",
+            "is_tilt_position": "Aktuell {entity_name} kipp positioun ass"
         },
         "trigger_type": {
             "closed": "{entity_name} gouf zougemaach",

@@ -87,11 +87,11 @@ class TestScene(unittest.TestCase):
             "scene:\n"
             "  - name: test\n"
             "    entities:\n"
-            "      {0}: on\n"
-            "      {1}:\n"
+            f"      {self.light_1.entity_id}: on\n"
+            f"      {self.light_2.entity_id}:\n"
             "        state: on\n"
             "        brightness: 100\n"
-        ).format(self.light_1.entity_id, self.light_2.entity_id)
+        )
 
         with io.StringIO(config) as file:
             doc = yaml_loader.yaml.safe_load(file)

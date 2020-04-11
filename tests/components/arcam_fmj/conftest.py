@@ -55,5 +55,5 @@ def player_fixture(hass, state):
     player = ArcamFmj(state, MOCK_NAME, None)
     player.entity_id = MOCK_ENTITY_ID
     player.hass = hass
-    player.async_schedule_update_ha_state = Mock()
+    player.async_write_ha_state = Mock()
     return player

@@ -1,0 +1,33 @@
+{
+  "config": {
+    "title": "Internet Printing Protocol (IPP)",
+    "flow_title": "Printer: {name}",
+    "step": {
+      "user": {
+        "title": "Link your printer",
+        "description": "Set up your printer via Internet Printing Protocol (IPP) to integrate with Home Assistant.",
+        "data": {
+          "host": "Host or IP address",
+          "port": "Port",
+          "base_path": "Relative path to the printer",
+          "ssl": "Printer supports communication over SSL/TLS",
+          "verify_ssl": "Printer uses a proper SSL certificate"
+        }
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add the printer named `{name}` to Home Assistant?",
+        "title": "Discovered printer"
+      }
+    },
+    "error": {
+      "connection_error": "Failed to connect to printer.",
+      "connection_upgrade": "Failed to connect to printer. Please try again with SSL/TLS option checked."
+    },
+    "abort": {
+      "already_configured": "This printer is already configured.",
+      "connection_error": "Failed to connect to printer.",
+      "connection_upgrade": "Failed to connect to printer due to connection upgrade being required.",
+      "parse_error": "Failed to parse response from printer."
+    }
+  }
+}

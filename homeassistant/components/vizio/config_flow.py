@@ -125,8 +125,8 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
             default_include_or_exclude = (
                 CONF_EXCLUDE
                 if self.config_entry.options
-                and CONF_EXCLUDE in self.config_entry.options.get(CONF_APPS)
-                else CONF_EXCLUDE
+                and CONF_EXCLUDE in self.config_entry.options.get(CONF_APPS, {})
+                else CONF_INCLUDE
             )
             options.update(
                 {

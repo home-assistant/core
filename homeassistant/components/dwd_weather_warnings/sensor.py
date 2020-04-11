@@ -133,9 +133,9 @@ class DwdWeatherWarningsSensor(Entity):
         else:
             raise Exception("Unknown warning type")
 
-        data["warning_count"] = self._api.data[prefix + "_warning_count"]
+        data["warning_count"] = self._api.data[f"{prefix}_warning_count"]
         i = 0
-        for event in self._api.data[prefix + "_warnings"]:
+        for event in self._api.data[f"{prefix}_warnings"]:
             i = i + 1
 
             data[f"warning_{i}_name"] = event["event"]

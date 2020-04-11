@@ -5,7 +5,7 @@ set_aircleaner_mode:
       description: "This setting will affect all zones connected to the thermostat."
       example: climate.master_bedroom
     aircleaner_mode:
-      description: "The air cleaner mode to set. Options include \"auto\", \"quick\", or \"allergy\"."
+      description: 'The air cleaner mode to set. Options include "auto", "quick", or "allergy".'
       example: allergy
 
 set_humidify_setpoint:

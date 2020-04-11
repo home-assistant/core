@@ -3,7 +3,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICES, CONF_UNIT_OF_MEASUREMENT, CONF_ZONE
+from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_ZONE,
+    LENGTH_KILOMETERS,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
@@ -28,7 +33,7 @@ DEFAULT_PROXIMITY_ZONE = "home"
 DEFAULT_TOLERANCE = 1
 DOMAIN = "proximity"
 
-UNITS = ["km", "m", "mi", "ft"]
+UNITS = [LENGTH_KILOMETERS, "m", "mi", "ft"]
 
 ZONE_SCHEMA = vol.Schema(
     {
@@ -160,7 +165,7 @@ class Proximity(Entity):
             if (device_state.state).lower() == (self.friendly_name).lower():
                 device_friendly = device_state.name
                 if devices_in_zone != "":
-                    devices_in_zone = devices_in_zone + ", "
+                    devices_in_zone = f"{devices_in_zone}, "
                 devices_in_zone = devices_in_zone + device_friendly
 
         # No-one to track so reset the entity.

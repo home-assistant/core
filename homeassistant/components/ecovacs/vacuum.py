@@ -55,7 +55,7 @@ class EcovacsVacuum(VacuumDevice):
         """Initialize the Ecovacs Vacuum."""
         self.device = device
         self.device.connect_and_wait_until_ready()
-        if self.device.vacuum.get("nick", None) is not None:
+        if self.device.vacuum.get("nick") is not None:
             self._name = str(self.device.vacuum["nick"])
         else:
             # In case there is no nickname defined, use the device id
@@ -96,7 +96,7 @@ class EcovacsVacuum(VacuumDevice):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return self.device.vacuum.get("did", None)
+        return self.device.vacuum.get("did")
 
     @property
     def is_on(self):

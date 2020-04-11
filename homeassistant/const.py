@@ -1,6 +1,6 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 108
+MINOR_VERSION = 109
 PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
@@ -184,6 +184,7 @@ EVENT_CORE_CONFIG_UPDATE = "core_config_updated"
 EVENT_HOMEASSISTANT_CLOSE = "homeassistant_close"
 EVENT_HOMEASSISTANT_START = "homeassistant_start"
 EVENT_HOMEASSISTANT_STOP = "homeassistant_stop"
+EVENT_HOMEASSISTANT_FINAL_WRITE = "homeassistant_final_write"
 EVENT_LOGBOOK_ENTRY = "logbook_entry"
 EVENT_PLATFORM_DISCOVERED = "platform_discovered"
 EVENT_SCRIPT_STARTED = "script_started"
@@ -343,6 +344,9 @@ ATTR_TEMPERATURE = "temperature"
 # #### UNITS OF MEASUREMENT ####
 # Power units
 POWER_WATT = "W"
+
+# Voltage units
+UNIT_VOLT = "V"
 
 # Energy units
 ENERGY_KILO_WATT_HOUR = "kWh"
@@ -526,6 +530,7 @@ HTTP_CREATED = 201
 HTTP_MOVED_PERMANENTLY = 301
 HTTP_BAD_REQUEST = 400
 HTTP_UNAUTHORIZED = 401
+HTTP_FORBIDDEN = 403
 HTTP_NOT_FOUND = 404
 HTTP_METHOD_NOT_ALLOWED = 405
 HTTP_UNPROCESSABLE_ENTITY = 422

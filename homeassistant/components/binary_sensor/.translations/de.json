@@ -46,7 +46,6 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} Batterie schwach",
-            "closed": "{entity_name} geschlossen",
             "cold": "{entity_name} wurde kalt",
             "connected": "{entity_name} verbunden",
             "gas": "{entity_name} hat Gas detektiert",
@@ -54,7 +53,6 @@
             "light": "{entity_name} hat Licht detektiert",
             "locked": "{entity_name} gesperrt",
             "moist": "{entity_name} wurde feucht",
-            "moist\u00a7": "{entity_name} wurde feucht",
             "motion": "{entity_name} hat Bewegungen detektiert",
             "moving": "{entity_name} hat angefangen sich zu bewegen",
             "no_gas": "{entity_name} hat kein Gas mehr erkannt",

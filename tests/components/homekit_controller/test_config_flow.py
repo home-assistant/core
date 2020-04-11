@@ -100,11 +100,9 @@ def test_valid_pairing_codes(pairing_code):
 def get_flow_context(hass, result):
     """Get the flow context from the result of async_init or async_configure."""
     flow = next(
-        (
-            flow
-            for flow in hass.config_entries.flow.async_progress()
-            if flow["flow_id"] == result["flow_id"]
-        )
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
     )
 
     return flow["context"]

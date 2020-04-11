@@ -8,7 +8,13 @@ import growattServer
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    ENERGY_KILO_WATT_HOUR,
+    UNIT_VOLT,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -23,26 +29,46 @@ SCAN_INTERVAL = datetime.timedelta(minutes=5)
 TOTAL_SENSOR_TYPES = {
     "total_money_today": ("Total money today", "€", "plantMoneyText", None),
     "total_money_total": ("Money lifetime", "€", "totalMoneyText", None),
-    "total_energy_today": ("Energy Today", "kWh", "todayEnergy", "power"),
+    "total_energy_today": (
+        "Energy Today",
+        ENERGY_KILO_WATT_HOUR,
+        "todayEnergy",
+        "power",
+    ),
     "total_output_power": ("Output Power", "W", "invTodayPpv", "power"),
-    "total_energy_output": ("Lifetime energy output", "kWh", "totalEnergy", "power"),
+    "total_energy_output": (
+        "Lifetime energy output",
+        ENERGY_KILO_WATT_HOUR,
+        "totalEnergy",
+        "power",
+    ),
     "total_maximum_output": ("Maximum power", "W", "nominalPower", "power"),
 }
 
 INVERTER_SENSOR_TYPES = {
-    "inverter_energy_today": ("Energy today", "kWh", "e_today", "power"),
-    "inverter_energy_total": ("Lifetime energy output", "kWh", "e_total", "power"),
-    "inverter_voltage_input_1": ("Input 1 voltage", "V", "vpv1", None),
+    "inverter_energy_today": (
+        "Energy today",
+        ENERGY_KILO_WATT_HOUR,
+        "e_today",
+        "power",
+    ),
+    "inverter_energy_total": (
+        "Lifetime energy output",
+        ENERGY_KILO_WATT_HOUR,
+        "e_total",
+        "power",
+    ),
+    "inverter_voltage_input_1": ("Input 1 voltage", UNIT_VOLT, "vpv1", None),
     "inverter_amperage_input_1": ("Input 1 Amperage", "A", "ipv1", None),
     "inverter_wattage_input_1": ("Input 1 Wattage", "W", "ppv1", "power"),
-    "inverter_voltage_input_2": ("Input 2 voltage", "V", "vpv2", None),
+    "inverter_voltage_input_2": ("Input 2 voltage", UNIT_VOLT, "vpv2", None),
     "inverter_amperage_input_2": ("Input 2 Amperage", "A", "ipv2", None),
     "inverter_wattage_input_2": ("Input 2 Wattage", "W", "ppv2", "power"),
-    "inverter_voltage_input_3": ("Input 3 voltage", "V", "vpv3", None),
+    "inverter_voltage_input_3": ("Input 3 voltage", UNIT_VOLT, "vpv3", None),
     "inverter_amperage_input_3": ("Input 3 Amperage", "A", "ipv3", None),
     "inverter_wattage_input_3": ("Input 3 Wattage", "W", "ppv3", "power"),
     "inverter_internal_wattage": ("Internal wattage", "W", "ppv", "power"),
-    "inverter_reactive_voltage": ("Reactive voltage", "V", "vacr", None),
+    "inverter_reactive_voltage": ("Reactive voltage", UNIT_VOLT, "vacr", None),
     "inverter_inverter_reactive_amperage": ("Reactive amperage", "A", "iacr", None),
     "inverter_frequency": ("AC frequency", "Hz", "fac", None),
     "inverter_current_wattage": ("Output power", "W", "pac", "power"),

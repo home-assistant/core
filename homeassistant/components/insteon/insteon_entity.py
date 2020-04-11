@@ -55,21 +55,18 @@ class InsteonEntity(Entity):
         """Return the name of the node (used for Entity_ID)."""
         # Set a base description
         description = self._insteon_device.description
-        if self._insteon_device.description is None:
+        if description is None:
             description = "Unknown Device"
-
         # Get an extension label if there is one
         extension = self._get_label()
         if extension:
             extension = f" {extension}"
-        name = f"{description} {self._insteon_device.address.human}{extension}"
-        return name
+        return f"{description} {self._insteon_device.address.human}{extension}"
 
     @property
     def device_state_attributes(self):
         """Provide attributes for display on device card."""
-        attributes = {"insteon_address": self.address, "insteon_group": self.group}
-        return attributes
+        return {"insteon_address": self.address, "insteon_group": self.group}
 
     @callback
     def async_entity_update(self, deviceid, group, val):
@@ -80,7 +77,7 @@ class InsteonEntity(Entity):
             group,
             val,
         )
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Register INSTEON update events."""
@@ -93,9 +90,13 @@ class InsteonEntity(Entity):
         self._insteon_device_state.register_updates(self.async_entity_update)
         self.hass.data[DOMAIN][INSTEON_ENTITIES].add(self.entity_id)
         load_signal = f"{self.entity_id}_{SIGNAL_LOAD_ALDB}"
-        async_dispatcher_connect(self.hass, load_signal, self._load_aldb)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, load_signal, self._load_aldb)
+        )
         print_signal = f"{self.entity_id}_{SIGNAL_PRINT_ALDB}"
-        async_dispatcher_connect(self.hass, print_signal, self._print_aldb)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, print_signal, self._print_aldb)
+        )
 
     def _load_aldb(self, reload=False):
         """Load the device All-Link Database."""
