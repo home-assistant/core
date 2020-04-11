@@ -19,6 +19,7 @@ from homeassistant.const import (
     TIME_MONTHS,
     TIME_SECONDS,
     TIME_YEARS,
+    UNIT_DEGREE,
     UNIT_PERCENTAGE,
     UNIT_UV_INDEX,
     UNIT_VOLT,
@@ -41,7 +42,7 @@ UOM_FRIENDLY_NAME = {
     "10": TIME_DAYS,
     "12": "dB",
     "13": "dB A",
-    "14": "°",
+    "14": UNIT_DEGREE,
     "16": "macroseismic",
     "17": TEMP_FAHRENHEIT,
     "18": "ft",
@@ -97,7 +98,7 @@ UOM_FRIENDLY_NAME = {
     "73": POWER_WATT,
     "74": f"{POWER_WATT}/m²",
     "75": "weekday",
-    "76": "Wind Direction (°)",
+    "76": f"Wind Direction ({UNIT_DEGREE})",
     "77": TIME_YEARS,
     "82": "mm",
     "83": LENGTH_KILOMETERS,
@@ -107,8 +108,8 @@ UOM_FRIENDLY_NAME = {
     "88": "Water activity",
     "89": "RPM",
     "90": "Hz",
-    "91": "° (Relative to North)",
-    "92": "° (Relative to South)",
+    "91": f"{UNIT_DEGREE} (Relative to North)",
+    "92": f"{UNIT_DEGREE} (Relative to South)",
 }
 
 UOM_TO_STATES = {
