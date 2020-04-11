@@ -41,8 +41,8 @@ class ColorChannel(ZigbeeChannel):
         """Initialize ColorChannel."""
         super().__init__(cluster, ch_pool)
         self._color_capabilities = None
-        self._min_mireds = None
-        self._max_mireds = None
+        self._min_mireds = 153
+        self._max_mireds = 500
 
     @property
     def min_mireds(self):
