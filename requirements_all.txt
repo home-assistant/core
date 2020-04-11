@@ -607,7 +607,7 @@ georss_qld_bushfire_alert_client==0.3
 # homeassistant.components.kef
 # homeassistant.components.minecraft_server
 # homeassistant.components.nmap_tracker
-getmac==0.8.1
+getmac==0.8.2
 
 # homeassistant.components.gios
 gios==0.1.1
