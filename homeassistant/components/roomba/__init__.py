@@ -19,7 +19,6 @@ from .const import (
     CONF_CONTINUOUS,
     CONF_DELAY,
     CONF_NAME,
-    CONF_PREFIX,
     DEFAULT_CERT,
     DEFAULT_CONTINUOUS,
     DEFAULT_DELAY,
@@ -44,7 +43,6 @@ def _has_all_unique_bilds(value):
 DEVICE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PREFIX, default=""): vol.All(cv.string, vol.Lower),
         vol.Required(CONF_BLID): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Optional(CONF_CERT, default=DEFAULT_CERT): str,
