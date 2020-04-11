@@ -10,10 +10,10 @@ from homeassistant.helpers.entity import Entity
 from .const import (
     ATTR_ADDRESS,
     ATTR_CHANNEL,
+    ATTR_DUTY_CYCLE,
     ATTR_INTERFACE,
     ATTR_PARAM,
     ATTR_UNIQUE_ID,
-    ATTR_DUTY_CYCLE,
     DATA_HOMEMATIC,
     DOMAIN,
     HM_ATTRIBUTE_SUPPORT,
