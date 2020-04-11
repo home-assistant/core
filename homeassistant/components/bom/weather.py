@@ -4,7 +4,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    POWER_WATT,
+    TEMP_CELSIUS,
+)
 from homeassistant.helpers import config_validation as cv
 
 # Reuse data and API logic from the sensor implementation
@@ -99,7 +105,7 @@ class BOMWeather(WeatherEntity):
             "SSW",
             "SW",
             "WSW",
-            "W",
+            POWER_WATT,
             "WNW",
             "NW",
             "NNW",
