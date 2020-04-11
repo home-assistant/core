@@ -71,12 +71,12 @@ def lookup_unit_for_sensor_type(sensor_type):
 def devices_from_config(domain_config):
     """Parse configuration and add Rflink sensor devices."""
     devices = []
-    for device_id, config in domain_config[CONF_DEVICES].items():
+    for entity_id, config in domain_config[CONF_DEVICES].items():
         if ATTR_UNIT_OF_MEASUREMENT not in config:
             config[ATTR_UNIT_OF_MEASUREMENT] = lookup_unit_for_sensor_type(
                 config[CONF_SENSOR_TYPE]
             )
-        device = RflinkSensor(device_id, **config)
+        device = RflinkSensor(entity_id, **config)
         devices.append(device)
 
     return devices
@@ -88,10 +88,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def add_new_device(event):
         """Check if device is known, otherwise create device entity."""
-        device_id = event[EVENT_KEY_ID]
+        entity_id = event[EVENT_KEY_ID]
 
         device = RflinkSensor(
-            device_id,
+            entity_id,
             event[EVENT_KEY_SENSOR],
             event[EVENT_KEY_UNIT],
             initial_event=event,
@@ -107,12 +107,12 @@ class RflinkSensor(RflinkDevice):
     """Representation of a Rflink sensor."""
 
     def __init__(
-        self, device_id, sensor_type, unit_of_measurement, initial_event=None, **kwargs
+        self, entity_id, sensor_type, unit_of_measurement, initial_event=None, **kwargs
     ):
         """Handle sensor specific args and super init."""
         self._sensor_type = sensor_type
         self._unit_of_measurement = unit_of_measurement
-        super().__init__(device_id, initial_event=initial_event, **kwargs)
+        super().__init__(entity_id, initial_event=initial_event, **kwargs)
 
     def _handle_event(self, event):
         """Domain specific event handler."""
@@ -121,17 +121,17 @@ class RflinkSensor(RflinkDevice):
     async def async_added_to_hass(self):
         """Register update callback."""
         # Remove temporary bogus entity_id if added
-        tmp_entity = TMP_ENTITY.format(self._device_id)
+        tmp_entity = TMP_ENTITY.format(self.unique_id)
         if (
             tmp_entity
-            in self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][self._device_id]
+            in self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][self.unique_id]
         ):
             self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][
-                self._device_id
+                self.unique_id
             ].remove(tmp_entity)
 
         # Register id and aliases
-        self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][self._device_id].append(
+        self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][self.unique_id].append(
             self.entity_id
         )
         if self._aliases:
@@ -155,6 +155,19 @@ class RflinkSensor(RflinkDevice):
         # Process the initial event now that the entity is created
         if self._initial_event:
             self.handle_event_callback(self._initial_event)
+
+    async def async_will_remove_from_hass(self):
+        """Run when entity will be removed from hass."""
+        _LOGGER.info('async_will_remove_from_hass for %s', self.entity_id)
+        # Register id and aliases
+        self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][self.unique_id].remove(
+            self.entity_id
+        )
+        if self._aliases:
+            for _id in self._aliases:
+                self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][_id].remove(
+                    self.entity_id
+                )
 
     @property
     def unit_of_measurement(self):
