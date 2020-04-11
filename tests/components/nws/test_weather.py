@@ -40,7 +40,7 @@ HOURLY_CONFIG = {
     ],
 )
 async def test_imperial_metric(
-    hass, units, result_observation, result_forecast, mock_simple_nws
+    hass, units, result_observation, result_forecast, mock_simple_nws, caplog
 ):
     """Test with imperial and metric units."""
     hass.config.units = units
@@ -72,6 +72,9 @@ async def test_imperial_metric(
     forecast = data.get(ATTR_FORECAST)
     for key, value in result_forecast.items():
         assert forecast[0].get(key) == value
+
+    assert "Error updating observation" not in caplog.text
+    assert "Success updating observation" not in caplog.text
 
 
 async def test_none_values(hass, mock_simple_nws):
@@ -136,14 +139,18 @@ async def test_error_observation(hass, mock_simple_nws, caplog):
     assert await async_setup_component(hass, nws.DOMAIN, MINIMAL_CONFIG)
     await hass.async_block_till_done()
 
+    assert "Error updating observation for station ABC" in caplog.text
+    assert "Success updating observation for station ABC" not in caplog.text
+    caplog.clear()
+
     instance.update_observation.side_effect = None
 
     future_time = dt_util.utcnow() + timedelta(minutes=15)
     async_fire_time_changed(hass, future_time)
     await hass.async_block_till_done()
 
-    assert "Error updating observation" in caplog.text
-    assert "Success updating observation" in caplog.text
+    assert "Error updating observation for station ABC" not in caplog.text
+    assert "Success updating observation for station ABC" in caplog.text
 
 
 async def test_error_forecast(hass, caplog, mock_simple_nws):
@@ -154,14 +161,18 @@ async def test_error_forecast(hass, caplog, mock_simple_nws):
     assert await async_setup_component(hass, nws.DOMAIN, MINIMAL_CONFIG)
     await hass.async_block_till_done()
 
+    assert "Error updating forecast for station ABC" in caplog.text
+    assert "Success updating forecast for station ABC" not in caplog.text
+    caplog.clear()
+
     instance.update_forecast.side_effect = None
 
     future_time = dt_util.utcnow() + timedelta(minutes=15)
     async_fire_time_changed(hass, future_time)
     await hass.async_block_till_done()
 
-    assert "Error updating forecast" in caplog.text
-    assert "Success updating forecast" in caplog.text
+    assert "Error updating forecast for station ABC" not in caplog.text
+    assert "Success updating forecast for station ABC" in caplog.text
 
 
 async def test_error_forecast_hourly(hass, caplog, mock_simple_nws):
@@ -172,11 +183,15 @@ async def test_error_forecast_hourly(hass, caplog, mock_simple_nws):
     assert await async_setup_component(hass, nws.DOMAIN, MINIMAL_CONFIG)
     await hass.async_block_till_done()
 
+    assert "Error updating forecast_hourly for station ABC" in caplog.text
+    assert "Success updating forecast_hourly for station ABC" not in caplog.text
+    caplog.clear()
+
     instance.update_forecast_hourly.side_effect = None
 
     future_time = dt_util.utcnow() + timedelta(minutes=15)
     async_fire_time_changed(hass, future_time)
     await hass.async_block_till_done()
 
-    assert "Error updating forecast_hourly" in caplog.text
-    assert "Success updating forecast_hourly" in caplog.text
+    assert "Error updating forecast_hourly for station ABC" not in caplog.text
+    assert "Success updating forecast_hourly for station ABC" in caplog.text
