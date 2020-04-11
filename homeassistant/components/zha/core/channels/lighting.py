@@ -41,6 +41,18 @@ class ColorChannel(ZigbeeChannel):
         """Initialize ColorChannel."""
         super().__init__(cluster, ch_pool)
         self._color_capabilities = None
+        self._min_mireds = 153
+        self._max_mireds = 500
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this channel supports."""
+        return self._min_mireds
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this channel supports."""
+        return self._max_mireds
 
     def get_color_capabilities(self):
         """Return the color capabilities."""
@@ -59,9 +71,15 @@ class ColorChannel(ZigbeeChannel):
 
     async def fetch_color_capabilities(self, from_cache):
         """Get the color configuration."""
-        capabilities = await self.get_attribute_value(
-            "color_capabilities", from_cache=from_cache
-        )
+        attributes = [
+            "color_temp_physical_min",
+            "color_temp_physical_max",
+            "color_capabilities",
+        ]
+        results = await self.get_attributes(attributes, from_cache=from_cache)
+        capabilities = results.get("color_capabilities")
+        self._min_mireds = results.get("color_temp_physical_min", 153)
+        self._max_mireds = results.get("color_temp_physical_max", 500)
 
         if capabilities is None:
             # ZCL Version 4 devices don't support the color_capabilities

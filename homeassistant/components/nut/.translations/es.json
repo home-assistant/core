@@ -8,6 +8,19 @@
             "unknown": "Error inesperado"
         },
         "step": {
+            "resources": {
+                "data": {
+                    "resources": "Recursos"
+                },
+                "title": "Selecciona los recursos a monitorizar"
+            },
+            "ups": {
+                "data": {
+                    "alias": "Alias",
+                    "resources": "Recursos"
+                },
+                "title": "Selecciona el UPS a monitorizar"
+            },
             "user": {
                 "data": {
                     "alias": "Alias",

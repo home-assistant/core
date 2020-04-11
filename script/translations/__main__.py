@@ -1,20 +1,15 @@
 """Validate manifests."""
 import argparse
+import importlib
 from pathlib import Path
 import sys
 
-from . import clean, download, error, upload
+from . import error, util
 
 
 def get_arguments() -> argparse.Namespace:
     """Get parsed passed in arguments."""
-    parser = argparse.ArgumentParser(description="Home Assistant Scaffolder")
-    parser.add_argument("action", type=str, choices=["download", "clean", "upload"])
-    parser.add_argument("--debug", action="store_true", help="Enable log output")
-
-    arguments = parser.parse_args()
-
-    return arguments
+    return util.get_base_arg_parser().parse_known_args()[0]
 
 
 def main():
@@ -25,12 +20,8 @@ def main():
 
     args = get_arguments()
 
-    if args.action == "download":
-        download.run(args)
-    elif args.action == "upload":
-        upload.run(args)
-    elif args.action == "clean":
-        clean.run()
+    module = importlib.import_module(f".{args.action}", "script.translations")
+    module.run()
 
     return 0
 
@@ -42,3 +33,7 @@ if __name__ == "__main__":
         print()
         print(f"Fatal Error: {err.reason}")
         sys.exit(err.exit_code)
+    except (KeyboardInterrupt, EOFError):
+        print()
+        print("Aborted!")
+        sys.exit(2)

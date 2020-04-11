@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Coordonn\u00e9es d\u00e9j\u00e0 enregistr\u00e9es"
+        },
+        "error": {
+            "general_error": "Une erreur inconnue est survenue."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                }
+            }
+        }
+    }
+}
