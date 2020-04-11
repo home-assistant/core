@@ -75,7 +75,7 @@ class QSEntity(Entity):
         return self._name
 
     @property
-    def poll(self):
+    def should_poll(self):
         """QS sensors gets packets in update_packet."""
         return False
 
