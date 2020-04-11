@@ -5,9 +5,11 @@ from typing import Optional
 import aiopulse
 
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import LOGGER
+from .const import ACMEDA_HUB_UPDATE, LOGGER
 from .errors import CannotConnect
+from .helpers import update_devices
 
 
 class PulseHub:
@@ -17,8 +19,6 @@ class PulseHub:
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass
-        self.available = True
-        self.authorized = False
         self.api: Optional[aiopulse.Hub] = None
         self.parallel_updates_semaphore = None
         self.task = None
@@ -34,6 +34,7 @@ class PulseHub:
         hass = self.hass
 
         hub = aiopulse.Hub(host)
+        hub.callback_subscribe(self.async_notify_update)
 
         try:
             # Create a Hub object and verify connection.
@@ -67,7 +68,6 @@ class PulseHub:
 
         self.parallel_updates_semaphore = asyncio.Semaphore(10)
 
-        self.authorized = True
         LOGGER.debug("Hub setup complete")
         return True
 
@@ -91,6 +91,7 @@ class PulseHub:
         if self.api is None:
             return True
 
+        self.api.callback_unsubscribe(self.async_notify_update)
         await self.api.stop()
 
         # If setup was successful, we set api variable, forwarded entry and
@@ -108,8 +109,10 @@ class PulseHub:
         # None and True are OK
         return False not in results
 
-    async def async_update(self):
-        """Update the device with the latest data."""
-        LOGGER.error("updating hub")
-        await self.api.update()
-        LOGGER.error("update complete")
+    async def async_notify_update(self):
+        """Evaluate entities when hub reports that update has occurred."""
+        LOGGER.debug("Hub updated")
+
+        await update_devices(self.hass, self.config_entry, self.api.rollers)
+
+        async_dispatcher_send(self.hass, ACMEDA_HUB_UPDATE)

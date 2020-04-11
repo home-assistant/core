@@ -6,17 +6,11 @@ from homeassistant.helpers.entity_registry import async_get_registry as get_ent_
 from .const import DOMAIN
 
 
-async def remove_devices(hass, config_entry, api_ids, current):
+async def remove_devices(hass, config_entry, removed_items):
     """Get items that are removed from api."""
-    removed_items = []
 
-    for item_id in current:
-        if item_id in api_ids:
-            continue
-
+    for entity in removed_items:
         # Device is removed from Pulse, so we remove it from Home Assistant
-        entity = current[item_id]
-        removed_items.append(item_id)
         await entity.async_remove()
         ent_registry = await get_ent_reg(hass)
         if entity.entity_id in ent_registry.entities:
@@ -30,8 +24,20 @@ async def remove_devices(hass, config_entry, api_ids, current):
                 device.id, remove_config_entry_id=config_entry.entry_id
             )
 
-    for item_id in removed_items:
-        del current[item_id]
+
+async def update_devices(hass, config_entry, api):
+    """Tell hass that device info has been updated."""
+    dev_registry = await get_dev_reg(hass)
+
+    for api_item in api.values():
+        # Update Device name
+        device = dev_registry.async_get_device(
+            identifiers={(DOMAIN, api_item.id)}, connections=set()
+        )
+        if device is not None:
+            dev_registry.async_update_device(
+                device.id, name=api_item.name,
+            )
 
 
 def create_config_flow(hass, host):

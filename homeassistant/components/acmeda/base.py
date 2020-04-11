@@ -1,21 +1,34 @@
 """Base class for Acmeda Roller Blinds."""
-import logging
-
 import aiopulse
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, LOGGER
 
 
 class AcmedaBase:
     """Base representation of an Acmeda roller."""
 
-    def __init__(self, hass, roller: aiopulse.Roller, hub: aiopulse.Hub):
+    def __init__(self, hass, roller: aiopulse.Roller):
         """Initialize the roller."""
         self.hass = hass
         self.roller = roller
-        self.hub = hub
+
+    async def async_added_to_hass(self):
+        """Entity has been added to hass."""
+        self.roller.callback_subscribe(self.notify_update)
+
+    async def async_reset(self):
+        """Entity being removed from hass."""
+        self.roller.callback_unsubscribe(self.notify_update)
+
+    def notify_update(self):
+        """Tell HA that the device has been updated."""
+        LOGGER.debug("Device update notification received: %s", self.name)
+        self.schedule_update_ha_state()
+
+    @property
+    def should_poll(self):
+        """Report that Acmeda entities do not need polling."""
+        return False
 
     @property
     def unique_id(self):
@@ -36,8 +49,8 @@ class AcmedaBase:
     def device_info(self):
         """Return the device info."""
         return {
-            "identifiers": {(DOMAIN, self.device_id)},
+            "identifiers": {(DOMAIN, self.roller.id)},
             "name": self.roller.name,
             "manufacturer": "Rollease Acmeda",
-            "via_device": (DOMAIN, self.hub.api.id),
+            "via_device": (DOMAIN, self.roller.hub.id),
         }

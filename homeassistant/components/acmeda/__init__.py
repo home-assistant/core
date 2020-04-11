@@ -1,6 +1,5 @@
 """The Rollease Acmeda Automate integration."""
 import ipaddress
-import logging
 
 import voluptuous as vol
 
@@ -10,8 +9,6 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 from .hub import PulseHub
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_HUBS = "hubs"
 
@@ -86,13 +83,6 @@ async def async_setup_entry(
 ):
     """Set up Rollease Acmeda Automate hub from a config entry."""
     host = entry.data["host"]
-    config = hass.data[DATA_CONFIGS].get(host)
-
-    if config is None:
-        pass
-    else:
-        pass
-
     hub = PulseHub(hass, entry)
 
     if not await hub.async_setup():
