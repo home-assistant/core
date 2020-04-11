@@ -184,8 +184,12 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanel, RestoreEntity):
         attrs[ATTR_CHANGED_BY_KEYPAD] = self._changed_by_keypad
         attrs[ATTR_CHANGED_BY_TIME] = self._changed_by_time
         attrs[ATTR_CHANGED_BY_ID] = self._changed_by_id
-        attrs[ATTR_CHANGED_BY] = self._changed_by
         return attrs
+
+    @property
+    def changed_by(self):
+        """Last change triggered by."""
+        return self._changed_by
 
     def _element_changed(self, element, changeset):
         elk_state_to_hass_state = {
