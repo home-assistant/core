@@ -6,6 +6,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
     UNIT_PERCENTAGE,
+    UNIT_VOLT,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.helpers.entity import Entity
@@ -25,7 +26,7 @@ SENSOR_TYPES = {
         "active_power",
     ],
     "current": ["Current", "mdi:gauge", "local", "A", "current"],
-    "voltage": ["Voltage", "mdi:gauge", "local", "V", "voltage"],
+    "voltage": ["Voltage", "mdi:gauge", "local", UNIT_VOLT, "voltage"],
     "active_cosfi": [
         "Power Factor",
         "mdi:gauge",
