@@ -37,6 +37,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
+        """Initialize the Panasonic Viera config flow."""
         self._data = {
             CONF_HOST: None,
             CONF_NAME: None,
@@ -118,7 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._errors = {"base": ERROR_NOT_CONNECTED}
             return await self.async_step_user()
         except Exception as err:
-            _LOGGER.error("An unknown error occured: %s", err)
+            _LOGGER.error("An unknown error occurred: %s", err)
             self._errors = {"base": ERROR_UNKNOWN}
             return await self.async_step_user()
 
@@ -165,6 +166,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._remote.request_pin_code(name="Home Assistant")
         return self.async_show_form(
             step_id="pairing",
-            data_schema=vol.Schema({vol.Required(CONF_PIN): str,}),
+            data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
             errors=self._errors,
+            description_placeholders={"name": self._data[CONF_NAME]},
         )

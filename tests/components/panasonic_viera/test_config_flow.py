@@ -2,14 +2,10 @@
 from unittest.mock import Mock
 
 from asynctest import patch
-from panasonic_viera import (
-    TV_TYPE_ENCRYPTED,
-    TV_TYPE_NONENCRYPTED,
-    RemoteControl,
-    SOAPError,
-)
+from panasonic_viera import TV_TYPE_ENCRYPTED, TV_TYPE_NONENCRYPTED, SOAPError
+import pytest
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.panasonic_viera.const import (
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
@@ -26,9 +22,20 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(name="panasonic_viera_setup", autouse=True)
+def panasonic_viera_setup_fixture():
+    """Mock panasonic_viera setup."""
+    with patch(
+        "homeassistant.components.panasonic_viera.async_setup", return_value=True
+    ), patch(
+        "homeassistant.components.panasonic_viera.async_setup_entry", return_value=True,
+    ):
+        yield
+
+
 def get_mock_remote(
     host="1.2.3.4",
-    fail_authorize_connection=False,
+    authorize_error=None,
     encrypted=False,
     app_id=None,
     encryption_key=None,
@@ -49,10 +56,8 @@ def get_mock_remote(
         if pincode == "1234":
             return
 
-        if fail_authorize_connection:
-            raise TimeoutError
-        else:
-            raise SOAPError
+        if authorize_error is not None:
+            raise authorize_error
 
     mock_remote.authorize_pin_code = authorize_pin_code
 
@@ -60,6 +65,8 @@ def get_mock_remote(
 
 
 async def test_flow_non_encrypted(hass):
+    """Test flow without encryption."""
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -231,10 +238,6 @@ async def test_flow_non_encrypted(hass):
     with patch(
         "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
         return_value=mock_remote,
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup", return_value=True
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup_entry", return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
@@ -293,6 +296,8 @@ async def test_imported_flow_encrypted_valid_pin_code(hass):
 
 
 async def test_flow_encrypted_valid_pin_code(hass):
+    """Test flow with encryption and valid PIN code."""
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -307,10 +312,6 @@ async def test_flow_encrypted_valid_pin_code(hass):
     with patch(
         "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
         return_value=mock_remote,
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup", return_value=True,
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup_entry", return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
@@ -336,6 +337,8 @@ async def test_flow_encrypted_valid_pin_code(hass):
 
 
 async def test_flow_encrypted_invalid_pin_code(hass):
+    """Test flow with encryption and invalid PIN code."""
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -343,15 +346,11 @@ async def test_flow_encrypted_invalid_pin_code(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
 
-    mock_remote = get_mock_remote(encrypted=True)
+    mock_remote = get_mock_remote(encrypted=True, authorize_error=SOAPError)
 
     with patch(
         "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
         return_value=mock_remote,
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup", return_value=True,
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup_entry", return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
@@ -373,7 +372,9 @@ async def test_flow_encrypted_invalid_pin_code(hass):
     assert result["errors"] == {"base": ERROR_INVALID_PIN_CODE}
 
 
-async def test_flow_encrypted_invalid_pin_code_not_connected(hass):
+async def test_flow_encrypted_pin_code_not_connected(hass):
+    """Test flow with encryption and PIN code connection error."""
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -381,15 +382,11 @@ async def test_flow_encrypted_invalid_pin_code_not_connected(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
 
-    mock_remote = get_mock_remote(encrypted=True, fail_authorize_connection=True)
+    mock_remote = get_mock_remote(encrypted=True, authorize_error=TimeoutError)
 
     with patch(
         "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
         return_value=mock_remote,
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup", return_value=True,
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup_entry", return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
@@ -407,7 +404,41 @@ async def test_flow_encrypted_invalid_pin_code_not_connected(hass):
     assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
 
 
-async def test_flow_encrypted_not_connected(hass):
+async def test_flow_encrypted_pin_code_unknown(hass):
+    """Test flow with encryption and PIN code unknown error."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    mock_remote = get_mock_remote(encrypted=True, authorize_error=Exception)
+
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        return_value=mock_remote,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "pairing"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PIN: "0000"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": ERROR_UNKNOWN}
+
+
+async def test_flow_not_connected(hass):
+    """Test flow with connection error."""
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -418,10 +449,6 @@ async def test_flow_encrypted_not_connected(hass):
     with patch(
         "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
         side_effect=TimeoutError,
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup", return_value=True
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup_entry", return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
@@ -432,7 +459,51 @@ async def test_flow_encrypted_not_connected(hass):
     assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
 
 
+async def test_flow_unknwon(hass):
+    """Test flow with unknown error."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": ERROR_UNKNOWN}
+
+
+async def test_flow_already_configured_non_encrypted(hass):
+    """Test flow without encryption and existing config entry."""
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1.2.3.4",
+        data={CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME, CONF_PORT: DEFAULT_PORT},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
 async def test_flow_already_configured_encrypted(hass):
+    """Test flow with encryption and existing config entry."""
+
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="1.2.3.4",
@@ -455,33 +526,14 @@ async def test_flow_already_configured_encrypted(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_flow_already_configured_non_encrypted(hass):
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="1.2.3.4",
-        data={CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME, CONF_PORT: DEFAULT_PORT},
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-
-
 async def test_imported_flow_non_encrypted(hass):
+    """Test imported flow without encryption."""
+
     mock_remote = get_mock_remote(encrypted=False)
 
     with patch(
         "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
         return_value=mock_remote,
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup", return_value=True
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup_entry", return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -505,6 +557,8 @@ async def test_imported_flow_non_encrypted(hass):
 
 
 async def test_imported_flow_encrypted_valid_pin_code(hass):
+    """Test imported flow with encryption and valid PIN code."""
+
     mock_remote = get_mock_remote(
         encrypted=True, app_id="test-app-id", encryption_key="test-encryption-key",
     )
@@ -512,10 +566,6 @@ async def test_imported_flow_encrypted_valid_pin_code(hass):
     with patch(
         "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
         return_value=mock_remote,
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup", return_value=True,
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup_entry", return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -621,15 +671,13 @@ async def test_imported_flow_encrypted_pin_code_not_connected(hass):
 
 
 async def test_imported_flow_encrypted_invalid_pin_code(hass):
-    mock_remote = get_mock_remote(encrypted=True)
+    """Test imported flow with encryption and invalid PIN code."""
+
+    mock_remote = get_mock_remote(encrypted=True, authorize_error=SOAPError)
 
     with patch(
         "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
         return_value=mock_remote,
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup", return_value=True,
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup_entry", return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -808,16 +856,14 @@ async def test_imported_flow_already_configured_encrypted(hass):
 =======
 
 
-async def test_imported_flow_encrypted_invalid_pin_code_not_connected(hass):
-    mock_remote = get_mock_remote(encrypted=True, fail_authorize_connection=True)
+async def test_imported_flow_encrypted_pin_code_not_connected(hass):
+    """Test imported flow with encryption and PIN code connection error."""
+
+    mock_remote = get_mock_remote(encrypted=True, authorize_error=TimeoutError)
 
     with patch(
         "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
         return_value=mock_remote,
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup", return_value=True,
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup_entry", return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -842,14 +888,44 @@ async def test_imported_flow_encrypted_invalid_pin_code_not_connected(hass):
     assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
 
 
+async def test_imported_flow_encrypted_pin_code_unknown(hass):
+    """Test imported flow with encryption and PIN code unknown error."""
+
+    mock_remote = get_mock_remote(encrypted=True, authorize_error=Exception)
+
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        return_value=mock_remote,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_HOST: "1.2.3.4",
+                CONF_NAME: DEFAULT_NAME,
+                CONF_PORT: DEFAULT_PORT,
+                CONF_ON_ACTION: "test-on-action",
+            },
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "pairing"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PIN: "0000"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": ERROR_UNKNOWN}
+
+
 async def test_imported_flow_not_connected(hass):
+    """Test imported flow with connection error."""
+
     with patch(
         "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
         side_effect=TimeoutError,
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup", return_value=True
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup_entry", return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -867,7 +943,32 @@ async def test_imported_flow_not_connected(hass):
     assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
 
 
-async def test_imported_flow_already_configured_encrypted(hass):
+async def test_imported_flow_unknown(hass):
+    """Test imported flow with unknown error."""
+
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_HOST: "1.2.3.4",
+                CONF_NAME: DEFAULT_NAME,
+                CONF_PORT: DEFAULT_PORT,
+                CONF_ON_ACTION: "test-on-action",
+            },
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": ERROR_UNKNOWN}
+
+
+async def test_imported_flow_already_configured_non_encrypted(hass):
+    """Test imported flow without encryption and existing config entry."""
+
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="1.2.3.4",
@@ -876,8 +977,6 @@ async def test_imported_flow_already_configured_encrypted(hass):
             CONF_NAME: DEFAULT_NAME,
             CONF_PORT: DEFAULT_PORT,
             CONF_ON_ACTION: "test-on-action",
-            CONF_APP_ID: "test-app-id",
-            CONF_ENCRYPTION_KEY: "test-encryption-key",
         },
     ).add_to_hass(hass)
 
@@ -891,7 +990,9 @@ async def test_imported_flow_already_configured_encrypted(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_imported_flow_already_configured_non_encrypted(hass):
+async def test_imported_flow_already_configured_encrypted(hass):
+    """Test imported flow with encryption and existing config entry."""
+
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="1.2.3.4",
@@ -900,6 +1001,8 @@ async def test_imported_flow_already_configured_non_encrypted(hass):
             CONF_NAME: DEFAULT_NAME,
             CONF_PORT: DEFAULT_PORT,
             CONF_ON_ACTION: "test-on-action",
+            CONF_APP_ID: "test-app-id",
+            CONF_ENCRYPTION_KEY: "test-encryption-key",
         },
     ).add_to_hass(hass)
 

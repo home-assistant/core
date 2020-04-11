@@ -20,24 +20,10 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_BROADCAST_ADDRESS,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
 from homeassistant.helpers.script import Script
 
-from .const import (
-    CONF_APP_ID,
-    CONF_ENCRYPTION_KEY,
-    CONF_ON_ACTION,
-    DEVICE_MANUFACTURER,
-    DOMAIN,
-)
+from .const import CONF_APP_ID, CONF_ENCRYPTION_KEY, CONF_ON_ACTION
 
 SUPPORT_VIERATV = (
     SUPPORT_PAUSE
@@ -203,9 +189,12 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
 
 
 class Remote:
+    """The Remote class. It stores the TV properties and the remote control connection itself."""
+
     def __init__(
         self, hass, host, port, app_id=None, encryption_key=None,
     ):
+        """Initialize the Remote class."""
         self._hass = hass
         self._host = host
         self._port = port
@@ -220,6 +209,7 @@ class Remote:
         self._control = None
 
     async def async_create_remote_control(self, during_setup=False):
+        """Create remote control."""
         control_existed = self._control is not None
         try:
             params = {}
@@ -235,12 +225,12 @@ class Remote:
         except (TimeoutError, URLError, OSError) as err:
             if control_existed or during_setup:
                 _LOGGER.error("Could not establish remote connection: %s", err)
-                self._remote = None
+                self._control = None
                 self._state = STATE_OFF
         except Exception as err:
             if control_existed or during_setup:
-                _LOGGER.error("An unknown error occured: %s", err)
-                self._remote = None
+                _LOGGER.error("An unknown error occurred: %s", err)
+                self._control = None
                 self._state = STATE_OFF
 
     async def async_update(self):
@@ -270,6 +260,7 @@ class Remote:
                 await self.async_create_remote_control()
 
     async def async_set_mute(self, enable):
+        """Set mute based on 'enable'."""
         if self._control:
             try:
                 self._control.set_mute(enable)
