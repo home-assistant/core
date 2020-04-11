@@ -8,6 +8,19 @@
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
+            "resources": {
+                "data": {
+                    "resources": "\u8cc7\u6e90"
+                },
+                "title": "\u9078\u64c7\u6240\u8981\u76e3\u8996\u7684\u8cc7\u6e90"
+            },
+            "ups": {
+                "data": {
+                    "alias": "\u5225\u540d",
+                    "resources": "\u8cc7\u6e90"
+                },
+                "title": "\u9078\u64c7\u6240\u8981\u76e3\u8996\u7684 UPS"
+            },
             "user": {
                 "data": {
                     "alias": "\u5225\u540d",
@@ -30,7 +43,7 @@
                 "data": {
                     "resources": "\u8cc7\u6e90"
                 },
-                "description": "\u9078\u64c7\u50b3\u611f\u5668\u8cc7\u6e90"
+                "description": "\u9078\u64c7\u50b3\u611f\u5668\u8cc7\u6e90\u3002"
             }
         }
     }

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "step": {
+            "resources": {
+                "data": {
+                    "resources": "Ressources"
+                },
+                "title": "Choisissez les ressources \u00e0 surveiller"
+            },
+            "ups": {
+                "data": {
+                    "alias": "Alias",
+                    "resources": "Ressources"
+                },
+                "title": "Choisir l'UPS \u00e0 surveiller"
+            }
+        }
+    }
+}
