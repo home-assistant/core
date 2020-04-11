@@ -3,6 +3,7 @@ from homeassistant.components import mysensors
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
+    ELECTRICAL_VOLTAGE_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     MASS_KILOGRAMS,
     POWER_WATT,
@@ -44,7 +45,7 @@ SENSORS = {
     "V_ORP": ["mV", None],
     "V_EC": ["μS/cm", None],
     "V_VAR": ["var", None],
-    "V_VA": ["VA", None],
+    "V_VA": [ELECTRICAL_VOLTAGE_AMPERE, None],
 }
 
 
