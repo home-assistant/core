@@ -68,7 +68,6 @@ async def async_setup(hass, config):
         return True
     for index, conf in enumerate(config[DOMAIN]):
         _LOGGER.debug("Importing Roomba #%d - %s", index, conf[CONF_HOST])
-        if current_config_entry:
             hass.config_entries.async_update_entry(current_config_entry, data=conf)
         hass.async_create_task(
             hass.config_entries.flow.async_init(
