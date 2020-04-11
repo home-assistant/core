@@ -27,6 +27,7 @@ ATTR_PARAMSET = "paramset"
 ATTR_DISCOVERY_TYPE = "discovery_type"
 ATTR_LOW_BAT = "LOW_BAT"
 ATTR_LOWBAT = "LOWBAT"
+ATTR_DUTY_CYCLE = "DutyCycle"
 
 EVENT_KEYPRESS = "homematic.keypress"
 EVENT_IMPULSE = "homematic.impulse"

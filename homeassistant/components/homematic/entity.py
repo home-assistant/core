@@ -13,6 +13,7 @@ from .const import (
     ATTR_INTERFACE,
     ATTR_PARAM,
     ATTR_UNIQUE_ID,
+    ATTR_DUTY_CYCLE,
     DATA_HOMEMATIC,
     DOMAIN,
     HM_ATTRIBUTE_SUPPORT,
@@ -23,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL_HUB = timedelta(seconds=300)
 SCAN_INTERVAL_VARIABLES = timedelta(seconds=30)
 SCAN_INTERVAL_DUTY_CYCLE = timedelta(seconds=90)
+BIDCOS_ATTR_DUTY_CYCLE = "DUTY_CYCLE"
 
 
 class HMDevice(Entity):
@@ -242,7 +244,7 @@ class HMHub(Entity):
         """Return the state attributes."""
         attr = self._variables.copy()
         if self._duty_cycle is not None:
-            attr["DutyCycle"] = self._duty_cycle
+            attr[ATTR_DUTY_CYCLE] = self._duty_cycle
         return attr
 
     @property
@@ -279,28 +281,21 @@ class HMHub(Entity):
 
     def _update_duty_cycle(self, now):
         """Retrieve duty cycle."""
-        if "DutyCycle" in self._variables:
+        if ATTR_DUTY_CYCLE in self._variables:
             # e.g. RaspberryMatic already sets DutyCycle system variable
             self._duty_cycle = None
             return
         bidcos_interfaces = self._homematic.listBidcosInterfaces(self._name)
-        if bidcos_interfaces is None:
-            return
-        _LOGGER.debug("bidcos_interfaces: %s", bidcos_interfaces)
-        if len(bidcos_interfaces) == 0:
-            return
-        if len(bidcos_interfaces) > 1:
-            _LOGGER.warning(
-                "Found more than one bidcos interface - cannot retrieve duty cycle."
-            )
+        if bidcos_interfaces is None or len(bidcos_interfaces) != 1:
+            # Found none or more than one bidcos interface.
+            # Cannot retrieve duty cycle.
             return
         bidcos_interface = bidcos_interfaces[0]
-        if "DUTY_CYCLE" not in bidcos_interface:
-            _LOGGER.warning("DUTY_CYCLE not found in %s.", bidcos_interface)
+        if BIDCOS_ATTR_DUTY_CYCLE not in bidcos_interface:
+            # DutyCycle attribute not supported
             return
-        duty_cycle = bidcos_interface["DUTY_CYCLE"]
+        duty_cycle = bidcos_interface[BIDCOS_ATTR_DUTY_CYCLE]
         if self._duty_cycle != duty_cycle:
-            _LOGGER.info("Retrieved new DutyCycle: %d", duty_cycle)
             self._duty_cycle = duty_cycle
             self.schedule_update_ha_state()
 
