@@ -1,7 +1,7 @@
 """Sensor for checking the battery level of Roomba."""
 import logging
 
-from homeassistant.const import DEVICE_CLASS_BATTERY
+from homeassistant.const import DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 
 from . import roomba_reported_state
