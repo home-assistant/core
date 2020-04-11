@@ -295,7 +295,12 @@ def mock_aiohttp_client():
 
 
 class MockLongPollSideEffect:
-    """Imitate a long_poll request. Once created, actual responses are queued and if queue is empty, will await until done."""
+    """Imitate a long_poll request.
+
+    It should be created and used as a side effect for a GET/PUT/etc. request.
+    Once created, actual responses are queued with queue_response
+    If queue is empty, will await until done.
+    """
 
     def __init__(self):
         """Initialize the queue."""
