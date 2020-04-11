@@ -165,3 +165,64 @@ async def test_switch_device(hass, aioclient_mock, qs_devices):
     ) in aioclient_mock.mock_calls
 
     listen_mock.stop()
+
+
+async def test_light_device(hass, aioclient_mock, qs_devices):
+    """Test a light device."""
+
+    async def get_devices_json(method, url, data):
+        return AiohttpClientMockResponse(method=method, url=url, json=qs_devices)
+
+    config = {"qwikswitch": {}}
+    aioclient_mock.get("http://127.0.0.1:2020/&device", side_effect=get_devices_json)
+    listen_mock = MockLongPollSideEffect()
+    aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
+    await async_setup_component(hass, QWIKSWITCH, config)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    state_obj = hass.states.get("light.dim_3")
+    assert state_obj.state == "on"
+    assert state_obj.attributes["brightness"] == 255
+
+    aioclient_mock.mock_calls.clear()
+    aioclient_mock.get("http://127.0.0.1:2020/@a00003=0")
+    await hass.services.async_call(
+        "light", "turn_off", {"entity_id": "light.dim_3"}, blocking=True
+    )
+    await asyncio.sleep(0.01)
+    assert (
+        "GET",
+        URL("http://127.0.0.1:2020/@a00003=0"),
+        None,
+        None,
+    ) in aioclient_mock.mock_calls
+
+    qs_devices[2]["val"] = "280c55"  # half dimmed
+    listen_mock.queue_response(json={"id": "@a00003", "cmd": ""},)
+    await asyncio.sleep(0.01)
+    await hass.async_block_till_done()
+    state_obj = hass.states.get("light.dim_3")
+    assert state_obj.state == "on"
+    assert 16 < state_obj.attributes["brightness"] < 240
+
+    qs_devices[2]["val"] = "280c78"  # off
+    listen_mock.queue_response(json={"id": "@a00003", "cmd": ""},)
+    await asyncio.sleep(0.01)
+    await hass.async_block_till_done()
+    state_obj = hass.states.get("light.dim_3")
+    assert state_obj.state == "off"
+
+    aioclient_mock.mock_calls.clear()
+    aioclient_mock.get("http://127.0.0.1:2020/@a00003=100")
+    await hass.services.async_call(
+        "light", "turn_on", {"entity_id": "light.dim_3"}, blocking=True
+    )
+    assert (
+        "GET",
+        URL("http://127.0.0.1:2020/@a00003=100"),
+        None,
+        None,
+    ) in aioclient_mock.mock_calls
+
+    listen_mock.stop()
