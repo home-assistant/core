@@ -192,9 +192,7 @@ async def async_setup(hass, config):
                     hass.data[DATA_DEVICE_REGISTER][event_type](event)
                 )
             else:
-                _LOGGER.debug(
-                    "entity_id %s not known and automatic add disabled", event_id
-                )
+                _LOGGER.debug("entity_id %s not known and automatic add disabled", event_id)
 
     # When connecting to tcp host instead of serial port (optional)
     host = config[DOMAIN].get(CONF_HOST)
