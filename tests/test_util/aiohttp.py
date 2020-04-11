@@ -323,7 +323,7 @@ class MockLongPollSideEffect:
 
     def stop(self):
         """Stop the current request and future ones.
-        
+
         This avoids an exception if there is someone waiting when exiting test.
         """
         self.stopping = True
