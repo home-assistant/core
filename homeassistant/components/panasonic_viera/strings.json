@@ -12,7 +12,7 @@
       },
       "pairing": {
         "title": "Pair your TV",
-        "description": "Type the PIN code displayed on your {tv_name}",
+        "description": "Type the PIN code displayed on your Panasonic Viera TV",
         "data": {
           "pin": "PIN code"
         }

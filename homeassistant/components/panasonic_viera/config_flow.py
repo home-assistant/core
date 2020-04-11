@@ -1,7 +1,5 @@
 """Config flow for Panasonic Viera TV integration."""
-from functools import partial
 import logging
-from urllib.request import URLError
 
 from panasonic_viera import (
     TV_TYPE_ENCRYPTED,
@@ -9,7 +7,11 @@ from panasonic_viera import (
     RemoteControl,
     SOAPError,
 )
+from urllib.request import URLError
+
 import voluptuous as vol
+
+from functools import partial
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
@@ -66,7 +68,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Invalid PIN code: %s", err)
                 self._errors = {"base": ERROR_INVALID_PIN_CODE}
                 return await self.async_step_user(self._data)
-            except (URLError, TimeoutError) as err:
+            except (TimeoutError, URLError, OSError) as err:
                 _LOGGER.error("Could not establish remote connection: %s", err)
                 self._errors = {"base": ERROR_NOT_CONNECTED}
                 return await self.async_step_user()
@@ -113,12 +115,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._remote = await self.hass.async_add_executor_job(
                 partial(RemoteControl, self._data[CONF_HOST], self._data[CONF_PORT])
             )
-        except (URLError, TimeoutError) as err:
+        except (TimeoutError, URLError, OSError) as err:
             _LOGGER.error("Could not establish remote connection: %s", err)
             self._errors = {"base": ERROR_NOT_CONNECTED}
             return await self.async_step_user()
         except Exception as err:
-            _LOGGER.error("Unknown error: %s", err)
+            _LOGGER.error("An unknown error occured: %s", err)
             self._errors = {"base": ERROR_UNKNOWN}
             return await self.async_step_user()
 
@@ -130,26 +132,41 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
     @callback
-    def _show_user_form(self, errors=None):
+    def _show_user_form(self):
         """Show the initial form to the user."""
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+                    vol.Required(
+                        CONF_HOST,
+                        default=self._data[CONF_HOST]
+                        if self._data[CONF_HOST] is not None
+                        else "",
+                    ): str,
+                    vol.Optional(
+                        CONF_NAME,
+                        default=self._data[CONF_NAME]
+                        if self._data[CONF_NAME] is not None
+                        else DEFAULT_NAME,
+                    ): str,
                 }
             ),
             errors=self._errors,
         )
 
     @callback
-    def _show_pair_form(self, errors=None):
+    def _show_pair_form(self):
         """Show the pairing form to the user."""
-        self._remote.request_pin_code()
+        if self._errors is not None and self._errors["base"] in [
+            ERROR_NOT_CONNECTED,
+            ERROR_UNKNOWN,
+        ]:
+            self._errors = None
+
+        self._remote.request_pin_code(name="Home Assistant")
         return self.async_show_form(
             step_id="pairing",
             data_schema=vol.Schema({vol.Required(CONF_PIN): str,}),
             errors=self._errors,
-            description_placeholders={"tv_name": self._data[CONF_NAME],},
         )

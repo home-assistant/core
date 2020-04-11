@@ -3,9 +3,6 @@ DOMAIN = "panasonic_viera"
 
 DEVICE_MANUFACTURER = "Panasonic"
 
-TV_TYPE_NONENCRYPTED = 0
-TV_TYPE_ENCRYPTED = 1
-
 CONF_ON_ACTION = "turn_on_action"
 CONF_APP_ID = "app_id"
 CONF_ENCRYPTION_KEY = "encryption_key"
