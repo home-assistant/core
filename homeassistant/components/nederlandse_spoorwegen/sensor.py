@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import logging
 
 import ns_api
+from ns_api import RequestParametersError
 import requests
 import voluptuous as vol
 
@@ -56,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ) as error:
         _LOGGER.error("Could not connect to the internet: %s", error)
         return
-    except requests.exceptions.RequestParametersError as error:
+    except RequestParametersError as error:
         _LOGGER.error("Could not fetch stations, please check configuration: %s", error)
         return
     except Exception as error:
