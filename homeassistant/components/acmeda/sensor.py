@@ -4,7 +4,6 @@ import asyncio
 import aiopulse
 
 from homeassistant.const import (
-    ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     DEVICE_CLASS_BATTERY,
     UNIT_PERCENTAGE,
@@ -91,14 +90,10 @@ class AcmedaBattery(AcmedaBase, entity.Entity):
             attr.update(super_attr)
 
         attr[ATTR_BATTERY_LEVEL] = self.roller.battery
-        attr[ATTR_BATTERY_CHARGING] = False
 
         return attr
 
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        charging = False
-        return icon_for_battery_level(
-            battery_level=self.roller.battery, charging=charging
-        )
+        return icon_for_battery_level(battery_level=self.roller.battery)

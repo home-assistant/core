@@ -21,7 +21,7 @@ class PulseHub:
         self.hass = hass
         self.api: Optional[aiopulse.Hub] = None
         self.parallel_updates_semaphore = None
-        self.task = None
+        self.tasks = []
 
     @property
     def host(self):
@@ -40,7 +40,7 @@ class PulseHub:
             # Create a Hub object and verify connection.
             try:
                 # self.task = hass.async_create_task(hub.run())
-                self.task = asyncio.create_task(hub.run())
+                self.tasks.append(asyncio.create_task(hub.run()))
                 LOGGER.debug("Hub running")
             except (aiopulse.InvalidResponseException):
                 raise CannotConnect
@@ -58,12 +58,20 @@ class PulseHub:
 
         self.api = hub
 
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(self.config_entry, "cover")
+        self.tasks.append(
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(
+                    self.config_entry, "cover"
+                )
+            )
         )
 
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(self.config_entry, "sensor")
+        self.tasks.append(
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(
+                    self.config_entry, "sensor"
+                )
+            )
         )
 
         self.parallel_updates_semaphore = asyncio.Semaphore(10)
@@ -94,14 +102,15 @@ class PulseHub:
         self.api.callback_unsubscribe(self.async_notify_update)
         await self.api.stop()
 
+        # wait for any running tasks to complete
+        await asyncio.wait(self.tasks)
+
         # If setup was successful, we set api variable, forwarded entry and
         # register service
         results = await asyncio.gather(
             self.hass.config_entries.async_forward_entry_unload(
                 self.config_entry, "cover"
             ),
-        )
-        results = await asyncio.gather(
             self.hass.config_entries.async_forward_entry_unload(
                 self.config_entry, "sensor"
             ),
