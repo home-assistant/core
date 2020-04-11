@@ -12,8 +12,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, _, add_entities, discovery_info=None):
     """Add sensor from the main Qwikswitch component."""
-    if discovery_info is None:
-        return
+    # will not be called if no info
+    assert discovery_info
 
     qsusb = hass.data[QWIKSWITCH]
     _LOGGER.debug("Setup qwikswitch.sensor %s, %s", qsusb, discovery_info)

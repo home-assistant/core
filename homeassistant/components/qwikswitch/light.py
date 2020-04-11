@@ -6,8 +6,8 @@ from . import DOMAIN as QWIKSWITCH, QSToggleEntity
 
 async def async_setup_platform(hass, _, add_entities, discovery_info=None):
     """Add lights from the main Qwikswitch component."""
-    if discovery_info is None:
-        return
+    # will not be called if no info
+    assert discovery_info
 
     qsusb = hass.data[QWIKSWITCH]
     devs = [QSLight(qsid, qsusb) for qsid in discovery_info[QWIKSWITCH]]
