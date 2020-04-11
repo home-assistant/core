@@ -132,14 +132,19 @@ class IPPEntity(Entity):
         name: str,
         icon: str,
         enabled_default: bool = True,
+        entry_unique_id: str = None,
     ) -> None:
         """Initialize the IPP entity."""
         self._enabled_default = enabled_default
         self._entry_id = entry_id
+        aelf._entry_unique_id = entry_unique_id
+        self._device_id = None
         self._icon = icon
         self._name = name
         self._unsub_dispatcher = None
         self.coordinator = coordinator
+
+        
 
     @property
     def name(self) -> str:
@@ -179,8 +184,11 @@ class IPPEntity(Entity):
     @property
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this IPP device."""
+        if self._device_id is None:
+            return None
+
         return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.data.info.uuid)},
+            ATTR_IDENTIFIERS: {(DOMAIN, self._device_id)},
             ATTR_NAME: self.coordinator.data.info.name,
             ATTR_MANUFACTURER: self.coordinator.data.info.manufacturer,
             ATTR_MODEL: self.coordinator.data.info.model,
