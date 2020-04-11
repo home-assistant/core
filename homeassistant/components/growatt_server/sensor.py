@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
     UNIT_VOLT,
 )
 import homeassistant.helpers.config_validation as cv
@@ -35,14 +36,14 @@ TOTAL_SENSOR_TYPES = {
         "todayEnergy",
         "power",
     ),
-    "total_output_power": ("Output Power", "W", "invTodayPpv", "power"),
+    "total_output_power": ("Output Power", POWER_WATT, "invTodayPpv", "power"),
     "total_energy_output": (
         "Lifetime energy output",
         ENERGY_KILO_WATT_HOUR,
         "totalEnergy",
         "power",
     ),
-    "total_maximum_output": ("Maximum power", "W", "nominalPower", "power"),
+    "total_maximum_output": ("Maximum power", POWER_WATT, "nominalPower", "power"),
 }
 
 INVERTER_SENSOR_TYPES = {
@@ -60,19 +61,24 @@ INVERTER_SENSOR_TYPES = {
     ),
     "inverter_voltage_input_1": ("Input 1 voltage", UNIT_VOLT, "vpv1", None),
     "inverter_amperage_input_1": ("Input 1 Amperage", "A", "ipv1", None),
-    "inverter_wattage_input_1": ("Input 1 Wattage", "W", "ppv1", "power"),
+    "inverter_wattage_input_1": ("Input 1 Wattage", POWER_WATT, "ppv1", "power"),
     "inverter_voltage_input_2": ("Input 2 voltage", UNIT_VOLT, "vpv2", None),
     "inverter_amperage_input_2": ("Input 2 Amperage", "A", "ipv2", None),
-    "inverter_wattage_input_2": ("Input 2 Wattage", "W", "ppv2", "power"),
+    "inverter_wattage_input_2": ("Input 2 Wattage", POWER_WATT, "ppv2", "power"),
     "inverter_voltage_input_3": ("Input 3 voltage", UNIT_VOLT, "vpv3", None),
     "inverter_amperage_input_3": ("Input 3 Amperage", "A", "ipv3", None),
-    "inverter_wattage_input_3": ("Input 3 Wattage", "W", "ppv3", "power"),
-    "inverter_internal_wattage": ("Internal wattage", "W", "ppv", "power"),
+    "inverter_wattage_input_3": ("Input 3 Wattage", POWER_WATT, "ppv3", "power"),
+    "inverter_internal_wattage": ("Internal wattage", POWER_WATT, "ppv", "power"),
     "inverter_reactive_voltage": ("Reactive voltage", UNIT_VOLT, "vacr", None),
     "inverter_inverter_reactive_amperage": ("Reactive amperage", "A", "iacr", None),
     "inverter_frequency": ("AC frequency", "Hz", "fac", None),
-    "inverter_current_wattage": ("Output power", "W", "pac", "power"),
-    "inverter_current_reactive_wattage": ("Reactive wattage", "W", "pacr", "power"),
+    "inverter_current_wattage": ("Output power", POWER_WATT, "pac", "power"),
+    "inverter_current_reactive_wattage": (
+        "Reactive wattage",
+        POWER_WATT,
+        "pacr",
+        "power",
+    ),
 }
 
 SENSOR_TYPES = {**TOTAL_SENSOR_TYPES, **INVERTER_SENSOR_TYPES}
