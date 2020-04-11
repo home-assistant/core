@@ -2,7 +2,7 @@
   "domain": "vizio",
   "name": "VIZIO SmartCast",
   "documentation": "https://www.home-assistant.io/integrations/vizio",
-  "requirements": ["pyvizio==0.1.46"],
+  "requirements": ["pyvizio==0.1.47"],
   "codeowners": ["@raman325"],
   "config_flow": true,
   "zeroconf": ["_viziocast._tcp.local."],
