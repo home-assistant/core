@@ -60,16 +60,9 @@ class AzureDevOpsFlowHandler(ConfigFlow):
                 creds=BasicAuthentication("", user_input.get(CONF_PAT)),
             )
 
-        try:
-            core_client = connection.clients.get_core_client()
-            core_client.get_project(user_input.get(CONF_PROJECT))
-        except AzureDevOpsServiceError as exception:
-            _LOGGER.warning(exception)
-            errors["base"] = "authorization_error"
-            return await self._show_setup_form(errors)
-        except ClientRequestError as exception:
-            _LOGGER.warning(exception)
-            errors["base"] = "connection_error"
+        error = await self._test_connection(connection, user_input.get(CONF_PROJECT))
+        if error is not None:
+            errors["base"] = error
             return await self._show_setup_form(errors)
 
         return self.async_create_entry(
@@ -80,3 +73,15 @@ class AzureDevOpsFlowHandler(ConfigFlow):
                 CONF_PAT: user_input.get(CONF_PAT),
             },
         )
+
+    async def _test_connection(self, connection, project: str) -> str:
+        try:
+            core_client = connection.clients.get_core_client()
+            core_client.get_project(project)
+        except AzureDevOpsServiceError as exception:
+            _LOGGER.warning(exception)
+            return "authorization_error"
+        except ClientRequestError as exception:
+            _LOGGER.warning(exception)
+            return "connection_error"
+        return None
