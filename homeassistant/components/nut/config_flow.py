@@ -30,7 +30,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 SENSOR_DICT = {
-    sensor_id: SENSOR_TYPES[sensor_id][SENSOR_NAME] for sensor_id in SENSOR_TYPES
+    sensor_id: sensor_spec[SENSOR_NAME]
+    for sensor_id, sensor_spec in SENSOR_TYPES.items()
 }
 
 DATA_SCHEMA = vol.Schema(
