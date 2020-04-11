@@ -13,45 +13,20 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from .base import AcmedaBase
-from .const import ACMEDA_HUB_UPDATE, DOMAIN, LOGGER
-from .helpers import remove_devices
+from .const import ACMEDA_HUB_UPDATE
+from .helpers import update_entities
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Acmeda Rollers from a config entry."""
-    hub = hass.data[DOMAIN][config_entry.data["host"]]
-
     update_lock = asyncio.Lock()
     current = {}
 
     async def async_update():
-        """Add any new sensors."""
         async with update_lock:
-            LOGGER.debug("Looking for new sensors on: %s", hub.host)
-
-            api = hub.api.rollers
-
-            new_items = []
-
-            for unique_id, roller in api.items():
-                if unique_id not in current:
-                    LOGGER.debug("New sensor %s", unique_id)
-                    new_item = AcmedaBattery(hass, roller)
-                    current[unique_id] = new_item
-                    new_items.append(new_item)
-
-            async_add_entities(new_items)
-
-            removed_items = []
-            for unique_id, element in current.items():
-                if unique_id not in api:
-                    LOGGER.debug("Removing sensor %s", unique_id)
-                    removed_items.append(element)
-
-            for element in removed_items:
-                del current[element.unique_id]
-
-            await remove_devices(hass, config_entry, removed_items)
+            await update_entities(
+                hass, AcmedaBattery, config_entry, current, async_add_entities
+            )
 
     async_dispatcher_connect(hass, ACMEDA_HUB_UPDATE, async_update)
 
