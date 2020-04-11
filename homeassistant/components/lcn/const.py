@@ -4,6 +4,8 @@ from itertools import product
 from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    TEMP_KELVIN,
+    UNIT_DEGREE,
     UNIT_PERCENTAGE,
     UNIT_VOLT,
 )
@@ -149,7 +151,7 @@ VAR_UNITS = [
     "LCN",
     "NATIVE",
     TEMP_CELSIUS,
-    "°K",
+    TEMP_KELVIN,
     TEMP_FAHRENHEIT,
     "LUX_T",
     "LX_T",
@@ -167,7 +169,7 @@ VAR_UNITS = [
     "AMP",
     "A",
     "DEGREE",
-    "°",
+    UNIT_DEGREE,
 ]
 
 RELVARREF = ["CURRENT", "PROG"]

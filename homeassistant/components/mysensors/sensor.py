@@ -7,6 +7,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_DEGREE,
     UNIT_PERCENTAGE,
     UNIT_VOLT,
 )
@@ -22,7 +23,7 @@ SENSORS = {
     "V_RAINRATE": [None, "mdi:weather-rainy"],
     "V_WIND": [None, "mdi:weather-windy"],
     "V_GUST": [None, "mdi:weather-windy"],
-    "V_DIRECTION": ["°", "mdi:compass"],
+    "V_DIRECTION": [UNIT_DEGREE, "mdi:compass"],
     "V_WEIGHT": [MASS_KILOGRAMS, "mdi:weight-kilogram"],
     "V_DISTANCE": ["m", "mdi:ruler"],
     "V_IMPEDANCE": ["ohm", None],
