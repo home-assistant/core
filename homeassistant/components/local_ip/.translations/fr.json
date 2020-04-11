@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'int\u00e9gration est d\u00e9j\u00e0 configur\u00e9e avec un capteur existant portant ce nom"
+            "already_configured": "L'int\u00e9gration est d\u00e9j\u00e0 configur\u00e9e avec un capteur existant portant ce nom",
+            "single_instance_allowed": "Une seule configuration d'IP locale est autoris\u00e9e"
         },
         "step": {
             "user": {
