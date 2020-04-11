@@ -113,6 +113,7 @@ CONF_TEMP_INITIAL = "initial"
 CONF_TEMP_MAX = "max_temp"
 CONF_TEMP_MIN = "min_temp"
 CONF_TEMP_STEP = "temp_step"
+CONF_TEMP_UNIT = "unit_of_measurement"
 
 TEMPLATE_KEYS = (
     CONF_AUX_STATE_TEMPLATE,
@@ -223,6 +224,7 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_TEMP_LOW_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_TEMP_STATE_TEMPLATE): cv.template,
             vol.Optional(CONF_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_TEMP_UNIT): cv.string,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         }
@@ -294,7 +296,6 @@ class MqttClimate(
         self._target_temp_high = None
         self._target_temp_low = None
         self._topic = None
-        self._unit_of_measurement = hass.config.units.temperature_unit
         self._value_templates = None
 
         self._setup_from_config(config)
@@ -583,7 +584,9 @@ class MqttClimate(
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return self._unit_of_measurement
+        if self._config.get(CONF_TEMP_UNIT):
+            return self._config.get(CONF_TEMP_UNIT)
+        return self.hass.config.units.temperature_unit
 
     @property
     def current_temperature(self):
