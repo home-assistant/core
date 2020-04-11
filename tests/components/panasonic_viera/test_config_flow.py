@@ -1,8 +1,7 @@
 """Test the Panasonic Viera config flow."""
 from unittest.mock import Mock
-from tests.common import MockConfigEntry
-from asynctest import patch
 
+from asynctest import patch
 from panasonic_viera import (
     TV_TYPE_ENCRYPTED,
     TV_TYPE_NONENCRYPTED,
@@ -23,6 +22,8 @@ from homeassistant.components.panasonic_viera.const import (
     ERROR_UNKNOWN,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
+
+from tests.common import MockConfigEntry
 
 
 def get_mock_remote(
