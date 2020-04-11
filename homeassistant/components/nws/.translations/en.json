@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, please try again",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API key",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "station": "Station"
+                },
+                "title": "Connect to the device"
+            }
+        },
+        "title": "National Weather Service (NWS)"
+    }
+}
