@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError as RequestsConnectionError
 from tuyaha import TuyaApi
 import voluptuous as vol
 
@@ -69,7 +69,7 @@ def setup(hass, config, retry_delay=FIRST_RETRY_TIME):
 
     try:
         tuya.init(username, password, country_code, platform)
-    except ConnectionError:
+    except RequestsConnectionError:
         _LOGGER.warning(
             "Connection error initializing %s domain. Will retry in %s seconds...",
             DOMAIN,
