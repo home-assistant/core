@@ -41,7 +41,7 @@ def _generate_qr_code(data: str) -> str:
 
     with BytesIO() as buffer:
         qr_code.svg(file=buffer, scale=4)
-        return "{}".format(
+        return str(
             buffer.getvalue()
             .decode("ascii")
             .replace("\n", "")

@@ -83,7 +83,7 @@ class PyLoadSensor(Entity):
 
     def __init__(self, api, sensor_type, client_name):
         """Initialize a new pyLoad sensor."""
-        self._name = "{} {}".format(client_name, sensor_type[1])
+        self._name = f"{client_name} {sensor_type[1]}"
         self.type = sensor_type[0]
         self.api = api
         self._state = None
@@ -141,9 +141,7 @@ class PyLoadAPI:
 
         if username is not None and password is not None:
             self.payload = {"username": username, "password": password}
-            self.login = requests.post(
-                "{}{}".format(api_url, "login"), data=self.payload, timeout=5
-            )
+            self.login = requests.post(f"{api_url}login", data=self.payload, timeout=5)
         self.update()
 
     def post(self, method, params=None):
@@ -155,7 +153,7 @@ class PyLoadAPI:
 
         try:
             response = requests.post(
-                "{}{}".format(self.api_url, "statusServer"),
+                f"{self.api_url}statusServer",
                 json=payload,
                 cookies=self.login.cookies,
                 headers=self.headers,

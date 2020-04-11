@@ -509,11 +509,9 @@ class Event:
         """Return the representation."""
         # pylint: disable=maybe-no-member
         if self.data:
-            return "<Event {}[{}]: {}>".format(
-                self.event_type, str(self.origin)[0], util.repr_helper(self.data)
-            )
+            return f"<Event {self.event_type}[{str(self.origin)[0]}]: {util.repr_helper(self.data)}>"
 
-        return "<Event {}[{}]>".format(self.event_type, str(self.origin)[0])
+        return f"<Event {self.event_type}[{str(self.origin)[0]}]>"
 
     def __eq__(self, other: Any) -> bool:
         """Return the comparison."""
@@ -826,15 +824,11 @@ class State:
 
     def __repr__(self) -> str:
         """Return the representation of the states."""
-        attrs = (
-            "; {}".format(util.repr_helper(self.attributes)) if self.attributes else ""
-        )
+        attrs = f"; {util.repr_helper(self.attributes)}" if self.attributes else ""
 
-        return "<state {}={}{} @ {}>".format(
-            self.entity_id,
-            self.state,
-            attrs,
-            dt_util.as_local(self.last_changed).isoformat(),
+        return (
+            f"<state {self.entity_id}={self.state}{attrs}"
+            f" @ {dt_util.as_local(self.last_changed).isoformat()}>"
         )
 
 
@@ -1045,8 +1039,9 @@ class ServiceCall:
     def __repr__(self) -> str:
         """Return the representation of the service."""
         if self.data:
-            return "<ServiceCall {}.{} (c:{}): {}>".format(
-                self.domain, self.service, self.context.id, util.repr_helper(self.data)
+            return (
+                f"<ServiceCall {self.domain}.{self.service} "
+                f"(c:{self.context.id}): {util.repr_helper(self.data)}>"
             )
 
         return f"<ServiceCall {self.domain}.{self.service} (c:{self.context.id})>"
