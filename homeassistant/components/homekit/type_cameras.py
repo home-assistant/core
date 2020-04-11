@@ -151,7 +151,7 @@ class Camera(HomeAccessory, PyhapCamera):
 
     def update_state(self, new_state):
         """Handle state change to update HomeKit value."""
-        pass
+        pass  # pylint: disable=unnecessary-pass
 
     def _get_stream_source(self):
         camera = self._camera.get_entity(self.entity_id)
@@ -164,7 +164,7 @@ class Camera(HomeAccessory, PyhapCamera):
             stream_source = asyncio.run_coroutine_threadsafe(
                 camera.stream_source(), self.hass.loop
             ).result(10)
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-except
             _LOGGER.error("Failed to get stream source: %s", err)
         return stream_source
 
