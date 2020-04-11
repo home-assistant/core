@@ -2,7 +2,8 @@
 from datetime import timedelta
 import logging
 
-from tuyaha import TuyaApi, TuyaNetException, TuyaServerException
+from tuyaha import TuyaApi
+from tuyaha.tuyaapi import TuyaAPIException, TuyaNetException, TuyaServerException
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
@@ -82,6 +83,12 @@ def setup(hass, config, retry_delay=FIRST_RETRY_TIME):
         call_later(hass, retry_delay, retry_setup)
 
         return True
+
+    except TuyaAPIException as exc:
+        _LOGGER.error(
+            "Connection error during integration setup. Error: %s", exc,
+        )
+        return False
 
     hass.data[DATA_TUYA] = tuya
     hass.data[DOMAIN] = {"entities": {}}
