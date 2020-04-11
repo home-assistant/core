@@ -78,10 +78,8 @@ class AzureDevOpsFlowHandler(ConfigFlow):
         try:
             core_client = connection.clients.get_core_client()
             core_client.get_project(project)
-        except AzureDevOpsServiceError as exception:
-            _LOGGER.warning(exception)
+        except AzureDevOpsServiceError:
             return "authorization_error"
-        except ClientRequestError as exception:
-            _LOGGER.warning(exception)
+        except ClientRequestError:
             return "connection_error"
         return None
