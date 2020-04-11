@@ -22,6 +22,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_BLOCK_CLIENT,
+    CONF_CLIENTS_TO_TRACK,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
     CONF_POE_CLIENTS,
@@ -89,21 +90,19 @@ class UniFiController:
         return self._site_role
 
     @property
-    def option_allow_bandwidth_sensors(self):
-        """Config entry option to allow bandwidth sensors."""
-        return self.config_entry.options.get(
-            CONF_ALLOW_BANDWIDTH_SENSORS, DEFAULT_ALLOW_BANDWIDTH_SENSORS
-        )
+    def mac(self):
+        """Return the mac address of this controller."""
+        for client in self.api.clients.values():
+            if self.host == client.ip:
+                return client.mac
+        return None
+
+    # Device tracker options
 
     @property
-    def option_block_clients(self):
+    def option_clients_to_track(self):
         """Config entry option with list of clients to control network access."""
-        return self.config_entry.options.get(CONF_BLOCK_CLIENT, [])
-
-    @property
-    def option_poe_clients(self):
-        """Config entry option to control poe clients."""
-        return self.config_entry.options.get(CONF_POE_CLIENTS, DEFAULT_POE_CLIENTS)
+        return self.config_entry.options.get(CONF_CLIENTS_TO_TRACK, [])
 
     @property
     def option_track_clients(self):
@@ -111,16 +110,21 @@ class UniFiController:
         return self.config_entry.options.get(CONF_TRACK_CLIENTS, DEFAULT_TRACK_CLIENTS)
 
     @property
-    def option_track_devices(self):
-        """Config entry option to not track devices."""
-        return self.config_entry.options.get(CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES)
-
-    @property
     def option_track_wired_clients(self):
         """Config entry option to not track wired clients."""
         return self.config_entry.options.get(
             CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
         )
+
+    @property
+    def option_track_devices(self):
+        """Config entry option to not track devices."""
+        return self.config_entry.options.get(CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES)
+
+    @property
+    def option_ssid_filter(self):
+        """Config entry option listing what SSIDs are being used to track clients."""
+        return self.config_entry.options.get(CONF_SSID_FILTER, [])
 
     @property
     def option_detection_time(self):
@@ -131,18 +135,26 @@ class UniFiController:
             )
         )
 
-    @property
-    def option_ssid_filter(self):
-        """Config entry option listing what SSIDs are being used to track clients."""
-        return self.config_entry.options.get(CONF_SSID_FILTER, [])
+    # Client control options
 
     @property
-    def mac(self):
-        """Return the mac address of this controller."""
-        for client in self.api.clients.values():
-            if self.host == client.ip:
-                return client.mac
-        return None
+    def option_poe_clients(self):
+        """Config entry option to control poe clients."""
+        return self.config_entry.options.get(CONF_POE_CLIENTS, DEFAULT_POE_CLIENTS)
+
+    @property
+    def option_block_clients(self):
+        """Config entry option with list of clients to control network access."""
+        return self.config_entry.options.get(CONF_BLOCK_CLIENT, [])
+
+    # Statistics sensors options
+
+    @property
+    def option_allow_bandwidth_sensors(self):
+        """Config entry option to allow bandwidth sensors."""
+        return self.config_entry.options.get(
+            CONF_ALLOW_BANDWIDTH_SENSORS, DEFAULT_ALLOW_BANDWIDTH_SENSORS
+        )
 
     @callback
     def async_unifi_signalling_callback(self, signal, data):

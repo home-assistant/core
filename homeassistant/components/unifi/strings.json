@@ -31,6 +31,7 @@
       },
       "device_tracker": {
         "data": {
+          "clients_to_track": "Select specific clients to track",
           "detection_time": "Time in seconds from last seen until considered away",
           "ssid_filter": "Select SSIDs to track wireless clients on",
           "track_clients": "Track network clients",

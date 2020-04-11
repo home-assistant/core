@@ -47,6 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     option_track_clients = controller.option_track_clients
     option_track_devices = controller.option_track_devices
     option_track_wired_clients = controller.option_track_wired_clients
+    option_clients_to_track = controller.option_clients_to_track
     option_ssid_filter = controller.option_ssid_filter
 
     registry = await hass.helpers.entity_registry.async_get_registry()
@@ -89,6 +90,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         nonlocal option_track_clients
         nonlocal option_track_devices
         nonlocal option_track_wired_clients
+        nonlocal option_clients_to_track
         nonlocal option_ssid_filter
 
         update = False
@@ -120,21 +122,34 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     if isinstance(entity, UniFiClientTracker) and entity.is_wired:
                         remove.add(mac)
 
-        if option_ssid_filter != controller.option_ssid_filter:
-            option_ssid_filter = controller.option_ssid_filter
+        if option_clients_to_track != controller.option_clients_to_track:
             update = True
 
-            for mac, entity in tracked.items():
-                if (
-                    isinstance(entity, UniFiClientTracker)
-                    and not entity.is_wired
-                    and entity.client.essid not in option_ssid_filter
-                ):
-                    remove.add(mac)
+            if controller.option_clients_to_track:
+                for mac, entity in tracked.items():
+                    if (
+                        isinstance(entity, UniFiClientTracker)
+                        and mac not in controller.option_clients_to_track
+                    ):
+                        remove.add(mac)
+
+        if option_ssid_filter != controller.option_ssid_filter:
+            update = True
+
+            if controller.option_ssid_filter:
+                for mac, entity in tracked.items():
+                    if (
+                        isinstance(entity, UniFiClientTracker)
+                        and not entity.is_wired
+                        and entity.client.essid not in controller.option_ssid_filter
+                    ):
+                        remove.add(mac)
 
         option_track_clients = controller.option_track_clients
         option_track_devices = controller.option_track_devices
         option_track_wired_clients = controller.option_track_wired_clients
+        option_clients_to_track = controller.option_clients_to_track
+        option_ssid_filter = controller.option_ssid_filter
 
         for mac in remove:
             entity = tracked.pop(mac)
@@ -175,6 +190,12 @@ def add_entities(controller, async_add_entities, tracked):
 
             if tracker_class is UniFiClientTracker:
                 client = items[item_id]
+
+                if (
+                    controller.option_clients_to_track
+                    and client.mac not in controller.option_clients_to_track
+                ):
+                    continue
 
                 if not controller.option_track_wired_clients and client.is_wired:
                     continue
@@ -304,13 +325,12 @@ class UniFiDeviceTracker(ScannerEntity):
         """Set up tracked device."""
         self.device = device
         self.controller = controller
-        self.listeners = []
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
         LOGGER.debug("New UniFi device tracker %s (%s)", self.name, self.device.mac)
         self.device.register_callback(self.async_update_callback)
-        self.listeners.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, self.controller.signal_reachable, self.async_update_callback
             )
@@ -319,8 +339,6 @@ class UniFiDeviceTracker(ScannerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         self.device.remove_callback(self.async_update_callback)
-        for unsub_dispatcher in self.listeners:
-            unsub_dispatcher()
 
     @callback
     def async_update_callback(self):

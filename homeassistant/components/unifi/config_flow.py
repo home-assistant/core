@@ -17,6 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_BLOCK_CLIENT,
+    CONF_CLIENTS_TO_TRACK,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
     CONF_POE_CLIENTS,
@@ -189,6 +190,11 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             self.options.update(user_input)
             return await self.async_step_client_control()
 
+        clients_to_track = {
+            client.mac: client.name or client.hostname
+            for client in self.controller.api.clients.values()
+        }
+
         ssid_filter = {wlan: wlan for wlan in self.controller.api.wlans}
 
         return self.async_show_form(
@@ -207,6 +213,10 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_TRACK_DEVICES,
                         default=self.controller.option_track_devices,
                     ): bool,
+                    vol.Optional(
+                        CONF_CLIENTS_TO_TRACK,
+                        default=self.controller.option_clients_to_track,
+                    ): cv.multi_select(clients_to_track),
                     vol.Optional(
                         CONF_SSID_FILTER, default=self.controller.option_ssid_filter
                     ): cv.multi_select(ssid_filter),

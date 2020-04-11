@@ -9,6 +9,7 @@ from homeassistant.components.unifi.config_flow import CONF_NEW_CLIENT
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_BLOCK_CLIENT,
+    CONF_CLIENTS_TO_TRACK,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
     CONF_POE_CLIENTS,
@@ -284,6 +285,7 @@ async def test_option_flow(hass):
             CONF_TRACK_CLIENTS: False,
             CONF_TRACK_WIRED_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
+            CONF_CLIENTS_TO_TRACK: ["00:00:00:00:00:01"],
             CONF_SSID_FILTER: ["SSID 1"],
             CONF_DETECTION_TIME: 100,
         },
@@ -338,9 +340,10 @@ async def test_option_flow(hass):
         CONF_TRACK_CLIENTS: False,
         CONF_TRACK_WIRED_CLIENTS: False,
         CONF_TRACK_DEVICES: False,
-        CONF_DETECTION_TIME: 100,
+        CONF_CLIENTS_TO_TRACK: ["00:00:00:00:00:01"],
         CONF_SSID_FILTER: ["SSID 1"],
-        CONF_BLOCK_CLIENT: ["00:00:00:00:00:01"],
+        CONF_DETECTION_TIME: 100,
         CONF_POE_CLIENTS: False,
+        CONF_BLOCK_CLIENT: ["00:00:00:00:00:01"],
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
     }

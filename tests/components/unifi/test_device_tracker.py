@@ -11,6 +11,7 @@ from homeassistant.components import unifi
 import homeassistant.components.device_tracker as device_tracker
 from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
+    CONF_CLIENTS_TO_TRACK,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
@@ -345,14 +346,59 @@ async def test_option_track_devices(hass):
     assert device_1 is not None
 
 
+async def test_option_clients_to_track(hass):
+    """Test the clients to track filter works."""
+    controller = await setup_unifi_integration(
+        hass, clients_response=[CLIENT_1, CLIENT_2],
+    )
+    assert len(hass.states.async_entity_ids("device_tracker")) == 2
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1
+    wired_client = hass.states.get("device_tracker.wired_client")
+    assert wired_client
+
+    # Set client filter to track only client_1
+    hass.config_entries.async_update_entry(
+        controller.config_entry, options={CONF_CLIENTS_TO_TRACK: [CLIENT_1["mac"]]},
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids("device_tracker")) == 1
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1
+    wired_client = hass.states.get("device_tracker.wired_client")
+    assert not wired_client
+
+    # Clear client filter
+    hass.config_entries.async_update_entry(
+        controller.config_entry, options={CONF_CLIENTS_TO_TRACK: []},
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids("device_tracker")) == 2
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1
+    wired_client = hass.states.get("device_tracker.wired_client")
+    assert wired_client
+
+
 async def test_option_ssid_filter(hass):
     """Test the SSID filter works."""
-    controller = await setup_unifi_integration(
-        hass, options={CONF_SSID_FILTER: ["ssid"]}, clients_response=[CLIENT_3],
-    )
-    assert len(hass.states.async_entity_ids("device_tracker")) == 0
+    controller = await setup_unifi_integration(hass, clients_response=[CLIENT_3],)
+    assert len(hass.states.async_entity_ids("device_tracker")) == 1
 
-    # SSID filter active
+    client_3 = hass.states.get("device_tracker.client_3")
+    assert client_3
+
+    # Set SSID filter
+    hass.config_entries.async_update_entry(
+        controller.config_entry, options={CONF_SSID_FILTER: ["ssid"]},
+    )
+    await hass.async_block_till_done()
+
     client_3 = hass.states.get("device_tracker.client_3")
     assert not client_3
 
@@ -374,7 +420,6 @@ async def test_option_ssid_filter(hass):
     controller.api.message_handler(event)
     await hass.async_block_till_done()
 
-    # SSID no longer filtered
     client_3 = hass.states.get("device_tracker.client_3")
     assert client_3.state == "home"
 

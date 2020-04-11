@@ -13,6 +13,7 @@ UNIFI_WIRELESS_CLIENTS = "unifi_wireless_clients"
 
 CONF_ALLOW_BANDWIDTH_SENSORS = "allow_bandwidth_sensors"
 CONF_BLOCK_CLIENT = "block_client"
+CONF_CLIENTS_TO_TRACK = "clients_to_track"
 CONF_DETECTION_TIME = "detection_time"
 CONF_POE_CLIENTS = "poe_clients"
 CONF_TRACK_CLIENTS = "track_clients"
