@@ -21,6 +21,7 @@ CONF_FILTER = "filter"
 CONF_LINKED_BATTERY_SENSOR = "linked_battery_sensor"
 CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
 CONF_SAFE_MODE = "safe_mode"
+CONF_ZEROCONF_DEFAULT_INTERFACE = "zeroconf_default_interface"
 
 # #### Config Defaults ####
 DEFAULT_AUTO_START = True

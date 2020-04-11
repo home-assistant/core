@@ -4,6 +4,7 @@ import logging
 from zlib import adler32
 
 import voluptuous as vol
+from zeroconf import InterfaceChoice
 
 from homeassistant.components import cover
 from homeassistant.components.cover import DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE
@@ -39,6 +40,7 @@ from .const import (
     CONF_FEATURE_LIST,
     CONF_FILTER,
     CONF_SAFE_MODE,
+    CONF_ZEROCONF_DEFAULT_INTERFACE,
     DEFAULT_AUTO_START,
     DEFAULT_PORT,
     DEFAULT_SAFE_MODE,
@@ -98,6 +100,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_SAFE_MODE, default=DEFAULT_SAFE_MODE): cv.boolean,
                 vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
                 vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
+                vol.Optional(CONF_ZEROCONF_DEFAULT_INTERFACE, default={}): cv.boolean,
             }
         )
     },
@@ -122,6 +125,9 @@ async def async_setup(hass, config):
     safe_mode = conf[CONF_SAFE_MODE]
     entity_filter = conf[CONF_FILTER]
     entity_config = conf[CONF_ENTITY_CONFIG]
+    interface = None
+    if config.get(CONF_ZEROCONF_DEFAULT_INTERFACE):
+        interface = InterfaceChoice.Default
 
     homekit = HomeKit(
         hass,
@@ -132,6 +138,7 @@ async def async_setup(hass, config):
         entity_config,
         safe_mode,
         advertise_ip,
+        interface,
     )
     await hass.async_add_executor_job(homekit.setup)
 
