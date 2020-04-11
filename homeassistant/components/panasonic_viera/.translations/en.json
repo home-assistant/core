@@ -4,7 +4,7 @@
             "already_configured": "This Panasonic Viera TV is already configured."
         },
         "error": {
-            "invalid_pin_code": "The PIN code you typed is invalid",
+            "invalid_pin_code": "The PIN code you entered was invalid",
             "not_connected": "Could not establish a remote connection with your Panasonic Viera TV",
             "unknown": "An unknown error occured. Check the logs for more information."
         },
@@ -13,7 +13,7 @@
                 "data": {
                     "pin": "PIN code"
                 },
-                "description": "Type the PIN code displayed on your Panasonic Viera TV",
+                "description": "Enter the PIN code displayed on your {name}",
                 "title": "Pair your TV"
             },
             "user": {
@@ -21,7 +21,7 @@
                     "host": "IP address",
                     "name": "Name"
                 },
-                "description": "Type your Panasonic Viera TV's IP address",
+                "description": "Enter your Panasonic Viera TV's IP address",
                 "title": "Setup your TV"
             }
         },
