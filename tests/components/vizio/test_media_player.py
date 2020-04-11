@@ -79,6 +79,14 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 _LOGGER = logging.getLogger(__name__)
 
 
+async def _add_config_entry_to_hass(
+    hass: HomeAssistantType, config_entry: MockConfigEntry
+) -> None:
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
 def _get_ha_power_state(vizio_power_state: Optional[bool]) -> str:
     """Return HA power state given Vizio power state."""
     if vizio_power_state:
@@ -88,6 +96,47 @@ def _get_ha_power_state(vizio_power_state: Optional[bool]) -> str:
         return STATE_OFF
 
     return STATE_UNAVAILABLE
+
+
+def _assert_sources_and_volume(attr: Dict[str, Any], vizio_device_class) -> None:
+    """Assert source list, source, and volume level based on attr dict and device class."""
+    assert attr["source_list"] == INPUT_LIST
+    assert attr["source"] == CURRENT_INPUT
+    assert (
+        attr["volume_level"]
+        == float(int(MAX_VOLUME[vizio_device_class] / 2))
+        / MAX_VOLUME[vizio_device_class]
+    )
+
+
+def _get_attr_and_assert_base_attr(
+    hass: HomeAssistantType, device_class: str, power_state: str
+) -> Dict[str, Any]:
+    """Return entity attributes  after asserting name, device class, and power state."""
+    attr = hass.states.get(ENTITY_ID).attributes
+    assert attr["friendly_name"] == NAME
+    assert attr["device_class"] == device_class
+
+    assert hass.states.get(ENTITY_ID).state == power_state
+    return attr
+
+
+@asynccontextmanager
+async def _cm_for_test_setup_without_apps(
+    all_settings: Dict[str, Any], vizio_power_state: Optional[bool]
+) -> None:
+    """Context manager to setup test for Vizio devices without including app specific patches."""
+    with patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_all_settings",
+        return_value=all_settings,
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_setting_options",
+        return_value=EQ_LIST,
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
+        return_value=vizio_power_state,
+    ):
+        yield
 
 
 async def _test_setup_tv(
@@ -102,37 +151,16 @@ async def _test_setup_tv(
         unique_id=UNIQUE_ID,
     )
 
-    with patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_all_settings",
-        return_value={
-            "volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2),
-            "mute": "Off",
-        },
-    ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_setting_options",
-        return_value=EQ_LIST,
-    ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
-        return_value=vizio_power_state,
+    async with _cm_for_test_setup_without_apps(
+        {"volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2), "mute": "Off"},
+        vizio_power_state,
     ):
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        await _add_config_entry_to_hass(hass, config_entry)
 
-        attr = hass.states.get(ENTITY_ID).attributes
-        assert attr["friendly_name"] == NAME
-        assert attr["device_class"] == DEVICE_CLASS_TV
-
-        assert hass.states.get(ENTITY_ID).state == ha_power_state
+        attr = _get_attr_and_assert_base_attr(hass, DEVICE_CLASS_TV, ha_power_state)
         if ha_power_state == STATE_ON:
-            assert attr["source_list"] == INPUT_LIST
-            assert attr["source"] == CURRENT_INPUT
+            _assert_sources_and_volume(attr, VIZIO_DEVICE_CLASS_TV)
             assert "sound_mode" not in attr
-            assert (
-                attr["volume_level"]
-                == float(int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2))
-                / MAX_VOLUME[VIZIO_DEVICE_CLASS_TV]
-            )
 
 
 async def _test_setup_speaker(
@@ -147,41 +175,26 @@ async def _test_setup_speaker(
         unique_id=UNIQUE_ID,
     )
 
-    with patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_all_settings",
-        return_value={
+    async with _cm_for_test_setup_without_apps(
+        {
             "volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_SPEAKER] / 2),
             "mute": "Off",
             "eq": CURRENT_EQ,
         },
-    ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_setting_options",
-        return_value=EQ_LIST,
-    ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
-        return_value=vizio_power_state,
-    ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
-    ) as service_call:
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        vizio_power_state,
+    ):
+        with patch(
+            "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
+        ) as service_call:
+            await _add_config_entry_to_hass(hass, config_entry)
 
-        attr = hass.states.get(ENTITY_ID).attributes
-        assert attr["friendly_name"] == NAME
-        assert attr["device_class"] == DEVICE_CLASS_SPEAKER
-
-        assert hass.states.get(ENTITY_ID).state == ha_power_state
-        if ha_power_state == STATE_ON:
-            assert attr["source_list"] == INPUT_LIST
-            assert attr["source"] == CURRENT_INPUT
-            assert not service_call.called
-            assert "sound_mode" in attr
-            assert (
-                attr["volume_level"]
-                == float(int(MAX_VOLUME[VIZIO_DEVICE_CLASS_SPEAKER] / 2))
-                / MAX_VOLUME[VIZIO_DEVICE_CLASS_SPEAKER]
+            attr = _get_attr_and_assert_base_attr(
+                hass, DEVICE_CLASS_SPEAKER, ha_power_state
             )
+            if ha_power_state == STATE_ON:
+                _assert_sources_and_volume(attr, VIZIO_DEVICE_CLASS_SPEAKER)
+                assert not service_call.called
+                assert "sound_mode" in attr
 
 
 @asynccontextmanager
@@ -193,37 +206,28 @@ async def _cm_for_test_setup_tv_with_apps(
         domain=DOMAIN, data=vol.Schema(VIZIO_SCHEMA)(device_config), unique_id=UNIQUE_ID
     )
 
-    with patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_all_settings",
-        return_value={
-            "volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2),
-            "mute": "Off",
-        },
-    ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
-        return_value=AppConfig(**app_config),
+    async with _cm_for_test_setup_without_apps(
+        {"volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2), "mute": "Off"}, True,
     ):
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        with patch(
+            "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
+            return_value=AppConfig(**app_config),
+        ):
+            await _add_config_entry_to_hass(hass, config_entry)
 
-        attr = hass.states.get(ENTITY_ID).attributes
-        assert attr["friendly_name"] == NAME
-        assert attr["device_class"] == DEVICE_CLASS_TV
-        assert hass.states.get(ENTITY_ID).state == STATE_ON
-        assert (
-            attr["volume_level"]
-            == float(int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2))
-            / MAX_VOLUME[VIZIO_DEVICE_CLASS_TV]
-        )
+            attr = _get_attr_and_assert_base_attr(hass, DEVICE_CLASS_TV, STATE_ON)
+            assert (
+                attr["volume_level"]
+                == float(int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2))
+                / MAX_VOLUME[VIZIO_DEVICE_CLASS_TV]
+            )
 
-        yield
+            yield
 
 
-def _assert_source_list(list_to_test: List[str], attr: Dict[str, Any]) -> None:
+def _assert_source_list_with_apps(
+    list_to_test: List[str], attr: Dict[str, Any]
+) -> None:
     """Assert source list matches list_to_test after removing INPUT_APPS from list."""
     for app_to_remove in INPUT_APPS:
         if app_to_remove in list_to_test:
@@ -239,9 +243,7 @@ async def _test_setup_failure(hass: HomeAssistantType, config: str) -> None:
         return_value=False,
     ):
         config_entry = MockConfigEntry(domain=DOMAIN, data=config, unique_id=UNIQUE_ID)
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        await _add_config_entry_to_hass(hass, config_entry)
         assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
 
 
@@ -465,7 +467,7 @@ async def test_setup_with_apps(
         hass, MOCK_USER_VALID_TV_CONFIG, CURRENT_APP_CONFIG
     ):
         attr = hass.states.get(ENTITY_ID).attributes
-        _assert_source_list(list(INPUT_LIST_WITH_APPS + APP_LIST), attr)
+        _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + APP_LIST), attr)
         assert CURRENT_APP in attr["source_list"]
         assert attr["source"] == CURRENT_APP
         assert attr["app_name"] == CURRENT_APP
@@ -491,7 +493,7 @@ async def test_setup_with_apps_include(
         hass, MOCK_TV_WITH_INCLUDE_CONFIG, CURRENT_APP_CONFIG
     ):
         attr = hass.states.get(ENTITY_ID).attributes
-        _assert_source_list(list(INPUT_LIST_WITH_APPS + [CURRENT_APP]), attr)
+        _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + [CURRENT_APP]), attr)
         assert CURRENT_APP in attr["source_list"]
         assert attr["source"] == CURRENT_APP
         assert attr["app_name"] == CURRENT_APP
@@ -509,7 +511,7 @@ async def test_setup_with_apps_exclude(
         hass, MOCK_TV_WITH_EXCLUDE_CONFIG, CURRENT_APP_CONFIG
     ):
         attr = hass.states.get(ENTITY_ID).attributes
-        _assert_source_list(list(INPUT_LIST_WITH_APPS + [CURRENT_APP]), attr)
+        _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + [CURRENT_APP]), attr)
         assert CURRENT_APP in attr["source_list"]
         assert attr["source"] == CURRENT_APP
         assert attr["app_name"] == CURRENT_APP
@@ -528,7 +530,7 @@ async def test_setup_with_apps_additional_apps_config(
     ):
         attr = hass.states.get(ENTITY_ID).attributes
         assert attr["source_list"].count(CURRENT_APP) == 1
-        _assert_source_list(
+        _assert_source_list_with_apps(
             list(
                 INPUT_LIST_WITH_APPS
                 + APP_LIST
@@ -598,7 +600,7 @@ async def test_setup_with_unknown_app_config(
         hass, MOCK_USER_VALID_TV_CONFIG, UNKNOWN_APP_CONFIG
     ):
         attr = hass.states.get(ENTITY_ID).attributes
-        _assert_source_list(list(INPUT_LIST_WITH_APPS + APP_LIST), attr)
+        _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + APP_LIST), attr)
         assert attr["source"] == UNKNOWN_APP
         assert attr["app_name"] == UNKNOWN_APP
         assert attr["app_id"] == UNKNOWN_APP_CONFIG
@@ -615,7 +617,7 @@ async def test_setup_with_no_running_app(
         hass, MOCK_USER_VALID_TV_CONFIG, vars(AppConfig())
     ):
         attr = hass.states.get(ENTITY_ID).attributes
-        _assert_source_list(list(INPUT_LIST_WITH_APPS + APP_LIST), attr)
+        _assert_source_list_with_apps(list(INPUT_LIST_WITH_APPS + APP_LIST), attr)
         assert attr["source"] == "CAST"
         assert "app_id" not in attr
         assert "app_name" not in attr
