@@ -98,7 +98,7 @@ def _get_ha_power_state(vizio_power_state: Optional[bool]) -> str:
     return STATE_UNAVAILABLE
 
 
-def _assert_sources_and_volume(attr: Dict[str, Any], vizio_device_class) -> None:
+def _assert_sources_and_volume(attr: Dict[str, Any], vizio_device_class: str) -> None:
     """Assert source list, source, and volume level based on attr dict and device class."""
     assert attr["source_list"] == INPUT_LIST
     assert attr["source"] == CURRENT_INPUT
