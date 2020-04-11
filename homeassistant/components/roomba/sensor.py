@@ -49,7 +49,7 @@ class RoombaBattery(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     @property
     def state(self):
