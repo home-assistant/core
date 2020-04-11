@@ -3,8 +3,8 @@ from itertools import product
 
 from homeassistant.const import (
     TEMP_CELSIUS,
-    TEMP_KELVIN,
     TEMP_FAHRENHEIT,
+    TEMP_KELVIN,
     UNIT_DEGREE,
     UNIT_PERCENTAGE,
     UNIT_VOLT,
