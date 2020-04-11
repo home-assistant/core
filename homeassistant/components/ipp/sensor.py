@@ -34,7 +34,7 @@ async def async_setup_entry(
 
     sensors = []
 
-    sensors.append(IPPPrinterSensor(entry.entry_id, coordinator))
+    sensors.append(IPPPrinterSensor(entry.entry_id, coordinator, entry_unique_id=entry.unique_id))
     sensors.append(IPPUptimeSensor(entry.entry_id, coordinator))
 
     for marker_index in range(len(coordinator.data.markers)):
@@ -55,11 +55,20 @@ class IPPSensor(IPPEntity):
         icon: str,
         key: str,
         name: str,
+        entry_unique_id: Optional[str] = None,
         unit_of_measurement: Optional[str] = None,
     ) -> None:
         """Initialize IPP sensor."""
         self._unit_of_measurement = unit_of_measurement
+        self._entry_unique_id = entry_unique_id
         self._key = key
+
+        if coordinator.data.info.uuid is not None:
+            self._unique_id = f"{coordinator.data.info.uuid}_{key}"
+        elif self._entry_unique_id is not None:
+            self._unique_id = f"{entry_unique_id}-{key}"
+        else:
+            self._unique_id = None
 
         super().__init__(
             entry_id=entry_id,
@@ -72,7 +81,7 @@ class IPPSensor(IPPEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
-        return f"{self.coordinator.data.info.uuid}_{self._key}"
+        return self._unique_id
 
     @property
     def unit_of_measurement(self) -> str:
@@ -84,7 +93,11 @@ class IPPMarkerSensor(IPPSensor):
     """Defines an IPP marker sensor."""
 
     def __init__(
-        self, entry_id: str, coordinator: IPPDataUpdateCoordinator, marker_index: int
+        self,
+        entry_id: str,
+        coordinator: IPPDataUpdateCoordinator,
+        marker_index: int,
+        entry_unique_id: Optional[str] = None,
     ) -> None:
         """Initialize IPP marker sensor."""
         self.marker_index = marker_index
@@ -92,6 +105,7 @@ class IPPMarkerSensor(IPPSensor):
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
+            entry_unique_id=entry_unique_id,
             icon="mdi:water",
             key=f"marker_{marker_index}",
             name=f"{coordinator.data.info.name} {coordinator.data.markers[marker_index].name}",
@@ -127,11 +141,17 @@ class IPPMarkerSensor(IPPSensor):
 class IPPPrinterSensor(IPPSensor):
     """Defines an IPP printer sensor."""
 
-    def __init__(self, entry_id: str, coordinator: IPPDataUpdateCoordinator) -> None:
+    def __init__(
+        self,
+        entry_id: str,
+        coordinator: IPPDataUpdateCoordinator,
+        entry_unique_id: Optional[str] = None,
+    ) -> None:
         """Initialize IPP printer sensor."""
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
+            entry_unique_id=entry_unique_id,
             icon="mdi:printer",
             key="printer",
             name=coordinator.data.info.name,
@@ -160,12 +180,18 @@ class IPPPrinterSensor(IPPSensor):
 class IPPUptimeSensor(IPPSensor):
     """Defines a IPP uptime sensor."""
 
-    def __init__(self, entry_id: str, coordinator: IPPDataUpdateCoordinator) -> None:
+    def __init__(
+        self,
+        entry_id: str,
+        coordinator: IPPDataUpdateCoordinator,
+        entry_unique_id: Optional[str] = None,
+    ) -> None:
         """Initialize IPP uptime sensor."""
         super().__init__(
             coordinator=coordinator,
             enabled_default=False,
             entry_id=entry_id,
+            entry_unique_id=entry_unique_id,
             icon="mdi:clock-outline",
             key="uptime",
             name=f"{coordinator.data.info.name} Uptime",
