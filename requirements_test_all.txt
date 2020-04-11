@@ -346,7 +346,7 @@ mficlient==0.3.0
 minio==4.0.9
 
 # homeassistant.components.tts
-mutagen==1.43.0
+mutagen==1.44.0
 
 # homeassistant.components.ness_alarm
 nessclient==0.9.15
