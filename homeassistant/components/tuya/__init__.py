@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from requests.exceptions import ConnectionError
 from tuyaha import TuyaApi
 import voluptuous as vol
 
@@ -11,7 +12,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.event import call_later, track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,6 +22,9 @@ PARALLEL_UPDATES = 0
 
 DOMAIN = "tuya"
 DATA_TUYA = "data_tuya"
+
+FIRST_RETRY_TIME = 60
+MAX_RETRY_TIME = 900
 
 SIGNAL_DELETE_ENTITY = "tuya_delete"
 SIGNAL_UPDATE_ENTITY = "tuya_update"
@@ -52,8 +56,10 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass, config, retry_delay=FIRST_RETRY_TIME):
     """Set up Tuya Component."""
+
+    _LOGGER.info("Initializing %s domain.", DOMAIN)
 
     tuya = TuyaApi()
     username = config[DOMAIN][CONF_USERNAME]
@@ -61,8 +67,24 @@ def setup(hass, config):
     country_code = config[DOMAIN][CONF_COUNTRYCODE]
     platform = config[DOMAIN][CONF_PLATFORM]
 
+    try:
+        tuya.init(username, password, country_code, platform)
+    except ConnectionError:
+        _LOGGER.warning(
+            "Connection error initializing %s domain. Will retry in %s seconds...",
+            DOMAIN,
+            retry_delay,
+        )
+
+        def retry_setup(now):
+            """Retry setup if a error happens on tuya API."""
+            setup(hass, config, retry_delay=min(2 * retry_delay, MAX_RETRY_TIME))
+
+        call_later(hass, retry_delay, retry_setup)
+
+        return True
+
     hass.data[DATA_TUYA] = tuya
-    tuya.init(username, password, country_code, platform)
     hass.data[DOMAIN] = {"entities": {}}
 
     def load_devices(device_list):
