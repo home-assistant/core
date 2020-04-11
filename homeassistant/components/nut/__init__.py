@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+import re
 
 import async_timeout
 from pynut2.nut2 import PyNUTClient, PyNUTError
@@ -131,7 +132,7 @@ def _firmware_from_status(status):
 def _serial_from_status(status):
     """Find the best serialvalue from the status."""
     serial = status.get("device.serial") or status.get("ups.serial")
-    if serial and serial == "unknown":
+    if serial and (serial.lower() == "unknown" or re.search(r"^0+$", serial)):
         return None
     return serial
 
