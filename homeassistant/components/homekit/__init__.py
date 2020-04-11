@@ -100,7 +100,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_SAFE_MODE, default=DEFAULT_SAFE_MODE): cv.boolean,
                 vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
                 vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
-                vol.Optional(CONF_ZEROCONF_DEFAULT_INTERFACE, default={}): cv.boolean,
+                vol.Optional(
+                    CONF_ZEROCONF_DEFAULT_INTERFACE, default=False
+                ): cv.boolean,
             }
         )
     },
@@ -125,9 +127,9 @@ async def async_setup(hass, config):
     safe_mode = conf[CONF_SAFE_MODE]
     entity_filter = conf[CONF_FILTER]
     entity_config = conf[CONF_ENTITY_CONFIG]
-    interface = None
+    interface_choice = None
     if config.get(CONF_ZEROCONF_DEFAULT_INTERFACE):
-        interface = InterfaceChoice.Default
+        interface_choice = InterfaceChoice.Default
 
     homekit = HomeKit(
         hass,
@@ -138,7 +140,7 @@ async def async_setup(hass, config):
         entity_config,
         safe_mode,
         advertise_ip,
-        interface,
+        interface_choice,
     )
     await hass.async_add_executor_job(homekit.setup)
 
@@ -294,6 +296,7 @@ class HomeKit:
         entity_config,
         safe_mode,
         advertise_ip=None,
+        interface_choice=None,
     ):
         """Initialize a HomeKit object."""
         self.hass = hass
@@ -304,6 +307,7 @@ class HomeKit:
         self._config = entity_config
         self._safe_mode = safe_mode
         self._advertise_ip = advertise_ip
+        self._interface_choice = interface_choice
         self.status = STATUS_READY
 
         self.bridge = None
@@ -324,6 +328,7 @@ class HomeKit:
             port=self._port,
             persist_file=path,
             advertised_address=self._advertise_ip,
+            interface_choice=self._interface_choice,
         )
         self.bridge = HomeBridge(self.hass, self.driver, self._name)
         if self._safe_mode:
