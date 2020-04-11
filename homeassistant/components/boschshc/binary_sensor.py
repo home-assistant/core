@@ -23,7 +23,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     session: SHCSession = hass.data[DOMAIN][slugify(config[CONF_NAME])]
 
     for binarysensor in session.device_helper.shutter_contacts:
-        _LOGGER.debug("Found shutter contact: %s" % binarysensor.id)
+        _LOGGER.debug("Found shutter contact: %s", binarysensor.id)
         device.append(
             ShutterContactSensor(
                 device=binarysensor,
@@ -33,7 +33,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
     for binarysensor in session.device_helper.smoke_detectors:
-        _LOGGER.debug("Found smoke detector: %s" % binarysensor.id)
+        _LOGGER.debug("Found smoke detector: %s", binarysensor.id)
         device.append(
             SmokeDetectorSensor(
                 device=binarysensor,
@@ -52,7 +52,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     session: SHCSession = hass.data[DOMAIN][slugify(config_entry.data[CONF_NAME])]
 
     for binarysensor in session.device_helper.shutter_contacts:
-        _LOGGER.debug(f"Found shutter contact: {binarysensor.name} ({binarysensor.id})")
+        _LOGGER.debug(
+            "Found shutter contact: %s (%s)", binarysensor.name, binarysensor.id
+        )
         device.append(
             ShutterContactSensor(
                 device=binarysensor,
@@ -62,7 +64,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
 
     for binarysensor in session.device_helper.smoke_detectors:
-        _LOGGER.debug(f"Found smoke detector: {binarysensor.name} ({binarysensor.id})")
+        _LOGGER.debug(
+            "Found smoke detector: %s (%s)", binarysensor.name, binarysensor.id
+        )
         device.append(
             SmokeDetectorSensor(
                 device=binarysensor,
@@ -145,17 +149,18 @@ class ShutterContactSensor(BinarySensorDevice):
     @property
     def available(self):
         """Return false if status is unavailable."""
-        return True if self._device.status == "AVAILABLE" else False
+        if self._device.status == "AVAILABLE":
+            return True
+        return False
 
     @property
     def is_on(self):
         """Return the state of the sensor."""
         if self._device.state == SHCShutterContact.ShutterContactService.State.OPEN:
             return True
-        elif self._device.state == SHCShutterContact.ShutterContactService.State.CLOSED:
+        if self._device.state == SHCShutterContact.ShutterContactService.State.CLOSED:
             return False
-        else:
-            return None
+        return None
 
     @property
     def device_class(self):
@@ -168,7 +173,7 @@ class ShutterContactSensor(BinarySensorDevice):
         }
         return switcher.get(self._device.device_class, DEVICE_CLASS_WINDOW)
 
-    def update(self, **kwargs):
+    def update(self):
         """Trigger an update of the device."""
         self._device.update()
 
@@ -196,9 +201,7 @@ class SmokeDetectorSensor(BinarySensorDevice):
         await super().async_added_to_hass()
 
         def on_state_changed():
-            _LOGGER.debug(
-                "Update notification for smoke detector: %s" % self._device.id
-            )
+            _LOGGER.debug("Update notification for smoke detector: %s", self._device.id)
             self.schedule_update_ha_state()
 
         for service in self._device.device_services:
@@ -255,22 +258,25 @@ class SmokeDetectorSensor(BinarySensorDevice):
     @property
     def available(self):
         """Return false if status is unavailable."""
-        return True if self._device.status == "AVAILABLE" else False
+        if self._device.status == "AVAILABLE":
+            return True
+
+        return False
 
     @property
     def is_on(self):
         """Return the state of the sensor."""
         if self._device.alarm_state == SHCSmokeDetector.AlarmService.State.IDLE_OFF:
             return False
-        else:
-            return True
+
+        return True
 
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_SMOKE
 
-    def update(self, **kwargs):
+    def update(self):
         """Trigger an update of the device."""
         self._device.update()
 
