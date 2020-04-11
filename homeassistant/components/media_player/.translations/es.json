@@ -5,7 +5,7 @@
             "is_off": "{entity_name} est\u00e1 apagado",
             "is_on": "{entity_name} est\u00e1 activado",
             "is_paused": "{entity_name} est\u00e1 en pausa",
-            "is_playing": "{entity_name} est\u00e1 jugando"
+            "is_playing": "{entity_name} est\u00e1 reproduciendo"
         }
     }
 }

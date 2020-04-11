@@ -345,6 +345,9 @@ ATTR_TEMPERATURE = "temperature"
 # Power units
 POWER_WATT = "W"
 
+# Voltage units
+UNIT_VOLT = "V"
+
 # Energy units
 ENERGY_WATT_HOUR = f"{POWER_WATT}h"
 ENERGY_KILO_WATT_HOUR = f"k{ENERGY_WATT_HOUR}"
