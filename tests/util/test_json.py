@@ -1,5 +1,7 @@
 """Test Home Assistant json utility functions."""
-from json import JSONEncoder
+from datetime import datetime
+from functools import partial
+from json import JSONEncoder, dumps
 import os
 import sys
 from tempfile import mkdtemp
@@ -8,6 +10,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.json import (
     SerializationError,
@@ -122,3 +125,27 @@ def test_find_unserializable_data():
         "$[1].blub",
     ]
     assert find_paths_unserializable_data({("A",): 1}) == ["$<key: ('A',)>"]
+    assert find_paths_unserializable_data(
+        float("nan"), dump=partial(dumps, allow_nan=False)
+    ) == ["$"]
+
+    # Test custom encoder + State support.
+
+    class MockJSONEncoder(JSONEncoder):
+        """Mock JSON encoder."""
+
+        def default(self, o):
+            """Mock JSON encode method."""
+            if isinstance(o, datetime):
+                return o.isoformat()
+            return super().default(o)
+
+    assert find_paths_unserializable_data(
+        [State("mock_domain.mock_entity", "on", {"bad": object()})],
+        dump=partial(dumps, cls=MockJSONEncoder),
+    ) == ["$[0](state: mock_domain.mock_entity).attributes.bad"]
+
+    assert find_paths_unserializable_data(
+        [Event("bad_event", {"bad_attribute": object()})],
+        dump=partial(dumps, cls=MockJSONEncoder),
+    ) == ["$[0](event: bad_event).data.bad_attribute"]

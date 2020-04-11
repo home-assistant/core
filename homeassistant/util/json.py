@@ -6,6 +6,7 @@ import os
 import tempfile
 from typing import Any, Dict, List, Optional, Type, Union
 
+from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,7 +86,7 @@ def save_json(
                 _LOGGER.error("JSON replacement cleanup failed: %s", err)
 
 
-def find_paths_unserializable_data(bad_data: Any) -> List[str]:
+def find_paths_unserializable_data(bad_data: Any, *, dump=json.dumps) -> List[str]:
     """Find the paths to unserializable data.
 
     This method is slow! Only use for error handling.
@@ -97,16 +98,24 @@ def find_paths_unserializable_data(bad_data: Any) -> List[str]:
         obj, obj_path = to_process.popleft()
 
         try:
-            json.dumps(obj)
+            dump(obj)
             continue
-        except TypeError:
+        except (ValueError, TypeError):
             pass
+
+        # We convert states and events to dict so we can find bad data inside it
+        if isinstance(obj, State):
+            obj_path += f"(state: {obj.entity_id})"
+            obj = obj.as_dict()
+        elif isinstance(obj, Event):
+            obj_path += f"(event: {obj.event_type})"
+            obj = obj.as_dict()
 
         if isinstance(obj, dict):
             for key, value in obj.items():
                 try:
                     # Is key valid?
-                    json.dumps({key: None})
+                    dump({key: None})
                 except TypeError:
                     invalid.append(f"{obj_path}<key: {key}>")
                 else:
