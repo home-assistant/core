@@ -1,5 +1,4 @@
 """Support for functionality to interact with Android TV / Fire TV devices."""
-import binascii
 from datetime import datetime
 import functools
 import logging
