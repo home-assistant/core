@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components.camera import (
     DOMAIN as CAMERA_DOMAIN,
+    SERVICE_DISABLE_MOTION,
     SERVICE_ENABLE_MOTION,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -113,3 +114,15 @@ async def test_motion_detection(hass):
     # Check if state has been updated.
     state = hass.states.get(ENTITY_CAMERA)
     assert state.attributes.get("motion_detection")
+
+    # Call service to turn off motion detection
+    await hass.services.async_call(
+        CAMERA_DOMAIN,
+        SERVICE_DISABLE_MOTION,
+        {ATTR_ENTITY_ID: ENTITY_CAMERA},
+        blocking=True,
+    )
+
+    # Check if state has been updated.
+    state = hass.states.get(ENTITY_CAMERA)
+    assert not state.attributes.get("motion_detection")
