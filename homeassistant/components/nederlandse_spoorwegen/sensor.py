@@ -3,11 +3,13 @@ from datetime import datetime, timedelta
 import logging
 
 import ns_api
+from ns_api import RequestParametersError
 import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -47,13 +49,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the departure sensor."""
 
     nsapi = ns_api.NSAPI(config[CONF_API_KEY])
+
     try:
         stations = nsapi.get_stations()
     except (
         requests.exceptions.ConnectionError,
         requests.exceptions.HTTPError,
     ) as error:
-        _LOGGER.error("Couldn't fetch stations, API key correct?: %s", error)
+        _LOGGER.error("Could not connect to the internet: %s", error)
+        raise PlatformNotReady()
+    except RequestParametersError as error:
+        _LOGGER.error("Could not fetch stations, please check configuration: %s", error)
         return
 
     sensors = []
