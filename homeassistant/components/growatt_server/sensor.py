@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
+    FREQUENCY_HERTZ,
     POWER_WATT,
     UNIT_VOLT,
 )
@@ -92,7 +93,7 @@ INVERTER_SENSOR_TYPES = {
         "iacr",
         None,
     ),
-    "inverter_frequency": ("AC frequency", "Hz", "fac", None),
+    "inverter_frequency": ("AC frequency", FREQUENCY_HERTZ, "fac", None),
     "inverter_current_wattage": ("Output power", POWER_WATT, "pac", "power"),
     "inverter_current_reactive_wattage": (
         "Reactive wattage",

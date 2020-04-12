@@ -385,6 +385,10 @@ LENGTH_FEET: str = "ft"
 LENGTH_YARD: str = "yd"
 LENGTH_MILES: str = "mi"
 
+# Frequency units
+FREQUENCY_HERTZ = "Hz"
+FREQUENCY_GIGAHERTZ = f"G{FREQUENCY_HERTZ}"
+
 # Pressure units
 PRESSURE_PA: str = "Pa"
 PRESSURE_HPA: str = "hPa"
@@ -412,6 +416,9 @@ MASS_MICROGRAMS = "µg"
 
 MASS_OUNCES: str = "oz"
 MASS_POUNDS: str = "lb"
+
+# Conductivity units
+UNIT_CONDUCTIVITY: str = f"µS/{LENGTH_CENTIMETERS}"
 
 # UV Index units
 UNIT_UV_INDEX: str = "UV index"

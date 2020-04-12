@@ -41,7 +41,7 @@ CAPABILITY_TO_SENSORS = {
         Map(Attribute.battery, "Battery", UNIT_PERCENTAGE, DEVICE_CLASS_BATTERY)
     ],
     Capability.body_mass_index_measurement: [
-        Map(Attribute.bmi_measurement, "Body Mass Index", "kg/m^2", None)
+        Map(Attribute.bmi_measurement, "Body Mass Index", f"{MASS_KILOGRAMS}/m^2", None)
     ],
     Capability.body_weight_measurement: [
         Map(Attribute.body_weight_measurement, "Body Weight", MASS_KILOGRAMS, None)

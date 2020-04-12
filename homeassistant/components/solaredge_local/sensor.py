@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_NAME,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_WATT_HOUR,
+    FREQUENCY_HERTZ,
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -59,7 +60,7 @@ SENSOR_TYPES = {
     "current_frequency": [
         "gridfrequency",
         "Grid Frequency",
-        "Hz",
+        FREQUENCY_HERTZ,
         "mdi:current-ac",
         None,
     ],

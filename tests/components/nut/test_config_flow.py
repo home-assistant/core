@@ -1,9 +1,11 @@
 """Test the Network UPS Tools (NUT) config flow."""
-from asynctest import MagicMock, patch
+from asynctest import patch
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.nut.const import DOMAIN
-from homeassistant.const import CONF_RESOURCES
+from homeassistant.const import CONF_RESOURCES, CONF_SCAN_INTERVAL
+
+from .util import _get_mock_pynutclient
 
 from tests.common import MockConfigEntry
 
@@ -13,13 +15,6 @@ VALID_CONFIG = {
     "name": "name",
     "resources": ["battery.charge"],
 }
-
-
-def _get_mock_pynutclient(list_vars=None, list_ups=None):
-    pynutclient = MagicMock()
-    type(pynutclient).list_ups = MagicMock(return_value=list_ups)
-    type(pynutclient).list_vars = MagicMock(return_value=list_vars)
-    return pynutclient
 
 
 async def test_form_user_one_ups(hass):
@@ -249,4 +244,26 @@ async def test_options_flow(hass):
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert config_entry.options == {CONF_RESOURCES: ["battery.voltage"]}
+        assert config_entry.options == {
+            CONF_RESOURCES: ["battery.voltage"],
+            CONF_SCAN_INTERVAL: 60,
+        }
+
+    with patch(
+        "homeassistant.components.nut.PyNUTClient", return_value=mock_pynut,
+    ), patch("homeassistant.components.nut.async_setup_entry", return_value=True):
+        result2 = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result2["step_id"] == "init"
+
+        result2 = await hass.config_entries.options.async_configure(
+            result2["flow_id"],
+            user_input={CONF_RESOURCES: ["battery.voltage"], CONF_SCAN_INTERVAL: 12},
+        )
+
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert config_entry.options == {
+            CONF_RESOURCES: ["battery.voltage"],
+            CONF_SCAN_INTERVAL: 12,
+        }

@@ -414,7 +414,7 @@ def _get_wind_direction(wind_direction_degree: float) -> str:
     if 236.25 <= wind_direction_degree < 258.75:
         return "WSW"
     if 258.75 <= wind_direction_degree < 281.25:
-        return POWER_WATT
+        return "W"
     if 281.25 <= wind_direction_degree < 303.75:
         return "WNW"
     if 303.75 <= wind_direction_degree < 326.25:

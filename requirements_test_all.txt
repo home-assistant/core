@@ -307,7 +307,7 @@ influxdb==5.2.3
 jsonpath==0.82
 
 # homeassistant.scripts.keyring
-keyring==20.0.0
+keyring==21.2.0
 
 # homeassistant.scripts.keyring
 keyrings.alt==3.4.0
@@ -356,7 +356,7 @@ nessclient==0.9.15
 netdisco==2.6.0
 
 # homeassistant.components.nexia
-nexia==0.8.2
+nexia==0.9.1
 
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.0.10
@@ -597,6 +597,10 @@ pyps4-2ndscreen==1.0.7
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
 
+# homeassistant.components.modbus
+# homeassistant.components.serial
+pyserial-asyncio==0.4
+
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.2.4
 
@@ -683,6 +687,9 @@ ring_doorbell==0.6.0
 
 # homeassistant.components.roku
 roku==4.1.0
+
+# homeassistant.components.roomba
+roombapy==1.5.0
 
 # homeassistant.components.yamaha
 rxv==0.6.0
