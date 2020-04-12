@@ -130,7 +130,7 @@ async def async_connect_or_timeout(hass, roomba):
             await hass.async_add_job(roomba.connect)
             while not roomba.roomba_connected or name is None:
                 # Waiting for connection and check datas ready
-                name = roomba_reported_state(roomba).get("name", None)
+                name = roomba_reported_state(roomba).get("name")
                 if name:
                     break
                 await asyncio.sleep(1)
