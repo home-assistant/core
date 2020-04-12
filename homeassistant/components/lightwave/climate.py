@@ -27,7 +27,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if discovery_info is None:
         return
 
-    trv = []
+    entities = []
     lwlink = hass.data[LIGHTWAVE_LINK]
 
     for device_id, device_config in discovery_info.items():
