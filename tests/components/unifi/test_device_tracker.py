@@ -347,12 +347,18 @@ async def test_option_track_devices(hass):
 
 async def test_option_ssid_filter(hass):
     """Test the SSID filter works."""
-    controller = await setup_unifi_integration(
-        hass, options={CONF_SSID_FILTER: ["ssid"]}, clients_response=[CLIENT_3],
-    )
-    assert len(hass.states.async_entity_ids("device_tracker")) == 0
+    controller = await setup_unifi_integration(hass, clients_response=[CLIENT_3])
+    assert len(hass.states.async_entity_ids("device_tracker")) == 1
 
-    # SSID filter active
+    client_3 = hass.states.get("device_tracker.client_3")
+    assert client_3
+
+    # Set SSID filter
+    hass.config_entries.async_update_entry(
+        controller.config_entry, options={CONF_SSID_FILTER: ["ssid"]},
+    )
+    await hass.async_block_till_done()
+
     client_3 = hass.states.get("device_tracker.client_3")
     assert not client_3
 
@@ -374,7 +380,6 @@ async def test_option_ssid_filter(hass):
     controller.api.message_handler(event)
     await hass.async_block_till_done()
 
-    # SSID no longer filtered
     client_3 = hass.states.get("device_tracker.client_3")
     assert client_3.state == "home"
 

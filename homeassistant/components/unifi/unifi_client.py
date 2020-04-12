@@ -50,7 +50,7 @@ class UniFiClient(Entity):
         """Client entity created."""
         LOGGER.debug("New UniFi client %s (%s)", self.name, self.client.mac)
         self.client.register_callback(self.async_update_callback)
-        self.listeners.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, self.controller.signal_reachable, self.async_update_callback
             )
@@ -59,8 +59,6 @@ class UniFiClient(Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect client object when removed."""
         self.client.remove_callback(self.async_update_callback)
-        for unsub_dispatcher in self.listeners:
-            unsub_dispatcher()
 
     @callback
     def async_update_callback(self) -> None:
