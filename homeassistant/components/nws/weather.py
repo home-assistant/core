@@ -73,8 +73,10 @@ def convert_condition(time, weather):
     return cond, max(prec_probs)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the NWS weather platform."""
+    if discovery_info is None:
+        return
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     station = config.get(CONF_STATION)
@@ -134,7 +136,7 @@ class NWSWeather(WeatherEntity):
         else:
             self._forecast = self.nws.forecast_hourly
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def should_poll(self) -> bool:
