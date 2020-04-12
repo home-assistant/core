@@ -14,7 +14,10 @@ from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
     async_load_config,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    EVENT_HOMEASSISTANT_STOP
+)
 from homeassistant.helpers.event import track_point_in_utc_time
 import homeassistant.util.dt as dt_util
 
@@ -74,7 +77,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
         """Discover Bluetooth LE devices."""
         _LOGGER.debug("Discovering Bluetooth LE devices")
         try:
-            adapter = pygatt.GATTToolBackend()
+            device_id = config.get(CONF_DEVICE_ID, 0)
+            adapter = pygatt.GATTToolBackend(hci_device=f'hci{device_id}')
             hass.data[DATA_BLE][DATA_BLE_ADAPTER] = adapter
             devs = adapter.scan()
 
