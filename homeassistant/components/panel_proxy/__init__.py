@@ -1,9 +1,9 @@
 """Register an proxy front end panel."""
-import voluptuous as vol
 import aiohttp
+import voluptuous as vol
 
-from homeassistant.const import CONF_ICON, CONF_URL
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import CONF_ICON, CONF_URL
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "panel_proxy"
