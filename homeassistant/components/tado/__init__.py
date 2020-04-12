@@ -23,6 +23,7 @@ from .const import (
     DATA,
     DOMAIN,
     SIGNAL_TADO_UPDATE_RECEIVED,
+    UPDATE_LISTENER,
     UPDATE_TRACK,
 )
 
@@ -102,12 +103,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass, lambda now: tadoconnector.update(), SCAN_INTERVAL,
     )
 
+    update_listener = entry.add_update_listener(_async_update_listener)
+
     hass.data[DOMAIN][entry.entry_id] = {
         DATA: tadoconnector,
         UPDATE_TRACK: update_track,
+        UPDATE_LISTENER: update_listener,
     }
-
-    entry.add_update_listener(_async_update_listener)
 
     for component in TADO_COMPONENTS:
         hass.async_create_task(
@@ -120,13 +122,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 @callback
 def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
     options = dict(entry.options)
-    modified = 0
-    for importable_option in [CONF_FALLBACK]:
-        if importable_option not in entry.options and importable_option in entry.data:
-            options[importable_option] = entry.data[importable_option]
-            modified = 1
-
-    if modified:
+    if CONF_FALLBACK not in options:
+        options[CONF_FALLBACK] = entry.data.get(CONF_FALLBACK, True)
         hass.config_entries.async_update_entry(entry, options=options)
 
 
@@ -147,6 +144,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     hass.data[DOMAIN][entry.entry_id][UPDATE_TRACK]()
+    hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER]()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)

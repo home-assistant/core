@@ -145,3 +145,5 @@ UNIQUE_ID = "unique_id"
 DEFAULT_NAME = "Tado"
 
 TADO_BRIDGE = "Tado Bridge"
+
+UPDATE_LISTENER = "update_listener"
