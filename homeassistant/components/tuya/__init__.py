@@ -2,10 +2,6 @@
 from datetime import timedelta
 import logging
 
-<<<<<<< HEAD
-=======
-from requests.exceptions import ConnectionError as RequestsConnectionError
->>>>>>> Rename exception
 from tuyaha import TuyaApi
 from tuyaha.tuyaapi import TuyaAPIException, TuyaNetException, TuyaServerException
 import voluptuous as vol
@@ -73,12 +69,8 @@ def setup(hass, config, retry_delay=FIRST_RETRY_TIME):
 
     try:
         tuya.init(username, password, country_code, platform)
-<<<<<<< HEAD
     except (TuyaNetException, TuyaServerException):
 
-=======
-    except RequestsConnectionError:
->>>>>>> Rename exception
         _LOGGER.warning(
             "Connection error during integration setup. Will retry in %s seconds",
             retry_delay,
