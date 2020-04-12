@@ -79,13 +79,13 @@ class PanelProxy(HomeAssistantView):
 async def async_setup(hass, config):
     """Set up the proxy frontend panels."""
     for url_path, info in config[DOMAIN].items():
-        hass.http.register_view(PanelProxy('/' + url_path, info[CONF_URL]))
+        hass.http.register_view(PanelProxy("/" + url_path, info[CONF_URL]))
         hass.components.frontend.async_register_built_in_panel(
             "iframe",
             info.get(CONF_TITLE),
             info.get(CONF_ICON),
-            'proxy_' + url_path,
-            {"url": '/' + url_path},
+            "proxy_" + url_path,
+            {"url": "/" + url_path},
             require_admin=info[CONF_REQUIRE_ADMIN],
         )
 
