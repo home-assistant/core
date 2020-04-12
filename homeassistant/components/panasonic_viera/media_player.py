@@ -60,9 +60,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         params["app_id"] = config[CONF_APP_ID]
         params["encryption_key"] = config[CONF_ENCRYPTION_KEY]
 
-    remote = await hass.async_add_executor_job(
-        partial(Remote, hass, host, port, **params)
-    )
+    remote = Remote(hass, host, port, **params)
     await remote.async_create_remote_control(during_setup=True)
 
     tv_device = PanasonicVieraTVDevice(hass, remote, name, on_action,)
