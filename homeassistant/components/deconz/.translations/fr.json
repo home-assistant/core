@@ -34,6 +34,8 @@
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Les deux boutons",
+            "top_buttons": "sup\u00e9rieurs boutons",
+            "bottom_buttons" : "inf\u00e9rieurs boutons",
             "button_1": "Premier bouton",
             "button_2": "Deuxi\u00e8me bouton",
             "button_3": "Troisi\u00e8me bouton",
