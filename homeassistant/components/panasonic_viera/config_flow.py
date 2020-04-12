@@ -120,10 +120,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self._remote._type == TV_TYPE_ENCRYPTED:  # pylint: disable=protected-access
             return await self.async_step_pairing()
-        else:
-            return self.async_create_entry(
-                title=self._data[CONF_NAME], data=self._data,
-            )
+
+        return self.async_create_entry(title=self._data[CONF_NAME], data=self._data,)
 
     @callback
     def _show_user_form(self):
