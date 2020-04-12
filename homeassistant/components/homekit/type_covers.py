@@ -104,11 +104,6 @@ class GarageDoorOpener(HomeAccessory):
         target_door_state = DOOR_TARGET_HASS_TO_HK.get(hass_state)
         current_door_state = DOOR_CURRENT_HASS_TO_HK.get(hass_state)
 
-        _LOGGER.debug(
-            "target_door_state: %s, current_door_state: %s",
-            target_door_state,
-            current_door_state,
-        )
         if (
             target_door_state is not None
             and self.char_target_state.value != target_door_state
