@@ -37,9 +37,34 @@ from .const import (
     CHAR_TARGET_POSITION,
     CHAR_TARGET_TILT_ANGLE,
     DEVICE_PRECISION_LEEWAY,
+    HK_DOOR_CLOSED,
+    HK_DOOR_CLOSING,
+    HK_DOOR_OPEN,
+    HK_DOOR_OPENING,
     SERV_GARAGE_DOOR_OPENER,
     SERV_WINDOW_COVERING,
 )
+
+DOOR_CURRENT_HASS_TO_HK = {
+    STATE_OPEN: HK_DOOR_OPEN,
+    STATE_CLOSED: HK_DOOR_CLOSED,
+    STATE_OPENING: HK_DOOR_OPENING,
+    STATE_CLOSING: HK_DOOR_CLOSING,
+}
+
+# HomeKit only has two states for
+# Target Door State:
+#  0: Open
+#  1: Closed
+# Opening is mapped to 0 since the target is Open
+# Closing is mapped to 1 since the target is Closed
+DOOR_TARGET_HASS_TO_HK = {
+    STATE_OPEN: HK_DOOR_OPEN,
+    STATE_CLOSED: HK_DOOR_CLOSED,
+    STATE_OPENING: HK_DOOR_OPEN,
+    STATE_CLOSING: HK_DOOR_CLOSED,
+}
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +80,7 @@ class GarageDoorOpener(HomeAccessory):
     def __init__(self, *args):
         """Initialize a GarageDoorOpener accessory object."""
         super().__init__(*args, category=CATEGORY_GARAGE_DOOR_OPENER)
-        self._flag_state = False
+        state = self.hass.states.get(self.entity_id)
 
         serv_garage_door = self.add_preload_service(SERV_GARAGE_DOOR_OPENER)
         self.char_current_state = serv_garage_door.configure_char(
@@ -64,31 +89,38 @@ class GarageDoorOpener(HomeAccessory):
         self.char_target_state = serv_garage_door.configure_char(
             CHAR_TARGET_DOOR_STATE, value=0, setter_callback=self.set_state
         )
+        self.update_state(state)
 
     def set_state(self, value):
         """Change garage state if call came from HomeKit."""
         _LOGGER.debug("%s: Set state to %d", self.entity_id, value)
-        self._flag_state = True
 
         params = {ATTR_ENTITY_ID: self.entity_id}
-        if value == 0:
+        if value == HK_DOOR_OPEN:
             if self.char_current_state.value != value:
-                self.char_current_state.set_value(3)
+                self.char_current_state.set_value(HK_DOOR_OPENING)
             self.call_service(DOMAIN, SERVICE_OPEN_COVER, params)
-        elif value == 1:
+        elif value == HK_DOOR_CLOSED:
             if self.char_current_state.value != value:
-                self.char_current_state.set_value(2)
+                self.char_current_state.set_value(HK_DOOR_CLOSING)
             self.call_service(DOMAIN, SERVICE_CLOSE_COVER, params)
 
     def update_state(self, new_state):
         """Update cover state after state changed."""
         hass_state = new_state.state
-        if hass_state in (STATE_OPEN, STATE_CLOSED):
-            current_state = 0 if hass_state == STATE_OPEN else 1
-            self.char_current_state.set_value(current_state)
-            if not self._flag_state:
-                self.char_target_state.set_value(current_state)
-            self._flag_state = False
+        target_door_state = DOOR_TARGET_HASS_TO_HK.get(hass_state)
+        current_door_state = DOOR_CURRENT_HASS_TO_HK.get(hass_state)
+
+        if (
+            target_door_state is not None
+            and self.char_target_state.value != target_door_state
+        ):
+            self.char_target_state.set_value(target_door_state)
+        if (
+            current_door_state is not None
+            and self.char_current_state.value != current_door_state
+        ):
+            self.char_current_state.set_value(current_door_state)
 
 
 @TYPES.register("WindowCovering")
