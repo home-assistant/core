@@ -209,4 +209,8 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 
 class CannotDisconnect(exceptions.HomeAssistantError):
+<<<<<<< HEAD
     """Error to indicate we cannot disconnect."""
+=======
+    """Error to indicate we cannot connect."""
+>>>>>>> Add check disconnect to vacuum
