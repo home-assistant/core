@@ -6,6 +6,7 @@ from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LENGTH_KILOMETERS,
+    MASS_KILOGRAMS,
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
@@ -55,7 +56,7 @@ UOM_FRIENDLY_NAME = {
     "25": "index",
     "26": "K",
     "27": "keyword",
-    "28": "kg",
+    "28": MASS_KILOGRAMS,
     "29": "kV",
     "30": "kW",
     "31": "kPa",
