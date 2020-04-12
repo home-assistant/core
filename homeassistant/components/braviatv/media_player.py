@@ -115,8 +115,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     braviarc = hass.data[DOMAIN][config_entry.entry_id]
 
-    if config_entry.options.get(CONF_IGNORED_SOURCES):
-        ignored_sources = config_entry.options.get(CONF_IGNORED_SOURCES)
+    ignored_sources = config_entry.options.get(CONF_IGNORED_SOURCES, [])
 
     async_add_entities(
         [
