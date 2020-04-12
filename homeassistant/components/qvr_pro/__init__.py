@@ -19,6 +19,8 @@ from .const import (
     SERVICE_STOP_RECORD,
 )
 
+DEFAULT_PORT = 8080
+
 SERVICE_CHANNEL_GUID = "guid"
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_HOST): cv.string,
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_PORT, default=8080): cv.port,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_EXCLUDE_CHANNELS, default=[]): vol.All(
                     cv.ensure_list_csv, [cv.positive_int]
                 ),
