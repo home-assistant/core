@@ -129,18 +129,21 @@ class NwsData:
         return self.nws.forecast_hourly
 
     @staticmethod
-    async def _async_update_item(update_call, update_type, station_name, success):
+    async def _async_update_item(
+        update_call, update_type, station_name, previous_success
+    ):
+        """Update item and handle logging."""
         try:
             _LOGGER.debug("Updating %s for station %s", update_type, station_name)
             await update_call()
 
-            if success:
+            if not previous_success:
                 _LOGGER.warning(
                     "Success updating %s for station %s", update_type, station_name
                 )
-                success = True
+            success = True
         except (aiohttp.ClientError, asyncio.TimeoutError) as err:
-            if success:
+            if previous_success:
                 _LOGGER.warning(
                     "Error updating %s for station %s: %s",
                     update_type,
@@ -148,23 +151,24 @@ class NwsData:
                     err,
                 )
             success = False
+        return success
 
     async def async_update(self, now=None):
         """Update all data."""
 
-        await self._async_update_item(
+        self.update_observation_success = await self._async_update_item(
             self.nws.update_observation,
             "observation",
             self.station,
             self.update_observation_success,
         )
-        await self._async_update_item(
+        self.update_forecast_success = await self._async_update_item(
             self.nws.update_forecast,
             "forecast",
             self.station,
             self.update_forecast_success,
         )
-        await self._async_update_item(
+        self.update_forecast_hourly_success = await self._async_update_item(
             self.nws.update_forecast_hourly,
             "forecast_hourly",
             self.station,
