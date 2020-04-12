@@ -2,7 +2,6 @@
 import asyncio
 from datetime import timedelta
 import logging
-import re
 
 import async_timeout
 from pynut2.nut2 import PyNUTClient, PyNUTError
