@@ -1,0 +1,9 @@
+{
+  "domain": "panel_proxy",
+  "name": "proxy Panel",
+  "documentation": "https://www.home-assistant.io/integrations/panel_proxy",
+  "requirements": [],
+  "dependencies": ["frontend"],
+  "codeowners": ["@doudz"],
+  "quality_scale": "internal"
+}
