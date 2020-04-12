@@ -381,6 +381,10 @@ LENGTH_FEET: str = "ft"
 LENGTH_YARD: str = "yd"
 LENGTH_MILES: str = "mi"
 
+# Frequency units
+FREQUENCY_HERTZ = "Hz"
+FREQUENCY_GIGAHERTZ = f"G{FREQUENCY_HERTZ}"
+
 # Pressure units
 PRESSURE_PA: str = "Pa"
 PRESSURE_HPA: str = "hPa"
