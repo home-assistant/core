@@ -148,9 +148,16 @@ async def async_connect_or_timeout(hass, roomba):
 
 async def async_disconnect_or_timeout(hass, roomba):
     """Disconnect to vacuum."""
-    _LOGGER.debug("Disconnect vacuum")
-    with async_timeout.timeout(3):
-        await hass.async_add_executor_job(roomba.disconnect)
+    try:
+        with async_timeout.timeout(3):
+            _LOGGER.debug("Disconnect vacuum")
+            await hass.async_add_executor_job(roomba.disconnect)
+            while roomba.roomba_connected:
+                await asyncio.sleep(1)
+    except asyncio.TimeoutError:
+        _LOGGER.error("Timeout exceeded when disconnecting the vacuum cleaner")
+        raise CannotDisconnect
+
     return True
 
 
@@ -192,4 +199,8 @@ def _async_find_matching_config_entry(hass, prefix):
 
 
 class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class CannotDisconnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
