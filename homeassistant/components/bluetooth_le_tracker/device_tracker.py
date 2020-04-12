@@ -75,7 +75,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
         _LOGGER.debug("Discovering Bluetooth LE devices")
         try:
             device_id = config.get(CONF_DEVICE_ID, 0)
-            adapter = pygatt.GATTToolBackend(hci_device=f'hci{device_id}')
+            adapter = pygatt.GATTToolBackend(hci_device=f"hci{device_id}")
             hass.data[DATA_BLE][DATA_BLE_ADAPTER] = adapter
             devs = adapter.scan()
 
