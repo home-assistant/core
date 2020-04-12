@@ -44,7 +44,6 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up IPP from a config entry."""
-
     # Create IPP instance for this entry
     coordinator = IPPDataUpdateCoordinator(
         hass,
@@ -128,23 +127,21 @@ class IPPEntity(Entity):
         self,
         *,
         entry_id: str,
+        entry_unique_id: str,
         coordinator: IPPDataUpdateCoordinator,
         name: str,
         icon: str,
         enabled_default: bool = True,
-        entry_unique_id: str = None,
     ) -> None:
         """Initialize the IPP entity."""
         self._enabled_default = enabled_default
         self._entry_id = entry_id
-        aelf._entry_unique_id = entry_unique_id
-        self._device_id = None
+        self._entry_unique_id = entry_unique_id
+        self._device_id = entry_unique_id
         self._icon = icon
         self._name = name
         self._unsub_dispatcher = None
         self.coordinator = coordinator
-
-        
 
     @property
     def name(self) -> str:

@@ -1,6 +1,7 @@
 """Config flow to configure the IPP integration."""
 import logging
 from typing import Any, Dict, Optional
+from uuid import NAMESPACE_URL, uuid3
 
 from pyipp import (
     IPP,
@@ -75,9 +76,17 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("IPP Parse Error")
             return self.async_abort(reason="parse_error")
 
-        user_input[CONF_UUID] = info[CONF_UUID]
+        unique_id = user_input[CONF_UUID] = info[CONF_UUID]
 
-        await self.async_set_unique_id(user_input[CONF_UUID])
+        if unique_id is None:
+            _LOGGER.debug(
+                "Printer UUID is missing from IPP info. Falling back to IPP URL"
+            )
+            # Use the user provided host, port, and base path to build a semi-unique id
+            url = f"http://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}{user_input[CONF_BASE_PATH]}"
+            unique_id = "url-" + uuid3(NAMESPACE_URL, url).hex
+
+        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
 
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
@@ -85,22 +94,22 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(self, discovery_info: ConfigType) -> Dict[str, Any]:
         """Handle zeroconf discovery."""
         # Hostname is format: EPSON123456.local.
-        host = discovery_info["hostname"].rstrip(".")
-        port = discovery_info["port"]
-        name, _ = host.rsplit(".")
-        tls = discovery_info["type"] == "_ipps._tcp.local."
+        hostname = discovery_info["hostname"].rstrip(".")
+        port = discovery_info[CONF_PORT]
+        ztype = discovery_info["type"]
+        name = discovery_info[CONF_NAME].replace(f".{ztype}", "")
+        tls = ztype == "_ipps._tcp.local."
+        base_path = discovery_info["properties"].get("rp", "ipp/print")
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {"name": name}})
-
         self.discovery_info.update(
             {
                 CONF_HOST: discovery_info[CONF_HOST],
                 CONF_PORT: port,
                 CONF_SSL: tls,
                 CONF_VERIFY_SSL: False,
-                CONF_BASE_PATH: "/"
-                + discovery_info["properties"].get("rp", "ipp/print"),
+                CONF_BASE_PATH: f"/{base_path}",
                 CONF_NAME: name,
                 CONF_UUID: discovery_info["properties"].get("UUID"),
             }
@@ -116,10 +125,22 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("IPP Parse Error")
             return self.async_abort(reason="parse_error")
 
-        if info[CONF_UUID] is not None:
-            self.discovery_info[CONF_UUID] = info[CONF_UUID]
+        unique_id = self.discovery_info[CONF_UUID]
+        if unique_id is None and info[CONF_UUID] is not None:
+            _LOGGER.debug(
+                "Printer UUID is missing from discovery info. Falling back to IPP UUID"
+            )
+            unique_id = self.discovery_info[CONF_UUID] = info[CONF_UUID]
+        elif unique_id is None:
+            _LOGGER.debug(
+                "Printer UUID is missing from discovery info. Falling back to IPP URL"
+            )
+            # Use the mdns provided hostname, port, and base path to build a semi-unique id
+            # The goal is to allow these printers to be added properly or ignored via UI
+            url = f"http://{hostname}:{port}/{base_path}"
+            unique_id = "url-" + uuid3(NAMESPACE_URL, url).hex
 
-        await self.async_set_unique_id(self.discovery_info[CONF_UUID])
+        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self.discovery_info[CONF_HOST]}
         )
