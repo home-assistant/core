@@ -398,7 +398,8 @@ class SpeechManager:
         @callback
         def async_remove_from_mem():
             """Cleanup memcache."""
-            self.mem_cache.pop(key)
+            if key in self.mem_cache.keys():
+                self.mem_cache.pop(key)
 
         self.hass.loop.call_later(self.time_memory, async_remove_from_mem)
 
