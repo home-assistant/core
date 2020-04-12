@@ -267,14 +267,6 @@ class Thermostat(HomeAccessory):
 
         hvac_mode = self.hass.states.get(self.entity_id).state
         homekit_hvac_mode = HC_HASS_TO_HOMEKIT[hvac_mode]
-        _LOGGER.debug(
-            "Thermostat features: %s, state: %s, hvac_mode: %s, homekit_hvac_mode: %s hc_homekit_to_hass: %s",
-            features,
-            state,
-            hvac_mode,
-            homekit_hvac_mode,
-            self.hc_homekit_to_hass,
-        )
 
         if CHAR_TARGET_HEATING_COOLING in char_values:
             # Homekit will reset the mode when VIEWING the temp
@@ -296,7 +288,6 @@ class Thermostat(HomeAccessory):
 
         if CHAR_TARGET_TEMPERATURE in char_values:
             hc_target_temp = char_values[CHAR_TARGET_TEMPERATURE]
-            _LOGGER.debug("CHAR_TARGET_TEMPERATURE features: %s", features)
             if features & SUPPORT_TARGET_TEMPERATURE:
                 service = SERVICE_SET_TEMPERATURE_THERMOSTAT
                 temperature = self._temperature_to_states(hc_target_temp)
@@ -357,8 +348,6 @@ class Thermostat(HomeAccessory):
                     ATTR_TARGET_TEMP_LOW: self._temperature_to_states(low),
                 }
             )
-
-        _LOGGER.debug("Params: %s", params)
 
         if service:
             params[ATTR_ENTITY_ID] = self.entity_id
