@@ -196,15 +196,16 @@ class ModbusHub:
 
     def _framer(self, method):
         if method == "ascii":
-            return ModbusAsciiFramer(ClientDecoder())
+            framer = ModbusAsciiFramer(ClientDecoder())
         elif method == "rtu":
-            return ModbusRtuFramer(ClientDecoder())
+            framer = ModbusRtuFramer(ClientDecoder())
         elif method == "binary":
-            return ModbusBinaryFramer(ClientDecoder())
+            framer = ModbusBinaryFramer(ClientDecoder())
         elif method == "socket":
-            return ModbusSocketFramer(ClientDecoder())
+            framer = ModbusSocketFramer(ClientDecoder())
         else:
-            return None
+            framer = None
+        return framer
 
     async def create_serial(self):
         """Create serial modbus client and connect."""
