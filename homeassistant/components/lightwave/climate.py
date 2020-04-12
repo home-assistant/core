@@ -39,7 +39,6 @@ class LightwaveTrv(ClimateDevice):
         self._state = None
         self._current_temperature = None
         self._target_temperature = None
-        self._target_temperature_step = 0.5
         self._hvac_action = None
         self._lwlink = lwlink
         self._serial = serial
@@ -128,7 +127,7 @@ class LightwaveTrv(ClimateDevice):
     @property
     def target_temperature_step(self):
         """Set temperature step."""
-        return self._target_temperature_step
+        return 0.5
 
     def set_temperature(self, **kwargs):
         """Set TRV target temperature."""
