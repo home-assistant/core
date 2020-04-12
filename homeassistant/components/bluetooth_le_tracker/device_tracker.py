@@ -14,10 +14,7 @@ from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
     async_load_config,
 )
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    EVENT_HOMEASSISTANT_STOP
-)
+from homeassistant.const import CONF_DEVICE_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.event import track_point_in_utc_time
 import homeassistant.util.dt as dt_util
 
