@@ -10,19 +10,29 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_RESOURCES,
+    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import PyNUTData, find_resources_in_config_entry
-from .const import DEFAULT_HOST, DEFAULT_PORT, SENSOR_TYPES
+from .const import (
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    SENSOR_NAME,
+    SENSOR_TYPES,
+)
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 
-SENSOR_DICT = {sensor_id: SENSOR_TYPES[sensor_id][0] for sensor_id in SENSOR_TYPES}
+SENSOR_DICT = {
+    sensor_id: sensor_spec[SENSOR_NAME]
+    for sensor_id, sensor_spec in SENSOR_TYPES.items()
+}
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -34,22 +44,20 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-def _resource_schema(available_resources, selected_resources):
+def _resource_schema_base(available_resources, selected_resources):
     """Resource selection schema."""
 
     known_available_resources = {
-        sensor_id: sensor[0]
+        sensor_id: sensor[SENSOR_NAME]
         for sensor_id, sensor in SENSOR_TYPES.items()
         if sensor_id in available_resources
     }
 
-    return vol.Schema(
-        {
-            vol.Required(CONF_RESOURCES, default=selected_resources): cv.multi_select(
-                known_available_resources
-            )
-        }
-    )
+    return {
+        vol.Required(CONF_RESOURCES, default=selected_resources): cv.multi_select(
+            known_available_resources
+        )
+    }
 
 
 def _ups_schema(ups_list):
@@ -160,7 +168,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="resources",
-                data_schema=_resource_schema(self.available_resources, []),
+                data_schema=vol.Schema(
+                    _resource_schema_base(self.available_resources, [])
+                ),
             )
 
         self.nut_config.update(user_input)
@@ -207,12 +217,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         resources = find_resources_in_config_entry(self.config_entry)
+        scan_interval = self.config_entry.options.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
 
         info = await validate_input(self.hass, self.config_entry.data)
 
+        base_schema = _resource_schema_base(info["available_resources"], resources)
+        base_schema[
+            vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval)
+        ] = cv.positive_int
+
         return self.async_show_form(
-            step_id="init",
-            data_schema=_resource_schema(info["available_resources"], resources),
+            step_id="init", data_schema=vol.Schema(base_schema),
         )
 
 

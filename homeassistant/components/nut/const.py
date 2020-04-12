@@ -26,6 +26,7 @@ KEY_STATUS = "ups.status"
 KEY_STATUS_DISPLAY = "ups.status.display"
 
 COORDINATOR = "coordinator"
+DEFAULT_SCAN_INTERVAL = 60
 
 PYNUT_DATA = "data"
 PYNUT_UNIQUE_ID = "unique_id"
