@@ -51,6 +51,13 @@ DOOR_CURRENT_HASS_TO_HK = {
     STATE_OPENING: HK_DOOR_OPENING,
     STATE_CLOSING: HK_DOOR_CLOSING,
 }
+
+# HomeKit only has two states for
+# Target Door State:
+#  0: Open
+#  1: Closed
+# Opening is mapped to 0 since the target is Open
+# Closing is mapped to 1 since the target is Closed
 DOOR_TARGET_HASS_TO_HK = {
     STATE_OPEN: HK_DOOR_OPEN,
     STATE_CLOSED: HK_DOOR_CLOSED,
