@@ -46,11 +46,8 @@ class LightwaveTrv(ClimateDevice):
         self._name = name
         self._device_id = device_id
         self._state = None
-        self._max_temp = DEFAULT_MAX_TEMP
-        self._min_temp = DEFAULT_MIN_TEMP
         self._current_temperature = None
         self._target_temperature = None
-        self._temperature_unit = TEMP_CELSIUS
         self._target_temperature_step = 0.5
         self._hvac_mode = HVAC_MODE_HEAT
         self._hvac_action = None
@@ -136,17 +133,17 @@ class LightwaveTrv(ClimateDevice):
     @property
     def min_temp(self):
         """Min Temp."""
-        return self._min_temp
+        return DEFAULT_MIN_TEMP
 
     @property
     def max_temp(self):
         """Max Temp."""
-        return self._max_temp
+        return DEFAULT_MAX_TEMP
 
     @property
     def temperature_unit(self):
         """Set temperature unit."""
-        return self._temperature_unit
+        return TEMP_CELSIUS
 
     @property
     def target_temperature_step(self):

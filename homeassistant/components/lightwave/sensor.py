@@ -1,7 +1,7 @@
 """Support for LightwaveRF TRV - Associated Battery."""
 import logging
 
-from homeassistant.const import CONF_NAME, DEVICE_CLASS_BATTERY
+from homeassistant.const import CONF_NAME, DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 
 from . import CONF_SERIAL, LIGHTWAVE_LINK
@@ -14,16 +14,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if not discovery_info:
         return
 
-    batt = []
+    batteries = []
 
     lwlink = hass.data[LIGHTWAVE_LINK]
 
-    for dummy, device_config in discovery_info.items():
+    for _, device_config in discovery_info.items():
         name = device_config[CONF_NAME]
         serial = device_config[CONF_SERIAL]
-        batt.append(LightwaveBattery(name, lwlink, serial))
+        batteries.append(LightwaveBattery(name, lwlink, serial))
 
-    async_add_entities(batt)
+    async_add_entities(batteries)
 
 
 class LightwaveBattery(Entity):
@@ -35,13 +35,11 @@ class LightwaveBattery(Entity):
         self._state = None
         self._lwlink = lwlink
         self._serial = serial
-        self._device_class = DEVICE_CLASS_BATTERY
-        self._unit_of_measurement = "%"
 
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return self._device_class
+        return DEVICE_CLASS_BATTERY
 
     @property
     def name(self):
@@ -56,7 +54,7 @@ class LightwaveBattery(Entity):
     @property
     def unit_of_measurement(self):
         """Return the state of the sensor."""
-        return self._unit_of_measurement
+        return UNIT_PERCENTAGE
 
     def update(self):
         """Communicate with a Lightwave RTF Proxy to get state."""
