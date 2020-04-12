@@ -21,6 +21,7 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     HTTP_OK,
+    LENGTH_MILLIMETERS,
     PRESSURE_HPA,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
@@ -43,7 +44,7 @@ ATTRIBUTION = (
 
 SENSOR_TYPES = {
     "symbol": ["Symbol", None, None],
-    "precipitation": ["Precipitation", "mm", None],
+    "precipitation": ["Precipitation", LENGTH_MILLIMETERS, None],
     "temperature": ["Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
     "windSpeed": ["Wind speed", SPEED_METERS_PER_SECOND, None],
     "windGust": ["Wind gust", SPEED_METERS_PER_SECOND, None],

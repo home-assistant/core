@@ -6,6 +6,7 @@ from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LENGTH_KILOMETERS,
+    LENGTH_MILLIMETERS,
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
@@ -100,7 +101,7 @@ UOM_FRIENDLY_NAME = {
     "75": "weekday",
     "76": f"Wind Direction ({UNIT_DEGREE})",
     "77": TIME_YEARS,
-    "82": "mm",
+    "82": LENGTH_MILLIMETERS,
     "83": LENGTH_KILOMETERS,
     "85": "ohm",
     "86": "kOhm",

@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_NAME,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    LENGTH_MILLIMETERS,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     UNIT_DEGREE,
@@ -90,7 +91,7 @@ SENSOR_TYPES = {
     ],
     "precipitation_amount": [
         "Precipitation amount",
-        "mm",
+        LENGTH_MILLIMETERS,
         "precipitation_amount",
         "mdi:cup-water",
         None,

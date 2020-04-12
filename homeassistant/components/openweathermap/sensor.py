@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    LENGTH_MILLIMETERS,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -41,8 +42,8 @@ SENSOR_TYPES = {
     "humidity": ["Humidity", UNIT_PERCENTAGE],
     "pressure": ["Pressure", "mbar"],
     "clouds": ["Cloud coverage", UNIT_PERCENTAGE],
-    "rain": ["Rain", "mm"],
-    "snow": ["Snow", "mm"],
+    "rain": ["Rain", LENGTH_MILLIMETERS],
+    "snow": ["Snow", LENGTH_MILLIMETERS],
     "weather_code": ["Weather code", None],
 }
 
@@ -167,14 +168,14 @@ class OpenWeatherMapSensor(Entity):
                 rain = data.get_rain()
                 if "3h" in rain:
                     self._state = round(rain["3h"], 0)
-                    self._unit_of_measurement = "mm"
+                    self._unit_of_measurement = LENGTH_MILLIMETERS
                 else:
                     self._state = "not raining"
                     self._unit_of_measurement = ""
             elif self.type == "snow":
                 if data.get_snow():
                     self._state = round(data.get_snow(), 0)
-                    self._unit_of_measurement = "mm"
+                    self._unit_of_measurement = LENGTH_MILLIMETERS
                 else:
                     self._state = "not snowing"
                     self._unit_of_measurement = ""
