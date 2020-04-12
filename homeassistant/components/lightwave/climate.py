@@ -33,7 +33,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     for device_id, device_config in discovery_info.items():
         name = device_config[CONF_NAME]
         serial = device_config[CONF_SERIAL]
-        trv.append(LightwaveTrv(name, device_id, lwlink, serial))
+        entities.append(LightwaveTrv(name, device_id, lwlink, serial))
 
     async_add_entities(trv)
 
