@@ -22,13 +22,20 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_PIN,
+    STATE_OFF,
+    STATE_ON,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json
 
 from .const import (
     ATTR_MANUFACTURER,
-    ATTR_MODEL,
     BRAVIA_CONFIG_FILE,
     CLIENTID_PREFIX,
     CONF_IGNORED_SOURCES,
@@ -82,12 +89,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         host_ip, host_config = bravia_config.popitem()
         if host_ip == host:
             pin = host_config[CONF_PIN]
+            mac = host_config[CONF_MAC]
 
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
                     context={"source": SOURCE_IMPORT},
-                    data={CONF_HOST: host, CONF_PIN: pin},
+                    data={CONF_HOST: host, CONF_PIN: pin, CONF_MAC: mac},
                 )
             )
 
@@ -96,7 +104,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add BraviaTV entities from a config_entry."""
     ignored_sources = []
     pin = config_entry.data[CONF_PIN]
-    model = config_entry.data[ATTR_MODEL]
+    model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
     device_info = {
         "identifiers": {(DOMAIN, unique_id)},

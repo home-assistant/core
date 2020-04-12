@@ -6,7 +6,7 @@ from asynctest import patch
 from homeassistant import data_entry_flow
 from homeassistant.components.braviatv.const import CONF_IGNORED_SOURCES, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PIN
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_PIN
 
 from tests.common import MockConfigEntry
 
@@ -32,13 +32,21 @@ BRAVIA_SOURCE_LIST = OrderedDict(
         ("AV/Component", "extInput:component?port=1"),
     ]
 )
-
-CONFIG = {CONF_HOST: "bravia-host", CONF_PIN: "1234"}
+CONFIG = {
+    CONF_HOST: "bravia-host",
+    CONF_PIN: "1234",
+    CONF_MAC: "AA:BB:CC:DD:EE:FF",
+}
 
 config_entry = MockConfigEntry(
     domain=DOMAIN,
     unique_id="very_unique_string",
-    data={CONF_HOST: "bravia-host", CONF_PIN: "1234"},
+    data={
+        CONF_HOST: "bravia-host",
+        CONF_PIN: "1234",
+        CONF_MAC: "AA:BB:CC:DD:EE:FF",
+        CONF_MODEL: "",
+    },
     title="TV-Model",
 )
 
@@ -68,6 +76,7 @@ async def test_import(hass):
         assert result["data"] == {
             CONF_HOST: "bravia-host",
             CONF_PIN: "1234",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
         }
 
 

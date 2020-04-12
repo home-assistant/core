@@ -3,7 +3,7 @@ import asyncio
 
 from bravia_tv import BraviaRC
 
-from homeassistant.const import CONF_HOST, CONF_PIN
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CLIENTID_PREFIX, DOMAIN, NICKNAME
@@ -19,9 +19,10 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up a config entry."""
     host = config_entry.data[CONF_HOST]
+    mac = config_entry.data[CONF_MAC]
     pin = config_entry.data[CONF_PIN]
 
-    braviarc = BraviaRC(host)
+    braviarc = BraviaRC(host, mac)
 
     await hass.async_add_executor_job(braviarc.connect, pin, CLIENTID_PREFIX, NICKNAME)
 

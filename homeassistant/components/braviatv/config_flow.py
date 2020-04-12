@@ -7,12 +7,13 @@ from bravia_tv import BraviaRC
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_HOST, CONF_PIN
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_PIN
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (  # pylint:disable=unused-import
     ATTR_CID,
+    ATTR_MAC,
     ATTR_MODEL,
     CLIENTID_PREFIX,
     CONF_IGNORED_SOURCES,
@@ -124,6 +125,8 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 title = f"{system_info[ATTR_MODEL]}"
                 user_input[CONF_HOST] = self.host
+                user_input[CONF_MODEL] = system_info[ATTR_MODEL]
+                user_input[CONF_MAC] = system_info[ATTR_MAC]
                 return self.async_create_entry(title=title, data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
