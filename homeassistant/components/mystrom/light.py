@@ -19,6 +19,8 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "myStrom bulb"
@@ -39,28 +41,28 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the myStrom Light platform."""
-
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the myStrom light integration."""
     host = config.get(CONF_HOST)
     mac = config.get(CONF_MAC)
     name = config.get(CONF_NAME)
 
     bulb = MyStromBulb(host, mac)
     try:
-        if bulb.get_status()["type"] != "rgblamp":
+        await bulb.get_state()
+        if bulb.bulb_type != "rgblamp":
             _LOGGER.error("Device %s (%s) is not a myStrom bulb", host, mac)
             return
     except MyStromConnectionError:
-        _LOGGER.warning("No route to device: %s", host)
+        _LOGGER.warning("No route to myStrom bulb: %s", host)
 
-    add_entities([MyStromLight(bulb, name)], True)
+    async_add_entities([MyStromLight(bulb, name, mac)], True)
 
 
 class MyStromLight(Light):
-    """Representation of the myStrom WiFi Bulb."""
+    """Representation of the myStrom WiFi bulb."""
 
-    def __init__(self, bulb, name):
+    def __init__(self, bulb, name, mac):
         """Initialize the light."""
         self._bulb = bulb
         self._name = name
@@ -69,11 +71,30 @@ class MyStromLight(Light):
         self._brightness = 0
         self._color_h = 0
         self._color_s = 0
+        self._mac = mac
+        self.bulb_type = None
+        self.firmware = None
 
     @property
     def name(self):
         """Return the display name of this light."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._mac
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self._name,
+            "manufacturer": DOMAIN,
+            "model": self.bulb_type,
+            "sw_version": self.firmware,
+        }
 
     @property
     def supported_features(self):
@@ -103,11 +124,10 @@ class MyStromLight(Light):
     @property
     def is_on(self):
         """Return true if light is on."""
-        return self._state["on"] if self._state is not None else None
+        return self._state
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn on the light."""
-
         brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         effect = kwargs.get(ATTR_EFFECT)
 
@@ -121,33 +141,34 @@ class MyStromLight(Light):
 
         try:
             if not self.is_on:
-                self._bulb.set_on()
+                await self._bulb.set_on()
             if brightness is not None:
-                self._bulb.set_color_hsv(
+                await self._bulb.set_color_hsv(
                     int(color_h), int(color_s), round(brightness * 100 / 255)
                 )
             if effect == EFFECT_SUNRISE:
-                self._bulb.set_sunrise(30)
+                await self._bulb.set_sunrise(30)
             if effect == EFFECT_RAINBOW:
-                self._bulb.set_rainbow(30)
+                await self._bulb.set_rainbow(30)
         except MyStromConnectionError:
-            _LOGGER.warning("No route to device")
+            _LOGGER.warning("No route to myStrom bulb")
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn off the bulb."""
-
         try:
-            self._bulb.set_off()
+            await self._bulb.set_off()
         except MyStromConnectionError:
             _LOGGER.warning("myStrom bulb not online")
 
-    def update(self):
+    async def async_update(self):
         """Fetch new state data for this light."""
-
         try:
-            self._state = self._bulb.get_status()
+            await self._bulb.get_state()
+            self._state = self._bulb.state
+            self.bulb_type = self._bulb.bulb_type
+            self.firmware = self._bulb.firmware
 
-            colors = self._bulb.get_color()["color"]
+            colors = self._bulb.color
             try:
                 color_h, color_s, color_v = colors.split(";")
             except ValueError:
@@ -160,5 +181,5 @@ class MyStromLight(Light):
 
             self._available = True
         except MyStromConnectionError:
-            _LOGGER.warning("No route to device")
+            _LOGGER.warning("No route to myStrom bulb")
             self._available = False
