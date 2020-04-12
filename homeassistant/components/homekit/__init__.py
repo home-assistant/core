@@ -127,9 +127,7 @@ async def async_setup(hass, config):
     safe_mode = conf[CONF_SAFE_MODE]
     entity_filter = conf[CONF_FILTER]
     entity_config = conf[CONF_ENTITY_CONFIG]
-    interface_choice = None
-    if config.get(CONF_ZEROCONF_DEFAULT_INTERFACE):
-        interface_choice = InterfaceChoice.Default
+    interface_choice = InterfaceChoice.Default if config.get(CONF_ZEROCONF_DEFAULT_INTERFACE) else None
 
     homekit = HomeKit(
         hass,
