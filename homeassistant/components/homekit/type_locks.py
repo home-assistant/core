@@ -55,6 +55,9 @@ class Lock(HomeAccessory):
         hass_value = HOMEKIT_TO_HASS.get(value)
         service = STATE_TO_SERVICE[hass_value]
 
+        if self.char_current_state.value != value:
+            self.char_current_state.set_value(value)
+
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._code:
             params[ATTR_CODE] = self._code
@@ -71,10 +74,15 @@ class Lock(HomeAccessory):
                 hass_state,
                 current_lock_state,
             )
-            if self.char_current_state.value != current_lock_state:
-                self.char_current_state.set_value(current_lock_state)
-
             # LockTargetState only supports locked and unlocked
+            # Must set lock target state before current state
+            # or there will be no notification
             if hass_state in (STATE_LOCKED, STATE_UNLOCKED):
                 if self.char_target_state.value != current_lock_state:
                     self.char_target_state.set_value(current_lock_state)
+
+            # Set lock current state ONLY after ensuring that
+            # target state is correct or there will be no
+            # notification
+            if self.char_current_state.value != current_lock_state:
+                self.char_current_state.set_value(current_lock_state)
