@@ -1105,6 +1105,9 @@ ptvsd==4.2.8
 # homeassistant.components.wink
 pubnubsub-handler==1.0.8
 
+# homeassistant.components.pulseaudio_loopback
+pulsectl==20.2.4
+
 # homeassistant.components.androidtv
 pure-python-adb==0.2.2.dev0
 
