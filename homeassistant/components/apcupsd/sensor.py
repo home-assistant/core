@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_RESOURCES,
+    FREQUENCY_HERTZ,
     POWER_WATT,
     TEMP_CELSIUS,
     TIME_MINUTES,
@@ -49,7 +50,7 @@ SENSOR_TYPES = {
     "itemp": ["Internal Temperature", TEMP_CELSIUS, "mdi:thermometer"],
     "lastxfer": ["Last Transfer", "", "mdi:transfer"],
     "linefail": ["Input Voltage Status", "", "mdi:information-outline"],
-    "linefreq": ["Line Frequency", "Hz", "mdi:information-outline"],
+    "linefreq": ["Line Frequency", FREQUENCY_HERTZ, "mdi:information-outline"],
     "linev": ["Input Voltage", UNIT_VOLT, "mdi:flash"],
     "loadpct": ["Load", UNIT_PERCENTAGE, "mdi:gauge"],
     "loadapnt": ["Load Apparent Power", UNIT_PERCENTAGE, "mdi:gauge"],
@@ -100,7 +101,7 @@ INFERRED_UNITS = {
     " Ampere": "A",
     " Volt-Ampere": "VA",
     " Watts": POWER_WATT,
-    " Hz": "Hz",
+    " Hz": FREQUENCY_HERTZ,
     " C": TEMP_CELSIUS,
     " Percent Load Capacity": UNIT_PERCENTAGE,
 }
