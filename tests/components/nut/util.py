@@ -26,10 +26,6 @@ async def async_init_integration(
     ups_fixture = f"nut/{ups_fixture}.json"
     list_vars = json.loads(load_fixture(ups_fixture))
 
-    import pprint
-
-    pprint.pprint(list_vars)
-
     mock_pynut = _get_mock_pynutclient(list_ups={"ups1": "UPS 1"}, list_vars=list_vars)
 
     with patch(
