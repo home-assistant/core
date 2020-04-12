@@ -58,7 +58,6 @@ class LightwaveBattery(Entity):
 
     def update(self):
         """Communicate with a Lightwave RTF Proxy to get state."""
-        battery = None
         (dummy_temp, dummy_targ, battery, dummy_output) = self._lwlink.read_trv_status(
             self._serial
         )
