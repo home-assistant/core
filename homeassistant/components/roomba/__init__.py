@@ -203,4 +203,4 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 
 class CannotDisconnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
+    """Error to indicate we cannot disconnect."""
