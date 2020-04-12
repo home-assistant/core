@@ -91,9 +91,8 @@ def _async_create_cast_device(hass: HomeAssistantType, info: ChromecastInfo):
     """
     _LOGGER.debug("_async_create_cast_device: %s", info)
     if info.uuid is None:
-        # Found a cast without UUID, we don't store it because we won't be able
-        # to update it anyway.
-        return CastDevice(info)
+        _LOGGER.error("_async_create_cast_device uuid none: %s", info)
+        return None
 
     # Found a cast with UUID
     added_casts = hass.data[ADDED_CAST_DEVICES_KEY]
@@ -156,7 +155,7 @@ async def _async_setup_platform(
     def async_cast_discovered(discover: ChromecastInfo) -> None:
         """Handle discovery of a new chromecast."""
         if info is not None and info.host_port != discover.host_port:
-            # Not our requested cast device.
+            # Waiting for a specific cast device, this is not it.
             return
 
         cast_device = _async_create_cast_device(hass, discover)
@@ -262,44 +261,24 @@ class CastDevice(MediaPlayerDevice):
             return
 
         # pylint: disable=protected-access
-        if self.services is None:
-            _LOGGER.debug(
-                "[%s %s (%s:%s)] Connecting to cast device by host %s",
-                self.entity_id,
-                self._cast_info.friendly_name,
-                self._cast_info.host,
-                self._cast_info.port,
-                cast_info,
-            )
-            chromecast = await self.hass.async_add_job(
-                pychromecast._get_chromecast_from_host,
-                (
-                    cast_info.host,
-                    cast_info.port,
-                    cast_info.uuid,
-                    cast_info.model_name,
-                    cast_info.friendly_name,
-                ),
-            )
-        else:
-            _LOGGER.debug(
-                "[%s %s (%s:%s)] Connecting to cast device by service %s",
-                self.entity_id,
-                self._cast_info.friendly_name,
-                self._cast_info.host,
-                self._cast_info.port,
+        _LOGGER.debug(
+            "[%s %s (%s:%s)] Connecting to cast device by service %s",
+            self.entity_id,
+            self._cast_info.friendly_name,
+            self._cast_info.host,
+            self._cast_info.port,
+            self.services,
+        )
+        chromecast = await self.hass.async_add_executor_job(
+            pychromecast._get_chromecast_from_service,
+            (
                 self.services,
-            )
-            chromecast = await self.hass.async_add_job(
-                pychromecast._get_chromecast_from_service,
-                (
-                    self.services,
-                    ChromeCastZeroconf.get_zeroconf(),
-                    cast_info.uuid,
-                    cast_info.model_name,
-                    cast_info.friendly_name,
-                ),
-            )
+                ChromeCastZeroconf.get_zeroconf(),
+                cast_info.uuid,
+                cast_info.model_name,
+                cast_info.friendly_name,
+            ),
+        )
         self._chromecast = chromecast
 
         if CAST_MULTIZONE_MANAGER_KEY not in self.hass.data:
@@ -403,10 +382,6 @@ class CastDevice(MediaPlayerDevice):
                 self._cast_info.port,
                 connection_status.status,
             )
-            info = self._cast_info
-            if info.friendly_name is None and not info.is_audio_group:
-                # We couldn't find friendly_name when the cast was added, retry
-                self._cast_info = info.fill_out_missing_chromecast_info()
             self._available = new_available
             self.schedule_update_ha_state()
 
