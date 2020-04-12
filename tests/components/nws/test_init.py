@@ -31,7 +31,7 @@ DUPLICATE_CONFIG = {
 async def test_no_config(hass, mock_simple_nws):
     """Test that nws does not setup with no config."""
     with assert_setup_component(0):
-        assert await async_setup_component(hass, DOMAIN, {}) is True
+        assert await async_setup_component(hass, DOMAIN, {})
         assert DOMAIN not in hass.data
 
 
@@ -40,7 +40,7 @@ async def test_successful_minimal_config(hass, mock_simple_nws):
     hass.config.latitude = 40.0
     hass.config.longitude = -75.0
     with assert_setup_component(1):
-        assert await async_setup_component(hass, DOMAIN, MINIMAL_CONFIG) is True
+        assert await async_setup_component(hass, DOMAIN, MINIMAL_CONFIG)
         assert DOMAIN in hass.data
         assert nws.base_unique_id(40.0, -75.0) in hass.data[DOMAIN]
 
@@ -48,7 +48,7 @@ async def test_successful_minimal_config(hass, mock_simple_nws):
 async def test_successful_latlon_config(hass, mock_simple_nws):
     """Test that nws setup with latlon config."""
     with assert_setup_component(1):
-        assert await async_setup_component(hass, DOMAIN, LATLON_CONFIG) is True
+        assert await async_setup_component(hass, DOMAIN, LATLON_CONFIG)
         assert DOMAIN in hass.data
         assert nws.base_unique_id(45.0, -75.0) in hass.data[DOMAIN]
 
@@ -56,12 +56,12 @@ async def test_successful_latlon_config(hass, mock_simple_nws):
 async def test_successful_full_config(hass, mock_simple_nws):
     """Test that nws setup with full config."""
     with assert_setup_component(1):
-        assert await async_setup_component(hass, DOMAIN, FULL_CONFIG) is True
+        assert await async_setup_component(hass, DOMAIN, FULL_CONFIG)
         assert DOMAIN in hass.data
         assert nws.base_unique_id(45.0, -75.0) in hass.data[DOMAIN]
 
 
 async def test_unsuccessful_duplicate_config(hass, mock_simple_nws):
     """Test that nws setup with duplicate config."""
-    assert await async_setup_component(hass, DOMAIN, DUPLICATE_CONFIG) is True
+    assert await async_setup_component(hass, DOMAIN, DUPLICATE_CONFIG)
     assert len(hass.data[DOMAIN]) == 1
