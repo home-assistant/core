@@ -71,7 +71,7 @@ class PanelProxy(HomeAssistantView):
             self.proxy_url + requested_url,
             params=request.query,
             data=post_data,
-            headers=headers
+            headers=headers,
         ) as resp:
             content = await resp.read()
             headers = resp.headers.copy()
