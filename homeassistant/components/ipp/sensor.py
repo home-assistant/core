@@ -40,7 +40,7 @@ async def async_setup_entry(
     for marker_index in range(len(coordinator.data.markers)):
         sensors.append(IPPMarkerSensor(entry.entry_id, coordinator, marker_index))
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class IPPSensor(IPPEntity):
