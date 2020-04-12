@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    LENGTH_METERS,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     UNIT_DEGREE,
@@ -64,7 +65,12 @@ SENSOR_TYPES = {
     # The following probably not useful for general consumption,
     # but we need them to fill in internal attributes
     "station_name": ("Station Name", None, "Name", str),
-    "station_elevation": ("Station Elevation", "m", "Höhe m", int),
+    "station_elevation": (
+        "Station Elevation",
+        LENGTH_METERS,
+        f"Höhe {LENGTH_METERS}",
+        int,
+    ),
     "update_date": ("Update Date", None, "Datum", str),
     "update_time": ("Update Time", None, "Zeit", str),
 }

@@ -56,6 +56,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     EVENT_TIMER_OUT_OF_SYNC,
+    LENGTH_METERS,
     MATCH_ALL,
     __version__,
 )
@@ -1324,7 +1325,7 @@ class Config:
         Async friendly.
         """
         return self.units.length(
-            location.distance(self.latitude, self.longitude, lat, lon), "m"
+            location.distance(self.latitude, self.longitude, lat, lon), LENGTH_METERS
         )
 
     def path(self, *path: str) -> str:
