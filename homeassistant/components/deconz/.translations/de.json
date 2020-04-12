@@ -34,6 +34,8 @@
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Beide Tasten",
+            "top_buttons": "Obere Tasten",
+            "bottom_buttons" : "Untere Tasten",
             "button_1": "Erste Taste",
             "button_2": "Zweite Taste",
             "button_3": "Dritte Taste",
