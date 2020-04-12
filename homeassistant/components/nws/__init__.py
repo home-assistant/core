@@ -78,7 +78,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
         for component in PLATFORMS:
             hass.async_create_task(
-                discovery.async_load_platform(hass, component, DOMAIN, {}, config)
+                discovery.async_load_platform(hass, component, DOMAIN, entry, config)
             )
 
     return True

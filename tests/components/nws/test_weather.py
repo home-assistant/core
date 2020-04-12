@@ -21,16 +21,6 @@ from tests.components.nws.const import (
     NONE_OBSERVATION,
 )
 
-HOURLY_CONFIG = {
-    "weather": {
-        "platform": "nws",
-        "api_key": "x@example.com",
-        "latitude": 40.0,
-        "longitude": -85.0,
-        "mode": "hourly",
-    }
-}
-
 
 @pytest.mark.parametrize(
     "units,result_observation,result_forecast",

@@ -77,9 +77,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the NWS weather platform."""
     if discovery_info is None:
         return
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    station = config.get(CONF_STATION)
+    latitude = discovery_info.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = discovery_info.get(CONF_LONGITUDE, hass.config.longitude)
+    station = discovery_info.get(CONF_STATION)
 
     nws_data = hass.data[DOMAIN][base_unique_id(latitude, longitude)]
 
