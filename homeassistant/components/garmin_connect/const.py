@@ -1,6 +1,7 @@
 """Constants for the Garmin Connect integration."""
 from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
+    LENGTH_METERS,
     MASS_KILOGRAMS,
     TIME_MINUTES,
     UNIT_PERCENTAGE,
@@ -32,7 +33,13 @@ GARMIN_ENTITY_LIST = {
         False,
     ],
     "netCalorieGoal": ["Net Calorie Goal", "cal", "mdi:food", None, False],
-    "totalDistanceMeters": ["Total Distance Mtr", "m", "mdi:walk", None, True],
+    "totalDistanceMeters": [
+        "Total Distance Mtr",
+        LENGTH_METERS,
+        "mdi:walk",
+        None,
+        True,
+    ],
     "wellnessStartTimeLocal": [
         "Wellness Start Time",
         "",
@@ -48,7 +55,13 @@ GARMIN_ENTITY_LIST = {
         False,
     ],
     "wellnessDescription": ["Wellness Description", "", "mdi:clock", None, False],
-    "wellnessDistanceMeters": ["Wellness Distance Mtr", "m", "mdi:walk", None, False],
+    "wellnessDistanceMeters": [
+        "Wellness Distance Mtr",
+        LENGTH_METERS,
+        "mdi:walk",
+        None,
+        False,
+    ],
     "wellnessActiveKilocalories": [
         "Wellness Active KiloCalories",
         "kcal",
@@ -81,8 +94,20 @@ GARMIN_ENTITY_LIST = {
         None,
         True,
     ],
-    "floorsAscendedInMeters": ["Floors Ascended Mtr", "m", "mdi:stairs", None, False],
-    "floorsDescendedInMeters": ["Floors Descended Mtr", "m", "mdi:stairs", None, False],
+    "floorsAscendedInMeters": [
+        "Floors Ascended Mtr",
+        LENGTH_METERS,
+        "mdi:stairs",
+        None,
+        False,
+    ],
+    "floorsDescendedInMeters": [
+        "Floors Descended Mtr",
+        LENGTH_METERS,
+        "mdi:stairs",
+        None,
+        False,
+    ],
     "floorsAscended": ["Floors Ascended", "floors", "mdi:stairs", None, True],
     "floorsDescended": ["Floors Descended", "floors", "mdi:stairs", None, True],
     "userFloorsAscendedGoal": [
