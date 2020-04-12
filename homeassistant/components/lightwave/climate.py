@@ -52,7 +52,6 @@ class LightwaveTrv(ClimateDevice):
         self._hvac_mode = HVAC_MODE_HEAT
         self._hvac_action = None
         self._lwlink = lwlink
-        self._battery = None
         self._serial = serial
         # inhibit is used to prevent race condition on update.  If non zero, skip next update cycle.
         self._inhibit = 0
