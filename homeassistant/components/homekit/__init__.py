@@ -44,6 +44,7 @@ from .const import (
     DEFAULT_AUTO_START,
     DEFAULT_PORT,
     DEFAULT_SAFE_MODE,
+    DEFAULT_ZEROCONF_DEFAULT_INTERFACE,
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_PM25,
@@ -101,7 +102,8 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
                 vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
                 vol.Optional(
-                    CONF_ZEROCONF_DEFAULT_INTERFACE, default=DEFAULT_ZEROCONF_DEFAULT_INTERFACE
+                    CONF_ZEROCONF_DEFAULT_INTERFACE,
+                    default=DEFAULT_ZEROCONF_DEFAULT_INTERFACE,
                 ): cv.boolean,
             }
         )
@@ -127,7 +129,9 @@ async def async_setup(hass, config):
     safe_mode = conf[CONF_SAFE_MODE]
     entity_filter = conf[CONF_FILTER]
     entity_config = conf[CONF_ENTITY_CONFIG]
-    interface_choice = InterfaceChoice.Default if config.get(CONF_ZEROCONF_DEFAULT_INTERFACE) else None
+    interface_choice = (
+        InterfaceChoice.Default if config.get(CONF_ZEROCONF_DEFAULT_INTERFACE) else None
+    )
 
     homekit = HomeKit(
         hass,
