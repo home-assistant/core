@@ -18,7 +18,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     lwlink = hass.data[LIGHTWAVE_LINK]
 
-    for _, device_config in discovery_info.items():
+    for device_config in discovery_info.values():
         name = device_config[CONF_NAME]
         serial = device_config[CONF_SERIAL]
         batteries.append(LightwaveBattery(name, lwlink, serial))
