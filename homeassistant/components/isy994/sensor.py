@@ -5,7 +5,9 @@ from typing import Callable
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    LENGTH_CENTIMETERS,
     LENGTH_KILOMETERS,
+    LENGTH_METERS,
     MASS_KILOGRAMS,
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
@@ -35,7 +37,7 @@ UOM_FRIENDLY_NAME = {
     "1": "amp",
     "3": f"btu/{TIME_HOURS}",
     "4": TEMP_CELSIUS,
-    "5": "cm",
+    "5": LENGTH_CENTIMETERS,
     "6": "ft³",
     "7": f"ft³/{TIME_MINUTES}",
     "8": "m³",
@@ -66,7 +68,7 @@ UOM_FRIENDLY_NAME = {
     "35": "l",
     "36": "lx",
     "37": "mercalli",
-    "38": "m",
+    "38": LENGTH_METERS,
     "39": "m³/hr",
     "40": SPEED_METERS_PER_SECOND,
     "41": "mA",
