@@ -11,6 +11,7 @@ from homeassistant.components import unifi
 import homeassistant.components.device_tracker as device_tracker
 from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
+    CONF_IGNORE_WIRED_BUG,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
@@ -398,6 +399,7 @@ async def test_wireless_client_go_wired_issue(hass):
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1 is not None
     assert client_1.state == "home"
+    assert client_1.attributes["is_wired"] is False
 
     client_1_client["is_wired"] = True
     client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
@@ -407,6 +409,7 @@ async def test_wireless_client_go_wired_issue(hass):
 
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1.state == "home"
+    assert client_1.attributes["is_wired"] is False
 
     with patch.object(
         unifi.device_tracker.dt_util,
@@ -419,6 +422,7 @@ async def test_wireless_client_go_wired_issue(hass):
 
         client_1 = hass.states.get("device_tracker.client_1")
         assert client_1.state == "not_home"
+        assert client_1.attributes["is_wired"] is False
 
     client_1_client["is_wired"] = False
     client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
@@ -428,6 +432,43 @@ async def test_wireless_client_go_wired_issue(hass):
 
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1.state == "home"
+    assert client_1.attributes["is_wired"] is False
+
+
+async def test_option_ignore_wired_bug(hass):
+    """Test option to ignore wired bug."""
+    client_1_client = copy(CLIENT_1)
+    client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+
+    controller = await setup_unifi_integration(
+        hass, options={CONF_IGNORE_WIRED_BUG: True}, clients_response=[client_1_client]
+    )
+    assert len(hass.states.async_entity_ids("device_tracker")) == 1
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+    assert client_1.state == "home"
+    assert client_1.attributes["is_wired"] is False
+
+    client_1_client["is_wired"] = True
+    client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+    event = {"meta": {"message": "sta:sync"}, "data": [client_1_client]}
+    controller.api.message_handler(event)
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == "home"
+    assert client_1.attributes["is_wired"] is True
+
+    client_1_client["is_wired"] = False
+    client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+    event = {"meta": {"message": "sta:sync"}, "data": [client_1_client]}
+    controller.api.message_handler(event)
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == "home"
+    assert client_1.attributes["is_wired"] is False
 
 
 async def test_restoring_client(hass):
