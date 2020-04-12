@@ -38,11 +38,13 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 class PanelProxy(HomeAssistantView):
+    """Reverse Proxy View"""
     requires_auth = False
     cors_allowed = True
     name = "panelproxy"
 
     def __init__(self, url, proxy_url):
+        """setting up url"""
         self.url = url + r'{requested_url:.*}'
         self.proxy_url = proxy_url
 
@@ -64,14 +66,14 @@ class PanelProxy(HomeAssistantView):
         headers['X-Forwarded-Proto'] = request.scheme
         post_data = await request.read()
         async with aiohttp.request(method,
-                           self.proxy_url+requested_url,
-                           params=request.query,
-                           data=post_data,
-                           headers=headers) as resp:
+                                   self.proxy_url + requested_url,
+                                   params=request.query,
+                                   data=post_data,
+                                   headers=headers) as resp:
             content = await resp.read()
             headers = resp.headers.copy()
             return aiohttp.web.Response(body=content, status=resp.status, headers=headers)
-    
+
 
 async def async_setup(hass, config):
     """Set up the proxy frontend panels."""
