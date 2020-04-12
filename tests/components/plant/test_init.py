@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UNIT_CONDUCTIVITY,
 )
 from homeassistant.setup import setup_component
 
@@ -93,7 +94,9 @@ class TestPlant(unittest.TestCase):
 
     def test_initial_states(self):
         """Test plant initialises attributes if sensor already exists."""
-        self.hass.states.set(MOISTURE_ENTITY, 5, {ATTR_UNIT_OF_MEASUREMENT: "us/cm"})
+        self.hass.states.set(
+            MOISTURE_ENTITY, 5, {ATTR_UNIT_OF_MEASUREMENT: UNIT_CONDUCTIVITY}
+        )
         plant_name = "some_plant"
         assert setup_component(
             self.hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}
@@ -111,7 +114,9 @@ class TestPlant(unittest.TestCase):
         assert setup_component(
             self.hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}
         )
-        self.hass.states.set(MOISTURE_ENTITY, 5, {ATTR_UNIT_OF_MEASUREMENT: "us/cm"})
+        self.hass.states.set(
+            MOISTURE_ENTITY, 5, {ATTR_UNIT_OF_MEASUREMENT: UNIT_CONDUCTIVITY}
+        )
         self.hass.block_till_done()
         state = self.hass.states.get(f"plant.{plant_name}")
         assert STATE_PROBLEM == state.state
@@ -127,7 +132,9 @@ class TestPlant(unittest.TestCase):
             self.hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}
         )
         self.hass.states.set(
-            MOISTURE_ENTITY, STATE_UNAVAILABLE, {ATTR_UNIT_OF_MEASUREMENT: "us/cm"}
+            MOISTURE_ENTITY,
+            STATE_UNAVAILABLE,
+            {ATTR_UNIT_OF_MEASUREMENT: UNIT_CONDUCTIVITY},
         )
         self.hass.block_till_done()
         state = self.hass.states.get(f"plant.{plant_name}")
@@ -143,13 +150,17 @@ class TestPlant(unittest.TestCase):
         assert setup_component(
             self.hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}
         )
-        self.hass.states.set(MOISTURE_ENTITY, 42, {ATTR_UNIT_OF_MEASUREMENT: "us/cm"})
+        self.hass.states.set(
+            MOISTURE_ENTITY, 42, {ATTR_UNIT_OF_MEASUREMENT: UNIT_CONDUCTIVITY}
+        )
         self.hass.block_till_done()
         state = self.hass.states.get(f"plant.{plant_name}")
         assert state.state == STATE_OK
         assert state.attributes[plant.READING_MOISTURE] == 42
         self.hass.states.set(
-            MOISTURE_ENTITY, STATE_UNAVAILABLE, {ATTR_UNIT_OF_MEASUREMENT: "us/cm"}
+            MOISTURE_ENTITY,
+            STATE_UNAVAILABLE,
+            {ATTR_UNIT_OF_MEASUREMENT: UNIT_CONDUCTIVITY},
         )
         self.hass.block_till_done()
         state = self.hass.states.get(f"plant.{plant_name}")
