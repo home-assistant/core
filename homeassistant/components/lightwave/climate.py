@@ -61,7 +61,6 @@ class LightwaveTrv(ClimateDevice):
 
     def update(self):
         """Communicate with a Lightwave RTF Proxy to get state."""
-        targ = temp = battery = trv_output = None
         (temp, targ, _, trv_output) = self._lwlink.read_trv_status(self._serial)
         if temp is not None:
             self._current_temperature = temp
