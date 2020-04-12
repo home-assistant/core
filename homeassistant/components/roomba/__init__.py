@@ -150,7 +150,7 @@ async def async_disconnect_or_timeout(hass, roomba):
     """Disconnect to vacuum."""
     _LOGGER.debug("Disconnect vacuum")
     with async_timeout.timeout(3):
-        await hass.async_add_job(roomba.disconnect)
+        await hass.async_add_executor_job(roomba.disconnect)
     return True
 
 
