@@ -7,7 +7,7 @@ https://home-assistant.io/integrations/zha/
 import asyncio
 import logging
 
-from zigpy.exceptions import DeliveryError
+from zigpy.exceptions import ZigbeeException
 import zigpy.zcl.clusters.security as security
 
 from homeassistant.core import callback
@@ -151,7 +151,7 @@ class IASZoneChannel(ZigbeeChannel):
                 self._cluster.ep_attribute,
                 res[0],
             )
-        except DeliveryError as ex:
+        except ZigbeeException as ex:
             self.debug(
                 "Failed to write cie_addr: %s to '%s' cluster: %s",
                 str(ieee),

@@ -83,7 +83,12 @@ SENSOR_TYPES = {
         "mdi:solar-power",
     ],
     "capacity": ["CAPACITY", "capacity", UNIT_PERCENTAGE, "mdi:solar-power"],
-    "efficiency": ["EFFICIENCY", "efficiency", "% W/Wp", "mdi:solar-power"],
+    "efficiency": [
+        "EFFICIENCY",
+        "efficiency",
+        f"% {POWER_WATT}/{POWER_WATT}p",
+        "mdi:solar-power",
+    ],
     "power_available": [
         "powerAVAILABLE",
         "power available",

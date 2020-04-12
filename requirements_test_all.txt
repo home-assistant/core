@@ -184,7 +184,7 @@ denonavr==0.8.1
 directv==0.3.0
 
 # homeassistant.components.updater
-distro==1.4.0
+distro==1.5.0
 
 # homeassistant.components.doorbird
 doorbirdpy==2.0.8
@@ -227,7 +227,7 @@ garminconnect==0.1.10
 geojson_client==0.4
 
 # homeassistant.components.aprs
-geopy==1.19.0
+geopy==1.21.0
 
 # homeassistant.components.geo_rss_events
 georss_generic_client==0.3
@@ -242,7 +242,7 @@ georss_qld_bushfire_alert_client==0.3
 # homeassistant.components.kef
 # homeassistant.components.minecraft_server
 # homeassistant.components.nmap_tracker
-getmac==0.8.1
+getmac==0.8.2
 
 # homeassistant.components.gios
 gios==0.1.1
@@ -349,7 +349,7 @@ mficlient==0.3.0
 minio==4.0.9
 
 # homeassistant.components.tts
-mutagen==1.43.0
+mutagen==1.44.0
 
 # homeassistant.components.ness_alarm
 nessclient==0.9.15
@@ -371,7 +371,7 @@ nuheat==0.3.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.18.1
+numpy==1.18.2
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -398,7 +398,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==7.0.0
+pillow==7.1.1
 
 # homeassistant.components.plex
 plexapi==3.3.0
@@ -664,7 +664,7 @@ pyvera==0.3.7
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.46
+pyvizio==0.1.47
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -686,6 +686,9 @@ ring_doorbell==0.6.0
 
 # homeassistant.components.roku
 roku==4.1.0
+
+# homeassistant.components.roomba
+roombapy==1.5.0
 
 # homeassistant.components.yamaha
 rxv==0.6.0
