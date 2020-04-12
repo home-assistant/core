@@ -1,14 +1,11 @@
 """Support for Acmeda Roller Blind Batteries."""
 import asyncio
 
-import aiopulse
-
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     DEVICE_CLASS_BATTERY,
     UNIT_PERCENTAGE,
 )
-from homeassistant.helpers import entity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -31,15 +28,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(hass, ACMEDA_HUB_UPDATE, async_update)
 
 
-class AcmedaBattery(AcmedaBase, entity.Entity):
+class AcmedaBattery(AcmedaBase):
     """Representation of a Acmeda cover device."""
 
     device_class = DEVICE_CLASS_BATTERY
     unit_of_measurement = UNIT_PERCENTAGE
-
-    def __init__(self, hass, roller: aiopulse.Roller):
-        """Initialize the roller."""
-        super().__init__(hass, roller)
 
     @property
     def name(self):

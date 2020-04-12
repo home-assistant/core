@@ -1,8 +1,6 @@
 """Support for Acmeda Roller Blinds."""
 import asyncio
 
-import aiopulse
-
 from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -27,10 +25,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class AcmedaCover(AcmedaBase, CoverDevice):
     """Representation of a Acmeda cover device."""
-
-    def __init__(self, hass, roller: aiopulse.Roller):
-        """Initialize the roller."""
-        super().__init__(hass, roller)
 
     @property
     def current_cover_position(self):

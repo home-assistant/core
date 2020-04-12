@@ -1,10 +1,12 @@
 """Base class for Acmeda Roller Blinds."""
 import aiopulse
 
+from homeassistant.helpers import entity
+
 from .const import DOMAIN, LOGGER
 
 
-class AcmedaBase:
+class AcmedaBase(entity.Entity):
     """Base representation of an Acmeda roller."""
 
     def __init__(self, hass, roller: aiopulse.Roller):
@@ -23,7 +25,7 @@ class AcmedaBase:
     def notify_update(self):
         """Tell HA that the device has been updated."""
         LOGGER.debug("Device update notification received: %s", self.name)
-        self.schedule_update_ha_state()
+        super().schedule_update_ha_state()
 
     @property
     def should_poll(self):
