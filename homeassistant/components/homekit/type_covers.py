@@ -32,6 +32,7 @@ from .const import (
     CHAR_CURRENT_DOOR_STATE,
     CHAR_CURRENT_POSITION,
     CHAR_CURRENT_TILT_ANGLE,
+    CHAR_HOLD_POSITION,
     CHAR_POSITION_STATE,
     CHAR_TARGET_DOOR_STATE,
     CHAR_TARGET_POSITION,
@@ -123,47 +124,50 @@ class GarageDoorOpener(HomeAccessory):
             self.char_current_state.set_value(current_door_state)
 
 
-@TYPES.register("WindowCovering")
-class WindowCovering(HomeAccessory):
-    """Generate a Window accessory for a cover entity.
+class WindowCoveringBase(HomeAccessory):
+    """Generate a base Window accessory for a cover entity.
 
-    The cover entity must support: set_cover_position.
+    This class is used for WindowCoveringBasic and
+    WindowCovering
     """
 
-    def __init__(self, *args):
-        """Initialize a WindowCovering accessory object."""
+    def __init__(self, *args, category):
+        """Initialize a WindowCoveringBase accessory object."""
         super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
 
-        self._homekit_target = None
-        self._homekit_target_tilt = None
-
-        serv_cover = self.add_preload_service(
-            SERV_WINDOW_COVERING,
-            chars=[CHAR_TARGET_TILT_ANGLE, CHAR_CURRENT_TILT_ANGLE],
-        )
-
-        features = self.hass.states.get(self.entity_id).attributes.get(
+        self.features = self.hass.states.get(self.entity_id).attributes.get(
             ATTR_SUPPORTED_FEATURES, 0
         )
+        self._supports_stop = self.features & SUPPORT_STOP
+        self._homekit_target_tilt = None
+        self.chars = []
+        if self._supports_stop:
+            self.chars.append(CHAR_HOLD_POSITION)
+        self._supports_tilt = self.features & SUPPORT_SET_TILT_POSITION
 
-        self._supports_tilt = features & SUPPORT_SET_TILT_POSITION
         if self._supports_tilt:
-            self.char_target_tilt = serv_cover.configure_char(
+            self.chars.extend([CHAR_TARGET_TILT_ANGLE, CHAR_CURRENT_TILT_ANGLE])
+
+        self.serv_cover = self.add_preload_service(SERV_WINDOW_COVERING, self.chars)
+
+        if self._supports_stop:
+            self.char_hold_position = self.serv_cover.configure_char(
+                CHAR_HOLD_POSITION, setter_callback=self.set_stop
+            )
+
+        if self._supports_tilt:
+            self.char_target_tilt = self.serv_cover.configure_char(
                 CHAR_TARGET_TILT_ANGLE, setter_callback=self.set_tilt
             )
-            self.char_current_tilt = serv_cover.configure_char(
+            self.char_current_tilt = self.serv_cover.configure_char(
                 CHAR_CURRENT_TILT_ANGLE, value=0
             )
 
-        self.char_current_position = serv_cover.configure_char(
-            CHAR_CURRENT_POSITION, value=0
-        )
-        self.char_target_position = serv_cover.configure_char(
-            CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover
-        )
-        self.char_position_state = serv_cover.configure_char(
-            CHAR_POSITION_STATE, value=2
-        )
+    def set_stop(self, value):
+        """Stop the cover motion from HomeKit."""
+        if value != 1:
+            return
+        self.call_service(DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: self.entity_id})
 
     @debounce
     def set_tilt(self, value):
@@ -178,6 +182,51 @@ class WindowCovering(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_TILT_POSITION: value}
 
         self.call_service(DOMAIN, SERVICE_SET_COVER_TILT_POSITION, params, value)
+
+    def update_state(self, new_state):
+        """Update cover position and tilt after state changed."""
+        # update tilt
+        current_tilt = new_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
+        if isinstance(current_tilt, (float, int)):
+            # HomeKit sends values between -90 and 90.
+            # We'll have to normalize to [0,100]
+            current_tilt = (current_tilt / 100.0 * 180.0) - 90.0
+            current_tilt = int(current_tilt)
+            self.char_current_tilt.set_value(current_tilt)
+
+            # We have to assume that the device has worse precision than HomeKit.
+            # If it reports back a state that is only _close_ to HK's requested
+            # state, we'll "fix" what HomeKit requested so that it won't appear
+            # out of sync.
+            if self._homekit_target_tilt is None or abs(
+                current_tilt - self._homekit_target_tilt < DEVICE_PRECISION_LEEWAY
+            ):
+                self.char_target_tilt.set_value(current_tilt)
+                self._homekit_target_tilt = None
+
+
+@TYPES.register("WindowCovering")
+class WindowCovering(WindowCoveringBase, HomeAccessory):
+    """Generate a Window accessory for a cover entity.
+
+    The cover entity must support: set_cover_position.
+    """
+
+    def __init__(self, *args):
+        """Initialize a WindowCovering accessory object."""
+        super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
+
+        self._homekit_target = None
+
+        self.char_current_position = self.serv_cover.configure_char(
+            CHAR_CURRENT_POSITION, value=0
+        )
+        self.char_target_position = self.serv_cover.configure_char(
+            CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover
+        )
+        self.char_position_state = self.serv_cover.configure_char(
+            CHAR_POSITION_STATE, value=2
+        )
 
     @debounce
     def move_cover(self, value):
@@ -213,28 +262,11 @@ class WindowCovering(HomeAccessory):
         else:
             self.char_position_state.set_value(2)
 
-        # update tilt
-        current_tilt = new_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
-        if isinstance(current_tilt, (float, int)):
-            # HomeKit sends values between -90 and 90.
-            # We'll have to normalize to [0,100]
-            current_tilt = (current_tilt / 100.0 * 180.0) - 90.0
-            current_tilt = int(current_tilt)
-            self.char_current_tilt.set_value(current_tilt)
-
-            # We have to assume that the device has worse precision than HomeKit.
-            # If it reports back a state that is only _close_ to HK's requested
-            # state, we'll "fix" what HomeKit requested so that it won't appear
-            # out of sync.
-            if self._homekit_target_tilt is None or abs(
-                current_tilt - self._homekit_target_tilt < DEVICE_PRECISION_LEEWAY
-            ):
-                self.char_target_tilt.set_value(current_tilt)
-                self._homekit_target_tilt = None
+        super().update_state(new_state)
 
 
 @TYPES.register("WindowCoveringBasic")
-class WindowCoveringBasic(HomeAccessory):
+class WindowCoveringBasic(WindowCoveringBase, HomeAccessory):
     """Generate a Window accessory for a cover entity.
 
     The cover entity must support: open_cover, close_cover,
@@ -244,19 +276,14 @@ class WindowCoveringBasic(HomeAccessory):
     def __init__(self, *args):
         """Initialize a WindowCovering accessory object."""
         super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
-        features = self.hass.states.get(self.entity_id).attributes.get(
-            ATTR_SUPPORTED_FEATURES
-        )
-        self._supports_stop = features & SUPPORT_STOP
 
-        serv_cover = self.add_preload_service(SERV_WINDOW_COVERING)
-        self.char_current_position = serv_cover.configure_char(
+        self.char_current_position = self.serv_cover.configure_char(
             CHAR_CURRENT_POSITION, value=0
         )
-        self.char_target_position = serv_cover.configure_char(
+        self.char_target_position = self.serv_cover.configure_char(
             CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover
         )
-        self.char_position_state = serv_cover.configure_char(
+        self.char_position_state = self.serv_cover.configure_char(
             CHAR_POSITION_STATE, value=2
         )
 
@@ -298,3 +325,5 @@ class WindowCoveringBasic(HomeAccessory):
             self.char_position_state.set_value(0)
         else:
             self.char_position_state.set_value(2)
+
+        super().update_state(new_state)
