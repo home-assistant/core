@@ -194,7 +194,8 @@ class ModbusHub:
             await asyncio.sleep(self._config_delay)
             self._config_delay = 0
 
-    def _framer(self, method):
+    @staticmethod
+    def _framer(method):
         if method == "ascii":
             framer = ModbusAsciiFramer(ClientDecoder())
         elif method == "rtu":
