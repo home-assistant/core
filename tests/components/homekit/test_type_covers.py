@@ -12,7 +12,13 @@ from homeassistant.components.cover import (
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
 )
-from homeassistant.components.homekit.const import ATTR_VALUE
+from homeassistant.components.homekit.const import (
+    ATTR_VALUE,
+    HK_DOOR_CLOSED,
+    HK_DOOR_CLOSING,
+    HK_DOOR_OPEN,
+    HK_DOOR_OPENING,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -62,28 +68,28 @@ async def test_garage_door_open_close(hass, hk_driver, cls, events):
     assert acc.aid == 2
     assert acc.category == 4  # GarageDoorOpener
 
-    assert acc.char_current_state.value == 0
-    assert acc.char_target_state.value == 0
+    assert acc.char_current_state.value == HK_DOOR_OPEN
+    assert acc.char_target_state.value == HK_DOOR_OPEN
 
     hass.states.async_set(entity_id, STATE_CLOSED)
     await hass.async_block_till_done()
-    assert acc.char_current_state.value == 1
-    assert acc.char_target_state.value == 1
+    assert acc.char_current_state.value == HK_DOOR_CLOSED
+    assert acc.char_target_state.value == HK_DOOR_CLOSED
 
     hass.states.async_set(entity_id, STATE_OPEN)
     await hass.async_block_till_done()
-    assert acc.char_current_state.value == 0
-    assert acc.char_target_state.value == 0
+    assert acc.char_current_state.value == HK_DOOR_OPEN
+    assert acc.char_target_state.value == HK_DOOR_OPEN
 
     hass.states.async_set(entity_id, STATE_UNAVAILABLE)
     await hass.async_block_till_done()
-    assert acc.char_current_state.value == 0
-    assert acc.char_target_state.value == 0
+    assert acc.char_current_state.value == HK_DOOR_OPEN
+    assert acc.char_target_state.value == HK_DOOR_OPEN
 
     hass.states.async_set(entity_id, STATE_UNKNOWN)
     await hass.async_block_till_done()
-    assert acc.char_current_state.value == 0
-    assert acc.char_target_state.value == 0
+    assert acc.char_current_state.value == HK_DOOR_OPEN
+    assert acc.char_target_state.value == HK_DOOR_OPEN
 
     # Set from HomeKit
     call_close_cover = async_mock_service(hass, DOMAIN, "close_cover")
@@ -93,8 +99,8 @@ async def test_garage_door_open_close(hass, hk_driver, cls, events):
     await hass.async_block_till_done()
     assert call_close_cover
     assert call_close_cover[0].data[ATTR_ENTITY_ID] == entity_id
-    assert acc.char_current_state.value == 2
-    assert acc.char_target_state.value == 1
+    assert acc.char_current_state.value == HK_DOOR_CLOSING
+    assert acc.char_target_state.value == HK_DOOR_CLOSED
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
@@ -103,8 +109,8 @@ async def test_garage_door_open_close(hass, hk_driver, cls, events):
 
     await hass.async_add_executor_job(acc.char_target_state.client_update_value, 1)
     await hass.async_block_till_done()
-    assert acc.char_current_state.value == 1
-    assert acc.char_target_state.value == 1
+    assert acc.char_current_state.value == HK_DOOR_CLOSED
+    assert acc.char_target_state.value == HK_DOOR_CLOSED
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
 
@@ -112,8 +118,8 @@ async def test_garage_door_open_close(hass, hk_driver, cls, events):
     await hass.async_block_till_done()
     assert call_open_cover
     assert call_open_cover[0].data[ATTR_ENTITY_ID] == entity_id
-    assert acc.char_current_state.value == 3
-    assert acc.char_target_state.value == 0
+    assert acc.char_current_state.value == HK_DOOR_OPENING
+    assert acc.char_target_state.value == HK_DOOR_OPEN
     assert len(events) == 3
     assert events[-1].data[ATTR_VALUE] is None
 
@@ -122,8 +128,8 @@ async def test_garage_door_open_close(hass, hk_driver, cls, events):
 
     await hass.async_add_executor_job(acc.char_target_state.client_update_value, 0)
     await hass.async_block_till_done()
-    assert acc.char_current_state.value == 0
-    assert acc.char_target_state.value == 0
+    assert acc.char_current_state.value == HK_DOOR_OPEN
+    assert acc.char_target_state.value == HK_DOOR_OPEN
     assert len(events) == 4
     assert events[-1].data[ATTR_VALUE] is None
 
