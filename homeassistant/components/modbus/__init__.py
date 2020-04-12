@@ -3,13 +3,21 @@ import asyncio
 import logging
 
 from async_timeout import timeout
-from pymodbus.client.asynchronous import schedulers
-from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient as ClientSerial
-from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient as ClientTCP
-from pymodbus.client.asynchronous.udp import AsyncModbusUDPClient as ClientUDP
+from pymodbus.client.asynchronous.asyncio import (
+    AsyncioModbusSerialClient,
+    ModbusClientProtocol,
+    init_tcp_client,
+    init_udp_client,
+)
 from pymodbus.exceptions import ModbusException
+from pymodbus.factory import ClientDecoder
 from pymodbus.pdu import ExceptionResponse
-from pymodbus.transaction import ModbusRtuFramer
+from pymodbus.transaction import (
+    ModbusAsciiFramer,
+    ModbusBinaryFramer,
+    ModbusRtuFramer,
+    ModbusSocketFramer,
+)
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -105,13 +113,6 @@ async def async_setup(hass, config):
         for client in hub_collect.values():
             del client
 
-    def start_modbus():
-        """Start Modbus service."""
-        for client in hub_collect.values():
-            client.setup()
-
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
-
     async def write_register(service):
         """Write Modbus registers."""
         unit = int(float(service.data[ATTR_UNIT]))
@@ -136,7 +137,11 @@ async def async_setup(hass, config):
         await hub_collect[client_name].write_coil(unit, address, state)
 
     # do not wait for EVENT_HOMEASSISTANT_START, activate pymodbus now
-    await hass.async_add_executor_job(start_modbus)
+    for client in hub_collect.values():
+        await client.setup(hass)
+
+    # register function to gracefully stop modbus
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
 
     # Register services for modbus
     hass.services.async_register(
@@ -189,47 +194,55 @@ class ModbusHub:
             await asyncio.sleep(self._config_delay)
             self._config_delay = 0
 
-    def setup(self):
-        """Set up pymodbus client."""
-        # pylint: disable = E0633
-        # Client* do deliver loop, client as result but
-        # pylint does not accept that fact
+    @staticmethod
+    def _framer(method):
+        if method == "ascii":
+            framer = ModbusAsciiFramer(ClientDecoder())
+        elif method == "rtu":
+            framer = ModbusRtuFramer(ClientDecoder())
+        elif method == "binary":
+            framer = ModbusBinaryFramer(ClientDecoder())
+        elif method == "socket":
+            framer = ModbusSocketFramer(ClientDecoder())
+        else:
+            framer = None
+        return framer
 
+    async def setup(self, hass):
+        """Set up pymodbus client."""
         if self._config_type == "serial":
-            _, self._client = ClientSerial(
-                schedulers.ASYNC_IO,
-                method=self._config_method,
-                port=self._config_port,
+            # reconnect ??
+            framer = self._framer(self._config_method)
+
+            # just a class creation no IO or other slow items
+            self._client = AsyncioModbusSerialClient(
+                self._config_port,
+                protocol_class=ModbusClientProtocol,
+                framer=framer,
+                loop=self._loop,
                 baudrate=self._config_baudrate,
-                stopbits=self._config_stopbits,
                 bytesize=self._config_bytesize,
                 parity=self._config_parity,
-                loop=self._loop,
+                stopbits=self._config_stopbits,
             )
+            await self._client.connect()
         elif self._config_type == "rtuovertcp":
-            _, self._client = ClientTCP(
-                schedulers.ASYNC_IO,
-                host=self._config_host,
-                port=self._config_port,
-                framer=ModbusRtuFramer,
-                timeout=self._config_timeout,
-                loop=self._loop,
+            # framer ModbusRtuFramer ??
+            # timeout ??
+            self._client = await init_tcp_client(
+                None, self._loop, self._config_host, self._config_port
             )
         elif self._config_type == "tcp":
-            _, self._client = ClientTCP(
-                schedulers.ASYNC_IO,
-                host=self._config_host,
-                port=self._config_port,
-                timeout=self._config_timeout,
-                loop=self._loop,
+            # framer ??
+            # timeout ??
+            self._client = await init_tcp_client(
+                None, self._loop, self._config_host, self._config_port
             )
         elif self._config_type == "udp":
-            _, self._client = ClientUDP(
-                schedulers.ASYNC_IO,
-                host=self._config_host,
-                port=self._config_port,
-                timeout=self._config_timeout,
-                loop=self._loop,
+            # framer ??
+            # timeout ??
+            self._client = await init_udp_client(
+                None, self._loop, self._config_host, self._config_port
             )
         else:
             assert False
