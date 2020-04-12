@@ -89,13 +89,6 @@ class LightwaveTrv(ClimateDevice):
                 self._hvac_action = CURRENT_HVAC_OFF
 
     @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        return {
-            ATTR_BATTERY_LEVEL: self._battery,
-        }
-
-    @property
     def name(self):
         """Lightwave trv name."""
         return self._name
