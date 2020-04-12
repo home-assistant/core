@@ -45,7 +45,7 @@ class PanelProxy(HomeAssistantView):
     name = "panelproxy"
 
     def __init__(self, url, proxy_url):
-        """Setting up view url."""
+        """Setup view url."""
         self.url = url + r'{requested_url:.*}'
         self.proxy_url = proxy_url
 
