@@ -3,6 +3,7 @@ from homeassistant.components import mysensors
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
+    FREQUENCY_HERTZ,
     MASS_KILOGRAMS,
     POWER_WATT,
     TEMP_CELSIUS,
@@ -35,7 +36,7 @@ SENSORS = {
     "V_VOLUME": ["m³", None],
     "V_LEVEL": {
         "S_SOUND": ["dB", "mdi:volume-high"],
-        "S_VIBRATION": ["Hz", None],
+        "S_VIBRATION": [FREQUENCY_HERTZ, None],
         "S_LIGHT_LEVEL": ["lx", "mdi:white-balance-sunny"],
     },
     "V_VOLTAGE": [UNIT_VOLT, "mdi:flash"],

@@ -5,6 +5,7 @@ from typing import Callable
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    FREQUENCY_HERTZ,
     LENGTH_KILOMETERS,
     MASS_KILOGRAMS,
     POWER_WATT,
@@ -108,7 +109,7 @@ UOM_FRIENDLY_NAME = {
     "87": "m³/m³",
     "88": "Water activity",
     "89": "RPM",
-    "90": "Hz",
+    "90": FREQUENCY_HERTZ,
     "91": f"{UNIT_DEGREE} (Relative to North)",
     "92": f"{UNIT_DEGREE} (Relative to South)",
 }
