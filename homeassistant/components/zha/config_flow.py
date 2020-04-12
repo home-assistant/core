@@ -22,7 +22,7 @@ from .core.registries import RADIO_TYPES
 class ZhaFlowHandler(config_entries.ConfigFlow):
     """Handle a config flow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     async def async_step_user(self, user_input=None):

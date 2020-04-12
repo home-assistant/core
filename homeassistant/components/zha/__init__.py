@@ -15,6 +15,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from . import api
 from .core import ZHAGateway
 from .core.const import (
+    BAUD_RATES,
     COMPONENTS,
     CONF_BAUDRATE,
     CONF_DATABASE,
@@ -30,6 +31,7 @@ from .core.const import (
     DATA_ZHA_PLATFORM_LOADED,
     DOMAIN,
     SIGNAL_ADD_ENTITIES,
+    RadioType,
 )
 from .core.discovery import GROUP_PROBE
 
@@ -163,3 +165,28 @@ async def async_load_entities(hass: HomeAssistantType) -> None:
         if isinstance(res, Exception):
             _LOGGER.warning("Couldn't setup zha platform: %s", res)
     async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistantType, config_entry: config_entries.ConfigEntry
+):
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        config_entry.data = {
+            CONF_RADIO_TYPE: config_entry.data[CONF_RADIO_TYPE],
+            CONF_DEVICE: {CONF_DEVICE_PATH: config_entry.data[CONF_USB_PATH]},
+        }
+
+        baudrate = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {}).get(CONF_BAUDRATE)
+        if (
+            config_entry.data[CONF_RADIO_TYPE] != RadioType.deconz
+            and baudrate in BAUD_RATES
+        ):
+            config_entry.data[CONF_DEVICE][CONF_BAUDRATE] = baudrate
+
+        config_entry.version = 2
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+    return True
