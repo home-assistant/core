@@ -74,8 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         bridge = Lightify(host, log_level=logging.NOTSET)
     except OSError as err:
-        msg = "Error connecting to bridge: {} due to: {}".format(host, str(err))
-        _LOGGER.exception(msg)
+        _LOGGER.exception("Error connecting to bridge: %s due to: %s", host, err)
         return
 
     setup_bridge(bridge, add_entities, config)
@@ -380,9 +379,7 @@ class OsramLightifyLight(Luminary):
         """Update static attributes of the luminary."""
         super().update_static_attributes()
         attrs = {
-            "device_type": "{} ({})".format(
-                self._luminary.type_id(), self._luminary.devicename()
-            ),
+            "device_type": f"{self._luminary.type_id()} ({self._luminary.devicename()})",
             "firmware_version": self._luminary.version(),
         }
         if self._luminary.devicetype().name == "SENSOR":
