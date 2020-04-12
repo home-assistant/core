@@ -140,7 +140,7 @@ async def async_setup(hass, config):
     for client in hub_collect.values():
         await client.setup(hass)
 
-    # register function to gracefully stop modbud
+    # register function to gracefully stop modbus
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
 
     # Register services for modbus
@@ -194,6 +194,7 @@ class ModbusHub:
             await asyncio.sleep(self._config_delay)
             self._config_delay = 0
 
+    @staticmethod
     def _framer(self, method):
         if method == "ascii":
             framer = ModbusAsciiFramer(ClientDecoder())
@@ -206,12 +207,6 @@ class ModbusHub:
         else:
             framer = None
         return framer
-
-    async def create_serial(self):
-        """Create serial modbus client and connect."""
-        # pylint: disable = E0633
-        # Client* do deliver loop, client as result but
-        # pylint does not accept that fact
 
     async def setup(self, hass):
         """Set up pymodbus client."""
