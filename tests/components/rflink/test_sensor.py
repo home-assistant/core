@@ -13,6 +13,7 @@ from homeassistant.components.rflink import (
     TMP_ENTITY,
 )
 from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS, UNIT_PERCENTAGE
+from homeassistant.helpers import entity_registry
 
 from tests.components.rflink.test_init import mock_rflink
 
@@ -200,3 +201,42 @@ async def test_race_condition(hass, monkeypatch):
     new_sensor = hass.states.get(f"{DOMAIN}.test3")
     assert new_sensor
     assert new_sensor.state == "ko"
+
+
+async def test_remove_entity(hass, monkeypatch):
+    """Test race condition for unknown components."""
+    config = {
+        "rflink": {"port": "/dev/ttyABC0"},
+        DOMAIN: {
+            "platform": "rflink",
+            "devices": {
+                "test_04_id": {
+                    "name": "test_04_name",
+                    "sensor_type": "humiditybattery",
+                    "aliases": ["test_alias_04_0"],
+                }
+            },
+        },
+    }
+    test_04 = f"{DOMAIN}.test_04_name"
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
+
+    registry = await entity_registry.async_get_registry(hass)
+
+    # test_04 added to EVENT_KEY_SENSOR for entity_id
+    assert test_04 in hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR]["test_04_id"]
+    # test_04 added to EVENT_KEY_SENSOR for entity_alias
+    assert test_04 in hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR]["test_alias_04_0"]
+
+    registry.async_remove(test_04)
+    await hass.async_block_till_done()
+
+    # test_04 must not exists in EVENT_KEY_SENSOR for entity_id
+    assert test_04 not in hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR]["test_04_id"]
+    # test_04 must not exists in EVENT_KEY_SENSOR for entity_alias
+    assert (
+        test_04
+        not in hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR]["test_alias_04_0"]
+    )
