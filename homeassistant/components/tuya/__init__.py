@@ -59,7 +59,7 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config, retry_delay=FIRST_RETRY_TIME):
     """Set up Tuya Component."""
 
-    _LOGGER.debug("Initializing domain")
+    _LOGGER.debug("Setting up integration")
 
     tuya = TuyaApi()
     username = config[DOMAIN][CONF_USERNAME]
@@ -74,7 +74,7 @@ def setup(hass, config, retry_delay=FIRST_RETRY_TIME):
             raise ex
 
         _LOGGER.warning(
-            "Connection error initializing domain. Will retry in %s seconds.",
+            "Connection error during integration setup. Will retry in %s seconds",
             retry_delay,
         )
 
