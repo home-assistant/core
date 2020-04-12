@@ -38,13 +38,14 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 class PanelProxy(HomeAssistantView):
-    """Reverse Proxy View"""
+    """Reverse Proxy View."""
+
     requires_auth = False
     cors_allowed = True
     name = "panelproxy"
 
     def __init__(self, url, proxy_url):
-        """setting up url"""
+        """Setting up view url."""
         self.url = url + r'{requested_url:.*}'
         self.proxy_url = proxy_url
 
