@@ -101,7 +101,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
                 vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
                 vol.Optional(
-                    CONF_ZEROCONF_DEFAULT_INTERFACE, default=False
+                    CONF_ZEROCONF_DEFAULT_INTERFACE, default=DEFAULT_ZEROCONF_DEFAULT_INTERFACE
                 ): cv.boolean,
             }
         )
