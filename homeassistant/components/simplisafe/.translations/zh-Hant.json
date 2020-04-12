@@ -10,7 +10,6 @@
         "step": {
             "user": {
                 "data": {
-                    "code": "\u9a57\u8b49\u78bc\uff08Home Assistant \u7528\uff09",
                     "password": "\u5bc6\u78bc",
                     "username": "\u96fb\u5b50\u90f5\u4ef6\u5730\u5740"
                 },

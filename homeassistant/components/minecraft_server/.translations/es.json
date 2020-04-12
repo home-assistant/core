@@ -12,8 +12,7 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "name": "Nombre",
-                    "port": "Puerto"
+                    "name": "Nombre"
                 },
                 "description": "Configura tu instancia de Minecraft Server para permitir la supervisi\u00f3n.",
                 "title": "Enlace su servidor Minecraft"

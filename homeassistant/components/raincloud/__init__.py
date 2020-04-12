@@ -107,9 +107,7 @@ def setup(hass, config):
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Rain Cloud service: %s", str(ex))
         hass.components.persistent_notification.create(
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
+            f"Error: {ex}<br />" "You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
@@ -142,7 +140,7 @@ class RainCloudEntity(Entity):
         """Initialize the RainCloud entity."""
         self.data = data
         self._sensor_type = sensor_type
-        self._name = "{0} {1}".format(self.data.name, KEY_MAP.get(self._sensor_type))
+        self._name = f"{self.data.name} {KEY_MAP.get(self._sensor_type)}"
         self._state = None
 
     @property
@@ -152,8 +150,10 @@ class RainCloudEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_RAINCLOUD, self._update_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_RAINCLOUD, self._update_callback
+            )
         )
 
     def _update_callback(self):

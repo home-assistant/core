@@ -15,7 +15,7 @@ from tests.common import get_test_home_assistant, get_test_instance_port
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
 
-BRIDGE_URL_BASE = "http://127.0.0.1:{}".format(BRIDGE_SERVER_PORT) + "{}"
+BRIDGE_URL_BASE = f"http://127.0.0.1:{BRIDGE_SERVER_PORT}" + "{}"
 JSON_HEADERS = {CONTENT_TYPE: const.CONTENT_TYPE_JSON}
 
 

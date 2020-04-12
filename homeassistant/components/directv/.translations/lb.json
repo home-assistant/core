@@ -5,12 +5,15 @@
             "unknown": "Onerwaarte Feeler"
         },
         "error": {
-            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
-            "unknown": "Onerwaarte Feeler"
+            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol."
         },
         "flow_title": "DirecTV: {name}",
         "step": {
             "ssdp_confirm": {
+                "data": {
+                    "one": "Een",
+                    "other": "Aner"
+                },
                 "description": "Soll {name} konfigur\u00e9iert ginn?",
                 "title": "Mam DirecTV Receiver verbannen"
             },

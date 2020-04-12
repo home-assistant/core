@@ -146,7 +146,7 @@ async def find_entity_id(domain, zha_device, hass):
     machine so that we can test state changes.
     """
     ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])
-    head = f"{domain}." + slugify(f"{zha_device.name} {ieeetail}")
+    head = f"{domain}.{slugify(f'{zha_device.name} {ieeetail}')}"
 
     enitiy_ids = hass.states.async_entity_ids(domain)
     await hass.async_block_till_done()

@@ -82,10 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     timeout = config.get(CONF_TIMEOUT)
     humidifier = config.get(CONF_HUMIDIFIER)
 
-    if config.get(CONF_SSL):
-        proto = "https"
-    else:
-        proto = "http"
+    protocol = "https" if config[CONF_SSL] else "http"
 
     client = VenstarColorTouch(
         addr=host,
@@ -93,7 +90,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         user=username,
         password=password,
         pin=pin,
-        proto=proto,
+        proto=protocol,
     )
 
     add_entities([VenstarThermostat(client, humidifier)], True)

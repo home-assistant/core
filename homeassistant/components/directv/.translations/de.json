@@ -5,8 +5,7 @@
             "unknown": "Unerwarteter Fehler"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
-            "unknown": "Unerwarteter Fehler"
+            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut"
         },
         "flow_title": "DirecTV: {name}",
         "step": {
@@ -15,7 +14,8 @@
                     "one": "eins",
                     "other": "andere"
                 },
-                "description": "M\u00f6chten Sie {name} einrichten?"
+                "description": "M\u00f6chten Sie {name} einrichten?",
+                "title": "Stellen Sie eine Verbindung zum DirecTV-Empf\u00e4nger her"
             },
             "user": {
                 "data": {

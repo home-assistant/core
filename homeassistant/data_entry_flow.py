@@ -67,20 +67,17 @@ class FlowManager(abc.ABC):
 
         Handler key is the domain of the component that we want to set up.
         """
-        pass
 
     @abc.abstractmethod
     async def async_finish_flow(
         self, flow: "FlowHandler", result: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Finish a config flow and add an entry."""
-        pass
 
     async def async_post_init(
         self, flow: "FlowHandler", result: Dict[str, Any]
     ) -> None:
         """Entry has finished executing its first step asynchronously."""
-        pass
 
     @callback
     def async_progress(self) -> List[Dict]:
@@ -182,9 +179,7 @@ class FlowManager(abc.ABC):
             RESULT_TYPE_ABORT,
             RESULT_TYPE_EXTERNAL_STEP_DONE,
         ):
-            raise ValueError(
-                "Handler returned incorrect type: {}".format(result["type"])
-            )
+            raise ValueError(f"Handler returned incorrect type: {result['type']}")
 
         if result["type"] in (
             RESULT_TYPE_FORM,

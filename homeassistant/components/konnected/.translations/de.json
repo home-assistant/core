@@ -34,6 +34,7 @@
             "not_konn_panel": "Kein anerkanntes Konnected.io-Ger\u00e4t"
         },
         "error": {
+            "bad_host": "Ung\u00fcltige Override-API-Host-URL",
             "one": "eins",
             "other": "andere"
         },
@@ -85,17 +86,22 @@
                 "title": "Konfigurieren Sie Erweiterte I/O"
             },
             "options_misc": {
+                "data": {
+                    "api_host": "API-Host-URL \u00fcberschreiben (optional)",
+                    "override_api_host": "\u00dcberschreiben Sie die Standard-Host-Panel-URL der Home Assistant-API"
+                },
                 "description": "Bitte w\u00e4hlen Sie das gew\u00fcnschte Verhalten f\u00fcr Ihr Panel"
             },
             "options_switch": {
                 "data": {
                     "activation": "Ausgabe, wenn eingeschaltet",
                     "momentary": "Impulsdauer (ms) (optional)",
+                    "more_states": "Konfigurieren Sie zus\u00e4tzliche Zust\u00e4nde f\u00fcr diese Zone",
                     "name": "Name (optional)",
                     "pause": "Pause zwischen Impulsen (ms) (optional)",
                     "repeat": "Zeit zum Wiederholen (-1 = unendlich) (optional)"
                 },
-                "description": "Bitte w\u00e4hlen Sie die Ausgabeoptionen f\u00fcr {zone}"
+                "description": "Bitte w\u00e4hlen Sie die Ausgabeoptionen f\u00fcr {zone} : Status {state}"
             }
         },
         "title": "Konnected Alarm Panel-Optionen"

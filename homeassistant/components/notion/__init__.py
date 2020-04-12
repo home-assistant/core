@@ -7,7 +7,12 @@ from aionotion.errors import InvalidCredentialsError, NotionError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -57,7 +62,7 @@ BINARY_SENSOR_TYPES = {
     SENSOR_WINDOW_HINGED_HORIZONTAL: ("Hinged Window", "window"),
     SENSOR_WINDOW_HINGED_VERTICAL: ("Hinged Window", "window"),
 }
-SENSOR_TYPES = {SENSOR_TEMPERATURE: ("Temperature", "temperature", "°C")}
+SENSOR_TYPES = {SENSOR_TEMPERATURE: ("Temperature", "temperature", TEMP_CELSIUS)}
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -211,7 +216,6 @@ class NotionEntity(Entity):
         self, notion, task_id, sensor_id, bridge_id, system_id, name, device_class
     ):
         """Initialize the entity."""
-        self._async_unsub_dispatcher_connect = None
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._bridge_id = bridge_id
         self._device_class = device_class
@@ -255,9 +259,7 @@ class NotionEntity(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{0}: {1}".format(
-            self._notion.sensors[self._sensor_id]["name"], self._name
-        )
+        return f"{self._notion.sensors[self._sensor_id]['name']}: {self._name}"
 
     @property
     def should_poll(self):
@@ -268,7 +270,7 @@ class NotionEntity(Entity):
     def unique_id(self):
         """Return a unique, unchanging string that represents this sensor."""
         task = self._notion.tasks[self._task_id]
-        return "{0}_{1}".format(self._sensor_id, task["task_type"])
+        return f"{self._sensor_id}_{task['task_type']}"
 
     async def _update_bridge_id(self):
         """Update the entity's bridge ID if it has changed.
@@ -309,17 +311,11 @@ class NotionEntity(Entity):
             self.update_from_latest_data()
             self.async_write_ha_state()
 
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_DATA_UPDATE, update
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, TOPIC_DATA_UPDATE, update)
         )
 
         self.update_from_latest_data()
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-            self._async_unsub_dispatcher_connect = None
 
     @callback
     def update_from_latest_data(self):

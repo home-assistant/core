@@ -4,9 +4,23 @@
     },
     "options": {
         "step": {
+            "init": {
+                "data": {
+                    "one": "Een",
+                    "other": "Aner"
+                }
+            },
+            "options_1": {
+                "data": {
+                    "bool": "Optionelle Boolean",
+                    "int": "Numeresch Agab"
+                }
+            },
             "options_2": {
                 "data": {
-                    "select": "Eng Optioun auswielen"
+                    "multi": "Multiple Auswiel",
+                    "select": "Eng Optioun auswielen",
+                    "string": "String W\u00e4ert"
                 }
             }
         }

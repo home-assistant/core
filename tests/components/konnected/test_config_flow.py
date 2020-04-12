@@ -362,10 +362,11 @@ async def test_ssdp_host_update(hass, mock_panel):
     )
     assert result["type"] == "abort"
 
-    # confirm the host value was updated
+    # confirm the host value was updated, access_token was not
     entry = hass.config_entries.async_entries(config_flow.DOMAIN)[0]
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["port"] == 1234
+    assert entry.data["access_token"] == "11223344556677889900"
 
 
 async def test_import_existing_config(hass, mock_panel):
@@ -450,6 +451,7 @@ async def test_import_existing_config(hass, mock_panel):
                 "alarm1": "Switchable Output",
             },
             "blink": True,
+            "api_host": "",
             "discovery": True,
             "binary_sensors": [
                 {"zone": "2", "type": "door", "inverse": False},
@@ -493,6 +495,7 @@ async def test_import_existing_config_entry(hass, mock_panel):
         data={
             "host": "0.0.0.0",
             "port": 1111,
+            "access_token": "ORIGINALTOKEN",
             "id": "112233445566",
             "extra": "something",
         },
@@ -545,14 +548,14 @@ async def test_import_existing_config_entry(hass, mock_panel):
 
     assert result["type"] == "abort"
 
-    # We should have updated the entry
+    # We should have updated the host info but not the access token
     assert len(hass.config_entries.async_entries("konnected")) == 1
     assert hass.config_entries.async_entries("konnected")[0].data == {
         "host": "1.2.3.4",
         "port": 1234,
+        "access_token": "ORIGINALTOKEN",
         "id": "112233445566",
         "model": "Konnected Pro",
-        "access_token": "SUPERSECRETTOKEN",
         "extra": "something",
     }
 
@@ -628,6 +631,7 @@ async def test_import_pin_config(hass, mock_panel):
                 "out": "Switchable Output",
             },
             "blink": True,
+            "api_host": "",
             "discovery": True,
             "binary_sensors": [
                 {"zone": "1", "type": "door", "inverse": False},
@@ -778,9 +782,21 @@ async def test_option_flow(hass, mock_panel):
 
     assert result["type"] == "form"
     assert result["step_id"] == "options_misc"
-
+    # make sure we enforce url format
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"blink": True},
+        result["flow_id"],
+        user_input={"blink": True, "override_api_host": True, "api_host": "badhosturl"},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "options_misc"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "blink": True,
+            "override_api_host": True,
+            "api_host": "http://overridehost:1111",
+        },
     )
     assert result["type"] == "create_entry"
     assert result["data"] == {
@@ -792,6 +808,7 @@ async def test_option_flow(hass, mock_panel):
             "out": "Switchable Output",
         },
         "blink": True,
+        "api_host": "http://overridehost:1111",
         "binary_sensors": [
             {"zone": "2", "type": "door", "inverse": False},
             {"zone": "6", "type": "window", "name": "winder", "inverse": True},
@@ -958,7 +975,7 @@ async def test_option_flow_pro(hass, mock_panel):
     assert result["step_id"] == "options_misc"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"blink": True},
+        result["flow_id"], user_input={"blink": True, "override_api_host": False},
     )
 
     assert result["type"] == "create_entry"
@@ -976,6 +993,7 @@ async def test_option_flow_pro(hass, mock_panel):
             "out1": "Switchable Output",
         },
         "blink": True,
+        "api_host": "",
         "binary_sensors": [
             {"zone": "2", "type": "door", "inverse": False},
             {"zone": "6", "type": "window", "name": "winder", "inverse": True},
@@ -1121,7 +1139,7 @@ async def test_option_flow_import(hass, mock_panel):
     schema = result["data_schema"]({})
     assert schema["blink"] is True
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"blink": False},
+        result["flow_id"], user_input={"blink": False, "override_api_host": False},
     )
 
     # verify the updated fields
@@ -1129,6 +1147,7 @@ async def test_option_flow_import(hass, mock_panel):
     assert result["data"] == {
         "io": {"1": "Binary Sensor", "2": "Digital Sensor", "3": "Switchable Output"},
         "blink": False,
+        "api_host": "",
         "binary_sensors": [
             {"zone": "1", "type": "door", "inverse": True, "name": "winder"},
         ],

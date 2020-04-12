@@ -183,7 +183,7 @@ class ONVIFHassCamera(Camera):
             self._port,
             self._username,
             self._password,
-            "{}/wsdl/".format(os.path.dirname(onvif.__file__)),
+            f"{os.path.dirname(onvif.__file__)}/wsdl/",
             transport=transport,
         )
 
@@ -411,8 +411,11 @@ class ONVIFHassCamera(Camera):
             req = media_service.create_type("GetSnapshotUri")
             req.ProfileToken = profiles[self._profile_index].token
 
-            snapshot_uri = await media_service.GetSnapshotUri(req)
-            self._snapshot = snapshot_uri.Uri
+            try:
+                snapshot_uri = await media_service.GetSnapshotUri(req)
+                self._snapshot = snapshot_uri.Uri
+            except ServerDisconnectedError as err:
+                _LOGGER.debug("Camera does not support GetSnapshotUri: %s", err)
 
             _LOGGER.debug(
                 "ONVIF Camera Using the following URL for %s snapshot: %s",
@@ -516,13 +519,16 @@ class ONVIFHassCamera(Camera):
                 """Read image from a URL."""
                 try:
                     response = requests.get(self._snapshot, timeout=5, auth=auth)
-                    return response.content
+                    if response.status_code < 300:
+                        return response.content
                 except requests.exceptions.RequestException as error:
                     _LOGGER.error(
                         "Fetch snapshot image failed from %s, falling back to FFmpeg; %s",
                         self._name,
                         error,
                     )
+
+                return None
 
             image = await self.hass.async_add_job(fetch)
 

@@ -1,21 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_in_progress": "El flux de dades de configuraci\u00f3 pel component Vizio ja est\u00e0 en curs.",
             "already_setup": "Aquesta entrada ja ha estat configurada.",
-            "already_setup_with_diff_host_and_name": "Sembla que aquesta entrada ja s'ha configurat amb un amfitri\u00f3 i nom diferents a partir del n\u00famero de s\u00e8rie. Elimina les entrades antigues de configuraction.yaml i del men\u00fa d'integracions abans de provar d'afegir el dispositiu novament.",
-            "host_exists": "Ja existeix un component Vizio configurat amb el host.",
-            "name_exists": "Ja existeix un component Vizio configurat amb el nom.",
-            "updated_entry": "Aquesta entrada ja s'ha configurat per\u00f2 el nom i les opcions definides a la configuraci\u00f3 no coincideixen amb els valors importats anteriorment, en conseq\u00fc\u00e8ncia, s'han actualitzat.",
-            "updated_options": "Aquesta entrada ja s'ha configurat per\u00f2 les opcions definides a la configuraci\u00f3 no coincideixen amb els valors importats anteriorment, en conseq\u00fc\u00e8ncia, s'han actualitzat.",
-            "updated_volume_step": "Aquesta entrada ja s'ha configurat per\u00f2 la mida de l'increment de volum definit a la configuraci\u00f3 no coincideix, en conseq\u00fc\u00e8ncia, s'ha actualitzat."
+            "updated_entry": "Aquesta entrada ja s'ha configurat per\u00f2 el nom i les opcions definides a la configuraci\u00f3 no coincideixen amb els valors importats anteriorment, en conseq\u00fc\u00e8ncia, s'han actualitzat."
         },
         "error": {
             "cant_connect": "No s'ha pogut connectar amb el dispositiu. [Comprova la documentaci\u00f3](https://www.home-assistant.io/integrations/vizio/) i torna a verificar que: \n - El dispositiu est\u00e0 engegat \n - El dispositiu est\u00e0 connectat a la xarxa \n - Els valors que has intridu\u00eft s\u00f3n correctes\n   abans d\u2019intentar tornar a presentar.",
             "complete_pairing failed": "No s'ha pogut completar l'emparellament. Verifica que el PIN proporcionat sigui el correcte i que el televisor segueix connectat a la xarxa abans de provar-ho de nou.",
             "host_exists": "Dispositiu Vizio amb aquest nom d'amfitri\u00f3 ja configurat.",
-            "name_exists": "Dispositiu Vizio amb aquest nom ja configurat.",
-            "tv_needs_token": "Si el tipus de dispositiu \u00e9s 'tv', cal un testimoni d'acc\u00e9s v\u00e0lid (token)."
+            "name_exists": "Dispositiu Vizio amb aquest nom ja configurat."
         },
         "step": {
             "pair_tv": {
@@ -33,14 +26,6 @@
                 "description": "El dispositiu Vizio SmartCast est\u00e0 connectat a Home Assistant.\n\nEl testimoni d'acc\u00e9s (Access Token) \u00e9s '**{access_token}**'.",
                 "title": "Emparellament completat"
             },
-            "tv_apps": {
-                "data": {
-                    "apps_to_include_or_exclude": "Aplicacions a incloure o excloure",
-                    "include_or_exclude": "Incloure o excloure aplicacions?"
-                },
-                "description": "Si tens una Smart TV, pots filtrar de manera opcional la teva llista de canals escollint quines aplicacions vols incloure o excloure de la llista. Pots ometre aquest pas si el teu televisor no admet aplicacions.",
-                "title": "Configuraci\u00f3 d'Aplicacions per a Smart TV"
-            },
             "user": {
                 "data": {
                     "access_token": "Testimoni d'acc\u00e9s",
@@ -50,14 +35,6 @@
                 },
                 "description": "Nom\u00e9s es necessita testimoni d'acc\u00e9s per als televisors. Si est\u00e0s configurant un televisor i encara no tens un testimoni d'acc\u00e9s, deixeu-ho en blanc per poder fer el proc\u00e9s d'emparellament.",
                 "title": "Configuraci\u00f3 del client de Vizio SmartCast"
-            },
-            "user_tv": {
-                "data": {
-                    "apps_to_include_or_exclude": "Aplicacions a incloure o excloure",
-                    "include_or_exclude": "Incloure o excloure aplicacions?"
-                },
-                "description": "Si tens una Smart TV, pots filtrar de manera opcional la teva llista de canals escollint quines aplicacions vols incloure o excloure de la llista. Pots ometre aquest pas si el teu televisor no admet aplicacions.",
-                "title": "Configuraci\u00f3 d'Aplicacions per a Smart TV"
             }
         },
         "title": "Vizio SmartCast"
@@ -68,7 +45,6 @@
                 "data": {
                     "apps_to_include_or_exclude": "Aplicacions a incloure o excloure",
                     "include_or_exclude": "Incloure o excloure aplicacions?",
-                    "timeout": "Temps d'espera de les sol\u00b7licituds API (en segons)",
                     "volume_step": "Mida del pas de volum"
                 },
                 "description": "Si tens una Smart TV, pots filtrar de manera opcional la teva llista de canals escollint quines aplicacions vols incloure o excloure de la llista.",

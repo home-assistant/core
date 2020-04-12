@@ -7,6 +7,7 @@ import pytest
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.components.zwave import DATA_NETWORK, const
+from homeassistant.const import HTTP_NOT_FOUND
 
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue
 
@@ -181,7 +182,7 @@ async def test_get_groups_nonode(hass, client):
 
     resp = await client.get("/api/zwave/groups/2")
 
-    assert resp.status == 404
+    assert resp.status == HTTP_NOT_FOUND
     result = await resp.json()
 
     assert result == {"message": "Node not found"}
@@ -244,7 +245,7 @@ async def test_get_config_nonode(hass, client):
 
     resp = await client.get("/api/zwave/config/2")
 
-    assert resp.status == 404
+    assert resp.status == HTTP_NOT_FOUND
     result = await resp.json()
 
     assert result == {"message": "Node not found"}
@@ -257,7 +258,7 @@ async def test_get_usercodes_nonode(hass, client):
 
     resp = await client.get("/api/zwave/usercodes/2")
 
-    assert resp.status == 404
+    assert resp.status == HTTP_NOT_FOUND
     result = await resp.json()
 
     assert result == {"message": "Node not found"}
@@ -323,7 +324,7 @@ async def test_save_config_no_network(hass, client):
     """Test saving configuration without network data."""
     resp = await client.post("/api/zwave/saveconfig")
 
-    assert resp.status == 404
+    assert resp.status == HTTP_NOT_FOUND
     result = await resp.json()
     assert result == {"message": "No Z-Wave network data found"}
 
@@ -400,7 +401,7 @@ async def test_get_protection_values_nonexisting_node(hass, client):
 
     resp = await client.get("/api/zwave/protection/18")
 
-    assert resp.status == 404
+    assert resp.status == HTTP_NOT_FOUND
     result = await resp.json()
     assert not node.get_protections.called
     assert not node.get_protection_item.called
@@ -515,7 +516,7 @@ async def test_set_protection_value_nonexisting_node(hass, client):
         data=json.dumps({"value_id": "123456", "selection": "Protecton by Sequence"}),
     )
 
-    assert resp.status == 404
+    assert resp.status == HTTP_NOT_FOUND
     result = await resp.json()
     assert not node.set_protection.called
     assert result == {"message": "Node not found"}
@@ -535,7 +536,7 @@ async def test_set_protection_value_missing_class(hass, client):
         data=json.dumps({"value_id": "123456", "selection": "Protecton by Sequence"}),
     )
 
-    assert resp.status == 404
+    assert resp.status == HTTP_NOT_FOUND
     result = await resp.json()
     assert not node.set_protection.called
     assert result == {"message": "No protection commandclass on this node"}

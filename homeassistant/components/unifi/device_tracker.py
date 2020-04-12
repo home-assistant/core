@@ -16,24 +16,26 @@ from .unifi_client import UniFiClient
 
 LOGGER = logging.getLogger(__name__)
 
-DEVICE_ATTRIBUTES = [
+CLIENT_CONNECTED_ATTRIBUTES = [
     "_is_guest_by_uap",
     "ap_mac",
     "authorized",
     "essid",
-    "hostname",
     "ip",
     "is_11r",
     "is_guest",
-    "mac",
-    "name",
     "noted",
-    "oui",
     "qos_policy_applied",
     "radio",
     "radio_proto",
-    "site_id",
     "vlan",
+]
+
+CLIENT_STATIC_ATTRIBUTES = [
+    "hostname",
+    "mac",
+    "name",
+    "oui",
 ]
 
 
@@ -217,7 +219,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             """Scheduled callback for update."""
             self.is_disconnected = True
             self.cancel_scheduled_update = None
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if (
             not self.is_wired
@@ -284,11 +286,13 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         """Return the client state attributes."""
         attributes = {}
 
-        for variable in DEVICE_ATTRIBUTES:
-            if variable in self.client.raw:
-                attributes[variable] = self.client.raw[variable]
-
         attributes["is_wired"] = self.is_wired
+
+        for variable in CLIENT_STATIC_ATTRIBUTES + CLIENT_CONNECTED_ATTRIBUTES:
+            if variable in self.client.raw:
+                if self.is_disconnected and variable in CLIENT_CONNECTED_ATTRIBUTES:
+                    continue
+                attributes[variable] = self.client.raw[variable]
 
         return attributes
 
@@ -323,7 +327,7 @@ class UniFiDeviceTracker(ScannerEntity):
         """Update the sensor's state."""
         LOGGER.debug("Updating UniFi tracked device %s", self.entity_id)
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def is_connected(self):

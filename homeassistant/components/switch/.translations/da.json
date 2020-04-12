@@ -7,9 +7,7 @@
         },
         "condition_type": {
             "is_off": "{entity_name} er fra",
-            "is_on": "{entity_name} er til",
-            "turn_off": "{entity_name} slukket",
-            "turn_on": "{entity_name} t\u00e6ndt"
+            "is_on": "{entity_name} er til"
         },
         "trigger_type": {
             "turned_off": "{entity_name} slukkede",

@@ -24,4 +24,4 @@ only: pulls
 
 # Optionally, specify configuration settings just for `issues` or `pulls`
 issues:
-   daysUntilLock: 30
+  daysUntilLock: 30

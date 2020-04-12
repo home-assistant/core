@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Platsen \u00e4r redan registrerad"
-        },
         "step": {
             "user": {
                 "data": {

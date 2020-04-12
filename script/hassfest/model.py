@@ -17,7 +17,7 @@ class Error:
 
     def __str__(self) -> str:
         """Represent error as string."""
-        return "[{}] {}".format(self.plugin.upper(), self.error)
+        return f"[{self.plugin.upper()}] {self.error}"
 
 
 @attr.s
@@ -70,6 +70,16 @@ class Integration:
     def domain(self) -> str:
         """Integration domain."""
         return self.path.name
+
+    @property
+    def requirements(self) -> List[str]:
+        """List of requirements."""
+        return self.manifest.get("requirements", [])
+
+    @property
+    def dependencies(self) -> List[str]:
+        """List of dependencies."""
+        return self.manifest.get("dependencies", [])
 
     def add_error(self, *args, **kwargs):
         """Add an error."""

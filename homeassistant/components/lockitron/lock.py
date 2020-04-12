@@ -5,7 +5,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.lock import PLATFORM_SCHEMA, LockDevice
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ID
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ID, HTTP_OK
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     response = requests.get(
         f"{BASE_URL}/v2/locks/{device_id}?access_token={access_token}", timeout=5
     )
-    if response.status_code == 200:
+    if response.status_code == HTTP_OK:
         add_entities([Lockitron(response.json()["state"], access_token, device_id)])
     else:
         _LOGGER.error("Error retrieving lock status during init: %s", response.text)
@@ -67,7 +67,7 @@ class Lockitron(LockDevice):
             f"{BASE_URL}/v2/locks/{self.device_id}?access_token={self.access_token}",
             timeout=5,
         )
-        if response.status_code == 200:
+        if response.status_code == HTTP_OK:
             self._state = response.json()["state"]
         else:
             _LOGGER.error("Error retrieving lock status: %s", response.text)
@@ -78,7 +78,7 @@ class Lockitron(LockDevice):
             f"{BASE_URL}/v2/locks/{self.device_id}?access_token={self.access_token}&state={requested_state}",
             timeout=5,
         )
-        if response.status_code == 200:
+        if response.status_code == HTTP_OK:
             return response.json()["state"]
 
         _LOGGER.error(

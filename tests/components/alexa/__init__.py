@@ -47,7 +47,6 @@ class MockConfig(config.AbstractConfig):
 
     async def async_accept_grant(self, code):
         """Accept a grant."""
-        pass
 
 
 DEFAULT_CONFIG = MockConfig(None)
@@ -205,4 +204,4 @@ class ReportedProperties:
                 assert prop["value"] == value
                 return prop
 
-        assert False, "property %s:%s not in %r" % (namespace, name, self.properties)
+        assert False, f"property {namespace}:{name} not in {self.properties!r}"

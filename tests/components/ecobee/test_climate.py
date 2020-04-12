@@ -64,7 +64,7 @@ class TestEcobee(unittest.TestCase):
     def test_current_temperature(self):
         """Test current temperature."""
         assert 30 == self.thermostat.current_temperature
-        self.ecobee["runtime"]["actualTemperature"] = 404
+        self.ecobee["runtime"]["actualTemperature"] = const.HTTP_NOT_FOUND
         assert 40.4 == self.thermostat.current_temperature
 
     def test_target_temperature_low(self):

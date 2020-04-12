@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
     DATA_GIGABYTES,
+    HTTP_OK,
     UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -144,7 +145,7 @@ class TekSavvyData:
         )
         with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await self.websession.get(url, headers=headers)
-        if req.status != 200:
+        if req.status != HTTP_OK:
             _LOGGER.error("Request failed with status: %u", req.status)
             return False
 

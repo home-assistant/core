@@ -19,7 +19,10 @@ from homeassistant.exceptions import ServiceNotFound
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
-from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
+from tests.ignore_uncaught_exceptions import (
+    IGNORE_UNCAUGHT_EXCEPTIONS,
+    IGNORE_UNCAUGHT_JSON_EXCEPTIONS,
+)
 
 pytest.register_assert_rewrite("tests.common")
 
@@ -103,6 +106,13 @@ def hass(loop, hass_storage, request):
         ) in IGNORE_UNCAUGHT_EXCEPTIONS:
             continue
         if isinstance(ex, ServiceNotFound):
+            continue
+        if (
+            isinstance(ex, TypeError)
+            and "is not JSON serializable" in str(ex)
+            and (request.module.__name__, request.function.__name__)
+            in IGNORE_UNCAUGHT_JSON_EXCEPTIONS
+        ):
             continue
         raise ex
 
@@ -211,7 +221,7 @@ def hass_client(hass, aiohttp_client, hass_access_token):
     async def auth_client():
         """Return an authenticated client."""
         return await aiohttp_client(
-            hass.http.app, headers={"Authorization": f"Bearer {hass_access_token}"},
+            hass.http.app, headers={"Authorization": f"Bearer {hass_access_token}"}
         )
 
     return auth_client

@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import CONF_SENSORS
+from homeassistant.const import CONF_SENSORS, HTTP_BAD_REQUEST
 from homeassistant.core import callback
 
 from .const import (
@@ -207,5 +207,5 @@ class LogiCircleAuthCallbackView(HomeAssistantView):
             )
             return self.json_message("Authorisation code saved")
         return self.json_message(
-            "Authorisation code missing from query string", status_code=400
+            "Authorisation code missing from query string", status_code=HTTP_BAD_REQUEST
         )

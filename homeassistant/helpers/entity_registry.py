@@ -146,7 +146,7 @@ class EntityRegistry:
         Conflicts checked against registered and currently existing entities.
         """
         return ensure_unique_string(
-            "{}.{}".format(domain, slugify(suggested_object_id)),
+            f"{domain}.{slugify(suggested_object_id)}",
             chain(
                 self.entities.keys(),
                 self.hass.states.async_entity_ids(domain),
