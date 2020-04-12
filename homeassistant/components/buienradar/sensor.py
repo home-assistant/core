@@ -82,11 +82,15 @@ SENSOR_TYPES = {
     "pressure": ["Pressure", "hPa", "mdi:gauge"],
     "visibility": ["Visibility", LENGTH_KILOMETERS, None],
     "windgust": ["Wind gust", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
-    "precipitation": ["Precipitation", f"mm/{TIME_HOURS}", "mdi:weather-pouring"],
+    "precipitation": [
+        "Precipitation",
+        f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
+        "mdi:weather-pouring",
+    ],
     "irradiance": ["Irradiance", IRRADIATION_WATTS_PER_SQUARE_METER, "mdi:sunglasses"],
     "precipitation_forecast_average": [
         "Precipitation forecast average",
-        f"mm/{TIME_HOURS}",
+        f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
         "mdi:weather-pouring",
     ],
     "precipitation_forecast_total": [

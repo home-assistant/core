@@ -40,7 +40,12 @@ SENSOR_TYPES = {
         DEVICE_CLASS_TEMPERATURE,
     ],
     SENSOR_TYPE_HUMIDITY: ["Humidity", UNIT_PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
-    SENSOR_TYPE_RAINRATE: ["Rain rate", f"mm/{TIME_HOURS}", "mdi:water", None],
+    SENSOR_TYPE_RAINRATE: [
+        "Rain rate",
+        f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
+        "mdi:water",
+        None,
+    ],
     SENSOR_TYPE_RAINTOTAL: ["Rain total", LENGTH_MILLIMETERS, "mdi:water", None],
     SENSOR_TYPE_WINDDIRECTION: ["Wind direction", "", "", None],
     SENSOR_TYPE_WINDAVERAGE: ["Wind average", SPEED_METERS_PER_SECOND, "", None],

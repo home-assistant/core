@@ -74,7 +74,7 @@ UOM_FRIENDLY_NAME = {
     "43": "mV",
     "44": TIME_MINUTES,
     "45": TIME_MINUTES,
-    "46": "mm/hr",
+    "46": f"{LENGTH_MILLIMETERS}/hr",
     "47": TIME_MONTHS,
     "48": SPEED_MILES_PER_HOUR,
     "49": SPEED_METERS_PER_SECOND,
