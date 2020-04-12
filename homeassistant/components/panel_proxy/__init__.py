@@ -46,34 +46,38 @@ class PanelProxy(HomeAssistantView):
 
     def __init__(self, url, proxy_url):
         """Initialize view url."""
-        self.url = url + r'{requested_url:.*}'
+        self.url = url + r"{requested_url:.*}"
         self.proxy_url = proxy_url
 
     async def get(self, request, requested_url):
         """Handle GET proxy requests."""
-        return await self._handle_request('GET', request, requested_url)
+        return await self._handle_request("GET", request, requested_url)
 
     async def post(self, request, requested_url):
         """Handle POST proxy requests."""
-        return await self._handle_request('POST', request, requested_url)
+        return await self._handle_request("POST", request, requested_url)
 
     async def _handle_request(self, method, request, requested_url):
         """Handle proxy requests."""
-        requested_url = requested_url or '/'
+        requested_url = requested_url or "/"
         headers = request.headers.copy()
-        headers['Host'] = request.host
-        headers['X-Real-Ip'] = request.remote
-        # headers['X-Forwarded-For'] = request.forwarded
-        headers['X-Forwarded-Proto'] = request.scheme
+        headers["Host"] = request.host
+        headers["X-Real-Ip"] = request.remote
+        # headers["X-Forwarded-For"] = request.forwarded
+        headers["X-Forwarded-Proto"] = request.scheme
         post_data = await request.read()
-        async with aiohttp.request(method,
-                                   self.proxy_url + requested_url,
-                                   params=request.query,
-                                   data=post_data,
-                                   headers=headers) as resp:
+        async with aiohttp.request(
+            method,
+            self.proxy_url + requested_url,
+            params=request.query,
+            data=post_data,
+            headers=headers
+        ) as resp:
             content = await resp.read()
             headers = resp.headers.copy()
-            return aiohttp.web.Response(body=content, status=resp.status, headers=headers)
+            return aiohttp.web.Response(
+                body=content, status=resp.status, headers=headers
+            )
 
 
 async def async_setup(hass, config):
