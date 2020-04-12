@@ -8,12 +8,7 @@ from homeassistant.components.climate import (
     ClimateDevice,
 )
 from homeassistant.components.climate.const import CURRENT_HVAC_HEAT, CURRENT_HVAC_OFF
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    ATTR_TEMPERATURE,
-    CONF_NAME,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
 
 from . import CONF_SERIAL, LIGHTWAVE_LINK
 
@@ -45,7 +40,6 @@ class LightwaveTrv(ClimateDevice):
         self._current_temperature = None
         self._target_temperature = None
         self._target_temperature_step = 0.5
-        self._hvac_mode = HVAC_MODE_HEAT
         self._hvac_action = None
         self._lwlink = lwlink
         self._serial = serial
@@ -94,9 +88,10 @@ class LightwaveTrv(ClimateDevice):
     def target_temperature(self):
         """Target room temperature."""
         if self._inhibit > 0:
-            # if we get an update before the new temp has
-            # propagated, the GUI target temp is set back to the
-            # old target, showing a false reading temporarily
+            # If we get an update before the new temp has
+            # propagated, the target temp is set back to the
+            # old target on the next poll, showing a false
+            # reading temporarily.
             self._target_temperature = self._inhibit
         return self._target_temperature
 
@@ -108,7 +103,7 @@ class LightwaveTrv(ClimateDevice):
     @property
     def hvac_mode(self):
         """HVAC mode."""
-        return self._hvac_mode
+        return HVAC_MODE_HEAT
 
     @property
     def hvac_action(self):
