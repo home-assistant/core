@@ -23,6 +23,7 @@ from .const import (
     DEFAULT_CONTINUOUS,
     DEFAULT_DELAY,
     DOMAIN,
+    LISTENER,
     ROOMBA_SESSION,
 )
 
@@ -104,18 +105,18 @@ async def async_setup_entry(hass, config_entry):
     except CannotConnect:
         raise exceptions.ConfigEntryNotReady
 
+    listener_options = config_entry.add_update_listener(async_update_options)
+
     hass.data[DOMAIN][config_entry.entry_id] = {
         ROOMBA_SESSION: roomba,
         BLID: config_entry.data[CONF_BLID],
+        LISTENER: listener_options,
     }
 
     for component in COMPONENTS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
-
-    if not config_entry.update_listeners:
-        config_entry.add_update_listener(async_update_options)
 
     return True
 
@@ -170,6 +171,9 @@ async def async_unload_entry(hass, config_entry):
     )
     if unload_ok:
         domain_data = hass.data[DOMAIN][config_entry.entry_id]
+        # unsubscribe listerner
+        domain_data[LISTENER]()
+        # disconnect vacuum
         await async_disconnect_or_timeout(hass, roomba=domain_data[ROOMBA_SESSION])
         hass.data[DOMAIN].pop(config_entry.entry_id)
 

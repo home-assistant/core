@@ -11,3 +11,4 @@ DEFAULT_CONTINUOUS = True
 DEFAULT_DELAY = 1
 ROOMBA_SESSION = "roomba_session"
 BLID = "blid_key"
+LISTENER = "listener_options"
