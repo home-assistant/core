@@ -331,7 +331,7 @@ class HarmonyRemote(remote.RemoteDevice):
 
             if activity_id is None:
                 _LOGGER.debug("%s: Find activity ID based on name", self.name)
-                activity_id = self._client.get_activity_id(str(activity).strip())
+                activity_id = self._client.get_activity_id(str(activity))
 
             if activity_id is None:
                 _LOGGER.error("%s: Activity %s is invalid", self.name, activity)
