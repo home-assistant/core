@@ -502,6 +502,9 @@ class WaterHeater(HomeAccessory):
             CHAR_TEMP_DISPLAY_UNITS, value=0
         )
 
+        state = self.hass.states.get(self.entity_id)
+        self.update_state(state)
+
     def get_temperature_range(self):
         """Return min and max temperature range."""
         max_temp = self.hass.states.get(self.entity_id).attributes.get(ATTR_MAX_TEMP)
