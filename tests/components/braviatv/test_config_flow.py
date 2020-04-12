@@ -40,13 +40,6 @@ IMPORT_CONFIG_IP = {
     CONF_MAC: "AA:BB:CC:DD:EE:FF",
 }
 
-config_entry = MockConfigEntry(
-    domain=DOMAIN,
-    unique_id="very_unique_string",
-    data={CONF_HOST: "bravia-host", CONF_PIN: "1234", CONF_MAC: "AA:BB:CC:DD:EE:FF"},
-    title="TV-Model",
-)
-
 
 async def test_show_form(hass):
     """Test that the form is served with no input."""
@@ -105,6 +98,17 @@ async def test_import_model_unsupported(hass):
 
 async def test_import_duplicate_error(hass):
     """Test that errors are shown when duplicates are added during import."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="very_unique_string",
+        data={
+            CONF_HOST: "bravia-host",
+            CONF_PIN: "1234",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+        },
+        title="TV-Model",
+    )
+
     with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
         "bravia_tv.BraviaRC.is_connected", return_value=True
     ), patch("bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO):
@@ -163,6 +167,17 @@ async def test_authorize_model_unsupported(hass):
 
 async def test_duplicate_error(hass):
     """Test that errors are shown when duplicates are added."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="very_unique_string",
+        data={
+            CONF_HOST: "bravia-host",
+            CONF_PIN: "1234",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+        },
+        title="TV-Model",
+    )
+
     with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
         "bravia_tv.BraviaRC.is_connected", return_value=True
     ), patch("bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO):
@@ -208,6 +223,17 @@ async def test_create_entry(hass):
 
 async def test_options_flow(hass):
     """Test config flow options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="very_unique_string",
+        data={
+            CONF_HOST: "bravia-host",
+            CONF_PIN: "1234",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+        },
+        title="TV-Model",
+    )
+
     with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
         "bravia_tv.BraviaRC.is_connected", return_value=True
     ), patch("bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO):
