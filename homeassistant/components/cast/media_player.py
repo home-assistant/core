@@ -269,7 +269,7 @@ class CastDevice(MediaPlayerDevice):
             self._cast_info.port,
             self.services,
         )
-        chromecast = await self.hass.async_add_job(
+        chromecast = await self.hass.async_add_executor_job(
             pychromecast._get_chromecast_from_service,
             (
                 self.services,
