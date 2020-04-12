@@ -119,9 +119,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         name = SENSOR_TYPES[parameter][1]
         unit = SENSOR_TYPES[parameter][2]
 
-        # prefix = config.get(CONF_NAME)
-        # if prefix:
-        #     name = f"{prefix} {name}"
+        prefix = config.get(CONF_NAME)
+        if prefix:
+            name = f"{prefix} {name}"
 
         entities.append(
             MiTempBtSensor(poller, parameter, name, unit, force_update, median, mac)
