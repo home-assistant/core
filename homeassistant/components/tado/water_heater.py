@@ -146,7 +146,9 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterDevice):
 
         self._undo_dispatcher = async_dispatcher_connect(
             self.hass,
-            SIGNAL_TADO_UPDATE_RECEIVED.format("zone", self.zone_id),
+            SIGNAL_TADO_UPDATE_RECEIVED.format(
+                self._tado.device_id, "zone", self.zone_id
+            ),
             self._async_update_callback,
         )
         self._async_update_data()

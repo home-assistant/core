@@ -116,7 +116,9 @@ class TadoZoneSensor(TadoZoneEntity, Entity):
 
         self._undo_dispatcher = async_dispatcher_connect(
             self.hass,
-            SIGNAL_TADO_UPDATE_RECEIVED.format("zone", self.zone_id),
+            SIGNAL_TADO_UPDATE_RECEIVED.format(
+                self._tado.device_id, "zone", self.zone_id
+            ),
             self._async_update_callback,
         )
         self._async_update_zone_data()
@@ -257,7 +259,9 @@ class TadoDeviceSensor(Entity):
 
         self._undo_dispatcher = async_dispatcher_connect(
             self.hass,
-            SIGNAL_TADO_UPDATE_RECEIVED.format("device", self.device_id),
+            SIGNAL_TADO_UPDATE_RECEIVED.format(
+                self._tado.device_id, "device", self.device_id
+            ),
             self._async_update_callback,
         )
         self._async_update_device_data()
