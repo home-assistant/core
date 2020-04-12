@@ -145,7 +145,6 @@ class LightwaveTrv(ClimateDevice):
         self._lwlink.set_temperature(
             self._device_id, self._target_temperature, self._name
         )
-        self.async_schedule_update_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set HVAC Mode for TRV."""
