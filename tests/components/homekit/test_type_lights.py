@@ -66,7 +66,7 @@ async def test_light_basic(hass, hk_driver, cls, events, driver):
 
     assert acc.aid == 1
     assert acc.category == 5  # Lightbulb
-    assert acc.char_on.value == 0
+    assert acc.char_on.value
 
     await acc.run_handler()
     await hass.async_block_till_done()
@@ -260,7 +260,7 @@ async def test_light_color_temperature(hass, hk_driver, cls, events, driver):
     acc = cls.light(hass, hk_driver, "Light", entity_id, 1, None)
     driver.add_accessory(acc)
 
-    assert acc.char_color_temperature.value == 153
+    assert acc.char_color_temperature.value == 190
 
     await acc.run_handler()
     await hass.async_block_till_done()
@@ -326,8 +326,8 @@ async def test_light_rgb_color(hass, hk_driver, cls, events, driver):
     acc = cls.light(hass, hk_driver, "Light", entity_id, 1, None)
     driver.add_accessory(acc)
 
-    assert acc.char_hue.value == 0
-    assert acc.char_saturation.value == 75
+    assert acc.char_hue.value == 260
+    assert acc.char_saturation.value == 90
 
     await acc.run_handler()
     await hass.async_block_till_done()
