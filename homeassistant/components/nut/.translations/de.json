@@ -8,6 +8,18 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "resources": {
+                "data": {
+                    "resources": "Ressourcen"
+                },
+                "title": "W\u00e4hlen Sie die zu \u00fcberwachenden Ressourcen aus"
+            },
+            "ups": {
+                "data": {
+                    "alias": "Alias",
+                    "resources": "Ressourcen"
+                }
+            },
             "user": {
                 "data": {
                     "alias": "Alias",
@@ -28,7 +40,7 @@
                 "data": {
                     "resources": "Ressourcen"
                 },
-                "description": "W\u00e4hlen Sie Sensorressourcen"
+                "description": "W\u00e4hlen Sie Sensorressourcen."
             }
         }
     }
