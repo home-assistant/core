@@ -34,9 +34,9 @@ class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
     def __init__(self, roomba, blid):
         """Initialize the sensor object."""
         self.vacuum = roomba
-        self.vacuum_state = roomba_reported_state(roomba)
+        vacuum_state = roomba_reported_state(roomba)
         self._blid = blid
-        self._name = self.vacuum_state.get("name")
+        self._name = vacuum_state.get("name")
         self._identifier = f"roomba_{self._blid}"
         self._bin_status = None
 >>>>>>> Fix icon
