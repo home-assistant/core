@@ -50,9 +50,9 @@ async def async_setup(hass: core.HomeAssistant, config: dict):
 
     hubs = conf[CONF_HUBS]
 
-    configured_hosts = set(
+    configured_hosts = {
         entry.data.get("host") for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
     for hub_conf in hubs:
         host = hub_conf[CONF_HOST]
