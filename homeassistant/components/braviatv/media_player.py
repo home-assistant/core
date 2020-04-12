@@ -76,18 +76,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
         return
 
-    for config_host in bravia_config:
-        if config_host == host:
-            data = bravia_config[config_host]
-            data[CONF_HOST] = config_host
+    while bravia_config:
+        # Import a configured TV
+        host_ip, host_config = bravia_config.popitem()
+        if host_ip == host:
+            data = host_config
+            data[CONF_HOST] = host
 
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=data,
                 )
             )
-
-            break
+            return
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
