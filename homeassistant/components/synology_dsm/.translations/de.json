@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Host bereits konfiguriert"
+        },
+        "error": {
+            "login": "Login-Fehler: Bitte \u00fcberpr\u00fcfen Sie Ihren Benutzernamen & Passwort",
+            "unknown": "Unbekannter Fehler: Bitte versuchen Sie es sp\u00e4ter noch einmal oder eine andere Konfiguration"
+        },
+        "flow_title": "Synology DSM {name} ({host})",
+        "step": {
+            "link": {
+                "data": {
+                    "api_version": "DSM-Version",
+                    "password": "Passwort",
+                    "port": "Port (optional)",
+                    "username": "Benutzername"
+                },
+                "description": "M\u00f6chten Sie {name} ({host}) einrichten?",
+                "title": "Synology DSM"
+            },
+            "user": {
+                "data": {
+                    "api_version": "DSM-Version",
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Passwort",
+                    "port": "Port (optional)",
+                    "username": "Benutzername"
+                },
+                "title": "Synology DSM"
+            }
+        },
+        "title": "Synology DSM"
+    }
+}
