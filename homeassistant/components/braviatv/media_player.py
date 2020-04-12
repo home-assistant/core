@@ -22,15 +22,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_MODEL,
-    CONF_NAME,
-    CONF_PIN,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json
 
@@ -39,6 +31,7 @@ from .const import (
     BRAVIA_CONFIG_FILE,
     CLIENTID_PREFIX,
     CONF_IGNORED_SOURCES,
+    CONF_MODEL,
     DEFAULT_NAME,
     DOMAIN,
     NICKNAME,
@@ -74,7 +67,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if host is None:
         return
 
-    pin = None
     bravia_config_file_path = hass.config.path(BRAVIA_CONFIG_FILE)
     bravia_config = await hass.async_add_executor_job(
         load_json, bravia_config_file_path
@@ -84,20 +76,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             "Configuration import failed, there is no bravia.conf file in the configuration folder"
         )
         return
-    while bravia_config:
-        # Import a configured TV
-        host_ip, host_config = bravia_config.popitem()
-        if host_ip == host:
-            pin = host_config[CONF_PIN]
-            mac = host_config[CONF_MAC]
+
+    for config_host in bravia_config:
+        if config_host == host:
+            data = bravia_config[config_host]
+            data[CONF_HOST] = config_host
 
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_IMPORT},
-                    data={CONF_HOST: host, CONF_PIN: pin, CONF_MAC: mac},
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=data
                 )
             )
+
+            break
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

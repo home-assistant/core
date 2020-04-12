@@ -5,6 +5,7 @@ ATTR_MANUFACTURER = "Sony"
 ATTR_MODEL = "model"
 
 CONF_IGNORED_SOURCES = "ignored_sources"
+CONF_MODEL = "model"
 
 BRAVIA_CONFIG_FILE = "bravia.conf"
 CLIENTID_PREFIX = "HomeAssistant"
