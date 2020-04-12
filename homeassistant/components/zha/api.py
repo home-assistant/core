@@ -2,6 +2,7 @@
 
 import asyncio
 import collections
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -677,7 +678,7 @@ async def websocket_unbind_devices(hass, connection, msg):
 
 def is_cluster_binding(value: Any) -> ClusterBinding:
     """Validate and transform a cluster binding."""
-    if not isinstance(value, collections.Mapping):
+    if not isinstance(value, Mapping):
         raise vol.Invalid("Not a cluster binding")
     try:
         cluster_binding = ClusterBinding(
