@@ -11,7 +11,6 @@ from homeassistant.components.cast import media_player as cast
 from homeassistant.components.cast.media_player import ChromecastInfo
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
@@ -33,8 +32,6 @@ def cast_mock():
         "homeassistant.components.cast.media_player.pychromecast", pycast_mock
     ), patch(
         "homeassistant.components.cast.discovery.pychromecast", pycast_mock
-    ), patch(
-        "homeassistant.components.cast.helpers.dial", dial_mock
     ), patch(
         "homeassistant.components.cast.media_player.MultizoneManager", MagicMock()
     ):
@@ -199,36 +196,11 @@ async def test_stop_discovery_called_on_stop(hass):
         assert start_discovery.call_count == 1
 
 
-async def test_internal_discovery_callback_fill_out(hass):
-    """Test internal discovery automatically filling out information."""
-    import pychromecast  # imports mock pychromecast
-
-    pychromecast.ChromecastConnectionError = IOError
-
-    discover_cast, _ = await async_setup_cast_internal_discovery(hass)
-    info = get_fake_chromecast_info(uuid=None)
-    full_info = attr.evolve(info, model_name="", friendly_name="Speaker", uuid=FakeUUID)
-
-    with patch(
-        "homeassistant.components.cast.helpers.dial.get_device_status",
-        return_value=full_info,
-    ):
-        signal = MagicMock()
-
-        async_dispatcher_connect(hass, "cast_discovered", signal)
-        discover_cast("the-service", info)
-        await hass.async_block_till_done()
-
-        # when called with incomplete info, it should use HTTP to get missing
-        discover = signal.mock_calls[0][1][0]
-        assert discover == full_info
-
-
 async def test_create_cast_device_without_uuid(hass):
-    """Test create a cast device with no UUId should still create an entity."""
+    """Test create a cast device with no UUId does not create an entity."""
     info = get_fake_chromecast_info(uuid=None)
     cast_device = cast._async_create_cast_device(hass, info)
-    assert cast_device is not None
+    assert cast_device is None
 
 
 async def test_create_cast_device_with_uuid(hass):
@@ -334,11 +306,7 @@ async def test_entity_media_states(hass: HomeAssistantType):
         info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
     )
 
-    with patch(
-        "homeassistant.components.cast.helpers.dial.get_device_status",
-        return_value=full_info,
-    ):
-        chromecast, entity = await async_setup_media_player_cast(hass, info)
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
 
     entity._available = True
     entity.schedule_update_ha_state()
@@ -392,11 +360,7 @@ async def test_group_media_states(hass: HomeAssistantType):
         info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
     )
 
-    with patch(
-        "homeassistant.components.cast.helpers.dial.get_device_status",
-        return_value=full_info,
-    ):
-        chromecast, entity = await async_setup_media_player_cast(hass, info)
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
 
     entity._available = True
     entity.schedule_update_ha_state()
@@ -442,11 +406,7 @@ async def test_group_media_control(hass: HomeAssistantType):
         info, model_name="google home", friendly_name="Speaker", uuid=FakeUUID
     )
 
-    with patch(
-        "homeassistant.components.cast.helpers.dial.get_device_status",
-        return_value=full_info,
-    ):
-        chromecast, entity = await async_setup_media_player_cast(hass, info)
+    chromecast, entity = await async_setup_media_player_cast(hass, info)
 
     entity._available = True
     entity.async_write_ha_state()
@@ -495,11 +455,7 @@ async def test_disconnect_on_stop(hass: HomeAssistantType):
     """Test cast device disconnects socket on stop."""
     info = get_fake_chromecast_info()
 
-    with patch(
-        "homeassistant.components.cast.helpers.dial.get_device_status",
-        return_value=info,
-    ):
-        chromecast, _ = await async_setup_media_player_cast(hass, info)
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
