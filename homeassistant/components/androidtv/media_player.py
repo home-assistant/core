@@ -494,7 +494,7 @@ class ADBDevice(MediaPlayerDevice):
 
     @adb_decorator()
     def get_raw_media_data(self):
-        """Raw base64 image data."""
+        """Raw image data."""
         return self.aftv.adb_screencap()
 
     @property
