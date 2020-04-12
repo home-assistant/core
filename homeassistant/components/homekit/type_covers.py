@@ -106,10 +106,10 @@ class WindowCoveringBase(HomeAccessory):
         self.features = self.hass.states.get(self.entity_id).attributes.get(
             ATTR_SUPPORTED_FEATURES, 0
         )
-        self.supports_stop = self.features & SUPPORT_STOP
+        self._supports_stop = self.features & SUPPORT_STOP
         self._homekit_target_tilt = None
         self.chars = []
-        if self.supports_stop:
+        if self._supports_stop:
             self.chars.append(CHAR_HOLD_POSITION)
         self._supports_tilt = self.features & SUPPORT_SET_TILT_POSITION
 
@@ -118,7 +118,7 @@ class WindowCoveringBase(HomeAccessory):
 
         self.serv_cover = self.add_preload_service(SERV_WINDOW_COVERING, self.chars)
 
-        if self.supports_stop:
+        if self._supports_stop:
             self.char_hold_position = self.serv_cover.configure_char(
                 CHAR_HOLD_POSITION, setter_callback=self.set_stop
             )
@@ -260,7 +260,7 @@ class WindowCoveringBasic(WindowCoveringBase, HomeAccessory):
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set position to %d", self.entity_id, value)
 
-        if self.supports_stop:
+        if self._supports_stop:
             if value > 70:
                 service, position = (SERVICE_OPEN_COVER, 100)
             elif value < 30:
