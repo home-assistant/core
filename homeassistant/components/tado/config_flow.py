@@ -43,7 +43,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise NoHomes
 
     home = tado_me["homes"][0]
-    unique_id = home["id"]
+    unique_id = str(home["id"])
     name = home["name"]
 
     return {"title": name, UNIQUE_ID: unique_id}
