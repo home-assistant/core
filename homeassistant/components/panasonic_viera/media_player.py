@@ -64,9 +64,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
     await remote.async_create_remote_control(during_setup=True)
 
-    tv = PanasonicVieraTVDevice(hass, remote, name, on_action,)
+    tv_device = PanasonicVieraTVDevice(hass, remote, name, on_action,)
 
-    async_add_entities([tv])
+    async_add_entities([tv_device])
 
     return True
 
@@ -101,17 +101,17 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        return self._remote._state
+        return self._remote.state
 
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        return self._remote._volume
+        return self._remote.volume
 
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
-        return self._remote._muted
+        return self._remote.muted
 
     @property
     def supported_features(self):
@@ -131,9 +131,9 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
 
     async def async_turn_off(self):
         """Turn off media player."""
-        if self._remote._state != STATE_OFF:
+        if self._remote.state != STATE_OFF:
             await self._remote.async_send_key(Keys.power)
-            self._remote._state = STATE_OFF
+            self._remote.state = STATE_OFF
 
     async def async_volume_up(self):
         """Volume up the media player."""
@@ -153,22 +153,22 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
 
     async def async_media_play_pause(self):
         """Simulate play pause media player."""
-        if self._remote._playing:
+        if self._remote.playing:
             await self._remote.async_send_key(Keys.pause)
-            self._remote._playing = False
+            self._remote.playing = False
         else:
             await self._remote.async_send_key(Keys.play)
-            self._remote._playing = True
+            self._remote.playing = True
 
     async def async_media_play(self):
         """Send play command."""
         await self._remote.async_send_key(Keys.play)
-        self._remote._playing = True
+        self._remote.playing = True
 
     async def async_media_pause(self):
         """Send pause command."""
         await self._remote.async_send_key(Keys.pause)
-        self._remote._playing = True
+        self._remote.playing = True
 
     async def async_media_stop(self):
         """Stop playback."""
@@ -182,7 +182,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         """Send the rewind command."""
         await self._remote.async_send_key(Keys.rewind)
 
-    async def async_play_media(self, media_type, media_id):
+    async def async_play_media(self, media_type, media_id, **kwargs):
         """Play media."""
         await self._remote.async_play_media(media_type, media_id)
 
@@ -195,15 +195,16 @@ class Remote:
     ):
         """Initialize the Remote class."""
         self._hass = hass
+
         self._host = host
         self._port = port
         self._app_id = app_id
         self._encryption_key = encryption_key
 
-        self._state = None
-        self._volume = 0
-        self._muted = False
-        self._playing = True
+        self.state = None
+        self.volume = 0
+        self.muted = False
+        self.playing = True
 
         self._control = None
 
@@ -220,17 +221,17 @@ class Remote:
                 partial(RemoteControl, self._host, self._port, **params)
             )
 
-            self._state = STATE_ON
+            self.state = STATE_ON
         except (TimeoutError, URLError, OSError) as err:
             if control_existed or during_setup:
                 _LOGGER.error("Could not establish remote connection: %s", err)
                 self._control = None
-                self._state = STATE_OFF
-        except Exception as err:
+                self.state = STATE_OFF
+        except Exception as err:  # pylint: disable=broad-except
             if control_existed or during_setup:
                 _LOGGER.error("An unknown error occurred: %s", err)
                 self._control = None
-                self._state = STATE_OFF
+                self.state = STATE_OFF
 
     async def async_update(self):
         """Retrieve the latest data."""
@@ -238,13 +239,13 @@ class Remote:
             if self._control is None:
                 raise Exception
 
-            self._muted = self._control.get_mute()
-            self._volume = self._control.get_volume() / 100
-            self._state = STATE_ON
+            self.muted = self._control.get_mute()
+            self.volume = self._control.get_volume() / 100
+            self.state = STATE_ON
         except EncryptionRequired:
             _LOGGER.error("The connection couldn't be encrypted.")
-        except Exception:
-            self._state = STATE_OFF
+        except Exception:  # pylint: disable=broad-except
+            self.state = STATE_OFF
             await self.async_create_remote_control()
 
     async def async_send_key(self, key):
@@ -254,8 +255,8 @@ class Remote:
                 self._control.send_key(key)
             except EncryptionRequired:
                 _LOGGER.error("The connection couldn't be encrypted.")
-            except Exception:
-                self._state = STATE_OFF
+            except Exception:  # pylint: disable=broad-except
+                self.state = STATE_OFF
                 await self.async_create_remote_control()
 
     async def async_set_mute(self, enable):
@@ -265,8 +266,8 @@ class Remote:
                 self._control.set_mute(enable)
             except EncryptionRequired:
                 _LOGGER.error("The connection couldn't be encrypted.")
-            except Exception:
-                self._state = STATE_OFF
+            except Exception:  # pylint: disable=broad-except
+                self.state = STATE_OFF
                 await self.async_create_remote_control()
 
     async def async_set_volume(self, volume):
@@ -277,8 +278,8 @@ class Remote:
                 self._control.set_volume(volume)
             except EncryptionRequired:
                 _LOGGER.error("The connection couldn't be encrypted.")
-            except Exception:
-                self._state = STATE_OFF
+            except Exception:  # pylint: disable=broad-except
+                self.state = STATE_OFF
                 await self.async_create_remote_control()
 
     async def async_play_media(self, media_type, media_id):
@@ -293,8 +294,8 @@ class Remote:
                 self._control.open_webpage(media_id)
             except EncryptionRequired:
                 _LOGGER.error("The connection couldn't be encrypted.")
-            except Exception:
-                self._state = STATE_OFF
+            except Exception:  # pylint: disable=broad-except
+                self.state = STATE_OFF
                 await self.async_create_remote_control()
         else:
             _LOGGER.warning("Unsupported media_type: %s", media_type)

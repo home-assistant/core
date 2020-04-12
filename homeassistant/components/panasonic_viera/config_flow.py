@@ -3,19 +3,14 @@ from functools import partial
 import logging
 from urllib.request import URLError
 
-from panasonic_viera import (
-    TV_TYPE_ENCRYPTED,
-    TV_TYPE_NONENCRYPTED,
-    RemoteControl,
-    SOAPError,
-)
+from panasonic_viera import TV_TYPE_ENCRYPTED, RemoteControl, SOAPError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 from homeassistant.core import callback
 
-from .const import (
+from .const import (  # pylint: disable=unused-import
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
     CONF_ON_ACTION,
@@ -71,14 +66,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Could not establish remote connection: %s", err)
                 self._errors = {"base": ERROR_NOT_CONNECTED}
                 return await self.async_step_user()
-            except Exception as err:
+            except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.error("Unknown error: %s", err)
                 self._errors = {"base": ERROR_UNKNOWN}
                 return await self.async_step_user()
 
             enc_data = {
-                CONF_APP_ID: self._remote._app_id,
-                CONF_ENCRYPTION_KEY: self._remote._enc_key,
+                CONF_APP_ID: self._remote._app_id,  # pylint: disable=protected-access
+                CONF_ENCRYPTION_KEY: self._remote._enc_key,  # pylint: disable=protected-access
             }
 
             self._data = {**self._data, **enc_data}
@@ -118,14 +113,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Could not establish remote connection: %s", err)
             self._errors = {"base": ERROR_NOT_CONNECTED}
             return await self.async_step_user()
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-except
             _LOGGER.error("An unknown error occurred: %s", err)
             self._errors = {"base": ERROR_UNKNOWN}
             return await self.async_step_user()
 
-        if self._remote._type == TV_TYPE_ENCRYPTED:
+        if self._remote._type == TV_TYPE_ENCRYPTED:  # pylint: disable=protected-access
             return await self.async_step_pairing()
-        elif self._remote._type == TV_TYPE_NONENCRYPTED:
+        else:
             return self.async_create_entry(
                 title=self._data[CONF_NAME], data=self._data,
             )
