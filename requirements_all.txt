@@ -956,9 +956,6 @@ oauth2client==4.0.0
 # homeassistant.components.oem
 oemthermostat==1.1
 
-# homeassistant.components.onkyo
-onkyo-eiscp==1.2.7
-
 # homeassistant.components.onvif
 onvif-zeep-async==0.2.0
 
@@ -1254,6 +1251,9 @@ pyedimax==0.2.1
 
 # homeassistant.components.eight_sleep
 pyeight==0.1.4
+
+# homeassistant.components.onkyo
+pyeiscp==0.0.1
 
 # homeassistant.components.emby
 pyemby==1.6
