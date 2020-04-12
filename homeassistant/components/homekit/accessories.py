@@ -216,6 +216,12 @@ class HomeAccessory(Accessory):
         }
 
         self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data)
+        _LOGGER.debug(
+            "Homekit calling service: %s.%s with data: %s",
+            domain,
+            service,
+            service_data,
+        )
         await self.hass.services.async_call(domain, service, service_data)
 
 
