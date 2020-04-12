@@ -307,7 +307,7 @@ influxdb==5.2.3
 jsonpath==0.82
 
 # homeassistant.scripts.keyring
-keyring==20.0.0
+keyring==21.2.0
 
 # homeassistant.scripts.keyring
 keyrings.alt==3.4.0
