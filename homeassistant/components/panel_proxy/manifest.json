@@ -3,7 +3,7 @@
   "name": "proxy Panel",
   "documentation": "https://www.home-assistant.io/integrations/panel_proxy",
   "requirements": [],
-  "dependencies": ["frontend"],
+  "dependencies": ["frontend", "http"],
   "codeowners": ["@doudz"],
   "quality_scale": "internal"
 }
