@@ -55,7 +55,11 @@ async def test_import(hass):
     """Test that the import works."""
     with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
         "bravia_tv.BraviaRC.is_connected", return_value=True
-    ), patch("bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO):
+    ), patch(
+        "bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO
+    ), patch(
+        "homeassistant.components.braviatv.async_setup_entry", return_value=True
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_CONFIG_HOSTNAME,
         )
