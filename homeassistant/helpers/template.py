@@ -19,6 +19,7 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_UNIT_OF_MEASUREMENT,
+    LENGTH_METERS,
     MATCH_ALL,
     STATE_UNKNOWN,
 )
@@ -638,7 +639,7 @@ def distance(hass, *args):
         return hass.config.distance(*locations[0])
 
     return hass.config.units.length(
-        loc_util.distance(*locations[0] + locations[1]), "m"
+        loc_util.distance(*locations[0] + locations[1]), LENGTH_METERS
     )
 
 
