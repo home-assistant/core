@@ -35,7 +35,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         serial = device_config[CONF_SERIAL]
         entities.append(LightwaveTrv(name, device_id, lwlink, serial))
 
-    async_add_entities(trv)
+    async_add_entities(entities)
 
 
 class LightwaveTrv(ClimateDevice):
