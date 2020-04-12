@@ -27,7 +27,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json
 
 from .const import (
-    ATTR_CID,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     BRAVIA_CONFIG_FILE,
@@ -97,22 +96,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add BraviaTV entities from a config_entry."""
     ignored_sources = []
     pin = config_entry.data[CONF_PIN]
-    braviarc = hass.data[DOMAIN][config_entry.entry_id]
-
-    try:
-        system_info = await hass.async_add_executor_job(braviarc.get_system_info)
-    except TypeError:
-        _LOGGER.error("Cannot retrieve system info from TV")
-        return
-    braviarc._mac = system_info["macAddr"].lower()  # pylint: disable=protected-access
-
-    unique_id = system_info[ATTR_CID].lower()
+    model = config_entry.data[ATTR_MODEL]
+    unique_id = config_entry.unique_id
     device_info = {
         "identifiers": {(DOMAIN, unique_id)},
         "name": DEFAULT_NAME,
         "manufacturer": ATTR_MANUFACTURER,
-        "model": system_info[ATTR_MODEL],
+        "model": model,
     }
+
+    braviarc = hass.data[DOMAIN][config_entry.entry_id]
+
     if config_entry.options.get(CONF_IGNORED_SOURCES):
         ignored_sources = config_entry.options.get(CONF_IGNORED_SOURCES)
 
