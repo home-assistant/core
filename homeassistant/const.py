@@ -410,6 +410,9 @@ MASS_MICROGRAMS = "µg"
 MASS_OUNCES: str = "oz"
 MASS_POUNDS: str = "lb"
 
+# Conductivity units
+UNIT_CONDUCTIVITY: str = f"µS/{LENGTH_CENTIMETERS}"
+
 # UV Index units
 UNIT_UV_INDEX: str = "UV index"
 

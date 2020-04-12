@@ -320,7 +320,7 @@ beewi_smartclim==0.0.7
 bellows-homeassistant==0.15.2
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.1
+bimmer_connected==0.7.5
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -921,7 +921,7 @@ netdisco==2.6.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==0.8.2
+nexia==0.9.1
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -1528,6 +1528,7 @@ pysdcp==1
 # homeassistant.components.sensibo
 pysensibo==1.0.3
 
+# homeassistant.components.modbus
 # homeassistant.components.serial
 pyserial-asyncio==0.4
 

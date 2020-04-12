@@ -3,10 +3,12 @@ from homeassistant.components import mysensors
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
+    LENGTH_METERS,
     MASS_KILOGRAMS,
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_CONDUCTIVITY,
     UNIT_DEGREE,
     UNIT_PERCENTAGE,
     UNIT_VOLT,
@@ -25,12 +27,12 @@ SENSORS = {
     "V_GUST": [None, "mdi:weather-windy"],
     "V_DIRECTION": [UNIT_DEGREE, "mdi:compass"],
     "V_WEIGHT": [MASS_KILOGRAMS, "mdi:weight-kilogram"],
-    "V_DISTANCE": ["m", "mdi:ruler"],
+    "V_DISTANCE": [LENGTH_METERS, "mdi:ruler"],
     "V_IMPEDANCE": ["ohm", None],
     "V_WATT": [POWER_WATT, None],
     "V_KWH": [ENERGY_KILO_WATT_HOUR, None],
     "V_LIGHT_LEVEL": [UNIT_PERCENTAGE, "mdi:white-balance-sunny"],
-    "V_FLOW": ["m", "mdi:gauge"],
+    "V_FLOW": [LENGTH_METERS, "mdi:gauge"],
     "V_VOLUME": ["m³", None],
     "V_LEVEL": {
         "S_SOUND": ["dB", "mdi:volume-high"],
@@ -41,7 +43,7 @@ SENSORS = {
     "V_CURRENT": ["A", "mdi:flash-auto"],
     "V_PH": ["pH", None],
     "V_ORP": ["mV", None],
-    "V_EC": ["μS/cm", None],
+    "V_EC": [UNIT_CONDUCTIVITY, None],
     "V_VAR": ["var", None],
     "V_VA": ["VA", None],
 }

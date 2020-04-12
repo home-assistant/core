@@ -419,9 +419,7 @@ def _load_file(
             parts = []
             for part in path.split("."):
                 parts.append(part)
-                white_listed_errors.append(
-                    "No module named '{}'".format(".".join(parts))
-                )
+                white_listed_errors.append(f"No module named '{'.'.join(parts)}'")
 
             if str(err) not in white_listed_errors:
                 _LOGGER.exception(

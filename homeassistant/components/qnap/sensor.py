@@ -177,7 +177,7 @@ class QNAPStatsAPI:
 
         protocol = "https" if config[CONF_SSL] else "http"
         self._api = QNAPStats(
-            "{}://{}".format(protocol, config.get(CONF_HOST)),
+            f"{protocol}://{config.get(CONF_HOST)}",
             config.get(CONF_PORT),
             config.get(CONF_USERNAME),
             config.get(CONF_PASSWORD),
@@ -357,9 +357,7 @@ class QNAPDriveSensor(QNAPSensor):
         """Return the name of the sensor, if any."""
         server_name = self._api.data["system_stats"]["system"]["name"]
 
-        return "{} {} (Drive {})".format(
-            server_name, self.var_name, self.monitor_device
-        )
+        return f"{server_name} {self.var_name} (Drive {self.monitor_device})"
 
     @property
     def device_state_attributes(self):
@@ -402,6 +400,4 @@ class QNAPVolumeSensor(QNAPSensor):
             data = self._api.data["volumes"][self.monitor_device]
             total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
 
-            return {
-                ATTR_VOLUME_SIZE: "{} {}".format(round_nicely(total_gb), DATA_GIBIBYTES)
-            }
+            return {ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {DATA_GIBIBYTES}"}
