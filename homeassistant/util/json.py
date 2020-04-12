@@ -57,7 +57,7 @@ def save_json(
         json_data = json.dumps(data, sort_keys=True, indent=4, cls=encoder)
     except TypeError:
         # pylint: disable=no-member
-        msg = f"Failed to serialize to JSON: {filename}. Bad data found at {', '.join(find_paths_unserializable_data(data))}"
+        msg = f"Failed to serialize to JSON: {filename}. Bad data at {format_unserializable_data(find_paths_unserializable_data(data))}"
         _LOGGER.error(msg)
         raise SerializationError(msg)
 
@@ -86,15 +86,23 @@ def save_json(
                 _LOGGER.error("JSON replacement cleanup failed: %s", err)
 
 
+def format_unserializable_data(data: Dict[str, Any]) -> str:
+    """Format output of find_paths in a friendly way.
+
+    Format is comma separated: <path>=<value>(<type>)
+    """
+    return ", ".join(f"{path}={value}({type(value)}" for path, value in data.items())
+
+
 def find_paths_unserializable_data(
     bad_data: Any, *, dump: Callable[[Any], str] = json.dumps
-) -> List[str]:
+) -> Dict[str, Any]:
     """Find the paths to unserializable data.
 
     This method is slow! Only use for error handling.
     """
     to_process = deque([(bad_data, "$")])
-    invalid = []
+    invalid = {}
 
     while to_process:
         obj, obj_path = to_process.popleft()
@@ -119,7 +127,7 @@ def find_paths_unserializable_data(
                     # Is key valid?
                     dump({key: None})
                 except TypeError:
-                    invalid.append(f"{obj_path}<key: {key}>")
+                    invalid[f"{obj_path}<key: {key}>"] = key
                 else:
                     # Process value
                     to_process.append((value, f"{obj_path}.{key}"))
@@ -127,6 +135,6 @@ def find_paths_unserializable_data(
             for idx, value in enumerate(obj):
                 to_process.append((value, f"{obj_path}[{idx}]"))
         else:
-            invalid.append(obj_path)
+            invalid[obj_path] = obj
 
     return invalid
