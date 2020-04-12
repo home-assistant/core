@@ -176,16 +176,16 @@ class HifiBerry(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        url = self._state.get("artUrl", None)
-        # Utilise external artwork if no local is available.
-        if url is not None:
-            if "artwork" in url:
-                mediaurl = f"http://{self.host}:{self.port}/{url}"
-        else:
-            mediaurl = self._state.get("externalArtUrl", None)
-        if mediaurl is None:
-            return
-        return mediaurl
+        artUrl = self._state.get("artUrl", None)
+        externalArtUrl = self._state.get("externalArtUrl", None)
+        if artUrl is None:
+            return externalArtUrl
+        if artUrl[0] != "h":
+            if "artwork" in artUrl:
+                artUrl = f"http://{self.host}:{self.port}/{artUrl}"
+            else:
+                return externalArtUrl
+        return artUrl
 
     @property
     def volume_level(self):
