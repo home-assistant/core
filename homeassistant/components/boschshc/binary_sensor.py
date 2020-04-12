@@ -9,47 +9,17 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_WINDOW,
     BinarySensorDevice,
 )
-from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME
-from homeassistant.util import slugify
+from homeassistant.const import CONF_IP_ADDRESS
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the SHC binary sensor platform."""
-    device = []
-    session: SHCSession = hass.data[DOMAIN][slugify(config[CONF_NAME])]
-
-    for binarysensor in session.device_helper.shutter_contacts:
-        _LOGGER.debug("Found shutter contact: %s", binarysensor.id)
-        device.append(
-            ShutterContactSensor(
-                device=binarysensor,
-                room_name=session.room(binarysensor.room_id).name,
-                controller_ip=config[CONF_IP_ADDRESS],
-            )
-        )
-
-    for binarysensor in session.device_helper.smoke_detectors:
-        _LOGGER.debug("Found smoke detector: %s", binarysensor.id)
-        device.append(
-            SmokeDetectorSensor(
-                device=binarysensor,
-                room_name=session.room(binarysensor.room_id).name,
-                controller_ip=config[CONF_IP_ADDRESS],
-            )
-        )
-
-    if device:
-        return await async_add_entities(device)
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the SHC binary sensor platform."""
     device = []
-    session: SHCSession = hass.data[DOMAIN][slugify(config_entry.data[CONF_NAME])]
+    session: SHCSession = hass.data[DOMAIN][config_entry.entry_id]
 
     for binarysensor in session.device_helper.shutter_contacts:
         _LOGGER.debug(

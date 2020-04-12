@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default="Home"): str,
+        vol.Required(CONF_NAME, default="Bosch SHC"): str,
         vol.Required(CONF_IP_ADDRESS): str,
         vol.Required(CONF_SSL_CERTIFICATE): str,
         vol.Required(CONF_SSL_KEY): str,
@@ -49,8 +49,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bosch SHC."""
 
     VERSION = 1
-    # TODO pick one of the available connection classes in homeassistant/config_entries.py
-    CONNECTION_CLASS = config_entries.CONN_CLASS_UNKNOWN
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -58,6 +57,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
+
+                # Check if already configured
+                await self.async_set_unique_id(user_input[CONF_IP_ADDRESS])
+                self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:

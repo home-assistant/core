@@ -8,7 +8,6 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.util import slugify
 
 from .const import CONF_SSL_CERTIFICATE, CONF_SSL_KEY, DOMAIN
 
@@ -18,7 +17,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Required(CONF_NAME, default="Home"): cv.string,
+                vol.Required(CONF_NAME, default="Bosch SHC"): cv.string,
                 vol.Required(CONF_IP_ADDRESS): cv.string,
                 vol.Required(CONF_SSL_CERTIFICATE): cv.isfile,
                 vol.Required(CONF_SSL_KEY): cv.isfile,
@@ -41,6 +40,14 @@ async def async_setup(hass: HomeAssistant, config: dict):
     conf = config.get(DOMAIN)
 
     if not conf:
+        return True
+
+    configured_hosts = {
+        entry.data.get("ip_address")
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    }
+
+    if conf[CONF_IP_ADDRESS] in configured_hosts:
         return True
 
     hass.async_create_task(
@@ -72,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     elif shc_info.updateState.name == "UPDATE_AVAILABLE":
         _LOGGER.warning("Please check for software updates in the Bosch Smart Home App")
 
-    hass.data[DOMAIN][slugify(data[CONF_NAME])] = session
+    hass.data[DOMAIN][entry.entry_id] = session
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
@@ -89,17 +96,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    # async def stop_polling(event):
-    #     """Stop polling service."""
-    #     await hass.async_add_executor_job(session.stop_polling)
-
-    # async def start_polling(event):
-    #     """Start polling service."""
-    #     await hass.async_add_executor_job(session.start_polling)
-    #     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_polling)
-
-    # hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_polling)
-
     await hass.async_add_executor_job(session.start_polling)
 
     return True
@@ -109,7 +105,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     from boschshcpy import SHCSession
 
-    session: SHCSession = hass.data[DOMAIN][slugify(entry.data[CONF_NAME])]
+    session: SHCSession = hass.data[DOMAIN][entry.entry_id]
     await hass.async_add_executor_job(session.stop_polling)
 
     unload_ok = all(
@@ -121,6 +117,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN].pop(slugify(entry.data[CONF_NAME]))
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
