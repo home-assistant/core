@@ -1,6 +1,4 @@
 """Support for LightwaveRF TRV - Associated Battery."""
-import logging
-
 from homeassistant.const import CONF_NAME, DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 
