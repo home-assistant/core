@@ -103,11 +103,7 @@ async def test_import_duplicate_error(hass):
     """Test that errors are shown when duplicates are added during import."""
     with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
         "bravia_tv.BraviaRC.is_connected", return_value=True
-    ), patch(
-        "bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO
-    ), patch(
-        "socket.socket.connect"
-    ):
+    ), patch("bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO):
         config_entry.add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
@@ -129,21 +125,9 @@ async def test_user_invalid_host(hass):
     assert result["errors"] == {CONF_HOST: "invalid_host"}
 
 
-async def test_user_host_unreachable(hass):
-    """Test that errors are shown when the host is unreachable."""
-    with patch("socket.socket.connect", side_effect=OSError):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG,
-        )
-
-        assert result["errors"] == {CONF_HOST: "host_unreachable"}
-
-
 async def test_authorize_cannot_connect(hass):
     """Test that errors are shown when cannot connect to host at the authorize step."""
-    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
-        "socket.socket.connect"
-    ):
+    with patch("bravia_tv.BraviaRC.connect", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG,
         )
@@ -158,9 +142,7 @@ async def test_authorize_model_unsupported(hass):
     """Test that errors are shown when the TV is not supported at the authorize step."""
     with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
         "bravia_tv.BraviaRC.is_connected", return_value=True
-    ), patch("bravia_tv.BraviaRC.get_system_info", side_effect=KeyError), patch(
-        "socket.socket.connect"
-    ):
+    ), patch("bravia_tv.BraviaRC.get_system_info", side_effect=KeyError):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -177,11 +159,7 @@ async def test_duplicate_error(hass):
     """Test that errors are shown when duplicates are added."""
     with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
         "bravia_tv.BraviaRC.is_connected", return_value=True
-    ), patch(
-        "bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO
-    ), patch(
-        "socket.socket.connect"
-    ):
+    ), patch("bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO):
         config_entry.add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
@@ -199,11 +177,7 @@ async def test_create_entry(hass):
     """Test that the user step works."""
     with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
         "bravia_tv.BraviaRC.is_connected", return_value=True
-    ), patch(
-        "bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO
-    ), patch(
-        "socket.socket.connect"
-    ):
+    ), patch("bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}

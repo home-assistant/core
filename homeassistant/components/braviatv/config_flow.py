@@ -2,7 +2,6 @@
 import ipaddress
 import logging
 import re
-import socket
 
 from bravia_tv import BraviaRC
 import voluptuous as vol
@@ -32,17 +31,6 @@ def host_valid(host):
     except ValueError:
         disallowed = re.compile(r"[^a-zA-Z\d\-]")
         return all(x and not disallowed.search(x) for x in host.split("."))
-
-
-def host_reachable(host):
-    """Return True if host is reachable."""
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        sock.connect((host, 80))
-    except OSError:
-        return False
-    sock.close()
-    return True
 
 
 class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -98,19 +86,12 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if not host_valid(user_input[CONF_HOST]):
                     raise InvalidHost()
 
-                if not await self.hass.async_add_executor_job(
-                    host_reachable, user_input[CONF_HOST]
-                ):
-                    raise HostUnreachable()
-
                 self.host = user_input[CONF_HOST]
                 self.braviarc = BraviaRC(self.host)
 
                 return await self.async_step_authorize()
             except InvalidHost:
                 errors[CONF_HOST] = "invalid_host"
-            except HostUnreachable:
-                errors[CONF_HOST] = "host_unreachable"
 
         return self.async_show_form(
             step_id="user",
@@ -210,7 +191,3 @@ class InvalidHost(exceptions.HomeAssistantError):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class HostUnreachable(exceptions.HomeAssistantError):
-    """Error to indicate the host is unreachable."""

@@ -19,7 +19,6 @@
     },
     "error": {
       "invalid_host": "Invalid hostname or IP address.",
-      "host_unreachable": "Host is unreachable, please try again.",
       "cannot_connect": "Failed to connect, invalid host or PIN code.",
       "unsupported_model": "Your TV model is not supported."
     },
