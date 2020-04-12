@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Find and return LightWave lights."""
-    if not discovery_info:
+    if discovery_info is None:
         return
 
     trv = []
