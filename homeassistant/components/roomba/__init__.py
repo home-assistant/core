@@ -175,7 +175,6 @@ async def async_unload_entry(hass, config_entry):
         domain_data[LISTENER]()
         # disconnect vacuum
         await async_disconnect_or_timeout(hass, roomba=domain_data[ROOMBA_SESSION])
-        hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
 
