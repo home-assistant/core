@@ -3,5 +3,5 @@
   "name": "HomeKit",
   "documentation": "https://www.home-assistant.io/integrations/homekit",
   "requirements": ["HAP-python==2.8.2"],
-  "codeowners": []
+  "codeowners": ["@bdraco"]
 }
