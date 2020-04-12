@@ -1,10 +1,11 @@
 """The tests for local file camera component."""
-from unittest.mock import mock_open, patch
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.camera import (
     DOMAIN as CAMERA_DOMAIN,
+    SERVICE_DISABLE_MOTION,
     SERVICE_ENABLE_MOTION,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -35,16 +36,11 @@ async def test_init_state_is_streaming(hass):
     state = hass.states.get(ENTITY_CAMERA)
     assert state.state == STATE_STREAMING
 
-    mock_on_img = mock_open(read_data=b"ON")
-    with patch("homeassistant.components.demo.camera.open", mock_on_img, create=True):
+    with patch(
+        "homeassistant.components.demo.camera.Path.read_bytes", return_value=b"ON"
+    ) as mock_read_bytes:
         image = await async_get_image(hass, ENTITY_CAMERA)
-        assert mock_on_img.called
-        assert mock_on_img.call_args_list[0][0][0][-6:] in [
-            "_0.jpg",
-            "_1.jpg",
-            "_2.jpg",
-            "_3.jpg",
-        ]
+        assert mock_read_bytes.call_count == 1
         assert image.content == b"ON"
 
 
@@ -113,3 +109,15 @@ async def test_motion_detection(hass):
     # Check if state has been updated.
     state = hass.states.get(ENTITY_CAMERA)
     assert state.attributes.get("motion_detection")
+
+    # Call service to turn off motion detection
+    await hass.services.async_call(
+        CAMERA_DOMAIN,
+        SERVICE_DISABLE_MOTION,
+        {ATTR_ENTITY_ID: ENTITY_CAMERA},
+        blocking=True,
+    )
+
+    # Check if state has been updated.
+    state = hass.states.get(ENTITY_CAMERA)
+    assert not state.attributes.get("motion_detection")
