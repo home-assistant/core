@@ -1,6 +1,4 @@
 """Support for LightwaveRF TRVs."""
-import logging
-
 from homeassistant.components.climate import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
