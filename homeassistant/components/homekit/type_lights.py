@@ -56,7 +56,7 @@ class Light(HomeAccessory):
         self.chars = []
         state = self.hass.states.get(self.entity_id)
 
-        self._features = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        self._features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if self._features & SUPPORT_BRIGHTNESS:
             self.chars.append(CHAR_BRIGHTNESS)
