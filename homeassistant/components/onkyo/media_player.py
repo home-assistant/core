@@ -151,6 +151,10 @@ SOUND_MODE_MAPPING = {
     "Front Stage Surround": ["theater-dimensional"],
 }
 
+SOUND_MODE_REVERSE_MAPPING = {
+    subval: key for key, values in SOUND_MODE_MAPPING.items() for subval in values
+}
+
 DEFAULT_PLAYABLE_SOURCES = ("fm", "am", "tuner")
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -315,13 +319,6 @@ class OnkyoDevice(MediaPlayerDevice):
         self._source_mapping = sources
         self._reverse_mapping = {value: key for key, value in sources.items()}
         self._sound_mode = None
-        self._sound_mode_list = list(SOUND_MODE_MAPPING.keys())
-        self._sound_mode_mapping = SOUND_MODE_MAPPING
-        self._sound_mode_reverse_mapping = {
-            subval: key
-            for key, values in SOUND_MODE_MAPPING.items()
-            for subval in values
-        }
         self._attributes = {}
 
         self._supports_sound_mode = True
@@ -385,8 +382,8 @@ class OnkyoDevice(MediaPlayerDevice):
                 else:
                     sound_mode_tuples = sound_mode_raw
                 for sound_mode in sound_mode_tuples[1]:
-                    if sound_mode in self._sound_mode_reverse_mapping:
-                        self._sound_mode = self._sound_mode_reverse_mapping[sound_mode]
+                    if sound_mode in SOUND_MODE_REVERSE_MAPPING:
+                        self._sound_mode = SOUND_MODE_REVERSE_MAPPING[sound_mode]
                         break
                     self._sound_mode = "_".join(sound_mode_tuples[1])
         self._muted = bool(mute_raw[1] == "on")
@@ -444,7 +441,7 @@ class OnkyoDevice(MediaPlayerDevice):
     @property
     def sound_mode_list(self):
         """Return a list of available sound modes."""
-        return self._sound_mode_list
+        return list(SOUND_MODE_MAPPING)
 
     @property
     def device_state_attributes(self):
@@ -496,8 +493,8 @@ class OnkyoDevice(MediaPlayerDevice):
 
     def select_sound_mode(self, sound_mode):
         """Select sound mode."""
-        if sound_mode in self._sound_mode_list:
-            sound_mode = self._sound_mode_mapping[sound_mode][0]
+        if sound_mode in list(SOUND_MODE_MAPPING):
+            sound_mode = SOUND_MODE_MAPPING[sound_mode][0]
         self.command(f"listening-mode {sound_mode}")
 
     def play_media(self, media_type, media_id, **kwargs):
