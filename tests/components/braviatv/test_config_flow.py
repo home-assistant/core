@@ -1,6 +1,4 @@
 """Define tests for the Bravia TV config flow."""
-from collections import OrderedDict
-
 from asynctest import patch
 
 from homeassistant import data_entry_flow
@@ -23,15 +21,13 @@ BRAVIA_SYSTEM_INFO = {
     "cid": "very_unique_string",
 }
 
-BRAVIA_SOURCE_LIST = OrderedDict(
-    [
-        ("HDMI 1", "extInput:hdmi?port=1"),
-        ("HDMI 2", "extInput:hdmi?port=2"),
-        ("HDMI 3/ARC", "extInput:hdmi?port=3"),
-        ("HDMI 4", "extInput:hdmi?port=4"),
-        ("AV/Component", "extInput:component?port=1"),
-    ]
-)
+BRAVIA_SOURCE_LIST = {
+    "HDMI 1": "extInput:hdmi?port=1",
+    "HDMI 2": "extInput:hdmi?port=2",
+    "HDMI 3/ARC": "extInput:hdmi?port=3",
+    "HDMI 4": "extInput:hdmi?port=4",
+    "AV/Component": "extInput:component?port=1",
+}
 
 IMPORT_CONFIG_HOSTNAME = {
     CONF_HOST: "bravia-host",
