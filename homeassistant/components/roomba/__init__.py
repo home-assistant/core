@@ -174,6 +174,7 @@ async def async_unload_entry(hass, config_entry):
             ]
         )
     )
+<<<<<<< HEAD
 
     domain_data = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -182,6 +183,13 @@ async def async_unload_entry(hass, config_entry):
 
     # disconnect cleanly
     try:
+=======
+    if unload_ok:
+        domain_data = hass.data[DOMAIN][config_entry.entry_id]
+        # unsubscribe listerner
+        domain_data[LISTENER]()
+        # disconnect vacuum
+>>>>>>> Add unsubscribe listener
         await async_disconnect_or_timeout(hass, roomba=domain_data[ROOMBA_SESSION])
     except CannotDisconnect:
         return False

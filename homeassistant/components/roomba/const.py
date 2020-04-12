@@ -12,4 +12,7 @@ DEFAULT_DELAY = 1
 ROOMBA_SESSION = "roomba_session"
 BLID = "blid_key"
 LISTENER = "listener_options"
+<<<<<<< HEAD
 ICON_BIN = "mdi:delete-variant"
+=======
+>>>>>>> Add unsubscribe listener
