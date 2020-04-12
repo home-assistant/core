@@ -2,8 +2,8 @@
 from datetime import timedelta
 import logging
 
+from requests.exceptions import ConnectionError as RequestsConnectionError
 from tuyaha import TuyaApi
-from urllib3.exceptions import NewConnectionError
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
@@ -59,7 +59,7 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config, retry_delay=FIRST_RETRY_TIME):
     """Set up Tuya Component."""
 
-    _LOGGER.info("Initializing %s domain.", DOMAIN)
+    _LOGGER.debug("Initializing domain")
 
     tuya = TuyaApi()
     username = config[DOMAIN][CONF_USERNAME]
@@ -69,10 +69,12 @@ def setup(hass, config, retry_delay=FIRST_RETRY_TIME):
 
     try:
         tuya.init(username, password, country_code, platform)
-    except NewConnectionError:
+    except RequestsConnectionError as ex:
+        if "NewConnectionError" not in str(ex):
+            raise ex
+
         _LOGGER.warning(
-            "Connection error initializing %s domain. Will retry in %s seconds...",
-            DOMAIN,
+            "Connection error initializing domain. Will retry in %s seconds.",
             retry_delay,
         )
 
