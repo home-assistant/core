@@ -9,6 +9,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN,
+    SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
 )
@@ -392,6 +393,30 @@ async def test_window_open_close_stop(hass, hk_driver, cls, events):
     assert acc.char_target_position.value == 50
     assert acc.char_position_state.value == 2
     assert len(events) == 3
+    assert events[-1].data[ATTR_VALUE] is None
+
+
+async def test_window_open_close_with_position_and_stop(hass, hk_driver, cls, events):
+    """Test if accessory and HA are updated accordingly."""
+    entity_id = "cover.stop_window"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_UNKNOWN,
+        {ATTR_SUPPORTED_FEATURES: SUPPORT_STOP | SUPPORT_SET_POSITION},
+    )
+    acc = cls.window(hass, hk_driver, "Cover", entity_id, 2, None)
+    await acc.run_handler()
+
+    # Set from HomeKit
+    call_stop_cover = async_mock_service(hass, DOMAIN, "stop_cover")
+
+    await hass.async_add_executor_job(acc.char_hold_position.client_update_value, 1)
+    await hass.async_block_till_done()
+    assert call_stop_cover
+    assert call_stop_cover[0].data[ATTR_ENTITY_ID] == entity_id
+    assert acc.char_hold_position.value == 1
+    assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
 
