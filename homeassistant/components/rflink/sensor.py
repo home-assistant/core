@@ -126,9 +126,9 @@ class RflinkSensor(RflinkDevice):
             tmp_entity
             in self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][self.unique_id]
         ):
-            self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][
-                self.unique_id
-            ].remove(tmp_entity)
+            self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][self.unique_id].remove(
+                tmp_entity
+            )
 
         # Register id and aliases
         self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][self.unique_id].append(
@@ -158,7 +158,7 @@ class RflinkSensor(RflinkDevice):
 
     async def async_will_remove_from_hass(self):
         """Run when entity will be removed from hass."""
-        _LOGGER.info('async_will_remove_from_hass for %s', self.entity_id)
+        _LOGGER.info("async_will_remove_from_hass for %s", self.entity_id)
         # Register id and aliases
         self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][self.unique_id].remove(
             self.entity_id
