@@ -170,7 +170,7 @@ async def async_unload_entry(hass, config_entry):
         )
     )
     if unload_ok:
-        domain_data = hass.data[DOMAIN][config_entry.entry_id]
+        domain_data = hass.data[DOMAIN].pop(config_entry.entry_id)
         # unsubscribe listerner
         domain_data[LISTENER]()
         # disconnect vacuum
