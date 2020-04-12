@@ -144,14 +144,12 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> di
     elif entry:
         supported_features = entry.supported_features
 
-    extra_fields = vol.Schema({})
+    extra_fields = {}
 
     if supported_features & SUPPORT_BRIGHTNESS:
-        extra_fields = extra_fields.extend(
-            {vol.Optional(ATTR_BRIGHTNESS_PCT): VALID_BRIGHTNESS_PCT}
-        )
+        extra_fields[vol.Optional(ATTR_BRIGHTNESS_PCT)] = VALID_BRIGHTNESS_PCT
 
     if supported_features & SUPPORT_FLASH:
-        extra_fields = extra_fields.extend({vol.Optional(ATTR_FLASH): VALID_FLASH})
+        extra_fields[vol.Optional(ATTR_FLASH)] = VALID_FLASH
 
-    return {"extra_fields": extra_fields}
+    return {"extra_fields": vol.Schema(extra_fields)} if extra_fields else {}
