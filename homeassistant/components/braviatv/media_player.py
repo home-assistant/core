@@ -31,7 +31,6 @@ from .const import (
     BRAVIA_CONFIG_FILE,
     CLIENTID_PREFIX,
     CONF_IGNORED_SOURCES,
-    CONF_MODEL,
     DEFAULT_NAME,
     DOMAIN,
     NICKNAME,
@@ -95,13 +94,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add BraviaTV entities from a config_entry."""
     ignored_sources = []
     pin = config_entry.data[CONF_PIN]
-    model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
     device_info = {
         "identifiers": {(DOMAIN, unique_id)},
         "name": DEFAULT_NAME,
         "manufacturer": ATTR_MANUFACTURER,
-        "model": model,
+        "model": config_entry.title,
     }
 
     braviarc = hass.data[DOMAIN][config_entry.entry_id]

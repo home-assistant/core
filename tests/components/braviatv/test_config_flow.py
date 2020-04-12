@@ -6,7 +6,7 @@ from asynctest import patch
 from homeassistant import data_entry_flow
 from homeassistant.components.braviatv.const import CONF_IGNORED_SOURCES, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_PIN
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 
 from tests.common import MockConfigEntry
 
@@ -32,8 +32,14 @@ BRAVIA_SOURCE_LIST = OrderedDict(
         ("AV/Component", "extInput:component?port=1"),
     ]
 )
-CONFIG = {
+
+IMPORT_CONFIG_HOSTNAME = {
     CONF_HOST: "bravia-host",
+    CONF_PIN: "1234",
+    CONF_MAC: "AA:BB:CC:DD:EE:FF",
+}
+IMPORT_CONFIG_IP = {
+    CONF_HOST: "10.10.10.12",
     CONF_PIN: "1234",
     CONF_MAC: "AA:BB:CC:DD:EE:FF",
 }
@@ -41,12 +47,7 @@ CONFIG = {
 config_entry = MockConfigEntry(
     domain=DOMAIN,
     unique_id="very_unique_string",
-    data={
-        CONF_HOST: "bravia-host",
-        CONF_PIN: "1234",
-        CONF_MAC: "AA:BB:CC:DD:EE:FF",
-        CONF_MODEL: "",
-    },
+    data={CONF_HOST: "bravia-host", CONF_PIN: "1234", CONF_MAC: "AA:BB:CC:DD:EE:FF"},
     title="TV-Model",
 )
 
@@ -67,7 +68,7 @@ async def test_import(hass):
         "bravia_tv.BraviaRC.is_connected", return_value=True
     ), patch("bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=CONFIG,
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_CONFIG_HOSTNAME,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -86,7 +87,7 @@ async def test_import_cannot_connect(hass):
         "bravia_tv.BraviaRC.is_connected", return_value=False
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=CONFIG,
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_CONFIG_HOSTNAME,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -99,9 +100,7 @@ async def test_import_model_unsupported(hass):
         "bravia_tv.BraviaRC.is_connected", return_value=True
     ), patch("bravia_tv.BraviaRC.get_system_info", side_effect=KeyError):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_HOST: "10.10.10.12", CONF_PIN: "1234"},
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_CONFIG_IP,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -116,7 +115,7 @@ async def test_import_duplicate_error(hass):
         config_entry.add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=CONFIG,
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_CONFIG_HOSTNAME,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -128,7 +127,11 @@ async def test_user_invalid_host(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: "invalid/host", CONF_PIN: "1234"},
+        data={
+            CONF_HOST: "invalid/host",
+            CONF_PIN: "1234",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+        },
     )
 
     assert result["errors"] == {CONF_HOST: "invalid_host"}
@@ -138,7 +141,7 @@ async def test_authorize_cannot_connect(hass):
     """Test that errors are shown when cannot connect to host at the authorize step."""
     with patch("bravia_tv.BraviaRC.connect", return_value=True):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG,
+            DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"},
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PIN: "1234"}
@@ -153,9 +156,7 @@ async def test_authorize_model_unsupported(hass):
         "bravia_tv.BraviaRC.is_connected", return_value=True
     ), patch("bravia_tv.BraviaRC.get_system_info", side_effect=KeyError):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_HOST: "10.10.10.12", CONF_PIN: "1234"},
+            DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "10.10.10.12"},
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PIN: "1234"}
@@ -172,7 +173,7 @@ async def test_duplicate_error(hass):
         config_entry.add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG,
+            DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"},
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PIN: "1234"}
@@ -205,6 +206,7 @@ async def test_create_entry(hass):
         assert result["data"] == {
             CONF_HOST: "bravia-host",
             CONF_PIN: "1234",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
         }
 
 

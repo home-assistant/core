@@ -17,7 +17,6 @@ from .const import (  # pylint:disable=unused-import
     ATTR_MODEL,
     CLIENTID_PREFIX,
     CONF_IGNORED_SOURCES,
-    CONF_MODEL,
     DOMAIN,
     NICKNAME,
 )
@@ -77,7 +76,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         title = f"{system_info[ATTR_MODEL]}"
-        user_input[CONF_MODEL] = system_info[ATTR_MODEL]
         return self.async_create_entry(title=title, data=user_input)
 
     async def async_step_user(self, user_input=None):
@@ -127,7 +125,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 title = f"{system_info[ATTR_MODEL]}"
                 user_input[CONF_HOST] = self.host
-                user_input[CONF_MODEL] = system_info[ATTR_MODEL]
                 user_input[CONF_MAC] = system_info[ATTR_MAC]
                 return self.async_create_entry(title=title, data=user_input)
             except CannotConnect:
