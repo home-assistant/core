@@ -38,7 +38,8 @@
       "init": {
         "description": "Choose Sensor Resources.",
         "data": {
-          "resources": "Resources"
+          "resources": "Resources",
+          "scan_interval": "Scan Interval (seconds)"
         }
       }
     }
