@@ -76,6 +76,6 @@ async def test_non_json_message(hass, websocket_client, caplog):
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
     assert (
-        "Unable to serialize to JSON. Bad data found at $.result[0](test_domain.entity).attributes.bad"
+        "Unable to serialize to JSON. Bad data found at $.result[0](state: test_domain.entity).attributes.bad"
         in caplog.text
     )

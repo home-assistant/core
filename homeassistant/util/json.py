@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import tempfile
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 
 from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
@@ -86,7 +86,9 @@ def save_json(
                 _LOGGER.error("JSON replacement cleanup failed: %s", err)
 
 
-def find_paths_unserializable_data(bad_data: Any, *, dump=json.dumps) -> List[str]:
+def find_paths_unserializable_data(
+    bad_data: Any, *, dump: Callable[[Any], str] = json.dumps
+) -> List[str]:
     """Find the paths to unserializable data.
 
     This method is slow! Only use for error handling.
