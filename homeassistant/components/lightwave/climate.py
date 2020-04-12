@@ -80,8 +80,6 @@ class LightwaveTrv(ClimateDevice):
             else:
                 # Done the job - use proxy next iteration
                 self._inhibit = 0
-        if battery is not None:
-            self._battery = battery
         if trv_output is not None:
             if trv_output > 0:
                 self._hvac_action = CURRENT_HVAC_HEAT
