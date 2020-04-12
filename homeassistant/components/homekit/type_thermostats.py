@@ -280,11 +280,6 @@ class Thermostat(HomeAccessory):
                 events.append(
                     f"{CHAR_TARGET_HEATING_COOLING} to {char_values[CHAR_TARGET_HEATING_COOLING]}"
                 )
-            else:
-                _LOGGER.debug(
-                    "Homekit requested target heat_cool: %s and device already in this state",
-                    homekit_hvac_mode,
-                )
 
         if CHAR_TARGET_TEMPERATURE in char_values:
             hc_target_temp = char_values[CHAR_TARGET_TEMPERATURE]
@@ -299,7 +294,8 @@ class Thermostat(HomeAccessory):
                 # Homekit will send us a target temperature
                 # even if the device does not support it
                 _LOGGER.debug(
-                    "Homekit requested target temp: %s and the device does not support"
+                    "Homekit requested target temp: %s and the device does not support",
+                    hc_target_temp,
                 )
                 if (
                     homekit_hvac_mode == HC_HEAT_COOL_HEAT
