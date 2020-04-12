@@ -147,11 +147,6 @@ class BraviaTVDevice(MediaPlayerDevice):
         self._device_info = device_info
         self._ignored_sources = ignored_sources
 
-        if self._braviarc.is_connected():
-            self.update()
-        else:
-            self._state = STATE_OFF
-
     def update(self):
         """Update TV info."""
         if not self._braviarc.is_connected():
