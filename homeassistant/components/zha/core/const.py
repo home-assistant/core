@@ -146,11 +146,11 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 class RadioType(enum.Enum):
     """Possible options for radio type."""
 
-    deconz = "deconz"
     ezsp = "ezsp"
+    deconz = "deconz"
     ti_cc = "ti_cc"
-    xbee = "xbee"
     zigate = "zigate"
+    xbee = "xbee"
 
     @classmethod
     def list(cls):
