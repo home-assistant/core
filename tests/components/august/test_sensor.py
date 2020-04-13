@@ -1,6 +1,6 @@
 """The sensor tests for the august platform."""
 
-from homeassistant.const import STATE_UNAVAILABLE, PERCENTAGE
+from homeassistant.const import PERCENTAGE, STATE_UNAVAILABLE
 
 from tests.components.august.mocks import (
     _create_august_with_devices,

@@ -16,10 +16,10 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UNIT_CONDUCTIVITY,
-    PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv

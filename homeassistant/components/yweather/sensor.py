@@ -15,8 +15,8 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    TEMP_CELSIUS,
     PERCENTAGE,
+    TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity

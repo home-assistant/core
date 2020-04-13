@@ -13,11 +13,11 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_API_KEY,
     EVENT_HOMEASSISTANT_STOP,
+    PERCENTAGE,
     POWER_WATT,
     SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
     UNIT_DEGREE,
-    PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady

@@ -3,11 +3,11 @@ import unittest
 
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    PERCENTAGE,
 )
 from homeassistant.setup import setup_component
 

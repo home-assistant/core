@@ -1,6 +1,6 @@
 """The sensor tests for the nexia platform."""
 
-from homeassistant.const import TEMP_CELSIUS, PERCENTAGE
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 
 from .util import async_init_integration
 

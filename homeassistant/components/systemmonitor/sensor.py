@@ -13,9 +13,9 @@ from homeassistant.const import (
     DATA_GIBIBYTES,
     DATA_MEBIBYTES,
     DATA_RATE_MEGABYTES_PER_SECOND,
+    PERCENTAGE,
     STATE_OFF,
     STATE_ON,
-    PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity

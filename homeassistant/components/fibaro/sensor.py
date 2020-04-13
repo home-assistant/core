@@ -7,9 +7,9 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 

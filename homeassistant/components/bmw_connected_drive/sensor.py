@@ -8,8 +8,8 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
-    TIME_HOURS,
     PERCENTAGE,
+    TIME_HOURS,
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )

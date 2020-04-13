@@ -6,10 +6,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     FREQUENCY_HERTZ,
+    PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
     TIME_SECONDS,
-    PERCENTAGE,
     UNIT_VOLT,
 )
 

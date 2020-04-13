@@ -13,8 +13,8 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_START,
-    TIME_HOURS,
     PERCENTAGE,
+    TIME_HOURS,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError

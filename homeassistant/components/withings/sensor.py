@@ -13,9 +13,9 @@ from withings_api.common import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     MASS_KILOGRAMS,
+    PERCENTAGE,
     SPEED_METERS_PER_SECOND,
     TIME_SECONDS,
-    PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow

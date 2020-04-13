@@ -47,9 +47,9 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    PERCENTAGE,
 )
 
 from . import TYPES

@@ -1,10 +1,10 @@
 """Meteo-France component constants."""
 
 from homeassistant.const import (
+    PERCENTAGE,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     TIME_MINUTES,
-    PERCENTAGE,
 )
 
 DOMAIN = "meteo_france"

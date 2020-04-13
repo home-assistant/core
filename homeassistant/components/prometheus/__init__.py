@@ -15,9 +15,9 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONTENT_TYPE_TEXT_PLAIN,
     EVENT_STATE_CHANGED,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    PERCENTAGE,
 )
 from homeassistant.helpers import entityfilter, state as state_helper
 import homeassistant.helpers.config_validation as cv

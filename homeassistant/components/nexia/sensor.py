@@ -5,9 +5,9 @@ from nexia.const import UNIT_CELSIUS
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    PERCENTAGE,
 )
 
 from .const import DOMAIN, NEXIA_DEVICE, UPDATE_COORDINATOR

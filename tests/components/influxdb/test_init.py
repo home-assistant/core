@@ -6,10 +6,10 @@ from unittest import mock
 import homeassistant.components.influxdb as influxdb
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
+    PERCENTAGE,
     STATE_OFF,
     STATE_ON,
     STATE_STANDBY,
-    PERCENTAGE,
 )
 from homeassistant.setup import setup_component
 

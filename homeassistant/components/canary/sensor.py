@@ -1,7 +1,7 @@
 """Support for Canary sensors."""
 from canary.api import SensorType
 
-from homeassistant.const import TEMP_CELSIUS, PERCENTAGE
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 

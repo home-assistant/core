@@ -4,8 +4,8 @@ from pyecobee.const import ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
-    TEMP_FAHRENHEIT,
     PERCENTAGE,
+    TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers.entity import Entity
 

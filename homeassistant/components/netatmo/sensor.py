@@ -9,9 +9,9 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle

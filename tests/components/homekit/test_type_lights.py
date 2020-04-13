@@ -21,10 +21,10 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     EVENT_HOMEASSISTANT_START,
+    PERCENTAGE,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    PERCENTAGE,
 )
 from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry

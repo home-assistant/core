@@ -10,6 +10,7 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_METERS,
     MASS_KILOGRAMS,
+    PERCENTAGE,
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
@@ -24,7 +25,6 @@ from homeassistant.const import (
     TIME_SECONDS,
     TIME_YEARS,
     UNIT_DEGREE,
-    PERCENTAGE,
     UNIT_UV_INDEX,
     UNIT_VOLT,
 )

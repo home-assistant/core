@@ -12,8 +12,8 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SHOW_ON_MAP,
-    TEMP_CELSIUS,
     PERCENTAGE,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady

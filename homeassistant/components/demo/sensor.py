@@ -3,8 +3,8 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS,
     PERCENTAGE,
+    TEMP_CELSIUS,
 )
 from homeassistant.helpers.entity import Entity
 

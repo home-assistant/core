@@ -1,7 +1,7 @@
 """Support for Verisure sensors."""
 import logging
 
-from homeassistant.const import TEMP_CELSIUS, PERCENTAGE
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 from . import CONF_HYDROMETERS, CONF_MOUSE, CONF_THERMOMETERS, HUB as hub

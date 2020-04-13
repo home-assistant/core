@@ -7,8 +7,8 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS,
     PERCENTAGE,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import callback
 

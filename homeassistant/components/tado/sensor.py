@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS, PERCENTAGE
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity

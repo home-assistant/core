@@ -14,10 +14,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
     POWER_WATT,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
-    PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect

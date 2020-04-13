@@ -21,11 +21,11 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     HTTP_OK,
+    PERCENTAGE,
     PRESSURE_HPA,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     UNIT_DEGREE,
-    PERCENTAGE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv

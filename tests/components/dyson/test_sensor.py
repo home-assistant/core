@@ -9,11 +9,11 @@ from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.dyson import sensor as dyson
 from homeassistant.const import (
+    PERCENTAGE,
     STATE_OFF,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TIME_HOURS,
-    PERCENTAGE,
 )
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component

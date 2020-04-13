@@ -6,8 +6,8 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS,
     PERCENTAGE,
+    TEMP_CELSIUS,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import parse_datetime

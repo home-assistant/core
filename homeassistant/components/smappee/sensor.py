@@ -4,9 +4,9 @@ import logging
 
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
     POWER_WATT,
     UNIT_DEGREE,
-    PERCENTAGE,
     UNIT_VOLT,
     VOLUME_CUBIC_METERS,
 )

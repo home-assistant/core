@@ -14,8 +14,8 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
-    TEMP_CELSIUS,
     PERCENTAGE,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv

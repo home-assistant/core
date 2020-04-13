@@ -12,11 +12,11 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    PERCENTAGE,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UNIT_DEGREE,
-    PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity

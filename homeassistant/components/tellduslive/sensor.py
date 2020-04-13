@@ -6,11 +6,11 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     POWER_WATT,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     TIME_HOURS,
-    PERCENTAGE,
     UNIT_UV_INDEX,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect

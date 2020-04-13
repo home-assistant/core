@@ -1,6 +1,6 @@
 """Reads vehicle status from StarLine API."""
 from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
-from homeassistant.const import TEMP_CELSIUS, PERCENTAGE, UNIT_VOLT
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, UNIT_VOLT
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level, icon_for_signal_level
 

@@ -11,8 +11,8 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
-    TEMP_CELSIUS,
     PERCENTAGE,
+    TEMP_CELSIUS,
     UNIT_VOLT,
 )
 import homeassistant.helpers.config_validation as cv

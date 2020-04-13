@@ -11,9 +11,9 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
+    PERCENTAGE,
     TIME_DAYS,
     TIME_MINUTES,
-    PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send

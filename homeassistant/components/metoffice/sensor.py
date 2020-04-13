@@ -14,9 +14,9 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     LENGTH_KILOMETERS,
+    PERCENTAGE,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
-    PERCENTAGE,
     UNIT_UV_INDEX,
 )
 import homeassistant.helpers.config_validation as cv

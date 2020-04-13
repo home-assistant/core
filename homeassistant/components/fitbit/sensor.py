@@ -16,9 +16,9 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
     MASS_KILOGRAMS,
     MASS_MILLIGRAMS,
+    PERCENTAGE,
     TIME_MILLISECONDS,
     TIME_MINUTES,
-    PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv

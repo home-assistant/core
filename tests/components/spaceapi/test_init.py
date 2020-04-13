@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.spaceapi import DOMAIN, SPACEAPI_VERSION, URL_API_SPACEAPI
-from homeassistant.const import TEMP_CELSIUS, PERCENTAGE
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro

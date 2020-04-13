@@ -12,7 +12,7 @@ from homeassistant.components.canary.sensor import (
     STATE_AIR_QUALITY_VERY_ABNORMAL,
     CanarySensor,
 )
-from homeassistant.const import TEMP_CELSIUS, PERCENTAGE
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 
 from tests.common import get_test_home_assistant
 from tests.components.canary.test_init import mock_device, mock_location

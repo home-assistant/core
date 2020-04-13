@@ -24,10 +24,10 @@ from homeassistant.components.homematicip_cloud.sensor import (
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    PERCENTAGE,
 )
 from homeassistant.setup import async_setup_component
 

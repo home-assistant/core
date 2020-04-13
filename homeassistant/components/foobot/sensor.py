@@ -15,9 +15,9 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_TOKEN,
     CONF_USERNAME,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TIME_SECONDS,
-    PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession

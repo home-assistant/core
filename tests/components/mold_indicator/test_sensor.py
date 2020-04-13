@@ -8,9 +8,9 @@ from homeassistant.components.mold_indicator.sensor import (
 import homeassistant.components.sensor as sensor
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
-    PERCENTAGE,
 )
 from homeassistant.setup import setup_component
 

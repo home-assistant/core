@@ -21,9 +21,9 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
-    PERCENTAGE,
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import parse_datetime, utcnow

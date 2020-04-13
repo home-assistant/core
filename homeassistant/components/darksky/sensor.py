@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     LENGTH_CENTIMETERS,
     LENGTH_KILOMETERS,
+    PERCENTAGE,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
@@ -24,7 +25,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TIME_HOURS,
     UNIT_DEGREE,
-    PERCENTAGE,
     UNIT_UV_INDEX,
 )
 import homeassistant.helpers.config_validation as cv

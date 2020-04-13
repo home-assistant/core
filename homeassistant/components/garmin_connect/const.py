@@ -3,8 +3,8 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     LENGTH_METERS,
     MASS_KILOGRAMS,
-    TIME_MINUTES,
     PERCENTAGE,
+    TIME_MINUTES,
 )
 
 DOMAIN = "garmin_connect"

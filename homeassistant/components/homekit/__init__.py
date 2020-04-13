@@ -23,9 +23,9 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA

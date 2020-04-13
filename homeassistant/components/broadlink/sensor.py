@@ -14,8 +14,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
-    TEMP_CELSIUS,
     PERCENTAGE,
+    TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity

@@ -8,11 +8,11 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_RESOURCES,
     FREQUENCY_HERTZ,
+    PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
     TIME_MINUTES,
     TIME_SECONDS,
-    PERCENTAGE,
     UNIT_VOLT,
 )
 import homeassistant.helpers.config_validation as cv

@@ -14,12 +14,12 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
+    PERCENTAGE,
     POWER_WATT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    PERCENTAGE,
 )
 from homeassistant.helpers import restore_state
 from homeassistant.util import dt as dt_util

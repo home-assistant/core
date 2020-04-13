@@ -18,9 +18,9 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SSL,
     CONTENT_TYPE_JSON,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TIME_SECONDS,
-    PERCENTAGE,
 )
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv

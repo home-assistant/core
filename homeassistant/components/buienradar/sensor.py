@@ -29,11 +29,11 @@ from homeassistant.const import (
     CONF_NAME,
     IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_KILOMETERS,
+    PERCENTAGE,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     TIME_HOURS,
     UNIT_DEGREE,
-    PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv

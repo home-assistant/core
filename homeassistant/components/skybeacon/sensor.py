@@ -13,9 +13,9 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
+    PERCENTAGE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
-    PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity

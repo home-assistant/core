@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import ATTR_BATTERY_LEVEL, TEMP_CELSIUS, PERCENTAGE
+from homeassistant.const import ATTR_BATTERY_LEVEL, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice

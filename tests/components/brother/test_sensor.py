@@ -9,9 +9,9 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
+    PERCENTAGE,
     STATE_UNAVAILABLE,
     TIME_DAYS,
-    PERCENTAGE,
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow

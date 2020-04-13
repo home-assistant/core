@@ -19,6 +19,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
+    PERCENTAGE,
     STATE_HOME,
     STATE_NOT_HOME,
     STATE_OFF,
@@ -26,7 +27,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    PERCENTAGE,
 )
 from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry

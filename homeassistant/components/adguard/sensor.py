@@ -11,7 +11,7 @@ from homeassistant.components.adguard.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_MILLISECONDS, PERCENTAGE
+from homeassistant.const import PERCENTAGE, TIME_MILLISECONDS
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 

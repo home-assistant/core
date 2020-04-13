@@ -3,10 +3,10 @@ import pyotgw.vars as gw_vars
 
 from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TIME_HOURS,
     TIME_MINUTES,
-    PERCENTAGE,
 )
 
 ATTR_GW_ID = "gateway_id"

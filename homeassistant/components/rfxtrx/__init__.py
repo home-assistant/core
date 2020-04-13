@@ -16,9 +16,9 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
-    PERCENTAGE,
     UNIT_UV_INDEX,
 )
 import homeassistant.helpers.config_validation as cv

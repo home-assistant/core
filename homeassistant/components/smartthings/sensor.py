@@ -13,10 +13,10 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     ENERGY_KILO_WATT_HOUR,
     MASS_KILOGRAMS,
+    PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    PERCENTAGE,
     UNIT_VOLT,
 )
 

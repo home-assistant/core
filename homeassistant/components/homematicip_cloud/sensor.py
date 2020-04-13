@@ -30,10 +30,10 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    PERCENTAGE,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 

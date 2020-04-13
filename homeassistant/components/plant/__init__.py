@@ -11,13 +11,13 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_SENSORS,
+    PERCENTAGE,
     STATE_OK,
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     UNIT_CONDUCTIVITY,
-    PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError

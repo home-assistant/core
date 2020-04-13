@@ -18,10 +18,10 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     LENGTH_METERS,
+    PERCENTAGE,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     UNIT_DEGREE,
-    PERCENTAGE,
     __version__,
 )
 import homeassistant.helpers.config_validation as cv

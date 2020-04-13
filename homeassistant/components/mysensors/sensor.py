@@ -6,12 +6,12 @@ from homeassistant.const import (
     FREQUENCY_HERTZ,
     LENGTH_METERS,
     MASS_KILOGRAMS,
+    PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UNIT_CONDUCTIVITY,
     UNIT_DEGREE,
-    PERCENTAGE,
     UNIT_VOLT,
 )
 

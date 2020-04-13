@@ -21,9 +21,9 @@ from homeassistant.const import (
     CONF_NAME,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
+    PERCENTAGE,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity

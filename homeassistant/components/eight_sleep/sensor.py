@@ -1,7 +1,7 @@
 """Support for Eight Sleep sensors."""
 import logging
 
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, PERCENTAGE
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 from . import (
     CONF_SENSORS,

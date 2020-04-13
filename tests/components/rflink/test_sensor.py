@@ -12,7 +12,7 @@ from homeassistant.components.rflink import (
     EVENT_KEY_SENSOR,
     TMP_ENTITY,
 )
-from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS, PERCENTAGE
+from homeassistant.const import PERCENTAGE, STATE_UNKNOWN, TEMP_CELSIUS
 
 from tests.components.rflink.test_init import mock_rflink
 

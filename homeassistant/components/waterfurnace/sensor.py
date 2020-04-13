@@ -1,7 +1,7 @@
 """Support for Waterfurnace."""
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.const import POWER_WATT, TEMP_FAHRENHEIT, PERCENTAGE
+from homeassistant.const import PERCENTAGE, POWER_WATT, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify

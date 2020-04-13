@@ -17,8 +17,8 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     DATA_GIGABITS,
-    TIME_DAYS,
     PERCENTAGE,
+    TIME_DAYS,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv

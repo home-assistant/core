@@ -11,9 +11,9 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    PERCENTAGE,
     PRECISION_TENTHS,
     TEMP_CELSIUS,
-    PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity

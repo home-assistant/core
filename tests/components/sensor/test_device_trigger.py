@@ -6,7 +6,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components.sensor.device_trigger import ENTITY_TRIGGERS
-from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN, PERCENTAGE
+from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util

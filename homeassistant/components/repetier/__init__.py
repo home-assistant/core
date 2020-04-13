@@ -12,8 +12,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_SENSORS,
-    TEMP_CELSIUS,
     PERCENTAGE,
+    TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform

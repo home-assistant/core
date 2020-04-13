@@ -12,8 +12,8 @@ from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHING
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    STATE_UNKNOWN,
     PERCENTAGE,
+    STATE_UNKNOWN,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 

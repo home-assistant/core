@@ -22,12 +22,12 @@ from homeassistant.const import (
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
+    PERCENTAGE,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UNIT_DEGREE,
-    PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession

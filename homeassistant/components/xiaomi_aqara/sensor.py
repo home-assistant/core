@@ -6,8 +6,8 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS,
     PERCENTAGE,
+    TEMP_CELSIUS,
 )
 
 from . import PY_XIAOMI_GATEWAY, XiaomiDevice

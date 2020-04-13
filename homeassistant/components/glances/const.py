@@ -1,5 +1,5 @@
 """Constants for Glances component."""
-from homeassistant.const import DATA_GIBIBYTES, DATA_MEBIBYTES, TEMP_CELSIUS, PERCENTAGE
+from homeassistant.const import DATA_GIBIBYTES, DATA_MEBIBYTES, PERCENTAGE, TEMP_CELSIUS
 
 DOMAIN = "glances"
 CONF_VERSION = "version"

@@ -18,8 +18,8 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     DATA_GIBIBYTES,
     DATA_RATE_MEBIBYTES_PER_SECOND,
-    TEMP_CELSIUS,
     PERCENTAGE,
+    TEMP_CELSIUS,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
