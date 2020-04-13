@@ -64,8 +64,9 @@ async def validate_input(data):
     timed_out = False
     if not await async_wait_for_elk_to_sync(elk, VALIDATE_TIMEOUT):
         _LOGGER.error(
-            "Timed out after %d seconds while trying to sync with elkm1",
+            "Timed out after %d seconds while trying to sync with ElkM1 at %s",
             VALIDATE_TIMEOUT,
+            url,
         )
         timed_out = True
 
