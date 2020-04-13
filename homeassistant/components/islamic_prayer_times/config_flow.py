@@ -31,7 +31,7 @@ class IslamicPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=NAME, data=user_input)
 
     async def async_step_import(self, import_config):
-        """Import from Transmission client config."""
+        """Import from config."""
         return await self.async_step_user(user_input=import_config)
 
 

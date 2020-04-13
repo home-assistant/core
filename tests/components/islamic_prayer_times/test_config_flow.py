@@ -1,9 +1,23 @@
 """Tests for Islamic Prayer Times config flow."""
+from unittest.mock import patch
+
+import pytest
+
 from homeassistant import data_entry_flow
 from homeassistant.components import islamic_prayer_times
 from homeassistant.components.islamic_prayer_times.const import CONF_CALC_METHOD, DOMAIN
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(name="mock_setup", autouse=True)
+def mock_setup():
+    """Mock entry setup."""
+    with patch(
+        "homeassistant.components.islamic_prayer_times.async_setup_entry",
+        return_value=True,
+    ):
+        yield
 
 
 async def test_flow_works(hass):
