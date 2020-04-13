@@ -69,6 +69,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         SENSE_TRENDS_COORDINATOR
     ]
 
+    # Request only in case it takes longer
+    # than 60s
+    await trends_coordinator.async_request_refresh()
+
     sense_monitor_id = data.sense_monitor_id
     sense_devices = hass.data[DOMAIN][config_entry.entry_id][
         SENSE_DISCOVERED_DEVICES_DATA

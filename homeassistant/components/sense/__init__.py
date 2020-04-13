@@ -121,6 +121,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_interval=timedelta(seconds=300),
     )
 
+    await trends_coordinator.async_request_refresh()
+
     hass.data[DOMAIN][entry.entry_id] = {
         SENSE_DATA: gateway,
         SENSE_DEVICES_DATA: sense_devices_data,
