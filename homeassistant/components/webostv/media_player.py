@@ -8,7 +8,7 @@ from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
 from websockets.exceptions import ConnectionClosed
 
 from homeassistant import util
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -233,9 +233,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         return self._name
 
     @property
-    def icon(self):
-        """Return the icon of the device."""
-        return "hass:television"
+    def device_class(self):
+        """Return the device class of the device."""
+        return DEVICE_CLASS_TV
 
     @property
     def state(self):
