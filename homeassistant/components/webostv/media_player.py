@@ -4,7 +4,7 @@ from datetime import timedelta
 from functools import wraps
 import logging
 
-from aiopylgtv import PyLGTVCmdException, PyLGTVPairException
+from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
 from websockets.exceptions import ConnectionClosed
 
 from homeassistant import util
@@ -114,10 +114,11 @@ def cmd(func):
 class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     """Representation of a LG webOS Smart TV."""
 
-    def __init__(self, client, name, customize, on_script=None):
+    def __init__(self, client: WebOsClient, name: str, customize, on_script=None):
         """Initialize the webos device."""
         self._client = client
         self._name = name
+        self._unique_id = client.software_info["device_id"]
         self._customize = customize
         self._on_script = on_script
 
@@ -222,6 +223,11 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
                 PyLGTVCmdException,
             ):
                 pass
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the device."""
+        return self._name
 
     @property
     def name(self):
