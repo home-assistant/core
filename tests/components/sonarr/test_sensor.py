@@ -6,7 +6,7 @@ import unittest
 import pytest
 
 import homeassistant.components.sonarr.sensor as sonarr
-from homeassistant.const import DATA_GIGABYTES, UNIT_PERCENTAGE
+from homeassistant.const import DATA_GIGABYTES, PERCENTAGE
 
 from tests.common import get_test_home_assistant
 
@@ -570,7 +570,7 @@ class TestSonarrSetup(unittest.TestCase):
             assert "Episodes" == device.unit_of_measurement
             assert "Sonarr Queue" == device.name
             assert (
-                f"100.00{UNIT_PERCENTAGE}"
+                f"100.00{PERCENTAGE}"
                 == device.device_state_attributes["Game of Thrones S03E08"]
             )
 

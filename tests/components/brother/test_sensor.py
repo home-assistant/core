@@ -11,7 +11,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     TIME_DAYS,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -40,7 +40,7 @@ async def test_sensors(hass):
     state = hass.states.get("sensor.hl_l2340dw_black_toner_remaining")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:printer-3d-nozzle"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "75"
 
     entry = registry.async_get("sensor.hl_l2340dw_black_toner_remaining")
@@ -50,7 +50,7 @@ async def test_sensors(hass):
     state = hass.states.get("sensor.hl_l2340dw_cyan_toner_remaining")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:printer-3d-nozzle"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "10"
 
     entry = registry.async_get("sensor.hl_l2340dw_cyan_toner_remaining")
@@ -60,7 +60,7 @@ async def test_sensors(hass):
     state = hass.states.get("sensor.hl_l2340dw_magenta_toner_remaining")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:printer-3d-nozzle"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "8"
 
     entry = registry.async_get("sensor.hl_l2340dw_magenta_toner_remaining")
@@ -70,7 +70,7 @@ async def test_sensors(hass):
     state = hass.states.get("sensor.hl_l2340dw_yellow_toner_remaining")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:printer-3d-nozzle"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "2"
 
     entry = registry.async_get("sensor.hl_l2340dw_yellow_toner_remaining")
@@ -82,7 +82,7 @@ async def test_sensors(hass):
     assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
     assert state.attributes.get(ATTR_REMAINING_PAGES) == 11014
     assert state.attributes.get(ATTR_COUNTER) == 986
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "92"
 
     entry = registry.async_get("sensor.hl_l2340dw_drum_remaining_life")
@@ -94,7 +94,7 @@ async def test_sensors(hass):
     assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
     assert state.attributes.get(ATTR_REMAINING_PAGES) == 16389
     assert state.attributes.get(ATTR_COUNTER) == 1611
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "92"
 
     entry = registry.async_get("sensor.hl_l2340dw_black_drum_remaining_life")
@@ -106,7 +106,7 @@ async def test_sensors(hass):
     assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
     assert state.attributes.get(ATTR_REMAINING_PAGES) == 16389
     assert state.attributes.get(ATTR_COUNTER) == 1611
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "92"
 
     entry = registry.async_get("sensor.hl_l2340dw_cyan_drum_remaining_life")
@@ -118,7 +118,7 @@ async def test_sensors(hass):
     assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
     assert state.attributes.get(ATTR_REMAINING_PAGES) == 16389
     assert state.attributes.get(ATTR_COUNTER) == 1611
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "92"
 
     entry = registry.async_get("sensor.hl_l2340dw_magenta_drum_remaining_life")
@@ -130,7 +130,7 @@ async def test_sensors(hass):
     assert state.attributes.get(ATTR_ICON) == "mdi:chart-donut"
     assert state.attributes.get(ATTR_REMAINING_PAGES) == 16389
     assert state.attributes.get(ATTR_COUNTER) == 1611
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "92"
 
     entry = registry.async_get("sensor.hl_l2340dw_yellow_drum_remaining_life")
@@ -140,7 +140,7 @@ async def test_sensors(hass):
     state = hass.states.get("sensor.hl_l2340dw_fuser_remaining_life")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:water-outline"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "97"
 
     entry = registry.async_get("sensor.hl_l2340dw_fuser_remaining_life")
@@ -150,7 +150,7 @@ async def test_sensors(hass):
     state = hass.states.get("sensor.hl_l2340dw_belt_unit_remaining_life")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:current-ac"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "97"
 
     entry = registry.async_get("sensor.hl_l2340dw_belt_unit_remaining_life")
@@ -160,7 +160,7 @@ async def test_sensors(hass):
     state = hass.states.get("sensor.hl_l2340dw_pf_kit_1_remaining_life")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:printer-3d"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "98"
 
     entry = registry.async_get("sensor.hl_l2340dw_pf_kit_1_remaining_life")

@@ -6,7 +6,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
     UNIT_DEGREE,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
     UNIT_VOLT,
 )
 
@@ -160,7 +160,7 @@ VAR_UNITS = [
     "LX",
     "M/S",
     "METERPERSECOND",
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
     "PERCENT",
     "PPM",
     "VOLT",

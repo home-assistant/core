@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
@@ -102,7 +102,7 @@ NODE_FILTERS = {
     },
     "light": {
         "uom": ["51"],
-        "states": ["on", "off", UNIT_PERCENTAGE],
+        "states": ["on", "off", PERCENTAGE],
         "node_def_id": [
             "DimmerLampSwitch",
             "DimmerLampSwitch_ADV",

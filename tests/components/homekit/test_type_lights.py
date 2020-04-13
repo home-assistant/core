@@ -24,7 +24,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry
@@ -174,8 +174,7 @@ async def test_light_brightness(hass, hk_driver, cls, events, driver):
     assert call_turn_on[0].data[ATTR_BRIGHTNESS_PCT] == 20
     assert len(events) == 1
     assert (
-        events[-1].data[ATTR_VALUE]
-        == f"Set state to 1, brightness at 20{UNIT_PERCENTAGE}"
+        events[-1].data[ATTR_VALUE] == f"Set state to 1, brightness at 20{PERCENTAGE}"
     )
 
     driver.set_characteristics(
@@ -197,8 +196,7 @@ async def test_light_brightness(hass, hk_driver, cls, events, driver):
     assert call_turn_on[1].data[ATTR_BRIGHTNESS_PCT] == 40
     assert len(events) == 2
     assert (
-        events[-1].data[ATTR_VALUE]
-        == f"Set state to 1, brightness at 40{UNIT_PERCENTAGE}"
+        events[-1].data[ATTR_VALUE] == f"Set state to 1, brightness at 40{PERCENTAGE}"
     )
 
     driver.set_characteristics(
@@ -218,10 +216,7 @@ async def test_light_brightness(hass, hk_driver, cls, events, driver):
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 3
-    assert (
-        events[-1].data[ATTR_VALUE]
-        == f"Set state to 0, brightness at 0{UNIT_PERCENTAGE}"
-    )
+    assert events[-1].data[ATTR_VALUE] == f"Set state to 0, brightness at 0{PERCENTAGE}"
 
     # 0 is a special case for homekit, see "Handle Brightness"
     # in update_state
@@ -470,7 +465,7 @@ async def test_light_set_brightness_and_color(hass, hk_driver, cls, events, driv
     assert len(events) == 1
     assert (
         events[-1].data[ATTR_VALUE]
-        == f"Set state to 1, brightness at 20{UNIT_PERCENTAGE}, set color at (145, 75)"
+        == f"Set state to 1, brightness at 20{PERCENTAGE}, set color at (145, 75)"
     )
 
 
@@ -541,5 +536,5 @@ async def test_light_set_brightness_and_color_temp(
     assert len(events) == 1
     assert (
         events[-1].data[ATTR_VALUE]
-        == f"Set state to 1, brightness at 20{UNIT_PERCENTAGE}, color temperature at 250"
+        == f"Set state to 1, brightness at 20{PERCENTAGE}, color temperature at 250"
     )

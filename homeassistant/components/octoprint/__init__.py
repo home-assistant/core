@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONTENT_TYPE_JSON,
     TEMP_CELSIUS,
     TIME_SECONDS,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -72,13 +72,7 @@ SENSOR_TYPES = {
     # API Endpoint, Group, Key, unit, icon
     "Temperatures": ["printer", "temperature", "*", TEMP_CELSIUS],
     "Current State": ["printer", "state", "text", None, "mdi:printer-3d"],
-    "Job Percentage": [
-        "job",
-        "progress",
-        "completion",
-        UNIT_PERCENTAGE,
-        "mdi:file-percent",
-    ],
+    "Job Percentage": ["job", "progress", "completion", PERCENTAGE, "mdi:file-percent"],
     "Time Remaining": [
         "job",
         "progress",

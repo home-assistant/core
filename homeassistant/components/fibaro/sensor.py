@@ -9,7 +9,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -29,12 +29,7 @@ SENSOR_TYPES = {
         None,
     ],
     "CO2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:cloud", None],
-    "com.fibaro.humiditySensor": [
-        "Humidity",
-        UNIT_PERCENTAGE,
-        None,
-        DEVICE_CLASS_HUMIDITY,
-    ],
+    "com.fibaro.humiditySensor": ["Humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
     "com.fibaro.lightSensor": ["Light", "lx", None, DEVICE_CLASS_ILLUMINANCE],
 }
 

@@ -12,7 +12,7 @@ from homeassistant.components.canary.sensor import (
     STATE_AIR_QUALITY_VERY_ABNORMAL,
     CanarySensor,
 )
-from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
+from homeassistant.const import TEMP_CELSIUS, PERCENTAGE
 
 from tests.common import get_test_home_assistant
 from tests.components.canary.test_init import mock_device, mock_location
@@ -98,7 +98,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         sensor.update()
 
         assert sensor.name == "Home Family Room Humidity"
-        assert sensor.unit_of_measurement == UNIT_PERCENTAGE
+        assert sensor.unit_of_measurement == PERCENTAGE
         assert sensor.state == 50.46
         assert sensor.icon == "mdi:water-percent"
 
@@ -185,7 +185,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         sensor.update()
 
         assert sensor.name == "Home Family Room Battery"
-        assert sensor.unit_of_measurement == UNIT_PERCENTAGE
+        assert sensor.unit_of_measurement == PERCENTAGE
         assert sensor.state == 70.46
         assert sensor.icon == "mdi:battery-70"
 

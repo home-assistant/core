@@ -19,7 +19,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.helpers import restore_state
 from homeassistant.util import dt as dt_util
@@ -36,7 +36,7 @@ from .common import (
 async def async_test_humidity(hass, cluster, entity_id):
     """Test humidity sensor."""
     await send_attributes_report(hass, cluster, {1: 1, 0: 1000, 2: 100})
-    assert_state(hass, entity_id, "10.0", UNIT_PERCENTAGE)
+    assert_state(hass, entity_id, "10.0", PERCENTAGE)
 
 
 async def async_test_temperature(hass, cluster, entity_id):

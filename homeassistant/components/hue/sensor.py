@@ -11,7 +11,7 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -108,7 +108,7 @@ class HueBattery(GenericHueSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
 
 SENSOR_CONFIG_MAP.update(

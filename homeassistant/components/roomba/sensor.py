@@ -1,7 +1,7 @@
 """Sensor for checking the battery level of Roomba."""
 import logging
 
-from homeassistant.const import DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
+from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.helpers.entity import Entity
 
 from . import roomba_reported_state
@@ -49,7 +49,7 @@ class RoombaBattery(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def state(self):
@@ -59,10 +59,7 @@ class RoombaBattery(Entity):
     @property
     def device_info(self):
         """Return the device info of the vacuum cleaner."""
-        return {
-            "identifiers": {(DOMAIN, self._identifier)},
-            "name": str(self._name),
-        }
+        return {"identifiers": {(DOMAIN, self._identifier)}, "name": str(self._name)}
 
     async def async_update(self):
         """Return the update info of the vacuum cleaner."""

@@ -49,7 +49,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 
 from . import TYPES
@@ -186,7 +186,7 @@ class Thermostat(HomeAccessory):
         hc_valid_values = {k: v for v, k in self.hc_homekit_to_hass.items()}
 
         self.char_target_heat_cool = serv_thermostat.configure_char(
-            CHAR_TARGET_HEATING_COOLING, valid_values=hc_valid_values,
+            CHAR_TARGET_HEATING_COOLING, valid_values=hc_valid_values
         )
 
         # Current and target temperature characteristics
@@ -347,9 +347,7 @@ class Thermostat(HomeAccessory):
 
         if service:
             params[ATTR_ENTITY_ID] = self.entity_id
-            self.call_service(
-                DOMAIN_CLIMATE, service, params, ", ".join(events),
-            )
+            self.call_service(DOMAIN_CLIMATE, service, params, ", ".join(events))
 
         if CHAR_TARGET_HUMIDITY in char_values:
             self.set_target_humidity(char_values[CHAR_TARGET_HUMIDITY])
@@ -375,7 +373,7 @@ class Thermostat(HomeAccessory):
         _LOGGER.debug("%s: Set target humidity to %d", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: value}
         self.call_service(
-            DOMAIN_CLIMATE, SERVICE_SET_HUMIDITY, params, f"{value}{UNIT_PERCENTAGE}"
+            DOMAIN_CLIMATE, SERVICE_SET_HUMIDITY, params, f"{value}{PERCENTAGE}"
         )
 
     def update_state(self, new_state):

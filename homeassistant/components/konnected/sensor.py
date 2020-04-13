@@ -10,7 +10,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     DEVICE_CLASS_TEMPERATURE: ["Temperature", TEMP_CELSIUS],
-    DEVICE_CLASS_HUMIDITY: ["Humidity", UNIT_PERCENTAGE],
+    DEVICE_CLASS_HUMIDITY: ["Humidity", PERCENTAGE],
 }
 
 

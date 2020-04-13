@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -30,7 +30,7 @@ SCAN_INTERVAL = timedelta(seconds=300)
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_CELSIUS],
     "air_quality": ["Air Quality", " "],
-    "humidity": ["Humidity", UNIT_PERCENTAGE],
+    "humidity": ["Humidity", PERCENTAGE],
     "light": ["Light", " "],
     "noise": ["Noise", " "],
 }

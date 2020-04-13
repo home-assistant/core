@@ -6,7 +6,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
     UNIT_DEGREE,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
     UNIT_VOLT,
     VOLUME_CUBIC_METERS,
 )
@@ -28,13 +28,7 @@ SENSOR_TYPES = {
     ],
     "current": ["Current", "mdi:gauge", "local", "A", "current"],
     "voltage": ["Voltage", "mdi:gauge", "local", UNIT_VOLT, "voltage"],
-    "active_cosfi": [
-        "Power Factor",
-        "mdi:gauge",
-        "local",
-        UNIT_PERCENTAGE,
-        "active_cosfi",
-    ],
+    "active_cosfi": ["Power Factor", "mdi:gauge", "local", PERCENTAGE, "active_cosfi"],
     "alwayson_today": [
         "Always On Today",
         "mdi:gauge",
@@ -81,14 +75,14 @@ SENSOR_TYPES = {
         "Water Sensor Humidity",
         "mdi:water-percent",
         "water",
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         "humidity",
     ],
     "water_sensor_battery": [
         "Water Sensor Battery",
         "mdi:battery",
         "water",
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         "battery",
     ],
 }

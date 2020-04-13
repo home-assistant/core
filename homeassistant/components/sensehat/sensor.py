@@ -11,7 +11,7 @@ from homeassistant.const import (
     CONF_DISPLAY_OPTIONS,
     CONF_NAME,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -26,7 +26,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 SENSOR_TYPES = {
     "temperature": ["temperature", TEMP_CELSIUS],
-    "humidity": ["humidity", UNIT_PERCENTAGE],
+    "humidity": ["humidity", PERCENTAGE],
     "pressure": ["pressure", "mb"],
 }
 

@@ -16,7 +16,7 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
     UNIT_UV_INDEX,
 )
 import homeassistant.helpers.config_validation as cv
@@ -74,8 +74,8 @@ SENSOR_TYPES = {
     "visibility": ["Visibility", None],
     "visibility_distance": ["Visibility Distance", LENGTH_KILOMETERS],
     "uv": ["UV", UNIT_UV_INDEX],
-    "precipitation": ["Probability of Precipitation", UNIT_PERCENTAGE],
-    "humidity": ["Humidity", UNIT_PERCENTAGE],
+    "precipitation": ["Probability of Precipitation", PERCENTAGE],
+    "humidity": ["Humidity", PERCENTAGE],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

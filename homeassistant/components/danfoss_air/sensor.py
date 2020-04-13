@@ -8,7 +8,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -46,24 +46,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ReadCommand.extractTemperature,
             DEVICE_CLASS_TEMPERATURE,
         ],
-        [
-            "Danfoss Air Remaining Filter",
-            UNIT_PERCENTAGE,
-            ReadCommand.filterPercent,
-            None,
-        ],
+        ["Danfoss Air Remaining Filter", PERCENTAGE, ReadCommand.filterPercent, None],
         [
             "Danfoss Air Humidity",
-            UNIT_PERCENTAGE,
+            PERCENTAGE,
             ReadCommand.humidity,
             DEVICE_CLASS_HUMIDITY,
         ],
-        ["Danfoss Air Fan Step", UNIT_PERCENTAGE, ReadCommand.fan_step, None],
+        ["Danfoss Air Fan Step", PERCENTAGE, ReadCommand.fan_step, None],
         ["Danfoss Air Exhaust Fan Speed", "RPM", ReadCommand.exhaust_fan_speed, None],
         ["Danfoss Air Supply Fan Speed", "RPM", ReadCommand.supply_fan_speed, None],
         [
             "Danfoss Air Dial Battery",
-            UNIT_PERCENTAGE,
+            PERCENTAGE,
             ReadCommand.battery_percent,
             DEVICE_CLASS_BATTERY,
         ],

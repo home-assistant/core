@@ -7,7 +7,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.setup import setup_component
 
@@ -234,7 +234,7 @@ class TestMinMaxSensor(unittest.TestCase):
         assert state.attributes.get("unit_of_measurement") == "ERR"
 
         self.hass.states.set(
-            entity_ids[2], self.values[2], {ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE}
+            entity_ids[2], self.values[2], {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
         )
         self.hass.block_till_done()
 

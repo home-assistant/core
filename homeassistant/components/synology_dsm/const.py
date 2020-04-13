@@ -2,7 +2,7 @@
 from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 
 DOMAIN = "synology_dsm"
@@ -15,14 +15,14 @@ DEFAULT_PORT_SSL = 5001
 DEFAULT_DSM_VERSION = 6
 
 UTILISATION_SENSORS = {
-    "cpu_other_load": ["CPU Load (Other)", UNIT_PERCENTAGE, "mdi:chip"],
-    "cpu_user_load": ["CPU Load (User)", UNIT_PERCENTAGE, "mdi:chip"],
-    "cpu_system_load": ["CPU Load (System)", UNIT_PERCENTAGE, "mdi:chip"],
-    "cpu_total_load": ["CPU Load (Total)", UNIT_PERCENTAGE, "mdi:chip"],
-    "cpu_1min_load": ["CPU Load (1 min)", UNIT_PERCENTAGE, "mdi:chip"],
-    "cpu_5min_load": ["CPU Load (5 min)", UNIT_PERCENTAGE, "mdi:chip"],
-    "cpu_15min_load": ["CPU Load (15 min)", UNIT_PERCENTAGE, "mdi:chip"],
-    "memory_real_usage": ["Memory Usage (Real)", UNIT_PERCENTAGE, "mdi:memory"],
+    "cpu_other_load": ["CPU Load (Other)", PERCENTAGE, "mdi:chip"],
+    "cpu_user_load": ["CPU Load (User)", PERCENTAGE, "mdi:chip"],
+    "cpu_system_load": ["CPU Load (System)", PERCENTAGE, "mdi:chip"],
+    "cpu_total_load": ["CPU Load (Total)", PERCENTAGE, "mdi:chip"],
+    "cpu_1min_load": ["CPU Load (1 min)", PERCENTAGE, "mdi:chip"],
+    "cpu_5min_load": ["CPU Load (5 min)", PERCENTAGE, "mdi:chip"],
+    "cpu_15min_load": ["CPU Load (15 min)", PERCENTAGE, "mdi:chip"],
+    "memory_real_usage": ["Memory Usage (Real)", PERCENTAGE, "mdi:memory"],
     "memory_size": ["Memory Size", DATA_MEGABYTES, "mdi:memory"],
     "memory_cached": ["Memory Cached", DATA_MEGABYTES, "mdi:memory"],
     "memory_available_swap": ["Memory Available (Swap)", DATA_MEGABYTES, "mdi:memory"],
@@ -37,7 +37,7 @@ STORAGE_VOL_SENSORS = {
     "volume_device_type": ["Type", None, "mdi:harddisk"],
     "volume_size_total": ["Total Size", None, "mdi:chart-pie"],
     "volume_size_used": ["Used Space", None, "mdi:chart-pie"],
-    "volume_percentage_used": ["Volume Used", UNIT_PERCENTAGE, "mdi:chart-pie"],
+    "volume_percentage_used": ["Volume Used", PERCENTAGE, "mdi:chart-pie"],
     "volume_disk_temp_avg": ["Average Disk Temp", None, "mdi:thermometer"],
     "volume_disk_temp_max": ["Maximum Disk Temp", None, "mdi:thermometer"],
 }

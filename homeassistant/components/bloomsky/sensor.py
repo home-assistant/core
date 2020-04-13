@@ -8,7 +8,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -30,7 +30,7 @@ SENSOR_TYPES = [
 # Sensor units - these do not currently align with the API documentation
 SENSOR_UNITS_IMPERIAL = {
     "Temperature": TEMP_FAHRENHEIT,
-    "Humidity": UNIT_PERCENTAGE,
+    "Humidity": PERCENTAGE,
     "Pressure": "inHg",
     "Luminance": "cd/m²",
     "Voltage": "mV",
@@ -39,7 +39,7 @@ SENSOR_UNITS_IMPERIAL = {
 # Metric units
 SENSOR_UNITS_METRIC = {
     "Temperature": TEMP_CELSIUS,
-    "Humidity": UNIT_PERCENTAGE,
+    "Humidity": PERCENTAGE,
     "Pressure": "mbar",
     "Luminance": "cd/m²",
     "Voltage": "mV",

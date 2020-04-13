@@ -24,7 +24,7 @@ from homeassistant.const import (
     TIME_SECONDS,
     TIME_YEARS,
     UNIT_DEGREE,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
     UNIT_UV_INDEX,
     UNIT_VOLT,
 )
@@ -82,7 +82,7 @@ UOM_FRIENDLY_NAME = {
     "48": SPEED_MILES_PER_HOUR,
     "49": SPEED_METERS_PER_SECOND,
     "50": "ohm",
-    "51": UNIT_PERCENTAGE,
+    "51": PERCENTAGE,
     "52": "lb",
     "53": "power factor",
     "54": CONCENTRATION_PARTS_PER_MILLION,

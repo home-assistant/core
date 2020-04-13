@@ -12,7 +12,7 @@ from homeassistant.components.rflink import (
     EVENT_KEY_SENSOR,
     TMP_ENTITY,
 )
-from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS, UNIT_PERCENTAGE
+from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS, PERCENTAGE
 
 from tests.components.rflink.test_init import mock_rflink
 
@@ -147,12 +147,7 @@ async def test_aliases(hass, monkeypatch):
 
     # test event for config sensor
     event_callback(
-        {
-            "id": "test_alias_02_0",
-            "sensor": "humidity",
-            "value": 65,
-            "unit": UNIT_PERCENTAGE,
-        }
+        {"id": "test_alias_02_0", "sensor": "humidity", "value": 65, "unit": PERCENTAGE}
     )
     await hass.async_block_till_done()
 
@@ -160,7 +155,7 @@ async def test_aliases(hass, monkeypatch):
     updated_sensor = hass.states.get("sensor.test_02")
     assert updated_sensor
     assert updated_sensor.state == "65"
-    assert updated_sensor.attributes["unit_of_measurement"] == UNIT_PERCENTAGE
+    assert updated_sensor.attributes["unit_of_measurement"] == PERCENTAGE
 
 
 async def test_race_condition(hass, monkeypatch):

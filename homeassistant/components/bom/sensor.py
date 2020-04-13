@@ -23,7 +23,7 @@ from homeassistant.const import (
     LENGTH_METERS,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -71,7 +71,7 @@ SENSOR_TYPES = {
     "press_msl": ["Pressure msl", "msl"],
     "press_tend": ["Pressure Tend", None],
     "rain_trace": ["Rain Today", "mm"],
-    "rel_hum": ["Relative Humidity", UNIT_PERCENTAGE],
+    "rel_hum": ["Relative Humidity", PERCENTAGE],
     "sea_state": ["Sea State", None],
     "swell_dir_worded": ["Swell Direction", None],
     "swell_height": ["Swell Height", LENGTH_METERS],

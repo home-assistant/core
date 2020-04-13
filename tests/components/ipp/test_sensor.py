@@ -5,7 +5,7 @@ from asynctest import patch
 
 from homeassistant.components.ipp.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT, UNIT_PERCENTAGE
+from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -42,31 +42,31 @@ async def test_sensors(
     state = hass.states.get("sensor.epson_xp_6000_series_black_ink")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:water"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is PERCENTAGE
     assert state.state == "58"
 
     state = hass.states.get("sensor.epson_xp_6000_series_photo_black_ink")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:water"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is PERCENTAGE
     assert state.state == "98"
 
     state = hass.states.get("sensor.epson_xp_6000_series_cyan_ink")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:water"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is PERCENTAGE
     assert state.state == "91"
 
     state = hass.states.get("sensor.epson_xp_6000_series_yellow_ink")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:water"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is PERCENTAGE
     assert state.state == "95"
 
     state = hass.states.get("sensor.epson_xp_6000_series_magenta_ink")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:water"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is UNIT_PERCENTAGE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is PERCENTAGE
     assert state.state == "73"
 
     state = hass.states.get("sensor.epson_xp_6000_series_uptime")

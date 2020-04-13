@@ -11,15 +11,15 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     UNIT_CONDUCTIVITY,
     UNIT_DEGREE,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
     UNIT_VOLT,
 )
 
 SENSORS = {
     "V_TEMP": [None, "mdi:thermometer"],
-    "V_HUM": [UNIT_PERCENTAGE, "mdi:water-percent"],
-    "V_DIMMER": [UNIT_PERCENTAGE, "mdi:percent"],
-    "V_PERCENTAGE": [UNIT_PERCENTAGE, "mdi:percent"],
+    "V_HUM": [PERCENTAGE, "mdi:water-percent"],
+    "V_DIMMER": [PERCENTAGE, "mdi:percent"],
+    "V_PERCENTAGE": [PERCENTAGE, "mdi:percent"],
     "V_PRESSURE": [None, "mdi:gauge"],
     "V_FORECAST": [None, "mdi:weather-partly-cloudy"],
     "V_RAIN": [None, "mdi:weather-rainy"],
@@ -32,7 +32,7 @@ SENSORS = {
     "V_IMPEDANCE": ["ohm", None],
     "V_WATT": [POWER_WATT, None],
     "V_KWH": [ENERGY_KILO_WATT_HOUR, None],
-    "V_LIGHT_LEVEL": [UNIT_PERCENTAGE, "mdi:white-balance-sunny"],
+    "V_LIGHT_LEVEL": [PERCENTAGE, "mdi:white-balance-sunny"],
     "V_FLOW": [LENGTH_METERS, "mdi:gauge"],
     "V_VOLUME": ["m³", None],
     "V_LEVEL": {

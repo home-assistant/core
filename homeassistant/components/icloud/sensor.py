@@ -3,7 +3,7 @@ import logging
 from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
+from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -83,7 +83,7 @@ class IcloudDeviceBatterySensor(Entity):
     @property
     def unit_of_measurement(self) -> str:
         """Battery state measured in percentage."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def icon(self) -> str:

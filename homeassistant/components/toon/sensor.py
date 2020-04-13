@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT, UNIT_PERCENTAGE
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT, PERCENTAGE
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
@@ -195,7 +195,7 @@ async def async_setup_entry(
                     "current_modulation_level",
                     "Boiler Modulation Level",
                     "mdi:percent",
-                    UNIT_PERCENTAGE,
+                    PERCENTAGE,
                 )
             ]
         )

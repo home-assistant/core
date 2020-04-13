@@ -15,7 +15,7 @@ from homeassistant.const import (
     MASS_KILOGRAMS,
     SPEED_METERS_PER_SECOND,
     TIME_SECONDS,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -140,11 +140,7 @@ WITHINGS_ATTRIBUTES = [
         "mdi:thermometer",
     ),
     WithingsMeasureAttribute(
-        const.MEAS_FAT_RATIO_PCT,
-        MeasureType.FAT_RATIO,
-        "Fat Ratio",
-        UNIT_PERCENTAGE,
-        None,
+        const.MEAS_FAT_RATIO_PCT, MeasureType.FAT_RATIO, "Fat Ratio", PERCENTAGE, None
     ),
     WithingsMeasureAttribute(
         const.MEAS_DIASTOLIC_MMHG,
@@ -168,13 +164,13 @@ WITHINGS_ATTRIBUTES = [
         "mdi:heart-pulse",
     ),
     WithingsMeasureAttribute(
-        const.MEAS_SPO2_PCT, MeasureType.SP02, "SP02", UNIT_PERCENTAGE, None
+        const.MEAS_SPO2_PCT, MeasureType.SP02, "SP02", PERCENTAGE, None
     ),
     WithingsMeasureAttribute(
         const.MEAS_HYDRATION,
         MeasureType.HYDRATION,
         "Hydration",
-        UNIT_PERCENTAGE,
+        PERCENTAGE,
         "mdi:water",
     ),
     WithingsMeasureAttribute(

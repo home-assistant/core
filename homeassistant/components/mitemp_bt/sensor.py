@@ -16,7 +16,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -48,8 +48,8 @@ DEFAULT_TIMEOUT = 10
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
     "temperature": [DEVICE_CLASS_TEMPERATURE, "Temperature", TEMP_CELSIUS],
-    "humidity": [DEVICE_CLASS_HUMIDITY, "Humidity", UNIT_PERCENTAGE],
-    "battery": [DEVICE_CLASS_BATTERY, "Battery", UNIT_PERCENTAGE],
+    "humidity": [DEVICE_CLASS_HUMIDITY, "Humidity", PERCENTAGE],
+    "battery": [DEVICE_CLASS_BATTERY, "Battery", PERCENTAGE],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

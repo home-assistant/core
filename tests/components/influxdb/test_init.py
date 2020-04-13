@@ -9,7 +9,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_STANDBY,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.setup import setup_component
 
@@ -108,7 +108,7 @@ class TestInfluxDB(unittest.TestCase):
                 "unit_of_measurement": "foobars",
                 "longitude": "1.1",
                 "latitude": "2.2",
-                "battery_level": f"99{UNIT_PERCENTAGE}",
+                "battery_level": f"99{PERCENTAGE}",
                 "temperature": "20c",
                 "last_seen": "Last seen 23 minutes ago",
                 "updated_at": datetime.datetime(2017, 1, 1, 0, 0),
@@ -130,7 +130,7 @@ class TestInfluxDB(unittest.TestCase):
                     "fields": {
                         "longitude": 1.1,
                         "latitude": 2.2,
-                        "battery_level_str": f"99{UNIT_PERCENTAGE}",
+                        "battery_level_str": f"99{PERCENTAGE}",
                         "battery_level": 99.0,
                         "temperature_str": "20c",
                         "temperature": 20.0,

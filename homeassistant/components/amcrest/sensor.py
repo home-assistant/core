@@ -4,7 +4,7 @@ import logging
 
 from amcrest import AmcrestError
 
-from homeassistant.const import CONF_NAME, CONF_SENSORS, UNIT_PERCENTAGE
+from homeassistant.const import CONF_NAME, CONF_SENSORS, PERCENTAGE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
@@ -20,7 +20,7 @@ SENSOR_SDCARD = "sdcard"
 # Sensor types are defined like: Name, units, icon
 SENSORS = {
     SENSOR_PTZ_PRESET: ["PTZ Preset", None, "mdi:camera-iris"],
-    SENSOR_SDCARD: ["SD Used", UNIT_PERCENTAGE, "mdi:sd"],
+    SENSOR_SDCARD: ["SD Used", PERCENTAGE, "mdi:sd"],
 }
 
 
