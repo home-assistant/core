@@ -4,12 +4,7 @@ from datetime import timedelta
 import logging
 
 import requests
-from tesla_powerwall import (
-    ApiError,
-    MetersResponse,
-    PowerWall,
-    PowerWallUnreachableError,
-)
+from tesla_powerwall import ApiError, Powerwall, PowerwallUnreachableError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -67,10 +62,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN].setdefault(entry_id, {})
     http_session = requests.Session()
-    power_wall = PowerWall(entry.data[CONF_IP_ADDRESS], http_session=http_session)
+    power_wall = Powerwall(entry.data[CONF_IP_ADDRESS], http_session=http_session)
     try:
         powerwall_data = await hass.async_add_executor_job(call_base_info, power_wall)
-    except (PowerWallUnreachableError, ApiError, ConnectionError):
+    except (PowerwallUnreachableError, ApiError, ConnectionError):
         http_session.close()
         raise ConfigEntryNotReady
 
@@ -108,22 +103,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 def call_base_info(power_wall):
     """Wrap powerwall properties to be a callable."""
     return {
-        POWERWALL_API_SITE_INFO: power_wall.site_info,
-        POWERWALL_API_STATUS: power_wall.status,
-        POWERWALL_API_DEVICE_TYPE: power_wall.device_type,
+        POWERWALL_API_SITE_INFO: power_wall.get_site_info(),
+        POWERWALL_API_STATUS: power_wall.get_status(),
+        POWERWALL_API_DEVICE_TYPE: power_wall.get_device_type(),
     }
 
 
 def _fetch_powerwall_data(power_wall):
     """Process and update powerwall data."""
-    meters = power_wall.meters
     return {
-        POWERWALL_API_CHARGE: power_wall.charge,
-        POWERWALL_API_SITEMASTER: power_wall.sitemaster,
-        POWERWALL_API_METERS: {
-            meter: MetersResponse(meters[meter]) for meter in meters
-        },
-        POWERWALL_API_GRID_STATUS: power_wall.grid_status,
+        POWERWALL_API_CHARGE: power_wall.get_charge(),
+        POWERWALL_API_SITEMASTER: power_wall.get_sitemaster(),
+        POWERWALL_API_METERS: power_wall.get_meters(),
+        POWERWALL_API_GRID_STATUS: power_wall.get_grid_status(),
     }
 
 

@@ -15,10 +15,10 @@ async def test_sensors(hass):
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
 
     with patch(
-        "homeassistant.components.powerwall.config_flow.PowerWall",
+        "homeassistant.components.powerwall.config_flow.Powerwall",
         return_value=mock_powerwall,
     ), patch(
-        "homeassistant.components.powerwall.PowerWall", return_value=mock_powerwall
+        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
     ):
         assert await async_setup_component(hass, DOMAIN, _mock_get_config())
         await hass.async_block_till_done()
@@ -28,13 +28,13 @@ async def test_sensors(hass):
         identifiers={("powerwall", "Wom Energy_60Hz_240V_s_IEEE1547a_2014_13.5")},
         connections=set(),
     )
-    assert reg_device.model == "PowerWall 2 (hec)"
+    assert reg_device.model == "PowerWall 2 (GW1)"
     assert reg_device.sw_version == "1.45.1"
     assert reg_device.manufacturer == "Tesla"
     assert reg_device.name == "MySite"
 
     state = hass.states.get("sensor.powerwall_site_now")
-    assert state.state == "0.032"
+    assert state.state == "0.0"
     expected_attributes = {
         "frequency": 60,
         "energy_exported": 10429451.9916853,
@@ -50,7 +50,7 @@ async def test_sensors(hass):
         assert state.attributes[key] == value
 
     state = hass.states.get("sensor.powerwall_load_now")
-    assert state.state == "1.971"
+    assert state.state == "2.0"
     expected_attributes = {
         "frequency": 60,
         "energy_exported": 1056797.48917483,
@@ -66,7 +66,7 @@ async def test_sensors(hass):
         assert state.attributes[key] == value
 
     state = hass.states.get("sensor.powerwall_battery_now")
-    assert state.state == "-8.55"
+    assert state.state == "-8.6"
     expected_attributes = {
         "frequency": 60.014,
         "energy_exported": 3620010,
@@ -82,7 +82,7 @@ async def test_sensors(hass):
         assert state.attributes[key] == value
 
     state = hass.states.get("sensor.powerwall_solar_now")
-    assert state.state == "10.49"
+    assert state.state == "10.5"
     expected_attributes = {
         "frequency": 60,
         "energy_exported": 9864205.82222448,
@@ -98,7 +98,7 @@ async def test_sensors(hass):
         assert state.attributes[key] == value
 
     state = hass.states.get("sensor.powerwall_charge")
-    assert state.state == "47.32"
+    assert state.state == "47"
     expected_attributes = {
         "unit_of_measurement": UNIT_PERCENTAGE,
         "friendly_name": "Powerwall Charge",
