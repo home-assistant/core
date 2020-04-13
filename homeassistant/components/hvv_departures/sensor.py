@@ -125,6 +125,7 @@ class HVVDepartureSensor(Entity):
             self._last_error = None
 
             departure = data["departures"][0]
+            line = departure["line"]
             self._available = True
             self._state = (
                 departure_time
@@ -134,27 +135,28 @@ class HVVDepartureSensor(Entity):
 
             self.attr.update(
                 {
-                    ATTR_LINE: departure["line"]["name"],
-                    ATTR_ORIGIN: departure["line"]["origin"],
-                    ATTR_DIRECTION: departure["line"]["direction"],
-                    ATTR_TYPE: departure["line"]["type"]["shortInfo"],
-                    ATTR_ID: departure["line"]["id"],
+                    ATTR_LINE: line["name"],
+                    ATTR_ORIGIN: line["origin"],
+                    ATTR_DIRECTION: line["direction"],
+                    ATTR_TYPE: line["type"]["shortInfo"],
+                    ATTR_ID: line["id"],
                     ATTR_DELAY: departure.get("delay", 0),
                 }
             )
 
             departures = []
             for departure in data["departures"]:
+                line = departure["line"]
                 departures.append(
                     {
                         ATTR_DEPARTURE: departure_time
                         + timedelta(minutes=departure["timeOffset"])
                         + timedelta(seconds=departure.get("delay", 0)),
-                        ATTR_LINE: departure["line"]["name"],
-                        ATTR_ORIGIN: departure["line"]["origin"],
-                        ATTR_DIRECTION: departure["line"]["direction"],
-                        ATTR_TYPE: departure["line"]["type"]["shortInfo"],
-                        ATTR_ID: departure["line"]["id"],
+                        ATTR_LINE: line["name"],
+                        ATTR_ORIGIN: line["origin"],
+                        ATTR_DIRECTION: line["direction"],
+                        ATTR_TYPE: line["type"]["shortInfo"],
+                        ATTR_ID: line["id"],
                         ATTR_DELAY: departure.get("delay", 0),
                     }
                 )
