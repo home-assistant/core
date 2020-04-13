@@ -11,7 +11,12 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_FILTER, CONF_REAL_TIME, DOMAIN  # pylint:disable=unused-import
+from .const import (  # pylint:disable=unused-import
+    CONF_FILTER,
+    CONF_REAL_TIME,
+    CONF_STATION,
+    DOMAIN,
+)
 from .hub import GTIHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +29,7 @@ SCHEMA_STEP_USER = vol.Schema(
     }
 )
 
-SCHEMA_STEP_STATION = vol.Schema({vol.Required("station"): str})
+SCHEMA_STEP_STATION = vol.Schema({vol.Required(CONF_STATION): str})
 
 SCHEMA_STEP_OPTIONS = vol.Schema(
     {
@@ -84,7 +89,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             check_name = await self.hub.gti.checkName(
-                {"theName": {"name": user_input["station"]}, "maxList": 20}
+                {"theName": {"name": user_input[CONF_STATION]}, "maxList": 20}
             )
 
             stations = check_name.get("results")
@@ -102,7 +107,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
 
             schema = vol.Schema(
-                {vol.Required("station"): vol.In(list(self.stations.keys()))}
+                {vol.Required(CONF_STATION): vol.In(list(self.stations.keys()))}
             )
 
             return self.async_show_form(
@@ -120,7 +125,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="station_select", data_schema=SCHEMA_STEP_STATION
             )
         else:
-            self.data.update({"station": self.stations[user_input["station"]]})
+            self.data.update({"station": self.stations[user_input[CONF_STATION]]})
 
             # get station information
             station_information = await self.hub.gti.stationInformation(
