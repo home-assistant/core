@@ -4,16 +4,15 @@ import logging
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-LUTRON_CASETA_SMARTBRIDGE = "lutron_smartbridge"
-
 DOMAIN = "lutron_caseta"
+DATA_BRIDGE_CONFIG = "lutron_caseta_bridges"
 
 CONF_KEYFILE = "keyfile"
 CONF_CERTFILE = "certfile"
@@ -21,13 +20,16 @@ CONF_CA_CERTS = "ca_certs"
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_KEYFILE): cv.string,
-                vol.Required(CONF_CERTFILE): cv.string,
-                vol.Required(CONF_CA_CERTS): cv.string,
-            }
+        DOMAIN: vol.All(
+            cv.ensure_list,
+            [
+                {
+                    vol.Required(CONF_HOST): cv.string,
+                    vol.Required(CONF_KEYFILE): cv.string,
+                    vol.Required(CONF_CERTFILE): cv.string,
+                    vol.Required(CONF_CA_CERTS): cv.string,
+                }
+            ],
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -39,29 +41,68 @@ LUTRON_CASETA_COMPONENTS = ["light", "switch", "cover", "scene", "fan", "binary_
 async def async_setup(hass, base_config):
     """Set up the Lutron component."""
 
-    config = base_config.get(DOMAIN)
+    bridge_configs = base_config.get(DOMAIN)
+
+    if not bridge_configs:
+        return True
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data.setdefault(DATA_BRIDGE_CONFIG, {})
+
+    # Hosts with existing entries
+    existing_hosts = {
+        entry.data.get("host") for entry in hass.config_entries.async_entries(DOMAIN)
+    }
+
+    for config in bridge_configs:
+        host = config[CONF_HOST]
+
+        # Store bridge configs keyed by host
+        hass.data[DATA_BRIDGE_CONFIG][host] = config
+
+        # No need to setup entry again
+        if host in existing_hosts:
+            continue
+
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data={"host": host},
+            )
+        )
+
+    return True
+
+
+async def async_setup_entry(hass, config_entry):
+    """Set up a bridge from a config entry."""
+
+    host = config_entry.data.get("host")
+
+    config = hass.data[DATA_BRIDGE_CONFIG][host]
     keyfile = hass.config.path(config[CONF_KEYFILE])
     certfile = hass.config.path(config[CONF_CERTFILE])
     ca_certs = hass.config.path(config[CONF_CA_CERTS])
+
     bridge = Smartbridge.create_tls(
-        hostname=config[CONF_HOST],
-        keyfile=keyfile,
-        certfile=certfile,
-        ca_certs=ca_certs,
+        hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
     )
-    hass.data[LUTRON_CASETA_SMARTBRIDGE] = bridge
+
     await bridge.connect()
-    if not hass.data[LUTRON_CASETA_SMARTBRIDGE].is_connected():
-        _LOGGER.error(
-            "Unable to connect to Lutron smartbridge at %s", config[CONF_HOST]
-        )
+    if not bridge.is_connected():
+        _LOGGER.error("Unable to connect to Lutron Caseta bridge at %s", host)
         return False
 
-    _LOGGER.info("Connected to Lutron smartbridge at %s", config[CONF_HOST])
+    _LOGGER.info("Connected to Lutron Caseta bridge at %s", host)
+
+    # Store this bridge (keyed by entry_id) so it can be retrieved by the
+    # components we're setting up.
+    hass.data[DOMAIN][config_entry.entry_id] = bridge
 
     for component in LUTRON_CASETA_COMPONENTS:
         hass.async_create_task(
-            discovery.async_load_platform(hass, component, DOMAIN, {}, config)
+            hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
 
     return True
