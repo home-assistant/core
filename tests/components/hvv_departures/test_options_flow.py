@@ -3,7 +3,11 @@ from asynctest import patch
 from pygti.exceptions import CannotConnect, InvalidAuth
 
 from homeassistant.components.hvv_departures import config_flow
-from homeassistant.components.hvv_departures.const import CONF_REAL_TIME, DOMAIN
+from homeassistant.components.hvv_departures.const import (
+    CONF_FILTER,
+    CONF_REAL_TIME,
+    DOMAIN,
+)
 from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigEntry
 from homeassistant.const import CONF_OFFSET
 
@@ -43,12 +47,12 @@ async def test_options_flow(hass):
         # step: init
         await flow.async_step_init(user_input=None)
         result_init = await flow.async_step_init(
-            user_input={"filter": ["0"], CONF_OFFSET: 15, CONF_REAL_TIME: False}
+            user_input={CONF_FILTER: ["0"], CONF_OFFSET: 15, CONF_REAL_TIME: False}
         )
 
         assert result_init["type"] == "create_entry"
         assert result_init["data"] == {
-            "filter": [
+            CONF_FILTER: [
                 {
                     "serviceID": "HHA-U:U1_HHA-U",
                     "stationIDs": ["Master:10902"],
@@ -124,7 +128,7 @@ async def test_options_flow_invalid_auth(hass):
         # step: init
 
         result_init = await flow.async_step_init(
-            user_input={"filter": ["0"], CONF_OFFSET: 15, CONF_REAL_TIME: False}
+            user_input={CONF_FILTER: ["0"], CONF_OFFSET: 15, CONF_REAL_TIME: False}
         )
 
         assert result_init["type"] == "form"
@@ -157,7 +161,7 @@ async def test_options_flow_cannot_connect(hass):
         # step: init
         await flow.async_step_init()
         result_init = await flow.async_step_init(
-            user_input={"filter": ["0"], CONF_OFFSET: 15, CONF_REAL_TIME: False}
+            user_input={CONF_FILTER: ["0"], CONF_OFFSET: 15, CONF_REAL_TIME: False}
         )
 
         assert result_init["type"] == "form"

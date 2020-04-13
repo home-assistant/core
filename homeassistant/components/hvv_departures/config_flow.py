@@ -11,7 +11,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_REAL_TIME, DOMAIN  # pylint:disable=unused-import
+from .const import CONF_FILTER, CONF_REAL_TIME, DOMAIN  # pylint:disable=unused-import
 from .hub import GTIHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ SCHEMA_STEP_STATION = vol.Schema({vol.Required("station"): str})
 
 SCHEMA_STEP_OPTIONS = vol.Schema(
     {
-        vol.Required("filter"): vol.In([]),
+        vol.Required(CONF_FILTER): vol.In([]),
         vol.Required(CONF_OFFSET, default=0): vol.All(int, vol.Range(min=0)),
         vol.Optional(CONF_REAL_TIME, default=True): bool,
     }
@@ -195,11 +195,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None and not errors:
 
             options = {
-                "filter": [
+                CONF_FILTER: [
                     departure_filter[1]
                     for departure_filter in filter(
                         lambda departure_filter: departure_filter[0]
-                        in user_input["filter"],
+                        in user_input[CONF_FILTER],
                         self.departure_filters.items(),
                     )
                 ],
@@ -209,12 +209,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             return self.async_create_entry(title="", data=options)
 
-        if "filter" in self.config_entry.options:
+        if CONF_FILTER in self.config_entry.options:
             old_filter = [
                 departure_filter[0]
                 for departure_filter in filter(
                     lambda departure_filter: departure_filter[1]
-                    in self.config_entry.options.get("filter"),
+                    in self.config_entry.options.get(CONF_FILTER),
                     self.departure_filters.items(),
                 )
             ]
@@ -225,7 +225,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Optional("filter", default=old_filter): cv.multi_select(
+                    vol.Optional(CONF_FILTER, default=old_filter): cv.multi_select(
                         {
                             key: f"{departure_filter['serviceName']}, {departure_filter['label']}"
                             for key, departure_filter in self.departure_filters.items()
