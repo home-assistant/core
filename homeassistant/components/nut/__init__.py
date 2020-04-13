@@ -83,10 +83,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
+    unique_id = _unique_id_from_status(status)
+
+    if unique_id is None:
+        # If the device is missing a serial number
+        # we fallback to the host/port/alias
+        # as the sensors won't show up on the integrations page.
+        unique_id = format_host_port_alias(config)
+
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,
         PYNUT_DATA: data,
-        PYNUT_UNIQUE_ID: _unique_id_from_status(status),
+        PYNUT_UNIQUE_ID: unique_id,
         PYNUT_MANUFACTURER: _manufacturer_from_status(status),
         PYNUT_MODEL: _model_from_status(status),
         PYNUT_FIRMWARE: _firmware_from_status(status),
@@ -164,6 +172,16 @@ def find_resources_in_config_entry(config_entry):
     if CONF_RESOURCES in config_entry.options:
         return config_entry.options[CONF_RESOURCES]
     return config_entry.data[CONF_RESOURCES]
+
+
+def format_host_port_alias(user_input):
+    """Format a host, port, and alias."""
+    host = user_input[CONF_HOST]
+    port = user_input[CONF_PORT]
+    alias = user_input.get(CONF_ALIAS)
+    if alias:
+        return f"{alias}@{host}:{port}"
+    return f"{host}:{port}"
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):

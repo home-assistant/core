@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from . import PyNUTData, find_resources_in_config_entry
+from . import PyNUTData, find_resources_in_config_entry, format_host_port_alias
 from .const import (
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -93,16 +93,6 @@ async def validate_input(hass: core.HomeAssistant, data):
     return {"ups_list": data.ups_list, "available_resources": status}
 
 
-def _format_host_port_alias(user_input):
-    """Format a host, port, and alias so it can be used for comparison or display."""
-    host = user_input[CONF_HOST]
-    port = user_input[CONF_PORT]
-    alias = user_input.get(CONF_ALIAS)
-    if alias:
-        return f"{alias}@{host}:{port}"
-    return f"{host}:{port}"
-
-
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Network UPS Tools (NUT)."""
 
@@ -125,7 +115,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _, errors = await self._async_validate_or_error(user_input)
 
             if not errors:
-                title = _format_host_port_alias(user_input)
+                title = format_host_port_alias(user_input)
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
@@ -181,16 +171,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         self.nut_config.update(user_input)
-        title = _format_host_port_alias(self.nut_config)
+        title = format_host_port_alias(self.nut_config)
         return self.async_create_entry(title=title, data=self.nut_config)
 
     def _host_port_alias_already_configured(self, user_input):
         """See if we already have a nut entry matching user input configured."""
         existing_host_port_aliases = {
-            _format_host_port_alias(entry.data)
+            format_host_port_alias(entry.data)
             for entry in self._async_current_entries()
         }
-        return _format_host_port_alias(user_input) in existing_host_port_aliases
+        return format_host_port_alias(user_input) in existing_host_port_aliases
 
     async def _async_validate_or_error(self, config):
         errors = {}
