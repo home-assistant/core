@@ -34,8 +34,7 @@
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Both buttons",
-            "top_buttons": "Top buttons",
-            "bottom_buttons" : "Bottom buttons",
+            "bottom_buttons": "Bottom buttons",
             "button_1": "First button",
             "button_2": "Second button",
             "button_3": "Third button",
@@ -52,6 +51,7 @@
             "side_4": "Side 4",
             "side_5": "Side 5",
             "side_6": "Side 6",
+            "top_buttons": "Top buttons",
             "turn_off": "Turn off",
             "turn_on": "Turn on"
         },
