@@ -109,7 +109,11 @@ class PowerWallEnergySensor(PowerWallEntity):
     @property
     def state(self):
         """Get the current value in kW."""
-        return self._coordinator.data[POWERWALL_API_METERS].get(self._meter).get_power()
+        return (
+            self._coordinator.data[POWERWALL_API_METERS]
+            .get(self._meter)
+            .get_power(precision=3)
+        )
 
     @property
     def device_state_attributes(self):
