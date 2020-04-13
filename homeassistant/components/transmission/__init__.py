@@ -314,10 +314,13 @@ class TransmissionData:
 
     def check_started_torrent_info(self):
         """Get started torrent info functionality."""
-        all_torrents = self._api.get_torrents()
+        actual_torrents = self.torrents
+        if not actual_torrents:
+            return
+
         current_down = {}
 
-        for torrent in all_torrents:
+        for torrent in actual_torrents:
             if torrent.status == "downloading":
                 info = self.started_torrent_dict[torrent.name] = {
                     "added_date": torrent.addedDate,
