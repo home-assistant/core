@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -121,9 +121,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_interval=timedelta(seconds=300),
     )
 
-    # async_request_refresh instead of async_refresh
-    # as this can take longer than 60s
-    await trends_coordinator.async_request_refresh()
+    # This can take longer than 60s and we already know
+    # sense is online since get_discovered_device_data was
+    # successful so we do it later.
+    async_call_later(hass, 1, lambda now: trends_coordinator.async_refresh())
 
     hass.data[DOMAIN][entry.entry_id] = {
         SENSE_DATA: gateway,
