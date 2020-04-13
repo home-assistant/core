@@ -26,7 +26,6 @@ from homeassistant.util.dt import utc_from_timestamp
 
 from .common import (
     ControllerData,
-    async_maybe_set_legacy_entity_unique_id,
     get_configured_platforms,
     get_controller_data,
     set_controller_data,
@@ -66,10 +65,6 @@ async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
     if not config:
         return True
 
-    # Mark old config entries as using older entity unique_id
-    for config_entry in hass.config_entries.async_entries(DOMAIN):
-        await async_maybe_set_legacy_entity_unique_id(hass, config_entry, True)
-
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config,
@@ -81,8 +76,6 @@ async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Do setup of vera."""
-    await async_maybe_set_legacy_entity_unique_id(hass, config_entry, False)
-
     # Use options entered during initial config flow or provided from configuration.yml
     if config_entry.data.get(CONF_LIGHTS) or config_entry.data.get(CONF_EXCLUDE):
         hass.config_entries.async_update_entry(

@@ -142,7 +142,7 @@ class ComponentFactory:
         if not controller_config.config_from_file:
             await hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
+                context={"source": config_entries.SOURCE_USER},
                 data=component_config,
             )
             await hass.async_block_till_done()

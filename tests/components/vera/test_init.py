@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from .common import ComponentFactory, new_simple_controller_config
 
 from tests.async_mock import MagicMock
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_registry
 
 
 async def test_init(
@@ -90,14 +90,11 @@ async def test_multiple_controllers_with_legacy_one(
     vera_device2.is_tripped = False
     entity2_id = "binary_sensor.second_dev_2"
 
-    # Add existing config from previous setup.
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_CONTROLLER: "http://127.0.0.1"},
-        options={},
-        unique_id="12345",
+    # Add existing entity registry entry from previous setup.
+    entity_registry = mock_registry(hass)
+    entity_registry.async_get_or_create(
+        domain="switch", platform=DOMAIN, unique_id="12"
     )
-    entry.add_to_hass(hass)
 
     await vera_component_factory.configure_component(
         hass=hass,
