@@ -44,6 +44,27 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self.braviarc = None
         self.host = None
+        self.title = None
+        self.mac = None
+
+    async def init_device(self, pin):
+        """Initialize Bravia TV device."""
+        await self.hass.async_add_executor_job(
+            self.braviarc.connect, pin, CLIENTID_PREFIX, NICKNAME,
+        )
+
+        if not self.braviarc.is_connected():
+            raise CannotConnect()
+
+        system_info = await self.hass.async_add_executor_job(
+            self.braviarc.get_system_info
+        )
+
+        await self.async_set_unique_id(system_info[ATTR_CID].lower())
+        self._abort_if_unique_id_configured()
+
+        self.title = system_info[ATTR_MODEL]
+        self.mac = system_info[ATTR_MAC]
 
     @staticmethod
     @callback
@@ -56,27 +77,18 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.host = user_input[CONF_HOST]
         self.braviarc = BraviaRC(self.host)
 
-        await self.hass.async_add_executor_job(
-            self.braviarc.connect, user_input[CONF_PIN], CLIENTID_PREFIX, NICKNAME,
-        )
-
-        if not self.braviarc.is_connected():
+        try:
+            await self.init_device(user_input[CONF_PIN])
+        except CannotConnect:
             _LOGGER.error("Import aborted, cannot connect to %s", self.host)
             return self.async_abort(reason="cannot_connect")
-
-        try:
-            system_info = await self.hass.async_add_executor_job(
-                self.braviarc.get_system_info
-            )
         except (KeyError, TypeError):
             _LOGGER.error("Import aborted, your TV is not supported")
             return self.async_abort(reason="unsupported_model")
 
-        await self.async_set_unique_id(system_info[ATTR_CID].lower())
-        self._abort_if_unique_id_configured()
+        user_input[CONF_MAC] = self.mac
 
-        title = f"{system_info[ATTR_MODEL]}"
-        return self.async_create_entry(title=title, data=user_input)
+        return self.async_create_entry(title=self.title, data=user_input)
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -106,27 +118,12 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await self.hass.async_add_executor_job(
-                    self.braviarc.connect,
-                    user_input[CONF_PIN],
-                    CLIENTID_PREFIX,
-                    NICKNAME,
-                )
+                await self.init_device(user_input[CONF_PIN])
 
-                if not self.braviarc.is_connected():
-                    raise CannotConnect
-
-                system_info = await self.hass.async_add_executor_job(
-                    self.braviarc.get_system_info
-                )
-
-                await self.async_set_unique_id(system_info[ATTR_CID].lower())
-                self._abort_if_unique_id_configured()
-
-                title = f"{system_info[ATTR_MODEL]}"
                 user_input[CONF_HOST] = self.host
-                user_input[CONF_MAC] = system_info[ATTR_MAC]
-                return self.async_create_entry(title=title, data=user_input)
+                user_input[CONF_MAC] = self.mac
+
+                return self.async_create_entry(title=self.title, data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except (KeyError, TypeError):

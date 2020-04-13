@@ -80,12 +80,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         # Import a configured TV
         host_ip, host_config = bravia_config.popitem()
         if host_ip == host:
-            data = host_config
-            data[CONF_HOST] = host
+            pin = host_config[CONF_PIN]
 
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=data,
+                    DOMAIN,
+                    context={"source": SOURCE_IMPORT},
+                    data={CONF_HOST: host, CONF_PIN: pin},
                 )
             )
             return
