@@ -54,7 +54,7 @@ SENSOR_TYPES = {
 ENDPOINTS = {
     "diskspace": "{0}://{1}:{2}/{3}api/diskspace",
     "queue": "{0}://{1}:{2}/{3}api/queue",
-    "upcoming": "{0}://{1}:{2}/{3}api/calendar?start={4}&end={5}",
+    "upcoming": "{0}://{1}:{2}/{3}api/calendar?start={4}T00:00:00Z&end={5}T23:59:59Z",
     "wanted": "{0}://{1}:{2}/{3}api/wanted/missing",
     "series": "{0}://{1}:{2}/{3}api/series",
     "commands": "{0}://{1}:{2}/{3}api/command",
@@ -206,7 +206,7 @@ class SonarrSensor(Entity):
     def update(self):
         """Update the data for the sensor."""
         start = get_date(self._tz)
-        end = get_date(self._tz, self.days)
+        end = get_date(self._tz, self.days - 1)
         try:
             res = requests.get(
                 ENDPOINTS[self.type].format(
@@ -227,7 +227,7 @@ class SonarrSensor(Entity):
                     # Sonarr API returns an empty array if start and end dates
                     # are the same, so we need to filter to just today
                     self.data = list(
-                        filter(lambda x: x["airDate"] == str(start), res.json())
+                        filter(lambda x: str(start) in x["airDateUtc"], res.json())
                     )
                 else:
                     self.data = res.json()
