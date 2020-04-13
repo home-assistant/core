@@ -120,6 +120,16 @@ stages:
           -r https://github.com/home-assistant/hassio-homeassistant \
           -t machine --docker-hub homeassistant
       displayName: 'Build Release'
+  - job: 'ReleaseCore'
+    pool:
+      vmImage: 'ubuntu-latest'
+    condition: startsWith(variables['Build.SourceBranch'], 'refs/tags')
+    - script: |
+        docker login -u $(dockerUser) -p $(dockerPassword)
+      displayName: 'Docker hub login'
+    - script: |
+        docker build --tag homeassistant/home-assistant:$(Build.SourceBranch) -f Dockerfile.core .
+        docker push homeassistant/home-assistant:$(Build.SourceBranch)
 
 - stage: 'Publish'
   jobs:
@@ -178,34 +188,34 @@ stages:
           local tag_l=$1
           local tag_r=$2
 
-          docker manifest create homeassistant/home-assistant:${tag_l} \
+          docker manifest create homeassistant/hassio-homeassistant:${tag_l} \
             homeassistant/amd64-homeassistant:${tag_r} \
             homeassistant/i386-homeassistant:${tag_r} \
             homeassistant/armhf-homeassistant:${tag_r} \
             homeassistant/armv7-homeassistant:${tag_r} \
             homeassistant/aarch64-homeassistant:${tag_r}
 
-          docker manifest annotate homeassistant/home-assistant:${tag_l} \
+          docker manifest annotate homeassistant/hassio-homeassistant:${tag_l} \
             homeassistant/amd64-homeassistant:${tag_r} \
             --os linux --arch amd64
 
-          docker manifest annotate homeassistant/home-assistant:${tag_l} \
+          docker manifest annotate homeassistant/hassio-homeassistant:${tag_l} \
             homeassistant/i386-homeassistant:${tag_r} \
             --os linux --arch 386
 
-          docker manifest annotate homeassistant/home-assistant:${tag_l} \
+          docker manifest annotate homeassistant/hassio-homeassistant:${tag_l} \
             homeassistant/armhf-homeassistant:${tag_r} \
             --os linux --arch arm --variant=v6
 
-          docker manifest annotate homeassistant/home-assistant:${tag_l} \
+          docker manifest annotate homeassistant/hassio-homeassistant:${tag_l} \
             homeassistant/armv7-homeassistant:${tag_r} \
             --os linux --arch arm --variant=v7
 
-          docker manifest annotate homeassistant/home-assistant:${tag_l} \
+          docker manifest annotate homeassistant/hassio-homeassistant:${tag_l} \
             homeassistant/aarch64-homeassistant:${tag_r} \
             --os linux --arch arm64 --variant=v8
 
-          docker manifest push --purge homeassistant/home-assistant:${tag_l}
+          docker manifest push --purge homeassistant/hassio-homeassistant:${tag_l}
         }
 
         docker pull homeassistant/amd64-homeassistant:$(homeassistantRelease)
