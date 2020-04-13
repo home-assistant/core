@@ -180,6 +180,7 @@ class TransmissionClient:
                 ("http", "ftp:", "magnet:")
             ) or self.hass.config.is_allowed_path(torrent):
                 tm_client.tm_api.add_torrent(torrent)
+                tm_client.api.update()
             else:
                 _LOGGER.warning(
                     "Could not add torrent: unsupported type or no permission"
