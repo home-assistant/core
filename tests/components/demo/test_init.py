@@ -29,6 +29,7 @@ def demo_cleanup(hass):
 async def test_setting_up_demo(hass):
     """Test if we can set up the demo and dump it to JSON."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
     await hass.async_start()
 
     # This is done to make sure entity components don't accidentally store

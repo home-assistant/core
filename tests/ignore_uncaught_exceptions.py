@@ -1,6 +1,5 @@
 """List of modules that have uncaught exceptions today. Will be shrunk over time."""
 IGNORE_UNCAUGHT_EXCEPTIONS = [
-    ("tests.components.demo.test_init", "test_setting_up_demo"),
     ("tests.components.dyson.test_air_quality", "test_purecool_aiq_attributes"),
     ("tests.components.dyson.test_air_quality", "test_purecool_aiq_update_state"),
     (

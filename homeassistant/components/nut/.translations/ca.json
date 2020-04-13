@@ -41,7 +41,8 @@
         "step": {
             "init": {
                 "data": {
-                    "resources": "Recursos"
+                    "resources": "Recursos",
+                    "scan_interval": "Interval d'escaneig (segons)"
                 },
                 "description": "Selecciona els recursos del sensor"
             }

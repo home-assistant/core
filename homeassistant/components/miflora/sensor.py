@@ -18,6 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_CONDUCTIVITY,
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
@@ -54,7 +55,7 @@ SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_CELSIUS, "mdi:thermometer"],
     "light": ["Light intensity", "lx", "mdi:white-balance-sunny"],
     "moisture": ["Moisture", UNIT_PERCENTAGE, "mdi:water-percent"],
-    "conductivity": ["Conductivity", "µS/cm", "mdi:flash-circle"],
+    "conductivity": ["Conductivity", UNIT_CONDUCTIVITY, "mdi:flash-circle"],
     "battery": ["Battery", UNIT_PERCENTAGE, "mdi:battery-charging"],
 }
 

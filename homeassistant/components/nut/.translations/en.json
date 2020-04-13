@@ -41,7 +41,8 @@
         "step": {
             "init": {
                 "data": {
-                    "resources": "Resources"
+                    "resources": "Resources",
+                    "scan_interval": "Scan Interval (seconds)"
                 },
                 "description": "Choose Sensor Resources."
             }

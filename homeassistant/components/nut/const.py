@@ -5,6 +5,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
 )
 from homeassistant.const import (
+    FREQUENCY_HERTZ,
     POWER_WATT,
     TEMP_CELSIUS,
     TIME_SECONDS,
@@ -26,6 +27,7 @@ KEY_STATUS = "ups.status"
 KEY_STATUS_DISPLAY = "ups.status.display"
 
 COORDINATOR = "coordinator"
+DEFAULT_SCAN_INTERVAL = 60
 
 PYNUT_DATA = "data"
 PYNUT_UNIQUE_ID = "unique_id"
@@ -158,10 +160,10 @@ SENSOR_TYPES = {
     ],
     "input.voltage": ["Input Voltage", UNIT_VOLT, "mdi:flash", None],
     "input.voltage.nominal": ["Nominal Input Voltage", UNIT_VOLT, "mdi:flash", None],
-    "input.frequency": ["Input Line Frequency", "hz", "mdi:flash", None],
+    "input.frequency": ["Input Line Frequency", FREQUENCY_HERTZ, "mdi:flash", None],
     "input.frequency.nominal": [
         "Nominal Input Line Frequency",
-        "hz",
+        FREQUENCY_HERTZ,
         "mdi:flash",
         None,
     ],
@@ -175,8 +177,13 @@ SENSOR_TYPES = {
     "output.current.nominal": ["Nominal Output Current", "A", "mdi:flash", None],
     "output.voltage": ["Output Voltage", UNIT_VOLT, "mdi:flash", None],
     "output.voltage.nominal": ["Nominal Output Voltage", UNIT_VOLT, "mdi:flash", None],
-    "output.frequency": ["Output Frequency", "hz", "mdi:flash", None],
-    "output.frequency.nominal": ["Nominal Output Frequency", "hz", "mdi:flash", None],
+    "output.frequency": ["Output Frequency", FREQUENCY_HERTZ, "mdi:flash", None],
+    "output.frequency.nominal": [
+        "Nominal Output Frequency",
+        FREQUENCY_HERTZ,
+        "mdi:flash",
+        None,
+    ],
 }
 
 STATE_TYPES = {
