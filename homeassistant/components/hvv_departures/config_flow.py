@@ -129,7 +129,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # get station information
             station_information = await self.hub.gti.stationInformation(
-                {"station": self.data["station"]}
+                {"station": self.data[CONF_STATION]}
             )
 
             self.filters = {
@@ -138,7 +138,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
             self.data.update({"stationInformation": station_information})
 
-            title = self.data["station"]["name"]
+            title = self.data[CONF_STATION]["name"]
 
             return self.async_create_entry(title=title, data=self.data)
 
@@ -177,7 +177,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             try:
                 departure_list = await self.hub.gti.departureList(
                     {
-                        "station": self.config_entry.data["station"],
+                        "station": self.config_entry.data[CONF_STATION],
                         "time": {"date": "heute", "time": "jetzt"},
                         "maxList": 5,
                         "maxTimeOffset": 200,
