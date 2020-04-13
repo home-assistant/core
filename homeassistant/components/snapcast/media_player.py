@@ -13,7 +13,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_PORT,
     STATE_IDLE,
@@ -22,13 +21,11 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNKNOWN,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers import config_validation as cv, entity_platform
 
 from . import (
     ATTR_LATENCY,
     ATTR_MASTER,
-    DOMAIN,
     SERVICE_JOIN,
     SERVICE_RESTORE,
     SERVICE_SET_LATENCY,
@@ -60,44 +57,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Snapcast platform."""
 
+    _LOGGER.debug("Reached async_setup_platform")
+
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT, CONTROL_PORT)
 
-    async def async_service_handle(service_event, service, data):
-        """Handle dispatched services."""
-        entity_ids = data.get(ATTR_ENTITY_ID)
-        devices = [
-            device for device in hass.data[DATA_KEY] if device.entity_id in entity_ids
-        ]
-        for device in devices:
-            if service == SERVICE_SNAPSHOT:
-                device.snapshot()
-            elif service == SERVICE_RESTORE:
-                await device.async_restore()
-            elif service == SERVICE_JOIN:
-                if isinstance(device, SnapcastClientDevice):
-                    master = [
-                        e
-                        for e in hass.data[DATA_KEY]
-                        if e.entity_id == data[ATTR_MASTER]
-                    ]
-                    if isinstance(master[0], SnapcastClientDevice):
-                        await device.async_join(master[0])
-            elif service == SERVICE_UNJOIN:
-                if isinstance(device, SnapcastClientDevice):
-                    await device.async_unjoin()
-            elif service == SERVICE_SET_LATENCY:
-                if isinstance(device, SnapcastClientDevice):
-                    master = [
-                        e
-                        for e in hass.data[DATA_KEY]
-                        if e.entity_id == data[ATTR_ENTITY_ID]
-                    ]
-                    await device.async_set_latency(data.get(ATTR_LATENCY))
-
-        service_event.set()
-
-    async_dispatcher_connect(hass, DOMAIN, async_service_handle)
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(SERVICE_SNAPSHOT, {}, "snapshot")
+    platform.async_register_entity_service(SERVICE_RESTORE, {}, "async_restore")
+    platform.async_register_entity_service(
+        SERVICE_JOIN, {vol.Required(ATTR_MASTER): cv.entity_id}, "async_join"
+    )
+    platform.async_register_entity_service(SERVICE_UNJOIN, {}, "async_unjoin")
+    platform.async_register_entity_service(
+        SERVICE_SET_LATENCY,
+        {vol.Required(ATTR_LATENCY): cv.positive_int},
+        "async_set_latency",
+    )
 
     try:
         server = await snapcast.control.create_server(
@@ -268,19 +244,14 @@ class SnapcastClientDevice(MediaPlayerDevice):
         return STATE_OFF
 
     @property
-    def state_attributes(self):
-        """Return entity state attributes."""
-        state_attrs = {}
-        state_attrs.update(super().state_attributes)
-        if self.latency is not None:
-            state_attrs["latency"] = self.latency
-        return state_attrs
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes."""
+        state_attrs = {}
+        if self.latency is not None:
+            state_attrs["latency"] = self.latency
         name = f"{self._client.friendly_name} {CLIENT_SUFFIX}"
-        return {"friendly_name": name}
+        state_attrs["friendly_name"] = name
+        return state_attrs
 
     @property
     def should_poll(self):
@@ -311,10 +282,11 @@ class SnapcastClientDevice(MediaPlayerDevice):
 
     async def async_join(self, master):
         """Join the group of the master player."""
+        masters = [e for e in self.hass.data[DATA_KEY] if e.entity_id == master]
         master_group = [
             group
             for group in self._client.groups_available()
-            if master.identifier in group.clients
+            if masters[0].identifier in group.clients
         ]
         await master_group[0].add_client(self._client.identifier)
         self.async_write_ha_state()
