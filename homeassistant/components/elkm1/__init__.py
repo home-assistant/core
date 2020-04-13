@@ -39,7 +39,7 @@ from .const import (
     ELK_ELEMENTS,
 )
 
-SYNC_TIMEOUT = 57
+SYNC_TIMEOUT = 120
 
 _LOGGER = logging.getLogger(__name__)
 
