@@ -3,6 +3,7 @@ import asyncio
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -10,7 +11,7 @@ from .const import DOMAIN
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [DOMAIN_SENSOR]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
