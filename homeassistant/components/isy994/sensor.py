@@ -25,7 +25,7 @@ from homeassistant.const import (
     TIME_YEARS,
     DEGREE,
     UNIT_PERCENTAGE,
-    UNIT_UV_INDEX,
+    UV_INDEX,
     VOLT,
 )
 from homeassistant.helpers.typing import ConfigType
@@ -97,7 +97,7 @@ UOM_FRIENDLY_NAME = {
     "64": "shindo",
     "65": "SML",
     "69": "gal",
-    "71": UNIT_UV_INDEX,
+    "71": UV_INDEX,
     "72": VOLT,
     "73": POWER_WATT,
     "74": f"{POWER_WATT}/m²",

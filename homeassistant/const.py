@@ -417,7 +417,7 @@ MASS_POUNDS: str = "lb"
 CONDUCTIVITY: str = f"µS/{LENGTH_CENTIMETERS}"
 
 # UV Index units
-UNIT_UV_INDEX: str = "UV index"
+UV_INDEX: str = "UV index"
 
 # Percentage units
 UNIT_PERCENTAGE = "%"

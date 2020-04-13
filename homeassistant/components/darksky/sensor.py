@@ -25,7 +25,7 @@ from homeassistant.const import (
     TIME_HOURS,
     DEGREE,
     UNIT_PERCENTAGE,
-    UNIT_UV_INDEX,
+    UV_INDEX,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -339,11 +339,11 @@ SENSOR_TYPES = {
     ],
     "uv_index": [
         "UV Index",
-        UNIT_UV_INDEX,
-        UNIT_UV_INDEX,
-        UNIT_UV_INDEX,
-        UNIT_UV_INDEX,
-        UNIT_UV_INDEX,
+        UV_INDEX,
+        UV_INDEX,
+        UV_INDEX,
+        UV_INDEX,
+        UV_INDEX,
         "mdi:weather-sunny",
         ["currently", "hourly", "daily"],
     ],
