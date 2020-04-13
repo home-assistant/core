@@ -7,7 +7,7 @@ from homeassistant.const import (
     TEMP_KELVIN,
     UNIT_DEGREE,
     UNIT_PERCENTAGE,
-    UNIT_VOLT,
+    VOLT,
 )
 
 DOMAIN = "lcn"
@@ -164,7 +164,7 @@ VAR_UNITS = [
     "PERCENT",
     "PPM",
     "VOLT",
-    UNIT_VOLT,
+    VOLT,
     "AMPERE",
     "AMP",
     "A",

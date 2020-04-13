@@ -26,7 +26,7 @@ from homeassistant.const import (
     UNIT_DEGREE,
     UNIT_PERCENTAGE,
     UNIT_UV_INDEX,
-    UNIT_VOLT,
+    VOLT,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -98,7 +98,7 @@ UOM_FRIENDLY_NAME = {
     "65": "SML",
     "69": "gal",
     "71": UNIT_UV_INDEX,
-    "72": UNIT_VOLT,
+    "72": VOLT,
     "73": POWER_WATT,
     "74": f"{POWER_WATT}/m²",
     "75": "weekday",

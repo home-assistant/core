@@ -12,7 +12,7 @@ from homeassistant.const import (
     UNIT_CONDUCTIVITY,
     UNIT_DEGREE,
     UNIT_PERCENTAGE,
-    UNIT_VOLT,
+    VOLT,
 )
 
 SENSORS = {
@@ -40,7 +40,7 @@ SENSORS = {
         "S_VIBRATION": [FREQUENCY_HERTZ, None],
         "S_LIGHT_LEVEL": ["lx", "mdi:white-balance-sunny"],
     },
-    "V_VOLTAGE": [UNIT_VOLT, "mdi:flash"],
+    "V_VOLTAGE": [VOLT, "mdi:flash"],
     "V_CURRENT": ["A", "mdi:flash-auto"],
     "V_PH": ["pH", None],
     "V_ORP": ["mV", None],
