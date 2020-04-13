@@ -63,19 +63,19 @@ class TestPanelProxy(unittest.TestCase):
 
         assert panels.get("proxy_router").to_response() == {
             "component_name": "iframe",
-            "config": {"url": "http://192.168.1.1"},
+            "config": {"url": "/router"},
             "icon": "mdi:network-wireless",
             "title": "Router",
-            "url_path": "router",
+            "url_path": "proxy_router",
             "require_admin": True,
         }
 
         assert panels.get("proxy_weather").to_response() == {
             "component_name": "iframe",
-            "config": {"url": "https://www.wunderground.com/us/ca/san-diego"},
+            "config": {"url": "/weather"},
             "icon": "mdi:weather",
             "title": "Weather",
-            "url_path": "weather",
+            "url_path": "proxy_weather",
             "require_admin": True,
         }
 
@@ -84,15 +84,15 @@ class TestPanelProxy(unittest.TestCase):
             "config": {"url": "/api"},
             "icon": "mdi:weather",
             "title": "Api",
-            "url_path": "api",
+            "url_path": "proxy_api",
             "require_admin": False,
         }
 
-        assert panels.get("ftp").to_response() == {
+        assert panels.get("proxy_ftp").to_response() == {
             "component_name": "iframe",
-            "config": {"url": "ftp://some/ftp"},
+            "config": {"url": "/ftp"},
             "icon": "mdi:weather",
             "title": "FTP",
-            "url_path": "ftp",
+            "url_path": "proxy_ftp",
             "require_admin": False,
         }
