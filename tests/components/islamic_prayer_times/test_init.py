@@ -79,7 +79,9 @@ async def test_unload_entry(hass):
     ):
         await hass.config_entries.async_setup(entry.entry_id)
 
-        assert await islamic_prayer_times.async_unload_entry(hass, entry)
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
         assert islamic_prayer_times.DOMAIN not in hass.data
 
 

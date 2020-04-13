@@ -8,8 +8,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.event import track_point_in_time
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_point_in_time
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -61,9 +61,9 @@ async def async_setup_entry(hass, config_entry):
 async def async_unload_entry(hass, config_entry):
     """Unload Islamic Prayer entry from config_entry."""
     if hass.data[DOMAIN].event_unsub:
-        await hass.async_add_executor_job(hass.data[DOMAIN].event_unsub)
-    await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
+        hass.data[DOMAIN].event_unsub()
     hass.data.pop(DOMAIN)
+    await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
 
     return True
 
@@ -94,7 +94,7 @@ class IslamicPrayerClient:
         )
         return calc.fetch_prayer_times()
 
-    def schedule_future_update(self):
+    async def async_schedule_future_update(self):
         """Schedule future update for sensors.
 
         Midnight is a calculated time.  The specifics of the calculation
@@ -142,18 +142,22 @@ class IslamicPrayerClient:
 
         _LOGGER.info("Next update scheduled for: %s", next_update_at)
 
-        self.event_unsub = track_point_in_time(self.hass, self.update, next_update_at)
+        self.event_unsub = async_track_point_in_time(
+            self.hass, self.async_update, next_update_at
+        )
 
-    def update(self, *_):
+    async def async_update(self, *_):
         """Update sensors with new prayer times."""
         try:
-            prayer_times = self.get_new_prayer_times()
+            prayer_times = await self.hass.async_add_executor_job(
+                self.get_new_prayer_times
+            )
             self.available = True
         except (exceptions.InvalidResponseError, ConnError):
             self.available = False
             _LOGGER.debug("Error retrieving prayer times.")
-            track_point_in_time(
-                self.hass, self.update, dt_util.utcnow() + timedelta(minutes=1)
+            async_track_point_in_time(
+                self.hass, self.async_update, dt_util.utcnow() + timedelta(minutes=1)
             )
             return
 
@@ -161,10 +165,10 @@ class IslamicPrayerClient:
             self.prayer_times_info[prayer] = dt_util.parse_datetime(
                 f"{dt_util.now().date()} {time}"
             )
-        self.schedule_future_update()
+        await self.async_schedule_future_update()
 
         _LOGGER.debug("New prayer times retrieved. Updating sensors.")
-        dispatcher_send(self.hass, DATA_UPDATED)
+        async_dispatcher_send(self.hass, DATA_UPDATED)
 
     async def async_setup(self):
         """Set up the Islamic prayer client."""
@@ -175,7 +179,7 @@ class IslamicPrayerClient:
         except (exceptions.InvalidResponseError, ConnError):
             raise ConfigEntryNotReady
 
-        await self.hass.async_add_executor_job(self.update)
+        await self.async_update()
         self.config_entry.add_update_listener(self.async_options_updated)
 
         self.hass.async_create_task(
@@ -200,5 +204,5 @@ class IslamicPrayerClient:
     async def async_options_updated(hass, entry):
         """Triggered by config entry options updates."""
         if hass.data[DOMAIN].event_unsub:
-            await hass.async_add_executor_job(hass.data[DOMAIN].event_unsub)
-        await hass.async_add_executor_job(hass.data[DOMAIN].update)
+            hass.data[DOMAIN].event_unsub()
+        await hass.data[DOMAIN].async_update()

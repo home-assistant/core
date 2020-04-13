@@ -1,18 +1,11 @@
 """Platform to retrieve Islamic prayer times information for Home Assistant."""
 import logging
 
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import (
-    ATTR_TIMESTAMP,
-    DATA_UPDATED,
-    DOMAIN,
-    PRAYER_TIMES_ICON,
-    SENSOR_SUFFIX,
-    SENSOR_TYPES,
-    TIME_STR_FORMAT,
-)
+from .const import DATA_UPDATED, DOMAIN, PRAYER_TIMES_ICON, SENSOR_SUFFIX, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +29,6 @@ class IslamicPrayerTimeSensor(Entity):
         """Initialize the Islamic prayer time sensor."""
         self.sensor_type = sensor_type
         self.client = client
-        self._state = self.client.prayer_times_info.get(self.sensor_type)
 
     @property
     def name(self):
@@ -46,7 +38,7 @@ class IslamicPrayerTimeSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique id of the entity."""
-        return f"{DOMAIN}_{self.sensor_type}"
+        return self.sensor_type
 
     @property
     def icon(self):
@@ -56,7 +48,7 @@ class IslamicPrayerTimeSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state.time().strftime(TIME_STR_FORMAT) if self._state else None
+        return self.client.prayer_times_info.get(self.sensor_type).isoformat()
 
     @property
     def should_poll(self):
@@ -64,11 +56,9 @@ class IslamicPrayerTimeSensor(Entity):
         return False
 
     @property
-    def state_attributes(self):
-        """Return datetime as attribute."""
-        if self._state:
-            return {ATTR_TIMESTAMP: self._state}
-        return None
+    def device_class(self):
+        """Return the device class."""
+        return DEVICE_CLASS_TIMESTAMP
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
