@@ -45,19 +45,17 @@ from homeassistant.helpers.script import Script
 
 _LOGGER = logging.getLogger(__name__)
 
-
 SUPPORT_WEBOSTV = (
     SUPPORT_TURN_OFF
     | SUPPORT_NEXT_TRACK
     | SUPPORT_PAUSE
     | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_PLAY
 )
+
+SUPPORT_WEBOSTV_VOLUME = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
@@ -300,9 +298,17 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
+        supported = SUPPORT_WEBOSTV
+
+        if self._client.sound_output == "external_arc":
+            supported = supported | SUPPORT_WEBOSTV_VOLUME
+        elif self._client.sound_output != "lineout":
+            supported = supported | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
+
         if self._on_script:
-            return SUPPORT_WEBOSTV | SUPPORT_TURN_ON
-        return SUPPORT_WEBOSTV
+            supported = supported | SUPPORT_TURN_ON
+
+        return supported
 
     @property
     def device_state_attributes(self):
