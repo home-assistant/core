@@ -41,7 +41,8 @@
         "step": {
             "init": {
                 "data": {
-                    "resources": "\u8cc7\u6e90"
+                    "resources": "\u8cc7\u6e90",
+                    "scan_interval": "\u6383\u63cf\u9593\u8ddd\uff08\u79d2\uff09"
                 },
                 "description": "\u9078\u64c7\u50b3\u611f\u5668\u8cc7\u6e90\u3002"
             }
