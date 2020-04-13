@@ -3,6 +3,7 @@ from asynctest import patch
 from pygti.exceptions import CannotConnect, InvalidAuth
 
 from homeassistant.components.hvv_departures import config_flow
+from homeassistant.components.hvv_departures.const import CONF_STATION
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 
@@ -85,14 +86,14 @@ async def test_user_flow(hass):
 
         # step: station
         result_station = await flow.async_step_station(
-            user_input={"station": "Wartenau"}
+            user_input={CONF_STATION: "Wartenau"}
         )
 
         assert result_station["step_id"] == "station_select"
 
         # step: station_select
         result_station_select = await flow.async_step_station_select(
-            user_input={"station": "Wartenau (STATION)"}
+            user_input={CONF_STATION: "Wartenau (STATION)"}
         )
 
         print(result_station_select)
@@ -103,7 +104,7 @@ async def test_user_flow(hass):
             CONF_HOST: "api-test.geofox.de",
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
-            "station": {
+            CONF_STATION: {
                 "name": "Wartenau",
                 "city": "Hamburg",
                 "combinedName": "Wartenau",
@@ -177,7 +178,7 @@ async def test_user_flow_no_results(hass):
         assert result_user["step_id"] == "station"
 
         # step: station
-        result_station = await flow.async_step_station(user_input={"station": " "})
+        result_station = await flow.async_step_station(user_input={CONF_STATION: " "})
 
         assert result_station["step_id"] == "station"
         assert result_station["errors"]["base"] == "no_results"
