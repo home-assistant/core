@@ -121,6 +121,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_interval=timedelta(seconds=300),
     )
 
+    # async_request_refresh instead of async_refresh
+    # as this can take longer than 60s
     await trends_coordinator.async_request_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = {
