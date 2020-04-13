@@ -61,7 +61,7 @@ class TestPanelProxy(unittest.TestCase):
 
         panels = self.hass.data[frontend.DATA_PANELS]
 
-        assert panels.get("router").to_response() == {
+        assert panels.get("proxy_router").to_response() == {
             "component_name": "iframe",
             "config": {"url": "http://192.168.1.1"},
             "icon": "mdi:network-wireless",
@@ -70,7 +70,7 @@ class TestPanelProxy(unittest.TestCase):
             "require_admin": True,
         }
 
-        assert panels.get("weather").to_response() == {
+        assert panels.get("proxy_weather").to_response() == {
             "component_name": "iframe",
             "config": {"url": "https://www.wunderground.com/us/ca/san-diego"},
             "icon": "mdi:weather",
@@ -79,7 +79,7 @@ class TestPanelProxy(unittest.TestCase):
             "require_admin": True,
         }
 
-        assert panels.get("api").to_response() == {
+        assert panels.get("proxy_api").to_response() == {
             "component_name": "iframe",
             "config": {"url": "/api"},
             "icon": "mdi:weather",
