@@ -10,7 +10,11 @@ async def update_entities(
     hass, entity_class, config_entry, current, async_add_entities
 ):
     """Add any new entities, remove any old ones."""
-    hub = hass.data[DOMAIN][config_entry.data["host"]]
+    if config_entry.entry_id not in hass.data[DOMAIN]:
+        LOGGER.error("Invalid config_entry %s", config_entry.entry_id)
+        return
+
+    hub = hass.data[DOMAIN][config_entry.entry_id]
     LOGGER.debug("Looking for new %s on: %s", entity_class.__name__, hub.host)
 
     api = hub.api.rollers

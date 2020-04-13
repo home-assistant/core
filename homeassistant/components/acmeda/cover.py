@@ -20,7 +20,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 hass, AcmedaCover, config_entry, current, async_add_entities
             )
 
-    async_dispatcher_connect(hass, ACMEDA_HUB_UPDATE, async_update)
+    async_dispatcher_connect(
+        hass, ACMEDA_HUB_UPDATE.format(config_entry.entry_id), async_update
+    )
 
 
 class AcmedaCover(AcmedaBase, CoverDevice):

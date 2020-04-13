@@ -8,7 +8,3 @@ class PulseException(HomeAssistantError):
 
 class CannotConnect(PulseException):
     """Unable to connect to the bridge."""
-
-
-class AuthenticationRequired(PulseException):
-    """Unknown error occurred."""

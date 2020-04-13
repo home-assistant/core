@@ -25,7 +25,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 hass, AcmedaBattery, config_entry, current, async_add_entities
             )
 
-    async_dispatcher_connect(hass, ACMEDA_HUB_UPDATE, async_update)
+    async_dispatcher_connect(
+        hass, ACMEDA_HUB_UPDATE.format(config_entry.entry_id), async_update
+    )
 
 
 class AcmedaBattery(AcmedaBase):
@@ -37,7 +39,7 @@ class AcmedaBattery(AcmedaBase):
     @property
     def name(self):
         """Return the name of roller."""
-        return super().name + " Battery"
+        return f"{super().name} Battery"
 
     @property
     def battery_level(self):

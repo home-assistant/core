@@ -1,4 +1,5 @@
 """The Rollease Acmeda Automate integration."""
+import asyncio
 import ipaddress
 
 import voluptuous as vol
@@ -11,8 +12,6 @@ from .const import DOMAIN
 from .hub import PulseHub
 
 CONF_HUBS = "hubs"
-
-DATA_CONFIGS = "pulse_configs"
 
 HUB_CONFIG_SCHEMA = vol.Schema(
     {
@@ -34,6 +33,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = ["cover", "sensor"]
+
 
 async def async_setup(hass: core.HomeAssistant, config: dict):
     """Set up the Rollease Acmeda Automate component."""
@@ -42,7 +43,6 @@ async def async_setup(hass: core.HomeAssistant, config: dict):
         conf = {}
 
     hass.data[DOMAIN] = {}
-    hass.data[DATA_CONFIGS] = {}
 
     # User has configured hubs
     if CONF_HUBS not in conf:
@@ -50,17 +50,14 @@ async def async_setup(hass: core.HomeAssistant, config: dict):
 
     hubs = conf[CONF_HUBS]
 
-    configured_hosts = {
-        entry.data.get("host") for entry in hass.config_entries.async_entries(DOMAIN)
+    configured_hubs = {
+        entry.data["host"] for entry in hass.config_entries.async_entries(DOMAIN)
     }
 
     for hub_conf in hubs:
         host = hub_conf[CONF_HOST]
 
-        # Store config in hass.data so the config entry can find it
-        hass.data[DATA_CONFIGS][host] = hub_conf
-
-        if host in configured_hosts:
+        if host in configured_hubs:
             continue
 
         # No existing config entry found, trigger link config flow. Because we're
@@ -79,23 +76,43 @@ async def async_setup(hass: core.HomeAssistant, config: dict):
 
 
 async def async_setup_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
 ):
     """Set up Rollease Acmeda Automate hub from a config entry."""
-    host = entry.data["host"]
-    hub = PulseHub(hass, entry)
+    hub = PulseHub(hass, config_entry)
 
     if not await hub.async_setup():
         return False
 
-    hass.data[DOMAIN][host] = hub
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][config_entry.entry_id] = hub
+
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, component)
+        )
 
     return True
 
 
 async def async_unload_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
 ):
     """Unload a config entry."""
-    hub = hass.data[DOMAIN].pop(entry.data["host"])
-    return await hub.async_reset()
+    hub = hass.data[DOMAIN][config_entry.entry_id]
+
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(config_entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if not await hub.async_reset():
+        return False
+
+    if unload_ok:
+        hass.data[DOMAIN].pop(config_entry.entry_id)
+
+    return unload_ok

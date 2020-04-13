@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 
 from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
-from .errors import AuthenticationRequired, CannotConnect
+from .errors import CannotConnect
 
 
 class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -55,8 +55,10 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_hubs")
 
         # Find already configured hosts
-        already_configured = self._async_current_ids(False)
-        hubs = [hub for hub in hubs if hub.id not in already_configured]
+        already_configured = {
+            entry.data["host"] for entry in self._async_current_entries()
+        }
+        hubs = [hub for hub in hubs if hub.host not in already_configured]
 
         if not hubs:
             return self.async_abort(reason="all_configured")
@@ -85,10 +87,9 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # Can happen if we come from import.
             if self.unique_id is None:
                 await self.async_set_unique_id(hub.id, raise_on_progress=False)
+            title = hub.id or hub.host
 
-            return self.async_create_entry(title=hub.host, data={"host": hub.host},)
-        except AuthenticationRequired:
-            errors["base"] = "register_failed"
+            return self.async_create_entry(title=title, data={"host": hub.host},)
 
         except CannotConnect:
             LOGGER.error("Error connecting to the Acmeda Pulse hub at %s", hub.host)
