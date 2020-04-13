@@ -3,7 +3,16 @@
 import json
 import os
 
-from asynctest import MagicMock, PropertyMock
+from asynctest import MagicMock, Mock
+from tesla_powerwall import (
+    DeviceType,
+    GridStatus,
+    MetersAggregateResponse,
+    Powerwall,
+    PowerwallStatusResponse,
+    SiteInfoResponse,
+    SitemasterResponse,
+)
 
 from homeassistant.components.powerwall.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
@@ -20,13 +29,13 @@ async def _mock_powerwall_with_fixtures(hass):
     device_type = await _async_load_json_fixture(hass, "device_type.json")
 
     return _mock_powerwall_return_value(
-        site_info=site_info,
-        charge=47.31993232,
-        sitemaster=sitemaster,
-        meters=meters,
-        grid_status="SystemGridConnected",
-        status=status,
-        device_type=device_type,
+        site_info=SiteInfoResponse(site_info),
+        charge=47,
+        sitemaster=SitemasterResponse(sitemaster),
+        meters=MetersAggregateResponse(meters),
+        grid_status=GridStatus.CONNECTED,
+        status=PowerwallStatusResponse(status),
+        device_type=DeviceType(device_type["device_type"]),
     )
 
 
@@ -39,21 +48,33 @@ def _mock_powerwall_return_value(
     status=None,
     device_type=None,
 ):
-    powerwall_mock = MagicMock()
-    type(powerwall_mock).site_info = PropertyMock(return_value=site_info)
-    type(powerwall_mock).charge = PropertyMock(return_value=charge)
-    type(powerwall_mock).sitemaster = PropertyMock(return_value=sitemaster)
-    type(powerwall_mock).meters = PropertyMock(return_value=meters)
-    type(powerwall_mock).grid_status = PropertyMock(return_value=grid_status)
-    type(powerwall_mock).status = PropertyMock(return_value=status)
-    type(powerwall_mock).device_type = PropertyMock(return_value=device_type)
+    powerwall_mock = MagicMock(Powerwall("1.2.3.4"))
+    powerwall_mock.get_site_info = Mock(return_value=site_info)
+    powerwall_mock.get_charge = Mock(return_value=charge)
+    powerwall_mock.get_sitemaster = Mock(return_value=sitemaster)
+    powerwall_mock.get_meters = Mock(return_value=meters)
+    powerwall_mock.get_grid_status = Mock(return_value=grid_status)
+    powerwall_mock.get_status = Mock(return_value=status)
+    powerwall_mock.get_device_type = Mock(return_value=device_type)
+
+    return powerwall_mock
+
+
+async def _mock_powerwall_site_name(hass, site_name):
+    powerwall_mock = MagicMock(Powerwall("1.2.3.4"))
+
+    site_info_resp = SiteInfoResponse(
+        await _async_load_json_fixture(hass, "site_info.json")
+    )
+    site_info_resp.site_name = site_name
+    powerwall_mock.get_site_info = Mock(return_value=site_info_resp)
 
     return powerwall_mock
 
 
 def _mock_powerwall_side_effect(site_info=None):
-    powerwall_mock = MagicMock()
-    type(powerwall_mock).site_info = PropertyMock(side_effect=site_info)
+    powerwall_mock = MagicMock(Powerwall("1.2.3.4"))
+    powerwall_mock.get_site_info = Mock(side_effect=site_info)
     return powerwall_mock
 
 
