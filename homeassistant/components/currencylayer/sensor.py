@@ -40,15 +40,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Currencylayer sensor."""
-    base = config.get(CONF_BASE)
-    api_key = config.get(CONF_API_KEY)
+    base = config[CONF_BASE]
+    api_key = config[CONF_API_KEY]
     parameters = {"source": base, "access_key": api_key, "format": 1}
 
     rest = CurrencylayerData(_RESOURCE, parameters)
 
     response = requests.get(_RESOURCE, params=parameters, timeout=10)
     sensors = []
-    for variable in config["quote"]:
+    for variable in config[CONF_QUOTE]:
         sensors.append(CurrencylayerSensor(rest, base, variable))
     if "error" in response.json():
         return False

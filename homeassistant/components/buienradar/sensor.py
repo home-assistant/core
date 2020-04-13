@@ -194,7 +194,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Inclusive(
             CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
         ): cv.longitude,
-        vol.Optional(CONF_TIMEFRAME, default=60): vol.All(
+        vol.Optional(CONF_TIMEFRAME, default=DEFAULT_TIMEFRAME): vol.All(
             vol.Coerce(int), vol.Range(min=5, max=120)
         ),
         vol.Optional(CONF_NAME, default="br"): cv.string,
@@ -207,7 +207,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    timeframe = config.get(CONF_TIMEFRAME, DEFAULT_TIMEFRAME)
+    timeframe = config[CONF_TIMEFRAME]
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")

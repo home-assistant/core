@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         location,
                         device,
                         DEFAULT_TIMEOUT,
-                        config.get(CONF_FFMPEG_ARGUMENTS),
+                        config[CONF_FFMPEG_ARGUMENTS],
                     )
                 )
 

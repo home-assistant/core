@@ -54,9 +54,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the CoinMarketCap sensor."""
-    currency_id = config.get(CONF_CURRENCY_ID)
-    display_currency = config.get(CONF_DISPLAY_CURRENCY).upper()
-    display_currency_decimals = config.get(CONF_DISPLAY_CURRENCY_DECIMALS)
+    currency_id = config[CONF_CURRENCY_ID]
+    display_currency = config[CONF_DISPLAY_CURRENCY].upper()
+    display_currency_decimals = config[CONF_DISPLAY_CURRENCY_DECIMALS]
 
     try:
         CoinMarketCapData(currency_id, display_currency).update()
