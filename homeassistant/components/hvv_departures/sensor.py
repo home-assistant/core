@@ -170,7 +170,7 @@ class HVVDepartureSensor(Entity):
         station_id = self.config_entry.data["station"]["id"]
         station_type = self.config_entry.data["station"]["type"]
 
-        return f"{DOMAIN}-{self.config_entry.entry_id}-{station_id}-{station_type}"
+        return f"{self.config_entry.entry_id}-{station_id}-{station_type}"
 
     @property
     def device_info(self):
