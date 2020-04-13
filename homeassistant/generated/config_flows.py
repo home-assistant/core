@@ -117,6 +117,7 @@ FLOWS = [
     "tellduslive",
     "tesla",
     "toon",
+    "totalconnect",
     "tplink",
     "traccar",
     "tradfri",
