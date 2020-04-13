@@ -1,0 +1,10 @@
+{
+  "domain": "opensprinkler",
+  "name": "Opensprinkler",
+  "documentation": "https://www.home-assistant.io/integrations/opensprinkler",
+  "requirements": [
+    "pyopensprinkler==0.2.6"
+  ],
+  "dependencies": [],
+  "codeowners": ["@vinteo"]
+}
