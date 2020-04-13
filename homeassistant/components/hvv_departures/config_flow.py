@@ -115,8 +115,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_station_select(self, user_input=None):
         """Handle the step where the user inputs his/her station."""
-        errors = {}
-        if user_input is not None:
+        if user_input is None:
+            return self.async_show_form(
+                step_id="station_select", data_schema=SCHEMA_STEP_STATION
+            )
+        else:
             self.data.update({"station": self.stations[user_input["station"]]})
 
             # get station information
@@ -133,10 +136,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title = self.data["station"]["name"]
 
             return self.async_create_entry(title=title, data=self.data)
-
-        return self.async_show_form(
-            step_id="station_select", data_schema=SCHEMA_STEP_STATION, errors=errors
-        )
 
     @staticmethod
     @callback
