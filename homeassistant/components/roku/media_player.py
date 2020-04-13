@@ -222,6 +222,11 @@ class RokuDevice(MediaPlayerDevice):
         if self.current_app is not None:
             if source == "Home":
                 self.roku.home()
+            elif "?ch=" in source:
+                index = source.index("?ch=")
+                tuner = source[:index]
+                channel = source[index + 4 :]
+                self.roku.launch(self.roku[tuner], {"ch": channel})
             else:
                 channel = self.roku[source]
                 channel.launch()
