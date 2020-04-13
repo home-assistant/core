@@ -88,37 +88,38 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_station(self, user_input=None):
         """Handle the step where the user inputs his/her station."""
-        errors = {}
-        if user_input is not None:
-
-            check_name = await self.hub.gti.checkName(
-                {"theName": {"name": user_input[CONF_STATION]}, "maxList": 20}
-            )
-
-            stations = check_name.get("results")
-
-            if not stations:
-                errors["base"] = "no_results"
-
-                return self.async_show_form(
-                    step_id="station", data_schema=SCHEMA_STEP_STATION, errors=errors
-                )
-
-            self.stations = {
-                f"{station.get('name')} ({station.get('type')})": station
-                for station in stations
-            }
-
-            schema = vol.Schema(
-                {vol.Required(CONF_STATION): vol.In(list(self.stations.keys()))}
-            )
+        if user_input is None:
 
             return self.async_show_form(
-                step_id="station_select", data_schema=schema, errors=errors
+                step_id="station", data_schema=SCHEMA_STEP_STATION
             )
 
+        errors = {}
+
+        check_name = await self.hub.gti.checkName(
+            {"theName": {"name": user_input[CONF_STATION]}, "maxList": 20}
+        )
+
+        stations = check_name.get("results")
+
+        if not stations:
+            errors["base"] = "no_results"
+
+            return self.async_show_form(
+                step_id="station", data_schema=SCHEMA_STEP_STATION, errors=errors
+            )
+
+        self.stations = {
+            f"{station.get('name')} ({station.get('type')})": station
+            for station in stations
+        }
+
+        schema = vol.Schema(
+            {vol.Required(CONF_STATION): vol.In(list(self.stations.keys()))}
+        )
+
         return self.async_show_form(
-            step_id="station", data_schema=SCHEMA_STEP_STATION, errors=errors
+            step_id="station_select", data_schema=schema, errors=errors
         )
 
     async def async_step_station_select(self, user_input=None):
