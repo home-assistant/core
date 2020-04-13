@@ -5,7 +5,7 @@ import logging
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
-    UNIT_DEGREE,
+    DEGREE,
     UNIT_PERCENTAGE,
     VOLT,
     VOLUME_CUBIC_METERS,
@@ -74,7 +74,7 @@ SENSOR_TYPES = {
         "Water Sensor Temperature",
         "mdi:temperature-celsius",
         "water",
-        UNIT_DEGREE,
+        DEGREE,
         "temperature",
     ],
     "water_sensor_humidity": [

@@ -5,7 +5,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
-    UNIT_DEGREE,
+    DEGREE,
     UNIT_PERCENTAGE,
     VOLT,
 )
@@ -169,7 +169,7 @@ VAR_UNITS = [
     "AMP",
     "A",
     "DEGREE",
-    UNIT_DEGREE,
+    DEGREE,
 ]
 
 RELVARREF = ["CURRENT", "PROG"]

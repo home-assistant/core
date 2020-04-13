@@ -26,7 +26,7 @@ from homeassistant.const import (
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_DEGREE,
+    DEGREE,
     UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
@@ -457,7 +457,7 @@ SENSOR_TYPES = {
     ),
     "weather": WUCurrentConditionsSensorConfig("Weather Summary", "weather", None),
     "wind_degrees": WUCurrentConditionsSensorConfig(
-        "Wind Degrees", "wind_degrees", "mdi:weather-windy", UNIT_DEGREE
+        "Wind Degrees", "wind_degrees", "mdi:weather-windy", DEGREE
     ),
     "wind_dir": WUCurrentConditionsSensorConfig(
         "Wind Direction", "wind_dir", "mdi:weather-windy"
