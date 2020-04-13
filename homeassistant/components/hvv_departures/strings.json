@@ -50,7 +50,7 @@
         "data": {
           "filter": "Select lines",
           "offset": "Offset (minutes)",
-          "realtime": "Use realtime data"
+          "real_time": "Use real time data"
         }
       }
     }
