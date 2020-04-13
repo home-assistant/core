@@ -2,6 +2,8 @@
 from homeassistant.components import mysensors
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
+    CONDUCTIVITY,
+    DEGREE,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     LENGTH_METERS,
@@ -9,8 +11,6 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    CONDUCTIVITY,
-    DEGREE,
     UNIT_PERCENTAGE,
     VOLT,
 )

@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.const import (
+    DEGREE,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
@@ -11,7 +12,6 @@ from homeassistant.const import (
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    DEGREE,
     UNIT_PERCENTAGE,
     VOLT,
     VOLUME_CUBIC_METERS,

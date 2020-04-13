@@ -9,11 +9,11 @@ from homeassistant.components import recorder
 import homeassistant.components.plant as plant
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    CONDUCTIVITY,
     STATE_OK,
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CONDUCTIVITY,
 )
 from homeassistant.setup import setup_component
 

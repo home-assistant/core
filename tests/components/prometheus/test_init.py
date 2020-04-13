@@ -7,9 +7,9 @@ from homeassistant.components.demo.sensor import DemoSensor
 import homeassistant.components.prometheus as prometheus
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    DEGREE,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
-    DEGREE,
 )
 from homeassistant.setup import async_setup_component
 

@@ -14,11 +14,11 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEGREE,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
-    DEGREE,
     UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession

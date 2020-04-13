@@ -2,10 +2,10 @@
 from itertools import product
 
 from homeassistant.const import (
+    DEGREE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
-    DEGREE,
     UNIT_PERCENTAGE,
     VOLT,
 )

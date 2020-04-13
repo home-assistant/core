@@ -3,7 +3,7 @@ import json
 import logging
 
 from homeassistant.components import mqtt
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, DEGREE
+from homeassistant.const import DEGREE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify

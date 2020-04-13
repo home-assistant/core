@@ -17,10 +17,10 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEGREE,
     LENGTH_METERS,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    DEGREE,
     UNIT_PERCENTAGE,
     __version__,
 )

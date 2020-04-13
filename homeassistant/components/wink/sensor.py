@@ -3,7 +3,7 @@ import logging
 
 import pywink
 
-from homeassistant.const import TEMP_CELSIUS, DEGREE
+from homeassistant.const import DEGREE, TEMP_CELSIUS
 
 from . import DOMAIN, WinkDevice
 

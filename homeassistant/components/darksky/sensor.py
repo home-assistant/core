@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
+    DEGREE,
     LENGTH_CENTIMETERS,
     LENGTH_KILOMETERS,
     SPEED_KILOMETERS_PER_HOUR,
@@ -23,7 +24,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TIME_HOURS,
-    DEGREE,
     UNIT_PERCENTAGE,
     UV_INDEX,
 )

@@ -5,6 +5,7 @@ from typing import Callable
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    DEGREE,
     FREQUENCY_HERTZ,
     LENGTH_CENTIMETERS,
     LENGTH_KILOMETERS,
@@ -23,7 +24,6 @@ from homeassistant.const import (
     TIME_MONTHS,
     TIME_SECONDS,
     TIME_YEARS,
-    DEGREE,
     UNIT_PERCENTAGE,
     UV_INDEX,
     VOLT,

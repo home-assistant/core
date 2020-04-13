@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    CONDUCTIVITY,
     CONF_FORCE_UPDATE,
     CONF_MAC,
     CONF_MONITORED_CONDITIONS,
@@ -18,7 +19,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    CONDUCTIVITY,
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback

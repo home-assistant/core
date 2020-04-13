@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEGREE,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
@@ -24,7 +25,6 @@ from homeassistant.const import (
     PRESSURE_HPA,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
-    DEGREE,
     UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession

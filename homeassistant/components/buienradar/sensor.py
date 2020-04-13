@@ -27,12 +27,12 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEGREE,
     IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_KILOMETERS,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     TIME_HOURS,
-    DEGREE,
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback

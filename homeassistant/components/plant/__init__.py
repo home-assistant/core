@@ -10,13 +10,13 @@ from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONDUCTIVITY,
     CONF_SENSORS,
     STATE_OK,
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
-    CONDUCTIVITY,
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback

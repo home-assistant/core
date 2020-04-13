@@ -12,11 +12,11 @@ from homeassistant.const import (
     ATTR_NAME,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_API_KEY,
+    DEGREE,
     EVENT_HOMEASSISTANT_STOP,
     POWER_WATT,
     SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
-    DEGREE,
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback

@@ -3,9 +3,9 @@ from datetime import timedelta
 import logging
 
 from homeassistant.const import (
+    DEGREE,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
-    DEGREE,
     UNIT_PERCENTAGE,
     VOLT,
     VOLUME_CUBIC_METERS,

@@ -3,7 +3,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.const import SPEED_METERS_PER_SECOND, DEGREE, UNIT_PERCENTAGE
+from homeassistant.const import DEGREE, SPEED_METERS_PER_SECOND, UNIT_PERCENTAGE
 import homeassistant.util.dt as dt_util
 
 from tests.common import assert_setup_component, load_fixture

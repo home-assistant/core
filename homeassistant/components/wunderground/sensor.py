@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
+    DEGREE,
     IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_FEET,
     LENGTH_INCHES,
@@ -26,7 +27,6 @@ from homeassistant.const import (
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    DEGREE,
     UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
