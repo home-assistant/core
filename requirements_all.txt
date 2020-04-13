@@ -762,6 +762,9 @@ iperf3==0.1.11
 # homeassistant.components.route53
 ipify==1.0.0
 
+# homeassistant.components.jenkins
+jenkinsapi==0.3.11
+
 # homeassistant.components.rest
 # homeassistant.components.verisure
 jsonpath==0.82

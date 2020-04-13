@@ -192,6 +192,7 @@ homeassistant/components/ipp/* @ctalkington
 homeassistant/components/iqvia/* @bachya
 homeassistant/components/irish_rail_transport/* @ttroy50
 homeassistant/components/izone/* @Swamp-Ig
+homeassistant/components/jenkins/* @jadlers @Callet91
 homeassistant/components/jewish_calendar/* @tsvi
 homeassistant/components/juicenet/* @jesserockz
 homeassistant/components/kaiterra/* @Michsior14

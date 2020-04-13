@@ -1,0 +1,7 @@
+{
+  "domain": "jenkins",
+  "name": "Jenkins",
+  "documentation": "https://www.home-assistant.io/integrations/jenkins",
+  "requirements": ["jenkinsapi==0.3.11"],
+  "codeowners": ["@jadlers", "@Callet91"]
+}
