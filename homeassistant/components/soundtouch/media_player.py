@@ -3,6 +3,7 @@ import logging
 import re
 
 from libsoundtouch import soundtouch_device
+from libsoundtouch.utils import Source
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
@@ -237,6 +238,19 @@ class SoundTouchDevice(MediaPlayerEntity):
         return MAP_STATUS.get(self._status.play_status, STATE_UNAVAILABLE)
 
     @property
+    def source(self):
+        """Name of the current input source."""
+        return self._status.source
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return [
+            Source.AUX,
+            Source.BLUETOOTH,
+        ]
+
+    @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._volume.muted
@@ -361,10 +375,10 @@ class SoundTouchDevice(MediaPlayerEntity):
 
     def select_source(self, source):
         """Select input source."""
-        if source == "AUX":
+        if source == Source.AUX:
             _LOGGER.debug("Selecting source AUX")
             self._device.select_source_aux()
-        elif source == "Bluetooth":
+        elif source == Source.BLUETOOTH:
             _LOGGER.debug("Selecting source Bluetooth")
             self._device.select_source_bluetooth()
         else:
