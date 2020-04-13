@@ -23,6 +23,13 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.components.webostv.const import (
+    ATTR_SOUND_OUTPUT,
+    CONF_ON_ACTION,
+    CONF_SOURCES,
+    DOMAIN,
+    LIVE_TV_APP_ID,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_CUSTOMIZE,
@@ -35,9 +42,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.script import Script
-
-from . import CONF_ON_ACTION, CONF_SOURCES, DOMAIN
-from .const import ATTR_SOUND_OUTPUT, LIVE_TV_APP_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +64,7 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the LG WebOS TV platform."""
+    """Set up the LG webOS Smart TV platform."""
 
     if discovery_info is None:
         return
@@ -108,7 +112,7 @@ def cmd(func):
 
 
 class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
-    """Representation of a LG WebOS TV."""
+    """Representation of a LG webOS Smart TV."""
 
     def __init__(self, client, name, customize, on_script=None):
         """Initialize the webos device."""
