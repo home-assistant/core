@@ -132,12 +132,16 @@ class HVVDepartureSensor(Entity):
                 + timedelta(seconds=departure.get("delay", 0))
             )
 
-            self.attr[ATTR_LINE] = departure["line"]["name"]
-            self.attr[ATTR_ORIGIN] = departure["line"]["origin"]
-            self.attr[ATTR_DIRECTION] = departure["line"]["direction"]
-            self.attr[ATTR_TYPE] = departure["line"]["type"]["shortInfo"]
-            self.attr[ATTR_ID] = departure["line"]["id"]
-            self.attr[ATTR_DELAY] = departure.get("delay", 0)
+            self.attr.update(
+                {
+                    ATTR_LINE: departure["line"]["name"],
+                    ATTR_ORIGIN: departure["line"]["origin"],
+                    ATTR_DIRECTION: departure["line"]["direction"],
+                    ATTR_TYPE: departure["line"]["type"]["shortInfo"],
+                    ATTR_ID: departure["line"]["id"],
+                    ATTR_DELAY: departure.get("delay", 0),
+                }
+            )
 
             departures = []
             for departure in data["departures"]:
