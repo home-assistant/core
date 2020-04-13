@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
-    UNIT_CONDUCTIVITY,
+    CONDUCTIVITY,
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
@@ -148,7 +148,7 @@ class Plant(Entity):
             "max": CONF_MAX_MOISTURE,
         },
         READING_CONDUCTIVITY: {
-            ATTR_UNIT_OF_MEASUREMENT: UNIT_CONDUCTIVITY,
+            ATTR_UNIT_OF_MEASUREMENT: CONDUCTIVITY,
             "min": CONF_MIN_CONDUCTIVITY,
             "max": CONF_MAX_CONDUCTIVITY,
         },

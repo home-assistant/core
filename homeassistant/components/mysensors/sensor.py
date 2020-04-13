@@ -9,7 +9,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_CONDUCTIVITY,
+    CONDUCTIVITY,
     DEGREE,
     UNIT_PERCENTAGE,
     VOLT,
@@ -44,7 +44,7 @@ SENSORS = {
     "V_CURRENT": ["A", "mdi:flash-auto"],
     "V_PH": ["pH", None],
     "V_ORP": ["mV", None],
-    "V_EC": [UNIT_CONDUCTIVITY, None],
+    "V_EC": [CONDUCTIVITY, None],
     "V_VAR": ["var", None],
     "V_VA": ["VA", None],
 }
