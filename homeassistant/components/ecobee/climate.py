@@ -556,7 +556,7 @@ class Thermostat(ClimateDevice):
 
     def set_fan_mode(self, fan_mode):
         """Set the fan mode.  Valid values are "on" or "auto"."""
-        if fan_mode.lower() != STATE_ON and fan_mode.lower() != HVAC_MODE_AUTO:
+        if fan_mode.lower() not in (FAN_ON, FAN_AUTO):
             error = "Invalid fan_mode value:  Valid values are 'on' or 'auto'"
             _LOGGER.error(error)
             return
