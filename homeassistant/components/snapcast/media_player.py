@@ -26,10 +26,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
+    ATTR_LATENCY,
     ATTR_MASTER,
     DOMAIN,
     SERVICE_JOIN,
     SERVICE_RESTORE,
+    SERVICE_SET_LATENCY,
     SERVICE_SNAPSHOT,
     SERVICE_UNJOIN,
 )
@@ -84,6 +86,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             elif service == SERVICE_UNJOIN:
                 if isinstance(device, SnapcastClientDevice):
                     await device.async_unjoin()
+            elif service == SERVICE_SET_LATENCY:
+                if isinstance(device, SnapcastClientDevice):
+                    master = [
+                        e
+                        for e in hass.data[DATA_KEY]
+                        if e.entity_id == data[ATTR_ENTITY_ID]
+                    ]
+                    await device.async_set_latency(data.get(ATTR_LATENCY))
 
         service_event.set()
 
@@ -258,6 +268,15 @@ class SnapcastClientDevice(MediaPlayerDevice):
         return STATE_OFF
 
     @property
+    def state_attributes(self):
+        """Return entity state attributes."""
+        state_attrs = {}
+        state_attrs.update(super().state_attributes)
+        if self.latency is not None:
+            state_attrs["latency"] = self.latency
+        return state_attrs
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         name = f"{self._client.friendly_name} {CLIENT_SUFFIX}"
@@ -267,6 +286,11 @@ class SnapcastClientDevice(MediaPlayerDevice):
     def should_poll(self):
         """Do not poll for state."""
         return False
+
+    @property
+    def latency(self):
+        """Latency for Client."""
+        return self._client.latency
 
     async def async_select_source(self, source):
         """Set input source."""
@@ -307,3 +331,8 @@ class SnapcastClientDevice(MediaPlayerDevice):
     async def async_restore(self):
         """Restore the client state."""
         await self._client.restore()
+
+    async def async_set_latency(self, latency):
+        """Set the latency of the client."""
+        await self._client.set_latency(latency)
+        self.async_write_ha_state()

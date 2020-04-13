@@ -14,12 +14,16 @@ SERVICE_SNAPSHOT = "snapshot"
 SERVICE_RESTORE = "restore"
 SERVICE_JOIN = "join"
 SERVICE_UNJOIN = "unjoin"
+SERVICE_SET_LATENCY = "set_latency"
 
 ATTR_MASTER = "master"
+ATTR_LATENCY = "latency"
 
 SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids})
 
 JOIN_SERVICE_SCHEMA = SERVICE_SCHEMA.extend({vol.Required(ATTR_MASTER): cv.entity_id})
+
+LATENCY_SCHEMA = SERVICE_SCHEMA.extend({vol.Required(ATTR_LATENCY): cv.positive_int})
 
 
 async def async_setup(hass, config):
@@ -45,6 +49,9 @@ async def async_setup(hass, config):
     )
     hass.services.async_register(
         DOMAIN, SERVICE_UNJOIN, service_handle, schema=SERVICE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_LATENCY, service_handle, schema=LATENCY_SCHEMA
     )
 
     return True
