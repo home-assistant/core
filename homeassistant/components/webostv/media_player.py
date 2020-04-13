@@ -235,6 +235,11 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         return self._name
 
     @property
+    def icon(self):
+        """Return the icon of the device."""
+        return "hass:television"
+
+    @property
     def state(self):
         """Return the state of the device."""
         if self._client.is_on:
