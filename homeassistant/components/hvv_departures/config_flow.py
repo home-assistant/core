@@ -124,23 +124,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="station_select", data_schema=SCHEMA_STEP_STATION
             )
-        else:
-            self.data.update({"station": self.stations[user_input[CONF_STATION]]})
 
-            # get station information
-            station_information = await self.hub.gti.stationInformation(
-                {"station": self.data[CONF_STATION]}
-            )
+        self.data.update({"station": self.stations[user_input[CONF_STATION]]})
 
-            self.filters = {
-                "{}, {}".format(x["serviceName"], x["label"]): x
-                for x in dl.get("filter")
-            }
-            self.data.update({"stationInformation": station_information})
+        # get station information
+        station_information = await self.hub.gti.stationInformation(
+            {"station": self.data[CONF_STATION]}
+        )
 
-            title = self.data[CONF_STATION]["name"]
+        self.data.update({"stationInformation": station_information})
 
-            return self.async_create_entry(title=title, data=self.data)
+        title = self.data[CONF_STATION]["name"]
+
+        return self.async_create_entry(title=title, data=self.data)
 
     @staticmethod
     @callback
