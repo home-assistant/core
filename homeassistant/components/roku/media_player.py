@@ -1,4 +1,6 @@
 """Support for the Roku media player."""
+import logging
+
 from requests.exceptions import (
     ConnectionError as RequestsConnectionError,
     ReadTimeout as RequestsReadTimeout,
@@ -7,9 +9,11 @@ from roku import RokuException
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -21,6 +25,8 @@ from homeassistant.const import STATE_HOME, STATE_IDLE, STATE_PLAYING, STATE_STA
 
 from .const import DATA_CLIENT, DEFAULT_MANUFACTURER, DEFAULT_PORT, DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 SUPPORT_ROKU = (
     SUPPORT_PREVIOUS_TRACK
     | SUPPORT_NEXT_TRACK
@@ -28,6 +34,7 @@ SUPPORT_ROKU = (
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_PLAY
+    | SUPPORT_PLAY_MEDIA
     | SUPPORT_TURN_ON
     | SUPPORT_TURN_OFF
 )
@@ -216,6 +223,18 @@ class RokuDevice(MediaPlayerDevice):
         """Volume down media player."""
         if self.current_app is not None:
             self.roku.volume_down()
+
+    def play_media(self, media_type, media_id, **kwargs):
+        """Tune to channel."""
+        if media_type != MEDIA_TYPE_CHANNEL:
+            _LOGGER.error(
+                "Invalid media type %s. Only %s is supported",
+                media_type,
+                MEDIA_TYPE_CHANNEL,
+            )
+            return
+        if self.current_app is not None:
+            self.roku.launch(self.roku["tvinput.dtv"], {"ch": media_id})
 
     def select_source(self, source):
         """Select input source."""
