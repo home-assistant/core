@@ -3,7 +3,7 @@ from asynctest import patch
 from pygti.exceptions import CannotConnect, InvalidAuth
 
 from homeassistant.components.hvv_departures import config_flow
-from homeassistant.components.hvv_departures.const import DOMAIN
+from homeassistant.components.hvv_departures.const import CONF_REAL_TIME, DOMAIN
 from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigEntry
 from homeassistant.const import CONF_OFFSET
 
@@ -43,7 +43,7 @@ async def test_options_flow(hass):
         # step: init
         await flow.async_step_init(user_input=None)
         result_init = await flow.async_step_init(
-            user_input={"filter": ["0"], CONF_OFFSET: 15, "realtime": False}
+            user_input={"filter": ["0"], CONF_OFFSET: 15, CONF_REAL_TIME: False}
         )
 
         assert result_init["type"] == "create_entry"
@@ -57,7 +57,7 @@ async def test_options_flow(hass):
                 }
             ],
             CONF_OFFSET: 15,
-            "realtime": False,
+            CONF_REAL_TIME: False,
         }
 
 
@@ -124,7 +124,7 @@ async def test_options_flow_invalid_auth(hass):
         # step: init
 
         result_init = await flow.async_step_init(
-            user_input={"filter": ["0"], CONF_OFFSET: 15, "realtime": False}
+            user_input={"filter": ["0"], CONF_OFFSET: 15, CONF_REAL_TIME: False}
         )
 
         assert result_init["type"] == "form"
@@ -157,7 +157,7 @@ async def test_options_flow_cannot_connect(hass):
         # step: init
         await flow.async_step_init()
         result_init = await flow.async_step_init(
-            user_input={"filter": ["0"], CONF_OFFSET: 15, "realtime": False}
+            user_input={"filter": ["0"], CONF_OFFSET: 15, CONF_REAL_TIME: False}
         )
 
         assert result_init["type"] == "form"
