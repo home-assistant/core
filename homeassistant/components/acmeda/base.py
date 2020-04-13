@@ -1,6 +1,7 @@
 """Base class for Acmeda Roller Blinds."""
 import aiopulse
 
+from homeassistant.core import callback
 from homeassistant.helpers import entity
 
 from .const import DOMAIN, LOGGER
@@ -22,10 +23,11 @@ class AcmedaBase(entity.Entity):
         """Entity being removed from hass."""
         self.roller.callback_unsubscribe(self.notify_update)
 
+    @callback
     def notify_update(self):
-        """Tell HA that the device has been updated."""
+        """Write updated device state information."""
         LOGGER.debug("Device update notification received: %s", self.name)
-        super().schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def should_poll(self):

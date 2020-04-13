@@ -25,11 +25,6 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        # This is for backwards compatibility.
-        return await self.async_step_init(user_input)
-
-    async def async_step_init(self, user_input=None):
-        """Handle a flow start."""
         if (
             user_input is not None
             and self.discovered_hubs is not None
@@ -40,7 +35,7 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.hub = self.discovered_hubs[user_input["id"]]
             await self.async_set_unique_id(self.hub.id, raise_on_progress=False)
             # We pass user input to link so it will attempt to link right away
-            return await self.async_step_link({})
+            return await self.async_step_link()
 
         hubs = []
         try:
@@ -93,7 +88,7 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 title = hub.host
 
-            return self.async_create_entry(title=title, data={"host": hub.host},)
+            return self.async_create_entry(title=title, data={"host": hub.host})
 
         except CannotConnect:
             LOGGER.error("Error connecting to the Acmeda Pulse hub at %s", hub.host)
@@ -110,11 +105,8 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_info):
         """Import a new hub as a config entry.
 
-        This flow is triggered by `async_setup` for both configured and
-        discovered bridges. Triggered for any bridge that does not have a
-        config entry yet (based on host).
-
-        This flow is also triggered by `async_step_discovery`.
+        This flow is triggered by `async_setup` for any configured
+        hub that does not have a config entry yet (based on host).
         """
         # Check if host exists, abort if so.
         if any(
