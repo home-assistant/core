@@ -312,7 +312,7 @@ class UniFiDeviceTracker(ScannerEntity):
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
-        LOGGER.debug("New UniFi device tracker %s (%s)", self.name, self.device.mac)
+        LOGGER.debug("New device %s (%s)", self.entity_id, self.device.mac)
         self.device.register_callback(self.async_update_callback)
         self.async_on_remove(
             async_dispatcher_connect(
@@ -327,7 +327,7 @@ class UniFiDeviceTracker(ScannerEntity):
     @callback
     def async_update_callback(self):
         """Update the sensor's state."""
-        LOGGER.debug("Updating UniFi tracked device %s", self.entity_id)
+        LOGGER.debug("Updating device %s (%s)", self.entity_id, self.device.mac)
 
         self.async_write_ha_state()
 

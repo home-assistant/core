@@ -48,7 +48,7 @@ class UniFiClient(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Client entity created."""
-        LOGGER.debug("New UniFi client %s (%s)", self.name, self.client.mac)
+        LOGGER.debug("New client %s (%s)", self.entity_id, self.client.mac)
         self.client.register_callback(self.async_update_callback)
         self.async_on_remove(
             async_dispatcher_connect(
@@ -81,7 +81,7 @@ class UniFiClient(Entity):
             elif self.client.event.event in CLIENT_BLOCKED + CLIENT_UNBLOCKED:
                 self.is_blocked = self.client.event.event in CLIENT_BLOCKED
 
-        LOGGER.debug("Updating client %s %s", self.entity_id, self.client.mac)
+        LOGGER.debug("Updating client %s (%s)", self.entity_id, self.client.mac)
         self.async_write_ha_state()
 
     @property
