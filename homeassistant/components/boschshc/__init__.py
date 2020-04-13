@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from boschshcpy import SHCSession
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -60,8 +61,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Bosch SHC from a config entry."""
-    from boschshcpy import SHCSession
-
     data = entry.data
 
     _LOGGER.debug("Connecting to Bosch Smart Home Controller API")
@@ -76,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if shc_info.version == "n/a":
         _LOGGER.error("Unable to connect to Bosch Smart Home Controller API")
         return False
-    elif shc_info.updateState.name == "UPDATE_AVAILABLE":
+    if shc_info.updateState.name == "UPDATE_AVAILABLE":
         _LOGGER.warning("Please check for software updates in the Bosch Smart Home App")
 
     hass.data[DOMAIN][entry.entry_id] = session
@@ -103,8 +102,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    from boschshcpy import SHCSession
-
     session: SHCSession = hass.data[DOMAIN][entry.entry_id]
     await hass.async_add_executor_job(session.stop_polling)
 

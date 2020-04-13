@@ -1,13 +1,14 @@
 """Config flow for Bosch Smart Home Controller integration."""
 import logging
 
+from boschshcpy import SHCSession
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_ICON, CONF_IP_ADDRESS, CONF_NAME
 
-from .const import CONF_SSL_CERTIFICATE  # pylint:disable=unused-import
-from .const import CONF_SSL_KEY, DOMAIN
+from .const import CONF_SSL_CERTIFICATE, CONF_SSL_KEY
+from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,8 +28,6 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    from boschshcpy import SHCSession
-
     session = await hass.async_add_executor_job(
         SHCSession,
         data[CONF_IP_ADDRESS],
