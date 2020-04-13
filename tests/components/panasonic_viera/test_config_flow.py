@@ -404,7 +404,7 @@ async def test_flow_encrypted_pin_code_not_connected(hass):
     assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
 
 
-async def test_flow_encrypted_pin_code_unknown(hass):
+async def test_flow_encrypted_pin_code_unknown_error(hass):
     """Test flow with encryption and PIN code unknown error."""
 
     result = await hass.config_entries.flow.async_init(
@@ -459,7 +459,7 @@ async def test_flow_not_connected(hass):
     assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
 
 
-async def test_flow_unknwon(hass):
+async def test_flow_unknown_error(hass):
     """Test flow with unknown error."""
 
     result = await hass.config_entries.flow.async_init(
@@ -888,7 +888,7 @@ async def test_imported_flow_encrypted_pin_code_not_connected(hass):
     assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
 
 
-async def test_imported_flow_encrypted_pin_code_unknown(hass):
+async def test_imported_flow_encrypted_pin_code_unknown_error(hass):
     """Test imported flow with encryption and PIN code unknown error."""
 
     mock_remote = get_mock_remote(encrypted=True, authorize_error=Exception)
@@ -943,7 +943,7 @@ async def test_imported_flow_not_connected(hass):
     assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
 
 
-async def test_imported_flow_unknown(hass):
+async def test_imported_flow_unknown_error(hass):
     """Test imported flow with unknown error."""
 
     with patch(
