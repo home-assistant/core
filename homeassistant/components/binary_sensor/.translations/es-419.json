@@ -28,6 +28,7 @@
             "is_not_occupied": "{entity_name} no est\u00e1 ocupado",
             "is_not_open": "{entity_name} est\u00e1 cerrado",
             "is_not_plugged_in": "{entity_name} est\u00e1 desconectado",
+            "is_not_present": "{entity_name} no est\u00e1 presente",
             "is_not_unsafe": "{entity_name} es seguro",
             "is_occupied": "{entity_name} est\u00e1 ocupado",
             "is_off": "{entity_name} est\u00e1 apagado",

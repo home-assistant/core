@@ -1,0 +1,33 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "blid": "BLID",
+                    "certificate": "Certificat",
+                    "continuous": "Cont\u00ednua",
+                    "delay": "Retard",
+                    "host": "Nom de l'amfitri\u00f3 o adre\u00e7a IP",
+                    "password": "Contrasenya"
+                },
+                "description": "Actualment la recuperaci\u00f3 de BLID i la contrasenya \u00e9s un proc\u00e9s manual. Segueix els passos de la documentaci\u00f3 a: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
+                "title": "Connexi\u00f3 amb el dispositiu"
+            }
+        },
+        "title": "Roomba iRobot"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Cont\u00ednua",
+                    "delay": "Retard"
+                }
+            }
+        }
+    }
+}
