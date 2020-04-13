@@ -319,11 +319,7 @@ class Entity(ABC):
         else:
             state = self.state
 
-            if state is None:
-                state = STATE_UNKNOWN
-            else:
-                state = str(state)
-
+            state = STATE_UNKNOWN if state is None else str(state)
             attr.update(self.state_attributes or {})
             attr.update(self.device_state_attributes or {})
 
@@ -622,7 +618,7 @@ class ToggleEntity(Entity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        await self.hass.async_add_job(ft.partial(self.turn_on, **kwargs))
+        await self.hass.async_add_executor_job(ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -630,7 +626,7 @@ class ToggleEntity(Entity):
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        await self.hass.async_add_job(ft.partial(self.turn_off, **kwargs))
+        await self.hass.async_add_executor_job(ft.partial(self.turn_off, **kwargs))
 
     def toggle(self, **kwargs: Any) -> None:
         """Toggle the entity."""
