@@ -67,6 +67,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             client = controller.api.clients_all[mac]
             controller.api.clients.process_raw([client.raw])
+            LOGGER.debug(
+                "Restore disconnected client %s (%s)", entity.entity_id, client.mac,
+            )
 
     @callback
     def update_controller():

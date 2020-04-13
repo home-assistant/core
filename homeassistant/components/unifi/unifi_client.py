@@ -67,7 +67,6 @@ class UniFiClient(Entity):
             self._is_wired = False
 
         if self.client.last_updated == SOURCE_EVENT:
-            print(self.client.event.event)
             if self.client.event.event in WIRELESS_CLIENT:
                 self.wireless_connection = self.client.event.event in (
                     WIRELESS_CLIENT_CONNECTED,
