@@ -133,11 +133,6 @@ class WebSocketHandler:
             PENDING_MSG_PEAK,
             PENDING_MSG_PEAK_TIME,
         )
-
-        if self._peak_checker_unsub:
-            self._peak_checker_unsub()
-            self._peak_checker_unsub = None
-
         self._cancel()
 
     @callback
