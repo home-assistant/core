@@ -87,7 +87,11 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # Can happen if we come from import.
             if self.unique_id is None:
                 await self.async_set_unique_id(hub.id, raise_on_progress=False)
-            title = hub.id or hub.host
+
+            if hub.id:
+                title = f"{hub.id} ({hub.host})"
+            else:
+                title = hub.host
 
             return self.async_create_entry(title=title, data={"host": hub.host},)
 
