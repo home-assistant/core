@@ -51,7 +51,7 @@ async def async_setup(hass, base_config):
 
     # Hosts with existing entries
     existing_hosts = {
-        entry.data.get("host") for entry in hass.config_entries.async_entries(DOMAIN)
+        entry.data["host"] for entry in hass.config_entries.async_entries(DOMAIN)
     }
 
     for config in bridge_configs:
@@ -78,7 +78,7 @@ async def async_setup(hass, base_config):
 async def async_setup_entry(hass, config_entry):
     """Set up a bridge from a config entry."""
 
-    host = config_entry.data.get("host")
+    host = config_entry.data["host"]
 
     config = hass.data[DATA_BRIDGE_CONFIG][host]
     keyfile = hass.config.path(config[CONF_KEYFILE])
@@ -94,7 +94,7 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.error("Unable to connect to Lutron Caseta bridge at %s", host)
         return False
 
-    _LOGGER.info("Connected to Lutron Caseta bridge at %s", host)
+    _LOGGER.debug("Connected to Lutron Caseta bridge at %s", host)
 
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
     # components we're setting up.
