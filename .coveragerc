@@ -226,6 +226,8 @@ omit =
     homeassistant/components/flunearyou/__init__.py
     homeassistant/components/flunearyou/sensor.py
     homeassistant/components/flux_led/light.py
+    homeassistant/components/fmi/sensor.py
+    homeassistant/components/fmi/weather.py
     homeassistant/components/folder/sensor.py
     homeassistant/components/folder_watcher/*
     homeassistant/components/foobot/sensor.py
