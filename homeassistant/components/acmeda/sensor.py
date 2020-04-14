@@ -1,11 +1,7 @@
 """Support for Acmeda Roller Blind Batteries."""
 import asyncio
 
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    DEVICE_CLASS_BATTERY,
-    UNIT_PERCENTAGE,
-)
+from homeassistant.const import DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -42,26 +38,9 @@ class AcmedaBattery(AcmedaBase):
         return f"{super().name} Battery"
 
     @property
-    def battery_level(self):
-        """Return the battery level of the device."""
-        return self.roller.battery
-
-    @property
     def state(self):
         """Return the state of the device."""
         return self.roller.battery
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        attr = {}
-        super_attr = super().device_state_attributes
-        if super_attr is not None:
-            attr.update(super_attr)
-
-        attr[ATTR_BATTERY_LEVEL] = self.roller.battery
-
-        return attr
 
     @property
     def icon(self):
