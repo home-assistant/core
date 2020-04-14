@@ -150,7 +150,7 @@ class SonarrSensor(Entity):
             for show in self.data:
                 if show["series"]["title"] in attributes:
                     continue
-                        
+
                 attributes[show["series"]["title"]] = "S{:02d}E{:02d}".format(
                     show["seasonNumber"], show["episodeNumber"]
                 )
