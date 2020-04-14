@@ -120,7 +120,6 @@ class SensorManager:
                 continue
 
             sensor_type = api[item_id].type
-
             # Check for event generator devices
             event_config = EVENT_CONFIG_MAP.get(sensor_type)
             if event_config is not None:
@@ -136,17 +135,17 @@ class SensorManager:
             if sensor_config is None:
                 continue
 
-            base_name = api[item_id].name
-            primary_sensor = primary_sensor_devices.get(_device_id(api[item_id]))
-            if primary_sensor is not None:
-                base_name = primary_sensor.name
-            name = sensor_config["name_format"].format(base_name)
+            for sensor in sensor_config:
+                base_name = api[item_id].name
+                primary_sensor = primary_sensor_devices.get(_device_id(api[item_id]))
+                if primary_sensor is not None:
+                    base_name = primary_sensor.name
+                name = sensor["name_format"].format(base_name)
+                current[uniqueid] = sensor["class"](
+                    api[item_id], name, self.bridge, primary_sensor=primary_sensor
+                )
 
-            current[uniqueid] = sensor_config["class"](
-                api[item_id], name, self.bridge, primary_sensor=primary_sensor
-            )
-
-            to_add.setdefault(sensor_config["platform"], []).append(current[uniqueid])
+                to_add.setdefault(sensor["platform"], []).append(current[uniqueid])
 
         self.bridge.hass.async_create_task(
             remove_devices(
