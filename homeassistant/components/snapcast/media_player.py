@@ -6,7 +6,7 @@ import snapcast.control
 from snapcast.control.server import CONTROL_PORT
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_VOLUME_MUTE,
@@ -45,6 +45,10 @@ SUPPORT_SNAPCAST_CLIENT = (
 )
 SUPPORT_SNAPCAST_GROUP = (
     SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_SELECT_SOURCE
+)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT): cv.port}
 )
 
 
