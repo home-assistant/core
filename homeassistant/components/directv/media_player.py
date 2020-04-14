@@ -35,6 +35,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+KNOWN_MEDIA_TYPES = [MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW]
+
 SUPPORT_DTV = (
     SUPPORT_PAUSE
     | SUPPORT_TURN_ON
@@ -178,8 +180,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerDevice):
         if self._is_standby or self._program is None:
             return None
 
-        known_types = [MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW]
-        if self._program.program_type in known_types:
+        if self._program.program_type in KNOWN_MEDIA_TYPES:
             return self._program.program_type
 
         return MEDIA_TYPE_MOVIE
