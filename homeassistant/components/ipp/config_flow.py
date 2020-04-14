@@ -92,7 +92,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             unique_id = info[CONF_SERIAL]
         elif unique_id is None:
             _LOGGER.debug(
-                "Printer UUID and serial are missing from IPP response"
+                "Unable to determine unique id from IPP response"
             )
 
         await self.async_set_unique_id(unique_id)
@@ -154,7 +154,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             unique_id = info[CONF_SERIAL]
         elif unique_id is None:
             _LOGGER.debug(
-                "Printer UUID is missing from discovery info and IPP response"
+                "Unable to determine unique id from discovery info and IPP response"
             )
 
         await self.async_set_unique_id(unique_id)
