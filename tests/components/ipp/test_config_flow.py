@@ -205,7 +205,7 @@ async def test_zeroconf_ipp_error(
 async def test_user_ipp_version_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test we abort use flow on IPP version not supported error."""
+    """Test we abort user flow on IPP version not supported error."""
     aioclient_mock.post(
         "http://192.168.1.31:631/ipp/print",
         content=load_fixture_binary("ipp/get-printer-attributes-error-0x0503.bin"),
