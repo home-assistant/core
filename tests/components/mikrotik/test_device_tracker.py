@@ -11,7 +11,7 @@ import homeassistant.util.dt as dt_util
 from . import (
     DEVICE_1_WIRELESS,
     DEVICE_3_WIRELESS,
-    ENTRY_CONFIG,
+    ENTRY_DATA,
     HUB1_WIRELESS_DATA,
     HUB2_WIRELESS_DATA,
     MOCK_HUB1,
@@ -25,13 +25,12 @@ from tests.common import MockConfigEntry, patch
 
 async def test_platform_manually_configured(hass):
     """Test that nothing happens when configuring mikrotik through device tracker platform."""
-    assert (
+    assert not (
         await async_setup_component(
             hass,
             device_tracker.DOMAIN,
             {device_tracker.DOMAIN: {"platform": "mikrotik"}},
         )
-        is False
     )
     assert mikrotik.DOMAIN not in hass.data
 
@@ -142,7 +141,7 @@ async def test_device_tracker_switching_hubs(hass, api):
 async def test_restoring_devices(hass, api):
     """Test restoring existing device_tracker entities if not detected on startup."""
     config_entry = MockConfigEntry(
-        domain=mikrotik.DOMAIN, data=ENTRY_CONFIG, options=MOCK_OPTIONS
+        domain=mikrotik.DOMAIN, data=ENTRY_DATA, options=MOCK_OPTIONS
     )
     config_entry.add_to_hass(hass)
 

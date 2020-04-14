@@ -2,40 +2,45 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from homeassistant import config_entries
 from homeassistant.components import mikrotik
 from homeassistant.setup import async_setup_component
 
-from . import ENTRY_CONFIG, OLD_ENTRY_CONFIG
+from . import ENTRY_DATA, OLD_ENTRY_CONFIG
 from .test_hub import setup_mikrotik_integration
 
-from tests.common import mock_coro
+from tests.common import MockConfigEntry, mock_coro
 
 
 async def test_setup_with_no_config(hass, api):
     """Test that we do not discover anything or try to set up a hub."""
-    assert await async_setup_component(hass, mikrotik.DOMAIN, {}) is True
+    assert await async_setup_component(hass, mikrotik.DOMAIN, {})
     assert mikrotik.DOMAIN not in hass.data
 
 
 async def test_successful_config_entry(hass, api):
     """Test config entry successful setup."""
-    await setup_mikrotik_integration(hass)
-    assert hass.data[mikrotik.DOMAIN]
+    mikrotik_mock = await setup_mikrotik_integration(hass)
+    assert mikrotik_mock.config_entry.state == config_entries.ENTRY_STATE_LOADED
 
 
 async def test_old_config_entry(hass, api):
     """Test converting  old config entry successfully."""
-    await setup_mikrotik_integration(hass, config_entry=OLD_ENTRY_CONFIG)
-    assert hass.data[mikrotik.DOMAIN]
+    mikrotik_mock = await setup_mikrotik_integration(hass, entry_data=OLD_ENTRY_CONFIG)
+    assert mikrotik_mock.config_entry.state == config_entries.ENTRY_STATE_LOADED
 
 
 async def test_config_fail_setup(hass, api):
     """Test that a failed setup will not store the config."""
     with patch.object(mikrotik, "Mikrotik") as mock_integration:
         mock_integration.return_value.async_setup.return_value = mock_coro(False)
-        await setup_mikrotik_integration(hass)
 
-    assert mikrotik.DOMAIN not in hass.data
+        config_entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=dict(ENTRY_DATA))
+        config_entry.add_to_hass(hass)
+
+        await setup_mikrotik_integration(hass, config_entry=config_entry)
+
+    assert config_entry.state == config_entries.ENTRY_STATE_SETUP_ERROR
 
 
 async def test_successfull_integration_setup(hass, api):
@@ -51,7 +56,7 @@ async def test_successfull_integration_setup(hass, api):
             "device_tracker",
         )
 
-        assert len(mikrotik_mock.hubs) == len(ENTRY_CONFIG[mikrotik.CONF_HUBS])
+        assert len(mikrotik_mock.hubs) == len(ENTRY_DATA[mikrotik.CONF_HUBS])
         assert mikrotik_mock.option_detection_time == timedelta(
             seconds=mikrotik.DEFAULT_DETECTION_TIME
         )
@@ -64,7 +69,7 @@ async def test_successfull_integration_setup(hass, api):
 async def test_unload_entry(hass, api):
     """Test being able to unload an entry."""
     mikrotik_mock = await setup_mikrotik_integration(hass)
-    assert hass.data[mikrotik.DOMAIN]
+    assert mikrotik_mock.config_entry.state == config_entries.ENTRY_STATE_LOADED
 
-    assert await mikrotik.async_unload_entry(hass, mikrotik_mock.config_entry)
-    assert not hass.data[mikrotik.DOMAIN]
+    assert await hass.config_entries.async_unload(mikrotik_mock.config_entry.entry_id)
+    assert mikrotik_mock.config_entry.state == config_entries.ENTRY_STATE_NOT_LOADED

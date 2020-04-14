@@ -1,17 +1,18 @@
 """Test Mikrotik hub."""
-from copy import deepcopy
+# from copy import copy
 import itertools
 
 from asynctest import patch
 import librouteros
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components import mikrotik
 from homeassistant.components.mikrotik import const
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from . import (
-    ENTRY_CONFIG,
+    ENTRY_DATA,
     ENTRY_OPTIONS,
     HUB1_ARP_DATA,
     HUB1_DHCP_DATA,
@@ -42,7 +43,8 @@ DATA_RETURN = {
 
 async def setup_mikrotik_integration(
     hass,
-    config_entry=ENTRY_CONFIG,
+    config_entry=None,
+    entry_data=ENTRY_DATA,
     config_options=ENTRY_OPTIONS,
     support_capsman=False,
     support_wireless=False,
@@ -67,12 +69,11 @@ async def setup_mikrotik_integration(
             hub_index = next(i)
         return DATA_RETURN[cmd][hub_index]
 
-    config_entry = MockConfigEntry(
-        domain=mikrotik.DOMAIN,
-        data=deepcopy(config_entry),
-        options=deepcopy(config_options),
-    )
-    config_entry.add_to_hass(hass)
+    if not config_entry:
+        config_entry = MockConfigEntry(
+            domain=mikrotik.DOMAIN, data=dict(ENTRY_DATA), options=dict(config_options),
+        )
+        config_entry.add_to_hass(hass)
 
     with patch.object(mikrotik.hub.MikrotikHub, "command", new=mock_command):
 
@@ -107,9 +108,7 @@ async def test_hubs_conn_error(hass, api):
         librouteros.exceptions.LibRouterosError,
     ]
     config_entry = MockConfigEntry(
-        domain=mikrotik.DOMAIN,
-        data=deepcopy(ENTRY_CONFIG),
-        options=deepcopy(ENTRY_OPTIONS),
+        domain=mikrotik.DOMAIN, data=dict(ENTRY_DATA), options=dict(ENTRY_OPTIONS),
     )
     config_entry.add_to_hass(hass)
 
@@ -120,7 +119,7 @@ async def test_hubs_conn_error(hass, api):
         assert len(mikrotik_mock.hubs) == 1
         assert MOCK_HUB1[const.CONF_HOST] not in mikrotik_mock.hubs
         assert MOCK_HUB2[const.CONF_HOST] in mikrotik_mock.hubs
-        assert mikrotik.DOMAIN not in hass.data
+        assert config_entry.state == config_entries.ENTRY_STATE_SETUP_ERROR
 
 
 async def test_update_failed(hass, api):

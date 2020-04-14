@@ -17,7 +17,7 @@ MOCK_HUB2 = {
     mikrotik.CONF_VERIFY_SSL: False,
 }
 
-ENTRY_CONFIG = {
+ENTRY_DATA = {
     mikrotik.CONF_NAME: "Mikrotik",
     mikrotik.CONF_HUBS: {
         MOCK_HUB1[mikrotik.CONF_HOST]: MOCK_HUB1,
