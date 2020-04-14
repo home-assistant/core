@@ -224,14 +224,7 @@ class SonarrSensor(Entity):
 
         if res.status_code == HTTP_OK:
             if self.type in ["upcoming", "queue", "series", "commands"]:
-                if self.days == 1 and self.type == "upcoming":
-                    # Sonarr API returns an empty array if start and end dates
-                    # are the same, so we need to filter to just today
-                    self.data = list(
-                        filter(lambda x: x["airDate"] == str(start), res.json())
-                    )
-                else:
-                    self.data = res.json()
+                self.data = res.json()
                 self._state = len(self.data)
             elif self.type == "wanted":
                 data = res.json()
