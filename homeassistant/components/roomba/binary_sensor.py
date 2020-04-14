@@ -25,12 +25,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
     """Class to hold Roomba Sensor basic info."""
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     ICON = "mdi:delete-variant"
-=======
-=======
->>>>>>> Fix icon
+
     def __init__(self, roomba, blid):
         """Initialize the sensor object."""
         self.vacuum = roomba
@@ -39,7 +35,6 @@ class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
         self._name = vacuum_state.get("name")
         self._identifier = f"roomba_{self._blid}"
         self._bin_status = None
->>>>>>> Fix icon
 
     @property
     def name(self):
