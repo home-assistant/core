@@ -1,5 +1,5 @@
 """Support for Sonarr."""
-from datetime import datetime
+from datetime import timedelta
 import logging
 import time
 
@@ -27,6 +27,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -205,12 +206,12 @@ class SonarrSensor(Entity):
 
     def update(self):
         """Update the data for the sensor."""
-        start = get_date(self._tz)
-        end = get_date(self._tz, self.days)
+        start = dt_util.utcnow().replace(microsecond=0)
+        end = start + timedelta(days=self._days)
         try:
             res = requests.get(
                 ENDPOINTS[self.type].format(
-                    self.ssl, self.host, self.port, self.urlbase, start, end
+                    self.ssl, self.host, self.port, self.urlbase, start.isoformat(), end.isoformat()
                 ),
                 headers={"X-Api-Key": self.apikey},
                 timeout=10,
@@ -262,12 +263,6 @@ class SonarrSensor(Entity):
                 self.data = res.json()
                 self._state = self.data["version"]
             self._available = True
-
-
-def get_date(zone, offset=0):
-    """Get date based on timezone and offset of days."""
-    day = 60 * 60 * 24
-    return datetime.date(datetime.fromtimestamp(time.time() + day * offset, tz=zone))
 
 
 def to_unit(value, unit):
