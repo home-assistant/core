@@ -8,6 +8,7 @@ from pyipp import (
     IPPConnectionUpgradeRequired,
     IPPParseError,
     IPPResponseError,
+    IPPVersionNotSupportedError,
 )
 import voluptuous as vol
 
@@ -112,6 +113,8 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="connection_upgrade")
         except (IPPConnectionError, IPPResponseError):
             return self.async_abort(reason="connection_error")
+        except IPPVersionNotSupportedError:
+            return self.async_abort(reason="version_error")
         except IPPParseError:
             _LOGGER.exception("IPP Parse Error")
             return self.async_abort(reason="parse_error")
