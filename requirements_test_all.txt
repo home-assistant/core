@@ -136,6 +136,9 @@ bellows-homeassistant==0.15.2
 # homeassistant.components.bom
 bomradarloop==0.1.4
 
+# homeassistant.components.braviatv
+bravia-tv==1.0.1
+
 # homeassistant.components.broadlink
 broadlink==0.13.0
 
