@@ -302,8 +302,8 @@ async def test_sensors_with_multiple_bridges(hass, mock_bridge):
 
     assert len(mock_bridge.mock_requests) == 1
     assert len(mock_bridge_2.mock_requests) == 1
-    # 3 "physical" sensors with 3 virtual sensors each + 1 battery sensor
-    assert len(hass.states.async_all()) == 10
+    # 3 "physical" sensors with 4 virtual sensors each + 1 battery sensor
+    assert len(hass.states.async_all()) == 13
 
 
 async def test_sensors(hass, mock_bridge):
@@ -311,8 +311,8 @@ async def test_sensors(hass, mock_bridge):
     mock_bridge.mock_sensor_responses.append(SENSOR_RESPONSE)
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 1
-    # 2 "physical" sensors with 3 virtual sensors each
-    assert len(hass.states.async_all()) == 7
+    # 2 "physical" sensors with 4 virtual sensors each
+    assert len(hass.states.async_all()) == 9
 
     presence_sensor_1 = hass.states.get("binary_sensor.living_room_sensor_motion")
     light_level_sensor_1 = hass.states.get("sensor.living_room_sensor_light_level")
@@ -351,8 +351,8 @@ async def test_unsupported_sensors(hass, mock_bridge):
     mock_bridge.mock_sensor_responses.append(response_with_unsupported)
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 1
-    # 2 "physical" sensors with 3 virtual sensors each + 1 battery sensor
-    assert len(hass.states.async_all()) == 7
+    # 2 "physical" sensors with 4 virtual sensors each + 1 battery sensor
+    assert len(hass.states.async_all()) == 9
 
 
 async def test_new_sensor_discovered(hass, mock_bridge):
@@ -361,7 +361,7 @@ async def test_new_sensor_discovered(hass, mock_bridge):
 
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 1
-    assert len(hass.states.async_all()) == 7
+    assert len(hass.states.async_all()) == 9
 
     new_sensor_response = dict(SENSOR_RESPONSE)
     new_sensor_response.update(
@@ -379,7 +379,7 @@ async def test_new_sensor_discovered(hass, mock_bridge):
     await hass.async_block_till_done()
 
     assert len(mock_bridge.mock_requests) == 2
-    assert len(hass.states.async_all()) == 10
+    assert len(hass.states.async_all()) == 13
 
     presence = hass.states.get("binary_sensor.bedroom_sensor_motion")
     assert presence is not None
@@ -395,7 +395,7 @@ async def test_sensor_removed(hass, mock_bridge):
 
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 1
-    assert len(hass.states.async_all()) == 7
+    assert len(hass.states.async_all()) == 9
 
     mock_bridge.mock_sensor_responses.clear()
     keys = ("1", "2", "3")
@@ -408,7 +408,7 @@ async def test_sensor_removed(hass, mock_bridge):
     await hass.async_block_till_done()
 
     assert len(mock_bridge.mock_requests) == 2
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
 
     sensor = hass.states.get("binary_sensor.living_room_sensor_motion")
     assert sensor is not None
@@ -443,7 +443,7 @@ async def test_hue_events(hass, mock_bridge):
 
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 1
-    assert len(hass.states.async_all()) == 7
+    assert len(hass.states.async_all()) == 9
     assert len(mock_listener.mock_calls) == 0
 
     new_sensor_response = dict(SENSOR_RESPONSE)
@@ -458,7 +458,7 @@ async def test_hue_events(hass, mock_bridge):
     await hass.async_block_till_done()
 
     assert len(mock_bridge.mock_requests) == 2
-    assert len(hass.states.async_all()) == 7
+    assert len(hass.states.async_all()) == 9
     assert len(mock_listener.mock_calls) == 1
     assert mock_listener.mock_calls[0][1][0].data == {
         "id": "hue_tap",
@@ -479,7 +479,7 @@ async def test_hue_events(hass, mock_bridge):
     await hass.async_block_till_done()
 
     assert len(mock_bridge.mock_requests) == 3
-    assert len(hass.states.async_all()) == 7
+    assert len(hass.states.async_all()) == 9
     assert len(mock_listener.mock_calls) == 2
     assert mock_listener.mock_calls[1][1][0].data == {
         "id": "hue_dimmer_switch_1",
@@ -528,7 +528,7 @@ async def test_hue_events(hass, mock_bridge):
     await hass.async_block_till_done()
 
     assert len(mock_bridge.mock_requests) == 4
-    assert len(hass.states.async_all()) == 8
+    assert len(hass.states.async_all()) == 10
     assert len(mock_listener.mock_calls) == 2
 
     # A new press fires the event
@@ -540,7 +540,7 @@ async def test_hue_events(hass, mock_bridge):
     await hass.async_block_till_done()
 
     assert len(mock_bridge.mock_requests) == 5
-    assert len(hass.states.async_all()) == 8
+    assert len(hass.states.async_all()) == 10
     assert len(mock_listener.mock_calls) == 3
     assert mock_listener.mock_calls[2][1][0].data == {
         "id": "lutron_aurora_1",
