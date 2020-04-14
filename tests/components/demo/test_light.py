@@ -85,7 +85,7 @@ async def test_state_attributes(hass):
 
     state = hass.states.get(ENTITY_LIGHT)
     assert state.attributes.get(ATTR_COLOR_TEMP) == 333
-    assert state.attributes.get(ATTR_BRIGHTNESS) == 127
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 128
 
 
 async def test_turn_off(hass):
