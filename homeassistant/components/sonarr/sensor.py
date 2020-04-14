@@ -92,13 +92,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sonarr platform."""
     conditions = config.get(CONF_MONITORED_CONDITIONS)
-    add_entities([SonarrSensor(hass, config, sensor) for sensor in conditions], True)
+    add_entities([SonarrSensor(config, sensor) for sensor in conditions], True)
 
 
 class SonarrSensor(Entity):
     """Implementation of the Sonarr sensor."""
 
-    def __init__(self, hass, conf, sensor_type):
+    def __init__(self, conf, sensor_type):
         """Create Sonarr entity."""
 
         self.conf = conf
