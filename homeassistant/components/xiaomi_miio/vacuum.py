@@ -195,7 +195,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     try:
         vacuum = Vacuum(host, token)
         device_info = await hass.async_add_executor_job(vacuum.info)
-        unique_id = f"{device_info.model}-{device_info.mac_address}"
+        unique_id = device_info.mac_address
         _LOGGER.info(
             "%s %s %s detected",
             device_info.model,
