@@ -189,21 +189,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     # Create handler
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
-
-    unique_id = None
+    vacuum = Vacuum(host, token)
 
     try:
-        vacuum = Vacuum(host, token)
         device_info = await hass.async_add_executor_job(vacuum.info)
-        unique_id = device_info.mac_address
-        _LOGGER.info(
-            "%s %s %s detected",
-            device_info.model,
-            device_info.firmware_version,
-            device_info.hardware_version,
-        )
     except DeviceException:
         raise PlatformNotReady
+
+    unique_id = device_info.mac_address
+    _LOGGER.debug(
+        "%s %s %s detected",
+        device_info.model,
+        device_info.firmware_version,
+        device_info.hardware_version,
+    )
 
     mirobo = MiroboVacuum(name, vacuum, unique_id)
     hass.data[DATA_KEY][host] = mirobo
