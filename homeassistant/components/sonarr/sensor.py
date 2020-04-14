@@ -2,7 +2,6 @@
 from datetime import timedelta
 import logging
 
-from pytz import timezone
 import requests
 import voluptuous as vol
 
@@ -114,7 +113,6 @@ class SonarrSensor(Entity):
         self.ssl = "https" if conf.get(CONF_SSL) else "http"
         self._state = None
         self.data = []
-        self._tz = timezone(str(hass.config.time_zone))
         self.type = sensor_type
         self._name = SENSOR_TYPES[self.type][0]
         if self.type == "diskspace":
