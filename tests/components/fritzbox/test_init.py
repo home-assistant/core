@@ -48,8 +48,8 @@ async def test_setup_duplicate_config(hass: HomeAssistantType, fritz: Mock, capl
     DUPLICATE = {FB_DOMAIN: [MOCK_CONFIG[FB_DOMAIN][0], MOCK_CONFIG[FB_DOMAIN][0]]}
     assert not await async_setup_component(hass, FB_DOMAIN, DUPLICATE)
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids()) == 0
-    assert len(hass.states.async_all()) == 0
+    assert not hass.states.async_entity_ids()
+    assert not hass.states.async_all()
     assert "duplicate host entries found" in caplog.text
 
 
