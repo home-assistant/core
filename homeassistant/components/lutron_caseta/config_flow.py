@@ -2,7 +2,7 @@
 
 from homeassistant import config_entries
 
-from . import DOMAIN
+from . import DOMAIN  # pylint: disable=unused-import
 
 
 class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
