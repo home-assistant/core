@@ -150,15 +150,12 @@ class SonarrSensor(Entity):
         attributes = {}
         if self.type == "upcoming":
             for show in self.data:
-                title = show["series"]["title"]
-                identifier = "S{:02d}E{:02d}".format(
+                if show["series"]["title"] in attributes:
+                    continue
+                        
+                attributes[show["series"]["title"]] = "S{:02d}E{:02d}".format(
                     show["seasonNumber"], show["episodeNumber"]
                 )
-
-                if title in attributes:
-                    attributes[title] += f"/{identifier}"
-                else:
-                    attributes[title] = identifier
         elif self.type == "queue":
             for show in self.data:
                 remaining = 1 if show["size"] == 0 else show["sizeleft"] / show["size"]
