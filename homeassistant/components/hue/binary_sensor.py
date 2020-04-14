@@ -8,7 +8,6 @@ from homeassistant.components.binary_sensor import (
 )
 
 from .const import DOMAIN as HUE_DOMAIN
-from .sensor import REMOTE_NAME_FORMAT, HueBattery
 from .sensor_base import SENSOR_CONFIG_MAP, GenericZLLSensor
 
 PRESENCE_NAME_FORMAT = "{} motion"
@@ -49,12 +48,7 @@ SENSOR_CONFIG_MAP.update(
                 "platform": "binary_sensor",
                 "name_format": PRESENCE_NAME_FORMAT,
                 "class": HuePresence,
-            },
-            {
-                "platform": "sensor",
-                "name_format": REMOTE_NAME_FORMAT,
-                "class": HueBattery,
-            },
+            }
         ]
     }
 )
