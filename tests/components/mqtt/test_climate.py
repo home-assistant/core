@@ -793,10 +793,10 @@ async def test_temp_step_custom(hass, mqtt_mock):
     assert temp_step == 0.01
 
 
-async def test_unit_of_measurement(hass, mqtt_mock):
-    """Test that setting unit of measurement converts temperature values."""
+async def test_temperature_unit(hass, mqtt_mock):
+    """Test that setting temperature unit converts temperature values."""
     config = copy.deepcopy(DEFAULT_CONFIG)
-    config["climate"]["unit_of_measurement"] = "F"
+    config["climate"]["temperature_unit"] = "F"
     config["climate"]["current_temperature_topic"] = "current_temperature"
 
     assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
