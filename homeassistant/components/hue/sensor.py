@@ -113,25 +113,33 @@ class HueBattery(GenericHueSensor):
 
 SENSOR_CONFIG_MAP.update(
     {
-        TYPE_ZLL_LIGHTLEVEL: {
-            "platform": "sensor",
-            "name_format": LIGHT_LEVEL_NAME_FORMAT,
-            "class": HueLightLevel,
-        },
-        TYPE_ZLL_TEMPERATURE: {
-            "platform": "sensor",
-            "name_format": TEMPERATURE_NAME_FORMAT,
-            "class": HueTemperature,
-        },
-        TYPE_ZLL_SWITCH: {
-            "platform": "sensor",
-            "name_format": REMOTE_NAME_FORMAT,
-            "class": HueBattery,
-        },
-        TYPE_ZLL_ROTARY: {
-            "platform": "sensor",
-            "name_format": REMOTE_NAME_FORMAT,
-            "class": HueBattery,
-        },
+        TYPE_ZLL_LIGHTLEVEL: [
+            {
+                "platform": "sensor",
+                "name_format": LIGHT_LEVEL_NAME_FORMAT,
+                "class": HueLightLevel,
+            }
+        ],
+        TYPE_ZLL_TEMPERATURE: [
+            {
+                "platform": "sensor",
+                "name_format": TEMPERATURE_NAME_FORMAT,
+                "class": HueTemperature,
+            }
+        ],
+        TYPE_ZLL_SWITCH: [
+            {
+                "platform": "sensor",
+                "name_format": REMOTE_NAME_FORMAT,
+                "class": HueBattery,
+            }
+        ],
+        TYPE_ZLL_ROTARY: [
+            {
+                "platform": "sensor",
+                "name_format": REMOTE_NAME_FORMAT,
+                "class": HueBattery,
+            }
+        ],
     }
 )
