@@ -614,6 +614,29 @@ async def test_update_system_options(hass, hass_ws_client):
     assert entry.system_options.disable_new_entities
 
 
+async def test_update_entry(hass, hass_ws_client):
+    """Test that we can update entry."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    entry = MockConfigEntry(domain="demo", title="Initial Title")
+    entry.add_to_hass(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/update",
+            "entry_id": entry.entry_id,
+            "title": "Updated Title",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["title"] == "Updated Title"
+    assert entry.title == "Updated Title"
+
+
 async def test_ignore_flow(hass, hass_ws_client):
     """Test we can ignore a flow."""
     assert await async_setup_component(hass, "config", {})
