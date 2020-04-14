@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "title": "Stellen Sie eine Verbindung zu Ihrem Tado-Konto her"
+            }
+        },
+        "title": "Tado"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Passen Sie die Tado-Optionen an."
+            }
+        },
+        "title": "Tado"
+    }
+}

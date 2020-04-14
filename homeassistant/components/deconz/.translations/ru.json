@@ -34,6 +34,7 @@
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "\u041e\u0431\u0435 \u043a\u043d\u043e\u043f\u043a\u0438",
+            "bottom_buttons": "\u041d\u0438\u0436\u043d\u0438\u0435 \u043a\u043d\u043e\u043f\u043a\u0438",
             "button_1": "\u041f\u0435\u0440\u0432\u0430\u044f \u043a\u043d\u043e\u043f\u043a\u0430",
             "button_2": "\u0412\u0442\u043e\u0440\u0430\u044f \u043a\u043d\u043e\u043f\u043a\u0430",
             "button_3": "\u0422\u0440\u0435\u0442\u044c\u044f \u043a\u043d\u043e\u043f\u043a\u0430",
@@ -50,6 +51,7 @@
             "side_4": "\u0413\u0440\u0430\u043d\u044c 4",
             "side_5": "\u0413\u0440\u0430\u043d\u044c 5",
             "side_6": "\u0413\u0440\u0430\u043d\u044c 6",
+            "top_buttons": "\u0412\u0435\u0440\u0445\u043d\u0438\u0435 \u043a\u043d\u043e\u043f\u043a\u0438",
             "turn_off": "\u0412\u044b\u043a\u043b\u044e\u0447\u0430\u0435\u0442\u0441\u044f",
             "turn_on": "\u0412\u043a\u043b\u044e\u0447\u0430\u0435\u0442\u0441\u044f"
         },

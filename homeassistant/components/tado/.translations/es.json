@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar, por favor, int\u00e9ntalo de nuevo",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "no_homes": "No hay casas asociadas a esta cuenta de Tado",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Usuario"
+                },
+                "title": "Conectar con tu cuenta de Tado"
+            }
+        },
+        "title": "Tado"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "fallback": "Activar modo de salvaguarda."
+                },
+                "description": "El modo de salvaguarda volver\u00e1 a la Planificaci\u00f3n Inteligente en el siguiente cambio de programaci\u00f3n despu\u00e9s de ajustar manualmente una zona.",
+                "title": "Ajustar las opciones de Tado"
+            }
+        },
+        "title": "Tado"
+    }
+}

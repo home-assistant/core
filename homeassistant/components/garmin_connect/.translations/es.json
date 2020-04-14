@@ -13,7 +13,7 @@
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Nombre de usuario"
+                    "username": "Usuario"
                 },
                 "description": "Introduzca sus credenciales.",
                 "title": "Garmin Connect"

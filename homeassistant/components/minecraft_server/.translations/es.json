@@ -4,7 +4,7 @@
             "already_configured": "El host ya est\u00e1 configurado."
         },
         "error": {
-            "cannot_connect": "No se pudo conectar al servidor. Compruebe el host y el puerto e int\u00e9ntelo de nuevo. Tambi\u00e9n aseg\u00farese de que est\u00e1 ejecutando al menos Minecraft versi\u00f3n 1.7 en su servidor.",
+            "cannot_connect": "No se pudo conectar al servidor. Comprueba el host y el puerto e int\u00e9ntalo de nuevo. Tambi\u00e9n aseg\u00farate de que est\u00e1s ejecutando al menos Minecraft versi\u00f3n 1.7 en tu servidor.",
             "invalid_ip": "La direcci\u00f3n IP no es valida (no se pudo determinar la direcci\u00f3n MAC). Por favor, corr\u00edgelo e int\u00e9ntalo de nuevo.",
             "invalid_port": "El puerto debe estar en el rango de 1024 a 65535. Por favor, corr\u00edgelo e int\u00e9ntalo de nuevo."
         },
