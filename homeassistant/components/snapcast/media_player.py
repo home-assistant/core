@@ -6,7 +6,7 @@ import snapcast.control
 from snapcast.control.server import CONTROL_PORT
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_VOLUME_MUTE,
@@ -23,19 +23,9 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv, entity_platform
 
-from . import (
-    ATTR_LATENCY,
-    ATTR_MASTER,
-    SERVICE_JOIN,
-    SERVICE_RESTORE,
-    SERVICE_SET_LATENCY,
-    SERVICE_SNAPSHOT,
-    SERVICE_UNJOIN,
-)
+from .const import *
 
 _LOGGER = logging.getLogger(__name__)
-
-DATA_KEY = "snapcast"
 
 SUPPORT_SNAPCAST_CLIENT = (
     SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_SELECT_SOURCE
@@ -44,20 +34,9 @@ SUPPORT_SNAPCAST_GROUP = (
     SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_SELECT_SOURCE
 )
 
-GROUP_PREFIX = "snapcast_group_"
-GROUP_SUFFIX = "Snapcast Group"
-CLIENT_PREFIX = "snapcast_client_"
-CLIENT_SUFFIX = "Snapcast Client"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT): cv.port}
-)
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Snapcast platform."""
-
-    _LOGGER.debug("Reached async_setup_platform")
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT, CONTROL_PORT)
