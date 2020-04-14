@@ -15,6 +15,7 @@ FLOWS = [
     "ambient_station",
     "august",
     "axis",
+    "braviatv",
     "brother",
     "cast",
     "cert_expiry",
