@@ -127,13 +127,7 @@ async def test_import_duplicate_error(hass):
 async def test_user_invalid_host(hass):
     """Test that errors are shown when the host is invalid."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
-            CONF_HOST: "invalid/host",
-            CONF_PIN: "1234",
-            CONF_MAC: "AA:BB:CC:DD:EE:FF",
-        },
+        DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "invalid/host"}
     )
 
     assert result["errors"] == {CONF_HOST: "invalid_host"}
