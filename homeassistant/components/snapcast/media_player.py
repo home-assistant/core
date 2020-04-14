@@ -23,7 +23,20 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv, entity_platform
 
-from .const import *
+from .const import (
+    DATA_KEY,
+    GROUP_PREFIX,
+    GROUP_SUFFIX,
+    CLIENT_PREFIX,
+    CLIENT_SUFFIX,
+    SERVICE_SNAPSHOT,
+    SERVICE_RESTORE,
+    SERVICE_JOIN,
+    SERVICE_UNJOIN,
+    SERVICE_SET_LATENCY,
+    ATTR_MASTER,
+    ATTR_LATENCY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
