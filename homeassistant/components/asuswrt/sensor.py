@@ -70,29 +70,11 @@ class AsuswrtDevicesSensor(AsuswrtSensor):
 
     _name = "Asuswrt Devices Connected"
 
-    @property
-    def device_state_attributes(self):
-        """Return the attributes of the sensor."""
-        return self._attributes
-
     async def async_update(self):
         """Fetch new state data for the sensor."""
         await super().async_update()
         if self._devices:
             self._state = len(self._devices)
-            mac_addresses = []
-            ip_addresses = []
-            hosts = []
-            for mac in self._devices:
-                device = self._devices[mac]._asdict()
-                mac_addresses.append(device["mac"])
-                ip_addresses.append(device["ip"])
-                hosts.append(device["name"])
-            self._attributes = {
-                "mac_addresses": mac_addresses,
-                "ip_addresses": ip_addresses,
-                "hosts": hosts,
-            }
 
 
 class AsuswrtRXSensor(AsuswrtSensor):
