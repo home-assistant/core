@@ -374,7 +374,6 @@ async def test_light(hass: HomeAssistant, light_mock_data: LightMockData) -> Non
 
     state = hass.states.get("light.light1")
     assert state.state == "on"
-    # We are still going to loose some precision here (less though)
     assert state.attributes["brightness"] == 51
     assert state.attributes["hs_color"] == (110, 90)
     assert state.attributes["color_temp"] == 222
