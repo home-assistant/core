@@ -13,7 +13,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_PORT,
     STATE_IDLE,
@@ -22,21 +21,24 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNKNOWN,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers import config_validation as cv, entity_platform
 
-from . import (
+from .const import (
+    ATTR_LATENCY,
     ATTR_MASTER,
-    DOMAIN,
+    CLIENT_PREFIX,
+    CLIENT_SUFFIX,
+    DATA_KEY,
+    GROUP_PREFIX,
+    GROUP_SUFFIX,
     SERVICE_JOIN,
     SERVICE_RESTORE,
+    SERVICE_SET_LATENCY,
     SERVICE_SNAPSHOT,
     SERVICE_UNJOIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-DATA_KEY = "snapcast"
 
 SUPPORT_SNAPCAST_CLIENT = (
     SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_SELECT_SOURCE
@@ -44,11 +46,6 @@ SUPPORT_SNAPCAST_CLIENT = (
 SUPPORT_SNAPCAST_GROUP = (
     SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_SELECT_SOURCE
 )
-
-GROUP_PREFIX = "snapcast_group_"
-GROUP_SUFFIX = "Snapcast Group"
-CLIENT_PREFIX = "snapcast_client_"
-CLIENT_SUFFIX = "Snapcast Client"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT): cv.port}
@@ -61,33 +58,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT, CONTROL_PORT)
 
-    async def async_service_handle(service_event, service, data):
-        """Handle dispatched services."""
-        entity_ids = data.get(ATTR_ENTITY_ID)
-        devices = [
-            device for device in hass.data[DATA_KEY] if device.entity_id in entity_ids
-        ]
-        for device in devices:
-            if service == SERVICE_SNAPSHOT:
-                device.snapshot()
-            elif service == SERVICE_RESTORE:
-                await device.async_restore()
-            elif service == SERVICE_JOIN:
-                if isinstance(device, SnapcastClientDevice):
-                    master = [
-                        e
-                        for e in hass.data[DATA_KEY]
-                        if e.entity_id == data[ATTR_MASTER]
-                    ]
-                    if isinstance(master[0], SnapcastClientDevice):
-                        await device.async_join(master[0])
-            elif service == SERVICE_UNJOIN:
-                if isinstance(device, SnapcastClientDevice):
-                    await device.async_unjoin()
-
-        service_event.set()
-
-    async_dispatcher_connect(hass, DOMAIN, async_service_handle)
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(SERVICE_SNAPSHOT, {}, "snapshot")
+    platform.async_register_entity_service(SERVICE_RESTORE, {}, "async_restore")
+    platform.async_register_entity_service(
+        SERVICE_JOIN, {vol.Required(ATTR_MASTER): cv.entity_id}, handle_async_join
+    )
+    platform.async_register_entity_service(SERVICE_UNJOIN, {}, handle_async_unjoin)
+    platform.async_register_entity_service(
+        SERVICE_SET_LATENCY,
+        {vol.Required(ATTR_LATENCY): cv.positive_int},
+        handle_set_latency,
+    )
 
     try:
         server = await snapcast.control.create_server(
@@ -105,6 +87,27 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     devices = groups + clients
     hass.data[DATA_KEY] = devices
     async_add_entities(devices)
+
+
+async def handle_async_join(entity, service_call):
+    """Handle the entity service join."""
+    if not isinstance(entity, SnapcastClientDevice):
+        raise ValueError("Entity is not a client. Can only join clients.")
+    await entity.async_join(service_call.data[ATTR_MASTER])
+
+
+async def handle_async_unjoin(entity, service_call):
+    """Handle the entity service unjoin."""
+    if not isinstance(entity, SnapcastClientDevice):
+        raise ValueError("Entity is not a client. Can only unjoin clients.")
+    await entity.async_unjoin()
+
+
+async def handle_set_latency(entity, service_call):
+    """Handle the entity service set_latency."""
+    if not isinstance(entity, SnapcastClientDevice):
+        raise ValueError("Latency can only be set for a Snapcast client.")
+    await entity.async_set_latency(service_call.data[ATTR_LATENCY])
 
 
 class SnapcastGroupDevice(MediaPlayerDevice):
@@ -260,13 +263,22 @@ class SnapcastClientDevice(MediaPlayerDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
+        state_attrs = {}
+        if self.latency is not None:
+            state_attrs["latency"] = self.latency
         name = f"{self._client.friendly_name} {CLIENT_SUFFIX}"
-        return {"friendly_name": name}
+        state_attrs["friendly_name"] = name
+        return state_attrs
 
     @property
     def should_poll(self):
         """Do not poll for state."""
         return False
+
+    @property
+    def latency(self):
+        """Latency for Client."""
+        return self._client.latency
 
     async def async_select_source(self, source):
         """Set input source."""
@@ -287,12 +299,19 @@ class SnapcastClientDevice(MediaPlayerDevice):
 
     async def async_join(self, master):
         """Join the group of the master player."""
-        master_group = [
+
+        master_entity = next(
+            entity for entity in self.hass.data[DATA_KEY] if entity.entity_id == master
+        )
+        if not isinstance(master_entity, SnapcastClientDevice):
+            raise ValueError("Master is not a client device. Can only join clients.")
+
+        master_group = next(
             group
             for group in self._client.groups_available()
-            if master.identifier in group.clients
-        ]
-        await master_group[0].add_client(self._client.identifier)
+            if master_entity.identifier in group.clients
+        )
+        await master_group.add_client(self._client.identifier)
         self.async_write_ha_state()
 
     async def async_unjoin(self):
@@ -307,3 +326,8 @@ class SnapcastClientDevice(MediaPlayerDevice):
     async def async_restore(self):
         """Restore the client state."""
         await self._client.restore()
+
+    async def async_set_latency(self, latency):
+        """Set the latency of the client."""
+        await self._client.set_latency(latency)
+        self.async_write_ha_state()
