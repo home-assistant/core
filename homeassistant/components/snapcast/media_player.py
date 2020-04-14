@@ -58,13 +58,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     platform.async_register_entity_service(SERVICE_SNAPSHOT, {}, "snapshot")
     platform.async_register_entity_service(SERVICE_RESTORE, {}, "async_restore")
     platform.async_register_entity_service(
-        SERVICE_JOIN, {vol.Required(ATTR_MASTER): cv.entity_id}, "async_join"
+        SERVICE_JOIN, {vol.Required(ATTR_MASTER): cv.entity_id}, handle_async_join
     )
     platform.async_register_entity_service(SERVICE_UNJOIN, {}, "async_unjoin")
     platform.async_register_entity_service(
         SERVICE_SET_LATENCY,
         {vol.Required(ATTR_LATENCY): cv.positive_int},
-        "async_set_latency",
+        handle_set_latency,
     )
 
     try:
@@ -83,6 +83,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     devices = groups + clients
     hass.data[DATA_KEY] = devices
     async_add_entities(devices)
+
+
+async def handle_async_join(entity, service_call):
+    """Handle the entity service join."""
+    if not isinstance(entity, SnapcastClientDevice):
+        raise ValueError("Entity is not a client. Can only join clients.")
+    await entity.async_join(service_call.data[ATTR_MASTER])
+
+
+async def handle_set_latency(entity, service_call):
+    """Handle the entity service set_latency."""
+    if not isinstance(entity, SnapcastClientDevice):
+        raise ValueError("Latency can only be set for a Snapcast client.")
+    await entity.async_set_latency(service_call.data[ATTR_LATENCY])
 
 
 class SnapcastGroupDevice(MediaPlayerDevice):
@@ -274,18 +288,25 @@ class SnapcastClientDevice(MediaPlayerDevice):
 
     async def async_join(self, master):
         """Join the group of the master player."""
+
         master_entity = next(
             (
-                entity for entity in self.hass.data[DATA_KEY]
+                entity
+                for entity in self.hass.data[DATA_KEY]
                 if entity.entity_id == master
             )
         )
-        master_group = [
-            group
-            for group in self._client.groups_available()
-            if masters[0].identifier in group.clients
-        ]
-        await master_group[0].add_client(self._client.identifier)
+        if not isinstance(master_entity, SnapcastClientDevice):
+            raise ValueError("Master is not a client device. Can only join clients.")
+
+        master_group = next(
+            (
+                group
+                for group in self._client.groups_available()
+                if master_entity.identifier in group.clients
+            )
+        )
+        await master_group.add_client(self._client.identifier)
         self.async_write_ha_state()
 
     async def async_unjoin(self):
