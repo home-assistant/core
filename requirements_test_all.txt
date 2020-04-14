@@ -611,7 +611,7 @@ pysma==0.3.5
 pysmartapp==0.3.2
 
 # homeassistant.components.smartthings
-pysmartthings==0.7.0
+pysmartthings==0.7.1
 
 # homeassistant.components.soma
 pysoma==0.0.10
