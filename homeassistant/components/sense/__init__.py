@@ -124,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # This can take longer than 60s and we already know
     # sense is online since get_discovered_device_data was
     # successful so we do it later.
-    async_call_later(hass, 1, lambda now: trends_coordinator.async_refresh())
+    hass.loop.create_task(trends_coordinator.async_request_refresh())
 
     hass.data[DOMAIN][entry.entry_id] = {
         SENSE_DATA: gateway,
