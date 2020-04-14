@@ -1477,7 +1477,7 @@ async def test_async_setup_init_entry(hass):
         )
         return True
 
-    async_setup_entry = MagicMock(return_value=mock_coro(True))
+    async_setup_entry = CoroutineMock(return_value=True)
     mock_integration(
         hass,
         MockModule(
