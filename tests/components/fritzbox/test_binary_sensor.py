@@ -8,7 +8,12 @@ from requests.exceptions import HTTPError
 
 from homeassistant.components.binary_sensor import DOMAIN
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -48,9 +53,22 @@ async def test_setup(hass: HomeAssistantType, fritz: Mock):
     state = hass.states.get(ENTITY_ID)
 
     assert state
-    assert state.state == "on"
+    assert state.state == STATE_ON
     assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name"
     assert state.attributes[ATTR_DEVICE_CLASS] == "window"
+
+
+async def test_is_off(hass: HomeAssistantType, fritz: Mock):
+    """Test state of platform."""
+    device = FritzDeviceBinarySensorMock()
+    device.present = False
+    fritz().get_devices.return_value = [device]
+
+    await setup_fritzbox(hass, MOCK_CONFIG)
+    state = hass.states.get(ENTITY_ID)
+
+    assert state
+    assert state.state == STATE_OFF
 
 
 async def test_update(hass: HomeAssistantType, fritz: Mock):
