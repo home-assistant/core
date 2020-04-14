@@ -5,6 +5,7 @@ import concurrent.futures
 import functools
 import logging
 import threading
+import traceback
 from typing import Any, Callable, Coroutine
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,17 +60,54 @@ def run_callback_threadsafe(
 
 
 def check_loop() -> None:
-    """Raise if called inside the event loop."""
+    """Warn if called inside the event loop."""
     try:
         get_running_loop()
         in_loop = True
     except RuntimeError:
         in_loop = False
 
-    if in_loop:
-        _LOGGER.warning(
+    if not in_loop:
+        return
+
+    found_frame = None
+
+    for frame in reversed(traceback.extract_stack()):
+        for path in ("custom_components/", "homeassistant/components/"):
+            try:
+                index = frame.filename.index(path)
+                found_frame = frame
+                break
+            except ValueError:
+                continue
+
+        if found_frame is not None:
+            break
+
+    # Did not source from integration? Hard error.
+    if found_frame is None:
+        raise RuntimeError(
             "Detected I/O inside the event loop. This is causing stability issues. Please report issue"
         )
+
+    start = index + len(path)
+    end = found_frame.filename.index("/", start)
+
+    integration = found_frame.filename[start:end]
+
+    if path == "custom_components/":
+        extra = " to the custom component author"
+    else:
+        extra = ""
+
+    _LOGGER.warning(
+        "Detected I/O inside the event loop. This is causing stability issues. Please report issue%s for %s doing I/O at %s, line %s: %s",
+        extra,
+        integration,
+        found_frame.filename[index:],
+        found_frame.lineno,
+        found_frame.line.strip(),
+    )
 
 
 def protect_loop(func: Callable) -> Callable:
