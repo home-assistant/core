@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from asynctest import CoroutineMock
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, loader
