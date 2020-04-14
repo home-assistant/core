@@ -129,7 +129,7 @@ class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorDevice):
 
     @property
     def is_on(self):
-        """Get the current value in kWh."""
+        """Grid is online."""
         return (
             self._coordinator.data[POWERWALL_API_GRID_STATUS] == POWERWALL_GRID_ONLINE
         )
