@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     host = config[CONF_HOST]
     port = config[CONF_PORT]
-    token = config[CONF_ACCESS_TOKEN]
+    token = config.get(CONF_ACCESS_TOKEN)
 
     client = ClementineRemote(host, port, token, reconnect=True)
 
