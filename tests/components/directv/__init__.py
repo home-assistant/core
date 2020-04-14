@@ -63,6 +63,13 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
         text=load_fixture("directv/tv-get-tuned.json"),
         headers={"Content-Type": "application/json"},
     )
+    
+    aioclient_mock.get(
+        f"http://{HOST}:8080/tv/getTuned",
+        params={"clientAddr": "A01234567890"},
+        text=load_fixture("directv/tv-get-tuned-music.json"),
+        headers={"Content-Type": "application/json"},
+    )
 
     aioclient_mock.get(
         f"http://{HOST}:8080/tv/getTuned",
