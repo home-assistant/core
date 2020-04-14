@@ -143,6 +143,8 @@ class IPPEntity(Entity):
 
         if coordinator.data.info.uuid is not None:
             self._device_id = coordinator.data.info.uuid
+        elif coordinator.data.info.serial is not None:
+            self._device_id = coordinator.data.info.serial
 
     @property
     def name(self) -> str:
