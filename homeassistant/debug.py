@@ -8,7 +8,7 @@ from typing import Callable
 def raise_in_loop() -> None:
     """Raise if called inside the event loop."""
     try:
-        asyncio.current_task()
+        asyncio.get_running_loop()
         in_loop = True
     except RuntimeError:
         in_loop = False
