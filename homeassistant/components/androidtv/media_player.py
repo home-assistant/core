@@ -1,5 +1,4 @@
 """Support for functionality to interact with Android TV / Fire TV devices."""
-import binascii
 from datetime import datetime
 import functools
 import logging
@@ -89,12 +88,14 @@ CONF_GET_SOURCES = "get_sources"
 CONF_STATE_DETECTION_RULES = "state_detection_rules"
 CONF_TURN_ON_COMMAND = "turn_on_command"
 CONF_TURN_OFF_COMMAND = "turn_off_command"
+CONF_SCREENCAP = "screencap"
 
 DEFAULT_NAME = "Android TV"
 DEFAULT_PORT = 5555
 DEFAULT_ADB_SERVER_PORT = 5037
 DEFAULT_GET_SOURCES = True
 DEFAULT_DEVICE_CLASS = "auto"
+DEFAULT_SCREENCAP = True
 
 DEVICE_ANDROIDTV = "androidtv"
 DEVICE_FIRETV = "firetv"
@@ -146,6 +147,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             {cv.string: ha_state_detection_rules_validator(vol.Invalid)}
         ),
         vol.Optional(CONF_EXCLUDE_UNNAMED_APPS, default=False): cv.boolean,
+        vol.Optional(CONF_SCREENCAP, default=DEFAULT_SCREENCAP): cv.boolean,
     }
 )
 
@@ -239,6 +241,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         config.get(CONF_TURN_ON_COMMAND),
         config.get(CONF_TURN_OFF_COMMAND),
         config[CONF_EXCLUDE_UNNAMED_APPS],
+        config[CONF_SCREENCAP],
     ]
 
     if aftv.DEVICE_CLASS == DEVICE_ANDROIDTV:
@@ -382,6 +385,7 @@ class ADBDevice(MediaPlayerDevice):
         turn_on_command,
         turn_off_command,
         exclude_unnamed_apps,
+        screencap,
     ):
         """Initialize the Android TV / Fire TV device."""
         self.aftv = aftv
@@ -401,6 +405,7 @@ class ADBDevice(MediaPlayerDevice):
         self.turn_off_command = turn_off_command
 
         self._exclude_unnamed_apps = exclude_unnamed_apps
+        self._screencap = screencap
 
         # ADB exceptions to catch
         if not self.aftv.adb_server_ip:
@@ -479,7 +484,7 @@ class ADBDevice(MediaPlayerDevice):
 
     async def async_get_media_image(self):
         """Fetch current playing image."""
-        if self.state in [STATE_OFF, None] or not self.available:
+        if not self._screencap or self.state in [STATE_OFF, None] or not self.available:
             return None, None
 
         media_data = await self.hass.async_add_executor_job(self.get_raw_media_data)
@@ -489,16 +494,8 @@ class ADBDevice(MediaPlayerDevice):
 
     @adb_decorator()
     def get_raw_media_data(self):
-        """Raw base64 image data."""
-        try:
-            response = self.aftv.adb_shell("screencap -p | base64")
-        except UnicodeDecodeError:
-            return None
-
-        if isinstance(response, str) and response.strip():
-            return binascii.a2b_base64(response.strip().replace("\n", ""))
-
-        return None
+        """Raw image data."""
+        return self.aftv.adb_screencap()
 
     @property
     def media_image_hash(self):
@@ -613,6 +610,7 @@ class AndroidTVDevice(ADBDevice):
         turn_on_command,
         turn_off_command,
         exclude_unnamed_apps,
+        screencap,
     ):
         """Initialize the Android TV device."""
         super().__init__(
@@ -623,6 +621,7 @@ class AndroidTVDevice(ADBDevice):
             turn_on_command,
             turn_off_command,
             exclude_unnamed_apps,
+            screencap,
         )
 
         self._is_volume_muted = None
