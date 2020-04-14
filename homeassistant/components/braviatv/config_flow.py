@@ -95,15 +95,12 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            try:
-                if not host_valid(user_input[CONF_HOST]):
-                    raise InvalidHost()
-
+            if host_valid(user_input[CONF_HOST]):
                 self.host = user_input[CONF_HOST]
                 self.braviarc = BraviaRC(self.host)
 
                 return await self.async_step_authorize()
-            except InvalidHost:
+            else:
                 errors[CONF_HOST] = "invalid_host"
 
         return self.async_show_form(
