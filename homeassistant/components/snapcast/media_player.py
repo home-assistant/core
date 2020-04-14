@@ -64,7 +64,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     platform.async_register_entity_service(
         SERVICE_JOIN, {vol.Required(ATTR_MASTER): cv.entity_id}, handle_async_join
     )
-    platform.async_register_entity_service(SERVICE_UNJOIN, {}, "async_unjoin")
+    platform.async_register_entity_service(SERVICE_UNJOIN, {}, handle_async_unjoin)
     platform.async_register_entity_service(
         SERVICE_SET_LATENCY,
         {vol.Required(ATTR_LATENCY): cv.positive_int},
@@ -94,6 +94,13 @@ async def handle_async_join(entity, service_call):
     if not isinstance(entity, SnapcastClientDevice):
         raise ValueError("Entity is not a client. Can only join clients.")
     await entity.async_join(service_call.data[ATTR_MASTER])
+
+
+async def handle_async_unjoin(entity, service_call):
+    """Handle the entity service unjoin."""
+    if not isinstance(entity, SnapcastClientDevice):
+        raise ValueError("Entity is not a client. Can only unjoin clients.")
+    await entity.async_unjoin()
 
 
 async def handle_set_latency(entity, service_call):
