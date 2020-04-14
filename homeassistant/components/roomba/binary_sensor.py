@@ -49,7 +49,7 @@ class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
     @property
     def icon(self):
         """Return the icon of this sensor."""
-        return ICON_BIN
+        return self.ICON
 
     @property
     def is_on(self):
