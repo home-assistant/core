@@ -58,7 +58,7 @@ def run_callback_threadsafe(
     return future
 
 
-def raise_in_loop() -> None:
+def check_loop() -> None:
     """Raise if called inside the event loop."""
     try:
         get_running_loop()
@@ -67,7 +67,9 @@ def raise_in_loop() -> None:
         in_loop = False
 
     if in_loop:
-        raise RuntimeError("You cannot do I/O inside the event loop")
+        _LOGGER.warning(
+            "Detected I/O inside the event loop. This is causing stability issues. Please report issue"
+        )
 
 
 def protect_loop(func: Callable) -> Callable:
@@ -75,7 +77,7 @@ def protect_loop(func: Callable) -> Callable:
 
     @functools.wraps(func)
     def protected_loop_func(*args, **kwargs):  # type: ignore
-        raise_in_loop()
+        check_loop()
         return func(*args, **kwargs)
 
     return protected_loop_func

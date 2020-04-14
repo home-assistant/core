@@ -167,23 +167,25 @@ class RunThreadsafeTests(TestCase):
         self.assertIn("Invalid!", exc_context.exception.args)
 
 
-async def test_raise_in_loop_async():
+async def test_check_loop_async(caplog):
     """Test raise_in_loop raises when called from event loop."""
-    with pytest.raises(RuntimeError):
-        hasync.raise_in_loop()
+    hasync.check_loop()
+    assert "Detected I/O inside the event loop" in caplog.text
 
 
-def test_raise_in_loop_sync():
-    """Test raise_in_loop not raises when called from thread."""
-    hasync.raise_in_loop()
+def test_check_loop_sync(caplog):
+    """Test check_loop not raises when called from thread."""
+    hasync.check_loop()
+    assert "Detected I/O inside the event loop" not in caplog.text
 
 
-async def test_protect_loop_async():
+async def test_protect_loop_async(caplog):
     """Test protect_loop raises when called from event loop."""
-    with pytest.raises(RuntimeError):
-        hasync.protect_loop(lambda: None)()
+    hasync.protect_loop(lambda: None)()
+    assert "Detected I/O inside the event loop" in caplog.text
 
 
-def test_protect_loop_sync():
+def test_protect_loop_sync(caplog):
     """Test protect_loop not raises when called from thread."""
     hasync.protect_loop(lambda: None)()
+    assert "Detected I/O inside the event loop" not in caplog.text
