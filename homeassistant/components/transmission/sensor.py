@@ -81,8 +81,30 @@ class TransmissionSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes, if any."""
-        if self._tm_client.api.started_torrent_dict and self.type == "started_torrents":
-            return {STATE_ATTR_TORRENT_INFO: self._tm_client.api.started_torrent_dict}
+        if self.type == "started_torrents":
+            return {
+                STATE_ATTR_TORRENT_INFO: _torrents_info(
+                    self._tm_client.api.torrents, "downloading"
+                )
+            }
+        if self.type == "completed_torrents":
+            return {
+                STATE_ATTR_TORRENT_INFO: _torrents_info(
+                    self._tm_client.api.torrents, "seeding"
+                )
+            }
+        if self.type == "paused_torrents":
+            return {
+                STATE_ATTR_TORRENT_INFO: _torrents_info(
+                    self._tm_client.api.torrents, "stopped"
+                )
+            }
+        if self.type == "total_torrents":
+            return {
+                STATE_ATTR_TORRENT_INFO: _torrents_info(self._tm_client.api.torrents)
+            }
+        if self.type == "active_torrents":
+            return {STATE_ATTR_TORRENT_INFO: {}}
         return None
 
     async def async_added_to_hass(self):
@@ -142,3 +164,20 @@ class TransmissionSensor(Entity):
                 self._state = self._data.pausedTorrentCount
             elif self.type == "total_torrents":
                 self._state = self._data.torrentCount
+
+
+def _torrents_info(torrents, status=None):
+    infos = {}
+    for torrent in torrents:
+        if torrent.status == status or status is None:
+            info = infos[torrent.name] = {
+                "added_date": torrent.addedDate,
+                "percent_done": f"{torrent.percentDone * 100:.2f}",
+                "status": torrent.status,
+                "id": torrent.id,
+            }
+            try:
+                info["eta"] = str(torrent.eta)
+            except ValueError:
+                info["eta"] = "unknown"
+    return infos

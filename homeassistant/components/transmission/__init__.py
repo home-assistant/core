@@ -235,13 +235,12 @@ class TransmissionData:
         self.hass = hass
         self.config = config
         self.data = None
-        self.torrents = None
+        self.torrents = []
         self.session = None
         self.available = True
         self._api = api
         self.completed_torrents = []
         self.started_torrents = []
-        self.started_torrent_dict = {}
 
     @property
     def host(self):
@@ -260,7 +259,6 @@ class TransmissionData:
             self.torrents = self._api.get_torrents()
             self.session = self._api.get_session()
 
-            self.check_started_torrent_info()
             self.check_completed_torrent()
             self.check_started_torrent()
             _LOGGER.debug("Torrent Data for %s Updated", self.host)
@@ -311,34 +309,6 @@ class TransmissionData:
         for var in tmp_started_torrents:
             self.hass.bus.fire("transmission_started_torrent", {"name": var})
         self.started_torrents = actual_started_torrents
-
-    def check_started_torrent_info(self):
-        """Get started torrent info functionality."""
-        actual_torrents = self.torrents
-        if not actual_torrents:
-            return
-
-        current_down = {}
-
-        for torrent in actual_torrents:
-            if torrent.status == "downloading":
-                info = self.started_torrent_dict[torrent.name] = {
-                    "added_date": torrent.addedDate,
-                    "percent_done": f"{torrent.percentDone * 100:.2f}",
-                }
-                try:
-                    info["eta"] = str(torrent.eta)
-                except ValueError:
-                    info["eta"] = "unknown"
-
-                current_down[torrent.name] = True
-
-            elif torrent.name in self.started_torrent_dict:
-                self.started_torrent_dict.pop(torrent.name)
-
-        for torrent in list(self.started_torrent_dict):
-            if torrent not in current_down:
-                self.started_torrent_dict.pop(torrent)
 
     def get_started_torrent_count(self):
         """Get the number of started torrents."""
