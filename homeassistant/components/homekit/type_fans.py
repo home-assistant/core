@@ -93,9 +93,20 @@ class Fan(HomeAccessory):
     def _set_chars(self, char_values):
         _LOGGER.debug("Fan _set_chars: %s", char_values)
         if CHAR_ACTIVE in char_values:
-            self.set_state(char_values[CHAR_ACTIVE])
-            if not char_values[CHAR_ACTIVE]:
-                # Its off, nothing more to do
+            if char_values[CHAR_ACTIVE]:
+                is_on = False
+                state = self.hass.states.get(self.entity_id)
+                if state and state.state == STATE_ON:
+                    is_on = True
+                # Only set the state to active if we
+                # did not get a rotation speed or its off
+                if not is_on or CHAR_ROTATION_SPEED not in char_values:
+                    self.set_state(1)
+            else:
+                # Its off, nothing more to do as setting the
+                # other chars will likely turn it back on which
+                # is what we want to avoid
+                self.set_state(0)
                 return
 
         if CHAR_SWING_MODE in char_values:

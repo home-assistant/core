@@ -350,7 +350,6 @@ async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
     # Initial value can be anything but 0. If it is 0, it might cause HomeKit to set the
     # speed to 100 when turning on a fan on a freshly booted up server.
     assert acc.char_speed.value != 0
-
     await acc.run_handler()
     assert (
         acc.speed_mapping.speed_ranges == HomeKitSpeedMapping(speed_list).speed_ranges
@@ -358,6 +357,22 @@ async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
 
     acc.speed_mapping.speed_to_homekit = Mock(return_value=42)
     acc.speed_mapping.speed_to_states = Mock(return_value="ludicrous")
+
+    hass.states.async_set(
+        entity_id,
+        STATE_OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_SET_SPEED
+            | SUPPORT_OSCILLATE
+            | SUPPORT_DIRECTION,
+            ATTR_SPEED: SPEED_OFF,
+            ATTR_OSCILLATING: False,
+            ATTR_DIRECTION: DIRECTION_FORWARD,
+            ATTR_SPEED_LIST: speed_list,
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_OFF
 
     # Set from HomeKit
     call_set_speed = async_mock_service(hass, DOMAIN, "set_speed")
@@ -400,8 +415,6 @@ async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
     )
     await hass.async_block_till_done()
     acc.speed_mapping.speed_to_states.assert_called_with(42)
-    assert len(events) == 4
-
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_speed[0]
@@ -413,10 +426,72 @@ async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
     assert call_set_direction[0]
     assert call_set_direction[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_direction[0].data[ATTR_DIRECTION] == DIRECTION_REVERSE
+    assert len(events) == 4
 
     assert events[1].data[ATTR_VALUE] is True
     assert events[2].data[ATTR_VALUE] == DIRECTION_REVERSE
     assert events[3].data[ATTR_VALUE] == "ludicrous"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_SET_SPEED
+            | SUPPORT_OSCILLATE
+            | SUPPORT_DIRECTION,
+            ATTR_SPEED: SPEED_OFF,
+            ATTR_OSCILLATING: False,
+            ATTR_DIRECTION: DIRECTION_FORWARD,
+            ATTR_SPEED_LIST: speed_list,
+        },
+    )
+    await hass.async_block_till_done()
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_active_iid,
+                    HAP_REPR_VALUE: 1,
+                },
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_speed_iid,
+                    HAP_REPR_VALUE: 42,
+                },
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_swing_iid,
+                    HAP_REPR_VALUE: 1,
+                },
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_direction_iid,
+                    HAP_REPR_VALUE: 1,
+                },
+            ]
+        },
+        "mock_addr",
+    )
+    # Turn on should not be called if its already on
+    # and we set a fan speed
+    await hass.async_block_till_done()
+    acc.speed_mapping.speed_to_states.assert_called_with(42)
+    assert len(events) == 7
+    assert call_set_speed[1]
+    assert call_set_speed[1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_speed[1].data[ATTR_SPEED] == "ludicrous"
+    assert call_oscillate[1]
+    assert call_oscillate[1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_oscillate[1].data[ATTR_OSCILLATING] is True
+    assert call_set_direction[1]
+    assert call_set_direction[1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_direction[1].data[ATTR_DIRECTION] == DIRECTION_REVERSE
+
+    assert events[-3].data[ATTR_VALUE] is True
+    assert events[-2].data[ATTR_VALUE] == DIRECTION_REVERSE
+    assert events[-1].data[ATTR_VALUE] == "ludicrous"
 
     hk_driver.set_characteristics(
         {
@@ -447,12 +522,12 @@ async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
     )
     await hass.async_block_till_done()
 
-    assert len(events) == 5
+    assert len(events) == 8
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
-    assert len(call_set_speed) == 1
-    assert len(call_oscillate) == 1
-    assert len(call_set_direction) == 1
+    assert len(call_set_speed) == 2
+    assert len(call_oscillate) == 2
+    assert len(call_set_direction) == 2
 
 
 async def test_fan_restore(hass, hk_driver, cls, events):
