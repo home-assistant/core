@@ -63,8 +63,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Bravia TV platform."""
     host = config[CONF_HOST]
-    if host is None:
-        return
 
     bravia_config_file_path = hass.config.path(BRAVIA_CONFIG_FILE)
     bravia_config = await hass.async_add_executor_job(
