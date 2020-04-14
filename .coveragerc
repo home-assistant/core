@@ -648,7 +648,7 @@ omit =
     homeassistant/components/smarthab/*
     homeassistant/components/sms/*
     homeassistant/components/smtp/notify.py
-    homeassistant/components/snapcast/media_player.py
+    homeassistant/components/snapcast/*
     homeassistant/components/snmp/*
     homeassistant/components/sochain/sensor.py
     homeassistant/components/socialblade/sensor.py
