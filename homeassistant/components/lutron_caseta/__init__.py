@@ -49,20 +49,11 @@ async def async_setup(hass, base_config):
     hass.data.setdefault(DOMAIN, {})
     hass.data.setdefault(DATA_BRIDGE_CONFIG, {})
 
-    # Hosts with existing entries
-    existing_hosts = {
-        entry.data["host"] for entry in hass.config_entries.async_entries(DOMAIN)
-    }
-
     for config in bridge_configs:
         host = config[CONF_HOST]
 
         # Store bridge configs keyed by host
         hass.data[DATA_BRIDGE_CONFIG][host] = config
-
-        # No need to setup entry again
-        if host in existing_hosts:
-            continue
 
         hass.async_create_task(
             hass.config_entries.flow.async_init(

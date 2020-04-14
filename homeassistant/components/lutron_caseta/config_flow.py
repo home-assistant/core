@@ -4,6 +4,10 @@ from homeassistant import config_entries
 
 from . import DOMAIN  # pylint: disable=unused-import
 
+ABORT_REASON_ALREADY_CONFIGURED = "already_configured"
+
+ENTRY_DEFAULT_TITLE = "Caseta Bridge"
+
 
 class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Hue config flow."""
@@ -20,6 +24,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Abort if existing entry with matching host exists.
         host = import_info["host"]
         if any(host == entry.data["host"] for entry in self._async_current_entries()):
-            return self.async_abort(reason="already_configured")
+            return self.async_abort(reason=ABORT_REASON_ALREADY_CONFIGURED)
 
-        return self.async_create_entry(title="Caseta Bridge", data={"host": host})
+        return self.async_create_entry(title=ENTRY_DEFAULT_TITLE, data={"host": host})
