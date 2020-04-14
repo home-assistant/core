@@ -344,11 +344,6 @@ def main() -> int:
     if args.pid_file:
         write_pid(args.pid_file)
 
-    if args.debug:
-        from . import debug  # import-outside-toplevel
-
-        debug.enable()
-
     exit_code = asyncio.run(setup_and_run_hass(config_dir, args), debug=args.debug)
     if exit_code == RESTART_EXIT_CODE and not args.runner:
         try_to_restart()

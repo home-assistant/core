@@ -1,7 +1,8 @@
 """Asyncio backports for Python 3.6 compatibility."""
-from asyncio import coroutines, ensure_future
+from asyncio import coroutines, ensure_future, get_running_loop
 from asyncio.events import AbstractEventLoop
 import concurrent.futures
+import functools
 import logging
 import threading
 from typing import Any, Callable, Coroutine
@@ -55,3 +56,26 @@ def run_callback_threadsafe(
 
     loop.call_soon_threadsafe(run_callback)
     return future
+
+
+def raise_in_loop() -> None:
+    """Raise if called inside the event loop."""
+    try:
+        get_running_loop()
+        in_loop = True
+    except RuntimeError:
+        in_loop = False
+
+    if in_loop:
+        raise RuntimeError("You cannot do I/O inside the event loop")
+
+
+def protect_loop(func: Callable) -> Callable:
+    """Protect function from running in event loop."""
+
+    @functools.wraps(func)
+    def protected_loop_func(*args, **kwargs):  # type: ignore
+        raise_in_loop()
+        return func(*args, **kwargs)
+
+    return protected_loop_func

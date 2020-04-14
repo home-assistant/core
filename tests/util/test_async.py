@@ -165,3 +165,25 @@ class RunThreadsafeTests(TestCase):
         with self.assertRaises(ValueError) as exc_context:
             self.loop.run_until_complete(future)
         self.assertIn("Invalid!", exc_context.exception.args)
+
+
+async def test_raise_in_loop_async():
+    """Test raise_in_loop raises when called from event loop."""
+    with pytest.raises(RuntimeError):
+        hasync.raise_in_loop()
+
+
+def test_raise_in_loop_sync():
+    """Test raise_in_loop not raises when called from thread."""
+    hasync.raise_in_loop()
+
+
+async def test_protect_loop_async():
+    """Test protect_loop raises when called from event loop."""
+    with pytest.raises(RuntimeError):
+        hasync.protect_loop(lambda: None)()
+
+
+def test_protect_loop_sync():
+    """Test protect_loop not raises when called from thread."""
+    hasync.protect_loop(lambda: None)()
