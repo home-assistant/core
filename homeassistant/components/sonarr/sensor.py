@@ -1,7 +1,6 @@
 """Support for Sonarr."""
 from datetime import timedelta
 import logging
-import time
 
 from pytz import timezone
 import requests
@@ -151,9 +150,15 @@ class SonarrSensor(Entity):
         attributes = {}
         if self.type == "upcoming":
             for show in self.data:
-                attributes[show["series"]["title"]] = "S{:02d}E{:02d}".format(
+                title = show["series"]["title"]
+                identifier = "S{:02d}E{:02d}".format(
                     show["seasonNumber"], show["episodeNumber"]
                 )
+
+                if title in attributes:
+                    attributes[title] += f"/{identifier}"
+                else:
+                    attributes[title] = identifier
         elif self.type == "queue":
             for show in self.data:
                 remaining = 1 if show["size"] == 0 else show["sizeleft"] / show["size"]
@@ -211,7 +216,12 @@ class SonarrSensor(Entity):
         try:
             res = requests.get(
                 ENDPOINTS[self.type].format(
-                    self.ssl, self.host, self.port, self.urlbase, start.isoformat(), end.isoformat()
+                    self.ssl,
+                    self.host,
+                    self.port,
+                    self.urlbase,
+                    start.isoformat().replace("+00:00", "Z"),
+                    end.isoformat().replace("+00:00", "Z"),
                 ),
                 headers={"X-Api-Key": self.apikey},
                 timeout=10,
