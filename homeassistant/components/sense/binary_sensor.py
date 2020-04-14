@@ -71,7 +71,6 @@ class SenseDevice(BinarySensorDevice):
         self._unique_id = f"{sense_monitor_id}-{self._id}"
         self._icon = sense_to_mdi(device["icon"])
         self._sense_devices_data = sense_devices_data
-        self._undo_dispatch_subscription = None
         self._state = None
         self._available = False
 
@@ -117,16 +116,13 @@ class SenseDevice(BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._undo_dispatch_subscription = async_dispatcher_connect(
-            self.hass,
-            f"{SENSE_DEVICE_UPDATE}-{self._sense_monitor_id}",
-            self._async_update_from_data,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SENSE_DEVICE_UPDATE}-{self._sense_monitor_id}",
+                self._async_update_from_data,
+            )
         )
-
-    async def async_will_remove_from_hass(self):
-        """Undo subscription."""
-        if self._undo_dispatch_subscription:
-            self._undo_dispatch_subscription()
 
     @callback
     def _async_update_from_data(self):
