@@ -9,6 +9,10 @@
       "locationName": "Client"
     },
     {
+      "clientAddr": "A01234567890",
+      "locationName": "Music Client"
+    },
+    {
       "clientAddr": "9XXXXXXXXXX9",
       "locationName": "Unavailable Client"
     }
