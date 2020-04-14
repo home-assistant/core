@@ -16,7 +16,7 @@
                 "data": {
                     "password": "Contrase\u00f1a",
                     "tenant": "Inquilino",
-                    "username": "Nombre de usuario"
+                    "username": "Usuario"
                 },
                 "description": "Identif\u00edcate con tu cuenta de Eneco Toon (no con la cuenta de desarrollador).",
                 "title": "Vincular tu cuenta Toon"

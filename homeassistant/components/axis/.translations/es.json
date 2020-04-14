@@ -19,7 +19,7 @@
                     "host": "Host",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
-                    "username": "Nombre de usuario"
+                    "username": "Usuario"
                 },
                 "title": "Configurar dispositivo Axis"
             }

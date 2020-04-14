@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Esta nombre de usuario ya est\u00e1 en uso."
+            "already_configured": "Este nombre de usuario ya est\u00e1 en uso."
         },
         "error": {
             "invalid_credentials": "Usuario o contrase\u00f1a no v\u00e1lido",

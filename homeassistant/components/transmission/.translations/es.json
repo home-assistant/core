@@ -15,7 +15,7 @@
                     "name": "Nombre",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
-                    "username": "Nombre de usuario"
+                    "username": "Usuario"
                 },
                 "title": "Configuraci\u00f3n del cliente de transmisi\u00f3n"
             }

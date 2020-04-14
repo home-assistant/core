@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "connection_error": "Error de conexi\u00f3n; compruebe la red y vuelva a intentarlo",
+            "connection_error": "Error de conexi\u00f3n; comprueba la red y vuelve a intentarlo",
             "identifier_exists": "Correo electr\u00f3nico ya registrado",
             "invalid_credentials": "Credenciales no v\u00e1lidas",
             "unknown_error": "Error desconocido, por favor reporte la informaci\u00f3n de registro"

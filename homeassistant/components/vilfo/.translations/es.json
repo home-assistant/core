@@ -4,8 +4,8 @@
             "already_configured": "Este router Vilfo ya est\u00e1 configurado."
         },
         "error": {
-            "cannot_connect": "No se pudo conectar. Compruebe la informaci\u00f3n que proporcion\u00f3 e int\u00e9ntelo de nuevo.",
-            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida. Compruebe el token de acceso e int\u00e9ntelo de nuevo.",
+            "cannot_connect": "No se pudo conectar. Comprueba la informaci\u00f3n que proporcionaste e int\u00e9ntalo de nuevo.",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida. Comprueba el token de acceso e int\u00e9ntalo de nuevo.",
             "unknown": "Se ha producido un error inesperado al configurar la integraci\u00f3n."
         },
         "step": {
