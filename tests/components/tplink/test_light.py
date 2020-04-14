@@ -287,7 +287,6 @@ async def test_smartswitch(
 
     state = hass.states.get("light.dimmer1")
     assert state.state == "on"
-    # We are still going to loose some precision here (less though)
     assert state.attributes["brightness"] == 51
     assert sys_info["relay_state"] == 1
 
