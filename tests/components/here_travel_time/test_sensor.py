@@ -80,6 +80,8 @@ def _build_mock_url(origin, destination, modes, api_key, departure=None, arrival
         parameters["arrival"] = arrival
     if departure is not None:
         parameters["departure"] = departure
+    if departure is None and arrival is None:
+        parameters["departure"] = "now"
     url = base_url + urllib.parse.urlencode(parameters)
     print(url)
     return url

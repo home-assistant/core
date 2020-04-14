@@ -922,7 +922,7 @@ netdisco==2.6.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==0.8.2
+nexia==0.9.1
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -1330,7 +1330,7 @@ pyialarm==0.3
 pyicloud==0.9.6.1
 
 # homeassistant.components.intesishome
-pyintesishome==1.7.1
+pyintesishome==1.7.3
 
 # homeassistant.components.ipma
 pyipma==2.0.5
