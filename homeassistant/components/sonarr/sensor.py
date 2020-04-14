@@ -207,7 +207,7 @@ class SonarrSensor(Entity):
     def update(self):
         """Update the data for the sensor."""
         start = dt_util.utcnow().replace(microsecond=0)
-        end = start + timedelta(days=self._days)
+        end = start + timedelta(days=self.days)
         try:
             res = requests.get(
                 ENDPOINTS[self.type].format(
