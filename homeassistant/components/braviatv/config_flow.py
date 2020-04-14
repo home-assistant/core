@@ -180,9 +180,5 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-class InvalidHost(exceptions.HomeAssistantError):
-    """Error to indicate that hostname/IP address is invalid."""
-
-
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
