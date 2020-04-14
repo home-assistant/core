@@ -637,6 +637,25 @@ async def test_update_entry(hass, hass_ws_client):
     assert entry.title == "Updated Title"
 
 
+async def test_update_entry_nonexisting(hass, hass_ws_client):
+    """Test that we can update entry."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/update",
+            "entry_id": "non_existing",
+            "title": "Updated Title",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "not_found"
+
+
 async def test_ignore_flow(hass, hass_ws_client):
     """Test we can ignore a flow."""
     assert await async_setup_component(hass, "config", {})
