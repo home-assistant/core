@@ -74,11 +74,7 @@ class SlackNotificationService(BaseNotificationService):
         self._default_channel = default_channel
         self._hass = hass
         self._icon = icon
-
-        if username or self._icon:
-            self._as_user = False
-        else:
-            self._as_user = True
+        self._username = username
 
     async def _async_send_local_file_message(self, path, targets, message, title):
         """Upload a local file (with message) to Slack."""
@@ -108,11 +104,11 @@ class SlackNotificationService(BaseNotificationService):
             target: self._client.chat_postMessage(
                 channel=target,
                 text=message,
-                as_user=self._as_user,
                 attachments=attachments,
                 blocks=blocks,
                 icon_emoji=self._icon,
                 link_names=True,
+                username=self._username,
             )
             for target in targets
         }
