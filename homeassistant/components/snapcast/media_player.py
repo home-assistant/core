@@ -24,18 +24,18 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import (
+    ATTR_LATENCY,
+    ATTR_MASTER,
+    CLIENT_PREFIX,
+    CLIENT_SUFFIX,
     DATA_KEY,
     GROUP_PREFIX,
     GROUP_SUFFIX,
-    CLIENT_PREFIX,
-    CLIENT_SUFFIX,
-    SERVICE_SNAPSHOT,
-    SERVICE_RESTORE,
     SERVICE_JOIN,
-    SERVICE_UNJOIN,
+    SERVICE_RESTORE,
     SERVICE_SET_LATENCY,
-    ATTR_MASTER,
-    ATTR_LATENCY,
+    SERVICE_SNAPSHOT,
+    SERVICE_UNJOIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
