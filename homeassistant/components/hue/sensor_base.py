@@ -135,11 +135,12 @@ class SensorManager:
             if sensor_config is None:
                 continue
 
+            base_name = api[item_id].name
+            primary_sensor = primary_sensor_devices.get(_device_id(api[item_id]))
+            if primary_sensor is not None:
+                base_name = primary_sensor.name
+
             for sensor in sensor_config:
-                base_name = api[item_id].name
-                primary_sensor = primary_sensor_devices.get(_device_id(api[item_id]))
-                if primary_sensor is not None:
-                    base_name = primary_sensor.name
                 name = sensor["name_format"].format(base_name)
                 current[uniqueid] = sensor["class"](
                     api[item_id], name, self.bridge, primary_sensor=primary_sensor
