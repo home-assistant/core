@@ -56,9 +56,12 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not self.braviarc.is_connected():
             raise CannotConnect()
 
-        system_info = await self.hass.async_add_executor_job(
-            self.braviarc.get_system_info
-        )
+        try:
+            system_info = await self.hass.async_add_executor_job(
+                self.braviarc.get_system_info
+            )
+        except (KeyError, TypeError):
+            raise ModelNotSupported()
 
         await self.async_set_unique_id(system_info[ATTR_CID].lower())
         self._abort_if_unique_id_configured()
@@ -82,7 +85,7 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             _LOGGER.error("Import aborted, cannot connect to %s", self.host)
             return self.async_abort(reason="cannot_connect")
-        except (KeyError, TypeError):
+        except ModelNotSupported:
             _LOGGER.error("Import aborted, your TV is not supported")
             return self.async_abort(reason="unsupported_model")
 
@@ -116,15 +119,14 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await self.init_device(user_input[CONF_PIN])
-
-                user_input[CONF_HOST] = self.host
-                user_input[CONF_MAC] = self.mac
-
-                return self.async_create_entry(title=self.title, data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except (KeyError, TypeError):
+            except ModelNotSupported:
                 errors["base"] = "unsupported_model"
+            else:
+                user_input[CONF_HOST] = self.host
+                user_input[CONF_MAC] = self.mac
+                return self.async_create_entry(title=self.title, data=user_input)
 
         # Connecting with th PIN "0000" to start the pairing process on the TV.
         await self.hass.async_add_executor_job(
@@ -182,3 +184,7 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class ModelNotSupported(exceptions.HomeAssistantError):
+    """Error to indicate not supported model."""
