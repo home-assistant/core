@@ -274,7 +274,12 @@ class SnapcastClientDevice(MediaPlayerDevice):
 
     async def async_join(self, master):
         """Join the group of the master player."""
-        masters = [e for e in self.hass.data[DATA_KEY] if e.entity_id == master]
+        master_entity = next(
+            (
+                entity for entity in self.hass.data[DATA_KEY]
+                if entity.entity_id == master
+            )
+        )
         master_group = [
             group
             for group in self._client.groups_available()
