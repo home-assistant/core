@@ -16,7 +16,9 @@ WebSocketCommandHandler = Callable[[HomeAssistant, "ActiveConnection", dict], No
 
 DOMAIN = "websocket_api"
 URL = "/api/websocket"
-MAX_PENDING_MSG = 512
+PENDING_MSG_PEAK = 512
+PENDING_MSG_PEAK_TIME = 5
+MAX_PENDING_MSG = 2048
 
 ERR_ID_REUSE = "id_reuse"
 ERR_INVALID_FORMAT = "invalid_format"

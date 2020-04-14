@@ -10,6 +10,7 @@ import async_timeout
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
+from homeassistant.helpers.event import async_call_later
 
 from .auth import AuthPhase, auth_required_message
 from .const import (
@@ -18,6 +19,8 @@ from .const import (
     ERR_UNKNOWN_ERROR,
     JSON_DUMP,
     MAX_PENDING_MSG,
+    PENDING_MSG_PEAK,
+    PENDING_MSG_PEAK_TIME,
     SIGNAL_WEBSOCKET_CONNECTED,
     SIGNAL_WEBSOCKET_DISCONNECTED,
     URL,
@@ -52,6 +55,7 @@ class WebSocketHandler:
         self._handle_task = None
         self._writer_task = None
         self._logger = logging.getLogger("{}.connection.{}".format(__name__, id(self)))
+        self._peak_checker_unsub = None
 
     async def _writer(self):
         """Write outgoing messages."""
@@ -83,6 +87,11 @@ class WebSocketHandler:
 
                 await self.wsock.send_str(dumped)
 
+        # Clean up the peaker checker when we shut down the writer
+        if self._peak_checker_unsub:
+            self._peak_checker_unsub()
+            self._peak_checker_unsub = None
+
     @callback
     def _send_message(self, message):
         """Send a message to the client.
@@ -97,7 +106,34 @@ class WebSocketHandler:
             self._logger.error(
                 "Client exceeded max pending messages [2]: %s", MAX_PENDING_MSG
             )
+
             self._cancel()
+
+        if self._to_write.qsize() < PENDING_MSG_PEAK:
+            if self._peak_checker_unsub:
+                self._peak_checker_unsub()
+                self._peak_checker_unsub = None
+            return
+
+        if self._peak_checker_unsub is None:
+            self._peak_checker_unsub = async_call_later(
+                self.hass, PENDING_MSG_PEAK_TIME, self._check_write_peak
+            )
+
+    @callback
+    def _check_write_peak(self, _):
+        """Check that we are no longer above the write peak."""
+        self._peak_checker_unsub = None
+
+        if self._to_write.qsize() < PENDING_MSG_PEAK:
+            return
+
+        self._logger.error(
+            "Client unable to keep up with pending messages. Stayed over %s for %s seconds",
+            PENDING_MSG_PEAK,
+            PENDING_MSG_PEAK_TIME,
+        )
+        self._cancel()
 
     @callback
     def _cancel(self):
@@ -111,13 +147,7 @@ class WebSocketHandler:
         wsock = self.wsock = web.WebSocketResponse(heartbeat=55)
         await wsock.prepare(request)
         self._logger.debug("Connected")
-
-        # Py3.7+
-        if hasattr(asyncio, "current_task"):
-            # pylint: disable=no-member
-            self._handle_task = asyncio.current_task()
-        else:
-            self._handle_task = asyncio.Task.current_task()
+        self._handle_task = asyncio.current_task()
 
         @callback
         def handle_hass_stop(event):
