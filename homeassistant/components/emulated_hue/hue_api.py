@@ -731,9 +731,9 @@ def create_list_of_entities(config, request):
 
 def hue_brightness_to_hass(value):
     """Convert hue brightness 1..254 to hass format 0..255."""
-    return min(255, round((value / HUE_API_STATE_HUE_MAX) * 255))
+    return min(255, round((value / HUE_API_STATE_BRI_MAX) * 255))
 
 
 def hass_to_hue_brightness(value):
     """Convert hass brightness 0..255 to hue 1..254 scale."""
-    return max(1, round((value / 255) * HUE_API_STATE_HUE_MAX))
+    return max(1, round((value / 255) * HUE_API_STATE_BRI_MAX))
