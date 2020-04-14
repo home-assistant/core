@@ -1,7 +1,7 @@
 {
   "callsign": "MCSJ",
   "duration": 86400,
-  "isOffAir": False,
+  "isOffAir": false,
   "isPclocked": 3,
   "isPpv": false,
   "isRecording": false,
