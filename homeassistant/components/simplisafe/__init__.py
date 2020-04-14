@@ -24,7 +24,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import EVENT_HOMEASSISTANT_START, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
@@ -474,6 +474,17 @@ class SimpliSafe:
                 _LOGGER.error("Error while fetching initial event: %s", err)
                 self.initial_event_to_use[system.system_id] = {}
 
+            # The initial update doesn't process notifications because it is likely that
+            # they will trigger SIMPLISAFE_NOTIFICATION events before other critical
+            # components – such as automation – are ready. Therefore, we schedule an
+            # update of notifications as soon as HASS is fully started:
+            def process_notifications(_):
+                self._async_process_new_notifications(system)
+
+            self._hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, process_notifications
+            )
+
         async def refresh(event_time):
             """Refresh data from the SimpliSafe account."""
             await self.async_update()
@@ -482,15 +493,18 @@ class SimpliSafe:
             self._config_entry.entry_id
         ] = async_track_time_interval(self._hass, refresh, DEFAULT_SCAN_INTERVAL)
 
-        await self.async_update()
+        await self.async_update(process_notifications=False)
 
-    async def async_update(self):
+    async def async_update(self, process_notifications=True):
         """Get updated data from SimpliSafe."""
 
         async def update_system(system):
             """Update a system."""
             await system.update()
-            self._async_process_new_notifications(system)
+
+            if process_notifications:
+                self._async_process_new_notifications(system)
+
             _LOGGER.debug('Updated REST API data for "%s"', system.address)
             async_dispatcher_send(
                 self._hass, TOPIC_UPDATE_REST_API.format(system.system_id)
