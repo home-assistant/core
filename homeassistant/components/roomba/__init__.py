@@ -159,8 +159,6 @@ async def async_disconnect_or_timeout(hass, roomba):
         _LOGGER.error("Timeout exceeded when disconnecting the vacuum cleaner")
         raise CannotDisconnect
 
-    return True
-
 
 async def async_update_options(hass, config_entry):
     """Update options."""
@@ -177,12 +175,17 @@ async def async_unload_entry(hass, config_entry):
             ]
         )
     )
+
+    domain_data = hass.data[DOMAIN][config_entry.entry_id]
+
+    # unsubscribe listerner
+    domain_data[LISTENER]()
+
+    # disconnect cleanly
+    await async_disconnect_or_timeout(hass, roomba=domain_data[ROOMBA_SESSION])
+
     if unload_ok:
-        domain_data = hass.data[DOMAIN].pop(config_entry.entry_id)
-        # unsubscribe listerner
-        domain_data[LISTENER]()
-        # disconnect vacuum
-        await async_disconnect_or_timeout(hass, roomba=domain_data[ROOMBA_SESSION])
+        hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
 
