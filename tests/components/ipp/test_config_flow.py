@@ -1,6 +1,6 @@
 """Tests for the IPP config flow."""
 import aiohttp
-from pyipp import IPPConnectionUpgradeRequired
+from pyipp import IPPConnectionUpgradeRequired, IPPError
 
 from homeassistant.components.ipp.const import CONF_BASE_PATH, CONF_UUID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -170,6 +170,40 @@ async def test_zeroconf_parse_error(
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "parse_error"
+
+
+async def test_user_ipp_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we show the user form if connection upgrade required by server."""
+    aioclient_mock.post(
+        "http://192.168.1.31:631/ipp/print", exc=IPPError
+    )
+
+    user_input = MOCK_USER_INPUT.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=user_input,
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "ipp_error"
+
+
+async def test_zeroconf_ipp_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we abort zeroconf flow on IPP connection error."""
+    aioclient_mock.post(
+        "http://192.168.1.31:631/ipp/print", exc=IPPError
+    )
+
+    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "ipp_error"
 
 
 async def test_user_ipp_version_error(
