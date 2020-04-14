@@ -237,11 +237,7 @@ async def test_options_flow(hass):
 
     with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
         "bravia_tv.BraviaRC.is_connected", return_value=True
-    ), patch(
-        "bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO
-    ), patch(
-        "homeassistant.components.braviatv.async_setup_entry", return_value=True
-    ):
+    ), patch("bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
