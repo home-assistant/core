@@ -60,7 +60,7 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Validate and confirm webhook setup."""
         await setup_smartapp_endpoint(self.hass)
-        webhook_url = f"<blockquote>{get_webhook_url(self.hass)}</blockquote>"
+        webhook_url = get_webhook_url(self.hass)
 
         # Abort if the webhook is invalid
         if not validate_webhook_requirements(self.hass):

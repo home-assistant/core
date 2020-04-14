@@ -32,10 +32,9 @@ async def test_step_import(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert (
-        result["description_placeholders"]["webhook_url"]
-        == f"<blockquote>{smartapp.get_webhook_url(hass)}</blockquote>"
-    )
+    assert result["description_placeholders"][
+        "webhook_url"
+    ] == smartapp.get_webhook_url(hass)
 
 
 async def test_step_user(hass):
@@ -47,10 +46,9 @@ async def test_step_user(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert (
-        result["description_placeholders"]["webhook_url"]
-        == f"<blockquote>{smartapp.get_webhook_url(hass)}</blockquote>"
-    )
+    assert result["description_placeholders"][
+        "webhook_url"
+    ] == smartapp.get_webhook_url(hass)
 
 
 async def test_step_user_aborts_invalid_webhook(hass):
@@ -63,10 +61,9 @@ async def test_step_user_aborts_invalid_webhook(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "invalid_webhook_url"
-    assert (
-        result["description_placeholders"]["webhook_url"]
-        == f"<blockquote>{smartapp.get_webhook_url(hass)}</blockquote>"
-    )
+    assert result["description_placeholders"][
+        "webhook_url"
+    ] == smartapp.get_webhook_url(hass)
     assert "component_url" in result["description_placeholders"]
 
 

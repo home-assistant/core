@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Confirm Callback URL",
-        "description": "SmartThings will be configured to send push updates to Home Assistant at: {webhook_url} If this is not correct, please update your configuration, restart Home Assistant, and try again."
+        "description": "SmartThings will be configured to send push updates to Home Assistant at:\n> {webhook_url}\n\nIf this is not correct, please update your configuration, restart Home Assistant, and try again."
       },
       "pat": {
         "title": "Enter Personal Access Token",
@@ -25,7 +25,7 @@
       }
     },
     "abort": {
-      "invalid_webhook_url": "Home Assistant is not configured correctly to receive updates from SmartThings. The webhook URL is invalid: {webhook_url} Please update your configuration per the [instructions]({component_url}), restart Home Assistant, and try again.",
+      "invalid_webhook_url": "Home Assistant is not configured correctly to receive updates from SmartThings. The webhook URL is invalid:\n> {webhook_url}\n\nPlease update your configuration per the [instructions]({component_url}), restart Home Assistant, and try again.",
       "no_available_locations": "There are no available SmartThings Locations to setup in Home Assistant."
     },
     "error": {
