@@ -361,7 +361,9 @@ class HomeAssistant:
         self._track_task = False
 
     @callback
-    def async_run_job(self, target: Callable[..., None], *args: Any) -> None:
+    def async_run_job(
+        self, target: Callable[..., Union[None, Awaitable]], *args: Any
+    ) -> None:
         """Run a job from within the event loop.
 
         This method must be run in the event loop.
