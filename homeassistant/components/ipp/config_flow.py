@@ -6,6 +6,7 @@ from pyipp import (
     IPP,
     IPPConnectionError,
     IPPConnectionUpgradeRequired,
+    IPPError,
     IPPParseError,
     IPPResponseError,
     IPPVersionNotSupportedError,
@@ -75,6 +76,11 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         except IPPParseError:
             _LOGGER.exception("IPP Parse Error")
             return self.async_abort(reason="parse_error")
+        except IPPVersionNotSupportedError:
+            return self.async_abort(reason="ipp_version_error")
+        except IPPError:
+            _LOGGER.exception("IPP Error")
+            return self.async_abort(reason="ipp_error")
 
         user_input[CONF_UUID] = info[CONF_UUID]
 
@@ -113,11 +119,14 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="connection_upgrade")
         except (IPPConnectionError, IPPResponseError):
             return self.async_abort(reason="connection_error")
-        except IPPVersionNotSupportedError:
-            return self.async_abort(reason="version_error")
         except IPPParseError:
             _LOGGER.exception("IPP Parse Error")
             return self.async_abort(reason="parse_error")
+        except IPPVersionNotSupportedError:
+            return self.async_abort(reason="ipp_version_error")
+        except IPPError:
+            _LOGGER.exception("IPP Error")
+            return self.async_abort(reason="ipp_error")
 
         if info[CONF_UUID] is not None:
             self.discovery_info[CONF_UUID] = info[CONF_UUID]
