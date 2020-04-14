@@ -66,7 +66,6 @@ class MikrotikHubTracker(ScannerEntity):
         """Initialize the tracked device."""
         self.device = device
         self.mikrotik = mikrotik
-        self.unsub_dispatcher = None
         self.hub_id = self.device.hub_id
 
     @property
@@ -119,7 +118,7 @@ class MikrotikHubTracker(ScannerEntity):
         }
         return info
 
-    async def _update_hub_id(self):
+    async def async_update_hub_id(self):
         """Update the entity's hub ID if it has changed."""
 
         if not self.device.hub_id or self.hub_id == self.device.hub_id:
@@ -140,8 +139,10 @@ class MikrotikHubTracker(ScannerEntity):
     async def async_added_to_hass(self):
         """Client entity created."""
         _LOGGER.debug("New network device tracker %s (%s)", self.name, self.unique_id)
-        self.unsub_dispatcher = async_dispatcher_connect(
-            self.hass, self.mikrotik.signal_update, self.async_write_ha_state
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self.mikrotik.signal_update, self._async_update_state
+            )
         )
 
     async def async_update(self):
@@ -150,9 +151,9 @@ class MikrotikHubTracker(ScannerEntity):
             "Updating Mikrotik tracked client %s (%s)", self.entity_id, self.unique_id
         )
         await self.mikrotik.request_update()
-        await self._update_hub_id()
 
-    async def will_remove_from_hass(self):
-        """Disconnect from dispatcher."""
-        if self.unsub_dispatcher:
-            self.unsub_dispatcher()
+    @callback
+    async def _async_update_state(self):
+        """Update device state and related hub_id."""
+        await self.async_update_hub_id()
+        self.async_write_ha_state()

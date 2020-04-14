@@ -121,17 +121,35 @@ async def test_device_tracker_switching_hubs(hass, api):
     assert mikrotik_mock.hubs[MOCK_HUB1[mikrotik.CONF_HOST]].serial_number == "11111"
     assert mikrotik_mock.hubs[MOCK_HUB2[mikrotik.CONF_HOST]].serial_number == "11112"
 
-    assert mikrotik_mock.clients["00:00:00:00:00:01"].hub_id == "11111"
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    hub1_device = device_registry.async_get_device({(mikrotik.DOMAIN, "11111")}, set())
+    hub2_device = device_registry.async_get_device({(mikrotik.DOMAIN, "11112")}, set())
+
+    # device_1 is initially connected to HUB1
+    this_device = device_registry.async_get_device(
+        {(mikrotik.DOMAIN, "00:00:00:00:00:01")}, set()
+    )
+    assert this_device.via_device_id == hub1_device.id
 
     with patch.object(mikrotik.hub.MikrotikHub, "command", new=mock_command):
+        # device_1 is still connected connected to HUB1 after update
+        await mikrotik_mock.async_update()
+        await hass.async_block_till_done()
+        this_device = device_registry.async_get_device(
+            {(mikrotik.DOMAIN, "00:00:00:00:00:01")}, set()
+        )
+        assert this_device.via_device_id == hub1_device.id
+
         # device_1 is disconnected from HUB1 and connected to HUB2
         del HUB1_WIRELESS_DATA[0]
         HUB2_WIRELESS_DATA.append(DEVICE_1_WIRELESS)
 
         await mikrotik_mock.async_update()
         await hass.async_block_till_done()
-
-    assert mikrotik_mock.clients["00:00:00:00:00:01"].hub_id == "11112"
+        this_device = device_registry.async_get_device(
+            {(mikrotik.DOMAIN, "00:00:00:00:00:01")}, set()
+        )
+        assert this_device.via_device_id == hub2_device.id
 
     # revert the changes made for this test
     del HUB2_WIRELESS_DATA[1]
