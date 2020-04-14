@@ -23,11 +23,23 @@ G_ZWAVE_ID = "0658:0200"
 G_AIS_REMOTE_ID = "0c45:5102"
 # ignore internal devices
 G_AIS_INTERNAL_DEVICES_ID = ["14cd:8608", "05e3:0608", "1d6b:0002", "1d6b:0003"]
-
+G_REMOTE_DRIVES_DOM_PATH = "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne"
 G_USB_DRIVES_PATH = "/mnt/media_rw"
 if platform.machine() == "x86_64":
     # local test
     G_USB_DRIVES_PATH = "/media/andrzej"
+
+
+# check if usb is valid external drive
+def is_usb_url_valid_external_drive(path):
+    # check if the path is correct for external usb / sdcard usr
+    path = path.replace("sqlite:////", "")
+    path = path.replace("/ais.db", "")
+    path = path.replace("/ais.log", "")
+    if os.path.islink(path):
+        if os.readlink(path).startswith(G_USB_DRIVES_PATH):
+            return True
+    return False
 
 
 def get_device_info(pathname):
@@ -119,8 +131,7 @@ async def async_setup(hass, config):
 
                     os.symlink(
                         str(event.pathname),
-                        "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/dysk_"
-                        + str(drive_id),
+                        G_REMOTE_DRIVES_DOM_PATH + "/dysk_" + str(drive_id),
                     )
                     hass.async_add_job(
                         hass.services.async_call(
@@ -163,12 +174,11 @@ async def async_setup(hass, config):
         def process_IN_DELETE(self, event):
             if event.pathname.startswith(G_USB_DRIVES_PATH):
                 # delete symlink
-                td = "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne"
-                for f in os.listdir(td):
-                    if str(os.path.realpath(os.path.join(td, f))) == str(
-                        event.pathname
-                    ):
-                        os.system("rm " + td + "/" + str(f))
+                for f in os.listdir(G_REMOTE_DRIVES_DOM_PATH):
+                    if str(
+                        os.path.realpath(os.path.join(G_REMOTE_DRIVES_DOM_PATH, f))
+                    ) == str(event.pathname):
+                        os.system("rm " + G_REMOTE_DRIVES_DOM_PATH + "/" + str(f))
                         hass.async_add_job(
                             hass.services.async_call(
                                 "ais_ai_service",
@@ -200,7 +210,7 @@ async def async_setup(hass, config):
                                 if (
                                     media_content_id is not None
                                     and media_content_id.startswith(
-                                        "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/"
+                                        G_REMOTE_DRIVES_DOM_PATH
                                     )
                                 ):
                                     # quick stop audio - to prevent
@@ -259,19 +269,18 @@ async def async_setup(hass, config):
     async def mount_external_drives(call):
         """mount_external_drives."""
         try:
-            os.system("rm /data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/*")
+            os.system("rm " + G_REMOTE_DRIVES_DOM_PATH + "/*")
             dirs = os.listdir(G_USB_DRIVES_PATH)
             for d in dirs:
                 os.symlink(
-                    G_USB_DRIVES_PATH + "/" + d,
-                    "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/dysk_" + d,
+                    G_USB_DRIVES_PATH + "/" + d, G_REMOTE_DRIVES_DOM_PATH + "/dysk_" + d
                 )
         except Exception as e:
             _LOGGER.error("mount_external_drives " + str(e))
 
     async def ls_flash_drives(call):
         ais_usb_flash_drives = [ais_global.G_EMPTY_OPTION]
-        dirs = os.listdir("/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/")
+        dirs = os.listdir(G_REMOTE_DRIVES_DOM_PATH)
         for d in dirs:
             ais_usb_flash_drives.append(d)
         # set drives on list

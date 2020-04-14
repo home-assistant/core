@@ -1579,6 +1579,7 @@ class AisColudData:
                 "7za a -mmt=2 "
                 + password
                 + " -xr\!deps"
+                + " -xr\!ais_update"
                 + " -xr\!*.log"
                 + " -xr\!*.db"
                 + " -xr\!home-assistant* "
@@ -1592,12 +1593,30 @@ class AisColudData:
             self.get_backup_info(call, 0, str(e))
             _LOGGER.error("do_backup 7za: " + str(e))
             return
-        # 2. upload
+        # 2. check backup size
+        # size in bytes 1 Byte = 0.000001 MB
+        b = os.path.getsize(home_dir + "backup.zip")
+        mb = b * 0.000001
+        if mb > 11:
+            self.get_backup_info(
+                call,
+                0,
+                "Maksymalny rozmiar kopii zapasowej konfiguracji to 10 MB. "
+                + "Twoja konfiguracja zajmuje "
+                + str(round(mb))
+                + " MB. Przed wykonaniem kopii usuń niepotrzebne zasoby z galerii (np. pliki wideo)."
+                + " Jeżeli dodałeś ręcznie jakieś niestandardowe komponenty do folderu z konfiguracją: "
+                + "~/AIS to też zajmują one miejsce i zalecamy je usunąć przed wykonaniem kopii.",
+            )
+            _LOGGER.error("Backup size, is to big, in bytes: " + str(b))
+            return
+
+        # 3. upload to cloud
         self.get_backup_info(
             call,
             1,
             None,
-            "Wysyłam kopie konfiguracji do panelu integratora",
+            "Wysyłam kopie konfiguracji do portalu integratora",
             None,
             None,
         )
@@ -1608,8 +1627,13 @@ class AisColudData:
             _LOGGER.error("post_backup: " + str(e))
             return
 
-        # refresh
-        self.get_backup_info(call, 0, "", "Kopia zapasowa konfiguracji wykonana")
+        if ws_resp.status_code != 200:
+            self.get_backup_info(
+                call, 0, "Podczas wysyłania kopii wystąpił problem " + ws_resp.text
+            )
+        else:
+            # refresh
+            self.get_backup_info(call, 0, "", "Kopia zapasowa konfiguracji wykonana")
 
     def restore_backup(self, call):
         import subprocess

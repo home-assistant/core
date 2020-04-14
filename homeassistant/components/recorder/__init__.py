@@ -168,6 +168,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             db_max_retries = 10
             db_retry_wait = 3
         else:
+            if db_url.startswith("sqlite://///"):
+                # DB in file
+                from homeassistant.components import ais_usb
+
+                if ais_usb.is_usb_url_valid_external_drive(db_url) is not True:
+                    _LOGGER.error(
+                        "Invalid external drive: %s selected for recording! ", db_url
+                    )
+                    return False
             keep_days = 10
             if "dbKeepDays" in db_settings:
                 keep_days = int(db_settings["dbKeepDays"])

@@ -151,12 +151,17 @@ async def _async_change_logger_settings(hass, call):
     )
 
     err_path_exists = os.path.isfile(file_log_path)
+    # check if this is correct external drive
+    from homeassistant.components import ais_usb
+
+    err_path_is_external_drive = ais_usb.is_usb_url_valid_external_drive(file_log_path)
     err_dir = os.path.dirname(file_log_path)
 
     # Check if we can write to the error log if it exists or that
     # we can create files in the containing directory if not.
-    if (err_path_exists and os.access(file_log_path, os.W_OK)) or (
-        not err_path_exists and os.access(err_dir, os.W_OK)
+    if err_path_is_external_drive and (
+        (err_path_exists and os.access(file_log_path, os.W_OK))
+        or (not err_path_exists and os.access(err_dir, os.W_OK))
     ):
         command = "pm2 logs >> " + file_log_path
         G_LOG_PROCESS = subprocess.Popen(command, shell=True)
@@ -223,6 +228,29 @@ async def _async_check_db_connection(hass, call):
         else:
             kwargs["echo"] = False
         try:
+            # check if dbUrl is valid external drive drive
+            if db_connection["dbUrl"].startswith("sqlite://///"):
+                # DB in file
+                from homeassistant.components import ais_usb
+
+                if (
+                    ais_usb.is_usb_url_valid_external_drive(db_connection["dbUrl"])
+                    is not True
+                ):
+                    error_info = (
+                        "Invalid external drive: "
+                        + db_connection["dbUrl"]
+                        + " selected for recording!"
+                    )
+
+                    _LOGGER.error(error_info)
+                    db_connection["errorInfo"] = error_info
+                    hass.states.async_set(
+                        "sensor.ais_db_connection_info",
+                        "db_url_not_valid",
+                        db_connection,
+                    )
+                    return
             engine = create_engine(db_connection["dbUrl"], **kwargs)
             with engine.connect() as connection:
                 result = connection.execute("SELECT 1")
@@ -327,12 +355,19 @@ async def _async_get_db_log_settings_info(hass, call):
         )
 
         err_path_exists = os.path.isfile(file_log_path)
+        from homeassistant.components import ais_usb
+
+        err_path_is_external_drive = ais_usb.is_usb_url_valid_external_drive(
+            file_log_path
+        )
+
         err_dir = os.path.dirname(file_log_path)
 
         # Check if we can write to the error log if it exists or that
         # we can create files in the containing directory if not.
-        if (err_path_exists and os.access(file_log_path, os.W_OK)) or (
-            not err_path_exists and os.access(err_dir, os.W_OK)
+        if err_path_is_external_drive and (
+            (err_path_exists and os.access(file_log_path, os.W_OK))
+            or (not err_path_exists and os.access(err_dir, os.W_OK))
         ):
             command = "pm2 logs >> " + file_log_path
             G_LOG_PROCESS = subprocess.Popen(command, shell=True)
