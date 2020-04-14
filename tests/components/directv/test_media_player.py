@@ -59,7 +59,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 ATTR_UNIQUE_ID = "unique_id"
 CLIENT_ENTITY_ID = f"{MP_DOMAIN}.client"
 MAIN_ENTITY_ID = f"{MP_DOMAIN}.host"
-MUSIC_ENTITY_ID = f"{MP_DOMAIN}.fireplace"
+MUSIC_ENTITY_ID = f"{MP_DOMAIN}.music_client"
 UNAVAILABLE_ENTITY_ID = f"{MP_DOMAIN}.unavailable_client"
 
 # pylint: disable=redefined-outer-name
