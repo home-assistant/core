@@ -301,21 +301,15 @@ class SnapcastClientDevice(MediaPlayerDevice):
         """Join the group of the master player."""
 
         master_entity = next(
-            (
-                entity
-                for entity in self.hass.data[DATA_KEY]
-                if entity.entity_id == master
-            )
+            entity for entity in self.hass.data[DATA_KEY] if entity.entity_id == master
         )
         if not isinstance(master_entity, SnapcastClientDevice):
             raise ValueError("Master is not a client device. Can only join clients.")
 
         master_group = next(
-            (
-                group
-                for group in self._client.groups_available()
-                if master_entity.identifier in group.clients
-            )
+            group
+            for group in self._client.groups_available()
+            if master_entity.identifier in group.clients
         )
         await master_group.add_client(self._client.identifier)
         self.async_write_ha_state()
