@@ -54,12 +54,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if config.get(CONF_STATION):
         ec_data = ECData(
-            station_id=config[CONF_STATION], language=config.get(CONF_LANGUAGE)
+            station_id=config[CONF_STATION], language=config[CONF_LANGUAGE]
         )
     else:
         lat = config.get(CONF_LATITUDE, hass.config.latitude)
         lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        ec_data = ECData(coordinates=(lat, lon), language=config.get(CONF_LANGUAGE))
+        ec_data = ECData(coordinates=(lat, lon), language=config[CONF_LANGUAGE])
 
     sensor_list = list(ec_data.conditions.keys()) + list(ec_data.alerts.keys())
     add_entities([ECSensor(sensor_type, ec_data) for sensor_type in sensor_list], True)

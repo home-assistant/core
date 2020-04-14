@@ -24,7 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the file size sensor."""
     sensors = []
-    for path in config.get(CONF_FILE_PATHS):
+    for path in config[CONF_FILE_PATHS]:
         if not hass.config.is_allowed_path(path):
             _LOGGER.error("Filepath %s is not valid or allowed", path)
             continue

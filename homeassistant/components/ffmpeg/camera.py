@@ -40,9 +40,9 @@ class FFmpegCamera(Camera):
         super().__init__()
 
         self._manager = hass.data[DATA_FFMPEG]
-        self._name = config.get(CONF_NAME)
-        self._input = config.get(CONF_INPUT)
-        self._extra_arguments = config.get(CONF_EXTRA_ARGUMENTS)
+        self._name = config[CONF_NAME]
+        self._input = config[CONF_INPUT]
+        self._extra_arguments = config[CONF_EXTRA_ARGUMENTS]
 
     @property
     def supported_features(self):

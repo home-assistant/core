@@ -42,14 +42,14 @@ class FleetGoDeviceScanner:
     def __init__(self, config, see):
         """Initialize FleetGoDeviceScanner."""
 
-        self._include = config.get(CONF_INCLUDE)
+        self._include = config[CONF_INCLUDE]
         self._see = see
 
         self._api = API(
-            config.get(CONF_CLIENT_ID),
-            config.get(CONF_CLIENT_SECRET),
-            config.get(CONF_USERNAME),
-            config.get(CONF_PASSWORD),
+            config[CONF_CLIENT_ID],
+            config[CONF_CLIENT_SECRET],
+            config[CONF_USERNAME],
+            config[CONF_PASSWORD],
         )
 
     def setup(self, hass):

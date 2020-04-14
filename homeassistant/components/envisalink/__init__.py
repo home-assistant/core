@@ -102,19 +102,19 @@ async def async_setup(hass, config):
 
     conf = config.get(DOMAIN)
 
-    host = conf.get(CONF_HOST)
-    port = conf.get(CONF_EVL_PORT)
+    host = conf[CONF_HOST]
+    port = conf[CONF_EVL_PORT]
     code = conf.get(CONF_CODE)
-    panel_type = conf.get(CONF_PANEL_TYPE)
-    panic_type = conf.get(CONF_PANIC)
-    version = conf.get(CONF_EVL_VERSION)
-    user = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASS)
-    keep_alive = conf.get(CONF_EVL_KEEPALIVE)
-    zone_dump = conf.get(CONF_ZONEDUMP_INTERVAL)
+    panel_type = conf[CONF_PANEL_TYPE]
+    panic_type = conf[CONF_PANIC]
+    version = conf[CONF_EVL_VERSION]
+    user = conf[CONF_USERNAME]
+    password = conf[CONF_PASS]
+    keep_alive = conf[CONF_EVL_KEEPALIVE]
+    zone_dump = conf[CONF_ZONEDUMP_INTERVAL]
     zones = conf.get(CONF_ZONES)
     partitions = conf.get(CONF_PARTITIONS)
-    connection_timeout = conf.get(CONF_TIMEOUT)
+    connection_timeout = conf[CONF_TIMEOUT]
     sync_connect = asyncio.Future()
 
     controller = EnvisalinkAlarmPanel(

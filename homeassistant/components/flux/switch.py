@@ -131,18 +131,18 @@ async def async_set_lights_rgb(hass, lights, rgb, transition):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Flux switches."""
-    name = config.get(CONF_NAME)
-    lights = config.get(CONF_LIGHTS)
+    name = config[CONF_NAME]
+    lights = config[CONF_LIGHTS]
     start_time = config.get(CONF_START_TIME)
     stop_time = config.get(CONF_STOP_TIME)
-    start_colortemp = config.get(CONF_START_CT)
-    sunset_colortemp = config.get(CONF_SUNSET_CT)
-    stop_colortemp = config.get(CONF_STOP_CT)
+    start_colortemp = config[CONF_START_CT]
+    sunset_colortemp = config[CONF_SUNSET_CT]
+    stop_colortemp = config[CONF_STOP_CT]
     brightness = config.get(CONF_BRIGHTNESS)
     disable_brightness_adjust = config.get(CONF_DISABLE_BRIGHTNESS_ADJUST)
-    mode = config.get(CONF_MODE)
-    interval = config.get(CONF_INTERVAL)
-    transition = config.get(ATTR_TRANSITION)
+    mode = config[CONF_MODE]
+    interval = config[CONF_INTERVAL]
+    transition = config[ATTR_TRANSITION]
     flux = FluxSwitch(
         name,
         hass,

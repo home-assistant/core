@@ -56,7 +56,7 @@ async def async_setup(hass, config):
     """Set up the FFmpeg component."""
     conf = config.get(DOMAIN, {})
 
-    manager = FFmpegManager(hass, conf.get(CONF_FFMPEG_BIN, DEFAULT_BINARY))
+    manager = FFmpegManager(hass, conf[CONF_FFMPEG_BIN])
 
     await manager.async_get_version()
 

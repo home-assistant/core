@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Etherscan.io sensors."""
-    address = config.get(CONF_ADDRESS)
+    address = config[CONF_ADDRESS]
     name = config.get(CONF_NAME)
     token = config.get(CONF_TOKEN)
     token_address = config.get(CONF_TOKEN_ADDRESS)

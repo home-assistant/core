@@ -25,7 +25,7 @@ SCAN_INTERVAL = timedelta(seconds=120)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_JAILS): vol.All(cv.ensure_list, vol.Length(min=1)),
-        vol.Optional(CONF_FILE_PATH): cv.isfile,
+        vol.Optional(CONF_FILE_PATH, default=DEFAULT_LOG): cv.isfile,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -33,9 +33,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the fail2ban sensor."""
-    name = config.get(CONF_NAME)
-    jails = config.get(CONF_JAILS)
-    log_file = config.get(CONF_FILE_PATH, DEFAULT_LOG)
+    name = config[CONF_NAME]
+    jails = config[CONF_JAILS]
+    log_file = config[CONF_FILE_PATH]
 
     device_list = []
     log_parser = BanLogParser(log_file)

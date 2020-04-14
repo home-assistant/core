@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("No Enviro pHAT was found.")
         return False
 
-    data = EnvirophatData(envirophat, config.get(CONF_USE_LEDS))
+    data = EnvirophatData(envirophat, config[CONF_USE_LEDS])
 
     dev = []
     for variable in config[CONF_DISPLAY_OPTIONS]:

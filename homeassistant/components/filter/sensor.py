@@ -151,7 +151,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template sensors."""
     name = config.get(CONF_NAME)
-    entity_id = config.get(CONF_ENTITY_ID)
+    entity_id = config[CONF_ENTITY_ID]
 
     filters = [
         FILTERS[_filter.pop(CONF_FILTER_NAME)](entity=entity_id, **_filter)

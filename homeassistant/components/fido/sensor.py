@@ -71,8 +71,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Fido sensor."""
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
 
     httpsession = hass.helpers.aiohttp_client.async_get_clientsession()
     fido_data = FidoData(username, password, httpsession)
@@ -80,7 +80,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if ret is False:
         return
 
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
 
     sensors = []
     for number in fido_data.client.get_phone_numbers():

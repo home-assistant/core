@@ -60,11 +60,11 @@ class FFmpegBinarySensor(FFmpegBase, BinarySensorDevice):
 
     def __init__(self, config):
         """Init for the binary sensor noise detection."""
-        super().__init__(config.get(CONF_INITIAL_STATE))
+        super().__init__(config[CONF_INITIAL_STATE])
 
         self._state = False
         self._config = config
-        self._name = config.get(CONF_NAME)
+        self._name = config[CONF_NAME]
 
     @callback
     def _async_callback(self, state):
@@ -104,15 +104,15 @@ class FFmpegMotion(FFmpegBinarySensor):
 
         # init config
         self.ffmpeg.set_options(
-            time_reset=self._config.get(CONF_RESET),
+            time_reset=self._config[CONF_RESET],
             time_repeat=self._config.get(CONF_REPEAT_TIME, 0),
             repeat=self._config.get(CONF_REPEAT, 0),
-            changes=self._config.get(CONF_CHANGES),
+            changes=self._config[CONF_CHANGES],
         )
 
         # run
         await self.ffmpeg.open_sensor(
-            input_source=self._config.get(CONF_INPUT),
+            input_source=self._config[CONF_INPUT],
             extra_cmd=self._config.get(CONF_EXTRA_ARGUMENTS),
         )
 

@@ -33,7 +33,7 @@ SCAN_INTERVAL = timedelta(minutes=60)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the cartridge sensor."""
-    host = config.get(CONF_HOST)
+    host = config[CONF_HOST]
 
     api = EpsonPrinterAPI(host)
     if not api.available:

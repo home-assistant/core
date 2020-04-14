@@ -90,13 +90,13 @@ def due_in_minutes(timestamp: datetime) -> int:
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Entur public transport sensor."""
 
-    expand = config.get(CONF_EXPAND_PLATFORMS)
-    line_whitelist = config.get(CONF_WHITELIST_LINES)
-    name = config.get(CONF_NAME)
-    show_on_map = config.get(CONF_SHOW_ON_MAP)
-    stop_ids = config.get(CONF_STOP_IDS)
-    omit_non_boarding = config.get(CONF_OMIT_NON_BOARDING)
-    number_of_departures = config.get(CONF_NUMBER_OF_DEPARTURES)
+    expand = config[CONF_EXPAND_PLATFORMS]
+    line_whitelist = config[CONF_WHITELIST_LINES]
+    name = config[CONF_NAME]
+    show_on_map = config[CONF_SHOW_ON_MAP]
+    stop_ids = config[CONF_STOP_IDS]
+    omit_non_boarding = config[CONF_OMIT_NON_BOARDING]
+    number_of_departures = config[CONF_NUMBER_OF_DEPARTURES]
 
     stops = [s for s in stop_ids if "StopPlace" in s]
     quays = [s for s in stop_ids if "Quay" in s]

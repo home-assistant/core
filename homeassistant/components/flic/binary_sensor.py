@@ -60,9 +60,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Initialize flic client responsible for
     # connecting to buttons and retrieving events
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    discovery = config.get(CONF_DISCOVERY)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    discovery = config[CONF_DISCOVERY]
 
     try:
         client = FlicClient(host, port)
@@ -115,7 +115,7 @@ def start_scanning(config, add_entities, client):
 
 def setup_button(hass, config, add_entities, client, address):
     """Set up a single button device."""
-    timeout = config.get(CONF_TIMEOUT)
+    timeout = config[CONF_TIMEOUT]
     ignored_click_types = config.get(CONF_IGNORED_CLICK_TYPES)
     button = FlicButton(hass, client, address, timeout, ignored_click_types)
     _LOGGER.info("Connected to button %s", address)

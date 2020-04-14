@@ -87,9 +87,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if DATA_EPSON not in hass.data:
         hass.data[DATA_EPSON] = []
 
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    name = config[CONF_NAME]
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
     ssl = config[CONF_SSL]
 
     epson_proj = EpsonProjector(

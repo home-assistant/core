@@ -144,7 +144,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     lights = []
     light_ips = []
 
-    for ipaddr, device_config in config.get(CONF_DEVICES, {}).items():
+    for ipaddr, device_config in config[CONF_DEVICES].items():
         device = {}
         device["name"] = device_config[CONF_NAME]
         device["ipaddr"] = ipaddr
@@ -155,7 +155,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         lights.append(light)
         light_ips.append(ipaddr)
 
-    if not config.get(CONF_AUTOMATIC_ADD, False):
+    if not config[CONF_AUTOMATIC_ADD]:
         add_entities(lights, True)
         return
 

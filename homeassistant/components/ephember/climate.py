@@ -55,8 +55,8 @@ HA_STATE_TO_EPH = {value: key for key, value in EPH_TO_HA_STATE.items()}
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ephember thermostat."""
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
 
     try:
         ember = EphEmber(username, password)

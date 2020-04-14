@@ -70,13 +70,13 @@ class FFmpegNoise(FFmpegBinarySensor):
             return
 
         self.ffmpeg.set_options(
-            time_duration=self._config.get(CONF_DURATION),
-            time_reset=self._config.get(CONF_RESET),
-            peak=self._config.get(CONF_PEAK),
+            time_duration=self._config[CONF_DURATION],
+            time_reset=self._config[CONF_RESET],
+            peak=self._config[CONF_PEAK],
         )
 
         await self.ffmpeg.open_sensor(
-            input_source=self._config.get(CONF_INPUT),
+            input_source=self._config[CONF_INPUT],
             output_dest=self._config.get(CONF_OUTPUT),
             extra_cmd=self._config.get(CONF_EXTRA_ARGUMENTS),
         )

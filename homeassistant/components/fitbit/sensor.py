@@ -261,7 +261,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if int(time.time()) - expires_at > 3600:
             authd_client.client.refresh_token()
 
-        unit_system = config.get(CONF_UNIT_SYSTEM)
+        unit_system = config[CONF_UNIT_SYSTEM]
         if unit_system == "default":
             authd_client.system = authd_client.user_profile_get()["user"]["locale"]
             if authd_client.system != "en_GB":
@@ -274,8 +274,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         dev = []
         registered_devs = authd_client.get_devices()
-        clock_format = config.get(CONF_CLOCK_FORMAT)
-        for resource in config.get(CONF_MONITORED_RESOURCES):
+        clock_format = config[CONF_CLOCK_FORMAT]
+        for resource in config[CONF_MONITORED_RESOURCES]:
 
             # monitor battery for all linked FitBit devices
             if resource == "devices/battery":

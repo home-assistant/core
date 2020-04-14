@@ -38,9 +38,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Fixer.io sensor."""
 
-    api_key = config.get(CONF_API_KEY)
-    name = config.get(CONF_NAME)
-    target = config.get(CONF_TARGET)
+    api_key = config[CONF_API_KEY]
+    name = config[CONF_NAME]
+    target = config[CONF_TARGET]
 
     try:
         Fixerio(symbols=[target], access_key=api_key).latest()

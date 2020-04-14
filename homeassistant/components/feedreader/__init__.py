@@ -43,8 +43,8 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the Feedreader component."""
     urls = config.get(DOMAIN)[CONF_URLS]
-    scan_interval = config.get(DOMAIN).get(CONF_SCAN_INTERVAL)
-    max_entries = config.get(DOMAIN).get(CONF_MAX_ENTRIES)
+    scan_interval = config.get(DOMAIN)[CONF_SCAN_INTERVAL]
+    max_entries = config.get(DOMAIN)[CONF_MAX_ENTRIES]
     data_file = hass.config.path(f"{DOMAIN}.pickle")
     storage = StoredData(data_file)
     feeds = [
