@@ -157,7 +157,7 @@ def preprocess_turn_on_alternatives(params):
 
     brightness_pct = params.pop(ATTR_BRIGHTNESS_PCT, None)
     if brightness_pct is not None:
-        params[ATTR_BRIGHTNESS] = int(255 * brightness_pct / 100)
+        params[ATTR_BRIGHTNESS] = round(255 * brightness_pct / 100)
 
     xy_color = params.pop(ATTR_XY_COLOR, None)
     if xy_color is not None:
@@ -233,7 +233,7 @@ async def async_setup(hass, config):
                 brightness += params.pop(ATTR_BRIGHTNESS_STEP)
 
             else:
-                brightness += int(params.pop(ATTR_BRIGHTNESS_STEP_PCT) / 100 * 255)
+                brightness += round(params.pop(ATTR_BRIGHTNESS_STEP_PCT) / 100 * 255)
 
             params[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
             turn_light_off, off_params = preprocess_turn_off(params)
