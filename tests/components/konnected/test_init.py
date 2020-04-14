@@ -230,7 +230,7 @@ async def test_setup_with_no_config(hass):
     assert konnected.YAML_CONFIGS not in hass.data[konnected.DOMAIN]
 
 
-async def test_setup_defined_hosts_known_auth(hass):
+async def test_setup_defined_hosts_known_auth(hass, mock_panel):
     """Test we don't initiate a config entry if configured panel is known."""
     MockConfigEntry(
         domain="konnected",
