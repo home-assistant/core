@@ -140,7 +140,6 @@ class IPPEntity(Entity):
         self._device_id = entry_unique_id
         self._icon = icon
         self._name = name
-        self._unsub_dispatcher = None
         self.coordinator = coordinator
 
     @property
