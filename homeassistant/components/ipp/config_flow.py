@@ -85,6 +85,11 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
         user_input[CONF_UUID] = info[CONF_UUID]
 
+        if user_input[CONF_UUID] is None:
+            _LOGGER.debug(
+                "Printer UUID is missing from IPP info"
+            )
+
         await self.async_set_unique_id(user_input[CONF_UUID])
         self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
 
@@ -93,10 +98,12 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(self, discovery_info: ConfigType) -> Dict[str, Any]:
         """Handle zeroconf discovery."""
         # Hostname is format: EPSON123456.local.
-        host = discovery_info["hostname"].rstrip(".")
-        port = discovery_info["port"]
-        name, _ = host.rsplit(".")
-        tls = discovery_info["type"] == "_ipps._tcp.local."
+        hostname = discovery_info["hostname"].rstrip(".")
+        port = discovery_info[CONF_PORT]
+        zctype = discovery_info["type"]
+        name = discovery_info[CONF_NAME].replace(f".{zctype}", "")
+        tls = zctype == "_ipps._tcp.local."
+        base_path = discovery_info["properties"].get("rp", "ipp/print")
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {"name": name}})
@@ -107,8 +114,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: port,
                 CONF_SSL: tls,
                 CONF_VERIFY_SSL: False,
-                CONF_BASE_PATH: "/"
-                + discovery_info["properties"].get("rp", "ipp/print"),
+                CONF_BASE_PATH: CONF_BASE_PATH: f"/{base_path}",
                 CONF_NAME: name,
                 CONF_UUID: discovery_info["properties"].get("UUID"),
             }
@@ -130,12 +136,22 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("IPP Error", exc_info=True)
             return self.async_abort(reason="ipp_error")
 
-        if info[CONF_UUID] is not None:
+        if self.discovery_info[CONF_UUID] is None and info[CONF_UUID] is not None:
+            _LOGGER.debug(
+                "Printer UUID is missing from discovery info. Falling back to IPP UUID"
+            )
             self.discovery_info[CONF_UUID] = info[CONF_UUID]
+        elif self.discovery_info[CONF_UUID] is None:
+            _LOGGER.debug(
+                "Printer UUID is missing from discovery info and IPP response"
+            )
 
         await self.async_set_unique_id(self.discovery_info[CONF_UUID])
         self._abort_if_unique_id_configured(
-            updates={CONF_HOST: self.discovery_info[CONF_HOST]}
+            updates={
+                CONF_HOST: self.discovery_info[CONF_HOST],
+                CONF_NAME: self.discovery_info[CONF_NAME],
+            },
         )
 
         return await self.async_step_zeroconf_confirm()
