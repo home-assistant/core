@@ -10,8 +10,11 @@ from homeassistant import data_entry_flow
 from homeassistant.components.smartthings import smartapp
 from homeassistant.components.smartthings.config_flow import SmartThingsFlowHandler
 from homeassistant.components.smartthings.const import (
+    CONF_APP_ID,
     CONF_INSTALLED_APP_ID,
     CONF_LOCATION_ID,
+    CONF_OAUTH_CLIENT_ID,
+    CONF_OAUTH_CLIENT_SECRET,
     CONF_REFRESH_TOKEN,
     DOMAIN,
 )
@@ -315,6 +318,38 @@ async def test_step_pat_app_updated_webhook(
     assert flow.app_id == app.app_id
     assert flow.oauth_client_secret == app_oauth_client.client_secret
     assert flow.oauth_client_id == app_oauth_client.client_id
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "select_location"
+
+
+async def test_step_pat_app_updated_webhook_from_existing_oauth_client(
+    hass, app, location, smartthings_mock
+):
+    """Test SmartApp is updated from existing then show location form."""
+    oauth_client_id = str(uuid4())
+    oauth_client_secret = str(uuid4())
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_APP_ID: app.app_id,
+            CONF_OAUTH_CLIENT_ID: oauth_client_id,
+            CONF_OAUTH_CLIENT_SECRET: oauth_client_secret,
+            CONF_LOCATION_ID: str(uuid4()),
+        },
+    )
+    entry.add_to_hass(hass)
+    flow = SmartThingsFlowHandler()
+    flow.hass = hass
+    smartthings_mock.apps.return_value = [app]
+    smartthings_mock.locations.return_value = [location]
+    token = str(uuid4())
+
+    result = await flow.async_step_pat({CONF_ACCESS_TOKEN: token})
+
+    assert flow.access_token == token
+    assert flow.app_id == app.app_id
+    assert flow.oauth_client_secret == oauth_client_secret
+    assert flow.oauth_client_id == oauth_client_id
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "select_location"
 
