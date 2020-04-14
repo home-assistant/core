@@ -175,7 +175,7 @@ async def test_zeroconf_parse_error(
 async def test_user_ipp_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test we show the user form if connection upgrade required by server."""
+    """Test we abort the user flow on IPP error."""
     aioclient_mock.post("http://192.168.1.31:631/ipp/print", exc=IPPError)
 
     user_input = MOCK_USER_INPUT.copy()
@@ -190,7 +190,7 @@ async def test_user_ipp_error(
 async def test_zeroconf_ipp_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test we abort zeroconf flow on IPP connection error."""
+    """Test we abort zeroconf flow on IPP error."""
     aioclient_mock.post("http://192.168.1.31:631/ipp/print", exc=IPPError)
 
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
