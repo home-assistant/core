@@ -1,6 +1,7 @@
 """Hue sensor entities."""
 from aiohue.sensors import (
     TYPE_ZLL_LIGHTLEVEL,
+    TYPE_ZLL_PRESENCE,
     TYPE_ZLL_ROTARY,
     TYPE_ZLL_SWITCH,
     TYPE_ZLL_TEMPERATURE,
@@ -142,4 +143,8 @@ SENSOR_CONFIG_MAP.update(
             }
         ],
     }
+)
+
+SENSOR_CONFIG_MAP[TYPE_ZLL_PRESENCE].extend(
+    [{"platform": "sensor", "name_format": REMOTE_NAME_FORMAT, "class": HueBattery}]
 )
