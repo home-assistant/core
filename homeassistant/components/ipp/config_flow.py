@@ -24,7 +24,7 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import CONF_BASE_PATH, CONF_UUID
+from .const import CONF_BASE_PATH, CONF_SERIAL, CONF_UUID
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ async def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
 
     printer = await ipp.printer()
 
-    return {CONF_UUID: printer.info.uuid}
+    return {CONF_SERIAL: printer.info.serial, CONF_UUID: printer.info.uuid}
 
 
 class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -83,14 +83,19 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("IPP Error", exc_info=True)
             return self.async_abort(reason="ipp_error")
 
-        user_input[CONF_UUID] = info[CONF_UUID]
+        unique_id = user_input[CONF_UUID] = info[CONF_UUID]
 
-        if user_input[CONF_UUID] is None:
+        if unique_id is None and info[CONF_SERIAL] is not None:
             _LOGGER.debug(
-                "Printer UUID is missing from IPP info"
+                "Printer UUID is missing from IPP response. Falling back to IPP serial number"
+            )
+            unique_id = info[CONF_SERIAL]
+        elif unique_id is None:
+            _LOGGER.debug(
+                "Printer UUID and serial are missing from IPP response"
             )
 
-        await self.async_set_unique_id(user_input[CONF_UUID])
+        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
 
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
@@ -136,17 +141,23 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("IPP Error", exc_info=True)
             return self.async_abort(reason="ipp_error")
 
-        if self.discovery_info[CONF_UUID] is None and info[CONF_UUID] is not None:
+        unique_id = self.discovery_info[CONF_UUID]
+        if unique_id is None and info[CONF_UUID] is not None:
             _LOGGER.debug(
                 "Printer UUID is missing from discovery info. Falling back to IPP UUID"
             )
-            self.discovery_info[CONF_UUID] = info[CONF_UUID]
-        elif self.discovery_info[CONF_UUID] is None:
+            unique_id = self.discovery_info[CONF_UUID] = info[CONF_UUID]
+        elif unique_id is None and info[CONF_SERIAL] is not None:
+            _LOGGER.debug(
+                "Printer UUID is missing from discovery info and IPP response. Falling back to IPP serial number"
+            )
+            unique_id = info[CONF_SERIAL]
+        elif unique_id is None:
             _LOGGER.debug(
                 "Printer UUID is missing from discovery info and IPP response"
             )
 
-        await self.async_set_unique_id(self.discovery_info[CONF_UUID])
+        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(
             updates={
                 CONF_HOST: self.discovery_info[CONF_HOST],
