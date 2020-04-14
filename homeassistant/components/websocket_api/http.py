@@ -11,6 +11,10 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util.json import (
+    find_paths_unserializable_data,
+    format_unserializable_data,
+)
 
 from .auth import AuthPhase, auth_required_message
 from .const import (
@@ -74,14 +78,17 @@ class WebSocketHandler:
 
                 try:
                     dumped = JSON_DUMP(message)
-                except (ValueError, TypeError) as err:
-                    self._logger.error(
-                        "Unable to serialize to JSON: %s\n%s", err, message
-                    )
+                except (ValueError, TypeError):
                     await self.wsock.send_json(
                         error_message(
                             message["id"], ERR_UNKNOWN_ERROR, "Invalid JSON in response"
                         )
+                    )
+                    self._logger.error(
+                        "Unable to serialize to JSON. Bad data found at %s",
+                        format_unserializable_data(
+                            find_paths_unserializable_data(message, dump=JSON_DUMP)
+                        ),
                     )
                     continue
 
