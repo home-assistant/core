@@ -710,7 +710,7 @@ sentry-sdk==0.13.5
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.0.6
+simplisafe-python==9.0.7
 
 # homeassistant.components.sleepiq
 sleepyq==0.7
