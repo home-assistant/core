@@ -26,7 +26,7 @@ DEFAULT_NAME = "CurrencyLayer Sensor"
 
 ICON = "mdi:currency"
 
-SCAN_INTERVAL = timedelta(hours=2)
+SCAN_INTERVAL = timedelta(hours=4)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

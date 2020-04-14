@@ -15,7 +15,7 @@
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
                     "ssl": "Utilice SSL/TLS para conectarse al sistema Glances",
-                    "username": "Nombre de usuario",
+                    "username": "Usuario",
                     "verify_ssl": "Verificar la certificaci\u00f3n del sistema",
                     "version": "Versi\u00f3n API Glances (2 o 3)"
                 },

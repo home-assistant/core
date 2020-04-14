@@ -5,6 +5,7 @@ import logging
 
 import aiohttp
 
+from homeassistant.const import POWER_WATT
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, dt as dt_util
@@ -194,7 +195,7 @@ class TibberSensorRT(TibberSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return "W"
+        return POWER_WATT
 
     @property
     def unique_id(self):

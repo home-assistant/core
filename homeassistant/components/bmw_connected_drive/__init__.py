@@ -32,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: ACCOUNT_SCHEMA}}, extra=vol.ALLO
 SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_VIN): cv.string})
 
 
-BMW_COMPONENTS = ["binary_sensor", "device_tracker", "lock", "sensor"]
+BMW_COMPONENTS = ["binary_sensor", "device_tracker", "lock", "notify", "sensor"]
 UPDATE_INTERVAL = 5  # in minutes
 
 SERVICE_UPDATE_STATE = "update_state"

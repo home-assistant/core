@@ -39,7 +39,7 @@ from .const import (
     ELK_ELEMENTS,
 )
 
-SYNC_TIMEOUT = 55
+SYNC_TIMEOUT = 120
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -215,7 +215,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     if not await async_wait_for_elk_to_sync(elk, SYNC_TIMEOUT):
         _LOGGER.error(
-            "Timed out after %d seconds while trying to sync with ElkM1", SYNC_TIMEOUT,
+            "Timed out after %d seconds while trying to sync with ElkM1 at %s",
+            SYNC_TIMEOUT,
+            conf[CONF_HOST],
         )
         elk.disconnect()
         raise ConfigEntryNotReady

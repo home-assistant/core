@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Arduino platform."""
     board = hass.data[DOMAIN]
 
-    pins = config.get(CONF_PINS)
+    pins = config[CONF_PINS]
 
     switches = []
     for pinnum, pin in pins.items():
@@ -47,13 +47,13 @@ class ArduinoSwitch(SwitchDevice):
     def __init__(self, pin, options, board):
         """Initialize the Pin."""
         self._pin = pin
-        self._name = options.get(CONF_NAME)
+        self._name = options[CONF_NAME]
         self.pin_type = CONF_TYPE
         self.direction = "out"
 
-        self._state = options.get(CONF_INITIAL)
+        self._state = options[CONF_INITIAL]
 
-        if options.get(CONF_NEGATE):
+        if options[CONF_NEGATE]:
             self.turn_on_handler = board.set_digital_out_low
             self.turn_off_handler = board.set_digital_out_high
         else:

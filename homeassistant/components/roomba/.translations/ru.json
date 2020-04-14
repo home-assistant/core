@@ -1,0 +1,33 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0438\u0442\u044c\u0441\u044f, \u043f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0435\u0449\u0435 \u0440\u0430\u0437.",
+            "unknown": "\u041d\u0435\u043f\u0440\u0435\u0434\u0432\u0438\u0434\u0435\u043d\u043d\u0430\u044f \u043e\u0448\u0438\u0431\u043a\u0430."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "blid": "BLID",
+                    "certificate": "\u0421\u0435\u0440\u0442\u0438\u0444\u0438\u043a\u0430\u0442",
+                    "continuous": "\u041d\u0435\u043f\u0440\u0435\u0440\u044b\u0432\u043d\u044b\u0439",
+                    "delay": "\u0417\u0430\u0434\u0435\u0440\u0436\u043a\u0430",
+                    "host": "\u0414\u043e\u043c\u0435\u043d\u043d\u043e\u0435 \u0438\u043c\u044f \u0438\u043b\u0438 IP-\u0430\u0434\u0440\u0435\u0441",
+                    "password": "\u041f\u0430\u0440\u043e\u043b\u044c"
+                },
+                "description": "\u041e\u0437\u043d\u0430\u043a\u043e\u043c\u044c\u0442\u0435\u0441\u044c \u0441 \u0438\u043d\u0441\u0442\u0440\u0443\u043a\u0446\u0438\u044f\u043c\u0438, \u0447\u0442\u043e\u0431\u044b \u0443\u0437\u043d\u0430\u0442\u044c \u043a\u0430\u043a \u043f\u043e\u043b\u0443\u0447\u0438\u0442\u044c BLID \u0438 \u043f\u0430\u0440\u043e\u043b\u044c:\nhttps://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
+                "title": "\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435 \u043a \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u0443"
+            }
+        },
+        "title": "iRobot Roomba"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "\u041d\u0435\u043f\u0440\u0435\u0440\u044b\u0432\u043d\u044b\u0439",
+                    "delay": "\u0417\u0430\u0434\u0435\u0440\u0436\u043a\u0430"
+                }
+            }
+        }
+    }
+}

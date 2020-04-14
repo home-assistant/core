@@ -12,7 +12,7 @@ from homeassistant.components.canary.sensor import (
     STATE_AIR_QUALITY_VERY_ABNORMAL,
     CanarySensor,
 )
-from homeassistant.const import UNIT_PERCENTAGE
+from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
 
 from tests.common import get_test_home_assistant
 from tests.components.canary.test_init import mock_device, mock_location
@@ -69,7 +69,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         sensor.update()
 
         assert sensor.name == "Home Family Room Temperature"
-        assert sensor.unit_of_measurement == "°C"
+        assert sensor.unit_of_measurement == TEMP_CELSIUS
         assert sensor.state == 21.12
         assert sensor.icon == "mdi:thermometer"
 

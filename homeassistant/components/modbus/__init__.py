@@ -2,13 +2,22 @@
 import asyncio
 import logging
 
-from pymodbus.client.asynchronous import schedulers
-from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient as ClientSerial
-from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient as ClientTCP
-from pymodbus.client.asynchronous.udp import AsyncModbusUDPClient as ClientUDP
+from async_timeout import timeout
+from pymodbus.client.asynchronous.asyncio import (
+    AsyncioModbusSerialClient,
+    ModbusClientProtocol,
+    init_tcp_client,
+    init_udp_client,
+)
 from pymodbus.exceptions import ModbusException
+from pymodbus.factory import ClientDecoder
 from pymodbus.pdu import ExceptionResponse
-from pymodbus.transaction import ModbusRtuFramer
+from pymodbus.transaction import (
+    ModbusAsciiFramer,
+    ModbusBinaryFramer,
+    ModbusRtuFramer,
+    ModbusSocketFramer,
+)
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -20,7 +29,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TIMEOUT,
     CONF_TYPE,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
@@ -35,7 +43,7 @@ from .const import (
     CONF_PARITY,
     CONF_STOPBITS,
     DEFAULT_HUB,
-    MODBUS_DOMAIN,
+    MODBUS_DOMAIN as DOMAIN,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
 )
@@ -68,7 +76,7 @@ ETHERNET_SCHEMA = BASE_SCHEMA.extend(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {MODBUS_DOMAIN: vol.All(cv.ensure_list, [vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)])},
+    {DOMAIN: vol.All(cv.ensure_list, [vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)])},
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -95,36 +103,15 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up Modbus component."""
-    hass.data[MODBUS_DOMAIN] = hub_collect = {}
+    hass.data[DOMAIN] = hub_collect = {}
 
-    for client_config in config[MODBUS_DOMAIN]:
+    for client_config in config[DOMAIN]:
         hub_collect[client_config[CONF_NAME]] = ModbusHub(client_config, hass.loop)
 
     def stop_modbus(event):
         """Stop Modbus service."""
         for client in hub_collect.values():
             del client
-
-    def start_modbus(event):
-        """Start Modbus service."""
-        for client in hub_collect.values():
-            client.setup()
-
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
-
-        # Register services for modbus
-        hass.services.async_register(
-            MODBUS_DOMAIN,
-            SERVICE_WRITE_REGISTER,
-            write_register,
-            schema=SERVICE_WRITE_REGISTER_SCHEMA,
-        )
-        hass.services.async_register(
-            MODBUS_DOMAIN,
-            SERVICE_WRITE_COIL,
-            write_coil,
-            schema=SERVICE_WRITE_COIL_SCHEMA,
-        )
 
     async def write_register(service):
         """Write Modbus registers."""
@@ -149,8 +136,23 @@ async def async_setup(hass, config):
         client_name = service.data[ATTR_HUB]
         await hub_collect[client_name].write_coil(unit, address, state)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_modbus)
+    # do not wait for EVENT_HOMEASSISTANT_START, activate pymodbus now
+    for client in hub_collect.values():
+        await client.setup(hass)
 
+    # register function to gracefully stop modbus
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
+
+    # Register services for modbus
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_WRITE_REGISTER,
+        write_register,
+        schema=SERVICE_WRITE_REGISTER_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_WRITE_COIL, write_coil, schema=SERVICE_WRITE_COIL_SCHEMA,
+    )
     return True
 
 
@@ -168,7 +170,7 @@ class ModbusHub:
         self._config_type = client_config[CONF_TYPE]
         self._config_port = client_config[CONF_PORT]
         self._config_timeout = client_config[CONF_TIMEOUT]
-        self._config_delay = client_config[CONF_DELAY]
+        self._config_delay = 0
 
         if self._config_type == "serial":
             # serial configuration
@@ -180,6 +182,7 @@ class ModbusHub:
         else:
             # network configuration
             self._config_host = client_config[CONF_HOST]
+            self._config_delay = client_config[CONF_DELAY]
 
     @property
     def name(self):
@@ -191,48 +194,55 @@ class ModbusHub:
             await asyncio.sleep(self._config_delay)
             self._config_delay = 0
 
-    def setup(self):
-        """Set up pymodbus client."""
-        # pylint: disable = E0633
-        # Client* do deliver loop, client as result but
-        # pylint does not accept that fact
+    @staticmethod
+    def _framer(method):
+        if method == "ascii":
+            framer = ModbusAsciiFramer(ClientDecoder())
+        elif method == "rtu":
+            framer = ModbusRtuFramer(ClientDecoder())
+        elif method == "binary":
+            framer = ModbusBinaryFramer(ClientDecoder())
+        elif method == "socket":
+            framer = ModbusSocketFramer(ClientDecoder())
+        else:
+            framer = None
+        return framer
 
+    async def setup(self, hass):
+        """Set up pymodbus client."""
         if self._config_type == "serial":
-            _, self._client = ClientSerial(
-                schedulers.ASYNC_IO,
-                method=self._config_method,
-                port=self._config_port,
+            # reconnect ??
+            framer = self._framer(self._config_method)
+
+            # just a class creation no IO or other slow items
+            self._client = AsyncioModbusSerialClient(
+                self._config_port,
+                protocol_class=ModbusClientProtocol,
+                framer=framer,
+                loop=self._loop,
                 baudrate=self._config_baudrate,
-                stopbits=self._config_stopbits,
                 bytesize=self._config_bytesize,
                 parity=self._config_parity,
-                timeout=self._config_timeout,
-                loop=self._loop,
+                stopbits=self._config_stopbits,
             )
+            await self._client.connect()
         elif self._config_type == "rtuovertcp":
-            _, self._client = ClientTCP(
-                schedulers.ASYNC_IO,
-                host=self._config_host,
-                port=self._config_port,
-                framer=ModbusRtuFramer,
-                timeout=self._config_timeout,
-                loop=self._loop,
+            # framer ModbusRtuFramer ??
+            # timeout ??
+            self._client = await init_tcp_client(
+                None, self._loop, self._config_host, self._config_port
             )
         elif self._config_type == "tcp":
-            _, self._client = ClientTCP(
-                schedulers.ASYNC_IO,
-                host=self._config_host,
-                port=self._config_port,
-                timeout=self._config_timeout,
-                loop=self._loop,
+            # framer ??
+            # timeout ??
+            self._client = await init_tcp_client(
+                None, self._loop, self._config_host, self._config_port
             )
         elif self._config_type == "udp":
-            _, self._client = ClientUDP(
-                schedulers.ASYNC_IO,
-                host=self._config_host,
-                port=self._config_port,
-                timeout=self._config_timeout,
-                loop=self._loop,
+            # framer ??
+            # timeout ??
+            self._client = await init_udp_client(
+                None, self._loop, self._config_host, self._config_port
             )
         else:
             assert False
@@ -242,7 +252,12 @@ class ModbusHub:
         await self._connect_delay()
         async with self._lock:
             kwargs = {"unit": unit} if unit else {}
-            result = await func(address, count, **kwargs)
+            try:
+                async with timeout(self._config_timeout):
+                    result = await func(address, count, **kwargs)
+            except asyncio.TimeoutError:
+                result = None
+
             if isinstance(result, (ModbusException, ExceptionResponse)):
                 _LOGGER.error("Hub %s Exception (%s)", self._config_name, result)
             return result
@@ -252,7 +267,11 @@ class ModbusHub:
         await self._connect_delay()
         async with self._lock:
             kwargs = {"unit": unit} if unit else {}
-            await func(address, value, **kwargs)
+            try:
+                async with timeout(self._config_timeout):
+                    func(address, value, **kwargs)
+            except asyncio.TimeoutError:
+                return
 
     async def read_coils(self, unit, address, count):
         """Read coils."""

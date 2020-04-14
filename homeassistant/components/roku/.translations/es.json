@@ -5,8 +5,7 @@
             "unknown": "Error inesperado"
         },
         "error": {
-            "cannot_connect": "No se ha podido conectar, por favor, int\u00e9ntalo de nuevo.",
-            "unknown": "Error inesperado"
+            "cannot_connect": "No se ha podido conectar, por favor, int\u00e9ntalo de nuevo."
         },
         "flow_title": "Roku: {name}",
         "step": {

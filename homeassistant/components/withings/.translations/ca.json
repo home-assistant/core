@@ -2,8 +2,7 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "S'ha acabat el temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
-            "missing_configuration": "La integraci\u00f3 Withings no est\u00e0 configurada. Mira'n la documentaci\u00f3.",
-            "no_flows": "Necessites configurar Withings abans de poder autenticar't-hi. Llegeix la documentaci\u00f3."
+            "missing_configuration": "La integraci\u00f3 Withings no est\u00e0 configurada. Mira'n la documentaci\u00f3."
         },
         "create_entry": {
             "default": "Autenticaci\u00f3 exitosa amb Withings per al perfil seleccionat."
@@ -17,13 +16,6 @@
                     "profile": "Perfil"
                 },
                 "description": "Quin perfil has seleccionat al lloc web de Withings? \u00c9s important que els perfils coincideixin sin\u00f3, les dades no s\u2019etiquetaran correctament.",
-                "title": "Perfil d'usuari."
-            },
-            "user": {
-                "data": {
-                    "profile": "Perfil"
-                },
-                "description": "Selecciona un perfil d'usuari amb el qual vols que Home Assistant s'uneixi amb un perfil de Withings. A la p\u00e0gina de Withings, assegura't de seleccionar el mateix usuari o, les dades no seran les correctes.",
                 "title": "Perfil d'usuari."
             }
         },

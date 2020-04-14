@@ -35,7 +35,7 @@ class Lock(HomeAccessory):
         """Initialize a Lock accessory object."""
         super().__init__(*args, category=CATEGORY_DOOR_LOCK)
         self._code = self.config.get(ATTR_CODE)
-        self._flag_state = False
+        state = self.hass.states.get(self.entity_id)
 
         serv_lock_mechanism = self.add_preload_service(SERV_LOCK)
         self.char_current_state = serv_lock_mechanism.configure_char(
@@ -46,14 +46,17 @@ class Lock(HomeAccessory):
             value=HASS_TO_HOMEKIT[STATE_LOCKED],
             setter_callback=self.set_state,
         )
+        self.update_state(state)
 
     def set_state(self, value):
         """Set lock state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set state to %d", self.entity_id, value)
-        self._flag_state = True
 
         hass_value = HOMEKIT_TO_HASS.get(value)
         service = STATE_TO_SERVICE[hass_value]
+
+        if self.char_current_state.value != value:
+            self.char_current_state.set_value(value)
 
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._code:
@@ -65,16 +68,21 @@ class Lock(HomeAccessory):
         hass_state = new_state.state
         if hass_state in HASS_TO_HOMEKIT:
             current_lock_state = HASS_TO_HOMEKIT[hass_state]
-            self.char_current_state.set_value(current_lock_state)
             _LOGGER.debug(
                 "%s: Updated current state to %s (%d)",
                 self.entity_id,
                 hass_state,
                 current_lock_state,
             )
-
             # LockTargetState only supports locked and unlocked
+            # Must set lock target state before current state
+            # or there will be no notification
             if hass_state in (STATE_LOCKED, STATE_UNLOCKED):
-                if not self._flag_state:
+                if self.char_target_state.value != current_lock_state:
                     self.char_target_state.set_value(current_lock_state)
-                self._flag_state = False
+
+            # Set lock current state ONLY after ensuring that
+            # target state is correct or there will be no
+            # notification
+            if self.char_current_state.value != current_lock_state:
+                self.char_current_state.set_value(current_lock_state)

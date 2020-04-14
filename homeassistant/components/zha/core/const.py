@@ -213,6 +213,7 @@ SIGNAL_SET_LEVEL = "set_level"
 SIGNAL_STATE_ATTR = "update_state_attribute"
 SIGNAL_UPDATE_DEVICE = "{}_zha_update_device"
 SIGNAL_REMOVE_GROUP = "remove_group"
+SIGNAL_GROUP_ENTITY_REMOVED = "group_entity_removed"
 SIGNAL_GROUP_MEMBERSHIP_CHANGE = "group_membership_change"
 
 UNKNOWN = "unknown"

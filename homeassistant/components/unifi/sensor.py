@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
-from homeassistant.const import DATA_BYTES
+from homeassistant.const import DATA_MEGABYTES
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -116,7 +116,7 @@ class UniFiRxBandwidthSensor(UniFiClient):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return DATA_BYTES
+        return DATA_MEGABYTES
 
 
 class UniFiTxBandwidthSensor(UniFiRxBandwidthSensor):

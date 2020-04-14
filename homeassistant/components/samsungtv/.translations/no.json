@@ -4,7 +4,6 @@
             "already_configured": "Denne Samsung TV-en er allerede konfigurert.",
             "already_in_progress": "Samsung TV-konfigurasjon p\u00e5g\u00e5r allerede.",
             "auth_missing": "Home Assistant er ikke autorisert til \u00e5 koble til denne Samsung-TV. Vennligst kontroller innstillingene for TV-en for \u00e5 autorisere Home Assistent.",
-            "not_found": "Ingen st\u00f8ttede Samsung TV-enheter funnet i nettverket.",
             "not_successful": "Kan ikke koble til denne Samsung TV-enheten.",
             "not_supported": "Denne Samsung TV-enhetene st\u00f8ttes forel\u00f8pig ikke."
         },

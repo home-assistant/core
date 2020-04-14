@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_RESOURCE,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
+    HTTP_OK,
 )
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
@@ -51,9 +52,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the aREST sensor."""
-    resource = config.get(CONF_RESOURCE)
-    var_conf = config.get(CONF_MONITORED_VARIABLES)
-    pins = config.get(CONF_PINS)
+    resource = config[CONF_RESOURCE]
+    var_conf = config[CONF_MONITORED_VARIABLES]
+    pins = config[CONF_PINS]
 
     try:
         response = requests.get(resource, timeout=10).json()
@@ -149,7 +150,7 @@ class ArestSensor(Entity):
 
         if self._pin is not None:
             request = requests.get(f"{self._resource}/mode/{self._pin}/i", timeout=10)
-            if request.status_code != 200:
+            if request.status_code != HTTP_OK:
                 _LOGGER.error("Can't set mode of %s", self._resource)
 
     @property

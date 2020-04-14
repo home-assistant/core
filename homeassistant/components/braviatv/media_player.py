@@ -61,7 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sony Bravia TV platform."""
-    host = config.get(CONF_HOST)
+    host = config[CONF_HOST]
 
     if host is None:
         return
@@ -74,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if host_ip == host:
             pin = host_config["pin"]
             mac = host_config["mac"]
-            name = config.get(CONF_NAME)
+            name = config[CONF_NAME]
             braviarc = BraviaRC(host, mac)
             if not braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME):
                 raise PlatformNotReady
@@ -91,8 +91,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def setup_bravia(config, pin, hass, add_entities):
     """Set up a Sony Bravia TV based on host parameter."""
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
+    host = config[CONF_HOST]
+    name = config[CONF_NAME]
 
     if pin is None:
         request_configuration(config, hass, add_entities)
@@ -128,8 +128,8 @@ def setup_bravia(config, pin, hass, add_entities):
 
 def request_configuration(config, hass, add_entities):
     """Request configuration steps from the user."""
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
+    host = config[CONF_HOST]
+    name = config[CONF_NAME]
 
     configurator = hass.components.configurator
 

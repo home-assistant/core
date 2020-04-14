@@ -3,7 +3,7 @@ import json
 import logging
 
 from homeassistant.components import mqtt
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_DEGREE
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
@@ -45,7 +45,7 @@ def discover_sensors(topic, payload):
         return (
             ArwnSensor("Wind Speed", "speed", unit, "mdi:speedometer"),
             ArwnSensor("Wind Gust", "gust", unit, "mdi:speedometer"),
-            ArwnSensor("Wind Direction", "direction", "°", "mdi:compass"),
+            ArwnSensor("Wind Direction", "direction", UNIT_DEGREE, "mdi:compass"),
         )
 
 

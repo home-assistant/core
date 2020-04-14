@@ -1,6 +1,5 @@
 """List of modules that have uncaught exceptions today. Will be shrunk over time."""
 IGNORE_UNCAUGHT_EXCEPTIONS = [
-    ("tests.components.demo.test_init", "test_setting_up_demo"),
     ("tests.components.dyson.test_air_quality", "test_purecool_aiq_attributes"),
     ("tests.components.dyson.test_air_quality", "test_purecool_aiq_update_state"),
     (
@@ -34,8 +33,6 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.ios.test_init", "test_creating_entry_sets_up_sensor"),
     ("tests.components.ios.test_init", "test_not_configuring_ios_not_creates_entry"),
     ("tests.components.local_file.test_camera", "test_file_not_readable"),
-    ("tests.components.qwikswitch.test_init", "test_binary_sensor_device"),
-    ("tests.components.qwikswitch.test_init", "test_sensor_device"),
 ]
 
 IGNORE_UNCAUGHT_JSON_EXCEPTIONS = []

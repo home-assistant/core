@@ -4,8 +4,10 @@ import logging
 from zlib import adler32
 
 import voluptuous as vol
+from zeroconf import InterfaceChoice
 
 from homeassistant.components import cover
+from homeassistant.components.cover import DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -38,9 +40,11 @@ from .const import (
     CONF_FEATURE_LIST,
     CONF_FILTER,
     CONF_SAFE_MODE,
+    CONF_ZEROCONF_DEFAULT_INTERFACE,
     DEFAULT_AUTO_START,
     DEFAULT_PORT,
     DEFAULT_SAFE_MODE,
+    DEFAULT_ZEROCONF_DEFAULT_INTERFACE,
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_PM25,
@@ -97,6 +101,10 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_SAFE_MODE, default=DEFAULT_SAFE_MODE): cv.boolean,
                 vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
                 vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
+                vol.Optional(
+                    CONF_ZEROCONF_DEFAULT_INTERFACE,
+                    default=DEFAULT_ZEROCONF_DEFAULT_INTERFACE,
+                ): cv.boolean,
             }
         )
     },
@@ -121,6 +129,9 @@ async def async_setup(hass, config):
     safe_mode = conf[CONF_SAFE_MODE]
     entity_filter = conf[CONF_FILTER]
     entity_config = conf[CONF_ENTITY_CONFIG]
+    interface_choice = (
+        InterfaceChoice.Default if config.get(CONF_ZEROCONF_DEFAULT_INTERFACE) else None
+    )
 
     homekit = HomeKit(
         hass,
@@ -131,6 +142,7 @@ async def async_setup(hass, config):
         entity_config,
         safe_mode,
         advertise_ip,
+        interface_choice,
     )
     await hass.async_add_executor_job(homekit.setup)
 
@@ -200,7 +212,7 @@ def get_accessory(hass, driver, state, aid, config):
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if device_class == "garage" and features & (
+        if device_class in (DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE) and features & (
             cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE
         ):
             a_type = "GarageDoorOpener"
@@ -286,6 +298,7 @@ class HomeKit:
         entity_config,
         safe_mode,
         advertise_ip=None,
+        interface_choice=None,
     ):
         """Initialize a HomeKit object."""
         self.hass = hass
@@ -296,6 +309,7 @@ class HomeKit:
         self._config = entity_config
         self._safe_mode = safe_mode
         self._advertise_ip = advertise_ip
+        self._interface_choice = interface_choice
         self.status = STATUS_READY
 
         self.bridge = None
@@ -316,6 +330,7 @@ class HomeKit:
             port=self._port,
             persist_file=path,
             advertised_address=self._advertise_ip,
+            interface_choice=self._interface_choice,
         )
         self.bridge = HomeBridge(self.hass, self.driver, self._name)
         if self._safe_mode:

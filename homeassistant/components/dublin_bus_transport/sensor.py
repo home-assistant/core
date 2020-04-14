@@ -11,7 +11,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, HTTP_OK, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
@@ -148,7 +148,7 @@ class PublicTransportData:
 
         response = requests.get(_RESOURCE, params, timeout=10)
 
-        if response.status_code != 200:
+        if response.status_code != HTTP_OK:
             self.info = [
                 {ATTR_DUE_AT: "n/a", ATTR_ROUTE: self.route, ATTR_DUE_IN: "n/a"}
             ]

@@ -1,21 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_in_progress": "Il flusso di configurazione per vizio \u00e8 gi\u00e0 in corso.",
             "already_setup": "Questa voce \u00e8 gi\u00e0 stata configurata.",
-            "already_setup_with_diff_host_and_name": "Sembra che questa voce sia gi\u00e0 stata configurata con un host e un nome diversi in base al suo numero seriale. Rimuovere eventuali voci precedenti da configuration.yaml e dal menu Integrazioni prima di tentare nuovamente di aggiungere questo dispositivo.",
-            "host_exists": "Componente Vizio con host gi\u00e0 configurato.",
-            "name_exists": "Componente Vizio con nome gi\u00e0 configurato.",
-            "updated_entry": "Questa voce \u00e8 gi\u00e0 stata configurata, ma il nome, le app e/o le opzioni definite nella configurazione non corrispondono alla configurazione importata in precedenza, pertanto la voce di configurazione \u00e8 stata aggiornata di conseguenza.",
-            "updated_options": "Questa voce \u00e8 gi\u00e0 stata impostata, ma le opzioni definite nella configurazione non corrispondono ai valori delle opzioni importate in precedenza, quindi la voce di configurazione \u00e8 stata aggiornata di conseguenza.",
-            "updated_volume_step": "Questa voce \u00e8 gi\u00e0 stata impostata, ma la dimensione del passo del volume nella configurazione non corrisponde alla voce di configurazione, quindi \u00e8 stata aggiornata di conseguenza."
+            "updated_entry": "Questa voce \u00e8 gi\u00e0 stata configurata, ma il nome, le app e/o le opzioni definite nella configurazione non corrispondono alla configurazione importata in precedenza, pertanto la voce di configurazione \u00e8 stata aggiornata di conseguenza."
         },
         "error": {
             "cant_connect": "Impossibile connettersi al dispositivo. [Esamina i documenti] (https://www.home-assistant.io/integrations/vizio/) e verifica nuovamente che: \n - Il dispositivo sia acceso \n - Il dispositivo sia collegato alla rete \n - I valori inseriti siano corretti \n prima di ritentare.",
             "complete_pairing failed": "Impossibile completare l'associazione. Assicurarsi che il PIN fornito sia corretto e che il televisore sia ancora alimentato e connesso alla rete prima di inviarlo di nuovo.",
             "host_exists": "Dispositivo Vizio con host specificato gi\u00e0 configurato.",
-            "name_exists": "Dispositivo Vizio con il nome specificato gi\u00e0 configurato.",
-            "tv_needs_token": "Quando Device Type \u00e8 `tv`, \u00e8 necessario un token di accesso valido."
+            "name_exists": "Dispositivo Vizio con il nome specificato gi\u00e0 configurato."
         },
         "step": {
             "pair_tv": {
@@ -33,14 +26,6 @@
                 "description": "Il dispositivo Vizio SmartCast TV \u00e8 ora connesso a Home Assistant. \n\nIl tuo Token di Accesso \u00e8 '**{access_token}**'.",
                 "title": "Associazione completata"
             },
-            "tv_apps": {
-                "data": {
-                    "apps_to_include_or_exclude": "App da includere o escludere",
-                    "include_or_exclude": "Includere o Escludere le App?"
-                },
-                "description": "Se si dispone di una Smart TV, \u00e8 possibile filtrare facoltativamente l'elenco di origine scegliendo le app da includere o escludere in esso. \u00c8 possibile saltare questo passaggio per i televisori che non supportano le app.",
-                "title": "Configura le app per Smart TV"
-            },
             "user": {
                 "data": {
                     "access_token": "Token di accesso",
@@ -50,14 +35,6 @@
                 },
                 "description": "Un Token di Accesso \u00e8 necessario solo per i televisori. Se si sta configurando un televisore e non si dispone ancora di un Token di Accesso, lasciarlo vuoto per passare attraverso un processo di associazione.",
                 "title": "Configurazione del dispositivo SmartCast Vizio"
-            },
-            "user_tv": {
-                "data": {
-                    "apps_to_include_or_exclude": "App da Includere o Escludere",
-                    "include_or_exclude": "Includere o Escludere le App?"
-                },
-                "description": "Se si dispone di una Smart TV, \u00e8 possibile filtrare facoltativamente l'elenco di origine scegliendo le app da includere o escludere in esso. \u00c8 possibile saltare questo passaggio per i televisori che non supportano le app.",
-                "title": "Configura le app per Smart TV"
             }
         },
         "title": "Vizio SmartCast"
@@ -68,7 +45,6 @@
                 "data": {
                     "apps_to_include_or_exclude": "App da includere o escludere",
                     "include_or_exclude": "Includere o escludere app?",
-                    "timeout": "Timeout richiesta API (secondi)",
                     "volume_step": "Dimensione del passo del volume"
                 },
                 "description": "Se si dispone di una Smart TV, \u00e8 possibile filtrare l'elenco di origine scegliendo le app da includere o escludere in esso.",

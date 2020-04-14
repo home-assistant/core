@@ -4,10 +4,22 @@
             "already_configured": "El host ya est\u00e1 configurado."
         },
         "error": {
-            "login": "Error de inicio de sesi\u00f3n: comprueba tu direcci\u00f3n de correo electr\u00f3nico y contrase\u00f1a",
+            "login": "Error de inicio de sesi\u00f3n: comprueba tu nombre de usuario y contrase\u00f1a",
             "unknown": "Error desconocido: por favor vuelve a intentarlo m\u00e1s tarde o usa otra configuraci\u00f3n"
         },
+        "flow_title": "Synology DSM {name} ({host})",
         "step": {
+            "link": {
+                "data": {
+                    "api_version": "Versi\u00f3n del DSM",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto (opcional)",
+                    "ssl": "Usar SSL/TLS para conectar con tu NAS",
+                    "username": "Usuario"
+                },
+                "description": "\u00bfQuieres configurar {name} ({host})?",
+                "title": "Synology DSM"
+            },
             "user": {
                 "data": {
                     "api_version": "Versi\u00f3n del DSM",
@@ -18,9 +30,9 @@
                     "ssl": "Usar SSL/TLS para conectar con tu NAS",
                     "username": "Usuario"
                 },
-                "title": "DSM Synology"
+                "title": "Synology DSM"
             }
         },
-        "title": "DSM Synology"
+        "title": "Synology DSM"
     }
 }

@@ -13,7 +13,7 @@
                     "discovery": "Habilitar descubrimiento",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
-                    "username": "Nombre de usuario"
+                    "username": "Usuario"
                 },
                 "description": "Por favor, introduce la informaci\u00f3n de tu agente MQTT",
                 "title": "MQTT"

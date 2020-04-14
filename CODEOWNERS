@@ -121,7 +121,7 @@ homeassistant/components/filter/* @dgomes
 homeassistant/components/fitbit/* @robbiet480
 homeassistant/components/fixer/* @fabaff
 homeassistant/components/flock/* @fabaff
-homeassistant/components/flume/* @ChrisMandich
+homeassistant/components/flume/* @ChrisMandich @bdraco
 homeassistant/components/flunearyou/* @bachya
 homeassistant/components/fortigate/* @kifeo
 homeassistant/components/fortios/* @kimfrellsen
@@ -162,6 +162,7 @@ homeassistant/components/hisense_aehw4a1/* @bannhead
 homeassistant/components/history/* @home-assistant/core
 homeassistant/components/hive/* @Rendili @KJonline
 homeassistant/components/homeassistant/* @home-assistant/core
+homeassistant/components/homekit/* @bdraco
 homeassistant/components/homekit_controller/* @Jc2k
 homeassistant/components/homematic/* @pvizeli @danielperna84
 homeassistant/components/homematicip_cloud/* @SukramJ
@@ -291,7 +292,7 @@ homeassistant/components/plex/* @jjlawren
 homeassistant/components/plugwise/* @laetificat @CoMPaTech @bouwew
 homeassistant/components/plum_lightpad/* @ColinHarrington
 homeassistant/components/point/* @fredrike
-homeassistant/components/powerwall/* @bdraco
+homeassistant/components/powerwall/* @bdraco @jrester
 homeassistant/components/proxmoxve/* @k4ds3
 homeassistant/components/ps4/* @ktnrg45
 homeassistant/components/ptvsd/* @swamp-ig
@@ -314,7 +315,7 @@ homeassistant/components/rfxtrx/* @danielhiversen
 homeassistant/components/ring/* @balloob
 homeassistant/components/rmvtransport/* @cgtobi
 homeassistant/components/roku/* @ctalkington
-homeassistant/components/roomba/* @pschmitt
+homeassistant/components/roomba/* @pschmitt @cyr-ius
 homeassistant/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
 homeassistant/components/salt/* @bjornorri
@@ -328,6 +329,7 @@ homeassistant/components/sense/* @kbickar
 homeassistant/components/sensibo/* @andrey-git
 homeassistant/components/sentry/* @dcramer
 homeassistant/components/serial/* @fabaff
+homeassistant/components/seven_segments/* @fabaff
 homeassistant/components/seventeentrack/* @bachya
 homeassistant/components/shell_command/* @home-assistant/core
 homeassistant/components/shiftr/* @fabaff

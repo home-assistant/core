@@ -32,6 +32,7 @@ from homeassistant.const import (
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    LENGTH_KILOMETERS,
 )
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -154,7 +155,7 @@ async def test_setup(hass):
                 ATTR_TYPE: "Type 1",
                 ATTR_SIZE: "Size 1",
                 ATTR_RESPONSIBLE_AGENCY: "Agency 1",
-                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
                 ATTR_SOURCE: "nsw_rural_fire_service_feed",
                 ATTR_ICON: "mdi:fire",
             }
@@ -169,7 +170,7 @@ async def test_setup(hass):
                 ATTR_LONGITUDE: 150.1,
                 ATTR_FRIENDLY_NAME: "Title 2",
                 ATTR_FIRE: False,
-                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
                 ATTR_SOURCE: "nsw_rural_fire_service_feed",
                 ATTR_ICON: "mdi:alarm-light",
             }
@@ -184,7 +185,7 @@ async def test_setup(hass):
                 ATTR_LONGITUDE: 150.2,
                 ATTR_FRIENDLY_NAME: "Title 3",
                 ATTR_FIRE: True,
-                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
                 ATTR_SOURCE: "nsw_rural_fire_service_feed",
                 ATTR_ICON: "mdi:fire",
             }

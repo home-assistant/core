@@ -7,6 +7,7 @@ import threading
 import requests
 import voluptuous as vol
 
+from homeassistant.const import HTTP_OK
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import sanitize_filename
 
@@ -76,7 +77,7 @@ def setup(hass, config):
 
                 req = requests.get(url, stream=True, timeout=10)
 
-                if req.status_code != 200:
+                if req.status_code != HTTP_OK:
                     _LOGGER.warning(
                         "downloading '%s' failed, status_code=%d", url, req.status_code
                     )

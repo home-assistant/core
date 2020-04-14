@@ -221,7 +221,7 @@ class TestMinMaxSensor(unittest.TestCase):
         state = self.hass.states.get("sensor.test")
 
         assert str(float(self.values[0])) == state.state
-        assert state.attributes.get("unit_of_measurement") == "°C"
+        assert state.attributes.get("unit_of_measurement") == TEMP_CELSIUS
 
         self.hass.states.set(
             entity_ids[1], self.values[1], {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT}

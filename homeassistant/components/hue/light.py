@@ -280,7 +280,7 @@ class HueLight(Light):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        if self.is_group:
+        if self.is_group or "ct" not in self.light.controlcapabilities:
             return super().min_mireds
 
         return self.light.controlcapabilities["ct"]["min"]
@@ -288,8 +288,8 @@ class HueLight(Light):
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        if self.is_group:
-            return super().min_mireds
+        if self.is_group or "ct" not in self.light.controlcapabilities:
+            return super().max_mireds
 
         return self.light.controlcapabilities["ct"]["max"]
 

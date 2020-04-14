@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "already_in_progress": "\u8a2d\u5099\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d\u3002",
             "not_konn_panel": "\u4e26\u975e\u53ef\u8b58\u5225 Konnected.io \u8a2d\u5099",
             "unknown": "\u767c\u751f\u672a\u77e5\u932f\u8aa4\u3002"

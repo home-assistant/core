@@ -15,7 +15,7 @@
                     "name": "Nombre",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
-                    "username": "Nombre de usuario",
+                    "username": "Usuario",
                     "verify_ssl": "Usar ssl"
                 },
                 "title": "Configurar el router Mikrotik"

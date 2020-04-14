@@ -87,6 +87,7 @@ VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 VALID_BRIGHTNESS_STEP = vol.All(vol.Coerce(int), vol.Clamp(min=-255, max=255))
 VALID_BRIGHTNESS_STEP_PCT = vol.All(vol.Coerce(float), vol.Clamp(min=-100, max=100))
+VALID_FLASH = vol.In([FLASH_SHORT, FLASH_LONG])
 
 LIGHT_TURN_ON_SCHEMA = {
     vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
@@ -116,7 +117,7 @@ LIGHT_TURN_ON_SCHEMA = {
     ),
     vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): vol.All(vol.Coerce(int), vol.Range(min=0)),
     ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
-    ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
+    ATTR_FLASH: VALID_FLASH,
     ATTR_EFFECT: cv.string,
 }
 
@@ -191,11 +192,11 @@ async def async_setup(hass, config):
 
     def preprocess_data(data):
         """Preprocess the service data."""
-        base = {}
-
-        for entity_field in cv.ENTITY_SERVICE_FIELDS:
-            if entity_field in data:
-                base[entity_field] = data.pop(entity_field)
+        base = {
+            entity_field: data.pop(entity_field)
+            for entity_field in cv.ENTITY_SERVICE_FIELDS
+            if entity_field in data
+        }
 
         preprocess_turn_on_alternatives(data)
         turn_lights_off, off_params = preprocess_turn_off(data)
@@ -252,10 +253,7 @@ async def async_setup(hass, config):
 
     component.async_register_entity_service(
         SERVICE_TURN_OFF,
-        {
-            ATTR_TRANSITION: VALID_TRANSITION,
-            ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
-        },
+        {ATTR_TRANSITION: VALID_TRANSITION, ATTR_FLASH: VALID_FLASH},
         "async_turn_off",
     )
 

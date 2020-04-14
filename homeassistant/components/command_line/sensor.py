@@ -1,5 +1,5 @@
 """Allows to configure custom shell commands to turn a value for a sensor."""
-import collections
+from collections.abc import Mapping
 from datetime import timedelta
 import json
 import logging
@@ -106,7 +106,7 @@ class CommandSensor(Entity):
             if value:
                 try:
                     json_dict = json.loads(value)
-                    if isinstance(json_dict, collections.Mapping):
+                    if isinstance(json_dict, Mapping):
                         self._attributes = {
                             k: json_dict[k]
                             for k in self._json_attributes

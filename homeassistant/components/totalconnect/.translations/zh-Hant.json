@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "login": "\u767b\u5165\u932f\u8aa4\uff1a\u8acb\u78ba\u8a8d\u96fb\u5b50\u90f5\u4ef6\u8207\u5bc6\u78bc"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "title": "Total Connect"
+            }
+        },
+        "title": "Total Connect"
+    }
+}

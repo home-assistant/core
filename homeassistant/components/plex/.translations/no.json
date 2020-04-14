@@ -4,7 +4,6 @@
             "all_configured": "Alle knyttet servere som allerede er konfigurert",
             "already_configured": "Denne Plex-serveren er allerede konfigurert",
             "already_in_progress": "Plex blir konfigurert",
-            "discovery_no_file": "Ingen eldre konfigurasjonsfil funnet",
             "invalid_import": "Den importerte konfigurasjonen er ugyldig",
             "non-interactive": "Ikke-interaktiv import",
             "token_request_timeout": "Tidsavbrudd ved innhenting av token",
@@ -13,20 +12,9 @@
         "error": {
             "faulty_credentials": "Autorisasjonen mislyktes",
             "no_servers": "Ingen servere koblet til kontoen",
-            "no_token": "Angi et token eller velg manuelt oppsett",
             "not_found": "Plex-server ikke funnet"
         },
         "step": {
-            "manual_setup": {
-                "data": {
-                    "host": "Vert",
-                    "port": "",
-                    "ssl": "Bruk SSL",
-                    "token": "Token (hvis n\u00f8dvendig)",
-                    "verify_ssl": "Verifisere SSL-sertifikat"
-                },
-                "title": "Plex-server"
-            },
             "select_server": {
                 "data": {
                     "server": ""
@@ -36,14 +24,6 @@
             },
             "start_website_auth": {
                 "description": "Fortsett \u00e5 autorisere p\u00e5 plex.tv.",
-                "title": "Koble til Plex-server"
-            },
-            "user": {
-                "data": {
-                    "manual_setup": "Manuelt oppsett",
-                    "token": "Plex token"
-                },
-                "description": "Fortsett \u00e5 autorisere p\u00e5 plex.tv eller manuelt konfigurere en server.",
                 "title": "Koble til Plex-server"
             }
         },
@@ -55,7 +35,6 @@
                 "data": {
                     "ignore_new_shared_users": "Ignorer nye administrerte/delte brukere",
                     "monitored_users": "Overv\u00e5kede brukere",
-                    "show_all_controls": "Vis alle kontroller",
                     "use_episode_art": "Bruk episode bilde"
                 },
                 "description": "Alternativer for Plex Media Players"

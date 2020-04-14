@@ -412,13 +412,8 @@ async def test_full_setup(hass: HomeAssistant, aiohttp_client, aioclient_mock) -
         (profiles[0], const.MEAS_SLEEP_RESPIRATORY_RATE_AVERAGE, 2320),
         (profiles[0], const.MEAS_SLEEP_RESPIRATORY_RATE_MIN, 2520),
         (profiles[0], const.MEAS_SLEEP_RESPIRATORY_RATE_MAX, 2720),
-        (profiles[0], const.MEAS_SLEEP_STATE, const.STATE_DEEP),
-        (profiles[1], const.MEAS_SLEEP_STATE, STATE_UNKNOWN),
         (profiles[1], const.MEAS_HYDRATION, STATE_UNKNOWN),
-        (profiles[2], const.MEAS_SLEEP_STATE, const.STATE_AWAKE),
-        (profiles[3], const.MEAS_SLEEP_STATE, const.STATE_LIGHT),
         (profiles[3], const.MEAS_FAT_FREE_MASS_KG, STATE_UNKNOWN),
-        (profiles[4], const.MEAS_SLEEP_STATE, const.STATE_REM),
     )
     for (profile, meas, value) in expected_states:
         assert_state_equals(hass, profile, meas, value)
