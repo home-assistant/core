@@ -106,19 +106,20 @@ class FlowManager(abc.ABC):
         if context is None:
             context = {}
 
+        init_done: asyncio.Future = asyncio.Future()
+        self._initializing.setdefault(handler, []).append(init_done)
+
+        flow = await self.async_create_flow(handler, context=context, data=data)
+        if not flow:
+            self._initializing[handler].remove(init_done)
+            raise UnknownFlow("Flow was not created")
+        flow.hass = self.hass
+        flow.handler = handler
+        flow.flow_id = uuid.uuid4().hex
+        flow.context = context
+        self._progress[flow.flow_id] = flow
+
         try:
-            init_done: asyncio.Future = asyncio.Future()
-            self._initializing.setdefault(handler, []).append(init_done)
-
-            flow = await self.async_create_flow(handler, context=context, data=data)
-            if not flow:
-                raise UnknownFlow("Flow was not created")
-            flow.hass = self.hass
-            flow.handler = handler
-            flow.flow_id = uuid.uuid4().hex
-            flow.context = context
-            self._progress[flow.flow_id] = flow
-
             result = await self._async_handle_step(
                 flow, flow.init_step, data, init_done
             )
