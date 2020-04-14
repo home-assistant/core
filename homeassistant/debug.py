@@ -1,9 +1,8 @@
 """Home Assistant debug mode."""
 import asyncio
 import functools
+from http.client import HTTPConnection
 from typing import Callable
-
-from requests.sessions import Session
 
 
 def raise_in_loop() -> None:
@@ -31,4 +30,4 @@ def protect_loop(func: Callable) -> None:
 
 def enable() -> None:
     """Enable debug mode."""
-    Session.send = protect_loop(Session.send)
+    HTTPConnection.putrequest = protect_loop(HTTPConnection.putrequest)

@@ -345,7 +345,7 @@ def main() -> int:
         write_pid(args.pid_file)
 
     if args.debug:
-        from . import debug
+        from . import debug  # import-outside-toplevel
 
         debug.enable()
 
