@@ -77,15 +77,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an EnOcean sensor device."""
-    dev_id = config.get(CONF_ID)
-    dev_name = config.get(CONF_NAME)
-    sensor_type = config.get(CONF_DEVICE_CLASS)
+    dev_id = config[CONF_ID]
+    dev_name = config[CONF_NAME]
+    sensor_type = config[CONF_DEVICE_CLASS]
 
     if sensor_type == SENSOR_TYPE_TEMPERATURE:
-        temp_min = config.get(CONF_MIN_TEMP)
-        temp_max = config.get(CONF_MAX_TEMP)
-        range_from = config.get(CONF_RANGE_FROM)
-        range_to = config.get(CONF_RANGE_TO)
+        temp_min = config[CONF_MIN_TEMP]
+        temp_max = config[CONF_MAX_TEMP]
+        range_from = config[CONF_RANGE_FROM]
+        range_to = config[CONF_RANGE_TO]
         add_entities(
             [
                 EnOceanTemperatureSensor(

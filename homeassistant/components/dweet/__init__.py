@@ -39,8 +39,8 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the Dweet.io component."""
     conf = config[DOMAIN]
-    name = conf.get(CONF_NAME)
-    whitelist = conf.get(CONF_WHITELIST)
+    name = conf[CONF_NAME]
+    whitelist = conf[CONF_WHITELIST]
     json_body = {}
 
     def dweet_event_listener(event):

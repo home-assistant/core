@@ -81,13 +81,13 @@ def setup(hass, config):
     """Set up the Egardia platform."""
 
     conf = config[DOMAIN]
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
+    username = conf[CONF_USERNAME]
+    password = conf[CONF_PASSWORD]
     host = conf.get(CONF_HOST)
-    port = conf.get(CONF_PORT)
-    version = conf.get(CONF_VERSION)
-    rs_enabled = conf.get(CONF_REPORT_SERVER_ENABLED)
-    rs_port = conf.get(CONF_REPORT_SERVER_PORT)
+    port = conf[CONF_PORT]
+    version = conf[CONF_VERSION]
+    rs_enabled = conf[CONF_REPORT_SERVER_ENABLED]
+    rs_port = conf[CONF_REPORT_SERVER_PORT]
     try:
         device = hass.data[EGARDIA_DEVICE] = egardiadevice.EgardiaDevice(
             host, port, username, password, "", version

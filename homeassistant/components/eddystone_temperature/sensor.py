@@ -46,9 +46,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Validate configuration, create devices and start monitoring thread."""
-    bt_device_id = config.get("bt_device_id")
+    bt_device_id = config[CONF_BT_DEVICE_ID]
 
-    beacons = config.get(CONF_BEACONS)
+    beacons = config[CONF_BEACONS]
     devices = []
 
     for dev_name, properties in beacons.items():

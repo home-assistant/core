@@ -104,14 +104,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     device = CreateDevice(
         host=config[CONF_HOST],
-        port=config.get(CONF_PORT),
-        username=config.get(CONF_USERNAME),
-        password=config.get(CONF_PASSWORD),
+        port=config[CONF_PORT],
+        username=config[CONF_USERNAME],
+        password=config[CONF_PASSWORD],
         is_https=config[CONF_SSL],
-        prefer_picon=config.get(CONF_USE_CHANNEL_ICON),
-        mac_address=config.get(CONF_MAC_ADDRESS),
-        turn_off_to_deep=config.get(CONF_DEEP_STANDBY),
-        source_bouquet=config.get(CONF_SOURCE_BOUQUET),
+        prefer_picon=config[CONF_USE_CHANNEL_ICON],
+        mac_address=config[CONF_MAC_ADDRESS],
+        turn_off_to_deep=config[CONF_DEEP_STANDBY],
+        source_bouquet=config[CONF_SOURCE_BOUQUET],
     )
 
     add_devices([Enigma2Device(config[CONF_NAME], device)], True)

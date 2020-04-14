@@ -45,15 +45,15 @@ def setup(hass, config):
         hass.data[DYSON_DEVICES] = []
 
     dyson_account = DysonAccount(
-        config[DOMAIN].get(CONF_USERNAME),
-        config[DOMAIN].get(CONF_PASSWORD),
-        config[DOMAIN].get(CONF_LANGUAGE),
+        config[DOMAIN][CONF_USERNAME],
+        config[DOMAIN][CONF_PASSWORD],
+        config[DOMAIN][CONF_LANGUAGE],
     )
 
     logged = dyson_account.login()
 
-    timeout = config[DOMAIN].get(CONF_TIMEOUT)
-    retry = config[DOMAIN].get(CONF_RETRY)
+    timeout = config[DOMAIN][CONF_TIMEOUT]
+    retry = config[DOMAIN][CONF_RETRY]
 
     if not logged:
         _LOGGER.error("Not connected to Dyson account. Unable to add devices")
@@ -61,7 +61,7 @@ def setup(hass, config):
 
     _LOGGER.info("Connected to Dyson account")
     dyson_devices = dyson_account.devices()
-    if CONF_DEVICES in config[DOMAIN] and config[DOMAIN].get(CONF_DEVICES):
+    if CONF_DEVICES in config[DOMAIN] and config[DOMAIN][CONF_DEVICES]:
         configured_devices = config[DOMAIN].get(CONF_DEVICES)
         for device in configured_devices:
             dyson_device = next(

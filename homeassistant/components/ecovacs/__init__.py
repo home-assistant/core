@@ -47,10 +47,10 @@ def setup(hass, config):
 
     ecovacs_api = EcoVacsAPI(
         ECOVACS_API_DEVICEID,
-        config[DOMAIN].get(CONF_USERNAME),
-        EcoVacsAPI.md5(config[DOMAIN].get(CONF_PASSWORD)),
-        config[DOMAIN].get(CONF_COUNTRY),
-        config[DOMAIN].get(CONF_CONTINENT),
+        config[DOMAIN][CONF_USERNAME],
+        EcoVacsAPI.md5(config[DOMAIN][CONF_PASSWORD]),
+        config[DOMAIN][CONF_COUNTRY],
+        config[DOMAIN][CONF_CONTINENT],
     )
 
     devices = ecovacs_api.devices()

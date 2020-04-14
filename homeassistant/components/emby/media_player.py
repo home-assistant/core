@@ -68,8 +68,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Emby platform."""
 
-    host = config.get(CONF_HOST)
-    key = config.get(CONF_API_KEY)
+    host = config[CONF_HOST]
+    key = config[CONF_API_KEY]
     port = config.get(CONF_PORT)
     ssl = config[CONF_SSL]
 

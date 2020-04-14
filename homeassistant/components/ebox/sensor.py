@@ -69,13 +69,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the EBox sensor."""
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
 
     httpsession = hass.helpers.aiohttp_client.async_get_clientsession()
     ebox_data = EBoxData(username, password, httpsession)
 
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
 
     try:
         await ebox_data.async_update()

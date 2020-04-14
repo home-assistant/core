@@ -102,9 +102,9 @@ async def async_setup(hass, config):
     """Set up the Eight Sleep component."""
 
     conf = config.get(DOMAIN)
-    user = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
-    partner = conf.get(CONF_PARTNER)
+    user = conf[CONF_USERNAME]
+    password = conf[CONF_PASSWORD]
+    partner = conf[CONF_PARTNER]
 
     if hass.config.time_zone is None:
         _LOGGER.error("Timezone is not set in Home Assistant.")

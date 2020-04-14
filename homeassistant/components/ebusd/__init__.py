@@ -62,8 +62,8 @@ def setup(hass, config):
     conf = config[DOMAIN]
     name = conf[CONF_NAME]
     circuit = conf[CONF_CIRCUIT]
-    monitored_conditions = conf.get(CONF_MONITORED_CONDITIONS)
-    server_address = (conf.get(CONF_HOST), conf.get(CONF_PORT))
+    monitored_conditions = conf[CONF_MONITORED_CONDITIONS]
+    server_address = (conf[CONF_HOST], conf[CONF_PORT])
 
     try:
         _LOGGER.debug("Ebusd integration setup started")

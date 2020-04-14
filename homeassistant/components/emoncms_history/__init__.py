@@ -43,7 +43,7 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the Emoncms history component."""
     conf = config[DOMAIN]
-    whitelist = conf.get(CONF_WHITELIST)
+    whitelist = conf[CONF_WHITELIST]
 
     def send_data(url, apikey, node, payload):
         """Send payload data to Emoncms."""
@@ -88,14 +88,11 @@ def setup(hass, config):
             )
 
             send_data(
-                conf.get(CONF_URL),
-                conf.get(CONF_API_KEY),
-                str(conf.get(CONF_INPUTNODE)),
-                payload,
+                conf[CONF_URL], conf[CONF_API_KEY], str(conf[CONF_INPUTNODE]), payload
             )
 
         track_point_in_time(
-            hass, update_emoncms, time + timedelta(seconds=conf.get(CONF_SCAN_INTERVAL))
+            hass, update_emoncms, time + timedelta(seconds=conf[CONF_SCAN_INTERVAL])
         )
 
     update_emoncms(dt_util.utcnow())

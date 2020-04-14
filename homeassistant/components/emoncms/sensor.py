@@ -69,11 +69,11 @@ def get_id(sensorid, feedtag, feedname, feedid, feeduserid):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Emoncms sensor."""
-    apikey = config.get(CONF_API_KEY)
-    url = config.get(CONF_URL)
-    sensorid = config.get(CONF_ID)
+    apikey = config[CONF_API_KEY]
+    url = config[CONF_URL]
+    sensorid = config[CONF_ID]
     value_template = config.get(CONF_VALUE_TEMPLATE)
-    config_unit = config.get(CONF_UNIT_OF_MEASUREMENT)
+    config_unit = config[CONF_UNIT_OF_MEASUREMENT]
     exclude_feeds = config.get(CONF_EXCLUDE_FEEDID)
     include_only_feeds = config.get(CONF_ONLY_INCLUDE_FEEDID)
     sensor_names = config.get(CONF_SENSOR_NAMES)

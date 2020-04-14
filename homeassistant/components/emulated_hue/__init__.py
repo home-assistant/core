@@ -169,7 +169,7 @@ class Config:
     def __init__(self, hass, conf):
         """Initialize the instance."""
         self.hass = hass
-        self.type = conf.get(CONF_TYPE)
+        self.type = conf[CONF_TYPE]
         self.numbers = None
         self.cached_states = {}
 
@@ -189,7 +189,7 @@ class Config:
             )
 
         # Get the port that the Hue bridge will listen on
-        self.listen_port = conf.get(CONF_LISTEN_PORT)
+        self.listen_port = conf[CONF_LISTEN_PORT]
         if not isinstance(self.listen_port, int):
             self.listen_port = DEFAULT_LISTEN_PORT
             _LOGGER.info(

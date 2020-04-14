@@ -60,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DWD-Weather-Warnings sensor."""
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
     region_name = config.get(CONF_REGION_NAME)
 
     api = DwdWeatherWarningsAPI(region_name)

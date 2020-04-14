@@ -29,8 +29,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Binary Sensor platform for EnOcean."""
-    dev_id = config.get(CONF_ID)
-    dev_name = config.get(CONF_NAME)
+    dev_id = config[CONF_ID]
+    dev_name = config[CONF_NAME]
     device_class = config.get(CONF_DEVICE_CLASS)
 
     add_entities([EnOceanBinarySensor(dev_id, dev_name, device_class)])

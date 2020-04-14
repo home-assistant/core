@@ -81,8 +81,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.data[ECONET_DATA] = {}
     hass.data[ECONET_DATA]["water_heaters"] = []
 
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
 
     econet = PyEcoNet(username, password)
     water_heaters = econet.get_water_heaters()

@@ -49,8 +49,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DuneHD media player platform."""
 
     sources = config.get(CONF_SOURCES, {})
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
+    host = config[CONF_HOST]
+    name = config[CONF_NAME]
 
     add_entities([DuneHDPlayerEntity(DuneHDPlayer(host), name, sources)], True)
 

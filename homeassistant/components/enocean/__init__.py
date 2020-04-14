@@ -25,7 +25,7 @@ SIGNAL_SEND_MESSAGE = "enocean.send_message"
 
 def setup(hass, config):
     """Set up the EnOcean component."""
-    serial_dev = config[DOMAIN].get(CONF_DEVICE)
+    serial_dev = config[DOMAIN][CONF_DEVICE]
     dongle = EnOceanDongle(hass, serial_dev)
     hass.data[DATA_ENOCEAN] = dongle
 
