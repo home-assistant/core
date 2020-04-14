@@ -23,7 +23,7 @@
                 "data": {
                     "code": "C\u00f3digo de verificaci\u00f3n"
                 },
-                "description": "Por favor, compruebe tu {login_method} ({username}) e introduce el c\u00f3digo de verificaci\u00f3n a continuaci\u00f3n",
+                "description": "Por favor, comprueba tu {login_method} ({username}) e introduce el c\u00f3digo de verificaci\u00f3n a continuaci\u00f3n",
                 "title": "Autenticaci\u00f3n de dos factores"
             }
         },

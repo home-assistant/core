@@ -17,7 +17,7 @@
                     "username": "Usuario"
                 },
                 "description": "Para acceder a la API Personal de Flume, tendr\u00e1s que solicitar un 'Client ID' y un 'Client Secret' en https://portal.flumetech.com/settings#token",
-                "title": "Conectar con tu Cuenta de Flume"
+                "title": "Conectar con tu cuenta de Flume"
             }
         },
         "title": "Flume"

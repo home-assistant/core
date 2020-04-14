@@ -34,6 +34,7 @@
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "\u5169\u500b\u6309\u9215",
+            "bottom_buttons": "\u4e0b\u65b9\u6309\u9215",
             "button_1": "\u7b2c\u4e00\u500b\u6309\u9215",
             "button_2": "\u7b2c\u4e8c\u500b\u6309\u9215",
             "button_3": "\u7b2c\u4e09\u500b\u6309\u9215",
@@ -50,6 +51,7 @@
             "side_4": "\u7b2c 4 \u9762",
             "side_5": "\u7b2c 5 \u9762",
             "side_6": "\u7b2c 6 \u9762",
+            "top_buttons": "\u4e0a\u65b9\u6309\u9215",
             "turn_off": "\u95dc\u9589",
             "turn_on": "\u958b\u555f"
         },
