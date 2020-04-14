@@ -84,19 +84,19 @@ class TransmissionSensor(Entity):
         if self.type == "started_torrents":
             return {
                 STATE_ATTR_TORRENT_INFO: _torrents_info(
-                    self._tm_client.api.torrents, "downloading"
+                    self._tm_client.api.torrents, ("downloading")
                 )
             }
         if self.type == "completed_torrents":
             return {
                 STATE_ATTR_TORRENT_INFO: _torrents_info(
-                    self._tm_client.api.torrents, "seeding"
+                    self._tm_client.api.torrents, ("seeding")
                 )
             }
         if self.type == "paused_torrents":
             return {
                 STATE_ATTR_TORRENT_INFO: _torrents_info(
-                    self._tm_client.api.torrents, "stopped"
+                    self._tm_client.api.torrents, ("stopped")
                 )
             }
         if self.type == "total_torrents":
@@ -104,7 +104,11 @@ class TransmissionSensor(Entity):
                 STATE_ATTR_TORRENT_INFO: _torrents_info(self._tm_client.api.torrents)
             }
         if self.type == "active_torrents":
-            return {STATE_ATTR_TORRENT_INFO: {}}
+            return {
+                STATE_ATTR_TORRENT_INFO: _torrents_info(
+                    self._tm_client.api.torrents, ("seeding", "downloading")
+                )
+            }
         return None
 
     async def async_added_to_hass(self):
@@ -166,10 +170,10 @@ class TransmissionSensor(Entity):
                 self._state = self._data.torrentCount
 
 
-def _torrents_info(torrents, status=None):
+def _torrents_info(torrents, statuses=None):
     infos = {}
     for torrent in torrents:
-        if torrent.status == status or status is None:
+        if statuses is None or torrent.status in statuses:
             info = infos[torrent.name] = {
                 "added_date": torrent.addedDate,
                 "percent_done": f"{torrent.percentDone * 100:.2f}",
