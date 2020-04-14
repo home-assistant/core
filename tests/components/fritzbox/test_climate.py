@@ -27,32 +27,16 @@ from homeassistant.components.fritzbox.const import (
     ATTR_STATE_WINDOW_OPEN,
     DOMAIN as FB_DOMAIN,
 )
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    ATTR_FRIENDLY_NAME,
-    ATTR_TEMPERATURE,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_FRIENDLY_NAME, ATTR_TEMPERATURE
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from . import FritzDeviceClimateMock
+from . import MOCK_CONFIG, FritzDeviceClimateMock
 
 from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake_name"
-MOCK_CONFIG = {
-    FB_DOMAIN: [
-        {
-            CONF_HOST: "fake_host",
-            CONF_PASSWORD: "fake_pass",
-            CONF_USERNAME: "fake_user",
-        }
-    ]
-}
 
 
 @pytest.fixture(name="fritz")

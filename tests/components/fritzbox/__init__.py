@@ -1,6 +1,19 @@
 """Tests for the AVM Fritz!Box integration."""
 from unittest.mock import Mock
 
+from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+
+MOCK_CONFIG = {
+    FB_DOMAIN: [
+        {
+            CONF_HOST: "fake_host",
+            CONF_PASSWORD: "fake_pass",
+            CONF_USERNAME: "fake_user",
+        }
+    ]
+}
+
 
 class FritzDeviceBinarySensorMock(Mock):
     """Mock of a AVM Fritz!Box binary sensor device."""

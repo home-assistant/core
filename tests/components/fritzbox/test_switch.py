@@ -18,9 +18,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_TEMPERATURE,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     ENERGY_KILO_WATT_HOUR,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -30,20 +27,11 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from . import FritzDeviceSwitchMock
+from . import MOCK_CONFIG, FritzDeviceSwitchMock
 
 from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake_name"
-MOCK_CONFIG = {
-    FB_DOMAIN: [
-        {
-            CONF_HOST: "fake_host",
-            CONF_PASSWORD: "fake_pass",
-            CONF_USERNAME: "fake_user",
-        }
-    ]
-}
 
 
 @pytest.fixture(name="fritz")

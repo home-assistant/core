@@ -10,19 +10,9 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
-from . import FritzDeviceSwitchMock
+from . import MOCK_CONFIG, FritzDeviceSwitchMock
 
 from tests.common import MockConfigEntry
-
-MOCK_CONFIG = {
-    FB_DOMAIN: [
-        {
-            CONF_HOST: "fake_host",
-            CONF_PASSWORD: "fake_pass",
-            CONF_USERNAME: "fake_user",
-        }
-    ]
-}
 
 
 @pytest.fixture(name="fritz")

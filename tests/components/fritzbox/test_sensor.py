@@ -14,29 +14,17 @@ from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from . import FritzDeviceSensorMock
+from . import MOCK_CONFIG, FritzDeviceSensorMock
 
 from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake_name"
-MOCK_CONFIG = {
-    FB_DOMAIN: [
-        {
-            CONF_HOST: "fake_host",
-            CONF_PASSWORD: "fake_pass",
-            CONF_USERNAME: "fake_user",
-        }
-    ]
-}
 
 
 @pytest.fixture(name="fritz")

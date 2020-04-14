@@ -8,31 +8,16 @@ from requests.exceptions import HTTPError
 
 from homeassistant.components.binary_sensor import DOMAIN
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from . import FritzDeviceBinarySensorMock
+from . import MOCK_CONFIG, FritzDeviceBinarySensorMock
 
 from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake_name"
-MOCK_CONFIG = {
-    FB_DOMAIN: [
-        {
-            CONF_HOST: "fake_host",
-            CONF_PASSWORD: "fake_pass",
-            CONF_USERNAME: "fake_user",
-        }
-    ]
-}
 
 
 @pytest.fixture(name="fritz")
