@@ -234,7 +234,7 @@ async def test_check_attributes(
     assert state.attributes.get(ATTR_MEDIA_START_TIME) == datetime(
         2020, 3, 21, 13, 0, tzinfo=dt_util.UTC
     )
-    
+
     state = hass.states.get(CLIENT_ENTITY_ID)
     assert state.state == STATE_PLAYING
 
