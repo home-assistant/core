@@ -13,6 +13,7 @@ from homeassistant.components.directv.media_player import (
 )
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_CHANNEL,
     ATTR_MEDIA_CONTENT_ID,
@@ -233,7 +234,7 @@ async def test_check_attributes(
     assert state.attributes.get(ATTR_MEDIA_START_TIME) == datetime(
         2020, 3, 21, 13, 0, tzinfo=dt_util.UTC
     )
-
+    
     state = hass.states.get(CLIENT_ENTITY_ID)
     assert state.state == STATE_PLAYING
 
@@ -252,7 +253,7 @@ async def test_check_attributes(
     assert state.attributes.get(ATTR_MEDIA_START_TIME) == datetime(
         2010, 7, 5, 15, 0, 8, tzinfo=dt_util.UTC
     )
-    
+
     state = hass.states.get(MUSIC_ENTITY_ID)
     assert state.state == STATE_PLAYING
 
@@ -263,7 +264,7 @@ async def test_check_attributes(
     assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT)
     assert state.attributes.get(ATTR_MEDIA_TITLE) == "Sparkle In Your Eyes"
     assert state.attributes.get(ATTR_MEDIA_ARTIST) == "Gerald Albright"
-    assert state.attributes.get(ATTR_MEDIA_ALBUM) == "Slam Dunk (2014)"
+    assert state.attributes.get(ATTR_MEDIA_ALBUM_NAME) == "Slam Dunk (2014)"
     assert state.attributes.get(ATTR_MEDIA_SERIES_TITLE) is None
     assert state.attributes.get(ATTR_MEDIA_CHANNEL) == "{} ({})".format("MCSJ", "851")
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "851"
