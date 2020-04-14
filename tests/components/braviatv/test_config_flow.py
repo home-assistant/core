@@ -110,11 +110,11 @@ async def test_import_duplicate_error(hass):
         },
         title="TV-Model",
     )
+    config_entry.add_to_hass(hass)
 
     with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
         "bravia_tv.BraviaRC.is_connected", return_value=True
     ), patch("bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO):
-        config_entry.add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_CONFIG_HOSTNAME,
@@ -173,11 +173,11 @@ async def test_duplicate_error(hass):
         },
         title="TV-Model",
     )
+    config_entry.add_to_hass(hass)
 
     with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
         "bravia_tv.BraviaRC.is_connected", return_value=True
     ), patch("bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO):
-        config_entry.add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"},
@@ -233,6 +233,7 @@ async def test_options_flow(hass):
         },
         title="TV-Model",
     )
+    config_entry.add_to_hass(hass)
 
     with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
         "bravia_tv.BraviaRC.is_connected", return_value=True
@@ -241,7 +242,6 @@ async def test_options_flow(hass):
     ), patch(
         "homeassistant.components.braviatv.async_setup_entry", return_value=True
     ):
-        config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
