@@ -103,8 +103,8 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.braviarc = BraviaRC(self.host)
 
                 return await self.async_step_authorize()
-            else:
-                errors[CONF_HOST] = "invalid_host"
+
+            errors[CONF_HOST] = "invalid_host"
 
         return self.async_show_form(
             step_id="user",
