@@ -5,7 +5,7 @@ from homeassistant.util.async_ import protect_loop
 
 
 def enable() -> None:
-    """Enable the blocking of I/O in the event loop."""
+    """Enable the detection of I/O in the event loop."""
     # Prevent urllib3 and requests doing I/O in event loop
     HTTPConnection.putrequest = protect_loop(HTTPConnection.putrequest)
 
