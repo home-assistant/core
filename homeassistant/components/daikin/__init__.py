@@ -91,7 +91,7 @@ async def daikin_api_setup(hass, host):
 
     session = hass.helpers.aiohttp_client.async_get_clientsession()
     try:
-        with timeout(10):
+        with timeout(60):
             device = Appliance(host, session)
             await device.init()
     except asyncio.TimeoutError:

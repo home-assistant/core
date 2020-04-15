@@ -38,7 +38,7 @@ class FlowHandler(config_entries.ConfigFlow):
             device = Appliance(
                 host, self.hass.helpers.aiohttp_client.async_get_clientsession()
             )
-            with timeout(10):
+            with timeout(60):
                 await device.init()
         except asyncio.TimeoutError:
             return self.async_abort(reason="device_timeout")
