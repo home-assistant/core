@@ -1,4 +1,5 @@
 {
+  "title": "Huawei LTE",
   "config": {
     "abort": {
       "already_configured": "This device has already been configured",
@@ -26,8 +27,7 @@
         "description": "Enter device access details. Specifying username and password is optional, but enables support for more integration features. On the other hand, use of an authorized connection may cause problems accessing the device web interface from outside Home Assistant while the integration is active, and the other way around.",
         "title": "Configure Huawei LTE"
       }
-    },
-    "title": "Huawei LTE"
+    }
   },
   "options": {
     "step": {

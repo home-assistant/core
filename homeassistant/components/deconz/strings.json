@@ -1,6 +1,6 @@
 {
+  "title": "deCONZ Zigbee gateway",
   "config": {
-    "title": "deCONZ Zigbee gateway",
     "flow_title": "deCONZ Zigbee gateway ({host})",
     "step": {
       "init": {

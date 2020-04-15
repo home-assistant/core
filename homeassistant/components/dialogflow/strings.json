@@ -1,6 +1,6 @@
 {
+  "title": "Dialogflow",
   "config": {
-    "title": "Dialogflow",
     "step": {
       "user": {
         "title": "Set up the Dialogflow Webhook",

@@ -1,6 +1,6 @@
 {
+  "title": "Vilfo Router",
   "config": {
-    "title": "Vilfo Router",
     "step": {
       "user": {
         "title": "Connect to the Vilfo Router",

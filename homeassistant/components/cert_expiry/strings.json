@@ -1,6 +1,6 @@
 {
+  "title": "Certificate Expiry",
   "config": {
-    "title": "Certificate Expiry",
     "step": {
       "user": {
         "title": "Define the certificate to test",

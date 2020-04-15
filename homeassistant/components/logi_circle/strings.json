@@ -1,6 +1,6 @@
 {
+  "title": "Logi Circle",
   "config": {
-    "title": "Logi Circle",
     "step": {
       "user": {
         "title": "Authentication Provider",

@@ -1,6 +1,6 @@
 {
+  "title": "Met.no",
   "config": {
-    "title": "Met.no",
     "step": {
       "user": {
         "title": "Location",

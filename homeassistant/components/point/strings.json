@@ -1,6 +1,6 @@
 {
+  "title": "Minut Point",
   "config": {
-    "title": "Minut Point",
     "step": {
       "user": {
         "title": "Authentication Provider",

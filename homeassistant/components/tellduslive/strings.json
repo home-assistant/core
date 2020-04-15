@@ -1,4 +1,5 @@
 {
+  "title": "Telldus Live",
   "config": {
     "abort": {
       "already_setup": "TelldusLive is already configured",
@@ -20,7 +21,6 @@
         },
         "title": "Pick endpoint."
       }
-    },
-    "title": "Telldus Live"
+    }
   }
 }

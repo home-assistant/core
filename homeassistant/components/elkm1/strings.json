@@ -1,6 +1,6 @@
 {
+  "title": "Elk-M1 Control",
   "config": {
-    "title": "Elk-M1 Control",
     "step": {
       "user": {
         "title": "Connect to Elk-M1 Control",
