@@ -1,6 +1,14 @@
 """API for Lokalise."""
 import requests
 
+from .const import PROJECT_ID
+from .util import get_lokalise_token
+
+
+def get_api() -> "Lokalise":
+    """Get Lokalise API."""
+    return Lokalise(PROJECT_ID, get_lokalise_token())
+
 
 class Lokalise:
     """Lokalise API."""
@@ -28,7 +36,7 @@ class Lokalise:
         return req.json()
 
     def keys_list(self, params={}):
-        """Fetch key ID from a name.
+        """List keys.
 
         https://app.lokalise.com/api2docs/curl/#transition-list-all-keys-get
         """
@@ -40,3 +48,10 @@ class Lokalise:
         https://app.lokalise.com/api2docs/curl/#transition-delete-multiple-keys-delete
         """
         return self.request("DELETE", "keys", {"keys": key_ids})
+
+    def keys_bulk_update(self, updates):
+        """Update multiple keys.
+
+        https://app.lokalise.com/api2docs/curl/#transition-bulk-update-put
+        """
+        return self.request("PUT", "keys", {"keys": updates})
