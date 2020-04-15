@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_point_in_time
+from homeassistant.helpers.event import async_call_later, async_track_point_in_time
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -156,9 +156,7 @@ class IslamicPrayerClient:
         except (exceptions.InvalidResponseError, ConnError):
             self.available = False
             _LOGGER.debug("Error retrieving prayer times.")
-            async_track_point_in_time(
-                self.hass, self.async_update, dt_util.utcnow() + timedelta(minutes=1)
-            )
+            async_call_later(self.hass, 60, self.async_update)
             return
 
         for prayer, time in prayer_times.items():
