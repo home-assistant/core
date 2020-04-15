@@ -27,7 +27,13 @@ VALID_CONFIG_ROUTER_SSH = {
         CONF_PROTOCOL: "ssh",
         CONF_USERNAME: "fake_user",
         CONF_PASSWORD: "fake_pass",
-        CONF_SENSORS: "upload",
+        CONF_SENSORS: [
+            "devices",
+            "download_speed",
+            "download",
+            "upload_speed",
+            "upload",
+        ],
     }
 }
 
