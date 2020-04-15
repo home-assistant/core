@@ -29,8 +29,7 @@ def get_scanner(hass, config):
     """Return a BT Smart Hub scanner if successful."""
     info = config[DOMAIN]
     smarthub_client = BTSmartHub(
-        router_ip=info[CONF_HOST],
-        smarthub_model=info.get(CONF_SMARTHUB_MODEL)
+        router_ip=info[CONF_HOST], smarthub_model=info.get(CONF_SMARTHUB_MODEL)
     )
 
     scanner = BTSmartHubScanner(smarthub_client)
