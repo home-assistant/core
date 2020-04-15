@@ -14,7 +14,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import PRECISION_WHOLE, STATE_ON, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import PRECISION_WHOLE, STATE_ON
 
 from . import ElkEntity, create_elk_entities
 from .const import DOMAIN
@@ -55,7 +55,7 @@ class ElkThermostat(ElkEntity, ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the temperature unit."""
-        return TEMP_FAHRENHEIT if self._temperature_unit == "F" else TEMP_CELSIUS
+        return self._temperature_unit
 
     @property
     def current_temperature(self):
