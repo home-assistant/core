@@ -13,6 +13,10 @@
       "locationName": "Music Client"
     },
     {
+      "clientAddr": "B01234567890",
+      "locationName": "Standby Client"
+    },
+    {
       "clientAddr": "9XXXXXXXXXX9",
       "locationName": "Unavailable Client"
     }

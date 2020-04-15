@@ -33,6 +33,13 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
 
     aioclient_mock.get(
         f"http://{HOST}:8080/info/mode",
+        params={"clientAddr": "B01234567890"},
+        text=load_fixture("directv/info-mode-standby.json"),
+        headers={"Content-Type": "application/json"},
+    )
+
+    aioclient_mock.get(
+        f"http://{HOST}:8080/info/mode",
         params={"clientAddr": "9XXXXXXXXXX9"},
         status=HTTP_INTERNAL_SERVER_ERROR,
         text=load_fixture("directv/info-mode-error.json"),

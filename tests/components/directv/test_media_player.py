@@ -47,6 +47,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
@@ -61,6 +62,7 @@ ATTR_UNIQUE_ID = "unique_id"
 CLIENT_ENTITY_ID = f"{MP_DOMAIN}.client"
 MAIN_ENTITY_ID = f"{MP_DOMAIN}.host"
 MUSIC_ENTITY_ID = f"{MP_DOMAIN}.music_client"
+STANDBY_ENTITY_ID = f"{MP_DOMAIN}.standby_client"
 UNAVAILABLE_ENTITY_ID = f"{MP_DOMAIN}.unavailable_client"
 
 # pylint: disable=redefined-outer-name
@@ -274,6 +276,24 @@ async def test_check_attributes(
     assert state.attributes.get(ATTR_MEDIA_START_TIME) == datetime(
         2020, 3, 21, 10, 0, 0, tzinfo=dt_util.UTC
     )
+
+    state = hass.states.get(STANDBY_ENTITY_ID)
+    assert state.state == STATE_OFF
+
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) is None
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) is None
+    assert state.attributes.get(ATTR_MEDIA_DURATION) is None
+    assert state.attributes.get(ATTR_MEDIA_POSITION) is None
+    assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT) is None
+    assert state.attributes.get(ATTR_MEDIA_TITLE) is None
+    assert state.attributes.get(ATTR_MEDIA_ARTIST) is None
+    assert state.attributes.get(ATTR_MEDIA_ALBUM_NAME) is None
+    assert state.attributes.get(ATTR_MEDIA_SERIES_TITLE) is None
+    assert state.attributes.get(ATTR_MEDIA_CHANNEL) is None
+    assert state.attributes.get(ATTR_INPUT_SOURCE) is None
+    assert not state.attributes.get(ATTR_MEDIA_CURRENTLY_RECORDING)
+    assert state.attributes.get(ATTR_MEDIA_RATING) is None
+    assert not state.attributes.get(ATTR_MEDIA_RECORDED)
 
     state = hass.states.get(UNAVAILABLE_ENTITY_ID)
     assert state.state == STATE_UNAVAILABLE
