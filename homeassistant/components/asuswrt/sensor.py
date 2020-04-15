@@ -43,7 +43,6 @@ class AsuswrtSensor(Entity):
         """Initialize the sensor."""
         self._api = api
         self._state = None
-        self._attributes = None
         self._devices = None
         self._rates = None
         self._speed = None
