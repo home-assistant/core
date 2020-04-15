@@ -1,9 +1,8 @@
 """Find translation keys that are in Lokalise but no longer defined in source."""
 import json
 
-from .const import INTEGRATIONS_DIR, PROJECT_ID
-from .lokalise import Lokalise
-from .util import get_lokalise_token
+from .const import INTEGRATIONS_DIR
+from .lokalise import get_api
 
 
 def find_extra(base, translations, path_prefix, missing_keys):
@@ -50,7 +49,7 @@ def run():
         print("No missing translations!")
         return
 
-    lokalise = Lokalise(PROJECT_ID, get_lokalise_token())
+    lokalise = get_api()
 
     to_delete = []
 
