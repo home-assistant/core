@@ -132,6 +132,14 @@ class TransmissionStatusSensor(TransmissionSensor):
 class TransmissionTorrentsSensor(TransmissionSensor):
     """Representation of a Transmission torrents sensor."""
 
+    SUBTYPE_MODES = {
+        "started": ("downloading"),
+        "completed": ("seeding"),
+        "paused": ("stopped"),
+        "active": ("seeding", "downloading"),
+        "total": None,
+    }
+
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
@@ -140,52 +148,14 @@ class TransmissionTorrentsSensor(TransmissionSensor):
     @property
     def device_state_attributes(self):
         """Return the state attributes, if any."""
-        if self._sub_type == "started":
-            return {
-                STATE_ATTR_TORRENT_INFO: _torrents_info(
-                    self._tm_client.api.torrents, ("downloading")
-                )
-            }
-        if self._sub_type == "completed":
-            return {
-                STATE_ATTR_TORRENT_INFO: _torrents_info(
-                    self._tm_client.api.torrents, ("seeding")
-                )
-            }
-        if self._sub_type == "paused":
-            return {
-                STATE_ATTR_TORRENT_INFO: _torrents_info(
-                    self._tm_client.api.torrents, ("stopped")
-                )
-            }
-        if self._sub_type == "total":
-            return {
-                STATE_ATTR_TORRENT_INFO: _torrents_info(self._tm_client.api.torrents)
-            }
-        if self._sub_type == "active":
-            return {
-                STATE_ATTR_TORRENT_INFO: _torrents_info(
-                    self._tm_client.api.torrents, ("seeding", "downloading")
-                )
-            }
-        return None
+        info = _torrents_info(
+            self._tm_client.api.torrents, self.SUBTYPE_MODES[self._sub_type]
+        )
+        return {STATE_ATTR_TORRENT_INFO: info}
 
     def update(self):
         """Get the latest data from Transmission and updates the state."""
-        data = self._tm_client.api.data
-
-        if self._sub_type == "completed":
-            self._state = self._tm_client.api.get_completed_torrent_count()
-        elif self._sub_type == "started":
-            self._state = self._tm_client.api.get_started_torrent_count()
-
-        if data:
-            if self._sub_type == "active":
-                self._state = data.activeTorrentCount
-            elif self._sub_type == "paused":
-                self._state = data.pausedTorrentCount
-            elif self._sub_type == "total":
-                self._state = data.torrentCount
+        self._state = len(self.device_state_attributes[STATE_ATTR_TORRENT_INFO])
 
 
 def _torrents_info(torrents, statuses=None):
