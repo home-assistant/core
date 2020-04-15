@@ -24,13 +24,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import Throttle, slugify
 
 from . import async_setup_service, data_packet, hostname, mac_address
-from .const import (
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-    DEFAULT_RETRY,
-    DEFAULT_TIMEOUT,
-    DEFAULT_TYPE,
-)
+from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_RETRY, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,15 +37,22 @@ RM_TYPES = [
     "rm",
     "rm2",
     "rm_mini",
+    "rm_mini_shate",
     "rm_pro_phicomm",
     "rm2_home_plus",
     "rm2_home_plus_gdt",
     "rm2_pro_plus",
     "rm2_pro_plus2",
     "rm2_pro_plus_bl",
-    "rm_mini_shate",
 ]
-RM4_TYPES = ["rm_mini3_5f36", "rm4_mini", "rm4_pro"]
+RM4_TYPES = [
+    "rm_mini3_newblackbean",
+    "rm_mini3_redbean",
+    "rm4_mini",
+    "rm4_pro",
+    "rm4c_mini",
+    "rm4c_pro",
+]
 SP1_TYPES = ["sp1"]
 SP2_TYPES = ["sp2", "honeywell_sp2", "sp3", "spmini2", "spminiplus"]
 MP1_TYPES = ["mp1"]
@@ -123,22 +124,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return slots[f"slot_{slot}"]
 
     if switch_type in RM_TYPES:
-        broadlink_device = blk.rm((host, DEFAULT_PORT), mac_addr, DEFAULT_TYPE)
+        broadlink_device = blk.rm((host, DEFAULT_PORT), mac_addr, None)
         hass.add_job(async_setup_service, hass, host, broadlink_device)
         switches = generate_rm_switches(devices, broadlink_device)
     if switch_type in RM4_TYPES:
-        broadlink_device = blk.rm4((host, DEFAULT_PORT), mac_addr, DEFAULT_TYPE)
+        broadlink_device = blk.rm4((host, DEFAULT_PORT), mac_addr, None)
         hass.add_job(async_setup_service, hass, host, broadlink_device)
         switches = generate_rm_switches(devices, broadlink_device)
     elif switch_type in SP1_TYPES:
-        broadlink_device = blk.sp1((host, DEFAULT_PORT), mac_addr, DEFAULT_TYPE)
+        broadlink_device = blk.sp1((host, DEFAULT_PORT), mac_addr, None)
         switches = [BroadlinkSP1Switch(friendly_name, broadlink_device, retry_times)]
     elif switch_type in SP2_TYPES:
-        broadlink_device = blk.sp2((host, DEFAULT_PORT), mac_addr, DEFAULT_TYPE)
+        broadlink_device = blk.sp2((host, DEFAULT_PORT), mac_addr, None)
         switches = [BroadlinkSP2Switch(friendly_name, broadlink_device, retry_times)]
     elif switch_type in MP1_TYPES:
         switches = []
-        broadlink_device = blk.mp1((host, DEFAULT_PORT), mac_addr, DEFAULT_TYPE)
+        broadlink_device = blk.mp1((host, DEFAULT_PORT), mac_addr, None)
         parent_device = BroadlinkMP1Switch(broadlink_device, retry_times)
         for i in range(1, 5):
             slot = BroadlinkMP1Slot(

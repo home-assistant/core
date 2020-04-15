@@ -23,7 +23,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from . import hostname, mac_address
-from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_TIMEOUT, DEFAULT_TYPE
+from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Required(CONF_HOST): vol.All(vol.Any(hostname, ip_address), cv.string),
         vol.Required(CONF_MAC): mac_address,
-        vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): cv.positive_int,
+        vol.Optional(CONF_TYPE): cv.positive_int,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )
@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config[CONF_HOST]
     mac_addr = config[CONF_MAC]
     name = config[CONF_NAME]
-    dev_type = config[CONF_TYPE]
+    dev_type = config.get(CONF_TYPE)
     timeout = config[CONF_TIMEOUT]
     update_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     broadlink_data = BroadlinkData(update_interval, host, mac_addr, dev_type, timeout)

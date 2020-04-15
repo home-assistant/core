@@ -39,7 +39,6 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_RETRY,
     DEFAULT_TIMEOUT,
-    DEFAULT_TYPE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,7 +74,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): vol.All(vol.Any(hostname, ip_address), cv.string),
         vol.Required(CONF_MAC): mac_address,
-        vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): cv.positive_int,
+        vol.Optional(CONF_TYPE): cv.positive_int,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
@@ -86,7 +85,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the Broadlink remote."""
     host = config[CONF_HOST]
     mac_addr = config[CONF_MAC]
-    dev_type = config[CONF_TYPE]
+    dev_type = config.get(CONF_TYPE)
     timeout = config[CONF_TIMEOUT]
     name = config[CONF_NAME]
     unique_id = f"remote_{hexlify(mac_addr).decode('utf-8')}"
@@ -96,9 +95,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
     hass.data[DOMAIN][COMPONENT].append(unique_id)
 
-    api = await hass.async_add_executor_job(
-        blk.gendevice, dev_type, (host, DEFAULT_PORT), mac_addr
-    )
+    if dev_type is None:
+        api = blk.rm((host, DEFAULT_PORT), mac_addr, None)
+    else:
+        api = await hass.async_add_executor_job(
+            blk.gendevice, dev_type, (host, DEFAULT_PORT), mac_addr
+        )
     api.timeout = timeout
     code_storage = Store(hass, CODE_STORAGE_VERSION, f"broadlink_{unique_id}_codes")
     flag_storage = Store(hass, FLAG_STORAGE_VERSION, f"broadlink_{unique_id}_flags")
