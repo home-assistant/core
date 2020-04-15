@@ -60,10 +60,6 @@ async def async_setup(hass: core.HomeAssistant, config: dict):
         if host in configured_hubs:
             continue
 
-        # No existing config entry found, trigger link config flow. Because we're
-        # inside the setup of this component we'll have to use hass.async_add_job
-        # to avoid a deadlock: creating a config entry will set up the component
-        # but the setup would block till the entry is created!
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,

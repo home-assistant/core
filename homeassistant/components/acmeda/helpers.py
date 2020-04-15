@@ -1,5 +1,4 @@
 """Helper functions for Acmeda Pulse."""
-from homeassistant import config_entries
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
 from homeassistant.helpers.entity_registry import async_get_registry as get_ent_reg
 
@@ -10,10 +9,6 @@ async def update_entities(
     hass, entity_class, config_entry, current, async_add_entities
 ):
     """Add any new entities, remove any old ones."""
-    if config_entry.entry_id not in hass.data[DOMAIN]:
-        LOGGER.error("Invalid config_entry %s", config_entry.entry_id)
-        return
-
     hub = hass.data[DOMAIN][config_entry.entry_id]
     LOGGER.debug("Looking for new %s on: %s", entity_class.__name__, hub.host)
 
@@ -68,14 +63,3 @@ async def update_devices(hass, config_entry, api):
             dev_registry.async_update_device(
                 device.id, name=api_item.name,
             )
-
-
-def create_config_flow(hass, host):
-    """Start a config flow."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={"host": host},
-        )
-    )
