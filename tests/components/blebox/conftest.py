@@ -83,6 +83,10 @@ class BleBoxTestHelper:
         config = mock_config()
         config.add_to_hass(hass)
 
+        domain = hass.data.setdefault(const.DOMAIN, {})
+        products = domain.setdefault(const.PRODUCTS, {})
+        products[config.entry_id] = self.default_mock().product
+
         all_entries = []
 
         def add_entries(entries, update):

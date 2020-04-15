@@ -19,9 +19,8 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
 )
-from homeassistant.exceptions import PlatformNotReady
 
-from .conftest import BleBoxTestHelper, mock_feature, patch_product_identify
+from .conftest import BleBoxTestHelper, mock_feature
 
 
 class CoverTestHelper(BleBoxTestHelper):
@@ -428,38 +427,6 @@ async def test_with_no_stop(gatebox, hass):
 def all_types(request):
     """Return a fixture using all cover types."""
     return request.param()
-
-
-async def test_setup_failure(all_types, hass):
-    """Test that setup failure is handled and logged."""
-
-    data = all_types
-    patch_product_identify(None, side_effect=blebox_uniapi.error.ClientError)
-
-    with patch("homeassistant.components.blebox._LOGGER.error") as error:
-        with pytest.raises(PlatformNotReady):
-            await data.async_mock_entities(hass)
-
-        error.assert_has_calls(
-            [call("Identify failed at %s:%d (%s)", "172.100.123.4", 80, mock.ANY,)]
-        )
-        assert isinstance(error.call_args[0][3], blebox_uniapi.error.ClientError)
-
-
-async def test_setup_failure_on_connection(all_types, hass):
-    """Test that setup failure is handled and logged."""
-
-    data = all_types
-    patch_product_identify(None, side_effect=blebox_uniapi.error.ConnectionError)
-
-    with patch("homeassistant.components.blebox._LOGGER.error") as error:
-        with pytest.raises(PlatformNotReady):
-            await data.async_mock_entities(hass)
-
-        error.assert_has_calls(
-            [call("Identify failed at %s:%d (%s)", "172.100.123.4", 80, mock.ANY,)]
-        )
-        assert isinstance(error.call_args[0][3], blebox_uniapi.error.ConnectionError)
 
 
 async def test_update_failure(all_types, hass):

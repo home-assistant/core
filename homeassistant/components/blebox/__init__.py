@@ -4,11 +4,15 @@ import logging
 
 from blebox_uniapi.error import Error
 from blebox_uniapi.products import Products
+from blebox_uniapi.session import ApiHost
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCTS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +28,24 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up BleBox devices from a config entry."""
+
+    websession = async_get_clientsession(hass)
+
+    host = entry.data[CONF_HOST]
+    port = entry.data[CONF_PORT]
+    timeout = DEFAULT_SETUP_TIMEOUT
+
+    api_host = ApiHost(host, port, timeout, websession, hass.loop, _LOGGER)
+
+    try:
+        product = await Products.async_from_host(api_host)
+    except Error as ex:
+        _LOGGER.error("Identify failed at %s:%d (%s)", api_host.host, api_host.port, ex)
+        raise ConfigEntryNotReady from ex
+
+    domain = hass.data.setdefault(DOMAIN, {})
+    products = domain.setdefault(PRODUCTS, {})
+    products[entry.entry_id] = product
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -47,15 +69,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-async def async_create_blebox_entities(
-    api_host, async_add, entity_klass, entity_type, exception
-):
+async def async_create_blebox_entities(product, async_add, entity_klass, entity_type):
     """Create entities from a BleBox product's features."""
-    try:
-        product = await Products.async_from_host(api_host)
-    except Error as ex:
-        _LOGGER.error("Identify failed at %s:%d (%s)", api_host.host, api_host.port, ex)
-        raise exception from ex
 
     entities = []
     for feature in product.features[entity_type]:
