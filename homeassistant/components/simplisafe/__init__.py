@@ -23,8 +23,9 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_START,
 )
-from homeassistant.core import EVENT_HOMEASSISTANT_START, callback
+from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
@@ -478,9 +479,13 @@ class SimpliSafe:
             # they will trigger SIMPLISAFE_NOTIFICATION events before other critical
             # components – such as automation – are ready. Therefore, we schedule an
             # update of notifications as soon as HASS is fully started:
+            async def process_notifications(_):
+                while self._hass.state != CoreState.running:
+                    await asyncio.sleep(1)
+                self._async_process_new_notifications(system)
+
             self._hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START,
-                lambda event: self._async_process_new_notifications(system),
+                EVENT_HOMEASSISTANT_START, process_notifications
             )
 
         async def refresh(event_time):
