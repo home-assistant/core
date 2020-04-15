@@ -1,7 +1,5 @@
 """Tests for the AVM Fritz!Box integration."""
-from unittest.mock import Mock, call, patch
-
-import pytest
+from unittest.mock import Mock, call
 
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -13,19 +11,6 @@ from homeassistant.setup import async_setup_component
 from . import MOCK_CONFIG, FritzDeviceSwitchMock
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture(name="fritz")
-def fritz_fixture():
-    """Patch libraries."""
-    with patch("homeassistant.components.fritzbox.socket") as socket1, patch(
-        "homeassistant.components.fritzbox.config_flow.socket"
-    ) as socket2, patch("homeassistant.components.fritzbox.Fritzhome") as fritz, patch(
-        "homeassistant.components.fritzbox.config_flow.Fritzhome"
-    ):
-        socket1.gethostbyname.return_value = "FAKE_IP_ADDRESS"
-        socket2.gethostbyname.return_value = "FAKE_IP_ADDRESS"
-        yield fritz
 
 
 async def test_setup(hass: HomeAssistantType, fritz: Mock):

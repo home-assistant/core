@@ -1,8 +1,7 @@
 """Tests for AVM Fritz!Box switch component."""
 from datetime import timedelta
+from unittest.mock import Mock
 
-from asynctest.mock import Mock, patch
-import pytest
 from requests.exceptions import HTTPError
 
 from homeassistant.components.fritzbox.const import (
@@ -21,6 +20,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_ON,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.typing import HomeAssistantType
@@ -34,22 +34,9 @@ from tests.common import async_fire_time_changed
 ENTITY_ID = f"{DOMAIN}.fake_name"
 
 
-@pytest.fixture(name="fritz")
-def fritz_fixture():
-    """Patch libraries."""
-    with patch("homeassistant.components.fritzbox.socket") as socket1, patch(
-        "homeassistant.components.fritzbox.config_flow.socket"
-    ) as socket2, patch("homeassistant.components.fritzbox.Fritzhome") as fritz, patch(
-        "homeassistant.components.fritzbox.config_flow.Fritzhome"
-    ):
-        socket1.gethostbyname.return_value = "FAKE_IP_ADDRESS"
-        socket2.gethostbyname.return_value = "FAKE_IP_ADDRESS"
-        yield fritz
-
-
 async def setup_fritzbox(hass: HomeAssistantType, config: dict):
     """Set up mock AVM Fritz!Box."""
-    assert await async_setup_component(hass, FB_DOMAIN, config) is True
+    assert await async_setup_component(hass, FB_DOMAIN, config)
     await hass.async_block_till_done()
 
 
@@ -62,6 +49,7 @@ async def test_setup(hass: HomeAssistantType, fritz: Mock):
     state = hass.states.get(ENTITY_ID)
 
     assert state
+    assert state.state == STATE_ON
     assert state.attributes[ATTR_CURRENT_POWER_W] == 5.678
     assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name"
     assert state.attributes[ATTR_STATE_DEVICE_LOCKED] == "fake_locked_device"

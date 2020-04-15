@@ -1,8 +1,7 @@
 """Tests for AVM Fritz!Box climate component."""
 from datetime import timedelta
+from unittest.mock import Mock
 
-from asynctest.mock import Mock, patch
-import pytest
 from requests.exceptions import HTTPError
 
 from homeassistant.components.climate.const import (
@@ -37,19 +36,6 @@ from . import MOCK_CONFIG, FritzDeviceClimateMock
 from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake_name"
-
-
-@pytest.fixture(name="fritz")
-def fritz_fixture():
-    """Patch libraries."""
-    with patch("homeassistant.components.fritzbox.socket") as socket1, patch(
-        "homeassistant.components.fritzbox.config_flow.socket"
-    ) as socket2, patch("homeassistant.components.fritzbox.Fritzhome") as fritz, patch(
-        "homeassistant.components.fritzbox.config_flow.Fritzhome"
-    ):
-        socket1.gethostbyname.return_value = "FAKE_IP_ADDRESS"
-        socket2.gethostbyname.return_value = "FAKE_IP_ADDRESS"
-        yield fritz
 
 
 async def setup_fritzbox(hass: HomeAssistantType, config: dict):

@@ -1,9 +1,8 @@
 """Tests for AVM Fritz!Box binary sensor component."""
 from datetime import timedelta
+from unittest import mock
+from unittest.mock import Mock
 
-from asynctest import mock
-from asynctest.mock import Mock, patch
-import pytest
 from requests.exceptions import HTTPError
 
 from homeassistant.components.binary_sensor import DOMAIN
@@ -25,22 +24,9 @@ from tests.common import async_fire_time_changed
 ENTITY_ID = f"{DOMAIN}.fake_name"
 
 
-@pytest.fixture(name="fritz")
-def fritz_fixture():
-    """Patch libraries."""
-    with patch("homeassistant.components.fritzbox.socket") as socket1, patch(
-        "homeassistant.components.fritzbox.config_flow.socket"
-    ) as socket2, patch("homeassistant.components.fritzbox.Fritzhome") as fritz, patch(
-        "homeassistant.components.fritzbox.config_flow.Fritzhome"
-    ):
-        socket1.gethostbyname.return_value = "FAKE_IP_ADDRESS"
-        socket2.gethostbyname.return_value = "FAKE_IP_ADDRESS"
-        yield fritz
-
-
 async def setup_fritzbox(hass: HomeAssistantType, config: dict):
     """Set up mock AVM Fritz!Box."""
-    assert await async_setup_component(hass, FB_DOMAIN, config) is True
+    assert await async_setup_component(hass, FB_DOMAIN, config)
     await hass.async_block_till_done()
 
 
