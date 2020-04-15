@@ -253,24 +253,37 @@ def async_enable_logging(
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
     # AIS dom fix
-    # return
-    log_file = (
-        "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/dysk_1234/ais.log"
-    )
+    try:
+        import json
+        from homeassistant.components.ais_dom import ais_global
 
+        with open(
+            "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_log_settings_info"
+        ) as json_file:
+            ais_logs_settings = json.load(json_file)
+            log_drive = ais_logs_settings["logDrive"]
+    except Exception:
+        # no log settings file is present
+        return
+    log_rotate_days = 10
+    if "logRotating" in ais_logs_settings:
+        log_rotate_days = ais_logs_settings["logRotating"]
+    log_file = ais_global.G_REMOTE_DRIVES_DOM_PATH + "/" + log_drive + "/ais.log"
     # Log errors to a file if we have write access to file or config dir
-    if log_file is None:
-        err_log_path = hass.config.path(ERROR_LOG_FILENAME)
-    else:
-        err_log_path = os.path.abspath(log_file)
+    err_log_path = os.path.abspath(log_file)
 
     err_path_exists = os.path.isfile(err_log_path)
     err_dir = os.path.dirname(err_log_path)
+    # check if this is correct external drive
+    from homeassistant.components import ais_usb
+
+    err_path_is_external_drive = ais_usb.is_usb_url_valid_external_drive(err_dir)
 
     # Check if we can write to the error log if it exists or that
     # we can create files in the containing directory if not.
-    if (err_path_exists and os.access(err_log_path, os.W_OK)) or (
-        not err_path_exists and os.access(err_dir, os.W_OK)
+    if err_path_is_external_drive and (
+        (err_path_exists and os.access(err_log_path, os.W_OK))
+        or (not err_path_exists and os.access(err_dir, os.W_OK))
     ):
 
         if log_rotate_days:
@@ -291,6 +304,7 @@ def async_enable_logging(
             await async_handler.async_close(blocking=True)
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, async_stop_async_handler)
+        hass.bus.async_listen_once("ais_stop_logs_event", async_stop_async_handler)
 
         logger = logging.getLogger("")
         logger.addHandler(async_handler)  # type: ignore
