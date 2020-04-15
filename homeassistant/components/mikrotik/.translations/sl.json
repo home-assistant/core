@@ -20,8 +20,7 @@
                 },
                 "title": "Nastavite Mikrotik usmerjevalnik"
             }
-        },
-        "title": "Mikrotik"
+        }
     },
     "options": {
         "step": {
@@ -33,5 +32,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Mikrotik"
 }

@@ -26,8 +26,7 @@
                 "description": "Si prega di inserire le informazioni dell'host per il tuo Pannello Konnected.",
                 "title": "Rileva il dispositivo Konnected"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
@@ -104,5 +103,6 @@
             }
         },
         "title": "Opzioni del pannello di allarme Konnected"
-    }
+    },
+    "title": "Konnected.io"
 }

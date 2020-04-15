@@ -15,8 +15,7 @@
                 "description": "F\u00ebllt \u00e4r Informatiounen aus.",
                 "title": "Tesla - Konfiguratioun"
             }
-        },
-        "title": "Tesla"
+        }
     },
     "options": {
         "step": {
@@ -27,5 +26,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Tesla"
 }

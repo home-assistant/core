@@ -16,8 +16,7 @@
                 "description": "You will need the API Key from https://app.rach.io/. Select 'Account Settings, and then click on 'GET API KEY'.",
                 "title": "Connect to your Rachio device"
             }
-        },
-        "title": "Rachio"
+        }
     },
     "options": {
         "step": {
@@ -27,5 +26,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Rachio"
 }

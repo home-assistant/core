@@ -15,7 +15,7 @@
                 "description": "Introdueix el nom de l'amfitri\u00f3 o l'adre\u00e7a IP d'un dispositiu Heos (preferiblement un connectat a la xarxa per cable).",
                 "title": "Connexi\u00f3 amb Heos"
             }
-        },
-        "title": "HEOS"
-    }
+        }
+    },
+    "title": "HEOS"
 }

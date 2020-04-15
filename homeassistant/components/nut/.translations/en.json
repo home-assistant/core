@@ -34,8 +34,7 @@
                 "description": "If there are multiple UPSs attached to the NUT server, enter the name UPS to query in the 'Alias' field.",
                 "title": "Connect to the NUT server"
             }
-        },
-        "title": "Network UPS Tools (NUT)"
+        }
     },
     "options": {
         "step": {
@@ -47,5 +46,6 @@
                 "description": "Choose Sensor Resources."
             }
         }
-    }
+    },
+    "title": "Network UPS Tools (NUT)"
 }

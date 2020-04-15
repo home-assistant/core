@@ -20,8 +20,7 @@
                 },
                 "title": "Logitech Harmony Hub \uc124\uc815"
             }
-        },
-        "title": "Logitech Harmony Hub"
+        }
     },
     "options": {
         "step": {
@@ -33,5 +32,6 @@
                 "description": "Harmony Hub \uc635\uc158 \uc870\uc815"
             }
         }
-    }
+    },
+    "title": "Logitech Harmony Hub"
 }

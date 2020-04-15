@@ -26,8 +26,7 @@
                 "description": "Immettere i dettagli di accesso al dispositivo. La specifica di nome utente e password \u00e8 facoltativa, ma abilita il supporto per altre funzionalit\u00e0 di integrazione. D'altra parte, l'uso di una connessione autorizzata pu\u00f2 causare problemi di accesso all'interfaccia Web del dispositivo dall'esterno di Home Assistant mentre l'integrazione \u00e8 attiva e viceversa.",
                 "title": "Configura Huawei LTE"
             }
-        },
-        "title": "Huawei LTE"
+        }
     },
     "options": {
         "step": {
@@ -39,5 +38,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Huawei LTE"
 }

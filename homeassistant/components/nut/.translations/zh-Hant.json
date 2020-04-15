@@ -34,8 +34,7 @@
                 "description": "\u5047\u5982 NUT \u4f3a\u670d\u5668\u4e0b\u64c1\u6709\u591a\u7d44 UPS\uff0c\u65bc\u300c\u5225\u540d\u300d\u6b04\u4f4d\u8f38\u5165 UPS \u540d\u7a31\u3002",
                 "title": "\u9023\u7dda\u81f3 NUT \u4f3a\u670d\u5668"
             }
-        },
-        "title": "Network UPS Tools (NUT)"
+        }
     },
     "options": {
         "step": {
@@ -47,5 +46,6 @@
                 "description": "\u9078\u64c7\u50b3\u611f\u5668\u8cc7\u6e90\u3002"
             }
         }
-    }
+    },
+    "title": "Network UPS Tools (NUT)"
 }

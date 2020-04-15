@@ -9,7 +9,7 @@
         },
         "step": {
             "authorize": {
-                "description": "Autoryzuj t\u0119 aplikacj\u0119 na https://www.ecobee.com/consumerportal/index.html za pomoc\u0105 kodu PIN: \n\n {pin} \n \n Nast\u0119pnie naci\u015bnij przycisk Prze\u015blij.",
+                "description": "Autoryzuj t\u0119 aplikacj\u0119 na https://www.ecobee.com/consumerportal/index.html za pomoc\u0105 kodu PIN: \n\n {pin} \n \n Nast\u0119pnie naci\u015bnij przycisk \"Zatwierd\u017a\".",
                 "title": "Autoryzuj aplikacj\u0119 na ecobee.com"
             },
             "user": {
@@ -19,7 +19,7 @@
                 "description": "Prosz\u0119 wprowadzi\u0107 klucz API uzyskany na ecobee.com.",
                 "title": "Klucz API"
             }
-        },
-        "title": "ecobee"
-    }
+        }
+    },
+    "title": "ecobee"
 }

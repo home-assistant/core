@@ -4,7 +4,7 @@
             "user": {
                 "description": "Sj\u00e5 [www.home-assistant.io/docs/z-wave/installation/](https://www.home-assistant.io/docs/z-wave/installation/) for informasjon om konfigurasjonsvariablene."
             }
-        },
-        "title": "Z-Wave"
-    }
+        }
+    },
+    "title": "Z-Wave"
 }

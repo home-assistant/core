@@ -19,8 +19,7 @@
                 },
                 "title": "St\u00e4ll in Vizio SmartCast-klient"
             }
-        },
-        "title": "Vizio SmartCast"
+        }
     },
     "options": {
         "step": {
@@ -32,5 +31,6 @@
             }
         },
         "title": "Uppdatera Vizo SmartCast-alternativ"
-    }
+    },
+    "title": "Vizio SmartCast"
 }

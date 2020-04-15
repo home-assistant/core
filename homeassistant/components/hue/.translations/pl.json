@@ -25,7 +25,7 @@
                 "description": "Naci\u015bnij przycisk na mostku, aby zarejestrowa\u0107 Philips Hue w Home Assistant.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
                 "title": "Hub Link"
             }
-        },
-        "title": "Philips Hue"
-    }
+        }
+    },
+    "title": "Philips Hue"
 }

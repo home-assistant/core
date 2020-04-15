@@ -33,7 +33,7 @@
                 "description": "Please enter the verification code you just received from iCloud",
                 "title": "iCloud verification code"
             }
-        },
-        "title": "Apple iCloud"
-    }
+        }
+    },
+    "title": "Apple iCloud"
 }

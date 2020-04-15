@@ -19,8 +19,7 @@
                 },
                 "title": "Transmission-Client einrichten"
             }
-        },
-        "title": "Transmission"
+        }
     },
     "options": {
         "step": {
@@ -31,5 +30,6 @@
                 "title": "Konfiguriere die Optionen f\u00fcr die \u00dcbertragung"
             }
         }
-    }
+    },
+    "title": "Transmission"
 }

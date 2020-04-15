@@ -12,7 +12,7 @@
                 "description": "Gib deine Sentry-DSN ein",
                 "title": "Sentry"
             }
-        },
-        "title": "Sentry"
-    }
+        }
+    },
+    "title": "Sentry"
 }

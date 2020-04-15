@@ -17,7 +17,7 @@
                 "description": "Accede al siguiente [enlace]({authorization_url}) y <b>permite</b> el acceso a tu cuenta de Ambiclimate, despu\u00e9s vuelve y pulsa en <b>enviar</b> a continuaci\u00f3n.\n(Aseg\u00farate que la url de devoluci\u00f3n de llamada es {cb_url})",
                 "title": "Autenticaci\u00f3n de Ambiclimate"
             }
-        },
-        "title": "Ambiclimate"
-    }
+        }
+    },
+    "title": "Ambiclimate"
 }

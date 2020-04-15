@@ -15,8 +15,7 @@
                 "description": "Prosimo, vnesite svoje podatke.",
                 "title": "Tesla - konfiguracija"
             }
-        },
-        "title": "Tesla"
+        }
     },
     "options": {
         "step": {
@@ -26,5 +25,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Tesla"
 }

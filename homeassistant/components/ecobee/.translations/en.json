@@ -19,7 +19,7 @@
                 "description": "Please enter the API key obtained from ecobee.com.",
                 "title": "ecobee API key"
             }
-        },
-        "title": "ecobee"
-    }
+        }
+    },
+    "title": "ecobee"
 }

@@ -13,7 +13,7 @@
                 "description": "Pour acc\u00e9der \u00e0 l'API personnel Flume, vous devez demander un \"Client ID\" et un \"Client Secret\" \u00e0 l'adresse https://portal.flumetech.com/settings#token",
                 "title": "Se connecter \u00e0 votre compte Flume"
             }
-        },
-        "title": "Flume"
-    }
+        }
+    },
+    "title": "Flume"
 }

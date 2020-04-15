@@ -20,7 +20,7 @@
                 "description": "Buka gerbang deCONZ Anda untuk mendaftar dengan Home Assistant. \n\n 1. Pergi ke pengaturan sistem deCONZ \n 2. Tekan tombol \"Buka Kunci Gateway\"",
                 "title": "Tautan dengan deCONZ"
             }
-        },
-        "title": "deCONZ Zigbee gateway"
-    }
+        }
+    },
+    "title": "deCONZ Zigbee gateway"
 }

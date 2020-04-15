@@ -17,8 +17,7 @@
                 "description": "Actualment la recuperaci\u00f3 de BLID i la contrasenya \u00e9s un proc\u00e9s manual. Segueix els passos de la documentaci\u00f3 a: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
                 "title": "Connexi\u00f3 amb el dispositiu"
             }
-        },
-        "title": "Roomba iRobot"
+        }
     },
     "options": {
         "step": {
@@ -29,5 +28,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Roomba iRobot"
 }

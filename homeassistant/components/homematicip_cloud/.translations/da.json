@@ -24,7 +24,7 @@
                 "description": "Tryk p\u00e5 den bl\u00e5 knap p\u00e5 adgangspunktet og send knappen for at registrere HomematicIP med Home Assistant.\n\n ![Placering af knap p\u00e5 bridge](/static/images/config_flows/config_homematicip_cloud.png)",
                 "title": "Link adgangspunkt"
             }
-        },
-        "title": "HomematicIP Cloud"
-    }
+        }
+    },
+    "title": "HomematicIP Cloud"
 }

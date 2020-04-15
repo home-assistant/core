@@ -17,7 +17,7 @@
                 "description": "St\u00e4ll in Vilfo Router-integrationen. Du beh\u00f6ver din Vilfo-routers v\u00e4rdnamn eller IP-adress och en \u00e5tkomstnyckel till dess API. F\u00f6r ytterligare information om den h\u00e4r integrationen och hur du f\u00e5r fram den n\u00f6dv\u00e4ndiga informationen, bes\u00f6k: https://www.home-assistant.io/integrations/vilfo",
                 "title": "Anslut till Vilfo-routern"
             }
-        },
-        "title": "Vilfo Router"
-    }
+        }
+    },
+    "title": "Vilfo Router"
 }

@@ -24,7 +24,7 @@
                 "description": "Trykk p\u00e5 den bl\u00e5 knappen p\u00e5 tilgangspunktet og sendknappen for \u00e5 registrere HomematicIP med Home Assistant.\n\n ! [Plassering av knapp p\u00e5 bro] (/ static / images / config_flows / config_homematicip_cloud.png)",
                 "title": "Link tilgangspunk"
             }
-        },
-        "title": "HomematicIP Cloud"
-    }
+        }
+    },
+    "title": "HomematicIP Cloud"
 }

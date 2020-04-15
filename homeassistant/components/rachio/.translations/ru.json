@@ -16,8 +16,7 @@
                 "description": "\u0414\u043b\u044f \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u043d\u0443\u0436\u0435\u043d \u043a\u043b\u044e\u0447 API \u043e\u0442 https://app.rach.io/. \u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 'Account Settings', \u0430 \u0437\u0430\u0442\u0435\u043c \u043d\u0430\u0436\u043c\u0438\u0442\u0435 'GET API KEY'.",
                 "title": "Rachio"
             }
-        },
-        "title": "Rachio"
+        }
     },
     "options": {
         "step": {
@@ -27,5 +26,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Rachio"
 }

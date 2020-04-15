@@ -25,8 +25,7 @@
                 "description": "\u6309\u4e0b Bridge \u4e0a\u7684\u6309\u9215\uff0c\u4ee5\u5c07 Philips Hue \u8a3b\u518a\u81f3 Home Assistant\u3002\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
                 "title": "\u9023\u7d50 Hub"
             }
-        },
-        "title": "Philips Hue"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -44,5 +43,6 @@
             "remote_button_short_press": "\"{subtype}\" \u6309\u9215\u5df2\u6309\u4e0b",
             "remote_button_short_release": "\"{subtype}\" \u6309\u9215\u5df2\u91cb\u653e"
         }
-    }
+    },
+    "title": "Philips Hue"
 }

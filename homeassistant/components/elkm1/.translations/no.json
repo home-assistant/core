@@ -22,7 +22,7 @@
                 "description": "Adressestrengen m\u00e5 v\u00e6re i formen 'adresse [: port]' for 'sikker' og 'ikke-sikker'. Eksempel: '192.168.1.1'. Porten er valgfri og er standard til 2101 for 'ikke-sikker' og 2601 for 'sikker'. For den serielle protokollen m\u00e5 adressen v\u00e6re i formen 'tty [: baud]'. Eksempel: '/ dev / ttyS1'. Baud er valgfri og er standard til 115200.",
                 "title": "Koble til Elk-M1-kontroll"
             }
-        },
-        "title": "Elk-M1 kontroll"
-    }
+        }
+    },
+    "title": "Elk-M1 kontroll"
 }

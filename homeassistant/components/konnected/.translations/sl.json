@@ -26,8 +26,7 @@
                 "description": "Vnesite podatke o gostitelju v svoj Konnected Panel.",
                 "title": "Odkrijte Konnected napravo"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
@@ -106,5 +105,6 @@
             }
         },
         "title": "Mo\u017enosti Konnected alarm-a"
-    }
+    },
+    "title": "Konnected.io"
 }

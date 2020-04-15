@@ -21,8 +21,7 @@
                 },
                 "title": "Sett opp UniFi kontroller"
             }
-        },
-        "title": "UniFi kontroller"
+        }
     },
     "error": {
         "unknown_client_mac": "Ingen klient tilgjengelig i UniFi p\u00e5 den MAC-adressen"
@@ -56,5 +55,6 @@
                 "title": "UniFi-alternativ 3/3"
             }
         }
-    }
+    },
+    "title": "UniFi kontroller"
 }

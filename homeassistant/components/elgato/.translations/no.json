@@ -21,7 +21,7 @@
                 "description": "Vil du legge Elgato Key Light med serienummer ` {serial_number} til Home Assistant?",
                 "title": "Oppdaget Elgato Key Light-enheten"
             }
-        },
-        "title": "Elgato Key Light"
-    }
+        }
+    },
+    "title": "Elgato Key Light"
 }

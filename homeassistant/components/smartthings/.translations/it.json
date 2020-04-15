@@ -22,7 +22,7 @@
                 "description": "Si prega di installare l'Home Assistant SmartApp in almeno una posizione e fare clic su Invia.",
                 "title": "Installa SmartApp"
             }
-        },
-        "title": "SmartThings"
-    }
+        }
+    },
+    "title": "SmartThings"
 }

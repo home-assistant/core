@@ -25,8 +25,7 @@
                 "description": "Dr\u00e9ckt de Kn\u00e4ppchen un der Bridge fir den Philips Hue mam Home Assistant ze registr\u00e9ieren.\n\n![Kn\u00e4ppchen un der Bridge](/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
             }
-        },
-        "title": "Philips Hue"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -44,5 +43,6 @@
             "remote_button_short_press": "\"{subtype}\" Kn\u00e4ppche gedr\u00e9ckt",
             "remote_button_short_release": "\"{subtype}\" Kn\u00e4ppche lassgelooss"
         }
-    }
+    },
+    "title": "Philips Hue"
 }

@@ -21,8 +21,7 @@
                 },
                 "title": "Stellen Sie eine Verbindung zu DoorBird her"
             }
-        },
-        "title": "DoorBird"
+        }
     },
     "options": {
         "step": {
@@ -33,5 +32,6 @@
                 "description": "F\u00fcgen Sie f\u00fcr jedes Ereignis, das Sie verfolgen m\u00f6chten, einen durch Kommas getrennten Ereignisnamen hinzu. Nachdem Sie sie hier eingegeben haben, verwenden Sie die DoorBird-App, um sie einem bestimmten Ereignis zuzuweisen. Weitere Informationen finden Sie in der Dokumentation unter https://www.home-assistant.io/integrations/doorbird/#events. Beispiel: jemand_hat_den_knopf_gedr\u00fcckt, bewegung"
             }
         }
-    }
+    },
+    "title": "DoorBird"
 }

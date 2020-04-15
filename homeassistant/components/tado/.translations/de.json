@@ -16,8 +16,7 @@
                 },
                 "title": "Stellen Sie eine Verbindung zu Ihrem Tado-Konto her"
             }
-        },
-        "title": "Tado"
+        }
     },
     "options": {
         "step": {
@@ -26,5 +25,6 @@
             }
         },
         "title": "Tado"
-    }
+    },
+    "title": "Tado"
 }

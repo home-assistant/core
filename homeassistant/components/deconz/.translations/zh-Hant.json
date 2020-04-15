@@ -28,8 +28,7 @@
                 "description": "\u89e3\u9664 deCONZ \u9598\u9053\u5668\u9396\u5b9a\uff0c\u4ee5\u65bc Home Assistant \u9032\u884c\u8a3b\u518a\u3002\n\n1. \u9032\u5165 deCONZ \u7cfb\u7d71\u8a2d\u5b9a -> \u9598\u9053\u5668 -> \u9032\u968e\u8a2d\u5b9a\n2. \u6309\u4e0b\u300c\u8a8d\u8b49\u7a0b\u5f0f\uff08Authenticate app\uff09\u300d\u6309\u9215",
                 "title": "\u9023\u7d50\u81f3 deCONZ"
             }
-        },
-        "title": "deCONZ Zigbee \u9598\u9053\u5668"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -96,5 +95,6 @@
                 "title": "deCONZ \u9078\u9805"
             }
         }
-    }
+    },
+    "title": "deCONZ Zigbee \u9598\u9053\u5668"
 }

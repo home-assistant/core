@@ -16,8 +16,7 @@
                 "description": "Du brauchs een API Schl\u00ebssel vun https://app.rach.io/. Wiel 'Account Settings', a klick dann op 'GET API KEY'.",
                 "title": "Mam Rachio Apparat verbannen"
             }
-        },
-        "title": "Rachio"
+        }
     },
     "options": {
         "step": {
@@ -27,5 +26,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Rachio"
 }

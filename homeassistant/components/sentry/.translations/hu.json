@@ -12,7 +12,7 @@
                 "description": "Add meg a Sentry DSN-t",
                 "title": "Sentry"
             }
-        },
-        "title": "Sentry"
-    }
+        }
+    },
+    "title": "Sentry"
 }

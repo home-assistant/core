@@ -12,7 +12,7 @@
                 "description": "\u00cates-vous s\u00fbr de vouloir configurer Twilio?",
                 "title": "Configurer le Webhook Twilio"
             }
-        },
-        "title": "Twilio"
-    }
+        }
+    },
+    "title": "Twilio"
 }

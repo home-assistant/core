@@ -26,8 +26,7 @@
                 "description": "Continua l'autoritzaci\u00f3 a plex.tv.",
                 "title": "Connexi\u00f3 amb el servidor Plex"
             }
-        },
-        "title": "Plex"
+        }
     },
     "options": {
         "step": {
@@ -40,5 +39,6 @@
                 "description": "Opcions dels reproductors multim\u00e8dia Plex"
             }
         }
-    }
+    },
+    "title": "Plex"
 }

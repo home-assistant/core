@@ -27,7 +27,7 @@
                 "description": "W\u00ebllt dir de Printer mam Numm `{name}` am Home Assistant dob\u00e4isetzen?",
                 "title": "Entdeckte Printer"
             }
-        },
-        "title": "Internet Printing Protocol (IPP)"
-    }
+        }
+    },
+    "title": "Internet Printing Protocol (IPP)"
 }

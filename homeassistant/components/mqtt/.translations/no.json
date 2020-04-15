@@ -25,8 +25,7 @@
                 "description": "Vil du konfigurere Home Assistant til \u00e5 koble til en MQTT megler som er levert av Hass.io-tillegget {addon}?",
                 "title": "MQTT megler via Hass.io tillegg"
             }
-        },
-        "title": "MQTT"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -49,5 +48,6 @@
             "button_short_release": "\"{subtype}\" utgitt",
             "button_triple_press": "\"{subtype}\" trippel klikket"
         }
-    }
+    },
+    "title": "MQTT"
 }

@@ -18,7 +18,7 @@
                 "description": "Por favor, insira a chave de API obtida em ecobee.com.",
                 "title": "chave da API ecobee"
             }
-        },
-        "title": "ecobee"
-    }
+        }
+    },
+    "title": "ecobee"
 }

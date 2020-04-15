@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "invalid_webhook_url": "Home Assistant \u672a\u8a2d\u5b9a\u6b63\u78ba\u4ee5\u63a5\u6536 SmartThings \u66f4\u65b0\u3002Webhook URL \u7121\u6548\uff1a\n> {webhook_url}\n\n\u8acb\u8ddf\u96a8\u6b64[\u6559\u5b78]({component_url}) \u66f4\u65b0\u8a2d\u5b9a\u3002\u91cd\u65b0\u555f\u52d5 Home Assistant \u5f8c\u3001\u518d\n\u8a66\u4e00\u6b21\u3002",
+            "no_available_locations": "\u6c92\u6709\u53ef\u7528 SmartThings \u4f4d\u7f6e\u4ee5\u8a2d\u5b9a Home Assistant\u3002"
+        },
         "error": {
             "app_not_installed": "\u8acb\u78ba\u8a8d\u5df2\u7d93\u5b89\u88dd\u4e26\u6388\u6b0a Home Assistant Smartapp \u5f8c\u518d\u8a66\u4e00\u6b21\u3002",
             "app_setup_error": "\u7121\u6cd5\u8a2d\u5b9a SmartApp\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002",
@@ -8,21 +12,38 @@
             "token_forbidden": "\u5bc6\u9470\u4e0d\u5177\u6240\u9700\u7684 OAuth \u7bc4\u570d\u3002",
             "token_invalid_format": "\u5bc6\u9470\u5fc5\u9808\u70ba UID/GUID \u683c\u5f0f",
             "token_unauthorized": "\u5bc6\u9470\u7121\u6548\u6216\u4e0d\u518d\u5177\u6709\u6388\u6b0a\u3002",
-            "webhook_error": "SmartThings \u7121\u6cd5\u8a8d\u8b49\u300cbase_url\u300d\u4e2d\u8a2d\u5b9a\u4e4b\u7aef\u9ede\u3002\u8acb\u518d\u6b21\u78ba\u8a8d\u5143\u4ef6\u9700\u6c42\u3002"
+            "webhook_error": "SmartThings \u7121\u6cd5\u8a8d\u8b49 Webhook URL\u3002\u8acb\u78ba\u8a8d Webhook URL \u53ef\u7531\u7db2\u8def\u5b58\u53d6\u5f8c\u518d\u8a66\u4e00\u6b21\u3002"
         },
         "step": {
+            "authorize": {
+                "title": "\u8a8d\u8b49 Home Assistant"
+            },
+            "pat": {
+                "data": {
+                    "access_token": "\u5b58\u53d6\u5bc6\u9470"
+                },
+                "description": "\u8acb\u8f38\u5165\u8ddf\u96a8\u6b64[\u6559\u5b78]({component_url}) \u6240\u5efa\u7acb\u7684 SmartThings [\u500b\u4eba\u5b58\u53d6\u5bc6\u9470]({token_url})\u3002\u5c07\u4f7f\u7528 SmartThings \u5e33\u865f\u65b0\u589e Home Assistant \u6574\u5408\u3002",
+                "title": "\u8f38\u5165\u500b\u4eba\u5b58\u53d6\u5bc6\u9470"
+            },
+            "select_location": {
+                "data": {
+                    "location_id": "\u4f4d\u7f6e"
+                },
+                "description": "\u8acb\u9078\u64c7\u6240\u8981\u52a0\u5165\u81f3 Home Assistant \u7684 SmartThings \u4f4d\u7f6e\u3002\u5c07\u6703\u958b\u555f\u65b0\u8996\u7a97\u4e26\u8a62\u554f\u767b\u5165\u8207\u8a8d\u8b49\u5b89\u88dd Home Assistant \u6574\u5408\u81f3\u6240\u9078\u4f4d\u7f6e\u3002",
+                "title": "\u9078\u64c7\u4f4d\u7f6e"
+            },
             "user": {
                 "data": {
                     "access_token": "\u5b58\u53d6\u5bc6\u9470"
                 },
-                "description": "\u8acb\u8f38\u5165\u8ddf\u8457[ \u6307\u5f15]({component_url})\u6240\u7522\u751f\u7684 SmartThings [\u500b\u4eba\u5b58\u53d6\u5bc6\u9470]({token_url})\u3002",
-                "title": "\u8f38\u5165\u500b\u4eba\u5b58\u53d6\u5bc6\u9470"
+                "description": "SmartThings \u9700\u8981\u9032\u884c\u8a2d\u5b9a\u4ee5\u50b3\u9001\u63a8\u64a5\u66f4\u65b0\u81f3 Home Assistant\uff0c\u8a2d\u5b9a\u4f4d\u5740\uff1a\n> {webhook_url}\n\n\u5047\u5982\u8cc7\u8a0a\u4e0d\u6b63\u78ba\uff0c\u8acb\u66f4\u65b0\u8a2d\u5b9a\u3001\u91cd\u65b0\u555f\u52d5 Home Assistant \u5f8c\u3001\u518d\u8a66\u4e00\u6b21\u3002",
+                "title": "\u78ba\u8a8d Callback URL"
             },
             "wait_install": {
                 "description": "\u8acb\u81f3\u5c11\u65bc\u4e00\u500b\u4f4d\u7f6e\u4e2d\u5b89\u88dd Home Assistant Smartapp\uff0c\u4e26\u9ede\u9078\u50b3\u9001\u3002",
                 "title": "\u5b89\u88dd SmartApp"
             }
-        },
-        "title": "SmartThings"
-    }
+        }
+    },
+    "title": "SmartThings"
 }

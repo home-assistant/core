@@ -15,8 +15,7 @@
                 },
                 "title": "Izpolnite svoje podatke"
             }
-        },
-        "title": "SimpliSafe"
+        }
     },
     "options": {
         "step": {
@@ -27,5 +26,6 @@
                 "title": "Konfigurirajte SimpliSafe"
             }
         }
-    }
+    },
+    "title": "SimpliSafe"
 }

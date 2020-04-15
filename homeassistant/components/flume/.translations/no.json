@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "klient-ID",
+                    "client_secret": "Klienthemmelighet",
+                    "password": "Passord",
+                    "username": "Brukernavn"
+                },
+                "description": "For \u00e5 f\u00e5 tilgang til Flume Personal API, m\u00e5 du be om en \"Klient-ID\" og \"Client Secret\" p\u00e5 https://portal.flumetech.com/settings#token",
+                "title": "Koble til Flume-kontoen din"
+            }
+        }
+    },
+    "title": "Flume"
+}

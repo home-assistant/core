@@ -26,7 +26,7 @@
                 "description": "Kies met welke authenticatieprovider u wilt authenticeren met Logi Circle.",
                 "title": "Authenticatieprovider"
             }
-        },
-        "title": "Logi Circle"
-    }
+        }
+    },
+    "title": "Logi Circle"
 }

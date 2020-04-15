@@ -16,8 +16,7 @@
                 },
                 "title": "Stellen Sie eine Verbindung zum Ger\u00e4t her"
             }
-        },
-        "title": "iRobot Roomba"
+        }
     },
     "options": {
         "step": {
@@ -28,5 +27,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "iRobot Roomba"
 }

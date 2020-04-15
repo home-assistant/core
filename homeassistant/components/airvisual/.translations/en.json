@@ -16,8 +16,7 @@
                 "description": "Monitor air quality in a geographical location.",
                 "title": "Configure AirVisual"
             }
-        },
-        "title": "AirVisual"
+        }
     },
     "options": {
         "step": {
@@ -29,5 +28,6 @@
                 "title": "Configure AirVisual"
             }
         }
-    }
+    },
+    "title": "AirVisual"
 }

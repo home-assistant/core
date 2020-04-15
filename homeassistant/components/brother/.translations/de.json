@@ -26,7 +26,7 @@
                 "description": "M\u00f6chten Sie den Brother Drucker {model} mit der Seriennummer `{serial_number}` zum Home Assistant hinzuf\u00fcgen?",
                 "title": "Brother-Drucker entdeckt"
             }
-        },
-        "title": "Brother Drucker"
-    }
+        }
+    },
+    "title": "Brother Drucker"
 }

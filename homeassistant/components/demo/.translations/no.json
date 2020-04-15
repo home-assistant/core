@@ -1,7 +1,4 @@
 {
-    "config": {
-        "title": "Demo"
-    },
     "options": {
         "step": {
             "options_1": {
@@ -18,5 +15,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Demo"
 }

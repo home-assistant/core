@@ -21,8 +21,7 @@
                 },
                 "title": "\u8a2d\u5b9a UniFi \u63a7\u5236\u5668"
             }
-        },
-        "title": "UniFi \u63a7\u5236\u5668"
+        }
     },
     "error": {
         "unknown_client_mac": "\u8a72 Mac \u4f4d\u5740\u7121\u53ef\u7528 UniFi \u5ba2\u6236\u7aef"
@@ -57,5 +56,6 @@
                 "title": "UniFi \u9078\u9805 3/3"
             }
         }
-    }
+    },
+    "title": "UniFi \u63a7\u5236\u5668"
 }

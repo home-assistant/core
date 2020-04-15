@@ -24,7 +24,7 @@
                 "description": "\u8bf7\u6309\u4e0b\u6865\u63a5\u5668\u4e0a\u7684\u6309\u94ae\uff0c\u4ee5\u5728 Home Assistant \u4e0a\u6ce8\u518c\u98de\u5229\u6d66 Hue\u3002\n\n![\u6865\u63a5\u5668\u6309\u94ae\u4f4d\u7f6e](/static/images/config_philips_hue.jpg)",
                 "title": "\u8fde\u63a5\u4e2d\u67a2"
             }
-        },
-        "title": "\u98de\u5229\u6d66 Hue Bridge"
-    }
+        }
+    },
+    "title": "\u98de\u5229\u6d66 Hue Bridge"
 }

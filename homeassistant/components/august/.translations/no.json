@@ -26,7 +26,7 @@
                 "description": "Kontroller {login_method} ({username}) og skriv inn bekreftelseskoden nedenfor",
                 "title": "To-faktor autentisering"
             }
-        },
-        "title": ""
-    }
+        }
+    },
+    "title": ""
 }

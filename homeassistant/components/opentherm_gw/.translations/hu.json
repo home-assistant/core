@@ -15,8 +15,7 @@
                 },
                 "title": "OpenTherm \u00e1tj\u00e1r\u00f3"
             }
-        },
-        "title": "OpenTherm \u00e1tj\u00e1r\u00f3"
+        }
     },
     "options": {
         "step": {
@@ -27,5 +26,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "OpenTherm \u00e1tj\u00e1r\u00f3"
 }

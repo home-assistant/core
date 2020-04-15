@@ -36,7 +36,7 @@
                 "description": "Select mode for configuration. The IP Address field can be left blank if selecting Auto Discovery, as devices will be automatically discovered.",
                 "title": "PlayStation 4"
             }
-        },
-        "title": "PlayStation 4"
-    }
+        }
+    },
+    "title": "PlayStation 4"
 }

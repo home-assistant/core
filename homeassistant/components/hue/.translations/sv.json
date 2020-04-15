@@ -25,7 +25,7 @@
                 "description": "Tryck p\u00e5 knappen p\u00e5 bryggan f\u00f6r att registrera Philips Hue med Home Assistant. \n\n![Placering av knapp p\u00e5 brygga](/static/images/config_philips_hue.jpg)",
                 "title": "L\u00e4nka hub"
             }
-        },
-        "title": "Philips Hue Bridge"
-    }
+        }
+    },
+    "title": "Philips Hue Bridge"
 }

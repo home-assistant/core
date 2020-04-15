@@ -21,8 +21,7 @@
                 },
                 "title": "Configuraci\u00f3 del controlador UniFi"
             }
-        },
-        "title": "Controlador UniFi"
+        }
     },
     "error": {
         "unknown_client_mac": "No hi ha cap client disponible a UniFi en aquesta adre\u00e7a MAC"
@@ -57,5 +56,6 @@
                 "title": "Opcions d'UniFi"
             }
         }
-    }
+    },
+    "title": "Controlador UniFi"
 }

@@ -14,8 +14,7 @@
                 "description": "Stellen Sie unten eine Vera-Controller-Url zur Verf\u00fcgung. Sie sollte wie folgt aussehen: http://192.168.1.161:3480.",
                 "title": "Richten Sie den Vera-Controller ein"
             }
-        },
-        "title": "Vera"
+        }
     },
     "options": {
         "step": {
@@ -27,5 +26,6 @@
                 "title": "Vera Controller Optionen"
             }
         }
-    }
+    },
+    "title": "Vera"
 }

@@ -19,8 +19,7 @@
                 },
                 "title": "UniFi vez\u00e9rl\u0151 be\u00e1ll\u00edt\u00e1sa"
             }
-        },
-        "title": "UniFi Vez\u00e9rl\u0151"
+        }
     },
     "options": {
         "step": {
@@ -30,5 +29,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "UniFi Vez\u00e9rl\u0151"
 }

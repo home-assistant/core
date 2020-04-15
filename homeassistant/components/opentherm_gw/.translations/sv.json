@@ -15,8 +15,7 @@
                 },
                 "title": "OpenTherm Gateway"
             }
-        },
-        "title": "OpenTherm Gateway"
+        }
     },
     "options": {
         "step": {
@@ -28,5 +27,6 @@
                 "description": "Alternativ f\u00f6r OpenTherm Gateway"
             }
         }
-    }
+    },
+    "title": "OpenTherm Gateway"
 }

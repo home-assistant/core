@@ -12,7 +12,7 @@
                 "description": "\u00bfEst\u00e1 seguro de que desea configurar el Webhook de GPSLogger?",
                 "title": "Configurar el Webhook de GPSLogger"
             }
-        },
-        "title": "GPSLogger Webhook"
-    }
+        }
+    },
+    "title": "GPSLogger Webhook"
 }

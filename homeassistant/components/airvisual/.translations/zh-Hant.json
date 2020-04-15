@@ -16,8 +16,7 @@
                 "description": "\u4f9d\u5730\u7406\u4f4d\u7f6e\u76e3\u63a7\u7a7a\u6c23\u54c1\u8cea\u3002",
                 "title": "\u8a2d\u5b9a AirVisual"
             }
-        },
-        "title": "AirVisual"
+        }
     },
     "options": {
         "step": {
@@ -29,5 +28,6 @@
                 "title": "\u8a2d\u5b9a AirVisual"
             }
         }
-    }
+    },
+    "title": "AirVisual"
 }

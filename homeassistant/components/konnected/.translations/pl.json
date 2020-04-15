@@ -22,8 +22,7 @@
                 "description": "Wprowad\u017a informacje o ho\u015bcie panelu Konnected.",
                 "title": "Wykryj urz\u0105dzenie Konnected"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
@@ -102,5 +101,6 @@
             }
         },
         "title": "Opcje panelu alarmu Konnected"
-    }
+    },
+    "title": "Konnected.io"
 }

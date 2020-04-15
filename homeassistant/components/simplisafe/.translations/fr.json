@@ -15,8 +15,7 @@
                 },
                 "title": "Veuillez saisir vos informations"
             }
-        },
-        "title": "SimpliSafe"
+        }
     },
     "options": {
         "step": {
@@ -27,5 +26,6 @@
                 "title": "Configurer SimpliSafe"
             }
         }
-    }
+    },
+    "title": "SimpliSafe"
 }

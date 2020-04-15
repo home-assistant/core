@@ -16,8 +16,7 @@
                 "description": "Potrebovali boste API klju\u010d iz https://app.rach.io/. Izberite ' nastavitve ra\u010duna in kliknite 'get API KEY'.",
                 "title": "Pove\u017eite se z napravo Rachio"
             }
-        },
-        "title": "Rachio"
+        }
     },
     "options": {
         "step": {
@@ -27,5 +26,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Rachio"
 }

@@ -24,7 +24,7 @@
                 "description": "Premi il pulsante blu sull'access point ed il pulsante di invio per registrare HomematicIP con Home Assistant. \n\n ![Posizione del pulsante sul bridge](/static/images/config_flows/config_homematicip_cloud.png)",
                 "title": "Collegamento access point"
             }
-        },
-        "title": "HomematicIP Cloud"
-    }
+        }
+    },
+    "title": "HomematicIP Cloud"
 }
