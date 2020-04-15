@@ -106,8 +106,8 @@ async def test_form_already_configured(hass, mock_simple_nws):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"api_key": "test"},
         )
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "already_configured"}
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_configured"
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0

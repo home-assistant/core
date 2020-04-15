@@ -48,17 +48,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            await self.async_set_unique_id(base_unique_id(user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE]))
+            await self.async_set_unique_id(
+                base_unique_id(user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE])
+            )
             self._abort_if_unique_id_configured()
-                try:
-                    info = await validate_input(self.hass, user_input)
-                    user_input[CONF_STATION] = info["title"]
-                    return self.async_create_entry(title=info["title"], data=user_input)
-                except CannotConnect:
-                    errors["base"] = "cannot_connect"
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception("Unexpected exception")
-                    errors["base"] = "unknown"
+            try:
+                info = await validate_input(self.hass, user_input)
+                user_input[CONF_STATION] = info["title"]
+                return self.async_create_entry(title=info["title"], data=user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
 
         DATA_SCHEMA = vol.Schema(
             {
@@ -80,7 +82,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class AlreadyConfigured(exceptions.HomeAssistantError):
-    """Error to indicate a duplicate entry."""
