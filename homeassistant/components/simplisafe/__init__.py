@@ -482,7 +482,7 @@ class SimpliSafe:
             async def process_notifications(_):
                 while self._hass.state != CoreState.running:
                     await asyncio.sleep(1)
-                self._async_process_new_notifications(system)
+                self._async_process_new_notifications(system)  # pylint: disable: W0640
 
             self._hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, process_notifications
