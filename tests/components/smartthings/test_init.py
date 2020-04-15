@@ -61,7 +61,7 @@ async def test_api_security_errors_returns_false(
     )
 
     # Assert setup returns false
-    assert not await smartthings.async_setup_entry(hass, config_entry)
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
     assert "due to a security issue" in caplog.text
 
 
@@ -76,7 +76,7 @@ async def test_api_refresh_token_errors_returns_false(
         "Invalid refresh token"
     )
 
-    assert not await smartthings.async_setup_entry(hass, config_entry)
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
     assert "Unable to obtain a new refresh token" in caplog.text
 
 
