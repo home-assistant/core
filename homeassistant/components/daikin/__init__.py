@@ -42,7 +42,7 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
-    hosts = config[DOMAIN].get(CONF_HOSTS)
+    hosts = config[DOMAIN][CONF_HOSTS]
     if not hosts:
         hass.async_create_task(
             hass.config_entries.flow.async_init(

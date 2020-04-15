@@ -23,7 +23,7 @@ ATTR_IMAGES = "images"
 
 def get_service(hass, config, discovery_info=None):
     """Get the Discord notification service."""
-    token = config.get(CONF_TOKEN)
+    token = config[CONF_TOKEN]
     return DiscordNotificationService(hass, token)
 
 
