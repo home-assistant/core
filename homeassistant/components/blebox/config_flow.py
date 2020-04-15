@@ -68,7 +68,7 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.error("%s at %s:%d (%s)", LOG_MSG[message_id], *addr, exception)
 
-        address = "{0}:{1}".format(*addr)
+        address = "{}:{}".format(*addr)
         return self.async_show_form(
             step_id="user",
             data_schema=schema,
@@ -79,7 +79,7 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def abort_because_configured(self, addr):
         """Return abort flow response for when already configured."""
 
-        address = "{0}:{1}".format(*addr)
+        address = "{}:{}".format(*addr)
         return self.async_abort(
             reason=ALREADY_CONFIGURED, description_placeholders={"address": address},
         )
