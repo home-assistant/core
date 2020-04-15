@@ -1,7 +1,7 @@
 """Support for monitoring the Transmission BitTorrent client API."""
 import logging
 
-from homeassistant.const import CONF_NAME, STATE_IDLE
+from homeassistant.const import CONF_NAME, DATA_RATE_MEGABYTES_PER_SECOND, STATE_IDLE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -17,7 +17,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     tm_client = hass.data[DOMAIN][config_entry.entry_id]
     name = config_entry.data[CONF_NAME]
 
-    dev = []
+    dev = [
+        TransmissionSpeedSensor(tm_client, name, "Down Speed", "download"),
+        TransmissionSpeedSensor(tm_client, name, "Up Speed", "upload"),
+    ]
     for sensor_type in SENSOR_TYPES:
         dev.append(
             TransmissionSensor(
@@ -30,6 +33,79 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
 
     async_add_entities(dev, True)
+
+
+class TransmissionSpeedSensor(Entity):
+    """Representation of a Transmission speed sensor."""
+
+    def __init__(self, tm_client, client_name, sensor_name, speed_type):
+        """Initialize the sensor."""
+        self._tm_client = tm_client
+        self._client_name = client_name
+        self._name = sensor_name
+        self._speed_type = speed_type
+        self._state = None
+        self.unsub_update = None
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self._client_name} {self._name}"
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the entity."""
+        return f"{self._tm_client.api.host}-{self.name}"
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def should_poll(self):
+        """Return the polling requirement for this sensor."""
+        return False
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return DATA_RATE_MEGABYTES_PER_SECOND
+
+    @property
+    def available(self):
+        """Could the device be accessed during the last update call."""
+        return self._tm_client.api.available
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        self.unsub_update = async_dispatcher_connect(
+            self.hass,
+            self._tm_client.api.signal_update,
+            self._schedule_immediate_update,
+        )
+
+    @callback
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state(True)
+
+    async def will_remove_from_hass(self):
+        """Unsubscribe from update dispatcher."""
+        if self.unsub_update:
+            self.unsub_update()
+            self.unsub_update = None
+
+    def update(self):
+        """Get the latest data from Transmission and updates the state."""
+        data = self._tm_client.api.data
+        if data:
+            mb_spd = (
+                float(data.downloadSpeed)
+                if self._speed_type == "download"
+                else float(data.uploadSpeed)
+            )
+            mb_spd = mb_spd / 1024 / 1024
+            self._state = round(mb_spd, 2 if mb_spd < 0.1 else 1)
 
 
 class TransmissionSensor(Entity):
@@ -154,15 +230,7 @@ class TransmissionSensor(Entity):
                 self._state = None
 
         if self._data:
-            if self.type == "download_speed":
-                mb_spd = float(self._data.downloadSpeed)
-                mb_spd = mb_spd / 1024 / 1024
-                self._state = round(mb_spd, 2 if mb_spd < 0.1 else 1)
-            elif self.type == "upload_speed":
-                mb_spd = float(self._data.uploadSpeed)
-                mb_spd = mb_spd / 1024 / 1024
-                self._state = round(mb_spd, 2 if mb_spd < 0.1 else 1)
-            elif self.type == "active_torrents":
+            if self.type == "active_torrents":
                 self._state = self._data.activeTorrentCount
             elif self.type == "paused_torrents":
                 self._state = self._data.pausedTorrentCount
