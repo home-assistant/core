@@ -68,3 +68,5 @@ def run():
 
     print("Deleting keys:", ", ".join(map(str, to_delete)))
     print(lokalise.keys_delete_multiple(to_delete))
+
+    return 0
