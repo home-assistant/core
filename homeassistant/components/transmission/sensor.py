@@ -6,7 +6,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, SENSOR_TYPES, STATE_ATTR_TORRENT_INFO
+from .const import DOMAIN, STATE_ATTR_TORRENT_INFO
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,22 +21,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         TransmissionSpeedSensor(tm_client, name, "Down Speed", "download"),
         TransmissionSpeedSensor(tm_client, name, "Up Speed", "upload"),
         TransmissionStatusSensor(tm_client, name, "Status"),
+        TransmissionTorrentsSensor(tm_client, name, "Active Torrents", "active"),
+        TransmissionTorrentsSensor(tm_client, name, "Paused Torrents", "paused"),
+        TransmissionTorrentsSensor(tm_client, name, "Total Torrents", "total"),
+        TransmissionTorrentsSensor(tm_client, name, "Completed Torrents", "completed"),
+        TransmissionTorrentsSensor(tm_client, name, "Started Torrents", "started"),
     ]
-    for sensor_type in SENSOR_TYPES:
-        dev.append(
-            TransmissionSensor(
-                sensor_type,
-                tm_client,
-                name,
-                SENSOR_TYPES[sensor_type][0],
-                SENSOR_TYPES[sensor_type][1],
-            )
-        )
 
     async_add_entities(dev, True)
 
 
-class TransmissionBaseSensor(Entity):
+class TransmissionSensor(Entity):
     """A base class for all Transmission sensors."""
 
     def __init__(self, tm_client, client_name, sensor_name, sub_type=None):
@@ -92,7 +87,7 @@ class TransmissionBaseSensor(Entity):
             self._unsub_update = None
 
 
-class TransmissionSpeedSensor(TransmissionBaseSensor):
+class TransmissionSpeedSensor(TransmissionSensor):
     """Representation of a Transmission speed sensor."""
 
     @property
@@ -113,7 +108,7 @@ class TransmissionSpeedSensor(TransmissionBaseSensor):
             self._state = round(mb_spd, 2 if mb_spd < 0.1 else 1)
 
 
-class TransmissionStatusSensor(TransmissionBaseSensor):
+class TransmissionStatusSensor(TransmissionSensor):
     """Representation of a Transmission status sensor."""
 
     def update(self):
@@ -134,78 +129,40 @@ class TransmissionStatusSensor(TransmissionBaseSensor):
             self._state = None
 
 
-class TransmissionSensor(Entity):
-    """Representation of a Transmission sensor."""
-
-    def __init__(
-        self, sensor_type, tm_client, client_name, sensor_name, unit_of_measurement
-    ):
-        """Initialize the sensor."""
-        self._name = sensor_name
-        self._state = None
-        self._tm_client = tm_client
-        self._unit_of_measurement = unit_of_measurement
-        self._data = None
-        self.client_name = client_name
-        self.type = sensor_type
-        self.unsub_update = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the entity."""
-        return f"{self._tm_client.api.host}-{self.name}"
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement for this sensor."""
-        return False
+class TransmissionTorrentsSensor(TransmissionSensor):
+    """Representation of a Transmission torrents sensor."""
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def available(self):
-        """Could the device be accessed during the last update call."""
-        return self._tm_client.api.available
+        return "Torrents"
 
     @property
     def device_state_attributes(self):
         """Return the state attributes, if any."""
-        if self.type == "started_torrents":
+        if self._sub_type == "started":
             return {
                 STATE_ATTR_TORRENT_INFO: _torrents_info(
                     self._tm_client.api.torrents, ("downloading")
                 )
             }
-        if self.type == "completed_torrents":
+        if self._sub_type == "completed":
             return {
                 STATE_ATTR_TORRENT_INFO: _torrents_info(
                     self._tm_client.api.torrents, ("seeding")
                 )
             }
-        if self.type == "paused_torrents":
+        if self._sub_type == "paused":
             return {
                 STATE_ATTR_TORRENT_INFO: _torrents_info(
                     self._tm_client.api.torrents, ("stopped")
                 )
             }
-        if self.type == "total_torrents":
+        if self._sub_type == "total":
             return {
                 STATE_ATTR_TORRENT_INFO: _torrents_info(self._tm_client.api.torrents)
             }
-        if self.type == "active_torrents":
+        if self._sub_type == "active":
             return {
                 STATE_ATTR_TORRENT_INFO: _torrents_info(
                     self._tm_client.api.torrents, ("seeding", "downloading")
@@ -213,40 +170,22 @@ class TransmissionSensor(Entity):
             }
         return None
 
-    async def async_added_to_hass(self):
-        """Handle entity which will be added."""
-        self.unsub_update = async_dispatcher_connect(
-            self.hass,
-            self._tm_client.api.signal_update,
-            self._schedule_immediate_update,
-        )
-
-    @callback
-    def _schedule_immediate_update(self):
-        self.async_schedule_update_ha_state(True)
-
-    async def will_remove_from_hass(self):
-        """Unsubscribe from update dispatcher."""
-        if self.unsub_update:
-            self.unsub_update()
-            self.unsub_update = None
-
     def update(self):
         """Get the latest data from Transmission and updates the state."""
-        self._data = self._tm_client.api.data
+        data = self._tm_client.api.data
 
-        if self.type == "completed_torrents":
+        if self._sub_type == "completed":
             self._state = self._tm_client.api.get_completed_torrent_count()
-        elif self.type == "started_torrents":
+        elif self._sub_type == "started":
             self._state = self._tm_client.api.get_started_torrent_count()
 
-        if self._data:
-            if self.type == "active_torrents":
-                self._state = self._data.activeTorrentCount
-            elif self.type == "paused_torrents":
-                self._state = self._data.pausedTorrentCount
-            elif self.type == "total_torrents":
-                self._state = self._data.torrentCount
+        if data:
+            if self._sub_type == "active":
+                self._state = data.activeTorrentCount
+            elif self._sub_type == "paused":
+                self._state = data.pausedTorrentCount
+            elif self._sub_type == "total":
+                self._state = data.torrentCount
 
 
 def _torrents_info(torrents, statuses=None):

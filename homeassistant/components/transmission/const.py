@@ -2,13 +2,6 @@
 
 DOMAIN = "transmission"
 
-SENSOR_TYPES = {
-    "active_torrents": ["Active Torrents", "Torrents"],
-    "paused_torrents": ["Paused Torrents", "Torrents"],
-    "total_torrents": ["Total Torrents", "Torrents"],
-    "completed_torrents": ["Completed Torrents", "Torrents"],
-    "started_torrents": ["Started Torrents", "Torrents"],
-}
 SWITCH_TYPES = {"on_off": "Switch", "turtle_mode": "Turtle Mode"}
 
 DEFAULT_NAME = "Transmission"
