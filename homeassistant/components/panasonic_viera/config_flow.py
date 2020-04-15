@@ -71,12 +71,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._errors = {"base": ERROR_UNKNOWN}
                 return await self.async_step_user()
 
-            enc_data = {
-                CONF_APP_ID: self._remote._app_id,  # pylint: disable=protected-access
-                CONF_ENCRYPTION_KEY: self._remote._enc_key,  # pylint: disable=protected-access
+            encryption_data = {
+                CONF_APP_ID: self._remote.app_id,
+                CONF_ENCRYPTION_KEY: self._remote.enc_key,
             }
 
-            self._data = {**self._data, **enc_data}
+            self._data = {**self._data, **encryption_data}
 
             return self.async_create_entry(
                 title=self._data[CONF_NAME], data=self._data,
@@ -118,7 +118,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._errors = {"base": ERROR_UNKNOWN}
             return await self.async_step_user()
 
-        if self._remote._type == TV_TYPE_ENCRYPTED:  # pylint: disable=protected-access
+        if self._remote.type == TV_TYPE_ENCRYPTED:
             return await self.async_step_pairing()
 
         return self.async_create_entry(title=self._data[CONF_NAME], data=self._data,)
