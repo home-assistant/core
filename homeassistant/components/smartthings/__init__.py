@@ -6,10 +6,10 @@ from typing import Iterable
 
 from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
 from pysmartapp.event import EVENT_TYPE_DEVICE
-from pysmartthings import Attribute, Capability, SmartThings
+from pysmartthings import APIInvalidGrant, Attribute, Capability, SmartThings
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, HTTP_FORBIDDEN
+from homeassistant.const import CONF_ACCESS_TOKEN, HTTP_FORBIDDEN, HTTP_UNAUTHORIZED
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -84,7 +84,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     api = SmartThings(async_get_clientsession(hass), entry.data[CONF_ACCESS_TOKEN])
 
-    remove_entry = False
     try:
         # See if the app is already setup. This occurs when there are
         # installs in multiple SmartThings locations (valid use-case)
@@ -103,16 +102,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         # Get scenes
         scenes = await async_get_entry_scenes(entry, api)
 
-        # Get SmartApp token to sync subscriptions
-        token = await api.generate_tokens(
-            entry.data[CONF_OAUTH_CLIENT_ID],
-            entry.data[CONF_OAUTH_CLIENT_SECRET],
-            entry.data[CONF_REFRESH_TOKEN],
-        )
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_REFRESH_TOKEN: token.refresh_token}
-        )
-
         # Get devices and their current status
         devices = await api.devices(location_ids=[installed_app.location_id])
 
@@ -130,6 +119,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
         await asyncio.gather(*(retrieve_device_status(d) for d in devices.copy()))
 
+        # Get SmartApp token to sync subscriptions
+        token = await api.generate_tokens(
+            entry.data[CONF_OAUTH_CLIENT_ID],
+            entry.data[CONF_OAUTH_CLIENT_SECRET],
+            entry.data[CONF_REFRESH_TOKEN],
+        )
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_REFRESH_TOKEN: token.refresh_token}
+        )
+
         # Sync device subscriptions
         await smartapp_sync_subscriptions(
             hass,
@@ -144,31 +143,28 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         broker.connect()
         hass.data[DOMAIN][DATA_BROKERS][entry.entry_id] = broker
 
+    except APIInvalidGrant as ex:
+        _LOGGER.error(
+            "Unable to obtain a new refresh token for '%s': %s - Reauthorize the SmartApp inside the SmartThings mobile app",
+            entry.title,
+            ex,
+        )
+        return False
+
     except ClientResponseError as ex:
-        if ex.status in (401, HTTP_FORBIDDEN):
+        if ex.status in (HTTP_UNAUTHORIZED, HTTP_FORBIDDEN):
             _LOGGER.exception(
-                "Unable to setup configuration entry '%s' - please reconfigure the integration",
+                "Unable to setup '%s' due to a security issue - Reauthorize the SmartApp inside the SmartThings mobile app",
                 entry.title,
             )
-            remove_entry = True
-        else:
-            _LOGGER.debug(ex, exc_info=True)
-            raise ConfigEntryNotReady
-    except (ClientConnectionError, RuntimeWarning) as ex:
+            return False
+        # Retry for other types of errors
         _LOGGER.debug(ex, exc_info=True)
         raise ConfigEntryNotReady
 
-    if remove_entry:
-        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        # only create new flow if there isn't a pending one for SmartThings.
-        flows = hass.config_entries.flow.async_progress()
-        if not [flow for flow in flows if flow["handler"] == DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": "import"}
-                )
-            )
-        return False
+    except (ClientConnectionError, RuntimeWarning) as ex:
+        _LOGGER.debug(ex, exc_info=True)
+        raise ConfigEntryNotReady
 
     for component in SUPPORTED_PLATFORMS:
         hass.async_create_task(

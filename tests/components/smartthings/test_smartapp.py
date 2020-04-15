@@ -12,6 +12,7 @@ from homeassistant.components.smartthings.const import (
     DATA_MANAGER,
     DOMAIN,
 )
+from homeassistant.config_entries import ENTRY_STATE_SETUP_ERROR
 
 from tests.common import MockConfigEntry
 
@@ -90,6 +91,31 @@ async def test_smartapp_update_saves_token(
     await smartapp.smartapp_update(hass, request, None, app)
     # Assert
     assert entry.data[CONF_REFRESH_TOKEN] == request.refresh_token
+
+
+async def test_smartapp_update_saves_token_reloads_failed_entry(
+    hass, smartthings_mock, location, device_factory
+):
+    """Test update saves token and reloads a failed config entry."""
+    # Arrange
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"installed_app_id": str(uuid4()), "app_id": str(uuid4())}
+    )
+    entry.add_to_hass(hass)
+    entry.state = ENTRY_STATE_SETUP_ERROR
+    app = Mock()
+    app.app_id = entry.data["app_id"]
+    request = Mock()
+    request.installed_app_id = entry.data["installed_app_id"]
+    request.auth_token = str(uuid4())
+    request.refresh_token = str(uuid4())
+    request.location_id = location.location_id
+
+    # Act
+    await smartapp.smartapp_update(hass, request, None, app)
+    # Assert
+    assert entry.data[CONF_REFRESH_TOKEN] == request.refresh_token
+    assert entry.state != ENTRY_STATE_SETUP_ERROR
 
 
 async def test_smartapp_update_configures_flow(hass):

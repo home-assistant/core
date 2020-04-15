@@ -24,6 +24,7 @@ from pysmartthings import (
 )
 
 from homeassistant.components import webhook
+from homeassistant.config_entries import ENTRY_STATE_SETUP_ERROR
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -419,6 +420,9 @@ async def smartapp_update(hass: HomeAssistantType, req, resp, app):
             req.installed_app_id,
             app.app_id,
         )
+        # Try reloading the entry if the token was updated and it failed to setup
+        if entry.state == ENTRY_STATE_SETUP_ERROR:
+            await hass.config_entries.async_reload(entry.entry_id)
 
     flow = next(
         (

@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from asynctest import Mock, patch
-from pysmartthings import InstalledAppStatus, OAuthToken
+from pysmartthings import APIInvalidGrant, InstalledAppStatus, OAuthToken
 import pytest
 
 from homeassistant.components import cloud, smartthings
@@ -43,11 +43,11 @@ async def test_migration_creates_new_flow(hass, smartthings_mock, config_entry):
     assert flows[0]["context"] == {"source": "import"}
 
 
-async def test_unrecoverable_api_errors_create_new_flow(
-    hass, config_entry, smartthings_mock
+async def test_api_security_errors_returns_false(
+    hass, config_entry, smartthings_mock, caplog
 ):
     """
-    Test a new config flow is initiated when there are API errors.
+    Test a security error returns false.
 
     401 (unauthorized): Occurs when the access token is no longer valid.
     403 (forbidden/not found): Occurs when the app or installed app could
@@ -61,17 +61,23 @@ async def test_unrecoverable_api_errors_create_new_flow(
     )
 
     # Assert setup returns false
-    result = await smartthings.async_setup_entry(hass, config_entry)
-    assert not result
+    assert not await smartthings.async_setup_entry(hass, config_entry)
+    assert "due to a security issue" in caplog.text
 
-    # Assert entry was removed and new flow created
-    await hass.async_block_till_done()
-    assert not hass.config_entries.async_entries(DOMAIN)
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["handler"] == "smartthings"
-    assert flows[0]["context"] == {"source": "import"}
-    hass.config_entries.flow.async_abort(flows[0]["flow_id"])
+
+async def test_api_refresh_token_errors_returns_false(
+    hass, config_entry, app, installed_app, smartthings_mock, caplog
+):
+    """Test that a refresh token error returns false."""
+    config_entry.add_to_hass(hass)
+    smartthings_mock.app.return_value = app
+    smartthings_mock.installed_app.return_value = installed_app
+    smartthings_mock.generate_tokens.side_effect = APIInvalidGrant(
+        "Invalid refresh token"
+    )
+
+    assert not await smartthings.async_setup_entry(hass, config_entry)
+    assert "Unable to obtain a new refresh token" in caplog.text
 
 
 async def test_recoverable_api_errors_raise_not_ready(
