@@ -3,6 +3,7 @@
         "action_type": {
             "brightness_decrease": "Disminuir brillo de {entity_name}",
             "brightness_increase": "Aumentar brillo de {entity_name}",
+            "flash": "Destellos {entidad_nombre}",
             "toggle": "Alternar {entity_name}",
             "turn_off": "Apagar {entity_name}",
             "turn_on": "Encender {entity_name}"
