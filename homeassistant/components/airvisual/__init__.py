@@ -22,6 +22,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     CONF_CITY,
     CONF_COUNTRY,
+    CONF_GEOGRAPHIES,
     DATA_CLIENT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -33,8 +34,6 @@ _LOGGER = logging.getLogger(__name__)
 DATA_LISTENER = "listener"
 
 DEFAULT_OPTIONS = {CONF_SHOW_ON_MAP: True}
-
-CONF_GEOGRAPHIES = "geographies"
 
 GEOGRAPHY_COORDINATES_SCHEMA = vol.Schema(
     {
@@ -158,8 +157,7 @@ async def async_migrate_entry(hass, config_entry):
 
         # Update the config entry to only include the first geography (there is always
         # guaranteed to be at least one):
-        data = {**config_entry.data}
-        geographies = data.pop(CONF_GEOGRAPHIES)
+        geographies = list(config_entry.data[CONF_GEOGRAPHIES])
         first_geography = geographies.pop(0)
         first_id = async_get_geography_id(first_geography)
 

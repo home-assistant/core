@@ -55,7 +55,9 @@ def get_homekit_info_mock(model):
 
 async def test_setup(hass, mock_zeroconf):
     """Test configured options for a device are loaded via config entry."""
-    with patch.object(hass.config_entries, "flow") as mock_config_flow, patch.object(
+    with patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow, patch.object(
         zeroconf, "ServiceBrowser", side_effect=service_update_mock
     ) as mock_service_browser:
         mock_zeroconf.get_service_info.side_effect = get_service_info_mock
@@ -72,7 +74,9 @@ async def test_homekit_match_partial_space(hass, mock_zeroconf):
     """Test configured options for a device are loaded via config entry."""
     with patch.dict(
         zc_gen.ZEROCONF, {zeroconf.HOMEKIT_TYPE: ["homekit_controller"]}, clear=True
-    ), patch.object(hass.config_entries, "flow") as mock_config_flow, patch.object(
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow, patch.object(
         zeroconf, "ServiceBrowser", side_effect=service_update_mock
     ) as mock_service_browser:
         mock_zeroconf.get_service_info.side_effect = get_homekit_info_mock("LIFX bulb")
@@ -87,7 +91,9 @@ async def test_homekit_match_partial_dash(hass, mock_zeroconf):
     """Test configured options for a device are loaded via config entry."""
     with patch.dict(
         zc_gen.ZEROCONF, {zeroconf.HOMEKIT_TYPE: ["homekit_controller"]}, clear=True
-    ), patch.object(hass.config_entries, "flow") as mock_config_flow, patch.object(
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow, patch.object(
         zeroconf, "ServiceBrowser", side_effect=service_update_mock
     ) as mock_service_browser:
         mock_zeroconf.get_service_info.side_effect = get_homekit_info_mock(
@@ -104,7 +110,9 @@ async def test_homekit_match_full(hass, mock_zeroconf):
     """Test configured options for a device are loaded via config entry."""
     with patch.dict(
         zc_gen.ZEROCONF, {zeroconf.HOMEKIT_TYPE: ["homekit_controller"]}, clear=True
-    ), patch.object(hass.config_entries, "flow") as mock_config_flow, patch.object(
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow, patch.object(
         zeroconf, "ServiceBrowser", side_effect=service_update_mock
     ) as mock_service_browser:
         mock_zeroconf.get_service_info.side_effect = get_homekit_info_mock("BSB002")
