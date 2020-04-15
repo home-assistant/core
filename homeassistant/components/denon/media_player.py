@@ -80,7 +80,7 @@ MEDIA_MODES = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Denon platform."""
-    denon = DenonDevice(config.get(CONF_NAME), config.get(CONF_HOST))
+    denon = DenonDevice(config[CONF_NAME], config[CONF_HOST])
 
     if denon.update():
         add_entities([denon])

@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if not digital:
         return False
 
-    droplets = config.get(CONF_DROPLETS)
+    droplets = config[CONF_DROPLETS]
 
     dev = []
     for droplet in droplets:
