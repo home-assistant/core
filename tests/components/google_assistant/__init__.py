@@ -33,6 +33,7 @@ class MockConfig(helpers.AbstractConfig):
         """Initialize config."""
         super().__init__(hass)
         self._should_expose = should_expose
+        self._should_2fa = should_2fa
         self._secure_devices_pin = secure_devices_pin
         self._entity_config = entity_config or {}
         self._local_sdk_webhook_id = local_sdk_webhook_id
@@ -72,6 +73,10 @@ class MockConfig(helpers.AbstractConfig):
     def should_expose(self, state):
         """Expose it all."""
         return self._should_expose is None or self._should_expose(state)
+
+    def should_2fa(self, state):
+        """Expose it all."""
+        return self._should_2fa is None or self._should_2fa(state)
 
 
 BASIC_CONFIG = MockConfig()
