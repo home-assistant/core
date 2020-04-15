@@ -1,9 +1,16 @@
 {
+  "title": "Plaato",
   "config": {
     "step": {
       "user": {
-        "title": "Set up the Plaato Webhook",
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+        "title": "Set up the Plaato devices",
+        "description": "[%key:common::config_flow::description::confirm_setup%]",
+        "data": {
+          "token": "The Auth Token obtained from Plaato",
+          "use_webhook": "Enable to use webhook for the Airlock",
+          "use_keg": "Enable if you have a Keg",
+          "use_airlock": "Enable if you have an Airlock"
+        }
       }
     },
     "abort": {
@@ -11,7 +18,7 @@
       "webhook_not_internet_accessible": "[%key:common::config_flow::abort::webhook_not_internet_accessible%]"
     },
     "create_entry": {
-      "default": "To send events to Home Assistant, you will need to setup the webhook feature in Plaato Airlock.\n\nFill in the following info:\n\n- URL: `{webhook_url}`\n- Method: POST\n\nSee [the documentation]({docs_url}) for further details."
+      "default": "### If you chose webhook. To send events to Home Assistant, you will need to setup the webhook feature in Plaato Airlock.\n\nFill in the following info:\n\n- URL: `{webhook_url}`\n- Method: POST\n\nSee [the documentation]({docs_url}) for further details."
     }
   }
 }

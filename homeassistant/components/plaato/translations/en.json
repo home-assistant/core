@@ -9,9 +9,16 @@
         },
         "step": {
             "user": {
-                "description": "Do you want to start set up?",
-                "title": "Set up the Plaato Webhook"
-            }
+                "title": "Do you want to start set up?",
+                "description": "Select what devices you have",
+                "data": {
+                    "token": "The Auth Token obtained from Plaato",
+                    "use_webhook": "Enable to use webhook for the Airlock",
+                    "use_keg": "Enable if you have a Keg",
+                    "use_airlock": "Enable if you have an Airlock"
+                }
+          }
         }
-    }
+    },
+    "title": "Plaato"
 }

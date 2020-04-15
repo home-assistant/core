@@ -22,7 +22,9 @@ from . import (
     PLAATO_DEVICE_SENSORS,
     SENSOR_DATA_KEY,
     SENSOR_UPDATE,
+    get_coordinator,
 )
+from .const import CONF_DEVICE_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +52,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             sensors = get_device_sensors(device_id)
 
             for sensor_type in sensors:
-                entities.append(PlaatoSensor(device_id, sensor_type))
+                entities.append(PlaatoSensor(device_id, sensor_type, device_id))
 
             devices[device_id] = entities
 
@@ -59,9 +61,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             for entity in devices[device_id]:
                 async_dispatcher_send(hass, f"{PLAATO_DOMAIN}_{entity.unique_id}")
 
-    hass.data[SENSOR_DATA_KEY] = async_dispatcher_connect(
-        hass, SENSOR_UPDATE, _update_sensor
-    )
+    if config_entry.data[CONF_WEBHOOK_ID] is not None:
+        hass.data[SENSOR_DATA_KEY] = async_dispatcher_connect(
+            hass, SENSOR_UPDATE, _update_sensor
+        )
+    else:
+        coordinator = await get_coordinator(hass, config_entry)
+        if coordinator.data is not None:
+            async_add_entities(
+                PlaatoSensor(
+                    config_entry.data[CONF_TOKEN],
+                    sensor_type,
+                    config_entry.data[CONF_DEVICE_NAME],
+                    coordinator,
+                )
+                for sensor_type in coordinator.data.sensors.keys()
+            )
 
     return True
 
@@ -69,44 +84,57 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class PlaatoSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, device_id, sensor_type):
+    def __init__(self, device_id, sensor_type, device_name, coordinator=None):
         """Initialize the sensor."""
+        self._coordinator = coordinator
         self._device_id = device_id
-        self._type = sensor_type
+        self._sensor_type = sensor_type
+        self._device_type = PlaatoDeviceType.Airlock
+        self._device_name = device_name
+        self._name = f"{device_name} {sensor_type}"
+
+        if coordinator is not None:
+            self._device_type = coordinator.data.device_type
+            sensor_name = coordinator.data.get_sensor_name(self._sensor_type)
+            self._name = f"{device_name} {sensor_name}"
+
         self._state = 0
-        self._name = f"{device_id} {sensor_type}"
         self._attributes = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{PLAATO_DOMAIN} {self._name}"
+        return f"{PLAATO_DOMAIN} {self._device_type} {self._name}".title()
 
     @property
     def unique_id(self):
         """Return the unique ID of this sensor."""
-        return f"{self._device_id}_{self._type}"
+        return f"{self._device_id}_{self._sensor_type}"
 
     @property
     def device_info(self):
         """Get device info."""
+        fw_version = ""
+        if self._coordinator is not None and self._device_type == PlaatoDeviceType.Keg:
+            fw_version = self._coordinator.data.firmware_version
         return {
             "identifiers": {(PLAATO_DOMAIN, self._device_id)},
-            "name": self._device_id,
+            "name": self._device_name,
             "manufacturer": "Plaato",
-            "model": "Airlock",
+            "model": self._device_type,
+            "sq_version": fw_version,
         }
 
     def get_sensors(self):
-        """Get device sensors."""
+        """Get device sensors. (Only webhook)."""
         return (
             self.hass.data[PLAATO_DOMAIN]
-            .get(self._device_id)
+            .get(self._device_id, False)
             .get(PLAATO_DEVICE_SENSORS, False)
         )
 
     def get_sensors_unit_of_measurement(self, sensor_type):
-        """Get unit of measurement for sensor of type."""
+        """Get unit of measurement for sensor of type. (Only webhook)."""
         return (
             self.hass.data[PLAATO_DOMAIN]
             .get(self._device_id)
@@ -117,18 +145,21 @@ class PlaatoSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
+        if self._coordinator is not None:
+            return self._coordinator.data.sensors.get(self._sensor_type)
+
         sensors = self.get_sensors()
         if sensors is False:
             _LOGGER.debug("Device with name %s has no sensors", self.name)
             return 0
 
-        if self._type == ATTR_ABV:
-            return round(sensors.get(self._type), 2)
-        if self._type == ATTR_TEMP:
-            return round(sensors.get(self._type), 1)
-        if self._type == ATTR_CO2_VOLUME:
-            return round(sensors.get(self._type), 2)
-        return sensors.get(self._type)
+        if self._sensor_type == ATTR_ABV:
+            return round(sensors.get(self._sensor_type), 2)
+        if self._sensor_type == ATTR_TEMP:
+            return round(sensors.get(self._sensor_type), 1)
+        if self._sensor_type == ATTR_CO2_VOLUME:
+            return round(sensors.get(self._sensor_type), 2)
+        return sensors.get(self._sensor_type)
 
     @property
     def device_state_attributes(self):
@@ -139,16 +170,29 @@ class PlaatoSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        if self._type == ATTR_TEMP:
+        if self._coordinator is not None:
+            return self._coordinator.data.get_unit_of_measurement(self._sensor_type)
+
+        if self._sensor_type == ATTR_TEMP:
             return self.get_sensors_unit_of_measurement(ATTR_TEMP_UNIT)
-        if self._type == ATTR_BATCH_VOLUME or self._type == ATTR_CO2_VOLUME:
+        if (
+            self._sensor_type == ATTR_BATCH_VOLUME
+            or self._sensor_type == ATTR_CO2_VOLUME
+        ):
             return self.get_sensors_unit_of_measurement(ATTR_VOLUME_UNIT)
-        if self._type == ATTR_BPM:
+        if self._sensor_type == ATTR_BPM:
             return "bpm"
-        if self._type == ATTR_ABV:
+        if self._sensor_type == ATTR_ABV:
             return PERCENTAGE
 
         return ""
+
+    @property
+    def available(self):
+        """Return if sensor is available."""
+        if self._coordinator is not None:
+            return self._coordinator.last_update_success
+        return True
 
     @property
     def should_poll(self):
@@ -156,9 +200,16 @@ class PlaatoSensor(Entity):
         return False
 
     async def async_added_to_hass(self):
-        """Register callbacks."""
-        self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
+        """When entity is added to hass."""
+        if self._coordinator is not None:
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        else:
+            self.async_on_remove(self.hass.helpers.dispatcher.async_dispatcher_connect(
                 f"{PLAATO_DOMAIN}_{self.unique_id}", self.async_write_ha_state
             )
-        )
+            )
+
+    async def async_will_remove_from_hass(self):
+        """When entity will be removed from hass."""
+        if self._coordinator is not None:
+            self._coordinator.async_remove_listener(self.async_write_ha_state)
