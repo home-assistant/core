@@ -62,7 +62,7 @@ def _get_with_state():
     device.environmental_state.dust = 5
     device.environmental_state.humidity = 45
     device.environmental_state.temperature = 295
-    device.environmental_state.volatile_organic_compounds = 2
+    device.environmental_state.volatil_organic_compounds = 2
 
     return device
 

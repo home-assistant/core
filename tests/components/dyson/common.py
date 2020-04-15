@@ -14,6 +14,7 @@ def load_mock_device(device):
     device.environmental_state.particulate_matter_25 = "0000"
     device.environmental_state.particulate_matter_10 = "0000"
     device.environmental_state.nitrogen_dioxide = "0000"
+    device.environmental_state.volatil_organic_compounds = "0000"
     device.environmental_state.volatile_organic_compounds = "0000"
     device.environmental_state.temperature = 250
     device.state.hepa_filter_state = 0
