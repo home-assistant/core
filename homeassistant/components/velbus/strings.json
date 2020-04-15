@@ -1,6 +1,6 @@
 {
+  "title": "Velbus interface",
   "config": {
-    "title": "Velbus interface",
     "step": {
       "user": {
         "title": "Define the velbus connection type",

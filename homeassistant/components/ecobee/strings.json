@@ -1,6 +1,6 @@
 {
+  "title": "ecobee",
   "config": {
-    "title": "ecobee",
     "step": {
       "user": {
         "title": "ecobee API key",

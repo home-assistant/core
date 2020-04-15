@@ -1,6 +1,6 @@
 {
+  "title": "SmartThings",
   "config": {
-    "title": "SmartThings",
     "step": {
       "user": {
         "title": "Confirm Callback URL",

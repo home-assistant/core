@@ -1,6 +1,6 @@
 {
+  "title": "Network UPS Tools (NUT)",
   "config": {
-    "title": "Network UPS Tools (NUT)",
     "step": {
       "user": {
         "title": "Connect to the NUT server",

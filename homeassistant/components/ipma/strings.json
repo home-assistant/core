@@ -1,6 +1,6 @@
 {
+  "title": "Portuguese weather service (IPMA)",
   "config": {
-    "title": "Portuguese weather service (IPMA)",
     "step": {
       "user": {
         "title": "Location",

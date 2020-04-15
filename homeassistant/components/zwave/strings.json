@@ -1,6 +1,6 @@
 {
+  "title": "Z-Wave",
   "config": {
-    "title": "Z-Wave",
     "step": {
       "user": {
         "title": "Set up Z-Wave",

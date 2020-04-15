@@ -1,6 +1,6 @@
 {
+  "title": "Glances",
   "config": {
-    "title": "Glances",
     "step": {
       "user": {
         "title": "Setup Glances",

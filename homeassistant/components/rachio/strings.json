@@ -1,6 +1,6 @@
 {
+  "title": "Rachio",
   "config": {
-    "title": "Rachio",
     "step": {
       "user": {
         "title": "Connect to your Rachio device",

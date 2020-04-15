@@ -1,6 +1,6 @@
 {
+  "title": "Transmission",
   "config": {
-    "title": "Transmission",
     "step": {
       "user": {
         "title": "Setup Transmission Client",

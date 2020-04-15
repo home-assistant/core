@@ -1,6 +1,6 @@
 {
+  "title": "Ambiclimate",
   "config": {
-    "title": "Ambiclimate",
     "step": {
       "auth": {
         "title": "Authenticate Ambiclimate",

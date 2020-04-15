@@ -1,6 +1,6 @@
 {
+  "title": "MyQ",
   "config": {
-    "title": "MyQ",
     "step": {
       "user": {
         "title": "Connect to the MyQ Gateway",

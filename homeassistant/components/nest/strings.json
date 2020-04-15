@@ -1,6 +1,6 @@
 {
+  "title": "Nest",
   "config": {
-    "title": "Nest",
     "step": {
       "init": {
         "title": "Authentication Provider",

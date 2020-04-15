@@ -1,6 +1,6 @@
 {
+  "title": "Tesla Powerwall",
   "config": {
-    "title": "Tesla Powerwall",
     "step": {
       "user": {
         "title": "Connect to the powerwall",

@@ -1,6 +1,6 @@
 {
+  "title": "MQTT",
   "config": {
-    "title": "MQTT",
     "step": {
       "broker": {
         "title": "MQTT",

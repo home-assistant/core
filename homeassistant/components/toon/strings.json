@@ -1,6 +1,6 @@
 {
+  "title": "Toon",
   "config": {
-    "title": "Toon",
     "step": {
       "authenticate": {
         "title": "Link your Toon account",

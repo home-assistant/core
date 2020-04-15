@@ -1,6 +1,6 @@
 {
+  "title": "MELCloud",
   "config": {
-    "title": "MELCloud",
     "step": {
       "user": {
         "title": "Connect to MELCloud",
