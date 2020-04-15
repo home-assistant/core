@@ -107,6 +107,11 @@ G_HTTP_REST_SERVICE_BASE_URL = "http://{}:8122"
 G_USB_DEVICES = []
 G_USB_INTERNAL_MIC_RESET = False
 
+#
+G_REMOTE_DRIVES_DOM_PATH = "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne"
+G_LOG_SETTINGS_INFO = None
+G_DB_SETTINGS_INFO = None
+
 
 def get_pass_for_ssid(ssid):
     for item in GLOBAL_SCAN_WIFI_ANSWER["ScanResult"]:

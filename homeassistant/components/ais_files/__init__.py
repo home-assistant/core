@@ -7,16 +7,16 @@ https://www.ai-speaker.com/
 import asyncio
 import os
 import logging
-import subprocess
 from PIL import Image
 from aiohttp.web import Request, Response
 from sqlalchemy import create_engine
 import json
 from sqlalchemy.pool import StaticPool
-
+from typing import Any
 from homeassistant.components.http import HomeAssistantView
 from . import sensor
 from .const import DOMAIN
+import homeassistant.components.ais_dom.ais_global as ais_global
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,8 +27,6 @@ G_LOG_SETTINGS_INFO_FILE = (
 G_DB_SETTINGS_INFO_FILE = (
     "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_settings_info"
 )
-G_LOG_SETTINGS_INFO = None
-G_DB_SETTINGS_INFO = None
 
 
 @asyncio.coroutine
@@ -112,115 +110,106 @@ async def _async_change_logger_settings(hass, call):
     if "log_level" not in call.data:
         _LOGGER.error("No log_level")
         return
+    log_rotating = 10
+    if "log_rotating" in call.data:
+        log_rotating = call.data["log_rotating"]
 
     log_drive = call.data["log_drive"]
     log_level = call.data["log_level"]
 
-    # save to file
-    await _async_save_logs_settings_info(log_drive, log_level)
+    chaged_settings = "log_drive"
+    # check what was changed
+    if ais_global.G_LOG_SETTINGS_INFO is None:
+        chaged_settings = "log_drive"
+    else:
+        if (
+            "logDrive" in ais_global.G_LOG_SETTINGS_INFO
+            and ais_global.G_LOG_SETTINGS_INFO["logDrive"] != log_drive
+        ):
+            chaged_settings = "log_drive"
+        elif (
+            "logLevel" in ais_global.G_LOG_SETTINGS_INFO
+            and ais_global.G_LOG_SETTINGS_INFO["logLevel"] != log_level
+        ):
+            chaged_settings = "log_level"
+        elif (
+            "logRotating" in ais_global.G_LOG_SETTINGS_INFO
+            and ais_global.G_LOG_SETTINGS_INFO["logRotating"] != log_rotating
+        ):
+            chaged_settings = "log_rotating"
+
+    # store settings in file
+    await _async_save_logs_settings_info(log_drive, log_level, log_rotating)
+
     # set the logs settings info
     hass.states.async_set(
         "sensor.ais_logs_settings_info",
         "0",
-        {"logDrive": log_drive, "logLevel": log_level},
+        {"logDrive": log_drive, "logLevel": log_level, "logRotating": log_rotating},
     )
 
-    # check if drive is -
-    if log_drive == "-":
-        hass.async_add_job(
-            hass.services.async_call(
-                "ais_ai_service", "say_it", {"text": "Logowanie do pliku wyłączone"}
+    if chaged_settings == "log_drive":
+        # check if drive is - then remove logging to file
+        if log_drive == "-":
+            info = "Logowanie do pliku wyłączone"
+        else:
+            # change log settings
+            log_file = (
+                ais_global.G_REMOTE_DRIVES_DOM_PATH + "/" + log_drive + "/ais.log"
             )
-        )
-        return
+            # Log errors to a file if we have write access to file or dir
+            err_log_path = os.path.abspath(log_file)
+            err_path_exists = os.path.isfile(err_log_path)
+            # check if this is correct external drive
+            from homeassistant.components import ais_usb
 
-    # change log settings
-    # Log errors to a file if we have write access to file or config dir
-    file_log_path = os.path.abspath(
-        "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/"
-        + log_drive
-        + "/ais.log"
-    )
+            err_path_is_external_drive = ais_usb.is_usb_url_valid_external_drive(
+                err_log_path
+            )
+            err_dir = os.path.dirname(err_log_path)
 
-    err_path_exists = os.path.isfile(file_log_path)
-    # check if this is correct external drive
-    from homeassistant.components import ais_usb
+            # Check if we can write to the error log if it exists or that
+            # we can create files in the containing directory if not.
+            if err_path_is_external_drive and (
+                (err_path_exists and os.access(err_log_path, os.W_OK))
+                or (not err_path_exists and os.access(err_dir, os.W_OK))
+            ):
+                info = "Logi systemowe zapisywane do pliku log na " + log_drive
 
-    err_path_is_external_drive = ais_usb.is_usb_url_valid_external_drive(file_log_path)
-    err_dir = os.path.dirname(file_log_path)
-
-    # Check if we can write to the error log if it exists or that
-    # we can create files in the containing directory if not.
-    if err_path_is_external_drive and (
-        (err_path_exists and os.access(file_log_path, os.W_OK))
-        or (not err_path_exists and os.access(err_dir, os.W_OK))
-    ):
-        # replace the current handler on the root logger
-        logger = logging.getLogger("")  # root logger
-        for hdlr in logger.handlers[:]:  # remove all old handlers
-            logger.removeHandler(hdlr)
-
-        from homeassistant.util.logging import AsyncHandler
-
-        hass.data["logging"] = file_log_path
-        err_handler = logging.FileHandler(file_log_path, mode="w", delay=True)
-        async_handler = AsyncHandler(hass.loop, err_handler)
-
-        fmt = "%(asctime)s %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
-        datefmt = "%Y-%m-%d %H:%M:%S"
-        try:
-            from colorlog import ColoredFormatter
-
-            # basicConfig must be called after importing colorlog in order to
-            # ensure that the handlers it sets up wraps the correct streams.
-            logging.basicConfig(level=logging.INFO)
-
-            colorfmt = f"%(log_color)s{fmt}%(reset)s"
-            logging.getLogger().handlers[0].setFormatter(
-                ColoredFormatter(
-                    colorfmt,
-                    datefmt=datefmt,
-                    reset=True,
-                    log_colors={
-                        "DEBUG": "cyan",
-                        "INFO": "green",
-                        "WARNING": "yellow",
-                        "ERROR": "red",
-                        "CRITICAL": "red",
+                hass.states.async_set(
+                    "sensor.ais_logs_settings_info",
+                    "1",
+                    {
+                        "logDrive": log_drive,
+                        "logLevel": log_level,
+                        "logRotating": log_rotating,
+                        "logError": "",
                     },
                 )
-            )
-        except ImportError:
-            pass
+            else:
+                log_error = "Unable to set up log " + log_file + " (access denied)"
+                _LOGGER.error(log_error)
+                info = "Nie można skonfigurować zapisu do pliku na " + log_drive
+                hass.states.async_set(
+                    "sensor.ais_logs_settings_info",
+                    "0",
+                    {
+                        "logDrive": log_drive,
+                        "logLevel": log_level,
+                        "logRotating": log_rotating,
+                        "logError": log_error,
+                    },
+                )
 
-        err_handler.setLevel(logging.getLevelName(log_level.upper()))
-        err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
+    elif chaged_settings == "log_level":
+        info = "Poziom logowania " + log_level
 
-        logger.addHandler(async_handler)  # type: ignore
-        logger.setLevel(logging.getLevelName(log_level.upper()))
-        info = "Logi systemowe zapisywane do pliku log na " + log_drive
-        hass.states.async_set(
-            "sensor.ais_logs_settings_info",
-            "1",
-            {"logDrive": log_drive, "logLevel": log_level, "logError": ""},
-        )
-    else:
-        log_error = "Unable to set up log " + file_log_path + " (access denied)"
-        _LOGGER.error(log_error)
-        info = "Nie można skonfigurować zapisu do pliku na " + log_drive
-        hass.states.async_set(
-            "sensor.ais_logs_settings_info",
-            "0",
-            {"logDrive": log_drive, "logLevel": log_level, "logError": log_error},
-        )
+    elif chaged_settings == "log_rotating":
+        info = "Rotacja logów co " + str(log_rotating) + " dni"
 
     # inform about loging
     hass.async_add_job(
         hass.services.async_call("ais_ai_service", "say_it", {"text": info})
-    )
-    # re-set log level
-    hass.async_add_job(
-        hass.services.async_call("logger", "set_default_level", {"level": log_level})
     )
 
 
@@ -319,40 +308,53 @@ async def _async_check_db_connection(hass, call):
 
 
 async def _async_get_db_log_settings_info(hass, call):
+    on_system_start = False
+    if "on_system_start" in call.data:
+        on_system_start = True
     # on page load
-    global G_LOG_SETTINGS_INFO
-    global G_DB_SETTINGS_INFO
     log_settings = {}
     db_settings = {}
-    if G_LOG_SETTINGS_INFO is None:
+    if ais_global.G_LOG_SETTINGS_INFO is None:
         # get the info from file
         try:
             with open(G_LOG_SETTINGS_INFO_FILE) as json_file:
                 log_settings = json.load(json_file)
-            G_LOG_SETTINGS_INFO = log_settings
+            ais_global.G_LOG_SETTINGS_INFO = log_settings
         except Exception as e:
             _LOGGER.info("Error get log settings info " + str(e))
     else:
-        log_settings = G_LOG_SETTINGS_INFO
+        log_settings = ais_global.G_LOG_SETTINGS_INFO
 
-    if G_DB_SETTINGS_INFO is None:
+    if ais_global.G_DB_SETTINGS_INFO is None:
         try:
             with open(G_DB_SETTINGS_INFO_FILE) as json_file:
                 db_settings = json.load(json_file)
-            G_DB_SETTINGS_INFO = db_settings
-            if "dbKeepDays" not in G_DB_SETTINGS_INFO:
-                G_DB_SETTINGS_INFO["dbKeepDays"] = 10
+            ais_global.G_DB_SETTINGS_INFO = db_settings
+            if "dbKeepDays" not in ais_global.G_DB_SETTINGS_INFO:
+                ais_global.G_DB_SETTINGS_INFO["dbKeepDays"] = 10
         except Exception as e:
             _LOGGER.info("Error get db settings info " + str(e))
     else:
-        db_settings = G_DB_SETTINGS_INFO
+        db_settings = ais_global.G_DB_SETTINGS_INFO
 
     # fill the drives list
     hass.async_add_job(hass.services.async_call("ais_usb", "ls_flash_drives"))
 
     # set the logs settings info
-    # TODO check if logs are on
-    hass.states.async_set("sensor.ais_logs_settings_info", "1", log_settings)
+    if ais_global.G_LOG_SETTINGS_INFO is not None:
+        hass.states.async_set("sensor.ais_logs_settings_info", "1", log_settings)
+        # enable logs on system start (if set)
+        if on_system_start:
+            # re-set log level
+            hass.async_add_job(
+                hass.services.async_call(
+                    "logger",
+                    "set_default_level",
+                    {"level": ais_global.G_LOG_SETTINGS_INFO["logLevel"]},
+                )
+            )
+    else:
+        hass.states.async_set("sensor.ais_logs_settings_info", "0", log_settings)
 
     # set the db settings sensor info
     # step - no db url saved
@@ -370,25 +372,27 @@ async def _async_get_db_log_settings_info(hass, call):
     hass.states.async_set("sensor.ais_db_connection_info", db_conn_step, db_settings)
 
 
-async def _async_save_logs_settings_info(log_drive, log_level):
+async def _async_save_logs_settings_info(log_drive, log_level, log_rotating):
     """save log path info in a file."""
-    global G_LOG_SETTINGS_INFO
     try:
-        logs_settings = {"logDrive": log_drive, "logLevel": log_level}
+        logs_settings = {
+            "logDrive": log_drive,
+            "logLevel": log_level,
+            "logRotating": log_rotating,
+        }
         with open(G_LOG_SETTINGS_INFO_FILE, "w") as outfile:
             json.dump(logs_settings, outfile)
-        G_LOG_SETTINGS_INFO = logs_settings
+        ais_global.G_LOG_SETTINGS_INFO = logs_settings
     except Exception as e:
         _LOGGER.error("Error save_log_settings_info " + str(e))
 
 
 async def _async_save_db_settings_info(db_settings):
     """save db url info in a file."""
-    global G_DB_SETTINGS_INFO
     try:
         with open(G_DB_SETTINGS_INFO_FILE, "w") as outfile:
             json.dump(db_settings, outfile)
-        G_DB_SETTINGS_INFO = db_settings
+        ais_global.G_DB_SETTINGS_INFO = db_settings
     except Exception as e:
         _LOGGER.error("Error save_db_file_url_info " + str(e))
 

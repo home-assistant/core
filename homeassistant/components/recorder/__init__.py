@@ -155,11 +155,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # AIS dom fix - get recorder config from file
     try:
         import json
+        from homeassistant.components import ais_files
+        import homeassistant.components.ais_dom.ais_global as ais_global
 
-        with open(
-            "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_settings_info"
-        ) as json_file:
+        with open(ais_files.G_DB_SETTINGS_INFO_FILE) as json_file:
             db_settings = json.load(json_file)
+            ais_global.G_DB_SETTINGS_INFO = db_settings
         db_url = db_settings["dbUrl"]
         if db_url == "sqlite:///:memory:":
             keep_days = 2
@@ -529,6 +530,7 @@ class Recorder(threading.Thread):
                 self.join()
 
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+            self.hass.bus.async_listen_once("ais_stop_recorder_event", shutdown)
 
             if self.hass.state == CoreState.running:
                 hass_started.set_result(None)
@@ -688,9 +690,9 @@ class Recorder(threading.Thread):
         try:
             self.event_session.commit()
         except Exception as err:
-            _LOGGER.error("Error executing query: %s ais no raise", err)
+            _LOGGER.error("Error executing query: %s", err)
             self.event_session.rollback()
-            # raise
+            raise
 
     @callback
     def event_listener(self, event):

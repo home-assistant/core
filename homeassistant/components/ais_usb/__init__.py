@@ -23,7 +23,7 @@ G_ZWAVE_ID = "0658:0200"
 G_AIS_REMOTE_ID = "0c45:5102"
 # ignore internal devices
 G_AIS_INTERNAL_DEVICES_ID = ["14cd:8608", "05e3:0608", "1d6b:0002", "1d6b:0003"]
-G_REMOTE_DRIVES_DOM_PATH = "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne"
+
 G_USB_DRIVES_PATH = "/mnt/media_rw"
 if platform.machine() == "x86_64":
     # local test
@@ -131,7 +131,7 @@ async def async_setup(hass, config):
 
                     os.symlink(
                         str(event.pathname),
-                        G_REMOTE_DRIVES_DOM_PATH + "/dysk_" + str(drive_id),
+                        ais_global.G_REMOTE_DRIVES_DOM_PATH + "/dysk_" + str(drive_id),
                     )
                     hass.async_add_job(
                         hass.services.async_call(
@@ -174,11 +174,15 @@ async def async_setup(hass, config):
         def process_IN_DELETE(self, event):
             if event.pathname.startswith(G_USB_DRIVES_PATH):
                 # delete symlink
-                for f in os.listdir(G_REMOTE_DRIVES_DOM_PATH):
+                for f in os.listdir(ais_global.G_REMOTE_DRIVES_DOM_PATH):
                     if str(
-                        os.path.realpath(os.path.join(G_REMOTE_DRIVES_DOM_PATH, f))
+                        os.path.realpath(
+                            os.path.join(ais_global.G_REMOTE_DRIVES_DOM_PATH, f)
+                        )
                     ) == str(event.pathname):
-                        os.system("rm " + G_REMOTE_DRIVES_DOM_PATH + "/" + str(f))
+                        os.system(
+                            "rm " + ais_global.G_REMOTE_DRIVES_DOM_PATH + "/" + str(f)
+                        )
                         hass.async_add_job(
                             hass.services.async_call(
                                 "ais_ai_service",
@@ -202,6 +206,35 @@ async def async_setup(hass, config):
                                 "info" in device_info
                                 and "xHCI Host Controller " not in device_info["info"]
                             ):
+                                # quick stop access to files - to prevent
+                                # ProcessKiller: Process xxx (10754) has open file /mnt/media_rw/...
+                                # ProcessKiller: Sending Interrupt to process 10754
+
+                                # 1. check the if log file exists, if not then stop logs
+                                if ais_global.G_LOG_SETTINGS_INFO is not None:
+                                    if "logDrive" in ais_global.G_LOG_SETTINGS_INFO:
+                                        if not os.path.isfile(
+                                            ais_global.G_REMOTE_DRIVES_DOM_PATH
+                                            + "/"
+                                            + ais_global.G_LOG_SETTINGS_INFO["logDrive"]
+                                            + "/ais.log"
+                                        ):
+                                            hass.bus.async_fire("ais_stop_logs_event")
+                                # 2. check the if recorder db file exists, if not then stop recorder
+                                if ais_global.G_DB_SETTINGS_INFO is not None:
+                                    if "dbUrl" in ais_global.G_DB_SETTINGS_INFO and ais_global.G_DB_SETTINGS_INFO[
+                                        "dbUrl"
+                                    ].startswith(
+                                        ais_global.G_REMOTE_DRIVES_DOM_PATH
+                                    ):
+                                        if not os.path.isfile(
+                                            ais_global.G_DB_SETTINGS_INFO["dbUrl"]
+                                        ):
+                                            hass.bus.async_fire(
+                                                "ais_stop_recorder_event"
+                                            )
+
+                                # 3. check the if media file exists, if not then stop player
                                 state = hass.states.get(
                                     "media_player.wbudowany_glosnik"
                                 )
@@ -210,17 +243,19 @@ async def async_setup(hass, config):
                                 if (
                                     media_content_id is not None
                                     and media_content_id.startswith(
-                                        G_REMOTE_DRIVES_DOM_PATH
+                                        ais_global.G_REMOTE_DRIVES_DOM_PATH
                                     )
                                 ):
-                                    # quick stop audio - to prevent
-                                    # ProcessKiller: Process pl.sviete.dom (10754) has open file /mnt/media_rw/...
-                                    # ProcessKiller: Sending Interrupt to process 10754
-                                    hass.services.call(
-                                        "ais_ai_service",
-                                        "publish_command_to_frame",
-                                        {"key": "stopAudio", "val": True},
-                                    )
+                                    if not os.path.isfile(media_content_id):
+                                        # quick stop player - to prevent
+                                        # ProcessKiller: Process pl.sviete.dom (10754) has open file /mnt/media_rw/...
+                                        # ProcessKiller: Sending Interrupt to process 10754
+                                        hass.services.call(
+                                            "ais_ai_service",
+                                            "publish_command_to_frame",
+                                            {"key": "stopAudio", "val": True},
+                                        )
+
                     # info to user
                     if (
                         device_info["id"] != G_AIS_REMOTE_ID
@@ -269,18 +304,19 @@ async def async_setup(hass, config):
     async def mount_external_drives(call):
         """mount_external_drives."""
         try:
-            os.system("rm " + G_REMOTE_DRIVES_DOM_PATH + "/*")
+            os.system("rm " + ais_global.G_REMOTE_DRIVES_DOM_PATH + "/*")
             dirs = os.listdir(G_USB_DRIVES_PATH)
             for d in dirs:
                 os.symlink(
-                    G_USB_DRIVES_PATH + "/" + d, G_REMOTE_DRIVES_DOM_PATH + "/dysk_" + d
+                    G_USB_DRIVES_PATH + "/" + d,
+                    ais_global.G_REMOTE_DRIVES_DOM_PATH + "/dysk_" + d,
                 )
         except Exception as e:
             _LOGGER.error("mount_external_drives " + str(e))
 
     async def ls_flash_drives(call):
         ais_usb_flash_drives = [ais_global.G_EMPTY_OPTION]
-        dirs = os.listdir(G_REMOTE_DRIVES_DOM_PATH)
+        dirs = os.listdir(ais_global.G_REMOTE_DRIVES_DOM_PATH)
         for d in dirs:
             ais_usb_flash_drives.append(d)
         # set drives on list
