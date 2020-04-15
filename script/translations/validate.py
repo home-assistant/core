@@ -85,7 +85,7 @@ def run():
             )
 
     if not errors:
-        return
+        return 0
 
     print(f"Found {len(errors)} errors")
     print()
