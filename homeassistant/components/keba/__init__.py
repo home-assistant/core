@@ -183,6 +183,7 @@ class KebaHandler(KebaKeContact):
     async def async_request_data(self, param):
         """Request new data in async way."""
         await self.request_data()
+        _LOGGER.debug("New data from KEBA wallbox requested.")
 
     async def async_set_energy(self, param):
         """Set energy target in async way."""
