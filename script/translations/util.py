@@ -11,9 +11,7 @@ def get_base_arg_parser():
     """Get a base argument parser."""
     parser = argparse.ArgumentParser(description="Home Assistant Translations")
     parser.add_argument(
-        "action",
-        type=str,
-        choices=["check", "develop", "download", "migrate", "validate", "upload"],
+        "action", type=str, choices=["develop", "download", "migrate", "upload"],
     )
     parser.add_argument("--debug", action="store_true", help="Enable log output")
     return parser

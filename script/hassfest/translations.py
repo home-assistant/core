@@ -1,10 +1,11 @@
-"""Check translation files."""
+"""Validate integration translation files."""
 import json
+from typing import Dict
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from .const import INTEGRATIONS_DIR
+from .model import Integration
 
 
 def data_entry_schema(*, require_title: bool, require_step_title: bool):
@@ -59,39 +60,31 @@ AUTH_SCHEMA = vol.Schema(
 ONBOARDING_SCHEMA = vol.Schema({vol.Required("area"): {str: str}})
 
 
-def run():
-    """Check all integrations."""
-    errors = []
+def validate_translation_file(integration: Integration):
+    """Validate translation files for integration."""
+    strings_file = integration.path / "strings.json"
 
-    for integration in INTEGRATIONS_DIR.iterdir():
-        strings_file = integration / "strings.json"
-        if not strings_file.is_file():
-            continue
+    if not strings_file.is_file():
+        return
 
-        strings = json.loads(strings_file.read_text())
+    strings = json.loads(strings_file.read_text())
 
-        if integration.name == "auth":
-            schema = AUTH_SCHEMA
-        elif integration.name == "onboarding":
-            schema = ONBOARDING_SCHEMA
-        else:
-            schema = STRINGS_SCHEMA
+    if integration.domain == "auth":
+        schema = AUTH_SCHEMA
+    elif integration.domain == "onboarding":
+        schema = ONBOARDING_SCHEMA
+    else:
+        schema = STRINGS_SCHEMA
 
-        try:
-            schema(strings)
-        except vol.Invalid as err:
-            errors.append(
-                f"{integration.name} - invalid strings.json: {humanize_error(strings, err)}"
-            )
+    try:
+        schema(strings)
+    except vol.Invalid as err:
+        integration.add_error(
+            "translations", f"Invalid strings.json: {humanize_error(strings, err)}"
+        )
 
-    if not errors:
-        return 0
 
-    print(f"Found {len(errors)} errors")
-    print()
-
-    for error in errors:
-        print(error)
-        print()
-
-    return 1
+def validate(integrations: Dict[str, Integration], config):
+    """Handle JSON files inside integrations."""
+    for integration in integrations.values():
+        validate_translation_file(integration)

@@ -100,10 +100,6 @@ stages:
       displayName: 'Validate manifests'
     - script: |
         . venv/bin/activate
-        python -m script.translations validate
-      displayName: 'Validate translations'
-    - script: |
-        . venv/bin/activate
         ./script/gen_requirements_all.py validate
       displayName: 'requirements_all validate'
   - job: 'CheckFormat'
