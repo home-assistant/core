@@ -252,8 +252,11 @@ def async_enable_logging(
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
-    # AIS fix
-    return
+    # AIS dom fix
+    # return
+    log_file = (
+        "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/dysk_1234/ais.log"
+    )
 
     # Log errors to a file if we have write access to file or config dir
     if log_file is None:

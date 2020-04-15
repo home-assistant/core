@@ -29,7 +29,6 @@ G_DB_SETTINGS_INFO_FILE = (
 )
 G_LOG_SETTINGS_INFO = None
 G_DB_SETTINGS_INFO = None
-G_LOG_PROCESS = None
 
 
 @asyncio.coroutine
@@ -107,7 +106,6 @@ async def _async_refresh_files(hass):
 
 async def _async_change_logger_settings(hass, call):
     # on logger change
-    global G_LOG_PROCESS
     if "log_drive" not in call.data:
         _LOGGER.error("No log_drive")
         return
@@ -126,12 +124,6 @@ async def _async_change_logger_settings(hass, call):
         "0",
         {"logDrive": log_drive, "logLevel": log_level},
     )
-
-    # Stop current log process
-    if G_LOG_PROCESS is not None:
-        _LOGGER.info("terminate log process pid: " + str(G_LOG_PROCESS.pid))
-        G_LOG_PROCESS.terminate()
-        G_LOG_PROCESS = None
 
     # check if drive is -
     if log_drive == "-":
@@ -163,13 +155,53 @@ async def _async_change_logger_settings(hass, call):
         (err_path_exists and os.access(file_log_path, os.W_OK))
         or (not err_path_exists and os.access(err_dir, os.W_OK))
     ):
-        command = "pm2 logs >> " + file_log_path
-        G_LOG_PROCESS = subprocess.Popen(command, shell=True)
-        _LOGGER.info("start log process pid: " + str(G_LOG_PROCESS.pid))
+        # replace the current handler on the root logger
+        logger = logging.getLogger("")  # root logger
+        for hdlr in logger.handlers[:]:  # remove all old handlers
+            logger.removeHandler(hdlr)
+
+        from homeassistant.util.logging import AsyncHandler
+
+        hass.data["logging"] = file_log_path
+        err_handler = logging.FileHandler(file_log_path, mode="w", delay=True)
+        async_handler = AsyncHandler(hass.loop, err_handler)
+
+        fmt = "%(asctime)s %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
+        datefmt = "%Y-%m-%d %H:%M:%S"
+        try:
+            from colorlog import ColoredFormatter
+
+            # basicConfig must be called after importing colorlog in order to
+            # ensure that the handlers it sets up wraps the correct streams.
+            logging.basicConfig(level=logging.INFO)
+
+            colorfmt = f"%(log_color)s{fmt}%(reset)s"
+            logging.getLogger().handlers[0].setFormatter(
+                ColoredFormatter(
+                    colorfmt,
+                    datefmt=datefmt,
+                    reset=True,
+                    log_colors={
+                        "DEBUG": "cyan",
+                        "INFO": "green",
+                        "WARNING": "yellow",
+                        "ERROR": "red",
+                        "CRITICAL": "red",
+                    },
+                )
+            )
+        except ImportError:
+            pass
+
+        err_handler.setLevel(logging.getLevelName(log_level.upper()))
+        err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
+
+        logger.addHandler(async_handler)  # type: ignore
+        logger.setLevel(logging.getLevelName(log_level.upper()))
         info = "Logi systemowe zapisywane do pliku log na " + log_drive
         hass.states.async_set(
             "sensor.ais_logs_settings_info",
-            str(G_LOG_PROCESS.pid),
+            "0",
             {"logDrive": log_drive, "logLevel": log_level, "logError": ""},
         )
     else:
@@ -287,10 +319,6 @@ async def _async_check_db_connection(hass, call):
 
 
 async def _async_get_db_log_settings_info(hass, call):
-    global G_LOG_PROCESS
-    on_system_start = False
-    if "on_system_start" in call.data:
-        on_system_start = True
     # on page load
     global G_LOG_SETTINGS_INFO
     global G_DB_SETTINGS_INFO
@@ -323,10 +351,7 @@ async def _async_get_db_log_settings_info(hass, call):
     hass.async_add_job(hass.services.async_call("ais_usb", "ls_flash_drives"))
 
     # set the logs settings info
-    pid = 0
-    if G_LOG_PROCESS is not None:
-        pid = G_LOG_PROCESS.pid
-    hass.states.async_set("sensor.ais_logs_settings_info", str(pid), log_settings)
+    hass.states.async_set("sensor.ais_logs_settings_info", "0", log_settings)
 
     # set the db settings sensor info
     # step - no db url saved
@@ -342,69 +367,6 @@ async def _async_get_db_log_settings_info(hass, call):
         db_settings["dbEngine"] = "SQLite (memory)"
 
     hass.states.async_set("sensor.ais_db_connection_info", db_conn_step, db_settings)
-
-    # enable logs on system start (if set)
-    if on_system_start and G_LOG_SETTINGS_INFO is not None:
-        # try to reconnect the logging to file on start
-        # change log settings
-        # Log errors to a file if we have write access to file or config dir
-        file_log_path = os.path.abspath(
-            "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/"
-            + G_LOG_SETTINGS_INFO["logDrive"]
-            + "/ais.log"
-        )
-
-        err_path_exists = os.path.isfile(file_log_path)
-        from homeassistant.components import ais_usb
-
-        err_path_is_external_drive = ais_usb.is_usb_url_valid_external_drive(
-            file_log_path
-        )
-
-        err_dir = os.path.dirname(file_log_path)
-
-        # Check if we can write to the error log if it exists or that
-        # we can create files in the containing directory if not.
-        if err_path_is_external_drive and (
-            (err_path_exists and os.access(file_log_path, os.W_OK))
-            or (not err_path_exists and os.access(err_dir, os.W_OK))
-        ):
-            command = "pm2 logs >> " + file_log_path
-            G_LOG_PROCESS = subprocess.Popen(command, shell=True)
-            _LOGGER.info("start log process pid: " + str(G_LOG_PROCESS.pid))
-            info = (
-                "Logi systemowe zapisywane do pliku log na "
-                + G_LOG_SETTINGS_INFO["logDrive"]
-            )
-            hass.states.async_set(
-                "sensor.ais_logs_settings_info",
-                str(G_LOG_PROCESS.pid),
-                {
-                    "logDrive": G_LOG_SETTINGS_INFO["logDrive"],
-                    "logLevel": G_LOG_SETTINGS_INFO["logLevel"],
-                    "logError": "",
-                },
-            )
-            # re-set log level
-            hass.async_add_job(
-                hass.services.async_call(
-                    "logger",
-                    "set_default_level",
-                    {"level": G_LOG_SETTINGS_INFO["logLevel"]},
-                )
-            )
-        else:
-            log_error = "Unable to set up log " + file_log_path + " (access denied)"
-            _LOGGER.error(log_error)
-            hass.states.async_set(
-                "sensor.ais_logs_settings_info",
-                "0",
-                {
-                    "logDrive": G_LOG_SETTINGS_INFO["logDrive"],
-                    "logLevel": G_LOG_SETTINGS_INFO["logLevel"],
-                    "logError": log_error,
-                },
-            )
 
 
 async def _async_save_logs_settings_info(log_drive, log_level):
