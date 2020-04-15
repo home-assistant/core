@@ -13,7 +13,7 @@ def get_base_arg_parser():
     parser.add_argument(
         "action",
         type=str,
-        choices=["download", "clean", "upload", "develop", "migrate"],
+        choices=["clean", "develop", "download", "migrate", "upload"],
     )
     parser.add_argument("--debug", action="store_true", help="Enable log output")
     return parser
