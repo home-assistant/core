@@ -5,7 +5,7 @@ import concurrent.futures
 import functools
 import logging
 import threading
-import traceback
+from traceback import extract_stack
 from typing import Any, Callable, Coroutine
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,7 +72,7 @@ def check_loop() -> None:
 
     found_frame = None
 
-    for frame in reversed(traceback.extract_stack()):
+    for frame in reversed(extract_stack()):
         for path in ("custom_components/", "homeassistant/components/"):
             try:
                 index = frame.filename.index(path)

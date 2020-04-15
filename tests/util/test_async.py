@@ -176,7 +176,7 @@ async def test_check_loop_async():
 async def test_check_loop_async_integration(caplog):
     """Test check_loop detects when called from event loop from integration context."""
     with patch(
-        "traceback.extract_stack",
+        "homeassistant.util.async_.extract_stack",
         return_value=[
             Mock(
                 filename="/home/paulus/homeassistant/core.py",
@@ -205,7 +205,7 @@ async def test_check_loop_async_integration(caplog):
 async def test_check_loop_async_custom(caplog):
     """Test check_loop detects when called from event loop with custom component context."""
     with patch(
-        "traceback.extract_stack",
+        "homeassistant.util.async_.extract_stack",
         return_value=[
             Mock(
                 filename="/home/paulus/homeassistant/core.py",
