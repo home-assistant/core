@@ -177,6 +177,7 @@ async def test_controller_setup(hass):
     assert controller.mac is None
 
     assert controller.signal_update == "unifi-update-1.2.3.4-site_id"
+    assert controller.signal_remove == "unifi-remove-1.2.3.4-site_id"
     assert controller.signal_options_update == "unifi-options-1.2.3.4-site_id"
 
 
