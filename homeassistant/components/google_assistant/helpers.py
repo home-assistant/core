@@ -379,7 +379,7 @@ class GoogleEntity:
 
     @callback
     def might_2fa_traits(self) -> bool:
-        """Return if the entity might encounter 2FA."""
+        """Return if the entity might encounter 2FA based on just traits."""
         state = self.state
         domain = state.domain
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
