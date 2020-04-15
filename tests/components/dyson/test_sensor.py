@@ -18,20 +18,15 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
+from .common import load_mock_device
+
 from tests.common import get_test_home_assistant
 
 
 def _get_dyson_purecool_device():
     """Return a valid device provide by Dyson web services."""
     device = mock.Mock(spec=DysonPureCool)
-    device.serial = "XX-XXXXX-XX"
-    device.name = "Living room"
-    device.connect = mock.Mock(return_value=True)
-    device.auto_connect = mock.Mock(return_value=True)
-    device.environmental_state.humidity = 42
-    device.environmental_state.temperature = 280
-    device.state.hepa_filter_state = 90
-    device.state.carbon_filter_state = 80
+    load_mock_device(device)
     return device
 
 
@@ -61,10 +56,9 @@ def _get_device_without_state():
 def _get_with_state():
     """Return a valid device with state values."""
     device = mock.Mock()
+    load_mock_device(device)
     device.name = "Device_name"
-    device.state = mock.Mock()
     device.state.filter_life = 100
-    device.environmental_state = mock.Mock()
     device.environmental_state.dust = 5
     device.environmental_state.humidity = 45
     device.environmental_state.temperature = 295
@@ -76,14 +70,10 @@ def _get_with_state():
 def _get_with_standby_monitoring():
     """Return a valid device with state but with standby monitoring disable."""
     device = mock.Mock()
+    load_mock_device(device)
     device.name = "Device_name"
-    device.state = mock.Mock()
-    device.state.filter_life = 100
-    device.environmental_state = mock.Mock()
-    device.environmental_state.dust = 5
     device.environmental_state.humidity = 0
     device.environmental_state.temperature = 0
-    device.environmental_state.volatil_organic_compounds = 2
 
     return device
 
