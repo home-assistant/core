@@ -1,7 +1,7 @@
 """The tests for the AsusWrt sensor platform."""
-from collections import namedtuple
 from datetime import datetime, timedelta
 
+from aioasuswrt.asuswrt import Device
 from asynctest import CoroutineMock, patch
 
 from homeassistant.components import sensor
@@ -12,7 +12,6 @@ from homeassistant.components.asuswrt import (
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_SENSORS,
-    DATA_ASUSWRT,
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -42,8 +41,6 @@ VALID_CONFIG_ROUTER_SSH = {
         ],
     }
 }
-
-Device = namedtuple("Device", ["mac", "ip", "name"])
 
 MOCK_DEVICES = {
     "a1:b1:c1:d1:e1:f1": Device("a1:b1:c1:d1:e1:f1", "192.168.1.2", "Test"),
