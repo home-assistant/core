@@ -1,5 +1,6 @@
 """Classes to help gather user submissions."""
 import abc
+import asyncio
 import logging
 from typing import Any, Dict, List, Optional, cast
 import uuid
@@ -53,7 +54,17 @@ class FlowManager(abc.ABC):
     def __init__(self, hass: HomeAssistant,) -> None:
         """Initialize the flow manager."""
         self.hass = hass
+        self._initializing: Dict[str, List[asyncio.Future]] = {}
         self._progress: Dict[str, Any] = {}
+
+    async def async_wait_init_flow_finish(self, handler: str) -> None:
+        """Wait till all flows in progress are initialized."""
+        current = self._initializing.get(handler)
+
+        if not current:
+            return
+
+        await asyncio.wait(current)
 
     @abc.abstractmethod
     async def async_create_flow(
@@ -94,8 +105,13 @@ class FlowManager(abc.ABC):
         """Start a configuration flow."""
         if context is None:
             context = {}
+
+        init_done: asyncio.Future = asyncio.Future()
+        self._initializing.setdefault(handler, []).append(init_done)
+
         flow = await self.async_create_flow(handler, context=context, data=data)
         if not flow:
+            self._initializing[handler].remove(init_done)
             raise UnknownFlow("Flow was not created")
         flow.hass = self.hass
         flow.handler = handler
@@ -103,7 +119,12 @@ class FlowManager(abc.ABC):
         flow.context = context
         self._progress[flow.flow_id] = flow
 
-        result = await self._async_handle_step(flow, flow.init_step, data)
+        try:
+            result = await self._async_handle_step(
+                flow, flow.init_step, data, init_done
+            )
+        finally:
+            self._initializing[handler].remove(init_done)
 
         if result["type"] != RESULT_TYPE_ABORT:
             await self.async_post_init(flow, result)
@@ -154,13 +175,19 @@ class FlowManager(abc.ABC):
             raise UnknownFlow
 
     async def _async_handle_step(
-        self, flow: Any, step_id: str, user_input: Optional[Dict]
+        self,
+        flow: Any,
+        step_id: str,
+        user_input: Optional[Dict],
+        step_done: Optional[asyncio.Future] = None,
     ) -> Dict:
         """Handle a step of a flow."""
         method = f"async_step_{step_id}"
 
         if not hasattr(flow, method):
             self._progress.pop(flow.flow_id)
+            if step_done:
+                step_done.set_result(None)
             raise UnknownStep(
                 f"Handler {flow.__class__.__name__} doesn't support step {step_id}"
             )
@@ -171,6 +198,13 @@ class FlowManager(abc.ABC):
             result = _create_abort_data(
                 flow.flow_id, flow.handler, err.reason, err.description_placeholders
             )
+
+        # Mark the step as done.
+        # We do this before calling async_finish_flow because config entries will hit a
+        # circular dependency where async_finish_flow sets up new entry, which needs the
+        # integration to be set up, which is waiting for init to be done.
+        if step_done:
+            step_done.set_result(None)
 
         if result["type"] not in (
             RESULT_TYPE_FORM,
