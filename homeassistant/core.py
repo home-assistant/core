@@ -36,7 +36,7 @@ from async_timeout import timeout
 import attr
 import voluptuous as vol
 
-from homeassistant import loader, util
+from homeassistant import block_async_io, loader, util
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -76,6 +76,9 @@ from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitS
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntries
     from homeassistant.components.http import HomeAssistantHTTP
+
+
+block_async_io.enable()
 
 # pylint: disable=invalid-name
 T = TypeVar("T")
