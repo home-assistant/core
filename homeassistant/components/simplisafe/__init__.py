@@ -478,11 +478,9 @@ class SimpliSafe:
             # they will trigger SIMPLISAFE_NOTIFICATION events before other critical
             # components – such as automation – are ready. Therefore, we schedule an
             # update of notifications as soon as HASS is fully started:
-            def process_notifications(_):
-                self._async_process_new_notifications(system)
-
             self._hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, process_notifications
+                EVENT_HOMEASSISTANT_START,
+                lambda event: self._async_process_new_notifications(system),
             )
 
         async def refresh(event_time):
