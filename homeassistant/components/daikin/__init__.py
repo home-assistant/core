@@ -17,6 +17,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
 from . import config_flow  # noqa: F401
+from .const import TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +92,7 @@ async def daikin_api_setup(hass, host):
 
     session = hass.helpers.aiohttp_client.async_get_clientsession()
     try:
-        with timeout(10):
+        with timeout(TIMEOUT):
             device = Appliance(host, session)
             await device.init()
     except asyncio.TimeoutError:
