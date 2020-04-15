@@ -22,9 +22,10 @@ from pysmartthings import (
     Subscription,
     SubscriptionEntity,
 )
+from pysmartthings.installedapp import format_install_url
 
 from homeassistant.components import webhook
-from homeassistant.config_entries import ENTRY_STATE_SETUP_ERROR
+from homeassistant.config_entries import ENTRY_STATE_SETUP_ERROR, ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -37,6 +38,7 @@ from .const import (
     APP_NAME_PREFIX,
     APP_OAUTH_CLIENT_NAME,
     APP_OAUTH_SCOPES,
+    CONF_APP_ID,
     CONF_CLOUDHOOK_URL,
     CONF_INSTALLED_APP_ID,
     CONF_INSTANCE_ID,
@@ -400,6 +402,25 @@ async def smartapp_install(hass: HomeAssistantType, req, resp, app):
     )
 
 
+def create_reauthorize_notification(hass: HomeAssistantType, entry: ConfigEntry):
+    """Create a notification to reauthorize the SmartApp."""
+    reauthorize_url = format_install_url(
+        entry.data[CONF_APP_ID], entry.data[CONF_LOCATION_ID]
+    )
+    hass.components.persistent_notification.async_create(
+        "Home Assistant was unable to obtain a new refresh token. Please "
+        f"[click here to reauthorize the SmartApp]({reauthorize_url}). "
+        "On the window that opens, click 'Done' followed by 'Allow', and then close the window.",
+        title=f"Reauthorize SmartThings: {entry.title}",
+        notification_id=f"{DOMAIN}_{entry.entry_id}",
+    )
+
+
+def dismiss_reauthorize_notification(hass: HomeAssistantType, entry: ConfigEntry):
+    """Dismiss the notification to reauthorize."""
+    hass.components.persistent_notification.async_dismiss(f"{DOMAIN}_{entry.entry_id}")
+
+
 async def smartapp_update(hass: HomeAssistantType, req, resp, app):
     """Handle a SmartApp update and either update the entry or continue the flow."""
     entry = next(
@@ -422,6 +443,7 @@ async def smartapp_update(hass: HomeAssistantType, req, resp, app):
         )
         # Try reloading the entry if the token was updated and it failed to setup
         if entry.state == ENTRY_STATE_SETUP_ERROR:
+            dismiss_reauthorize_notification(hass, entry)
             await hass.config_entries.async_reload(entry.entry_id)
 
     flow = next(

@@ -37,6 +37,7 @@ from .const import (
     TOKEN_REFRESH_INTERVAL,
 )
 from .smartapp import (
+    create_reauthorize_notification,
     setup_smartapp,
     setup_smartapp_endpoint,
     smartapp_sync_subscriptions,
@@ -145,18 +146,20 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     except APIInvalidGrant as ex:
         _LOGGER.error(
-            "Unable to obtain a new refresh token for '%s': %s - Reauthorize the SmartApp inside the SmartThings mobile app",
+            "Unable to obtain a new refresh token for '%s': %s - Reauthorize the SmartApp",
             entry.title,
             ex,
         )
+        create_reauthorize_notification(hass, entry)
         return False
 
     except ClientResponseError as ex:
         if ex.status in (HTTP_UNAUTHORIZED, HTTP_FORBIDDEN):
             _LOGGER.exception(
-                "Unable to setup '%s' due to a security issue - Reauthorize the SmartApp inside the SmartThings mobile app",
+                "Unable to setup '%s' due to a security issue - Reauthorize the SmartApp",
                 entry.title,
             )
+            create_reauthorize_notification(hass, entry)
             return False
         # Retry for other types of errors
         _LOGGER.debug(ex, exc_info=True)
