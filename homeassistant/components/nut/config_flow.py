@@ -94,7 +94,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
 
 def _format_host_port_alias(user_input):
-    """Format a host, port, and alias."""
+    """Format a host, port, and alias so it can be used for comparison or display."""
     host = user_input[CONF_HOST]
     port = user_input[CONF_PORT]
     alias = user_input.get(CONF_ALIAS)
