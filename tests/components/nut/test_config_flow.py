@@ -74,6 +74,14 @@ async def test_form_user_one_ups(hass):
 async def test_form_user_multiple_ups(hass):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": "2.2.2.2", "port": 123, "resources": ["battery.charge"]},
+        options={CONF_RESOURCES: ["battery.charge"]},
+    )
+    config_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -134,7 +142,7 @@ async def test_form_user_multiple_ups(hass):
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 2
 
 
 async def test_form_import(hass):
