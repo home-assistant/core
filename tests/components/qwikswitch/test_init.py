@@ -262,6 +262,7 @@ async def test_failed_update_devices(hass, aioclient_mock):
     listen_mock = MockLongPollSideEffect()
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
     assert not await async_setup_component(hass, QWIKSWITCH, config)
+    listen_mock.stop()
 
 
 async def test_single_invalid_sensor(hass, aioclient_mock, qs_devices):
@@ -284,6 +285,7 @@ async def test_single_invalid_sensor(hass, aioclient_mock, qs_devices):
     assert hass.states.get("sensor.ss1")
     assert not hass.states.get("sensor.ss2")
     assert hass.states.get("sensor.ss3")
+    listen_mock.stop()
 
 
 async def test_non_binary_sensor_with_binary_args(
@@ -312,6 +314,7 @@ async def test_non_binary_sensor_with_binary_args(
     await hass.async_block_till_done()
     assert hass.states.get("sensor.ss1")
     assert "invert should only be used for binary_sensors" in caplog.text
+    listen_mock.stop()
 
 
 async def test_non_relay_switch(hass, aioclient_mock, qs_devices, caplog):
@@ -326,6 +329,7 @@ async def test_non_relay_switch(hass, aioclient_mock, qs_devices, caplog):
     await hass.async_block_till_done()
     assert not hass.states.get("switch.dim_3")
     assert "You specified a switch that is not a relay @a00003" in caplog.text
+    listen_mock.stop()
 
 
 async def test_unknown_device(hass, aioclient_mock, qs_devices, caplog):
@@ -343,3 +347,39 @@ async def test_unknown_device(hass, aioclient_mock, qs_devices, caplog):
     assert not hass.states.get("light.light_2")
     assert hass.states.get("light.dim_3")
     assert "Ignored unknown QSUSB device" in caplog.text
+    listen_mock.stop()
+
+
+async def test_no_discover_info(hass, hass_storage, aioclient_mock, caplog):
+    """Test a binary sensor device."""
+    config = {
+        "qwikswitch": {},
+        "light": {"platform": "qwikswitch"},
+        "switch": {"platform": "qwikswitch"},
+        "sensor": {"platform": "qwikswitch"},
+        "binary_sensor": {"platform": "qwikswitch"},
+    }
+    aioclient_mock.get(
+        "http://127.0.0.1:2020/&device",
+        json=[
+            {
+                "id": "@a00001",
+                "name": "Switch 1",
+                "type": "ERROR_TYPE",
+                "val": "OFF",
+                "time": "1522777506",
+                "rssi": "51%",
+            },
+        ],
+    )
+    listen_mock = MockLongPollSideEffect()
+    aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
+    assert await async_setup_component(hass, "light", config)
+    assert await async_setup_component(hass, "switch", config)
+    assert await async_setup_component(hass, "sensor", config)
+    assert await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+    assert "Error while setting up qwikswitch platform" not in caplog.text
+    listen_mock.stop()
