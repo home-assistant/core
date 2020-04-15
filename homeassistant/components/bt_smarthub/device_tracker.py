@@ -27,7 +27,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass, config):
     """Return a BT Smart Hub scanner if successful."""
-    scanner = BTSmartHubScanner(config[DOMAIN])
+    info = config[DOMAIN]
+    smarthub_client = BTSmartHub(
+        router_ip=info[CONF_HOST],
+        smarthub_model=info.get(CONF_SMARTHUB_MODEL)
+    )
+
+    scanner = BTSmartHubScanner(smarthub_client)
 
     return scanner if scanner.success_init else None
 
@@ -35,23 +41,18 @@ def get_scanner(hass, config):
 class BTSmartHubScanner(DeviceScanner):
     """This class queries a BT Smart Hub."""
 
-    def __init__(self, config):
+    def __init__(self, smarthub_client):
         """Initialise the scanner."""
-        _LOGGER.debug("Initialising BT Smart Hub")
-        self.host = config[CONF_HOST]
-        self.smarthub_model = config.get(CONF_SMARTHUB_MODEL)
+        self.smarthub = smarthub_client
         self.last_results = {}
         self.success_init = False
-        self.smarthub = BTSmartHub(
-            router_ip=self.host, smarthub_model=self.smarthub_model
-        )
 
         # Test the router is accessible
         data = self.get_bt_smarthub_data()
         if data:
             self.success_init = True
         else:
-            _LOGGER.info("Failed to connect to %s", self.host)
+            _LOGGER.info("Failed to connect to %s", self.smarthub.router_ip)
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
