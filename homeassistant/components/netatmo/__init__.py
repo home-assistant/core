@@ -92,6 +92,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass, entry
     )
 
+    # Set unique id if non was set (migration)
+    if not entry.unique_id:
+        hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
+
     hass.data[DOMAIN][entry.entry_id] = {
         AUTH: api.ConfigEntryNetatmoAuth(hass, entry, implementation)
     }
@@ -100,6 +104,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
+
+    # entry.add_update_listener(async_config_entry_updated)
 
     async def unregister_webhook(event):
         _LOGGER.debug("Unregister Netatmo webhook (%s)", entry.data[CONF_WEBHOOK_ID])
