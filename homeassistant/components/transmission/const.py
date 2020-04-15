@@ -4,7 +4,6 @@ DOMAIN = "transmission"
 
 SENSOR_TYPES = {
     "active_torrents": ["Active Torrents", "Torrents"],
-    "current_status": ["Status", None],
     "paused_torrents": ["Paused Torrents", "Torrents"],
     "total_torrents": ["Total Torrents", "Torrents"],
     "completed_torrents": ["Completed Torrents", "Torrents"],

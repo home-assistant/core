@@ -20,6 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     dev = [
         TransmissionSpeedSensor(tm_client, name, "Down Speed", "download"),
         TransmissionSpeedSensor(tm_client, name, "Up Speed", "upload"),
+        TransmissionStatusSensor(tm_client, name, "Status"),
     ]
     for sensor_type in SENSOR_TYPES:
         dev.append(
@@ -35,17 +36,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(dev, True)
 
 
-class TransmissionSpeedSensor(Entity):
-    """Representation of a Transmission speed sensor."""
+class TransmissionBaseSensor(Entity):
+    """A base class for all Transmission sensors."""
 
-    def __init__(self, tm_client, client_name, sensor_name, speed_type):
+    def __init__(self, tm_client, client_name, sensor_name, sub_type=None):
         """Initialize the sensor."""
         self._tm_client = tm_client
         self._client_name = client_name
         self._name = sensor_name
-        self._speed_type = speed_type
+        self._sub_type = sub_type
         self._state = None
-        self.unsub_update = None
+        self._unsub_update = None
 
     @property
     def name(self):
@@ -68,18 +69,13 @@ class TransmissionSpeedSensor(Entity):
         return False
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return DATA_RATE_MEGABYTES_PER_SECOND
-
-    @property
     def available(self):
         """Could the device be accessed during the last update call."""
         return self._tm_client.api.available
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-        self.unsub_update = async_dispatcher_connect(
+        self._unsub_update = async_dispatcher_connect(
             self.hass,
             self._tm_client.api.signal_update,
             self._schedule_immediate_update,
@@ -91,9 +87,18 @@ class TransmissionSpeedSensor(Entity):
 
     async def will_remove_from_hass(self):
         """Unsubscribe from update dispatcher."""
-        if self.unsub_update:
-            self.unsub_update()
-            self.unsub_update = None
+        if self._unsub_update:
+            self._unsub_update()
+            self._unsub_update = None
+
+
+class TransmissionSpeedSensor(TransmissionBaseSensor):
+    """Representation of a Transmission speed sensor."""
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return DATA_RATE_MEGABYTES_PER_SECOND
 
     def update(self):
         """Get the latest data from Transmission and updates the state."""
@@ -101,11 +106,32 @@ class TransmissionSpeedSensor(Entity):
         if data:
             mb_spd = (
                 float(data.downloadSpeed)
-                if self._speed_type == "download"
+                if self._sub_type == "download"
                 else float(data.uploadSpeed)
             )
             mb_spd = mb_spd / 1024 / 1024
             self._state = round(mb_spd, 2 if mb_spd < 0.1 else 1)
+
+
+class TransmissionStatusSensor(TransmissionBaseSensor):
+    """Representation of a Transmission status sensor."""
+
+    def update(self):
+        """Get the latest data from Transmission and updates the state."""
+        data = self._tm_client.api.data
+        if data:
+            upload = data.uploadSpeed
+            download = data.downloadSpeed
+            if upload > 0 and download > 0:
+                self._state = "Up/Down"
+            elif upload > 0 and download == 0:
+                self._state = "Seeding"
+            elif upload == 0 and download > 0:
+                self._state = "Downloading"
+            else:
+                self._state = STATE_IDLE
+        else:
+            self._state = None
 
 
 class TransmissionSensor(Entity):
@@ -213,21 +239,6 @@ class TransmissionSensor(Entity):
             self._state = self._tm_client.api.get_completed_torrent_count()
         elif self.type == "started_torrents":
             self._state = self._tm_client.api.get_started_torrent_count()
-
-        if self.type == "current_status":
-            if self._data:
-                upload = self._data.uploadSpeed
-                download = self._data.downloadSpeed
-                if upload > 0 and download > 0:
-                    self._state = "Up/Down"
-                elif upload > 0 and download == 0:
-                    self._state = "Seeding"
-                elif upload == 0 and download > 0:
-                    self._state = "Downloading"
-                else:
-                    self._state = STATE_IDLE
-            else:
-                self._state = None
 
         if self._data:
             if self.type == "active_torrents":
