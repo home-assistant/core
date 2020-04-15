@@ -48,3 +48,5 @@ def run():
     print()
     print("Updating keys")
     pprint(lokalise.keys_bulk_update(updates).json())
+
+    return 0

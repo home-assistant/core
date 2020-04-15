@@ -57,8 +57,5 @@
         "title": "UniFi options 3/3"
       }
     }
-  },
-  "error": {
-    "unknown_client_mac": "No client available in UniFi on that MAC address"
   }
 }

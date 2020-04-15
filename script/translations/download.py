@@ -149,3 +149,5 @@ def run():
     run_download_docker()
 
     write_integration_translations()
+
+    return 0
