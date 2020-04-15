@@ -201,7 +201,7 @@ async def _async_change_logger_settings(hass, call):
         info = "Logi systemowe zapisywane do pliku log na " + log_drive
         hass.states.async_set(
             "sensor.ais_logs_settings_info",
-            "0",
+            "1",
             {"logDrive": log_drive, "logLevel": log_level, "logError": ""},
         )
     else:
@@ -351,7 +351,8 @@ async def _async_get_db_log_settings_info(hass, call):
     hass.async_add_job(hass.services.async_call("ais_usb", "ls_flash_drives"))
 
     # set the logs settings info
-    hass.states.async_set("sensor.ais_logs_settings_info", "0", log_settings)
+    # TODO check if logs are on
+    hass.states.async_set("sensor.ais_logs_settings_info", "1", log_settings)
 
     # set the db settings sensor info
     # step - no db url saved
