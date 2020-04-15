@@ -73,8 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await nws_data.async_set_station(station)
     await nws_data.async_update()
 
-    scan_time = DEFAULT_SCAN_INTERVAL
-    async_track_time_interval(hass, nws_data.async_update, scan_time)
+    async_track_time_interval(hass, nws_data.async_update, DEFAULT_SCAN_INTERVAL)
 
     for component in PLATFORMS:
         hass.async_create_task(
