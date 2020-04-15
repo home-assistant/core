@@ -209,16 +209,6 @@ def find_resources_in_config_entry(config_entry):
     return config_entry.data[CONF_RESOURCES]
 
 
-def format_host_port_alias(user_input):
-    """Format a host, port, and alias."""
-    host = user_input[CONF_HOST]
-    port = user_input[CONF_PORT]
-    alias = user_input.get(CONF_ALIAS)
-    if alias:
-        return f"{alias}@{host}:{port}"
-    return f"{host}:{port}"
-
-
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     unload_ok = all(
