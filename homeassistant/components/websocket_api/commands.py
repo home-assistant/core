@@ -10,7 +10,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, Unauth
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.loader import async_get_integration
+from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from . import const, decorators, messages
 
@@ -28,7 +28,8 @@ def async_register_commands(hass, async_reg):
     async_reg(hass, handle_get_config)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
-    async_reg(hass, handle_integrations)
+    async_reg(hass, handle_manifest_list)
+    async_reg(hass, handle_manifest_get)
 
 
 def pong_message(iden):
@@ -188,27 +189,34 @@ def handle_get_config(hass, connection, msg):
     connection.send_message(messages.result_message(msg["id"], hass.config.as_dict()))
 
 
-@decorators.websocket_command(
-    {vol.Required("type"): "integrations", vol.Optional("filter"): [str]}
-)
+@decorators.websocket_command({vol.Required("type"): "manifest/list"})
 @decorators.async_response
-async def handle_integrations(hass, connection, msg):
+async def handle_manifest_list(hass, connection, msg):
     """Handle integrations command."""
-    integrations = [
-        domain
-        for domain in hass.config.components
-        # Filter out platforms.
-        if "." not in domain
-    ]
-    if "filter" in msg:
-        integrations = [domain for domain in integrations if domain in msg["filter"]]
-
     integrations = await asyncio.gather(
-        *[async_get_integration(hass, domain) for domain in integrations]
+        *[
+            async_get_integration(hass, domain)
+            for domain in hass.config.components
+            # Filter out platforms.
+            if "." not in domain
+        ]
     )
     connection.send_result(
         msg["id"], [integration.manifest for integration in integrations]
     )
+
+
+@decorators.websocket_command(
+    {vol.Required("type"): "manifest/get", vol.Required("integration"): str}
+)
+@decorators.async_response
+async def handle_manifest_get(hass, connection, msg):
+    """Handle integrations command."""
+    try:
+        integration = await async_get_integration(hass, msg["integration"])
+        connection.send_result(msg["id"], integration.manifest)
+    except IntegrationNotFound:
+        connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Integration not found")
 
 
 @callback

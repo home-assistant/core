@@ -470,12 +470,12 @@ async def test_render_template_returns_with_match_all(
     assert msg["success"]
 
 
-async def test_integrations(hass, websocket_client):
-    """Test loading integrations."""
+async def test_manifest_list(hass, websocket_client):
+    """Test loading manifests."""
     http = await async_get_integration(hass, "http")
     websocket_api = await async_get_integration(hass, "websocket_api")
 
-    await websocket_client.send_json({"id": 5, "type": "integrations"})
+    await websocket_client.send_json({"id": 5, "type": "manifest/list"})
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 5
@@ -486,14 +486,28 @@ async def test_integrations(hass, websocket_client):
         websocket_api.manifest,
     ]
 
+
+async def test_manifest_get(hass, websocket_client):
+    """Test getting a manifest."""
+    hue = await async_get_integration(hass, "hue")
+
     await websocket_client.send_json(
-        {"id": 6, "type": "integrations", "filter": ["websocket_api"]}
+        {"id": 6, "type": "manifest/get", "integration": "hue"}
     )
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 6
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
-    assert sorted(msg["result"], key=lambda manifest: manifest["domain"]) == [
-        websocket_api.manifest,
-    ]
+    assert msg["result"] == hue.manifest
+
+    # Non existing
+    await websocket_client.send_json(
+        {"id": 7, "type": "manifest/get", "integration": "non_existing"}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
