@@ -310,14 +310,6 @@ class TransmissionData:
             self.hass.bus.fire("transmission_started_torrent", {"name": var})
         self.started_torrents = actual_started_torrents
 
-    def get_started_torrent_count(self):
-        """Get the number of started torrents."""
-        return len(self.started_torrents)
-
-    def get_completed_torrent_count(self):
-        """Get the number of completed torrents."""
-        return len(self.completed_torrents)
-
     def start_torrents(self):
         """Start all torrents."""
         self._api.start_all()
