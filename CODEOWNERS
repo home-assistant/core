@@ -77,7 +77,7 @@ homeassistant/components/counter/* @fabaff
 homeassistant/components/cover/* @home-assistant/core
 homeassistant/components/cpuspeed/* @fabaff
 homeassistant/components/cups/* @fabaff
-homeassistant/components/daikin/* @fredrike @rofrantz
+homeassistant/components/daikin/* @fredrike
 homeassistant/components/darksky/* @fabaff
 homeassistant/components/deconz/* @kane610
 homeassistant/components/delijn/* @bollewolle
