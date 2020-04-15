@@ -48,12 +48,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            existing_id = await self.async_set_unique_id(
-                base_unique_id(user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE])
-            )
-            if existing_id:
-                errors["base"] = "already_configured"
-            else:
+            await self.async_set_unique_id(base_unique_id(user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE]))
+            self._abort_if_unique_id_configured()
                 try:
                     info = await validate_input(self.hass, user_input)
                     user_input[CONF_STATION] = info["title"]
