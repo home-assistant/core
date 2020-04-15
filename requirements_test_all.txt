@@ -479,7 +479,7 @@ pychromecast==4.2.0
 pycoolmasternet==0.0.4
 
 # homeassistant.components.daikin
-pydaikin==1.6.2
+pydaikin==1.6.3
 
 # homeassistant.components.deconz
 pydeconz==70
@@ -519,7 +519,7 @@ pyicloud==0.9.6.1
 pyipma==2.0.5
 
 # homeassistant.components.ipp
-pyipp==0.9.2
+pyipp==0.10.1
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
