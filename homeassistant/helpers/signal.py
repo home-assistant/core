@@ -24,9 +24,13 @@ def async_register_signal_handling(hass: HomeAssistant) -> None:
             * queue call to shutdown task
             * re-instate default handler
             """
-            hass.loop.remove_signal_handler(signal.SIGTERM)
-            hass.loop.remove_signal_handler(signal.SIGINT)
-            hass.async_create_task(hass.async_stop(exit_code))
+            if exit_code == 2:
+                # the signal SIGINT - Interrupt, need to be ignored on Android
+                _LOGGER.warning("Ignored SIGTERM")
+                # hass.loop.remove_signal_handler(signal.SIGINT)
+            else:
+                hass.loop.remove_signal_handler(signal.SIGTERM)
+                hass.async_create_task(hass.async_stop(exit_code))
 
         try:
             hass.loop.add_signal_handler(signal.SIGTERM, async_signal_handle, 0)
@@ -34,7 +38,7 @@ def async_register_signal_handling(hass: HomeAssistant) -> None:
             _LOGGER.warning("Could not bind to SIGTERM")
 
         try:
-            hass.loop.add_signal_handler(signal.SIGINT, async_signal_handle, 0)
+            hass.loop.add_signal_handler(signal.SIGINT, async_signal_handle, 2)
         except ValueError:
             _LOGGER.warning("Could not bind to SIGINT")
 

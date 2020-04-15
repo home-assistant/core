@@ -92,4 +92,4 @@ ais_usb:
 zone:
 
 logger:
-  default: info
+  default: warning
