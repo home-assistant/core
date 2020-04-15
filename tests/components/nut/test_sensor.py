@@ -9,7 +9,7 @@ async def test_pr3000rt2u(hass):
     """Test creation of PR3000RT2U sensors."""
 
     await async_init_integration(
-        hass, "192.168.103.12", "PR3000RT2U", ["battery.charge"]
+        hass, "192.168.103.12", "PR3000RT2U", ["battery.charge"], "54:A6:00:B3:00:00"
     )
     registry = await hass.helpers.entity_registry.async_get_registry()
     entry = registry.async_get("sensor.ups1_battery_charge")
@@ -35,11 +35,13 @@ async def test_pr3000rt2u(hass):
 async def test_cp1350c(hass):
     """Test creation of CP1350C sensors."""
 
-    await async_init_integration(hass, "192.168.103.18", "CP1350C", ["battery.charge"])
+    await async_init_integration(
+        hass, "192.168.103.18", "CP1350C", ["battery.charge"], "00:00:00:00:00:00"
+    )
     registry = await hass.helpers.entity_registry.async_get_registry()
     entry = registry.async_get("sensor.ups1_battery_charge")
-    assert entry
-    assert entry.unique_id == "ups1@192.168.103.18:mock_battery.charge"
+    # No unique id
+    assert not entry
 
     state = hass.states.get("sensor.ups1_battery_charge")
 
@@ -61,11 +63,13 @@ async def test_cp1350c(hass):
 async def test_5e850i(hass):
     """Test creation of 5E850I sensors."""
 
-    await async_init_integration(hass, "192.168.103.45", "5E850I", ["battery.charge"])
+    await async_init_integration(
+        hass, "192.168.103.45", "5E850I", ["battery.charge"], "54:A6:00:B3:00:00"
+    )
     registry = await hass.helpers.entity_registry.async_get_registry()
     entry = registry.async_get("sensor.ups1_battery_charge")
     assert entry
-    assert entry.unique_id == "ups1@192.168.103.45:mock_battery.charge"
+    assert entry.unique_id == "ups1_54:A6:00:B3:00:00_battery.charge"
 
     state = hass.states.get("sensor.ups1_battery_charge")
     assert state.state == "100"
@@ -112,7 +116,11 @@ async def test_backupsses600m1(hass):
     """Test creation of BACKUPSES600M1 sensors."""
 
     await async_init_integration(
-        hass, "192.168.103.84", "BACKUPSES600M1", ["battery.charge"]
+        hass,
+        "192.168.103.84",
+        "BACKUPSES600M1",
+        ["battery.charge"],
+        "24:A6:00:B3:00:00",
     )
     registry = await hass.helpers.entity_registry.async_get_registry()
     entry = registry.async_get("sensor.ups1_battery_charge")
@@ -142,12 +150,12 @@ async def test_cp1500pfclcd(hass):
     """Test creation of CP1500PFCLCD sensors."""
 
     await async_init_integration(
-        hass, "192.168.103.99", "CP1500PFCLCD", ["battery.charge"]
+        hass, "192.168.103.99", "CP1500PFCLCD", ["battery.charge"], "24:A6:00:B3:21:00"
     )
     registry = await hass.helpers.entity_registry.async_get_registry()
     entry = registry.async_get("sensor.ups1_battery_charge")
     assert entry
-    assert entry.unique_id == "ups1@192.168.103.99:mock_battery.charge"
+    assert entry.unique_id == "ups1_24:A6:00:B3:21:00_battery.charge"
 
     state = hass.states.get("sensor.ups1_battery_charge")
     assert state.state == "100"
