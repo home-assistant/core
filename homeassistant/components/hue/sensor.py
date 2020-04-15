@@ -145,6 +145,6 @@ SENSOR_CONFIG_MAP.update(
     }
 )
 
-SENSOR_CONFIG_MAP[TYPE_ZLL_PRESENCE].extend(
-    [{"platform": "sensor", "name_format": REMOTE_NAME_FORMAT, "class": HueBattery}]
+SENSOR_CONFIG_MAP.setdefault(TYPE_ZLL_PRESENCE, []).append(
+    {"platform": "sensor", "name_format": REMOTE_NAME_FORMAT, "class": HueBattery}
 )

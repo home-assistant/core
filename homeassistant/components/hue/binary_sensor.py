@@ -41,14 +41,10 @@ class HuePresence(GenericZLLSensor, BinarySensorEntity):
         return attributes
 
 
-SENSOR_CONFIG_MAP.update(
+SENSOR_CONFIG_MAP.setdefault(TYPE_ZLL_PRESENCE, []).append(
     {
-        TYPE_ZLL_PRESENCE: [
-            {
-                "platform": "binary_sensor",
-                "name_format": PRESENCE_NAME_FORMAT,
-                "class": HuePresence,
-            }
-        ]
+        "platform": "binary_sensor",
+        "name_format": PRESENCE_NAME_FORMAT,
+        "class": HuePresence,
     }
 )
