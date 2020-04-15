@@ -2,7 +2,7 @@
 import logging
 from typing import Optional
 
-from pymodbus.exceptions import ConnectionException, ModbusException
+from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Modbus binary sensors."""
     sensors = []
     for entry in config[CONF_INPUTS]:
@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
         )
 
-    add_entities(sensors)
+    async_add_entities(sensors)
 
 
 class ModbusBinarySensor(BinarySensorDevice):
@@ -107,17 +107,15 @@ class ModbusBinarySensor(BinarySensorDevice):
         """Return True if entity is available."""
         return self._available
 
-    def update(self):
+    async def async_update(self):
         """Update the state of the sensor."""
-        try:
-            if self._input_type == CALL_TYPE_COIL:
-                result = self._hub.read_coils(self._slave, self._address, 1)
-            else:
-                result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
-        except ConnectionException:
+        if self._input_type == CALL_TYPE_COIL:
+            result = await self._hub.read_coils(self._slave, self._address, 1)
+        else:
+            result = await self._hub.read_discrete_inputs(self._slave, self._address, 1)
+        if result is None:
             self._available = False
             return
-
         if isinstance(result, (ModbusException, ExceptionResponse)):
             self._available = False
             return

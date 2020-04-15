@@ -3,7 +3,7 @@ import logging
 import struct
 from typing import Any, Optional, Union
 
-from pymodbus.exceptions import ConnectionException, ModbusException
+from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
@@ -89,7 +89,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Modbus sensors."""
     sensors = []
     data_types = {DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"}}
@@ -148,7 +148,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if not sensors:
         return False
-    add_entities(sensors)
+    async_add_entities(sensors)
 
 
 class ModbusRegisterSensor(RestoreEntity):
@@ -219,21 +219,19 @@ class ModbusRegisterSensor(RestoreEntity):
         """Return True if entity is available."""
         return self._available
 
-    def update(self):
+    async def async_update(self):
         """Update the state of the sensor."""
-        try:
-            if self._register_type == CALL_TYPE_REGISTER_INPUT:
-                result = self._hub.read_input_registers(
-                    self._slave, self._register, self._count
-                )
-            else:
-                result = self._hub.read_holding_registers(
-                    self._slave, self._register, self._count
-                )
-        except ConnectionException:
+        if self._register_type == CALL_TYPE_REGISTER_INPUT:
+            result = await self._hub.read_input_registers(
+                self._slave, self._register, self._count
+            )
+        else:
+            result = await self._hub.read_holding_registers(
+                self._slave, self._register, self._count
+            )
+        if result is None:
             self._available = False
             return
-
         if isinstance(result, (ModbusException, ExceptionResponse)):
             self._available = False
             return
@@ -248,7 +246,7 @@ class ModbusRegisterSensor(RestoreEntity):
         if isinstance(val, int):
             self._value = str(val)
             if self._precision > 0:
-                self._value += "." + "0" * self._precision
+                self._value += f".{'0' * self._precision}"
         else:
             self._value = f"{val:.{self._precision}f}"
 
