@@ -183,5 +183,5 @@ def _torrents_info(torrents, statuses=None):
             try:
                 info["eta"] = str(torrent.eta)
             except ValueError:
-                info["eta"] = "unknown"
+                pass
     return infos
