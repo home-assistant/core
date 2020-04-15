@@ -1,6 +1,8 @@
 """Asuswrt status sensors."""
 import logging
 
+from aioasuswrt.asuswrt import AsusWrt
+
 from homeassistant.const import DATA_GIGABYTES, DATA_RATE_MEGABITS_PER_SECOND
 from homeassistant.helpers.entity import Entity
 
@@ -18,6 +20,8 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
     devices = []
 
+    if "devices" in discovery_info:
+        devices.append(AsuswrtDevicesSensor(api))
     if "download" in discovery_info:
         devices.append(AsuswrtTotalRXSensor(api))
     if "upload" in discovery_info:
@@ -35,10 +39,11 @@ class AsuswrtSensor(Entity):
 
     _name = "generic"
 
-    def __init__(self, api):
+    def __init__(self, api: AsusWrt):
         """Initialize the sensor."""
         self._api = api
         self._state = None
+        self._devices = None
         self._rates = None
         self._speed = None
 
@@ -54,8 +59,21 @@ class AsuswrtSensor(Entity):
 
     async def async_update(self):
         """Fetch status from asuswrt."""
+        self._devices = await self._api.async_get_connected_devices()
         self._rates = await self._api.async_get_bytes_total()
         self._speed = await self._api.async_get_current_transfer_rates()
+
+
+class AsuswrtDevicesSensor(AsuswrtSensor):
+    """Representation of a asuswrt download speed sensor."""
+
+    _name = "Asuswrt Devices Connected"
+
+    async def async_update(self):
+        """Fetch new state data for the sensor."""
+        await super().async_update()
+        if self._devices:
+            self._state = len(self._devices)
 
 
 class AsuswrtRXSensor(AsuswrtSensor):
