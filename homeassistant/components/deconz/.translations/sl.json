@@ -28,8 +28,7 @@
                 "description": "Odklenite va\u0161 deCONZ gateway za registracijo s Home Assistant-om. \n1. Pojdite v deCONZ sistemske nastavitve\n2. Pritisnite tipko \"odkleni prehod\"",
                 "title": "Povezava z deCONZ"
             }
-        },
-        "title": "deCONZ Zigbee prehod"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -94,5 +93,6 @@
                 "title": "mo\u017enosti deCONZ"
             }
         }
-    }
+    },
+    "title": "deCONZ Zigbee prehod"
 }

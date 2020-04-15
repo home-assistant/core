@@ -26,8 +26,7 @@
                 "description": "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0438\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u044e \u043e \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0438 \u043a \u043f\u0430\u043d\u0435\u043b\u0438 Konnected.",
                 "title": "\u0423\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e Konnected"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
@@ -106,5 +105,6 @@
             }
         },
         "title": "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u043f\u0430\u043d\u0435\u043b\u0438 \u0441\u0438\u0433\u043d\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u0438 Konnected"
-    }
+    },
+    "title": "Konnected.io"
 }

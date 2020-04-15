@@ -43,7 +43,7 @@
                 "description": "Please install the Home Assistant SmartApp in at least one location and click submit.",
                 "title": "Install SmartApp"
             }
-        },
-        "title": "SmartThings"
-    }
+        }
+    },
+    "title": "SmartThings"
 }

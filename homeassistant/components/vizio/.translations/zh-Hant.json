@@ -36,8 +36,7 @@
                 "description": "\u6b64\u96fb\u8996\u50c5\u9700\u5b58\u53d6\u5bc6\u9470\u3002\u5047\u5982\u60a8\u6b63\u5728\u8a2d\u5b9a\u96fb\u8996\u3001\u5c1a\u672a\u53d6\u5f97\u5bc6\u9470\uff0c\u4fdd\u6301\u7a7a\u767d\u4ee5\u9032\u884c\u914d\u5c0d\u904e\u7a0b\u3002",
                 "title": "\u8a2d\u5b9a VIZIO SmartCast \u8a2d\u5099"
             }
-        },
-        "title": "VIZIO SmartCast"
+        }
     },
     "options": {
         "step": {
@@ -52,5 +51,6 @@
             }
         },
         "title": "\u66f4\u65b0 VIZIO SmartCast \u9078\u9805"
-    }
+    },
+    "title": "VIZIO SmartCast"
 }

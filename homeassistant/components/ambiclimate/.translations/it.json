@@ -17,7 +17,7 @@
                 "description": "Segui questo [link]({authorization_url}) e <b>Consenti</b> accesso al tuo account Ambiclimate, quindi torna indietro e premi <b>Invia</b> qui sotto. \n (Assicurati che l'URL di richiamata specificato sia {cb_url})",
                 "title": "Autenticare Ambiclimate"
             }
-        },
-        "title": "Ambiclimate"
-    }
+        }
+    },
+    "title": "Ambiclimate"
 }

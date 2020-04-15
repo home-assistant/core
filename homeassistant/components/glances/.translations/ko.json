@@ -21,8 +21,7 @@
                 },
                 "title": "Glances \uc124\uce58"
             }
-        },
-        "title": "Glances"
+        }
     },
     "options": {
         "step": {
@@ -33,5 +32,6 @@
                 "description": "Glances \uc635\uc158 \uad6c\uc131"
             }
         }
-    }
+    },
+    "title": "Glances"
 }

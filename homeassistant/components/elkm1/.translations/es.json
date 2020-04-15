@@ -22,7 +22,7 @@
                 "description": "La cadena de direcci\u00f3n debe estar en el formato 'direcci\u00f3n[:puerto]' para 'seguro' y 'no-seguro'. Ejemplo: '192.168.1.1'. El puerto es opcional y el valor predeterminado es 2101 para 'no-seguro' y 2601 para 'seguro'. Para el protocolo serie, la direcci\u00f3n debe tener la forma 'tty[:baudios]'. Ejemplo: '/dev/ttyS1'. Los baudios son opcionales y el valor predeterminado es 115200.",
                 "title": "Conectar con Control Elk-M1"
             }
-        },
-        "title": "Control Elk-M1"
-    }
+        }
+    },
+    "title": "Control Elk-M1"
 }

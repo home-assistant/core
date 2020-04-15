@@ -21,8 +21,7 @@
                 },
                 "title": "Nastavite Glances"
             }
-        },
-        "title": "Glances"
+        }
     },
     "options": {
         "step": {
@@ -33,5 +32,6 @@
                 "description": "Konfiguracija mo\u017enosti za Glances"
             }
         }
-    }
+    },
+    "title": "Glances"
 }

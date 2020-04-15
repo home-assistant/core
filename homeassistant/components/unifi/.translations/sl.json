@@ -21,8 +21,7 @@
                 },
                 "title": "Nastavi UniFi Controller"
             }
-        },
-        "title": "UniFi Krmilnik"
+        }
     },
     "error": {
         "unknown_client_mac": "V UniFi na tem naslovu MAC ni na voljo nobenega odjemalca"
@@ -64,5 +63,6 @@
                 "title": "Mo\u017enosti UniFi 3/3"
             }
         }
-    }
+    },
+    "title": "UniFi Krmilnik"
 }

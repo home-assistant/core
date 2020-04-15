@@ -26,8 +26,7 @@
                 "description": "Continuer d'autoriser sur plex.tv.",
                 "title": "Connecter un serveur Plex"
             }
-        },
-        "title": "Plex"
+        }
     },
     "options": {
         "step": {
@@ -40,5 +39,6 @@
                 "description": "Options pour lecteurs multim\u00e9dia Plex"
             }
         }
-    }
+    },
+    "title": "Plex"
 }

@@ -17,7 +17,7 @@
                 "description": "Nastavite GIO\u015a (poljski glavni in\u0161pektorat za varstvo okolja) integracijo kakovosti zraka. \u010ce potrebujete pomo\u010d pri konfiguraciji si oglejte tukaj: https://www.home-assistant.io/integrations/gios",
                 "title": "GIO\u015a (glavni poljski in\u0161pektorat za varstvo okolja)"
             }
-        },
-        "title": "GIO\u015a"
-    }
+        }
+    },
+    "title": "GIO\u015a"
 }

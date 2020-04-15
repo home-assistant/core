@@ -25,8 +25,7 @@
                 "description": "Vous voulez configurer Home Assistant pour vous connecter au broker MQTT fourni par l\u2019Add-on hass.io {addon} ?",
                 "title": "MQTT Broker via le module compl\u00e9mentaire Hass.io"
             }
-        },
-        "title": "MQTT"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -42,5 +41,6 @@
         "trigger_type": {
             "button_short_press": "\" {subtype} \" press\u00e9"
         }
-    }
+    },
+    "title": "MQTT"
 }

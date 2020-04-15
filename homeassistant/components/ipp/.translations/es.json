@@ -27,7 +27,7 @@
                 "description": "\u00bfQuieres a\u00f1adir la impresora llamada `{name}` a Home Assistant?",
                 "title": "Impresora encontrada"
             }
-        },
-        "title": "Protocolo de Impresi\u00f3n de Internet (IPP)"
-    }
+        }
+    },
+    "title": "Protocolo de Impresi\u00f3n de Internet (IPP)"
 }

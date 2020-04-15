@@ -26,7 +26,7 @@
                 "description": "Bitte \u00fcberpr\u00fcfen Sie Ihre {login_method} ({username}) und geben Sie den Best\u00e4tigungscode ein",
                 "title": "Zwei-Faktor-Authentifizierung"
             }
-        },
-        "title": "August"
-    }
+        }
+    },
+    "title": "August"
 }

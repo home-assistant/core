@@ -27,7 +27,7 @@
                 "description": "Vols afegir la impressora {name} a Home Assistant?",
                 "title": "Impressora descoberta"
             }
-        },
-        "title": "Protocol d'impressi\u00f3 per Internet (IPP)"
-    }
+        }
+    },
+    "title": "Protocol d'impressi\u00f3 per Internet (IPP)"
 }

@@ -17,7 +17,7 @@
                 "description": "Konfigurer Vilfo Router-integreringen. Du trenger ditt Vilfo Router vertsnavn/IP og et API-tilgangstoken. Hvis du vil ha mer informasjon om denne integreringen og hvordan du f\u00e5r disse detaljene, kan du g\u00e5 til: https://www.home-assistant.io/integrations/vilfo",
                 "title": "Koble til Vilfo Ruteren"
             }
-        },
-        "title": ""
-    }
+        }
+    },
+    "title": ""
 }

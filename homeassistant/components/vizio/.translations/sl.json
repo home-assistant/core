@@ -36,8 +36,7 @@
                 "description": "Dostopni \u017eeton je potreben samo za televizorje. \u010ce konfigurirate televizor in \u0161e nimate \u017eetona za dostop, ga pustite prazno in boste \u0161li, da bo \u0161el skozi postopek seznanjanja.",
                 "title": "Namestite Vizio SmartCast napravo"
             }
-        },
-        "title": "Vizio SmartCast"
+        }
     },
     "options": {
         "step": {
@@ -52,5 +51,6 @@
             }
         },
         "title": "Posodobite mo\u017enosti Vizo SmartCast"
-    }
+    },
+    "title": "Vizio SmartCast"
 }

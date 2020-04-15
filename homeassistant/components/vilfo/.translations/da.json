@@ -17,7 +17,7 @@
                 "description": "Indstil Vilfo-routerintegration. Du har brug for dit Vilfo-routerv\u00e6rtsnavn/IP og et API-adgangstoken. For yderligere information om denne integration og hvordan du f\u00e5r disse detaljer, kan du bes\u00f8ge: https://www.home-assistant.io/integrations/vilfo",
                 "title": "Opret forbindelse til Vilfo-router"
             }
-        },
-        "title": "Vilfo-router"
-    }
+        }
+    },
+    "title": "Vilfo-router"
 }

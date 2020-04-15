@@ -18,8 +18,7 @@
                     "host": "Adresse IP de l\u2019appareil Konnected"
                 }
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "error": {
@@ -73,5 +72,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Konnected.io"
 }

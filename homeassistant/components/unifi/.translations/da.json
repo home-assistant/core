@@ -20,8 +20,7 @@
                 },
                 "title": "Konfigurer UniFi Controller"
             }
-        },
-        "title": "UniFi Controller"
+        }
     },
     "options": {
         "step": {
@@ -50,5 +49,6 @@
                 "title": "UniFi-indstillinger"
             }
         }
-    }
+    },
+    "title": "UniFi Controller"
 }

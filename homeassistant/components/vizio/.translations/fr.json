@@ -34,8 +34,7 @@
                 "description": "Un jeton d'acc\u00e8s n'est n\u00e9cessaire que pour les t\u00e9l\u00e9viseurs. Si vous configurez un t\u00e9l\u00e9viseur et que vous n'avez pas encore de jeton d'acc\u00e8s, laissez-le vide pour passer par un processus de couplage.",
                 "title": "Configurer le client Vizio SmartCast"
             }
-        },
-        "title": "Vizio SmartCast"
+        }
     },
     "options": {
         "step": {
@@ -50,5 +49,6 @@
             }
         },
         "title": "Mettre \u00e0 jour les options de Vizo SmartCast"
-    }
+    },
+    "title": "Vizio SmartCast"
 }

@@ -27,7 +27,7 @@
                 "description": "F\u00f6r att l\u00e4nka ditt Nest-konto, [autentisiera ditt konto]({url}). \n\nEfter autentisiering, klipp och klistra in den angivna pin-koden nedan.",
                 "title": "L\u00e4nka Nest-konto"
             }
-        },
-        "title": "Nest"
-    }
+        }
+    },
+    "title": "Nest"
 }

@@ -26,8 +26,7 @@
                 "description": "Voer de toegangsgegevens van het apparaat in. Opgeven van gebruikersnaam en wachtwoord is optioneel, maar biedt ondersteuning voor meer integratiefuncties. Aan de andere kant kan het gebruik van een geautoriseerde verbinding problemen veroorzaken bij het openen van het webinterface van het apparaat buiten de Home Assitant, terwijl de integratie actief is en andersom.",
                 "title": "Configureer Huawei LTE"
             }
-        },
-        "title": "Huawei LTE"
+        }
     },
     "options": {
         "step": {
@@ -39,5 +38,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Huawei LTE"
 }

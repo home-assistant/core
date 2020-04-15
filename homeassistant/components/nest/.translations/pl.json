@@ -27,7 +27,7 @@
                 "description": "Aby po\u0142\u0105czy\u0107 z kontem Nest, [wykonaj autoryzacj\u0119]({url}). \n\n Po autoryzacji skopiuj i wklej podany kod PIN poni\u017cej.",
                 "title": "Po\u0142\u0105cz z kontem Nest"
             }
-        },
-        "title": "Nest"
-    }
+        }
+    },
+    "title": "Nest"
 }

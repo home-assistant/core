@@ -16,8 +16,7 @@
                 "description": "Surveiller la qualit\u00e9 de l\u2019air dans un emplacement g\u00e9ographique.",
                 "title": "Configurer AirVisual"
             }
-        },
-        "title": "AirVisual"
+        }
     },
     "options": {
         "step": {
@@ -26,5 +25,6 @@
                 "title": "Configurer AirVisual"
             }
         }
-    }
+    },
+    "title": "AirVisual"
 }

@@ -22,7 +22,7 @@
                 "description": "Installeer de Home Assistant SmartApp in tenminste \u00e9\u00e9n locatie en klik Verzenden.",
                 "title": "Installeer SmartApp"
             }
-        },
-        "title": "SmartThings"
-    }
+        }
+    },
+    "title": "SmartThings"
 }

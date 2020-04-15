@@ -26,7 +26,7 @@
                 "description": "Por favor, comprueba tu {login_method} ({username}) e introduce el c\u00f3digo de verificaci\u00f3n a continuaci\u00f3n",
                 "title": "Autenticaci\u00f3n de dos factores"
             }
-        },
-        "title": "August"
-    }
+        }
+    },
+    "title": "August"
 }

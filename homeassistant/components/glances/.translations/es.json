@@ -21,8 +21,7 @@
                 },
                 "title": "Configurar Glances"
             }
-        },
-        "title": "Glances"
+        }
     },
     "options": {
         "step": {
@@ -33,5 +32,6 @@
                 "description": "Configurar opciones para Glances"
             }
         }
-    }
+    },
+    "title": "Glances"
 }

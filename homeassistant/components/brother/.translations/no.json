@@ -26,7 +26,7 @@
                 "description": "Vil du legge til Brother-skriveren {Model} med serienummeret {serial_number} til Home Assistant?",
                 "title": "Oppdaget Brother-Skriveren"
             }
-        },
-        "title": "Brother skriver"
-    }
+        }
+    },
+    "title": "Brother skriver"
 }

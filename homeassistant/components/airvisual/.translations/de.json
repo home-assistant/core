@@ -16,8 +16,7 @@
                 "description": "\u00dcberwachen Sie die Luftqualit\u00e4t an einem geografischen Ort.",
                 "title": "Konfigurieren Sie AirVisual"
             }
-        },
-        "title": "AirVisual"
+        }
     },
     "options": {
         "step": {
@@ -29,5 +28,6 @@
                 "title": "Konfigurieren Sie AirVisual"
             }
         }
-    }
+    },
+    "title": "AirVisual"
 }

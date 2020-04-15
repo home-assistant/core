@@ -15,8 +15,7 @@
                 },
                 "title": "Passerelle OpenTherm"
             }
-        },
-        "title": "Passerelle OpenTherm"
+        }
     },
     "options": {
         "step": {
@@ -28,5 +27,6 @@
                 "description": "Options pour la passerelle OpenTherm"
             }
         }
-    }
+    },
+    "title": "Passerelle OpenTherm"
 }

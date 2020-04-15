@@ -14,8 +14,7 @@
                 },
                 "title": "ZHA"
             }
-        },
-        "title": "ZHA"
+        }
     },
     "device_automation": {
         "action_type": {
@@ -71,5 +70,6 @@
             "remote_button_short_release": "Bot\u00f3n \"{subtype}\" soltado",
             "remote_button_triple_press": "Bot\u00f3n \"{subtype}\" triple pulsaci\u00f3n"
         }
-    }
+    },
+    "title": "ZHA"
 }

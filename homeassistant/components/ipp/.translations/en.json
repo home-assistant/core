@@ -29,7 +29,7 @@
                 "description": "Do you want to add the printer named `{name}` to Home Assistant?",
                 "title": "Discovered printer"
             }
-        },
-        "title": "Internet Printing Protocol (IPP)"
-    }
+        }
+    },
+    "title": "Internet Printing Protocol (IPP)"
 }

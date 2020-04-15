@@ -19,8 +19,7 @@
                 },
                 "title": "Oppsett av Transmission-klient"
             }
-        },
-        "title": ""
+        }
     },
     "options": {
         "step": {
@@ -31,5 +30,6 @@
                 "title": "Konfigurer alternativer for Transmission"
             }
         }
-    }
+    },
+    "title": ""
 }

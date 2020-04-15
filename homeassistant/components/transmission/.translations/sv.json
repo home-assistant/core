@@ -19,8 +19,7 @@
                 },
                 "title": "St\u00e4ll in Transmission-klienten"
             }
-        },
-        "title": "Transmission"
+        }
     },
     "options": {
         "step": {
@@ -31,5 +30,6 @@
                 "title": "Konfigurera alternativ f\u00f6r Transmission"
             }
         }
-    }
+    },
+    "title": "Transmission"
 }

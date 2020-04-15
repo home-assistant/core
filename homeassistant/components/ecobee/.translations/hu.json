@@ -19,7 +19,7 @@
                 "description": "Adja meg az ecobee.com webhelyr\u0151l beszerzett API-kulcsot.",
                 "title": "ecobee API kulcs"
             }
-        },
-        "title": "ecobee"
-    }
+        }
+    },
+    "title": "ecobee"
 }

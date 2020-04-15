@@ -26,7 +26,7 @@
                 "description": "Czy chcesz doda\u0107 drukark\u0119 Brother {model} o numerze seryjnym `{serial_number}` do Home Assistant'a?",
                 "title": "Wykryto drukark\u0119 Brother"
             }
-        },
-        "title": "Drukarka Brother"
-    }
+        }
+    },
+    "title": "Drukarka Brother"
 }

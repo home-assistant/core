@@ -21,8 +21,7 @@
                 },
                 "title": "Configurar el controlador UniFi"
             }
-        },
-        "title": "Controlador UniFi"
+        }
     },
     "error": {
         "unknown_client_mac": "Ning\u00fan cliente disponible en UniFi en esa direcci\u00f3n MAC"
@@ -63,5 +62,6 @@
                 "title": "Opciones UniFi 3/3"
             }
         }
-    }
+    },
+    "title": "Controlador UniFi"
 }

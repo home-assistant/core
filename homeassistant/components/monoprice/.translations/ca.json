@@ -20,8 +20,7 @@
                 },
                 "title": "Connexi\u00f3 amb el dispositiu"
             }
-        },
-        "title": "Amplificador Monoprice de 6 zones"
+        }
     },
     "options": {
         "step": {
@@ -37,5 +36,6 @@
                 "title": "Configuraci\u00f3 de les fonts"
             }
         }
-    }
+    },
+    "title": "Amplificador Monoprice de 6 zones"
 }

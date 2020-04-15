@@ -17,7 +17,7 @@
                 "description": "Konfiguracja integracji jako\u015bci powietrza GIO\u015a (G\u0142\u00f3wny Inspektorat Ochrony \u015arodowiska). Je\u015bli potrzebujesz pomocy z konfiguracj\u0105, przejd\u017a na stron\u0119: https://www.home-assistant.io/integrations/gios",
                 "title": "G\u0142\u00f3wny Inspektorat Ochrony \u015arodowiska (GIO\u015a)"
             }
-        },
-        "title": "GIO\u015a"
-    }
+        }
+    },
+    "title": "GIO\u015a"
 }

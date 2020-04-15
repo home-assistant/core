@@ -21,8 +21,7 @@
                 },
                 "title": "Usiichten konfigur\u00e9ieren"
             }
-        },
-        "title": "Usiichten"
+        }
     },
     "options": {
         "step": {
@@ -33,5 +32,6 @@
                 "description": "Optioune konfigur\u00e9ieren fir d'Usiichten"
             }
         }
-    }
+    },
+    "title": "Usiichten"
 }

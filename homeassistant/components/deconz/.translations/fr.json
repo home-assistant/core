@@ -28,8 +28,7 @@
                 "description": "D\u00e9verrouillez votre passerelle deCONZ pour vous enregistrer avec Home Assistant. \n\n 1. Acc\u00e9dez aux param\u00e8tres avanc\u00e9s du syst\u00e8me deCONZ \n 2. Cliquez sur \"D\u00e9verrouiller la passerelle\"",
                 "title": "Lien vers deCONZ"
             }
-        },
-        "title": "Passerelle deCONZ Zigbee"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -94,5 +93,6 @@
                 "title": "Options deCONZ"
             }
         }
-    }
+    },
+    "title": "Passerelle deCONZ Zigbee"
 }

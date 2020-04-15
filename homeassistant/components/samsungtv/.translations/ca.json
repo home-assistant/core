@@ -21,7 +21,7 @@
                 "description": "Introdeix les dades de la Samsung TV. Si mai abans l'has connectat a Home Assistant haur\u00edes de veure una finestra emergent demanant autenticaci\u00f3.",
                 "title": "Samsung TV"
             }
-        },
-        "title": "Samsung TV"
-    }
+        }
+    },
+    "title": "Samsung TV"
 }

@@ -15,7 +15,7 @@
                 "description": "Please enter the host name or IP address of a Heos device (preferably one connected via wire to the network).",
                 "title": "Connect to Heos"
             }
-        },
-        "title": "HEOS"
-    }
+        }
+    },
+    "title": "HEOS"
 }

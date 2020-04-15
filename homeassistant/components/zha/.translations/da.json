@@ -14,8 +14,7 @@
                 },
                 "title": "ZHA"
             }
-        },
-        "title": "ZHA"
+        }
     },
     "device_automation": {
         "action_type": {
@@ -63,5 +62,6 @@
             "remote_button_short_release": "\"{subtype}\"-knappen frigivet",
             "remote_button_triple_press": "\"{subtype}\"-knappen tredobbeltklikkes"
         }
-    }
+    },
+    "title": "ZHA"
 }

@@ -19,7 +19,7 @@
                 "description": "Necesitas obtener el n\u00famero de serie o el ID de tu termostato iniciando sesi\u00f3n en https://MyNuHeat.com y seleccionando tu(s) termostato(s).",
                 "title": "ConectarNuHeat"
             }
-        },
-        "title": "NuHeat"
-    }
+        }
+    },
+    "title": "NuHeat"
 }

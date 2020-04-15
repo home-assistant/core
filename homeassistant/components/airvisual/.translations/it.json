@@ -16,8 +16,7 @@
                 "description": "Monitorare la qualit\u00e0 dell'aria in una posizione geografica.",
                 "title": "Configura AirVisual"
             }
-        },
-        "title": "AirVisual"
+        }
     },
     "options": {
         "step": {
@@ -29,5 +28,6 @@
                 "title": "Configurare AirVisual"
             }
         }
-    }
+    },
+    "title": "AirVisual"
 }

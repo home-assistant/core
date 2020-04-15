@@ -25,8 +25,7 @@
                 "description": "\u662f\u5426\u8981\u914d\u7f6e Home Assistant \u8fde\u63a5\u5230 Hass.io \u52a0\u8f7d\u9879 {addon} \u63d0\u4f9b\u7684 MQTT \u670d\u52a1\u5668\uff1f",
                 "title": "\u6765\u81ea Hass.io \u52a0\u8f7d\u9879\u7684 MQTT \u670d\u52a1\u5668"
             }
-        },
-        "title": "MQTT"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -49,5 +48,6 @@
             "button_short_release": "\"{subtype}\" \u91ca\u653e",
             "button_triple_press": "\"{subtype}\" \u4e09\u8fde\u51fb"
         }
-    }
+    },
+    "title": "MQTT"
 }

@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Denne TV-en er allerede konfigurert."
+        },
+        "error": {
+            "cannot_connect": "Kunne ikke koble til, ugyldig vert eller PIN-kode.",
+            "invalid_host": "Ugyldig vertsnavn eller IP-adresse.",
+            "unsupported_model": "TV-modellen din st\u00f8ttes ikke."
+        },
+        "step": {
+            "authorize": {
+                "data": {
+                    "pin": "PIN-kode"
+                },
+                "description": "Tast inn PIN-koden som vises p\u00e5 Sony Bravia TV. \n\n Hvis PIN-koden ikke vises, m\u00e5 du avregistrere Home Assistant p\u00e5 TV-en, g\u00e5 til: Innstillinger - > Nettverk - > Innstillinger for ekstern enhet - > Avregistrere ekstern enhet.",
+                "title": "Autoriser Sony Bravia TV"
+            },
+            "user": {
+                "data": {
+                    "host": "TV-vertsnavn eller IP-adresse"
+                },
+                "description": "Konfigurer Sony Bravia TV-integrasjon. Hvis du har problemer med konfigurasjonen, g\u00e5 til: https://www.home-assistant.io/integrations/braviatv \n\n Forsikre deg om at TV-en er sl\u00e5tt p\u00e5.",
+                "title": "Sony Bravia TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "ignored_sources": "Liste over ignorerte kilder"
+                },
+                "title": "Alternativer for Sony Bravia TV"
+            }
+        }
+    },
+    "title": "Sony Bravia TV"
+}

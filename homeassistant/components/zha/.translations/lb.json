@@ -14,8 +14,7 @@
                 },
                 "title": "ZHA"
             }
-        },
-        "title": "ZHA"
+        }
     },
     "device_automation": {
         "action_type": {
@@ -71,5 +70,6 @@
             "remote_button_short_release": "\"{subtype}\" Kn\u00e4ppche lassgelooss",
             "remote_button_triple_press": "\"{subtype}\" Kn\u00e4ppche dr\u00e4imol gedr\u00e9ckt"
         }
-    }
+    },
+    "title": "ZHA"
 }

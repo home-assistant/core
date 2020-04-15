@@ -1,26 +1,26 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne WLED-enhed er allerede konfigureret.",
-            "connection_error": "Kunne ikke oprette forbindelse til WLED-enheden."
+            "already_configured": "Wykryto urz\u0105dzenie WLED",
+            "connection_error": "Wykryto urz\u0105dzenie WLED"
         },
         "error": {
-            "connection_error": "Kunne ikke oprette forbindelse til WLED-enheden."
+            "connection_error": "Wykryto urz\u0105dzenie WLED"
         },
-        "flow_title": "WLED: {name}",
+        "flow_title": "Wykryto urz\u0105dzenie WLED",
         "step": {
             "user": {
                 "data": {
                     "host": "V\u00e6rt eller IP-adresse"
                 },
-                "description": "Indstil din WLED til at integrere med Home Assistant.",
-                "title": "Forbind din WLED"
+                "description": "Wykryto urz\u0105dzenie WLED",
+                "title": "Wykryto urz\u0105dzenie WLED"
             },
             "zeroconf_confirm": {
-                "description": "\u00d8nsker du at tilf\u00f8je WLED-enhed med navnet `{name}' til Home Assistant?",
-                "title": "Fandt WLED-enhed"
+                "description": "Wykryto urz\u0105dzenie WLED",
+                "title": "Wykryto urz\u0105dzenie WLED"
             }
-        },
-        "title": "WLED"
-    }
+        }
+    },
+    "title": "WLED"
 }

@@ -21,7 +21,7 @@
                 "description": "Gib deine Samsung TV-Informationen ein. Wenn du noch nie eine Verbindung zum Home Assistant hergestellt hast, solltest du ein Popup-Fenster auf deinem Fernseher sehen, das nach einer Authentifizierung fragt.",
                 "title": "Samsung TV"
             }
-        },
-        "title": "Samsung TV"
-    }
+        }
+    },
+    "title": "Samsung TV"
 }

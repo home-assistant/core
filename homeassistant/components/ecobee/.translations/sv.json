@@ -19,7 +19,7 @@
                 "description": "V\u00e4nligen ange API-nyckeln som erh\u00e5llits fr\u00e5n ecobee.com.",
                 "title": "ecobee API-nyckel"
             }
-        },
-        "title": "ecobee"
-    }
+        }
+    },
+    "title": "ecobee"
 }

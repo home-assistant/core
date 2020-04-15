@@ -26,7 +26,7 @@
                 "description": "Voulez-vous ajouter l'imprimante Brother {model} avec le num\u00e9ro de s\u00e9rie `{serial_number}` \u00e0 Home Assistant ?",
                 "title": "Imprimante Brother d\u00e9couverte"
             }
-        },
-        "title": "Imprimante Brother"
-    }
+        }
+    },
+    "title": "Imprimante Brother"
 }

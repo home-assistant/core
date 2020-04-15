@@ -24,7 +24,7 @@
                 "description": "Tekan tombol biru pada access point dan tombol submit untuk mendaftarkan HomematicIP dengan rumah asisten.\n\n! [Lokasi tombol di bridge] (/ static/images/config_flows/config_homematicip_cloud.png)",
                 "title": "Tautkan jalur akses"
             }
-        },
-        "title": "HomematicIP Cloud"
-    }
+        }
+    },
+    "title": "HomematicIP Cloud"
 }

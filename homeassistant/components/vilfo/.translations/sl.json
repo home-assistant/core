@@ -17,7 +17,7 @@
                 "description": "Nastavite integracijo Vilfo Router. Potrebujete ime gostitelja ali IP Vilfo usmerjevalnika in dostopni \u017eeton API. Za dodatne informacije o tej integraciji in kako do teh podrobnosti obi\u0161\u010dite: https://www.home-assistant.io/integrations/vilfo",
                 "title": "Pove\u017eite se z usmerjevalnikom Vilfo"
             }
-        },
-        "title": "Vilfo Router"
-    }
+        }
+    },
+    "title": "Vilfo Router"
 }

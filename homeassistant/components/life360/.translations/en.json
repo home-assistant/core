@@ -22,7 +22,7 @@
                 "description": "To set advanced options, see [Life360 documentation]({docs_url}).\nYou may want to do that before adding accounts.",
                 "title": "Life360 Account Info"
             }
-        },
-        "title": "Life360"
-    }
+        }
+    },
+    "title": "Life360"
 }

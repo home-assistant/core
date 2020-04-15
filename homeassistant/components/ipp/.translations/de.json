@@ -27,7 +27,7 @@
                 "description": "M\u00f6chten Sie den Drucker mit dem Namen \"{name}\" zu Home Assistant hinzuf\u00fcgen?",
                 "title": "Entdeckter Drucker"
             }
-        },
-        "title": "Internet-Druckprotokoll (IPP)"
-    }
+        }
+    },
+    "title": "Internet-Druckprotokoll (IPP)"
 }

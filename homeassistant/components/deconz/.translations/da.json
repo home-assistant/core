@@ -28,8 +28,7 @@
                 "description": "L\u00e5s din deCONZ-gateway op for at registrere dig med Home Assistant. \n\n 1. G\u00e5 til deCONZ settings -> Gateway -> Advanced\n 2. Tryk p\u00e5 knappen \"Authenticate app\"",
                 "title": "Forbind med deCONZ"
             }
-        },
-        "title": "deCONZ Zigbee gateway"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -94,5 +93,6 @@
                 "title": "deCONZ-indstillinger"
             }
         }
-    }
+    },
+    "title": "deCONZ Zigbee gateway"
 }

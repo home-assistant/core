@@ -15,8 +15,7 @@
                 },
                 "title": "OpenTherm Prehod"
             }
-        },
-        "title": "OpenTherm Prehod"
+        }
     },
     "options": {
         "step": {
@@ -28,5 +27,6 @@
                 "description": "Mo\u017enosti za prehod OpenTherm"
             }
         }
-    }
+    },
+    "title": "OpenTherm Prehod"
 }

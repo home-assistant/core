@@ -1,22 +1,26 @@
 {
     "config": {
         "abort": {
-            "connection_error": "Falha ao ligar ao dispositivo WLED"
+            "already_configured": "Wykryto urz\u0105dzenie [VOID]",
+            "connection_error": "Wykryto urz\u0105dzenie [VOID]"
         },
         "error": {
-            "connection_error": "Falha ao ligar ao dispositivo WLED"
+            "connection_error": "Wykryto urz\u0105dzenie [VOID]"
         },
+        "flow_title": "Wykryto urz\u0105dzenie [VOID]",
         "step": {
             "user": {
                 "data": {
                     "host": "Nome servidor ou endere\u00e7o IP"
                 },
-                "title": "Associar WLED"
+                "description": "Wykryto urz\u0105dzenie [VOID]",
+                "title": "Wykryto urz\u0105dzenie [VOID]"
             },
             "zeroconf_confirm": {
-                "title": "Dispositivo WLED descoberto"
+                "description": "Wykryto urz\u0105dzenie [VOID]",
+                "title": "Wykryto urz\u0105dzenie [VOID]"
             }
-        },
-        "title": ""
-    }
+        }
+    },
+    "title": ""
 }

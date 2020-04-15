@@ -15,7 +15,7 @@
                 "description": "Ange v\u00e4rdnamnet eller IP-adressen f\u00f6r en Heos-enhet (helst en ansluten via kabel till n\u00e4tverket).",
                 "title": "Anslut till Heos"
             }
-        },
-        "title": "HEOS"
-    }
+        }
+    },
+    "title": "HEOS"
 }

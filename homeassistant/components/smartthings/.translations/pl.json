@@ -22,7 +22,7 @@
                 "description": "Prosz\u0119 zainstalowa\u0107 Home Assistant SmartApp w co najmniej jednej lokalizacji i klikn\u0105\u0107 przycisk Wy\u015blij.",
                 "title": "Zainstaluj SmartApp"
             }
-        },
-        "title": "SmartThings"
-    }
+        }
+    },
+    "title": "SmartThings"
 }

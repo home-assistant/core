@@ -26,8 +26,7 @@
                 "description": "Kontynuuj, by dokona\u0107 autoryzacji w plex.tv.",
                 "title": "Po\u0142\u0105cz z serwerem Plex"
             }
-        },
-        "title": "Plex"
+        }
     },
     "options": {
         "step": {
@@ -40,5 +39,6 @@
                 "description": "Opcje dla odtwarzaczy multimedialnych Plex"
             }
         }
-    }
+    },
+    "title": "Plex"
 }

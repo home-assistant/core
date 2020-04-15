@@ -13,7 +13,7 @@
                 "description": "Enter IP address of your Daikin AC.",
                 "title": "Configure Daikin AC"
             }
-        },
-        "title": "Daikin AC"
-    }
+        }
+    },
+    "title": "Daikin AC"
 }

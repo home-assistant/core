@@ -21,8 +21,7 @@
                 },
                 "title": "Configurer le contr\u00f4leur UniFi"
             }
-        },
-        "title": "Contr\u00f4leur UniFi"
+        }
     },
     "error": {
         "unknown_client_mac": "Aucun client disponible dans UniFi sur cette adresse MAC"
@@ -60,5 +59,6 @@
                 "title": "Options UniFi 3/3"
             }
         }
-    }
+    },
+    "title": "Contr\u00f4leur UniFi"
 }

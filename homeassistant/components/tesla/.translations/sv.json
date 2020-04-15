@@ -15,8 +15,7 @@
                 "description": "V\u00e4nligen ange din information.",
                 "title": "Tesla - Konfiguration"
             }
-        },
-        "title": "Tesla"
+        }
     },
     "options": {
         "step": {
@@ -26,5 +25,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Tesla"
 }

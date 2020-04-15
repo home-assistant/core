@@ -17,7 +17,7 @@
                 "description": "Configurare l'integrazione del Vilfo Router. \u00c8 necessario il vostro hostname/IP del Vilfo Router e un token di accesso API. Per ulteriori informazioni su questa integrazione e su come ottenere tali dettagli, visitare il sito: https://www.home-assistant.io/integrations/vilfo",
                 "title": "Collegamento al Vilfo Router"
             }
-        },
-        "title": "Vilfo Router"
-    }
+        }
+    },
+    "title": "Vilfo Router"
 }

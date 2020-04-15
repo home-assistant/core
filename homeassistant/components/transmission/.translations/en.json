@@ -19,8 +19,7 @@
                 },
                 "title": "Setup Transmission Client"
             }
-        },
-        "title": "Transmission"
+        }
     },
     "options": {
         "step": {
@@ -31,5 +30,6 @@
                 "title": "Configure options for Transmission"
             }
         }
-    }
+    },
+    "title": "Transmission"
 }

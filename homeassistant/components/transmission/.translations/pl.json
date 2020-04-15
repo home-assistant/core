@@ -19,8 +19,7 @@
                 },
                 "title": "Konfiguracja klienta Transmission"
             }
-        },
-        "title": "Transmission"
+        }
     },
     "options": {
         "step": {
@@ -31,5 +30,6 @@
                 "title": "Konfiguracja opcji dla Transmission"
             }
         }
-    }
+    },
+    "title": "Transmission"
 }

@@ -26,8 +26,7 @@
                 "description": "Gitt Detailer fir den Acc\u00e8s op den Apparat an. Benotzernumm a Passwuert si fakultativ, erm\u00e9iglecht awer d'\u00cbnnerst\u00ebtzung fir m\u00e9i Integratiouns Optiounen. Op der anerer S\u00e4it kann d'Benotzung vun enger autoris\u00e9ierter Verbindung Problemer mam Acc\u00e8s zum Web Interface vum Apparat ausserhalb vum Home Assistant verursaachen, w\u00e4rend d'Integratioun aktiv ass.",
                 "title": "Huawei LTE ariichten"
             }
-        },
-        "title": "Huawei LTE"
+        }
     },
     "options": {
         "step": {
@@ -39,5 +38,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Huawei LTE"
 }

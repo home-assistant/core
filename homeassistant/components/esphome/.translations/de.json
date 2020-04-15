@@ -29,7 +29,7 @@
                 "description": "Bitte gib die Verbindungseinstellungen deines [ESPHome](https://esphomelib.com/)-Knotens ein.",
                 "title": "ESPHome"
             }
-        },
-        "title": "ESPHome"
-    }
+        }
+    },
+    "title": "ESPHome"
 }

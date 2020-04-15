@@ -1,26 +1,26 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dit WLED-apparaat is al geconfigureerd.",
-            "connection_error": "Kan geen verbinding maken met WLED-apparaat."
+            "already_configured": "Wykryto urz\u0105dzenie WLED",
+            "connection_error": "Wykryto urz\u0105dzenie WLED"
         },
         "error": {
-            "connection_error": "Kan geen verbinding maken met WLED-apparaat."
+            "connection_error": "Wykryto urz\u0105dzenie WLED"
         },
-        "flow_title": "WLED: {name}",
+        "flow_title": "Wykryto urz\u0105dzenie WLED",
         "step": {
             "user": {
                 "data": {
                     "host": "Hostnaam of IP-adres"
                 },
-                "description": "Stel uw WLED in op integratie met Home Assistant.",
-                "title": "Koppel je WLED"
+                "description": "Wykryto urz\u0105dzenie WLED",
+                "title": "Wykryto urz\u0105dzenie WLED"
             },
             "zeroconf_confirm": {
-                "description": "Wil je de WLED genaamd `{name}` toevoegen aan Home Assistant?",
-                "title": "Ontdekt WLED-apparaat"
+                "description": "Wykryto urz\u0105dzenie WLED",
+                "title": "Wykryto urz\u0105dzenie WLED"
             }
-        },
-        "title": "WLED"
-    }
+        }
+    },
+    "title": "WLED"
 }

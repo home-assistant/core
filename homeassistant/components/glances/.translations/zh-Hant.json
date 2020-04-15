@@ -21,8 +21,7 @@
                 },
                 "title": "\u8a2d\u5b9a Glances"
             }
-        },
-        "title": "Glances"
+        }
     },
     "options": {
         "step": {
@@ -33,5 +32,6 @@
                 "description": "Glances \u8a2d\u5b9a\u9078\u9805"
             }
         }
-    }
+    },
+    "title": "Glances"
 }

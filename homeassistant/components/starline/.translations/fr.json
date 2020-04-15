@@ -36,7 +36,7 @@
                 "description": "Adresse e-mail et mot de passe du compte StarLine",
                 "title": "Informations d'identification de l'utilisateur"
             }
-        },
-        "title": "StarLine"
-    }
+        }
+    },
+    "title": "StarLine"
 }

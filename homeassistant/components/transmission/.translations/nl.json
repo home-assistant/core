@@ -19,8 +19,7 @@
                 },
                 "title": "Verzendclient instellen"
             }
-        },
-        "title": "Transmission"
+        }
     },
     "options": {
         "step": {
@@ -31,5 +30,6 @@
                 "title": "Configureer de opties voor Transmission"
             }
         }
-    }
+    },
+    "title": "Transmission"
 }

@@ -26,8 +26,7 @@
                 "description": "Informatioune vum Konnected Panel aginn.",
                 "title": "Konnected Apparat entdecken"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
@@ -108,5 +107,6 @@
             }
         },
         "title": "Konnected Alarm Panneau Optiounen"
-    }
+    },
+    "title": "Konnected.io"
 }

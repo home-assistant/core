@@ -29,7 +29,7 @@
                 "description": "Voer de verbindingsinstellingen in van uw [ESPHome](https://esphomelib.com/) node.",
                 "title": "ESPHome"
             }
-        },
-        "title": "ESPHome"
-    }
+        }
+    },
+    "title": "ESPHome"
 }
