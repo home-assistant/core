@@ -14,8 +14,7 @@
                 "description": "Provide a Vera controller url below. It should look like this: http://192.168.1.161:3480.",
                 "title": "Setup Vera controller"
             }
-        },
-        "title": "Vera"
+        }
     },
     "options": {
         "step": {
@@ -28,5 +27,6 @@
                 "title": "Vera controller options"
             }
         }
-    }
+    },
+    "title": "Vera"
 }

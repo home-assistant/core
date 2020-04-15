@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Wykryto urz\u0105dzenie ",
+            "connection_error": "Wykryto urz\u0105dzenie "
+        },
+        "error": {
+            "connection_error": "Wykryto urz\u0105dzenie "
+        },
+        "flow_title": "Wykryto urz\u0105dzenie ",
+        "step": {
+            "user": {
+                "description": "Wykryto urz\u0105dzenie ",
+                "title": "Wykryto urz\u0105dzenie "
+            },
+            "zeroconf_confirm": {
+                "description": "Wykryto urz\u0105dzenie ",
+                "title": "Wykryto urz\u0105dzenie "
+            }
+        }
+    }
+}

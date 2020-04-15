@@ -21,7 +21,7 @@
                 "description": "Ange informationen f\u00f6r din Samsung TV. Om du aldrig har anslutit denna till Home Assistant tidigare borde du se en popup om autentisering p\u00e5 din TV.",
                 "title": "Samsung TV"
             }
-        },
-        "title": "Samsung TV"
-    }
+        }
+    },
+    "title": "Samsung TV"
 }

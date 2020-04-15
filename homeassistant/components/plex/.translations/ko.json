@@ -26,8 +26,7 @@
                 "description": "plex.tv \uc5d0\uc11c \uc778\uc99d\uc744 \uc9c4\ud589\ud574\uc8fc\uc138\uc694.",
                 "title": "Plex \uc11c\ubc84 \uc5f0\uacb0"
             }
-        },
-        "title": "Plex"
+        }
     },
     "options": {
         "step": {
@@ -40,5 +39,6 @@
                 "description": "Plex \ubbf8\ub514\uc5b4 \ud50c\ub808\uc774\uc5b4 \uc635\uc158"
             }
         }
-    }
+    },
+    "title": "Plex"
 }

@@ -19,8 +19,7 @@
                 },
                 "title": "Namestitev odjemalca Transmission"
             }
-        },
-        "title": "Transmission"
+        }
     },
     "options": {
         "step": {
@@ -31,5 +30,6 @@
                 "title": "Nastavite mo\u017enosti za Transmission"
             }
         }
-    }
+    },
+    "title": "Transmission"
 }

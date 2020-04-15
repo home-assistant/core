@@ -26,8 +26,7 @@
                 "description": "Ange information om enhets\u00e5tkomst. Det \u00e4r valfritt att ange anv\u00e4ndarnamn och l\u00f6senord, men st\u00f6djer d\u00e5 fler integrationsfunktioner. \u00c5 andra sidan kan anv\u00e4ndning av en auktoriserad anslutning orsaka problem med att komma \u00e5t enhetens webbgr\u00e4nssnitt utanf\u00f6r Home Assistant medan integrationen \u00e4r aktiv och tv\u00e4rtom.",
                 "title": "Konfigurera Huawei LTE"
             }
-        },
-        "title": "Huawei LTE"
+        }
     },
     "options": {
         "step": {
@@ -39,5 +38,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Huawei LTE"
 }

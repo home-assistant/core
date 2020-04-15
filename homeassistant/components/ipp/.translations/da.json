@@ -26,7 +26,7 @@
                 "description": "Vil du tilf\u00f8je printeren med navnet '{name}' til Home Assistant?",
                 "title": "Fandt printer"
             }
-        },
-        "title": "Internet Printing Protocol (IPP)"
-    }
+        }
+    },
+    "title": "Internet Printing Protocol (IPP)"
 }

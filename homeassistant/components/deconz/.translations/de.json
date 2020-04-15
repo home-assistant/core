@@ -28,8 +28,7 @@
                 "description": "Entsperre dein deCONZ-Gateway, um es bei Home Assistant zu registrieren. \n\n 1. Gehe in die deCONZ-Systemeinstellungen \n 2. Dr\u00fccke die Taste \"Gateway entsperren\"",
                 "title": "Mit deCONZ verbinden"
             }
-        },
-        "title": "deCONZ Zigbee Gateway"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -96,5 +95,6 @@
                 "title": "deCONZ-Optionen"
             }
         }
-    }
+    },
+    "title": "deCONZ Zigbee Gateway"
 }

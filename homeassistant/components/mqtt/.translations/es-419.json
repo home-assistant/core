@@ -25,7 +25,7 @@
                 "description": "\u00bfDesea configurar el Asistente del Hogar para que se conecte al broker MQTT proporcionado por el complemento hass.io {addon}?",
                 "title": "MQTT Broker a trav\u00e9s del complemento Hass.io"
             }
-        },
-        "title": "MQTT"
-    }
+        }
+    },
+    "title": "MQTT"
 }

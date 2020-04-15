@@ -16,8 +16,7 @@
                 "description": "Overv\u00e5k luftkvaliteten p\u00e5 et geografisk sted.",
                 "title": "Konfigurer AirVisual"
             }
-        },
-        "title": ""
+        }
     },
     "options": {
         "step": {
@@ -29,5 +28,6 @@
                 "title": "Konfigurer AirVisual"
             }
         }
-    }
+    },
+    "title": ""
 }

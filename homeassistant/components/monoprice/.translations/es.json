@@ -20,8 +20,7 @@
                 },
                 "title": "Conectarse al dispositivo"
             }
-        },
-        "title": "Amplificador Monoprice de 6 zonas"
+        }
     },
     "options": {
         "step": {
@@ -37,5 +36,6 @@
                 "title": "Configurar fuentes"
             }
         }
-    }
+    },
+    "title": "Amplificador Monoprice de 6 zonas"
 }

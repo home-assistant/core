@@ -15,8 +15,7 @@
                 "description": "K\u00e9rlek, add meg az adataidat.",
                 "title": "Tesla - Konfigur\u00e1ci\u00f3"
             }
-        },
-        "title": "Tesla"
+        }
     },
     "options": {
         "step": {
@@ -26,5 +25,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Tesla"
 }

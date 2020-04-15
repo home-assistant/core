@@ -17,7 +17,7 @@
                 "description": "Configurar la integraci\u00f3n de la calidad del aire GIO\u015a (Inspecci\u00f3n Jefe de Protecci\u00f3n Ambiental de Polonia). Si necesita ayuda con la configuraci\u00f3n, eche un vistazo aqu\u00ed: https://www.home-assistant.io/integrations/gios",
                 "title": "GIO\u015a (Inspecci\u00f3n Jefe de Protecci\u00f3n del Medio Ambiente de Polonia)"
             }
-        },
-        "title": "GIO\u015a"
-    }
+        }
+    },
+    "title": "GIO\u015a"
 }

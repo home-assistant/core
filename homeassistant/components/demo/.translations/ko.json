@@ -1,7 +1,4 @@
 {
-    "config": {
-        "title": "\ub370\ubaa8"
-    },
     "options": {
         "step": {
             "options_1": {
@@ -18,5 +15,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "\ub370\ubaa8"
 }

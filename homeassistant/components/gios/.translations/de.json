@@ -17,7 +17,7 @@
                 "description": "Einrichtung von GIO\u015a (Polnische Hauptinspektion f\u00fcr Umweltschutz) Integration der Luftqualit\u00e4t. Wenn du Hilfe bei der Konfiguration ben\u00f6tigst, schaue hier: https://www.home-assistant.io/integrations/gios",
                 "title": "GIO\u015a (Polnische Hauptinspektion f\u00fcr Umweltschutz)"
             }
-        },
-        "title": "GIO\u015a"
-    }
+        }
+    },
+    "title": "GIO\u015a"
 }

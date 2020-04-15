@@ -21,8 +21,7 @@
                 "description": "M\u00faltiples servidores disponibles, seleccione uno:",
                 "title": "Seleccionar servidor Plex"
             }
-        },
-        "title": "Plex"
+        }
     },
     "options": {
         "step": {
@@ -30,5 +29,6 @@
                 "description": "Opciones para reproductores multimedia Plex"
             }
         }
-    }
+    },
+    "title": "Plex"
 }

@@ -19,8 +19,7 @@
                 },
                 "title": "\u8a2d\u5b9a Transmission \u5ba2\u6236\u7aef"
             }
-        },
-        "title": "Transmission"
+        }
     },
     "options": {
         "step": {
@@ -31,5 +30,6 @@
                 "title": "Transmission \u8a2d\u5b9a\u9078\u9805"
             }
         }
-    }
+    },
+    "title": "Transmission"
 }

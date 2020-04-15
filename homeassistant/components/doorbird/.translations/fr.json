@@ -18,8 +18,7 @@
                 },
                 "title": "Connectez-vous au DoorBird"
             }
-        },
-        "title": "DoorBird"
+        }
     },
     "options": {
         "step": {
@@ -29,5 +28,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "DoorBird"
 }

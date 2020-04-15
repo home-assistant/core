@@ -19,7 +19,7 @@
                 "description": "Instale la SmartApp de Home Assistant en al menos una ubicaci\u00f3n y haga clic en enviar.",
                 "title": "Instalar SmartApp"
             }
-        },
-        "title": "SmartThings"
-    }
+        }
+    },
+    "title": "SmartThings"
 }

@@ -16,8 +16,7 @@
                 "description": "Spremljajte kakovost zraka na zemljepisni lokaciji.",
                 "title": "Nastavite AirVisual"
             }
-        },
-        "title": "AirVisual"
+        }
     },
     "options": {
         "step": {
@@ -29,5 +28,6 @@
                 "title": "Nastavite AirVisual"
             }
         }
-    }
+    },
+    "title": "AirVisual"
 }

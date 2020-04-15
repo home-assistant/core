@@ -16,7 +16,7 @@
                 "description": "Consulte https://www.home-assistant.io/docs/z-wave/installation/ para obtener informaci\u00f3n sobre las variables de configuraci\u00f3n",
                 "title": "Configurar Z-Wave"
             }
-        },
-        "title": "Z-Wave"
-    }
+        }
+    },
+    "title": "Z-Wave"
 }

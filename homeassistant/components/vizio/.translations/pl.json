@@ -30,8 +30,7 @@
                 },
                 "title": "Konfiguracja klienta Vizio SmartCast"
             }
-        },
-        "title": "Vizio SmartCast"
+        }
     },
     "options": {
         "step": {
@@ -46,5 +45,6 @@
             }
         },
         "title": "Aktualizuj opcje Vizo SmartCast"
-    }
+    },
+    "title": "Vizio SmartCast"
 }

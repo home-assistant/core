@@ -26,8 +26,7 @@
                 "description": "Angi detaljer for enhetstilgang. Angivelse av brukernavn og passord er valgfritt, men gir st\u00f8tte for flere integreringsfunksjoner. P\u00e5 den annen side kan bruk av en autorisert tilkobling f\u00f8re til problemer med tilgang til enhetens webgrensesnitt utenfor Home Assistant mens integreringen er aktiv, og omvendt.",
                 "title": "Konfigurer Huawei LTE"
             }
-        },
-        "title": ""
+        }
     },
     "options": {
         "step": {
@@ -39,5 +38,6 @@
                 }
             }
         }
-    }
+    },
+    "title": ""
 }

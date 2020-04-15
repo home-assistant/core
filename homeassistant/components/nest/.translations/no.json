@@ -27,7 +27,7 @@
                 "description": "For \u00e5 koble din Nest-konto, [autoriser kontoen din]({url}). \n\n Etter godkjenning, kopier og lim inn den oppgitte PIN koden nedenfor.",
                 "title": "Koble til Nest konto"
             }
-        },
-        "title": ""
-    }
+        }
+    },
+    "title": ""
 }

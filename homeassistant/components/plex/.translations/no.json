@@ -26,8 +26,7 @@
                 "description": "Fortsett \u00e5 autorisere p\u00e5 plex.tv.",
                 "title": "Koble til Plex-server"
             }
-        },
-        "title": ""
+        }
     },
     "options": {
         "step": {
@@ -40,5 +39,6 @@
                 "description": "Alternativer for Plex Media Players"
             }
         }
-    }
+    },
+    "title": ""
 }

@@ -26,8 +26,7 @@
                 "description": "Forts\u00e6t for at godkende p\u00e5 plex.tv.",
                 "title": "Forbind Plex-server"
             }
-        },
-        "title": "Plex"
+        }
     },
     "options": {
         "step": {
@@ -40,5 +39,6 @@
                 "description": "Indstillinger for Plex-medieafspillere"
             }
         }
-    }
+    },
+    "title": "Plex"
 }

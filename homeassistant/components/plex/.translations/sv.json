@@ -26,8 +26,7 @@
                 "description": "Forts\u00e4tt att auktorisera p\u00e5 plex.tv.",
                 "title": "Anslut Plex-servern"
             }
-        },
-        "title": "Plex"
+        }
     },
     "options": {
         "step": {
@@ -38,5 +37,6 @@
                 "description": "Alternativ f\u00f6r Plex-mediaspelare"
             }
         }
-    }
+    },
+    "title": "Plex"
 }

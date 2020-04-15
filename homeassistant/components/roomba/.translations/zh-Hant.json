@@ -17,8 +17,7 @@
                 "description": "\u76ee\u524d\u63a5\u6536 BLID \u8207\u5bc6\u78bc\u70ba\u624b\u52d5\u904e\u7a0b\u3002\u8acb\u53c3\u95b1\u4ee5\u4e0b\u6587\u4ef6\u7684\u6b65\u9a5f\u9032\u884c\u8a2d\u5b9a\uff1ahttps://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
                 "title": "\u9023\u7dda\u81f3\u8a2d\u5099"
             }
-        },
-        "title": "iRobot Roomba"
+        }
     },
     "options": {
         "step": {
@@ -29,5 +28,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "iRobot Roomba"
 }

@@ -27,7 +27,7 @@
                 "description": "[Autorisiere dein Konto] ( {url} ), um deinen Nest-Account zu verkn\u00fcpfen.\n\n F\u00fcge anschlie\u00dfend den erhaltenen PIN Code hier ein.",
                 "title": "Nest-Konto verkn\u00fcpfen"
             }
-        },
-        "title": "Nest"
-    }
+        }
+    },
+    "title": "Nest"
 }

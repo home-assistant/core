@@ -27,7 +27,7 @@
                 "description": "Pour associer votre compte Nest, [autorisez votre compte]({url}). \n\n Apr\u00e8s autorisation, copiez-collez le code PIN fourni ci-dessous.",
                 "title": "Lier un compte Nest"
             }
-        },
-        "title": "Nest"
-    }
+        }
+    },
+    "title": "Nest"
 }

@@ -27,7 +27,7 @@
                 "description": "Untuk menautkan akun Nest Anda, [beri kuasa akun Anda] ( {url} ). \n\n Setelah otorisasi, salin-tempel kode pin yang disediakan di bawah ini.",
                 "title": "Hubungkan Akun Nest"
             }
-        },
-        "title": "Nest"
-    }
+        }
+    },
+    "title": "Nest"
 }

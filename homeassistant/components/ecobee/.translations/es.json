@@ -19,7 +19,7 @@
                 "description": "Introduzca la clave de API obtenida de ecobee.com.",
                 "title": "Clave API de ecobee"
             }
-        },
-        "title": "ecobee"
-    }
+        }
+    },
+    "title": "ecobee"
 }

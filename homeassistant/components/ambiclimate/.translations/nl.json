@@ -17,7 +17,7 @@
                 "description": "Volg deze [link] ( {authorization_url} ) en <b> Toestaan </b> toegang tot uw Ambiclimate-account, kom dan terug en druk hieronder op <b> Verzenden </b> . \n (Zorg ervoor dat de opgegeven callback-URL {cb_url} )",
                 "title": "Authenticatie Ambiclimate"
             }
-        },
-        "title": "Ambiclimate"
-    }
+        }
+    },
+    "title": "Ambiclimate"
 }

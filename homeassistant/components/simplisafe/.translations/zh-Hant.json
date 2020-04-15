@@ -15,8 +15,7 @@
                 },
                 "title": "\u586b\u5beb\u8cc7\u8a0a"
             }
-        },
-        "title": "SimpliSafe"
+        }
     },
     "options": {
         "step": {
@@ -27,5 +26,6 @@
                 "title": "\u8a2d\u5b9a SimpliSafe"
             }
         }
-    }
+    },
+    "title": "SimpliSafe"
 }

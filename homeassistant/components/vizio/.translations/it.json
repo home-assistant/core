@@ -36,8 +36,7 @@
                 "description": "Un Token di Accesso \u00e8 necessario solo per i televisori. Se si sta configurando un televisore e non si dispone ancora di un Token di Accesso, lasciarlo vuoto per passare attraverso un processo di associazione.",
                 "title": "Configurazione del dispositivo SmartCast Vizio"
             }
-        },
-        "title": "Vizio SmartCast"
+        }
     },
     "options": {
         "step": {
@@ -52,5 +51,6 @@
             }
         },
         "title": "Aggiornamento delle opzioni di Vizo SmartCast"
-    }
+    },
+    "title": "Vizio SmartCast"
 }

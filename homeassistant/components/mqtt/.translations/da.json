@@ -25,8 +25,7 @@
                 "description": "Vil du konfigurere Home Assistant til at oprette forbindelse til MQTT-brokeren, der leveres af hass.io-tilf\u00f8jelsen {addon}?",
                 "title": "MQTT-broker via Hass.io-tilf\u00f8jelse"
             }
-        },
-        "title": "MQTT"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -49,5 +48,6 @@
             "button_short_release": "\"{subtype}\" sluppet",
             "button_triple_press": "\"{subtype}\" tredobbeltklikket"
         }
-    }
+    },
+    "title": "MQTT"
 }

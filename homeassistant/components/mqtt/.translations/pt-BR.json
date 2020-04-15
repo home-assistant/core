@@ -25,7 +25,7 @@
                 "description": "Deseja configurar o Home Assistant para se conectar ao broker MQTT fornecido pelo complemento hass.io {addon}?",
                 "title": "MQTT Broker via add-on Hass.io"
             }
-        },
-        "title": "MQTT"
-    }
+        }
+    },
+    "title": "MQTT"
 }

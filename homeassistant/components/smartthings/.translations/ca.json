@@ -22,7 +22,7 @@
                 "description": "Instal\u00b7la l'SmartApp de Home Assistant en almenys una ubicaci\u00f3 i prem a Envia.",
                 "title": "Instal\u00b7laci\u00f3 de SmartApp"
             }
-        },
-        "title": "SmartThings"
-    }
+        }
+    },
+    "title": "SmartThings"
 }

@@ -27,8 +27,7 @@
                 "description": "Oldja fel a deCONZ \u00e1tj\u00e1r\u00f3t a Home Assistant-ban val\u00f3 regisztr\u00e1l\u00e1shoz.\n\n1. Menjen a deCONZ rendszer be\u00e1ll\u00edt\u00e1sokhoz\n2. Nyomja meg az \"\u00c1tj\u00e1r\u00f3 felold\u00e1sa\" gombot",
                 "title": "Kapcsol\u00f3d\u00e1s a deCONZ-hoz"
             }
-        },
-        "title": "deCONZ Zigbee gateway"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -92,5 +91,6 @@
                 "description": "A deCONZ eszk\u00f6zt\u00edpusok l\u00e1that\u00f3s\u00e1g\u00e1nak konfigur\u00e1l\u00e1sa"
             }
         }
-    }
+    },
+    "title": "deCONZ Zigbee gateway"
 }

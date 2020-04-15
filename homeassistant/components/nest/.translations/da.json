@@ -27,7 +27,7 @@
                 "description": "For at forbinde din Nest-konto, [godkend din konto]({url}). \n\nEfter godkendelse skal du kopiere pin koden nedenfor.",
                 "title": "Forbind Nest-konto"
             }
-        },
-        "title": "Nest"
-    }
+        }
+    },
+    "title": "Nest"
 }

@@ -14,8 +14,7 @@
                 },
                 "title": "ZHA"
             }
-        },
-        "title": "ZHA"
+        }
     },
     "device_automation": {
         "action_type": {
@@ -71,5 +70,6 @@
             "remote_button_short_release": "\"{subtype}\" \ubc84\ud2bc\uc5d0\uc11c \uc190\uc744 \ub5c4 \ub54c",
             "remote_button_triple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \uc138 \ubc88 \ub20c\ub9b4 \ub54c"
         }
-    }
+    },
+    "title": "ZHA"
 }

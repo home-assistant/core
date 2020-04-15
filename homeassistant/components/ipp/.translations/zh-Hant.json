@@ -4,6 +4,8 @@
             "already_configured": "\u6b64\u5370\u8868\u6a5f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "connection_error": "\u5370\u8868\u6a5f\u9023\u7dda\u5931\u6557\u3002",
             "connection_upgrade": "\u7531\u65bc\u9700\u8981\u5148\u5347\u7d1a\u9023\u7dda\u3001\u9023\u7dda\u81f3\u5370\u8868\u6a5f\u5931\u6557\u3002",
+            "ipp_error": "\u767c\u751f IPP \u932f\u8aa4\u3002",
+            "ipp_version_error": "\u4e0d\u652f\u63f4\u5370\u8868\u6a5f\u7684 IPP \u7248\u672c\u3002",
             "parse_error": "\u7372\u5f97\u5370\u8868\u6a5f\u56de\u61c9\u5931\u6557\u3002"
         },
         "error": {
@@ -27,7 +29,7 @@
                 "description": "\u662f\u5426\u8981\u65b0\u589e\u540d\u7a31 `{name}` \u5370\u8868\u6a5f\u81f3 Home Assistant\uff1f",
                 "title": "\u81ea\u52d5\u641c\u7d22\u5230\u7684\u5370\u8868\u6a5f"
             }
-        },
-        "title": "\u7db2\u969b\u7db2\u8def\u5217\u5370\u5354\u5b9a\uff08IPP\uff09"
-    }
+        }
+    },
+    "title": "\u7db2\u969b\u7db2\u8def\u5217\u5370\u5354\u5b9a\uff08IPP\uff09"
 }

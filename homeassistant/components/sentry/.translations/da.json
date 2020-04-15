@@ -12,7 +12,7 @@
                 "description": "Indtast dit Sentry-DSN",
                 "title": "Sentry"
             }
-        },
-        "title": "Sentry"
-    }
+        }
+    },
+    "title": "Sentry"
 }

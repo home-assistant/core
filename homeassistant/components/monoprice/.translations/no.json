@@ -20,8 +20,7 @@
                 },
                 "title": "Koble til enheten"
             }
-        },
-        "title": "Monoprice 6-Zone Forsterker"
+        }
     },
     "options": {
         "step": {
@@ -37,5 +36,6 @@
                 "title": "Konfigurer kilder"
             }
         }
-    }
+    },
+    "title": "Monoprice 6-Zone Forsterker"
 }

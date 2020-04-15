@@ -26,7 +26,7 @@
                 "description": "\u662f\u5426\u8981\u5c07\u5e8f\u865f {serial_number} \u4e4bBrother \u5370\u8868\u6a5f {model} \u65b0\u589e\u81f3 Home Assistant\uff1f",
                 "title": "\u81ea\u52d5\u63a2\u7d22\u5230 Brother \u5370\u8868\u6a5f"
             }
-        },
-        "title": "Brother \u5370\u8868\u6a5f"
-    }
+        }
+    },
+    "title": "Brother \u5370\u8868\u6a5f"
 }

@@ -26,8 +26,7 @@
                 "description": "Folytassa az enged\u00e9lyez\u00e9st a plex.tv webhelyen.",
                 "title": "Plex-kiszolg\u00e1l\u00f3 csatlakoztat\u00e1sa"
             }
-        },
-        "title": "Plex"
+        }
     },
     "options": {
         "step": {
@@ -38,5 +37,6 @@
                 "description": "Plex media lej\u00e1tsz\u00f3k be\u00e1ll\u00edt\u00e1sai"
             }
         }
-    }
+    },
+    "title": "Plex"
 }

@@ -14,8 +14,7 @@
                 "description": "Vera Kontroller URL uginn: D\u00e9i sollt sou ausgesinn:\nhttp://192.168.1.161:3480.",
                 "title": "Vera Kontroller ariichten"
             }
-        },
-        "title": "Vera"
+        }
     },
     "options": {
         "step": {
@@ -28,5 +27,6 @@
                 "title": "Vera Kontroller Optiounen"
             }
         }
-    }
+    },
+    "title": "Vera"
 }

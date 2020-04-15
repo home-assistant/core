@@ -19,8 +19,7 @@
                 },
                 "title": "Ops\u00e6t Vizio SmartCast-enhed"
             }
-        },
-        "title": "Vizio SmartCast"
+        }
     },
     "options": {
         "step": {
@@ -32,5 +31,6 @@
             }
         },
         "title": "Opdater Vizo SmartCast-indstillinger"
-    }
+    },
+    "title": "Vizio SmartCast"
 }

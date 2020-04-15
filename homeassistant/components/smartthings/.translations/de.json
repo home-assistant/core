@@ -22,7 +22,7 @@
                 "description": "Installiere die Home-Assistent SmartApp an mindestens einer Stelle, und klicke auf Absenden.",
                 "title": "SmartApp installieren"
             }
-        },
-        "title": "SmartThings"
-    }
+        }
+    },
+    "title": "SmartThings"
 }

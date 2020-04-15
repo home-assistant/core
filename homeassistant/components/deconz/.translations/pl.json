@@ -28,8 +28,7 @@
                 "description": "Odblokuj bramk\u0119 deCONZ, aby zarejestrowa\u0107 j\u0105 w Home Assistant. \n\n 1. Przejd\u017a do ustawienia deCONZ > bramka > Zaawansowane\n 2. Naci\u015bnij przycisk \"Uwierzytelnij aplikacj\u0119\"",
                 "title": "Po\u0142\u0105cz z deCONZ"
             }
-        },
-        "title": "Brama deCONZ Zigbee"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -94,5 +93,6 @@
                 "title": "Opcje deCONZ"
             }
         }
-    }
+    },
+    "title": "Brama deCONZ Zigbee"
 }

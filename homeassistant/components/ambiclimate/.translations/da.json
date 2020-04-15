@@ -17,7 +17,7 @@
                 "description": "F\u00f8lg dette [link]({authorization_url}) og <b>Tillad</b> adgang til din Ambiclimate-konto, vend s\u00e5 tilbage og tryk p\u00e5 <b>Indsend</b> nedenfor.\n(Kontroll\u00e9r den angivne callback url er {cb_url})",
                 "title": "Godkend Ambiclimate"
             }
-        },
-        "title": "Ambiclimate"
-    }
+        }
+    },
+    "title": "Ambiclimate"
 }

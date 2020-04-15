@@ -17,8 +17,7 @@
                 },
                 "title": "Tado"
             }
-        },
-        "title": "Tado"
+        }
     },
     "options": {
         "step": {
@@ -31,5 +30,6 @@
             }
         },
         "title": "Tado"
-    }
+    },
+    "title": "Tado"
 }

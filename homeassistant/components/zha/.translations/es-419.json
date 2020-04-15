@@ -14,8 +14,7 @@
                 },
                 "title": "ZHA"
             }
-        },
-        "title": "ZHA"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -34,5 +33,6 @@
             "device_slid": "Dispositivo deslizado \"{subtype}\"",
             "device_tilted": "Dispositivo inclinado"
         }
-    }
+    },
+    "title": "ZHA"
 }

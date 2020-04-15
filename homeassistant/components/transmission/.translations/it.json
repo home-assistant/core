@@ -19,8 +19,7 @@
                 },
                 "title": "Configura client di Trasmissione"
             }
-        },
-        "title": "Trasmissione"
+        }
     },
     "options": {
         "step": {
@@ -31,5 +30,6 @@
                 "title": "Configurare le opzioni per Transmission"
             }
         }
-    }
+    },
+    "title": "Trasmissione"
 }

@@ -17,8 +17,7 @@
                 },
                 "title": "\u9023\u7dda\u81f3 Tado \u5e33\u865f"
             }
-        },
-        "title": "Tado"
+        }
     },
     "options": {
         "step": {
@@ -31,5 +30,6 @@
             }
         },
         "title": "Tado"
-    }
+    },
+    "title": "Tado"
 }

@@ -25,8 +25,7 @@
                 "description": "Druk op de knop van de bridge om Philips Hue te registreren met Home Assistant.  \n\n![Locatie van de knop op bridge](/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
             }
-        },
-        "title": "Philips Hue"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -37,5 +36,6 @@
             "turn_off": "Uitschakelen",
             "turn_on": "Inschakelen"
         }
-    }
+    },
+    "title": "Philips Hue"
 }

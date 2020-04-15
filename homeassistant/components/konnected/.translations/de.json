@@ -26,8 +26,7 @@
                 "description": "Bitte geben Sie die Hostinformationen f\u00fcr Ihr Konnected Panel ein.",
                 "title": "Entdecken Sie Konnected Ger\u00e4t"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
@@ -105,5 +104,6 @@
             }
         },
         "title": "Konnected Alarm Panel-Optionen"
-    }
+    },
+    "title": "Konnected.io"
 }

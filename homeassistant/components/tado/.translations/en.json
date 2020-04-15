@@ -17,8 +17,7 @@
                 },
                 "title": "Connect to your Tado account"
             }
-        },
-        "title": "Tado"
+        }
     },
     "options": {
         "step": {
@@ -31,5 +30,6 @@
             }
         },
         "title": "Tado"
-    }
+    },
+    "title": "Tado"
 }

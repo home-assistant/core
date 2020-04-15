@@ -36,8 +36,7 @@
                 "description": "Todos los campos son obligatorios excepto el Token de Acceso. Si decides no proporcionar un Token de Acceso y tu Tipo de Dispositivo es \"tv\", se te llevar\u00e1 por un proceso de emparejamiento con tu dispositivo para que se pueda recuperar un Token de Acceso.\n\nPara pasar por el proceso de emparejamiento, antes de pulsar en Enviar, aseg\u00farese de que tu TV est\u00e9 encendida y conectada a la red. Tambi\u00e9n es necesario poder ver la pantalla.",
                 "title": "Configurar el cliente de Vizio SmartCast"
             }
-        },
-        "title": "Vizio SmartCast"
+        }
     },
     "options": {
         "step": {
@@ -52,5 +51,6 @@
             }
         },
         "title": "Actualizar las opciones de SmartCast de Vizo"
-    }
+    },
+    "title": "Vizio SmartCast"
 }

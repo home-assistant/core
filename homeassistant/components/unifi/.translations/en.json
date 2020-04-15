@@ -21,8 +21,7 @@
                 },
                 "title": "Set up UniFi Controller"
             }
-        },
-        "title": "UniFi Controller"
+        }
     },
     "error": {
         "unknown_client_mac": "No client available in UniFi on that MAC address"
@@ -57,5 +56,6 @@
                 "title": "UniFi options 3/3"
             }
         }
-    }
+    },
+    "title": "UniFi Controller"
 }

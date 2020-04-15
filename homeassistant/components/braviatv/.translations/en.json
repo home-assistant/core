@@ -23,8 +23,7 @@
                 "description": "Set up Sony Bravia TV integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/braviatv \n\nEnsure that your TV is turned on.",
                 "title": "Sony Bravia TV"
             }
-        },
-        "title": "Sony Bravia TV"
+        }
     },
     "options": {
         "step": {
@@ -35,5 +34,6 @@
                 "title": "Options for Sony Bravia TV"
             }
         }
-    }
+    },
+    "title": "Sony Bravia TV"
 }

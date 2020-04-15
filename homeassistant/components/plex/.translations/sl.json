@@ -26,8 +26,7 @@
                 "description": "Nadaljujte z avtorizacijo na plex.tv.",
                 "title": "Pove\u017eite stre\u017enik Plex"
             }
-        },
-        "title": "Plex"
+        }
     },
     "options": {
         "step": {
@@ -40,5 +39,6 @@
                 "description": "Mo\u017enosti za predvajalnike Plex"
             }
         }
-    }
+    },
+    "title": "Plex"
 }

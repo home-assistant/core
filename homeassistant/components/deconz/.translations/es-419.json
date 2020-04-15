@@ -27,8 +27,7 @@
                 "description": "Desbloquee su puerta de enlace deCONZ para registrarse con Home Assistant. \n\n 1. Vaya a Configuraci\u00f3n deCONZ - > Gateway - > Avanzado \n 2. Presione el bot\u00f3n \"Autenticar aplicaci\u00f3n\"",
                 "title": "Enlazar con deCONZ"
             }
-        },
-        "title": "deCONZ Zigbee gateway"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -48,5 +47,6 @@
             "remote_button_rotated": "Bot\u00f3n girado \"{subtype}\"",
             "remote_gyro_activated": "Dispositivo agitado"
         }
-    }
+    },
+    "title": "deCONZ Zigbee gateway"
 }

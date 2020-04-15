@@ -18,7 +18,7 @@
                 "description": "Configurazione dell'integrazione della qualit\u00e0 dell'aria Airly. Per generare la chiave API andare su https://developer.airly.eu/register",
                 "title": "Airly"
             }
-        },
-        "title": "Airly"
-    }
+        }
+    },
+    "title": "Airly"
 }

@@ -36,8 +36,7 @@
                 "description": "\uc561\uc138\uc2a4 \ud1a0\ud070\uc740 TV \uc5d0\ub9cc \ud544\uc694\ud569\ub2c8\ub2e4. TV \ub97c \uad6c\uc131\ud558\uace0 \uc788\uace0 \uc544\uc9c1 \uc561\uc138\uc2a4 \ud1a0\ud070\uc774 \uc5c6\ub294 \uacbd\uc6b0 \ud398\uc5b4\ub9c1 \uacfc\uc815\uc744 \uc9c4\ud589\ud558\ub824\uba74 \ube44\uc6cc\ub450\uc138\uc694.",
                 "title": "Vizio SmartCast \uae30\uae30 \uc124\uc815"
             }
-        },
-        "title": "Vizio SmartCast"
+        }
     },
     "options": {
         "step": {
@@ -52,5 +51,6 @@
             }
         },
         "title": "Vizo SmartCast \uc635\uc158 \uc5c5\ub370\uc774\ud2b8"
-    }
+    },
+    "title": "Vizio SmartCast"
 }

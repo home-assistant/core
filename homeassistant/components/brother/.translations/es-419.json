@@ -7,7 +7,7 @@
         "error": {
             "connection_error": "Error de conexi\u00f3n.",
             "snmp_error": "El servidor SNMP est\u00e1 apagado o la impresora no es compatible."
-        },
-        "title": "Impresora Brother"
-    }
+        }
+    },
+    "title": "Impresora Brother"
 }

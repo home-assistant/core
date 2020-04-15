@@ -26,8 +26,7 @@
                 "description": "\u8acb\u8f38\u5165 Konnected \u9762\u677f\u4e3b\u6a5f\u7aef\u8cc7\u8a0a\u3002",
                 "title": "\u641c\u7d22 Konnected \u8a2d\u5099"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
@@ -106,5 +105,6 @@
             }
         },
         "title": "Konnected \u8b66\u5831\u9762\u677f\u9078\u9805"
-    }
+    },
+    "title": "Konnected.io"
 }

@@ -12,7 +12,7 @@
                 "description": "Ange din Sentry DSN",
                 "title": "Sentry"
             }
-        },
-        "title": "Sentry"
-    }
+        }
+    },
+    "title": "Sentry"
 }

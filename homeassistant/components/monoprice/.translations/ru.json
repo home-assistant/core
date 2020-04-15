@@ -20,8 +20,7 @@
                 },
                 "title": "\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435 \u043a \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u0443"
             }
-        },
-        "title": "Monoprice 6-Zone Amplifier"
+        }
     },
     "options": {
         "step": {
@@ -37,5 +36,6 @@
                 "title": "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430 \u0438\u0441\u0442\u043e\u0447\u043d\u0438\u043a\u043e\u0432"
             }
         }
-    }
+    },
+    "title": "Monoprice 6-Zone Amplifier"
 }

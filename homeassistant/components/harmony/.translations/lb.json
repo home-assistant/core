@@ -20,8 +20,7 @@
                 },
                 "title": "Logitech Harmony Hub ariichten"
             }
-        },
-        "title": "Logitech Harmony Hub"
+        }
     },
     "options": {
         "step": {
@@ -33,5 +32,6 @@
                 "description": "Harmony Hub Optioune ajust\u00e9ieren"
             }
         }
-    }
+    },
+    "title": "Logitech Harmony Hub"
 }

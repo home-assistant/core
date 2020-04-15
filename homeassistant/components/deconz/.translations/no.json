@@ -28,12 +28,12 @@
                 "description": "L\u00e5s opp deCONZ-gatewayen din for \u00e5 registrere deg med Home Assistant. \n\n 1. G\u00e5 til deCONZ-systeminnstillinger -> Gateway -> Avansert \n 2. Trykk p\u00e5 \"L\u00e5s opp gateway\" knappen",
                 "title": "Koble til deCONZ"
             }
-        },
-        "title": "deCONZ Zigbee gateway"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Begge knappene",
+            "bottom_buttons": "Nederste knappene",
             "button_1": "F\u00f8rste knapp",
             "button_2": "Andre knapp",
             "button_3": "Tredje knapp",
@@ -50,6 +50,7 @@
             "side_4": "Side 4",
             "side_5": "Side 5",
             "side_6": "Side 6",
+            "top_buttons": "\u00d8verste knappene",
             "turn_off": "Skru av",
             "turn_on": "Sl\u00e5 p\u00e5"
         },
@@ -94,5 +95,6 @@
                 "title": "deCONZ alternativer"
             }
         }
-    }
+    },
+    "title": "deCONZ Zigbee gateway"
 }

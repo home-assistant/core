@@ -28,8 +28,7 @@
                 "description": "L\u00e5s upp din deCONZ-gateway f\u00f6r att registrera dig med Home Assistant. \n\n 1. G\u00e5 till deCONZ-systeminst\u00e4llningarna \n 2. Tryck p\u00e5 \"L\u00e5s upp gateway\"-knappen",
                 "title": "L\u00e4nka med deCONZ"
             }
-        },
-        "title": "deCONZ Zigbee Gateway"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -93,5 +92,6 @@
                 "description": "Konfigurera synlighet f\u00f6r deCONZ-enhetstyper"
             }
         }
-    }
+    },
+    "title": "deCONZ Zigbee Gateway"
 }

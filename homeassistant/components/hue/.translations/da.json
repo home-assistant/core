@@ -25,8 +25,7 @@
                 "description": "Tryk p\u00e5 knappen p\u00e5 broen for at registrere Philips Hue med Home Assistant. \n\n ![Placering af knap p\u00e5 bro](/static/images/config_philips_hue.jpg)",
                 "title": "Forbind Hub"
             }
-        },
-        "title": "Philips Hue"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -44,5 +43,6 @@
             "remote_button_short_press": "\"{subtype}\"-knappen trykket p\u00e5",
             "remote_button_short_release": "\"{subtype}\"-knappen frigivet"
         }
-    }
+    },
+    "title": "Philips Hue"
 }

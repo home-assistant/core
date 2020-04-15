@@ -21,7 +21,7 @@
                 "description": "\u00bfDesea agregar Elgato Key Light con el n\u00famero de serie `{serial_number}` a Home Assistant?",
                 "title": "Descubierto dispositivo Elgato Key Light"
             }
-        },
-        "title": "Elgato Key Light"
-    }
+        }
+    },
+    "title": "Elgato Key Light"
 }

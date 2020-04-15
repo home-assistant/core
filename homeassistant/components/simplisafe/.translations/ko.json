@@ -15,8 +15,7 @@
                 },
                 "title": "\uc0ac\uc6a9\uc790 \uc815\ubcf4 \uc785\ub825"
             }
-        },
-        "title": "SimpliSafe"
+        }
     },
     "options": {
         "step": {
@@ -27,5 +26,6 @@
                 "title": "SimpliSafe \uad6c\uc131"
             }
         }
-    }
+    },
+    "title": "SimpliSafe"
 }

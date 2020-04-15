@@ -21,8 +21,7 @@
                 },
                 "title": "Connexi\u00f3 amb DoorBird"
             }
-        },
-        "title": "DoorBird"
+        }
     },
     "options": {
         "step": {
@@ -33,5 +32,6 @@
                 "description": "Afegeix el/s noms del/s esdeveniment/s que vulguis seguir separats per comes. Despr\u00e9s d\u2019introduir-los, utilitzeu l\u2019aplicaci\u00f3 de DoorBird per assignar-los a un esdeveniment espec\u00edfic. Consulta la documentaci\u00f3 a https://www.home-assistant.io/integrations/doorbird/#events.\nExemple: algu_ha_premut_el_boto, moviment_detectat"
             }
         }
-    }
+    },
+    "title": "DoorBird"
 }
