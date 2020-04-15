@@ -237,17 +237,8 @@ def test_check_loop_sync(caplog):
     assert "Detected I/O inside the event loop" not in caplog.text
 
 
-async def test_protect_loop_async(caplog):
-    """Test protect_loop detects when called from event loop."""
-    calls = []
-    with patch("homeassistant.util.async_.check_loop") as mock_loop:
-        hasync.protect_loop(calls.append)(1)
-    assert len(mock_loop.mock_calls) == 1
-    assert calls == [1]
-
-
-def test_protect_loop_sync(caplog):
-    """Test protect_loop does nothing when called from thread."""
+def test_protect_loop_sync():
+    """Test protect_loop calls check_loop."""
     calls = []
     with patch("homeassistant.util.async_.check_loop") as mock_loop:
         hasync.protect_loop(calls.append)(1)
