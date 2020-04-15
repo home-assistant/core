@@ -845,10 +845,8 @@ async def test_lock_unlock_unlock(hass):
     assert err.value.code == const.ERR_CHALLENGE_NOT_SETUP
 
     # Test with 2FA override
-    with patch(
-        "homeassistant.components.google_assistant.helpers"
-        ".AbstractConfig.should_2fa",
-        return_value=False,
+    with patch.object(
+        BASIC_CONFIG, "should_2fa", return_value=False,
     ):
         await trt.execute(trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {"lock": False}, {})
     assert len(calls) == 2
