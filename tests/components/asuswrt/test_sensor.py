@@ -1,7 +1,8 @@
 """The tests for the AsusWrt sensor platform."""
 from collections import namedtuple
 from datetime import datetime, timedelta
-from unittest.mock import patch
+
+from asynctest import CoroutineMock, patch
 
 from homeassistant.components import sensor
 from homeassistant.components.asuswrt import (
@@ -20,7 +21,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed, mock_coro_func
+from tests.common import async_fire_time_changed
 
 VALID_CONFIG_ROUTER_SSH = {
     DOMAIN: {
@@ -56,19 +57,17 @@ MOCK_CURRENT_TRANSFER_RATES = [20000000, 10000000]
 async def test_sensors(hass: HomeAssistant):
     """Test creating an AsusWRT sensor."""
     with patch("homeassistant.components.asuswrt.AsusWrt") as AsusWrt:
-        AsusWrt().connection.async_connect = mock_coro_func()
-        AsusWrt().async_get_connected_devices = mock_coro_func(MOCK_DEVICES)
-        AsusWrt().async_get_bytes_total = mock_coro_func(MOCK_BYTES_TOTAL)
-        AsusWrt().async_get_current_transfer_rates = mock_coro_func(
-            MOCK_CURRENT_TRANSFER_RATES
+        AsusWrt().connection.async_connect = CoroutineMock()
+        AsusWrt().async_get_connected_devices = CoroutineMock(return_value=MOCK_DEVICES)
+        AsusWrt().async_get_bytes_total = CoroutineMock(return_value=MOCK_BYTES_TOTAL)
+        AsusWrt().async_get_current_transfer_rates = CoroutineMock(
+            return_value=MOCK_CURRENT_TRANSFER_RATES
         )
-
-        assert await async_setup_component(hass, DOMAIN, VALID_CONFIG_ROUTER_SSH)
-        await hass.async_block_till_done()
-        assert hass.data[DATA_ASUSWRT] is not None
 
         now = datetime(2020, 1, 1, 1, tzinfo=dt_util.UTC)
         with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+            assert await async_setup_component(hass, DOMAIN, VALID_CONFIG_ROUTER_SSH)
+            await hass.async_block_till_done()
             async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
             await hass.async_block_till_done()
 
