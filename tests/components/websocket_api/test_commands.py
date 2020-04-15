@@ -10,6 +10,7 @@ from homeassistant.components.websocket_api.auth import (
 from homeassistant.components.websocket_api.const import URL
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -467,3 +468,32 @@ async def test_render_template_returns_with_match_all(
     assert msg["id"] == 5
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
+
+
+async def test_integrations(hass, websocket_client):
+    """Test loading integrations."""
+    http = await async_get_integration(hass, "http")
+    websocket_api = await async_get_integration(hass, "websocket_api")
+
+    await websocket_client.send_json({"id": 5, "type": "integrations"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert sorted(msg["result"], key=lambda manifest: manifest["domain"]) == [
+        http.manifest,
+        websocket_api.manifest,
+    ]
+
+    await websocket_client.send_json(
+        {"id": 6, "type": "integrations", "filter": ["websocket_api"]}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert sorted(msg["result"], key=lambda manifest: manifest["domain"]) == [
+        websocket_api.manifest,
+    ]

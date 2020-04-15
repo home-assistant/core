@@ -1,4 +1,6 @@
 """Commands part of Websocket API."""
+import asyncio
+
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import POLICY_READ
@@ -8,6 +10,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, Unauth
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.service import async_get_all_descriptions
+from homeassistant.loader import async_get_integration
 
 from . import const, decorators, messages
 
@@ -25,6 +28,7 @@ def async_register_commands(hass, async_reg):
     async_reg(hass, handle_get_config)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
+    async_reg(hass, handle_integrations)
 
 
 def pong_message(iden):
@@ -40,10 +44,7 @@ def pong_message(iden):
     }
 )
 def handle_subscribe_events(hass, connection, msg):
-    """Handle subscribe events command.
-
-    Async friendly.
-    """
+    """Handle subscribe events command."""
     # Circular dep
     # pylint: disable=import-outside-toplevel
     from .permissions import SUBSCRIBE_WHITELIST
@@ -90,10 +91,7 @@ def handle_subscribe_events(hass, connection, msg):
     }
 )
 def handle_unsubscribe_events(hass, connection, msg):
-    """Handle unsubscribe events command.
-
-    Async friendly.
-    """
+    """Handle unsubscribe events command."""
     subscription = msg["subscription"]
 
     if subscription in connection.subscriptions:
@@ -117,10 +115,7 @@ def handle_unsubscribe_events(hass, connection, msg):
 )
 @decorators.async_response
 async def handle_call_service(hass, connection, msg):
-    """Handle call service command.
-
-    Async friendly.
-    """
+    """Handle call service command."""
     blocking = True
     if msg["domain"] == HASS_DOMAIN and msg["service"] in ["restart", "stop"]:
         blocking = False
@@ -164,10 +159,7 @@ async def handle_call_service(hass, connection, msg):
 @callback
 @decorators.websocket_command({vol.Required("type"): "get_states"})
 def handle_get_states(hass, connection, msg):
-    """Handle get states command.
-
-    Async friendly.
-    """
+    """Handle get states command."""
     if connection.user.permissions.access_all_entities("read"):
         states = hass.states.async_all()
     else:
@@ -184,10 +176,7 @@ def handle_get_states(hass, connection, msg):
 @decorators.websocket_command({vol.Required("type"): "get_services"})
 @decorators.async_response
 async def handle_get_services(hass, connection, msg):
-    """Handle get services command.
-
-    Async friendly.
-    """
+    """Handle get services command."""
     descriptions = await async_get_all_descriptions(hass)
     connection.send_message(messages.result_message(msg["id"], descriptions))
 
@@ -195,20 +184,37 @@ async def handle_get_services(hass, connection, msg):
 @callback
 @decorators.websocket_command({vol.Required("type"): "get_config"})
 def handle_get_config(hass, connection, msg):
-    """Handle get config command.
-
-    Async friendly.
-    """
+    """Handle get config command."""
     connection.send_message(messages.result_message(msg["id"], hass.config.as_dict()))
+
+
+@decorators.websocket_command(
+    {vol.Required("type"): "integrations", vol.Optional("filter"): [str]}
+)
+@decorators.async_response
+async def handle_integrations(hass, connection, msg):
+    """Handle integrations command."""
+    integrations = [
+        domain
+        for domain in hass.config.components
+        # Filter out platforms.
+        if "." not in domain
+    ]
+    if "filter" in msg:
+        integrations = [domain for domain in integrations if domain in msg["filter"]]
+
+    integrations = await asyncio.gather(
+        *[async_get_integration(hass, domain) for domain in integrations]
+    )
+    connection.send_result(
+        msg["id"], [integration.manifest for integration in integrations]
+    )
 
 
 @callback
 @decorators.websocket_command({vol.Required("type"): "ping"})
 def handle_ping(hass, connection, msg):
-    """Handle ping command.
-
-    Async friendly.
-    """
+    """Handle ping command."""
     connection.send_message(pong_message(msg["id"]))
 
 
@@ -222,10 +228,7 @@ def handle_ping(hass, connection, msg):
     }
 )
 def handle_render_template(hass, connection, msg):
-    """Handle render_template command.
-
-    Async friendly.
-    """
+    """Handle render_template command."""
     template = msg["template"]
     template.hass = hass
 
