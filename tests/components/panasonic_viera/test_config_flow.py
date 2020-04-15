@@ -42,10 +42,10 @@ def get_mock_remote(
 ):
     """Return a mock remote."""
     mock_remote = Mock()
-    mock_remote._host = host
-    mock_remote._type = TV_TYPE_ENCRYPTED if encrypted else TV_TYPE_NONENCRYPTED
-    mock_remote._app_id = app_id
-    mock_remote._enc_key = encryption_key
+
+    mock_remote.type = TV_TYPE_ENCRYPTED if encrypted else TV_TYPE_NONENCRYPTED
+    mock_remote.app_id = app_id
+    mock_remote.enc_key = encryption_key
 
     def request_pin_code(name=None):
         return
