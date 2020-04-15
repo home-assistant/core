@@ -1,9 +1,11 @@
 """The nut component."""
 import asyncio
 from datetime import timedelta
+import ipaddress
 import logging
 
 import async_timeout
+import getmac
 from pynut2.nut2 import PyNUTClient, PyNUTError
 
 from homeassistant.config_entries import ConfigEntry
@@ -19,11 +21,16 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util.network import is_loopback
 
 from .const import (
     COORDINATOR,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_UPS_ALIAS,
     DOMAIN,
+    EMPTY_MAC_ADDRESS,
+    IPV4_LOOPBACK,
+    LOCALHOST,
     PLATFORMS,
     PYNUT_DATA,
     PYNUT_FIRMWARE,
@@ -86,10 +93,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     unique_id = _unique_id_from_status(status)
 
     if unique_id is None:
-        # If the device is missing a serial number
-        # we fallback to the host/port/alias
-        # as the sensors won't show up on the integrations page.
-        unique_id = format_host_port_alias(config)
+        unique_id = await hass.async_add_executor_job(
+            _unique_id_from_nut_server, config
+        )
 
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,
@@ -113,6 +119,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+def _unique_id_from_nut_server(config):
+    """Get the mac address of NUT if its on the LAN."""
+    nut_host = config[CONF_HOST]
+    host_is_ip = True
+
+    if nut_host == LOCALHOST:
+        nut_host = IPV4_LOOPBACK
+    else:
+        try:
+            ipaddress.ip_address(nut_host)
+        except ValueError:
+            host_is_ip = False
+
+    if host_is_ip and is_loopback(ipaddress.ip_address(nut_host)):
+        mac_addr = getmac.get_mac_address()
+    elif host_is_ip:
+        mac_addr = getmac.get_mac_address(ip=nut_host)
+    else:
+        mac_addr = getmac.get_mac_address(hostname=nut_host)
+
+    _LOGGER.debug("mac_address of NUT at %s: %s", nut_host, mac_addr)
+
+    if mac_addr is None or mac_addr == EMPTY_MAC_ADDRESS:
+        return None
+
+    ups_alias = config.get(CONF_ALIAS, DEFAULT_UPS_ALIAS)
+    return f"{ups_alias}_{mac_addr}"
 
 
 def _manufacturer_from_status(status):
