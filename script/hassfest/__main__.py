@@ -8,16 +8,15 @@ from . import (
     config_flow,
     coverage,
     dependencies,
-    json,
     manifest,
     services,
     ssdp,
+    translations,
     zeroconf,
 )
 from .model import Config, Integration
 
 PLUGINS = [
-    json,
     codeowners,
     config_flow,
     coverage,
@@ -25,6 +24,7 @@ PLUGINS = [
     manifest,
     services,
     ssdp,
+    translations,
     zeroconf,
 ]
 

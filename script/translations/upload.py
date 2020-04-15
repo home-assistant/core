@@ -82,3 +82,5 @@ def run():
     LOCAL_FILE.write_text(json.dumps(translations, indent=4, sort_keys=True))
 
     run_upload_docker()
+
+    return 0
