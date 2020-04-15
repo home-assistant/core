@@ -42,6 +42,20 @@ ON_TEMPERATURE = 30.5
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
+HASS_PRESET_TO_MAX_MODE = {
+    PRESET_AWAY: MAX_DEVICE_MODE_VACATION,
+    PRESET_BOOST: MAX_DEVICE_MODE_BOOST,
+    PRESET_NONE: MAX_DEVICE_MODE_AUTOMATIC,
+    PRESET_ON: MAX_DEVICE_MODE_MANUAL,
+}
+
+MAX_MODE_TO_HASS_PRESET = {
+    MAX_DEVICE_MODE_AUTOMATIC: PRESET_NONE,
+    MAX_DEVICE_MODE_BOOST: PRESET_BOOST,
+    MAX_DEVICE_MODE_MANUAL: PRESET_NONE,
+    MAX_DEVICE_MODE_VACATION: PRESET_AWAY,
+}
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Iterate through all MAX! Devices and add thermostats."""
@@ -111,11 +125,15 @@ class MaxCubeClimate(ClimateDevice):
     def hvac_mode(self):
         """Return current operation mode."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-        if device.mode == MAX_DEVICE_MODE_MANUAL:
-            if device.target_temperature == OFF_TEMPERATURE:
-                return HVAC_MODE_OFF
-            return HVAC_MODE_HEAT
-        return HVAC_MODE_AUTO
+        if device.mode in [MAX_DEVICE_MODE_AUTOMATIC, MAX_DEVICE_MODE_BOOST]:
+            return HVAC_MODE_AUTO
+        if (
+            device.mode == MAX_DEVICE_MODE_MANUAL
+            and device.target_temperature == OFF_TEMPERATURE
+        ):
+            return HVAC_MODE_OFF
+
+        return HVAC_MODE_HEAT
 
     @property
     def hvac_modes(self):
@@ -147,7 +165,7 @@ class MaxCubeClimate(ClimateDevice):
         with self._cubehandle.mutex:
             try:
                 cube.set_temperature_mode(device, temp, mode)
-            except (socket.timeout, socket.error):
+            except (socket.timeout, OSError):
                 _LOGGER.error("Setting HVAC mode failed")
                 return
 
@@ -215,7 +233,7 @@ class MaxCubeClimate(ClimateDevice):
                 return PRESET_ON
             return PRESET_NONE
 
-        return self.map_preset_max_hass(device.mode)
+        return MAX_MODE_TO_HASS_PRESET[device.mode]
 
     @property
     def preset_modes(self):
@@ -244,7 +262,7 @@ class MaxCubeClimate(ClimateDevice):
             else:
                 temp = ON_TEMPERATURE
         else:
-            mode = self.map_preset_hass_max(preset_mode) or MAX_DEVICE_MODE_AUTOMATIC
+            mode = HASS_PRESET_TO_MAX_MODE[preset_mode] or MAX_DEVICE_MODE_AUTOMATIC
 
         with self._cubehandle.mutex:
             try:
@@ -254,11 +272,11 @@ class MaxCubeClimate(ClimateDevice):
                 return
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the optional state attributes."""
         cube = self._cubehandle.cube
         device = cube.device_by_rf(self._rf_address)
-        attributes = super().state_attributes
+        attributes = {}
 
         if cube.is_thermostat(device):
             attributes[ATTR_VALVE_POSITION] = device.valve_position
@@ -276,33 +294,3 @@ class MaxCubeClimate(ClimateDevice):
             return 0.0
 
         return temperature
-
-    @staticmethod
-    def map_preset_hass_max(preset):
-        """Map Home Assistant Preset Modes to MAX! Operation Modes."""
-        if preset == PRESET_NONE:
-            mode = MAX_DEVICE_MODE_AUTOMATIC
-        elif preset == PRESET_AWAY:
-            mode = MAX_DEVICE_MODE_VACATION
-        elif preset == PRESET_BOOST:
-            mode = MAX_DEVICE_MODE_BOOST
-        elif preset == PRESET_ON:
-            mode = MAX_DEVICE_MODE_MANUAL
-        else:
-            mode = None
-
-        return mode
-
-    @staticmethod
-    def map_preset_max_hass(mode):
-        """Map MAX! Operation Modes to Home Assistant Preset Modes."""
-        if mode in [MAX_DEVICE_MODE_AUTOMATIC, MAX_DEVICE_MODE_MANUAL]:
-            preset = PRESET_NONE
-        elif mode == MAX_DEVICE_MODE_VACATION:
-            preset = PRESET_AWAY
-        elif mode == MAX_DEVICE_MODE_BOOST:
-            preset = PRESET_BOOST
-        else:
-            preset = None
-
-        return preset
