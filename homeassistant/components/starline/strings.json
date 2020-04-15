@@ -1,6 +1,6 @@
 {
+  "title": "StarLine",
   "config": {
-    "title": "StarLine",
     "step": {
       "auth_app": {
         "title": "Application credentials",

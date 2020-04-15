@@ -1,4 +1,5 @@
 {
+  "title": "Soma",
   "config": {
     "abort": {
       "already_setup": "You can only configure one Soma account.",
@@ -19,7 +20,6 @@
         "description": "Please enter connection settings of your SOMA Connect.",
         "title": "SOMA Connect"
       }
-    },
-    "title": "Soma"
+    }
   }
 }

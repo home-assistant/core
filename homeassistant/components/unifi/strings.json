@@ -1,6 +1,6 @@
 {
+  "title": "UniFi Controller",
   "config": {
-    "title": "UniFi Controller",
     "step": {
       "user": {
         "title": "Set up UniFi Controller",

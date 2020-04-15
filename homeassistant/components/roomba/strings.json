@@ -1,6 +1,6 @@
 {
+  "title": "iRobot Roomba",
   "config": {
-    "title": "iRobot Roomba",
     "step": {
       "user": {
         "title": "Connect to the device",

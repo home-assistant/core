@@ -1,6 +1,6 @@
 {
+  "title": "Life360",
   "config": {
-    "title": "Life360",
     "step": {
       "user": {
         "title": "Life360 Account Info",

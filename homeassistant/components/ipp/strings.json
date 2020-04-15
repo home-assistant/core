@@ -1,6 +1,6 @@
 {
+  "title": "Internet Printing Protocol (IPP)",
   "config": {
-    "title": "Internet Printing Protocol (IPP)",
     "flow_title": "Printer: {name}",
     "step": {
       "user": {

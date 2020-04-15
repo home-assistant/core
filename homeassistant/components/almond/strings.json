@@ -1,4 +1,5 @@
 {
+  "title": "Almond",
   "config": {
     "step": {
       "pick_implementation": {
@@ -13,7 +14,6 @@
       "already_setup": "You can only configure one Almond account.",
       "cannot_connect": "Unable to connect to the Almond server.",
       "missing_configuration": "Please check the documentation on how to set up Almond."
-    },
-    "title": "Almond"
+    }
   }
 }

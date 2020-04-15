@@ -1,6 +1,6 @@
 {
+  "title": "GPSLogger Webhook",
   "config": {
-    "title": "GPSLogger Webhook",
     "step": {
       "user": {
         "title": "Set up the GPSLogger Webhook",

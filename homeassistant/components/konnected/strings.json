@@ -1,6 +1,6 @@
 {
+  "title": "Konnected.io",
   "config": {
-    "title": "Konnected.io",
     "step": {
       "import_confirm": {
         "title": "Import Konnected Device",
@@ -30,7 +30,6 @@
     }
   },
   "options": {
-    "title": "Konnected Alarm Panel Options",
     "step": {
       "options_io": {
         "title": "Configure I/O",

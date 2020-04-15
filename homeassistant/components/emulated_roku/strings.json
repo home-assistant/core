@@ -1,4 +1,5 @@
 {
+  "title": "EmulatedRoku",
   "config": {
     "abort": {
       "name_exists": "Name already exists"
@@ -15,7 +16,6 @@
         },
         "title": "Define server configuration"
       }
-    },
-    "title": "EmulatedRoku"
+    }
   }
 }

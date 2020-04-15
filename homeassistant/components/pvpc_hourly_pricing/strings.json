@@ -1,6 +1,6 @@
 {
+  "title": "Hourly price of electricity in Spain (PVPC)",
   "config": {
-    "title": "Hourly price of electricity in Spain (PVPC)",
     "step": {
       "user": {
         "title": "Tariff selection",

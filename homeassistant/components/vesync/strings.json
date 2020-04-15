@@ -1,6 +1,6 @@
 {
+  "title": "VeSync",
   "config": {
-    "title": "VeSync",
     "step": {
       "user": {
         "title": "Enter Username and Password",

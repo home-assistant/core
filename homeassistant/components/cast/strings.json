@@ -1,6 +1,6 @@
 {
+  "title": "Google Cast",
   "config": {
-    "title": "Google Cast",
     "step": {
       "confirm": {
         "title": "Google Cast",

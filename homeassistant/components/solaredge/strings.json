@@ -1,6 +1,6 @@
 {
+  "title": "SolarEdge",
   "config": {
-    "title": "SolarEdge",
     "step": {
       "user": {
         "title": "Define the API parameters for this installation",

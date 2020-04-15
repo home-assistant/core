@@ -1,6 +1,6 @@
 {
+  "title": "SimpliSafe",
   "config": {
-    "title": "SimpliSafe",
     "step": {
       "user": {
         "title": "Fill in your information",

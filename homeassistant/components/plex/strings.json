@@ -1,6 +1,6 @@
 {
+  "title": "Plex",
   "config": {
-    "title": "Plex",
     "step": {
       "select_server": {
         "title": "Select Plex server",

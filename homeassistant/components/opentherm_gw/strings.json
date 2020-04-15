@@ -1,6 +1,6 @@
 {
+  "title": "OpenTherm Gateway",
   "config": {
-    "title": "OpenTherm Gateway",
     "step": {
       "init": {
         "title": "OpenTherm Gateway",

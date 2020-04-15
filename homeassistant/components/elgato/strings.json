@@ -1,6 +1,6 @@
 {
+  "title": "Elgato Key Light",
   "config": {
-    "title": "Elgato Key Light",
     "flow_title": "Elgato Key Light: {serial_number}",
     "step": {
       "user": {

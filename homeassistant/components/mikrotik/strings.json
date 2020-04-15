@@ -1,6 +1,6 @@
 {
+  "title": "Mikrotik",
   "config": {
-    "title": "Mikrotik",
     "step": {
       "user": {
         "title": "Set up Mikrotik Router",

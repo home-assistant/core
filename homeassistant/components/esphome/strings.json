@@ -1,4 +1,5 @@
 {
+  "title": "ESPHome",
   "config": {
     "abort": {
       "already_configured": "ESP is already configured"
@@ -29,7 +30,6 @@
         "title": "Discovered ESPHome node"
       }
     },
-    "title": "ESPHome",
     "flow_title": "ESPHome: {name}"
   }
 }
