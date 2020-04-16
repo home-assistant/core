@@ -267,7 +267,7 @@ async def test_linked_battery_charging_sensor(hass, hk_driver, caplog):
     acc.update_state = lambda x: None
     assert acc.linked_battery_charging_sensor == linked_battery_charging_sensor
 
-    await hass.async_add_job(acc.run)
+    await acc.run_handler()
     await hass.async_block_till_done()
     assert acc._char_battery.value == 100
     assert acc._char_low_battery.value == 0
