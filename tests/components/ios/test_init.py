@@ -3,11 +3,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import bootstrap
 from homeassistant.components import ios
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, mock_component, mock_coro
+from tests.common import mock_component, mock_coro
 
 
 @pytest.fixture(autouse=True)
@@ -26,9 +25,6 @@ def mock_dependencies(hass):
 
 async def test_creating_entry_sets_up_sensor(hass):
     """Test setting up iOS loads the sensor component."""
-    # so it will not have an empty config
-    entry = MockConfigEntry(domain=ios.DOMAIN, data={},)
-    entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.ios.sensor.async_setup_entry",
         return_value=mock_coro(True),
