@@ -5,7 +5,14 @@ import ssl
 
 from aiohttp import CookieJar
 import aiounifi
-from aiounifi.controller import SIGNAL_CONNECTION_STATE
+from aiounifi.controller import (
+    DATA_CLIENT,
+    DATA_CLIENT_REMOVED,
+    DATA_DEVICE,
+    DATA_EVENT,
+    SIGNAL_CONNECTION_STATE,
+    SIGNAL_DATA,
+)
 from aiounifi.events import WIRELESS_CLIENT_CONNECTED, WIRELESS_GUEST_CONNECTED
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 import async_timeout
@@ -161,15 +168,22 @@ class UniFiController:
                 if not self.available:
                     self.hass.loop.call_later(RETRY_TIMER, self.reconnect)
 
-        elif signal == "new_data" and data:
-            if "event" in data:
-                if data["event"].event in (
+        elif signal == SIGNAL_DATA and data:
+
+            if DATA_EVENT in data:
+                if data[DATA_EVENT].event in (
                     WIRELESS_CLIENT_CONNECTED,
                     WIRELESS_GUEST_CONNECTED,
                 ):
                     self.update_wireless_clients()
-            elif "clients" in data or "devices" in data:
+
+            elif DATA_CLIENT in data or DATA_DEVICE in data:
                 async_dispatcher_send(self.hass, self.signal_update)
+
+            elif DATA_CLIENT_REMOVED in data:
+                async_dispatcher_send(
+                    self.hass, self.signal_remove, data[DATA_CLIENT_REMOVED]
+                )
 
     @property
     def signal_reachable(self) -> str:
@@ -180,6 +194,11 @@ class UniFiController:
     def signal_update(self):
         """Event specific per UniFi entry to signal new data."""
         return f"unifi-update-{self.controller_id}"
+
+    @property
+    def signal_remove(self):
+        """Event specific per UniFi entry to signal removal of entities."""
+        return f"unifi-remove-{self.controller_id}"
 
     @property
     def signal_options_update(self):
