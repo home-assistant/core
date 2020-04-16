@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
-_RESOURCE = "https://data.dublinked.ie/cgi-bin/rtpi/realtimebusinformation"
+_RESOURCE = "https://data.smartdublin.ie/cgi-bin/rtpi/realtimebusinformation"
 
 ATTR_STOP_ID = "Stop ID"
 ATTR_ROUTE = "Route"
