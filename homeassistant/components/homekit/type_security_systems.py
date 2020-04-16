@@ -93,5 +93,8 @@ class SecuritySystem(HomeAccessory):
                 )
 
             # SecuritySystemTargetState does not support triggered
-            if hass_state not in (STATE_ALARM_TRIGGERED, self.char_target_state.value):
+            if (
+                hass_state != STATE_ALARM_TRIGGERED
+                and self.char_target_state.value != current_security_state
+            ):
                 self.char_target_state.set_value(current_security_state)
