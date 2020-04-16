@@ -352,6 +352,7 @@ homeassistant/components/solarlog/* @Ernst79
 homeassistant/components/solax/* @squishykid
 homeassistant/components/soma/* @ratsept
 homeassistant/components/somfy/* @tetienne
+homeassistant/components/sonarr/* @ctalkington
 homeassistant/components/songpal/* @rytilahti
 homeassistant/components/sonos/* @amelchio
 homeassistant/components/spaceapi/* @fabaff
