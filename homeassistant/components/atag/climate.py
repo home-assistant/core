@@ -25,17 +25,17 @@ async def async_setup_platform(hass, _config, async_add_devices, _discovery_info
 
 async def async_setup_entry(hass, entry, async_add_devices):
     """Load a config entry."""
-    atag = hass.data[DOMAIN][entry.entry_id]
-    async_add_devices([AtagThermostat(atag, ENTITY_TYPES[CLIMATE])])
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_devices([AtagThermostat(coordinator, ENTITY_TYPES[CLIMATE])])
 
 
 class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
     """Atag climate device."""
 
-    def __init__(self, atag, atagtype):
+    def __init__(self, coordinator, atagtype):
         """Initialize with fake on/off state."""
-        super().__init__(atag, atagtype)
         self._on = None
+        super().__init__(coordinator, atagtype)
 
     async def async_added_to_hass(self):
         """Register callbacks & state restore for fake "Off" mode."""
@@ -54,7 +54,7 @@ class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
         """Return hvac operation ie. heat, cool mode."""
         if not self._on:
             return HVAC_MODE_OFF
-        return self.atag.hvac_mode
+        return self.coordinator.atag.hvac_mode
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -64,7 +64,7 @@ class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
     @property
     def hvac_action(self) -> Optional[str]:
         """Return the current running hvac operation."""
-        if self.atag.cv_status:
+        if self.coordinator.atag.cv_status:
             return CURRENT_HVAC_HEAT
         return CURRENT_HVAC_IDLE
 
@@ -76,12 +76,12 @@ class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
     @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
-        return self.atag.temperature
+        return self.coordinator.atag.temperature
 
     @property
     def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
-        return self.atag.target_temperature
+        return self.coordinator.atag.target_temperature
 
     @property
     def max_temp(self):
@@ -95,12 +95,14 @@ class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
-        if self._on and await self.atag.set_temp(kwargs.get(ATTR_TEMPERATURE)):
-            self.async_schedule_update_ha_state(True)
+        if self._on and await self.coordinator.atag.set_temp(
+            kwargs.get(ATTR_TEMPERATURE)
+        ):
+            await self.coordinator.async_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         self._on = hvac_mode != HVAC_MODE_OFF
         if self._on:
-            await self.atag.set_hvac_mode(hvac_mode)
-        self.async_schedule_update_ha_state()
+            await self.coordinator.atag.set_hvac_mode(hvac_mode)
+        await self.coordinator.async_refresh()

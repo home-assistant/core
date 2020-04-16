@@ -20,8 +20,8 @@ async def async_setup_platform(hass, config, async_add_devices, _discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Initialize DHW device from config entry."""
-    atag = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([AtagWaterHeater(atag, ENTITY_TYPES[WATER_HEATER])])
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities([AtagWaterHeater(coordinator, ENTITY_TYPES[WATER_HEATER])])
 
 
 class AtagWaterHeater(AtagEntity, WaterHeaterDevice):
@@ -40,12 +40,12 @@ class AtagWaterHeater(AtagEntity, WaterHeaterDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self.atag.dhw_temperature
+        return self.coordinator.atag.dhw_temperature
 
     @property
     def current_operation(self):
         """Return current operation."""
-        if self.atag.dhw_status:
+        if self.coordinator.atag.dhw_status:
             return STATE_PERFORMANCE
         return STATE_OFF
 
@@ -56,8 +56,8 @@ class AtagWaterHeater(AtagEntity, WaterHeaterDevice):
 
     async def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if await self.atag.dhw_set_temp(kwargs.get(ATTR_TEMPERATURE)):
-            self.async_schedule_update_ha_state(True)
+        if await self.coordinator.atag.dhw_set_temp(kwargs.get(ATTR_TEMPERATURE)):
+            await self.coordinator.async_refresh()
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
@@ -66,14 +66,14 @@ class AtagWaterHeater(AtagEntity, WaterHeaterDevice):
     @property
     def target_temperature(self):
         """Return the setpoint if water demand, otherwise return base temp (comfort level)."""
-        return self.atag.dhw_target_temperature
+        return self.coordinator.atag.dhw_target_temperature
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self.atag.dhw_max_temp
+        return self.coordinator.atag.dhw_max_temp
 
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self.atag.dhw_min_temp
+        return self.coordinator.atag.dhw_min_temp

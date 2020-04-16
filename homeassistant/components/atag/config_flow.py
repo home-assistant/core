@@ -4,14 +4,13 @@ from pyatag import DEFAULT_PORT, AtagDataStore, AtagException
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_DEVICE, CONF_EMAIL, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 
 from . import DOMAIN  # pylint: disable=unused-import
 
 DATA_SCHEMA = {
     vol.Required(CONF_HOST): str,
-    vol.Optional(CONF_EMAIL): str,
     vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
 }
 

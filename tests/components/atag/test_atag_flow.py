@@ -5,14 +5,13 @@ from asynctest import CoroutineMock
 
 from homeassistant import data_entry_flow
 from homeassistant.components.atag import config_flow
-from homeassistant.const import CONF_DEVICE, CONF_EMAIL, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
 
 FIXTURE_USER_INPUT = {
     CONF_HOST: "127.0.0.1",
     CONF_PORT: 10000,
-    CONF_EMAIL: "user@email.com",
 }
 FIXTURE_COMPLETE_ENTRY = FIXTURE_USER_INPUT.copy()
 FIXTURE_COMPLETE_ENTRY[CONF_DEVICE] = "device_identifier"
@@ -41,7 +40,7 @@ async def test_one_config_allowed(hass):
     assert step_user_result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert step_user_result["reason"] == "already_configured"
 
-    conf = {CONF_HOST: "atag.local", CONF_EMAIL: "user@email.com", CONF_PORT: 10000}
+    conf = {CONF_HOST: "atag.local", CONF_PORT: 10000}
 
     import_config_result = await flow.async_step_import(conf)
 
