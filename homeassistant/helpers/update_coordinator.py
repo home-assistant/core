@@ -170,7 +170,8 @@ class DataUpdateCoordinator:
                 self.name,
                 monotonic() - start,
             )
-            self._schedule_refresh()
+            if self._listeners:
+                self._schedule_refresh()
 
         for update_callback in self._listeners:
             update_callback()
