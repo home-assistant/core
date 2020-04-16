@@ -181,7 +181,7 @@ class AtagEntity(Entity):
         self.atag = atag
 
         self._id = atag_type.get(ATTR_ID)
-        self._name = f"{atag_type[ATTR_NAME]}"
+        self._name = atag_type[ATTR_NAME]
         self._icon = atag_type.get(ATTR_ICON)
         self._unit = atag_type.get(ATTR_UNIT_OF_MEASUREMENT)
         self._class = atag_type.get(ATTR_DEVICE_CLASS)
