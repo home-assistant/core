@@ -3,5 +3,6 @@
   "name": "Avri",
   "documentation": "https://www.home-assistant.io/integrations/avri",
   "requirements": ["avri-api==0.1.7"],
-  "codeowners": ["@timvancann"]
+  "codeowners": ["@timvancann"],
+  "config_flow": true
 }

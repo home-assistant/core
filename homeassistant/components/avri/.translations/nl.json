@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dit adres is reeds geconfigureerd."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "2 Letter landcode",
+                    "house_number": "Huisnummer",
+                    "house_number_extension": "Huisnummer toevoeging",
+                    "zip_code": "Postcode"
+                },
+                "description": "Vul je adres in.",
+                "title": "Avri"
+            }
+        }
+    },
+    "title": "Avri"
+}
