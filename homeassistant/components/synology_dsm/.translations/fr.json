@@ -24,7 +24,6 @@
                 "data": {
                     "api_version": "Version du DSM",
                     "host": "H\u00f4te",
-                    "name": "Nom",
                     "password": "Mot de passe",
                     "port": "Port (facultatif)"
                 }

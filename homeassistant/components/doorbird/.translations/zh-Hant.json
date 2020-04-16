@@ -32,6 +32,5 @@
                 "description": "\u4ee5\u9017\u865f\u5206\u5225\u6240\u8981\u8ffd\u8e64\u7684\u4e8b\u4ef6\u540d\u7a31\u3002\u65bc\u6b64\u8f38\u5165\u5f8c\uff0c\u4f7f\u7528 DoorBird App \u6307\u5b9a\u81f3\u7279\u5b9a\u4e8b\u4ef6\u3002\u8acb\u53c3\u95b1\u6587\u4ef6\uff1ahttps://www.home-assistant.io/integrations/doorbird/#events\u3002\u4f8b\u5982\uff1asomebody_pressed_the_button, motion"
             }
         }
-    },
-    "title": "DoorBird"
+    }
 }

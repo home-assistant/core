@@ -13,5 +13,6 @@
             "turned_off": "{entity_name} \u0432\u044b\u043a\u043b\u044e\u0447\u0430\u0435\u0442\u0441\u044f",
             "turned_on": "{entity_name} \u0432\u043a\u043b\u044e\u0447\u0430\u0435\u0442\u0441\u044f"
         }
-    }
+    },
+    "title": "\u0412\u044b\u043a\u043b\u044e\u0447\u0430\u0442\u0435\u043b\u044c"
 }

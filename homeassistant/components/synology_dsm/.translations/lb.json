@@ -24,7 +24,6 @@
                 "data": {
                     "api_version": "DSM Versioun",
                     "host": "Apparat",
-                    "name": "Numm",
                     "password": "Passwuert",
                     "port": "Port (Optionell)",
                     "ssl": "Benotzt SSL/TLS fir sech mam NAS ze verbannen",
@@ -33,6 +32,5 @@
                 "title": "Synology DSM"
             }
         }
-    },
-    "title": "Synology DSM"
+    }
 }

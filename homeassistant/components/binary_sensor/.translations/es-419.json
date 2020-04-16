@@ -82,5 +82,6 @@
             "turned_off": "{entity_name} apagado",
             "turned_on": "{entity_name} encendido"
         }
-    }
+    },
+    "title": "Sensor binario"
 }

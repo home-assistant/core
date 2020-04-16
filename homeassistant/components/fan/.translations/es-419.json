@@ -8,5 +8,6 @@
             "turned_off": "{entity_name} se apag\u00f3",
             "turned_on": "{entity_name} se encendi\u00f3"
         }
-    }
+    },
+    "title": "Ventilador"
 }

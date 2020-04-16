@@ -47,6 +47,5 @@
             "remote_button_rotated": "Bot\u00f3n girado \"{subtype}\"",
             "remote_gyro_activated": "Dispositivo agitado"
         }
-    },
-    "title": "deCONZ Zigbee gateway"
+    }
 }

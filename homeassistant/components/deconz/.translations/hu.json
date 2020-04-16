@@ -91,6 +91,5 @@
                 "description": "A deCONZ eszk\u00f6zt\u00edpusok l\u00e1that\u00f3s\u00e1g\u00e1nak konfigur\u00e1l\u00e1sa"
             }
         }
-    },
-    "title": "deCONZ Zigbee gateway"
+    }
 }

@@ -24,10 +24,9 @@
                 "data": {
                     "code": "C\u00f3digo PIN"
                 },
-                "description": "Para associar \u00e0 sua conta Nest, [autorizar sua conta]({url}).\n\nAp\u00f3s a autoriza\u00e7\u00e3o, copie e cole o c\u00f3digo pin fornecido abaixo.",
+                "description": "Para associar \u00e0 sua conta Nest, [autorizar a sua conta]({url}).\n\nAp\u00f3s a autoriza\u00e7\u00e3o, copie e cole o c\u00f3digo pin fornecido abaixo.",
                 "title": "Associar conta Nest"
             }
         }
-    },
-    "title": "Nest"
+    }
 }

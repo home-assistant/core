@@ -13,5 +13,6 @@
             "locked": "{entity_name} bloqueado",
             "unlocked": "{entity_name} desbloqueado"
         }
-    }
+    },
+    "title": "Cerradura"
 }

@@ -97,8 +97,6 @@
                 "description": "V\u00e4lj utdataalternativ f\u00f6r {zone}",
                 "title": "Konfigurera v\u00e4xelbar utdata"
             }
-        },
-        "title": "Alternativ f\u00f6r Konnected alarmpanel"
-    },
-    "title": "Konnected.io"
+        }
+    }
 }

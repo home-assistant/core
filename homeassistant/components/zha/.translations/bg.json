@@ -62,6 +62,5 @@
             "remote_button_short_release": "\"{subtype}\" \u0431\u0443\u0442\u043e\u043d\u044a\u0442 \u0431\u0435\u0448\u0435 \u043e\u0442\u043f\u0443\u0441\u043d\u0430\u0442",
             "remote_button_triple_press": "\"{subtype}\" \u0431\u0443\u0442\u043e\u043d\u044a\u0442 \u0431\u0435\u0448\u0435 \u043d\u0430\u0442\u0438\u0441\u043d\u0430\u0442 \u0442\u0440\u0438\u043a\u0440\u0430\u0442\u043d\u043e"
         }
-    },
-    "title": "ZHA"
+    }
 }

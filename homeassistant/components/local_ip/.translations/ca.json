@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Integraci\u00f3 ja configurada amb un sensor amb aquest nom",
             "single_instance_allowed": "Nom\u00e9s \u00e9s possible configurar una sola IP local."
         },
         "step": {

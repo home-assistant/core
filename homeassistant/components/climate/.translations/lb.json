@@ -13,5 +13,6 @@
             "current_temperature_changed": "{entity_name} gemoossen Temperatur ge\u00e4nnert",
             "hvac_mode_changed": "{entity_name} HVAC Modus ge\u00e4nnert"
         }
-    }
+    },
+    "title": "Klima"
 }

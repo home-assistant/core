@@ -24,7 +24,6 @@
                 "data": {
                     "api_version": "Versione DSM",
                     "host": "Host",
-                    "name": "Nome",
                     "password": "Password",
                     "port": "Porta (opzionale)",
                     "ssl": "Utilizzare SSL/TLS per connettersi al NAS",
@@ -33,6 +32,5 @@
                 "title": "Synology DSM"
             }
         }
-    },
-    "title": "Synology DSM"
+    }
 }

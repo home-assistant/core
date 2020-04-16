@@ -92,6 +92,5 @@
                 "description": "Configureer de zichtbaarheid van deCONZ-apparaattypen"
             }
         }
-    },
-    "title": "deCONZ Zigbee gateway"
+    }
 }

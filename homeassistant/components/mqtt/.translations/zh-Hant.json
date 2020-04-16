@@ -48,6 +48,5 @@
             "button_short_release": "\"{subtype}\" \u91cb\u653e",
             "button_triple_press": "\"{subtype}\" \u4e09\u9023\u64ca"
         }
-    },
-    "title": "MQTT"
+    }
 }

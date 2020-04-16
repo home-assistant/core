@@ -23,15 +23,11 @@
             },
             "user": {
                 "data": {
-                    "alias": "\u5225\u540d",
                     "host": "\u4e3b\u6a5f\u7aef",
-                    "name": "\u540d\u7a31",
                     "password": "\u5bc6\u78bc",
                     "port": "\u901a\u8a0a\u57e0",
-                    "resources": "\u8cc7\u6e90",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
-                "description": "\u5047\u5982 NUT \u4f3a\u670d\u5668\u4e0b\u64c1\u6709\u591a\u7d44 UPS\uff0c\u65bc\u300c\u5225\u540d\u300d\u6b04\u4f4d\u8f38\u5165 UPS \u540d\u7a31\u3002",
                 "title": "\u9023\u7dda\u81f3 NUT \u4f3a\u670d\u5668"
             }
         }
@@ -46,6 +42,5 @@
                 "description": "\u9078\u64c7\u50b3\u611f\u5668\u8cc7\u6e90\u3002"
             }
         }
-    },
-    "title": "Network UPS Tools (NUT)"
+    }
 }

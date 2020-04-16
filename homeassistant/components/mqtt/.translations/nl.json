@@ -26,6 +26,5 @@
                 "title": "MQTTT Broker via Hass.io add-on"
             }
         }
-    },
-    "title": "MQTT"
+    }
 }

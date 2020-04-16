@@ -23,6 +23,5 @@
                 "description": "Presione el bot\u00f3n azul en el punto de acceso y el bot\u00f3n enviar para registrar HomematicIP con Home Assistant. \n\n ! [Ubicaci\u00f3n del bot\u00f3n en el puente] (/static/images/config_flows/config_homematicip_cloud.png)"
             }
         }
-    },
-    "title": "HomematicIP Cloud"
+    }
 }

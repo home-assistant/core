@@ -9,12 +9,9 @@
             },
             "user": {
                 "data": {
-                    "alias": "Alias",
                     "host": "Host",
-                    "name": "Naam",
                     "password": "Wachtwoord",
                     "port": "Poort",
-                    "resources": "Bronnen",
                     "username": "Gebruikersnaam"
                 },
                 "title": "Verbind met NUT-server"
@@ -29,6 +26,5 @@
                 }
             }
         }
-    },
-    "title": "Network UPS Tools (NUT)"
+    }
 }

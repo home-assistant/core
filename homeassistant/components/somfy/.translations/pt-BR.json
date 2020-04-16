@@ -8,6 +8,5 @@
         "create_entry": {
             "default": "Autenticado com sucesso pela Somfy."
         }
-    },
-    "title": "Somfy"
+    }
 }

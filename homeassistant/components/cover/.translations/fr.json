@@ -19,5 +19,6 @@
             "position": "{entity_name} changement de position",
             "tilt_position": "{entity_name} changement d'inclinaison"
         }
-    }
+    },
+    "title": "Volets"
 }

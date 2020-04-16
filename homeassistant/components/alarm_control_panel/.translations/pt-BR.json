@@ -14,5 +14,6 @@
             "disarmed": "{entity_name} desarmado",
             "triggered": "{entity_name} acionado"
         }
-    }
+    },
+    "title": "Painel de controle do alarme"
 }

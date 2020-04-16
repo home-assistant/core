@@ -62,6 +62,5 @@
             "remote_button_short_release": "\"{subtype}\" knop losgelaten",
             "remote_button_triple_press": "\" {subtype} \" knop driemaal geklikt"
         }
-    },
-    "title": "ZHA"
+    }
 }

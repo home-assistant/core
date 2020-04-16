@@ -33,6 +33,7 @@
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Oba gumba",
+            "bottom_buttons": "Spodnji gumbi",
             "button_1": "Prvi gumb",
             "button_2": "Drugi gumb",
             "button_3": "Tretji gumb",
@@ -49,6 +50,7 @@
             "side_4": "Stran 4",
             "side_5": "Stran 5",
             "side_6": "Stran 6",
+            "top_buttons": "Zgornji gumbi",
             "turn_off": "Ugasni",
             "turn_on": "Pri\u017egi"
         },
@@ -93,6 +95,5 @@
                 "title": "mo\u017enosti deCONZ"
             }
         }
-    },
-    "title": "deCONZ Zigbee prehod"
+    }
 }

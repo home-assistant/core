@@ -21,5 +21,6 @@
             "disarmed": "{entity_name} deshabilitada",
             "triggered": "{entity_name} activada"
         }
-    }
+    },
+    "title": "Panel de control de alarma"
 }

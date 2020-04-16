@@ -13,5 +13,6 @@
             "current_temperature_changed": "{entity_name}\u91cf\u6e2c\u6eab\u5ea6\u5df2\u8b8a\u66f4",
             "hvac_mode_changed": "{entity_name} HVAC \u6a21\u5f0f\u5df2\u8b8a\u66f4"
         }
-    }
+    },
+    "title": "\u6eab\u63a7"
 }

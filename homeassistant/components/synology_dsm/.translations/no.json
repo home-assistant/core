@@ -1,10 +1,35 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Verten er allerede konfigurert"
+        },
+        "error": {
+            "login": "P\u00e5loggingsfeil: Vennligst sjekk brukernavnet ditt og passordet ditt",
+            "unknown": "Ukjent feil: pr\u00f8v p\u00e5 nytt senere eller en annen konfigurasjon"
+        },
+        "flow_title": "Synology DSM {name} ( {host} )",
         "step": {
+            "link": {
+                "data": {
+                    "api_version": "DSM-versjon",
+                    "password": "Passord",
+                    "port": "Port (valgfritt)",
+                    "ssl": "Bruk SSL/TLS til \u00e5 koble til NAS-en",
+                    "username": "Brukernavn"
+                },
+                "description": "Vil du konfigurere {name} ({host})?",
+                "title": "Synology DSM"
+            },
             "user": {
                 "data": {
-                    "port": "Port (valgfritt)"
-                }
+                    "api_version": "DSM-versjon",
+                    "host": "Vert",
+                    "password": "Passord",
+                    "port": "Port (valgfritt)",
+                    "ssl": "Bruk SSL/TLS til \u00e5 koble til NAS-en",
+                    "username": "Brukernavn"
+                },
+                "title": "Synology DSM"
             }
         }
     }

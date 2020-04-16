@@ -43,6 +43,5 @@
             "remote_button_short_press": "\"{subtype}\"-knappen trykket p\u00e5",
             "remote_button_short_release": "\"{subtype}\"-knappen frigivet"
         }
-    },
-    "title": "Philips Hue"
+    }
 }

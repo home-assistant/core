@@ -101,8 +101,6 @@
                 "description": "V\u00e6lg outputindstillingerne for {zone}",
                 "title": "Konfigurer skifteligt output"
             }
-        },
-        "title": "Indstillinger for Konnected-alarmpanel"
-    },
-    "title": "Konnected.io"
+        }
+    }
 }

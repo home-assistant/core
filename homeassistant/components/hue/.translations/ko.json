@@ -43,6 +43,5 @@
             "remote_button_short_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub20c\ub9b4 \ub54c",
             "remote_button_short_release": "\"{subtype}\" \ubc84\ud2bc\uc5d0\uc11c \uc190\uc744 \ub5c4 \ub54c"
         }
-    },
-    "title": "\ud544\ub9bd\uc2a4 Hue \ube0c\ub9bf\uc9c0"
+    }
 }

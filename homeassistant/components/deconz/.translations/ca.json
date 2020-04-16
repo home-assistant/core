@@ -33,6 +33,7 @@
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Ambd\u00f3s botons",
+            "bottom_buttons": "Botons inferiors",
             "button_1": "Primer bot\u00f3",
             "button_2": "Segon bot\u00f3",
             "button_3": "Tercer bot\u00f3",
@@ -49,6 +50,7 @@
             "side_4": "cara 4",
             "side_5": "cara 5",
             "side_6": "cara 6",
+            "top_buttons": "Botons superiors",
             "turn_off": "Desactiva",
             "turn_on": "Activa"
         },
@@ -93,6 +95,5 @@
                 "title": "Opcions de deCONZ"
             }
         }
-    },
-    "title": "Passarel\u00b7la d'enlla\u00e7 deCONZ Zigbee"
+    }
 }

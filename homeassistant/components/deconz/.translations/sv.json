@@ -92,6 +92,5 @@
                 "description": "Konfigurera synlighet f\u00f6r deCONZ-enhetstyper"
             }
         }
-    },
-    "title": "deCONZ Zigbee Gateway"
+    }
 }

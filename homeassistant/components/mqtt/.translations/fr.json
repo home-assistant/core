@@ -41,6 +41,5 @@
         "trigger_type": {
             "button_short_press": "\" {subtype} \" press\u00e9"
         }
-    },
-    "title": "MQTT"
+    }
 }

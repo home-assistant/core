@@ -27,9 +27,8 @@
                     "port": "\u901a\u8a0a\u57e0"
                 },
                 "description": "\u8acb\u8f38\u5165 [ESPHome](https://esphomelib.com/) \u7bc0\u9ede\u9023\u7dda\u8cc7\u8a0a\u3002",
-                "title": "ESPHome"
+                "title": "[%key:component::esphome::title%]"
             }
         }
-    },
-    "title": "ESPHome"
+    }
 }

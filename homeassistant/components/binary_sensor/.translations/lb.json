@@ -88,5 +88,6 @@
             "unsafe": "{entity_name} gouf ons\u00e9cher",
             "vibration": "{entity_name} huet ugefaange Vibratiounen z'entdecken"
         }
-    }
+    },
+    "title": "Bin\u00e4ren Sensor"
 }

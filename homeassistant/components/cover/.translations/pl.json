@@ -24,5 +24,6 @@
             "position": "zmieni si\u0119 pozycja pokrywy {entity_name}",
             "tilt_position": "zmieni si\u0119 pochylenie pokrywy {entity_name}"
         }
-    }
+    },
+    "title": "Pokrywa"
 }

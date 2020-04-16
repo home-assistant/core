@@ -16,5 +16,6 @@
             "position": "{entity_name} position \u00e4ndras",
             "tilt_position": "{entity_name} lutningsposition \u00e4ndras"
         }
-    }
+    },
+    "title": "Rullgardin"
 }

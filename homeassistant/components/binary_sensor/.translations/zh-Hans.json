@@ -50,5 +50,6 @@
             "hot": "{entity_name} \u53d8\u70ed",
             "light": "{entity_name} \u5f00\u59cb\u68c0\u6d4b\u5230\u5149\u7ebf"
         }
-    }
+    },
+    "title": "\u4e8c\u5143\u4f20\u611f\u5668"
 }

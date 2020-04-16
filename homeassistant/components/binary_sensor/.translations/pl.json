@@ -88,5 +88,6 @@
             "unsafe": "sensor {entity_name} wykryje niebezpiecze\u0144stwo",
             "vibration": "sensor {entity_name} wykryje wibracje"
         }
-    }
+    },
+    "title": "Sensor binarny"
 }

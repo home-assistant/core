@@ -48,6 +48,5 @@
             "button_short_release": "\"{subtype}\" soltado",
             "button_triple_press": "\"{subtype}\" triple pulsaci\u00f3n"
         }
-    },
-    "title": "MQTT"
+    }
 }

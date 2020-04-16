@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u6574\u5408\u5df2\u7d93\u8a2d\u5b9a\u4e26\u6709\u73fe\u6709\u50b3\u611f\u5668\u4f7f\u7528\u76f8\u540c\u540d\u7a31",
             "single_instance_allowed": "\u50c5\u5141\u8a31\u8a2d\u5b9a\u4e00\u7d44\u672c\u5730  IP\u3002"
         },
         "step": {

@@ -32,6 +32,5 @@
                 "description": "Setzt ee mat Komma getrennten Evenement Numm fir all Evenement dob\u00e4i d\u00e9i sollt suiv\u00e9iert ginn. Wann's du se hei aginn hues, benotz d'DoorBird App fir se zu engem spezifeschen Evenement dob\u00e4i ze setzen. Kuckt d'Dokumentatioun op https://www.home-assistant.io/integrations/doorbird/#events. Beispill: somebody_pressed_the_button, motion"
             }
         }
-    },
-    "title": "DoorBird"
+    }
 }

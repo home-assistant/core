@@ -24,7 +24,6 @@
                 "data": {
                     "api_version": "Versi\u00f3 DSM",
                     "host": "Amfitri\u00f3",
-                    "name": "Nom",
                     "password": "Contrasenya",
                     "port": "Port",
                     "ssl": "Utilitza SSL/TLS per connectar-te al servidor NAS",
@@ -33,6 +32,5 @@
                 "title": "Synology DSM"
             }
         }
-    },
-    "title": "Synology DSM"
+    }
 }

@@ -49,8 +49,6 @@
                 "description": "If you have a Smart TV, you can optionally filter your source list by choosing which apps to include or exclude in your source list.",
                 "title": "Update VIZIO SmartCast Options"
             }
-        },
-        "title": "Update VIZIO SmartCast Options"
-    },
-    "title": "VIZIO SmartCast"
+        }
+    }
 }

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Integration ist bereits mit einem vorhandenen Sensor mit diesem Namen konfiguriert",
             "single_instance_allowed": "Es ist nur eine einzige Konfiguration der lokalen IP zul\u00e4ssig."
         },
         "step": {

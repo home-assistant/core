@@ -23,15 +23,13 @@
             }
         }
     },
-    "error": {
-        "unknown_client_mac": "Ingen klient tilgjengelig i UniFi p\u00e5 den MAC-adressen"
-    },
     "options": {
         "step": {
             "client_control": {
                 "data": {
                     "block_client": "Nettverkskontrollerte klienter",
-                    "new_client": "Legg til ny klient for nettverkstilgangskontroll"
+                    "new_client": "Legg til ny klient for nettverkstilgangskontroll",
+                    "poe_clients": "Tillat POE-kontroll av klienter"
                 },
                 "description": "Konfigurere klient-kontroller\n\nOpprette brytere for serienumre du \u00f8nsker \u00e5 kontrollere tilgang til nettverk for.",
                 "title": "UniFi-alternativ 2/3"
@@ -55,6 +53,5 @@
                 "title": "UniFi-alternativ 3/3"
             }
         }
-    },
-    "title": "UniFi kontroller"
+    }
 }

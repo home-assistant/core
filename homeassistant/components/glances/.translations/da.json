@@ -32,6 +32,5 @@
                 "description": "Konfigurationsindstillinger for Glances"
             }
         }
-    },
-    "title": "Glances"
+    }
 }
