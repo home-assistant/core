@@ -1,6 +1,6 @@
 {
+  "title": "Rollease Acmeda Automate",
   "config": {
-    "title": "Rollease Acmeda Automate",
     "step": {
       "init": {
         "title": "Pick a hub to link",
