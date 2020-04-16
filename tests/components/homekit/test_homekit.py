@@ -309,6 +309,39 @@ async def test_homekit_start(hass, hk_driver, debounce_patcher):
     assert not hk_driver_start.called
 
 
+async def test_homekit_start_with_a_broken_accessory(hass, hk_driver, debounce_patcher):
+    """Test HomeKit start method."""
+    pin = b"123-45-678"
+    entity_filter = generate_filter(["cover", "light"], ["demo.test"], [], [])
+
+    homekit = HomeKit(hass, None, None, None, entity_filter, {}, None, None)
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = []
+    homekit.driver = hk_driver
+
+    hass.states.async_set("light.demo", "on")
+    hass.states.async_set("light.broken", "on")
+
+    with patch(f"{PATH_HOMEKIT}.get_accessory", side_effect=Exception), patch(
+        f"{PATH_HOMEKIT}.show_setup_message"
+    ) as mock_setup_msg, patch(
+        "pyhap.accessory_driver.AccessoryDriver.add_accessory",
+    ) as hk_driver_add_acc, patch(
+        "pyhap.accessory_driver.AccessoryDriver.start"
+    ) as hk_driver_start:
+        await hass.async_add_executor_job(homekit.start)
+
+    mock_setup_msg.assert_called_with(hass, pin)
+    hk_driver_add_acc.assert_called_with(homekit.bridge)
+    assert hk_driver_start.called
+    assert homekit.status == STATUS_RUNNING
+
+    # Test start() if already started
+    hk_driver_start.reset_mock()
+    await hass.async_add_executor_job(homekit.start)
+    assert not hk_driver_start.called
+
+
 async def test_homekit_stop(hass):
     """Test HomeKit stop method."""
     homekit = HomeKit(hass, None, None, None, None, None, None)

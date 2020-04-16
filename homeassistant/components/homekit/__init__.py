@@ -67,7 +67,7 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 
-MAX_DEVICES = 100
+MAX_DEVICES = 150
 TYPES = Registry()
 
 # #### Driver Status ####
@@ -361,9 +361,17 @@ class HomeKit:
             return
         aid = generate_aid(state.entity_id)
         conf = self._config.pop(state.entity_id, {})
-        acc = get_accessory(self.hass, self.driver, state, aid, conf)
-        if acc is not None:
-            self.bridge.add_accessory(acc)
+        # If an accessory cannot be created or added due to an exception
+        # of any kind (usually in pyhap) it should not prevent
+        # the rest of the accessories from being created
+        try:
+            acc = get_accessory(self.hass, self.driver, state, aid, conf)
+            if acc is not None:
+                self.bridge.add_accessory(acc)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Failed to create a HomeKit accessory for %s", state.entity_id
+            )
 
     def remove_bridge_accessory(self, aid):
         """Try adding accessory to bridge if configured beforehand."""
