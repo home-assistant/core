@@ -42,6 +42,9 @@ from .const import (
     HK_DOOR_CLOSING,
     HK_DOOR_OPEN,
     HK_DOOR_OPENING,
+    HK_POSITION_GOING_TO_MAX,
+    HK_POSITION_GOING_TO_MIN,
+    HK_POSITION_STOPPED,
     SERV_GARAGE_DOOR_OPENER,
     SERV_WINDOW_COVERING,
 )
@@ -134,10 +137,9 @@ class WindowCoveringBase(HomeAccessory):
     def __init__(self, *args, category):
         """Initialize a WindowCoveringBase accessory object."""
         super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
+        state = self.hass.states.get(self.entity_id)
 
-        self.features = self.hass.states.get(self.entity_id).attributes.get(
-            ATTR_SUPPORTED_FEATURES, 0
-        )
+        self.features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         self._supports_stop = self.features & SUPPORT_STOP
         self._homekit_target_tilt = None
         self.chars = []
@@ -192,7 +194,8 @@ class WindowCoveringBase(HomeAccessory):
             # We'll have to normalize to [0,100]
             current_tilt = (current_tilt / 100.0 * 180.0) - 90.0
             current_tilt = int(current_tilt)
-            self.char_current_tilt.set_value(current_tilt)
+            if self.char_current_tilt.value != current_tilt:
+                self.char_current_tilt.set_value(current_tilt)
 
             # We have to assume that the device has worse precision than HomeKit.
             # If it reports back a state that is only _close_ to HK's requested
@@ -201,7 +204,8 @@ class WindowCoveringBase(HomeAccessory):
             if self._homekit_target_tilt is None or abs(
                 current_tilt - self._homekit_target_tilt < DEVICE_PRECISION_LEEWAY
             ):
-                self.char_target_tilt.set_value(current_tilt)
+                if self.char_target_tilt.value != current_tilt:
+                    self.char_target_tilt.set_value(current_tilt)
                 self._homekit_target_tilt = None
 
 
@@ -215,7 +219,7 @@ class WindowCovering(WindowCoveringBase, HomeAccessory):
     def __init__(self, *args):
         """Initialize a WindowCovering accessory object."""
         super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
-
+        state = self.hass.states.get(self.entity_id)
         self._homekit_target = None
 
         self.char_current_position = self.serv_cover.configure_char(
@@ -225,8 +229,9 @@ class WindowCovering(WindowCoveringBase, HomeAccessory):
             CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover
         )
         self.char_position_state = self.serv_cover.configure_char(
-            CHAR_POSITION_STATE, value=2
+            CHAR_POSITION_STATE, value=HK_POSITION_STOPPED
         )
+        self.update_state(state)
 
     @debounce
     def move_cover(self, value):
@@ -242,7 +247,8 @@ class WindowCovering(WindowCoveringBase, HomeAccessory):
         current_position = new_state.attributes.get(ATTR_CURRENT_POSITION)
         if isinstance(current_position, (float, int)):
             current_position = int(current_position)
-            self.char_current_position.set_value(current_position)
+            if self.char_current_position.value != current_position:
+                self.char_current_position.set_value(current_position)
 
             # We have to assume that the device has worse precision than HomeKit.
             # If it reports back a state that is only _close_ to HK's requested
@@ -253,14 +259,18 @@ class WindowCovering(WindowCoveringBase, HomeAccessory):
                 or abs(current_position - self._homekit_target)
                 < DEVICE_PRECISION_LEEWAY
             ):
-                self.char_target_position.set_value(current_position)
+                if self.char_target_position.value != current_position:
+                    self.char_target_position.set_value(current_position)
                 self._homekit_target = None
         if new_state.state == STATE_OPENING:
-            self.char_position_state.set_value(1)
+            if self.char_position_state.value != HK_POSITION_GOING_TO_MAX:
+                self.char_position_state.set_value(HK_POSITION_GOING_TO_MAX)
         elif new_state.state == STATE_CLOSING:
-            self.char_position_state.set_value(0)
+            if self.char_position_state.value != HK_POSITION_GOING_TO_MIN:
+                self.char_position_state.set_value(HK_POSITION_GOING_TO_MIN)
         else:
-            self.char_position_state.set_value(2)
+            if self.char_position_state.value != HK_POSITION_STOPPED:
+                self.char_position_state.set_value(HK_POSITION_STOPPED)
 
         super().update_state(new_state)
 
@@ -276,7 +286,7 @@ class WindowCoveringBasic(WindowCoveringBase, HomeAccessory):
     def __init__(self, *args):
         """Initialize a WindowCovering accessory object."""
         super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
-
+        state = self.hass.states.get(self.entity_id)
         self.char_current_position = self.serv_cover.configure_char(
             CHAR_CURRENT_POSITION, value=0
         )
@@ -284,8 +294,9 @@ class WindowCoveringBasic(WindowCoveringBase, HomeAccessory):
             CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover
         )
         self.char_position_state = self.serv_cover.configure_char(
-            CHAR_POSITION_STATE, value=2
+            CHAR_POSITION_STATE, value=HK_POSITION_STOPPED
         )
+        self.update_state(state)
 
     @debounce
     def move_cover(self, value):
@@ -317,13 +328,18 @@ class WindowCoveringBasic(WindowCoveringBase, HomeAccessory):
         position_mapping = {STATE_OPEN: 100, STATE_CLOSED: 0}
         hk_position = position_mapping.get(new_state.state)
         if hk_position is not None:
-            self.char_current_position.set_value(hk_position)
-            self.char_target_position.set_value(hk_position)
+            if self.char_current_position.value != hk_position:
+                self.char_current_position.set_value(hk_position)
+            if self.char_target_position.value != hk_position:
+                self.char_target_position.set_value(hk_position)
         if new_state.state == STATE_OPENING:
-            self.char_position_state.set_value(1)
+            if self.char_position_state.value != HK_POSITION_GOING_TO_MAX:
+                self.char_position_state.set_value(HK_POSITION_GOING_TO_MAX)
         elif new_state.state == STATE_CLOSING:
-            self.char_position_state.set_value(0)
+            if self.char_position_state.value != HK_POSITION_GOING_TO_MIN:
+                self.char_position_state.set_value(HK_POSITION_GOING_TO_MIN)
         else:
-            self.char_position_state.set_value(2)
+            if self.char_position_state.value != HK_POSITION_STOPPED:
+                self.char_position_state.set_value(HK_POSITION_STOPPED)
 
         super().update_state(new_state)
