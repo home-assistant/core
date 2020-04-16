@@ -1,5 +1,4 @@
 {
-  "title": "Home Assistant iOS",
   "config": {
     "step": {
       "confirm": {

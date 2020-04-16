@@ -1,14 +1,10 @@
 {
-  "title": "deCONZ Zigbee gateway",
   "config": {
     "flow_title": "deCONZ Zigbee gateway ({host})",
     "step": {
       "init": {
         "title": "Define deCONZ gateway",
-        "data": {
-          "host": "Host",
-          "port": "Port"
-        }
+        "data": { "host": "Host", "port": "Port" }
       },
       "link": {
         "title": "Link with deCONZ",
@@ -19,9 +15,7 @@
         "description": "Do you want to configure Home Assistant to connect to the deCONZ gateway provided by the Hass.io add-on {addon}?"
       }
     },
-    "error": {
-      "no_key": "Couldn't get an API key"
-    },
+    "error": { "no_key": "Couldn't get an API key" },
     "abort": {
       "already_configured": "Bridge is already configured",
       "already_in_progress": "Config flow for bridge is already in progress.",

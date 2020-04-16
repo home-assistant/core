@@ -1,14 +1,10 @@
 {
-  "title": "HEOS",
   "config": {
     "step": {
       "user": {
         "title": "Connect to Heos",
         "description": "Please enter the host name or IP address of a Heos device (preferably one connected via wire to the network).",
-        "data": {
-          "access_token": "Host",
-          "host": "Host"
-        }
+        "data": { "access_token": "Host", "host": "Host" }
       }
     },
     "error": {

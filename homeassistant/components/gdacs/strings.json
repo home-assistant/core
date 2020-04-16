@@ -1,16 +1,11 @@
 {
-  "title": "Global Disaster Alert and Coordination System (GDACS)",
   "config": {
     "step": {
       "user": {
         "title": "Fill in your filter details.",
-        "data": {
-          "radius": "Radius"
-        }
+        "data": { "radius": "Radius" }
       }
     },
-    "abort": {
-      "already_configured": "Location is already configured."
-    }
+    "abort": { "already_configured": "Location is already configured." }
   }
 }

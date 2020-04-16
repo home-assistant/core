@@ -1,5 +1,4 @@
 {
-  "title": "AirVisual",
   "config": {
     "step": {
       "user": {
@@ -12,9 +11,7 @@
         }
       }
     },
-    "error": {
-      "invalid_api_key": "Invalid API key"
-    },
+    "error": { "invalid_api_key": "Invalid API key" },
     "abort": {
       "already_configured": "These coordinates have already been registered."
     }
@@ -24,9 +21,7 @@
       "init": {
         "title": "Configure AirVisual",
         "description": "Set various options for the AirVisual integration.",
-        "data": {
-          "show_on_map": "Show monitored geography on the map"
-        }
+        "data": { "show_on_map": "Show monitored geography on the map" }
       }
     }
   }

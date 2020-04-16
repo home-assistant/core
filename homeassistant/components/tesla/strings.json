@@ -1,5 +1,4 @@
 {
-  "title": "Tesla",
   "config": {
     "error": {
       "connection_error": "Error connecting; check network and retry",
@@ -9,10 +8,7 @@
     },
     "step": {
       "user": {
-        "data": {
-          "username": "Email Address",
-          "password": "Password"
-        },
+        "data": { "username": "Email Address", "password": "Password" },
         "description": "Please enter your information.",
         "title": "Tesla - Configuration"
       }
