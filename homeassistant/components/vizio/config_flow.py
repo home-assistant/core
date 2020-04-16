@@ -204,11 +204,13 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Check if new config entry matches any existing config entries
             for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if entry.data.get(CONF_SOURCE) != SOURCE_IGNORE:
-                    if _host_is_same(entry.data[CONF_HOST], user_input[CONF_HOST]):
-                        errors[CONF_HOST] = "host_exists"
-                    if entry.data[CONF_NAME] == user_input[CONF_NAME]:
-                        errors[CONF_NAME] = "name_exists"
+                # If source is ignore bypass host and name check and continue through loop
+                if entry.data.get(CONF_SOURCE) == SOURCE_IGNORE:
+                    continue
+                if _host_is_same(entry.data[CONF_HOST], user_input[CONF_HOST]):
+                    errors[CONF_HOST] = "host_exists"
+                if entry.data[CONF_NAME] == user_input[CONF_NAME]:
+                    errors[CONF_NAME] = "name_exists"
 
             if not errors:
                 # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
