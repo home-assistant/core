@@ -2,8 +2,8 @@
 from copy import copy
 from datetime import timedelta
 
-from aiounifi.controller import SIGNAL_CONNECTION_STATE
-from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
+from aiounifi.controller import MESSAGE_CLIENT_REMOVED, SIGNAL_CONNECTION_STATE
+from aiounifi.websocket import SIGNAL_DATA, STATE_DISCONNECTED, STATE_RUNNING
 from asynctest import patch
 
 from homeassistant import config_entries
@@ -178,6 +178,35 @@ async def test_tracked_devices(hass):
 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1.state == STATE_UNAVAILABLE
+
+
+async def test_remove_clients(hass):
+    """Test the remove_items function with some clients."""
+    controller = await setup_unifi_integration(
+        hass, clients_response=[CLIENT_1, CLIENT_2]
+    )
+    assert len(hass.states.async_entity_ids("device_tracker")) == 2
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+
+    wired_client = hass.states.get("device_tracker.wired_client")
+    assert wired_client is not None
+
+    controller.api.websocket._data = {
+        "meta": {"message": MESSAGE_CLIENT_REMOVED},
+        "data": [CLIENT_1],
+    }
+    controller.api.session_handler(SIGNAL_DATA)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids("device_tracker")) == 1
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is None
+
+    wired_client = hass.states.get("device_tracker.wired_client")
+    assert wired_client is not None
 
 
 async def test_controller_state_change(hass):
