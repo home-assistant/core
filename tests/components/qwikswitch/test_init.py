@@ -145,10 +145,12 @@ async def test_switch_device(hass, aioclient_mock, qs_devices):
         None,
     ) in aioclient_mock.mock_calls
 
-    qs_devices[0]["val"] = "ON"
     state_obj = hass.states.get("switch.switch_1")
     assert state_obj.state == "off"
-    listen_mock.queue_response(json={"id": "@a00001", "cmd": ""},)
+    qs_devices[0]["val"] = "ON"
+    listen_mock.queue_response(
+        json={"id": "@a00001", "cmd": "STATUS.ACK", "data": "ON"},
+    )
     await hass.async_block_till_done()
     state_obj = hass.states.get("switch.switch_1")
     assert state_obj.state == "on"
@@ -200,7 +202,9 @@ async def test_light_device(hass, aioclient_mock, qs_devices):
     ) in aioclient_mock.mock_calls
 
     qs_devices[2]["val"] = "280c55"  # half dimmed
-    listen_mock.queue_response(json={"id": "@a00003", "cmd": ""},)
+    listen_mock.queue_response(
+        json={"id": "@a00003", "cmd": "STATUS.ACK", "data": "280c55"},
+    )
     await asyncio.sleep(0.01)
     await hass.async_block_till_done()
     state_obj = hass.states.get("light.dim_3")
@@ -208,7 +212,9 @@ async def test_light_device(hass, aioclient_mock, qs_devices):
     assert 16 < state_obj.attributes["brightness"] < 240
 
     qs_devices[2]["val"] = "280c78"  # off
-    listen_mock.queue_response(json={"id": "@a00003", "cmd": ""},)
+    listen_mock.queue_response(
+        json={"id": "@a00003", "cmd": "STATUS.ACK", "data": "280c78"},
+    )
     await asyncio.sleep(0.01)
     await hass.async_block_till_done()
     state_obj = hass.states.get("light.dim_3")
