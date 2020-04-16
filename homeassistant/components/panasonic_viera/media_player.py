@@ -3,7 +3,7 @@ from functools import partial
 import logging
 from urllib.request import URLError
 
-from panasonic_viera import EncryptionRequired, Keys, RemoteControl
+from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -219,7 +219,7 @@ class Remote:
 
             self.state = STATE_ON
             self.available = True
-        except (TimeoutError, URLError, OSError) as err:
+        except (TimeoutError, URLError, SOAPError, OSError) as err:
             if control_existed or during_setup:
                 _LOGGER.error("Could not establish remote connection: %s", err)
                 self._control = None
@@ -293,7 +293,7 @@ class Remote:
             await self._hass.async_add_executor_job(func, *args)
         except EncryptionRequired:
             _LOGGER.error("The connection couldn't be encrypted")
-        except (TimeoutError, URLError, OSError):
+        except (TimeoutError, URLError, SOAPError, OSError):
             self.state = STATE_OFF
             self.available = self._on_action is not None
             await self.async_create_remote_control()
