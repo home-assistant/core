@@ -33,6 +33,7 @@
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Entrambi",
+            "bottom_buttons": "Pulsanti inferiori",
             "button_1": "Primo",
             "button_2": "Secondo pulsante",
             "button_3": "Terzo pulsante",
@@ -49,6 +50,7 @@
             "side_4": "Lato 4",
             "side_5": "Lato 5",
             "side_6": "Lato 6",
+            "top_buttons": "Pulsanti superiori",
             "turn_off": "Spegnere",
             "turn_on": "Accendere"
         },

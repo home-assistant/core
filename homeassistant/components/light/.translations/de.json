@@ -3,6 +3,7 @@
         "action_type": {
             "brightness_decrease": "Helligkeit von {entity_name} verringern",
             "brightness_increase": "Helligkeit von {entity_name} erh\u00f6hen",
+            "flash": "Flash {entity_name}",
             "toggle": "Schalte {entity_name} um.",
             "turn_off": "Schalte {entity_name} aus.",
             "turn_on": "Schalte {entity_name} ein."

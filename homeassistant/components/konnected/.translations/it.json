@@ -33,6 +33,7 @@
             "not_konn_panel": "Non \u00e8 un dispositivo Konnected.io riconosciuto"
         },
         "error": {
+            "bad_host": "URL dell'host API di sostituzione non valido",
             "one": "uno",
             "other": "altri"
         },
@@ -85,7 +86,9 @@
             },
             "options_misc": {
                 "data": {
-                    "blink": "Attiva il lampeggio del LED del pannello durante l'invio del cambiamento di stato "
+                    "api_host": "Sovrascrivi l'URL dell'host API (opzionale)",
+                    "blink": "Attiva il lampeggio del LED del pannello durante l'invio del cambiamento di stato ",
+                    "override_api_host": "Sovrascrivi l'URL predefinito del pannello host API di Home Assistant"
                 },
                 "description": "Seleziona il comportamento desiderato per il tuo pannello",
                 "title": "Configura Altro"
@@ -94,11 +97,12 @@
                 "data": {
                     "activation": "Uscita quando acceso",
                     "momentary": "Durata impulso (ms) (opzionale)",
+                    "more_states": "Configurare stati aggiuntivi per questa zona",
                     "name": "Nome (opzionale)",
                     "pause": "Pausa tra gli impulsi (ms) (opzionale)",
                     "repeat": "Numero di volte da ripetere (-1 = infinito) (opzionale)"
                 },
-                "description": "Selezionare le opzioni di uscita per {zona}",
+                "description": "Selezionare le opzioni di uscita per {zone}: stato {state}",
                 "title": "Configurare l'uscita commutabile"
             }
         },

@@ -27,5 +27,22 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Primo pulsante",
+            "button_2": "Secondo pulsante",
+            "button_3": "Terzo pulsante",
+            "button_4": "Quarto pulsante",
+            "dim_down": "Diminuisce luminosit\u00e0",
+            "dim_up": "Aumenta luminosit\u00e0",
+            "turn_off": "Spento",
+            "turn_on": "Acceso"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "Pulsante \"{subtype}\" rilasciato dopo una lunga pressione",
+            "remote_button_short_press": "Pulsante \"{subtype}\" premuto",
+            "remote_button_short_release": "Pulsante \"{subtype}\" rilasciato"
+        }
+    },
     "title": "Philips Hue"
 }
