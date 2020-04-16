@@ -147,35 +147,35 @@ async def test_valve_set_state(hass, hk_driver, events):
     assert acc.aid == 2
     assert acc.category == 29  # Faucet
 
-    assert acc.char_active.value is False
-    assert acc.char_in_use.value is False
+    assert acc.char_active.value == 0
+    assert acc.char_in_use.value == 0
     assert acc.char_valve_type.value == 0  # Generic Valve
 
     hass.states.async_set(entity_id, STATE_ON)
     await hass.async_block_till_done()
-    assert acc.char_active.value is True
-    assert acc.char_in_use.value is True
+    assert acc.char_active.value == 1
+    assert acc.char_in_use.value == 1
 
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
-    assert acc.char_active.value is False
-    assert acc.char_in_use.value is False
+    assert acc.char_active.value == 0
+    assert acc.char_in_use.value == 0
 
     # Set from HomeKit
     call_turn_on = async_mock_service(hass, "switch", "turn_on")
     call_turn_off = async_mock_service(hass, "switch", "turn_off")
 
-    await hass.async_add_executor_job(acc.char_active.client_update_value, True)
+    await hass.async_add_executor_job(acc.char_active.client_update_value, 1)
     await hass.async_block_till_done()
-    assert acc.char_in_use.value is True
+    assert acc.char_in_use.value == 1
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_executor_job(acc.char_active.client_update_value, False)
+    await hass.async_add_executor_job(acc.char_active.client_update_value, 0)
     await hass.async_block_till_done()
-    assert acc.char_in_use.value is False
+    assert acc.char_in_use.value == 0
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 2
