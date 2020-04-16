@@ -181,7 +181,9 @@ class UniFiController:
                 async_dispatcher_send(self.hass, self.signal_update)
 
             elif DATA_CLIENT_REMOVED in data:
-                async_dispatcher_send(self.hass, self.signal_update)
+                async_dispatcher_send(
+                    self.hass, self.signal_remove, data[DATA_CLIENT_REMOVED]
+                )
 
     @property
     def signal_reachable(self) -> str:
