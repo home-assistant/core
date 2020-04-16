@@ -11,10 +11,10 @@
         "step": {
             "pairing": {
                 "data": {
-                    "pin": "PIN code"
+                    "pin": "PIN"
                 },
-                "description": "Enter the PIN code displayed on your {name}",
-                "title": "Pair your TV"
+                "description": "Enter the PIN displayed on your TV",
+                "title": "Pairing"
             },
             "user": {
                 "data": {
