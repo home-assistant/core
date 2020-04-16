@@ -55,12 +55,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 continue
 
     @callback
-    def update_controller():
+    def items_added():
         """Update the values of the controller."""
         add_entities(controller, async_add_entities, switches, switches_off)
 
     controller.listeners.append(
-        async_dispatcher_connect(hass, controller.signal_update, update_controller)
+        async_dispatcher_connect(hass, controller.signal_update, items_added)
+    )
+
+    @callback
+    def items_removed(mac_addresses: set) -> None:
+        """Items have been removed from the controller."""
+        remove_entities(controller, mac_addresses, switches, entity_registry)
+
+    controller.listeners.append(
+        async_dispatcher_connect(hass, controller.signal_remove, items_removed)
     )
 
     @callback
@@ -96,14 +105,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for client_id in remove:
             entity = switches.pop(client_id)
-
-            if entity_registry.async_is_registered(entity.entity_id):
-                entity_registry.async_remove(entity.entity_id)
-
             hass.async_create_task(entity.async_remove())
 
         if len(update) != len(option_block_clients):
-            update_controller()
+            items_added()
 
     controller.listeners.append(
         async_dispatcher_connect(
@@ -111,7 +116,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
     )
 
-    update_controller()
+    items_added()
     switches_off.clear()
 
 
@@ -187,6 +192,21 @@ def add_entities(controller, async_add_entities, switches, switches_off):
 
     if new_switches:
         async_add_entities(new_switches)
+
+
+@callback
+def remove_entities(controller, mac_addresses, switches, entity_registry):
+    """Remove select switch entities."""
+    for mac in mac_addresses:
+
+        for switch_type in ("block", "poe"):
+            item_id = f"{switch_type}-{mac}"
+
+            if item_id not in switches:
+                continue
+
+            entity = switches.pop(item_id)
+            controller.hass.async_create_task(entity.async_remove())
 
 
 class UniFiPOEClientSwitch(UniFiClient, SwitchDevice, RestoreEntity):
