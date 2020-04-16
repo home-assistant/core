@@ -42,6 +42,9 @@ from .const import (
     HK_DOOR_CLOSING,
     HK_DOOR_OPEN,
     HK_DOOR_OPENING,
+    HK_POSITION_GOING_TO_MAX,
+    HK_POSITION_GOING_TO_MIN,
+    HK_POSITION_STOPPED,
     SERV_GARAGE_DOOR_OPENER,
     SERV_WINDOW_COVERING,
 )
@@ -226,7 +229,7 @@ class WindowCovering(WindowCoveringBase, HomeAccessory):
             CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover
         )
         self.char_position_state = self.serv_cover.configure_char(
-            CHAR_POSITION_STATE, value=2
+            CHAR_POSITION_STATE, value=HK_POSITION_STOPPED
         )
         self.update_state(state)
 
@@ -260,14 +263,14 @@ class WindowCovering(WindowCoveringBase, HomeAccessory):
                     self.char_target_position.set_value(current_position)
                 self._homekit_target = None
         if new_state.state == STATE_OPENING:
-            if self.char_position_state.value != 1:
-                self.char_position_state.set_value(1)
+            if self.char_position_state.value != HK_POSITION_GOING_TO_MAX:
+                self.char_position_state.set_value(HK_POSITION_GOING_TO_MAX)
         elif new_state.state == STATE_CLOSING:
-            if self.char_position_state.value != 0:
-                self.char_position_state.set_value(0)
+            if self.char_position_state.value != HK_POSITION_GOING_TO_MIN:
+                self.char_position_state.set_value(HK_POSITION_GOING_TO_MIN)
         else:
-            if self.char_position_state.value != 2:
-                self.char_position_state.set_value(2)
+            if self.char_position_state.value != HK_POSITION_STOPPED:
+                self.char_position_state.set_value(HK_POSITION_STOPPED)
 
         super().update_state(new_state)
 
@@ -291,7 +294,7 @@ class WindowCoveringBasic(WindowCoveringBase, HomeAccessory):
             CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover
         )
         self.char_position_state = self.serv_cover.configure_char(
-            CHAR_POSITION_STATE, value=2
+            CHAR_POSITION_STATE, value=HK_POSITION_STOPPED
         )
         self.update_state(state)
 
@@ -330,13 +333,13 @@ class WindowCoveringBasic(WindowCoveringBase, HomeAccessory):
             if self.char_target_position.value != hk_position:
                 self.char_target_position.set_value(hk_position)
         if new_state.state == STATE_OPENING:
-            if self.char_position_state.value != 1:
-                self.char_position_state.set_value(1)
+            if self.char_position_state.value != HK_POSITION_GOING_TO_MAX:
+                self.char_position_state.set_value(HK_POSITION_GOING_TO_MAX)
         elif new_state.state == STATE_CLOSING:
-            if self.char_position_state.value != 0:
-                self.char_position_state.set_value(0)
+            if self.char_position_state.value != HK_POSITION_GOING_TO_MIN:
+                self.char_position_state.set_value(HK_POSITION_GOING_TO_MIN)
         else:
-            if self.char_position_state.value != 2:
-                self.char_position_state.set_value(2)
+            if self.char_position_state.value != HK_POSITION_STOPPED:
+                self.char_position_state.set_value(HK_POSITION_STOPPED)
 
         super().update_state(new_state)
