@@ -3,6 +3,10 @@
         "abort": {
             "already_configured": "Dit adres is reeds geconfigureerd."
         },
+        "error": {
+            "invalid_country_code": "Onbekende landcode",
+            "invalid_house_number": "Ongeldig huisnummer."
+        },
         "step": {
             "user": {
                 "data": {

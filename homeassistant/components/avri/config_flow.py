@@ -1,4 +1,5 @@
 """Config flow for Avri component."""
+import pycountry
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -39,8 +40,18 @@ class AvriConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return await self._show_setup_form()
 
+        zip_code = user_input[CONF_ZIP_CODE].replace(" ", "").upper()
+
+        errors = {}
+        if user_input[CONF_HOUSE_NUMBER] <= 0:
+            errors[CONF_HOUSE_NUMBER] = "invalid_house_number"
+            return await self._show_setup_form(errors)
+        if not pycountry.countries.get(alpha_2=user_input[CONF_COUNTRY_CODE]):
+            errors[CONF_COUNTRY_CODE] = "invalid_country_code"
+            return await self._show_setup_form(errors)
+
         unique_id = (
-            f"{user_input[CONF_ZIP_CODE]}"
+            f"{zip_code}"
             f" "
             f"{user_input[CONF_HOUSE_NUMBER]}"
             f'{user_input.get(CONF_HOUSE_NUMBER_EXTENSION, "")}'
@@ -53,7 +64,7 @@ class AvriConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=unique_id,
             data={
                 CONF_ID: unique_id,
-                CONF_ZIP_CODE: user_input[CONF_ZIP_CODE],
+                CONF_ZIP_CODE: zip_code,
                 CONF_HOUSE_NUMBER: user_input[CONF_HOUSE_NUMBER],
                 CONF_HOUSE_NUMBER_EXTENSION: user_input.get(
                     CONF_HOUSE_NUMBER_EXTENSION, ""

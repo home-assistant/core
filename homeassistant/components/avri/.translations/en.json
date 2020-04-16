@@ -3,6 +3,10 @@
         "abort": {
             "already_configured": "This address is already configured."
         },
+        "error": {
+            "invalid_country_code": "Unknown 2 letter country code.",
+            "invalid_house_number": "Invalid house number."
+        },
         "step": {
             "user": {
                 "data": {
