@@ -67,7 +67,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._errors = {"base": ERROR_NOT_CONNECTED}
                 return await self.async_step_user()
             except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.error("Unknown error: %s", err)
+                _LOGGER.exception("Unknown error: %s", err)
                 self._errors = {"base": ERROR_UNKNOWN}
                 return await self.async_step_user()
 
@@ -114,7 +114,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._errors = {"base": ERROR_NOT_CONNECTED}
             return await self.async_step_user()
         except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error("An unknown error occurred: %s", err)
+            _LOGGER.exception("An unknown error occurred: %s", err)
             self._errors = {"base": ERROR_UNKNOWN}
             return await self.async_step_user()
 
