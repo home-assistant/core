@@ -83,10 +83,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
+    unique_id = _unique_id_from_status(status)
+
+    if unique_id is None:
+        unique_id = entry.entry_id
+
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,
         PYNUT_DATA: data,
-        PYNUT_UNIQUE_ID: _unique_id_from_status(status),
+        PYNUT_UNIQUE_ID: unique_id,
         PYNUT_MANUFACTURER: _manufacturer_from_status(status),
         PYNUT_MODEL: _model_from_status(status),
         PYNUT_FIRMWARE: _firmware_from_status(status),
