@@ -1569,3 +1569,5 @@ async def test_async_setup_update_entry(hass):
 
         assert len(hass.config_entries.async_entries("test")) == 2
         assert len(hass.config_entries.async_entries("test", False)) == 1
+        assert len(hass.config_entries.async_entries()) == 2
+        assert len(hass.config_entries.async_entries(include_ignored=False)) == 1

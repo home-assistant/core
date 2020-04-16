@@ -584,7 +584,10 @@ class ConfigEntries:
     ) -> List[ConfigEntry]:
         """Return all entries or entries for a specific domain."""
         if domain is None:
-            return list(self._entries)
+            if include_ignored:
+                return list(self._entries)
+
+            return [entry for entry in self._entries if entry.source != SOURCE_IGNORE]
 
         if include_ignored:
             return [entry for entry in self._entries if entry.domain == domain]
