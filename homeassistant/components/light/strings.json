@@ -1,4 +1,5 @@
 {
+  "title": "Light",
   "device_automation": {
     "action_type": {
       "brightness_decrease": "Decrease {entity_name} brightness",

@@ -1,4 +1,5 @@
 {
+  "title": "Binary sensor",
   "device_automation": {
     "condition_type": {
       "is_bat_low": "{entity_name} battery is low",
