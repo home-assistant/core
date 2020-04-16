@@ -153,8 +153,8 @@ async def async_disconnect_or_timeout(hass, roomba):
             _LOGGER.debug("Disconnect vacuum")
             await hass.async_add_executor_job(roomba.disconnect)
             while roomba.roomba_connected:
-                break
                 await asyncio.sleep(1)
+                break
     except asyncio.TimeoutError:
         _LOGGER.error("Timeout exceeded when disconnecting the vacuum cleaner")
         raise CannotDisconnect
@@ -182,7 +182,10 @@ async def async_unload_entry(hass, config_entry):
     domain_data[LISTENER]()
 
     # disconnect cleanly
-    await async_disconnect_or_timeout(hass, roomba=domain_data[ROOMBA_SESSION])
+    try:
+        await async_disconnect_or_timeout(hass, roomba=domain_data[ROOMBA_SESSION])
+    except CannotDisconnect:
+        return False
 
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
