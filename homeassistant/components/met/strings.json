@@ -1,5 +1,4 @@
 {
-  "title": "Met.no",
   "config": {
     "step": {
       "user": {
@@ -13,8 +12,6 @@
         }
       }
     },
-    "error": {
-      "name_exists": "Location already exists"
-    }
+    "error": { "name_exists": "Location already exists" }
   }
 }

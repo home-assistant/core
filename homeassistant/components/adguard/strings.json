@@ -1,5 +1,4 @@
 {
-  "title": "AdGuard Home",
   "config": {
     "step": {
       "user": {
@@ -19,9 +18,7 @@
         "description": "Do you want to configure Home Assistant to connect to the AdGuard Home provided by the Hass.io add-on: {addon}?"
       }
     },
-    "error": {
-      "connection_error": "Failed to connect."
-    },
+    "error": { "connection_error": "Failed to connect." },
     "abort": {
       "adguard_home_outdated": "This integration requires AdGuard Home {minimal_version} or higher, you have {current_version}.",
       "adguard_home_addon_outdated": "This integration requires AdGuard Home {minimal_version} or higher, you have {current_version}. Please update your Hass.io AdGuard Home add-on.",

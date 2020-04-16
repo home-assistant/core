@@ -1,15 +1,9 @@
 {
-  "title": "Tado",
   "config": {
-    "abort": {
-      "already_configured": "Device is already configured"
-    },
+    "abort": { "already_configured": "Device is already configured" },
     "step": {
       "user": {
-        "data": {
-          "password": "Password",
-          "username": "Username"
-        },
+        "data": { "password": "Password", "username": "Username" },
         "title": "Connect to your Tado account"
       }
     },
@@ -24,9 +18,7 @@
     "step": {
       "init": {
         "description": "Fallback mode will switch to Smart Schedule at next schedule switch after manually adjusting a zone.",
-        "data": {
-          "fallback": "Enable fallback mode."
-        },
+        "data": { "fallback": "Enable fallback mode." },
         "title": "Adjust Tado options."
       }
     }

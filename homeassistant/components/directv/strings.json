@@ -1,5 +1,4 @@
 {
-  "title": "DirecTV",
   "config": {
     "flow_title": "DirecTV: {name}",
     "step": {
@@ -10,14 +9,10 @@
       },
       "user": {
         "title": "Connect to the DirecTV receiver",
-        "data": {
-          "host": "Host or IP address"
-        }
+        "data": { "host": "Host or IP address" }
       }
     },
-    "error": {
-      "cannot_connect": "Failed to connect, please try again"
-    },
+    "error": { "cannot_connect": "Failed to connect, please try again" },
     "abort": {
       "already_configured": "DirecTV receiver is already configured",
       "unknown": "Unexpected error"

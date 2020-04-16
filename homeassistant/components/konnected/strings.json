@@ -1,5 +1,4 @@
 {
-  "title": "Konnected.io",
   "config": {
     "step": {
       "import_confirm": {
@@ -99,11 +98,7 @@
         }
       }
     },
-    "error": {
-      "bad_host": "Invalid Override API host url"
-    },
-    "abort": {
-      "not_konn_panel": "Not a recognized Konnected.io device"
-    }
+    "error": { "bad_host": "Invalid Override API host url" },
+    "abort": { "not_konn_panel": "Not a recognized Konnected.io device" }
   }
 }
