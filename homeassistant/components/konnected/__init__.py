@@ -58,6 +58,7 @@ from .const import (
     PIN_TO_ZONE,
     STATE_HIGH,
     STATE_LOW,
+    UNDO_UPDATE_LISTENER,
     UPDATE_ENDPOINT,
     ZONE_TO_PIN,
     ZONES,
@@ -254,7 +255,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up panel from a config entry."""
     client = AlarmPanel(hass, entry)
-    # create a data store in hass.data[DOMAIN][CONF_DEVICES]
+    # creates a panel data store in hass.data[DOMAIN][CONF_DEVICES]
     await client.async_save_data()
 
     try:
@@ -267,7 +268,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
-    entry.add_update_listener(async_entry_updated)
+
+    # config entry specific data to enable unload
+    hass.data[DOMAIN][entry.entry_id] = {
+        UNDO_UPDATE_LISTENER: entry.add_update_listener(async_entry_updated)
+    }
     return True
 
 
@@ -281,8 +286,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+
+    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+
     if unload_ok:
         hass.data[DOMAIN][CONF_DEVICES].pop(entry.data[CONF_ID])
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
