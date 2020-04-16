@@ -1,4 +1,5 @@
 {
+  "title": "Lock",
   "device_automation": {
     "action_type": {
       "lock": "Lock {entity_name}",

@@ -1,4 +1,5 @@
 {
+  "title": "Alarm control panel",
   "device_automation": {
     "action_type": {
       "arm_away": "Arm {entity_name} away",

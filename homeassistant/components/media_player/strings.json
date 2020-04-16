@@ -1,4 +1,5 @@
 {
+  "title": "Media player",
   "device_automation": {
     "condition_type": {
       "is_on": "{entity_name} is on",
