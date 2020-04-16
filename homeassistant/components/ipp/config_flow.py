@@ -91,9 +91,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             unique_id = info[CONF_SERIAL]
         elif unique_id is None:
-            _LOGGER.debug(
-                "Unable to determine unique id from IPP response"
-            )
+            _LOGGER.debug("Unable to determine unique id from IPP response")
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
@@ -102,8 +100,6 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info: ConfigType) -> Dict[str, Any]:
         """Handle zeroconf discovery."""
-        # Hostname is format: EPSON123456.local.
-        hostname = discovery_info["hostname"].rstrip(".")
         port = discovery_info[CONF_PORT]
         zctype = discovery_info["type"]
         name = discovery_info[CONF_NAME].replace(f".{zctype}", "")
@@ -119,7 +115,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: port,
                 CONF_SSL: tls,
                 CONF_VERIFY_SSL: False,
-                CONF_BASE_PATH: CONF_BASE_PATH: f"/{base_path}",
+                CONF_BASE_PATH: f"/{base_path}",
                 CONF_NAME: name,
                 CONF_UUID: discovery_info["properties"].get("UUID"),
             }

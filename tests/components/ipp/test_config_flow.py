@@ -50,7 +50,7 @@ async def test_show_zeroconf_form(
 
     assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["description_placeholders"] == {CONF_NAME: "EPSON123456"}
+    assert result["description_placeholders"] == {CONF_NAME: "EPSON XP-6000 Series"}
 
 
 async def test_connection_error(
@@ -290,9 +290,6 @@ async def test_zeroconf_with_uuid_device_exists_abort(
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
-    assert result["result"]
-    assert result["result"].unique_id == "cfe92100-67c4-11d4-a45f-f8d027761251"
-
 
 async def test_full_user_flow_implementation(
     hass: HomeAssistant, aioclient_mock
@@ -379,7 +376,7 @@ async def test_full_zeroconf_tls_flow_implementation(
 
     assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["description_placeholders"] == {CONF_NAME: "EPSON123456"}
+    assert result["description_placeholders"] == {CONF_NAME: "EPSON XP-6000 Series"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
@@ -396,4 +393,3 @@ async def test_full_zeroconf_tls_flow_implementation(
 
     assert result["result"]
     assert result["result"].unique_id == "cfe92100-67c4-11d4-a45f-f8d027761251"
-
