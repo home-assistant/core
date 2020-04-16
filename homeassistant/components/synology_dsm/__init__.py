@@ -139,15 +139,19 @@ class SynoApi:
             self._use_ssl,
             dsm_version=self._api_version,
         )
-        self.information = self._dsm.information
-        self.utilisation = self._dsm.utilisation
-        self.storage = self._dsm.storage
 
+        await self._hass.async_add_executor_job(self._fetch_device_configuration)
         await self.update()
 
         self._unsub_dispatcher = async_track_time_interval(
             self._hass, self.update, SCAN_INTERVAL
         )
+
+    def _fetch_device_configuration(self):
+        """Fetch initial device config."""
+        self.information = self._dsm.information
+        self.utilisation = self._dsm.utilisation
+        self.storage = self._dsm.storage
 
     async def async_unload(self):
         """Stop interacting with the NAS and prepare for removal from hass."""
