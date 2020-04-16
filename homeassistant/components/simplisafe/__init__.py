@@ -479,13 +479,21 @@ class SimpliSafe:
             # they will trigger SIMPLISAFE_NOTIFICATION events before other critical
             # components – such as automation – are ready. Therefore, we schedule an
             # update of notifications as soon as HASS is fully started:
-            async def process_notifications(_):
-                while self._hass.state != CoreState.running:
-                    await asyncio.sleep(1)
-                self._async_process_new_notifications(system)  # pylint: disable=W0640
+            async def process_notifications_listener(_):
+                """Define a listener to run when `homeassistant_start` fires."""
+
+                async def process_when_running():
+                    """Process notifications when HASS is running."""
+                    while self._hass.state != CoreState.running:
+                        await asyncio.sleep(1)
+                    self._async_process_new_notifications(  # pylint: disable=W0640
+                        system
+                    )
+
+                return self._hass.loop.create_task(process_when_running())
 
             self._hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, process_notifications
+                EVENT_HOMEASSISTANT_START, process_notifications_listener
             )
 
         async def refresh(event_time):
