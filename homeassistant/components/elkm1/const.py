@@ -18,6 +18,9 @@ CONF_ZONE = "zone"
 CONF_PREFIX = "prefix"
 
 
+BARE_TEMP_FAHRENHEIT = "F"
+BARE_TEMP_CELSIUS = "C"
+
 ELK_ELEMENTS = {
     CONF_AREA: Max.AREAS.value,
     CONF_COUNTER: Max.COUNTERS.value,
