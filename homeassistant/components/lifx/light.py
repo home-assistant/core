@@ -35,18 +35,12 @@ from homeassistant.components.light import (
     Light,
     preprocess_turn_on_alternatives,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_MODE,
-    ENTITY_MATCH_ALL,
-    ENTITY_MATCH_NONE,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.service import async_extract_entity_ids
 import homeassistant.util.color as color_util
 
 from . import (
@@ -105,15 +99,13 @@ PULSE_MODES = [
     PULSE_MODE_SOLID,
 ]
 
-LIFX_EFFECT_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Optional(ATTR_POWER_ON, default=True): cv.boolean,
-    }
-)
+LIFX_EFFECT_SCHEMA = {
+    vol.Optional(ATTR_POWER_ON, default=True): cv.boolean,
+}
 
-LIFX_EFFECT_PULSE_SCHEMA = LIFX_EFFECT_SCHEMA.extend(
+LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
     {
+        **LIFX_EFFECT_SCHEMA,
         ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
         ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
         vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
@@ -144,8 +136,9 @@ LIFX_EFFECT_PULSE_SCHEMA = LIFX_EFFECT_SCHEMA.extend(
     }
 )
 
-LIFX_EFFECT_COLORLOOP_SCHEMA = LIFX_EFFECT_SCHEMA.extend(
+LIFX_EFFECT_COLORLOOP_SCHEMA = cv.make_entity_service_schema(
     {
+        **LIFX_EFFECT_SCHEMA,
         ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
         ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
         ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Clamp(min=0.05)),
@@ -155,7 +148,7 @@ LIFX_EFFECT_COLORLOOP_SCHEMA = LIFX_EFFECT_SCHEMA.extend(
     }
 )
 
-LIFX_EFFECT_STOP_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
+LIFX_EFFECT_STOP_SCHEMA = cv.make_entity_service_schema({})
 
 
 def aiolifx():
@@ -191,7 +184,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             # Priority 3: default interface
             interfaces = [{}]
 
-    lifx_manager = LIFXManager(hass, async_add_entities)
+    platform = entity_platform.current_platform.get()
+    lifx_manager = LIFXManager(hass, platform, async_add_entities)
     hass.data[DATA_LIFX_MANAGER] = lifx_manager
 
     for interface in interfaces:
@@ -242,10 +236,11 @@ def merge_hsbk(base, change):
 class LIFXManager:
     """Representation of all known LIFX entities."""
 
-    def __init__(self, hass, async_add_entities):
+    def __init__(self, hass, platform, async_add_entities):
         """Initialize the light."""
         self.entities = {}
         self.hass = hass
+        self.platform = platform
         self.async_add_entities = async_add_entities
         self.effects_conductor = aiolifx_effects().Conductor(hass.loop)
         self.discoveries = []
@@ -293,22 +288,8 @@ class LIFXManager:
 
     def register_set_state(self):
         """Register the LIFX set_state service call."""
-
-        async def service_handler(service):
-            """Apply a service."""
-            tasks = []
-            for light in await self.async_service_to_entities(service):
-                if service.service == SERVICE_LIFX_SET_STATE:
-                    task = light.set_state(**service.data)
-                tasks.append(self.hass.async_create_task(task))
-            if tasks:
-                await asyncio.wait(tasks)
-
-        self.hass.services.async_register(
-            LIFX_DOMAIN,
-            SERVICE_LIFX_SET_STATE,
-            service_handler,
-            schema=LIFX_SET_STATE_SCHEMA,
+        self.platform.async_register_entity_service(
+            SERVICE_LIFX_SET_STATE, LIFX_SET_STATE_SCHEMA, "set_state"
         )
 
     def register_effects(self):
@@ -316,7 +297,7 @@ class LIFXManager:
 
         async def service_handler(service):
             """Apply a service, i.e. start an effect."""
-            entities = await self.async_service_to_entities(service)
+            entities = await self.platform.async_extract_from_service(service)
             if entities:
                 await self.start_effect(entities, service.service, **service.data)
 
@@ -372,21 +353,6 @@ class LIFXManager:
             await self.effects_conductor.start(effect, bulbs)
         elif service == SERVICE_EFFECT_STOP:
             await self.effects_conductor.stop(bulbs)
-
-    async def async_service_to_entities(self, service):
-        """Return the known entities that a service call mentions."""
-        if service.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_NONE:
-            return []
-
-        if service.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL:
-            return self.entities.values()
-
-        entity_ids = await async_extract_entity_ids(self.hass, service)
-        return [
-            entity
-            for entity in self.entities.values()
-            if entity.entity_id in entity_ids
-        ]
 
     @callback
     def register(self, bulb):
