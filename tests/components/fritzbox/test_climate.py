@@ -281,7 +281,7 @@ async def test_preset_mode_update(hass: HomeAssistantType, fritz: Mock):
     state = hass.states.get(ENTITY_ID)
 
     assert state
-    assert not state.attributes[ATTR_PRESET_MODE]
+    assert state.attributes[ATTR_PRESET_MODE] is None
 
     device.target_temperature = 98
 
