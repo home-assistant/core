@@ -80,6 +80,31 @@ async def test_5e850i(hass):
     )
 
 
+async def test_5e650i(hass):
+    """Test creation of 5E650I sensors."""
+
+    await async_init_integration(hass, "5E650I", ["battery.charge"])
+    registry = await hass.helpers.entity_registry.async_get_registry()
+    entry = registry.async_get("sensor.ups1_battery_charge")
+    # No unique id, no registry entry
+    assert not entry
+
+    state = hass.states.get("sensor.ups1_battery_charge")
+    assert state.state == "100"
+
+    expected_attributes = {
+        "device_class": "battery",
+        "friendly_name": "Ups1 Battery Charge",
+        "state": "Online Battery Charging",
+        "unit_of_measurement": "%",
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(
+        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+    )
+
+
 async def test_backupsses600m1(hass):
     """Test creation of BACKUPSES600M1 sensors."""
 
@@ -113,6 +138,56 @@ async def test_cp1500pfclcd(hass):
     """Test creation of CP1500PFCLCD sensors."""
 
     await async_init_integration(hass, "CP1500PFCLCD", ["battery.charge"])
+    registry = await hass.helpers.entity_registry.async_get_registry()
+    entry = registry.async_get("sensor.ups1_battery_charge")
+    # No unique id, no registry entry
+    assert not entry
+
+    state = hass.states.get("sensor.ups1_battery_charge")
+    assert state.state == "100"
+
+    expected_attributes = {
+        "device_class": "battery",
+        "friendly_name": "Ups1 Battery Charge",
+        "state": "Online",
+        "unit_of_measurement": UNIT_PERCENTAGE,
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(
+        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+    )
+
+
+async def test_dl650elcd(hass):
+    """Test creation of DL650ELCD sensors."""
+
+    await async_init_integration(hass, "DL650ELCD", ["battery.charge"])
+    registry = await hass.helpers.entity_registry.async_get_registry()
+    entry = registry.async_get("sensor.ups1_battery_charge")
+    # No unique id, no registry entry
+    assert not entry
+
+    state = hass.states.get("sensor.ups1_battery_charge")
+    assert state.state == "100"
+
+    expected_attributes = {
+        "device_class": "battery",
+        "friendly_name": "Ups1 Battery Charge",
+        "state": "Online",
+        "unit_of_measurement": UNIT_PERCENTAGE,
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(
+        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+    )
+
+
+async def test_blazer_usb(hass):
+    """Test creation of blazer_usb sensors."""
+
+    await async_init_integration(hass, "blazer_usb", ["battery.charge"])
     registry = await hass.helpers.entity_registry.async_get_registry()
     entry = registry.async_get("sensor.ups1_battery_charge")
     # No unique id, no registry entry
