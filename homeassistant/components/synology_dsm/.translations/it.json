@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Host gi\u00e0 configurato"
+        },
+        "error": {
+            "login": "Errore di accesso: si prega di controllare il nome utente e la password",
+            "unknown": "Errore sconosciuto: riprovare pi\u00f9 tardi o un'altra configurazione"
+        },
+        "flow_title": "Synology DSM {nome} ({host})",
+        "step": {
+            "link": {
+                "data": {
+                    "api_version": "Versione DSM",
+                    "password": "Password",
+                    "port": "Porta (opzionale)",
+                    "ssl": "Utilizzare SSL/TLS per connettersi al NAS",
+                    "username": "Nome utente"
+                },
+                "description": "Vuoi impostare {nome} ({host})?",
+                "title": "Synology DSM"
+            },
+            "user": {
+                "data": {
+                    "api_version": "Versione DSM",
+                    "host": "Host",
+                    "name": "Nome",
+                    "password": "Password",
+                    "port": "Porta (opzionale)",
+                    "ssl": "Utilizzare SSL/TLS per connettersi al NAS",
+                    "username": "Nome utente"
+                },
+                "title": "Synology DSM"
+            }
+        }
+    },
+    "title": "Synology DSM"
+}
