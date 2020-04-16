@@ -27,7 +27,6 @@ def mock_dependencies(hass):
 async def test_creating_entry_sets_up_sensor(hass):
     """Test setting up iOS loads the sensor component."""
     # so it will not have an empty config
-    await bootstrap.async_from_config_dict({"foo": "bar"}, hass)
     entry = MockConfigEntry(domain=ios.DOMAIN, data={},)
     entry.add_to_hass(hass)
     with patch(
