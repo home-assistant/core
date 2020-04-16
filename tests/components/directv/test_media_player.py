@@ -297,7 +297,7 @@ async def test_check_attributes(
     assert not state.attributes.get(ATTR_MEDIA_RECORDED)
 
     state = hass.states.get(RESTRICTED_ENTITY_ID)
-    assert state.state == STATE_ON
+    assert state.state == STATE_PLAYING
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) is None
     assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) is None
