@@ -68,7 +68,6 @@ async def test_import(hass):
         assert result["data"] == {
             CONF_HOST: "bravia-host",
             CONF_PIN: "1234",
-            CONF_MAC: "AA:BB:CC:DD:EE:FF",
         }
 
 
@@ -89,7 +88,7 @@ async def test_import_model_unsupported(hass):
     """Test that errors are shown when the TV is not supported during import."""
     with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
         "bravia_tv.BraviaRC.is_connected", return_value=True
-    ), patch("bravia_tv.BraviaRC.get_system_info", side_effect=KeyError):
+    ), patch("bravia_tv.BraviaRC.get_system_info", return_value={}):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_CONFIG_IP,
         )
@@ -150,7 +149,7 @@ async def test_authorize_model_unsupported(hass):
     """Test that errors are shown when the TV is not supported at the authorize step."""
     with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
         "bravia_tv.BraviaRC.is_connected", return_value=True
-    ), patch("bravia_tv.BraviaRC.get_system_info", side_effect=KeyError):
+    ), patch("bravia_tv.BraviaRC.get_system_info", return_value={}):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "10.10.10.12"},
         )
@@ -217,7 +216,6 @@ async def test_create_entry(hass):
         assert result["data"] == {
             CONF_HOST: "bravia-host",
             CONF_PIN: "1234",
-            CONF_MAC: "AA:BB:CC:DD:EE:FF",
         }
 
 

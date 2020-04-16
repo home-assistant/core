@@ -7,13 +7,12 @@ from bravia_tv import BraviaRC
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
+from homeassistant.const import CONF_HOST, CONF_PIN
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (  # pylint:disable=unused-import
     ATTR_CID,
-    ATTR_MAC,
     ATTR_MODEL,
     CLIENTID_PREFIX,
     CONF_IGNORED_SOURCES,
@@ -45,7 +44,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.braviarc = None
         self.host = None
         self.title = None
-        self.mac = None
 
     async def init_device(self, pin):
         """Initialize Bravia TV device."""
@@ -56,18 +54,16 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not self.braviarc.is_connected():
             raise CannotConnect()
 
-        try:
-            system_info = await self.hass.async_add_executor_job(
-                self.braviarc.get_system_info
-            )
-        except (KeyError, TypeError):
+        system_info = await self.hass.async_add_executor_job(
+            self.braviarc.get_system_info
+        )
+        if not system_info:
             raise ModelNotSupported()
 
         await self.async_set_unique_id(system_info[ATTR_CID].lower())
         self._abort_if_unique_id_configured()
 
         self.title = system_info[ATTR_MODEL]
-        self.mac = system_info[ATTR_MAC]
 
     @staticmethod
     @callback
@@ -88,8 +84,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except ModelNotSupported:
             _LOGGER.error("Import aborted, your TV is not supported")
             return self.async_abort(reason="unsupported_model")
-
-        user_input[CONF_MAC] = self.mac
 
         return self.async_create_entry(title=self.title, data=user_input)
 
@@ -125,7 +119,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unsupported_model"
             else:
                 user_input[CONF_HOST] = self.host
-                user_input[CONF_MAC] = self.mac
                 return self.async_create_entry(title=self.title, data=user_input)
 
         # Connecting with th PIN "0000" to start the pairing process on the TV.
