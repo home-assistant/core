@@ -520,7 +520,7 @@ async def test_light_set_brightness_and_color_temp(hass, hk_driver, cls, events)
     )
 
 
-async def test_light_restore_state(hass, hk_driver, cls, events):
+async def test_light_restore_state_color(hass, hk_driver, cls, events):
     """Test restoring brightness, color when turning back on."""
     entity_id = "light.demo"
 
@@ -567,4 +567,54 @@ async def test_light_restore_state(hass, hk_driver, cls, events):
     assert (
         events[-1].data[ATTR_VALUE]
         == "Set On: 1, Restore Brightness: 40, Restore Hue: 4, Restore Saturation: 9"
+    )
+
+
+async def test_light_restore_state_color_temp(hass, hk_driver, cls, events):
+    """Test restoring brightness, color temp when turning back on."""
+    entity_id = "light.demo"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP,
+            ATTR_BRIGHTNESS: 255,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = cls.light(hass, hk_driver, "Light", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    # Initial value can be anything but 0. If it is 0, it might cause HomeKit to set the
+    # brightness to 100 when turning on a light on a freshly booted up server.
+    assert acc.char_brightness.value != 0
+    char_on_iid = acc.char_on.to_HAP()[HAP_REPR_IID]
+
+    acc.char_brightness.set_value(1)
+    acc.char_color_temperature.set_value(224)
+
+    await hass.async_block_till_done()
+
+    # Set from HomeKit
+    call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {HAP_REPR_AID: acc.aid, HAP_REPR_IID: char_on_iid, HAP_REPR_VALUE: 1},
+            ]
+        },
+        "mock_addr",
+    )
+    await hass.async_block_till_done()
+    assert call_turn_on[0]
+    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_turn_on[0].data[ATTR_BRIGHTNESS_PCT] == 1
+    assert call_turn_on[0].data[ATTR_COLOR_TEMP] == 224
+
+    assert len(events) == 1
+    assert (
+        events[-1].data[ATTR_VALUE]
+        == "Set On: 1, Restore Brightness: 1, Restore ColorTemperature: 224"
     )
