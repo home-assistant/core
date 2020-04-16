@@ -7,8 +7,24 @@ from voluptuous.humanize import humanize_error
 
 from .model import Integration
 
+UNDEFINED = 0
+REQUIRED = 1
+REMOVED = 2
 
-def data_entry_schema(*, require_title: bool, require_step_title: bool):
+REMOVED_TITLE_MSG = (
+    "config.title key has been moved out of config and into the root of strings.json. "
+    "Starting Home Assistant 0.109 you only need to define this key in the root "
+    "if the title needs to be different than the name of your integration in the "
+    "manifest."
+)
+
+
+def removed_title_validator(value):
+    """Mark removed title."""
+    raise vol.Invalid(REMOVED_TITLE_MSG)
+
+
+def data_entry_schema(*, flow_title: int, require_step_title: bool):
     """Generate a data entry schema."""
     step_title_class = vol.Required if require_step_title else vol.Optional
     data_entry_schema = {
@@ -24,8 +40,12 @@ def data_entry_schema(*, require_title: bool, require_step_title: bool):
         vol.Optional("abort"): {str: str},
         vol.Optional("create_entry"): {str: str},
     }
-    if require_title:
+    if flow_title == REQUIRED:
         data_entry_schema[vol.Required("title")] = str
+    elif flow_title == REMOVED:
+        data_entry_schema[
+            vol.Optional("title", msg=REMOVED_TITLE_MSG)
+        ] = removed_title_validator
 
     return data_entry_schema
 
@@ -34,10 +54,10 @@ STRINGS_SCHEMA = vol.Schema(
     {
         vol.Optional("title"): str,
         vol.Optional("config"): data_entry_schema(
-            require_title=False, require_step_title=True
+            flow_title=REMOVED, require_step_title=True
         ),
         vol.Optional("options"): data_entry_schema(
-            require_title=False, require_step_title=False
+            flow_title=UNDEFINED, require_step_title=False
         ),
         vol.Optional("device_automation"): {
             vol.Optional("action_type"): {str: str},
@@ -52,7 +72,7 @@ STRINGS_SCHEMA = vol.Schema(
 AUTH_SCHEMA = vol.Schema(
     {
         vol.Optional("mfa_setup"): {
-            str: data_entry_schema(require_title=True, require_step_title=True)
+            str: data_entry_schema(flow_title=REQUIRED, require_step_title=True)
         }
     }
 )
