@@ -52,3 +52,6 @@ CONDITION_CLASSES = {
     "cloudy": ["Mostly cloudy", "Overcast"],
     "partlycloudy": ["A few clouds", "Partly cloudy"],
 }
+
+DAYNIGHT = "daynight"
+HOURLY = "hourly"

@@ -85,6 +85,7 @@ FLOWS = [
     "notion",
     "nuheat",
     "nut",
+    "nws",
     "opentherm_gw",
     "openuv",
     "owntracks",

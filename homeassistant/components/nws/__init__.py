@@ -7,9 +7,9 @@ import aiohttp
 from pynws import SimpleNWS
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -52,36 +52,51 @@ def signal_unique_id(latitude, longitude):
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the National Weather Service integration."""
-    if DOMAIN not in config:
-        return True
-
-    hass.data[DOMAIN] = hass.data.get(DOMAIN, {})
-    for entry in config[DOMAIN]:
-        latitude = entry.get(CONF_LATITUDE, hass.config.latitude)
-        longitude = entry.get(CONF_LONGITUDE, hass.config.longitude)
-        api_key = entry[CONF_API_KEY]
-
-        client_session = async_get_clientsession(hass)
-
-        if base_unique_id(latitude, longitude) in hass.data[DOMAIN]:
-            _LOGGER.error(
-                "Duplicate entry in config: latitude %s  latitude: %s",
-                latitude,
-                longitude,
-            )
-            continue
-
-        nws_data = NwsData(hass, latitude, longitude, api_key, client_session)
-        hass.data[DOMAIN][base_unique_id(latitude, longitude)] = nws_data
-        async_track_time_interval(hass, nws_data.async_update, DEFAULT_SCAN_INTERVAL)
-
-        for component in PLATFORMS:
-            hass.async_create_task(
-                discovery.async_load_platform(hass, component, DOMAIN, entry, config)
-            )
-
+    """Set up the National Weather Service (NWS) component."""
+    hass.data.setdefault(DOMAIN, {})
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up a National Weather Service entry."""
+    latitude = entry.data[CONF_LATITUDE]
+    longitude = entry.data[CONF_LONGITUDE]
+    api_key = entry.data[CONF_API_KEY]
+    station = entry.data[CONF_STATION]
+
+    client_session = async_get_clientsession(hass)
+
+    nws_data = NwsData(hass, latitude, longitude, api_key, client_session)
+    hass.data[DOMAIN][entry.entry_id] = nws_data
+
+    # async_set_station only does IO when station is None
+    await nws_data.async_set_station(station)
+    await nws_data.async_update()
+
+    async_track_time_interval(hass, nws_data.async_update, DEFAULT_SCAN_INTERVAL)
+
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+        if len(hass.data[DOMAIN]) == 0:
+            hass.data.pop(DOMAIN)
+    return unload_ok
 
 
 class NwsData:
