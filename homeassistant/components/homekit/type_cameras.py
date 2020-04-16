@@ -164,8 +164,10 @@ class Camera(HomeAccessory, PyhapCamera):
             stream_source = asyncio.run_coroutine_threadsafe(
                 camera.stream_source(), self.hass.loop
             ).result(10)
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error("Failed to get stream source: %s", err)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Failed to get stream source - this could be a transient error or your camera might not be compatible with HomeKit yet"
+            )
         return stream_source
 
     async def start_stream(self, session_info, stream_config):
@@ -232,7 +234,7 @@ class Camera(HomeAccessory, PyhapCamera):
             await stream.close()
             _LOGGER.debug("Stream process stopped.")
         else:
-            _LOGGER.warning("No stream for session ID %s", session_id)
+            _LOGGER.debug("No stream for session ID %s", session_id)
 
     async def reconfigure_stream(self, session_info, stream_config):
         """Reconfigure the stream so that it uses the given ``stream_config``."""
