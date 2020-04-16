@@ -66,6 +66,8 @@ class IPPSensor(IPPEntity):
             self._unique_id = f"{coordinator.data.info.uuid}_{key}"
         elif coordinator.data.info.serial is not None:
             self._unique_id = f"{coordinator.data.info.serial}_{key}"
+        elif entry_id is not None:
+            self._unique_id = f"{entry_id}_{key}"
 
         super().__init__(
             entry_id=entry_id,
