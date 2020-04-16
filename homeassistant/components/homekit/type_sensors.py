@@ -60,16 +60,16 @@ from .util import convert_to_float, density_to_air_quality, temperature_to_homek
 _LOGGER = logging.getLogger(__name__)
 
 BINARY_SENSOR_SERVICE_MAP = {
-    DEVICE_CLASS_CO2: (SERV_CARBON_DIOXIDE_SENSOR, CHAR_CARBON_DIOXIDE_DETECTED),
-    DEVICE_CLASS_DOOR: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE),
-    DEVICE_CLASS_GARAGE_DOOR: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE),
-    DEVICE_CLASS_GAS: (SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED),
-    DEVICE_CLASS_MOISTURE: (SERV_LEAK_SENSOR, CHAR_LEAK_DETECTED),
-    DEVICE_CLASS_MOTION: (SERV_MOTION_SENSOR, CHAR_MOTION_DETECTED),
-    DEVICE_CLASS_OCCUPANCY: (SERV_OCCUPANCY_SENSOR, CHAR_OCCUPANCY_DETECTED),
-    DEVICE_CLASS_OPENING: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE),
-    DEVICE_CLASS_SMOKE: (SERV_SMOKE_SENSOR, CHAR_SMOKE_DETECTED),
-    DEVICE_CLASS_WINDOW: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE),
+    DEVICE_CLASS_CO2: (SERV_CARBON_DIOXIDE_SENSOR, CHAR_CARBON_DIOXIDE_DETECTED, int),
+    DEVICE_CLASS_DOOR: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
+    DEVICE_CLASS_GARAGE_DOOR: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
+    DEVICE_CLASS_GAS: (SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED, int),
+    DEVICE_CLASS_MOISTURE: (SERV_LEAK_SENSOR, CHAR_LEAK_DETECTED, int),
+    DEVICE_CLASS_MOTION: (SERV_MOTION_SENSOR, CHAR_MOTION_DETECTED, bool),
+    DEVICE_CLASS_OCCUPANCY: (SERV_OCCUPANCY_SENSOR, CHAR_OCCUPANCY_DETECTED, int),
+    DEVICE_CLASS_OPENING: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
+    DEVICE_CLASS_SMOKE: (SERV_SMOKE_SENSOR, CHAR_SMOKE_DETECTED, int),
+    DEVICE_CLASS_WINDOW: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
 }
 
 
@@ -274,8 +274,12 @@ class BinarySensor(HomeAccessory):
             else BINARY_SENSOR_SERVICE_MAP[DEVICE_CLASS_OCCUPANCY]
         )
 
+        self.format = service_char[2]
         service = self.add_preload_service(service_char[0])
-        self.char_detected = service.configure_char(service_char[1], value=0)
+        initial_value = False if self.format is bool else 0
+        self.char_detected = service.configure_char(
+            service_char[1], value=initial_value
+        )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
         self.update_state(state)
@@ -283,7 +287,7 @@ class BinarySensor(HomeAccessory):
     def update_state(self, new_state):
         """Update accessory after state change."""
         state = new_state.state
-        detected = state in (STATE_ON, STATE_HOME)
+        detected = self.format(state in (STATE_ON, STATE_HOME))
         if self.char_detected.value != detected:
             self.char_detected.set_value(detected)
             _LOGGER.debug("%s: Set to %d", self.entity_id, detected)
