@@ -490,7 +490,7 @@ class SimpliSafe:
                         system
                     )
 
-                return self._hass.loop.create_task(process_when_running())
+                return asyncio.create_task(process_when_running())
 
             self._hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, process_notifications_listener
