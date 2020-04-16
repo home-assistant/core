@@ -1,4 +1,5 @@
 {
+  "title": "Axis device",
   "config": {
     "flow_title": "Axis device: {name} ({host})",
     "step": {
