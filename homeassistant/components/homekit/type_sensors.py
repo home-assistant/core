@@ -287,10 +287,7 @@ class BinarySensor(HomeAccessory):
     def update_state(self, new_state):
         """Update accessory after state change."""
         state = new_state.state
-        if self.format == bool:
-            detected = state in (STATE_ON, STATE_HOME)
-        else:
-            detected = 1 if state in (STATE_ON, STATE_HOME) else 0
+        detected = self.format(state in (STATE_ON, STATE_HOME))
         if self.char_detected.value != detected:
             self.char_detected.set_value(detected)
             _LOGGER.debug("%s: Set to %d", self.entity_id, detected)
