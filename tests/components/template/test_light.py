@@ -540,7 +540,6 @@ class TestTemplateLight:
         assert self.calls[0].data["white_value"] == "124"
 
         state = self.hass.states.get("light.test_template_light")
-        _LOGGER.info(str(state.attributes))
         assert state is not None
         assert state.attributes.get("white_value") == 124
 
