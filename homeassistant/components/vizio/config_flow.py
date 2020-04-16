@@ -207,8 +207,10 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # If source is ignore bypass host and name check and continue through loop
                 if entry.data.get(CONF_SOURCE) == SOURCE_IGNORE:
                     continue
+
                 if _host_is_same(entry.data[CONF_HOST], user_input[CONF_HOST]):
                     errors[CONF_HOST] = "host_exists"
+
                 if entry.data[CONF_NAME] == user_input[CONF_NAME]:
                     errors[CONF_NAME] = "name_exists"
 
@@ -282,6 +284,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # If source is ignore bypass host check and continue through loop
             if entry.data.get(CONF_SOURCE) == SOURCE_IGNORE:
                 continue
+
             if _host_is_same(entry.data[CONF_HOST], import_config[CONF_HOST]):
                 updated_options = {}
                 updated_data = {}
@@ -349,6 +352,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # If source is ignore bypass host check and continue through loop
             if entry.data.get(CONF_SOURCE) == SOURCE_IGNORE:
                 continue
+
             if _host_is_same(entry.data[CONF_HOST], discovery_info[CONF_HOST]):
                 return self.async_abort(reason="already_setup")
 
