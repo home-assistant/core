@@ -288,7 +288,7 @@ def async_enable_logging(
 
         if log_rotate_days:
             err_handler: logging.FileHandler = logging.handlers.TimedRotatingFileHandler(
-                err_log_path, when="midnight", backupCount=log_rotate_days
+                err_log_path, when="midnight", backupCount=int(log_rotate_days)
             )
         else:
             err_handler = logging.FileHandler(err_log_path, mode="w", delay=True)
