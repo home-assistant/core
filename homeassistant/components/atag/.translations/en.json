@@ -1,6 +1,6 @@
 {
+  "title": "Atag",
   "config": {
-    "title": "Atag",
     "step": {
       "user": {
         "title": "Connect to the device",
