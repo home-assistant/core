@@ -16,5 +16,6 @@
             "turned_off": "{entity_name} apagada",
             "turned_on": "{entity_name} encendida"
         }
-    }
+    },
+    "title": "Luz"
 }

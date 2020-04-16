@@ -23,9 +23,6 @@
             }
         }
     },
-    "error": {
-        "unknown_client_mac": "\ud574\ub2f9 MAC \uc8fc\uc18c\uc758 UniFi \uc5d0\uc11c \uc0ac\uc6a9\ud560 \uc218 \uc788\ub294 \ud074\ub77c\uc774\uc5b8\ud2b8\uac00 \uc5c6\uc2b5\ub2c8\ub2e4."
-    },
     "options": {
         "step": {
             "client_control": {
@@ -56,6 +53,5 @@
                 "title": "UniFi \uc635\uc158 3/3"
             }
         }
-    },
-    "title": "UniFi \ucee8\ud2b8\ub864\ub7ec"
+    }
 }

@@ -103,8 +103,6 @@
                 "description": "Please select the output options for {zone}: state {state}",
                 "title": "Configure Switchable Output"
             }
-        },
-        "title": "Konnected Alarm Panel Options"
-    },
-    "title": "Konnected.io"
+        }
+    }
 }

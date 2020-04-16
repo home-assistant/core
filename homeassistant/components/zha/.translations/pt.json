@@ -23,6 +23,5 @@
         "trigger_subtype": {
             "left": "Esquerda"
         }
-    },
-    "title": "ZHA"
+    }
 }

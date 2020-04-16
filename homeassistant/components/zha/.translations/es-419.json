@@ -33,6 +33,5 @@
             "device_slid": "Dispositivo deslizado \"{subtype}\"",
             "device_tilted": "Dispositivo inclinado"
         }
-    },
-    "title": "ZHA"
+    }
 }

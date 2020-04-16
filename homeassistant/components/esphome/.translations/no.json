@@ -27,9 +27,8 @@
                     "port": ""
                 },
                 "description": "Vennligst skriv inn tilkoblingsinnstillinger for din [ESPHome](https://esphomelib.com/) node.",
-                "title": ""
+                "title": "ESPHome"
             }
         }
-    },
-    "title": ""
+    }
 }

@@ -24,5 +24,6 @@
             "position": "{entity_name} spremembe polo\u017eaja",
             "tilt_position": "{entity_name} spremembe nagiba"
         }
-    }
+    },
+    "title": "Cover"
 }

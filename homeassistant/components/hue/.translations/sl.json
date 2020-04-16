@@ -27,5 +27,21 @@
             }
         }
     },
-    "title": "Philips Hue"
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Prvi gumb",
+            "button_2": "Drugi gumb",
+            "button_3": "Tretji gumb",
+            "button_4": "\u010cetrti gumb",
+            "dim_down": "Zatemnite",
+            "dim_up": "pove\u010dajte mo\u010d",
+            "turn_off": "Ugasni",
+            "turn_on": "Pri\u017egi"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "\"{subtype}\" gumb spro\u0161\u010den po dolgem pritisku",
+            "remote_button_short_press": "Pritisnjen \"{subtype}\" gumb",
+            "remote_button_short_release": "Gumb \"{subtype}\" spro\u0161\u010den"
+        }
+    }
 }

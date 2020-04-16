@@ -23,15 +23,13 @@
             }
         }
     },
-    "error": {
-        "unknown_client_mac": "V UniFi na tem naslovu MAC ni na voljo nobenega odjemalca"
-    },
     "options": {
         "step": {
             "client_control": {
                 "data": {
                     "block_client": "Odjemalci pod nadzorom dostopa do omre\u017eja",
-                    "new_client": "Dodajte novega odjemalca za nadzor dostopa do omre\u017eja"
+                    "new_client": "Dodajte novega odjemalca za nadzor dostopa do omre\u017eja",
+                    "poe_clients": "Dovoli POE nadzor strank"
                 },
                 "description": "Konfigurirajte nadzor odjemalcev \n\n Ustvarite stikala za serijske \u0161tevilke, za katere \u017eelite nadzirati dostop do omre\u017eja.",
                 "title": "Mo\u017enosti UniFi 2/3"
@@ -63,6 +61,5 @@
                 "title": "Mo\u017enosti UniFi 3/3"
             }
         }
-    },
-    "title": "UniFi Krmilnik"
+    }
 }

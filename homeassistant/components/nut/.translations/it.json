@@ -23,15 +23,11 @@
             },
             "user": {
                 "data": {
-                    "alias": "Alias",
                     "host": "Host",
-                    "name": "Nome",
                     "password": "Password",
                     "port": "Porta",
-                    "resources": "Risorse",
                     "username": "Nome utente"
                 },
-                "description": "Se al server NUT sono collegati pi\u00f9 UPS, inserire il nome UPS da interrogare nel campo 'Alias'.",
                 "title": "Connessione al server NUT"
             }
         }
@@ -46,6 +42,5 @@
                 "description": "Scegliere le Risorse del Sensore."
             }
         }
-    },
-    "title": "Strumenti UPS di rete (NUT)"
+    }
 }

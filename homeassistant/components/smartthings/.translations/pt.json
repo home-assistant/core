@@ -1,27 +1,36 @@
 {
     "config": {
+        "abort": {
+            "no_available_locations": "N\u00e3o h\u00e1 localiza\u00e7\u00f5es SmartThings dispon\u00edveis para configura\u00e7\u00e3o no Home Assistant."
+        },
         "error": {
-            "app_not_installed": "Por favor, instale o Home Assistant SmartApp em pelo menos um local e tente de novo.",
             "app_setup_error": "N\u00e3o \u00e9 poss\u00edvel configurar o SmartApp. Por favor, tente novamente.",
-            "base_url_not_https": "O `base_url` para o componente` http` deve ser configurado e iniciar com `https://`.",
-            "token_already_setup": "O token j\u00e1 foi configurado.",
             "token_forbidden": "O token n\u00e3o tem tem a cobertura OAuth necess\u00e1ria.",
             "token_invalid_format": "O token deve estar no formato UID/GUID",
-            "token_unauthorized": "O token \u00e9 inv\u00e1lido ou ja n\u00e3o est\u00e1 autorizado."
+            "token_unauthorized": "O token \u00e9 inv\u00e1lido ou ja n\u00e3o est\u00e1 autorizado.",
+            "webhook_error": "O SmartThings n\u00e3o p\u00f4de validar o URL do webhook. Verifique se o URL do webhook est\u00e1 acess\u00edvel pela Internet e tente novamente."
         },
         "step": {
-            "user": {
+            "authorize": {
+                "title": "Autorizar o Home Assistant"
+            },
+            "pat": {
                 "data": {
                     "access_token": "Token de Acesso"
                 },
-                "description": "Por favor, insira um SmartThings [Personal Access Token]({token_url} ) que foi criado de acordo com as [instru\u00e7\u00f5es]({component_url}).",
                 "title": "Insira o Token de acesso pessoal"
             },
-            "wait_install": {
-                "description": "Por favor, instale o Home Assistant SmartApp em pelo menos um local e clique em enviar.",
-                "title": "Instalar SmartApp"
+            "select_location": {
+                "data": {
+                    "location_id": "Localiza\u00e7\u00e3o"
+                },
+                "description": "Por favor, selecione a localiza\u00e7\u00e3o do SmartThings que voc\u00ea deseja adicionar ao Home Assistant. Em seguida, abriremos uma nova janela e solicitaremos que voc\u00ea fa\u00e7a o login e autorize a instala\u00e7\u00e3o da integra\u00e7\u00e3o do Home Assistant na localiza\u00e7\u00e3o selecionada.",
+                "title": "Selecionar Localiza\u00e7\u00e3o"
+            },
+            "user": {
+                "description": "Por favor, insira um SmartThings [Personal Access Token]({token_url} ) que foi criado de acordo com as [instru\u00e7\u00f5es]({component_url}).",
+                "title": "Insira o Token de acesso pessoal"
             }
         }
-    },
-    "title": "SmartThings"
+    }
 }

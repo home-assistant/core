@@ -12,7 +12,6 @@
                 "data": {
                     "api_version": "DSM \ubc84\uc804",
                     "host": "\ud638\uc2a4\ud2b8",
-                    "name": "\uc774\ub984",
                     "password": "\ube44\ubc00\ubc88\ud638",
                     "port": "\ud3ec\ud2b8",
                     "ssl": "SSL/TLS \ub97c \uc0ac\uc6a9\ud558\uc5ec NAS \uc5d0 \uc5f0\uacb0",
@@ -21,6 +20,5 @@
                 "title": "Synology DSM"
             }
         }
-    },
-    "title": "Synology DSM"
+    }
 }

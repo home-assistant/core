@@ -21,5 +21,6 @@
             "disarmed": "{entity_name} deaktiviert",
             "triggered": "{entity_name} ausgel\u00f6st"
         }
-    }
+    },
+    "title": "Alarmanlage"
 }

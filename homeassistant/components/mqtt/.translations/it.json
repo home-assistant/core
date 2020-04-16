@@ -48,6 +48,5 @@
             "button_short_release": "\"{subtype}\" rilasciato",
             "button_triple_press": "\"{subtype}\" cliccato tre volte"
         }
-    },
-    "title": "MQTT"
+    }
 }

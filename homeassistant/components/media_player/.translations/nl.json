@@ -7,5 +7,6 @@
             "is_paused": "{entity_name} is gepauzeerd",
             "is_playing": "{entity_name} wordt afgespeeld"
         }
-    }
+    },
+    "title": "Mediaspeler"
 }

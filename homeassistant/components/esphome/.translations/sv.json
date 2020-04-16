@@ -27,9 +27,8 @@
                     "port": "Port"
                 },
                 "description": "Ange anslutningsinst\u00e4llningarna f\u00f6r noden [ESPHome](https://esphomelib.com/).",
-                "title": "ESPHome"
+                "title": "[%key:component::esphome::title%]"
             }
         }
-    },
-    "title": "ESPHome"
+    }
 }

@@ -5,10 +5,7 @@
             "no_available_locations": "There are no available SmartThings Locations to setup in Home Assistant."
         },
         "error": {
-            "app_not_installed": "Please ensure you have installed and authorized the Home Assistant SmartApp and try again.",
             "app_setup_error": "Unable to setup the SmartApp.  Please try again.",
-            "base_url_not_https": "The `base_url` for the `http` component must be configured and start with `https://`.",
-            "token_already_setup": "The token has already been setup.",
             "token_forbidden": "The token does not have the required OAuth scopes.",
             "token_invalid_format": "The token must be in the UID/GUID format",
             "token_unauthorized": "The token is invalid or no longer authorized.",
@@ -33,17 +30,9 @@
                 "title": "Select Location"
             },
             "user": {
-                "data": {
-                    "access_token": "Access Token"
-                },
                 "description": "SmartThings will be configured to send push updates to Home Assistant at:\n> {webhook_url}\n\nIf this is not correct, please update your configuration, restart Home Assistant, and try again.",
                 "title": "Confirm Callback URL"
-            },
-            "wait_install": {
-                "description": "Please install the Home Assistant SmartApp in at least one location and click submit.",
-                "title": "Install SmartApp"
             }
         }
-    },
-    "title": "SmartThings"
+    }
 }

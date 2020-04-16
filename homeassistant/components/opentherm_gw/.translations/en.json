@@ -27,6 +27,5 @@
                 "description": "Options for the OpenTherm Gateway"
             }
         }
-    },
-    "title": "OpenTherm Gateway"
+    }
 }

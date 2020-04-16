@@ -62,6 +62,5 @@
             "remote_button_short_release": "\"{subtype}\"-knappen sl\u00e4ppt",
             "remote_button_triple_press": "\"{subtype}\"-knappen trippelklickades"
         }
-    },
-    "title": "ZHA"
+    }
 }

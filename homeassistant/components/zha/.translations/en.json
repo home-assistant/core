@@ -70,6 +70,5 @@
             "remote_button_short_release": "\"{subtype}\" button released",
             "remote_button_triple_press": "\"{subtype}\" button triple clicked"
         }
-    },
-    "title": "ZHA"
+    }
 }

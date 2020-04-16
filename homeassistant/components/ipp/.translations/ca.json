@@ -4,6 +4,8 @@
             "already_configured": "Aquesta impressora ja est\u00e0 configurada.",
             "connection_error": "No s'ha pogut connectar amb la impressora.",
             "connection_upgrade": "No s'ha pogut connectar amb la impressora, es necessita actualitzar la connexi\u00f3.",
+            "ipp_error": "S'ha produ\u00eft un error IPP.",
+            "ipp_version_error": "La versi\u00f3 IPP no \u00e9s compatible amb la impressora.",
             "parse_error": "No s'ha pogut analitzar la resposta de la impressora."
         },
         "error": {
@@ -28,6 +30,5 @@
                 "title": "Impressora descoberta"
             }
         }
-    },
-    "title": "Protocol d'impressi\u00f3 per Internet (IPP)"
+    }
 }

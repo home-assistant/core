@@ -88,5 +88,6 @@
             "unsafe": "{entity_name} ist unsicher",
             "vibration": "{entity_name} detektiert Vibrationen"
         }
-    }
+    },
+    "title": "Bin\u00e4rsensor"
 }

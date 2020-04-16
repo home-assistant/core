@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "\ud1b5\ud569 \uad6c\uc131\uc694\uc18c\uac00 \uc774\ubbf8 \ud574\ub2f9 \uc774\ub984\uc758 \uc13c\uc11c\ub85c \uad6c\uc131\ub418\uc5b4 \uc788\uc2b5\ub2c8\ub2e4"
-        },
         "step": {
             "user": {
                 "data": {

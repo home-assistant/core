@@ -103,8 +103,6 @@
                 "description": "Velg outputalternativer for {zone} : state {state}",
                 "title": "Konfigurere Valgbare Utgang"
             }
-        },
-        "title": "Alternativer for Konnected Alarm Panel"
-    },
-    "title": ""
+        }
+    }
 }

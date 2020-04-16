@@ -7,5 +7,6 @@
             "is_paused": "odtwarzanie medi\u00f3w na {entity_name} jest wstrzymane",
             "is_playing": "{entity_name} odtwarza media"
         }
-    }
+    },
+    "title": "Odtwarzacz medi\u00f3w"
 }

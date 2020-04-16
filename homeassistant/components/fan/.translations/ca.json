@@ -12,5 +12,6 @@
             "turned_off": "{entity_name} s'ha apagat",
             "turned_on": "{entity_name} s'ha enc\u00e8s"
         }
-    }
+    },
+    "title": "Ventiladors"
 }

@@ -21,5 +21,6 @@
             "disarmed": "{entity_name} zostanie rozbrojony",
             "triggered": "{entity_name} zostanie wyzwolony"
         }
-    }
+    },
+    "title": "Panel kontrolny alarmu"
 }

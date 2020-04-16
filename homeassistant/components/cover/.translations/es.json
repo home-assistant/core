@@ -24,5 +24,6 @@
             "position": "Posici\u00f3n cambiada de {entity_name}",
             "tilt_position": "Cambia la posici\u00f3n de inclinaci\u00f3n de {entity_name}"
         }
-    }
+    },
+    "title": "Persiana"
 }

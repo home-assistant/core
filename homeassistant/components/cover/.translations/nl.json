@@ -16,5 +16,6 @@
             "position": "{entity_name} positiewijzigingen",
             "tilt_position": "{entity_name} kantel positiewijzigingen"
         }
-    }
+    },
+    "title": "Bedekking"
 }

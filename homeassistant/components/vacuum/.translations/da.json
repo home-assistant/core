@@ -12,5 +12,6 @@
             "cleaning": "{entity_name} begyndte at reng\u00f8re",
             "docked": "{entity_name} er i dock"
         }
-    }
+    },
+    "title": "St\u00f8vsuger"
 }

@@ -27,5 +27,21 @@
             }
         }
     },
-    "title": ""
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "F\u00f8rste knapp",
+            "button_2": "Andre knapp",
+            "button_3": "Tredje knapp",
+            "button_4": "Fjerde knapp",
+            "dim_down": "Dimm ned",
+            "dim_up": "Dimm opp",
+            "turn_off": "Skru av",
+            "turn_on": "Sl\u00e5 p\u00e5"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "\"{subtype}\"-knappen sluppet etter langt trykk",
+            "remote_button_short_press": "\"{subtype}\" -knappen ble trykket",
+            "remote_button_short_release": "\"{subtype}\"-knappen sluppet"
+        }
+    }
 }

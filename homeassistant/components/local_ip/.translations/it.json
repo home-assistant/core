@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'integrazione \u00e8 gi\u00e0 configurata con un sensore esistente con questo nome",
             "single_instance_allowed": "\u00c8 consentita una sola configurazione dell'IP locale."
         },
         "step": {

@@ -21,5 +21,6 @@
             "disarmed": "{entity_name} desactivada",
             "triggered": "{entity_name} disparat/ada"
         }
-    }
+    },
+    "title": "Panell de control d'alarma"
 }

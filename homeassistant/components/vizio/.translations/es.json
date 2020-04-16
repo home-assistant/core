@@ -49,8 +49,6 @@
                 "description": "Si tienes un Smart TV, opcionalmente puedes filtrar su lista de fuentes eligiendo qu\u00e9 aplicaciones incluir o excluir en su lista de fuentes.",
                 "title": "Actualizar las opciones de SmartCast de Vizo"
             }
-        },
-        "title": "Actualizar las opciones de SmartCast de Vizo"
-    },
-    "title": "Vizio SmartCast"
+        }
+    }
 }

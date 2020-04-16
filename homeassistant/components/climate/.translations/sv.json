@@ -13,5 +13,6 @@
             "current_temperature_changed": "{entity_name} uppm\u00e4tt temperatur har \u00e4ndrats",
             "hvac_mode_changed": "{entity_name} HVAC-l\u00e4ge har \u00e4ndrats"
         }
-    }
+    },
+    "title": "Klimat"
 }

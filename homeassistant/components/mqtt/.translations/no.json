@@ -48,6 +48,5 @@
             "button_short_release": "\"{subtype}\" utgitt",
             "button_triple_press": "\"{subtype}\" trippel klikket"
         }
-    },
-    "title": "MQTT"
+    }
 }

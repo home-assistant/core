@@ -23,9 +23,6 @@
             }
         }
     },
-    "error": {
-        "unknown_client_mac": "Brak klienta w UniFi z tym adresem MAC"
-    },
     "options": {
         "step": {
             "client_control": {
@@ -63,6 +60,5 @@
                 "title": "Opcje UniFi"
             }
         }
-    },
-    "title": "Kontroler UniFi"
+    }
 }

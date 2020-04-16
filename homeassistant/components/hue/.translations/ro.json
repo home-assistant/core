@@ -20,6 +20,5 @@
                 "description": "Ap\u0103sa\u021bi butonul de pe pod pentru a \u00eenregistra Philips Hue cu Home Assistant. \n\n![Loca\u021bia butonului pe pod](/static/images/config_philips_hue.jpg)"
             }
         }
-    },
-    "title": "Philips Hue"
+    }
 }

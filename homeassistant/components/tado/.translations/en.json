@@ -28,8 +28,6 @@
                 "description": "Fallback mode will switch to Smart Schedule at next schedule switch after manually adjusting a zone.",
                 "title": "Adjust Tado options."
             }
-        },
-        "title": "Tado"
-    },
-    "title": "Tado"
+        }
+    }
 }

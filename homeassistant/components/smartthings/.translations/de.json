@@ -1,10 +1,7 @@
 {
     "config": {
         "error": {
-            "app_not_installed": "Stelle sicher, dass du die Home Assistant SmartApp installiert und autorisiert hast, und versuche es erneut.",
             "app_setup_error": "SmartApp kann nicht eingerichtet werden. Bitte versuche es erneut.",
-            "base_url_not_https": "Die `base_url` f\u00fcr die` http`-Komponente muss konfiguriert sein und mit `https://` beginnen.",
-            "token_already_setup": "Das Token wurde bereits eingerichtet.",
             "token_forbidden": "Das Token verf\u00fcgt nicht \u00fcber die erforderlichen OAuth-Bereiche.",
             "token_invalid_format": "Das Token muss im UID/GUID-Format vorliegen.",
             "token_unauthorized": "Das Token ist ung\u00fcltig oder nicht mehr autorisiert.",
@@ -27,17 +24,9 @@
                 "title": "Standort ausw\u00e4hlen"
             },
             "user": {
-                "data": {
-                    "access_token": "Zugangstoken"
-                },
                 "description": "SmartThings wird so konfiguriert, dass Push-Updates an Home Assistant gesendet werden an die URL: \n > {webhook_url} \n\nWenn dies nicht korrekt ist, aktualisieren Sie bitte Ihre Konfiguration, starten Sie Home Assistant neu und versuchen Sie es erneut.",
                 "title": "R\u00fcckruf-URL best\u00e4tigen"
-            },
-            "wait_install": {
-                "description": "Installiere die Home-Assistent SmartApp an mindestens einer Stelle, und klicke auf Absenden.",
-                "title": "SmartApp installieren"
             }
         }
-    },
-    "title": "SmartThings"
+    }
 }

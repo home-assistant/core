@@ -14,5 +14,6 @@
             "opened": "{entity_name} abriu",
             "opening": "{entity_name} est\u00e1 a abrir"
         }
-    }
+    },
+    "title": "Cobertura"
 }

@@ -13,5 +13,6 @@
             "locked": "nast\u0105pi zamkni\u0119cie {entity_name}",
             "unlocked": "nast\u0105pi otwarcie {entity_name}"
         }
-    }
+    },
+    "title": "Zamek"
 }

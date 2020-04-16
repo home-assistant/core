@@ -103,8 +103,6 @@
                 "description": "Selecciona les opcions de sortida per a {zone}: estat {state}",
                 "title": "Configuraci\u00f3 de sortida commutable"
             }
-        },
-        "title": "Opcions del panell d'alarma Konnected"
-    },
-    "title": "Konnected.io"
+        }
+    }
 }

@@ -47,26 +47,26 @@ def run():
 
     if not missing_keys:
         print("No missing translations!")
-        return
+        return 0
 
     lokalise = get_api()
 
-    to_delete = []
+    key_data = lokalise.keys_list(
+        {"filter_keys": ",".join(missing_keys), "limit": 1000}
+    )
+    if len(key_data) != len(missing_keys):
+        print(
+            f"Lookin up key in Lokalise returns {len(key_data)} results, expected {len(missing_keys)}"
+        )
+        return 1
 
+    print(f"Deleting {len(missing_keys)} keys:")
     for key in missing_keys:
-        print("Processing", key)
-        key_data = lokalise.keys_list({"filter_keys": key})
-        if len(key_data) != 1:
-            print(
-                f"Lookin up key in Lokalise returns {len(key_data)} results, expected 1"
-            )
-            continue
-        to_delete.append(key_data[0]["key_id"])
-
+        print(" -", key)
+    print()
     while input("Type YES to delete these keys: ") != "YES":
         pass
 
-    print("Deleting keys:", ", ".join(map(str, to_delete)))
-    print(lokalise.keys_delete_multiple(to_delete))
+    print(lokalise.keys_delete_multiple([key["key_id"] for key in key_data]))
 
     return 0

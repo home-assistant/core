@@ -1,6 +1,11 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Denne kontoen er allerede konfigurert"
+        },
         "error": {
+            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
         "step": {
@@ -15,6 +20,5 @@
                 "title": "Koble til Flume-kontoen din"
             }
         }
-    },
-    "title": "Flume"
+    }
 }

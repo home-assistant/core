@@ -43,6 +43,5 @@
             "remote_button_short_press": "\"{subtype}\" \u6309\u9215\u5df2\u6309\u4e0b",
             "remote_button_short_release": "\"{subtype}\" \u6309\u9215\u5df2\u91cb\u653e"
         }
-    },
-    "title": "Philips Hue"
+    }
 }

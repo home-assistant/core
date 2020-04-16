@@ -23,7 +23,7 @@
                 "title": "Seznanjanje je kon\u010dano"
             },
             "pairing_complete_import": {
-                "description": "Va\u0161 VIZIO SmartCast TV je zdaj priklju\u010den na Home Assistant.\n\n\u017deton za dostop je '**{access_token}**'.",
+                "description": "Va\u0161 VIZIO SmartCast TV je zdaj povezan s Home Assistant-om.\n\n\u017deton za dostop je '**{access_token}**'.",
                 "title": "Seznanjanje je kon\u010dano"
             },
             "user": {
@@ -34,7 +34,7 @@
                     "name": "Ime"
                 },
                 "description": "Dostopni \u017eeton je potreben samo za televizorje. \u010ce konfigurirate televizor in \u0161e nimate \u017eetona za dostop, ga pustite prazno in boste \u0161li, da bo \u0161el skozi postopek seznanjanja.",
-                "title": "Namestite Vizio SmartCast napravo"
+                "title": "Nastavite napravo VIZIO SmartCast"
             }
         }
     },
@@ -47,10 +47,8 @@
                     "volume_step": "Velikost koraka glasnosti"
                 },
                 "description": "\u010ce imate pametni TV, lahko po izbiri filtrirate seznam virov tako, da izberete, katere aplikacije \u017eelite vklju\u010diti ali izklju\u010diti na seznamu virov.",
-                "title": "Posodobite mo\u017enosti Vizo SmartCast"
+                "title": "Posodobite mo\u017enosti VIZIO SmartCast"
             }
-        },
-        "title": "Posodobite mo\u017enosti Vizo SmartCast"
-    },
-    "title": "Vizio SmartCast"
+        }
+    }
 }

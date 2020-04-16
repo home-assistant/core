@@ -23,15 +23,11 @@
             },
             "user": {
                 "data": {
-                    "alias": "\u00c0lies",
                     "host": "Amfitri\u00f3",
-                    "name": "Nom",
                     "password": "Contrasenya",
                     "port": "Port",
-                    "resources": "Recursos",
                     "username": "Nom d'usuari"
                 },
-                "description": "Si m\u00faltiples SAI (UPS) connectats al servidor NUT, introdueix el nom UPS per consultar al camp 'Alies'.",
                 "title": "No s'ha pogut connectar amb el servidor NUT"
             }
         }
@@ -46,6 +42,5 @@
                 "description": "Selecciona els recursos del sensor"
             }
         }
-    },
-    "title": "Eines de xarxa UPS (NUT)"
+    }
 }
