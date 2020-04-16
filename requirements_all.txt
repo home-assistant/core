@@ -730,7 +730,7 @@ hydrawiser==0.1.1
 # i2csense==0.0.4
 
 # homeassistant.components.iammeter
-iammeter==0.1.3
+iammeter==0.1.7
 
 # homeassistant.components.iaqualink
 iaqualink==0.3.1
