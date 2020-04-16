@@ -26,7 +26,7 @@
                 "description": "Please check your {login_method} ({username}) and enter the verification code below",
                 "title": "Two factor authentication"
             }
-        },
-        "title": "August"
-    }
+        }
+    },
+    "title": "August"
 }

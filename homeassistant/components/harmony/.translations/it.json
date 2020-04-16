@@ -5,7 +5,6 @@
         },
         "error": {
             "cannot_connect": "Impossibile connettersi, si prega di riprovare",
-            "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },
         "flow_title": "Logitech Harmony Hub {name}",
@@ -21,8 +20,7 @@
                 },
                 "title": "Configurare Logitech Harmony Hub"
             }
-        },
-        "title": "Logitech Harmony Hub"
+        }
     },
     "options": {
         "step": {
@@ -34,5 +32,6 @@
                 "description": "Regolare le opzioni di Harmony Hub"
             }
         }
-    }
+    },
+    "title": "Logitech Harmony Hub"
 }

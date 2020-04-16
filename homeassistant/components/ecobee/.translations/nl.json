@@ -19,7 +19,7 @@
                 "description": "Voer de API-sleutel in die u van ecobee.com hebt gekregen.",
                 "title": "ecobee API-sleutel"
             }
-        },
-        "title": "ecobee"
-    }
+        }
+    },
+    "title": "ecobee"
 }

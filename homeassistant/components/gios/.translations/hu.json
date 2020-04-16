@@ -17,7 +17,7 @@
                 "description": "A GIO\u015a (lengyel k\u00f6rnyezetv\u00e9delmi f\u0151fel\u00fcgyel\u0151) leveg\u0151min\u0151s\u00e9gi integr\u00e1ci\u00f3j\u00e1nak be\u00e1ll\u00edt\u00e1sa. Ha seg\u00edts\u00e9gre van sz\u00fcks\u00e9ged a konfigur\u00e1ci\u00f3val kapcsolatban, l\u00e1togass ide: https://www.home-assistant.io/integrations/gios",
                 "title": "GIO\u015a (Lengyel K\u00f6rnyezetv\u00e9delmi F\u0151fel\u00fcgyel\u0151s\u00e9g)"
             }
-        },
-        "title": "GIO\u015a"
-    }
+        }
+    },
+    "title": "GIO\u015a"
 }

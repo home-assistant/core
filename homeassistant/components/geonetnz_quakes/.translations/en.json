@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "Location is already configured."
         },
-        "error": {
-            "identifier_exists": "Location already registered"
-        },
         "step": {
             "user": {
                 "data": {
@@ -14,7 +11,7 @@
                 },
                 "title": "Fill in your filter details."
             }
-        },
-        "title": "GeoNet NZ Quakes"
-    }
+        }
+    },
+    "title": "GeoNet NZ Quakes"
 }

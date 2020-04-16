@@ -24,7 +24,7 @@
                 "description": "\u6309\u4e0b AP \u4e0a\u7684\u85cd\u8272\u6309\u9215\u8207\u50b3\u9001\u6309\u9215\uff0c\u4ee5\u65bc Home Assistant \u4e0a\u9032\u884c HomematicIP \u8a3b\u518a\u3002\n\n![\u6a4b\u63a5\u5668\u4e0a\u7684\u6309\u9215\u4f4d\u7f6e](/static/images/config_flows/config_homematicip_cloud.png)",
                 "title": "\u9023\u7d50 Access point"
             }
-        },
-        "title": "HomematicIP Cloud"
-    }
+        }
+    },
+    "title": "HomematicIP Cloud"
 }

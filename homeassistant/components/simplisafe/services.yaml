@@ -1,6 +1,4 @@
 # Describes the format for available SimpliSafe services
-
----
 remove_pin:
   description: Remove a PIN by its label or value.
   fields:

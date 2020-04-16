@@ -25,7 +25,7 @@
                 "description": "Chcete nakonfigurovat slu\u017ebu Home Assistant pro p\u0159ipojen\u00ed k zprost\u0159edkovateli MQTT poskytovan\u00e9mu dopl\u0148kem hass.io {addon}?",
                 "title": "MQTT Broker prost\u0159ednictv\u00edm dopl\u0148ku Hass.io"
             }
-        },
-        "title": "MQTT"
-    }
+        }
+    },
+    "title": "MQTT"
 }

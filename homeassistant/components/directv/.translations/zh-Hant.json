@@ -5,8 +5,7 @@
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "error": {
-            "cannot_connect": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21",
-            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21"
         },
         "flow_title": "DirecTV\uff1a{name}",
         "step": {
@@ -20,7 +19,7 @@
                 },
                 "title": "\u9023\u7dda\u81f3 DirecTV \u63a5\u6536\u5668"
             }
-        },
-        "title": "DirecTV"
-    }
+        }
+    },
+    "title": "DirecTV"
 }

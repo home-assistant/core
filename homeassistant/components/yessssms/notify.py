@@ -46,7 +46,6 @@ def get_service(hass, config, discovery_info=None):
             "Connection Error, could not verify login data for '%s'",
             yesss.get_provider(),
         )
-        pass
 
     _LOGGER.debug(
         "initialized; library version: %s, with %s",

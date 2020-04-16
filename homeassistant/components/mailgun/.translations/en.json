@@ -12,7 +12,7 @@
                 "description": "Are you sure you want to set up Mailgun?",
                 "title": "Set up the Mailgun Webhook"
             }
-        },
-        "title": "Mailgun"
-    }
+        }
+    },
+    "title": "Mailgun"
 }

@@ -7,12 +7,11 @@
             "user": {
                 "data": {
                     "host": "H\u00f4te",
-                    "name": "Nom",
-                    "port": "Port"
+                    "name": "Nom"
                 },
                 "title": "Reliez votre serveur Minecraft"
             }
-        },
-        "title": "Serveur Minecraft"
-    }
+        }
+    },
+    "title": "Serveur Minecraft"
 }

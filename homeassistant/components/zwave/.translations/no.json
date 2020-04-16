@@ -16,7 +16,7 @@
                 "description": "Se [www.home-assistant.io/docs/z-wave/installation/](https://www.home-assistant.io/docs/z-wave/installation/) for informasjon om konfigurasjon variablene",
                 "title": "Sett opp Z-Wave"
             }
-        },
-        "title": "Z-Wave"
-    }
+        }
+    },
+    "title": "Z-Wave"
 }

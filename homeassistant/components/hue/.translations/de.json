@@ -25,8 +25,7 @@
                 "description": "Dr\u00fccke den Knopf auf der Bridge, um Philips Hue mit Home Assistant zu registrieren.\n\n![Position des Buttons auf der Bridge](/static/images/config_philips_hue.jpg)",
                 "title": "Hub verbinden"
             }
-        },
-        "title": "Philips Hue"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -44,5 +43,6 @@
             "remote_button_short_press": "\"{subtype}\" Taste gedr\u00fcckt",
             "remote_button_short_release": "\"{subtype}\" Taste losgelassen"
         }
-    }
+    },
+    "title": "Philips Hue"
 }

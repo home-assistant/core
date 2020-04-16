@@ -1,12 +1,13 @@
-"""Support for interface with a Sony Bravia TV."""
-import ipaddress
+"""Support for interface with a Bravia TV."""
 import logging
 
-from bravia_tv import BraviaRC
-from getmac import get_mac_address
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import (
+    DEVICE_CLASS_TV,
+    PLATFORM_SCHEMA,
+    MediaPlayerDevice,
+)
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -20,20 +21,20 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import load_json
 
-BRAVIA_CONFIG_FILE = "bravia.conf"
-
-CLIENTID_PREFIX = "HomeAssistant"
-
-DEFAULT_NAME = "Sony Bravia TV"
-
-NICKNAME = "Home Assistant"
-
-# Map ip to request id for configuring
-_CONFIGURING = {}
+from .const import (
+    ATTR_MANUFACTURER,
+    BRAVIA_CONFIG_FILE,
+    CLIENTID_PREFIX,
+    CONF_IGNORED_SOURCES,
+    DEFAULT_NAME,
+    DOMAIN,
+    NICKNAME,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,110 +60,66 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Sony Bravia TV platform."""
-    host = config.get(CONF_HOST)
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Bravia TV platform."""
+    host = config[CONF_HOST]
 
-    if host is None:
-        return
-
-    pin = None
-    bravia_config = load_json(hass.config.path(BRAVIA_CONFIG_FILE))
-    while bravia_config:
-        # Set up a configured TV
-        host_ip, host_config = bravia_config.popitem()
-        if host_ip == host:
-            pin = host_config["pin"]
-            mac = host_config["mac"]
-            name = config.get(CONF_NAME)
-            braviarc = BraviaRC(host, mac)
-            braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
-            unique_id = braviarc.get_system_info()["cid"].lower()
-
-            add_entities([BraviaTVDevice(braviarc, name, pin, unique_id)])
-            return
-
-    setup_bravia(config, pin, hass, add_entities)
-
-
-def setup_bravia(config, pin, hass, add_entities):
-    """Set up a Sony Bravia TV based on host parameter."""
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-
-    if pin is None:
-        request_configuration(config, hass, add_entities)
-        return
-
-    try:
-        if ipaddress.ip_address(host).version == 6:
-            mode = "ip6"
-        else:
-            mode = "ip"
-    except ValueError:
-        mode = "hostname"
-    mac = get_mac_address(**{mode: host})
-
-    # If we came here and configuring this host, mark as done
-    if host in _CONFIGURING:
-        request_id = _CONFIGURING.pop(host)
-        configurator = hass.components.configurator
-        configurator.request_done(request_id)
-        _LOGGER.info("Discovery configuration done")
-
-    # Save config
-    save_json(
-        hass.config.path(BRAVIA_CONFIG_FILE),
-        {host: {"pin": pin, "host": host, "mac": mac}},
+    bravia_config_file_path = hass.config.path(BRAVIA_CONFIG_FILE)
+    bravia_config = await hass.async_add_executor_job(
+        load_json, bravia_config_file_path
     )
-    braviarc = BraviaRC(host, mac)
-    braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
-    unique_id = braviarc.get_system_info()["cid"].lower()
-
-    add_entities([BraviaTVDevice(braviarc, name, pin, unique_id)])
-
-
-def request_configuration(config, hass, add_entities):
-    """Request configuration steps from the user."""
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-
-    configurator = hass.components.configurator
-
-    # We got an error if this method is called while we are configuring
-    if host in _CONFIGURING:
-        configurator.notify_errors(
-            _CONFIGURING[host], "Failed to register, please try again."
+    if not bravia_config:
+        _LOGGER.error(
+            "Configuration import failed, there is no bravia.conf file in the configuration folder"
         )
         return
 
-    def bravia_configuration_callback(data):
-        """Handle the entry of user PIN."""
+    while bravia_config:
+        # Import a configured TV
+        host_ip, host_config = bravia_config.popitem()
+        if host_ip == host:
+            pin = host_config[CONF_PIN]
 
-        pin = data.get("pin")
-        _braviarc = BraviaRC(host)
-        _braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
-        if _braviarc.is_connected():
-            setup_bravia(config, pin, hass, add_entities)
-        else:
-            request_configuration(config, hass, add_entities)
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_IMPORT},
+                    data={CONF_HOST: host, CONF_PIN: pin},
+                )
+            )
+            return
 
-    _CONFIGURING[host] = configurator.request_config(
-        name,
-        bravia_configuration_callback,
-        description="Enter the Pin shown on your Sony Bravia TV."
-        + "If no Pin is shown, enter 0000 to let TV show you a Pin.",
-        description_image="/static/images/smart-tv.png",
-        submit_caption="Confirm",
-        fields=[{"id": "pin", "name": "Enter the pin", "type": ""}],
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Add BraviaTV entities from a config_entry."""
+    ignored_sources = []
+    pin = config_entry.data[CONF_PIN]
+    unique_id = config_entry.unique_id
+    device_info = {
+        "identifiers": {(DOMAIN, unique_id)},
+        "name": DEFAULT_NAME,
+        "manufacturer": ATTR_MANUFACTURER,
+        "model": config_entry.title,
+    }
+
+    braviarc = hass.data[DOMAIN][config_entry.entry_id]
+
+    ignored_sources = config_entry.options.get(CONF_IGNORED_SOURCES, [])
+
+    async_add_entities(
+        [
+            BraviaTVDevice(
+                braviarc, DEFAULT_NAME, pin, unique_id, device_info, ignored_sources
+            )
+        ]
     )
 
 
 class BraviaTVDevice(MediaPlayerDevice):
-    """Representation of a Sony Bravia TV."""
+    """Representation of a Bravia TV."""
 
-    def __init__(self, client, name, pin, unique_id):
-        """Initialize the Sony Bravia device."""
+    def __init__(self, client, name, pin, unique_id, device_info, ignored_sources):
+        """Initialize the Bravia TV device."""
 
         self._pin = pin
         self._braviarc = client
@@ -185,11 +142,8 @@ class BraviaTVDevice(MediaPlayerDevice):
         self._max_volume = None
         self._volume = None
         self._unique_id = unique_id
-
-        if self._braviarc.is_connected():
-            self.update()
-        else:
-            self._state = STATE_OFF
+        self._device_info = device_info
+        self._ignored_sources = ignored_sources
 
     def update(self):
         """Update TV info."""
@@ -259,7 +213,8 @@ class BraviaTVDevice(MediaPlayerDevice):
             self._content_mapping = self._braviarc.load_source_list()
             self._source_list = []
             for key in self._content_mapping:
-                self._source_list.append(key)
+                if key not in self._ignored_sources:
+                    self._source_list.append(key)
 
     @property
     def name(self):
@@ -267,9 +222,19 @@ class BraviaTVDevice(MediaPlayerDevice):
         return self._name
 
     @property
+    def device_class(self):
+        """Set the device class to TV."""
+        return DEVICE_CLASS_TV
+
+    @property
     def unique_id(self):
         """Return a unique_id for this entity."""
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return self._device_info
 
     @property
     def state(self):

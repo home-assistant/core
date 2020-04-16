@@ -22,8 +22,7 @@
                 },
                 "title": "Huawei LTE konfigur\u00e1l\u00e1sa"
             }
-        },
-        "title": "Huawei LTE"
+        }
     },
     "options": {
         "step": {
@@ -35,5 +34,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Huawei LTE"
 }

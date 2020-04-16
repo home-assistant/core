@@ -9,15 +9,15 @@
             "default": "Pomy\u015blnie uwierzytelniono z Ambiclimate"
         },
         "error": {
-            "follow_link": "Prosz\u0119 klikn\u0105\u0107 link i uwierzytelni\u0107 przed naci\u015bni\u0119ciem przycisku Prze\u015blij",
+            "follow_link": "Prosz\u0119 klikn\u0105\u0107 link i uwierzytelni\u0107 przed naci\u015bni\u0119ciem przycisku \"Zatwierd\u017a\"",
             "no_token": "Nieuwierzytelniony z Ambiclimate"
         },
         "step": {
             "auth": {
-                "description": "Kliknij poni\u017cszy [link]({authorization_url}) i <b>Zezw\u00f3l</b> na dost\u0119p do konta Ambiclimate, a nast\u0119pnie wr\u00f3\u0107 i naci\u015bnij <b>Prze\u015blij</b> poni\u017cej. \n(Upewnij si\u0119, \u017ce podany adres URL to {cb_url})",
+                "description": "Kliknij poni\u017cszy [link]({authorization_url}) i <b>Zezw\u00f3l</b> na dost\u0119p do konta Ambiclimate, a nast\u0119pnie wr\u00f3\u0107 i naci\u015bnij <b>Zatwierd\u017a</b> poni\u017cej. \n(Upewnij si\u0119, \u017ce podany adres URL to {cb_url})",
                 "title": "Uwierzytelnienie Ambiclimate"
             }
-        },
-        "title": "Ambiclimate"
-    }
+        }
+    },
+    "title": "Ambiclimate"
 }

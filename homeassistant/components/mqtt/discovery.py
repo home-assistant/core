@@ -56,8 +56,6 @@ def set_discovery_hash(hass, discovery_hash):
 class MQTTConfig(dict):
     """Dummy class to allow adding attributes."""
 
-    pass
-
 
 async def async_start(
     hass: HomeAssistantType, discovery_topic, hass_config, config_entry=None
@@ -148,6 +146,7 @@ async def async_start(
                 if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
                     if component == "device_automation":
                         # Local import to avoid circular dependencies
+                        # pylint: disable=import-outside-toplevel
                         from . import device_automation
 
                         await device_automation.async_setup_entry(hass, config_entry)
@@ -165,7 +164,7 @@ async def async_start(
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
     await mqtt.async_subscribe(
-        hass, discovery_topic + "/#", async_device_message_received, 0
+        hass, f"{discovery_topic}/#", async_device_message_received, 0
     )
 
     return True

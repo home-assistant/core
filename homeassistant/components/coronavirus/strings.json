@@ -1,6 +1,6 @@
 {
+  "title": "Coronavirus",
   "config": {
-    "title": "Coronavirus",
     "step": {
       "user": {
         "title": "Pick a country to monitor",

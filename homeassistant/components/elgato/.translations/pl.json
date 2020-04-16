@@ -21,7 +21,7 @@
                 "description": "Czy chcesz doda\u0107 urz\u0105dzenie Elgato Key Light o numerze seryjnym `{serial_number}` do Home Assistant'a?",
                 "title": "Wykryto urz\u0105dzenie Elgato Key Light"
             }
-        },
-        "title": "Elgato Key Light"
-    }
+        }
+    },
+    "title": "Elgato Key Light"
 }

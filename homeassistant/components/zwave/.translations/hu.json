@@ -16,7 +16,7 @@
                 "description": "A konfigur\u00e1ci\u00f3s v\u00e1ltoz\u00f3kr\u00f3l az inform\u00e1ci\u00f3kat l\u00e1sd a https://www.home-assistant.io/docs/z-wave/installation/ oldalon.",
                 "title": "Z-Wave be\u00e1ll\u00edt\u00e1sa"
             }
-        },
-        "title": "Z-Wave"
-    }
+        }
+    },
+    "title": "Z-Wave"
 }

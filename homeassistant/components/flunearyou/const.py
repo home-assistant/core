@@ -2,7 +2,7 @@
 import logging
 
 DOMAIN = "flunearyou"
-LOGGER = logging.getLogger("homeassistant.components.flunearyou")
+LOGGER = logging.getLogger(__package__)
 
 DATA_CLIENT = "client"
 

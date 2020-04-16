@@ -27,7 +27,7 @@
                 "description": "Als je je Nest-account wilt koppelen, [autoriseer je account] ( {url} ). \n\nNa autorisatie, kopieer en plak de voorziene pincode hieronder.",
                 "title": "Koppel Nest-account"
             }
-        },
-        "title": "Nest"
-    }
+        }
+    },
+    "title": "Nest"
 }

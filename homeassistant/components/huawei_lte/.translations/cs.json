@@ -22,8 +22,7 @@
                 },
                 "title": "Konfigurovat Huawei LTE"
             }
-        },
-        "title": "Huawei LTE"
+        }
     },
     "options": {
         "step": {
@@ -34,5 +33,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Huawei LTE"
 }

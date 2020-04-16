@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
+    HTTP_NOT_FOUND,
 )
 
 from tests.common import MockConfigEntry, mock_coro
@@ -81,7 +82,7 @@ async def test_form_cannot_connect(hass):
 
     with patch(
         "homeassistant.components.tesla.config_flow.TeslaAPI.connect",
-        side_effect=TeslaException(code=404),
+        side_effect=TeslaException(code=HTTP_NOT_FOUND),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -147,10 +148,7 @@ async def test_option_flow(hass):
         user_input={CONF_SCAN_INTERVAL: 350, CONF_WAKE_ON_START: True},
     )
     assert result["type"] == "create_entry"
-    assert result["data"] == {
-        CONF_SCAN_INTERVAL: 350,
-        CONF_WAKE_ON_START: True,
-    }
+    assert result["data"] == {CONF_SCAN_INTERVAL: 350, CONF_WAKE_ON_START: True}
 
 
 async def test_option_flow_defaults(hass):

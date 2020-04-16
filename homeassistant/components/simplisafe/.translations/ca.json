@@ -10,14 +10,12 @@
         "step": {
             "user": {
                 "data": {
-                    "code": "Codi (pel Home Assistant)",
                     "password": "Contrasenya",
                     "username": "Correu electr\u00f2nic"
                 },
                 "title": "Introdueix la teva informaci\u00f3"
             }
-        },
-        "title": "SimpliSafe"
+        }
     },
     "options": {
         "step": {
@@ -28,5 +26,6 @@
                 "title": "Configuraci\u00f3 de SimpliSafe"
             }
         }
-    }
+    },
+    "title": "SimpliSafe"
 }

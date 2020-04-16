@@ -22,7 +22,7 @@
                 "description": "Pour d\u00e9finir des options avanc\u00e9es, voir [Documentation Life360]({docs_url}).\nVous pouvez le faire avant d'ajouter des comptes.",
                 "title": "Informations sur le compte Life360"
             }
-        },
-        "title": "Life360"
-    }
+        }
+    },
+    "title": "Life360"
 }

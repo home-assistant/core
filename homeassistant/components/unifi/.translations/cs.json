@@ -20,8 +20,7 @@
                 },
                 "title": "Nastaven\u00ed UniFi \u0159adi\u010de"
             }
-        },
-        "title": "UniFi \u0159adi\u010d"
+        }
     },
     "options": {
         "step": {
@@ -31,5 +30,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "UniFi \u0159adi\u010d"
 }

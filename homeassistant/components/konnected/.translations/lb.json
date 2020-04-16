@@ -11,7 +11,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Modell: {model}\nHost: {host}\nPort: {port}\n\nDir k\u00ebnnt den I/O a Panel Verhaalen an de Konnected Alarm Panel Astellunge konfigur\u00e9ieren.",
+                "description": "Modell: {model}\nID: {id}\nHost: {host}\nPort: {port}\n\nDir k\u00ebnnt den I/O a Panel Verhaalen an de Konnected Alarm Panel Astellunge konfigur\u00e9ieren.",
                 "title": "Konnected Apparat parat"
             },
             "import_confirm": {
@@ -26,8 +26,7 @@
                 "description": "Informatioune vum Konnected Panel aginn.",
                 "title": "Konnected Apparat entdecken"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
@@ -103,10 +102,11 @@
                     "pause": "Pausen zw\u00ebscht den Impulser (ms) (optional)",
                     "repeat": "Unzuel vu Widderhuelungen (-1= onendlech) (optional)"
                 },
-                "description": "Wielt w.e.g. d'Ausgaboptiounen fir {zone}",
+                "description": "Wielt w.e.g. d'Ausgaboptiounen fir {zone}: Status {state}",
                 "title": "\u00cbmschltbaren Ausgang konfigur\u00e9ieren"
             }
         },
         "title": "Konnected Alarm Panneau Optiounen"
-    }
+    },
+    "title": "Konnected.io"
 }

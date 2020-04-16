@@ -24,7 +24,7 @@
                 "description": "Tryck p\u00e5 den bl\u00e5 knappen p\u00e5 accesspunkten och p\u00e5 skicka-knappen f\u00f6r att registrera HomematicIP med Home Assistant. \n\n ![Placering av knappen p\u00e5 bryggan](/static/images/config_flows/config_homematicip_cloud.png)",
                 "title": "L\u00e4nka Accesspunkt"
             }
-        },
-        "title": "HomematicIP Moln"
-    }
+        }
+    },
+    "title": "HomematicIP Moln"
 }

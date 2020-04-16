@@ -16,8 +16,7 @@
                 "description": "Voer de host-informatie in voor uw Konnected-paneel.",
                 "title": "Ontdek Konnected Device"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
@@ -62,6 +61,11 @@
                     "9": "Zone 9"
                 }
             },
+            "options_misc": {
+                "data": {
+                    "api_host": "API host-URL overschrijven (optioneel)"
+                }
+            },
             "options_switch": {
                 "data": {
                     "name": "Naam (optioneel)"
@@ -70,5 +74,6 @@
             }
         },
         "title": "Konnected Alarm Paneel Opties"
-    }
+    },
+    "title": "Konnected.io"
 }

@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Enw eisoes wedi gofrestru"
-        },
         "step": {
             "user": {
                 "data": {
@@ -12,7 +9,7 @@
                 },
                 "title": "Cwblhewch gwybodaeth eich lleoliad"
             }
-        },
-        "title": "Rhwydwaith Lleoliad Golau Byd-eang (WWLLN)"
-    }
+        }
+    },
+    "title": "Rhwydwaith Lleoliad Golau Byd-eang (WWLLN)"
 }

@@ -21,8 +21,7 @@
                 },
                 "title": "Configura l'UniFi Controller"
             }
-        },
-        "title": "UniFi Controller"
+        }
     },
     "error": {
         "unknown_client_mac": "Nessun client disponibile in UniFi su quell'indirizzo MAC"
@@ -32,7 +31,8 @@
             "client_control": {
                 "data": {
                     "block_client": "Client controllati per l'accesso alla rete",
-                    "new_client": "Aggiungere un nuovo client per il controllo dell'accesso alla rete"
+                    "new_client": "Aggiungere un nuovo client per il controllo dell'accesso alla rete",
+                    "poe_clients": "Consentire il controllo POE dei client"
                 },
                 "description": "Configurare i controlli client \n\nCreare interruttori per i numeri di serie dei quali si desidera controllare l'accesso alla rete.",
                 "title": "Opzioni UniFi 2/3"
@@ -62,5 +62,6 @@
                 "title": "Opzioni UniFi 3/3"
             }
         }
-    }
+    },
+    "title": "UniFi Controller"
 }

@@ -52,10 +52,7 @@ def set_default_port(schema: Dict) -> Dict:
     if not ip_port:
         hub_version = schema.get(CONF_HUB_VERSION)
         # Found hub_version but not ip_port
-        if hub_version == 1:
-            schema[CONF_IP_PORT] = 9761
-        else:
-            schema[CONF_IP_PORT] = 25105
+        schema[CONF_IP_PORT] = 9761 if hub_version == 1 else 25105
     return schema
 
 

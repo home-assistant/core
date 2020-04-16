@@ -16,7 +16,7 @@
                 "description": "Za informacije o konfiguracijskih spremenljivka si oglejte https://www.home-assistant.io/docs/z-wave/installation/",
                 "title": "Nastavite Z-Wave"
             }
-        },
-        "title": "Z-Wave"
-    }
+        }
+    },
+    "title": "Z-Wave"
 }

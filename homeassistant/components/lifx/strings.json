@@ -1,6 +1,6 @@
 {
+  "title": "LIFX",
   "config": {
-    "title": "LIFX",
     "step": {
       "confirm": {
         "title": "LIFX",

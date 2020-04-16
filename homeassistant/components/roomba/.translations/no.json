@@ -1,0 +1,33 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "blid": "Blid",
+                    "certificate": "Sertifikat",
+                    "continuous": "Kontinuerlige",
+                    "delay": "Forsinkelse",
+                    "host": "Vertsnavn eller IP-adresse",
+                    "password": "Passord"
+                },
+                "description": "Henting av BLID og passord er en manuell prosess. F\u00f8lg trinnene som er beskrevet i dokumentasjonen p\u00e5: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
+                "title": "Koble til enheten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Kontinuerlige",
+                    "delay": "Forsinkelse"
+                }
+            }
+        }
+    },
+    "title": "iRobot Roomba"
+}

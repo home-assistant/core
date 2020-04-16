@@ -1,7 +1,4 @@
 {
-    "config": {
-        "title": "\u5c55\u793a"
-    },
     "options": {
         "step": {
             "options_1": {
@@ -18,5 +15,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "\u5c55\u793a"
 }

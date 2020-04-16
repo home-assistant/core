@@ -36,8 +36,8 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Flexit Platform."""
-    modbus_slave = config.get(CONF_SLAVE, None)
-    name = config.get(CONF_NAME, None)
+    modbus_slave = config.get(CONF_SLAVE)
+    name = config.get(CONF_NAME)
     hub = hass.data[MODBUS_DOMAIN][config.get(CONF_HUB)]
     add_entities([Flexit(hub, modbus_slave, name)], True)
 

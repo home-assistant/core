@@ -12,7 +12,7 @@
                 "description": "Weet u zeker dat u Twilio wilt instellen?",
                 "title": "Stel de Twilio Webhook in"
             }
-        },
-        "title": "Twilio"
-    }
+        }
+    },
+    "title": "Twilio"
 }

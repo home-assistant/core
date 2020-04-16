@@ -24,7 +24,7 @@
                 "description": "Naci\u015bnij niebieski przycisk na punkcie dost\u0119pu i przycisk przesy\u0142ania, aby zarejestrowa\u0107 HomematicIP w Home Assistant. \n\n![Location of button on bridge](/static/images/config_flows/config_homematicip_cloud.png)",
                 "title": "Po\u0142\u0105cz z punktem dost\u0119pu"
             }
-        },
-        "title": "Chmura HomematicIP"
-    }
+        }
+    },
+    "title": "Chmura HomematicIP"
 }

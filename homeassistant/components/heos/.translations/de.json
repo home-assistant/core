@@ -15,7 +15,7 @@
                 "description": "Bitte gib den Hostnamen oder die IP-Adresse eines Heos-Ger\u00e4ts ein (vorzugsweise eines, das per Kabel mit dem Netzwerk verbunden ist).",
                 "title": "Mit Heos verbinden"
             }
-        },
-        "title": "HEOS"
-    }
+        }
+    },
+    "title": "HEOS"
 }

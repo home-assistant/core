@@ -5,8 +5,7 @@
             "unknown": "Error inesperat"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
-            "unknown": "Error inesperat"
+            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar"
         },
         "flow_title": "Roku: {name}",
         "step": {
@@ -21,7 +20,7 @@
                 "description": "Introdueix la teva informaci\u00f3 de Roku.",
                 "title": "Roku"
             }
-        },
-        "title": "Roku"
-    }
+        }
+    },
+    "title": "Roku"
 }

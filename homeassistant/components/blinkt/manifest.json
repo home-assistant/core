@@ -3,6 +3,5 @@
   "name": "Blinkt!",
   "documentation": "https://www.home-assistant.io/integrations/blinkt",
   "requirements": ["blinkt==0.1.0"],
-  "dependencies": [],
   "codeowners": []
 }

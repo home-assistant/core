@@ -10,14 +10,12 @@
         "step": {
             "user": {
                 "data": {
-                    "code": "Code (pour Home Assistant)",
                     "password": "Mot de passe",
                     "username": "Adresse e-mail"
                 },
                 "title": "Veuillez saisir vos informations"
             }
-        },
-        "title": "SimpliSafe"
+        }
     },
     "options": {
         "step": {
@@ -28,5 +26,6 @@
                 "title": "Configurer SimpliSafe"
             }
         }
-    }
+    },
+    "title": "SimpliSafe"
 }

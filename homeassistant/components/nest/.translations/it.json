@@ -27,7 +27,7 @@
                 "description": "Per collegare l'account Nido, [autorizzare l'account]({url}).\n\nDopo l'autorizzazione, copia-incolla il codice PIN fornito di seguito.",
                 "title": "Collega un account Nest"
             }
-        },
-        "title": "Nest"
-    }
+        }
+    },
+    "title": "Nest"
 }

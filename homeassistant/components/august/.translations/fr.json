@@ -15,7 +15,8 @@
                     "password": "Mot de passe",
                     "timeout": "D\u00e9lai d'expiration (secondes)",
                     "username": "Nom d'utilisateur"
-                }
+                },
+                "title": "Configurer un compte August"
             },
             "validation": {
                 "data": {
@@ -23,7 +24,7 @@
                 },
                 "title": "Authentification \u00e0 deux facteurs"
             }
-        },
-        "title": "August"
-    }
+        }
+    },
+    "title": "August"
 }

@@ -23,7 +23,7 @@
                 "description": "Nyomja meg a gombot a bridge-en a Philips Hue Home Assistant-ben val\u00f3 regisztr\u00e1l\u00e1s\u00e1hoz.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
                 "title": "Kapcsol\u00f3d\u00e1s a hubhoz"
             }
-        },
-        "title": "Philips Hue"
-    }
+        }
+    },
+    "title": "Philips Hue"
 }

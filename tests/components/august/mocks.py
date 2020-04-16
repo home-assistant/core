@@ -64,10 +64,7 @@ async def _create_august_with_devices(
     if api_call_side_effects is None:
         api_call_side_effects = {}
 
-    device_data = {
-        "doorbells": [],
-        "locks": [],
-    }
+    device_data = {"doorbells": [], "locks": []}
     for device in devices:
         if isinstance(device, LockDetail):
             device_data["locks"].append(
@@ -212,7 +209,7 @@ def _mock_august_doorbell_data(deviceid="mockdeviceid1", houseid="mockhouseid1")
     return {
         "_id": deviceid,
         "DeviceID": deviceid,
-        "name": deviceid + " Name",
+        "name": f"{deviceid} Name",
         "HouseID": houseid,
         "UserType": "owner",
         "serialNumber": "mockserial",
@@ -232,7 +229,7 @@ def _mock_august_lock_data(lockid="mocklockid1", houseid="mockhouseid1"):
     return {
         "_id": lockid,
         "LockID": lockid,
-        "LockName": lockid + " Name",
+        "LockName": f"{lockid} Name",
         "HouseID": houseid,
         "UserType": "owner",
         "SerialNumber": "mockserial",

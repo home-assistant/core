@@ -96,15 +96,12 @@ class AsyncHandler:
 
     def createLock(self) -> None:
         """Ignore lock stuff."""
-        pass
 
     def acquire(self) -> None:
         """Ignore lock stuff."""
-        pass
 
     def release(self) -> None:
         """Ignore lock stuff."""
-        pass
 
     @property
     def level(self) -> int:

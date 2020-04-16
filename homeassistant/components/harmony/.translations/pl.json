@@ -5,7 +5,6 @@
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
-            "invalid_auth": "Niepoprawne uwierzytelnienie.",
             "unknown": "Niespodziewany b\u0142\u0105d."
         },
         "flow_title": "Logitech Harmony Hub {name}",
@@ -21,8 +20,7 @@
                 },
                 "title": "Konfiguracja Logitech Harmony Hub"
             }
-        },
-        "title": "Logitech Harmony Hub"
+        }
     },
     "options": {
         "step": {
@@ -34,5 +32,6 @@
                 "description": "Dostosuj opcje huba Harmony"
             }
         }
-    }
+    },
+    "title": "Logitech Harmony Hub"
 }

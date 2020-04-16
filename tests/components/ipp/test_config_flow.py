@@ -1,6 +1,6 @@
 """Tests for the IPP config flow."""
 import aiohttp
-from pyipp import IPPConnectionUpgradeRequired
+from pyipp import IPPConnectionUpgradeRequired, IPPError
 
 from homeassistant.components.ipp.const import CONF_BASE_PATH, CONF_UUID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -38,7 +38,7 @@ async def test_show_zeroconf_form(
 ) -> None:
     """Test that the zeroconf confirmation form is served."""
     aioclient_mock.post(
-        "http://EPSON123456.local:631/ipp/print",
+        "http://192.168.1.31:631/ipp/print",
         content=load_fixture_binary("ipp/get-printer-attributes.bin"),
         headers={"Content-Type": "application/ipp"},
     )
@@ -57,9 +57,7 @@ async def test_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we show user form on IPP connection error."""
-    aioclient_mock.post(
-        "http://EPSON123456.local:631/ipp/print", exc=aiohttp.ClientError
-    )
+    aioclient_mock.post("http://192.168.1.31:631/ipp/print", exc=aiohttp.ClientError)
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
@@ -75,7 +73,7 @@ async def test_zeroconf_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort zeroconf flow on IPP connection error."""
-    aioclient_mock.post("http://EPSON123456.local/ipp/print", exc=aiohttp.ClientError)
+    aioclient_mock.post("http://192.168.1.31:631/ipp/print", exc=aiohttp.ClientError)
 
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
     result = await hass.config_entries.flow.async_init(
@@ -90,17 +88,11 @@ async def test_zeroconf_confirm_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort zeroconf flow on IPP connection error."""
-    aioclient_mock.post("http://EPSON123456.local/ipp/print", exc=aiohttp.ClientError)
+    aioclient_mock.post("http://192.168.1.31:631/ipp/print", exc=aiohttp.ClientError)
 
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_ZEROCONF,
-            CONF_HOST: "EPSON123456.local",
-            CONF_NAME: "EPSON123456",
-        },
-        data=discovery_info,
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
@@ -112,7 +104,7 @@ async def test_user_connection_upgrade_required(
 ) -> None:
     """Test we show the user form if connection upgrade required by server."""
     aioclient_mock.post(
-        "http://EPSON123456.local:631/ipp/print", exc=IPPConnectionUpgradeRequired
+        "http://192.168.1.31:631/ipp/print", exc=IPPConnectionUpgradeRequired
     )
 
     user_input = MOCK_USER_INPUT.copy()
@@ -130,7 +122,7 @@ async def test_zeroconf_connection_upgrade_required(
 ) -> None:
     """Test we abort zeroconf flow on IPP connection error."""
     aioclient_mock.post(
-        "http://EPSON123456.local/ipp/print", exc=IPPConnectionUpgradeRequired
+        "http://192.168.1.31:631/ipp/print", exc=IPPConnectionUpgradeRequired
     )
 
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
@@ -140,6 +132,112 @@ async def test_zeroconf_connection_upgrade_required(
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "connection_upgrade"
+
+
+async def test_user_parse_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we abort user flow on IPP parse error."""
+    aioclient_mock.post(
+        "http://192.168.1.31:631/ipp/print",
+        content="BAD",
+        headers={"Content-Type": "application/ipp"},
+    )
+
+    user_input = MOCK_USER_INPUT.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=user_input,
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "parse_error"
+
+
+async def test_zeroconf_parse_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we abort zeroconf flow on IPP parse error."""
+    aioclient_mock.post(
+        "http://192.168.1.31:631/ipp/print",
+        content="BAD",
+        headers={"Content-Type": "application/ipp"},
+    )
+
+    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "parse_error"
+
+
+async def test_user_ipp_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we abort the user flow on IPP error."""
+    aioclient_mock.post("http://192.168.1.31:631/ipp/print", exc=IPPError)
+
+    user_input = MOCK_USER_INPUT.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=user_input,
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "ipp_error"
+
+
+async def test_zeroconf_ipp_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we abort zeroconf flow on IPP error."""
+    aioclient_mock.post("http://192.168.1.31:631/ipp/print", exc=IPPError)
+
+    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "ipp_error"
+
+
+async def test_user_ipp_version_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we abort user flow on IPP version not supported error."""
+    aioclient_mock.post(
+        "http://192.168.1.31:631/ipp/print",
+        content=load_fixture_binary("ipp/get-printer-attributes-error-0x0503.bin"),
+        headers={"Content-Type": "application/ipp"},
+    )
+
+    user_input = {**MOCK_USER_INPUT}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=user_input,
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "ipp_version_error"
+
+
+async def test_zeroconf_ipp_version_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we abort zeroconf flow on IPP version not supported error."""
+    aioclient_mock.post(
+        "http://192.168.1.31:631/ipp/print",
+        content=load_fixture_binary("ipp/get-printer-attributes-error-0x0503.bin"),
+        headers={"Content-Type": "application/ipp"},
+    )
+
+    discovery_info = {**MOCK_ZEROCONF_IPP_SERVICE_INFO}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "ipp_version_error"
 
 
 async def test_user_device_exists_abort(
@@ -193,7 +291,7 @@ async def test_full_user_flow_implementation(
 ) -> None:
     """Test the full manual user flow from start to finish."""
     aioclient_mock.post(
-        "http://EPSON123456.local:631/ipp/print",
+        "http://192.168.1.31:631/ipp/print",
         content=load_fixture_binary("ipp/get-printer-attributes.bin"),
         headers={"Content-Type": "application/ipp"},
     )
@@ -207,14 +305,14 @@ async def test_full_user_flow_implementation(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_HOST: "EPSON123456.local", CONF_BASE_PATH: "/ipp/print"},
+        user_input={CONF_HOST: "192.168.1.31", CONF_BASE_PATH: "/ipp/print"},
     )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "EPSON123456.local"
+    assert result["title"] == "192.168.1.31"
 
     assert result["data"]
-    assert result["data"][CONF_HOST] == "EPSON123456.local"
+    assert result["data"][CONF_HOST] == "192.168.1.31"
     assert result["data"][CONF_UUID] == "cfe92100-67c4-11d4-a45f-f8d027761251"
 
 
@@ -223,7 +321,7 @@ async def test_full_zeroconf_flow_implementation(
 ) -> None:
     """Test the full manual user flow from start to finish."""
     aioclient_mock.post(
-        "http://EPSON123456.local:631/ipp/print",
+        "http://192.168.1.31:631/ipp/print",
         content=load_fixture_binary("ipp/get-printer-attributes.bin"),
         headers={"Content-Type": "application/ipp"},
     )
@@ -244,7 +342,7 @@ async def test_full_zeroconf_flow_implementation(
     assert result["title"] == "EPSON123456"
 
     assert result["data"]
-    assert result["data"][CONF_HOST] == "EPSON123456.local"
+    assert result["data"][CONF_HOST] == "192.168.1.31"
     assert result["data"][CONF_UUID] == "cfe92100-67c4-11d4-a45f-f8d027761251"
     assert not result["data"][CONF_SSL]
 
@@ -254,7 +352,7 @@ async def test_full_zeroconf_tls_flow_implementation(
 ) -> None:
     """Test the full manual user flow from start to finish."""
     aioclient_mock.post(
-        "https://EPSON123456.local:631/ipp/print",
+        "https://192.168.1.31:631/ipp/print",
         content=load_fixture_binary("ipp/get-printer-attributes.bin"),
         headers={"Content-Type": "application/ipp"},
     )
@@ -276,7 +374,7 @@ async def test_full_zeroconf_tls_flow_implementation(
     assert result["title"] == "EPSON123456"
 
     assert result["data"]
-    assert result["data"][CONF_HOST] == "EPSON123456.local"
+    assert result["data"][CONF_HOST] == "192.168.1.31"
     assert result["data"][CONF_NAME] == "EPSON123456"
     assert result["data"][CONF_UUID] == "cfe92100-67c4-11d4-a45f-f8d027761251"
     assert result["data"][CONF_SSL]

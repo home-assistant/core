@@ -6,11 +6,11 @@ from homeassistant.components.water_heater import (
     SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterDevice,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
 from .const import (
     CONST_HVAC_HEAT,
     CONST_MODE_AUTO,
@@ -21,8 +21,11 @@ from .const import (
     CONST_OVERLAY_TADO_MODE,
     CONST_OVERLAY_TIMER,
     DATA,
+    DOMAIN,
+    SIGNAL_TADO_UPDATE_RECEIVED,
     TYPE_HOT_WATER,
 )
+from .entity import TadoZoneEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,25 +47,31 @@ WATER_HEATER_MAP_TADO = {
 SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
     """Set up the Tado water heater platform."""
-    if discovery_info is None:
-        return
 
-    api_list = hass.data[DOMAIN][DATA]
-    entities = []
-
-    for tado in api_list:
-        for zone in tado.zones:
-            if zone["type"] == TYPE_HOT_WATER:
-                entity = create_water_heater_entity(tado, zone["name"], zone["id"])
-                entities.append(entity)
+    tado = hass.data[DOMAIN][entry.entry_id][DATA]
+    entities = await hass.async_add_executor_job(_generate_entities, tado)
 
     if entities:
-        add_entities(entities, True)
+        async_add_entities(entities, True)
 
 
-def create_water_heater_entity(tado, name: str, zone_id: int):
+def _generate_entities(tado):
+    """Create all water heater entities."""
+    entities = []
+
+    for zone in tado.zones:
+        if zone["type"] == TYPE_HOT_WATER:
+            entity = create_water_heater_entity(tado, zone["name"], zone["id"], zone)
+            entities.append(entity)
+
+    return entities
+
+
+def create_water_heater_entity(tado, name: str, zone_id: int, zone: str):
     """Create a Tado water heater device."""
     capabilities = tado.get_capabilities(zone_id)
 
@@ -77,13 +86,19 @@ def create_water_heater_entity(tado, name: str, zone_id: int):
         max_temp = None
 
     entity = TadoWaterHeater(
-        tado, name, zone_id, supports_temperature_control, min_temp, max_temp
+        tado,
+        name,
+        zone_id,
+        supports_temperature_control,
+        min_temp,
+        max_temp,
+        zone["devices"][0],
     )
 
     return entity
 
 
-class TadoWaterHeater(WaterHeaterDevice):
+class TadoWaterHeater(TadoZoneEntity, WaterHeaterDevice):
     """Representation of a Tado water heater."""
 
     def __init__(
@@ -94,11 +109,13 @@ class TadoWaterHeater(WaterHeaterDevice):
         supports_temperature_control,
         min_temp,
         max_temp,
+        device_info,
     ):
         """Initialize of Tado water heater entity."""
-        self._tado = tado
 
-        self.zone_name = zone_name
+        self._tado = tado
+        super().__init__(zone_name, device_info, tado.device_id, zone_id)
+
         self.zone_id = zone_id
         self._unique_id = f"{zone_id} {tado.device_id}"
 
@@ -148,11 +165,6 @@ class TadoWaterHeater(WaterHeaterDevice):
     def unique_id(self):
         """Return the unique id."""
         return self._unique_id
-
-    @property
-    def should_poll(self) -> bool:
-        """Do not poll."""
-        return False
 
     @property
     def current_operation(self):

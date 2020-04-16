@@ -15,7 +15,7 @@
                 "description": "Indtast v\u00e6rtsnavnet eller IP-adressen p\u00e5 en Heos-enhed (helst en tilsluttet via ledning til netv\u00e6rket).",
                 "title": "Opret forbindelse til HEOS"
             }
-        },
-        "title": "HEOS"
-    }
+        }
+    },
+    "title": "HEOS"
 }

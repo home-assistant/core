@@ -14,8 +14,7 @@
                 },
                 "title": "ZHA"
             }
-        },
-        "title": "ZHA"
+        }
     },
     "device_automation": {
         "action_type": {
@@ -71,5 +70,6 @@
             "remote_button_short_release": "Pulsante \"{subtype}\" rilasciato",
             "remote_button_triple_press": "Pulsante \"{subtype}\" cliccato tre volte"
         }
-    }
+    },
+    "title": "ZHA"
 }

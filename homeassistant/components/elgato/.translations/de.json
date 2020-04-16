@@ -21,7 +21,7 @@
                 "description": "M\u00f6chtest du das Elgato Key Light mit der Seriennummer \"{serial_number} \" zu Home Assistant hinzuf\u00fcgen?",
                 "title": "Elgato Key Light Ger\u00e4t entdeckt"
             }
-        },
-        "title": "Elgato Key Light"
-    }
+        }
+    },
+    "title": "Elgato Key Light"
 }

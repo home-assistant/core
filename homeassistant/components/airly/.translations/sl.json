@@ -5,7 +5,6 @@
         },
         "error": {
             "auth": "Klju\u010d API ni pravilen.",
-            "name_exists": "Ime \u017ee obstaja",
             "wrong_location": "Na tem obmo\u010dju ni merilnih postaj Airly."
         },
         "step": {
@@ -19,7 +18,7 @@
                 "description": "Nastavite Airly integracijo za kakovost zraka. \u010ce \u017eelite ustvariti API klju\u010d pojdite na https://developer.airly.eu/register",
                 "title": "Airly"
             }
-        },
-        "title": "Airly"
-    }
+        }
+    },
+    "title": "Airly"
 }

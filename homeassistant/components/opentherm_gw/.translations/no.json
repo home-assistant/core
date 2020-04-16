@@ -10,15 +10,12 @@
             "init": {
                 "data": {
                     "device": "Bane eller URL-adresse",
-                    "floor_temperature": "Gulv klimatemperatur",
                     "id": "",
-                    "name": "Navn",
-                    "precision": "Klima temperaturpresisjon"
+                    "name": "Navn"
                 },
                 "title": "OpenTherm Gateway"
             }
-        },
-        "title": "OpenTherm Gateway"
+        }
     },
     "options": {
         "step": {
@@ -30,5 +27,6 @@
                 "description": "Alternativer for OpenTherm Gateway"
             }
         }
-    }
+    },
+    "title": "OpenTherm Gateway"
 }

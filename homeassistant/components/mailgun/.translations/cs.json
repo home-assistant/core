@@ -12,7 +12,7 @@
                 "description": "Opravdu chcete nastavit slu\u017ebu Mailgun?",
                 "title": "Nastavit Mailgun Webhook"
             }
-        },
-        "title": "Mailgun"
-    }
+        }
+    },
+    "title": "Mailgun"
 }

@@ -52,7 +52,7 @@ class FluNearYouFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE]
             )
         except FluNearYouError as err:
-            LOGGER.error("Error while setting up integration: %s", err)
+            LOGGER.error("Error while configuring integration: %s", err)
             return self.async_show_form(
                 step_id="user", errors={"base": "general_error"}
             )

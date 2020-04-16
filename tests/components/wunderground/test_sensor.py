@@ -138,7 +138,7 @@ async def test_invalid_data(hass, aioclient_mock):
     await async_setup_component(hass, "sensor", {"sensor": VALID_CONFIG})
 
     for condition in VALID_CONFIG["monitored_conditions"]:
-        state = hass.states.get("sensor.pws_" + condition)
+        state = hass.states.get(f"sensor.pws_{condition}")
         assert state.state == STATE_UNKNOWN
 
 

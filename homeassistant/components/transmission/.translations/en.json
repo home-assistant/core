@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host is already configured.",
-            "one_instance_allowed": "Only a single instance is necessary."
+            "already_configured": "Host is already configured."
         },
         "error": {
             "cannot_connect": "Unable to Connect to host",
@@ -10,12 +9,6 @@
             "wrong_credentials": "Wrong username or password"
         },
         "step": {
-            "options": {
-                "data": {
-                    "scan_interval": "Update frequency"
-                },
-                "title": "Configure Options"
-            },
             "user": {
                 "data": {
                     "host": "Host",
@@ -26,8 +19,7 @@
                 },
                 "title": "Setup Transmission Client"
             }
-        },
-        "title": "Transmission"
+        }
     },
     "options": {
         "step": {
@@ -35,9 +27,9 @@
                 "data": {
                     "scan_interval": "Update frequency"
                 },
-                "description": "Configure options for Transmission",
                 "title": "Configure options for Transmission"
             }
         }
-    }
+    },
+    "title": "Transmission"
 }

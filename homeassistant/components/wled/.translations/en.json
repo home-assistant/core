@@ -20,7 +20,7 @@
                 "description": "Do you want to add the WLED named `{name}` to Home Assistant?",
                 "title": "Discovered WLED device"
             }
-        },
-        "title": "WLED"
-    }
+        }
+    },
+    "title": "WLED"
 }

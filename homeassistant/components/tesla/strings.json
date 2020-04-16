@@ -1,4 +1,5 @@
 {
+  "title": "Tesla",
   "config": {
     "error": {
       "connection_error": "Error connecting; check network and retry",
@@ -15,8 +16,7 @@
         "description": "Please enter your information.",
         "title": "Tesla - Configuration"
       }
-    },
-    "title": "Tesla"
+    }
   },
   "options": {
     "step": {

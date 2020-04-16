@@ -1,6 +1,6 @@
 {
+  "title": "Locative Webhook",
   "config": {
-    "title": "Locative Webhook",
     "step": {
       "user": {
         "title": "Set up the Locative Webhook",

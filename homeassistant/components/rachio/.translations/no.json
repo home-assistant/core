@@ -16,8 +16,7 @@
                 "description": "Du trenger API-n\u00f8kkelen fra https://app.rach.io/. Velg \"Kontoinnstillinger\", og klikk deretter p\u00e5 \"GET API KEY\".",
                 "title": "Koble til Rachio-enheten din"
             }
-        },
-        "title": ""
+        }
     },
     "options": {
         "step": {
@@ -27,5 +26,6 @@
                 }
             }
         }
-    }
+    },
+    "title": ""
 }

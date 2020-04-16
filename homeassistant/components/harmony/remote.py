@@ -331,7 +331,7 @@ class HarmonyRemote(remote.RemoteDevice):
 
             if activity_id is None:
                 _LOGGER.debug("%s: Find activity ID based on name", self.name)
-                activity_id = self._client.get_activity_id(str(activity).strip())
+                activity_id = self._client.get_activity_id(str(activity))
 
             if activity_id is None:
                 _LOGGER.error("%s: Activity %s is invalid", self.name, activity)
@@ -444,7 +444,7 @@ class HarmonyRemote(remote.RemoteDevice):
         try:
             with open(self._config_path, "w+", encoding="utf-8") as file_out:
                 json.dump(self._client.json_config, file_out, sort_keys=True, indent=4)
-        except IOError as exc:
+        except OSError as exc:
             _LOGGER.error(
                 "%s: Unable to write HUB configuration to %s: %s",
                 self.name,

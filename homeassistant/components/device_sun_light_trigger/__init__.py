@@ -65,9 +65,9 @@ async def async_setup(hass, config):
     light = hass.components.light
     person = hass.components.person
     conf = config[DOMAIN]
-    disable_turn_off = conf.get(CONF_DISABLE_TURN_OFF)
+    disable_turn_off = conf[CONF_DISABLE_TURN_OFF]
     light_group = conf.get(CONF_LIGHT_GROUP)
-    light_profile = conf.get(CONF_LIGHT_PROFILE)
+    light_profile = conf[CONF_LIGHT_PROFILE]
 
     device_group = conf.get(CONF_DEVICE_GROUP)
 

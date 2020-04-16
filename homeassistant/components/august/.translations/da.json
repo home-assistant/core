@@ -26,7 +26,7 @@
                 "description": "Kontroller dit {login_method} ({username}), og angiv bekr\u00e6ftelseskoden nedenfor",
                 "title": "Tofaktorgodkendelse"
             }
-        },
-        "title": "August"
-    }
+        }
+    },
+    "title": "August"
 }

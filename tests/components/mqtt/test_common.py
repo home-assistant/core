@@ -551,9 +551,9 @@ async def help_test_entity_debug_info(hass, mqtt_mock, domain, config):
         == f"homeassistant/{domain}/bla/config"
     )
     assert debug_info_data["entities"][0]["discovery_data"]["payload"] == config
-    assert len(debug_info_data["entities"][0]["topics"]) == 1
+    assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert {"topic": "test-topic", "messages": []} in debug_info_data["entities"][0][
-        "topics"
+        "subscriptions"
     ]
     assert len(debug_info_data["triggers"]) == 0
 
@@ -581,24 +581,27 @@ async def help_test_entity_debug_info_max_messages(hass, mqtt_mock, domain, conf
     assert device is not None
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)
-    assert len(debug_info_data["entities"][0]["topics"]) == 1
+    assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert {"topic": "test-topic", "messages": []} in debug_info_data["entities"][0][
-        "topics"
+        "subscriptions"
     ]
 
     for i in range(0, debug_info.STORED_MESSAGES + 1):
         async_fire_mqtt_message(hass, "test-topic", f"{i}")
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)
-    assert len(debug_info_data["entities"][0]["topics"]) == 1
+    assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert (
-        len(debug_info_data["entities"][0]["topics"][0]["messages"])
+        len(debug_info_data["entities"][0]["subscriptions"][0]["messages"])
         == debug_info.STORED_MESSAGES
     )
-    messages = [f"{i}" for i in range(1, debug_info.STORED_MESSAGES + 1)]
+    messages = [
+        {"topic": "test-topic", "payload": f"{i}"}
+        for i in range(1, debug_info.STORED_MESSAGES + 1)
+    ]
     assert {"topic": "test-topic", "messages": messages} in debug_info_data["entities"][
         0
-    ]["topics"]
+    ]["subscriptions"]
 
 
 async def help_test_entity_debug_info_message(
@@ -634,16 +637,19 @@ async def help_test_entity_debug_info_message(
     assert device is not None
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)
-    assert len(debug_info_data["entities"][0]["topics"]) >= 1
-    assert {"topic": topic, "messages": []} in debug_info_data["entities"][0]["topics"]
+    assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
+    assert {"topic": topic, "messages": []} in debug_info_data["entities"][0][
+        "subscriptions"
+    ]
 
     async_fire_mqtt_message(hass, topic, payload)
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)
-    assert len(debug_info_data["entities"][0]["topics"]) >= 1
-    assert {"topic": topic, "messages": [payload]} in debug_info_data["entities"][0][
-        "topics"
-    ]
+    assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
+    assert {
+        "topic": topic,
+        "messages": [{"topic": topic, "payload": payload}],
+    } in debug_info_data["entities"][0]["subscriptions"]
 
 
 async def help_test_entity_debug_info_remove(hass, mqtt_mock, domain, config):
@@ -675,9 +681,9 @@ async def help_test_entity_debug_info_remove(hass, mqtt_mock, domain, config):
         == f"homeassistant/{domain}/bla/config"
     )
     assert debug_info_data["entities"][0]["discovery_data"]["payload"] == config
-    assert len(debug_info_data["entities"][0]["topics"]) == 1
+    assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert {"topic": "test-topic", "messages": []} in debug_info_data["entities"][0][
-        "topics"
+        "subscriptions"
     ]
     assert len(debug_info_data["triggers"]) == 0
     assert debug_info_data["entities"][0]["entity_id"] == f"{domain}.test"
@@ -723,9 +729,9 @@ async def help_test_entity_debug_info_update_entity_id(hass, mqtt_mock, domain, 
     )
     assert debug_info_data["entities"][0]["discovery_data"]["payload"] == config
     assert debug_info_data["entities"][0]["entity_id"] == f"{domain}.test"
-    assert len(debug_info_data["entities"][0]["topics"]) == 1
+    assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert {"topic": "test-topic", "messages": []} in debug_info_data["entities"][0][
-        "topics"
+        "subscriptions"
     ]
     assert len(debug_info_data["triggers"]) == 0
 
@@ -741,9 +747,9 @@ async def help_test_entity_debug_info_update_entity_id(hass, mqtt_mock, domain, 
     )
     assert debug_info_data["entities"][0]["discovery_data"]["payload"] == config
     assert debug_info_data["entities"][0]["entity_id"] == f"{domain}.milk"
-    assert len(debug_info_data["entities"][0]["topics"]) == 1
+    assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert {"topic": "test-topic", "messages": []} in debug_info_data["entities"][0][
-        "topics"
+        "subscriptions"
     ]
     assert len(debug_info_data["triggers"]) == 0
     assert (

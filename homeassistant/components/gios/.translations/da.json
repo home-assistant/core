@@ -17,7 +17,7 @@
                 "description": "Ops\u00e6t GIO\u015a (polsk inspektorat for milj\u00f8beskyttelse) luftkvalitet-integration. Hvis du har brug for hj\u00e6lp med konfigurationen, kig her: https://www.home-assistant.io/integrations/gios",
                 "title": "GIO\u015a (Polish Chief Inspectorate Of Environmental Protection)"
             }
-        },
-        "title": "GIO\u015a"
-    }
+        }
+    },
+    "title": "GIO\u015a"
 }

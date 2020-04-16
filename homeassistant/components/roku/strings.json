@@ -1,6 +1,6 @@
 {
+  "title": "Roku",
   "config": {
-    "title": "Roku",
     "flow_title": "Roku: {name}",
     "step": {
       "user": {

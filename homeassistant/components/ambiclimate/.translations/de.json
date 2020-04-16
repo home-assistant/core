@@ -17,7 +17,7 @@
                 "description": "Bitte folge diesem [link] ({authorization_url}) und <b> Erlaube </b> Zugriff auf dein Ambiclimate-Konto, komme dann zur\u00fcck und dr\u00fccke <b> Senden </b> darunter.\n (Pr\u00fcfe, dass die Callback-URL {cb_url} ist.)",
                 "title": "Ambiclimate authentifizieren"
             }
-        },
-        "title": "Ambiclimate"
-    }
+        }
+    },
+    "title": "Ambiclimate"
 }

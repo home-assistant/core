@@ -17,7 +17,7 @@
                 "description": "Sledite temu povezavi ( {authorization_url} in <b> Dovoli </b> dostopu do svojega ra\u010duna Ambiclimate, nato se vrnite in pritisnite <b> Po\u0161lji </b> spodaj. \n (Poskrbite, da je dolo\u010den url za povratni klic {cb_url} )",
                 "title": "Overi Ambiclimate"
             }
-        },
-        "title": "Ambiclimate"
-    }
+        }
+    },
+    "title": "Ambiclimate"
 }

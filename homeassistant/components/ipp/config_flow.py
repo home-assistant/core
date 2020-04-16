@@ -2,7 +2,15 @@
 import logging
 from typing import Any, Dict, Optional
 
-from pyipp import IPP, IPPConnectionError, IPPConnectionUpgradeRequired
+from pyipp import (
+    IPP,
+    IPPConnectionError,
+    IPPConnectionUpgradeRequired,
+    IPPError,
+    IPPParseError,
+    IPPResponseError,
+    IPPVersionNotSupportedError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
@@ -63,8 +71,18 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except IPPConnectionUpgradeRequired:
             return self._show_setup_form({"base": "connection_upgrade"})
-        except IPPConnectionError:
+        except (IPPConnectionError, IPPResponseError):
+            _LOGGER.debug("IPP Connection/Response Error", exc_info=True)
             return self._show_setup_form({"base": "connection_error"})
+        except IPPParseError:
+            _LOGGER.debug("IPP Parse Error", exc_info=True)
+            return self.async_abort(reason="parse_error")
+        except IPPVersionNotSupportedError:
+            return self.async_abort(reason="ipp_version_error")
+        except IPPError:
+            _LOGGER.debug("IPP Error", exc_info=True)
+            return self.async_abort(reason="ipp_error")
+
         user_input[CONF_UUID] = info[CONF_UUID]
 
         await self.async_set_unique_id(user_input[CONF_UUID])
@@ -85,7 +103,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.discovery_info.update(
             {
-                CONF_HOST: host,
+                CONF_HOST: discovery_info[CONF_HOST],
                 CONF_PORT: port,
                 CONF_SSL: tls,
                 CONF_VERIFY_SSL: False,
@@ -100,10 +118,20 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, self.discovery_info)
         except IPPConnectionUpgradeRequired:
             return self.async_abort(reason="connection_upgrade")
-        except IPPConnectionError:
+        except (IPPConnectionError, IPPResponseError):
+            _LOGGER.debug("IPP Connection/Response Error", exc_info=True)
             return self.async_abort(reason="connection_error")
+        except IPPParseError:
+            _LOGGER.debug("IPP Parse Error", exc_info=True)
+            return self.async_abort(reason="parse_error")
+        except IPPVersionNotSupportedError:
+            return self.async_abort(reason="ipp_version_error")
+        except IPPError:
+            _LOGGER.debug("IPP Error", exc_info=True)
+            return self.async_abort(reason="ipp_error")
 
-        self.discovery_info[CONF_UUID] = info[CONF_UUID]
+        if info[CONF_UUID] is not None:
+            self.discovery_info[CONF_UUID] = info[CONF_UUID]
 
         await self.async_set_unique_id(self.discovery_info[CONF_UUID])
         self._abort_if_unique_id_configured(

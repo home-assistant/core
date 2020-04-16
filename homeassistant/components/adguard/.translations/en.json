@@ -26,7 +26,7 @@
                 "description": "Set up your AdGuard Home instance to allow monitoring and control.",
                 "title": "Link your AdGuard Home."
             }
-        },
-        "title": "AdGuard Home"
-    }
+        }
+    },
+    "title": "AdGuard Home"
 }

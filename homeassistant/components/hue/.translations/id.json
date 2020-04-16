@@ -23,7 +23,7 @@
                 "description": "Tekan tombol di bridge untuk mendaftar Philips Hue dengan Home Assistant.\n\n![Lokasi tombol di bridge](/static/images/config_philips_hue.jpg)",
                 "title": "Tautan Hub"
             }
-        },
-        "title": "Philips Hue"
-    }
+        }
+    },
+    "title": "Philips Hue"
 }

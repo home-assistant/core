@@ -11,14 +11,12 @@
                 "data": {
                     "api_key": "Clave API",
                     "latitude": "Latitud",
-                    "longitude": "Longitud",
-                    "show_on_map": "Mostrar geograf\u00eda monitorizada en el mapa"
+                    "longitude": "Longitud"
                 },
                 "description": "Monitorizar la calidad del aire en una ubicaci\u00f3n geogr\u00e1fica.",
                 "title": "Configurar AirVisual"
             }
-        },
-        "title": "AirVisual"
+        }
     },
     "options": {
         "step": {
@@ -30,5 +28,6 @@
                 "title": "Configurar AirVisual"
             }
         }
-    }
+    },
+    "title": "AirVisual"
 }

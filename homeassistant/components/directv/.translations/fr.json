@@ -5,8 +5,7 @@
             "unknown": "Erreur inattendue"
         },
         "error": {
-            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
-            "unknown": "Erreur inattendue"
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer"
         },
         "flow_title": "DirecTV: {name}",
         "step": {
@@ -20,7 +19,7 @@
                 },
                 "title": "Connectez-vous au r\u00e9cepteur DirecTV"
             }
-        },
-        "title": "DirecTV"
-    }
+        }
+    },
+    "title": "DirecTV"
 }

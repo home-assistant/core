@@ -29,7 +29,7 @@
                 "description": "Por favor Ingrese la configuraci\u00f3n de conexi\u00f3n de su nodo [ESPHome] (https://esphomelib.com/).",
                 "title": "ESPHome"
             }
-        },
-        "title": "ESPHome"
-    }
+        }
+    },
+    "title": "ESPHome"
 }

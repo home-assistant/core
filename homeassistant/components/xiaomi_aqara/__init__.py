@@ -242,8 +242,8 @@ class XiaomiDevice(Entity):
         self.parse_voltage(device["data"])
 
         if hasattr(self, "_data_key") and self._data_key:  # pylint: disable=no-member
-            self._unique_id = "{}{}".format(
-                self._data_key, self._sid  # pylint: disable=no-member
+            self._unique_id = (
+                f"{self._data_key}{self._sid}"  # pylint: disable=no-member
             )
         else:
             self._unique_id = f"{self._type}{self._sid}"

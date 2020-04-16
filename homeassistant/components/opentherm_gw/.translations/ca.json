@@ -10,15 +10,12 @@
             "init": {
                 "data": {
                     "device": "Ruta o URL",
-                    "floor_temperature": "Temperatura del pis",
                     "id": "ID",
-                    "name": "Nom",
-                    "precision": "Precisi\u00f3 de la temperatura"
+                    "name": "Nom"
                 },
                 "title": "Passarel\u00b7la d'OpenTherm"
             }
-        },
-        "title": "Passarel\u00b7la d'OpenTherm"
+        }
     },
     "options": {
         "step": {
@@ -30,5 +27,6 @@
                 "description": "Opcions del la passarel\u00b7la d'enlla\u00e7 d\u2019OpenTherm"
             }
         }
-    }
+    },
+    "title": "Passarel\u00b7la d'OpenTherm"
 }

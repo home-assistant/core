@@ -12,7 +12,7 @@
                 "description": "M\u00f6chtest du Mailgun wirklich einrichten?",
                 "title": "Mailgun-Webhook einrichten"
             }
-        },
-        "title": "Mailgun"
-    }
+        }
+    },
+    "title": "Mailgun"
 }

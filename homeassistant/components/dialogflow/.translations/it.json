@@ -12,7 +12,7 @@
                 "description": "Sei sicuro di voler configurare Dialogflow?",
                 "title": "Configura il webhook di Dialogflow"
             }
-        },
-        "title": "Dialogflow"
-    }
+        }
+    },
+    "title": "Dialogflow"
 }

@@ -10,14 +10,12 @@
         "step": {
             "user": {
                 "data": {
-                    "code": "Code (fir Home Assistant)",
                     "password": "Passwuert",
                     "username": "E-Mail Adress"
                 },
                 "title": "F\u00ebllt \u00e4r Informatiounen aus"
             }
-        },
-        "title": "SimpliSafe"
+        }
     },
     "options": {
         "step": {
@@ -28,5 +26,6 @@
                 "title": "Simplisafe konfigur\u00e9ieren"
             }
         }
-    }
+    },
+    "title": "SimpliSafe"
 }

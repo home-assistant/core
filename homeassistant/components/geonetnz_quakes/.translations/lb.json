@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "Standuert ass scho konfigu\u00e9iert."
         },
-        "error": {
-            "identifier_exists": "Standuert ass scho registr\u00e9iert"
-        },
         "step": {
             "user": {
                 "data": {
@@ -14,7 +11,7 @@
                 },
                 "title": "F\u00ebllt \u00e4r Filter D\u00e9tailer aus."
             }
-        },
-        "title": "GeoNet NZ Quakes"
-    }
+        }
+    },
+    "title": "GeoNet NZ Quakes"
 }

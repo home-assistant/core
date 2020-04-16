@@ -22,8 +22,7 @@
                 "description": "Ange v\u00e4rdinformationen f\u00f6r din Konnected Panel.",
                 "title": "Uppt\u00e4ck Konnected-enhet"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
@@ -100,5 +99,6 @@
             }
         },
         "title": "Alternativ f\u00f6r Konnected alarmpanel"
-    }
+    },
+    "title": "Konnected.io"
 }

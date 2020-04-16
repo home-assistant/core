@@ -1,6 +1,6 @@
 {
+  "title": "IKEA TRÅDFRI",
   "config": {
-    "title": "IKEA TRÅDFRI",
     "step": {
       "auth": {
         "title": "Enter security code",

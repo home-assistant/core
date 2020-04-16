@@ -12,7 +12,7 @@
                 "description": "Tem certeza de que deseja configurar o Mailgun?",
                 "title": "Configurar o Mailgun Webhook"
             }
-        },
-        "title": "Mailgun"
-    }
+        }
+    },
+    "title": "Mailgun"
 }

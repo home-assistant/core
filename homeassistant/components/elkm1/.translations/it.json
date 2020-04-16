@@ -22,7 +22,7 @@
                 "description": "La stringa di indirizzi deve essere nella forma \"address[:port]\" per \"secure\" e \"non secure\". Esempio: '192.168.1.1.1'. La porta \u00e8 facoltativa e il valore predefinito \u00e8 2101 per 'non sicuro' e 2601 per 'sicuro'. Per il protocollo seriale, l'indirizzo deve essere nella forma 'tty[:baud]'. Esempio: '/dev/ttyS1'. Il baud \u00e8 opzionale e il valore predefinito \u00e8 115200.",
                 "title": "Collegamento al controllo Elk-M1"
             }
-        },
-        "title": "Controllo Elk-M1"
-    }
+        }
+    },
+    "title": "Controllo Elk-M1"
 }

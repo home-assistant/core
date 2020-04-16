@@ -8,6 +8,19 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "resources": {
+                "data": {
+                    "resources": "Resources"
+                },
+                "title": "Choose the Resources to Monitor"
+            },
+            "ups": {
+                "data": {
+                    "alias": "Alias",
+                    "resources": "Resources"
+                },
+                "title": "Choose the UPS to Monitor"
+            },
             "user": {
                 "data": {
                     "alias": "Alias",
@@ -21,17 +34,18 @@
                 "description": "If there are multiple UPSs attached to the NUT server, enter the name UPS to query in the 'Alias' field.",
                 "title": "Connect to the NUT server"
             }
-        },
-        "title": "Network UPS Tools (NUT)"
+        }
     },
     "options": {
         "step": {
             "init": {
                 "data": {
-                    "resources": "Resources"
+                    "resources": "Resources",
+                    "scan_interval": "Scan Interval (seconds)"
                 },
-                "description": "Choose Sensor Resources"
+                "description": "Choose Sensor Resources."
             }
         }
-    }
+    },
+    "title": "Network UPS Tools (NUT)"
 }

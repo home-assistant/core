@@ -23,7 +23,7 @@
                 "description": "Pwyswch y botwm ar y bont i gofrestru Philips Hue gyda Cynorthwydd Cartref.\n\n![Lleoliad botwm ar bont](/static/images/config_philips_hue.jpg)",
                 "title": "Hwb cyswllt"
             }
-        },
-        "title": "Pont Phillips Hue"
-    }
+        }
+    },
+    "title": "Pont Phillips Hue"
 }

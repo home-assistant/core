@@ -3,6 +3,5 @@
   "name": "Yamaha MusicCast",
   "documentation": "https://www.home-assistant.io/integrations/yamaha_musiccast",
   "requirements": ["pymusiccast==0.1.6"],
-  "dependencies": [],
   "codeowners": ["@jalmeroth"]
 }

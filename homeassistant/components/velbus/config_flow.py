@@ -13,9 +13,9 @@ from .const import DOMAIN
 @callback
 def velbus_entries(hass: HomeAssistant):
     """Return connections for Velbus domain."""
-    return set(
+    return {
         (entry.data[CONF_PORT]) for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
 class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

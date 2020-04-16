@@ -10,14 +10,12 @@
         "step": {
             "user": {
                 "data": {
-                    "code": "Koda (za Home Assistant)",
                     "password": "Geslo",
                     "username": "E-po\u0161tni naslov"
                 },
                 "title": "Izpolnite svoje podatke"
             }
-        },
-        "title": "SimpliSafe"
+        }
     },
     "options": {
         "step": {
@@ -28,5 +26,6 @@
                 "title": "Konfigurirajte SimpliSafe"
             }
         }
-    }
+    },
+    "title": "SimpliSafe"
 }

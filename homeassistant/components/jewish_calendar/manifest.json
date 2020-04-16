@@ -3,6 +3,5 @@
   "name": "Jewish Calendar",
   "documentation": "https://www.home-assistant.io/integrations/jewish_calendar",
   "requirements": ["hdate==0.9.5"],
-  "dependencies": [],
   "codeowners": ["@tsvi"]
 }

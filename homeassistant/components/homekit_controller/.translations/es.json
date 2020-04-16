@@ -34,7 +34,7 @@
                 "description": "Selecciona el dispositivo que quieres vincular",
                 "title": "Vincular con accesorio HomeKit"
             }
-        },
-        "title": "Accesorio HomeKit"
-    }
+        }
+    },
+    "title": "Accesorio HomeKit"
 }

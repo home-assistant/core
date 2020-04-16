@@ -25,8 +25,7 @@
                 "description": "Czy chcesz skonfigurowa\u0107 Home Assistant'a, aby po\u0142\u0105czy\u0142 si\u0119 z po\u015brednikiem MQTT dostarczonym przez dodatek Hass.io {addon}?",
                 "title": "Po\u015brednik MQTT za po\u015brednictwem dodatku Hass.io"
             }
-        },
-        "title": "MQTT"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -49,5 +48,6 @@
             "button_short_release": "\"{subtype}\" zostanie zwolniony",
             "button_triple_press": "\"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
         }
-    }
+    },
+    "title": "MQTT"
 }

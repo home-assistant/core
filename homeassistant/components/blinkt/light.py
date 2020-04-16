@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # ensure that the lights are off when exiting
     blinkt.set_clear_on_exit()
 
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
 
     add_entities(
         [BlinktLight(blinkt, name, index) for index in range(blinkt.NUM_PIXELS)]

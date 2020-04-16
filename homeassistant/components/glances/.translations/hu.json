@@ -21,8 +21,7 @@
                 },
                 "title": "Glances Be\u00e1ll\u00edt\u00e1sa"
             }
-        },
-        "title": "Glances"
+        }
     },
     "options": {
         "step": {
@@ -33,5 +32,6 @@
                 "description": "A Glances be\u00e1ll\u00edt\u00e1sainak konfigur\u00e1l\u00e1sa"
             }
         }
-    }
+    },
+    "title": "Glances"
 }

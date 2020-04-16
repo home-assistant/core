@@ -9,6 +9,7 @@ from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_C
 from homeassistant.components.vizio.config_flow import _get_config_schema
 from homeassistant.components.vizio.const import (
     CONF_APPS,
+    CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
     CONF_INCLUDE,
     CONF_VOLUME_STEP,
     DEFAULT_NAME,
@@ -156,6 +157,39 @@ async def test_tv_options_flow_with_apps(hass: HomeAssistantType) -> None:
     entry.add_to_hass(hass)
 
     assert not entry.options
+
+    result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    options = {CONF_VOLUME_STEP: VOLUME_STEP}
+    options.update(MOCK_INCLUDE_APPS)
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input=options
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == ""
+    assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
+    assert CONF_APPS in result["data"]
+    assert result["data"][CONF_APPS] == {CONF_INCLUDE: [CURRENT_APP]}
+
+
+async def test_tv_options_flow_start_with_volume(hass: HomeAssistantType) -> None:
+    """Test options config flow for TV with providing apps option after providing volume step in initial config."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_USER_VALID_TV_CONFIG,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+    )
+    entry.add_to_hass(hass)
+
+    assert entry.options
+    assert entry.options == {CONF_VOLUME_STEP: VOLUME_STEP}
+    assert CONF_APPS not in entry.options
+    assert CONF_APPS_TO_INCLUDE_OR_EXCLUDE not in entry.options
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 

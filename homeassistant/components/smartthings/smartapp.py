@@ -36,10 +36,8 @@ from .const import (
     APP_NAME_PREFIX,
     APP_OAUTH_CLIENT_NAME,
     APP_OAUTH_SCOPES,
-    CONF_APP_ID,
     CONF_CLOUDHOOK_URL,
     CONF_INSTALLED_APP_ID,
-    CONF_INSTALLED_APPS,
     CONF_INSTANCE_ID,
     CONF_LOCATION_ID,
     CONF_REFRESH_TOKEN,
@@ -258,7 +256,6 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
         CONF_WEBHOOK_ID: config[CONF_WEBHOOK_ID],
         # Will not be present if not enabled
         CONF_CLOUDHOOK_URL: config.get(CONF_CLOUDHOOK_URL),
-        CONF_INSTALLED_APPS: [],
     }
     _LOGGER.debug(
         "Setup endpoint for %s",
@@ -370,40 +367,30 @@ async def smartapp_sync_subscriptions(
 
 
 async def smartapp_install(hass: HomeAssistantType, req, resp, app):
-    """
-    Handle when a SmartApp is installed by the user into a location.
-
-    Create a config entry representing the installation if this is not
-    the first installation under the account, otherwise store the data
-    for the config flow.
-    """
-    install_data = {
-        CONF_INSTALLED_APP_ID: req.installed_app_id,
-        CONF_LOCATION_ID: req.location_id,
-        CONF_REFRESH_TOKEN: req.refresh_token,
-    }
-    # App attributes (client id/secret, etc...) are copied from another entry
-    # with the same parent app_id.  If one is not found, the install data is
-    # stored for the config flow to retrieve during the wait step.
-    entry = next(
+    """Handle a SmartApp installation and continue the config flow."""
+    flow = next(
         (
-            entry
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.data[CONF_APP_ID] == app.app_id
+            flow
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["handler"] == DOMAIN
         ),
         None,
     )
-    if entry:
-        data = entry.data.copy()
-        data.update(install_data)
-        # Add as job not needed because the current coroutine was invoked
-        # from the dispatcher and is not being awaited.
-        await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "install"}, data=data
+    if flow is not None:
+        await hass.config_entries.flow.async_configure(
+            flow["flow_id"],
+            {
+                CONF_INSTALLED_APP_ID: req.installed_app_id,
+                CONF_LOCATION_ID: req.location_id,
+                CONF_REFRESH_TOKEN: req.refresh_token,
+            },
         )
-    else:
-        # Store the data where the flow can find it
-        hass.data[DOMAIN][CONF_INSTALLED_APPS].append(install_data)
+        _LOGGER.debug(
+            "Continued config flow '%s' for SmartApp '%s' under parent app '%s'",
+            flow["flow_id"],
+            req.installed_app_id,
+            app.app_id,
+        )
 
     _LOGGER.debug(
         "Installed SmartApp '%s' under parent app '%s'",
@@ -413,12 +400,7 @@ async def smartapp_install(hass: HomeAssistantType, req, resp, app):
 
 
 async def smartapp_update(hass: HomeAssistantType, req, resp, app):
-    """
-    Handle when a SmartApp is updated (reconfigured) by the user.
-
-    Store the refresh token in the config entry.
-    """
-    # Update refresh token in config entry
+    """Handle a SmartApp update and either update the entry or continue the flow."""
     entry = next(
         (
             entry
@@ -430,6 +412,36 @@ async def smartapp_update(hass: HomeAssistantType, req, resp, app):
     if entry:
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_REFRESH_TOKEN: req.refresh_token}
+        )
+        _LOGGER.debug(
+            "Updated config entry '%s' for SmartApp '%s' under parent app '%s'",
+            entry.entry_id,
+            req.installed_app_id,
+            app.app_id,
+        )
+
+    flow = next(
+        (
+            flow
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["handler"] == DOMAIN
+        ),
+        None,
+    )
+    if flow is not None:
+        await hass.config_entries.flow.async_configure(
+            flow["flow_id"],
+            {
+                CONF_INSTALLED_APP_ID: req.installed_app_id,
+                CONF_LOCATION_ID: req.location_id,
+                CONF_REFRESH_TOKEN: req.refresh_token,
+            },
+        )
+        _LOGGER.debug(
+            "Continued config flow '%s' for SmartApp '%s' under parent app '%s'",
+            flow["flow_id"],
+            req.installed_app_id,
+            app.app_id,
         )
 
     _LOGGER.debug(

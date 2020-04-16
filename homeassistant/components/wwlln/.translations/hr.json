@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Lokacija je ve\u0107 registrirana"
-        },
         "step": {
             "user": {
                 "data": {
@@ -12,7 +9,7 @@
                 },
                 "title": "Ispunite podatke o lokaciji."
             }
-        },
-        "title": "Svjetska mre\u017ea lokacija munje (WWLLN)"
-    }
+        }
+    },
+    "title": "Svjetska mre\u017ea lokacija munje (WWLLN)"
 }

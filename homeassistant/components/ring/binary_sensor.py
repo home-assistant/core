@@ -47,9 +47,7 @@ class RingBinarySensor(RingEntityMixin, BinarySensorDevice):
         super().__init__(config_entry_id, device)
         self._ring = ring
         self._sensor_type = sensor_type
-        self._name = "{0} {1}".format(
-            self._device.name, SENSOR_TYPES.get(sensor_type)[0]
-        )
+        self._name = "{} {}".format(self._device.name, SENSOR_TYPES.get(sensor_type)[0])
         self._device_class = SENSOR_TYPES.get(sensor_type)[2]
         self._state = None
         self._unique_id = f"{device.id}-{sensor_type}"

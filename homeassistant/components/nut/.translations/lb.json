@@ -18,10 +18,10 @@
                     "resources": "Ressourcen",
                     "username": "Benotzernumm"
                 },
+                "description": "Falls m\u00e9i w\u00e9i een UPS mat deem NUT Server verbonnen ass, g\u00e8eff den UPS Numm am 'Alias' Feld un fir ze sichen.",
                 "title": "Mam NUT Server verbannen"
             }
-        },
-        "title": "Network UPS Tools (NUT)"
+        }
     },
     "options": {
         "step": {
@@ -32,5 +32,6 @@
                 "description": "Sensor Ressourcen auswielen"
             }
         }
-    }
+    },
+    "title": "Network UPS Tools (NUT)"
 }

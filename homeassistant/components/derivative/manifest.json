@@ -2,9 +2,5 @@
   "domain": "derivative",
   "name": "Derivative",
   "documentation": "https://www.home-assistant.io/integrations/derivative",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": [
-    "@afaucogney"
-  ]
+  "codeowners": ["@afaucogney"]
 }

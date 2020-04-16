@@ -8,14 +8,14 @@
             "port_997_bind_error": "Nie mo\u017cna powi\u0105za\u0107 z portem 997."
         },
         "error": {
-            "credential_timeout": "Przekroczono limit czasu us\u0142ugi po\u015bwiadcze\u0144. Naci\u015bnij przycisk Prze\u015blij, aby ponowi\u0107.",
+            "credential_timeout": "Przekroczono limit czasu us\u0142ugi po\u015bwiadcze\u0144. Naci\u015bnij przycisk \"Zatwierd\u017a\", aby ponowi\u0107.",
             "login_failed": "Nie uda\u0142o si\u0119 sparowa\u0107 z PlayStation 4. Sprawd\u017a, czy PIN jest poprawny.",
             "no_ipaddress": "Wprowad\u017a adres IP PlayStation 4, kt\u00f3ry chcesz skonfigurowa\u0107.",
             "not_ready": "PlayStation 4 nie jest w\u0142\u0105czona lub po\u0142\u0105czona z sieci\u0105."
         },
         "step": {
             "creds": {
-                "description": "Wymagane s\u0105 po\u015bwiadczenia. Naci\u015bnij przycisk 'Prze\u015blij', a nast\u0119pnie w aplikacji PS4 Second Screen, od\u015bwie\u017c urz\u0105dzenia i wybierz urz\u0105dzenie 'Home-Assistant', aby kontynuowa\u0107.",
+                "description": "Wymagane s\u0105 po\u015bwiadczenia. Naci\u015bnij przycisk \"Zatwierd\u017a\", a nast\u0119pnie w aplikacji PS4 Second Screen, od\u015bwie\u017c urz\u0105dzenia i wybierz urz\u0105dzenie 'Home-Assistant', aby kontynuowa\u0107.",
                 "title": "PlayStation 4"
             },
             "link": {
@@ -36,7 +36,7 @@
                 "description": "Wybierz tryb konfiguracji. Pole adresu IP mo\u017cna pozostawi\u0107 puste, je\u015bli wybierzesz opcj\u0119 Auto Discovery, poniewa\u017c urz\u0105dzenia zostan\u0105 automatycznie wykryte.",
                 "title": "PlayStation 4"
             }
-        },
-        "title": "PlayStation 4"
-    }
+        }
+    },
+    "title": "PlayStation 4"
 }

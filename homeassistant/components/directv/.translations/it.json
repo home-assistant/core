@@ -5,8 +5,7 @@
             "unknown": "Errore imprevisto"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi, si prega di riprovare",
-            "unknown": "Errore imprevisto"
+            "cannot_connect": "Impossibile connettersi, si prega di riprovare"
         },
         "flow_title": "DirecTV: {name}",
         "step": {
@@ -24,7 +23,7 @@
                 },
                 "title": "Collegamento al ricevitore DirecTV"
             }
-        },
-        "title": "DirecTV"
-    }
+        }
+    },
+    "title": "DirecTV"
 }

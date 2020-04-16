@@ -11,12 +11,12 @@
             "default": "Pomy\u015blnie uwierzytelniono przy u\u017cyciu Minut dla urz\u0105dze\u0144 Point"
         },
         "error": {
-            "follow_link": "Prosz\u0119 klikn\u0105\u0107 link i uwierzytelni\u0107 przed naci\u015bni\u0119ciem przycisku Prze\u015blij",
+            "follow_link": "Prosz\u0119 klikn\u0105\u0107 link i uwierzytelni\u0107 przed naci\u015bni\u0119ciem przycisku \"Zatwierd\u017a\"",
             "no_token": "Brak uwierzytelnienia za pomoc\u0105 Minut"
         },
         "step": {
             "auth": {
-                "description": "Kliknij poni\u017cszy link i <b>Zaakceptuj</b> dost\u0119p do konta Minut, a nast\u0119pnie wr\u00f3\u0107 i naci\u015bnij <b>Prze\u015blij</b> poni\u017cej. \n\n [Link]({authorization_url})",
+                "description": "Kliknij poni\u017cszy link i <b>Zaakceptuj</b> dost\u0119p do konta Minut, a nast\u0119pnie wr\u00f3\u0107 i naci\u015bnij <b>Zatwierd\u017a</b> poni\u017cej. \n\n [Link]({authorization_url})",
                 "title": "Uwierzytelnienie Point"
             },
             "user": {
@@ -26,7 +26,7 @@
                 "description": "Wybierz, kt\u00f3rego dostawc\u0119 uwierzytelnienia chcesz u\u017cywa\u0107 z Point.",
                 "title": "Dostawca uwierzytelnienia"
             }
-        },
-        "title": "Minut Point"
-    }
+        }
+    },
+    "title": "Minut Point"
 }

@@ -26,7 +26,7 @@
                 "description": "Choisissez via quel fournisseur d'authentification vous souhaitez vous authentifier avec Logi Circle.",
                 "title": "Fournisseur d'authentification"
             }
-        },
-        "title": "Logi Circle"
-    }
+        }
+    },
+    "title": "Logi Circle"
 }

@@ -2,7 +2,7 @@
   "domain": "spotify",
   "name": "Spotify",
   "documentation": "https://www.home-assistant.io/integrations/spotify",
-  "requirements": ["spotipy==2.10.0"],
+  "requirements": ["spotipy==2.11.1"],
   "zeroconf": ["_spotify-connect._tcp.local."],
   "dependencies": ["http"],
   "codeowners": ["@frenck"],

@@ -103,8 +103,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         cache = hass.data[KEY_DENON_CACHE] = set()
 
     # Get config option for show_all_sources and timeout
-    show_all_sources = config.get(CONF_SHOW_ALL_SOURCES)
-    timeout = config.get(CONF_TIMEOUT)
+    show_all_sources = config[CONF_SHOW_ALL_SOURCES]
+    timeout = config[CONF_TIMEOUT]
 
     # Get config option for additional zones
     zones = config.get(CONF_ZONES)
