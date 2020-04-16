@@ -75,5 +75,5 @@ class PulseHub:
         for unique_id in list(self.current_rollers):
             if unique_id not in self.api.rollers:
                 LOGGER.info("Notifying remove of %s", unique_id)
-                self.current_rollers.remove(unique_id)
+                self.current_rollers.pop(unique_id)
                 async_dispatcher_send(self.hass, ACMEDA_ENTITY_REMOVE.format(unique_id))
