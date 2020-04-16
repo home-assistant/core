@@ -138,6 +138,16 @@ async def test_error_observation(hass, mock_simple_nws, caplog):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    instance.update_observation.assert_called_once()
+
+    state = hass.states.get("weather.abc_daynight")
+    assert state
+    assert state.state == "unavailable"
+
+    state = hass.states.get("weather.abc_hourly")
+    assert state
+    assert state.state == "unavailable"
+
     assert "Error updating observation for station ABC" in caplog.text
     assert "Success updating observation for station ABC" not in caplog.text
     caplog.clear()
@@ -147,6 +157,16 @@ async def test_error_observation(hass, mock_simple_nws, caplog):
     future_time = dt_util.utcnow() + timedelta(minutes=15)
     async_fire_time_changed(hass, future_time)
     await hass.async_block_till_done()
+
+    assert instance.update_observation.call_count == 2
+
+    state = hass.states.get("weather.abc_daynight")
+    assert state
+    assert state.state == "sunny"
+
+    state = hass.states.get("weather.abc_hourly")
+    assert state
+    assert state.state == "sunny"
 
     assert "Error updating observation for station ABC" not in caplog.text
     assert "Success updating observation for station ABC" in caplog.text
@@ -162,6 +182,12 @@ async def test_error_forecast(hass, caplog, mock_simple_nws):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    instance.update_forecast.assert_called_once()
+
+    state = hass.states.get("weather.abc_daynight")
+    assert state
+    assert state.state == "unavailable"
+
     assert "Error updating forecast for station ABC" in caplog.text
     assert "Success updating forecast for station ABC" not in caplog.text
     caplog.clear()
@@ -171,6 +197,12 @@ async def test_error_forecast(hass, caplog, mock_simple_nws):
     future_time = dt_util.utcnow() + timedelta(minutes=15)
     async_fire_time_changed(hass, future_time)
     await hass.async_block_till_done()
+
+    assert instance.update_forecast.call_count == 2
+
+    state = hass.states.get("weather.abc_daynight")
+    assert state
+    assert state.state == "sunny"
 
     assert "Error updating forecast for station ABC" not in caplog.text
     assert "Success updating forecast for station ABC" in caplog.text
@@ -186,6 +218,12 @@ async def test_error_forecast_hourly(hass, caplog, mock_simple_nws):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    state = hass.states.get("weather.abc_hourly")
+    assert state
+    assert state.state == "unavailable"
+
+    instance.update_forecast_hourly.assert_called_once()
+
     assert "Error updating forecast_hourly for station ABC" in caplog.text
     assert "Success updating forecast_hourly for station ABC" not in caplog.text
     caplog.clear()
@@ -195,6 +233,12 @@ async def test_error_forecast_hourly(hass, caplog, mock_simple_nws):
     future_time = dt_util.utcnow() + timedelta(minutes=15)
     async_fire_time_changed(hass, future_time)
     await hass.async_block_till_done()
+
+    assert instance.update_forecast_hourly.call_count == 2
+
+    state = hass.states.get("weather.abc_hourly")
+    assert state
+    assert state.state == "sunny"
 
     assert "Error updating forecast_hourly for station ABC" not in caplog.text
     assert "Success updating forecast_hourly for station ABC" in caplog.text
