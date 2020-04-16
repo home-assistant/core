@@ -50,7 +50,7 @@ async def test_show_zeroconf_form(
 
     assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["description_placeholders"] == {CONF_NAME: "EPSON123456"}
+    assert result["description_placeholders"] == {CONF_NAME: "EPSON XP-6000 Series"}
 
 
 async def test_connection_error(
@@ -276,8 +276,13 @@ async def test_zeroconf_with_uuid_device_exists_abort(
     """Test we abort zeroconf flow if printer already configured."""
     await init_integration(hass, aioclient_mock)
 
-    discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
-    discovery_info["properties"]["UUID"] = "cfe92100-67c4-11d4-a45f-f8d027761251"
+    discovery_info = {
+        **MOCK_ZEROCONF_IPP_SERVICE_INFO,
+        "properties": {
+            **MOCK_ZEROCONF_IPP_SERVICE_INFO["properties"],
+            "UUID": "cfe92100-67c4-11d4-a45f-f8d027761251",
+        },
+    }
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
     )
@@ -315,6 +320,9 @@ async def test_full_user_flow_implementation(
     assert result["data"][CONF_HOST] == "192.168.1.31"
     assert result["data"][CONF_UUID] == "cfe92100-67c4-11d4-a45f-f8d027761251"
 
+    assert result["result"]
+    assert result["result"].unique_id == "cfe92100-67c4-11d4-a45f-f8d027761251"
+
 
 async def test_full_zeroconf_flow_implementation(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
@@ -339,12 +347,16 @@ async def test_full_zeroconf_flow_implementation(
     )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "EPSON123456"
+    assert result["title"] == "EPSON XP-6000 Series"
 
     assert result["data"]
     assert result["data"][CONF_HOST] == "192.168.1.31"
+    assert result["data"][CONF_NAME] == "EPSON XP-6000 Series"
     assert result["data"][CONF_UUID] == "cfe92100-67c4-11d4-a45f-f8d027761251"
     assert not result["data"][CONF_SSL]
+
+    assert result["result"]
+    assert result["result"].unique_id == "cfe92100-67c4-11d4-a45f-f8d027761251"
 
 
 async def test_full_zeroconf_tls_flow_implementation(
@@ -364,17 +376,20 @@ async def test_full_zeroconf_tls_flow_implementation(
 
     assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["description_placeholders"] == {CONF_NAME: "EPSON123456"}
+    assert result["description_placeholders"] == {CONF_NAME: "EPSON XP-6000 Series"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "EPSON123456"
+    assert result["title"] == "EPSON XP-6000 Series"
 
     assert result["data"]
     assert result["data"][CONF_HOST] == "192.168.1.31"
-    assert result["data"][CONF_NAME] == "EPSON123456"
+    assert result["data"][CONF_NAME] == "EPSON XP-6000 Series"
     assert result["data"][CONF_UUID] == "cfe92100-67c4-11d4-a45f-f8d027761251"
     assert result["data"][CONF_SSL]
+
+    assert result["result"]
+    assert result["result"].unique_id == "cfe92100-67c4-11d4-a45f-f8d027761251"
