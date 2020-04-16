@@ -62,6 +62,7 @@ ATTR_UNIQUE_ID = "unique_id"
 CLIENT_ENTITY_ID = f"{MP_DOMAIN}.client"
 MAIN_ENTITY_ID = f"{MP_DOMAIN}.host"
 MUSIC_ENTITY_ID = f"{MP_DOMAIN}.music_client"
+RESTRICTED_ENTITY_ID = f"{MP_DOMAIN}.restricted_client"
 STANDBY_ENTITY_ID = f"{MP_DOMAIN}.standby_client"
 UNAVAILABLE_ENTITY_ID = f"{MP_DOMAIN}.unavailable_client"
 
@@ -279,6 +280,24 @@ async def test_check_attributes(
 
     state = hass.states.get(STANDBY_ENTITY_ID)
     assert state.state == STATE_OFF
+
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) is None
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) is None
+    assert state.attributes.get(ATTR_MEDIA_DURATION) is None
+    assert state.attributes.get(ATTR_MEDIA_POSITION) is None
+    assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT) is None
+    assert state.attributes.get(ATTR_MEDIA_TITLE) is None
+    assert state.attributes.get(ATTR_MEDIA_ARTIST) is None
+    assert state.attributes.get(ATTR_MEDIA_ALBUM_NAME) is None
+    assert state.attributes.get(ATTR_MEDIA_SERIES_TITLE) is None
+    assert state.attributes.get(ATTR_MEDIA_CHANNEL) is None
+    assert state.attributes.get(ATTR_INPUT_SOURCE) is None
+    assert not state.attributes.get(ATTR_MEDIA_CURRENTLY_RECORDING)
+    assert state.attributes.get(ATTR_MEDIA_RATING) is None
+    assert not state.attributes.get(ATTR_MEDIA_RECORDED)
+
+    state = hass.states.get(RESTRICTED_ENTITY_ID)
+    assert state.state == STATE_ON
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) is None
     assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) is None
