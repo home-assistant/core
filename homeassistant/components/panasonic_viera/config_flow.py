@@ -87,7 +87,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
         await self.async_load_data(import_config)
-        return await self.async_create_remote()
+
+        try:
+            self._remote = await self.hass.async_add_executor_job(
+                partial(RemoteControl, self._data[CONF_HOST], self._data[CONF_PORT])
+            )
+        except (TimeoutError, URLError, SOAPError, OSError) as err:
+            _LOGGER.error("Could not establish remote connection: %s", err)
+            return self.async_abort(reason=REASON_NOT_CONNECTED)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.exception("An unknown error occurred: %s", err)
+            return self.async_abort(reason=REASON_UNKNOWN)
+
+        if self._remote.type == TV_TYPE_ENCRYPTED:
+            return await self.async_step_pairing()
+
+        return self.async_create_entry(title=self._data[CONF_NAME], data=self._data,)
 
     async def async_load_data(self, config):
         """Load the data."""
