@@ -8,7 +8,7 @@ import re
 import subprocess
 from typing import Dict, List, Union
 
-from .const import DOCKER_IMAGE, PROJECT_ID
+from .const import CORE_PROJECT_ID, DOCKER_IMAGE
 from .error import ExitApp
 from .util import get_lokalise_token
 
@@ -32,7 +32,7 @@ def run_download_docker():
             "--token",
             get_lokalise_token(),
             "export",
-            PROJECT_ID,
+            CORE_PROJECT_ID,
             "--export_empty",
             "skip",
             "--type",
