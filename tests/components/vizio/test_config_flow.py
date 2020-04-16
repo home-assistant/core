@@ -830,7 +830,7 @@ async def test_zeroconf_ignore(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
-async def test_zeroconf_ignored_abort(
+async def test_zeroconf_abort_when_ignored(
     hass: HomeAssistantType,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
