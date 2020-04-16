@@ -33,6 +33,8 @@
             "button_2": "Second button",
             "button_3": "Third button",
             "button_4": "Fourth button",
+            "double_buttons_1_3": "First and Third buttons",
+            "double_buttons_2_4": "Second and Fourth buttons",
             "dim_down": "Dim down",
             "dim_up": "Dim up",
             "turn_off": "Turn off",
@@ -41,7 +43,9 @@
         "trigger_type": {
             "remote_button_long_release": "\"{subtype}\" button released after long press",
             "remote_button_short_press": "\"{subtype}\" button pressed",
-            "remote_button_short_release": "\"{subtype}\" button released"
+            "remote_button_short_release": "\"{subtype}\" button released",
+            "remote_double_button_long_press": "Both \"{subtype}\" released after long press",
+            "remote_double_button_short_press": "Both \"{subtype}\" released"
         }
     }
 }
