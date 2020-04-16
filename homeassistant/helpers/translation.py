@@ -1,8 +1,11 @@
 """Translation string lookup helpers."""
+import asyncio
 import logging
 from typing import Any, Dict, Iterable, Optional
 
+from homeassistant.core import callback
 from homeassistant.loader import (
+    Integration,
     async_get_config_flows,
     async_get_integration,
     bind_hass,
@@ -32,8 +35,9 @@ def flatten(data: Dict) -> Dict[str, Any]:
     return recursive_flatten("", data)
 
 
-async def component_translation_file(
-    hass: HomeAssistantType, component: str, language: str
+@callback
+def component_translation_file(
+    component: str, language: str, integration: Integration
 ) -> Optional[str]:
     """Return the translation json file location for a component.
 
@@ -48,9 +52,6 @@ async def component_translation_file(
     parts = component.split(".")
     domain = parts[-1]
     is_platform = len(parts) == 2
-
-    integration = await async_get_integration(hass, domain)
-    assert integration is not None, domain
 
     if is_platform:
         filename = f"{parts[0]}.{language}.json"
@@ -105,26 +106,47 @@ def build_resources(
 async def async_get_component_resources(
     hass: HomeAssistantType, language: str
 ) -> Dict[str, Any]:
-    """Return translation resources for all components."""
-    if TRANSLATION_STRING_CACHE not in hass.data:
-        hass.data[TRANSLATION_STRING_CACHE] = {}
-    if language not in hass.data[TRANSLATION_STRING_CACHE]:
-        hass.data[TRANSLATION_STRING_CACHE][language] = {}
-    translation_cache = hass.data[TRANSLATION_STRING_CACHE][language]
+    """Return translation resources for all components.
 
-    # Get the set of components
+    We go through all loaded components and platforms:
+     - see if they have already been loaded (exist in translation_cache)
+     - load them if they have not been loaded yet
+     - write them to cache
+     - flatten the cache and return
+    """
+    # Get cache for this language
+    cache = hass.data.setdefault(TRANSLATION_STRING_CACHE, {})
+    translation_cache = cache.setdefault(language, {})
+
+    # Get the set of components to check
     components = hass.config.components | await async_get_config_flows(hass)
 
-    # Calculate the missing components
-    missing_components = components - set(translation_cache)
+    # Calculate the missing components and platforms
+    missing_loaded = components - set(translation_cache)
+    missing_domains = {loaded.split(".")[-1] for loaded in missing_loaded}
+
+    missing_integrations = dict(
+        zip(
+            missing_domains,
+            await asyncio.gather(
+                *[async_get_integration(hass, domain) for domain in missing_domains]
+            ),
+        )
+    )
+
+    # Determine paths of missing components/platforms
     missing_files = {}
-    for component in missing_components:
-        path = await component_translation_file(hass, component, language)
+    for loaded in missing_loaded:
+        parts = loaded.split(".")
+        domain = parts[-1]
+        integration = missing_integrations[domain]
+
+        path = component_translation_file(loaded, language, integration)
         # No translation available
         if path is None:
-            translation_cache[component] = {}
+            translation_cache[loaded] = {}
         else:
-            missing_files[component] = path
+            missing_files[loaded] = path
 
     # Load missing files
     if missing_files:
@@ -133,6 +155,14 @@ async def async_get_component_resources(
         )
         assert load_translations_job is not None
         loaded_translations = await load_translations_job
+
+        # Translations that miss "title" will get integration put in.
+        for loaded, translations in loaded_translations.items():
+            if "." in loaded:
+                continue
+
+            if "title" not in translations:
+                translations["title"] = missing_integrations[loaded].name
 
         # Update cache
         translation_cache.update(loaded_translations)
