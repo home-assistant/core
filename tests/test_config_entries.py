@@ -7,6 +7,7 @@ from asynctest import CoroutineMock
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, loader
+from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
@@ -1558,3 +1559,13 @@ async def test_async_setup_update_entry(hass):
         assert len(entries) == 1
         assert entries[0].state == config_entries.ENTRY_STATE_LOADED
         assert entries[0].data == {"value": "updated"}
+
+    async def test_async_entries_ignore_parameter(hass):
+        """Test `include_ignored` parameter in ConfigEntries.async_entries."""
+        MockConfigEntry(domain="test", entry_id="test1").add_to_hass(hass)
+        MockConfigEntry(
+            domain="test", entry_id="test2", source=SOURCE_IGNORE
+        ).add_to_hass(hass)
+
+        assert len(hass.config_entries.async_entries("test")) == 2
+        assert len(hass.config_entries.async_entries("test", False)) == 1
