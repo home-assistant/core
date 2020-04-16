@@ -8,7 +8,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_CLASS_TV
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_ZEROCONF, ConfigEntry
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_IMPORT,
+    SOURCE_ZEROCONF,
+    ConfigEntry,
+)
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
@@ -18,6 +23,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PIN,
     CONF_PORT,
+    CONF_SOURCE,
     CONF_TYPE,
 )
 from homeassistant.core import callback
@@ -198,10 +204,11 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Check if new config entry matches any existing config entries
             for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if _host_is_same(entry.data[CONF_HOST], user_input[CONF_HOST]):
-                    errors[CONF_HOST] = "host_exists"
-                if entry.data[CONF_NAME] == user_input[CONF_NAME]:
-                    errors[CONF_NAME] = "name_exists"
+                if entry.data.get(CONF_SOURCE) != SOURCE_IGNORE:
+                    if _host_is_same(entry.data[CONF_HOST], user_input[CONF_HOST]):
+                        errors[CONF_HOST] = "host_exists"
+                    if entry.data[CONF_NAME] == user_input[CONF_NAME]:
+                        errors[CONF_NAME] = "name_exists"
 
             if not errors:
                 # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
@@ -270,7 +277,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         # Check if new config entry matches any existing config entries
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if _host_is_same(entry.data[CONF_HOST], import_config[CONF_HOST]):
+            if entry.data.get(CONF_SOURCE) != SOURCE_IGNORE and _host_is_same(
+                entry.data[CONF_HOST], import_config[CONF_HOST]
+            ):
                 updated_options = {}
                 updated_data = {}
                 remove_apps = False
@@ -334,7 +343,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Check if new config entry matches any existing config entries and abort if so
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if _host_is_same(entry.data[CONF_HOST], discovery_info[CONF_HOST]):
+            if entry.data.get(CONF_SOURCE) != SOURCE_IGNORE and _host_is_same(
+                entry.data[CONF_HOST], discovery_info[CONF_HOST]
+            ):
                 return self.async_abort(reason="already_setup")
 
         # Set default name to discovered device name by stripping zeroconf service
