@@ -1,7 +1,7 @@
 """Tests for the DirecTV component."""
 from homeassistant.components.directv.const import CONF_RECEIVER_ID, DOMAIN
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION
-from homeassistant.const import CONF_HOST, HTTP_INTERNAL_SERVER_ERROR
+from homeassistant.const import CONF_HOST, HTTP_FORBIDDEN, HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.common import MockConfigEntry, load_fixture
@@ -75,6 +75,14 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
         f"http://{HOST}:8080/tv/getTuned",
         params={"clientAddr": "A01234567890"},
         text=load_fixture("directv/tv-get-tuned-music.json"),
+        headers={"Content-Type": "application/json"},
+    )
+
+    aioclient_mock.get(
+        f"http://{HOST}:8080/tv/getTuned",
+        params={"clientAddr": "C01234567890"},
+        status=HTTP_FORBIDDEN,
+        text=load_fixture("directv/tv-get-tuned-restricted.json"),
         headers={"Content-Type": "application/json"},
     )
 
