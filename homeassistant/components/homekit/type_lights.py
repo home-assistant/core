@@ -10,6 +10,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
+    ATTR_TRANSITION,
     DOMAIN,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
@@ -83,12 +84,8 @@ class Light(HomeAccessory):
             self.char_brightness = serv_light.configure_char(CHAR_BRIGHTNESS, value=100)
 
         if CHAR_COLOR_TEMPERATURE in self.chars:
-            min_mireds = self.hass.states.get(self.entity_id).attributes.get(
-                ATTR_MIN_MIREDS, 153
-            )
-            max_mireds = self.hass.states.get(self.entity_id).attributes.get(
-                ATTR_MAX_MIREDS, 500
-            )
+            min_mireds = state.attributes.get(ATTR_MIN_MIREDS, 153)
+            max_mireds = state.attributes.get(ATTR_MAX_MIREDS, 500)
             self.char_color_temperature = serv_light.configure_char(
                 CHAR_COLOR_TEMPERATURE,
                 value=min_mireds,
@@ -107,37 +104,57 @@ class Light(HomeAccessory):
 
     def _set_chars(self, char_values):
         _LOGGER.debug("Light _set_chars: %s", char_values)
-        events = []
         service = SERVICE_TURN_ON
-        params = {ATTR_ENTITY_ID: self.entity_id}
+        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_TRANSITION: 0}
+        restore = {}
+        restore_state = False
         if CHAR_ON in char_values:
-            if not char_values[CHAR_ON]:
-                service = SERVICE_TURN_OFF
-            events.append(f"Set state to {char_values[CHAR_ON]}")
-
-        if CHAR_BRIGHTNESS in char_values:
-            if char_values[CHAR_BRIGHTNESS] == 0:
-                events[-1] = "Set state to 0"
-                service = SERVICE_TURN_OFF
+            if char_values[CHAR_ON]:
+                state = self.hass.states.get(self.entity_id)
+                if state and state.state == STATE_OFF:
+                    restore_state = True
             else:
-                params[ATTR_BRIGHTNESS_PCT] = char_values[CHAR_BRIGHTNESS]
-            events.append(f"brightness at {char_values[CHAR_BRIGHTNESS]}%")
+                service = SERVICE_TURN_OFF
 
-        if CHAR_COLOR_TEMPERATURE in char_values:
-            params[ATTR_COLOR_TEMP] = char_values[CHAR_COLOR_TEMPERATURE]
-            events.append(f"color temperature at {char_values[CHAR_COLOR_TEMPERATURE]}")
+        if CHAR_BRIGHTNESS in self.chars:
+            if CHAR_BRIGHTNESS in char_values:
+                if char_values[CHAR_BRIGHTNESS] == 0:
+                    service = SERVICE_TURN_OFF
+                else:
+                    params[ATTR_BRIGHTNESS_PCT] = char_values[CHAR_BRIGHTNESS]
+            elif restore_state:
+                restore[CHAR_BRIGHTNESS] = self.char_brightness.value
+                params[ATTR_BRIGHTNESS_PCT] = self.char_brightness.value
 
-        if (
-            self._features & SUPPORT_COLOR
-            and CHAR_HUE in char_values
-            and CHAR_SATURATION in char_values
-        ):
-            color = (char_values[CHAR_HUE], char_values[CHAR_SATURATION])
-            _LOGGER.debug("%s: Set hs_color to %s", self.entity_id, color)
-            params[ATTR_HS_COLOR] = color
-            events.append(f"set color at {color}")
+        if CHAR_COLOR_TEMPERATURE in self.chars:
+            if CHAR_COLOR_TEMPERATURE in char_values:
+                params[ATTR_COLOR_TEMP] = char_values[CHAR_COLOR_TEMPERATURE]
+            elif restore_state:
+                restore[CHAR_COLOR_TEMPERATURE] = self.char_color_temperature.value
+                params[ATTR_COLOR_TEMP] = self.char_color_temperature.value
 
-        self.call_service(DOMAIN, service, params, ", ".join(events))
+        if CHAR_HUE in self.chars and CHAR_SATURATION in self.chars:
+            hue = self.char_hue.value
+            saturation = self.char_saturation.value
+            if CHAR_HUE in char_values or CHAR_SATURATION in char_values:
+                if CHAR_HUE in char_values:
+                    hue = char_values[CHAR_HUE]
+                if CHAR_SATURATION in char_values:
+                    saturation = char_values[CHAR_SATURATION]
+                params[ATTR_HS_COLOR] = (hue, saturation)
+            elif restore_state:
+                restore[CHAR_HUE] = hue
+                restore[CHAR_SATURATION] = saturation
+                params[ATTR_HS_COLOR] = (hue, saturation)
+
+        if restore_state:
+            event_str = "Set On: 1, " + ", ".join(
+                f"Restore {k}: {v}" for k, v in restore.items()
+            )
+        else:
+            event_str = ", ".join(f"Set {k}: {v}" for k, v in char_values.items())
+        _LOGGER.debug("Light _set_chars events: %s", event_str)
+        self.call_service(DOMAIN, service, params, event_str)
 
     def update_state(self, new_state):
         """Update light after state change."""
