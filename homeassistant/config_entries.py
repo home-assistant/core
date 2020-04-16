@@ -579,11 +579,21 @@ class ConfigEntries:
         return None
 
     @callback
-    def async_entries(self, domain: Optional[str] = None) -> List[ConfigEntry]:
+    def async_entries(
+        self, domain: Optional[str] = None, include_ignored: bool = True
+    ) -> List[ConfigEntry]:
         """Return all entries or entries for a specific domain."""
         if domain is None:
             return list(self._entries)
-        return [entry for entry in self._entries if entry.domain == domain]
+
+        if include_ignored:
+            return [entry for entry in self._entries if entry.domain == domain]
+
+        return [
+            entry
+            for entry in self._entries
+            if entry.domain == domain and entry.source != SOURCE_IGNORE
+        ]
 
     async def async_add(self, entry: ConfigEntry) -> None:
         """Add and setup an entry."""
