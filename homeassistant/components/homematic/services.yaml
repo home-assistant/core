@@ -75,7 +75,7 @@ put_paramset:
       example: wireless
     address:
       description: Address of Homematic device
-      example: LEQ3948571
+      example: LEQ3948571:0
     paramset_key:
       description: The paramset_key argument to putParamset
       example: MASTER

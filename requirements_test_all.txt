@@ -521,7 +521,7 @@ pyhaversion==3.3.0
 pyheos==0.6.0
 
 # homeassistant.components.homematic
-pyhomematic==0.1.65
+pyhomematic==0.1.66
 
 # homeassistant.components.icloud
 pyicloud==0.9.6.1
