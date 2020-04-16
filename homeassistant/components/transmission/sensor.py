@@ -41,7 +41,6 @@ class TransmissionSensor(Entity):
         self._name = sensor_name
         self._sub_type = sub_type
         self._state = None
-        self._unsub_update = None
 
     @property
     def name(self):
@@ -70,21 +69,13 @@ class TransmissionSensor(Entity):
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-        self._unsub_update = async_dispatcher_connect(
-            self.hass,
-            self._tm_client.api.signal_update,
-            self._schedule_immediate_update,
-        )
 
-    @callback
-    def _schedule_immediate_update(self):
-        self.async_schedule_update_ha_state(True)
+        @callback
+        def update():
+            """Update the state."""
+            self.async_schedule_update_ha_state(True)
 
-    async def will_remove_from_hass(self):
-        """Unsubscribe from update dispatcher."""
-        if self._unsub_update:
-            self._unsub_update()
-            self._unsub_update = None
+        self.async_on_remove(async_dispatcher_connect(self.hass, DOMAIN, update))
 
 
 class TransmissionSpeedSensor(TransmissionSensor):
