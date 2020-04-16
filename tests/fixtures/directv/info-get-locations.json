@@ -17,6 +17,10 @@
       "locationName": "Standby Client"
     },
     {
+      "clientAddr": "C01234567890",
+      "locationName": "Restricted Client"
+    },
+    {
       "clientAddr": "9XXXXXXXXXX9",
       "locationName": "Unavailable Client"
     }
