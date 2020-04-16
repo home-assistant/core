@@ -1,5 +1,4 @@
 {
-  "title": "Telldus Live",
   "config": {
     "abort": {
       "already_setup": "TelldusLive is already configured",
@@ -7,20 +6,13 @@
       "authorize_url_timeout": "Timeout generating authorize url.",
       "unknown": "Unknown error occurred"
     },
-    "error": {
-      "auth_error": "Authentication error, please try again"
-    },
+    "error": { "auth_error": "Authentication error, please try again" },
     "step": {
       "auth": {
         "description": "To link your TelldusLive account:\n 1. Click the link below\n 2. Login to Telldus Live\n 3. Authorize **{app_name}** (click **Yes**).\n 4. Come back here and click **SUBMIT**.\n\n [Link TelldusLive account]({auth_url})",
         "title": "Authenticate against TelldusLive"
       },
-      "user": {
-        "data": {
-          "host": "Host"
-        },
-        "title": "Pick endpoint."
-      }
+      "user": { "data": { "host": "Host" }, "title": "Pick endpoint." }
     }
   }
 }

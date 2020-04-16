@@ -138,16 +138,31 @@ def find_different_languages():
     print("Frontend minus core", frontend_languages - core_languages)
 
 
+def interactive_update():
+    """Interactive update integration strings."""
+    for integration in INTEGRATIONS_DIR.iterdir():
+        strings_file = integration / "strings.json"
+
+        if not strings_file.is_file():
+            continue
+
+        strings = json.loads(strings_file.read_text())
+
+        if "title" not in strings:
+            continue
+
+        manifest = json.loads((integration / "manifest.json").read_text())
+
+        print("Processing", manifest["name"])
+        print("Translation title", strings["title"])
+        if input("Drop title? (1=yes, 2=no) ") == "1":
+            strings.pop("title")
+            strings_file.write_text(json.dumps(strings))
+        print()
+
+
 def run():
     """Migrate translations."""
-    # find_different_languages()
-    migrate_project_keys_translations(
-        FRONTEND_PROJECT_ID,
-        CORE_PROJECT_ID,
-        {
-            "domain::binary_sensor": "component::binary_sensor::title",
-            "domain::sensor": "component::sensor::title",
-        },
-    )
+    interactive_update()
 
     return 0

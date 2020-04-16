@@ -1,14 +1,10 @@
 {
-  "title": "IKEA TRÅDFRI",
   "config": {
     "step": {
       "auth": {
         "title": "Enter security code",
         "description": "You can find the security code on the back of your gateway.",
-        "data": {
-          "host": "Host",
-          "security_code": "Security Code"
-        }
+        "data": { "host": "Host", "security_code": "Security Code" }
       }
     },
     "error": {

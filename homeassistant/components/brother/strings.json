@@ -1,5 +1,4 @@
 {
-  "title": "Brother Printer",
   "config": {
     "flow_title": "Brother Printer: {model} {serial_number}",
     "step": {
@@ -14,9 +13,7 @@
       "zeroconf_confirm": {
         "description": "Do you want to add the Brother Printer {model} with serial number `{serial_number}` to Home Assistant?",
         "title": "Discovered Brother Printer",
-        "data": {
-          "type": "Type of the printer"
-        }
+        "data": { "type": "Type of the printer" }
       }
     },
     "error": {
