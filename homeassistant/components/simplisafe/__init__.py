@@ -23,7 +23,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -420,9 +419,14 @@ class SimpliSafe:
         self.systems = {}
         self.websocket = SimpliSafeWebsocket(hass, api.websocket)
 
-    @callback
-    def _async_process_new_notifications(self, system):
+    async def _async_process_new_notifications(self, system):
         """Act on any new system notifications."""
+        while self._hass.state != CoreState.running:
+            # If HASS isn't fully running yet, it may cause the SIMPLISAFE_NOTIFICATION
+            # event to fire before dependent components (like automation) are fully
+            # ready. Therefore, we sleep until that time:
+            await asyncio.sleep(1)
+
         old_notifications = self._system_notifications.get(system.system_id, [])
         latest_notifications = system.notifications
 
@@ -475,27 +479,6 @@ class SimpliSafe:
                 _LOGGER.error("Error while fetching initial event: %s", err)
                 self.initial_event_to_use[system.system_id] = {}
 
-            # The initial update doesn't process notifications because it is likely that
-            # they will trigger SIMPLISAFE_NOTIFICATION events before other critical
-            # components – such as automation – are ready. Therefore, we schedule an
-            # update of notifications as soon as HASS is fully started:
-            async def process_notifications_listener(_):
-                """Define a listener to run when `homeassistant_start` fires."""
-
-                async def process_when_running():
-                    """Process notifications when HASS is running."""
-                    while self._hass.state != CoreState.running:
-                        await asyncio.sleep(1)
-                    self._async_process_new_notifications(  # pylint: disable=W0640
-                        system
-                    )
-
-                return asyncio.create_task(process_when_running())
-
-            self._hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, process_notifications_listener
-            )
-
         async def refresh(event_time):
             """Refresh data from the SimpliSafe account."""
             await self.async_update()
@@ -504,17 +487,16 @@ class SimpliSafe:
             self._config_entry.entry_id
         ] = async_track_time_interval(self._hass, refresh, DEFAULT_SCAN_INTERVAL)
 
-        await self.async_update(process_notifications=False)
+        await self.async_update()
 
-    async def async_update(self, process_notifications=True):
+    async def async_update(self):
         """Get updated data from SimpliSafe."""
 
         async def update_system(system):
             """Update a system."""
             await system.update()
 
-            if process_notifications:
-                self._async_process_new_notifications(system)
+            asyncio.create_task(self._async_process_new_notifications(system))
 
             _LOGGER.debug('Updated REST API data for "%s"', system.address)
             async_dispatcher_send(
