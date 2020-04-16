@@ -232,6 +232,47 @@ async def websocket_get_groupable_devices(hass, connection, msg):
 
 @websocket_api.require_admin
 @websocket_api.async_response
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/devices/groupable2"})
+async def websocket_get_groupable_devices_2(hass, connection, msg):
+    """Get ZHA devices that can be grouped."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+
+    devices = [device for device in zha_gateway.devices.values() if device.is_groupable]
+
+    groupable_devices = []
+
+    for device in devices:
+        entity_refs = zha_gateway.device_registry.get(device.ieee)
+        device_info = device.async_get_info()
+        endpoint_info = []
+        for ep_id in device.async_get_groupable_endpoints():
+            endpoint_info.append(
+                {
+                    "endpoint": ep_id,
+                    "entities": [
+                        {
+                            "name": zha_gateway.ha_entity_registry.async_get(
+                                entity_ref.reference_id
+                            ).name,
+                            "original_name": zha_gateway.ha_entity_registry.async_get(
+                                entity_ref.reference_id
+                            ).original_name,
+                        }
+                        for entity_ref in entity_refs
+                        if list(entity_ref.cluster_channels.values())[
+                            0
+                        ].cluster.endpoint.endpoint_id
+                        == ep_id
+                    ],
+                }
+            )
+        groupable_devices.append({"device": device_info, "endpoints": endpoint_info})
+
+    connection.send_result(msg[ID], groupable_devices)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
 @websocket_api.websocket_command({vol.Required(TYPE): "zha/groups"})
 async def websocket_get_groups(hass, connection, msg):
     """Get ZHA groups."""
@@ -1050,6 +1091,7 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_permit_devices)
     websocket_api.async_register_command(hass, websocket_get_devices)
     websocket_api.async_register_command(hass, websocket_get_groupable_devices)
+    websocket_api.async_register_command(hass, websocket_get_groupable_devices_2)
     websocket_api.async_register_command(hass, websocket_get_groups)
     websocket_api.async_register_command(hass, websocket_get_device)
     websocket_api.async_register_command(hass, websocket_get_group)

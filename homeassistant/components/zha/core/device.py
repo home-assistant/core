@@ -235,13 +235,9 @@ class ZHADevice(LogMixin):
     @property
     def is_groupable(self):
         """Return true if this device has a group cluster."""
-        if not self.available:
-            return False
-        clusters = self.async_get_clusters()
-        for cluster_map in clusters.values():
-            for clusters in cluster_map.values():
-                if Groups.cluster_id in clusters:
-                    return True
+        return self.is_coordinator or (
+            self.available and self.async_get_groupable_endpoints()
+        )
 
     @property
     def skip_configuration(self):
@@ -441,6 +437,15 @@ class ZHADevice(LogMixin):
             for (ep_id, endpoint) in self._zigpy_device.endpoints.items()
             if ep_id != 0
         }
+
+    @callback
+    def async_get_groupable_endpoints(self):
+        """Get device endpoints that have a group 'in' cluster."""
+        return [
+            ep_id
+            for (ep_id, clusters) in self.async_get_clusters().items()
+            if Groups.cluster_id in clusters[CLUSTER_TYPE_IN]
+        ]
 
     @callback
     def async_get_std_clusters(self):
