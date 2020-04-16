@@ -8,7 +8,12 @@ from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import callback
 
-from . import CannotConnect, async_connect_or_timeout, async_disconnect_or_timeout
+from . import (
+    CannotConnect,
+    CannotDisconnect,
+    async_connect_or_timeout,
+    async_disconnect_or_timeout,
+)
 from .const import (
     CONF_BLID,
     CONF_CERT,
@@ -84,11 +89,16 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             try:
                 info = await validate_input(self.hass, user_input)
+                await async_disconnect_or_timeout(self.hass, info[ROOMBA_SESSION])
             except CannotConnect:
                 errors = {"base": "cannot_connect"}
+            except CannotDisconnect:
+                errors = {"base": "cannot_disconnect"}
+            except Exception as excpt:  # pylint: disable=broad-except
+                _LOGGER.error("Error %s" % excpt)
+                errors = {"base": "unknown"}
 
             if "base" not in errors:
-                await async_disconnect_or_timeout(self.hass, info[ROOMBA_SESSION])
                 return self.async_create_entry(title=info[CONF_NAME], data=user_input)
 
         return self.async_show_form(
