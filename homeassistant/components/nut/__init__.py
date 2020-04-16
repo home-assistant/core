@@ -58,10 +58,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.debug("NUT Sensors Available: %s", status)
 
+    unique_id = _unique_id_from_status(status)
+
+    if unique_id is None:
+        unique_id = entry.entry_id
+
     hass.data[DOMAIN][entry.entry_id] = {
         PYNUT_DATA: data,
         PYNUT_STATUS: status,
-        PYNUT_UNIQUE_ID: _unique_id_from_status(status),
+        PYNUT_UNIQUE_ID: unique_id,
         PYNUT_MANUFACTURER: _manufacturer_from_status(status),
         PYNUT_MODEL: _model_from_status(status),
         PYNUT_FIRMWARE: _firmware_from_status(status),
