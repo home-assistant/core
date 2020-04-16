@@ -20,9 +20,8 @@ PLATFORMS = ["sensor"]
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 DEFAULT_NAME = "NUT UPS"
-DEFAULT_HOST = "127.0.0.1"
+DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 3493
-DEFAULT_UPS_ALIAS = "ups"
 
 KEY_STATUS = "ups.status"
 KEY_STATUS_DISPLAY = "ups.status.display"
@@ -36,12 +35,6 @@ PYNUT_MANUFACTURER = "manufacturer"
 PYNUT_MODEL = "model"
 PYNUT_FIRMWARE = "firmware"
 PYNUT_NAME = "name"
-
-EMPTY_MAC_ADDRESS = "00:00:00:00:00:00"
-
-LOCALHOST = "localhost"
-IPV4_LOOPBACK = "127.0.0.1"
-
 
 SENSOR_TYPES = {
     "ups.status.display": ["Status", "", "mdi:information-outline", None],
