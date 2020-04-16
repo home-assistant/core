@@ -180,7 +180,11 @@ async def async_setup(hass, config):
                         "%s should only be used for binary_sensors: %s", _key, sens
                     )
         except KeyError:
-            _LOGGER.warning("Sensor validation failed")
+            _LOGGER.warning(
+                "Sensor validation failed for sensor id=%s type=%s",
+                sens["id"],
+                sens["type"],
+            )
 
     for qsid, dev in qsusb.devices.items():
         if qsid in switches:
