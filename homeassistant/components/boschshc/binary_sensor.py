@@ -59,20 +59,20 @@ class ShutterContactSensor(BinarySensorDevice):
         self._controller_ip = controller_ip
 
     async def async_added_to_hass(self):
-        """Subscribe SHC events."""
+        """Subscribe to SHC events."""
         await super().async_added_to_hass()
 
         def on_state_changed():
             self.schedule_update_ha_state()
 
         for service in self._device.device_services:
-            service.on_state_changed = on_state_changed
+            service.subscribe_callback(self.entity_id, on_state_changed)
 
     async def async_will_remove_from_hass(self):
-        """Unsubscribe SHC events."""
+        """Unsubscribe from SHC events."""
         await super().async_will_remove_from_hass()
         for service in self._device.device_services:
-            service.on_state_changed = None
+            service.unsubscribe_callback(self.entity_id)
 
     @property
     def unique_id(self):
@@ -167,21 +167,20 @@ class SmokeDetectorSensor(BinarySensorDevice):
         self._controller_ip = controller_ip
 
     async def async_added_to_hass(self):
-        """Subscribe SHC events."""
+        """Subscribe to SHC events."""
         await super().async_added_to_hass()
 
         def on_state_changed():
-            _LOGGER.debug("Update notification for smoke detector: %s", self._device.id)
             self.schedule_update_ha_state()
 
         for service in self._device.device_services:
-            service.on_state_changed = on_state_changed
+            service.subscribe_callback(self.entity_id, on_state_changed)
 
     async def async_will_remove_from_hass(self):
-        """Unsubscribe SHC events."""
+        """Unsubscribe from SHC events."""
         await super().async_will_remove_from_hass()
         for service in self._device.device_services:
-            service.on_state_changed = None
+            service.unsubscribe_callback(self.entity_id)
 
     @property
     def unique_id(self):
@@ -222,7 +221,7 @@ class SmokeDetectorSensor(BinarySensorDevice):
 
     @property
     def should_poll(self):
-        """Set polling mode."""
+        """Report polling mode."""
         return False
 
     @property
@@ -236,7 +235,7 @@ class SmokeDetectorSensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Return the state of the sensor."""
-        if self._device.alarm_state == SHCSmokeDetector.AlarmService.State.IDLE_OFF:
+        if self._device.alarmstate == SHCSmokeDetector.AlarmService.State.IDLE_OFF:
             return False
 
         return True

@@ -383,7 +383,7 @@ blockchain==1.4.4
 bond-api==0.1.12
 
 # homeassistant.components.boschshc
-boschshcpy==0.1.2
+boschshcpy==0.1.3
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
