@@ -1,5 +1,4 @@
 {
-  "title": "MQTT",
   "config": {
     "step": {
       "broker": {
@@ -16,17 +15,13 @@
       "hassio_confirm": {
         "title": "MQTT Broker via Hass.io add-on",
         "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the Hass.io add-on {addon}?",
-        "data": {
-          "discovery": "Enable discovery"
-        }
+        "data": { "discovery": "Enable discovery" }
       }
     },
     "abort": {
       "single_instance_allowed": "Only a single configuration of MQTT is allowed."
     },
-    "error": {
-      "cannot_connect": "Unable to connect to the broker."
-    }
+    "error": { "cannot_connect": "Unable to connect to the broker." }
   },
   "device_automation": {
     "trigger_type": {

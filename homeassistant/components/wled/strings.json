@@ -1,23 +1,18 @@
 {
-  "title": "WLED",
   "config": {
     "flow_title": "WLED: {name}",
     "step": {
       "user": {
         "title": "Link your WLED",
         "description": "Set up your WLED to integrate with Home Assistant.",
-        "data": {
-          "host": "Host or IP address"
-        }
+        "data": { "host": "Host or IP address" }
       },
       "zeroconf_confirm": {
         "description": "Do you want to add the WLED named `{name}` to Home Assistant?",
         "title": "Discovered WLED device"
       }
     },
-    "error": {
-      "connection_error": "Failed to connect to WLED device."
-    },
+    "error": { "connection_error": "Failed to connect to WLED device." },
     "abort": {
       "already_configured": "This WLED device is already configured.",
       "connection_error": "Failed to connect to WLED device."

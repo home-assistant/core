@@ -1,5 +1,4 @@
 {
-  "title": "Flume",
   "config": {
     "error": {
       "unknown": "Unexpected error",
@@ -18,8 +17,6 @@
         }
       }
     },
-    "abort": {
-      "already_configured": "This account is already configured"
-    }
+    "abort": { "already_configured": "This account is already configured" }
   }
 }

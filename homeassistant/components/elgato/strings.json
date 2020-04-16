@@ -1,15 +1,11 @@
 {
-  "title": "Elgato Key Light",
   "config": {
     "flow_title": "Elgato Key Light: {serial_number}",
     "step": {
       "user": {
         "title": "Link your Elgato Key Light",
         "description": "Set up your Elgato Key Light to integrate with Home Assistant.",
-        "data": {
-          "host": "Host or IP address",
-          "port": "Port number"
-        }
+        "data": { "host": "Host or IP address", "port": "Port number" }
       },
       "zeroconf_confirm": {
         "description": "Do you want to add the Elgato Key Light with serial number `{serial_number}` to Home Assistant?",

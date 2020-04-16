@@ -1,10 +1,7 @@
 {
-  "title": "UPnP/IGD",
   "config": {
     "step": {
-      "init": {
-        "title": "UPnP/IGD"
-      },
+      "init": { "title": "UPnP/IGD" },
       "confirm": {
         "title": "UPnP/IGD",
         "description": "Do you want to set up UPnP/IGD?"

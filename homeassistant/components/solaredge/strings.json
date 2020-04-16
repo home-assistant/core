@@ -1,5 +1,4 @@
 {
-  "title": "SolarEdge",
   "config": {
     "step": {
       "user": {
@@ -11,11 +10,7 @@
         }
       }
     },
-    "error": {
-      "site_exists": "This site_id is already configured"
-    },
-    "abort": {
-      "site_exists": "This site_id is already configured"
-    }
+    "error": { "site_exists": "This site_id is already configured" },
+    "abort": { "site_exists": "This site_id is already configured" }
   }
 }

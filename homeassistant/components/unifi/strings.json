@@ -1,5 +1,4 @@
 {
-  "title": "UniFi Controller",
   "config": {
     "step": {
       "user": {
@@ -26,9 +25,7 @@
   },
   "options": {
     "step": {
-      "init": {
-        "data": {}
-      },
+      "init": { "data": {} },
       "device_tracker": {
         "data": {
           "detection_time": "Time in seconds from last seen until considered away",
