@@ -22,12 +22,9 @@
             },
             "user": {
                 "data": {
-                    "alias": "Alias",
                     "host": "Host",
-                    "name": "Name",
                     "password": "Passwort",
                     "port": "Port",
-                    "resources": "Ressourcen",
                     "username": "Benutzername"
                 },
                 "title": "Stellen Sie eine Verbindung zum NUT-Server her"

@@ -23,19 +23,14 @@
             },
             "user": {
                 "data": {
-                    "alias": "Alias",
                     "host": "Host",
-                    "name": "Nombre",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
-                    "resources": "Recursos",
                     "username": "Usuario"
                 },
-                "description": "Si hay varios UPS conectados al servidor NUT, introduzca el nombre UPS a buscar en el campo 'Alias'.",
                 "title": "Conectar con el servidor NUT"
             }
-        },
-        "title": "Herramientas de UPS de red (NUT)"
+        }
     },
     "options": {
         "step": {

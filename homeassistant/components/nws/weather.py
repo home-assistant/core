@@ -1,8 +1,5 @@
 """Support for NWS weather service."""
-import asyncio
 import logging
-
-import aiohttp
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -13,8 +10,6 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
     LENGTH_MILES,
@@ -25,8 +20,8 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 from homeassistant.util.temperature import convert as convert_temperature
@@ -38,8 +33,9 @@ from .const import (
     ATTR_FORECAST_PRECIP_PROB,
     ATTRIBUTION,
     CONDITION_CLASSES,
-    CONF_STATION,
+    DAYNIGHT,
     DOMAIN,
+    HOURLY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,28 +69,15 @@ def convert_condition(time, weather):
     return cond, max(prec_probs)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigType, async_add_entities
+) -> None:
     """Set up the NWS weather platform."""
-    if discovery_info is None:
-        return
-    latitude = discovery_info.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = discovery_info.get(CONF_LONGITUDE, hass.config.longitude)
-    station = discovery_info.get(CONF_STATION)
-
-    nws_data = hass.data[DOMAIN][base_unique_id(latitude, longitude)]
-
-    try:
-        await nws_data.async_set_station(station)
-    except (aiohttp.ClientError, asyncio.TimeoutError) as err:
-        _LOGGER.error("Error automatically setting station: %s", str(err))
-        raise PlatformNotReady
-
-    await nws_data.async_update()
-
+    nws_data = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
-            NWSWeather(nws_data, "daynight", hass.config.units),
-            NWSWeather(nws_data, "hourly", hass.config.units),
+            NWSWeather(nws_data, DAYNIGHT, hass.config.units),
+            NWSWeather(nws_data, HOURLY, hass.config.units),
         ],
         False,
     )
@@ -131,7 +114,7 @@ class NWSWeather(WeatherEntity):
     def _update_callback(self) -> None:
         """Load data from integration."""
         self.observation = self.nws.observation
-        if self.mode == "daynight":
+        if self.mode == DAYNIGHT:
             self._forecast = self.nws.forecast
         else:
             self._forecast = self.nws.forecast_hourly
@@ -259,7 +242,7 @@ class NWSWeather(WeatherEntity):
                 ATTR_FORECAST_TIME: forecast_entry.get("startTime"),
             }
 
-            if self.mode == "daynight":
+            if self.mode == DAYNIGHT:
                 data[ATTR_FORECAST_DAYTIME] = forecast_entry.get("isDaytime")
             time = forecast_entry.get("iconTime")
             weather = forecast_entry.get("iconWeather")
@@ -292,7 +275,7 @@ class NWSWeather(WeatherEntity):
     @property
     def available(self):
         """Return if state is available."""
-        if self.mode == "daynight":
+        if self.mode == DAYNIGHT:
             return (
                 self.nws.update_observation_success and self.nws.update_forecast_success
             )

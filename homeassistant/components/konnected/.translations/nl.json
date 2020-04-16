@@ -16,8 +16,7 @@
                 "description": "Voer de host-informatie in voor uw Konnected-paneel.",
                 "title": "Ontdek Konnected Device"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
@@ -73,7 +72,6 @@
                 },
                 "title": "Schakelbare uitgang configureren"
             }
-        },
-        "title": "Konnected Alarm Paneel Opties"
+        }
     }
 }

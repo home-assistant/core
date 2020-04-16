@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Synology DSM",
     "flow_title": "Synology DSM {name} ({host})",
     "step": {
       "user": {
@@ -30,8 +29,6 @@
       "login": "Login error: please check your username & password",
       "unknown": "Unknown error: please retry later or an other configuration"
     },
-    "abort": {
-      "already_configured": "Host already configured"
-    }
+    "abort": { "already_configured": "Host already configured" }
   }
 }

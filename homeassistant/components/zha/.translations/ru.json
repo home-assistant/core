@@ -14,8 +14,7 @@
                 },
                 "title": "Zigbee Home Automation"
             }
-        },
-        "title": "Zigbee Home Automation (ZHA)"
+        }
     },
     "device_automation": {
         "action_type": {

@@ -21,5 +21,6 @@
             "disarmed": "{entity_name}\u5df2\u89e3\u9664",
             "triggered": "{entity_name}\u5df2\u89f8\u767c"
         }
-    }
+    },
+    "title": "\u8b66\u6212\u6a21\u5f0f\u63a7\u5236\u9762\u677f"
 }

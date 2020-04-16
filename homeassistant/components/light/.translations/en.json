@@ -16,5 +16,6 @@
             "turned_off": "{entity_name} turned off",
             "turned_on": "{entity_name} turned on"
         }
-    }
+    },
+    "title": "Light"
 }

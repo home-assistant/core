@@ -26,8 +26,7 @@
                 "description": "Please enter the host information for your Konnected Panel.",
                 "title": "Discover Konnected Device"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
@@ -104,7 +103,6 @@
                 "description": "Please select the output options for {zone}: state {state}",
                 "title": "Configure Switchable Output"
             }
-        },
-        "title": "Konnected Alarm Panel Options"
+        }
     }
 }

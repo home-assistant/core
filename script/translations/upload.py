@@ -6,7 +6,7 @@ import pathlib
 import re
 import subprocess
 
-from .const import DOCKER_IMAGE, INTEGRATIONS_DIR, PROJECT_ID
+from .const import CORE_PROJECT_ID, DOCKER_IMAGE, INTEGRATIONS_DIR
 from .error import ExitApp
 from .util import get_current_branch, get_lokalise_token
 
@@ -32,7 +32,7 @@ def run_upload_docker():
             "--token",
             get_lokalise_token(),
             "import",
-            PROJECT_ID,
+            CORE_PROJECT_ID,
             "--file",
             CONTAINER_FILE,
             "--lang_iso",
@@ -82,3 +82,5 @@ def run():
     LOCAL_FILE.write_text(json.dumps(translations, indent=4, sort_keys=True))
 
     run_upload_docker()
+
+    return 0

@@ -36,5 +36,6 @@
             "unsafe": "ficou inseguro {entity_name}",
             "vibration": "foram detectadas vibra\u00e7\u00f5es em {entity_name}"
         }
-    }
+    },
+    "title": "Sensor bin\u00e1rio"
 }

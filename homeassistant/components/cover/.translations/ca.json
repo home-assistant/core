@@ -24,5 +24,6 @@
             "position": "Canvia la posici\u00f3 de {entity_name}",
             "tilt_position": "Canvia la inclinaci\u00f3 de {entity_name}"
         }
-    }
+    },
+    "title": "Coberta"
 }

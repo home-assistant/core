@@ -36,8 +36,7 @@
                 "description": "\u6b64\u96fb\u8996\u50c5\u9700\u5b58\u53d6\u5bc6\u9470\u3002\u5047\u5982\u60a8\u6b63\u5728\u8a2d\u5b9a\u96fb\u8996\u3001\u5c1a\u672a\u53d6\u5f97\u5bc6\u9470\uff0c\u4fdd\u6301\u7a7a\u767d\u4ee5\u9032\u884c\u914d\u5c0d\u904e\u7a0b\u3002",
                 "title": "\u8a2d\u5b9a VIZIO SmartCast \u8a2d\u5099"
             }
-        },
-        "title": "VIZIO SmartCast"
+        }
     },
     "options": {
         "step": {
@@ -50,7 +49,6 @@
                 "description": "\u5047\u5982\u60a8\u64c1\u6709 Smart TV\u3001\u53ef\u7531\u4f86\u6e90\u5217\u8868\u4e2d\u9078\u64c7\u6240\u8981\u904e\u6ffe\u5305\u542b\u6216\u6392\u9664\u7684 App\u3002\u3002",
                 "title": "\u66f4\u65b0 VIZIO SmartCast \u9078\u9805"
             }
-        },
-        "title": "\u66f4\u65b0 VIZIO SmartCast \u9078\u9805"
+        }
     }
 }

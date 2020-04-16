@@ -19,12 +19,9 @@
         "title": "Google Hangouts Login"
       },
       "2fa": {
-        "data": {
-          "2fa": "2FA Pin"
-        },
+        "data": { "2fa": "2FA Pin" },
         "title": "2-Factor-Authentication"
       }
-    },
-    "title": "Google Hangouts"
+    }
   }
 }

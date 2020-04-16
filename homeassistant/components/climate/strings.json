@@ -1,4 +1,5 @@
 {
+  "title": "Climate",
   "device_automation": {
     "condition_type": {
       "is_hvac_mode": "{entity_name} is set to a specific HVAC mode",

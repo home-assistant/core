@@ -12,5 +12,6 @@
             "cleaning": "{entity_name} begon met schoonmaken",
             "docked": "{entity_name} is bij basisstation"
         }
-    }
+    },
+    "title": "Stofzuigen"
 }

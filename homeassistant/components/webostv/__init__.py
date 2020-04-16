@@ -1,4 +1,4 @@
-"""Support for WebOS TV."""
+"""Support for LG webOS Smart TV."""
 import asyncio
 import logging
 
@@ -6,6 +6,18 @@ from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
 import voluptuous as vol
 from websockets.exceptions import ConnectionClosed
 
+from homeassistant.components.webostv.const import (
+    ATTR_BUTTON,
+    ATTR_COMMAND,
+    CONF_ON_ACTION,
+    CONF_SOURCES,
+    DEFAULT_NAME,
+    DOMAIN,
+    SERVICE_BUTTON,
+    SERVICE_COMMAND,
+    SERVICE_SELECT_SOUND_OUTPUT,
+    WEBOSTV_CONFIG_FILE,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_CUSTOMIZE,
@@ -18,21 +30,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import ATTR_SOUND_OUTPUT
-
-DOMAIN = "webostv"
-
-CONF_SOURCES = "sources"
-CONF_ON_ACTION = "turn_on_action"
-DEFAULT_NAME = "LG webOS Smart TV"
-WEBOSTV_CONFIG_FILE = "webostv.conf"
-
-SERVICE_BUTTON = "button"
-ATTR_BUTTON = "button"
-
-SERVICE_COMMAND = "command"
-ATTR_COMMAND = "command"
-
-SERVICE_SELECT_SOUND_OUTPUT = "select_sound_output"
 
 CUSTOMIZE_SCHEMA = vol.Schema(
     {vol.Optional(CONF_SOURCES, default=[]): vol.All(cv.ensure_list, [cv.string])}

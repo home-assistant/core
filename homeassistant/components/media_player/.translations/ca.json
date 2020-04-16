@@ -7,5 +7,6 @@
             "is_paused": "{entity_name} est\u00e0 en pausa",
             "is_playing": "{entity_name} est\u00e0 reproduint"
         }
-    }
+    },
+    "title": "Reproductor multim\u00e8dia"
 }

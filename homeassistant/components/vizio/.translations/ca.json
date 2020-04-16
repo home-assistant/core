@@ -36,8 +36,7 @@
                 "description": "Nom\u00e9s es necessita testimoni d'acc\u00e9s per als televisors. Si est\u00e0s configurant un televisor i encara no tens un testimoni d'acc\u00e9s, deixeu-ho en blanc per poder fer el proc\u00e9s d'emparellament.",
                 "title": "Configuraci\u00f3 del client de Vizio SmartCast"
             }
-        },
-        "title": "Vizio SmartCast"
+        }
     },
     "options": {
         "step": {
@@ -50,7 +49,6 @@
                 "description": "Si tens una Smart TV, pots filtrar de manera opcional la teva llista de canals escollint quines aplicacions vols incloure o excloure de la llista.",
                 "title": "Actualitzaci\u00f3 de les opcions de Vizo SmartCast"
             }
-        },
-        "title": "Actualitzaci\u00f3 de les opcions de Vizo SmartCast"
+        }
     }
 }

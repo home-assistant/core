@@ -12,7 +12,6 @@
                 "description": "Er du sikker p\u00e5 at du vil konfigurere Plaato Airlock?",
                 "title": "Konfigurer Plaato Webhook"
             }
-        },
-        "title": "Plaato Airlock"
+        }
     }
 }

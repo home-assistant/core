@@ -45,6 +45,7 @@ omit =
     homeassistant/components/arest/sensor.py
     homeassistant/components/arest/switch.py
     homeassistant/components/arlo/*
+    homeassistant/components/arris_tg2492lg/*
     homeassistant/components/aruba/device_tracker.py
     homeassistant/components/arwn/sensor.py
     homeassistant/components/asterisk_cdr/mailbox.py
@@ -80,6 +81,8 @@ omit =
     homeassistant/components/bom/camera.py
     homeassistant/components/bom/sensor.py
     homeassistant/components/bom/weather.py
+    homeassistant/components/braviatv/__init__.py
+    homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/media_player.py
     homeassistant/components/broadlink/remote.py
     homeassistant/components/broadlink/sensor.py
@@ -647,7 +650,7 @@ omit =
     homeassistant/components/smarthab/*
     homeassistant/components/sms/*
     homeassistant/components/smtp/notify.py
-    homeassistant/components/snapcast/media_player.py
+    homeassistant/components/snapcast/*
     homeassistant/components/snmp/*
     homeassistant/components/sochain/sensor.py
     homeassistant/components/socialblade/sensor.py

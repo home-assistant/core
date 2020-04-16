@@ -13,5 +13,6 @@
             "locked": "{entity_name} gesperrt",
             "unlocked": "{entity_name} entsperrt"
         }
-    }
+    },
+    "title": "Schloss"
 }

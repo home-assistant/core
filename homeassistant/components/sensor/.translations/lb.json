@@ -22,5 +22,6 @@
             "timestamp": "{entity_name} Z\u00e4itstempel \u00e4nnert",
             "value": "{entity_name} W\u00e4ert \u00e4nnert"
         }
-    }
+    },
+    "title": "Sensor"
 }

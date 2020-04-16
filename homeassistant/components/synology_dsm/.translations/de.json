@@ -23,14 +23,12 @@
                 "data": {
                     "api_version": "DSM-Version",
                     "host": "Host",
-                    "name": "Name",
                     "password": "Passwort",
                     "port": "Port (optional)",
                     "username": "Benutzername"
                 },
                 "title": "Synology DSM"
             }
-        },
-        "title": "Synology DSM"
+        }
     }
 }

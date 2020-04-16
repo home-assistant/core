@@ -88,5 +88,6 @@
             "unsafe": "{entity_name} werd onveilig",
             "vibration": "{entity_name} begon trillingen te detecteren"
         }
-    }
+    },
+    "title": "Binaire sensor"
 }

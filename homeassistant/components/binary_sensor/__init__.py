@@ -23,6 +23,9 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 # On means low, Off means normal
 DEVICE_CLASS_BATTERY = "battery"
 
+# On means charging, Off means not charging
+DEVICE_CLASS_BATTERY_CHARGING = "battery_charging"
+
 # On means cold, Off means normal
 DEVICE_CLASS_COLD = "cold"
 
@@ -91,6 +94,7 @@ DEVICE_CLASS_WINDOW = "window"
 
 DEVICE_CLASSES = [
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_COLD,
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_DOOR,

@@ -21,11 +21,7 @@
                 },
                 "title": "Set up UniFi Controller"
             }
-        },
-        "title": "UniFi Controller"
-    },
-    "error": {
-        "unknown_client_mac": "No client available in UniFi on that MAC address"
+        }
     },
     "options": {
         "step": {

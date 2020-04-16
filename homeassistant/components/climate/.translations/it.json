@@ -13,5 +13,6 @@
             "current_temperature_changed": "{entity_name} temperatura misurata cambiata",
             "hvac_mode_changed": "{entity_name} modalit\u00e0 HVAC modificata"
         }
-    }
+    },
+    "title": "Termostato"
 }

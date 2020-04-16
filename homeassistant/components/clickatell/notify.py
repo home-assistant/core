@@ -29,8 +29,8 @@ class ClickatellNotificationService(BaseNotificationService):
 
     def __init__(self, config):
         """Initialize the service."""
-        self.api_key = config.get(CONF_API_KEY)
-        self.recipient = config.get(CONF_RECIPIENT)
+        self.api_key = config[CONF_API_KEY]
+        self.recipient = config[CONF_RECIPIENT]
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""

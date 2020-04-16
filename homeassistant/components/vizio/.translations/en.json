@@ -36,8 +36,7 @@
                 "description": "An Access Token is only needed for TVs. If you are configuring a TV and do not have an Access Token yet, leave it blank to go through a pairing process.",
                 "title": "Setup VIZIO SmartCast Device"
             }
-        },
-        "title": "VIZIO SmartCast"
+        }
     },
     "options": {
         "step": {
@@ -50,7 +49,6 @@
                 "description": "If you have a Smart TV, you can optionally filter your source list by choosing which apps to include or exclude in your source list.",
                 "title": "Update VIZIO SmartCast Options"
             }
-        },
-        "title": "Update VIZIO SmartCast Options"
+        }
     }
 }

@@ -12,5 +12,6 @@
             "turned_off": "{entity_name} st\u00e4ngdes av",
             "turned_on": "{entity_name} aktiverades"
         }
-    }
+    },
+    "title": "Fl\u00e4kt"
 }

@@ -21,5 +21,6 @@
             "disarmed": "{entity_name} disattivato",
             "triggered": "{entity_name} attivato"
         }
-    }
+    },
+    "title": "Pannello di controllo degli allarmi"
 }

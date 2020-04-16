@@ -24,5 +24,6 @@
             "position": "{entity_name} cambiamenti della posizione",
             "tilt_position": "{entity_name} cambiamenti della posizione d'inclinazione"
         }
-    }
+    },
+    "title": "Scuri"
 }

@@ -18,7 +18,6 @@
                 "description": "Set up Airly air quality integration. To generate API key go to https://developer.airly.eu/register",
                 "title": "Airly"
             }
-        },
-        "title": "Airly"
+        }
     }
 }

@@ -33,6 +33,7 @@ homeassistant/components/aprs/* @PhilRW
 homeassistant/components/arcam_fmj/* @elupus
 homeassistant/components/arduino/* @fabaff
 homeassistant/components/arest/* @fabaff
+homeassistant/components/arris_tg2492lg/* @vanbalken
 homeassistant/components/asuswrt/* @kennedyshead
 homeassistant/components/aten_pe/* @mtdcr
 homeassistant/components/atome/* @baqs
@@ -55,7 +56,7 @@ homeassistant/components/blink/* @fronzbot
 homeassistant/components/bmp280/* @belidzs
 homeassistant/components/bmw_connected_drive/* @gerard33
 homeassistant/components/bom/* @maddenp
-homeassistant/components/braviatv/* @robbiet480
+homeassistant/components/braviatv/* @robbiet480 @bieniu
 homeassistant/components/broadlink/* @danielhiversen @felipediel
 homeassistant/components/brother/* @bieniu
 homeassistant/components/brunt/* @eavanvalkenburg
@@ -78,7 +79,7 @@ homeassistant/components/counter/* @fabaff
 homeassistant/components/cover/* @home-assistant/core
 homeassistant/components/cpuspeed/* @fabaff
 homeassistant/components/cups/* @fabaff
-homeassistant/components/daikin/* @fredrike @rofrantz
+homeassistant/components/daikin/* @fredrike
 homeassistant/components/darksky/* @fabaff
 homeassistant/components/deconz/* @kane610
 homeassistant/components/delijn/* @bollewolle
@@ -351,6 +352,7 @@ homeassistant/components/solarlog/* @Ernst79
 homeassistant/components/solax/* @squishykid
 homeassistant/components/soma/* @ratsept
 homeassistant/components/somfy/* @tetienne
+homeassistant/components/sonarr/* @ctalkington
 homeassistant/components/songpal/* @rytilahti
 homeassistant/components/sonos/* @amelchio
 homeassistant/components/spaceapi/* @fabaff
