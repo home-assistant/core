@@ -20,3 +20,11 @@ def ecobee_time(time_string):
     except ValueError:
         raise vol.Invalid("Time does not match ecobee 24-hour time format HH:MM:SS")
     return time_string
+
+
+def safe_list_get(lst, idx, default):
+    """Attempts to get value from list, otherwise returns default"""
+    try:
+        return lst[idx]
+    except (IndexError, KeyError):
+        return default

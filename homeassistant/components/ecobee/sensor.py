@@ -11,10 +11,15 @@ from homeassistant.helpers.entity import Entity
 
 from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
+from .util import safe_list_get
+
+from datetime import datetime
+
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_FAHRENHEIT],
     "humidity": ["Humidity", UNIT_PERCENTAGE],
 }
+NOTIFICATIONS_KEY = "Notifications"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -29,21 +34,39 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
                 dev.append(EcobeeSensor(data, sensor["name"], item["type"], index))
 
+        dev.append(
+            EcobeeSensor(
+                data,
+                data.ecobee.thermostats[index]["name"],
+                NOTIFICATIONS_KEY,
+                index,
+                data.ecobee.get_equipment_notifications(index),
+            )
+        )
+
     async_add_entities(dev, True)
 
 
 class EcobeeSensor(Entity):
     """Representation of an Ecobee sensor."""
 
-    def __init__(self, data, sensor_name, sensor_type, sensor_index):
+    def __init__(self, data, sensor_name, sensor_type, sensor_index, attributes=None):
         """Initialize the sensor."""
         self.data = data
-        self._name = f"{sensor_name} {SENSOR_TYPES[sensor_type][0]}"
+        self._name = f"{sensor_name} {safe_list_get(SENSOR_TYPES, sensor_type, [sensor_type, None])[0]}"
         self.sensor_name = sensor_name
         self.type = sensor_type
         self.index = sensor_index
         self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._unit_of_measurement = safe_list_get(
+            SENSOR_TYPES, sensor_type, [None, None]
+        )[1]
+        self._attributes = attributes
+
+        _LOGGER.debug(
+            "SenserName:%s",
+            f"{sensor_name} {safe_list_get(SENSOR_TYPES, sensor_type, [sensor_type, None])[0]}",
+        )
 
     @property
     def name(self):
@@ -114,12 +137,42 @@ class EcobeeSensor(Entity):
         if self.type == "temperature":
             return float(self._state) / 10
 
+        if self.type == NOTIFICATIONS_KEY:
+            return len(
+                [
+                    notification
+                    for notification in self._attributes
+                    if notification["enabled"]
+                    and datetime.strptime(notification["remindMeDate"], "%Y-%m-%d")
+                    <= datetime.now()
+                ]
+            )
+
         return self._state
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement
+
+    @property
+    def state_attributes(self):
+        """Return the attributes of the sensor"""
+        if self.type != NOTIFICATIONS_KEY:
+            return None
+
+        if self._attributes is None:
+            self._attributes = {}
+        else:
+            self._attributes = {
+                NOTIFICATIONS_KEY: [
+                    notification
+                    for notification in self._attributes
+                    if notification["enabled"]
+                ]
+            }
+
+        return self._attributes
 
     async def async_update(self):
         """Get the latest state of the sensor."""
