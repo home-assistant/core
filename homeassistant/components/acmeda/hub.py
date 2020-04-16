@@ -6,7 +6,7 @@ import aiopulse
 
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import ACMEDA_HUB_UPDATE, LOGGER
+from .const import ACMEDA_ENTITY_REMOVE, ACMEDA_HUB_UPDATE, LOGGER
 from .helpers import update_devices
 
 
@@ -19,6 +19,7 @@ class PulseHub:
         self.hass = hass
         self.api: Optional[aiopulse.Hub] = None
         self.tasks = []
+        self.current_rollers = {}
 
     @property
     def title(self):
@@ -31,7 +32,7 @@ class PulseHub:
         return self.config_entry.data["host"]
 
     async def async_setup(self, tries=0):
-        """Set up a Pulse Hub based on host parameter."""
+        """Set up a hub based on host parameter."""
         host = self.host
 
         hub = aiopulse.Hub(host)
@@ -44,11 +45,7 @@ class PulseHub:
         return True
 
     async def async_reset(self):
-        """Reset this hub to default state.
-
-        Will cancel any scheduled setup retry and will unload
-        the config entry.
-        """
+        """Reset this hub to default state."""
 
         # If not setup
         if self.api is None:
@@ -69,9 +66,14 @@ class PulseHub:
         LOGGER.debug("Hub updated")
 
         await update_devices(self.hass, self.config_entry, self.api.rollers)
-
         self.hass.config_entries.async_update_entry(self.config_entry, title=self.title)
 
         async_dispatcher_send(
             self.hass, ACMEDA_HUB_UPDATE.format(self.config_entry.entry_id)
         )
+
+        for unique_id in list(self.current_rollers):
+            if unique_id not in self.api.rollers:
+                LOGGER.info("Notifying remove of %s", unique_id)
+                self.current_rollers.remove(unique_id)
+                async_dispatcher_send(self.hass, ACMEDA_ENTITY_REMOVE.format(unique_id))

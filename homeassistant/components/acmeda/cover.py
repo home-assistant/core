@@ -6,17 +6,17 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .base import AcmedaBase
 from .const import ACMEDA_HUB_UPDATE
-from .helpers import update_entities
+from .helpers import add_entities
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Acmeda Rollers from a config entry."""
     update_lock = asyncio.Lock()
-    current = {}
+    current = set()
 
     async def async_update():
         async with update_lock:
-            await update_entities(
+            await add_entities(
                 hass, AcmedaCover, config_entry, current, async_add_entities
             )
 

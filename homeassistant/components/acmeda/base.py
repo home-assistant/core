@@ -3,8 +3,11 @@ import aiopulse
 
 from homeassistant.core import callback
 from homeassistant.helpers import entity
+from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_registry import async_get_registry as get_ent_reg
 
-from .const import DOMAIN, LOGGER
+from .const import ACMEDA_ENTITY_REMOVE, DOMAIN, LOGGER
 
 
 class AcmedaBase(entity.Entity):
@@ -15,9 +18,36 @@ class AcmedaBase(entity.Entity):
         self.hass = hass
         self.roller = roller
 
+    async def async_remove_and_unregister(self):
+        """Unregister from entity and device registry and call entity remove function."""
+        LOGGER.error("Removing %s %s", self.__class__.__name__, self.unique_id)
+
+        ent_registry = await get_ent_reg(self.hass)
+        if self.entity_id in ent_registry.entities:
+            ent_registry.async_remove(self.entity_id)
+
+        dev_registry = await get_dev_reg(self.hass)
+        device = dev_registry.async_get_device(
+            identifiers={(DOMAIN, self.unique_id)}, connections=set()
+        )
+        if device is not None:
+            dev_registry.async_update_device(
+                device.id, remove_config_entry_id=self.registry_entry.config_entry_id
+            )
+
+        await self.async_remove()
+
     async def async_added_to_hass(self):
         """Entity has been added to hass."""
         self.roller.callback_subscribe(self.notify_update)
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                ACMEDA_ENTITY_REMOVE.format(self.roller.id),
+                self.async_remove_and_unregister,
+            )
+        )
 
     async def async_reset(self):
         """Entity being removed from hass."""
