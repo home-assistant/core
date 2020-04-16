@@ -1,8 +1,20 @@
 """Find translation keys that are in Lokalise but no longer defined in source."""
+import argparse
 import json
 
-from .const import INTEGRATIONS_DIR
+from .const import CORE_PROJECT_ID, FRONTEND_DIR, FRONTEND_PROJECT_ID, INTEGRATIONS_DIR
+from .error import ExitApp
 from .lokalise import get_api
+from .util import get_base_arg_parser
+
+
+def get_arguments() -> argparse.Namespace:
+    """Get parsed passed in arguments."""
+    parser = get_base_arg_parser()
+    parser.add_argument(
+        "--target", type=str, default="core", choices=["core", "frontend"],
+    )
+    return parser.parse_args()
 
 
 def find_extra(base, translations, path_prefix, missing_keys):
@@ -19,8 +31,8 @@ def find_extra(base, translations, path_prefix, missing_keys):
             missing_keys.append(cur_path)
 
 
-def find():
-    """Find all missing keys."""
+def find_core():
+    """Find all missing keys in core."""
     missing_keys = []
 
     for int_dir in INTEGRATIONS_DIR.iterdir():
@@ -41,15 +53,37 @@ def find():
     return missing_keys
 
 
+def find_frontend():
+    """Find all missing keys in frontend."""
+    if not FRONTEND_DIR.is_dir():
+        raise ExitApp(f"Unable to find frontend at {FRONTEND_DIR}")
+
+    source = FRONTEND_DIR / "src/translations/en.json"
+    translated = FRONTEND_DIR / "translations/en.json"
+
+    missing_keys = []
+    find_extra(
+        json.loads(source.read_text()),
+        json.loads(translated.read_text()),
+        "",
+        missing_keys,
+    )
+    return missing_keys
+
+
 def run():
     """Clean translations."""
-    missing_keys = find()
+    args = get_arguments()
+    if args.target == "frontend":
+        missing_keys = find_frontend()
+        lokalise = get_api(FRONTEND_PROJECT_ID)
+    else:
+        missing_keys = find_core()
+        lokalise = get_api(CORE_PROJECT_ID)
 
     if not missing_keys:
         print("No missing translations!")
         return 0
-
-    lokalise = get_api()
 
     key_data = lokalise.keys_list(
         {"filter_keys": ",".join(missing_keys), "limit": 1000}
