@@ -261,6 +261,9 @@ aqualogic==1.0
 # homeassistant.components.arcam_fmj
 arcam-fmj==0.4.3
 
+# homeassistant.components.arris_tg2492lg
+arris-tg2492lg==1.0.0
+
 # homeassistant.components.ampio
 asmog==0.0.6
 
