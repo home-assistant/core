@@ -49,10 +49,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     option_track_wired_clients = controller.option_track_wired_clients
     option_ssid_filter = controller.option_ssid_filter
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     # Restore clients that is not a part of active clients list.
-    for entity in registry.entities.values():
+    for entity in entity_registry.entities.values():
 
         if (
             entity.config_entry_id == config_entry.entry_id
@@ -69,7 +69,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             controller.api.clients.process_raw([client.raw])
 
     @callback
-    def update_controller():
+    def items_added():
         """Update the values of the controller."""
         nonlocal option_track_clients
         nonlocal option_track_devices
@@ -80,7 +80,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         add_entities(controller, async_add_entities, tracked)
 
     controller.listeners.append(
-        async_dispatcher_connect(hass, controller.signal_update, update_controller)
+        async_dispatcher_connect(hass, controller.signal_update, items_added)
+    )
+
+    @callback
+    def items_removed(mac_addresses: set) -> None:
+        """Items have been removed from the controller."""
+        remove_entities(controller, mac_addresses, tracked, entity_registry)
+
+    controller.listeners.append(
+        async_dispatcher_connect(hass, controller.signal_remove, items_removed)
     )
 
     @callback
@@ -136,16 +145,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         option_track_devices = controller.option_track_devices
         option_track_wired_clients = controller.option_track_wired_clients
 
-        for mac in remove:
-            entity = tracked.pop(mac)
-
-            if registry.async_is_registered(entity.entity_id):
-                registry.async_remove(entity.entity_id)
-
-            hass.async_create_task(entity.async_remove())
+        remove_entities(controller, remove, tracked, entity_registry)
 
         if update:
-            update_controller()
+            items_added()
 
     controller.listeners.append(
         async_dispatcher_connect(
@@ -153,7 +156,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
     )
 
-    update_controller()
+    items_added()
 
 
 @callback
@@ -191,6 +194,18 @@ def add_entities(controller, async_add_entities, tracked):
 
     if new_tracked:
         async_add_entities(new_tracked)
+
+
+@callback
+def remove_entities(controller, mac_addresses, tracked, entity_registry):
+    """Remove select tracked entities."""
+    for mac in mac_addresses:
+
+        if mac not in tracked:
+            continue
+
+        entity = tracked.pop(mac)
+        controller.hass.async_create_task(entity.async_remove())
 
 
 class UniFiClientTracker(UniFiClient, ScannerEntity):
