@@ -341,6 +341,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             unique_id=discovery_info[CONF_HOST].split(":")[0], raise_on_progress=True
         )
+        self._abort_if_unique_id_configured()
 
         discovery_info[
             CONF_HOST
