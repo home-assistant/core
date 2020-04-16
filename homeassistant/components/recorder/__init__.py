@@ -92,7 +92,7 @@ FILTER_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(DOMAIN, default=dict): vol.All(
-            cv.deprecated(CONF_PURGE_INTERVAL, invalidation_version="0.111.0"),
+            cv.deprecated(CONF_PURGE_INTERVAL),
             FILTER_SCHEMA.extend(
                 {
                     vol.Optional(CONF_AUTO_PURGE, default=True): cv.boolean,
