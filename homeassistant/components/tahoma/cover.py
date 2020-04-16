@@ -40,7 +40,7 @@ TAHOMA_DEVICE_CLASSES = {
     "io:RollerShutterWithLowSpeedManagementIOComponent": DEVICE_CLASS_SHUTTER,
     "io:VerticalExteriorAwningIOComponent": DEVICE_CLASS_AWNING,
     "io:VerticalInteriorBlindVeluxIOComponent": DEVICE_CLASS_BLIND,
-    "io:WindowOpenerVeluxIOComponent": DEVICE_CLASS_WINDOW,														  
+    "io:WindowOpenerVeluxIOComponent": DEVICE_CLASS_WINDOW,
     "rts:BlindRTSComponent": DEVICE_CLASS_BLIND,
     "rts:CurtainRTSComponent": DEVICE_CLASS_CURTAIN,
     "rts:DualCurtainRTSComponent": DEVICE_CLASS_CURTAIN,
@@ -48,6 +48,7 @@ TAHOMA_DEVICE_CLASSES = {
     "rts:RollerShutterRTSComponent": DEVICE_CLASS_SHUTTER,
     "rts:VenetianBlindRTSComponent": DEVICE_CLASS_BLIND,
 }
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tahoma covers."""
@@ -157,7 +158,8 @@ class TahomaCover(TahomaDevice, CoverDevice):
                 )
             if "core:OpenClosedPartialState" in self.tahoma_device.active_states:
                 self._closed = (
-                    self.tahoma_device.active_states["core:OpenClosedPartialState"] == "closed"
+                    self.tahoma_device.active_states["core:OpenClosedPartialState"]
+                    == "closed"
                 )
             else:
                 self._closed = False
@@ -237,7 +239,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
             self.apply_action("setPosition", "secured")
         elif self.tahoma_device.type in {
             "io:ExteriorVenetianBlindIOComponent",
-            "rts:BlindRTSComponent",								
+            "rts:BlindRTSComponent",
             "rts:DualCurtainRTSComponent",
             "rts:ExteriorVenetianBlindRTSComponent",
             "rts:VenetianBlindRTSComponent",
