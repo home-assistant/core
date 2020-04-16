@@ -524,13 +524,14 @@ class Recorder(threading.Thread):
 
             def shutdown(event):
                 """Shut down the Recorder."""
+                print("Shut down the Recorder.")
                 if not hass_started.done():
                     hass_started.set_result(shutdown_task)
                 self.queue.put(None)
                 self.join()
 
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
-            self.hass.bus.async_listen_once("ais_stop_recorder_event", shutdown)
+            self.hass.bus.async_listen("ais_stop_recorder_event", shutdown)
 
             if self.hass.state == CoreState.running:
                 hass_started.set_result(None)

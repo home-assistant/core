@@ -300,11 +300,19 @@ def async_enable_logging(
 
         async def async_stop_async_handler(_: Any) -> None:
             """Cleanup async handler."""
+            print("Cleanup async handler.")
+            # just to be sure
+            log = logging.getLogger()  # root logger
+            log.disabled = True
+            for hdlr in log.handlers[:]:  # remove all old handlers
+                hdlr.flush()
+                hdlr.close()
+                log.removeHandler(hdlr)
             logging.getLogger("").removeHandler(async_handler)  # type: ignore
             await async_handler.async_close(blocking=True)
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, async_stop_async_handler)
-        hass.bus.async_listen_once("ais_stop_logs_event", async_stop_async_handler)
+        hass.bus.async_listen("ais_stop_logs_event", async_stop_async_handler)
 
         logger = logging.getLogger("")
         logger.addHandler(async_handler)  # type: ignore

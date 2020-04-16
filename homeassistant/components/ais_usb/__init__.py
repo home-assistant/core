@@ -219,17 +219,22 @@ async def async_setup(hass, config):
                                             + ais_global.G_LOG_SETTINGS_INFO["logDrive"]
                                             + "/ais.log"
                                         ):
+                                            print("usb ais_stop_logs_event")
                                             hass.bus.async_fire("ais_stop_logs_event")
                                 # 2. check the if recorder db file exists, if not then stop recorder
                                 if ais_global.G_DB_SETTINGS_INFO is not None:
-                                    if "dbUrl" in ais_global.G_DB_SETTINGS_INFO and ais_global.G_DB_SETTINGS_INFO[
-                                        "dbUrl"
-                                    ].startswith(
-                                        ais_global.G_REMOTE_DRIVES_DOM_PATH
+                                    db_url = ais_global.G_DB_SETTINGS_INFO["dbUrl"]
+                                    if (
+                                        "dbUrl" in ais_global.G_DB_SETTINGS_INFO
+                                        and ais_global.G_REMOTE_DRIVES_DOM_PATH
+                                        in ais_global.G_DB_SETTINGS_INFO["dbUrl"]
                                     ):
                                         if not os.path.isfile(
-                                            ais_global.G_DB_SETTINGS_INFO["dbUrl"]
+                                            ais_global.G_DB_SETTINGS_INFO[
+                                                "dbUrl"
+                                            ].replace("sqlite:////", "")
                                         ):
+                                            print("usb ais_stop_recorder_event")
                                             hass.bus.async_fire(
                                                 "ais_stop_recorder_event"
                                             )
@@ -242,9 +247,8 @@ async def async_setup(hass, config):
                                 media_content_id = attr.get("media_content_id")
                                 if (
                                     media_content_id is not None
-                                    and media_content_id.startswith(
-                                        ais_global.G_REMOTE_DRIVES_DOM_PATH
-                                    )
+                                    and ais_global.G_REMOTE_DRIVES_DOM_PATH
+                                    in media_content_id
                                 ):
                                     if not os.path.isfile(media_content_id):
                                         # quick stop player - to prevent

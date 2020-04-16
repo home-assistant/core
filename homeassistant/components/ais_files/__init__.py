@@ -203,7 +203,11 @@ async def _async_change_logger_settings(hass, call):
 
     elif chaged_settings == "log_level":
         info = "Poziom logowania " + log_level
-
+        hass.async_add_job(
+            hass.services.async_call(
+                "logger", "set_default_level", {"level": log_level}
+            )
+        )
     elif chaged_settings == "log_rotating":
         info = "Rotacja logów co " + str(log_rotating) + " dni"
 

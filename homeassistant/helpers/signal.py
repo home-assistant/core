@@ -26,7 +26,32 @@ def async_register_signal_handling(hass: HomeAssistant) -> None:
             """
             if exit_code == 2:
                 # the signal SIGINT - Interrupt, need to be ignored on Android
-                _LOGGER.warning("Ignored SIGTERM")
+                print("SIGINT")
+                # quick stop access to files - to prevent
+                # ProcessKiller: Process xxx (10754) has open file /mnt/media_rw/...
+                # ProcessKiller: Sending Interrupt to process 10754
+                from homeassistant.components.ais_dom import ais_global
+
+                # 1. quick stop logs
+                if ais_global.G_LOG_SETTINGS_INFO is not None:
+                    # just to be sure
+                    print("logging.shutdown")
+                    logging.shutdown()
+                    log = logging.getLogger()  # root logger
+                    log.handlers.clear()
+                    log.disabled = True
+                    for hdlr in log.handlers[:]:  # remove all old handlers
+                        hdlr.flush()
+                        hdlr.close()
+                        log.removeHandler(hdlr)
+                    print("ais_stop_logs_event")
+                    hass.bus.async_fire("ais_stop_logs_event")
+                # 2. stop recorder if the db is in file
+                if ais_global.G_DB_SETTINGS_INFO is not None:
+                    db_url = ais_global.G_DB_SETTINGS_INFO["dbUrl"]
+                    if db_url.startswith("sqlite://///data"):
+                        print("ais_stop_recorder_event")
+                        hass.bus.async_fire("ais_stop_recorder_event")
                 # hass.loop.remove_signal_handler(signal.SIGINT)
             else:
                 hass.loop.remove_signal_handler(signal.SIGTERM)
