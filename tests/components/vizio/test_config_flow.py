@@ -51,6 +51,7 @@ from .const import (
     NAME2,
     UNIQUE_ID,
     VOLUME_STEP,
+    ZEROCONF_HOST,
 )
 
 from tests.common import MockConfigEntry
@@ -827,3 +828,28 @@ async def test_zeroconf_ignore(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+
+async def test_zeroconf_abort_when_ignored(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_setup: pytest.fixture,
+    vizio_guess_device_type: pytest.fixture,
+) -> None:
+    """Test zeroconf discovery aborts when the same host has been ignored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_SPEAKER_CONFIG,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        source=SOURCE_IGNORE,
+        unique_id=ZEROCONF_HOST,
+    )
+    entry.add_to_hass(hass)
+
+    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
