@@ -15,7 +15,8 @@ from homeassistant.components.panasonic_viera.const import (
     DOMAIN,
     ERROR_INVALID_PIN_CODE,
     ERROR_NOT_CONNECTED,
-    ERROR_UNKNOWN,
+    REASON_NOT_CONNECTED,
+    REASON_UNKNOWN,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 
@@ -372,8 +373,8 @@ async def test_flow_encrypted_invalid_pin_code(hass):
     assert result["errors"] == {"base": ERROR_INVALID_PIN_CODE}
 
 
-async def test_flow_encrypted_pin_code_not_connected(hass):
-    """Test flow with encryption and PIN code connection error."""
+async def test_flow_encrypted_pin_code_not_connected_abort(hass):
+    """Test flow with encryption and PIN code connection error abortion."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -399,13 +400,12 @@ async def test_flow_encrypted_pin_code_not_connected(hass):
         result["flow_id"], {CONF_PIN: "0000"},
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
+    assert result["type"] == "abort"
+    assert result["reason"] == REASON_NOT_CONNECTED
 
 
-async def test_flow_encrypted_pin_code_unknown_error(hass):
-    """Test flow with encryption and PIN code unknown error."""
+async def test_flow_encrypted_pin_code_unknown_abort(hass):
+    """Test flow with encryption and PIN code unknown error abortion."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -431,9 +431,8 @@ async def test_flow_encrypted_pin_code_unknown_error(hass):
         result["flow_id"], {CONF_PIN: "0000"},
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": ERROR_UNKNOWN}
+    assert result["type"] == "abort"
+    assert result["reason"] == REASON_UNKNOWN
 
 
 async def test_flow_not_connected(hass):
@@ -459,8 +458,8 @@ async def test_flow_not_connected(hass):
     assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
 
 
-async def test_flow_unknown_error(hass):
-    """Test flow with unknown error."""
+async def test_flow_unknown_abort(hass):
+    """Test flow with unknown error abortion."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -477,9 +476,8 @@ async def test_flow_unknown_error(hass):
             result["flow_id"], {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
         )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": ERROR_UNKNOWN}
+    assert result["type"] == "abort"
+    assert result["reason"] == REASON_UNKNOWN
 
 
 async def test_flow_already_configured_non_encrypted(hass):
@@ -710,6 +708,7 @@ async def test_imported_flow_encrypted_invalid_pin_code(hass):
     assert result["step_id"] == "pairing"
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PIN: "0000"},
@@ -850,14 +849,16 @@ async def test_imported_flow_already_configured_encrypted(hass):
     assert result["errors"] == {"base": "linking"}
 >>>>>>> Commit before rebase
 =======
+=======
+>>>>>>> Modifying error handling
     assert result["errors"] == {"base": ERROR_INVALID_PIN_CODE}
 <<<<<<< HEAD
 >>>>>>> Commit before rebase
 =======
 
 
-async def test_imported_flow_encrypted_pin_code_not_connected(hass):
-    """Test imported flow with encryption and PIN code connection error."""
+async def test_imported_flow_encrypted_pin_code_not_connected_abort(hass):
+    """Test imported flow with encryption and PIN code connection error abortion."""
 
     mock_remote = get_mock_remote(encrypted=True, authorize_error=TimeoutError)
 
@@ -883,13 +884,12 @@ async def test_imported_flow_encrypted_pin_code_not_connected(hass):
         result["flow_id"], {CONF_PIN: "0000"},
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
+    assert result["type"] == "abort"
+    assert result["reason"] == REASON_NOT_CONNECTED
 
 
-async def test_imported_flow_encrypted_pin_code_unknown_error(hass):
-    """Test imported flow with encryption and PIN code unknown error."""
+async def test_imported_flow_encrypted_pin_code_unknown_abort(hass):
+    """Test imported flow with encryption and PIN code unknown error abortion."""
 
     mock_remote = get_mock_remote(encrypted=True, authorize_error=Exception)
 
@@ -915,13 +915,12 @@ async def test_imported_flow_encrypted_pin_code_unknown_error(hass):
         result["flow_id"], {CONF_PIN: "0000"},
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": ERROR_UNKNOWN}
+    assert result["type"] == "abort"
+    assert result["reason"] == REASON_UNKNOWN
 
 
-async def test_imported_flow_not_connected(hass):
-    """Test imported flow with connection error."""
+async def test_imported_flow_not_connected_abort(hass):
+    """Test imported flow with connection error abortion."""
 
     with patch(
         "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
@@ -938,13 +937,12 @@ async def test_imported_flow_not_connected(hass):
             },
         )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
+    assert result["type"] == "abort"
+    assert result["reason"] == REASON_NOT_CONNECTED
 
 
-async def test_imported_flow_unknown_error(hass):
-    """Test imported flow with unknown error."""
+async def test_imported_flow_unknown_abort(hass):
+    """Test imported flow with unknown error abortion."""
 
     with patch(
         "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
@@ -961,9 +959,8 @@ async def test_imported_flow_unknown_error(hass):
             },
         )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": ERROR_UNKNOWN}
+    assert result["type"] == "abort"
+    assert result["reason"] == REASON_UNKNOWN
 
 
 async def test_imported_flow_already_configured_non_encrypted(hass):

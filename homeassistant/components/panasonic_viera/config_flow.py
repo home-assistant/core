@@ -160,10 +160,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="pairing",
             data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
-<<<<<<< HEAD
-            errors=self._errors,
-            description_placeholders={"name": self._data[CONF_NAME]},
-=======
             errors=errors,
->>>>>>> Adding pt-BR translation
         )

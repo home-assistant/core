@@ -12,4 +12,6 @@ DEFAULT_PORT = 55000
 
 ERROR_NOT_CONNECTED = "not_connected"
 ERROR_INVALID_PIN_CODE = "invalid_pin_code"
-ERROR_UNKNOWN = "unknown"
+
+REASON_NOT_CONNECTED = "not_connected"
+REASON_UNKNOWN = "unknown"
