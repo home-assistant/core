@@ -282,7 +282,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             # If source is ignore bypass host check and continue through loop
             if entry.source == SOURCE_IGNORE:
-                _LOGGER.error("done")
                 continue
 
             if _host_is_same(entry.data[CONF_HOST], import_config[CONF_HOST]):
