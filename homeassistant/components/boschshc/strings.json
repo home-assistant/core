@@ -1,6 +1,6 @@
 {
+  "title": "Bosch Smart Home Controller",
   "config": {
-    "title": "Bosch Smart Home Controller",
     "step": {
       "user": {
         "title": "SHC access parameters",
