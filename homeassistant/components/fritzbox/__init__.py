@@ -31,6 +31,7 @@ def ensure_unique_hosts(value):
 
 
 CONFIG_SCHEMA = vol.Schema(
+    cv.deprecated(DOMAIN),
     {
         DOMAIN: vol.All(
             cv.ensure_list,
