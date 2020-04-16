@@ -840,21 +840,28 @@ def test_relative_time(mock_is_safe, hass):
         assert (
             "1 hour"
             == template.Template(
-                '{{relative_time(strptime("2000-01-01 09:00:00","%Y-%m-%d %H:%M:%S"))}}',
+                '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}',
                 hass,
             ).async_render()
         )
         assert (
             "2 hours"
             == template.Template(
-                '{{relative_time(strptime("2000-01-01 09:00:00 +01:00","%Y-%m-%d %H:%M:%S %z"))}}',
+                '{{relative_time(strptime("2000-01-01 09:00:00 +01:00", "%Y-%m-%d %H:%M:%S %z"))}}',
                 hass,
             ).async_render()
         )
         assert (
             "1 hour"
             == template.Template(
-                '{{relative_time(strptime("2000-01-01 03:00:00 -06:00","%Y-%m-%d %H:%M:%S %z"))}}',
+                '{{relative_time(strptime("2000-01-01 03:00:00 -06:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+                hass,
+            ).async_render()
+        )
+        assert (
+            str(template.strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z"))
+            == template.Template(
+                '{{relative_time(strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z"))}}',
                 hass,
             ).async_render()
         )

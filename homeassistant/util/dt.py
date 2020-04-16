@@ -197,9 +197,6 @@ def get_age(date: dt.datetime) -> str:
         """Return quotient and remaining."""
         return first // second, first % second
 
-    if type(date) is dt.datetime and not date.tzinfo:
-        date = as_local(date)
-
     delta = now() - date
     day = delta.days
     second = delta.seconds
