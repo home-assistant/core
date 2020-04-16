@@ -400,7 +400,7 @@ class HomeKit:
 
     def add_bridge_accessory(self, state):
         """Try adding accessory to bridge if configured beforehand."""
-        if not state or not self._filter(state.entity_id):
+        if not self._filter(state.entity_id):
             return
 
         # The bridge itself counts as an accessory
