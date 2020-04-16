@@ -279,7 +279,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         # Check if new config entry matches any existing config entries
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            # If source is ignore bypass host and name check and continue through loop
+            # If source is ignore bypass host check and continue through loop
             if entry.data.get(CONF_SOURCE) == SOURCE_IGNORE:
                 continue
             if _host_is_same(entry.data[CONF_HOST], import_config[CONF_HOST]):
@@ -346,7 +346,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Check if new config entry matches any existing config entries and abort if so
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            # If source is ignore bypass host and name check and continue through loop
+            # If source is ignore bypass host check and continue through loop
             if entry.data.get(CONF_SOURCE) == SOURCE_IGNORE:
                 continue
             if _host_is_same(entry.data[CONF_HOST], discovery_info[CONF_HOST]):
