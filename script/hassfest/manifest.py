@@ -10,7 +10,7 @@ from .model import Integration
 DOCUMENTATION_URL_SCHEMA = "https"
 DOCUMENTATION_URL_HOST = "www.home-assistant.io"
 DOCUMENTATION_URL_PATH_PREFIX = "/integrations/"
-DOCUMENTATION_URL_EXCEPTIONS = ["https://www.home-assistant.io/hassio"]
+DOCUMENTATION_URL_EXCEPTIONS = {"https://www.home-assistant.io/hassio"}
 
 SUPPORTED_QUALITY_SCALES = ["gold", "internal", "platinum", "silver"]
 
@@ -23,9 +23,9 @@ def documentation_url(value: str) -> str:
     parsed_url = urlparse(value)
     if not parsed_url.scheme == DOCUMENTATION_URL_SCHEMA:
         raise vol.Invalid("Documentation url is not prefixed with https")
-    if not parsed_url.netloc == DOCUMENTATION_URL_HOST:
-        raise vol.Invalid("Documentation url not hosted at www.home-assistant.io")
-    if not parsed_url.path.startswith(DOCUMENTATION_URL_PATH_PREFIX):
+    if parsed_url.netloc == DOCUMENTATION_URL_HOST and not parsed_url.path.startswith(
+        DOCUMENTATION_URL_PATH_PREFIX
+    ):
         raise vol.Invalid(
             "Documentation url does not begin with www.home-assistant.io/integrations"
         )
