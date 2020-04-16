@@ -34,7 +34,7 @@ async def test_creating_entry_sets_up_sensor(hass):
         "homeassistant.components.ios.sensor.async_setup_entry",
         return_value=mock_coro(True),
     ) as mock_setup:
-        assert await hass.config_entries.async_setup(entry.entry_id)
+        assert await async_setup_component(hass, ios.DOMAIN, {ios.DOMAIN: {}})
         await hass.async_block_till_done()
 
     assert len(mock_setup.mock_calls) == 1
