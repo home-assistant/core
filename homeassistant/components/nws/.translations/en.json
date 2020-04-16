@@ -10,14 +10,15 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API key",
+                    "api_key": "API key (email)",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
-                    "station": "Station"
+                    "station": "METAR station code"
                 },
-                "title": "Connect to the device"
+                "description": "If a METAR station code is not specified, the latitude and longitude will be used to find the closest station.",
+                "title": "Connect to the National Weather Service"
             }
-        },
-        "title": "National Weather Service (NWS)"
-    }
+        }
+    },
+    "title": "National Weather Service (NWS)"
 }
