@@ -50,11 +50,8 @@ class ArrisDeviceScanner(DeviceScanner):
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         name = next(
-            (
-                result.hostname for result in self.last_results
-                if result.mac == device
-            ),
-            None
+            (result.hostname for result in self.last_results if result.mac == device),
+            None,
         )
         return name
 
