@@ -228,8 +228,11 @@ class HomeAccessory(Accessory):
         """
         battery_level = convert_to_float(battery_level_state)
         if battery_level is not None:
-            self._char_battery.set_value(battery_level)
-            self._char_low_battery.set_value(battery_level < self.low_battery_threshold)
+            if self._char_battery.value != battery_level:
+                self._char_battery.set_value(battery_level)
+            is_low_battery = 1 if battery_level < self.low_battery_threshold else 0
+            if self._char_low_battery.value != is_low_battery:
+                self._char_low_battery.set_value(is_low_battery)
             _LOGGER.debug(
                 "%s: Updated battery level to %d", self.entity_id, battery_level
             )
@@ -237,7 +240,8 @@ class HomeAccessory(Accessory):
         if battery_charging_state is None:
             return
         hk_charging = 1 if battery_charging_state else 0
-        self._char_charging.set_value(hk_charging)
+        if self._char_charging.value != hk_charging:
+            self._char_charging.set_value(hk_charging)
         _LOGGER.debug("%s: Updated battery charging to %d", self.entity_id, hk_charging)
 
     def update_state(self, new_state):

@@ -7,6 +7,7 @@ import voluptuous as vol
 from zeroconf import InterfaceChoice
 
 from homeassistant.components import cover, vacuum
+from homeassistant.components.binary_sensor import DEVICE_CLASS_BATTERY_CHARGING
 from homeassistant.components.cover import DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import DEVICE_CLASS_TV
@@ -81,11 +82,6 @@ from .util import (
     validate_entity_config,
     validate_media_player_features,
 )
-
-# TODO: switch the below once done testing outside of tree
-# from homeassistant.components.binary_sensor import DEVICE_CLASS_BATTERY_CHARGING
-DEVICE_CLASS_BATTERY_CHARGING = "battery_charging"
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -447,11 +443,21 @@ class HomeKit:
 
         ent_reg = await entity_registry.async_get_registry(self.hass)
 
+        domain_device_classes = {
+            ("binary_sensor", DEVICE_CLASS_BATTERY_CHARGING),
+            ("sensor", DEVICE_CLASS_BATTERY),
+        }
+
+        device_lookup = ent_reg.async_get_device_class_lookup(domain_device_classes)
+
+        _LOGGER.debug("device_lookup: %s", device_lookup)
+
         bridged_states = []
         for state in self.hass.states.async_all():
-            if not state or not self._filter(state.entity_id):
+            if not self._filter(state.entity_id):
                 continue
-            _async_configure_linked_battery_sensors(ent_reg, self._config, state)
+
+            self._async_configure_linked_battery_sensors(ent_reg, device_lookup, state)
             bridged_states.append(state)
 
         await self.hass.async_add_executor_job(self._start, bridged_states)
@@ -480,7 +486,7 @@ class HomeKit:
             )
 
         _LOGGER.debug("Driver start")
-        self.hass.add_job(self.driver.start)
+        self.hass.async_add_executor_job(self.driver.start)
         self.status = STATUS_RUNNING
 
     async def async_stop(self, *args):
@@ -490,7 +496,39 @@ class HomeKit:
         self.status = STATUS_STOPPED
 
         _LOGGER.debug("Driver stop")
-        self.hass.add_job(self.driver.stop)
+        self.hass.async_add_executor_job(self.driver.stop)
+
+    @callback
+    def _async_configure_linked_battery_sensors(self, ent_reg, device_lookup, state):
+        entry = ent_reg.async_get(state.entity_id)
+
+        if (
+            entry is None
+            or entry.device_id is None
+            or entry.device_id not in device_lookup
+            or entry.device_class
+            in (DEVICE_CLASS_BATTERY_CHARGING, DEVICE_CLASS_BATTERY)
+        ):
+            return
+
+        if ATTR_BATTERY_CHARGING not in state.attributes:
+            battery_charging_binary_sensor_entity_id = device_lookup[
+                entry.device_id
+            ].get(("binary_sensor", DEVICE_CLASS_BATTERY_CHARGING))
+            if battery_charging_binary_sensor_entity_id:
+                self._config.setdefault(state.entity_id, {}).setdefault(
+                    CONF_LINKED_BATTERY_CHARGING_SENSOR,
+                    battery_charging_binary_sensor_entity_id,
+                )
+
+        if ATTR_BATTERY_LEVEL not in state.attributes:
+            battery_sensor_entity_id = device_lookup[entry.device_id].get(
+                ("sensor", DEVICE_CLASS_BATTERY)
+            )
+            if battery_sensor_entity_id:
+                self._config.setdefault(state.entity_id, {}).setdefault(
+                    CONF_LINKED_BATTERY_SENSOR, battery_sensor_entity_id
+                )
 
 
 class HomeKitPairingQRView(HomeAssistantView):
@@ -509,46 +547,3 @@ class HomeKitPairingQRView(HomeAssistantView):
             body=request.app["hass"].data[HOMEKIT_PAIRING_QR],
             content_type="image/svg+xml",
         )
-
-
-@callback
-def _async_configure_linked_battery_sensors(ent_reg, config, state):
-    entry = ent_reg.async_get(state.entity_id)
-
-    if entry is None or entry.device_id is None:
-        return
-
-    entries = entity_registry.async_entries_for_device(ent_reg, entry.device_id)
-
-    for entry in entries:
-        if entry.device_class in (
-            DEVICE_CLASS_BATTERY_CHARGING,
-            CONF_LINKED_BATTERY_SENSOR,
-        ):
-            continue
-        if (
-            entry.domain == "binary_sensor"
-            and entry.device_class == DEVICE_CLASS_BATTERY_CHARGING
-            and ATTR_BATTERY_LEVEL not in state.attributes
-        ):
-            _LOGGER.debug(
-                "Found linked charging sensor for: %s: %s",
-                state.entity_id,
-                entry.entity_id,
-            )
-            config.setdefault(state.entity_id, {}).setdefault(
-                CONF_LINKED_BATTERY_CHARGING_SENSOR, entry.entity_id
-            )
-        if (
-            entry.domain == "sensor"
-            and entry.device_class == DEVICE_CLASS_BATTERY
-            and ATTR_BATTERY_CHARGING not in state.attributes
-        ):
-            _LOGGER.debug(
-                "Found linked battery sensor for: %s: %s",
-                state.entity_id,
-                entry.entity_id,
-            )
-            config.setdefault(state.entity_id, {}).setdefault(
-                CONF_LINKED_BATTERY_SENSOR, entry.entity_id
-            )
