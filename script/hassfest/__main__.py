@@ -18,6 +18,7 @@ from . import (
 from .model import Config, Integration
 
 INTEGRATION_PLUGINS = [
+    codeowners,
     config_flow,
     dependencies,
     manifest,
@@ -27,7 +28,6 @@ INTEGRATION_PLUGINS = [
     zeroconf,
 ]
 HASS_PLUGINS = [
-    codeowners,
     coverage,
 ]
 
