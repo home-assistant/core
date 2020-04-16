@@ -188,7 +188,7 @@ class Fan(HomeAccessory):
         # Handle Oscillating
         if self.char_swing is not None:
             oscillating = new_state.attributes.get(ATTR_OSCILLATING)
-            if oscillating in (True, False):
+            if isinstance(oscillating, bool):
                 hk_oscillating = 1 if oscillating else 0
                 if self.char_swing.value != hk_oscillating:
                     self.char_swing.set_value(hk_oscillating)
