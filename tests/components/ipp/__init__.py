@@ -62,7 +62,11 @@ def load_fixture_binary(filename):
 
 
 async def init_integration(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, skip_setup: bool = False,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    skip_setup: bool = False,
+    uuid: str = "cfe92100-67c4-11d4-a45f-f8d027761251",
+    unique_id: str = "cfe92100-67c4-11d4-a45f-f8d027761251",
 ) -> MockConfigEntry:
     """Set up the IPP integration in Home Assistant."""
     fixture = "ipp/get-printer-attributes.bin"
@@ -74,14 +78,14 @@ async def init_integration(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="cfe92100-67c4-11d4-a45f-f8d027761251",
+        unique_id=unique_id,
         data={
             CONF_HOST: "192.168.1.31",
             CONF_PORT: 631,
             CONF_SSL: False,
             CONF_VERIFY_SSL: True,
             CONF_BASE_PATH: "/ipp/print",
-            CONF_UUID: "cfe92100-67c4-11d4-a45f-f8d027761251",
+            CONF_UUID: uuid,
         },
     )
 
