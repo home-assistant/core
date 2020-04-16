@@ -7,5 +7,6 @@
             "is_paused": "{entity_name} est en pause",
             "is_playing": "{entity_name} joue"
         }
-    }
+    },
+    "title": "Lecteur multim\u00e9dia"
 }

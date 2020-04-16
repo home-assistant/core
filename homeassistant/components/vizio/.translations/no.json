@@ -7,8 +7,8 @@
         "error": {
             "cant_connect": "Kunne ikke koble til enheten. [Se gjennom dokumentene] (https://www.home-assistant.io/integrations/vizio/) og bekreft at: \n - Enheten er sl\u00e5tt p\u00e5 \n - Enheten er koblet til nettverket \n - Verdiene du fylte ut er n\u00f8yaktige \n f\u00f8r du pr\u00f8ver \u00e5 sende inn p\u00e5 nytt.",
             "complete_pairing failed": "Kan ikke fullf\u00f8re sammenkoblingen. Forsikre deg om at PIN-koden du oppga er riktig, og at TV-en fortsatt er p\u00e5 og tilkoblet nettverket f\u00f8r du sender inn p\u00e5 nytt.",
-            "host_exists": "Vizio-enhet med spesifisert vert allerede konfigurert.",
-            "name_exists": "Vizio-enhet med spesifisert navn allerede konfigurert."
+            "host_exists": "VIZIO-enhet med spesifisert vert allerede konfigurert.",
+            "name_exists": "VIZIO-enhet med spesifisert navn allerede konfigurert."
         },
         "step": {
             "pair_tv": {
@@ -49,8 +49,6 @@
                 "description": "Hvis du har en Smart-TV, kan du eventuelt filtrere kildelisten ved \u00e5 velge hvilke apper som skal inkluderes eller utelates i kildelisten.",
                 "title": "Oppdater VIZIO SmartCast-alternativer"
             }
-        },
-        "title": "Oppdater VIZIO SmartCast-alternativer"
-    },
-    "title": "VIZIO SmartCast"
+        }
+    }
 }

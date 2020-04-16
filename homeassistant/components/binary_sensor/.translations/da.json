@@ -88,5 +88,6 @@
             "unsafe": "{entity_name} blev usikker",
             "vibration": "{entity_name} begyndte at registrere vibration"
         }
-    }
+    },
+    "title": "Bin\u00e6r sensor"
 }

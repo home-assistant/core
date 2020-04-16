@@ -38,6 +38,5 @@
             "turn_off": "Kikapcsol\u00e1s",
             "turn_on": "Bekapcsol\u00e1s"
         }
-    },
-    "title": "MQTT"
+    }
 }

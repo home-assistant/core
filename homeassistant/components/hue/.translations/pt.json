@@ -1,16 +1,16 @@
 {
     "config": {
         "abort": {
-            "all_configured": "Todas os Philips Hue j\u00e1 est\u00e3o configuradas",
+            "all_configured": "Todos os hubs Philips Hue j\u00e1 est\u00e3o configurados",
             "already_configured": "Hue j\u00e1 est\u00e1 configurado",
-            "cannot_connect": "N\u00e3o foi poss\u00edvel se conectar",
-            "discover_timeout": "Nenhum Hue bridge descoberto",
-            "no_bridges": "Nenhum Philips Hue descoberto",
+            "cannot_connect": "N\u00e3o foi poss\u00edvel conectar-se ao hub",
+            "discover_timeout": "Nenhum hub Hue descoberto",
+            "no_bridges": "Nenhum hub Philips Hue descoberto",
             "unknown": "Ocorreu um erro desconhecido"
         },
         "error": {
             "linking": "Ocorreu um erro de liga\u00e7\u00e3o desconhecido.",
-            "register_failed": "Falha ao registrar, por favor, tente novamente"
+            "register_failed": "Falha ao registar, por favor, tente novamente"
         },
         "step": {
             "init": {
@@ -20,10 +20,9 @@
                 "title": "Hue bridge"
             },
             "link": {
-                "description": "Pressione o bot\u00e3o no Philips Hue  para registrar com o Home Assistant. \n\n![Localiza\u00e7\u00e3o do bot\u00e3o] (/static/images/config_philips_hue.jpg)",
+                "description": "Pressione o bot\u00e3o no Philips Hue para registar com o Home Assistant. \n\n![Localiza\u00e7\u00e3o do bot\u00e3o] (/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
             }
         }
-    },
-    "title": "Philips Hue"
+    }
 }

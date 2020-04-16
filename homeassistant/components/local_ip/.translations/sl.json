@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Integracija je \u017ee konfigurirana z obstoje\u010dim senzorjem s tem imenom"
+            "single_instance_allowed": "Dovoljena je samo ena konfiguracija lokalnega IP-ja."
         },
         "step": {
             "user": {

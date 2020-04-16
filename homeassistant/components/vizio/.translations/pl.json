@@ -43,8 +43,6 @@
                 "description": "Je\u015bli telewizor obs\u0142uguje aplikacje, mo\u017cesz opcjonalnie filtrowa\u0107 aplikacje, kt\u00f3re maj\u0105 zosta\u0107 uwzgl\u0119dnione lub wykluczone z listy \u017ar\u00f3de\u0142. Mo\u017cesz pomin\u0105\u0107 ten krok dla telewizor\u00f3w, kt\u00f3re nie obs\u0142uguj\u0105 aplikacji.",
                 "title": "Aktualizacja opcji Vizo SmartCast"
             }
-        },
-        "title": "Aktualizuj opcje Vizo SmartCast"
-    },
-    "title": "Vizio SmartCast"
+        }
+    }
 }

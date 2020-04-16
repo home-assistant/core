@@ -28,8 +28,6 @@
                 "description": "La modalit\u00e0 di fallback passer\u00e0 a Smart Schedule al prossimo cambio di programma dopo aver regolato manualmente una zona.",
                 "title": "Regolare le opzioni di Tado."
             }
-        },
-        "title": "Tado"
-    },
-    "title": "Tado"
+        }
+    }
 }

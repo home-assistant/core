@@ -1,10 +1,7 @@
 {
     "config": {
         "error": {
-            "app_not_installed": "Zorg ervoor dat u de Home Assistant SmartApp heeft ge\u00efnstalleerd en geautoriseerd en probeer het opnieuw.",
             "app_setup_error": "Instellen van SmartApp mislukt. Probeer het opnieuw.",
-            "base_url_not_https": "De `base_url` voor het `http` component moet worden geconfigureerd en beginnen met `https://`.",
-            "token_already_setup": "Het token is al ingesteld.",
             "token_forbidden": "Het token heeft niet de vereiste OAuth-scopes.",
             "token_invalid_format": "Het token moet de UID/GUID-indeling hebben",
             "token_unauthorized": "Het token is ongeldig of niet langer geautoriseerd.",
@@ -12,17 +9,9 @@
         },
         "step": {
             "user": {
-                "data": {
-                    "access_token": "Toegangstoken"
-                },
                 "description": "Voer een SmartThings [Personal Access Token]({token_url}) in die is aangemaakt volgens de [instructies]({component_url}).",
                 "title": "Persoonlijk toegangstoken invoeren"
-            },
-            "wait_install": {
-                "description": "Installeer de Home Assistant SmartApp in tenminste \u00e9\u00e9n locatie en klik Verzenden.",
-                "title": "Installeer SmartApp"
             }
         }
-    },
-    "title": "SmartThings"
+    }
 }

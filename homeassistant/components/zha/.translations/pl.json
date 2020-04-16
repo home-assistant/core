@@ -70,6 +70,5 @@
             "remote_button_short_release": "\"{subtype}\" zostanie zwolniony",
             "remote_button_triple_press": "\"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
         }
-    },
-    "title": "ZHA"
+    }
 }

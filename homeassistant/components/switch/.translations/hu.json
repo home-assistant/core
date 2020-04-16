@@ -13,5 +13,6 @@
             "turned_off": "{entity_name} ki lett kapcsolva",
             "turned_on": "{entity_name} be lett kapcsolva"
         }
-    }
+    },
+    "title": "Kapcsol\u00f3"
 }

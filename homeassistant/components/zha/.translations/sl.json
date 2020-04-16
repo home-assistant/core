@@ -70,6 +70,5 @@
             "remote_button_short_release": "Gumb \"{subtype}\" spro\u0161\u010den",
             "remote_button_triple_press": "Gumb \"{subtype}\" trikrat kliknjen"
         }
-    },
-    "title": "ZHA"
+    }
 }

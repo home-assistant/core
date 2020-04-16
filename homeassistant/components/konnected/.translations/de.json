@@ -102,8 +102,6 @@
                 },
                 "description": "Bitte w\u00e4hlen Sie die Ausgabeoptionen f\u00fcr {zone} : Status {state}"
             }
-        },
-        "title": "Konnected Alarm Panel-Optionen"
-    },
-    "title": "Konnected.io"
+        }
+    }
 }

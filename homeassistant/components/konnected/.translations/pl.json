@@ -99,8 +99,6 @@
                 "description": "Wybierz opcje wyj\u015bcia dla {zone}",
                 "title": "Konfiguracja prze\u0142\u0105czalne wyj\u015bcie"
             }
-        },
-        "title": "Opcje panelu alarmu Konnected"
-    },
-    "title": "Konnected.io"
+        }
+    }
 }

@@ -27,9 +27,8 @@
                     "port": "Poort"
                 },
                 "description": "Voer de verbindingsinstellingen in van uw [ESPHome](https://esphomelib.com/) node.",
-                "title": "ESPHome"
+                "title": "[%key:component::esphome::title%]"
             }
         }
-    },
-    "title": "ESPHome"
+    }
 }

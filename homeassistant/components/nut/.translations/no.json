@@ -8,17 +8,26 @@
             "unknown": "Uventet feil"
         },
         "step": {
-            "user": {
+            "resources": {
+                "data": {
+                    "resources": "Ressurser"
+                },
+                "title": "Velg ressurser som skal overv\u00e5kes"
+            },
+            "ups": {
                 "data": {
                     "alias": "Alias",
+                    "resources": "Ressurser"
+                },
+                "title": "Velg UPS som skal overv\u00e5kes"
+            },
+            "user": {
+                "data": {
                     "host": "Vert",
-                    "name": "Navn",
                     "password": "Passord",
                     "port": "Port",
-                    "resources": "Ressurser",
                     "username": "Brukernavn"
                 },
-                "description": "Hvis det er flere UPS-er knyttet til NUT-serveren, angir du navnet UPS for \u00e5 sp\u00f8rre i 'Alias' -feltet.",
                 "title": "Koble til NUT-serveren"
             }
         }
@@ -33,6 +42,5 @@
                 "description": "Velg Sensor Ressurser."
             }
         }
-    },
-    "title": "Nettverk UPS-verkt\u00f8y (NUT)"
+    }
 }

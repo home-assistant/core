@@ -27,9 +27,8 @@
                     "port": "Port"
                 },
                 "description": "Gitt Verbindungs Informatioune vun \u00e4rem [ESPHome](https://esphomelib.com/) an.",
-                "title": "ESPHome"
+                "title": "[%key:component::esphome::title%]"
             }
         }
-    },
-    "title": "ESPHome"
+    }
 }

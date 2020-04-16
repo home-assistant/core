@@ -43,6 +43,5 @@
             "remote_button_short_press": "Bot\u00f3n \"{subtype}\" pulsado",
             "remote_button_short_release": "Bot\u00f3n \"{subtype}\" soltado"
         }
-    },
-    "title": "Philips Hue"
+    }
 }

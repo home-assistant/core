@@ -23,9 +23,6 @@
             }
         }
     },
-    "error": {
-        "unknown_client_mac": "Unter dieser MAC-Adresse ist in UniFi kein Client verf\u00fcgbar"
-    },
     "options": {
         "step": {
             "client_control": {
@@ -62,6 +59,5 @@
                 "title": "UniFi-Optionen 3/3"
             }
         }
-    },
-    "title": "UniFi-Controller"
+    }
 }

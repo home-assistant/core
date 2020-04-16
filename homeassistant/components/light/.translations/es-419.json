@@ -8,5 +8,6 @@
             "turned_off": "{entity_name} desactivada",
             "turned_on": "{entity_name} activada"
         }
-    }
+    },
+    "title": "Luz"
 }

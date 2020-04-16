@@ -70,6 +70,5 @@
             "remote_button_short_release": "\"{subtype}\"-knappen sluppet",
             "remote_button_triple_press": "\"{subtype}\"-knappen ble trippelklikket"
         }
-    },
-    "title": ""
+    }
 }

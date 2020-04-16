@@ -13,5 +13,6 @@
             "current_temperature_changed": "{entity_name} m\u00e5lte temperatur \u00e6ndret",
             "hvac_mode_changed": "{entity_name} klimaanl\u00e6gstilstand \u00e6ndret"
         }
-    }
+    },
+    "title": "Klima"
 }

@@ -19,9 +19,8 @@
             },
             "zeroconf_confirm": {
                 "description": "Vols afegir l'Elgato Key Light amb n\u00famero de s\u00e8rie `{serial_number}` a Home Assistant?",
-                "title": "S'ha descobert un dispositiu Elgato Key Light"
+                "title": "Dispositiu Elgato Key Light descobert"
             }
         }
-    },
-    "title": "Elgato Key Light"
+    }
 }

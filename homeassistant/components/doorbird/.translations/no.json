@@ -10,6 +10,7 @@
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
+        "flow_title": "DoorBird {name} ( {host} )",
         "step": {
             "user": {
                 "data": {
@@ -31,6 +32,5 @@
                 "description": "Legg til et kommaseparert hendelsesnavn for hvert arrangement du \u00f8nsker \u00e5 spore. Etter \u00e5 ha skrevet dem inn her, bruker du DoorBird-appen til \u00e5 tilordne dem til en bestemt hendelse. Se dokumentasjonen p\u00e5 https://www.home-assistant.io/integrations/doorbird/#events. Eksempel: noen_trykket_knappen, bevegelse"
             }
         }
-    },
-    "title": "DoorBird"
+    }
 }

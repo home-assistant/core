@@ -48,6 +48,5 @@
             "button_short_release": "\"{subtype}\" lassgelooss",
             "button_triple_press": "\"{subtype}\" dr\u00e4imol gedr\u00e9ckt"
         }
-    },
-    "title": "MQTT"
+    }
 }

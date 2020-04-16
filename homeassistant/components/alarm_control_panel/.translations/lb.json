@@ -21,5 +21,6 @@
             "disarmed": "{entity_name} entsch\u00e4rft",
             "triggered": "{entity_name} ausgel\u00e9ist"
         }
-    }
+    },
+    "title": "Kontroll Feld Alarm"
 }

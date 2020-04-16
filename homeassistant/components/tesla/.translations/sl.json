@@ -21,10 +21,10 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_wake_on_start": "Vsili zbujanje avtomobila ob zagonu",
                     "scan_interval": "Sekund med skeniranjem"
                 }
             }
         }
-    },
-    "title": "Tesla"
+    }
 }

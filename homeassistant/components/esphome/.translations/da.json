@@ -27,9 +27,8 @@
                     "port": "Port"
                 },
                 "description": "Angiv forbindelsesindstillinger for din [ESPHome](https://esphomelib.com/) node.",
-                "title": "ESPHome"
+                "title": "[%key:component::esphome::title%]"
             }
         }
-    },
-    "title": "ESPHome"
+    }
 }

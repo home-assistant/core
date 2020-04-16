@@ -32,6 +32,5 @@
                 "description": "Aggiungere un nome di evento separato da virgola per ogni evento che si desidera monitorare. Dopo averli inseriti qui, usa l'applicazione DoorBird per assegnarli a un evento specifico. Consultare la documentazione su https://www.home-assistant.io/integrations/doorbird/#events. Esempio: qualcuno_premuto_il_pulsante, movimento"
             }
         }
-    },
-    "title": "DoorBird"
+    }
 }

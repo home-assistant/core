@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ta klju\u010d API je \u017ee v uporabi."
+            "already_configured": "Te koordinate so \u017ee registrirane."
         },
         "error": {
             "invalid_api_key": "Neveljaven API klju\u010d"
@@ -28,6 +28,5 @@
                 "title": "Nastavite AirVisual"
             }
         }
-    },
-    "title": "AirVisual"
+    }
 }

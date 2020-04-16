@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Integration er allerede konfigureret med en eksisterende sensor med det navn"
-        },
         "step": {
             "user": {
                 "data": {

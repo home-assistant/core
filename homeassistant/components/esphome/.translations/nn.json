@@ -6,9 +6,8 @@
                 "title": "Fann ESPhome node"
             },
             "user": {
-                "title": "ESPHome"
+                "title": "[%key:component::esphome::title%]"
             }
         }
-    },
-    "title": "ESPHome"
+    }
 }

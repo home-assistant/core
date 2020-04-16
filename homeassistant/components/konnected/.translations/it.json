@@ -105,8 +105,6 @@
                 "description": "Selezionare le opzioni di uscita per {zone}: stato {state}",
                 "title": "Configurare l'uscita commutabile"
             }
-        },
-        "title": "Opzioni del pannello di allarme Konnected"
-    },
-    "title": "Konnected.io"
+        }
+    }
 }

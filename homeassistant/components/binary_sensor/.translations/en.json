@@ -88,5 +88,6 @@
             "unsafe": "{entity_name} became unsafe",
             "vibration": "{entity_name} started detecting vibration"
         }
-    }
+    },
+    "title": "Binary sensor"
 }

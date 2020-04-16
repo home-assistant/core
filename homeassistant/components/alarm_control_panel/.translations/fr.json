@@ -21,5 +21,6 @@
             "disarmed": "{entity_name} d\u00e9sarm\u00e9",
             "triggered": "{entity_name} d\u00e9clench\u00e9"
         }
-    }
+    },
+    "title": "Panneau de contr\u00f4le d'alarme"
 }

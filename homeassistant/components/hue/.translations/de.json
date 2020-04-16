@@ -43,6 +43,5 @@
             "remote_button_short_press": "\"{subtype}\" Taste gedr\u00fcckt",
             "remote_button_short_release": "\"{subtype}\" Taste losgelassen"
         }
-    },
-    "title": "Philips Hue"
+    }
 }

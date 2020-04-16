@@ -43,6 +43,5 @@
             "remote_button_short_press": "\"{subtype}\" Kn\u00e4ppche gedr\u00e9ckt",
             "remote_button_short_release": "\"{subtype}\" Kn\u00e4ppche lassgelooss"
         }
-    },
-    "title": "Philips Hue"
+    }
 }

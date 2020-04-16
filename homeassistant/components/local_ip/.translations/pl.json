@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Integracja jest ju\u017c skonfigurowana z istniej\u0105cym sensorem o tej nazwie."
-        },
         "step": {
             "user": {
                 "data": {

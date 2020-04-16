@@ -5,10 +5,7 @@
             "no_available_locations": "Det er ingen tilgjengelige SmartThings-lokasjoner \u00e5 konfigurere i Home Assistant."
         },
         "error": {
-            "app_not_installed": "V\u00e6r sikker p\u00e5 at du har installert og autorisert Home Assistant SmartApp og pr\u00f8v igjen.",
             "app_setup_error": "Kan ikke konfigurere SmartApp. Vennligst pr\u00f8v p\u00e5 nytt.",
-            "base_url_not_https": "`base_url` for `http` komponenten m\u00e5 konfigureres og starte med `https://`.",
-            "token_already_setup": "Token har allerede blitt satt opp.",
             "token_forbidden": "Tokenet har ikke de n\u00f8dvendige OAuth-omfangene.",
             "token_invalid_format": "Token m\u00e5 v\u00e6re i UID/GUID format",
             "token_unauthorized": "Tollet er ugyldig eller ikke lenger autorisert.",
@@ -33,17 +30,9 @@
                 "title": "Velg Posisjon"
             },
             "user": {
-                "data": {
-                    "access_token": "Tilgangstoken"
-                },
                 "description": "SmartThings konfigureres til \u00e5 sende push-oppdateringer til Home Assistant p\u00e5:\n\" {webhook_url}\n\nHvis dette ikke er riktig, m\u00e5 du oppdatere konfigurasjonen, starte Home Assistant p\u00e5 nytt og pr\u00f8ve p\u00e5 nytt.",
                 "title": "Bekreft URL-adresse for tilbakeringing"
-            },
-            "wait_install": {
-                "description": "Vennligst installer Home Assistant SmartApp p\u00e5 minst ett sted og klikk p\u00e5 send.",
-                "title": "Installer SmartApp"
             }
         }
-    },
-    "title": ""
+    }
 }

@@ -14,5 +14,6 @@
             "disarmed": "{entity_name} frakoblet",
             "triggered": "{entity_name} udl\u00f8st"
         }
-    }
+    },
+    "title": "Alarmkontrolpanel"
 }

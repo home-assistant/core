@@ -103,8 +103,6 @@
                 "description": "\u8acb\u9078\u64c7 {zone}\u8f38\u51fa\u9078\u9805\uff1a\u72c0\u614b {state}",
                 "title": "\u8a2d\u5b9a Switchable \u8f38\u51fa"
             }
-        },
-        "title": "Konnected \u8b66\u5831\u9762\u677f\u9078\u9805"
-    },
-    "title": "Konnected.io"
+        }
+    }
 }

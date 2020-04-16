@@ -105,8 +105,6 @@
                 "description": "Wielt w.e.g. d'Ausgaboptiounen fir {zone}: Status {state}",
                 "title": "\u00cbmschltbaren Ausgang konfigur\u00e9ieren"
             }
-        },
-        "title": "Konnected Alarm Panneau Optiounen"
-    },
-    "title": "Konnected.io"
+        }
+    }
 }

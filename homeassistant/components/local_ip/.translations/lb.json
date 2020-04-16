@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Integratioun ass scho konfigur\u00e9iert mat engem Sensor mat deem Numm"
-        },
         "step": {
             "user": {
                 "data": {

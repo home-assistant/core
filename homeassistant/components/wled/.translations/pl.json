@@ -1,26 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Wykryto urz\u0105dzenie WLED",
-            "connection_error": "Wykryto urz\u0105dzenie WLED"
+            "already_configured": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
+            "connection_error": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
         },
         "error": {
-            "connection_error": "Wykryto urz\u0105dzenie WLED"
+            "connection_error": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
         },
-        "flow_title": "Wykryto urz\u0105dzenie WLED",
+        "flow_title": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
         "step": {
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP"
                 },
-                "description": "Wykryto urz\u0105dzenie WLED",
-                "title": "Wykryto urz\u0105dzenie WLED"
+                "description": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
+                "title": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
             },
             "zeroconf_confirm": {
-                "description": "Wykryto urz\u0105dzenie WLED",
-                "title": "Wykryto urz\u0105dzenie WLED"
+                "description": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
+                "title": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
             }
         }
-    },
-    "title": "WLED"
+    }
 }
