@@ -3,11 +3,11 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import bootstrap, config_entries, data_entry_flow
+from homeassistant import bootstrap
 from homeassistant.components import ios
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_component, mock_coro
+from tests.common import MockConfigEntry, mock_component, mock_coro
 
 
 @pytest.fixture(autouse=True)
@@ -28,20 +28,13 @@ async def test_creating_entry_sets_up_sensor(hass):
     """Test setting up iOS loads the sensor component."""
     # so it will not have an empty config
     await bootstrap.async_from_config_dict({"foo": "bar"}, hass)
+    entry = MockConfigEntry(domain=ios.DOMAIN, data={},)
+    entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.ios.sensor.async_setup_entry",
         return_value=mock_coro(True),
     ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            ios.DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-        # Confirmation form
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert len(mock_setup.mock_calls) == 1
