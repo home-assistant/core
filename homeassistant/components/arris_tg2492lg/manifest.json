@@ -5,7 +5,6 @@
   "requirements": [
     "arris-tg2492lg==1.0.0"
   ],
-  "dependencies": [],
   "codeowners": [
     "@vanbalken"
   ]

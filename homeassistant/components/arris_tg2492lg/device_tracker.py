@@ -49,19 +49,17 @@ class ArrisDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        filter_named = [
-            result.hostname for result in self.last_results if result.mac == device
-        ]
-
-        if filter_named:
-            return filter_named[0]
-        return None
+        name = next(
+            (
+                result.hostname for result in self.last_results
+                if result.mac == device
+            ),
+            None
+        )
+        return name
 
     def _update_info(self):
-        """Ensure the information from the Arris TG2492LG router is up to date.
-
-        Return boolean if scanning successful.
-        """
+        """Ensure the information from the Arris TG2492LG router is up to date."""
         result = self.connect_box.get_connected_devices()
 
         last_results = []
