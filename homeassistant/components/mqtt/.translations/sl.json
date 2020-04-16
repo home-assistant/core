@@ -25,8 +25,7 @@
                 "description": "Ali \u017eelite konfigurirati Home Assistant za povezavo s posrednikom MQTT, ki ga ponuja dodatek Hass.io {addon} ?",
                 "title": "MQTT Broker prek dodatka Hass.io"
             }
-        },
-        "title": "MQTT"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -49,5 +48,6 @@
             "button_short_release": "Gumb \"{subtype}\" spro\u0161\u010den",
             "button_triple_press": "Gumb \"{subtype}\" trikrat kliknjen"
         }
-    }
+    },
+    "title": "MQTT"
 }

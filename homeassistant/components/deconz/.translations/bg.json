@@ -28,8 +28,7 @@
                 "description": "\u041e\u0442\u043a\u043b\u044e\u0447\u0438 deCONZ \u0448\u043b\u044e\u0437\u0430 \u0437\u0430 \u0434\u0430 \u0441\u0435 \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u0430 \u0441 Home Assistant.\n\n1. \u041e\u0442\u0438\u0434\u0435\u0442\u0435 \u043d\u0430 deCONZ Settings -> Gateway -> Advanced\n2. \u041d\u0430\u0442\u0438\u0441\u043d\u0435\u0442\u0435 \u0431\u0443\u0442\u043e\u043d\u0430 \"Authenticate app\"",
                 "title": "\u0412\u0440\u044a\u0437\u043a\u0430 \u0441 deCONZ"
             }
-        },
-        "title": "deCONZ Zigbee \u0448\u043b\u044e\u0437"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -87,5 +86,6 @@
                 "description": "\u041a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0438\u0440\u0430\u0439\u0442\u0435 \u0432\u0438\u0434\u0438\u043c\u043e\u0441\u0442\u0442\u0430 \u043d\u0430 \u0442\u0438\u043f\u043e\u0432\u0435\u0442\u0435 \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u0430 deCONZ"
             }
         }
-    }
+    },
+    "title": "deCONZ Zigbee \u0448\u043b\u044e\u0437"
 }

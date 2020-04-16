@@ -26,7 +26,7 @@
                 "description": "Ali \u017eelite dodati Brother tiskalnik {model} s serijsko \u0161tevilko ' {serial_number} ' v Home Assistant?",
                 "title": "Odkriti Brother tiskalniki"
             }
-        },
-        "title": "Brother Tiskalnik"
-    }
+        }
+    },
+    "title": "Brother Tiskalnik"
 }

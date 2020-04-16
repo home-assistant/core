@@ -15,8 +15,7 @@
                 "description": "Vul alstublieft uw gegevens in.",
                 "title": "Tesla - Configuratie"
             }
-        },
-        "title": "Tesla"
+        }
     },
     "options": {
         "step": {
@@ -26,5 +25,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Tesla"
 }

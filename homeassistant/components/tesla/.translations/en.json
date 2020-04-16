@@ -15,8 +15,7 @@
                 "description": "Please enter your information.",
                 "title": "Tesla - Configuration"
             }
-        },
-        "title": "Tesla"
+        }
     },
     "options": {
         "step": {
@@ -27,5 +26,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Tesla"
 }

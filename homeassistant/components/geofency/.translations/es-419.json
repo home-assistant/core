@@ -12,7 +12,7 @@
                 "description": "\u00bfEst\u00e1s seguro de que quieres montar el Webhook de Geofency?",
                 "title": "Configurar el Webhook de Geofency"
             }
-        },
-        "title": "Geofency Webhook"
-    }
+        }
+    },
+    "title": "Geofency Webhook"
 }

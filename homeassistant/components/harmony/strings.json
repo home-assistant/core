@@ -1,6 +1,6 @@
 {
+  "title": "Logitech Harmony Hub",
   "config": {
-    "title": "Logitech Harmony Hub",
     "flow_title": "Logitech Harmony Hub {name}",
     "step": {
       "user": {

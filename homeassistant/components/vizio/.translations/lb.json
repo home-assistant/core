@@ -36,8 +36,7 @@
                 "description": "Een Access Jeton g\u00ebtt nn\u00ebmme fir Fernseher gebraucht. Wann Dir e Fernseh konfigur\u00e9iert a keen Access Jeton hutt, da loosst et eidel fir duerch dee Pairing Prozess ze goen.",
                 "title": "Vizo Smartcast Apparat ariichten"
             }
-        },
-        "title": "Vizio SmartCast"
+        }
     },
     "options": {
         "step": {
@@ -52,5 +51,6 @@
             }
         },
         "title": "Vizo Smartcast Optiounen aktualis\u00e9ieren"
-    }
+    },
+    "title": "Vizio SmartCast"
 }

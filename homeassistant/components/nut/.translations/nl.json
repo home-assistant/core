@@ -19,8 +19,7 @@
                 },
                 "title": "Verbind met NUT-server"
             }
-        },
-        "title": "Network UPS Tools (NUT)"
+        }
     },
     "options": {
         "step": {
@@ -30,5 +29,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Network UPS Tools (NUT)"
 }

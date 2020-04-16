@@ -16,8 +16,7 @@
                 "description": "Monitoruj jako\u015b\u0107 powietrza w okre\u015blonej lokalizacji geograficznej.",
                 "title": "Konfiguracja AirVisual"
             }
-        },
-        "title": "AirVisual"
+        }
     },
     "options": {
         "step": {
@@ -29,5 +28,6 @@
                 "title": "Konfiguracja AirVisual"
             }
         }
-    }
+    },
+    "title": "AirVisual"
 }

@@ -3,6 +3,6 @@
   "name": "Sony Bravia TV",
   "documentation": "https://www.home-assistant.io/integrations/braviatv",
   "requirements": ["bravia-tv==1.0.1"],
-  "dependencies": ["configurator"],
-  "codeowners": ["@robbiet480"]
+  "codeowners": ["@robbiet480", "@bieniu"],
+  "config_flow": true
 }

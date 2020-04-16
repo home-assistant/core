@@ -26,8 +26,7 @@
                 "description": "Introdueix la informaci\u00f3 d'amfitri\u00f3 del panell Konnected.",
                 "title": "Descoberta de dispositiu Konnected"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
@@ -106,5 +105,6 @@
             }
         },
         "title": "Opcions del panell d'alarma Konnected"
-    }
+    },
+    "title": "Konnected.io"
 }

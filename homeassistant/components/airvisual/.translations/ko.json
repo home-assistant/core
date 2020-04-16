@@ -16,8 +16,7 @@
                 "description": "\uc9c0\ub9ac\uc801 \uc704\uce58\uc5d0\uc11c \ub300\uae30\uc9c8\uc744 \ubaa8\ub2c8\ud130\ub9c1\ud569\ub2c8\ub2e4.",
                 "title": "AirVisual \uad6c\uc131"
             }
-        },
-        "title": "AirVisual"
+        }
     },
     "options": {
         "step": {
@@ -29,5 +28,6 @@
                 "title": "AirVisual \uad6c\uc131"
             }
         }
-    }
+    },
+    "title": "AirVisual"
 }

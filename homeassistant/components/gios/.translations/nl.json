@@ -17,7 +17,7 @@
                 "description": "GIO\u015a (Poolse hoofdinspectie van milieubescherming) luchtkwaliteitintegratie instellen. Als u hulp nodig hebt bij de configuratie, kijk dan hier: https://www.home-assistant.io/integrations/gios",
                 "title": "GIO\u015a (Poolse hoofdinspectie van milieubescherming)"
             }
-        },
-        "title": "GIO\u015a"
-    }
+        }
+    },
+    "title": "GIO\u015a"
 }

@@ -1,4 +1,5 @@
 {
+  "title": "NuHeat",
   "config": {
     "error": {
       "unknown": "Unexpected error",
@@ -6,7 +7,6 @@
       "invalid_auth": "Invalid authentication",
       "invalid_thermostat": "The thermostat serial number is invalid."
     },
-    "title": "NuHeat",
     "abort": {
       "already_configured": "The thermostat is already configured"
     },

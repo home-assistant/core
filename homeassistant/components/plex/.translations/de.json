@@ -26,8 +26,7 @@
                 "description": "Weiter zur Autorisierung unter plex.tv.",
                 "title": "Plex Server verbinden"
             }
-        },
-        "title": "Plex"
+        }
     },
     "options": {
         "step": {
@@ -40,5 +39,6 @@
                 "description": "Optionen f\u00fcr Plex-Media-Player"
             }
         }
-    }
+    },
+    "title": "Plex"
 }

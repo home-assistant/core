@@ -26,8 +26,7 @@
                 "description": "Indtast v\u00e6rtsinformationen for dit Konnected-panel.",
                 "title": "Find Konnected-enhed"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
@@ -104,5 +103,6 @@
             }
         },
         "title": "Indstillinger for Konnected-alarmpanel"
-    }
+    },
+    "title": "Konnected.io"
 }

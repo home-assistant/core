@@ -24,7 +24,7 @@
                 "description": "Appuyez sur le bouton bleu du point d'acc\u00e8s et sur le bouton Envoyer pour enregistrer HomematicIP avec Home Assistant. \n\n ![Emplacement du bouton sur le pont](/static/images/config_flows/config_homematicip_cloud.png)",
                 "title": "Lier le point d'acc\u00e8s"
             }
-        },
-        "title": "HomematicIP Cloud"
-    }
+        }
+    },
+    "title": "HomematicIP Cloud"
 }

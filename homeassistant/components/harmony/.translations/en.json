@@ -20,8 +20,7 @@
                 },
                 "title": "Setup Logitech Harmony Hub"
             }
-        },
-        "title": "Logitech Harmony Hub"
+        }
     },
     "options": {
         "step": {
@@ -33,5 +32,6 @@
                 "description": "Adjust Harmony Hub Options"
             }
         }
-    }
+    },
+    "title": "Logitech Harmony Hub"
 }

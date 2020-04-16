@@ -24,7 +24,7 @@
                 "description": "Dr\u00fccke den blauen Taster auf dem Accesspoint, sowie den Senden Button um HomematicIP mit Home Assistant zu verbinden.\n\n![Position des Tasters auf dem AP](/static/images/config_flows/config_homematicip_cloud.png)",
                 "title": "Verkn\u00fcpfe den Accesspoint"
             }
-        },
-        "title": "HomematicIP Cloud"
-    }
+        }
+    },
+    "title": "HomematicIP Cloud"
 }

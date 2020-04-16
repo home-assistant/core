@@ -15,8 +15,7 @@
                 },
                 "title": "Bramka OpenTherm"
             }
-        },
-        "title": "Bramka OpenTherm"
+        }
     },
     "options": {
         "step": {
@@ -28,5 +27,6 @@
                 "description": "Opcje dla bramki OpenTherm"
             }
         }
-    }
+    },
+    "title": "Bramka OpenTherm"
 }

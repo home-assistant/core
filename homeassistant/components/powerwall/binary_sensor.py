@@ -1,6 +1,8 @@
 """Support for August sensors."""
 import logging
 
+from tesla_powerwall import GridStatus
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     BinarySensorDevice,
@@ -17,13 +19,7 @@ from .const import (
     POWERWALL_API_SITE_INFO,
     POWERWALL_API_SITEMASTER,
     POWERWALL_API_STATUS,
-    POWERWALL_CONNECTED_KEY,
     POWERWALL_COORDINATOR,
-    POWERWALL_GRID_ONLINE,
-    POWERWALL_RUNNING_KEY,
-    SITE_INFO_GRID_CODE,
-    SITE_INFO_NOMINAL_SYSTEM_POWER_KW,
-    SITE_INFO_REGION,
 )
 from .entity import PowerWallEntity
 
@@ -71,17 +67,15 @@ class PowerWallRunningSensor(PowerWallEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Get the powerwall running state."""
-        return self._coordinator.data[POWERWALL_API_SITEMASTER][POWERWALL_RUNNING_KEY]
+        return self._coordinator.data[POWERWALL_API_SITEMASTER].running
 
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         return {
-            ATTR_REGION: self._site_info[SITE_INFO_REGION],
-            ATTR_GRID_CODE: self._site_info[SITE_INFO_GRID_CODE],
-            ATTR_NOMINAL_SYSTEM_POWER: self._site_info[
-                SITE_INFO_NOMINAL_SYSTEM_POWER_KW
-            ],
+            ATTR_REGION: self._site_info.region,
+            ATTR_GRID_CODE: self._site_info.grid_code,
+            ATTR_NOMINAL_SYSTEM_POWER: self._site_info.nominal_system_power_kW,
         }
 
 
@@ -106,7 +100,7 @@ class PowerWallConnectedSensor(PowerWallEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Get the powerwall connected to tesla state."""
-        return self._coordinator.data[POWERWALL_API_SITEMASTER][POWERWALL_CONNECTED_KEY]
+        return self._coordinator.data[POWERWALL_API_SITEMASTER].connected_to_tesla
 
 
 class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorDevice):
@@ -130,6 +124,4 @@ class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Grid is online."""
-        return (
-            self._coordinator.data[POWERWALL_API_GRID_STATUS] == POWERWALL_GRID_ONLINE
-        )
+        return self._coordinator.data[POWERWALL_API_GRID_STATUS] == GridStatus.CONNECTED

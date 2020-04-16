@@ -14,8 +14,7 @@
                 },
                 "title": "ZHA"
             }
-        },
-        "title": "ZHA"
+        }
     },
     "device_automation": {
         "action_type": {
@@ -24,5 +23,6 @@
         "trigger_subtype": {
             "left": "Esquerda"
         }
-    }
+    },
+    "title": "ZHA"
 }

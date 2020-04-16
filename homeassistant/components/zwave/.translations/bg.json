@@ -16,7 +16,7 @@
                 "description": "\u0412\u0438\u0436\u0442\u0435 https://www.home-assistant.io/docs/z-wave/installation/ \u0437\u0430 \u0438\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u044f \u043e\u0442\u043d\u043e\u0441\u043d\u043e \u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u043e\u043d\u043d\u0438\u0442\u0435 \u043f\u0440\u043e\u043c\u0435\u043d\u043b\u0438\u0432\u0438",
                 "title": "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u0432\u0430\u043d\u0435 \u043d\u0430 Z-Wave"
             }
-        },
-        "title": "Z-Wave"
-    }
+        }
+    },
+    "title": "Z-Wave"
 }

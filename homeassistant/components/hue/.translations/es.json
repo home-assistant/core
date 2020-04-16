@@ -25,8 +25,7 @@
                 "description": "Presione el bot\u00f3n en el puente para registrar Philips Hue con Home Assistant. \n\n![Ubicaci\u00f3n del bot\u00f3n en el puente](/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
             }
-        },
-        "title": "Philips Hue"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -44,5 +43,6 @@
             "remote_button_short_press": "Bot\u00f3n \"{subtype}\" pulsado",
             "remote_button_short_release": "Bot\u00f3n \"{subtype}\" soltado"
         }
-    }
+    },
+    "title": "Philips Hue"
 }

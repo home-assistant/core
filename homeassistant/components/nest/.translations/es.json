@@ -27,7 +27,7 @@
                 "description": "Para vincular tu cuenta de Nest, [autoriza tu cuenta]({url}).\n\nDespu\u00e9s de la autorizaci\u00f3n, copia y pega el c\u00f3digo pin a continuaci\u00f3n.",
                 "title": "Vincular cuenta de Nest"
             }
-        },
-        "title": "Nest"
-    }
+        }
+    },
+    "title": "Nest"
 }

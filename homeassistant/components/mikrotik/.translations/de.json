@@ -20,8 +20,7 @@
                 },
                 "title": "Richten Sie den Mikrotik Router ein"
             }
-        },
-        "title": "Mikrotik"
+        }
     },
     "options": {
         "step": {
@@ -32,5 +31,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Mikrotik"
 }

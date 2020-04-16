@@ -25,8 +25,7 @@
                 "description": "Be szeretn\u00e9d konfigru\u00e1lni, hogy a Home Assistant a(z) {addon} Hass.io add-on \u00e1ltal biztos\u00edtott MQTT br\u00f3kerhez csatlakozzon?",
                 "title": "MQTT Broker a Hass.io b\u0151v\u00edtm\u00e9nyen kereszt\u00fcl"
             }
-        },
-        "title": "MQTT"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -39,5 +38,6 @@
             "turn_off": "Kikapcsol\u00e1s",
             "turn_on": "Bekapcsol\u00e1s"
         }
-    }
+    },
+    "title": "MQTT"
 }

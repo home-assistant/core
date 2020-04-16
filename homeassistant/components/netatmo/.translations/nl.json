@@ -12,7 +12,7 @@
             "pick_implementation": {
                 "title": "Kies een authenticatie methode"
             }
-        },
-        "title": "Netatmo"
-    }
+        }
+    },
+    "title": "Netatmo"
 }

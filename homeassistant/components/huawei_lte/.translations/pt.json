@@ -18,8 +18,7 @@
                 },
                 "title": "Configurar o Huawei LTE"
             }
-        },
-        "title": ""
+        }
     },
     "options": {
         "step": {
@@ -30,5 +29,6 @@
                 }
             }
         }
-    }
+    },
+    "title": ""
 }

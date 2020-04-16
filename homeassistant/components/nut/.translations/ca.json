@@ -34,8 +34,7 @@
                 "description": "Si m\u00faltiples SAI (UPS) connectats al servidor NUT, introdueix el nom UPS per consultar al camp 'Alies'.",
                 "title": "No s'ha pogut connectar amb el servidor NUT"
             }
-        },
-        "title": "Eines de xarxa UPS (NUT)"
+        }
     },
     "options": {
         "step": {
@@ -47,5 +46,6 @@
                 "description": "Selecciona els recursos del sensor"
             }
         }
-    }
+    },
+    "title": "Eines de xarxa UPS (NUT)"
 }

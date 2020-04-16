@@ -20,7 +20,7 @@
                 "description": "Vuoi aggiungere il WLED chiamato `{name}` a Home Assistant?",
                 "title": "Dispositivo WLED rilevato"
             }
-        },
-        "title": "WLED"
-    }
+        }
+    },
+    "title": "WLED"
 }

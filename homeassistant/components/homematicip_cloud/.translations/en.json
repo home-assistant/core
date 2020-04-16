@@ -24,7 +24,7 @@
                 "description": "Press the blue button on the access point and the submit button to register HomematicIP with Home Assistant.\n\n![Location of button on bridge](/static/images/config_flows/config_homematicip_cloud.png)",
                 "title": "Link Access point"
             }
-        },
-        "title": "HomematicIP Cloud"
-    }
+        }
+    },
+    "title": "HomematicIP Cloud"
 }

@@ -28,8 +28,7 @@
                 "description": "Unlock your deCONZ gateway to register with Home Assistant.\n\n1. Go to deCONZ Settings -> Gateway -> Advanced\n2. Press \"Authenticate app\" button",
                 "title": "Link with deCONZ"
             }
-        },
-        "title": "deCONZ Zigbee gateway"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -96,5 +95,6 @@
                 "title": "deCONZ options"
             }
         }
-    }
+    },
+    "title": "deCONZ Zigbee gateway"
 }

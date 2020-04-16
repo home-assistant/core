@@ -10,7 +10,7 @@
         },
         "step": {
             "link": {
-                "description": "Kliknij \"Prze\u015blij\", a nast\u0119pnie naci\u015bnij przycisk strza\u0142ki w prawo na routerze, aby zarejestrowa\u0107 Freebox w Home Assistan'cie. \n\n ![Lokalizacja przycisku na routerze] (/static/images/config_freebox.png)",
+                "description": "Kliknij \"Zatwierd\u017a\", a nast\u0119pnie naci\u015bnij przycisk strza\u0142ki w prawo na routerze, aby zarejestrowa\u0107 Freebox w Home Assistan'cie. \n\n ![Lokalizacja przycisku na routerze] (/static/images/config_freebox.png)",
                 "title": "Po\u0142\u0105cz z routerem Freebox"
             },
             "user": {
@@ -20,7 +20,7 @@
                 },
                 "title": "Freebox"
             }
-        },
-        "title": "Freebox"
-    }
+        }
+    },
+    "title": "Freebox"
 }

@@ -1,6 +1,6 @@
 {
+  "title": "VIZIO SmartCast",
   "config": {
-    "title": "VIZIO SmartCast",
     "step": {
       "user": {
         "title": "Setup VIZIO SmartCast Device",
@@ -40,7 +40,6 @@
     }
   },
   "options": {
-    "title": "Update VIZIO SmartCast Options",
     "step": {
       "init": {
         "title": "Update VIZIO SmartCast Options",

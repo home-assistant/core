@@ -1,0 +1,20 @@
+{
+    "device_automation": {
+        "action_type": {
+            "brightness_decrease": "\u964d\u4f4e {entity_name} \u7684\u4eae\u5ea6",
+            "brightness_increase": "\u63d0\u9ad8 {entity_name} \u7684\u4eae\u5ea6",
+            "flash": "\u4f7f {entity_name} \u95ea\u70c1",
+            "toggle": "\u5207\u6362 {entity_name} \u5f00\u5173",
+            "turn_off": "\u5173\u95ed {entity_name}",
+            "turn_on": "\u6253\u5f00 {entity_name}"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} \u5df2\u5173\u95ed",
+            "is_on": "{entity_name} \u5df2\u6253\u5f00"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} \u88ab\u5173\u95ed",
+            "turned_on": "{entity_name} \u88ab\u6253\u5f00"
+        }
+    }
+}

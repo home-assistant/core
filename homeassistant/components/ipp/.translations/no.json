@@ -3,7 +3,9 @@
         "abort": {
             "already_configured": "Denne skriveren er allerede konfigurert.",
             "connection_error": "Klarte ikke \u00e5 koble til skriveren.",
-            "connection_upgrade": "Kunne ikke koble til skriveren fordi tilkoblingsoppgradering var n\u00f8dvendig."
+            "connection_upgrade": "Kunne ikke koble til skriveren fordi tilkoblingsoppgradering var n\u00f8dvendig.",
+            "ipp_error": "Oppdaget IPP-feil.",
+            "ipp_version_error": "IPP-versjon st\u00f8ttes ikke av skriveren."
         },
         "error": {
             "connection_error": "Klarte ikke \u00e5 koble til skriveren.",
@@ -26,7 +28,7 @@
                 "description": "\u00d8nsker du \u00e5 legge skriveren med navnet {name} til Home Assistant?",
                 "title": "Oppdaget skriver"
             }
-        },
-        "title": "Internet Printing Protocol (IPP)"
-    }
+        }
+    },
+    "title": "Internet Printing Protocol (IPP)"
 }

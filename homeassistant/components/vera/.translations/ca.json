@@ -14,8 +14,7 @@
                 "description": "Proporciona un URL pel controlador Vera. Hauria de quedar aix\u00ed: http://192.168.1.161:3480.",
                 "title": "Configuraci\u00f3 del controlador Vera"
             }
-        },
-        "title": "Vera"
+        }
     },
     "options": {
         "step": {
@@ -28,5 +27,6 @@
                 "title": "Opcions del controlador Vera"
             }
         }
-    }
+    },
+    "title": "Vera"
 }

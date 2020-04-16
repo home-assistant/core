@@ -21,7 +21,7 @@
                 "description": "Ali \u017eelite dodati Elgato Key Light s serijsko \u0161tevilko ' {serial_number} ' v Home Assistant-a?",
                 "title": "Odkrita naprava Elgato Key Light"
             }
-        },
-        "title": "Elgato Key Light"
-    }
+        }
+    },
+    "title": "Elgato Key Light"
 }

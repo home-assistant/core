@@ -15,8 +15,7 @@
                 "description": "Wprowad\u017a dane",
                 "title": "Tesla - konfiguracja"
             }
-        },
-        "title": "Tesla"
+        }
     },
     "options": {
         "step": {
@@ -26,5 +25,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Tesla"
 }

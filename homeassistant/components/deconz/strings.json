@@ -1,6 +1,6 @@
 {
+  "title": "deCONZ Zigbee gateway",
   "config": {
-    "title": "deCONZ Zigbee gateway",
     "flow_title": "deCONZ Zigbee gateway ({host})",
     "step": {
       "init": {
@@ -84,7 +84,7 @@
       "close": "Close",
       "both_buttons": "Both buttons",
       "top_buttons": "Top buttons",
-      "bottom_buttons" : "Bottom buttons",
+      "bottom_buttons": "Bottom buttons",
       "button_1": "First button",
       "button_2": "Second button",
       "button_3": "Third button",

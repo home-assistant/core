@@ -20,8 +20,7 @@
                 },
                 "title": "\uae30\uae30\uc5d0 \uc5f0\uacb0\ud558\uae30"
             }
-        },
-        "title": "Monoprice 6-Zone \uc570\ud504"
+        }
     },
     "options": {
         "step": {
@@ -37,5 +36,6 @@
                 "title": "\uc785\ub825 \uc18c\uc2a4 \uad6c\uc131"
             }
         }
-    }
+    },
+    "title": "Monoprice 6-Zone \uc570\ud504"
 }

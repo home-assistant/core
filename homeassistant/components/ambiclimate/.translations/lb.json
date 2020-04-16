@@ -17,7 +17,7 @@
                 "description": "Follegt d\u00ebsem [Link]({authorization_url}) an <b>erlaabtt</b> den Acc\u00e8s zu \u00e4rem Ambiclimate Kont , a kommt dann zer\u00e9ck heihin an dr\u00e9ck op <b>ofsch\u00e9cken</b> hei \u00ebnnen.\n(Stellt s\u00e9cher dass den Type vun Callback {cb_url} ass.)",
                 "title": "Ambiclimate authentifiz\u00e9ieren"
             }
-        },
-        "title": "Ambiclimate"
-    }
+        }
+    },
+    "title": "Ambiclimate"
 }

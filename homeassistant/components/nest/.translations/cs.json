@@ -27,7 +27,7 @@
                 "description": "Chcete-li propojit \u00fa\u010det Nest, [autorizujte sv\u016fj \u00fa\u010det]({url}). \n\n Po autorizaci zkop\u00edrujte n\u00ed\u017ee uveden\u00fd k\u00f3d PIN.",
                 "title": "Propojit s Nest \u00fa\u010dtem"
             }
-        },
-        "title": "Nest"
-    }
+        }
+    },
+    "title": "Nest"
 }

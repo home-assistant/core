@@ -22,7 +22,7 @@
                 "description": "Prosimo, namestite Home Assistant SmartApp v vsaj eni lokaciji in kliknite po\u0161lji.",
                 "title": "Namesti SmartApp"
             }
-        },
-        "title": "SmartThings"
-    }
+        }
+    },
+    "title": "SmartThings"
 }

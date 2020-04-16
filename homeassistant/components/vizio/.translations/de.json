@@ -36,8 +36,7 @@
                 "description": "Ein Zugriffstoken wird nur f\u00fcr Fernsehger\u00e4te ben\u00f6tigt. Wenn Sie ein Fernsehger\u00e4t konfigurieren und noch kein Zugriffstoken haben, lassen Sie es leer, um einen Pairing-Vorgang durchzuf\u00fchren.",
                 "title": "Richten Sie das VIZIO SmartCast-Ger\u00e4t ein"
             }
-        },
-        "title": "VIZIO SmartCast"
+        }
     },
     "options": {
         "step": {
@@ -52,5 +51,6 @@
             }
         },
         "title": "Aktualisieren Sie die VIZIO SmartCast-Optionen"
-    }
+    },
+    "title": "VIZIO SmartCast"
 }

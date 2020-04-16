@@ -17,7 +17,7 @@
                 "description": "Ver vennleg \u00e5 skriv inn tilkoplingsinformasjonen for MQTT-meglaren din",
                 "title": "MQTT"
             }
-        },
-        "title": "MQTT"
-    }
+        }
+    },
+    "title": "MQTT"
 }

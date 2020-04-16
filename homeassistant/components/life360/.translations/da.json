@@ -22,7 +22,7 @@
                 "description": "Hvis du vil angive avancerede indstillinger skal du se [Life360 dokumentation]({docs_url}).\nDu \u00f8nsker m\u00e5ske at g\u00f8re dette f\u00f8r du tilf\u00f8jer konti.",
                 "title": "Life360-kontooplysninger"
             }
-        },
-        "title": "Life360"
-    }
+        }
+    },
+    "title": "Life360"
 }

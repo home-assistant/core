@@ -21,8 +21,7 @@
                 "description": "Je\u015bli do serwera NUT pod\u0142\u0105czonych jest wiele zasilaczy UPS, wprowad\u017a w polu Alias nazw\u0119 zasilacza UPS, kt\u00f3rego dotyczy zapytanie.",
                 "title": "Po\u0142\u0105cz z serwerem NUT"
             }
-        },
-        "title": "Sieciowe narz\u0119dzia UPS (NUT)"
+        }
     },
     "options": {
         "step": {
@@ -33,5 +32,6 @@
                 "description": "Wybierz zasoby sensor\u00f3w"
             }
         }
-    }
+    },
+    "title": "Sieciowe narz\u0119dzia UPS (NUT)"
 }

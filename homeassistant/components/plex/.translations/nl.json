@@ -26,8 +26,7 @@
                 "description": "Ga verder met autoriseren bij plex.tv.",
                 "title": "Verbind de Plex server"
             }
-        },
-        "title": "Plex"
+        }
     },
     "options": {
         "step": {
@@ -38,5 +37,6 @@
                 "description": "Opties voor Plex-mediaspelers"
             }
         }
-    }
+    },
+    "title": "Plex"
 }

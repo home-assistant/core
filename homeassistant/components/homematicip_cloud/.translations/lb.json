@@ -24,7 +24,7 @@
                 "description": "Dr\u00e9ckt de bloen Kn\u00e4ppchen um Accesspoint an den Submit Kn\u00e4ppchen fir d'HomematicIP mam Home Assistant ze registr\u00e9ieren.\n\n![Standuert vum Kn\u00e4ppchen op der Bridge](/static/images/config_flows/config_homematicip_cloud.png)",
                 "title": "Accesspoint verbannen"
             }
-        },
-        "title": "HomematicIP Cloud"
-    }
+        }
+    },
+    "title": "HomematicIP Cloud"
 }

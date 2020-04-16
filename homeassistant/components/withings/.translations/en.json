@@ -18,7 +18,7 @@
                 "description": "Which profile did you select on the Withings website? It's important the profiles match, otherwise data will be mis-labeled.",
                 "title": "User Profile."
             }
-        },
-        "title": "Withings"
-    }
+        }
+    },
+    "title": "Withings"
 }

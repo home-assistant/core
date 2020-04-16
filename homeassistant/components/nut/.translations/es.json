@@ -34,17 +34,18 @@
                 "description": "Si hay varios UPS conectados al servidor NUT, introduzca el nombre UPS a buscar en el campo 'Alias'.",
                 "title": "Conectar con el servidor NUT"
             }
-        },
-        "title": "Herramientas de UPS de red (NUT)"
+        }
     },
     "options": {
         "step": {
             "init": {
                 "data": {
-                    "resources": "Recursos"
+                    "resources": "Recursos",
+                    "scan_interval": "Intervalo de escaneo (segundos)"
                 },
                 "description": "Elegir Recursos del Sensor"
             }
         }
-    }
+    },
+    "title": "Herramientas de UPS de red (NUT)"
 }

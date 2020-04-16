@@ -12,7 +12,7 @@
                 "description": "Introdueix el DSN de Sentry",
                 "title": "Sentry"
             }
-        },
-        "title": "Sentry"
-    }
+        }
+    },
+    "title": "Sentry"
 }

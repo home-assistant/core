@@ -18,7 +18,7 @@
                 "description": "Airly-integratie van luchtkwaliteit instellen. Ga naar https://developer.airly.eu/register om de API-sleutel te genereren",
                 "title": "Airly"
             }
-        },
-        "title": "Airly"
-    }
+        }
+    },
+    "title": "Airly"
 }

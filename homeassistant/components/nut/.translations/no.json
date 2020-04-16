@@ -21,17 +21,18 @@
                 "description": "Hvis det er flere UPS-er knyttet til NUT-serveren, angir du navnet UPS for \u00e5 sp\u00f8rre i 'Alias' -feltet.",
                 "title": "Koble til NUT-serveren"
             }
-        },
-        "title": "Nettverk UPS-verkt\u00f8y (NUT)"
+        }
     },
     "options": {
         "step": {
             "init": {
                 "data": {
-                    "resources": "Ressurser"
+                    "resources": "Ressurser",
+                    "scan_interval": "Skanneintervall (sekunder)"
                 },
-                "description": "Velg Sensorressurser"
+                "description": "Velg Sensor Ressurser."
             }
         }
-    }
+    },
+    "title": "Nettverk UPS-verkt\u00f8y (NUT)"
 }

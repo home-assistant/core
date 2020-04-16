@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Integrasjonen er allerede konfigurert med en eksisterende sensor med det navnet"
+            "already_configured": "Integrasjonen er allerede konfigurert med en eksisterende sensor med det navnet",
+            "single_instance_allowed": "Bare en enkelt konfigurasjon av lokal IP er tillatt."
         },
         "step": {
             "user": {
@@ -10,7 +11,7 @@
                 },
                 "title": "Lokal IP-adresse"
             }
-        },
-        "title": "Lokal IP-adresse"
-    }
+        }
+    },
+    "title": "Lokal IP-adresse"
 }

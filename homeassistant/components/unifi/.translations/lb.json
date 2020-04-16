@@ -21,8 +21,7 @@
                 },
                 "title": "Unifi Kontroller ariichten"
             }
-        },
-        "title": "Unifi Kontroller"
+        }
     },
     "error": {
         "unknown_client_mac": "Kee Client am Unifi disponibel mat der MAC Adress"
@@ -63,5 +62,6 @@
                 "title": "UniFi Optiounen 3/3"
             }
         }
-    }
+    },
+    "title": "Unifi Kontroller"
 }

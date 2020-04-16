@@ -21,7 +21,7 @@
                 "description": "Vill du l\u00e4gga till Elgato Key Light med serienummer `{serial_number}` till Home Assistant?",
                 "title": "Uppt\u00e4ckte Elgato Key Light-enhet"
             }
-        },
-        "title": "Elgato Key Light"
-    }
+        }
+    },
+    "title": "Elgato Key Light"
 }

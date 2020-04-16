@@ -15,7 +15,7 @@
                 "description": "Vennligst skriv inn vertsnavnet eller IP-adressen til en Heos-enhet (helst en tilkoblet via kabel til nettverket).",
                 "title": "Koble til Heos"
             }
-        },
-        "title": ""
-    }
+        }
+    },
+    "title": ""
 }

@@ -1,6 +1,6 @@
 {
+  "title": "GeoNet NZ Quakes",
   "config": {
-    "title": "GeoNet NZ Quakes",
     "step": {
       "user": {
         "title": "Fill in your filter details.",

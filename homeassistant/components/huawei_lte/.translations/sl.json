@@ -26,8 +26,7 @@
                 "description": "Vnesite podatke za dostop do naprave. Dolo\u010danje uporabni\u0161kega imena in gesla je izbirno, vendar omogo\u010da podporo za ve\u010d funkcij integracije. Po drugi strani pa lahko uporaba poobla\u0161\u010dene povezave povzro\u010di te\u017eave pri dostopu do spletnega vmesnika naprave zunaj Home Assistant-a, medtem ko je integracija aktivna, in obratno.",
                 "title": "Konfigurirajte Huawei LTE"
             }
-        },
-        "title": "Huawei LTE"
+        }
     },
     "options": {
         "step": {
@@ -39,5 +38,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Huawei LTE"
 }

@@ -17,7 +17,7 @@
                 "description": "V\u00e4nligen f\u00f6lj denna [l\u00e4nk] ({authorization_url}) och <b> till\u00e5ta </b> till g\u00e5ng till ditt Ambiclimate konto, kom sedan tillbaka och tryck p\u00e5 <b> Skicka </b> nedan.\n(Kontrollera att den angivna callback url \u00e4r {cb_url})",
                 "title": "Autentisera Ambiclimate"
             }
-        },
-        "title": "Ambiclimate"
-    }
+        }
+    },
+    "title": "Ambiclimate"
 }

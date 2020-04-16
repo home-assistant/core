@@ -21,8 +21,7 @@
                 },
                 "title": "UniFi-Controller einrichten"
             }
-        },
-        "title": "UniFi-Controller"
+        }
     },
     "error": {
         "unknown_client_mac": "Unter dieser MAC-Adresse ist in UniFi kein Client verf\u00fcgbar"
@@ -63,5 +62,6 @@
                 "title": "UniFi-Optionen 3/3"
             }
         }
-    }
+    },
+    "title": "UniFi-Controller"
 }

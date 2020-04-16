@@ -28,12 +28,12 @@
                 "description": "Desbloquea tu gateway de deCONZ para registrarte con Home Assistant.\n\n1. Dir\u00edgete a deCONZ Settings -> Gateway -> Advanced\n2. Pulsa el bot\u00f3n \"Authenticate app\"",
                 "title": "Enlazar con deCONZ"
             }
-        },
-        "title": "Pasarela Zigbee deCONZ"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Ambos botones",
+            "bottom_buttons": "Botones inferiores",
             "button_1": "Primer bot\u00f3n",
             "button_2": "Segundo bot\u00f3n",
             "button_3": "Tercer bot\u00f3n",
@@ -50,6 +50,7 @@
             "side_4": "Lado 4",
             "side_5": "Lado 5",
             "side_6": "Lado 6",
+            "top_buttons": "Botones superiores",
             "turn_off": "Apagar",
             "turn_on": "Encender"
         },
@@ -94,5 +95,6 @@
                 "title": "Opciones deCONZ"
             }
         }
-    }
+    },
+    "title": "Pasarela Zigbee deCONZ"
 }

@@ -12,7 +12,7 @@
                 "description": "Opravdu chcete nastavit Dialogflow?",
                 "title": "Nastavit Dialogflow Webhook"
             }
-        },
-        "title": "Dialogflow"
-    }
+        }
+    },
+    "title": "Dialogflow"
 }

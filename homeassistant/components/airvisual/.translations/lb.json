@@ -16,8 +16,7 @@
                 "description": "Loft Qualit\u00e9it an enger geografescher Lag iwwerwaachen.",
                 "title": "AirVisual konfigur\u00e9ieren"
             }
-        },
-        "title": "AirVisual"
+        }
     },
     "options": {
         "step": {
@@ -29,5 +28,6 @@
                 "title": "Airvisual ariichten"
             }
         }
-    }
+    },
+    "title": "AirVisual"
 }

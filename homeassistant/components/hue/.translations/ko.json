@@ -25,8 +25,7 @@
                 "description": "\ube0c\ub9bf\uc9c0\uc758 \ubc84\ud2bc\uc744 \ub20c\ub7ec \ud544\ub9bd\uc2a4 Hue\ub97c Home Assistant\uc5d0 \ub4f1\ub85d\ud558\uc138\uc694.\n\n![\ube0c\ub9bf\uc9c0 \ubc84\ud2bc \uc704\uce58](/static/images/config_philips_hue.jpg)",
                 "title": "\ud5c8\ube0c \uc5f0\uacb0"
             }
-        },
-        "title": "\ud544\ub9bd\uc2a4 Hue \ube0c\ub9bf\uc9c0"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -44,5 +43,6 @@
             "remote_button_short_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub20c\ub9b4 \ub54c",
             "remote_button_short_release": "\"{subtype}\" \ubc84\ud2bc\uc5d0\uc11c \uc190\uc744 \ub5c4 \ub54c"
         }
-    }
+    },
+    "title": "\ud544\ub9bd\uc2a4 Hue \ube0c\ub9bf\uc9c0"
 }

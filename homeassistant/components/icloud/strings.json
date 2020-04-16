@@ -1,6 +1,6 @@
 {
+  "title": "Apple iCloud",
   "config": {
-    "title": "Apple iCloud",
     "step": {
       "user": {
         "title": "iCloud credentials",

@@ -15,8 +15,7 @@
                 },
                 "title": "Fyll ut informasjonen din"
             }
-        },
-        "title": "SimpliSafe"
+        }
     },
     "options": {
         "step": {
@@ -27,5 +26,6 @@
                 "title": "Konfigurer SimpliSafe"
             }
         }
-    }
+    },
+    "title": "SimpliSafe"
 }

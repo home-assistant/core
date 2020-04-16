@@ -1,6 +1,6 @@
 {
+  "title": "HomematicIP Cloud",
   "config": {
-    "title": "HomematicIP Cloud",
     "step": {
       "init": {
         "title": "Pick HomematicIP Access point",

@@ -26,7 +26,7 @@
                 "description": "Kies met welke authenticatieprovider u wilt authenticeren met Point.",
                 "title": "Authenticatieleverancier"
             }
-        },
-        "title": "Minut Point"
-    }
+        }
+    },
+    "title": "Minut Point"
 }

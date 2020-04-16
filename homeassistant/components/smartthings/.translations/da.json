@@ -22,7 +22,7 @@
                 "description": "Installer Home Assistant SmartApp mindst et sted og klik p\u00e5 send.",
                 "title": "Installer SmartApp"
             }
-        },
-        "title": "SmartThings"
-    }
+        }
+    },
+    "title": "SmartThings"
 }

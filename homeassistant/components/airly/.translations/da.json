@@ -18,7 +18,7 @@
                 "description": "Konfigurer Airly luftkvalitetsintegration. For at generere API-n\u00f8gle, g\u00e5 til https://developer.airly.eu/register",
                 "title": "Airly"
             }
-        },
-        "title": "Airly"
-    }
+        }
+    },
+    "title": "Airly"
 }

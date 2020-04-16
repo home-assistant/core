@@ -23,7 +23,7 @@
                 "description": "Pressione o bot\u00e3o no Philips Hue  para registrar com o Home Assistant. \n\n![Localiza\u00e7\u00e3o do bot\u00e3o] (/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
             }
-        },
-        "title": "Philips Hue"
-    }
+        }
+    },
+    "title": "Philips Hue"
 }

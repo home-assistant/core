@@ -1,6 +1,6 @@
 {
+  "title": "Solar-Log",
   "config": {
-    "title": "Solar-Log",
     "step": {
       "user": {
         "title": "Define your Solar-Log connection",

@@ -21,8 +21,7 @@
                 },
                 "title": "Connect to the DoorBird"
             }
-        },
-        "title": "DoorBird"
+        }
     },
     "options": {
         "step": {
@@ -33,5 +32,6 @@
                 "description": "Add an comma separated event name for each event you wish to track. After entering them here, use the DoorBird app to assign them to a specific event. See the documentation at https://www.home-assistant.io/integrations/doorbird/#events. Example: somebody_pressed_the_button, motion"
             }
         }
-    }
+    },
+    "title": "DoorBird"
 }

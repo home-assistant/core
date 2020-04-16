@@ -1,6 +1,6 @@
 {
+  "title": "Daikin AC",
   "config": {
-    "title": "Daikin AC",
     "step": {
       "user": {
         "title": "Configure Daikin AC",

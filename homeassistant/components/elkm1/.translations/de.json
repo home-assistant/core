@@ -22,7 +22,7 @@
                 "description": "Die Adresszeichenfolge muss in der Form 'adresse[:port]' f\u00fcr 'sicher' und 'nicht sicher' vorliegen. Beispiel: '192.168.1.1'. Der Port ist optional und standardm\u00e4\u00dfig 2101 f\u00fcr \"nicht sicher\" und 2601 f\u00fcr \"sicher\". F\u00fcr das serielle Protokoll muss die Adresse die Form 'tty[:baud]' haben. Beispiel: '/dev/ttyS1'. Der Baudrate ist optional und standardm\u00e4\u00dfig 115200.",
                 "title": "Stellen Sie eine Verbindung zur Elk-M1-Steuerung her"
             }
-        },
-        "title": "Elk-M1-Steuerung"
-    }
+        }
+    },
+    "title": "Elk-M1-Steuerung"
 }

@@ -1,4 +1,5 @@
 {
+  "title": "Tado",
   "config": {
     "abort": {
       "already_configured": "Device is already configured"
@@ -17,11 +18,9 @@
       "no_homes": "There are no homes linked to this tado account.",
       "invalid_auth": "Invalid authentication",
       "cannot_connect": "Failed to connect, please try again"
-    },
-    "title": "Tado"
+    }
   },
   "options": {
-    "title": "Tado",
     "step": {
       "init": {
         "description": "Fallback mode will switch to Smart Schedule at next schedule switch after manually adjusting a zone.",

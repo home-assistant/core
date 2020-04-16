@@ -14,13 +14,13 @@
                 },
                 "title": "ZHA"
             }
-        },
-        "title": "ZHA"
+        }
     },
     "device_automation": {
         "action_type": {
             "squawk": "Squawk",
             "warn": "Aviso"
         }
-    }
+    },
+    "title": "ZHA"
 }

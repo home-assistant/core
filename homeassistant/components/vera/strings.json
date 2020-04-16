@@ -1,6 +1,6 @@
 {
+  "title": "Vera",
   "config": {
-    "title": "Vera",
     "abort": {
       "already_configured": "A controller is already configured.",
       "cannot_connect": "Could not connect to controller with url {base_url}"

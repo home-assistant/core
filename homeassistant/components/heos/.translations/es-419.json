@@ -11,7 +11,7 @@
                 "description": "Ingrese el nombre de host o la direcci\u00f3n IP de un dispositivo Heos (preferiblemente uno conectado por cable a la red).",
                 "title": "Con\u00e9ctate a Heos"
             }
-        },
-        "title": "Heos"
-    }
+        }
+    },
+    "title": "Heos"
 }

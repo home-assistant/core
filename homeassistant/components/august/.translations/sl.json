@@ -26,7 +26,7 @@
                 "description": "Preverite svoj {login_method} ({username}) in spodaj vnesite verifikacijsko kodo",
                 "title": "Dvofaktorska avtentikacija"
             }
-        },
-        "title": "Avgust"
-    }
+        }
+    },
+    "title": "Avgust"
 }

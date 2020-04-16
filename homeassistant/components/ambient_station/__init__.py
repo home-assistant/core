@@ -350,12 +350,17 @@ class AmbientStation:
 
     async def _attempt_connect(self):
         """Attempt to connect to the socket (retrying later on fail)."""
-        try:
+
+        async def connect(timestamp=None):
+            """Connect."""
             await self.client.websocket.connect()
+
+        try:
+            await connect()
         except WebsocketError as err:
             _LOGGER.error("Error with the websocket connection: %s", err)
             self._ws_reconnect_delay = min(2 * self._ws_reconnect_delay, 480)
-            async_call_later(self._hass, self._ws_reconnect_delay, self.ws_connect)
+            async_call_later(self._hass, self._ws_reconnect_delay, connect)
 
     async def ws_connect(self):
         """Register handlers and connect to the websocket."""

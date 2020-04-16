@@ -28,8 +28,7 @@
                 "description": "Entsperrt \u00e4r deCONZ gateway fir se mat Home Assistant ze registr\u00e9ieren.\n\n1. Gidd op deCONZ System Astellungen\n2. Dr\u00e9ckt \"Unlock\" Gateway Kn\u00e4ppchen",
                 "title": "Link mat deCONZ"
             }
-        },
-        "title": "deCONZ Zigbee gateway"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -94,5 +93,6 @@
                 "title": "deCONZ Optiounen"
             }
         }
-    }
+    },
+    "title": "deCONZ Zigbee gateway"
 }

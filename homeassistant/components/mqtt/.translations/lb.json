@@ -25,8 +25,7 @@
                 "description": "W\u00ebllt dir Home Assistant konfigur\u00e9iere fir sech mam MQTT broker ze verbannen dee vum hass.io add-on {addon} bereet gestallt g\u00ebtt?",
                 "title": "MQTT Broker via Hass.io add-on"
             }
-        },
-        "title": "MQTT"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -49,5 +48,6 @@
             "button_short_release": "\"{subtype}\" lassgelooss",
             "button_triple_press": "\"{subtype}\" dr\u00e4imol gedr\u00e9ckt"
         }
-    }
+    },
+    "title": "MQTT"
 }

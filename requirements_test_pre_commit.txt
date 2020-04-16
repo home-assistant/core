@@ -8,4 +8,4 @@ flake8==3.7.9
 isort==4.3.21
 pydocstyle==5.0.2
 pyupgrade==2.1.0
-yamllint==1.21.0
+yamllint==1.22.0
