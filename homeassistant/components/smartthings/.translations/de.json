@@ -8,15 +8,30 @@
             "token_forbidden": "Das Token verf\u00fcgt nicht \u00fcber die erforderlichen OAuth-Bereiche.",
             "token_invalid_format": "Das Token muss im UID/GUID-Format vorliegen.",
             "token_unauthorized": "Das Token ist ung\u00fcltig oder nicht mehr autorisiert.",
-            "webhook_error": "SmartThings konnte den in 'base_url' angegebenen Endpunkt nicht validieren. Bitte \u00fcberpr\u00fcfe die Komponentenanforderungen."
+            "webhook_error": "SmartThings konnte die Webhook-URL nicht \u00fcberpr\u00fcfen. Bitte stellen Sie sicher, dass die Webhook-URL \u00fcber das Internet erreichbar ist, und versuchen Sie es erneut."
         },
         "step": {
+            "authorize": {
+                "title": "Home Assistant autorisieren"
+            },
+            "pat": {
+                "data": {
+                    "access_token": "Zugangstoken"
+                },
+                "title": "Gib den pers\u00f6nlichen Zugangstoken an"
+            },
+            "select_location": {
+                "data": {
+                    "location_id": "Standort"
+                },
+                "title": "Standort ausw\u00e4hlen"
+            },
             "user": {
                 "data": {
                     "access_token": "Zugangstoken"
                 },
-                "description": "Bitte gib einen SmartThings [pers\u00f6nlichen Zugangstoken]({token_url}) ein, welcher gem\u00e4\u00df den [Anweisungen]({component_url}) erstellt wurde.",
-                "title": "Gib den pers\u00f6nlichen Zugangstoken an"
+                "description": "SmartThings wird so konfiguriert, dass Push-Updates an Home Assistant gesendet werden an die URL: \n > {webhook_url} \n\nWenn dies nicht korrekt ist, aktualisieren Sie bitte Ihre Konfiguration, starten Sie Home Assistant neu und versuchen Sie es erneut.",
+                "title": "R\u00fcckruf-URL best\u00e4tigen"
             },
             "wait_install": {
                 "description": "Installiere die Home-Assistent SmartApp an mindestens einer Stelle, und klicke auf Absenden.",

@@ -21,6 +21,9 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "fallback": "Aktivieren Sie den Fallback-Modus."
+                },
                 "title": "Passen Sie die Tado-Optionen an."
             }
         },
