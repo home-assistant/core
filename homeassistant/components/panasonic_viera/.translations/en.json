@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This Panasonic Viera TV is already configured."
+            "already_configured": "This Panasonic Viera TV is already configured.",
+            "not_connected": "The remote connection with your Panasonic Viera TV was lost. Check the logs for more information.",
+            "unknown": "An unknown error occured. Check the logs for more information."
         },
         "error": {
             "invalid_pin_code": "The PIN code you entered was invalid",
-            "not_connected": "Could not establish a remote connection with your Panasonic Viera TV",
-            "unknown": "An unknown error occured. Check the logs for more information."
+            "not_connected": "Could not establish a remote connection with your Panasonic Viera TV"
         },
         "step": {
             "pairing": {
