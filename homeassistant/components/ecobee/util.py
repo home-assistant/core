@@ -23,7 +23,7 @@ def ecobee_time(time_string):
 
 
 def safe_list_get(lst, idx, default):
-    """Attempts to get value from list, otherwise returns default"""
+    """Attempt to get value from list, otherwise return default."""
     try:
         return lst[idx]
     except (IndexError, KeyError):

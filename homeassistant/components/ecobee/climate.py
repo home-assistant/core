@@ -158,7 +158,6 @@ SUPPORT_FLAGS = (
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the ecobee thermostat."""
-
     data = hass.data[DOMAIN]
 
     devices = [Thermostat(data, index) for index in range(len(data.ecobee.thermostats))]

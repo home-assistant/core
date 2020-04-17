@@ -1,4 +1,6 @@
 """Support for Ecobee sensors."""
+from datetime import datetime
+
 from pyecobee.const import ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN
 
 from homeassistant.const import (
@@ -10,10 +12,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 
 from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
-
 from .util import safe_list_get
-
-from datetime import datetime
 
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_FAHRENHEIT],
@@ -157,7 +156,7 @@ class EcobeeSensor(Entity):
 
     @property
     def state_attributes(self):
-        """Return the attributes of the sensor"""
+        """Return the attributes of the sensor."""
         if self.type != NOTIFICATIONS_KEY:
             return None
 
