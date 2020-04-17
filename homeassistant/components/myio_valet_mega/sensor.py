@@ -32,7 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     sensor_entities.append(
                         MyIOSensor(hass, _sensor_id, _server_data, _server_name)
                     )
-        except (ValueError, Exception): # pylint: disable=broad-except
+        except (ValueError, Exception):  # pylint: disable=broad-except
             _LOGGER.debug("%s - No sensor data", _server_name)
 
         async_add_entities(sensor_entities)
