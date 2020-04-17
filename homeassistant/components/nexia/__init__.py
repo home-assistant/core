@@ -60,6 +60,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
 
+    state_file = hass.config.path(f"nexia_config_{username}.conf")
+
     try:
         nexia_home = await hass.async_add_executor_job(
             partial(
@@ -67,6 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 username=username,
                 password=password,
                 device_name=hass.config.location_name,
+                state_file=state_file,
             )
         )
     except ConnectTimeout as ex:
