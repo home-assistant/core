@@ -8,6 +8,7 @@ from homeassistant import data_entry_flow, setup
 from homeassistant.components import ssdp
 from homeassistant.components.synology_dsm.const import (
     CONF_VOLUMES,
+    DEFAULT_DSM_VERSION,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
     DEFAULT_SSL,
@@ -15,9 +16,9 @@ from homeassistant.components.synology_dsm.const import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
+    CONF_API_VERSION,
     CONF_DISKS,
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -30,7 +31,6 @@ from tests.common import MockConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 
-NAME = "My Syno"
 HOST = "nas.meontheinternet.com"
 SERIAL = "mySerial"
 HOST_2 = "nas.worldwide.me"
@@ -95,6 +95,7 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
             CONF_SSL: SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
+            CONF_API_VERSION: 5,
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -105,6 +106,7 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_SSL] == SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_API_VERSION] == 5
     assert result["data"].get(CONF_DISKS) is None
     assert result["data"].get(CONF_VOLUMES) is None
 
@@ -114,7 +116,6 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
-            CONF_NAME: NAME,
             CONF_HOST: HOST,
             CONF_SSL: False,
             CONF_USERNAME: USERNAME,
@@ -129,6 +130,7 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert not result["data"][CONF_SSL]
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_API_VERSION] == DEFAULT_DSM_VERSION
     assert result["data"].get(CONF_DISKS) is None
     assert result["data"].get(CONF_VOLUMES) is None
 
@@ -149,6 +151,7 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_SSL] == DEFAULT_SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_API_VERSION] == DEFAULT_DSM_VERSION
     assert result["data"].get(CONF_DISKS) is None
     assert result["data"].get(CONF_VOLUMES) is None
 
@@ -163,6 +166,7 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
             CONF_SSL: SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
+            CONF_API_VERSION: 5,
             CONF_DISKS: ["sda", "sdb", "sdc"],
             CONF_VOLUMES: ["volume_1"],
         },
@@ -175,6 +179,7 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_SSL] == SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_API_VERSION] == 5
     assert result["data"][CONF_DISKS] == ["sda", "sdb", "sdc"]
     assert result["data"][CONF_VOLUMES] == ["volume_1"]
 
@@ -246,16 +251,17 @@ async def test_form_ssdp(hass: HomeAssistantType, service: MagicMock):
     assert result["step_id"] == "link"
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
     )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "192.168.1.5"
-    assert result2["data"] == {
-        CONF_HOST: "192.168.1.5",
-        CONF_PORT: DEFAULT_PORT_SSL,
-        CONF_PASSWORD: PASSWORD,
-        CONF_SSL: DEFAULT_SSL,
-        CONF_USERNAME: USERNAME,
-    }
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "192.168.1.5"
+    assert result["data"][CONF_HOST] == "192.168.1.5"
+    assert result["data"][CONF_PORT] == 5001
+    assert result["data"][CONF_SSL] == DEFAULT_SSL
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_API_VERSION] == DEFAULT_DSM_VERSION
+    assert result["data"].get(CONF_DISKS) is None
+    assert result["data"].get(CONF_VOLUMES) is None

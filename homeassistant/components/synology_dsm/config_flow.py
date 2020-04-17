@@ -137,6 +137,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_SSL: use_ssl,
             CONF_USERNAME: username,
             CONF_PASSWORD: password,
+            CONF_API_VERSION: api_version,
         }
         if user_input.get(CONF_DISKS):
             config_data[CONF_DISKS] = user_input[CONF_DISKS]
