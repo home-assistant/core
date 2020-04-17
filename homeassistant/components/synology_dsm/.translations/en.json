@@ -5,7 +5,7 @@
         },
         "error": {
             "login": "Login error: please check your username & password",
-            "unknown": "Unknown error: please retry later or an other configuration"
+            "missing_data": "Missing data: please retry later or an other configuration"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
