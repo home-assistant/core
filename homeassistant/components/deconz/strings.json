@@ -2,9 +2,18 @@
   "config": {
     "flow_title": "deCONZ Zigbee gateway ({host})",
     "step": {
-      "init": {
-        "title": "Define deCONZ gateway",
-        "data": { "host": "Host", "port": "Port" }
+      "user": {
+        "title": "Select deCONZ gateway",
+        "data": {
+          "host": "Select discovered deCONZ gateway"
+        }
+      },
+      "manual_input": {
+        "title": "Configure deCONZ gateway",
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        }
       },
       "link": {
         "title": "Link with deCONZ",
