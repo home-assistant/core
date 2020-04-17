@@ -752,7 +752,7 @@ sunwatcher==0.2.1
 tellduslive==0.10.10
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.2.3
+tesla-powerwall==0.2.5
 
 # homeassistant.components.tesla
 teslajsonpy==0.8.0

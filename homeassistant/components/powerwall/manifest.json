@@ -3,6 +3,6 @@
   "name": "Tesla Powerwall",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/powerwall",
-  "requirements": ["tesla-powerwall==0.2.3"],
+  "requirements": ["tesla-powerwall==0.2.5"],
   "codeowners": ["@bdraco", "@jrester"]
 }
