@@ -1,0 +1,41 @@
+{
+  "config": {
+    "flow_title": "forked-daapd device: {name} ({host})",
+    "step": {
+      "user": {
+        "title": "Set up forked-daapd device",
+        "data": {
+          "name": "Friendly name",
+          "host": "Host",
+          "port": "API port",
+          "password": "API password (leave blank if no password)",
+          "default_volume": "Default volume (only used when unmuting - float in range [0,1])"
+        }
+      }
+    },
+    "error": {
+      "websocket_not_enabled": "forked-daapd server websocket not enabled.",
+      "wrong_host_or_port": "Unable to connect. Please check host and port.",
+      "wrong_password_or_server_type": "Incorrect password or not a forked-daapd server.",
+      "unknown_error": "Unknown error."
+    },
+    "abort": {
+      "already_configured": "Device is already configured.",
+      "not_forked_daapd": "Device is not a forked-daapd server."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure forked-daapd options",
+        "description": "Set various options for the forked-daapd integration.",
+        "data": {
+          "pipe_control": "Use pipe control? (Leave blank or 'librespot-java')",
+          "pipe_control_port": "Port for pipe control",
+          "tts_volume": "TTS volume (float in range [0,1])",
+          "tts_pause_time": "Seconds to pause before and after TTS"
+        }
+      }
+    }
+  }
+}

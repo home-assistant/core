@@ -40,6 +40,7 @@ FLOWS = [
     "flick_electric",
     "flume",
     "flunearyou",
+    "forked_daapd",
     "freebox",
     "fritzbox",
     "garmin_connect",
