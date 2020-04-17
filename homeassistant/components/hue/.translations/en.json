@@ -33,10 +33,10 @@
             "button_2": "Second button",
             "button_3": "Third button",
             "button_4": "Fourth button",
-            "double_buttons_1_3": "First and Third buttons",
-            "double_buttons_2_4": "Second and Fourth buttons",
             "dim_down": "Dim down",
             "dim_up": "Dim up",
+            "double_buttons_1_3": "First and Third buttons",
+            "double_buttons_2_4": "Second and Fourth buttons",
             "turn_off": "Turn off",
             "turn_on": "Turn on"
         },
