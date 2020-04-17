@@ -5,7 +5,7 @@
   "requirements": [
     "samsungctl[websocket]==0.7.1",
     "samsungtvws[websocket]==1.4.0",
-    "getmac==0.8.1"
+    "getmac==0.8.2"
   ],
   "ssdp": [
     {
