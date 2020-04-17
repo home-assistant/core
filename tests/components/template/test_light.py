@@ -544,7 +544,14 @@ class TestTemplateLight:
         assert state.attributes.get("white_value") == 124
 
     @pytest.mark.parametrize(
-        "expected_white_value,template", [(255, "{{255}}"), (None, "{{x - 12}}")],
+        "expected_white_value,template",
+        [
+            (255, "{{255}}"),
+            (None, "{{256}}"),
+            (None, "{{x - 12}}"),
+            (None, "{{ none }}"),
+            (None, ""),
+        ],
     )
     def test_white_value_template(self, expected_white_value, template):
         """Test the template for the white value."""

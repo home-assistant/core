@@ -436,6 +436,9 @@ class LightTemplate(Light):
             return
         try:
             white_value = self._white_value_template.async_render()
+            if white_value in ("None", ""):
+                self._white_value = None
+                return
             if 0 <= int(white_value) <= 255:
                 self._white_value = int(white_value)
             else:
@@ -443,6 +446,12 @@ class LightTemplate(Light):
                     "Received invalid white value: %s. Expected: 0-255", white_value
                 )
                 self._white_value = None
+        except ValueError:
+            _LOGGER.error(
+                "Template must supply an integer white_value from 0-255, or 'None'",
+                exc_info=True,
+            )
+            self._white_value = None
         except TemplateError as ex:
             _LOGGER.error(ex)
             self._state = None
