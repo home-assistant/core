@@ -71,5 +71,3 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 class RflinkSwitch(SwitchableRflinkDevice, SwitchDevice):
     """Representation of a Rflink switch."""
-
-    pass

@@ -34,7 +34,7 @@
                 "description": "Select the device you want to pair with",
                 "title": "Pair with HomeKit Accessory"
             }
-        },
-        "title": "HomeKit Accessory"
-    }
+        }
+    },
+    "title": "HomeKit Accessory"
 }

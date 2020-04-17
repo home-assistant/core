@@ -389,7 +389,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             pass
 
         self._last_triggered = utcnow()
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self):
         """Remove listeners when removing automation from Home Assistant."""

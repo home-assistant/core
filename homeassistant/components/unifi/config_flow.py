@@ -19,12 +19,15 @@ from .const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_IGNORE_WIRED_BUG,
+    CONF_POE_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
     CONTROLLER_ID,
+    DEFAULT_POE_CLIENTS,
     DOMAIN,
     LOGGER,
 )
@@ -214,6 +217,10 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                             self.controller.option_detection_time.total_seconds()
                         ),
                     ): int,
+                    vol.Optional(
+                        CONF_IGNORE_WIRED_BUG,
+                        default=self.controller.option_ignore_wired_bug,
+                    ): bool,
                 }
             ),
         )
@@ -262,6 +269,10 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="client_control",
             data_schema=vol.Schema(
                 {
+                    vol.Optional(
+                        CONF_POE_CLIENTS,
+                        default=self.options.get(CONF_POE_CLIENTS, DEFAULT_POE_CLIENTS),
+                    ): bool,
                     vol.Optional(
                         CONF_BLOCK_CLIENT, default=self.options[CONF_BLOCK_CLIENT]
                     ): cv.multi_select(clients_to_block),

@@ -15,13 +15,13 @@
                 "description": "Prosimo, vnesite svoje podatke.",
                 "title": "Tesla - konfiguracija"
             }
-        },
-        "title": "Tesla"
+        }
     },
     "options": {
         "step": {
             "init": {
                 "data": {
+                    "enable_wake_on_start": "Vsili zbujanje avtomobila ob zagonu",
                     "scan_interval": "Sekund med skeniranjem"
                 }
             }

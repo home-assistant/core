@@ -155,6 +155,7 @@ async def logbook_filtering_attributes(hass):
 
 @benchmark
 async def _logbook_filtering(hass, last_changed, last_updated):
+    # pylint: disable=import-outside-toplevel
     from homeassistant.components import logbook
 
     entity_id = "test.entity"

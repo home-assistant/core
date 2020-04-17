@@ -60,15 +60,15 @@ async def test_debounce(hass):
     now = datetime(2018, 1, 1, 20, 0, 0, tzinfo=dt_util.UTC)
 
     with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await hass.async_add_job(debounce_demo, mock, "value")
+        await hass.async_add_executor_job(debounce_demo, mock, "value")
     hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: now + timedelta(seconds=3)})
     await hass.async_block_till_done()
     assert counter == 1
     assert len(arguments) == 2
 
     with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await hass.async_add_job(debounce_demo, mock, "value")
-        await hass.async_add_job(debounce_demo, mock, "value")
+        await hass.async_add_executor_job(debounce_demo, mock, "value")
+        await hass.async_add_executor_job(debounce_demo, mock, "value")
 
     hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: now + timedelta(seconds=3)})
     await hass.async_block_till_done()
@@ -99,7 +99,7 @@ async def test_home_accessory(hass, hk_driver):
     with patch(
         "homeassistant.components.homekit.accessories.HomeAccessory.update_state"
     ) as mock_update_state:
-        await hass.async_add_job(acc.run)
+        await acc.run_handler()
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_update_state.assert_called_with(state)
@@ -132,7 +132,7 @@ async def test_battery_service(hass, hk_driver, caplog):
     assert acc._char_low_battery.value == 0
     assert acc._char_charging.value == 2
 
-    await hass.async_add_job(acc.run)
+    await acc.run_handler()
     await hass.async_block_till_done()
     assert acc._char_battery.value == 50
     assert acc._char_low_battery.value == 0
@@ -163,7 +163,7 @@ async def test_battery_service(hass, hk_driver, caplog):
     assert acc._char_low_battery.value == 0
     assert acc._char_charging.value == 2
 
-    await hass.async_add_job(acc.run)
+    await acc.run_handler()
     await hass.async_block_till_done()
     assert acc._char_battery.value == 10
     assert acc._char_low_battery.value == 1
@@ -197,7 +197,7 @@ async def test_linked_battery_sensor(hass, hk_driver, caplog):
     acc.update_state = lambda x: None
     assert acc.linked_battery_sensor == linked_battery
 
-    await hass.async_add_job(acc.run)
+    await acc.run_handler()
     await hass.async_block_till_done()
     assert acc._char_battery.value == 50
     assert acc._char_low_battery.value == 0
@@ -232,7 +232,7 @@ async def test_linked_battery_sensor(hass, hk_driver, caplog):
         {CONF_LINKED_BATTERY_SENSOR: linked_battery, CONF_LOW_BATTERY_THRESHOLD: 50},
     )
     acc.update_state = lambda x: None
-    await hass.async_add_job(acc.run)
+    await acc.run_handler()
     await hass.async_block_till_done()
     assert acc._char_battery.value == 20
     assert acc._char_low_battery.value == 1
@@ -263,7 +263,7 @@ async def test_missing_linked_battery_sensor(hass, hk_driver, caplog):
     acc.update_state = lambda x: None
     assert not acc.linked_battery_sensor
 
-    await hass.async_add_job(acc.run)
+    await acc.run_handler()
     await hass.async_block_till_done()
 
     assert not acc.linked_battery_sensor

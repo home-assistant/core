@@ -410,7 +410,6 @@ class RainMachineEntity(Entity):
         """Initialize."""
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._device_class = None
-        self._dispatcher_handlers = []
         self._name = None
         self.rainmachine = rainmachine
 
@@ -426,9 +425,9 @@ class RainMachineEntity(Entity):
             "identifiers": {(DOMAIN, self.rainmachine.controller.mac)},
             "name": self.rainmachine.controller.name,
             "manufacturer": "RainMachine",
-            "model": "Version {0} (API: {1})".format(
-                self.rainmachine.controller.hardware_version,
-                self.rainmachine.controller.api_version,
+            "model": (
+                f"Version {self.rainmachine.controller.hardware_version} "
+                f"(API: {self.rainmachine.controller.api_version})"
             ),
             "sw_version": self.rainmachine.controller.software_version,
         }
@@ -453,12 +452,6 @@ class RainMachineEntity(Entity):
         """Update the state."""
         self.update_from_latest_data()
         self.async_write_ha_state()
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listener when removed."""
-        for handler in self._dispatcher_handlers:
-            handler()
-        self._dispatcher_handlers = []
 
     @callback
     def update_from_latest_data(self):

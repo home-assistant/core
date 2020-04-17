@@ -49,7 +49,7 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation binary sensor from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN] = []
+    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -75,7 +75,6 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
 
     async def get_device_class(self):
         """Get the HA device class from the channel."""
-        pass
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""

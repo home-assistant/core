@@ -3,6 +3,7 @@
         "action_type": {
             "brightness_decrease": "Decrease {entity_name} brightness",
             "brightness_increase": "Increase {entity_name} brightness",
+            "flash": "Flash {entity_name}",
             "toggle": "Toggle {entity_name}",
             "turn_off": "Turn off {entity_name}",
             "turn_on": "Turn on {entity_name}"
@@ -15,5 +16,6 @@
             "turned_off": "{entity_name} turned off",
             "turned_on": "{entity_name} turned on"
         }
-    }
+    },
+    "title": "Light"
 }

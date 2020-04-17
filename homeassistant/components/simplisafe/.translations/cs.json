@@ -7,13 +7,11 @@
         "step": {
             "user": {
                 "data": {
-                    "code": "K\u00f3d (pro Home Assistant)",
                     "password": "Heslo",
                     "username": "E-mailov\u00e1 adresa"
                 },
                 "title": "Vypl\u0148te va\u0161e \u00fadaje"
             }
-        },
-        "title": "SimpliSafe"
+        }
     }
 }

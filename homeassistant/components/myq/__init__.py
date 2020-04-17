@@ -1,5 +1,6 @@
 """The MyQ integration."""
 import asyncio
+from datetime import timedelta
 import logging
 
 import pymyq
@@ -10,8 +11,9 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY, PLATFORMS, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +40,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except MyQError:
         raise ConfigEntryNotReady
 
-    hass.data[DOMAIN][entry.entry_id] = myq
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="myq devices",
+        update_method=myq.update_device_info,
+        update_interval=timedelta(seconds=UPDATE_INTERVAL),
+    )
+
+    hass.data[DOMAIN][entry.entry_id] = {MYQ_GATEWAY: myq, MYQ_COORDINATOR: coordinator}
 
     for component in PLATFORMS:
         hass.async_create_task(

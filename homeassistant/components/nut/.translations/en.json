@@ -1,0 +1,46 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, please try again",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "resources": {
+                "data": {
+                    "resources": "Resources"
+                },
+                "title": "Choose the Resources to Monitor"
+            },
+            "ups": {
+                "data": {
+                    "alias": "Alias",
+                    "resources": "Resources"
+                },
+                "title": "Choose the UPS to Monitor"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "title": "Connect to the NUT server"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "Resources",
+                    "scan_interval": "Scan Interval (seconds)"
+                },
+                "description": "Choose Sensor Resources."
+            }
+        }
+    }
+}

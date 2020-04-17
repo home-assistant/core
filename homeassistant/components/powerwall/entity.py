@@ -2,42 +2,40 @@
 
 from homeassistant.helpers.entity import Entity
 
-from .const import (
-    DOMAIN,
-    MANUFACTURER,
-    MODEL,
-    POWERWALL_SITE_NAME,
-    SITE_INFO_GRID_CODE,
-    SITE_INFO_NOMINAL_SYSTEM_ENERGY_KWH,
-    SITE_INFO_UTILITY,
-)
+from .const import DOMAIN, MANUFACTURER, MODEL
 
 
 class PowerWallEntity(Entity):
     """Base class for powerwall entities."""
 
-    def __init__(self, coordinator, site_info):
+    def __init__(self, coordinator, site_info, status, device_type):
         """Initialize the sensor."""
         super().__init__()
         self._coordinator = coordinator
         self._site_info = site_info
+        self._device_type = device_type
+        self._version = status.version
         # This group of properties will be unique to to the site
         unique_group = (
-            site_info[SITE_INFO_UTILITY],
-            site_info[SITE_INFO_GRID_CODE],
-            str(site_info[SITE_INFO_NOMINAL_SYSTEM_ENERGY_KWH]),
+            site_info.utility,
+            site_info.grid_code,
+            str(site_info.nominal_system_energy_kWh),
         )
         self.base_unique_id = "_".join(unique_group)
 
     @property
     def device_info(self):
         """Powerwall device info."""
-        return {
+        device_info = {
             "identifiers": {(DOMAIN, self.base_unique_id)},
-            "name": self._site_info[POWERWALL_SITE_NAME],
+            "name": self._site_info.site_name,
             "manufacturer": MANUFACTURER,
-            "model": MODEL,
         }
+        model = MODEL
+        model += f" ({self._device_type.name})"
+        device_info["model"] = model
+        device_info["sw_version"] = self._version
+        return device_info
 
     @property
     def available(self):

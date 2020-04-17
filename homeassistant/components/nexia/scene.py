@@ -1,23 +1,18 @@
 """Support for Nexia Automations."""
 
 from homeassistant.components.scene import Scene
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.helpers.event import async_call_later
 
-from .const import (
-    ATTR_DESCRIPTION,
-    ATTRIBUTION,
-    DATA_NEXIA,
-    DOMAIN,
-    NEXIA_DEVICE,
-    UPDATE_COORDINATOR,
-)
+from .const import ATTR_DESCRIPTION, DOMAIN, NEXIA_DEVICE, UPDATE_COORDINATOR
 from .entity import NexiaEntity
+
+SCENE_ACTIVATION_TIME = 5
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up automations for a Nexia device."""
 
-    nexia_data = hass.data[DOMAIN][config_entry.entry_id][DATA_NEXIA]
+    nexia_data = hass.data[DOMAIN][config_entry.entry_id]
     nexia_home = nexia_data[NEXIA_DEVICE]
     coordinator = nexia_data[UPDATE_COORDINATOR]
     entities = []
@@ -36,33 +31,28 @@ class NexiaAutomationScene(NexiaEntity, Scene):
 
     def __init__(self, coordinator, automation):
         """Initialize the automation scene."""
-        super().__init__(coordinator)
+        super().__init__(
+            coordinator, name=automation.name, unique_id=automation.automation_id,
+        )
         self._automation = automation
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the automation scene."""
-        # This is the automation unique_id
-        return self._automation.automation_id
-
-    @property
-    def name(self):
-        """Return the name of the automation scene."""
-        return self._automation.name
 
     @property
     def device_state_attributes(self):
         """Return the scene specific state attributes."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_DESCRIPTION: self._automation.description,
-        }
+        data = super().device_state_attributes
+        data[ATTR_DESCRIPTION] = self._automation.description
+        return data
 
     @property
     def icon(self):
         """Return the icon of the automation scene."""
         return "mdi:script-text-outline"
 
-    def activate(self):
+    async def async_activate(self):
         """Activate an automation scene."""
-        self._automation.activate()
+        await self.hass.async_add_executor_job(self._automation.activate)
+
+        async def refresh_callback(_):
+            await self._coordinator.async_refresh()
+
+        async_call_later(self.hass, SCENE_ACTIVATION_TIME, refresh_callback)

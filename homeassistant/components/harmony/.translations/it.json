@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi, si prega di riprovare",
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "Logitech Harmony Hub {name}",
+        "step": {
+            "link": {
+                "description": "Vuoi impostare {name} ({host})?",
+                "title": "Impostazione di Logitech Harmony Hub"
+            },
+            "user": {
+                "data": {
+                    "host": "Nome dell'host o indirizzo IP",
+                    "name": "Nome Hub"
+                },
+                "title": "Configurare Logitech Harmony Hub"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "activity": "L'attivit\u00e0 predefinita da eseguire quando nessuna \u00e8 specificata.",
+                    "delay_secs": "Il ritardo tra l'invio dei comandi."
+                },
+                "description": "Regolare le opzioni di Harmony Hub"
+            }
+        }
+    }
+}

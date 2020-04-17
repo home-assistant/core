@@ -1,13 +1,10 @@
 {
-    "config": {
-        "title": "Demo"
-    },
     "options": {
         "step": {
             "init": {
                 "data": {
                     "one": "uno",
-                    "other": "altro"
+                    "other": "altri"
                 }
             },
             "options_1": {
@@ -24,5 +21,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "Demo"
 }

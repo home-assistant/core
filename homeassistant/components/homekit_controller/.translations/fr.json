@@ -34,7 +34,7 @@
                 "description": "S\u00e9lectionnez l'appareil avec lequel vous voulez appairer",
                 "title": "Appairer avec l'accessoire HomeKit"
             }
-        },
-        "title": "Accessoire HomeKit"
-    }
+        }
+    },
+    "title": "Accessoire HomeKit"
 }

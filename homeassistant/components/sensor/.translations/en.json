@@ -22,5 +22,6 @@
             "timestamp": "{entity_name} timestamp changes",
             "value": "{entity_name} value changes"
         }
-    }
+    },
+    "title": "Sensor"
 }

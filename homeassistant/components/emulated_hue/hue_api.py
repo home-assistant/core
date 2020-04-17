@@ -367,7 +367,7 @@ class HueOneLightChangeView(HomeAssistantView):
                 cover.DOMAIN,
                 climate.DOMAIN,
             ]:
-                # Convert 0-255 to 0-100
+                # Convert 0-254 to 0-100
                 level = (parsed[STATE_BRIGHTNESS] / HUE_API_STATE_BRI_MAX) * 100
                 parsed[STATE_BRIGHTNESS] = round(level)
                 parsed[STATE_ON] = True
@@ -390,7 +390,9 @@ class HueOneLightChangeView(HomeAssistantView):
             if parsed[STATE_ON]:
                 if entity_features & SUPPORT_BRIGHTNESS:
                     if parsed[STATE_BRIGHTNESS] is not None:
-                        data[ATTR_BRIGHTNESS] = parsed[STATE_BRIGHTNESS]
+                        data[ATTR_BRIGHTNESS] = hue_brightness_to_hass(
+                            parsed[STATE_BRIGHTNESS]
+                        )
 
                 if entity_features & SUPPORT_COLOR:
                     if any((parsed[STATE_HUE], parsed[STATE_SATURATION])):
@@ -536,8 +538,10 @@ def get_entity_state(config, entity):
         data[STATE_ON] = entity.state != STATE_OFF
 
         if data[STATE_ON]:
-            data[STATE_BRIGHTNESS] = entity.attributes.get(ATTR_BRIGHTNESS, 0)
-            hue_sat = entity.attributes.get(ATTR_HS_COLOR, None)
+            data[STATE_BRIGHTNESS] = hass_to_hue_brightness(
+                entity.attributes.get(ATTR_BRIGHTNESS, 0)
+            )
+            hue_sat = entity.attributes.get(ATTR_HS_COLOR)
             if hue_sat is not None:
                 hue = hue_sat[0]
                 sat = hue_sat[1]
@@ -563,32 +567,32 @@ def get_entity_state(config, entity):
                 pass
         elif entity.domain == climate.DOMAIN:
             temperature = entity.attributes.get(ATTR_TEMPERATURE, 0)
-            # Convert 0-100 to 0-255
-            data[STATE_BRIGHTNESS] = round(temperature * 255 / 100)
+            # Convert 0-100 to 0-254
+            data[STATE_BRIGHTNESS] = round(temperature * HUE_API_STATE_BRI_MAX / 100)
         elif entity.domain == media_player.DOMAIN:
             level = entity.attributes.get(
                 ATTR_MEDIA_VOLUME_LEVEL, 1.0 if data[STATE_ON] else 0.0
             )
-            # Convert 0.0-1.0 to 0-255
-            data[STATE_BRIGHTNESS] = round(min(1.0, level) * 255)
+            # Convert 0.0-1.0 to 0-254
+            data[STATE_BRIGHTNESS] = round(min(1.0, level) * HUE_API_STATE_BRI_MAX)
         elif entity.domain == fan.DOMAIN:
             speed = entity.attributes.get(ATTR_SPEED, 0)
-            # Convert 0.0-1.0 to 0-255
+            # Convert 0.0-1.0 to 0-254
             data[STATE_BRIGHTNESS] = 0
             if speed == SPEED_LOW:
                 data[STATE_BRIGHTNESS] = 85
             elif speed == SPEED_MEDIUM:
                 data[STATE_BRIGHTNESS] = 170
             elif speed == SPEED_HIGH:
-                data[STATE_BRIGHTNESS] = 255
+                data[STATE_BRIGHTNESS] = HUE_API_STATE_BRI_MAX
         elif entity.domain == cover.DOMAIN:
             level = entity.attributes.get(ATTR_CURRENT_POSITION, 0)
-            data[STATE_BRIGHTNESS] = round(level / 100 * 255)
+            data[STATE_BRIGHTNESS] = round(level / 100 * HUE_API_STATE_BRI_MAX)
     else:
         data = cached_state
         # Make sure brightness is valid
         if data[STATE_BRIGHTNESS] is None:
-            data[STATE_BRIGHTNESS] = 255 if data[STATE_ON] else 0
+            data[STATE_BRIGHTNESS] = HUE_API_STATE_BRI_MAX if data[STATE_ON] else 0
 
         # Make sure hue/saturation are valid
         if (data[STATE_HUE] is None) or (data[STATE_SATURATION] is None):
@@ -723,3 +727,13 @@ def create_list_of_entities(config, request):
             json_response[number] = entity_to_json(config, entity)
 
     return json_response
+
+
+def hue_brightness_to_hass(value):
+    """Convert hue brightness 1..254 to hass format 0..255."""
+    return min(255, round((value / HUE_API_STATE_BRI_MAX) * 255))
+
+
+def hass_to_hue_brightness(value):
+    """Convert hass brightness 0..255 to hue 1..254 scale."""
+    return max(1, round((value / 255) * HUE_API_STATE_BRI_MAX))

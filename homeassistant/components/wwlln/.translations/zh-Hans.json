@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "\u4f4d\u7f6e\u5df2\u7ecf\u6ce8\u518c"
-        },
         "step": {
             "user": {
                 "data": {
@@ -12,7 +9,6 @@
                 },
                 "title": "\u586b\u5199\u60a8\u7684\u4f4d\u7f6e\u4fe1\u606f\u3002"
             }
-        },
-        "title": "\u5168\u7403\u95ea\u7535\u5b9a\u4f4d\u7f51\u7edc\uff08WWLLN\uff09"
+        }
     }
 }

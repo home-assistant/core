@@ -1,4 +1,4 @@
-"""Support for Go Slide slides."""
+"""Support for Slide slides."""
 
 import logging
 
@@ -12,13 +12,13 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import ATTR_ID
 
-from .const import API, DOMAIN, SLIDES
+from .const import API, DEFAULT_OFFSET, DOMAIN, SLIDES
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up cover(s) for Go Slide platform."""
+    """Set up cover(s) for Slide platform."""
 
     if discovery_info is None:
         return
@@ -33,7 +33,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 class SlideCover(CoverDevice):
-    """Representation of a Go Slide cover."""
+    """Representation of a Slide cover."""
 
     def __init__(self, api, slide):
         """Initialize the cover."""
@@ -42,6 +42,7 @@ class SlideCover(CoverDevice):
         self._id = slide["id"]
         self._unique_id = slide["mac"]
         self._name = slide["name"]
+        self._invert = slide["invert"]
 
     @property
     def unique_id(self):
@@ -95,6 +96,10 @@ class SlideCover(CoverDevice):
         """Return the current position of cover shutter."""
         pos = self._slide["pos"]
         if pos is not None:
+            if (1 - pos) <= DEFAULT_OFFSET or pos <= DEFAULT_OFFSET:
+                pos = round(pos)
+            if not self._invert:
+                pos = 1 - pos
             pos = int(pos * 100)
         return pos
 
@@ -115,6 +120,8 @@ class SlideCover(CoverDevice):
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION] / 100
+        if not self._invert:
+            position = 1 - position
 
         if self._slide["pos"] is not None:
             if position > self._slide["pos"]:

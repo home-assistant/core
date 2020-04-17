@@ -14,10 +14,6 @@
         "flow_title": "deCONZ Zigbee gateway ({host})",
         "step": {
             "hassio_confirm": {
-                "data": {
-                    "allow_clip_sensor": "Allow importing virtual sensors",
-                    "allow_deconz_groups": "Allow importing deCONZ groups"
-                },
                 "description": "Do you want to configure Home Assistant to connect to the deCONZ gateway provided by the Hass.io add-on {addon}?",
                 "title": "deCONZ Zigbee gateway via Hass.io add-on"
             },
@@ -31,20 +27,13 @@
             "link": {
                 "description": "Unlock your deCONZ gateway to register with Home Assistant.\n\n1. Go to deCONZ Settings -> Gateway -> Advanced\n2. Press \"Authenticate app\" button",
                 "title": "Link with deCONZ"
-            },
-            "options": {
-                "data": {
-                    "allow_clip_sensor": "Allow importing virtual sensors",
-                    "allow_deconz_groups": "Allow importing deCONZ groups"
-                },
-                "title": "Extra configuration options for deCONZ"
             }
-        },
-        "title": "deCONZ Zigbee gateway"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Both buttons",
+            "bottom_buttons": "Bottom buttons",
             "button_1": "First button",
             "button_2": "Second button",
             "button_3": "Third button",
@@ -61,6 +50,7 @@
             "side_4": "Side 4",
             "side_5": "Side 5",
             "side_6": "Side 6",
+            "top_buttons": "Top buttons",
             "turn_off": "Turn off",
             "turn_on": "Turn on"
         },
@@ -96,13 +86,6 @@
     },
     "options": {
         "step": {
-            "async_step_deconz_devices": {
-                "data": {
-                    "allow_clip_sensor": "Allow deCONZ CLIP sensors",
-                    "allow_deconz_groups": "Allow deCONZ light groups"
-                },
-                "description": "Configure visibility of deCONZ device types"
-            },
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Allow deCONZ CLIP sensors",

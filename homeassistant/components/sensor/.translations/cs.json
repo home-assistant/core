@@ -22,5 +22,6 @@
             "timestamp": "\u010dasov\u00e9 raz\u00edtko {entity_name} se zm\u011bn\u00ed",
             "value": "hodnota {entity_name} se zm\u011bn\u00ed"
         }
-    }
+    },
+    "title": "Senzor"
 }

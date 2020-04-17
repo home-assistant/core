@@ -14,5 +14,6 @@
             "disarmed": "{entity_name} bortkopplad",
             "triggered": "{entity_name} utl\u00f6st"
         }
-    }
+    },
+    "title": "Larmkontrollpanel"
 }

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This API key is already in use."
+            "already_configured": "These coordinates have already been registered."
         },
         "error": {
             "invalid_api_key": "Invalid API key"
@@ -16,8 +16,7 @@
                 "description": "Monitor air quality in a geographical location.",
                 "title": "Configure AirVisual"
             }
-        },
-        "title": "AirVisual"
+        }
     },
     "options": {
         "step": {

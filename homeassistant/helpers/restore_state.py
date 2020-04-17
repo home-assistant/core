@@ -123,11 +123,11 @@ class RestoreStateData:
         now = dt_util.utcnow()
         all_states = self.hass.states.async_all()
         # Entities currently backed by an entity object
-        current_entity_ids = set(
+        current_entity_ids = {
             state.entity_id
             for state in all_states
             if not state.attributes.get(entity_registry.ATTR_RESTORED)
-        )
+        }
 
         # Start with the currently registered states
         stored_states = [
@@ -171,14 +171,13 @@ class RestoreStateData:
     def async_setup_dump(self, *args: Any) -> None:
         """Set up the restore state listeners."""
 
-        @callback
-        def _async_dump_states(*_: Any) -> None:
-            self.hass.async_create_task(self.async_dump_states())
+        async def _async_dump_states(*_: Any) -> None:
+            await self.async_dump_states()
 
         # Dump the initial states now. This helps minimize the risk of having
         # old states loaded by overwriting the last states once Home Assistant
         # has started and the old states have been read.
-        _async_dump_states()
+        self.hass.async_create_task(_async_dump_states())
 
         # Dump states periodically
         async_track_time_interval(self.hass, _async_dump_states, STATE_DUMP_INTERVAL)

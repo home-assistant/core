@@ -202,7 +202,7 @@ def setup(hass: HomeAssistant, base_config):
         if multiprocessing.cpu_count() < 2
         else None
     )
-    host = base_config[DOMAIN].get(CONF_HOST, None)
+    host = base_config[DOMAIN].get(CONF_HOST)
     display_name = base_config[DOMAIN].get(CONF_DISPLAY_NAME, DEFAULT_DISPLAY_NAME)
     if host:
         adapter = TcpAdapter(host, name=display_name, activate_source=False)

@@ -84,10 +84,7 @@ class DemoLight(Light):
         self._effect_list = effect_list
         self._effect = effect
         self._available = True
-        if ct is not None and hs_color is None:
-            self._color_mode = "ct"
-        else:
-            self._color_mode = "hs"
+        self._color_mode = "ct" if ct is not None and hs_color is None else "hs"
 
     @property
     def device_info(self):
@@ -166,7 +163,7 @@ class DemoLight(Light):
         """Flag supported features."""
         return SUPPORT_DEMO
 
-    def turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the light on."""
         self._state = True
 
@@ -189,12 +186,12 @@ class DemoLight(Light):
 
         # As we have disabled polling, we need to inform
         # Home Assistant about updates in our state ourselves.
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the light off."""
         self._state = False
 
         # As we have disabled polling, we need to inform
         # Home Assistant about updates in our state ourselves.
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

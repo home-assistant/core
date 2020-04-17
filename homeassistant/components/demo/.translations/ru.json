@@ -1,7 +1,4 @@
 {
-    "config": {
-        "title": "\u0414\u0435\u043c\u043e"
-    },
     "options": {
         "step": {
             "options_1": {
@@ -18,5 +15,6 @@
                 }
             }
         }
-    }
+    },
+    "title": "\u0414\u0435\u043c\u043e"
 }

@@ -13,5 +13,6 @@
             "turned_off": "{entity_name} is uitgeschakeld",
             "turned_on": "{entity_name} is ingeschakeld"
         }
-    }
+    },
+    "title": "Licht"
 }
