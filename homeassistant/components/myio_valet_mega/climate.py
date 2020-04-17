@@ -57,7 +57,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     )
         except (ValueError, Exception):
             _LOGGER.debug(
-                "PWM doesn't have a sensor attribute - myIO-Server Version < 2.4.4.3"                
+                "PWM doesn't have a sensor attribute - myIO-Server Version < 2.4.4.3"              
             )
 
         async_add_entities(_climate_entities, True)
