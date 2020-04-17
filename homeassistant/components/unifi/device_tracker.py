@@ -67,6 +67,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             client = controller.api.clients_all[mac]
             controller.api.clients.process_raw([client.raw])
+            LOGGER.debug(
+                "Restore disconnected client %s (%s)", entity.entity_id, client.mac,
+            )
 
     @callback
     def items_added():
@@ -130,20 +133,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         remove.add(mac)
 
         if option_ssid_filter != controller.option_ssid_filter:
-            option_ssid_filter = controller.option_ssid_filter
             update = True
 
-            for mac, entity in tracked.items():
-                if (
-                    isinstance(entity, UniFiClientTracker)
-                    and not entity.is_wired
-                    and entity.client.essid not in option_ssid_filter
-                ):
-                    remove.add(mac)
+            if controller.option_ssid_filter:
+                for mac, entity in tracked.items():
+                    if (
+                        isinstance(entity, UniFiClientTracker)
+                        and not entity.is_wired
+                        and entity.client.essid not in controller.option_ssid_filter
+                    ):
+                        remove.add(mac)
 
         option_track_clients = controller.option_track_clients
         option_track_devices = controller.option_track_devices
         option_track_wired_clients = controller.option_track_wired_clients
+        option_ssid_filter = controller.option_ssid_filter
 
         remove_entities(controller, remove, tracked, entity_registry)
 
@@ -319,13 +323,12 @@ class UniFiDeviceTracker(ScannerEntity):
         """Set up tracked device."""
         self.device = device
         self.controller = controller
-        self.listeners = []
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
-        LOGGER.debug("New UniFi device tracker %s (%s)", self.name, self.device.mac)
+        LOGGER.debug("New device %s (%s)", self.entity_id, self.device.mac)
         self.device.register_callback(self.async_update_callback)
-        self.listeners.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, self.controller.signal_reachable, self.async_update_callback
             )
@@ -334,13 +337,11 @@ class UniFiDeviceTracker(ScannerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         self.device.remove_callback(self.async_update_callback)
-        for unsub_dispatcher in self.listeners:
-            unsub_dispatcher()
 
     @callback
     def async_update_callback(self):
         """Update the sensor's state."""
-        LOGGER.debug("Updating UniFi tracked device %s", self.entity_id)
+        LOGGER.debug("Updating device %s (%s)", self.entity_id, self.device.mac)
 
         self.async_write_ha_state()
 
