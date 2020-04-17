@@ -76,7 +76,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # Get the capabilities of our unit
     state = roomba_reported_state(roomba)
-    cap_carpet_boost = state.get("cap", {}).get("carpetBoost")
+    capabilities = state.get("cap", {})
+    cap_carpet_boost = capabilities.get("carpetBoost")
     detected_pad = state.get("detectedPad")
     if detected_pad is not None:
         constructor = BraavaJet
