@@ -1,9 +1,4 @@
-"""
-Support for Xiomi Gateway alarm control panels.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/
-"""
+"""Support for Xiomi Gateway alarm control panels."""
 
 import asyncio
 from functools import partial
@@ -27,7 +22,7 @@ from . import DOMAIN, CONF_GATEWAYS, KEY_GATEWAY_DEVICE, KEY_GATEWAY_INFO
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ["python-miio==0.4.8"]
+REQUIREMENTS = ["python-miio==0.5.0.1"]
 
 ATTR_MODEL = "model"
 ATTR_FIRMWARE_VERSION = "firmware_version"
