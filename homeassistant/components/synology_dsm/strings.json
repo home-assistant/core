@@ -13,6 +13,12 @@
           "password": "Password"
         }
       },
+      "2sa": {
+        "title": "Synology DSM: two-step authentication",
+        "data": {
+          "otp_code": "Code"
+        }
+      },
       "link": {
         "title": "Synology DSM",
         "description": "Do you want to setup {name} ({host})?",
@@ -27,7 +33,8 @@
     },
     "error": {
       "login": "Login error: please check your username & password",
-      "missing_data": "Missing data: please retry later or an other configuration"
+      "missing_data": "Missing data: please retry later or an other configuration",
+      "otp_failed": "Two-step authentication failed, retry with a new pass code"
     },
     "abort": { "already_configured": "Host already configured" }
   }

@@ -5,10 +5,17 @@
         },
         "error": {
             "login": "Login error: please check your username & password",
-            "missing_data": "Missing data: please retry later or an other configuration"
+            "missing_data": "Missing data: please retry later or an other configuration",
+            "otp_failed": "Two-step authentication failed, retry with a new pass code"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Code"
+                },
+                "title": "Synology DSM: two-step authentication"
+            },
             "link": {
                 "data": {
                     "api_version": "DSM version",
