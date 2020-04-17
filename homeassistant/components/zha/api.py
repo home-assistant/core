@@ -209,7 +209,7 @@ async def websocket_get_devices(hass, connection, msg):
     """Get ZHA devices."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
 
-    devices = [device.async_get_info() for device in zha_gateway.devices.values()]
+    devices = [device.zha_device_info for device in zha_gateway.devices.values()]
 
     connection.send_result(msg[ID], devices)
 
@@ -222,7 +222,7 @@ async def websocket_get_groupable_devices(hass, connection, msg):
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
 
     devices = [
-        device.async_get_info()
+        device.zha_device_info
         for device in zha_gateway.devices.values()
         if device.is_groupable or device.is_coordinator
     ]
@@ -243,7 +243,7 @@ async def websocket_get_groupable_devices_2(hass, connection, msg):
 
     for device in devices:
         entity_refs = zha_gateway.device_registry.get(device.ieee)
-        device_info = device.async_get_info()
+        device_info = device.zha_device_info
         endpoint_info = []
         for ep_id in device.async_get_groupable_endpoints():
             endpoint_info.append(
@@ -277,7 +277,7 @@ async def websocket_get_groupable_devices_2(hass, connection, msg):
 async def websocket_get_groups(hass, connection, msg):
     """Get ZHA groups."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-    groups = [group.async_get_info() for group in zha_gateway.groups.values()]
+    groups = [group.group_info for group in zha_gateway.groups.values()]
     connection.send_result(msg[ID], groups)
 
 
@@ -292,7 +292,7 @@ async def websocket_get_device(hass, connection, msg):
     ieee = msg[ATTR_IEEE]
     device = None
     if ieee in zha_gateway.devices:
-        device = zha_gateway.devices[ieee].async_get_info()
+        device = zha_gateway.devices[ieee].zha_device_info
     if not device:
         connection.send_message(
             websocket_api.error_message(
@@ -315,7 +315,7 @@ async def websocket_get_group(hass, connection, msg):
     group = None
 
     if group_id in zha_gateway.groups:
-        group = zha_gateway.groups.get(group_id).async_get_info()
+        group = zha_gateway.groups.get(group_id).group_info
     if not group:
         connection.send_message(
             websocket_api.error_message(
@@ -341,7 +341,7 @@ async def websocket_add_group(hass, connection, msg):
     group_name = msg[GROUP_NAME]
     members = msg.get(ATTR_MEMBERS)
     group = await zha_gateway.async_create_zigpy_group(group_name, members)
-    connection.send_result(msg[ID], group.async_get_info())
+    connection.send_result(msg[ID], group.group_info)
 
 
 @websocket_api.require_admin
@@ -364,7 +364,7 @@ async def websocket_remove_groups(hass, connection, msg):
         await asyncio.gather(*tasks)
     else:
         await zha_gateway.async_remove_zigpy_group(group_ids[0])
-    ret_groups = [group.async_get_info() for group in zha_gateway.groups.values()]
+    ret_groups = [group.group_info for group in zha_gateway.groups.values()]
     connection.send_result(msg[ID], ret_groups)
 
 
@@ -394,7 +394,7 @@ async def websocket_add_group_members(hass, connection, msg):
             )
         )
         return
-    ret_group = zha_group.async_get_info()
+    ret_group = zha_group.group_info
     connection.send_result(msg[ID], ret_group)
 
 
@@ -424,7 +424,7 @@ async def websocket_remove_group_members(hass, connection, msg):
             )
         )
         return
-    ret_group = zha_group.async_get_info()
+    ret_group = zha_group.group_info
     connection.send_result(msg[ID], ret_group)
 
 
@@ -649,7 +649,7 @@ async def websocket_get_bindable_devices(hass, connection, msg):
     source_device = zha_gateway.get_device(source_ieee)
 
     devices = [
-        device.async_get_info()
+        device.zha_device_info
         for device in zha_gateway.devices.values()
         if async_is_bindable_target(source_device, device)
     ]

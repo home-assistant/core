@@ -407,8 +407,8 @@ class ZHADevice(LogMixin):
         if self._zigpy_device.last_seen is None and last_seen is not None:
             self._zigpy_device.last_seen = last_seen
 
-    @callback
-    def async_get_info(self):
+    @property
+    def zha_device_info(self):
         """Get ZHA device information."""
         device_info = {}
         device_info.update(self.device_info)

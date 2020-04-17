@@ -308,7 +308,7 @@ class ZHAGateway:
                 ZHA_GW_MSG,
                 {
                     ATTR_TYPE: gateway_message_type,
-                    ZHA_GW_MSG_GROUP_INFO: zha_group.async_get_info(),
+                    ZHA_GW_MSG_GROUP_INFO: zha_group.group_info,
                 },
             )
 
@@ -327,7 +327,7 @@ class ZHAGateway:
         zha_device = self._devices.pop(device.ieee, None)
         entity_refs = self._device_registry.pop(device.ieee, None)
         if zha_device is not None:
-            device_info = zha_device.async_get_info()
+            device_info = zha_device.zha_device_info
             zha_device.async_cleanup_handles()
             async_dispatcher_send(
                 self._hass, "{}_{}".format(SIGNAL_REMOVE, str(zha_device.ieee))
@@ -542,7 +542,7 @@ class ZHAGateway:
             )
             await self._async_device_joined(zha_device)
 
-        device_info = zha_device.async_get_info()
+        device_info = zha_device.zha_device_info
 
         async_dispatcher_send(
             self._hass,

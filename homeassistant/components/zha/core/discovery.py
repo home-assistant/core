@@ -245,11 +245,11 @@ class GroupProbe:
 
         zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
         all_domain_occurrences = []
-        for device in group.members:
-            if device.is_coordinator:
+        for member in group.members:
+            if member.device.is_coordinator:
                 continue
             entities = async_entries_for_device(
-                zha_gateway.ha_entity_registry, device.device_id
+                zha_gateway.ha_entity_registry, member.device.device_id
             )
             all_domain_occurrences.extend(
                 [
