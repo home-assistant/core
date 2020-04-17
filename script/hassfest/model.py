@@ -66,6 +66,7 @@ class Integration:
     path = attr.ib(type=pathlib.Path)
     manifest = attr.ib(type=dict, default=None)
     errors = attr.ib(type=List[Error], factory=list)
+    warnings = attr.ib(type=List[Error], factory=list)
 
     @property
     def domain(self) -> str:
@@ -85,6 +86,10 @@ class Integration:
     def add_error(self, *args, **kwargs):
         """Add an error."""
         self.errors.append(Error(*args, **kwargs))
+
+    def add_warning(self, *args, **kwargs):
+        """Add an warning."""
+        self.warnings.append(Error(*args, **kwargs))
 
     def load_manifest(self) -> None:
         """Load manifest."""

@@ -125,18 +125,22 @@ def main():
         general_errors = config.errors
         invalid_itg = [itg for itg in integrations.values() if itg.errors]
 
+    warnings_itg = [itg for itg in integrations.values() if itg.warnings]
+
     print()
     print("Integrations:", len(integrations))
     print("Invalid integrations:", len(invalid_itg))
+    print()
 
     if not invalid_itg and not general_errors:
+        print_integrations_status(config, warnings_itg, show_fixable_errors=False)
+
         if config.action == "generate":
             for plugin in plugins:
                 if hasattr(plugin, "generate"):
                     plugin.generate(integrations, config)
         return 0
 
-    print()
     if config.action == "generate":
         print("Found errors. Generating files canceled.")
         print()
@@ -147,14 +151,24 @@ def main():
             print("*", error)
         print()
 
-    for integration in sorted(invalid_itg, key=lambda itg: itg.domain):
+    invalid_itg.extend(itg for itg in warnings_itg if itg not in invalid_itg)
+
+    print_integrations_status(config, invalid_itg, show_fixable_errors=False)
+
+    return 1
+
+
+def print_integrations_status(config, integrations, *, show_fixable_errors=True):
+    """Print integration status."""
+    for integration in sorted(integrations, key=lambda itg: itg.domain):
         extra = f" - {integration.path}" if config.specific_integrations else ""
         print(f"Integration {integration.domain}{extra}:")
         for error in integration.errors:
-            print("*", error)
+            if show_fixable_errors or not error.fixable:
+                print("*", error)
+        for warning in integration.warnings:
+            print("*", "[WARNING]", warning)
         print()
-
-    return 1
 
 
 if __name__ == "__main__":
