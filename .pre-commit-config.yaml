@@ -54,7 +54,7 @@ repos:
           - --branch=master
           - --branch=rc
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.22.0
+    rev: v1.23.0
     hooks:
       - id: yamllint
   - repo: https://github.com/prettier/prettier
