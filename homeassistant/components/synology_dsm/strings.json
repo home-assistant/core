@@ -27,7 +27,7 @@
     },
     "error": {
       "login": "Login error: please check your username & password",
-      "unknown": "Unknown error: please retry later or an other configuration"
+      "missing_data": "Missing data: please retry later or an other configuration"
     },
     "abort": { "already_configured": "Host already configured" }
   }
