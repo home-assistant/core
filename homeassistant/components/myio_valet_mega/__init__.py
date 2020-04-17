@@ -61,7 +61,6 @@ async def async_setup_entry(hass, config_entry):
     try:
         _refresh_timer = config_entry.options[CONF_REFRESH_TIME]
     except (ValueError, Exception):
-        _LOGGER.debug(ex)
         _refresh_timer = 4
 
     def server_status():
