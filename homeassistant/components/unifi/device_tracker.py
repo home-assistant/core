@@ -308,7 +308,6 @@ class UniFiDeviceTracker(ScannerEntity):
         """Set up tracked device."""
         self.device = device
         self.controller = controller
-        self.listeners = []
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""

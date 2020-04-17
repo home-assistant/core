@@ -39,7 +39,6 @@ class UniFiClient(Entity):
         """Set up client."""
         self.client = client
         self.controller = controller
-        self.listeners = []
 
         self._is_wired = self.client.mac not in controller.wireless_clients
         self.is_blocked = self.client.blocked
