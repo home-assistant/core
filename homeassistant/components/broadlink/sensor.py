@@ -23,7 +23,14 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from . import hostname, mac_address
-from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_TIMEOUT
+from .const import (
+    A1_TYPES,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
+    RM4_TYPES,
+    RM_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +44,8 @@ SENSOR_TYPES = {
     "noise": ["Noise", " "],
 }
 
+DEVICE_TYPES = A1_TYPES + RM_TYPES + RM4_TYPES
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): vol.Coerce(str),
@@ -45,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Required(CONF_HOST): vol.All(vol.Any(hostname, ip_address), cv.string),
         vol.Required(CONF_MAC): mac_address,
-        vol.Optional(CONF_TYPE): cv.positive_int,
+        vol.Optional(CONF_TYPE, default=DEVICE_TYPES[0]): vol.In(DEVICE_TYPES),
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )
@@ -55,11 +64,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Broadlink device sensors."""
     host = config[CONF_HOST]
     mac_addr = config[CONF_MAC]
+    model = config[CONF_TYPE]
     name = config[CONF_NAME]
-    dev_type = config.get(CONF_TYPE)
     timeout = config[CONF_TIMEOUT]
     update_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    broadlink_data = BroadlinkData(update_interval, host, mac_addr, dev_type, timeout)
+
+    if model in RM4_TYPES:
+        api = blk.rm4((host, DEFAULT_PORT), mac_addr, None)
+        check_sensors = api.check_sensors
+    else:
+        api = blk.a1((host, DEFAULT_PORT), mac_addr, None)
+        check_sensors = api.check_sensors_raw
+
+    api.timeout = timeout
+    broadlink_data = BroadlinkData(api, check_sensors, update_interval)
     dev = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         dev.append(BroadlinkSensor(name, broadlink_data, variable))
@@ -112,14 +130,11 @@ class BroadlinkSensor(Entity):
 class BroadlinkData:
     """Representation of a Broadlink data object."""
 
-    def __init__(self, interval, host, mac_addr, dev_type, timeout):
+    def __init__(self, api, check_sensors, interval):
         """Initialize the data object."""
+        self.api = api
+        self.check_sensors = check_sensors
         self.data = None
-        self.host = host
-        self.mac_addr = mac_addr
-        self.dev_type = dev_type
-        self.timeout = timeout
-        self._connect()
         self._schema = vol.Schema(
             {
                 vol.Optional("temperature"): vol.Range(min=-50, max=150),
@@ -133,13 +148,9 @@ class BroadlinkData:
         if not self._auth():
             _LOGGER.warning("Failed to connect to device")
 
-    def _connect(self):
-        self._device = blk.a1((self.host, DEFAULT_PORT), self.mac_addr, self.dev_type)
-        self._device.timeout = self.timeout
-
     def _update(self, retry=3):
         try:
-            data = self._device.check_sensors_raw()
+            data = self.check_sensors()
             if data is not None:
                 self.data = self._schema(data)
                 return
@@ -155,10 +166,9 @@ class BroadlinkData:
 
     def _auth(self, retry=3):
         try:
-            auth = self._device.auth()
+            auth = self.api.auth()
         except OSError:
             auth = False
         if not auth and retry > 0:
-            self._connect()
             return self._auth(retry - 1)
         return auth

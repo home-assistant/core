@@ -24,7 +24,17 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import Throttle, slugify
 
 from . import async_setup_service, data_packet, hostname, mac_address
-from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_RETRY, DEFAULT_TIMEOUT
+from .const import (
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DEFAULT_RETRY,
+    DEFAULT_TIMEOUT,
+    MP1_TYPES,
+    RM4_TYPES,
+    RM_TYPES,
+    SP1_TYPES,
+    SP2_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,31 +43,7 @@ TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 CONF_SLOTS = "slots"
 CONF_RETRY = "retry"
 
-RM_TYPES = [
-    "rm",
-    "rm2",
-    "rm_mini",
-    "rm_mini_shate",
-    "rm_pro_phicomm",
-    "rm2_home_plus",
-    "rm2_home_plus_gdt",
-    "rm2_pro_plus",
-    "rm2_pro_plus2",
-    "rm2_pro_plus_bl",
-]
-RM4_TYPES = [
-    "rm_mini3_newblackbean",
-    "rm_mini3_redbean",
-    "rm4_mini",
-    "rm4_pro",
-    "rm4c_mini",
-    "rm4c_pro",
-]
-SP1_TYPES = ["sp1"]
-SP2_TYPES = ["sp2", "honeywell_sp2", "sp3", "spmini2", "spminiplus"]
-MP1_TYPES = ["mp1"]
-
-SWITCH_TYPES = RM_TYPES + RM4_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
+DEVICE_TYPES = RM_TYPES + RM4_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
 
 SWITCH_SCHEMA = vol.Schema(
     {
@@ -85,7 +71,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_HOST): vol.All(vol.Any(hostname, ip_address), cv.string),
         vol.Required(CONF_MAC): mac_address,
         vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_TYPE, default=SWITCH_TYPES[0]): vol.In(SWITCH_TYPES),
+        vol.Optional(CONF_TYPE, default=DEVICE_TYPES[0]): vol.In(DEVICE_TYPES),
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_RETRY, default=DEFAULT_RETRY): cv.positive_int,
     }
@@ -100,7 +86,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     mac_addr = config.get(CONF_MAC)
     friendly_name = config.get(CONF_FRIENDLY_NAME)
-    switch_type = config.get(CONF_TYPE)
+    model = config[CONF_TYPE]
     retry_times = config.get(CONF_RETRY)
 
     def generate_rm_switches(switches, broadlink_device):
@@ -123,21 +109,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             return f"{switch_friendly_name} slot {slot}"
         return slots[f"slot_{slot}"]
 
-    if switch_type in RM_TYPES:
+    if model in RM_TYPES:
         broadlink_device = blk.rm((host, DEFAULT_PORT), mac_addr, None)
         hass.add_job(async_setup_service, hass, host, broadlink_device)
         switches = generate_rm_switches(devices, broadlink_device)
-    if switch_type in RM4_TYPES:
+    if model in RM4_TYPES:
         broadlink_device = blk.rm4((host, DEFAULT_PORT), mac_addr, None)
         hass.add_job(async_setup_service, hass, host, broadlink_device)
         switches = generate_rm_switches(devices, broadlink_device)
-    elif switch_type in SP1_TYPES:
+    elif model in SP1_TYPES:
         broadlink_device = blk.sp1((host, DEFAULT_PORT), mac_addr, None)
         switches = [BroadlinkSP1Switch(friendly_name, broadlink_device, retry_times)]
-    elif switch_type in SP2_TYPES:
+    elif model in SP2_TYPES:
         broadlink_device = blk.sp2((host, DEFAULT_PORT), mac_addr, None)
         switches = [BroadlinkSP2Switch(friendly_name, broadlink_device, retry_times)]
-    elif switch_type in MP1_TYPES:
+    elif model in MP1_TYPES:
         switches = []
         broadlink_device = blk.mp1((host, DEFAULT_PORT), mac_addr, None)
         parent_device = BroadlinkMP1Switch(broadlink_device, retry_times)
