@@ -709,10 +709,10 @@ def _flush_logs(hass, call):
         import homeassistant.components.ais_files as ais_files
 
         keep_days = 2
-        if ais_files.G_DB_SETTINGS_INFO is not None:
+        if ais_global.G_DB_SETTINGS_INFO is not None:
             # take keep days from settings
-            if "dbKeepDays" in ais_files.G_DB_SETTINGS_INFO:
-                keep_days = int(ais_files.G_DB_SETTINGS_INFO["dbKeepDays"])
+            if "dbKeepDays" in ais_global.G_DB_SETTINGS_INFO:
+                keep_days = int(ais_global.G_DB_SETTINGS_INFO["dbKeepDays"])
 
         yield from hass.services.async_call(
             "recorder", "purge", {"keep_days": keep_days, "repack": True}
