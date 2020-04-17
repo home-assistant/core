@@ -50,7 +50,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for _pwm in _pwms:
             try:
                 _sensor = _pwms[_pwm]["sensor"]
-            except Exception:
+            except (ValueError, Exception):
                 _sensor = 0
             finally:
                 if _pwms[_pwm]["description"] != "" and _sensor == 0:
@@ -286,7 +286,7 @@ class MyIOlightRGBW(Light):
                     if self._white_value != 0:
                         self._state = True
                     self._supported_features = RGBW_FEATURES
-            except Exception:
+            except (ValueError, Exception):
                 continue
 
         # defining HSB values from RGB values"""
@@ -446,23 +446,19 @@ class MyIOlightRGBW(Light):
                     self._red_value = _pwm_unit["state"]
                     if self._red_value != 0:
                         self._state = True
-                    continue
                 elif _element_d.startswith("G") and 100 < _element < 200:
                     self._green_value = _pwm_unit["state"]
                     if self._green_value != 0:
                         self._state = True
-                    continue
                 elif _element_d.startswith("B") and 100 < _element < 200:
                     self._blue_value = _pwm_unit["state"]
                     if self._blue_value != 0:
                         self._state = True
-                    continue
                 elif _element_d.startswith("W") and 100 < _element < 200:
                     self._white_value = _pwm_unit["state"]
                     if self._white_value != 0:
                         self._state = True
-                    continue
-            except Exception:
+            except (ValueError, Exception):
                 continue
 
         # defining HSB values from RGB values"""
