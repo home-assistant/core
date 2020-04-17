@@ -135,6 +135,7 @@ class IPPEntity(Entity):
         enabled_default: bool = True,
     ) -> None:
         """Initialize the IPP entity."""
+        self._device_id = device_id
         self._enabled_default = enabled_default
         self._entry_id = entry_id
         self._icon = icon
