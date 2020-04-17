@@ -393,11 +393,6 @@ class HueOneLightChangeView(HomeAssistantView):
                         data[ATTR_BRIGHTNESS] = hue_brightness_to_hass(
                             parsed[STATE_BRIGHTNESS]
                         )
-                        _LOGGER.debug(
-                            "Set brightness incoming from hueapi: %s outgoing to hass: %s",
-                            parsed[STATE_BRIGHTNESS],
-                            data[ATTR_BRIGHTNESS],
-                        )
 
                 if entity_features & SUPPORT_COLOR:
                     if any((parsed[STATE_HUE], parsed[STATE_SATURATION])):
