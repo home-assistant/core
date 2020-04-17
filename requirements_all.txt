@@ -1531,7 +1531,6 @@ pysdcp==1
 # homeassistant.components.sensibo
 pysensibo==1.0.3
 
-# homeassistant.components.modbus
 # homeassistant.components.serial
 pyserial-asyncio==0.4
 

@@ -2,7 +2,7 @@
 import logging
 from typing import Optional
 
-from pymodbus.exceptions import ModbusException
+from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
@@ -76,7 +76,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Read configuration and create Modbus devices."""
     switches = []
     if CONF_COILS in config:
@@ -109,7 +109,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 )
             )
 
-    async_add_entities(switches)
+    add_entities(switches)
 
 
 class ModbusCoilSwitch(ToggleEntity, RestoreEntity):
@@ -146,24 +146,26 @@ class ModbusCoilSwitch(ToggleEntity, RestoreEntity):
         """Return True if entity is available."""
         return self._available
 
-    async def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs):
         """Set switch on."""
-        await self._write_coil(self._coil, True)
+        self._write_coil(self._coil, True)
 
-    async def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs):
         """Set switch off."""
-        await self._write_coil(self._coil, False)
+        self._write_coil(self._coil, False)
 
-    async def async_update(self):
+    def update(self):
         """Update the state of the switch."""
-        self._is_on = await self._read_coil(self._coil)
+        self._is_on = self._read_coil(self._coil)
 
-    async def _read_coil(self, coil) -> Optional[bool]:
+    def _read_coil(self, coil) -> Optional[bool]:
         """Read coil using the Modbus hub slave."""
-        result = await self._hub.read_coils(self._slave, coil, 1)
-        if result is None:
+        try:
+            result = self._hub.read_coils(self._slave, coil, 1)
+        except ConnectionException:
             self._available = False
             return
+
         if isinstance(result, (ModbusException, ExceptionResponse)):
             self._available = False
             return
@@ -173,9 +175,14 @@ class ModbusCoilSwitch(ToggleEntity, RestoreEntity):
 
         return value
 
-    async def _write_coil(self, coil, value):
+    def _write_coil(self, coil, value):
         """Write coil using the Modbus hub slave."""
-        await self._hub.write_coil(self._slave, coil, value)
+        try:
+            self._hub.write_coil(self._slave, coil, value)
+        except ConnectionException:
+            self._available = False
+            return
+
         self._available = True
 
 
@@ -221,21 +228,21 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
 
         self._is_on = None
 
-    async def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs):
         """Set switch on."""
 
         # Only holding register is writable
         if self._register_type == CALL_TYPE_REGISTER_HOLDING:
-            await self._write_register(self._command_on)
+            self._write_register(self._command_on)
             if not self._verify_state:
                 self._is_on = True
 
-    async def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs):
         """Set switch off."""
 
         # Only holding register is writable
         if self._register_type == CALL_TYPE_REGISTER_HOLDING:
-            await self._write_register(self._command_off)
+            self._write_register(self._command_off)
             if not self._verify_state:
                 self._is_on = False
 
@@ -244,12 +251,12 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
         """Return True if entity is available."""
         return self._available
 
-    async def async_update(self):
+    def update(self):
         """Update the state of the switch."""
         if not self._verify_state:
             return
 
-        value = await self._read_register()
+        value = self._read_register()
         if value == self._state_on:
             self._is_on = True
         elif value == self._state_off:
@@ -263,18 +270,18 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
                 value,
             )
 
-    async def _read_register(self) -> Optional[int]:
-        if self._register_type == CALL_TYPE_REGISTER_INPUT:
-            result = await self._hub.read_input_registers(
-                self._slave, self._register, 1
-            )
-        else:
-            result = await self._hub.read_holding_registers(
-                self._slave, self._register, 1
-            )
-        if result is None:
+    def _read_register(self) -> Optional[int]:
+        try:
+            if self._register_type == CALL_TYPE_REGISTER_INPUT:
+                result = self._hub.read_input_registers(self._slave, self._register, 1)
+            else:
+                result = self._hub.read_holding_registers(
+                    self._slave, self._register, 1
+                )
+        except ConnectionException:
             self._available = False
             return
+
         if isinstance(result, (ModbusException, ExceptionResponse)):
             self._available = False
             return
@@ -284,7 +291,12 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
 
         return value
 
-    async def _write_register(self, value):
+    def _write_register(self, value):
         """Write holding register using the Modbus hub slave."""
-        await self._hub.write_register(self._slave, self._register, value)
+        try:
+            self._hub.write_register(self._slave, self._register, value)
+        except ConnectionException:
+            self._available = False
+            return
+
         self._available = True
