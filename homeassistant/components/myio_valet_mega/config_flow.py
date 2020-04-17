@@ -30,7 +30,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class configFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for MyIO Valet Mega."""
 
     VERSION = 1
@@ -94,3 +94,7 @@ class MyIOoptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="myio_options", data_schema=vol.Schema(options)
         )
+
+    
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
