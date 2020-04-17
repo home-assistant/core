@@ -6,9 +6,11 @@ import functools
 import logging
 import threading
 from traceback import extract_stack
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable, Coroutine, TypeVar
 
 _LOGGER = logging.getLogger(__name__)
+
+T = TypeVar("T")
 
 
 def fire_coroutine_threadsafe(coro: Coroutine, loop: AbstractEventLoop) -> None:
@@ -33,8 +35,8 @@ def fire_coroutine_threadsafe(coro: Coroutine, loop: AbstractEventLoop) -> None:
 
 
 def run_callback_threadsafe(
-    loop: AbstractEventLoop, callback: Callable, *args: Any
-) -> concurrent.futures.Future:
+    loop: AbstractEventLoop, callback: Callable[..., T], *args: Any
+) -> "concurrent.futures.Future[T]":
     """Submit a callback object to a given event loop.
 
     Return a concurrent.futures.Future to access the result.
