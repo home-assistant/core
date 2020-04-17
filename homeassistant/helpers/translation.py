@@ -16,6 +16,7 @@ from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
+TRANSLATION_LOAD_LOCK = "translation_load_lock"
 TRANSLATION_STRING_CACHE = "translation_string_cache"
 
 
@@ -183,7 +184,20 @@ async def async_get_translations(
         if config_flow:
             components = components | await async_get_config_flows(hass)
 
-    resources = await async_get_component_resources(hass, language, components)
+    lock = hass.data.get(TRANSLATION_LOAD_LOCK)
+    if lock is None:
+        lock = hass.data[TRANSLATION_LOAD_LOCK] = asyncio.Lock()
+
+    tasks = [async_get_component_resources(hass, language, components)]
+
+    # Fetch the English resources, as a fallback for missing keys
+    if language != "en":
+        tasks.append(async_get_component_resources(hass, "en", components))
+
+    async with lock:
+        results = await asyncio.gather(*tasks)
+
+    resources: Dict[str, Any] = results[0]
 
     if category is not None:
         resources = {
@@ -194,13 +208,14 @@ async def async_get_translations(
     resources = flatten({"component": resources})
 
     if language != "en":
-        # Fetch the English resources, as a fallback for missing keys
-        base_resources = await async_get_component_resources(hass, "en", components)
+        base_resources = results[1]
+
         if category is not None:
             base_resources = {
                 domain: {category: base_resources[domain].get(category) or {}}
                 for domain in base_resources
             }
+
         base_resources = flatten({"component": base_resources})
 
         resources = {**base_resources, **resources}
