@@ -90,14 +90,14 @@ class MyIOSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        stringToSend = ""
+        string_to_send = ""
         if int(self._number) < 100:
-            stringToSend = TEMP_CELSIUS
+            string_to_send = TEMP_CELSIUS
         elif int(self._number) < 200:
-            stringToSend = "%"
+            string_to_send = "%"
         else:
-            stringToSend = self._name
-        return stringToSend
+            string_to_send = self._name
+        return string_to_send
 
     def update(self):
         """Fetch new state data for the sensor."""
