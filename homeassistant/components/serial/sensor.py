@@ -28,6 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Serial sensor platform."""
     name = config.get(CONF_NAME)
@@ -42,6 +43,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, sensor.stop_serial_read())
     async_add_entities([sensor], True)
+
 
 class SerialSensor(Entity):
     """Representation of a Serial sensor."""
@@ -64,7 +66,7 @@ class SerialSensor(Entity):
 
     async def serial_read(self, device, rate, **kwargs):
         """Read the data from the port."""
-        loggedError = False
+        logged_error = False
         while True:
             try:
                 reader, _ = await serial_asyncio.open_serial_connection(
@@ -88,17 +90,21 @@ class SerialSensor(Entity):
 
                         _LOGGER.debug("Received: %s", line)
                         self._state = line
-                        self.async_schedule_update_ha_state()
+                        self.async_write_ha_state()
                     except Exception as e:
                         self._state = None
                         self._attributes = None
-                        self.async_schedule_update_ha_state()
+                        self.async_write_ha_state()
                         _LOGGER.error("Error while reading serial device %s: " + str(e), device)
+                        await asyncio.sleep(5)
                         break
             except:
-                if not loggedError:
+								self._state = None
+								self._attributes = None
+								self.async_write_ha_state()
+                if not logged_error:
                     _LOGGER.error("Unable to connect to the serial device %s. Retrying...", device)
-                    loggedError = True
+                    logged_error = True
                 await asyncio.sleep(5)
 
     async def stop_serial_read(self):
