@@ -865,6 +865,10 @@ def test_relative_time(mock_is_safe, hass):
                 hass,
             ).async_render()
         )
+        assert (
+            "string"
+            == template.Template('{{relative_time("string")}}', hass,).async_render()
+        )
 
 
 @patch(
