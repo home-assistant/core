@@ -32,8 +32,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     sensor_entities.append(
                         MyIOSensor(hass, _sensor_id, _server_data, _server_name)
                     )
-        except (ValueError, Exception as ex):
-            _LOGGER.debug("%s,%s - No sensor data", ex, _server_name)
+        except (ValueError, Exception):
+            _LOGGER.debug("%s - No sensor data", _server_name)
 
         async_add_entities(sensor_entities)
 
