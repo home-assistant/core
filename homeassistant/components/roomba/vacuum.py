@@ -171,7 +171,7 @@ class IRobotBase(VacuumDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn the vacuum on."""
-        await self.hass.async_add_job(self.vacuum.send_command, "start")
+        await self.hass.async_add_executor_job(self.vacuum.send_command, "start")
         self._is_on = True
 
     async def async_turn_off(self, **kwargs):
@@ -181,17 +181,17 @@ class IRobotBase(VacuumDevice):
 
     async def async_stop(self, **kwargs):
         """Stop the vacuum cleaner."""
-        await self.hass.async_add_job(self.vacuum.send_command, "stop")
+        await self.hass.async_add_executor_job(self.vacuum.send_command, "stop")
         self._is_on = False
 
     async def async_resume(self, **kwargs):
         """Resume the cleaning cycle."""
-        await self.hass.async_add_job(self.vacuum.send_command, "resume")
+        await self.hass.async_add_executor_job(self.vacuum.send_command, "resume")
         self._is_on = True
 
     async def async_pause(self):
         """Pause the cleaning cycle."""
-        await self.hass.async_add_job(self.vacuum.send_command, "pause")
+        await self.hass.async_add_executor_job(self.vacuum.send_command, "pause")
         self._is_on = False
 
     async def async_start_pause(self, **kwargs):
@@ -205,17 +205,19 @@ class IRobotBase(VacuumDevice):
 
     async def async_return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
-        await self.hass.async_add_job(self.vacuum.send_command, "dock")
+        await self.hass.async_add_executor_job(self.vacuum.send_command, "dock")
         self._is_on = False
 
     async def async_locate(self, **kwargs):
         """Located vacuum."""
-        await self.hass.async_add_job(self.vacuum.send_command, "find")
+        await self.hass.async_add_executor_job(self.vacuum.send_command, "find")
 
     async def async_send_command(self, command, params=None, **kwargs):
         """Send raw command."""
         _LOGGER.debug("async_send_command %s (%s), %s", command, params, kwargs)
-        await self.hass.async_add_job(self.vacuum.send_command, command, params)
+        await self.hass.async_add_executor_job(
+            self.vacuum.send_command, command, params
+        )
         return True
 
     async def async_update(self):
@@ -329,10 +331,10 @@ class RoombaVacuumCarpetBoost(RoombaVacuum):
             _LOGGER.error("No such fan speed available: %s", fan_speed)
             return
         # The set_preference method does only accept string values
-        await self.hass.async_add_job(
+        await self.hass.async_add_executor_job(
             self.vacuum.set_preference, "carpetBoost", str(carpet_boost)
         )
-        await self.hass.async_add_job(
+        await self.hass.async_add_executor_job(
             self.vacuum.set_preference, "vacHigh", str(high_perf)
         )
 
@@ -405,7 +407,7 @@ class BraavaJet(IRobotBase):
             overlap = OVERLAP_DEEP
         else:
             overlap = OVERLAP_EXTENDED
-        await self.hass.async_add_job(
+        await self.hass.async_add_executor_job(
             self.vacuum.client.publish,
             "delta",
             json.dumps(
