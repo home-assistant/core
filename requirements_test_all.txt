@@ -682,15 +682,6 @@ simplisafe-python==9.0.5
 # homeassistant.components.sleepiq
 sleepyq==0.7
 
-# homeassistant.components.bh1750
-# homeassistant.components.bme280
-# homeassistant.components.bme680
-# homeassistant.components.envirophat
-# homeassistant.components.htu21d
-# homeassistant.components.lm75
-# homeassistant.components.raspihats
-# smbus-cffi==0.5.1
-
 # homeassistant.components.smhi
 smhi-pkg==1.0.13
 
