@@ -256,7 +256,7 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
     @property
     def _active_state(self):
         """Get the current state."""
-        if self.state == STATE_ALARM_PENDING or self.state == STATE_ALARM_ARMING:
+        if self.state in (STATE_ALARM_PENDING, STATE_ALARM_ARMING):
             return self._previous_state
         return self._state
 
