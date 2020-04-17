@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "LM75",
     "step": {
       "user": {
         "title": "LM75",
