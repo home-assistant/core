@@ -82,8 +82,7 @@ async def _migrate_old_unique_ids(hass, entry_id, powerwall_data):
                 new_unique_id,
             )
             return {"new_unique_id": new_unique_id}
-        else:
-            return None
+        return None
 
     await entity_registry.async_migrate_entries(hass, entry_id, _async_migrator)
 
