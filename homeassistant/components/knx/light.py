@@ -184,6 +184,7 @@ class KNXLight(Light):
             return self.device.current_brightness
         hsv_color = self._hsv_color
         if self.device.supports_color and hsv_color:
+            # pylint: disable=unsubscriptable-object
             return round(hsv_color[-1] / 100 * 255)
         return None
 
