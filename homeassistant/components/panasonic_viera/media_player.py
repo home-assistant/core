@@ -222,9 +222,10 @@ class Remote:
         except (TimeoutError, URLError, SOAPError, OSError) as err:
             if control_existed or during_setup:
                 _LOGGER.error("Could not establish remote connection: %s", err)
-                self._control = None
-                self.state = STATE_OFF
-                self.available = self._on_action is not None
+
+            self._control = None
+            self.state = STATE_OFF
+            self.available = self._on_action is not None
         except Exception as err:  # pylint: disable=broad-except
             if control_existed or during_setup:
                 _LOGGER.exception("An unknown error occurred: %s", err)
@@ -248,6 +249,10 @@ class Remote:
         self.state = STATE_ON
         self.available = True
 
+    async def async_send_key(self, key):
+        """Send a key to the TV and handle exceptions."""
+        await self._handle_errors(self._control.send_key, key)
+
     async def async_turn_on(self):
         """Turn on the TV."""
         if self._on_action is not None:
@@ -262,11 +267,7 @@ class Remote:
         if self.state != STATE_OFF:
             await self.async_send_key(Keys.power)
             self.state = STATE_OFF
-            self.async_update()
-
-    async def async_send_key(self, key):
-        """Send a key to the TV and handles exceptions."""
-        await self._handle_errors(self._control.send_key, key)
+            await self.async_update()
 
     async def async_set_mute(self, enable):
         """Set mute based on 'enable'."""
