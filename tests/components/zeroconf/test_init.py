@@ -131,17 +131,14 @@ async def test_homekit_match_full(hass, mock_zeroconf):
     assert mock_config_flow.mock_calls[0][1][0] == "hue"
 
 
-async def test_info_from_service_non_utf8(hass, caplog):
+async def test_info_from_service_non_utf8(hass):
     """Test info_from_service handles non UTF-8 property keys and values correctly."""
     service_type = "_test._tcp.local."
-    service_info_mock = get_service_info_mock(service_type, f"test.{service_type}")
-    info = zeroconf.info_from_service(service_info_mock)
+    info = zeroconf.info_from_service(
+        get_service_info_mock(service_type, f"test.{service_type}")
+    )
     raw_info = info["properties"].pop("_raw", False)
     assert raw_info
-    assert (
-        f"Ignoring invalid key provided by [{service_info_mock.name}]: {NON_ASCII_KEY}"
-        in caplog.text
-    )
     assert len(raw_info) == len(PROPERTIES) - 1
     assert NON_ASCII_KEY not in raw_info
     assert len(info["properties"]) <= len(raw_info)
