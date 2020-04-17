@@ -56,14 +56,26 @@ async def test_default_setup(hass, monkeypatch):
     assert config_sensor.state == STATE_OFF
     assert config_sensor.attributes["device_class"] == "door"
 
-    # test event for config sensor
+    # test on event for config sensor
     event_callback({"id": "test", "command": "on"})
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.test").state == STATE_ON
 
-    # test event for config sensor
+    # test off event for config sensor
     event_callback({"id": "test", "command": "off"})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.test").state == STATE_OFF
+
+    # test allon event for config sensor
+    event_callback({"id": "test", "command": "allon"})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.test").state == STATE_ON
+
+    # test alloff event for config sensor
+    event_callback({"id": "test", "command": "alloff"})
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.test").state == STATE_OFF
