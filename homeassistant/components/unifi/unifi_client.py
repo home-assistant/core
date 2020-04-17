@@ -39,18 +39,17 @@ class UniFiClient(Entity):
         """Set up client."""
         self.client = client
         self.controller = controller
-        self.listeners = []
 
-        self.is_wired = self.client.mac not in controller.wireless_clients
+        self._is_wired = self.client.mac not in controller.wireless_clients
         self.is_blocked = self.client.blocked
         self.wired_connection = None
         self.wireless_connection = None
 
     async def async_added_to_hass(self) -> None:
         """Client entity created."""
-        LOGGER.debug("New UniFi client %s (%s)", self.name, self.client.mac)
+        LOGGER.debug("New client %s (%s)", self.entity_id, self.client.mac)
         self.client.register_callback(self.async_update_callback)
-        self.listeners.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, self.controller.signal_reachable, self.async_update_callback
             )
@@ -59,17 +58,14 @@ class UniFiClient(Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect client object when removed."""
         self.client.remove_callback(self.async_update_callback)
-        for unsub_dispatcher in self.listeners:
-            unsub_dispatcher()
 
     @callback
     def async_update_callback(self) -> None:
         """Update the clients state."""
-        if self.is_wired and self.client.mac in self.controller.wireless_clients:
-            self.is_wired = False
+        if self._is_wired and self.client.mac in self.controller.wireless_clients:
+            self._is_wired = False
 
         if self.client.last_updated == SOURCE_EVENT:
-
             if self.client.event.event in WIRELESS_CLIENT:
                 self.wireless_connection = self.client.event.event in (
                     WIRELESS_CLIENT_CONNECTED,
@@ -84,8 +80,18 @@ class UniFiClient(Entity):
             elif self.client.event.event in CLIENT_BLOCKED + CLIENT_UNBLOCKED:
                 self.is_blocked = self.client.event.event in CLIENT_BLOCKED
 
-        LOGGER.debug("Updating client %s %s", self.entity_id, self.client.mac)
+        LOGGER.debug("Updating client %s (%s)", self.entity_id, self.client.mac)
         self.async_write_ha_state()
+
+    @property
+    def is_wired(self):
+        """Return if the client is wired.
+
+        Allows disabling logic to keep track of clients affected by UniFi wired bug marking wireless devices as wired. This is useful when running a network not only containing UniFi APs.
+        """
+        if self.controller.option_ignore_wired_bug:
+            return self.client.is_wired
+        return self._is_wired
 
     @property
     def name(self) -> str:

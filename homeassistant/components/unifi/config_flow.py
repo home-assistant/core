@@ -19,6 +19,7 @@ from .const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_IGNORE_WIRED_BUG,
     CONF_POE_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
@@ -216,6 +217,10 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                             self.controller.option_detection_time.total_seconds()
                         ),
                     ): int,
+                    vol.Optional(
+                        CONF_IGNORE_WIRED_BUG,
+                        default=self.controller.option_ignore_wired_bug,
+                    ): bool,
                 }
             ),
         )
