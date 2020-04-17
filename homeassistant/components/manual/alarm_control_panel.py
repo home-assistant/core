@@ -359,20 +359,20 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
         if state == STATE_ALARM_TRIGGERED:
             pending_time = self._pending_time(state)
             track_point_in_time(
-                self._hass, self.async_update_ha_state, self._state_ts + pending_time
+                self._hass, self.async_scheduled_update, self._state_ts + pending_time
             )
 
             trigger_time = self._trigger_time_by_state[self._previous_state]
             track_point_in_time(
                 self._hass,
-                self.async_update_ha_state,
+                self.async_scheduled_update,
                 self._state_ts + pending_time + trigger_time,
             )
         elif state in SUPPORTED_ARMING_STATES:
             arming_time = self._arming_time(state)
             if arming_time:
                 track_point_in_time(
-                    self._hass, self.async_update_ha_state, self._state_ts + arming_time
+                    self._hass, self.async_scheduled_update, self._state_ts + arming_time
                 )
 
     def _validate_code(self, code, state):
@@ -398,6 +398,10 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
             state_attr[ATTR_NEXT_STATE] = self._state
 
         return state_attr
+
+    async def async_scheduled_update(self, now):
+        """Update state at a scheduled point in time."""
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
