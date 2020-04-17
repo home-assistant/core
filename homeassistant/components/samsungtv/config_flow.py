@@ -207,7 +207,8 @@ class SamsungTVOptionsFlowHandler(config_entries.OptionsFlow):
                 current_mac = await self.hass.async_add_executor_job(
                     partial(get_mac_address, **{"hostname": hostname})
                 )
-            except socket.gaierror:
+            except OSError:
+                LOGGER.info("Could not find mac address for %s", hostname)
                 current_mac = ""
 
         schema = {vol.Optional(CONF_MAC, default=current_mac): str}

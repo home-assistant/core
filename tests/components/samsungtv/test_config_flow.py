@@ -625,7 +625,7 @@ async def test_options_without_obtained_mac(hass, remote):
     # simulate an error in getting the mac address
     with patch(
         "homeassistant.components.samsungtv.config_flow.get_mac_address",
-        side_effect=socket.gaierror,
+        side_effect=socket.gaierror(),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
@@ -637,7 +637,7 @@ async def test_options_without_obtained_mac(hass, remote):
     )
 
     assert result["type"] == "create_entry"
-    assert config_entry.options[CONF_MAC] is None
+    assert config_entry.options.get(CONF_MAC) is None
 
     # override the auto-obtained mac address
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
