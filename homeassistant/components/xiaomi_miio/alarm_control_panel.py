@@ -1,42 +1,33 @@
-"""Support for Xiomi Gateway alarm control panels."""
+"""
+Support for Xiomi Gateway alarm control panels.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/
+"""
 
 import asyncio
 from functools import partial
 import logging
 
 from miio import DeviceException, gateway
-import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    PLATFORM_SCHEMA,
     SUPPORT_ALARM_ARM_AWAY,
     AlarmControlPanel,
 )
 from homeassistant.const import (
-    CONF_HOST,
     CONF_NAME,
-    CONF_TOKEN,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
 )
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+
+from . import DOMAIN, CONF_GATEWAYS, KEY_GATEWAY_DEVICE, KEY_GATEWAY_INFO
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Xiaomi Gateway Alarm"
-DATA_KEY = "alarm_control_panel.xiaomi_gateway"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
-REQUIREMENTS = ["python-miio==0.5.0.1"]
+REQUIREMENTS = ["python-miio==0.4.8"]
 
 ATTR_MODEL = "model"
 ATTR_FIRMWARE_VERSION = "firmware_version"
@@ -48,41 +39,20 @@ XIAOMI_STATE_ARMING_VALUE = "oning"
 XIAOMI_SUCCESS = ["ok"]
 
 
-# pylint: disable=unused-argument
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the sensor from config."""
-    if DATA_KEY not in hass.data:
-        hass.data[DATA_KEY] = {}
-    host = config.get(CONF_HOST)
-    token = config.get(CONF_TOKEN)
-    _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
-
-    try:
-        gateway_device = gateway.Gateway(host, token)
-        device_info = gateway_device.info()
-        _LOGGER.info(
-            "%s %s %s detected",
-            device_info.model,
-            device_info.firmware_version,
-            device_info.hardware_version,
-        )
-
-        device = XiaomiGatewayAlarm(gateway_device, config, device_info)
-    except DeviceException:
-        raise PlatformNotReady
-
-    hass.data[DATA_KEY][host] = device
-    async_add_devices([device], update_before_add=True)
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Perform the setup for Xiaomi Miio devices."""
+    for gw_device in hass.data[DOMAIN][CONF_GATEWAYS]:
+        device = XiaomiGatewayAlarm(gw_device.get(KEY_GATEWAY_DEVICE), gw_device.get(CONF_NAME), gw_device.get(KEY_GATEWAY_INFO))
+        add_entities([device], update_before_add=True)
 
 
 class XiaomiGatewayAlarm(AlarmControlPanel):
     """Representation of the XiaomiGatewayAlarm."""
 
-    def __init__(self, gateway_device, config, device_info):
+    def __init__(self, gateway_device, gateway_name, device_info):
         """Initialize the entity."""
         self._gateway = gateway_device
-        self._name = config.get(CONF_NAME)
+        self._name = gateway_name
         self._skip_update = False
         self._model = device_info.model
         self._unique_id = "{}-{}-alarm".format(
