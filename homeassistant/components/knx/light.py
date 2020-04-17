@@ -184,6 +184,7 @@ class KNXLight(Light):
             return self.device.current_brightness
         if self.device.supports_color and self._hsv_color:
             return round(self._hsv_color[-1] / 100 * 255)
+        return None
 
     @property
     def hs_color(self):
