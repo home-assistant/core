@@ -95,6 +95,6 @@ class MyIOoptionsFlowHandler(config_entries.OptionsFlow):
             step_id="myio_options", data_schema=vol.Schema(options)
         )
 
-    
-class CannotConnect(exceptions.HomeAssistantError):
+
+class CannotConnect():
     """Error to indicate we cannot connect."""
