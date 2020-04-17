@@ -7,5 +7,6 @@
             "is_paused": "{entity_name} sz\u00fcneteltetve van",
             "is_playing": "{entity_name} lej\u00e1tszik"
         }
-    }
+    },
+    "title": "M\u00e9dialej\u00e1tsz\u00f3"
 }

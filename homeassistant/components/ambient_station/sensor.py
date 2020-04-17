@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.const import ATTR_NAME
+from homeassistant.core import callback
 
 from . import (
     SENSOR_TYPES,
@@ -74,7 +75,8 @@ class AmbientWeatherSensor(AmbientWeatherEntity):
         """Return the unit of measurement."""
         return self._unit
 
-    async def async_update(self):
+    @callback
+    def update_from_latest_data(self):
         """Fetch new state data for the sensor."""
         if self._sensor_type == TYPE_SOLARRADIATION_LX:
             # If the user requests the solarradiation_lx sensor, use the
@@ -83,7 +85,11 @@ class AmbientWeatherSensor(AmbientWeatherEntity):
             w_m2_brightness_val = self._ambient.stations[self._mac_address][
                 ATTR_LAST_DATA
             ].get(TYPE_SOLARRADIATION)
-            self._state = round(float(w_m2_brightness_val) / 0.0079)
+
+            if w_m2_brightness_val is None:
+                self._state = None
+            else:
+                self._state = round(float(w_m2_brightness_val) / 0.0079)
         else:
             self._state = self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
                 self._sensor_type

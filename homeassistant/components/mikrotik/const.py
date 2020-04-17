@@ -24,6 +24,7 @@ CAPSMAN = "capsman"
 DHCP = "dhcp"
 WIRELESS = "wireless"
 IS_WIRELESS = "is_wireless"
+IS_CAPSMAN = "is_capsman"
 
 MIKROTIK_SERVICES = {
     ARP: "/ip/arp/getall",
@@ -33,6 +34,7 @@ MIKROTIK_SERVICES = {
     INFO: "/system/routerboard/getall",
     WIRELESS: "/interface/wireless/registration-table/getall",
     IS_WIRELESS: "/interface/wireless/print",
+    IS_CAPSMAN: "/caps-man/interface/print",
 }
 
 ATTR_DEVICE_TRACKER = [

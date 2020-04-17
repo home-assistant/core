@@ -30,13 +30,8 @@ from .helper import async_manipulate_test_data, get_and_check_entity_basics
 
 async def test_manually_configured_platform(hass):
     """Test that we do not set up an access point."""
-    assert (
-        await async_setup_component(
-            hass,
-            BINARY_SENSOR_DOMAIN,
-            {BINARY_SENSOR_DOMAIN: {"platform": HMIPC_DOMAIN}},
-        )
-        is True
+    assert await async_setup_component(
+        hass, BINARY_SENSOR_DOMAIN, {BINARY_SENSOR_DOMAIN: {"platform": HMIPC_DOMAIN}},
     )
     assert not hass.data.get(HMIPC_DOMAIN)
 
@@ -180,8 +175,8 @@ async def test_hmip_pluggable_mains_failure_surveillance_sensor(
     hass, default_mock_hap_factory
 ):
     """Test HomematicipPresenceDetector."""
-    entity_id = "binary_sensor.netzausfall"
-    entity_name = "Netzausfall"
+    entity_id = "binary_sensor.netzausfalluberwachung"
+    entity_name = "Netzausfallüberwachung"
     device_model = "HmIP-PMFS"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=[entity_name]
@@ -219,6 +214,11 @@ async def test_hmip_smoke_detector(hass, default_mock_hap_factory):
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
+    await async_manipulate_test_data(
+        hass, hmip_device, "smokeDetectorAlarmType", None,
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_OFF
 
 
 async def test_hmip_water_detector(hass, default_mock_hap_factory):

@@ -70,11 +70,6 @@ class SimpliSafeLock(SimpliSafeEntity, LockDevice):
     @callback
     def async_update_from_rest_api(self):
         """Update the entity with the provided REST API data."""
-        if self._lock.offline or self._lock.disabled:
-            self._online = False
-            return
-
-        self._online = True
         self._attrs.update(
             {
                 ATTR_LOCK_LOW_BATTERY: self._lock.lock_low_battery,

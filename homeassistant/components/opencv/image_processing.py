@@ -32,7 +32,7 @@ ATTR_TOTAL_MATCHES = "total_matches"
 
 CASCADE_URL = (
     "https://raw.githubusercontent.com/opencv/opencv/master/data/"
-    + "lbpcascades/lbpcascade_frontalface.xml"
+    "lbpcascades/lbpcascade_frontalface.xml"
 )
 
 CONF_CLASSIFIER = "classifier"
@@ -75,9 +75,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def _create_processor_from_config(hass, camera_entity, config):
     """Create an OpenCV processor from configuration."""
     classifier_config = config.get(CONF_CLASSIFIER)
-    name = "{} {}".format(
-        config[CONF_NAME], split_entity_id(camera_entity)[1].replace("_", " ")
-    )
+    name = f"{config[CONF_NAME]} {split_entity_id(camera_entity)[1].replace('_', ' ')}"
 
     processor = OpenCVImageProcessor(hass, camera_entity, name, classifier_config)
 
@@ -132,7 +130,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "OpenCV {0}".format(split_entity_id(camera_entity)[1])
+            self._name = f"OpenCV {split_entity_id(camera_entity)[1]}"
         self._classifiers = classifiers
         self._matches = {}
         self._total_matches = 0

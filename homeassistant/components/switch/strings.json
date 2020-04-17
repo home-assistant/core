@@ -1,4 +1,5 @@
 {
+  "title": "Switch",
   "device_automation": {
     "action_type": {
       "toggle": "Toggle {entity_name}",

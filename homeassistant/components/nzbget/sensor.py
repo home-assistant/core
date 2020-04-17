@@ -1,7 +1,11 @@
 """Monitor the NZBGet API."""
 import logging
 
-from homeassistant.const import DATA_MEGABYTES, DATA_RATE_MEGABYTES_PER_SECOND
+from homeassistant.const import (
+    DATA_MEGABYTES,
+    DATA_RATE_MEGABYTES_PER_SECOND,
+    TIME_MINUTES,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -26,7 +30,7 @@ SENSOR_TYPES = {
     "post_job_count": ["PostJobCount", "Post Processing Jobs", "Jobs"],
     "post_paused": ["PostPaused", "Post Processing Paused", None],
     "remaining_size": ["RemainingSizeMB", "Queue Size", DATA_MEGABYTES],
-    "uptime": ["UpTimeSec", "Uptime", "min"],
+    "uptime": ["UpTimeSec", "Uptime", TIME_MINUTES],
 }
 
 
@@ -85,8 +89,10 @@ class NZBGetSensor(Entity):
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-        async_dispatcher_connect(
-            self.hass, DATA_UPDATED, self._schedule_immediate_update
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, DATA_UPDATED, self._schedule_immediate_update
+            )
         )
 
     @callback

@@ -10,7 +10,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(
         [
             DemoSwitch("swith1", "Decorative Lights", True, None, True),
-            DemoSwitch("swith2", "AC", False, "mdi:air-conditioner", False),
+            DemoSwitch(
+                "swith2",
+                "AC",
+                False,
+                "mdi:air-conditioner",
+                False,
+                device_class="outlet",
+            ),
         ]
     )
 

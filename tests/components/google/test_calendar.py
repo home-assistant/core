@@ -218,7 +218,7 @@ async def test_offset_in_progress_event(hass, mock_next_event):
     event = copy.deepcopy(TEST_EVENT)
     event["start"]["dateTime"] = start
     event["end"]["dateTime"] = end
-    event["summary"] = "{} !!-15".format(event_summary)
+    event["summary"] = f"{event_summary} !!-15"
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -250,7 +250,7 @@ async def test_all_day_offset_in_progress_event(hass, mock_next_event):
     event = copy.deepcopy(TEST_EVENT)
     event["start"]["date"] = start
     event["end"]["date"] = end
-    event["summary"] = "{} !!-25:0".format(event_summary)
+    event["summary"] = f"{event_summary} !!-25:0"
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -282,7 +282,7 @@ async def test_all_day_offset_event(hass, mock_next_event):
     event = copy.deepcopy(TEST_EVENT)
     event["start"]["date"] = start
     event["end"]["date"] = end
-    event["summary"] = "{} !!-{}:0".format(event_summary, offset_hours)
+    event["summary"] = f"{event_summary} !!-{offset_hours}:0"
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})

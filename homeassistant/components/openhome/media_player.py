@@ -64,7 +64,7 @@ class OpenhomeDevice(MediaPlayerDevice):
         self._volume_level = None
         self._volume_muted = None
         self._supported_features = SUPPORT_OPENHOME
-        self._source_names = list()
+        self._source_names = []
         self._source_index = {}
         self._source = {}
         self._name = None
@@ -79,13 +79,13 @@ class OpenhomeDevice(MediaPlayerDevice):
         self._name = self._device.Room().decode("utf-8")
         self._supported_features = SUPPORT_OPENHOME
         source_index = {}
-        source_names = list()
+        source_names = []
 
         if self._device.VolumeEnabled():
             self._supported_features |= (
                 SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
             )
-            self._volume_level = self._device.VolumeLevel()
+            self._volume_level = self._device.VolumeLevel() / 100.0
             self._volume_muted = self._device.IsMuted()
 
         for source in self._device.Sources():
@@ -222,7 +222,7 @@ class OpenhomeDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        return self._volume_level / 100.0
+        return self._volume_level
 
     @property
     def is_volume_muted(self):

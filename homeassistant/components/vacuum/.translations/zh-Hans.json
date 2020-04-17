@@ -11,5 +11,6 @@
             "cleaning": "{entity_name} \u5f00\u59cb\u6e05\u626b",
             "docked": "{entity_name} \u8fd4\u56de\u5e95\u5ea7"
         }
-    }
+    },
+    "title": "\u626b\u5730\u673a"
 }

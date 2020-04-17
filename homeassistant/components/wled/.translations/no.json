@@ -20,7 +20,6 @@
                 "description": "Vil du legge til WLED med navnet ' {name} ' i Home Assistant?",
                 "title": "Oppdaget WLED-enhet"
             }
-        },
-        "title": "WLED"
+        }
     }
 }

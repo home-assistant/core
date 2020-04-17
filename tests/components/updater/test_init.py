@@ -1,5 +1,4 @@
 """The tests for the Updater component."""
-import asyncio
 from unittest.mock import Mock
 
 from asynctest import patch
@@ -128,17 +127,6 @@ async def test_get_newest_version_analytics_when_huuid(hass, aioclient_mock):
     ):
         res = await updater.get_newest_version(hass, MOCK_HUUID, False)
         assert res == (MOCK_RESPONSE["version"], MOCK_RESPONSE["release-notes"])
-
-
-async def test_error_fetching_new_version_timeout(hass):
-    """Test we handle timeout error while fetching new version."""
-    with patch(
-        "homeassistant.helpers.system_info.async_get_system_info",
-        Mock(return_value=mock_coro({"fake": "bla"})),
-    ), patch("async_timeout.timeout", side_effect=asyncio.TimeoutError), pytest.raises(
-        UpdateFailed
-    ):
-        await updater.get_newest_version(hass, MOCK_HUUID, False)
 
 
 async def test_error_fetching_new_version_bad_json(hass, aioclient_mock):

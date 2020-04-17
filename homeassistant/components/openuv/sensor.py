@@ -1,15 +1,14 @@
 """Support for OpenUV sensors."""
 import logging
 
+from homeassistant.const import TIME_MINUTES, UNIT_UV_INDEX
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import as_local, parse_datetime
 
 from . import (
     DATA_OPENUV_CLIENT,
     DATA_UV,
     DOMAIN,
-    TOPIC_UPDATE,
     TYPE_CURRENT_OZONE_LEVEL,
     TYPE_CURRENT_UV_INDEX,
     TYPE_CURRENT_UV_LEVEL,
@@ -44,38 +43,38 @@ UV_LEVEL_LOW = "Low"
 
 SENSORS = {
     TYPE_CURRENT_OZONE_LEVEL: ("Current Ozone Level", "mdi:vector-triangle", "du"),
-    TYPE_CURRENT_UV_INDEX: ("Current UV Index", "mdi:weather-sunny", "index"),
+    TYPE_CURRENT_UV_INDEX: ("Current UV Index", "mdi:weather-sunny", UNIT_UV_INDEX),
     TYPE_CURRENT_UV_LEVEL: ("Current UV Level", "mdi:weather-sunny", None),
-    TYPE_MAX_UV_INDEX: ("Max UV Index", "mdi:weather-sunny", "index"),
+    TYPE_MAX_UV_INDEX: ("Max UV Index", "mdi:weather-sunny", UNIT_UV_INDEX),
     TYPE_SAFE_EXPOSURE_TIME_1: (
         "Skin Type 1 Safe Exposure Time",
         "mdi:timer",
-        "minutes",
+        TIME_MINUTES,
     ),
     TYPE_SAFE_EXPOSURE_TIME_2: (
         "Skin Type 2 Safe Exposure Time",
         "mdi:timer",
-        "minutes",
+        TIME_MINUTES,
     ),
     TYPE_SAFE_EXPOSURE_TIME_3: (
         "Skin Type 3 Safe Exposure Time",
         "mdi:timer",
-        "minutes",
+        TIME_MINUTES,
     ),
     TYPE_SAFE_EXPOSURE_TIME_4: (
         "Skin Type 4 Safe Exposure Time",
         "mdi:timer",
-        "minutes",
+        TIME_MINUTES,
     ),
     TYPE_SAFE_EXPOSURE_TIME_5: (
         "Skin Type 5 Safe Exposure Time",
         "mdi:timer",
-        "minutes",
+        TIME_MINUTES,
     ),
     TYPE_SAFE_EXPOSURE_TIME_6: (
         "Skin Type 6 Safe Exposure Time",
         "mdi:timer",
-        "minutes",
+        TIME_MINUTES,
     ),
 }
 
@@ -134,24 +133,8 @@ class OpenUvSensor(OpenUvEntity):
         """Return the unit the value is expressed in."""
         return self._unit
 
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update
-        )
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-
-    async def async_update(self):
+    @callback
+    def update_from_latest_data(self):
         """Update the state."""
         data = self.openuv.data[DATA_UV].get("result")
 

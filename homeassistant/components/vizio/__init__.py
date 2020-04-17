@@ -5,32 +5,27 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DEVICE_CLASS
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import DOMAIN, VIZIO_SCHEMA
+from .const import CONF_APPS, CONF_DEVICE_CLASS, DOMAIN, VIZIO_SCHEMA
 
 
-def validate_auth(config: ConfigType) -> ConfigType:
-    """Validate presence of CONF_ACCESS_TOKEN when CONF_DEVICE_CLASS == DEVICE_CLASS_TV."""
-    token = config.get(CONF_ACCESS_TOKEN)
-    if config[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV and not token:
+def validate_apps(config: ConfigType) -> ConfigType:
+    """Validate CONF_APPS is only used when CONF_DEVICE_CLASS == DEVICE_CLASS_TV."""
+    if (
+        config.get(CONF_APPS) is not None
+        and config[CONF_DEVICE_CLASS] != DEVICE_CLASS_TV
+    ):
         raise vol.Invalid(
-            f"When '{CONF_DEVICE_CLASS}' is '{DEVICE_CLASS_TV}' then "
-            f"'{CONF_ACCESS_TOKEN}' is required.",
-            path=[CONF_ACCESS_TOKEN],
+            f"'{CONF_APPS}' can only be used if {CONF_DEVICE_CLASS}' is '{DEVICE_CLASS_TV}'"
         )
 
     return config
 
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list, [vol.All(vol.Schema(VIZIO_SCHEMA), validate_auth)]
-        )
-    },
+    {DOMAIN: vol.All(cv.ensure_list, [vol.All(VIZIO_SCHEMA, validate_apps)])},
     extra=vol.ALLOW_EXTRA,
 )
 

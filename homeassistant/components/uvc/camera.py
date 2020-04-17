@@ -1,6 +1,5 @@
 """Support for Ubiquiti's UVC cameras."""
 import logging
-import socket
 
 import requests
 from uvcclient import camera as uvc_camera, nvr
@@ -154,7 +153,7 @@ class UnifiVideoCamera(Camera):
                 )
                 self._connect_addr = addr
                 break
-            except socket.error:
+            except OSError:
                 pass
             except uvc_camera.CameraConnectError:
                 pass

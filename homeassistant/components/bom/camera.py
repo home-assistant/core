@@ -75,16 +75,12 @@ def _validate_schema(config):
     if config.get(CONF_LOCATION) is None:
         if not all(config.get(x) for x in (CONF_ID, CONF_DELTA, CONF_FRAMES)):
             raise vol.Invalid(
-                "Specify '{}', '{}' and '{}' when '{}' is unspecified".format(
-                    CONF_ID, CONF_DELTA, CONF_FRAMES, CONF_LOCATION
-                )
+                f"Specify '{CONF_ID}', '{CONF_DELTA}' and '{CONF_FRAMES}' when '{CONF_LOCATION}' is unspecified"
             )
     return config
 
 
-LOCATIONS_MSG = "Set '{}' to one of: {}".format(
-    CONF_LOCATION, ", ".join(sorted(LOCATIONS))
-)
+LOCATIONS_MSG = f"Set '{CONF_LOCATION}' to one of: {', '.join(sorted(LOCATIONS))}"
 XOR_MSG = f"Specify exactly one of '{CONF_ID}' or '{CONF_LOCATION}'"
 
 PLATFORM_SCHEMA = vol.All(
@@ -106,7 +102,7 @@ PLATFORM_SCHEMA = vol.All(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up BOM radar-loop camera component."""
-    location = config.get(CONF_LOCATION) or "ID {}".format(config.get(CONF_ID))
+    location = config.get(CONF_LOCATION) or f"ID {config.get(CONF_ID)}"
     name = config.get(CONF_NAME) or f"BOM Radar Loop - {location}"
     args = [
         config.get(x)

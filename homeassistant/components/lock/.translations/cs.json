@@ -9,5 +9,6 @@
             "is_locked": "{entity_name} je uzam\u010deno",
             "is_unlocked": "{entity_name} je odem\u010deno"
         }
-    }
+    },
+    "title": "Z\u00e1mek"
 }

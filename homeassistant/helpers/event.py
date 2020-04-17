@@ -1,7 +1,7 @@
 """Helpers for listening to events."""
 from datetime import datetime, timedelta
 import functools as ft
-from typing import Any, Callable, Dict, Iterable, Optional, Union, cast
+from typing import Any, Awaitable, Callable, Dict, Iterable, Optional, Union, cast
 
 import attr
 
@@ -67,8 +67,8 @@ def async_track_state_change(
 
     Must be run within the event loop.
     """
-    match_from_state = _process_state_match(from_state)
-    match_to_state = _process_state_match(to_state)
+    match_from_state = process_state_match(from_state)
+    match_to_state = process_state_match(to_state)
 
     # Ensure it is a lowercase list with entity ids we want to match on
     if entity_ids == MATCH_ALL:
@@ -118,7 +118,7 @@ def async_track_template(
     variables: Optional[Dict[str, Any]] = None,
 ) -> CALLBACK_TYPE:
     """Add a listener that track state changes with template condition."""
-    from . import condition
+    from . import condition  # pylint: disable=import-outside-toplevel
 
     # Local variable to keep track of if the action has already been triggered
     already_triggered = False
@@ -274,7 +274,9 @@ call_later = threaded_listener_factory(async_call_later)
 @callback
 @bind_hass
 def async_track_time_interval(
-    hass: HomeAssistant, action: Callable[..., None], interval: timedelta
+    hass: HomeAssistant,
+    action: Callable[..., Union[None, Awaitable]],
+    interval: timedelta,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
     remove = None
@@ -473,7 +475,7 @@ def async_track_time_change(
 track_time_change = threaded_listener_factory(async_track_time_change)
 
 
-def _process_state_match(
+def process_state_match(
     parameter: Union[None, str, Iterable[str]]
 ) -> Callable[[str], bool]:
     """Convert parameter to function that matches input against parameter."""

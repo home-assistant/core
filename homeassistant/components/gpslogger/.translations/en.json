@@ -12,7 +12,6 @@
                 "description": "Are you sure you want to set up the GPSLogger Webhook?",
                 "title": "Set up the GPSLogger Webhook"
             }
-        },
-        "title": "GPSLogger Webhook"
+        }
     }
 }

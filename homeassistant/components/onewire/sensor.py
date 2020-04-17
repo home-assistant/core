@@ -8,7 +8,13 @@ from pyownet import protocol
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_PORT, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
+    UNIT_VOLT,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -60,14 +66,14 @@ HOBBYBOARD_EF = {
 SENSOR_TYPES = {
     # SensorType: [ Measured unit, Unit ]
     "temperature": ["temperature", TEMP_CELSIUS],
-    "humidity": ["humidity", "%"],
-    "humidity_raw": ["humidity", "%"],
+    "humidity": ["humidity", UNIT_PERCENTAGE],
+    "humidity_raw": ["humidity", UNIT_PERCENTAGE],
     "pressure": ["pressure", "mb"],
     "illuminance": ["illuminance", "lux"],
-    "wetness_0": ["wetness", "%"],
-    "wetness_1": ["wetness", "%"],
-    "wetness_2": ["wetness", "%"],
-    "wetness_3": ["wetness", "%"],
+    "wetness_0": ["wetness", UNIT_PERCENTAGE],
+    "wetness_1": ["wetness", UNIT_PERCENTAGE],
+    "wetness_2": ["wetness", UNIT_PERCENTAGE],
+    "wetness_3": ["wetness", UNIT_PERCENTAGE],
     "moisture_0": ["moisture", "cb"],
     "moisture_1": ["moisture", "cb"],
     "moisture_2": ["moisture", "cb"],
@@ -75,9 +81,9 @@ SENSOR_TYPES = {
     "counter_a": ["counter", "count"],
     "counter_b": ["counter", "count"],
     "HobbyBoard": ["none", "none"],
-    "voltage": ["voltage", "V"],
-    "voltage_VAD": ["voltage", "V"],
-    "voltage_VDD": ["voltage", "V"],
+    "voltage": ["voltage", UNIT_VOLT],
+    "voltage_VAD": ["voltage", UNIT_VOLT],
+    "voltage_VDD": ["voltage", UNIT_VOLT],
     "current": ["current", "A"],
 }
 
@@ -176,7 +182,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # We have an owfs mounted
     else:
         for family_file_path in glob(os.path.join(base_dir, "*", "family")):
-            with open(family_file_path, "r") as family_file:
+            with open(family_file_path) as family_file:
                 family = family_file.read()
             if "EF" in family:
                 continue
@@ -210,7 +216,7 @@ class OneWire(Entity):
 
     def __init__(self, name, device_file, sensor_type):
         """Initialize the sensor."""
-        self._name = name + " " + sensor_type.capitalize()
+        self._name = f"{name} {sensor_type.capitalize()}"
         self._device_file = device_file
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._state = None
@@ -218,7 +224,7 @@ class OneWire(Entity):
 
     def _read_value_raw(self):
         """Read the value as it is returned by the sensor."""
-        with open(self._device_file, "r") as ds_device_file:
+        with open(self._device_file) as ds_device_file:
             lines = ds_device_file.readlines()
         return lines
 

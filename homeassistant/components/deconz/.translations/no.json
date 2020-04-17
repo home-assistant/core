@@ -14,37 +14,26 @@
         "flow_title": "deCONZ Zigbee gateway ({host})",
         "step": {
             "hassio_confirm": {
-                "data": {
-                    "allow_clip_sensor": "Tillat import av virtuelle sensorer",
-                    "allow_deconz_groups": "Tillat import av deCONZ grupper"
-                },
                 "description": "Vil du konfigurere Home Assistant til \u00e5 koble seg til deCONZ-gateway levert av Hass.io-tillegget {addon} ?",
                 "title": "deCONZ Zigbee gateway via Hass.io tillegg"
             },
             "init": {
                 "data": {
                     "host": "Vert",
-                    "port": "Port"
+                    "port": ""
                 },
                 "title": "Definer deCONZ-gatewayen"
             },
             "link": {
                 "description": "L\u00e5s opp deCONZ-gatewayen din for \u00e5 registrere deg med Home Assistant. \n\n 1. G\u00e5 til deCONZ-systeminnstillinger -> Gateway -> Avansert \n 2. Trykk p\u00e5 \"L\u00e5s opp gateway\" knappen",
                 "title": "Koble til deCONZ"
-            },
-            "options": {
-                "data": {
-                    "allow_clip_sensor": "Tillat import av virtuelle sensorer",
-                    "allow_deconz_groups": "Tillat import av deCONZ grupper"
-                },
-                "title": "Ekstra konfigurasjonsalternativer for deCONZ"
             }
-        },
-        "title": "deCONZ Zigbee gateway"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Begge knappene",
+            "bottom_buttons": "Nederste knappene",
             "button_1": "F\u00f8rste knapp",
             "button_2": "Andre knapp",
             "button_3": "Tredje knapp",
@@ -61,6 +50,7 @@
             "side_4": "Side 4",
             "side_5": "Side 5",
             "side_6": "Side 6",
+            "top_buttons": "\u00d8verste knappene",
             "turn_off": "Skru av",
             "turn_on": "Sl\u00e5 p\u00e5"
         },
@@ -96,19 +86,13 @@
     },
     "options": {
         "step": {
-            "async_step_deconz_devices": {
-                "data": {
-                    "allow_clip_sensor": "Tillat deCONZ CLIP-sensorer",
-                    "allow_deconz_groups": "Tillat deCONZ lys grupper"
-                },
-                "description": "Konfigurere synlighet av deCONZ enhetstyper"
-            },
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Tillat deCONZ CLIP-sensorer",
                     "allow_deconz_groups": "Tillat deCONZ lys grupper"
                 },
-                "description": "Konfigurere synlighet av deCONZ enhetstyper"
+                "description": "Konfigurere synlighet av deCONZ enhetstyper",
+                "title": "deCONZ alternativer"
             }
         }
     }

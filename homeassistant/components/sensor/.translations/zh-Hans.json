@@ -22,5 +22,6 @@
             "timestamp": "{entity_name} \u7684\u65f6\u95f4\u6233\u53d8\u5316",
             "value": "{entity_name} \u7684\u503c\u53d8\u5316"
         }
-    }
+    },
+    "title": "\u4f20\u611f\u5668"
 }

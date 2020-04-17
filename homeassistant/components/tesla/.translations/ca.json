@@ -15,13 +15,13 @@
                 "description": "Introdueix la teva informaci\u00f3.",
                 "title": "Configuraci\u00f3 de Tesla"
             }
-        },
-        "title": "Tesla"
+        }
     },
     "options": {
         "step": {
             "init": {
                 "data": {
+                    "enable_wake_on_start": "For\u00e7a el despertar del cotxe en la posada en marxa",
                     "scan_interval": "Segons entre escanejos"
                 }
             }

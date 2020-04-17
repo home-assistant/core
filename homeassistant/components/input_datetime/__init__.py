@@ -27,7 +27,6 @@ from homeassistant.util import dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "input_datetime"
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 CONF_HAS_DATE = "has_date"
 CONF_HAS_TIME = "has_time"
@@ -219,7 +218,7 @@ class InputDatetime(RestoreEntity):
     def from_yaml(cls, config: typing.Dict) -> "InputDatetime":
         """Return entity instance initialized from yaml storage."""
         input_dt = cls(config)
-        input_dt.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
+        input_dt.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_dt.editable = False
         return input_dt
 
@@ -238,12 +237,22 @@ class InputDatetime(RestoreEntity):
             return
 
         if self.has_date and self.has_time:
-            self._current_datetime = dt_util.parse_datetime(old_state.state)
+            date_time = dt_util.parse_datetime(old_state.state)
+            if date_time is None:
+                self._current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
+                return
+            self._current_datetime = date_time
         elif self.has_date:
             date = dt_util.parse_date(old_state.state)
+            if date is None:
+                self._current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
+                return
             self._current_datetime = datetime.datetime.combine(date, DEFAULT_TIME)
         else:
             time = dt_util.parse_time(old_state.state)
+            if time is None:
+                self._current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
+                return
             self._current_datetime = datetime.datetime.combine(DEFAULT_DATE, time)
 
     @property

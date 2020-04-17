@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 
-from .const import KEY_IP, KEY_MAC
+from .const import KEY_IP, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class FlowHandler(config_entries.ConfigFlow):
             device = Appliance(
                 host, self.hass.helpers.aiohttp_client.async_get_clientsession()
             )
-            with timeout(10):
+            with timeout(TIMEOUT):
                 await device.init()
         except asyncio.TimeoutError:
             return self.async_abort(reason="device_timeout")

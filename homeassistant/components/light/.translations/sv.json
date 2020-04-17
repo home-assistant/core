@@ -13,5 +13,6 @@
             "turned_off": "{entity_name} avst\u00e4ngd",
             "turned_on": "{entity_name} slogs p\u00e5"
         }
-    }
+    },
+    "title": "Lampor"
 }

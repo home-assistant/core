@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Integrationen \u00e4r redan konfigurerad med en befintlig sensor med det namnet"
-        },
         "step": {
             "user": {
                 "data": {
@@ -10,7 +7,7 @@
                 },
                 "title": "Lokal IP-adress"
             }
-        },
-        "title": "Lokal IP-adress"
-    }
+        }
+    },
+    "title": "Lokal IP-adress"
 }

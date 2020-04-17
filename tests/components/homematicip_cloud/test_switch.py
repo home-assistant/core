@@ -16,11 +16,8 @@ from .helper import async_manipulate_test_data, get_and_check_entity_basics
 
 async def test_manually_configured_platform(hass):
     """Test that we do not set up an access point."""
-    assert (
-        await async_setup_component(
-            hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": HMIPC_DOMAIN}}
-        )
-        is True
+    assert await async_setup_component(
+        hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": HMIPC_DOMAIN}}
     )
     assert not hass.data.get(HMIPC_DOMAIN)
 
@@ -152,7 +149,12 @@ async def test_hmip_multi_switch(hass, default_mock_hap_factory):
     entity_name = "Jalousien - 1 KiZi, 2 SchlaZi Channel1"
     device_model = "HmIP-PCBS2"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=["Jalousien - 1 KiZi, 2 SchlaZi"]
+        test_devices=[
+            "Jalousien - 1 KiZi, 2 SchlaZi",
+            "Multi IO Box",
+            "Heizungsaktor",
+            "ioBroker",
+        ]
     )
 
     ha_state, hmip_device = get_and_check_entity_basics(

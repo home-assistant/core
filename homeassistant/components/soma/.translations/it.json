@@ -19,7 +19,6 @@
                 "description": "Inserisci le impostazioni di connessione del tuo SOMA Connect.",
                 "title": "SOMA Connect"
             }
-        },
-        "title": "Soma"
+        }
     }
 }

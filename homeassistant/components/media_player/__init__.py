@@ -18,6 +18,9 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.const import (
+    HTTP_INTERNAL_SERVER_ERROR,
+    HTTP_NOT_FOUND,
+    HTTP_OK,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -104,7 +107,6 @@ _RND = SystemRandom()
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-ENTITY_IMAGE_URL = "/api/media_player_proxy/{0}?token={1}&cache={2}"
 CACHE_IMAGES = "images"
 CACHE_MAXSIZE = "maxsize"
 CACHE_LOCK = "lock"
@@ -212,7 +214,7 @@ async def async_setup(hass, config):
         SERVICE_TURN_OFF, {}, "async_turn_off", [SUPPORT_TURN_OFF]
     )
     component.async_register_entity_service(
-        SERVICE_TOGGLE, {}, "async_toggle", [SUPPORT_TURN_OFF | SUPPORT_TURN_ON],
+        SERVICE_TOGGLE, {}, "async_toggle", [SUPPORT_TURN_OFF | SUPPORT_TURN_ON]
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_UP,
@@ -242,7 +244,7 @@ async def async_setup(hass, config):
         SERVICE_MEDIA_STOP, {}, "async_media_stop", [SUPPORT_STOP]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_NEXT_TRACK, {}, "async_media_next_track", [SUPPORT_NEXT_TRACK],
+        SERVICE_MEDIA_NEXT_TRACK, {}, "async_media_next_track", [SUPPORT_NEXT_TRACK]
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_PREVIOUS_TRACK,
@@ -251,7 +253,7 @@ async def async_setup(hass, config):
         [SUPPORT_PREVIOUS_TRACK],
     )
     component.async_register_entity_service(
-        SERVICE_CLEAR_PLAYLIST, {}, "async_clear_playlist", [SUPPORT_CLEAR_PLAYLIST],
+        SERVICE_CLEAR_PLAYLIST, {}, "async_clear_playlist", [SUPPORT_CLEAR_PLAYLIST]
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_SET,
@@ -757,12 +759,20 @@ class MediaPlayerDevice(Entity):
         if self.media_image_remotely_accessible:
             return self.media_image_url
 
+        return self.media_image_local
+
+    @property
+    def media_image_local(self):
+        """Return local url to media image."""
         image_hash = self.media_image_hash
 
         if image_hash is None:
             return None
 
-        return ENTITY_IMAGE_URL.format(self.entity_id, self.access_token, image_hash)
+        return (
+            f"/api/media_player_proxy/{self.entity_id}?"
+            f"token={self.access_token}&cache={image_hash}"
+        )
 
     @property
     def capability_attributes(self):
@@ -788,11 +798,15 @@ class MediaPlayerDevice(Entity):
         if self.state == STATE_OFF:
             return None
 
-        state_attr = {
-            attr: getattr(self, attr)
-            for attr in ATTR_TO_PROPERTY
-            if getattr(self, attr) is not None
-        }
+        state_attr = {}
+
+        for attr in ATTR_TO_PROPERTY:
+            value = getattr(self, attr)
+            if value is not None:
+                state_attr[attr] = value
+
+        if self.media_image_remotely_accessible:
+            state_attr["entity_picture_local"] = self.media_image_local
 
         return state_attr
 
@@ -821,7 +835,7 @@ async def _async_fetch_image(hass, url):
             with async_timeout.timeout(10):
                 response = await websession.get(url)
 
-                if response.status == 200:
+                if response.status == HTTP_OK:
                     content = await response.read()
                     content_type = response.headers.get(CONTENT_TYPE)
                     if content_type:
@@ -852,7 +866,7 @@ class MediaPlayerImageView(HomeAssistantView):
         """Start a get request."""
         player = self.component.get_entity(entity_id)
         if player is None:
-            status = 404 if request[KEY_AUTHENTICATED] else 401
+            status = HTTP_NOT_FOUND if request[KEY_AUTHENTICATED] else 401
             return web.Response(status=status)
 
         authenticated = (
@@ -863,16 +877,10 @@ class MediaPlayerImageView(HomeAssistantView):
         if not authenticated:
             return web.Response(status=401)
 
-        if player.media_image_remotely_accessible:
-            url = player.media_image_url
-            if url is not None:
-                return web.Response(status=302, headers={"location": url})
-            return web.Response(status=500)
-
         data, content_type = await player.async_get_media_image()
 
         if data is None:
-            return web.Response(status=500)
+            return web.Response(status=HTTP_INTERNAL_SERVER_ERROR)
 
         headers = {CACHE_CONTROL: "max-age=3600"}
         return web.Response(body=data, content_type=content_type, headers=headers)
@@ -894,6 +902,10 @@ async def websocket_handle_thumbnail(hass, connection, msg):
             )
         )
         return
+
+    _LOGGER.warning(
+        "The websocket command media_player_thumbnail is deprecated. Use /api/media_player_proxy instead."
+    )
 
     data, content_type = await player.async_get_media_image()
 

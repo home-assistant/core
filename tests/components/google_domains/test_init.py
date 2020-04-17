@@ -13,7 +13,7 @@ DOMAIN = "test.example.com"
 USERNAME = "abc123"
 PASSWORD = "xyz789"
 
-UPDATE_URL = google_domains.UPDATE_URL.format(USERNAME, PASSWORD)
+UPDATE_URL = f"https://{USERNAME}:{PASSWORD}@domains.google.com/nic/update"
 
 
 @pytest.fixture

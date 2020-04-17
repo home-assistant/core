@@ -285,7 +285,7 @@ class Hyperion(Light):
             sock.close()
             return False
 
-        sock.send(bytearray(json.dumps(request) + "\n", "utf-8"))
+        sock.send(bytearray(f"{json.dumps(request)}\n", "utf-8"))
         try:
             buf = sock.recv(4096)
         except socket.timeout:

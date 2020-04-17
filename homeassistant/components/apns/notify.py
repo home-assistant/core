@@ -45,10 +45,10 @@ REGISTER_SERVICE_SCHEMA = vol.Schema(
 
 def get_service(hass, config, discovery_info=None):
     """Return push service."""
-    name = config.get(CONF_NAME)
-    cert_file = config.get(CONF_CERTFILE)
-    topic = config.get(CONF_TOPIC)
-    sandbox = config.get(CONF_SANDBOX)
+    name = config[CONF_NAME]
+    cert_file = config[CONF_CERTFILE]
+    topic = config[CONF_TOPIC]
+    sandbox = config[CONF_SANDBOX]
 
     service = ApnsNotificationService(hass, name, topic, sandbox, cert_file)
     hass.services.register(

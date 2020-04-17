@@ -159,6 +159,11 @@ async def test_loading_saving_data(hass, registry):
         supported_features=5,
         device_class="mock-device-class",
         disabled_by=entity_registry.DISABLED_HASS,
+        original_name="Original Name",
+        original_icon="hass:original-icon",
+    )
+    orig_entry2 = registry.async_update_entity(
+        orig_entry2.entity_id, name="User Name", icon="hass:user-icon"
     )
 
     assert len(registry.entities) == 2
@@ -181,6 +186,10 @@ async def test_loading_saving_data(hass, registry):
     assert new_entry2.capabilities == {"max": 100}
     assert new_entry2.supported_features == 5
     assert new_entry2.device_class == "mock-device-class"
+    assert new_entry2.name == "User Name"
+    assert new_entry2.icon == "hass:user-icon"
+    assert new_entry2.original_name == "Original Name"
+    assert new_entry2.original_icon == "hass:original-icon"
 
 
 def test_generate_entity_considers_registered_entities(registry):

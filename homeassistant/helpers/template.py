@@ -19,6 +19,7 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_UNIT_OF_MEASUREMENT,
+    LENGTH_METERS,
     MATCH_ALL,
     STATE_UNKNOWN,
 )
@@ -192,7 +193,7 @@ class Template:
             raise TemplateError(err)
 
     def extract_entities(
-        self, variables: Dict[str, Any] = None
+        self, variables: Optional[Dict[str, Any]] = None
     ) -> Union[str, List[str]]:
         """Extract all entities for state_changed listener."""
         return extract_entities(self.template, variables)
@@ -378,7 +379,7 @@ class DomainStates:
             raise TemplateError(f"Invalid entity ID '{entity_id}'")
         return _get_state(self._hass, entity_id)
 
-    def _collect_domain(self):
+    def _collect_domain(self) -> None:
         entity_collect = self._hass.data.get(_RENDER_INFO)
         if entity_collect is not None:
             # pylint: disable=protected-access
@@ -398,12 +399,12 @@ class DomainStates:
             )
         )
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return number of states."""
         self._collect_domain()
         return len(self._hass.states.async_entity_ids(self._domain))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Representation of Domain States."""
         return f"<template DomainStates('{self._domain}')>"
 
@@ -426,7 +427,7 @@ class TemplateState(State):
         return state
 
     @property
-    def state_with_unit(self):
+    def state_with_unit(self) -> str:
         """Return the state concatenated with the unit if available."""
         state = object.__getattribute__(self, "_access_state")()
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -447,7 +448,7 @@ class TemplateState(State):
         state = object.__getattribute__(self, "_access_state")()
         return getattr(state, name)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Representation of Template State."""
         state = object.__getattribute__(self, "_access_state")()
         rep = state.__repr__()
@@ -505,6 +506,7 @@ def expand(hass: HomeAssistantType, *args: Any) -> Iterable[State]:
             # ignore other types
             continue
 
+        # pylint: disable=import-outside-toplevel
         from homeassistant.components import group
 
         if split_entity_id(entity_id)[0] == group.DOMAIN:
@@ -637,7 +639,7 @@ def distance(hass, *args):
         return hass.config.distance(*locations[0])
 
     return hass.config.units.length(
-        loc_util.distance(*locations[0] + locations[1]), "m"
+        loc_util.distance(*locations[0] + locations[1]), LENGTH_METERS
     )
 
 

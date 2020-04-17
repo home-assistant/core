@@ -1,4 +1,5 @@
 {
+  "title": "Device tracker",
   "device_automation": {
     "condition_type": {
       "is_home": "{entity_name} is home",

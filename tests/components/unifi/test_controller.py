@@ -4,7 +4,7 @@ from copy import deepcopy
 from datetime import timedelta
 
 import aiounifi
-from asynctest import Mock, patch
+from asynctest import patch
 import pytest
 
 from homeassistant.components import unifi
@@ -63,15 +63,12 @@ async def setup_unifi_integration(
     clients_response=None,
     devices_response=None,
     clients_all_response=None,
+    wlans_response=None,
     known_wireless_clients=None,
     controllers=None,
 ):
     """Create the UniFi controller."""
-    configuration = {}
-    if controllers:
-        configuration = {unifi.DOMAIN: {unifi.CONF_CONTROLLERS: controllers}}
-
-    assert await async_setup_component(hass, unifi.DOMAIN, configuration)
+    assert await async_setup_component(hass, unifi.DOMAIN, {})
 
     config_entry = MockConfigEntry(
         domain=unifi.DOMAIN,
@@ -98,23 +95,30 @@ async def setup_unifi_integration(
     if clients_all_response:
         mock_client_all_responses.append(clients_all_response)
 
+    mock_wlans_responses = deque()
+    if wlans_response:
+        mock_wlans_responses.append(wlans_response)
+
     mock_requests = []
 
     async def mock_request(self, method, path, json=None):
         mock_requests.append({"method": method, "path": path, "json": json})
 
-        if path == "s/{site}/stat/sta" and mock_client_responses:
+        if path == "/stat/sta" and mock_client_responses:
             return mock_client_responses.popleft()
-        if path == "s/{site}/stat/device" and mock_device_responses:
+        if path == "/stat/device" and mock_device_responses:
             return mock_device_responses.popleft()
-        if path == "s/{site}/rest/user" and mock_client_all_responses:
+        if path == "/rest/user" and mock_client_all_responses:
             return mock_client_all_responses.popleft()
+        if path == "/rest/wlanconf" and mock_wlans_responses:
+            return mock_wlans_responses.popleft()
         return {}
 
-    # "aiounifi.Controller.start_websocket", return_value=True
-    with patch("aiounifi.Controller.login", return_value=True), patch(
-        "aiounifi.Controller.sites", return_value=sites
-    ), patch("aiounifi.Controller.request", new=mock_request), patch.object(
+    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
+        "aiounifi.Controller.login", return_value=True,
+    ), patch("aiounifi.Controller.sites", return_value=sites), patch(
+        "aiounifi.Controller.request", new=mock_request
+    ), patch.object(
         aiounifi.websocket.WSClient, "start", return_value=True
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -128,6 +132,7 @@ async def setup_unifi_integration(
     controller.mock_client_responses = mock_client_responses
     controller.mock_device_responses = mock_device_responses
     controller.mock_client_all_responses = mock_client_all_responses
+    controller.mock_wlans_responses = mock_wlans_responses
     controller.mock_requests = mock_requests
 
     return controller
@@ -158,7 +163,7 @@ async def test_controller_setup(hass):
         controller.option_allow_bandwidth_sensors
         == unifi.const.DEFAULT_ALLOW_BANDWIDTH_SENSORS
     )
-    assert controller.option_block_clients == unifi.const.DEFAULT_BLOCK_CLIENTS
+    assert isinstance(controller.option_block_clients, list)
     assert controller.option_track_clients == unifi.const.DEFAULT_TRACK_CLIENTS
     assert controller.option_track_devices == unifi.const.DEFAULT_TRACK_DEVICES
     assert (
@@ -167,11 +172,12 @@ async def test_controller_setup(hass):
     assert controller.option_detection_time == timedelta(
         seconds=unifi.const.DEFAULT_DETECTION_TIME
     )
-    assert controller.option_ssid_filter == unifi.const.DEFAULT_SSID_FILTER
+    assert isinstance(controller.option_ssid_filter, list)
 
     assert controller.mac is None
 
     assert controller.signal_update == "unifi-update-1.2.3.4-site_id"
+    assert controller.signal_remove == "unifi-remove-1.2.3.4-site_id"
     assert controller.signal_options_update == "unifi-options-1.2.3.4-site_id"
 
 
@@ -179,32 +185,6 @@ async def test_controller_mac(hass):
     """Test that it is possible to identify controller mac."""
     controller = await setup_unifi_integration(hass, clients_response=[CONTROLLER_HOST])
     assert controller.mac == "10:00:00:00:00:01"
-
-
-async def test_controller_import_config(hass):
-    """Test that import configuration.yaml instructions work."""
-    controllers = [
-        {
-            CONF_HOST: "1.2.3.4",
-            CONF_SITE_ID: "Site name",
-            unifi.CONF_BLOCK_CLIENT: ["random mac"],
-            unifi.CONF_DONT_TRACK_CLIENTS: True,
-            unifi.CONF_DONT_TRACK_DEVICES: True,
-            unifi.CONF_DONT_TRACK_WIRED_CLIENTS: True,
-            unifi.CONF_DETECTION_TIME: 150,
-            unifi.CONF_SSID_FILTER: ["SSID"],
-        }
-    ]
-
-    controller = await setup_unifi_integration(hass, controllers=controllers)
-
-    assert controller.option_allow_bandwidth_sensors is False
-    assert controller.option_block_clients == ["random mac"]
-    assert controller.option_track_clients is False
-    assert controller.option_track_devices is False
-    assert controller.option_track_wired_clients is False
-    assert controller.option_detection_time == timedelta(seconds=150)
-    assert controller.option_ssid_filter == ["SSID"]
 
 
 async def test_controller_not_accessible(hass):
@@ -227,7 +207,7 @@ async def test_reset_after_successful_setup(hass):
     """Calling reset when the entry has been setup."""
     controller = await setup_unifi_integration(hass)
 
-    assert len(controller.listeners) == 5
+    assert len(controller.listeners) == 9
 
     result = await controller.async_reset()
     await hass.async_block_till_done()
@@ -262,7 +242,9 @@ async def test_wireless_client_event_calls_update_wireless_devices(hass):
 
 async def test_get_controller(hass):
     """Successful call."""
-    with patch("aiounifi.Controller.login", return_value=Mock()):
+    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
+        "aiounifi.Controller.login", return_value=True
+    ):
         assert await unifi.controller.get_controller(hass, **CONTROLLER_DATA)
 
 
@@ -270,13 +252,15 @@ async def test_get_controller_verify_ssl_false(hass):
     """Successful call with verify ssl set to false."""
     controller_data = dict(CONTROLLER_DATA)
     controller_data[CONF_VERIFY_SSL] = False
-    with patch("aiounifi.Controller.login", return_value=Mock()):
+    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
+        "aiounifi.Controller.login", return_value=True
+    ):
         assert await unifi.controller.get_controller(hass, **controller_data)
 
 
 async def test_get_controller_login_failed(hass):
     """Check that get_controller can handle a failed login."""
-    with patch(
+    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", side_effect=aiounifi.Unauthorized
     ), pytest.raises(unifi.errors.AuthenticationRequired):
         await unifi.controller.get_controller(hass, **CONTROLLER_DATA)
@@ -284,7 +268,7 @@ async def test_get_controller_login_failed(hass):
 
 async def test_get_controller_controller_unavailable(hass):
     """Check that get_controller can handle controller being unavailable."""
-    with patch(
+    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", side_effect=aiounifi.RequestError
     ), pytest.raises(unifi.errors.CannotConnect):
         await unifi.controller.get_controller(hass, **CONTROLLER_DATA)
@@ -292,7 +276,7 @@ async def test_get_controller_controller_unavailable(hass):
 
 async def test_get_controller_unknown_error(hass):
     """Check that get_controller can handle unknown errors."""
-    with patch(
+    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", side_effect=aiounifi.AiounifiException
     ), pytest.raises(unifi.errors.AuthenticationRequired):
         await unifi.controller.get_controller(hass, **CONTROLLER_DATA)

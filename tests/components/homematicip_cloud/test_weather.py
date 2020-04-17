@@ -15,11 +15,8 @@ from .helper import async_manipulate_test_data, get_and_check_entity_basics
 
 async def test_manually_configured_platform(hass):
     """Test that we do not set up an access point."""
-    assert (
-        await async_setup_component(
-            hass, WEATHER_DOMAIN, {WEATHER_DOMAIN: {"platform": HMIPC_DOMAIN}}
-        )
-        is True
+    assert await async_setup_component(
+        hass, WEATHER_DOMAIN, {WEATHER_DOMAIN: {"platform": HMIPC_DOMAIN}}
     )
     assert not hass.data.get(HMIPC_DOMAIN)
 

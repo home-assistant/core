@@ -54,10 +54,10 @@ async def test_state_value(hass):
     with tempfile.TemporaryDirectory() as tempdirname:
         path = os.path.join(tempdirname, "cover_status")
         test_cover = {
-            "command_state": "cat {}".format(path),
-            "command_open": "echo 1 > {}".format(path),
-            "command_close": "echo 1 > {}".format(path),
-            "command_stop": "echo 0 > {}".format(path),
+            "command_state": f"cat {path}",
+            "command_open": f"echo 1 > {path}",
+            "command_close": f"echo 1 > {path}",
+            "command_stop": f"echo 0 > {path}",
             "value_template": "{{ value }}",
         }
         assert (

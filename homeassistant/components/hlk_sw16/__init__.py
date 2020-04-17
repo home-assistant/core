@@ -30,8 +30,6 @@ DEFAULT_PORT = 8080
 
 DOMAIN = "hlk_sw16"
 
-SIGNAL_AVAILABILITY = "hlk_sw16_device_available_{}"
-
 SWITCH_SCHEMA = vol.Schema({vol.Optional(CONF_NAME): cv.string})
 
 RELAY_ID = vol.All(
@@ -74,13 +72,13 @@ async def async_setup(hass, config):
         def disconnected():
             """Schedule reconnect after connection has been lost."""
             _LOGGER.warning("HLK-SW16 %s disconnected", device)
-            async_dispatcher_send(hass, SIGNAL_AVAILABILITY.format(device), False)
+            async_dispatcher_send(hass, f"hlk_sw16_device_available_{device}", False)
 
         @callback
         def reconnected():
             """Schedule reconnect after connection has been lost."""
             _LOGGER.warning("HLK-SW16 %s connected", device)
-            async_dispatcher_send(hass, SIGNAL_AVAILABILITY.format(device), True)
+            async_dispatcher_send(hass, f"hlk_sw16_device_available_{device}", True)
 
         async def connect():
             """Set up connection and hook it into HA for reconnect/shutdown."""
@@ -138,7 +136,7 @@ class SW16Device(Entity):
         """Propagate changes through ha."""
         _LOGGER.debug("Relay %s new state callback: %r", self._device_port, event)
         self._is_on = event
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def should_poll(self):
@@ -158,7 +156,7 @@ class SW16Device(Entity):
     @callback
     def _availability_callback(self, availability):
         """Update availability state."""
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Register update callback."""
@@ -166,8 +164,10 @@ class SW16Device(Entity):
             self.handle_event_callback, self._device_port
         )
         self._is_on = await self._client.status(self._device_port)
-        async_dispatcher_connect(
-            self.hass,
-            SIGNAL_AVAILABILITY.format(self._device_id),
-            self._availability_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"hlk_sw16_device_available_{self._device_id}",
+                self._availability_callback,
+            )
         )

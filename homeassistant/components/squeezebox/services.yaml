@@ -3,10 +3,10 @@ call_method:
   fields:
     entity_id:
       description: Name(s) of the Squeezebox entities where to run the API method.
-      example: 'media_player.squeezebox_radio'
+      example: "media_player.squeezebox_radio"
     command:
       description: Command to pass to Logitech Media Server (p0 in the CLI documentation).
-      example: 'playlist'
+      example: "playlist"
     parameters:
       description: Array of additional parameters to pass to Logitech Media Server (p1, ..., pN in the CLI documentation).
       example: ["loadtracks", "album.titlesearch="]

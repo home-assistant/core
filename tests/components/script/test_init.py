@@ -94,7 +94,7 @@ class TestScriptComponent(unittest.TestCase):
         ):
             assert not setup_component(
                 self.hass, "script", {"script": value}
-            ), "Script loaded with wrong config {}".format(value)
+            ), f"Script loaded with wrong config {value}"
 
             assert 0 == len(self.hass.states.entity_ids("script"))
 
@@ -446,3 +446,24 @@ async def test_extraction_functions(hass):
         "device-in-both",
         "device-in-last",
     }
+
+
+async def test_config(hass):
+    """Test passing info in config."""
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test_script": {
+                    "alias": "Script Name",
+                    "icon": "mdi:party",
+                    "sequence": [],
+                }
+            }
+        },
+    )
+
+    test_script = hass.states.get("script.test_script")
+    assert test_script.name == "Script Name"
+    assert test_script.attributes["icon"] == "mdi:party"

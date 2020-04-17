@@ -27,7 +27,7 @@ MOCK_TOKEN = {"access_token": "dummtoken", "expires_in": 3600}
 MOCK_JSON = {"devices": {}}
 MOCK_URL = "https://dummy"
 MOCK_HEADER = {
-    "Authorization": "Bearer {}".format(MOCK_TOKEN["access_token"]),
+    "Authorization": f"Bearer {MOCK_TOKEN['access_token']}",
     "X-GFE-SSL": "yes",
 }
 
@@ -57,7 +57,7 @@ async def test_get_access_token(hass, aioclient_mock):
     await _get_homegraph_token(hass, jwt)
     assert aioclient_mock.call_count == 1
     assert aioclient_mock.mock_calls[0][3] == {
-        "Authorization": "Bearer {}".format(jwt),
+        "Authorization": f"Bearer {jwt}",
         "Content-Type": "application/x-www-form-urlencoded",
     }
 

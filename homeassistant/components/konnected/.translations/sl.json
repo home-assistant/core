@@ -11,8 +11,12 @@
         },
         "step": {
             "confirm": {
-                "description": "Model: {model}\nGostitelj: {host}\nVrata: {port}\n\nV nastavitvah lahko nastavite vedenje I / O in plo\u0161\u010de Konnected alarma. ",
+                "description": "Model: {model}\nID: {id}\nGostitelj: {host}\nVrata: {port}\n\nV nastavitvah lahko nastavite vedenje I/O in plo\u0161\u010de Konnected alarma. ",
                 "title": "Konnected naprava pripravljena"
+            },
+            "import_confirm": {
+                "description": "Konnected alarm panel z ID {id} je bil odkrit v konfiguraciji. YAML. To tok vam bo omogo\u010dil, da ga uvozite v va\u0161o konfiguracijo.",
+                "title": "Uvoz Konnected Naprave"
             },
             "user": {
                 "data": {
@@ -22,14 +26,14 @@
                 "description": "Vnesite podatke o gostitelju v svoj Konnected Panel.",
                 "title": "Odkrijte Konnected napravo"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
             "not_konn_panel": "Ni prepoznana kot Konnected.io naprava"
         },
         "error": {
+            "bad_host": "Neveljaven URL gostitelja API-ja za preglasitev",
             "few": "nekaj",
             "one": "ena",
             "other": "drugo",
@@ -84,7 +88,9 @@
             },
             "options_misc": {
                 "data": {
-                    "blink": "Lu\u010dka LED na zaslonu utripa, ko po\u0161iljate spremembo stanja"
+                    "api_host": "Preveri gostiteljski URL API (neobvezno)",
+                    "blink": "Lu\u010dka LED na zaslonu utripa, ko po\u0161iljate spremembo stanja",
+                    "override_api_host": "Preglasi privzeti URL gostiteljske plo\u0161\u010de API-ja za Home Assistant"
                 },
                 "description": "Izberite \u017eeleno vedenje za va\u0161o plo\u0161\u010do",
                 "title": "Konfigurirajte Razno"
@@ -93,14 +99,14 @@
                 "data": {
                     "activation": "Izhod, ko je vklopljen",
                     "momentary": "Trajanje impulza (ms) (neobvezno)",
+                    "more_states": "Konfigurirajte dodatna stanja za to obmo\u010dje",
                     "name": "Ime (neobvezno)",
                     "pause": "Premor med impulzi (ms) (neobvezno)",
                     "repeat": "\u010casi ponovitve (-1 = neskon\u010dno) (neobvezno)"
                 },
-                "description": "Izberite izhodne mo\u017enosti za {zone}",
+                "description": "Izberite izhodne mo\u017enosti za {zone} : stanje {state}",
                 "title": "Konfigurirajte preklopni izhod"
             }
-        },
-        "title": "Mo\u017enosti Konnected alarm-a"
+        }
     }
 }

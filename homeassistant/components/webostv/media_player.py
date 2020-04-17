@@ -4,11 +4,11 @@ from datetime import timedelta
 from functools import wraps
 import logging
 
-from aiopylgtv import PyLGTVCmdException, PyLGTVPairException
+from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
 from websockets.exceptions import ConnectionClosed
 
 from homeassistant import util
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -23,6 +23,13 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.components.webostv.const import (
+    ATTR_SOUND_OUTPUT,
+    CONF_ON_ACTION,
+    CONF_SOURCES,
+    DOMAIN,
+    LIVE_TV_APP_ID,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_CUSTOMIZE,
@@ -36,31 +43,26 @@ from homeassistant.const import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.script import Script
 
-from . import CONF_ON_ACTION, CONF_SOURCES, DOMAIN
-from .const import ATTR_SOUND_OUTPUT, LIVE_TV_APP_ID
-
 _LOGGER = logging.getLogger(__name__)
-
 
 SUPPORT_WEBOSTV = (
     SUPPORT_TURN_OFF
     | SUPPORT_NEXT_TRACK
     | SUPPORT_PAUSE
     | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_PLAY
 )
+
+SUPPORT_WEBOSTV_VOLUME = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the LG WebOS TV platform."""
+    """Set up the LG webOS Smart TV platform."""
 
     if discovery_info is None:
         return
@@ -108,12 +110,13 @@ def cmd(func):
 
 
 class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
-    """Representation of a LG WebOS TV."""
+    """Representation of a LG webOS Smart TV."""
 
-    def __init__(self, client, name, customize, on_script=None):
+    def __init__(self, client: WebOsClient, name: str, customize, on_script=None):
         """Initialize the webos device."""
         self._client = client
         self._name = name
+        self._unique_id = client.software_info["device_id"]
         self._customize = customize
         self._on_script = on_script
 
@@ -153,7 +156,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         """Update state from WebOsClient."""
         self.update_sources()
 
-        self.async_schedule_update_ha_state(False)
+        self.async_write_ha_state()
 
     def update_sources(self):
         """Update list of sources from current source, apps, inputs and configured list."""
@@ -220,9 +223,19 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
                 pass
 
     @property
+    def unique_id(self):
+        """Return the unique id of the device."""
+        return self._unique_id
+
+    @property
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def device_class(self):
+        """Return the device class of the device."""
+        return DEVICE_CLASS_TV
 
     @property
     def state(self):
@@ -285,9 +298,17 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
+        supported = SUPPORT_WEBOSTV
+
+        if self._client.sound_output == "external_arc":
+            supported = supported | SUPPORT_WEBOSTV_VOLUME
+        elif self._client.sound_output != "lineout":
+            supported = supported | SUPPORT_WEBOSTV_VOLUME | SUPPORT_VOLUME_SET
+
         if self._on_script:
-            return SUPPORT_WEBOSTV | SUPPORT_TURN_ON
-        return SUPPORT_WEBOSTV
+            supported = supported | SUPPORT_TURN_ON
+
+        return supported
 
     @property
     def device_state_attributes(self):

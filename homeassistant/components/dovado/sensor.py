@@ -6,7 +6,7 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_SENSORS, DATA_GIGABYTES
+from homeassistant.const import CONF_SENSORS, DATA_GIGABYTES, UNIT_PERCENTAGE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -24,7 +24,12 @@ SENSOR_SMS_UNREAD = "sms"
 
 SENSORS = {
     SENSOR_NETWORK: ("signal strength", "Network", None, "mdi:access-point-network"),
-    SENSOR_SIGNAL: ("signal strength", "Signal Strength", "%", "mdi:signal"),
+    SENSOR_SIGNAL: (
+        "signal strength",
+        "Signal Strength",
+        UNIT_PERCENTAGE,
+        "mdi:signal",
+    ),
     SENSOR_SMS_UNREAD: ("sms unread", "SMS unread", "", "mdi:message-text-outline"),
     SENSOR_UPLOAD: ("traffic modem tx", "Sent", DATA_GIGABYTES, "mdi:cloud-upload"),
     SENSOR_DOWNLOAD: (
@@ -85,7 +90,7 @@ class DovadoSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._data.name, SENSORS[self._sensor][1])
+        return f"{self._data.name} {SENSORS[self._sensor][1]}"
 
     @property
     def state(self):

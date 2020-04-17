@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components import alexa
 from homeassistant.components.alexa import const
+from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
@@ -63,13 +64,13 @@ def alexa_client(loop, hass, hass_client):
 
 
 def _flash_briefing_req(client, briefing_id):
-    return client.get("/api/alexa/flash_briefings/{}".format(briefing_id))
+    return client.get(f"/api/alexa/flash_briefings/{briefing_id}")
 
 
 async def test_flash_briefing_invalid_id(alexa_client):
     """Test an invalid Flash Briefing ID."""
     req = await _flash_briefing_req(alexa_client, 10000)
-    assert req.status == 404
+    assert req.status == HTTP_NOT_FOUND
     text = await req.text()
     assert text == ""
 

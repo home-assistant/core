@@ -22,5 +22,6 @@
             "timestamp": "{entity_name} Zeitstempel\u00e4nderungen",
             "value": "{entity_name} Wert\u00e4nderungen"
         }
-    }
+    },
+    "title": "Sensor"
 }

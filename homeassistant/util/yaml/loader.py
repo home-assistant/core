@@ -41,7 +41,6 @@ def clear_secret_cache() -> None:
     __SECRET_CACHE.clear()
 
 
-# pylint: disable=too-many-ancestors
 class SafeLineLoader(yaml.SafeLoader):
     """Loader class that keeps track of line numbers."""
 
@@ -296,7 +295,7 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
             _LOGGER.debug("Secret %s retrieved from keyring", node.value)
             return pwd
 
-    global credstash  # pylint: disable=invalid-name
+    global credstash  # pylint: disable=invalid-name, global-statement
 
     if credstash:
         # pylint: disable=no-member

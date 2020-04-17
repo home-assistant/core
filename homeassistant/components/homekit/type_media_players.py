@@ -33,6 +33,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_STANDBY,
     STATE_UNKNOWN,
 )
 
@@ -146,7 +147,7 @@ class MediaPlayer(HomeAccessory):
 
     def generate_service_name(self, mode):
         """Generate name for individual service."""
-        return "{} {}".format(self.display_name, MODE_FRIENDLY_NAME[mode])
+        return f"{self.display_name} {MODE_FRIENDLY_NAME[mode]}"
 
     def set_on_off(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -190,7 +191,12 @@ class MediaPlayer(HomeAccessory):
         current_state = new_state.state
 
         if self.chars[FEATURE_ON_OFF]:
-            hk_state = current_state not in (STATE_OFF, STATE_UNKNOWN, "None")
+            hk_state = current_state not in (
+                STATE_OFF,
+                STATE_UNKNOWN,
+                STATE_STANDBY,
+                "None",
+            )
             if not self._flag[FEATURE_ON_OFF]:
                 _LOGGER.debug(
                     '%s: Set current state for "on_off" to %s', self.entity_id, hk_state
@@ -287,7 +293,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             )
             serv_tv.add_linked_service(serv_speaker)
 
-            name = "{} {}".format(self.display_name, "Volume")
+            name = f"{self.display_name} Volume"
             serv_speaker.configure_char(CHAR_NAME, value=name)
             serv_speaker.configure_char(CHAR_ACTIVE, value=1)
 

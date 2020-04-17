@@ -31,9 +31,7 @@ async def test_config_flow_registers_webhook(hass, aiohttp_client):
         hass.bus.async_listen(twilio.RECEIVED_DATA, handle_event)
 
         client = await aiohttp_client(hass.http.app)
-        await client.post(
-            "/api/webhook/{}".format(webhook_id), data={"hello": "twilio"}
-        )
+        await client.post(f"/api/webhook/{webhook_id}", data={"hello": "twilio"})
 
         assert len(twilio_events) == 1
         assert twilio_events[0].data["webhook_id"] == webhook_id

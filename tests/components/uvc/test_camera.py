@@ -258,7 +258,7 @@ class TestUVC(unittest.TestCase):
             """Mock login."""
             try:
                 responses.pop(0)
-                raise socket.error
+                raise OSError
             except IndexError:
                 pass
 

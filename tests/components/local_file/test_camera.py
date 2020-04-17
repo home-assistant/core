@@ -41,6 +41,8 @@ async def test_loading_file(hass, hass_client):
 
 async def test_file_not_readable(hass, caplog):
     """Test a warning is shown setup when file is not readable."""
+    mock_registry(hass)
+
     with mock.patch("os.path.isfile", mock.Mock(return_value=True)), mock.patch(
         "os.access", mock.Mock(return_value=False)
     ):

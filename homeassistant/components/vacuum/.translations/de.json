@@ -12,5 +12,6 @@
             "cleaning": "{entity_name} hat mit der Reinigung begonnen",
             "docked": "{entity_name} angedockt"
         }
-    }
+    },
+    "title": "Staubsauger"
 }

@@ -1,7 +1,7 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Lokalizacja jest ju\u017c zarejestrowana."
+        "abort": {
+            "already_configured": "Ta lokalizacja jest ju\u017c zarejestrowana."
         },
         "step": {
             "user": {
@@ -12,7 +12,6 @@
                 },
                 "title": "Wprowad\u017a informacje o lokalizacji."
             }
-        },
-        "title": "\u015awiatowa sie\u0107 lokalizacji wy\u0142adowa\u0144 atmosferycznych (WWLLN)"
+        }
     }
 }

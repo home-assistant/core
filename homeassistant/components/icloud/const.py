@@ -1,11 +1,12 @@
 """iCloud component constants."""
 
 DOMAIN = "icloud"
-SERVICE_UPDATE = f"{DOMAIN}_update"
 
+CONF_WITH_FAMILY = "with_family"
 CONF_MAX_INTERVAL = "max_interval"
 CONF_GPS_ACCURACY_THRESHOLD = "gps_accuracy_threshold"
 
+DEFAULT_WITH_FAMILY = False
 DEFAULT_MAX_INTERVAL = 30  # min
 DEFAULT_GPS_ACCURACY_THRESHOLD = 500  # meters
 
@@ -13,7 +14,7 @@ DEFAULT_GPS_ACCURACY_THRESHOLD = 500  # meters
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-ICLOUD_COMPONENTS = ["device_tracker", "sensor"]
+PLATFORMS = ["device_tracker", "sensor"]
 
 # pyicloud.AppleDevice status
 DEVICE_BATTERY_LEVEL = "batteryLevel"

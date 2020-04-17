@@ -60,10 +60,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if (
             user_input is not None
             and self.discovered_bridges is not None
-            # pylint: disable=unsupported-membership-test
             and user_input["id"] in self.discovered_bridges
         ):
-            # pylint: disable=unsubscriptable-object
             self.bridge = self.discovered_bridges[user_input["id"]]
             await self.async_set_unique_id(self.bridge.id, raise_on_progress=False)
             # We pass user input to link so it will attempt to link right away
