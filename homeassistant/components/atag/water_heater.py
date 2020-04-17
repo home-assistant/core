@@ -54,10 +54,6 @@ class AtagWaterHeater(AtagEntity, WaterHeaterDevice):
         if await self.coordinator.atag.dhw_set_temp(kwargs.get(ATTR_TEMPERATURE)):
             await self.coordinator.async_refresh()
 
-    def set_operation_mode(self, operation_mode):
-        """Set operation mode."""
-        pass
-
     @property
     def target_temperature(self):
         """Return the setpoint if water demand, otherwise return base temp (comfort level)."""
