@@ -1,6 +1,7 @@
 """Support gathering system information of hosts which are running netdata."""
 from datetime import timedelta
 import logging
+from typing import Any, Dict, Optional
 
 from netdata import Netdata
 from netdata.exceptions import NetdataError
@@ -93,6 +94,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         )
 
+    dev.append(NetdataAlarms(netdata, name, host, port))
     async_add_entities(dev, True)
 
 
@@ -145,6 +147,72 @@ class NetdataSensor(Entity):
         )
 
 
+class NetdataAlarms(Entity):
+    """Implementation of a Netdata alarm sensor."""
+
+    def __init__(self, netdata, name, host, port):
+        """Initialize the Netdata alarm sensor."""
+        self.netdata = netdata
+        self._state = None
+        self._name = name
+        self._host = host
+        self._port = port
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self._name} Alarms"
+
+    @property
+    def state(self):
+        """Return the state of the resources."""
+        return self._state
+
+    @property
+    def device_info(self) -> Optional[Dict[str, Any]]:
+        """Return host information, e.g. the url to netdata dashboard."""
+        return {"url": f"http://{self._host}:{self._port}"}
+
+    @property
+    def entity_picture(self):
+        """Status symbol if type is symbol."""
+        if self._state == "ok":
+            return "https://cdn2.iconfinder.com/data/icons/function_icon_set/circle_green.png"
+        elif self._state == "warning":
+            return "https://cdn2.iconfinder.com/data/icons/function_icon_set/warning_48.png"
+        elif self._state == "critical":
+            return "https://cdn2.iconfinder.com/data/icons/function_icon_set/circle_red.png"
+        else:
+            return "https://cdn2.iconfinder.com/data/icons/function_icon_set/refresh_48.png"
+
+    @property
+    def available(self):
+        """Could the resource be accessed during the last update call."""
+        return self.netdata.available
+
+    async def async_update(self):
+        """Get the latest alarms from Netdata REST API."""
+        import json
+
+        await self.netdata.async_update()
+        info = json.loads(self.netdata.api.alarms)
+        self._state = "unknown"
+        number_of_alarms = len(info["alarms"])
+
+        _LOGGER.debug(f"Host {self.name} has {number_of_alarms} alarms")
+
+        alarms = info["alarms"]
+        n = number_of_alarms
+
+        for alarm in alarms:
+            if alarms[alarm]["recipient"] == "silent":
+                n = n - 1
+            elif alarms[alarm]["status"] == "CRITICAL":
+                self._state = "critical"
+                return
+        self._state = "ok" if n == 0 else "warning"
+
+
 class NetdataData:
     """The class for handling the data retrieval."""
 
@@ -157,9 +225,14 @@ class NetdataData:
     async def async_update(self):
         """Get the latest data from the Netdata REST API."""
 
+        original_endpoint = self.api.endpoint
         try:
             await self.api.get_allmetrics()
+            # Overwrite endpoint to receive alarms and later restore it again.
+            self.api.endpoint = "alarms?format=json"
+            await self.api.get_alarms()
             self.available = True
         except NetdataError:
             _LOGGER.error("Unable to retrieve data from Netdata")
             self.available = False
+        self.api.endpoint = original_endpoint
