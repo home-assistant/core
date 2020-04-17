@@ -76,7 +76,7 @@ class IPPSensor(IPPEntity):
 
         super().__init__(
             entry_id=entry_id,
-            unique_id=unique_id,
+            device_id=unique_id,
             coordinator=coordinator,
             name=name,
             icon=icon,
