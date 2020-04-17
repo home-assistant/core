@@ -19,8 +19,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Select discovered deCONZ gateway",
-                    "manual_input": "Configure deCONZ gateway manually"
+                    "host": "Select discovered deCONZ gateway"
                 },
                 "title": "Select deCONZ gateway"
             },

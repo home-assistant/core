@@ -32,7 +32,7 @@ from .const import (
 
 DECONZ_MANUFACTURERURL = "http://www.dresden-elektronik.de"
 CONF_SERIAL = "serial"
-CONF_MANUAL_INPUT = "manual_input"
+CONF_MANUAL_INPUT = "Manually define gateway"
 
 
 @callback
@@ -71,18 +71,17 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         if user_input is not None:
 
-            if user_input.get(CONF_MANUAL_INPUT):
+            if CONF_MANUAL_INPUT == user_input[CONF_HOST]:
                 return await self.async_step_manual_input()
 
-            if CONF_HOST in user_input:
-                for bridge in self.bridges:
-                    if bridge[CONF_HOST] == user_input[CONF_HOST]:
-                        self.bridge_id = bridge[CONF_BRIDGE_ID]
-                        self.deconz_config = {
-                            CONF_HOST: bridge[CONF_HOST],
-                            CONF_PORT: bridge[CONF_PORT],
-                        }
-                        return await self.async_step_link()
+            for bridge in self.bridges:
+                if bridge[CONF_HOST] == user_input[CONF_HOST]:
+                    self.bridge_id = bridge[CONF_BRIDGE_ID]
+                    self.deconz_config = {
+                        CONF_HOST: bridge[CONF_HOST],
+                        CONF_PORT: bridge[CONF_PORT],
+                    }
+                    return await self.async_step_link()
 
         session = aiohttp_client.async_get_clientsession(self.hass)
 
@@ -101,14 +100,11 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             for bridge in self.bridges:
                 hosts.append(bridge[CONF_HOST])
 
+            hosts.append(CONF_MANUAL_INPUT)
+
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Optional(CONF_HOST): vol.In(hosts),
-                        vol.Optional(CONF_MANUAL_INPUT): bool,
-                    }
-                ),
+                data_schema=vol.Schema({vol.Optional(CONF_HOST): vol.In(hosts)}),
             )
 
         return await self.async_step_manual_input()

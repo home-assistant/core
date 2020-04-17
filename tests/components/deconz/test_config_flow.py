@@ -79,7 +79,7 @@ async def test_flow_manual_configuration_decision(hass, aioclient_mock):
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_MANUAL_INPUT: True}
+        result["flow_id"], user_input={CONF_HOST: CONF_MANUAL_INPUT}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
