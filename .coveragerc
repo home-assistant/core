@@ -50,6 +50,10 @@ omit =
     homeassistant/components/arwn/sensor.py
     homeassistant/components/asterisk_cdr/mailbox.py
     homeassistant/components/asterisk_mbox/*
+    homeassistant/components/atag/__init__.py
+    homeassistant/components/atag/climate.py
+    homeassistant/components/atag/sensor.py
+    homeassistant/components/atag/water_heater.py
     homeassistant/components/aten_pe/*
     homeassistant/components/atome/*
     homeassistant/components/aurora_abb_powerone/sensor.py
