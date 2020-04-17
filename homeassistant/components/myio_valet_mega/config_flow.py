@@ -96,5 +96,5 @@ class MyIOoptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-class CannotConnect():
+class CannotConnect:
     """Error to indicate we cannot connect."""
