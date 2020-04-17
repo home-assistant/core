@@ -1,6 +1,6 @@
 {
   "config": {
-    "title": "myIO server",
+    "title": "myIO Valet Mega",
     "step": {
       "user": {
         "title": "Connect to the device",
@@ -8,6 +8,8 @@
           "host": "Host",
           "username": "Username",
           "password": "Password",
+          "port": "HTTP Port",
+          "port_app": "App Port",
           "name": "Name"
         }
       }
@@ -27,7 +29,7 @@
         "data": {
           "option_1": "Option 1",
           "option_2": "Option 2",
-          "refresh_time": "refresh time"
+          "refresh_time": "Refresh time"
         }
       }
     }
