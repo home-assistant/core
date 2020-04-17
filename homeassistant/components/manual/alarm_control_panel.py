@@ -372,7 +372,9 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
             arming_time = self._arming_time(state)
             if arming_time:
                 track_point_in_time(
-                    self._hass, self.async_scheduled_update, self._state_ts + arming_time
+                    self._hass,
+                    self.async_scheduled_update,
+                    self._state_ts + arming_time,
                 )
 
     def _validate_code(self, code, state):
