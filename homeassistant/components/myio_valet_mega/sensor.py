@@ -32,7 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     sensor_entities.append(
                         MyIOSensor(hass, _sensor_id, _server_data, _server_name)
                     )
-        except Exception as ex:
+        except (ValueError, Exception as ex):
             _LOGGER.debug("%s,%s - No sensor data", ex, _server_name)
 
         async_add_entities(sensor_entities)
@@ -90,12 +90,14 @@ class MyIOSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
+        _stringToSend = ""
         if int(self._number) < 100:
-            return TEMP_CELSIUS
+            _stringToSend = TEMP_CELSIUS
         elif int(self._number) < 200:
-            return "%"
+            _stringToSend = "%"
         else:
-            return self._name
+            _stringToSend = self._name
+        return _stringToSend
 
     def update(self):
         """Fetch new state data for the sensor."""
