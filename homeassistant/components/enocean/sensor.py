@@ -4,6 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import enocean
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -231,7 +232,7 @@ class EnOceanHumiditySensor(EnOceanSensor):
         self.schedule_update_ha_state()
 
 
-class EnOceanWindowHandle(EnOceanSensor):
+class EnOceanWindowHandle(EnOceanSensor, RestoreEntity):
     """Representation of an EnOcean window handle device.
 
     EEPs (EnOcean Equipment Profiles):
@@ -241,6 +242,16 @@ class EnOceanWindowHandle(EnOceanSensor):
     def __init__(self, dev_id, dev_name):
         """Initialize the EnOcean window handle sensor device."""
         super().__init__(dev_id, dev_name, SENSOR_TYPE_WINDOWHANDLE)
+
+    async def async_added_to_hass(self):
+        """Call when entity about to be added to hass."""
+        # Try to retrieve the last value
+        await super().async_added_to_hass()
+        if self._state is not None:
+            return
+
+        state = await self.async_get_last_state()
+        self._state = state.state
 
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
