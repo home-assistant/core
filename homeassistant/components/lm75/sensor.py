@@ -3,11 +3,7 @@ import logging
 
 import smbus  # pylint: disable=import-error
 
-from homeassistant.const import (
-    DEVICE_CLASS_TEMPERATURE,
-    PRECISION_TENTHS,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import DEVICE_CLASS_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import display_temp
