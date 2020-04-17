@@ -60,19 +60,22 @@ async def test_binary_sensor_device(hass, aioclient_mock, qs_devices):
     await hass.async_start()
     await hass.async_block_till_done()
 
+    # verify initial state is off per the 'val' in qs_devices
     state_obj = hass.states.get("binary_sensor.s1")
     assert state_obj.state == "off"
 
+    # receive turn on command from network
     listen_mock.queue_response(
-        json={"id": "@a00001", "cmd": "", "data": "4e0e1601", "rssi": "61%"}
+        json={"id": "@a00001", "cmd": "STATUS.ACK", "data": "4e0e1601", "rssi": "61%"}
     )
     await asyncio.sleep(0.01)
     await hass.async_block_till_done()
     state_obj = hass.states.get("binary_sensor.s1")
     assert state_obj.state == "on"
 
+    # receive turn off command from network
     listen_mock.queue_response(
-        json={"id": "@a00001", "cmd": "", "data": "4e0e1701", "rssi": "61%"},
+        json={"id": "@a00001", "cmd": "STATUS.ACK", "data": "4e0e1701", "rssi": "61%"},
     )
     await asyncio.sleep(0.01)
     await hass.async_block_till_done()
@@ -104,6 +107,7 @@ async def test_sensor_device(hass, aioclient_mock, qs_devices):
     state_obj = hass.states.get("sensor.ss1")
     assert state_obj.state == "None"
 
+    # receive command that sets the sensor value
     listen_mock.queue_response(
         json={"id": "@a00001", "name": "ss1", "type": "rel", "val": "4733800001a00000"},
     )
@@ -129,9 +133,11 @@ async def test_switch_device(hass, aioclient_mock, qs_devices):
     await hass.async_start()
     await hass.async_block_till_done()
 
+    # verify initial state is off per the 'val' in qs_devices
     state_obj = hass.states.get("switch.switch_1")
     assert state_obj.state == "off"
 
+    # ask hass to turn on and verify command is sent to device
     aioclient_mock.mock_calls.clear()
     aioclient_mock.get("http://127.0.0.1:2020/@a00001=100")
     await hass.services.async_call(
@@ -145,8 +151,10 @@ async def test_switch_device(hass, aioclient_mock, qs_devices):
         None,
     ) in aioclient_mock.mock_calls
 
+    # verify state is still off (command not really sent)
     state_obj = hass.states.get("switch.switch_1")
     assert state_obj.state == "off"
+    # check if setting the value in the network show in hass
     qs_devices[0]["val"] = "ON"
     listen_mock.queue_response(
         json={"id": "@a00001", "cmd": "STATUS.ACK", "data": "ON"},
@@ -155,6 +163,7 @@ async def test_switch_device(hass, aioclient_mock, qs_devices):
     state_obj = hass.states.get("switch.switch_1")
     assert state_obj.state == "on"
 
+    # ask hass to turn off and verify command is sent to device
     aioclient_mock.mock_calls.clear()
     aioclient_mock.get("http://127.0.0.1:2020/@a00001=0")
     await hass.services.async_call(
@@ -184,10 +193,12 @@ async def test_light_device(hass, aioclient_mock, qs_devices):
     await hass.async_start()
     await hass.async_block_till_done()
 
+    # verify initial state is on per the 'val' in qs_devices
     state_obj = hass.states.get("light.dim_3")
     assert state_obj.state == "on"
     assert state_obj.attributes["brightness"] == 255
 
+    # ask hass to turn off and verify command is sent to device
     aioclient_mock.mock_calls.clear()
     aioclient_mock.get("http://127.0.0.1:2020/@a00003=0")
     await hass.services.async_call(
@@ -201,6 +212,7 @@ async def test_light_device(hass, aioclient_mock, qs_devices):
         None,
     ) in aioclient_mock.mock_calls
 
+    # change brightness in network and check that hass updates
     qs_devices[2]["val"] = "280c55"  # half dimmed
     listen_mock.queue_response(
         json={"id": "@a00003", "cmd": "STATUS.ACK", "data": "280c55"},
@@ -211,6 +223,7 @@ async def test_light_device(hass, aioclient_mock, qs_devices):
     assert state_obj.state == "on"
     assert 16 < state_obj.attributes["brightness"] < 240
 
+    # turn off in the network and see that it is off in hass as well
     qs_devices[2]["val"] = "280c78"  # off
     listen_mock.queue_response(
         json={"id": "@a00003", "cmd": "STATUS.ACK", "data": "280c78"},
@@ -220,6 +233,7 @@ async def test_light_device(hass, aioclient_mock, qs_devices):
     state_obj = hass.states.get("light.dim_3")
     assert state_obj.state == "off"
 
+    # ask hass to turn on and verify command is sent to device
     aioclient_mock.mock_calls.clear()
     aioclient_mock.get("http://127.0.0.1:2020/@a00003=100")
     await hass.services.async_call(
@@ -366,7 +380,7 @@ async def test_unknown_device(hass, aioclient_mock, qs_devices, caplog):
 
 
 async def test_no_discover_info(hass, hass_storage, aioclient_mock, caplog):
-    """Test a binary sensor device."""
+    """Test that discovery with no discovery_info does not result in errors."""
     config = {
         "qwikswitch": {},
         "light": {"platform": "qwikswitch"},
