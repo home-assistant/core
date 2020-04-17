@@ -55,7 +55,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     _climate_entities.append(
                         MyIOThermostate(hass, config_entry, _id, _server_name)
                     )
-        except (ValueError, Exception): # pylint: disable=broad-except
+        except (ValueError, Exception):  # pylint: disable=broad-except
             _LOGGER.debug(
                 "PWM doesn't have a sensor attribute - myIO-Server Version < 2.4.4.3"
             )
