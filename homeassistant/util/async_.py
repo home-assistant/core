@@ -4,9 +4,9 @@ from asyncio.events import AbstractEventLoop
 import concurrent.futures
 import functools
 import logging
+import threading
 from traceback import extract_stack
 from typing import Any, Callable, Coroutine, TypeVar
-
 
 _LOGGER = logging.getLogger(__name__)
 
