@@ -3,6 +3,11 @@ import logging
 from urllib.parse import urlparse
 
 from synology_dsm import SynologyDSM
+from synology_dsm.exceptions import (
+    SynologyDSMLogin2SAFailedException,
+    SynologyDSMLogin2SARequiredException,
+    SynologyDSMLoginInvalidException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -28,6 +33,8 @@ from .const import (
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_OTP_CODE = "otp_code"
 
 
 def _discovery_schema_with_defaults(discovery_info):
@@ -66,6 +73,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the synology_dsm config flow."""
+        self.saved_user_input = {}
         self.discovered_conf = {}
 
     async def _show_setup_form(self, user_input=None, errors=None):
@@ -104,6 +112,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         password = user_input[CONF_PASSWORD]
         use_ssl = user_input.get(CONF_SSL, DEFAULT_SSL)
         api_version = user_input.get(CONF_API_VERSION, DEFAULT_DSM_VERSION)
+        otp_code = user_input.get(CONF_OTP_CODE)
 
         if not port:
             if use_ssl is True:
@@ -117,9 +126,15 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             serial = await self.hass.async_add_executor_job(
-                _login_and_fetch_syno_info, api
+                _login_and_fetch_syno_info, api, otp_code
             )
-        except InvalidAuth:
+        except SynologyDSMLogin2SARequiredException:
+            return await self.async_step_2sa(user_input)
+        except SynologyDSMLogin2SAFailedException:
+            errors[CONF_OTP_CODE] = "otp_failed"
+            user_input[CONF_OTP_CODE] = None
+            return await self.async_step_2sa(user_input, errors)
+        except (SynologyDSMLoginInvalidException, InvalidAuth):
             errors[CONF_USERNAME] = "login"
         except InvalidData:
             errors["base"] = "missing_data"
@@ -139,6 +154,8 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PASSWORD: password,
             CONF_API_VERSION: api_version,
         }
+        if otp_code:
+            config_data["device_token"] = api.device_token
         if user_input.get(CONF_DISKS):
             config_data[CONF_DISKS] = user_input[CONF_DISKS]
         if user_input.get(CONF_VOLUMES):
@@ -168,8 +185,25 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry."""
         return await self.async_step_user(user_input)
 
-    async def async_step_link(self, user_input=None):
+    async def async_step_link(self, user_input):
         """Link a config entry from discovery."""
+        return await self.async_step_user(user_input)
+
+    async def async_step_2sa(self, user_input, errors=None):
+        """Enter 2SA code to anthenticate."""
+        if not self.saved_user_input:
+            self.saved_user_input = user_input
+
+        if not user_input.get(CONF_OTP_CODE):
+            return self.async_show_form(
+                step_id="2sa",
+                data_schema=vol.Schema({vol.Required(CONF_OTP_CODE): str}),
+                errors=errors or {},
+            )
+
+        user_input = {**self.saved_user_input, **user_input}
+        self.saved_user_input = {}
+
         return await self.async_step_user(user_input)
 
     def _host_already_configured(self, hostname):
@@ -180,9 +214,9 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return hostname in existing_hosts
 
 
-def _login_and_fetch_syno_info(api):
+def _login_and_fetch_syno_info(api, otp_code):
     """Login to the NAS and fetch basic data."""
-    if not api.login():
+    if not api.login(otp_code):
         raise InvalidAuth
 
     # These do i/o
