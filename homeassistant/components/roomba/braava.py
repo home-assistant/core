@@ -1,5 +1,4 @@
 """Class for Braava devices."""
-import json
 import logging
 
 from homeassistant.components.vacuum import SUPPORT_FAN_SPEED
@@ -108,14 +107,12 @@ class BraavaJet(IRobotBase):
         else:
             overlap = OVERLAP_EXTENDED
         await self.hass.async_add_executor_job(
-            self.vacuum.client.publish,
-            "delta",
-            json.dumps(
-                {
-                    "rankOverlap": overlap,
-                    "padWetness": {"disposable": spray, "reusable": spray},
-                }
-            ),
+            self.vacuum.set_preference, "rankOverlap", overlap
+        )
+        await self.hass.async_add_executor_job(
+            self.vacuum.set_preference,
+            "padWetness",
+            {"disposable": spray, "reusable": spray},
         )
 
     @property
