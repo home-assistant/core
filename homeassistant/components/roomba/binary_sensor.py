@@ -28,11 +28,10 @@ class RoombaBinStatus(BinarySensorDevice):
     def __init__(self, roomba, blid):
         """Initialize the sensor object."""
         self.vacuum = roomba
-        self.vacuum_state = roomba_reported_state(roomba)
+        vacuum_state = roomba_reported_state(roomba)
         self._blid = blid
-        self._name = self.vacuum_state.get("name")
+        self._name = vacuum_state.get("name")
         self._identifier = f"roomba_{self._blid}"
-        self._bin_status = None
 
     @property
     def name(self):
@@ -52,7 +51,11 @@ class RoombaBinStatus(BinarySensorDevice):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._bin_status
+        bin_status = (
+            roomba_reported_state(self.vacuum).get("bin", {}).get("full", False)
+        )
+        _LOGGER.debug("Update Full Bin status from the vacuum: %s", bin_status)
+        return bin_status
 
     @property
     def device_info(self):
@@ -64,11 +67,3 @@ class RoombaBinStatus(BinarySensorDevice):
 
     async def async_update(self):
         """Return the update info of the vacuum cleaner."""
-        # No data, no update
-        if not self.vacuum.master_state:
-            _LOGGER.debug("Roomba %s has no data yet. Skip update", self.name)
-            return
-        self._bin_status = (
-            roomba_reported_state(self.vacuum).get("bin", {}).get("full", False)
-        )
-        _LOGGER.debug("Update Full Bin status from the vacuum: %s", self._bin_status)

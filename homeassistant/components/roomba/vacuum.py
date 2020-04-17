@@ -95,12 +95,6 @@ class IRobotBase(VacuumDevice):
 
     def __init__(self, roomba, blid):
         """Initialize the Roomba handler."""
-        self._available = False
-        self._battery_level = None
-        self._fan_speed = None
-        self._is_on = False
-        self._state_attrs = {}
-        self._status = None
         self.vacuum = roomba
         self.vacuum_state = roomba_reported_state(roomba)
         self._blid = blid
@@ -133,7 +127,7 @@ class IRobotBase(VacuumDevice):
     @property
     def fan_speed(self):
         """Return the fan speed of the vacuum cleaner."""
-        return self._fan_speed
+        return None
 
     @property
     def fan_speed_list(self):
@@ -143,22 +137,22 @@ class IRobotBase(VacuumDevice):
     @property
     def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
-        return self._battery_level
+        return self.vacuum_state.get("batPct")
 
     @property
     def status(self):
         """Return the status of the vacuum cleaner."""
-        return self._status
+        return self.vacuum.current_state
 
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        return self._is_on
+        return self.status == "Running"
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._available
+        return True  # Always available, otherwise setup will fail
 
     @property
     def name(self):
@@ -168,12 +162,53 @@ class IRobotBase(VacuumDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        return self._state_attrs
+        state = self.vacuum_state
+
+        # Roomba software version
+        software_version = state.get("softwareVer")
+
+        # Error message in plain english
+        error_msg = "None"
+        if hasattr(self.vacuum, "error_message"):
+            error_msg = self.vacuum.error_message
+
+        # Set properties that are to appear in the GUI
+        state_attrs = {ATTR_SOFTWARE_VERSION: software_version}
+
+        # Only add cleaning time and cleaned area attrs when the vacuum is
+        # currently on
+        if self.is_on:
+            # Get clean mission status
+            mission_state = state.get("cleanMissionStatus", {})
+            cleaning_time = mission_state.get("mssnM")
+            cleaned_area = mission_state.get("sqft")  # Imperial
+            # Convert to m2 if the unit_system is set to metric
+            if cleaned_area and self.hass.config.units.is_metric:
+                cleaned_area = round(cleaned_area * 0.0929)
+            state_attrs[ATTR_CLEANING_TIME] = cleaning_time
+            state_attrs[ATTR_CLEANED_AREA] = cleaned_area
+
+        # Skip error attr if there is none
+        if error_msg and error_msg != "None":
+            state_attrs[ATTR_ERROR] = error_msg
+
+        # Not all Roombas expose position data
+        # https://github.com/koalazak/dorita980/issues/48
+        if self._cap_position:
+            pos_state = state.get("pose", {})
+            position = None
+            pos_x = pos_state.get("point", {}).get("x")
+            pos_y = pos_state.get("point", {}).get("y")
+            theta = pos_state.get("theta")
+            if all(item is not None for item in [pos_x, pos_y, theta]):
+                position = f"({pos_x}, {pos_y}, {theta})"
+            state_attrs[ATTR_POSITION] = position
+
+        return state_attrs
 
     async def async_turn_on(self, **kwargs):
         """Turn the vacuum on."""
         await self.hass.async_add_executor_job(self.vacuum.send_command, "start")
-        self._is_on = True
 
     async def async_turn_off(self, **kwargs):
         """Turn the vacuum off and return to home."""
@@ -183,23 +218,20 @@ class IRobotBase(VacuumDevice):
     async def async_stop(self, **kwargs):
         """Stop the vacuum cleaner."""
         await self.hass.async_add_executor_job(self.vacuum.send_command, "stop")
-        self._is_on = False
 
     async def async_resume(self, **kwargs):
         """Resume the cleaning cycle."""
         await self.hass.async_add_executor_job(self.vacuum.send_command, "resume")
-        self._is_on = True
 
     async def async_pause(self):
         """Pause the cleaning cycle."""
         await self.hass.async_add_executor_job(self.vacuum.send_command, "pause")
-        self._is_on = False
 
     async def async_start_pause(self, **kwargs):
         """Pause the cleaning task or resume it."""
         if self.vacuum_state and self.is_on:  # vacuum is running
             await self.async_pause()
-        elif self._status == "Stopped":  # vacuum is stopped
+        elif self.status == "Stopped":  # vacuum is stopped
             await self.async_resume()
         else:  # vacuum is off
             await self.async_turn_on()
@@ -207,7 +239,6 @@ class IRobotBase(VacuumDevice):
     async def async_return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
         await self.hass.async_add_executor_job(self.vacuum.send_command, "dock")
-        self._is_on = False
 
     async def async_locate(self, **kwargs):
         """Located vacuum."""
@@ -226,74 +257,26 @@ class IRobotBase(VacuumDevice):
         state = self.vacuum.master_state.get("state", {}).get("reported", {})
         _LOGGER.debug("Got new state from the vacuum: %s", state)
         self.vacuum_state = state
-        self._available = True
-
-        # Roomba software version
-        software_version = state.get("softwareVer")
-
-        # Error message in plain english
-        error_msg = "None"
-        if hasattr(self.vacuum, "error_message"):
-            error_msg = self.vacuum.error_message
-
-        self._battery_level = state.get("batPct")
-        self._status = self.vacuum.current_state
-        self._is_on = self._status in ["Running"]
-
-        # Set properties that are to appear in the GUI
-        self._state_attrs = {ATTR_SOFTWARE_VERSION: software_version}
-
-        # Only add cleaning time and cleaned area attrs when the vacuum is
-        # currently on
-        if self._is_on:
-            # Get clean mission status
-            mission_state = state.get("cleanMissionStatus", {})
-            cleaning_time = mission_state.get("mssnM")
-            cleaned_area = mission_state.get("sqft")  # Imperial
-            # Convert to m2 if the unit_system is set to metric
-            if cleaned_area and self.hass.config.units.is_metric:
-                cleaned_area = round(cleaned_area * 0.0929)
-            self._state_attrs[ATTR_CLEANING_TIME] = cleaning_time
-            self._state_attrs[ATTR_CLEANED_AREA] = cleaned_area
-
-        # Skip error attr if there is none
-        if error_msg and error_msg != "None":
-            self._state_attrs[ATTR_ERROR] = error_msg
-
-        # Not all Roombas expose position data
-        # https://github.com/koalazak/dorita980/issues/48
-        if self._cap_position:
-            pos_state = state.get("pose", {})
-            position = None
-            pos_x = pos_state.get("point", {}).get("x")
-            pos_y = pos_state.get("point", {}).get("y")
-            theta = pos_state.get("theta")
-            if all(item is not None for item in [pos_x, pos_y, theta]):
-                position = f"({pos_x}, {pos_y}, {theta})"
-            self._state_attrs[ATTR_POSITION] = position
 
 
 class RoombaVacuum(IRobotBase):
     """Basic Roomba robot (without carpet boost)."""
 
-    async def async_update(self):
-        """Fetch state from the device."""
-        await super().async_update()
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        state_attrs = super().device_state_attributes
 
         # Get bin state
-        bin_state = self._get_bin_state(self.vacuum_state)
-        self._state_attrs.update(bin_state)
-
-    @staticmethod
-    def _get_bin_state(state):
-        bin_raw_state = state.get("bin", {})
+        bin_raw_state = self.vacuum_state.get("bin", {})
         bin_state = {}
         if bin_raw_state.get("present") is not None:
             bin_state[ATTR_BIN_PRESENT] = bin_raw_state.get("present")
-
         if bin_raw_state.get("full") is not None:
             bin_state[ATTR_BIN_FULL] = bin_raw_state.get("full")
-        return bin_state
+        state_attrs.update(bin_state)
+
+        return state_attrs
 
 
 class RoombaVacuumCarpetBoost(RoombaVacuum):
@@ -303,6 +286,21 @@ class RoombaVacuumCarpetBoost(RoombaVacuum):
     def supported_features(self):
         """Flag vacuum cleaner robot features that are supported."""
         return SUPPORT_ROOMBA_CARPET_BOOST
+
+    @property
+    def fan_speed(self):
+        """Return the fan speed of the vacuum cleaner."""
+        fan_speed = None
+        carpet_boost = self.vacuum_state.get("carpetBoost")
+        high_perf = self.vacuum_state.get("vacHigh")
+        if carpet_boost is not None and high_perf is not None:
+            if carpet_boost:
+                fan_speed = FAN_SPEED_AUTOMATIC
+            elif high_perf:
+                fan_speed = FAN_SPEED_PERFORMANCE
+            else:  # carpet_boost and high_perf are False
+                fan_speed = FAN_SPEED_ECO
+        return fan_speed
 
     @property
     def fan_speed_list(self):
@@ -319,15 +317,12 @@ class RoombaVacuumCarpetBoost(RoombaVacuum):
         if fan_speed == FAN_SPEED_AUTOMATIC:
             high_perf = False
             carpet_boost = True
-            self._fan_speed = FAN_SPEED_AUTOMATIC
         elif fan_speed == FAN_SPEED_ECO:
             high_perf = False
             carpet_boost = False
-            self._fan_speed = FAN_SPEED_ECO
         elif fan_speed == FAN_SPEED_PERFORMANCE:
             high_perf = True
             carpet_boost = False
-            self._fan_speed = FAN_SPEED_PERFORMANCE
         else:
             _LOGGER.error("No such fan speed available: %s", fan_speed)
             return
@@ -338,23 +333,6 @@ class RoombaVacuumCarpetBoost(RoombaVacuum):
         await self.hass.async_add_executor_job(
             self.vacuum.set_preference, "vacHigh", str(high_perf)
         )
-
-    async def async_update(self):
-        """Fetch state from the device."""
-        await super().async_update()
-
-        # Fan speed mode (Performance, Automatic or Eco)
-        fan_speed = None
-        carpet_boost = self.vacuum_state.get("carpetBoost")
-        high_perf = self.vacuum_state.get("vacHigh")
-        if carpet_boost is not None and high_perf is not None:
-            if carpet_boost:
-                fan_speed = FAN_SPEED_AUTOMATIC
-            elif high_perf:
-                fan_speed = FAN_SPEED_PERFORMANCE
-            else:  # carpet_boost and high_perf are False
-                fan_speed = FAN_SPEED_ECO
-        self._fan_speed = fan_speed
 
 
 class BraavaJet(IRobotBase):
@@ -379,8 +357,19 @@ class BraavaJet(IRobotBase):
     @property
     def fan_speed(self):
         """Return the fan speed of the vacuum cleaner."""
-        behavior, spray = self._fan_speed
-        return f"{behavior}-{spray}"
+        # Mopping behavior and spray amount as fan speed
+        rank_overlap = self.vacuum_state.get("rankOverlap", {})
+        behavior = None
+        if rank_overlap == OVERLAP_STANDARD:
+            behavior = MOP_STANDARD
+        elif rank_overlap == OVERLAP_DEEP:
+            behavior = MOP_DEEP
+        elif rank_overlap == OVERLAP_EXTENDED:
+            behavior = MOP_EXTENDED
+        pad_wetness = self.vacuum_state.get("padWetness", {})
+        # "disposable" and "reusable" values are always the same
+        pad_wetness_value = pad_wetness.get("disposable")
+        return f"{behavior}-{pad_wetness_value}"
 
     @property
     def fan_speed_list(self):
@@ -437,9 +426,10 @@ class BraavaJet(IRobotBase):
             ),
         )
 
-    async def async_update(self):
-        """Fetch state from the device."""
-        await super().async_update()
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        state_attrs = super().device_state_attributes
 
         # Get Braava state
         state = self.vacuum_state
@@ -448,21 +438,9 @@ class BraavaJet(IRobotBase):
         lid_closed = mop_ready.get("lidClosed")
         tank_present = mop_ready.get("tankPresent")
         tank_level = state.get("tankLvl")
-        self._state_attrs[ATTR_DETECTED_PAD] = detected_pad
-        self._state_attrs[ATTR_LID_CLOSED] = lid_closed
-        self._state_attrs[ATTR_TANK_PRESENT] = tank_present
-        self._state_attrs[ATTR_TANK_LEVEL] = tank_level
+        state_attrs[ATTR_DETECTED_PAD] = detected_pad
+        state_attrs[ATTR_LID_CLOSED] = lid_closed
+        state_attrs[ATTR_TANK_PRESENT] = tank_present
+        state_attrs[ATTR_TANK_LEVEL] = tank_level
 
-        # Mopping behavior and spray amount as fan speed
-        rank_overlap = state.get("rankOverlap", {})
-        behavior = None
-        if rank_overlap == OVERLAP_STANDARD:
-            behavior = MOP_STANDARD
-        elif rank_overlap == OVERLAP_DEEP:
-            behavior = MOP_DEEP
-        elif rank_overlap == OVERLAP_EXTENDED:
-            behavior = MOP_EXTENDED
-        pad_wetness = state.get("padWetness", {})
-        # "disposable" and "reusable" values are always the same
-        pad_wetness_value = pad_wetness.get("disposable")
-        self._fan_speed = (behavior, pad_wetness_value)
+        return state_attrs

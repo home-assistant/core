@@ -25,11 +25,10 @@ class RoombaBattery(Entity):
     def __init__(self, roomba, blid):
         """Initialize the sensor object."""
         self.vacuum = roomba
-        self.vacuum_state = roomba_reported_state(roomba)
+        vacuum_state = roomba_reported_state(roomba)
         self._blid = blid
-        self._name = self.vacuum_state.get("name")
+        self._name = vacuum_state.get("name")
         self._identifier = f"roomba_{self._blid}"
-        self._battery_level = None
 
     @property
     def name(self):
@@ -54,7 +53,9 @@ class RoombaBattery(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._battery_level
+        battery_level = roomba_reported_state(self.vacuum).get("batPct")
+        _LOGGER.debug("Update battery level status from the vacuum: %s", battery_level)
+        return battery_level
 
     @property
     def device_info(self):
@@ -66,11 +67,3 @@ class RoombaBattery(Entity):
 
     async def async_update(self):
         """Return the update info of the vacuum cleaner."""
-        # No data, no update
-        if not self.vacuum.master_state:
-            _LOGGER.debug("Roomba %s has no data yet. Skip update", self.name)
-            return
-        self._battery_level = roomba_reported_state(self.vacuum).get("batPct")
-        _LOGGER.debug(
-            "Update battery level status from the vacuum: %s", self._battery_level
-        )
