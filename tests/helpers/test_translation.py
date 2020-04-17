@@ -101,7 +101,10 @@ def test_load_translations_files(hass):
     assert translation.load_translations_files(
         {"switch.test": file1, "invalid": file2}
     ) == {
-        "switch.test": {"state": {"string1": "Value 1", "string2": "Value 2"}},
+        "switch.test": {
+            "state": {"string1": "Value 1", "string2": "Value 2"},
+            "something": "else",
+        },
         "invalid": {},
     }
 
@@ -115,10 +118,12 @@ async def test_get_translations(hass, mock_config_flows):
 
     translations = await translation.async_get_translations(hass, "en")
 
+    assert translations["component.switch.something"] == "else"
     assert translations["component.switch.state.string1"] == "Value 1"
     assert translations["component.switch.state.string2"] == "Value 2"
 
-    translations = await translation.async_get_translations(hass, "de")
+    translations = await translation.async_get_translations(hass, "de", "state")
+    assert "component.switch.something" not in translations
     assert translations["component.switch.state.string1"] == "German Value 1"
     assert translations["component.switch.state.string2"] == "German Value 2"
 
@@ -149,8 +154,13 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
         "homeassistant.helpers.translation.async_get_integration",
         return_value=integration,
     ):
-        translations = await translation.async_get_translations(hass, "en")
+        translations = await translation.async_get_translations(
+            hass, "en", config_flow=True
+        )
+
     assert translations == {
         "component.component1.title": "Component 1",
         "component.component1.hello": "world",
     }
+
+    assert "component1" not in hass.config.components

@@ -1,7 +1,7 @@
 """Translation string lookup helpers."""
 import asyncio
 import logging
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Dict, Optional, Set
 
 from homeassistant.core import callback
 from homeassistant.loader import (
@@ -80,7 +80,7 @@ def load_translations_files(
 
 
 def build_resources(
-    translation_cache: Dict[str, Dict[str, Any]], components: Iterable[str]
+    translation_cache: Dict[str, Dict[str, Any]], components: Set[str]
 ) -> Dict[str, Dict[str, Any]]:
     """Build the resources response for the given components."""
     # Build response
@@ -102,9 +102,8 @@ def build_resources(
     return resources
 
 
-@bind_hass
 async def async_get_component_resources(
-    hass: HomeAssistantType, language: str
+    hass: HomeAssistantType, language: str, components: Set[str]
 ) -> Dict[str, Any]:
     """Return translation resources for all components.
 
@@ -117,9 +116,6 @@ async def async_get_component_resources(
     # Get cache for this language
     cache = hass.data.setdefault(TRANSLATION_STRING_CACHE, {})
     translation_cache = cache.setdefault(language, {})
-
-    # Get the set of components to check
-    components = hass.config.components | await async_get_config_flows(hass)
 
     # Calculate the missing components and platforms
     missing_loaded = components - set(translation_cache)
@@ -167,22 +163,46 @@ async def async_get_component_resources(
         # Update cache
         translation_cache.update(loaded_translations)
 
-    resources = build_resources(translation_cache, components)
-
-    # Return the component translations resources under the 'component'
-    # translation namespace
-    return flatten({"component": resources})
+    return build_resources(translation_cache, components)
 
 
 @bind_hass
 async def async_get_translations(
-    hass: HomeAssistantType, language: str
+    hass: HomeAssistantType,
+    language: str,
+    category: Optional[str] = None,
+    integration: Optional[str] = None,
+    config_flow: Optional[bool] = None,
 ) -> Dict[str, Any]:
     """Return all backend translations."""
-    resources = await async_get_component_resources(hass, language)
+    if integration is not None:
+        components = {integration}
+    else:
+        components = hass.config.components
+
+        if config_flow:
+            components = components | await async_get_config_flows(hass)
+
+    resources = await async_get_component_resources(hass, language, components)
+
+    if category is not None:
+        resources = {
+            domain: {category: resources[domain].get(category) or {}}
+            for domain in resources
+        }
+
+    resources = flatten({"component": resources})
+
     if language != "en":
         # Fetch the English resources, as a fallback for missing keys
-        base_resources = await async_get_component_resources(hass, "en")
+        base_resources = await async_get_component_resources(hass, "en", components)
+        if category is not None:
+            base_resources = {
+                domain: {category: base_resources[domain].get(category) or {}}
+                for domain in base_resources
+            }
+        base_resources = flatten({"component": base_resources})
+
         resources = {**base_resources, **resources}
 
     return resources
