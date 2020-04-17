@@ -13,11 +13,6 @@ SUPPORT_FLAGS_HEATER = 0
 OPERATION_LIST = [STATE_OFF, STATE_ECO, STATE_PERFORMANCE]
 
 
-async def async_setup_platform(hass, config, async_add_devices, _discovery_info=None):
-    """Atag updated to use config entry."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Initialize DHW device from config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]

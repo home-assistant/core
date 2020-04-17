@@ -4,11 +4,6 @@ from homeassistant.const import ATTR_STATE
 from . import DOMAIN, ENTITY_TYPES, SENSOR, AtagEntity
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Atag updated to use config entry."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Initialize sensor platform from config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]

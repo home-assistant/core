@@ -3,7 +3,7 @@
   "name": "Atag",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/atag/",
-  "requirements": ["pyatag==0.2.15"],
+  "requirements": ["pyatag==0.2.16"],
   "dependencies": [],
   "codeowners": ["@MatsNL"]
 }

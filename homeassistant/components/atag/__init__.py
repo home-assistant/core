@@ -69,13 +69,6 @@ ENTITY_TYPES = {
             ATTR_ICON: None,
         },
         {
-            ATTR_NAME: "Operation Mode",
-            ATTR_ID: "ch_mode",
-            ATTR_UNIT_OF_MEASUREMENT: None,
-            ATTR_DEVICE_CLASS: None,
-            ATTR_ICON: ICONS[ATTR_MODE],
-        },
-        {
             ATTR_NAME: "CH Water Pressure",
             ATTR_ID: "ch_water_pres",
             ATTR_UNIT_OF_MEASUREMENT: PRESSURE_BAR,
@@ -226,6 +219,9 @@ class AtagEntity(Entity):
     @property
     def icon(self) -> str:
         """Return the mdi icon of the entity."""
+        self._icon = (
+            self.coordinator.data.get(self._id, {}).get(ATTR_ICON) or self._icon
+        )
         return self._icon
 
     @property
@@ -241,7 +237,6 @@ class AtagEntity(Entity):
     @property
     def device_class(self):
         """Return the device class."""
-        # if hasattr(self, "_class"):
         return self._class
 
     @property
@@ -256,11 +251,9 @@ class AtagEntity(Entity):
 
     async def async_added_to_hass(self):
         """Connect to dispatcher listening for entity data notifications."""
-        self.coordinator.async_add_listener(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect from update signal."""
-        self.coordinator.async_remove_listener(self.async_write_ha_state)
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     async def async_update(self):
         """Update Atag entity."""

@@ -10,6 +10,8 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
+    PRESET_BOOST,
+    SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -17,10 +19,16 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import CLIMATE, DOMAIN, ENTITY_TYPES, AtagEntity
 
-
-async def async_setup_platform(hass, _config, async_add_devices, _discovery_info=None):
-    """Atag updated to use config entry."""
-    pass
+PRESET_SCHEDULE = "Auto"
+PRESET_MANUAL = "Manual"
+PRESET_EXTEND = "Extend"
+SUPPORT_PRESET = [
+    PRESET_MANUAL,
+    PRESET_SCHEDULE,
+    PRESET_EXTEND,
+    PRESET_BOOST,
+]
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 
 async def async_setup_entry(hass, entry, async_add_devices):
@@ -47,7 +55,7 @@ class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
+        return SUPPORT_FLAGS
 
     @property
     def hvac_mode(self) -> Optional[str]:
@@ -93,6 +101,16 @@ class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
         """Return the minimum temperature."""
         return DEFAULT_MIN_TEMP
 
+    @property
+    def preset_mode(self) -> Optional[str]:
+        """Return the current preset mode, e.g., auto, manual, fireplace, extend, etc."""
+        return self.coordinator.atag.hold_mode
+
+    @property
+    def preset_modes(self) -> Optional[List[str]]:
+        """Return a list of available preset modes."""
+        return SUPPORT_PRESET
+
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         if self._on and await self.coordinator.atag.set_temp(
@@ -105,4 +123,10 @@ class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
         self._on = hvac_mode != HVAC_MODE_OFF
         if self._on:
             await self.coordinator.atag.set_hvac_mode(hvac_mode)
+        await self.coordinator.async_refresh()
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        if self._on:
+            await self.coordinator.atag.set_hold_mode(preset_mode)
         await self.coordinator.async_refresh()
