@@ -44,7 +44,9 @@ async def async_setup_entry(
     sensors.append(IPPUptimeSensor(entry.entry_id, unique_id, coordinator))
 
     for marker_index in range(len(coordinator.data.markers)):
-        sensors.append(IPPMarkerSensor(entry.entry_id, unique_id, coordinator, marker_index))
+        sensors.append(
+            IPPMarkerSensor(entry.entry_id, unique_id, coordinator, marker_index)
+        )
 
     async_add_entities(sensors, True)
 
@@ -95,7 +97,11 @@ class IPPMarkerSensor(IPPSensor):
     """Defines an IPP marker sensor."""
 
     def __init__(
-        self, entry_id: str, unique_id: str, coordinator: IPPDataUpdateCoordinator, marker_index: int
+        self,
+        entry_id: str,
+        unique_id: str,
+        coordinator: IPPDataUpdateCoordinator,
+        marker_index: int,
     ) -> None:
         """Initialize IPP marker sensor."""
         self.marker_index = marker_index
@@ -139,7 +145,9 @@ class IPPMarkerSensor(IPPSensor):
 class IPPPrinterSensor(IPPSensor):
     """Defines an IPP printer sensor."""
 
-    def __init__(self, entry_id: str, unique_id: str, coordinator: IPPDataUpdateCoordinator) -> None:
+    def __init__(
+        self, entry_id: str, unique_id: str, coordinator: IPPDataUpdateCoordinator
+    ) -> None:
         """Initialize IPP printer sensor."""
         super().__init__(
             coordinator=coordinator,
@@ -173,7 +181,9 @@ class IPPPrinterSensor(IPPSensor):
 class IPPUptimeSensor(IPPSensor):
     """Defines a IPP uptime sensor."""
 
-    def __init__(self, entry_id: str, unique_id: str, coordinator: IPPDataUpdateCoordinator) -> None:
+    def __init__(
+        self, entry_id: str, unique_id: str, coordinator: IPPDataUpdateCoordinator
+    ) -> None:
         """Initialize IPP uptime sensor."""
         super().__init__(
             coordinator=coordinator,
