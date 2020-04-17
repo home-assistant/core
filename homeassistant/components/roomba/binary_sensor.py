@@ -33,6 +33,14 @@ class RoombaBinStatus(BinarySensorDevice):
         self._name = vacuum_state.get("name")
         self._identifier = f"roomba_{self._blid}"
 
+        # Register callback function
+        self.vacuum.register_on_message_callback(self.on_message)
+
+    @property
+    def should_poll(self):
+        """Disable pooling."""
+        return False
+
     @property
     def name(self):
         """Return the name of the sensor."""
@@ -65,5 +73,6 @@ class RoombaBinStatus(BinarySensorDevice):
             "name": str(self._name),
         }
 
-    async def async_update(self):
-        """Return the update info of the vacuum cleaner."""
+    def on_message(self, json_data):
+        """Update state on message change."""
+        self.schedule_update_ha_state()

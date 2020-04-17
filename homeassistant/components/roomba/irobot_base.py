@@ -52,6 +52,14 @@ class IRobotBase(VacuumDevice):
         self._sku = self.vacuum_state.get("sku")
         self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
 
+        # Register callback function
+        self.vacuum.register_on_message_callback(self.on_message)
+
+    @property
+    def should_poll(self):
+        """Disable pooling."""
+        return False
+
     @property
     def unique_id(self):
         """Return the uniqueid of the vacuum cleaner."""
@@ -155,6 +163,14 @@ class IRobotBase(VacuumDevice):
 
         return state_attrs
 
+    def on_message(self, json_data):
+        """Update state on message change."""
+        _LOGGER.debug("Got new state from the vacuum: %s", json_data)
+        self.vacuum_state = self.vacuum.master_state.get("state", {}).get(
+            "reported", {}
+        )
+        self.schedule_update_ha_state()
+
     async def async_turn_on(self, **kwargs):
         """Turn the vacuum on."""
         await self.hass.async_add_executor_job(self.vacuum.send_command, "start")
@@ -200,9 +216,3 @@ class IRobotBase(VacuumDevice):
             self.vacuum.send_command, command, params
         )
         return True
-
-    async def async_update(self):
-        """Fetch state from the device."""
-        state = self.vacuum.master_state.get("state", {}).get("reported", {})
-        _LOGGER.debug("Got new state from the vacuum: %s", state)
-        self.vacuum_state = state
