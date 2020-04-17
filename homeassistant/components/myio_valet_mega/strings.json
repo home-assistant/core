@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "myIO Valet Mega",
     "step": {
       "user": {
         "title": "Connect to the device",
