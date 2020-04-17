@@ -36,7 +36,7 @@ async def async_setup_entry(
     unique_id = entry.unique_id
 
     if unique_id is None:
-       unique_id = entry.entry_id
+        unique_id = entry.entry_id
 
     sensors = []
 
@@ -70,7 +70,7 @@ class IPPSensor(IPPEntity):
         self._unique_id = None
 
         if unique_id is not None:
-           self._unique_id = f"{unique_id}_{key}"
+            self._unique_id = f"{unique_id}_{key}"
 
         super().__init__(
             entry_id=entry_id,
