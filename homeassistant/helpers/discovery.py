@@ -10,10 +10,9 @@ from typing import Any, Callable, Collection, Dict, Optional, Union
 from homeassistant import core, setup
 from homeassistant.const import ATTR_DISCOVERED, ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import DEPENDENCY_BLACKLIST, bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 EVENT_LOAD_PLATFORM = "load_platform.{}"
 ATTR_PLATFORM = "platform"
@@ -56,13 +55,29 @@ def async_listen(
 
 
 @bind_hass
-def discover(hass, service, discovered, component, hass_config):
+def discover(
+    hass: core.HomeAssistant,
+    service: str,
+    discovered: DiscoveryInfoType,
+    component: str,
+    hass_config: ConfigType,
+) -> None:
     """Fire discovery event. Can ensure a component is loaded."""
-    hass.add_job(async_discover(hass, service, discovered, component, hass_config))
+    hass.add_job(
+        async_discover(  # type: ignore
+            hass, service, discovered, component, hass_config
+        )
+    )
 
 
 @bind_hass
-async def async_discover(hass, service, discovered, component, hass_config):
+async def async_discover(
+    hass: core.HomeAssistant,
+    service: str,
+    discovered: Optional[DiscoveryInfoType],
+    component: Optional[str],
+    hass_config: ConfigType,
+) -> None:
     """Fire discovery event. Can ensure a component is loaded."""
     if component in DEPENDENCY_BLACKLIST:
         raise HomeAssistantError(f"Cannot discover the {component} component.")
@@ -70,7 +85,7 @@ async def async_discover(hass, service, discovered, component, hass_config):
     if component is not None and component not in hass.config.components:
         await setup.async_setup_component(hass, component, hass_config)
 
-    data = {ATTR_SERVICE: service}
+    data: Dict[str, Any] = {ATTR_SERVICE: service}
 
     if discovered is not None:
         data[ATTR_DISCOVERED] = discovered
@@ -117,7 +132,13 @@ def async_listen_platform(
 
 
 @bind_hass
-def load_platform(hass, component, platform, discovered, hass_config):
+def load_platform(
+    hass: core.HomeAssistant,
+    component: str,
+    platform: str,
+    discovered: DiscoveryInfoType,
+    hass_config: ConfigType,
+) -> None:
     """Load a component and platform dynamically.
 
     Target components will be loaded and an EVENT_PLATFORM_DISCOVERED will be
@@ -129,12 +150,20 @@ def load_platform(hass, component, platform, discovered, hass_config):
     Use `listen_platform` to register a callback for these events.
     """
     hass.add_job(
-        async_load_platform(hass, component, platform, discovered, hass_config)
+        async_load_platform(  # type: ignore
+            hass, component, platform, discovered, hass_config
+        )
     )
 
 
 @bind_hass
-async def async_load_platform(hass, component, platform, discovered, hass_config):
+async def async_load_platform(
+    hass: core.HomeAssistant,
+    component: str,
+    platform: str,
+    discovered: DiscoveryInfoType,
+    hass_config: ConfigType,
+) -> None:
     """Load a component and platform dynamically.
 
     Target components will be loaded and an EVENT_PLATFORM_DISCOVERED will be
@@ -164,7 +193,7 @@ async def async_load_platform(hass, component, platform, discovered, hass_config
     if not setup_success:
         return
 
-    data = {
+    data: Dict[str, Any] = {
         ATTR_SERVICE: EVENT_LOAD_PLATFORM.format(component),
         ATTR_PLATFORM: platform,
     }

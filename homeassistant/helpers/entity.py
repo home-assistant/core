@@ -35,7 +35,7 @@ from homeassistant.helpers.entity_registry import (
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 from homeassistant.util.async_ import run_callback_threadsafe
 
-# mypy: allow-untyped-defs, no-check-untyped-defs, no-warn-return-any
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
