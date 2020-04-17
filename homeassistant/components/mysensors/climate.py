@@ -162,7 +162,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
             if self.gateway.optimistic:
                 # Optimistically assume that device has changed state
                 self._values[value_type] = value
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new target temperature."""
@@ -173,7 +173,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
         if self.gateway.optimistic:
             # Optimistically assume that device has changed state
             self._values[set_req.V_HVAC_SPEED] = fan_mode
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target temperature."""
@@ -187,7 +187,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
         if self.gateway.optimistic:
             # Optimistically assume that device has changed state
             self._values[self.value_type] = hvac_mode
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_update(self):
         """Update the controller with the latest value from a sensor."""

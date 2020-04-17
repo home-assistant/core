@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "connection_timeout": "Timeout vid anslutning till den h\u00e4r v\u00e4rden",
+            "resolve_failed": "Denna v\u00e4rd kan inte resolveras"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Certifikatets v\u00e4rdnamn",
+                    "name": "Certifikatets namn",
+                    "port": "Certifikatets port"
+                },
+                "title": "Definiera certifikatet som ska testas"
+            }
+        }
+    },
+    "title": "Certifikatets utg\u00e5ng"
+}

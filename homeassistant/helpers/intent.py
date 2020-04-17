@@ -158,7 +158,7 @@ class IntentHandler:
 
     def __repr__(self) -> str:
         """Represent a string of an intent handler."""
-        return "<{} - {}>".format(self.__class__.__name__, self.intent_type)
+        return f"<{self.__class__.__name__} - {self.intent_type}>"
 
 
 def _fuzzymatch(name: str, items: Iterable[T], key: Callable[[T], str]) -> Optional[T]:

@@ -44,7 +44,7 @@ async def test_auth_events(
 async def test_auth_via_msg_incorrect_pass(no_auth_websocket_client):
     """Test authenticating."""
     with patch(
-        "homeassistant.components.websocket_api.auth." "process_wrong_login",
+        "homeassistant.components.websocket_api.auth.process_wrong_login",
         return_value=mock_coro(),
     ) as mock_process_wrong_login:
         await no_auth_websocket_client.send_json(

@@ -1,4 +1,4 @@
-"""API for Somfy bound to HASS OAuth."""
+"""API for Somfy bound to Home Assistant OAuth."""
 from asyncio import run_coroutine_threadsafe
 from typing import Dict, Union
 

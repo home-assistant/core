@@ -48,9 +48,7 @@ class TestGoogleWifiSetup(unittest.TestCase):
     @requests_mock.Mocker()
     def test_setup_minimum(self, mock_req):
         """Test setup with minimum configuration."""
-        resource = "{}{}{}".format(
-            "http://", google_wifi.DEFAULT_HOST, google_wifi.ENDPOINT
-        )
+        resource = f"http://{google_wifi.DEFAULT_HOST}{google_wifi.ENDPOINT}"
         mock_req.get(resource, status_code=200)
         assert setup_component(
             self.hass,
@@ -62,7 +60,7 @@ class TestGoogleWifiSetup(unittest.TestCase):
     @requests_mock.Mocker()
     def test_setup_get(self, mock_req):
         """Test setup with full configuration."""
-        resource = "{}{}{}".format("http://", "localhost", google_wifi.ENDPOINT)
+        resource = f"http://localhost{google_wifi.ENDPOINT}"
         mock_req.get(resource, status_code=200)
         assert setup_component(
             self.hass,
@@ -101,17 +99,17 @@ class TestGoogleWifiSensor(unittest.TestCase):
 
     def setup_api(self, data, mock_req):
         """Set up API with fake data."""
-        resource = "{}{}{}".format("http://", "localhost", google_wifi.ENDPOINT)
+        resource = f"http://localhost{google_wifi.ENDPOINT}"
         now = datetime(1970, month=1, day=1)
         with patch("homeassistant.util.dt.now", return_value=now):
             mock_req.get(resource, text=data, status_code=200)
             conditions = google_wifi.MONITORED_CONDITIONS.keys()
             self.api = google_wifi.GoogleWifiAPI("localhost", conditions)
         self.name = NAME
-        self.sensor_dict = dict()
+        self.sensor_dict = {}
         for condition, cond_list in google_wifi.MONITORED_CONDITIONS.items():
             sensor = google_wifi.GoogleWifiSensor(self.api, self.name, condition)
-            name = "{}_{}".format(self.name, condition)
+            name = f"{self.name}_{condition}"
             units = cond_list[1]
             icon = cond_list[2]
             self.sensor_dict[condition] = {

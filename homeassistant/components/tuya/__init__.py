@@ -134,7 +134,7 @@ class TuyaDevice(Entity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return "tuya.{}".format(self.tuya.object_id())
+        return f"tuya.{self.tuya.object_id()}"
 
     @property
     def name(self):

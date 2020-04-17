@@ -1,10 +1,7 @@
 {
   "domain": "yweather",
-  "name": "Yweather",
+  "name": "Yahoo Weather",
   "documentation": "https://www.home-assistant.io/integrations/yweather",
-  "requirements": [
-    "yahooweather==0.10"
-  ],
-  "dependencies": [],
+  "requirements": ["yahooweather==0.10"],
   "codeowners": []
 }

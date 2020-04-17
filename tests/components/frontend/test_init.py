@@ -1,8 +1,7 @@
 """The tests for Home Assistant frontend."""
-import asyncio
 import re
-from unittest.mock import patch
 
+from asynctest import patch
 import pytest
 
 from homeassistant.components.frontend import (
@@ -14,6 +13,7 @@ from homeassistant.components.frontend import (
     EVENT_PANELS_UPDATED,
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events, mock_coro
@@ -23,14 +23,14 @@ CONFIG_THEMES = {DOMAIN: {CONF_THEMES: {"happy": {"primary-color": "red"}}}}
 
 @pytest.fixture
 def mock_http_client(hass, aiohttp_client):
-    """Start the Hass HTTP component."""
+    """Start the Home Assistant HTTP component."""
     hass.loop.run_until_complete(async_setup_component(hass, "frontend", {}))
     return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture
 def mock_http_client_with_themes(hass, aiohttp_client):
-    """Start the Hass HTTP component."""
+    """Start the Home Assistant HTTP component."""
     hass.loop.run_until_complete(
         async_setup_component(
             hass,
@@ -43,7 +43,7 @@ def mock_http_client_with_themes(hass, aiohttp_client):
 
 @pytest.fixture
 def mock_http_client_with_urls(hass, aiohttp_client):
-    """Start the Hass HTTP component."""
+    """Start the Home Assistant HTTP component."""
     hass.loop.run_until_complete(
         async_setup_component(
             hass,
@@ -71,54 +71,40 @@ def mock_onboarded():
         yield
 
 
-@asyncio.coroutine
-def test_frontend_and_static(mock_http_client, mock_onboarded):
+async def test_frontend_and_static(mock_http_client, mock_onboarded):
     """Test if we can get the frontend."""
-    resp = yield from mock_http_client.get("")
+    resp = await mock_http_client.get("")
     assert resp.status == 200
     assert "cache-control" not in resp.headers
 
-    text = yield from resp.text()
+    text = await resp.text()
 
     # Test we can retrieve frontend.js
     frontendjs = re.search(r"(?P<app>\/frontend_es5\/app.[A-Za-z0-9]{8}.js)", text)
 
     assert frontendjs is not None, text
-    resp = yield from mock_http_client.get(frontendjs.groups(0)[0])
+    resp = await mock_http_client.get(frontendjs.groups(0)[0])
     assert resp.status == 200
     assert "public" in resp.headers.get("cache-control")
 
 
-@asyncio.coroutine
-def test_dont_cache_service_worker(mock_http_client):
+async def test_dont_cache_service_worker(mock_http_client):
     """Test that we don't cache the service worker."""
-    resp = yield from mock_http_client.get("/service_worker.js")
+    resp = await mock_http_client.get("/service_worker.js")
     assert resp.status == 200
     assert "cache-control" not in resp.headers
 
 
-@asyncio.coroutine
-def test_404(mock_http_client):
+async def test_404(mock_http_client):
     """Test for HTTP 404 error."""
-    resp = yield from mock_http_client.get("/not-existing")
-    assert resp.status == 404
+    resp = await mock_http_client.get("/not-existing")
+    assert resp.status == HTTP_NOT_FOUND
 
 
-@asyncio.coroutine
-def test_we_cannot_POST_to_root(mock_http_client):
+async def test_we_cannot_POST_to_root(mock_http_client):
     """Test that POST is not allow to root."""
-    resp = yield from mock_http_client.post("/")
+    resp = await mock_http_client.post("/")
     assert resp.status == 405
-
-
-@asyncio.coroutine
-def test_states_routes(mock_http_client):
-    """All served by index."""
-    resp = yield from mock_http_client.get("/states")
-    assert resp.status == 200
-
-    resp = yield from mock_http_client.get("/states/group.existing")
-    assert resp.status == 200
 
 
 async def test_themes_api(hass, hass_ws_client):
@@ -131,6 +117,16 @@ async def test_themes_api(hass, hass_ws_client):
 
     assert msg["result"]["default_theme"] == "default"
     assert msg["result"]["themes"] == {"happy": {"primary-color": "red"}}
+
+    # safe mode
+    hass.config.safe_mode = True
+    await client.send_json({"id": 6, "type": "frontend/get_themes"})
+    msg = await client.receive_json()
+
+    assert msg["result"]["default_theme"] == "safe_mode"
+    assert msg["result"]["themes"] == {
+        "safe_mode": {"primary-color": "#db4437", "accent-color": "#eeee02"}
+    }
 
 
 async def test_themes_set_theme(hass, hass_ws_client):
@@ -179,7 +175,7 @@ async def test_themes_reload_themes(hass, hass_ws_client):
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.frontend.load_yaml_config_file",
+        "homeassistant.components.frontend.async_hass_config_yaml",
         return_value={DOMAIN: {CONF_THEMES: {"sad": {"primary-color": "blue"}}}},
     ):
         await hass.services.async_call(
@@ -211,12 +207,11 @@ async def test_missing_themes(hass, hass_ws_client):
     assert msg["result"]["themes"] == {}
 
 
-@asyncio.coroutine
-def test_extra_urls(mock_http_client_with_urls, mock_onboarded):
+async def test_extra_urls(mock_http_client_with_urls, mock_onboarded):
     """Test that extra urls are loaded."""
-    resp = yield from mock_http_client_with_urls.get("/states?latest")
+    resp = await mock_http_client_with_urls.get("/lovelace?latest")
     assert resp.status == 200
-    text = yield from resp.text()
+    text = await resp.text()
     assert text.find('href="https://domain.com/my_extra_url.html"') >= 0
 
 
@@ -225,7 +220,7 @@ async def test_get_panels(hass, hass_ws_client, mock_http_client):
     events = async_capture_events(hass, EVENT_PANELS_UPDATED)
 
     resp = await mock_http_client.get("/map")
-    assert resp.status == 404
+    assert resp.status == HTTP_NOT_FOUND
 
     hass.components.frontend.async_register_built_in_panel(
         "map", "Map", "mdi:tooltip-account", require_admin=True
@@ -253,7 +248,7 @@ async def test_get_panels(hass, hass_ws_client, mock_http_client):
     hass.components.frontend.async_remove_panel("map")
 
     resp = await mock_http_client.get("/map")
-    assert resp.status == 404
+    assert resp.status == HTTP_NOT_FOUND
 
     assert len(events) == 2
 

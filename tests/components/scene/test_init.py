@@ -3,7 +3,7 @@ import io
 import unittest
 
 from homeassistant.components import light, scene
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.yaml import loader as yaml_loader
 
 from tests.common import get_test_home_assistant
@@ -87,11 +87,11 @@ class TestScene(unittest.TestCase):
             "scene:\n"
             "  - name: test\n"
             "    entities:\n"
-            "      {0}: on\n"
-            "      {1}:\n"
+            f"      {self.light_1.entity_id}: on\n"
+            f"      {self.light_2.entity_id}:\n"
             "        state: on\n"
             "        brightness: 100\n"
-        ).format(self.light_1.entity_id, self.light_2.entity_id)
+        )
 
         with io.StringIO(config) as file:
             doc = yaml_loader.yaml.safe_load(file)
@@ -128,3 +128,11 @@ class TestScene(unittest.TestCase):
         assert self.light_1.is_on
         assert self.light_2.is_on
         assert 100 == self.light_2.last_call("turn_on")[1].get("brightness")
+
+
+async def test_services_registered(hass):
+    """Test we register services with empty config."""
+    assert await async_setup_component(hass, "scene", {})
+    assert hass.services.has_service("scene", "reload")
+    assert hass.services.has_service("scene", "turn_on")
+    assert hass.services.has_service("scene", "apply")

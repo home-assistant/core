@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     vacuums = []
     for device in hass.data[ECOVACS_DEVICES]:
         vacuums.append(EcovacsVacuum(device))
-    _LOGGER.debug("Adding Ecovacs Vacuums to Hass: %s", vacuums)
+    _LOGGER.debug("Adding Ecovacs Vacuums to Home Assistant: %s", vacuums)
     add_entities(vacuums, True)
 
 
@@ -55,11 +55,11 @@ class EcovacsVacuum(VacuumDevice):
         """Initialize the Ecovacs Vacuum."""
         self.device = device
         self.device.connect_and_wait_until_ready()
-        if self.device.vacuum.get("nick", None) is not None:
-            self._name = "{}".format(self.device.vacuum["nick"])
+        if self.device.vacuum.get("nick") is not None:
+            self._name = str(self.device.vacuum["nick"])
         else:
             # In case there is no nickname defined, use the device id
-            self._name = "{}".format(self.device.vacuum["did"])
+            self._name = str(format(self.device.vacuum["did"]))
 
         self._fan_speed = None
         self._error = None
@@ -96,7 +96,7 @@ class EcovacsVacuum(VacuumDevice):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return self.device.vacuum.get("did", None)
+        return self.device.vacuum.get("did")
 
     @property
     def is_on(self):

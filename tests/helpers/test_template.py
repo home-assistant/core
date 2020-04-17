@@ -65,7 +65,7 @@ def assert_result_info(info, result, entities=None, domains=None, all_states=Fal
 def test_template_equality():
     """Test template comparison and hashing."""
     template_one = template.Template("{{ template_one }}")
-    template_one_1 = template.Template("{{ template_" + "one }}")
+    template_one_1 = template.Template("{{ template_one }}")
     template_two = template.Template("{{ template_two }}")
 
     assert template_one == template_one_1
@@ -153,7 +153,7 @@ def test_iterating_all_states(hass):
 
 def test_iterating_domain_states(hass):
     """Test iterating domain states."""
-    tmpl_str = "{% for state in states.sensor %}" "{{ state.state }}{% endfor %}"
+    tmpl_str = "{% for state in states.sensor %}{{ state.state }}{% endfor %}"
 
     info = render_to_info(hass, tmpl_str)
     assert_result_info(info, "", domains=["sensor"])
@@ -271,14 +271,14 @@ def test_logarithm(hass):
     for value, base, expected in tests:
         assert (
             template.Template(
-                "{{ %s | log(%s) | round(1) }}" % (value, base), hass
+                f"{{{{ {value} | log({base}) | round(1) }}}}", hass
             ).async_render()
             == expected
         )
 
         assert (
             template.Template(
-                "{{ log(%s, %s) | round(1) }}" % (value, base), hass
+                f"{{{{ log({value}, {base}) | round(1) }}}}", hass
             ).async_render()
             == expected
         )
@@ -439,13 +439,13 @@ def test_arc_tan2(hass):
     for y, x, expected in tests:
         assert (
             template.Template(
-                "{{ (%s, %s) | atan2 | round(3) }}" % (y, x), hass
+                f"{{{{ ({y}, {x}) | atan2 | round(3) }}}}", hass
             ).async_render()
             == expected
         )
         assert (
             template.Template(
-                "{{ atan2(%s, %s) | round(3) }}" % (y, x), hass
+                f"{{{{ atan2({y}, {x}) | round(3) }}}}", hass
             ).async_render()
             == expected
         )
@@ -468,7 +468,7 @@ def test_strptime(hass):
         if expected is None:
             expected = datetime.strptime(inp, fmt)
 
-        temp = "{{ strptime('%s', '%s') }}" % (inp, fmt)
+        temp = f"{{{{ strptime('{inp}', '{fmt}') }}}}"
 
         assert template.Template(temp, hass).async_render() == str(expected)
 
@@ -486,15 +486,13 @@ def test_timestamp_custom(hass):
 
     for inp, fmt, local, out in tests:
         if fmt:
-            fil = "timestamp_custom('{}')".format(fmt)
+            fil = f"timestamp_custom('{fmt}')"
         elif fmt and local:
-            fil = "timestamp_custom('{0}', {1})".format(fmt, local)
+            fil = f"timestamp_custom('{fmt}', {local})"
         else:
             fil = "timestamp_custom"
 
-        assert (
-            template.Template("{{ %s | %s }}" % (inp, fil), hass).async_render() == out
-        )
+        assert template.Template(f"{{{{ {inp} | {fil} }}}}", hass).async_render() == out
 
 
 def test_timestamp_local(hass):
@@ -818,7 +816,7 @@ def test_states_function(hass):
 
 
 @patch(
-    "homeassistant.helpers.template.TemplateEnvironment." "is_safe_callable",
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
 def test_now(mock_is_safe, hass):
@@ -832,7 +830,7 @@ def test_now(mock_is_safe, hass):
 
 
 @patch(
-    "homeassistant.helpers.template.TemplateEnvironment." "is_safe_callable",
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
 def test_utcnow(mock_is_safe, hass):
@@ -857,7 +855,7 @@ def test_regex_match(hass):
 
     tpl = template.Template(
         """
-{{ 'home assistant test' | regex_match('Home', True) }}
+{{ 'Home Assistant test' | regex_match('home', True) }}
             """,
         hass,
     )
@@ -865,7 +863,7 @@ def test_regex_match(hass):
 
     tpl = template.Template(
         """
-    {{ 'Another home assistant test' | regex_match('home') }}
+    {{ 'Another Home Assistant test' | regex_match('Home') }}
                     """,
         hass,
     )
@@ -873,7 +871,7 @@ def test_regex_match(hass):
 
     tpl = template.Template(
         """
-{{ ['home assistant test'] | regex_match('.*assist') }}
+{{ ['Home Assistant test'] | regex_match('.*Assist') }}
             """,
         hass,
     )
@@ -892,7 +890,7 @@ def test_regex_search(hass):
 
     tpl = template.Template(
         """
-{{ 'home assistant test' | regex_search('Home', True) }}
+{{ 'Home Assistant test' | regex_search('home', True) }}
             """,
         hass,
     )
@@ -900,7 +898,7 @@ def test_regex_search(hass):
 
     tpl = template.Template(
         """
-    {{ 'Another home assistant test' | regex_search('home') }}
+    {{ 'Another Home Assistant test' | regex_search('Home') }}
                     """,
         hass,
     )
@@ -908,7 +906,7 @@ def test_regex_search(hass):
 
     tpl = template.Template(
         """
-{{ ['home assistant test'] | regex_search('assist') }}
+{{ ['Home Assistant test'] | regex_search('Assist') }}
             """,
         hass,
     )
@@ -927,11 +925,11 @@ def test_regex_replace(hass):
 
     tpl = template.Template(
         """
-{{ ['home hinderant test'] | regex_replace('hinder', 'assist') }}
+{{ ['Home hinderant test'] | regex_replace('hinder', 'Assist') }}
             """,
         hass,
     )
-    assert tpl.async_render() == "['home assistant test']"
+    assert tpl.async_render() == "['Home Assistant test']"
 
 
 def test_regex_findall_index(hass):
@@ -1260,18 +1258,18 @@ async def test_expand(hass):
     hass.states.async_set("test.object", "happy")
 
     info = render_to_info(
-        hass, "{{ expand('test.object') | map(attribute='entity_id')" " | join(', ') }}"
+        hass, "{{ expand('test.object') | map(attribute='entity_id') | join(', ') }}"
     )
     assert_result_info(info, "test.object", [])
 
     info = render_to_info(
         hass,
-        "{{ expand('group.new_group') | map(attribute='entity_id')" " | join(', ') }}",
+        "{{ expand('group.new_group') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "", ["group.new_group"])
 
     info = render_to_info(
-        hass, "{{ expand(states.group) | map(attribute='entity_id')" " | join(', ') }}"
+        hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
     )
     assert_result_info(info, "", [], ["group"])
 
@@ -1279,12 +1277,12 @@ async def test_expand(hass):
 
     info = render_to_info(
         hass,
-        "{{ expand('group.new_group') | map(attribute='entity_id')" " | join(', ') }}",
+        "{{ expand('group.new_group') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "test.object", ["group.new_group"])
 
     info = render_to_info(
-        hass, "{{ expand(states.group) | map(attribute='entity_id')" " | join(', ') }}"
+        hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
     )
     assert_result_info(info, "test.object", ["group.new_group"], ["group"])
 
@@ -1437,7 +1435,7 @@ def test_closest_function_to_state(hass):
 
     assert (
         template.Template(
-            "{{ closest(states.zone.far_away, " "states.test_domain).entity_id }}", hass
+            "{{ closest(states.zone.far_away, states.test_domain).entity_id }}", hass
         ).async_render()
         == "test_domain.closest_zone"
     )
@@ -1471,7 +1469,7 @@ def test_closest_function_state_with_invalid_location(hass):
 
     assert (
         template.Template(
-            "{{ closest(states.test_domain.closest_home, " "states) }}", hass
+            "{{ closest(states.test_domain.closest_home, states) }}", hass
         ).async_render()
         == "None"
     )
@@ -1517,7 +1515,7 @@ def test_extract_entities_none_exclude_stuff(hass):
 
     assert (
         template.extract_entities(
-            "{{ closest(states.zone.far_away, " "states.test_domain).entity_id }}"
+            "{{ closest(states.zone.far_away, states.test_domain).entity_id }}"
         )
         == MATCH_ALL
     )

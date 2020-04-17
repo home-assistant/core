@@ -63,11 +63,6 @@ async def setup_platform(hass, config_entry, config):
     await hass.async_block_till_done()
 
 
-async def test_async_setup_platform():
-    """Test setup platform does nothing (it uses config entries)."""
-    await media_player.async_setup_platform(None, None, None)
-
-
 async def test_state_attributes(hass, config_entry, config, controller):
     """Tests the state attributes."""
     await setup_platform(hass, config_entry, config)
@@ -511,7 +506,7 @@ async def test_select_radio_favorite(hass, config_entry, config, controller, fav
 async def test_select_radio_favorite_command_error(
     hass, config_entry, config, controller, favorites, caplog
 ):
-    """Tests command error loged when playing favorite."""
+    """Tests command error logged when playing favorite."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
     # Test set radio preset

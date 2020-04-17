@@ -22,7 +22,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity_registry import (
     async_entries_for_device,
@@ -113,21 +113,20 @@ async def async_get_conditions(
         )
 
         conditions.extend(
-            (
-                {
-                    **template,
-                    "condition": "device",
-                    "device_id": device_id,
-                    "entity_id": entry.entity_id,
-                    "domain": DOMAIN,
-                }
-                for template in templates
-            )
+            {
+                **template,
+                "condition": "device",
+                "device_id": device_id,
+                "entity_id": entry.entity_id,
+                "domain": DOMAIN,
+            }
+            for template in templates
         )
 
     return conditions
 
 
+@callback
 def async_condition_from_config(
     config: ConfigType, config_validation: bool
 ) -> condition.ConditionCheckerType:

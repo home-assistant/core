@@ -193,7 +193,7 @@ def _get_test_integration(hass, name, config_flow):
     """Return a generated test integration."""
     return loader.Integration(
         hass,
-        "homeassistant.components.{}".format(name),
+        f"homeassistant.components.{name}",
         None,
         {
             "name": name,
@@ -236,3 +236,9 @@ async def test_get_config_flows(hass):
         flows = await loader.async_get_config_flows(hass)
         assert "test_2" in flows
         assert "test_1" not in flows
+
+
+async def test_get_custom_components_safe_mode(hass):
+    """Test that we get empty custom components in safe mode."""
+    hass.config.safe_mode = True
+    assert await loader.async_get_custom_components(hass) == {}

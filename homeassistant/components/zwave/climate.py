@@ -1,7 +1,7 @@
 """Support for Z-Wave climate devices."""
 # Because we do not compile openzwave on CI
 import logging
-from typing import Optional
+from typing import Optional, Tuple
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -34,7 +34,7 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import ZWaveDeviceEntity
+from . import ZWaveDeviceEntity, const
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,11 +128,6 @@ DEFAULT_HVAC_MODES = [
 ]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old method of setting up Z-Wave climate devices."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Z-Wave Climate device from Config Entry."""
 
@@ -147,10 +142,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 def get_device(hass, values, **kwargs):
     """Create Z-Wave entity device."""
     temp_unit = hass.config.units.temperature_unit
-    return ZWaveClimate(values, temp_unit)
+    if values.primary.command_class == const.COMMAND_CLASS_THERMOSTAT_SETPOINT:
+        return ZWaveClimateSingleSetpoint(values, temp_unit)
+    if values.primary.command_class == const.COMMAND_CLASS_THERMOSTAT_MODE:
+        return ZWaveClimateMultipleSetpoint(values, temp_unit)
+    return None
 
 
-class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
+class ZWaveClimateBase(ZWaveDeviceEntity, ClimateDevice):
     """Representation of a Z-Wave Climate device."""
 
     def __init__(self, values, temp_unit):
@@ -188,18 +187,21 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                     self._zxt_120 = 1
         self.update_properties()
 
-    def _current_mode_setpoints(self):
-        current_mode = str(self.values.primary.data).lower()
-        setpoints_names = MODE_SETPOINT_MAPPINGS.get(current_mode, ())
-        return tuple(getattr(self.values, name, None) for name in setpoints_names)
+    def _mode(self) -> None:
+        """Return thermostat mode Z-Wave value."""
+        raise NotImplementedError()
+
+    def _current_mode_setpoints(self) -> Tuple:
+        """Return a tuple of current setpoint Z-Wave value(s)."""
+        raise NotImplementedError()
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
         support = SUPPORT_TARGET_TEMPERATURE
-        if HVAC_MODE_HEAT_COOL in self._hvac_list:
+        if self._hvac_list and HVAC_MODE_HEAT_COOL in self._hvac_list:
             support |= SUPPORT_TARGET_TEMPERATURE_RANGE
-        if PRESET_AWAY in self._preset_list:
+        if self._preset_list and PRESET_AWAY in self._preset_list:
             support |= SUPPORT_TARGET_TEMPERATURE_RANGE
 
         if self.values.fan_mode:
@@ -237,13 +239,13 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
     def _update_operation_mode(self):
         """Update hvac and preset modes."""
-        if self.values.primary:
+        if self._mode():
             self._hvac_list = []
             self._hvac_mapping = {}
             self._preset_list = []
             self._preset_mapping = {}
 
-            mode_list = self.values.primary.data_items
+            mode_list = self._mode().data_items
             if mode_list:
                 for mode in mode_list:
                     ha_mode = HVAC_STATE_MAPPINGS.get(str(mode).lower())
@@ -271,7 +273,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                 # Presets are supported
                 self._preset_list.append(PRESET_NONE)
 
-            current_mode = self.values.primary.data
+            current_mode = self._mode().data
             _LOGGER.debug("current_mode=%s", current_mode)
             _hvac_temp = next(
                 (
@@ -424,7 +426,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
         Need to be one of HVAC_MODE_*.
         """
-        if self.values.primary:
+        if self._mode():
             return self._hvac_mode
         return self._default_hvac_mode
 
@@ -434,7 +436,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
         Need to be a subset of HVAC_MODES.
         """
-        if self.values.primary:
+        if self._mode():
             return self._hvac_list
         return []
 
@@ -451,7 +453,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         """Return true if aux heater."""
         if not self._aux_heat:
             return None
-        if self.values.primary.data == AUX_HEAT_ZWAVE_MODE:
+        if self._mode().data == AUX_HEAT_ZWAVE_MODE:
             return True
         return False
 
@@ -461,7 +463,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
         Need to be one of PRESET_*.
         """
-        if self.values.primary:
+        if self._mode():
             return self._preset_mode
         return PRESET_NONE
 
@@ -471,7 +473,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
         Need to be a subset of PRESET_MODES.
         """
-        if self.values.primary:
+        if self._mode():
             return self._preset_list
         return []
 
@@ -520,22 +522,22 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         _LOGGER.debug("Set hvac_mode to %s", hvac_mode)
-        if not self.values.primary:
+        if not self._mode():
             return
         operation_mode = self._hvac_mapping.get(hvac_mode)
         _LOGGER.debug("Set operation_mode to %s", operation_mode)
-        self.values.primary.data = operation_mode
+        self._mode().data = operation_mode
 
     def turn_aux_heat_on(self):
-        """Turn auxillary heater on."""
+        """Turn auxiliary heater on."""
         if not self._aux_heat:
             return
         operation_mode = AUX_HEAT_ZWAVE_MODE
         _LOGGER.debug("Aux heat on. Set operation mode to %s", operation_mode)
-        self.values.primary.data = operation_mode
+        self._mode().data = operation_mode
 
     def turn_aux_heat_off(self):
-        """Turn auxillary heater off."""
+        """Turn auxiliary heater off."""
         if not self._aux_heat:
             return
         if HVAC_MODE_HEAT in self._hvac_mapping:
@@ -543,23 +545,23 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         else:
             operation_mode = self._hvac_mapping.get(HVAC_MODE_OFF)
         _LOGGER.debug("Aux heat off. Set operation mode to %s", operation_mode)
-        self.values.primary.data = operation_mode
+        self._mode().data = operation_mode
 
     def set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
         _LOGGER.debug("Set preset_mode to %s", preset_mode)
-        if not self.values.primary:
+        if not self._mode():
             return
         if preset_mode == PRESET_NONE:
             # Activate the current hvac mode
             self._update_operation_mode()
             operation_mode = self._hvac_mapping.get(self.hvac_mode)
             _LOGGER.debug("Set operation_mode to %s", operation_mode)
-            self.values.primary.data = operation_mode
+            self._mode().data = operation_mode
         else:
             operation_mode = self._preset_mapping.get(preset_mode, preset_mode)
             _LOGGER.debug("Set operation_mode to %s", operation_mode)
-            self.values.primary.data = operation_mode
+            self._mode().data = operation_mode
 
     def set_swing_mode(self, swing_mode):
         """Set new target swing mode."""
@@ -575,3 +577,37 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         if self._fan_action:
             data[ATTR_FAN_ACTION] = self._fan_action
         return data
+
+
+class ZWaveClimateSingleSetpoint(ZWaveClimateBase):
+    """Representation of a single setpoint Z-Wave thermostat device."""
+
+    def __init__(self, values, temp_unit):
+        """Initialize the Z-Wave climate device."""
+        ZWaveClimateBase.__init__(self, values, temp_unit)
+
+    def _mode(self) -> None:
+        """Return thermostat mode Z-Wave value."""
+        return self.values.mode
+
+    def _current_mode_setpoints(self) -> Tuple:
+        """Return a tuple of current setpoint Z-Wave value(s)."""
+        return (self.values.primary,)
+
+
+class ZWaveClimateMultipleSetpoint(ZWaveClimateBase):
+    """Representation of a multiple setpoint Z-Wave thermostat device."""
+
+    def __init__(self, values, temp_unit):
+        """Initialize the Z-Wave climate device."""
+        ZWaveClimateBase.__init__(self, values, temp_unit)
+
+    def _mode(self) -> None:
+        """Return thermostat mode Z-Wave value."""
+        return self.values.primary
+
+    def _current_mode_setpoints(self) -> Tuple:
+        """Return a tuple of current setpoint Z-Wave value(s)."""
+        current_mode = str(self.values.primary.data).lower()
+        setpoints_names = MODE_SETPOINT_MAPPINGS.get(current_mode, ())
+        return tuple(getattr(self.values, name, None) for name in setpoints_names)

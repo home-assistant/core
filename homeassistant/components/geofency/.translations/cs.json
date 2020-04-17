@@ -8,7 +8,6 @@
                 "description": "Opravdu chcete nastavit Geofency Webhook?",
                 "title": "Nastavit Geofency Webhook"
             }
-        },
-        "title": "Geofency Webhook"
+        }
     }
 }

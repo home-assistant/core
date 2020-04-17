@@ -7,7 +7,7 @@ from homeassistant.components import deconz
 import homeassistant.components.scene as scene
 from homeassistant.setup import async_setup_component
 
-from .test_gateway import DECONZ_WEB_REQUEST, ENTRY_CONFIG, setup_deconz_integration
+from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
 GROUPS = {
     "1": {
@@ -35,10 +35,7 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_scenes(hass):
     """Test that scenes can be loaded without scenes being available."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass)
     assert len(gateway.deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
 
@@ -47,9 +44,7 @@ async def test_scenes(hass):
     """Test that scenes works."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["groups"] = deepcopy(GROUPS)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass, get_state_response=data)
 
     assert "scene.light_group_scene" in gateway.deconz_ids
     assert len(hass.states.async_all()) == 1

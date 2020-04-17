@@ -189,18 +189,12 @@ class TemplateFan(FanEntity):
         self._oscillating = None
         self._direction = None
 
-        self._template.hass = self.hass
         if self._speed_template:
-            self._speed_template.hass = self.hass
             self._supported_features |= SUPPORT_SET_SPEED
         if self._oscillating_template:
-            self._oscillating_template.hass = self.hass
             self._supported_features |= SUPPORT_OSCILLATE
         if self._direction_template:
-            self._direction_template.hass = self.hass
             self._supported_features |= SUPPORT_DIRECTION
-        if self._availability_template:
-            self._availability_template.hass = self.hass
 
         self._entities = entity_ids
         # List of valid speeds

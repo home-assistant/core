@@ -67,7 +67,7 @@ def setup(hass, config):
 
     try:
         pilight_client = pilight.Client(host=host, port=port)
-    except (socket.error, socket.timeout) as err:
+    except (OSError, socket.timeout) as err:
         _LOGGER.error("Unable to connect to %s on port %s: %s", host, port, err)
         return False
 

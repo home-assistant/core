@@ -63,8 +63,7 @@ def setup(hass, config):
         )
     except ConnectionError as error:
         _LOGGER.error(
-            "Failed to create XS1 API client " "because of a connection error: %s",
-            error,
+            "Failed to create XS1 API client because of a connection error: %s", error,
         )
         return False
 

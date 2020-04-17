@@ -20,7 +20,8 @@ OPTION_TYPES = {
     "time": "Time",
     "date": "Date",
     "date_time": "Date & Time",
-    "date_time_iso": "Date & Time ISO",
+    "date_time_utc": "Date & Time (UTC)",
+    "date_time_iso": "Date & Time (ISO)",
     "time_date": "Time & Date",
     "beat": "Internet Time",
     "time_utc": "Time (UTC)",
@@ -102,6 +103,7 @@ class TimeDateSensor(Entity):
         time = dt_util.as_local(time_date).strftime(TIME_STR_FORMAT)
         time_utc = time_date.strftime(TIME_STR_FORMAT)
         date = dt_util.as_local(time_date).date().isoformat()
+        date_utc = time_date.date().isoformat()
 
         # Calculate Swatch Internet Time.
         time_bmt = time_date + timedelta(hours=1)
@@ -119,6 +121,8 @@ class TimeDateSensor(Entity):
             self._state = date
         elif self.type == "date_time":
             self._state = f"{date}, {time}"
+        elif self.type == "date_time_utc":
+            self._state = f"{date_utc}, {time_utc}"
         elif self.type == "time_date":
             self._state = f"{time}, {date}"
         elif self.type == "time_utc":
@@ -132,7 +136,7 @@ class TimeDateSensor(Entity):
     def point_in_time_listener(self, time_date):
         """Get the latest data and update state."""
         self._update_internal_state(time_date)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
         async_track_point_in_utc_time(
             self.hass, self.point_in_time_listener, self.get_next_interval()
         )

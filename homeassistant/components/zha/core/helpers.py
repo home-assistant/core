@@ -1,24 +1,13 @@
-"""
-Helpers for Zigbee Home Automation.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/zha/
-"""
+"""Helpers for Zigbee Home Automation."""
 import collections
 import logging
+from typing import Any, Callable, Iterator, List, Optional
 
 import zigpy.types
 
-from homeassistant.core import callback
+from homeassistant.core import State, callback
 
-from .const import (
-    ATTR_NAME,
-    CLUSTER_TYPE_IN,
-    CLUSTER_TYPE_OUT,
-    DATA_ZHA,
-    DATA_ZHA_GATEWAY,
-    DOMAIN,
-)
+from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, DATA_ZHA, DATA_ZHA_GATEWAY
 from .registries import BINDABLE_CLUSTERS
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,18 +34,6 @@ async def safe_read(
         return result
     except Exception:  # pylint: disable=broad-except
         return {}
-
-
-def get_attr_id_by_name(cluster, attr_name):
-    """Get the attribute id for a cluster attribute by its name."""
-    return next(
-        (
-            attrid
-            for attrid, (attrname, datatype) in cluster.attributes.items()
-            if attr_name == attrname
-        ),
-        None,
-    )
 
 
 async def get_matched_clusters(source_zha_device, target_zha_device):
@@ -109,6 +86,45 @@ async def async_get_zha_device(hass, device_id):
     return zha_gateway.devices[ieee]
 
 
+def find_state_attributes(states: List[State], key: str) -> Iterator[Any]:
+    """Find attributes with matching key from states."""
+    for state in states:
+        value = state.attributes.get(key)
+        if value is not None:
+            yield value
+
+
+def mean_int(*args):
+    """Return the mean of the supplied values."""
+    return int(sum(args) / len(args))
+
+
+def mean_tuple(*args):
+    """Return the mean values along the columns of the supplied values."""
+    return tuple(sum(l) / len(l) for l in zip(*args))
+
+
+def reduce_attribute(
+    states: List[State],
+    key: str,
+    default: Optional[Any] = None,
+    reduce: Callable[..., Any] = mean_int,
+) -> Any:
+    """Find the first attribute matching key from states.
+
+    If none are found, return default.
+    """
+    attrs = list(find_state_attributes(states, key))
+
+    if not attrs:
+        return default
+
+    if len(attrs) == 1:
+        return attrs[0]
+
+    return reduce(*attrs)
+
+
 class LogMixin:
     """Log helper."""
 
@@ -131,28 +147,3 @@ class LogMixin:
     def error(self, msg, *args):
         """Error level log."""
         return self.log(logging.ERROR, msg, *args)
-
-
-@callback
-def async_get_device_info(hass, device, ha_device_registry=None):
-    """Get ZHA device."""
-    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-    ret_device = {}
-    ret_device.update(device.device_info)
-    ret_device["entities"] = [
-        {
-            "entity_id": entity_ref.reference_id,
-            ATTR_NAME: entity_ref.device_info[ATTR_NAME],
-        }
-        for entity_ref in zha_gateway.device_registry[device.ieee]
-    ]
-
-    if ha_device_registry is not None:
-        reg_device = ha_device_registry.async_get_device(
-            {(DOMAIN, str(device.ieee))}, set()
-        )
-        if reg_device is not None:
-            ret_device["user_given_name"] = reg_device.name_by_user
-            ret_device["device_reg_id"] = reg_device.id
-            ret_device["area_id"] = reg_device.area_id
-    return ret_device

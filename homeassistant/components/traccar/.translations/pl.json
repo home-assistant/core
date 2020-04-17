@@ -10,9 +10,8 @@
         "step": {
             "user": {
                 "description": "Na pewno chcesz skonfigurowa\u0107 Traccar?",
-                "title": "Skonfiguruj Traccar"
+                "title": "Konfiguracja Traccar"
             }
-        },
-        "title": "Traccar"
+        }
     }
 }

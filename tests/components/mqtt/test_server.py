@@ -1,11 +1,13 @@
 """The tests for the MQTT component embedded server."""
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock
+
+from asynctest import CoroutineMock, patch
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant, mock_coro
+from tests.common import get_test_home_assistant, mock_coro, mock_storage
 
 
 class TestMQTT:
@@ -14,14 +16,17 @@ class TestMQTT:
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.mock_storage = mock_storage()
+        self.mock_storage.__enter__()
 
     def teardown_method(self, method):
         """Stop everything that was started."""
         self.hass.stop()
+        self.mock_storage.__exit__(None, None, None)
 
     @patch("passlib.apps.custom_app_context", Mock(return_value=""))
     @patch("tempfile.NamedTemporaryFile", Mock(return_value=MagicMock()))
-    @patch("hbmqtt.broker.Broker", Mock(return_value=MagicMock()))
+    @patch("hbmqtt.broker.Broker", Mock(return_value=MagicMock(start=CoroutineMock())))
     @patch("hbmqtt.broker.Broker.start", Mock(return_value=mock_coro()))
     @patch("homeassistant.components.mqtt.MQTT")
     def test_creating_config_with_pass_and_no_http_pass(self, mock_mqtt):
@@ -43,7 +48,7 @@ class TestMQTT:
 
     @patch("passlib.apps.custom_app_context", Mock(return_value=""))
     @patch("tempfile.NamedTemporaryFile", Mock(return_value=MagicMock()))
-    @patch("hbmqtt.broker.Broker", Mock(return_value=MagicMock()))
+    @patch("hbmqtt.broker.Broker", Mock(return_value=MagicMock(start=CoroutineMock())))
     @patch("hbmqtt.broker.Broker.start", Mock(return_value=mock_coro()))
     @patch("homeassistant.components.mqtt.MQTT")
     def test_creating_config_with_pass_and_http_pass(self, mock_mqtt):

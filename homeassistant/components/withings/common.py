@@ -38,13 +38,9 @@ NOT_AUTHENTICATED_ERROR = re.compile(
 class NotAuthenticatedError(HomeAssistantError):
     """Raise when not authenticated with the service."""
 
-    pass
-
 
 class ServiceError(HomeAssistantError):
     """Raise when the service has an error."""
-
-    pass
 
 
 class ThrottleData:
@@ -108,7 +104,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
             partial(
                 requests.request,
                 method,
-                "%s/%s" % (self.URL, path),
+                f"{self.URL}/{path}",
                 params=params,
                 headers={
                     "Authorization": "Bearer %s"
@@ -259,8 +255,8 @@ class WithingsDataManager:
 
     async def update_sleep(self) -> SleepGetResponse:
         """Update the sleep data."""
-        end_date = int(time.time())
-        start_date = end_date - (6 * 60 * 60)
+        end_date = dt.now()
+        start_date = end_date - datetime.timedelta(hours=2)
 
         def function():
             return self._api.sleep_get(startdate=start_date, enddate=end_date)

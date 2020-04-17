@@ -13,5 +13,6 @@
             "locked": "{entity_name} s'ha bloquejat",
             "unlocked": "{entity_name} s'ha desbloquejat"
         }
-    }
+    },
+    "title": "Panys"
 }

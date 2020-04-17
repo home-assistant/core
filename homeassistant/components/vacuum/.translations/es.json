@@ -4,7 +4,7 @@
             "clean": "Deje que {entity_name} limpie",
             "dock": "Deje que {entity_name} regrese a la base"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_cleaning": "{entity_name} est\u00e1 limpiando",
             "is_docked": "{entity_name} en la base"
         },
@@ -12,5 +12,6 @@
             "cleaning": "{entity_name} empez\u00f3 a limpiar",
             "docked": "{entity_name} en la base"
         }
-    }
+    },
+    "title": "Aspiradora"
 }

@@ -10,8 +10,9 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     Light,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, STATE_ON
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
     CONF_AUTOMATIC_ADD,
@@ -72,8 +73,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         RECEIVED_EVT_SUBSCRIBERS.append(light_update)
 
 
-class RfxtrxLight(RfxtrxDevice, Light):
+class RfxtrxLight(RfxtrxDevice, Light, RestoreEntity):
     """Representation of a RFXtrx light."""
+
+    async def async_added_to_hass(self):
+        """Restore RFXtrx device state (ON/OFF)."""
+        await super().async_added_to_hass()
+
+        old_state = await self.async_get_last_state()
+        if old_state is not None:
+            self._state = old_state.state == STATE_ON
+
+        # Restore the brightness of dimmable devices
+        if (
+            old_state is not None
+            and old_state.attributes.get(ATTR_BRIGHTNESS) is not None
+        ):
+            self._brightness = int(old_state.attributes[ATTR_BRIGHTNESS])
 
     @property
     def brightness(self):

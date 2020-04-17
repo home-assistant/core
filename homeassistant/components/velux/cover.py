@@ -1,6 +1,6 @@
 """Support for Velux covers."""
 from pyvlx import OpeningDevice, Position
-from pyvlx.opening_device import Awning, Blind, RollerShutter, Window
+from pyvlx.opening_device import Awning, Blind, GarageDoor, RollerShutter, Window
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -38,7 +38,7 @@ class VeluxCover(CoverDevice):
 
         async def after_update_callback(device):
             """Call after device was updated."""
-            await self.async_update_ha_state()
+            self.async_write_ha_state()
 
         self.node.register_device_updated_cb(after_update_callback)
 
@@ -77,6 +77,8 @@ class VeluxCover(CoverDevice):
             return "shutter"
         if isinstance(self.node, Awning):
             return "awning"
+        if isinstance(self.node, GarageDoor):
+            return "garage"
         return "window"
 
     @property

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Du kan endast konfigurera ett Netatmo-konto.",
+            "authorize_url_timeout": "Timeout vid generering av en auktoriserings-URL.",
+            "missing_configuration": "Netatmo-komponenten har inte konfigurerats. F\u00f6lj dokumentationen."
+        },
+        "create_entry": {
+            "default": "Autentiserad med Netatmo."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "V\u00e4lj autentiseringsmetod"
+            }
+        }
+    }
+}

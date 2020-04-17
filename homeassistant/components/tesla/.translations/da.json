@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Fejl ved tilslutning; tjek netv\u00e6rk og pr\u00f8v igen",
+            "identifier_exists": "Email er allerede registreret",
+            "invalid_credentials": "Ugyldige legitimationsoplysninger",
+            "unknown_error": "Ukendt fejl, rapporter venligst loginfo"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Adgangskode",
+                    "username": "Email-adresse"
+                },
+                "description": "Indtast dine oplysninger.",
+                "title": "Tesla - Konfiguration"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Sekunder mellem scanninger"
+                }
+            }
+        }
+    }
+}

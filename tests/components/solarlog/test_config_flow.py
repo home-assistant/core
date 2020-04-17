@@ -46,7 +46,7 @@ async def test_form(hass):
 
 @pytest.fixture(name="test_connect")
 def mock_controller():
-    """Mock a successfull _host_in_configuration_exists."""
+    """Mock a successful _host_in_configuration_exists."""
     with patch(
         "homeassistant.components.solarlog.config_flow.SolarLogConfigFlow._test_connection",
         side_effect=lambda *_: mock_coro(True),

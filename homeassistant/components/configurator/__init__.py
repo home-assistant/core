@@ -14,7 +14,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     EVENT_TIME_CHANGED,
 )
-from homeassistant.core import callback as async_callback
+from homeassistant.core import Event, callback as async_callback
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -209,14 +209,14 @@ class Configurator:
         entity_id = self._requests.pop(request_id)[0]
 
         # If we remove the state right away, it will not be included with
-        # the result fo the service call (current design limitation).
+        # the result of the service call (current design limitation).
         # Instead, we will set it to configured to give as feedback but delete
         # it shortly after so that it is deleted when the client updates.
         self.hass.states.async_set(entity_id, STATE_CONFIGURED)
 
-        def deferred_remove(event):
+        def deferred_remove(event: Event):
             """Remove the request state."""
-            self.hass.states.async_remove(entity_id)
+            self.hass.states.async_remove(entity_id, context=event.context)
 
         self.hass.bus.async_listen_once(EVENT_TIME_CHANGED, deferred_remove)
 
@@ -237,7 +237,7 @@ class Configurator:
     def _generate_unique_id(self):
         """Generate a unique configurator ID."""
         self._cur_id += 1
-        return "{}-{}".format(id(self), self._cur_id)
+        return f"{id(self)}-{self._cur_id}"
 
     def _validate_request_id(self, request_id):
         """Validate that the request belongs to this instance."""

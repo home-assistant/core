@@ -34,8 +34,8 @@ NOTIFICATION_TITLE = "myLeviton Decora Setup"
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Decora WiFi platform."""
 
-    email = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    email = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
     session = DecoraWiFiSession()
 
     try:

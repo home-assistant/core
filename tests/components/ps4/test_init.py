@@ -138,7 +138,7 @@ async def test_config_flow_entry_migrate(hass):
     mock_entry = MOCK_ENTRY_VERSION_1
     mock_entry.add_to_manager(manager)
     mock_e_registry = mock_registry(hass)
-    mock_entity_id = "media_player.ps4_{}".format(MOCK_UNIQUE_ID)
+    mock_entity_id = f"media_player.ps4_{MOCK_UNIQUE_ID}"
     mock_e_entry = mock_e_registry.async_get_or_create(
         "media_player",
         "ps4",
@@ -278,7 +278,7 @@ async def test_send_command(hass):
     mock_devices = hass.data[PS4_DATA].devices
     assert len(mock_devices) == 1
     mock_entity = mock_devices[0]
-    assert mock_entity.entity_id == "media_player.{}".format(MOCK_NAME)
+    assert mock_entity.entity_id == f"media_player.{MOCK_NAME}"
 
     # Test that all commands call service function.
     with patch(mock_func, return_value=mock_coro(True)) as mock_service:

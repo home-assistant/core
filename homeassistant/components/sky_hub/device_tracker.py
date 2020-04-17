@@ -10,7 +10,7 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, HTTP_OK
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,7 +85,7 @@ def _get_skyhub_data(url):
     except requests.exceptions.Timeout:
         _LOGGER.exception("Connection to the router timed out")
         return
-    if response.status_code == 200:
+    if response.status_code == HTTP_OK:
         return _parse_skyhub_response(response.text)
     _LOGGER.error("Invalid response from Sky Hub: %s", response)
 
@@ -95,8 +95,7 @@ def _parse_skyhub_response(data_str):
     pattmatch = re.search("attach_dev = '(.*)'", data_str)
     if pattmatch is None:
         raise OSError(
-            "Error: Impossible to fetch data from"
-            + " Sky Hub. Try to reboot the router."
+            "Error: Impossible to fetch data from Sky Hub. Try to reboot the router."
         )
     patt = pattmatch.group(1)
 
@@ -107,8 +106,6 @@ def _parse_skyhub_response(data_str):
         if _MAC_REGEX.match(dvc[1]):
             devices[dvc[1]] = dvc[0]
         else:
-            raise RuntimeError(
-                "Error: MAC address " + dvc[1] + " not in correct format."
-            )
+            raise RuntimeError(f"Error: MAC address {dvc[1]} not in correct format.")
 
     return devices

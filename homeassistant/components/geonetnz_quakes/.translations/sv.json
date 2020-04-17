@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "mmi": "MMI",
+                    "radius": "Radie"
+                },
+                "title": "Fyll i dina filterdetaljer."
+            }
+        }
+    }
+}

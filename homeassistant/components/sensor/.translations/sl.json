@@ -22,5 +22,6 @@
             "timestamp": "{entity_name} spremembe \u010dasovnega \u017eiga",
             "value": "{entity_name} spremembe vrednosti"
         }
-    }
+    },
+    "title": "Senzor"
 }

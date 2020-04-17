@@ -37,7 +37,6 @@ SERVICE_KONNECTED = "konnected"
 SERVICE_MOBILE_APP = "hass_mobile_app"
 SERVICE_NETGEAR = "netgear_router"
 SERVICE_OCTOPRINT = "octoprint"
-SERVICE_PLEX = "plex_mediaserver"
 SERVICE_ROKU = "roku"
 SERVICE_SABNZBD = "sabnzbd"
 SERVICE_SAMSUNG_PRINTER = "samsung_printer"
@@ -51,7 +50,6 @@ CONFIG_ENTRY_HANDLERS = {
     SERVICE_DAIKIN: "daikin",
     SERVICE_TELLDUSLIVE: "tellduslive",
     SERVICE_IGD: "upnp",
-    SERVICE_PLEX: "plex",
 }
 
 SERVICE_HANDLERS = {
@@ -75,10 +73,8 @@ SERVICE_HANDLERS = {
     "logitech_mediaserver": ("media_player", "squeezebox"),
     "directv": ("media_player", "directv"),
     "denonavr": ("media_player", "denonavr"),
-    "samsung_tv": ("media_player", "samsungtv"),
     "frontier_silicon": ("media_player", "frontier_silicon"),
     "openhome": ("media_player", "openhome"),
-    "harmony": ("remote", "harmony"),
     "bose_soundtouch": ("media_player", "soundtouch"),
     "bluesound": ("media_player", "bluesound"),
     "songpal": ("media_player", "songpal"),
@@ -96,6 +92,7 @@ MIGRATED_SERVICE_HANDLERS = [
     "esphome",
     "google_cast",
     SERVICE_HEOS,
+    "harmony",
     "homekit",
     "ikea_tradfri",
     "philips_hue",

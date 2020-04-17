@@ -1,16 +1,4 @@
-"""
-Platform for Flexit AC units with CI66 Modbus adapter.
-
-Example configuration:
-
-climate:
-  - platform: flexit
-    name: Main AC
-    slave: 21
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/climate.flexit/
-"""
+"""Platform for Flexit AC units with CI66 Modbus adapter."""
 import logging
 from typing import List
 
@@ -23,11 +11,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.components.modbus import (
-    CONF_HUB,
-    DEFAULT_HUB,
-    DOMAIN as MODBUS_DOMAIN,
-)
+from homeassistant.components.modbus.const import CONF_HUB, DEFAULT_HUB, MODBUS_DOMAIN
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_NAME,
@@ -52,8 +36,8 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Flexit Platform."""
-    modbus_slave = config.get(CONF_SLAVE, None)
-    name = config.get(CONF_NAME, None)
+    modbus_slave = config.get(CONF_SLAVE)
+    name = config.get(CONF_NAME)
     hub = hass.data[MODBUS_DOMAIN][config.get(CONF_HUB)]
     add_entities([Flexit(hub, modbus_slave, name)], True)
 

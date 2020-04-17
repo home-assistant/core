@@ -4,8 +4,7 @@
             "user": {
                 "title": "ZHA"
             }
-        },
-        "title": "ZHA"
+        }
     },
     "device_automation": {
         "action_type": {

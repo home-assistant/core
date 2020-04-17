@@ -246,7 +246,7 @@ class TradfriLight(TradfriBaseDevice, Light):
                 color_command = self._device_control.set_hsb(**color_data)
                 transition_time = None
 
-        # HSB can always be set, but color temp + brightness is bulb dependant
+        # HSB can always be set, but color temp + brightness is bulb dependent
         command = dimmer_command
         if command is not None:
             command += color_command

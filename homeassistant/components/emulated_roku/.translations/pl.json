@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "name_exists": "Nazwa ju\u017c istnieje"
+            "name_exists": "Nazwa ju\u017c istnieje."
         },
         "step": {
             "user": {
@@ -15,7 +15,7 @@
                 },
                 "title": "Zdefiniuj konfiguracj\u0119 serwera"
             }
-        },
-        "title": "EmulatedRoku"
-    }
+        }
+    },
+    "title": "EmulatedRoku"
 }

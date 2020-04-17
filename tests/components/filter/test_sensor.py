@@ -28,6 +28,7 @@ class TestFilterSensor(unittest.TestCase):
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.config.components.add("history")
         raw_values = [20, 19, 18, 21, 22, 0]
         self.values = []
 
@@ -103,6 +104,7 @@ class TestFilterSensor(unittest.TestCase):
         t_0 = dt_util.utcnow() - timedelta(minutes=1)
         t_1 = dt_util.utcnow() - timedelta(minutes=2)
         t_2 = dt_util.utcnow() - timedelta(minutes=3)
+        t_3 = dt_util.utcnow() - timedelta(minutes=4)
 
         if missing:
             fake_states = {}
@@ -110,17 +112,18 @@ class TestFilterSensor(unittest.TestCase):
             fake_states = {
                 "sensor.test_monitored": [
                     ha.State("sensor.test_monitored", 18.0, last_changed=t_0),
-                    ha.State("sensor.test_monitored", 19.0, last_changed=t_1),
-                    ha.State("sensor.test_monitored", 18.2, last_changed=t_2),
+                    ha.State("sensor.test_monitored", "unknown", last_changed=t_1),
+                    ha.State("sensor.test_monitored", 19.0, last_changed=t_2),
+                    ha.State("sensor.test_monitored", 18.2, last_changed=t_3),
                 ]
             }
 
         with patch(
-            "homeassistant.components.history." "state_changes_during_period",
+            "homeassistant.components.history.state_changes_during_period",
             return_value=fake_states,
         ):
             with patch(
-                "homeassistant.components.history." "get_last_state_changes",
+                "homeassistant.components.history.get_last_state_changes",
                 return_value=fake_states,
             ):
                 with assert_setup_component(1, "sensor"):
@@ -164,11 +167,11 @@ class TestFilterSensor(unittest.TestCase):
             ]
         }
         with patch(
-            "homeassistant.components.history." "state_changes_during_period",
+            "homeassistant.components.history.state_changes_during_period",
             return_value=fake_states,
         ):
             with patch(
-                "homeassistant.components.history." "get_last_state_changes",
+                "homeassistant.components.history.get_last_state_changes",
                 return_value=fake_states,
             ):
                 with assert_setup_component(1, "sensor"):
@@ -207,11 +210,33 @@ class TestFilterSensor(unittest.TestCase):
             filtered = filt.filter_state(state)
         assert 21 == filtered.state
 
+    def test_unknown_state_outlier(self):
+        """Test issue #32395."""
+        filt = OutlierFilter(window_size=3, precision=2, entity=None, radius=4.0)
+        out = ha.State("sensor.test_monitored", "unknown")
+        for state in [out] + self.values + [out]:
+            try:
+                filtered = filt.filter_state(state)
+            except ValueError:
+                assert state.state == "unknown"
+        assert 21 == filtered.state
+
+    def test_precision_zero(self):
+        """Test if precision of zero returns an integer."""
+        filt = LowPassFilter(window_size=10, precision=0, entity=None, time_constant=10)
+        for state in self.values:
+            filtered = filt.filter_state(state)
+        assert isinstance(filtered.state, int)
+
     def test_lowpass(self):
         """Test if lowpass filter works."""
         filt = LowPassFilter(window_size=10, precision=2, entity=None, time_constant=10)
-        for state in self.values:
-            filtered = filt.filter_state(state)
+        out = ha.State("sensor.test_monitored", "unknown")
+        for state in [out] + self.values + [out]:
+            try:
+                filtered = filt.filter_state(state)
+            except ValueError:
+                assert state.state == "unknown"
         assert 18.05 == filtered.state
 
     def test_range(self):

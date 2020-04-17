@@ -36,7 +36,6 @@
                 "description": "E-postadresse og passord for StarLine-kontoen",
                 "title": "Brukerlegitimasjon"
             }
-        },
-        "title": "StarLine"
+        }
     }
 }

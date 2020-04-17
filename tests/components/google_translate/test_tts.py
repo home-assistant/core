@@ -65,7 +65,10 @@ class TestTTSGooglePlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "google_translate_say",
-            {tts.ATTR_MESSAGE: "90% of I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -89,7 +92,10 @@ class TestTTSGooglePlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "google_translate_say",
-            {tts.ATTR_MESSAGE: "90% of I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -115,6 +121,7 @@ class TestTTSGooglePlatform:
             tts.DOMAIN,
             "google_say",
             {
+                "entity_id": "media_player.something",
                 tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
                 tts.ATTR_LANGUAGE: "de",
             },
@@ -139,7 +146,10 @@ class TestTTSGooglePlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "google_translate_say",
-            {tts.ATTR_MESSAGE: "90% of I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -161,7 +171,10 @@ class TestTTSGooglePlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "google_translate_say",
-            {tts.ATTR_MESSAGE: "90% of I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -176,7 +189,7 @@ class TestTTSGooglePlatform:
         self.url_param["total"] = 9
         self.url_param["q"] = "I%20person%20is%20on%20front%20of%20your%20door"
         self.url_param["textlen"] = 33
-        for idx in range(0, 9):
+        for idx in range(9):
             self.url_param["idx"] = idx
             aioclient_mock.get(
                 self.url, params=self.url_param, status=200, content=b"test"
@@ -193,6 +206,7 @@ class TestTTSGooglePlatform:
             tts.DOMAIN,
             "google_say",
             {
+                "entity_id": "media_player.something",
                 tts.ATTR_MESSAGE: (
                     "I person is on front of your door."
                     "I person is on front of your door."
@@ -203,7 +217,7 @@ class TestTTSGooglePlatform:
                     "I person is on front of your door."
                     "I person is on front of your door."
                     "I person is on front of your door."
-                )
+                ),
             },
         )
         self.hass.block_till_done()

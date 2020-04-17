@@ -10,15 +10,12 @@
             "init": {
                 "data": {
                     "device": "Pfad oder URL",
-                    "floor_temperature": "Boden-Temperatur",
                     "id": "ID",
-                    "name": "Name",
-                    "precision": "Genauigkeit der Temperatur"
+                    "name": "Name"
                 },
                 "title": "OpenTherm Gateway"
             }
-        },
-        "title": "OpenTherm Gateway"
+        }
     },
     "options": {
         "step": {
@@ -26,7 +23,8 @@
                 "data": {
                     "floor_temperature": "Boden-Temperatur",
                     "precision": "Genauigkeit"
-                }
+                },
+                "description": "Optionen f\u00fcr das OpenTherm Gateway"
             }
         }
     }
