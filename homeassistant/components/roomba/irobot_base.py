@@ -57,7 +57,7 @@ class IRobotBase(VacuumDevice):
 
     @property
     def should_poll(self):
-        """Disable pooling."""
+        """Disable polling."""
         return False
 
     @property
