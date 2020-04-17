@@ -76,7 +76,8 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorDevice):
         if command in ["on", "allon"]:
             self._state = True
         elif command in ["off", "alloff"]:
-            self._state = False            
+            self._state = False
+
         if self._state and self._off_delay is not None:
 
             def off_delay_listener(now):
