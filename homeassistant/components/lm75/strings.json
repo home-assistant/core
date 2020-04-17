@@ -1,0 +1,17 @@
+{
+  "config": {
+    "title": "LM75",
+    "step": {
+      "user": {
+        "title": "LM75",
+        "description": "Give your LM75 sensor a name.",
+        "data": {
+          "name": "Sensor Name"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Integration is already configured with an existing sensor with that name"
+    }
+  }
+}

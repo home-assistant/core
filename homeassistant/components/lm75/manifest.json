@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/lm75",
   "dependencies": [],
   "codeowners": ["@KarlKl"],
-  "requirements": ["smbus-cffi==0.5.1"]
+  "requirements": ["smbus-cffi==0.5.1"],
+  "config_flow": true
 }

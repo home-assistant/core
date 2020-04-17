@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No LM75 devices found on the network.",
+            "single_instance_allowed": "Only a single configuration of LM75 is possible."
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to set up LM75?",
+                "title": "LM75"
+            }
+        },
+        "title": "LM75"
+    }
+}

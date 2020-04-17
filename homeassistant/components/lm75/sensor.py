@@ -2,24 +2,17 @@
 import logging
 
 import smbus  # pylint: disable=import-error
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
     DEVICE_CLASS_TEMPERATURE,
     PRECISION_TENTHS,
     TEMP_CELSIUS,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import display_temp
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_I2C_ADDRESS = "i2c_address"
-CONF_I2C_BUS = "i2c_bus"
-CONF_REGISTER = "register"
 
 LM75_TEMP_REGISTER = 0
 LM75_CONF_REGISTER = 1
@@ -37,43 +30,23 @@ DEFAULT_I2C_ADDRESS = 0x48
 DEFAULT_I2C_BUS = 1
 DEFAULT_REGISTER = LM75_TEMP_REGISTER
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): vol.Coerce(int),
-        vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): vol.Coerce(int),
-        vol.Optional(CONF_REGISTER, default=DEFAULT_REGISTER): vol.In(REGISTER),
-    }
-)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the sensor platform."""
-
-    name = config.get(CONF_NAME)
-    i2c_address = config.get(CONF_I2C_ADDRESS)
-    bus_number = config.get(CONF_I2C_BUS)
-    register = config.get(CONF_REGISTER)
-
-    _LOGGER.info(
-        "Setup of temperature sensor at address %s with bus number %s is complete",
-        i2c_address,
-        bus_number,
-    )
-
-    add_entities([LM75(name, i2c_address, bus_number, register)])
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
+    """Set up the platform from config_entry."""
+    name = config_entry.data["name"]
+    async_add_entities([LM75(name)], True)
 
 
 class LM75(Entity):
     """Implementation of the LM75 sensor."""
 
-    def __init__(self, name, address, busnum, register):
+    def __init__(self, name):
         """Initialize the sensor."""
         self._state = None
         self._name = name
-        self._address = address
-        self._bus = smbus.SMBus(busnum)
-        self._register = register
+        self._address = DEFAULT_I2C_ADDRESS
+        self._bus = smbus.SMBus(DEFAULT_I2C_BUS)
+        self._register = DEFAULT_REGISTER
 
     @property
     def name(self) -> str:
