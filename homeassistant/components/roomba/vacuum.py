@@ -395,10 +395,28 @@ class BraavaJet(IRobotBase):
             spray = int(split[1])
             if behavior.capitalize() in BRAAVA_MOP_BEHAVIORS:
                 behavior = behavior.capitalize()
-            assert behavior in BRAAVA_MOP_BEHAVIORS
-            assert spray in BRAAVA_SPRAY_AMOUNT
-        except (IndexError, ValueError, AssertionError):
-            _LOGGER("No such fan speed available: %s", fan_speed)
+        except IndexError:
+            _LOGGER.error(
+                "Fan speed error: expected {behavior}-{spray_amount}, got '%s'",
+                fan_speed,
+            )
+            return
+        except ValueError:
+            _LOGGER.error("Spray amount error: expected integer, got '%s'", split[1])
+            return
+        if behavior not in BRAAVA_MOP_BEHAVIORS:
+            _LOGGER.error(
+                "Mop behavior error: expected one of %s, got '%s'",
+                str(BRAAVA_MOP_BEHAVIORS),
+                behavior,
+            )
+            return
+        if spray not in BRAAVA_SPRAY_AMOUNT:
+            _LOGGER.error(
+                "Spray amount error: expected one of %s, got '%d'",
+                str(BRAAVA_SPRAY_AMOUNT),
+                spray,
+            )
             return
 
         overlap = 0
