@@ -3,7 +3,7 @@ import logging
 import struct
 from typing import Any, Optional, Union
 
-from pymodbus.exceptions import ModbusException
+from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
@@ -89,7 +89,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus sensors."""
     sensors = []
     data_types = {DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"}}
@@ -148,7 +148,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     if not sensors:
         return False
-    async_add_entities(sensors)
+    add_entities(sensors)
 
 
 class ModbusRegisterSensor(RestoreEntity):
@@ -219,19 +219,21 @@ class ModbusRegisterSensor(RestoreEntity):
         """Return True if entity is available."""
         return self._available
 
-    async def async_update(self):
+    def update(self):
         """Update the state of the sensor."""
-        if self._register_type == CALL_TYPE_REGISTER_INPUT:
-            result = await self._hub.read_input_registers(
-                self._slave, self._register, self._count
-            )
-        else:
-            result = await self._hub.read_holding_registers(
-                self._slave, self._register, self._count
-            )
-        if result is None:
+        try:
+            if self._register_type == CALL_TYPE_REGISTER_INPUT:
+                result = self._hub.read_input_registers(
+                    self._slave, self._register, self._count
+                )
+            else:
+                result = self._hub.read_holding_registers(
+                    self._slave, self._register, self._count
+                )
+        except ConnectionException:
             self._available = False
             return
+
         if isinstance(result, (ModbusException, ExceptionResponse)):
             self._available = False
             return

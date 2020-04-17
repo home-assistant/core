@@ -3,7 +3,7 @@ import logging
 import struct
 from typing import Optional
 
-from pymodbus.exceptions import ModbusException
+from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
@@ -72,7 +72,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus Thermostat Platform."""
     name = config[CONF_NAME]
     modbus_slave = config[CONF_SLAVE]
@@ -91,7 +91,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     hub_name = config[CONF_HUB]
     hub = hass.data[MODBUS_DOMAIN][hub_name]
 
-    async_add_entities(
+    add_entities(
         [
             ModbusThermostat(
                 hub,
@@ -170,12 +170,12 @@ class ModbusThermostat(ClimateDevice):
         """Return the list of supported features."""
         return SUPPORT_TARGET_TEMPERATURE
 
-    async def async_update(self):
+    def update(self):
         """Update Target & Current Temperature."""
-        self._target_temperature = await self._read_register(
+        self._target_temperature = self._read_register(
             CALL_TYPE_REGISTER_HOLDING, self._target_temperature_register
         )
-        self._current_temperature = await self._read_register(
+        self._current_temperature = self._read_register(
             self._current_temperature_register_type, self._current_temperature_register
         )
 
@@ -224,7 +224,7 @@ class ModbusThermostat(ClimateDevice):
         """Return the supported step of target temperature."""
         return self._temp_step
 
-    async def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs):
         """Set new target temperature."""
         target_temperature = int(
             (kwargs.get(ATTR_TEMPERATURE) - self._offset) / self._scale
@@ -233,26 +233,28 @@ class ModbusThermostat(ClimateDevice):
             return
         byte_string = struct.pack(self._structure, target_temperature)
         register_value = struct.unpack(">h", byte_string[0:2])[0]
-        await self._write_register(self._target_temperature_register, register_value)
+        self._write_register(self._target_temperature_register, register_value)
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
-    async def _read_register(self, register_type, register) -> Optional[float]:
+    def _read_register(self, register_type, register) -> Optional[float]:
         """Read register using the Modbus hub slave."""
-        if register_type == CALL_TYPE_REGISTER_INPUT:
-            result = await self._hub.read_input_registers(
-                self._slave, register, self._count
-            )
-        else:
-            result = await self._hub.read_holding_registers(
-                self._slave, register, self._count
-            )
-        if result is None:
+        try:
+            if register_type == CALL_TYPE_REGISTER_INPUT:
+                result = self._hub.read_input_registers(
+                    self._slave, register, self._count
+                )
+            else:
+                result = self._hub.read_holding_registers(
+                    self._slave, register, self._count
+                )
+        except ConnectionException:
             self._available = False
             return
+
         if isinstance(result, (ModbusException, ExceptionResponse)):
             self._available = False
             return
@@ -269,7 +271,12 @@ class ModbusThermostat(ClimateDevice):
 
         return register_value
 
-    async def _write_register(self, register, value):
+    def _write_register(self, register, value):
         """Write holding register using the Modbus hub slave."""
-        await self._hub.write_registers(self._slave, register, [value, 0])
+        try:
+            self._hub.write_registers(self._slave, register, [value, 0])
+        except ConnectionException:
+            self._available = False
+            return
+
         self._available = True
