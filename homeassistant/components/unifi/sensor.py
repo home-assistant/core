@@ -24,36 +24,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     controller = get_controller_from_config_entry(hass, config_entry)
     controller.entities[DOMAIN] = {RX_SENSOR: set(), TX_SENSOR: set()}
 
-    option_allow_bandwidth_sensors = controller.option_allow_bandwidth_sensors
-
     @callback
     def items_added():
         """Update the values of the controller."""
-        if not controller.option_allow_bandwidth_sensors:
-            return
+        if controller.option_allow_bandwidth_sensors:
+            add_entities(controller, async_add_entities)
 
-        add_entities(controller, async_add_entities)
-
-    controller.listeners.append(
-        async_dispatcher_connect(hass, controller.signal_update, items_added)
-    )
-
-    @callback
-    def options_updated():
-        """Update the values of the controller."""
-        nonlocal option_allow_bandwidth_sensors
-
-        if option_allow_bandwidth_sensors != controller.option_allow_bandwidth_sensors:
-            option_allow_bandwidth_sensors = controller.option_allow_bandwidth_sensors
-
-            if option_allow_bandwidth_sensors:
-                items_added()
-
-    controller.listeners.append(
-        async_dispatcher_connect(
-            hass, controller.signal_options_update, options_updated
-        )
-    )
+    for signal in (controller.signal_update, controller.signal_options_update):
+        controller.listeners.append(async_dispatcher_connect(hass, signal, items_added))
 
     items_added()
 
@@ -63,11 +41,10 @@ def add_entities(controller, async_add_entities):
     """Add new sensor entities from the controller."""
     sensors = []
 
-    for client_id in controller.api.clients:
+    for mac in controller.api.clients:
         for sensor_class in (UniFiRxBandwidthSensor, UniFiTxBandwidthSensor):
-            if client_id in controller.entities[DOMAIN][sensor_class.TYPE]:
-                continue
-            sensors.append(sensor_class(controller.api.clients[client_id], controller))
+            if mac not in controller.entities[DOMAIN][sensor_class.TYPE]:
+                sensors.append(sensor_class(controller.api.clients[mac], controller))
 
     if sensors:
         async_add_entities(sensors)
@@ -95,7 +72,6 @@ class UniFiBandwidthSensor(UniFiClient):
 
     async def async_added_to_hass(self) -> None:
         """Client entity created."""
-        await super().async_added_to_hass()
         self.controller.entities[DOMAIN][self.TYPE].add(self.client.mac)
         self.async_on_remove(
             async_dispatcher_connect(
@@ -107,23 +83,22 @@ class UniFiBandwidthSensor(UniFiClient):
                 self.hass, self.controller.signal_remove, self.remove_item
             )
         )
+        await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect client object when removed."""
         await super().async_will_remove_from_hass()
         self.controller.entities[DOMAIN][self.TYPE].remove(self.client.mac)
 
-    @callback
-    def options_updated(self) -> None:
+    async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.controller.option_allow_bandwidth_sensors:
-            self.hass.async_create_task(self.async_remove())
+            await self.async_remove()
 
-    @callback
-    def remove_item(self, mac_addresses: set) -> None:
+    async def remove_item(self, mac_addresses: set) -> None:
         """Remove entity if client MAC is part of set."""
         if self.client.mac in mac_addresses:
-            self.hass.async_create_task(self.async_remove())
+            await self.async_remove()
 
 
 class UniFiRxBandwidthSensor(UniFiBandwidthSensor):
