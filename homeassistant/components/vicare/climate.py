@@ -138,8 +138,6 @@ class ViCareClimate(ClimateDevice):
             # Update the generic device attributes
             self._attributes = {}
             self._attributes["room_temperature"] = _room_temperature
-            self._attributes["supply_temperature"] = _supply_temperature
-            self._attributes["outside_temperature"] = self._api.getOutsideTemperature()
             self._attributes["active_vicare_program"] = self._current_program
             self._attributes["active_vicare_mode"] = self._current_mode
             self._attributes["heating_curve_slope"] = self._api.getHeatingCurveSlope()
@@ -157,18 +155,11 @@ class ViCareClimate(ClimateDevice):
             # Update the specific device attributes
             if self._heating_type == HeatingType.gas:
                 self._current_action = self._api.getBurnerActive()
-
                 self._attributes["burner_modulation"] = self._api.getBurnerModulation()
-                self._attributes[
-                    "boiler_temperature"
-                ] = self._api.getBoilerTemperature()
 
             elif self._heating_type == HeatingType.heatpump:
                 self._current_action = self._api.getCompressorActive()
 
-                self._attributes[
-                    "return_temperature"
-                ] = self._api.getReturnTemperature()
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
