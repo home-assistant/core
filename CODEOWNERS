@@ -425,7 +425,6 @@ homeassistant/components/vesync/* @markperdue @webdjoe
 homeassistant/components/vicare/* @oischinger
 homeassistant/components/vilfo/* @ManneW
 homeassistant/components/vivotek/* @HarlemSquirrel
-homeassistant/components/virtual_thermostat/* @DB-CL
 homeassistant/components/vizio/* @raman325
 homeassistant/components/vlc_telnet/* @rodripf
 homeassistant/components/waqi/* @andrey-git
