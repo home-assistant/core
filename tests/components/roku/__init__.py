@@ -34,11 +34,18 @@ class MockDeviceInfo:
 
 
 async def setup_integration(
-    hass: HomeAssistantType, skip_entry_setup: bool = False
+    hass: HomeAssistantType,
+    skip_entry_setup: bool = False,
+    device: str = "roku3",
 ) -> MockConfigEntry:
     """Set up the Roku integration in Home Assistant."""
+    device_fixture = f"roku/{device}-device-info.xml"
+    device_body = load_fixture(device_fixture)
+
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=UPNP_SERIAL, data={CONF_HOST: HOST}
+        domain=DOMAIN,
+        unique_id=UPNP_SERIAL,
+        data={CONF_HOST: HOST}
     )
 
     entry.add_to_hass(hass)
