@@ -6,12 +6,9 @@ import requests
 from homeassistant.const import (
     CONF_ICON,
     CONF_NAME,
-    CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
 )
-
 from homeassistant.helpers.entity import Entity
 
 from . import (
@@ -43,14 +40,12 @@ SENSOR_TYPES = {
     SENSOR_OUTSIDE_TEMPERATURE: {
         CONF_NAME: "Outside Temperature",
         CONF_ICON: "mdi:thermometer",
-        CONF_TYPE: DEVICE_CLASS_TEMPERATURE,
         CONF_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         CONF_GETTER: lambda api: api.getOutsideTemperature(),
     },
     SENSOR_SUPPLY_TEMPERATURE: {
         CONF_NAME: "Supply Temperature",
         CONF_ICON: "mdi:thermometer",
-        CONF_TYPE: DEVICE_CLASS_TEMPERATURE,
         CONF_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         CONF_GETTER: lambda api: api.getSupplyTemperature(),
     },
