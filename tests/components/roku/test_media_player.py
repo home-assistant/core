@@ -188,7 +188,7 @@ async def test_services(hass: HomeAssistantType, requests_mock: Mocker) -> None:
             MP_DOMAIN, SERVICE_SELECT_SOURCE, {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_INPUT_SOURCE: "Netflix"}, blocking=True
         )
 
-        remote_mock.assert_called_once_with("/launch/12", {"contentID": "12"})
+        remote_mock.assert_called_once_with("/launch/12", params={"contentID": "12"})
 
 
 async def test_tv_services(hass: HomeAssistantType, requests_mock: Mocker) -> None:
