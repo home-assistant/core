@@ -26,8 +26,8 @@ from homeassistant.const import (
     MATCH_ALL,
     STATE_OFF,
     STATE_ON,
-    STATE_UNKNOWN,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
