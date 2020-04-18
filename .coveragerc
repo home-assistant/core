@@ -597,6 +597,11 @@ omit =
     homeassistant/components/ripple/sensor.py
     homeassistant/components/rocketchat/notify.py
     homeassistant/components/roku/remote.py
+    homeassistant/components/roomba/binary_sensor.py
+    homeassistant/components/roomba/braava.py
+    homeassistant/components/roomba/irobot_base.py
+    homeassistant/components/roomba/roomba.py
+    homeassistant/components/roomba/sensor.py
     homeassistant/components/roomba/vacuum.py
     homeassistant/components/route53/*
     homeassistant/components/rova/sensor.py
