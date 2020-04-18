@@ -22,8 +22,8 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_NEXT_TRACK,
-    SERVICE_PREVIOUS_TRACK,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
@@ -162,14 +162,14 @@ async def test_services(hass: HomeAssistantType, requests_mock: Mocker) -> None:
 
     with patch("roku.Roku._post") as remote_mock:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_NEXT_TRACK, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
+            MP_DOMAIN, SERVICE_MEDIA_NEXT_TRACK, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
         )
 
         remote_mock.assert_called_once_with("/keypress/Fwd")
 
     with patch("roku.Roku._post") as remote_mock:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_PREVIOUS_TRACK, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
+            MP_DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
         )
 
         remote_mock.assert_called_once_with("/keypress/Rev")
