@@ -37,7 +37,7 @@ def flatten(data: Dict) -> Dict[str, Any]:
 
 
 @callback
-def component_translation_file(
+def component_translation_path(
     component: str, language: str, integration: Integration
 ) -> Optional[str]:
     """Return the translation json file location for a component.
@@ -81,7 +81,9 @@ def load_translations_files(
 
 
 def build_resources(
-    translation_cache: Dict[str, Dict[str, Any]], components: Set[str]
+    translation_cache: Dict[str, Dict[str, Any]],
+    components: Set[str],
+    category: Optional[str],
 ) -> Dict[str, Dict[str, Any]]:
     """Build the resources response for the given components."""
     # Build response
@@ -92,36 +94,43 @@ def build_resources(
         else:
             domain = component.split(".", 1)[0]
 
-        if domain not in resources:
-            resources[domain] = {}
+        domain_resources = resources.setdefault(domain, {})
 
         # Add the translations for this component to the domain resources.
         # Since clients cannot determine which platform an entity belongs to,
         # all translations for a domain will be returned together.
-        resources[domain].update(translation_cache[component])
+
+        if category is None:
+            domain_resources.update(translation_cache[component])
+            continue
+
+        if category not in translation_cache[component]:
+            continue
+
+        domain_resources.setdefault(category, {}).update(
+            translation_cache[component][category]
+        )
 
     return resources
 
 
-async def async_get_component_resources(
+async def async_get_component_cache(
     hass: HomeAssistantType, language: str, components: Set[str]
 ) -> Dict[str, Any]:
-    """Return translation resources for all components.
-
-    We go through all loaded components and platforms:
-     - see if they have already been loaded (exist in translation_cache)
-     - load them if they have not been loaded yet
-     - write them to cache
-     - flatten the cache and return
-    """
+    """Return translation cache that includes all specified components."""
     # Get cache for this language
-    cache = hass.data.setdefault(TRANSLATION_STRING_CACHE, {})
-    translation_cache = cache.setdefault(language, {})
+    cache: Dict[str, Dict[str, Any]] = hass.data.setdefault(
+        TRANSLATION_STRING_CACHE, {}
+    )
+    translation_cache: Dict[str, Any] = cache.setdefault(language, {})
 
     # Calculate the missing components and platforms
     missing_loaded = components - set(translation_cache)
-    missing_domains = list({loaded.split(".")[-1] for loaded in missing_loaded})
 
+    if not missing_loaded:
+        return translation_cache
+
+    missing_domains = list({loaded.split(".")[-1] for loaded in missing_loaded})
     missing_integrations = dict(
         zip(
             missing_domains,
@@ -138,7 +147,7 @@ async def async_get_component_resources(
         domain = parts[-1]
         integration = missing_integrations[domain]
 
-        path = component_translation_file(loaded, language, integration)
+        path = component_translation_path(loaded, language, integration)
         # No translation available
         if path is None:
             translation_cache[loaded] = {}
@@ -164,7 +173,7 @@ async def async_get_component_resources(
         # Update cache
         translation_cache.update(loaded_translations)
 
-    return build_resources(translation_cache, components)
+    return translation_cache
 
 
 @bind_hass
@@ -192,38 +201,23 @@ async def async_get_translations(
     if lock is None:
         lock = hass.data[TRANSLATION_LOAD_LOCK] = asyncio.Lock()
 
-    tasks = [async_get_component_resources(hass, language, components)]
+    tasks = [async_get_component_cache(hass, language, components)]
 
     # Fetch the English resources, as a fallback for missing keys
     if language != "en":
-        tasks.append(async_get_component_resources(hass, "en", components))
+        tasks.append(async_get_component_cache(hass, "en", components))
 
     async with lock:
         results = await asyncio.gather(*tasks)
 
-    resources: Dict[str, Any] = results[0]
-
-    if category is not None:
-        new_resources = {}
-        for domain, data in resources.items():
-            if category in data:
-                new_resources[domain] = {category: data[category]}
-        resources = new_resources
-
-    resources = flatten({"component": resources})
+    resources = flatten(
+        {"component": build_resources(results[0], components, category)}
+    )
 
     if language != "en":
-        base_resources = results[1]
-
-        if category is not None:
-            new_base_resources = {}
-            for domain, data in base_resources.items():
-                if category in data:
-                    new_base_resources[domain] = {category: data[category]}
-            base_resources = new_base_resources
-
-        base_resources = flatten({"component": base_resources})
-
+        base_resources = flatten(
+            {"component": build_resources(results[1], components, category)}
+        )
         resources = {**base_resources, **resources}
 
     return resources

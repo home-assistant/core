@@ -35,7 +35,7 @@ def test_flatten():
     }
 
 
-async def test_component_translation_file(hass):
+async def test_component_translation_path(hass):
     """Test the component translation file function."""
     assert await async_setup_component(
         hass,
@@ -58,13 +58,13 @@ async def test_component_translation_file(hass):
     )
 
     assert path.normpath(
-        translation.component_translation_file("switch.test", "en", int_test)
+        translation.component_translation_path("switch.test", "en", int_test)
     ) == path.normpath(
         hass.config.path("custom_components", "test", ".translations", "switch.en.json")
     )
 
     assert path.normpath(
-        translation.component_translation_file(
+        translation.component_translation_path(
             "switch.test_embedded", "en", int_test_embedded
         )
     ) == path.normpath(
@@ -74,14 +74,14 @@ async def test_component_translation_file(hass):
     )
 
     assert (
-        translation.component_translation_file(
+        translation.component_translation_path(
             "test_standalone", "en", int_test_standalone
         )
         is None
     )
 
     assert path.normpath(
-        translation.component_translation_file("test_package", "en", int_test_package)
+        translation.component_translation_path("test_package", "en", int_test_package)
     ) == path.normpath(
         hass.config.path(
             "custom_components", "test_package", ".translations", "en.json"
@@ -145,7 +145,7 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
     integration.name = "Component 1"
 
     with patch.object(
-        translation, "component_translation_file", return_value=mock_coro("bla.json")
+        translation, "component_translation_path", return_value=mock_coro("bla.json")
     ), patch.object(
         translation,
         "load_translations_files",
@@ -179,7 +179,7 @@ async def test_get_translations_while_loading_components(hass):
         return {"component1": {"hello": "world"}}
 
     with patch.object(
-        translation, "component_translation_file", return_value=mock_coro("bla.json")
+        translation, "component_translation_path", return_value=mock_coro("bla.json")
     ), patch.object(
         translation, "load_translations_files", side_effect=mock_load_translation_files,
     ), patch(
