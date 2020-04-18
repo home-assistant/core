@@ -8,12 +8,12 @@
                 "data": {
                     "latitude": "\u7def\u5ea6",
                     "longitude": "\u7d93\u5ea6",
+                    "mode": "\u6a21\u5f0f",
                     "name": "\u540d\u7a31"
                 },
                 "description": "Instituto Portugu\u00eas do Mar e Atmosfera",
                 "title": "\u5ea7\u6a19"
             }
-        },
-        "title": "\u8461\u8404\u7259\u6c23\u8c61\u670d\u52d9\uff08IPMA\uff09"
+        }
     }
 }

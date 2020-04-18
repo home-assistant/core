@@ -102,7 +102,7 @@ async def async_setup(hass, config):
     except XKNXException as ex:
         _LOGGER.warning("Can't connect to KNX interface: %s", ex)
         hass.components.persistent_notification.async_create(
-            "Can't connect to KNX interface: <br><b>{0}</b>".format(ex), title="KNX"
+            f"Can't connect to KNX interface: <br><b>{ex}</b>", title="KNX"
         )
 
     for component, discovery_type in (
@@ -205,7 +205,7 @@ class KNXModule:
 
     def connection_config_tunneling(self):
         """Return the connection_config if tunneling is configured."""
-        gateway_ip = self.config[DOMAIN][CONF_KNX_TUNNELING].get(CONF_HOST)
+        gateway_ip = self.config[DOMAIN][CONF_KNX_TUNNELING][CONF_HOST]
         gateway_port = self.config[DOMAIN][CONF_KNX_TUNNELING].get(CONF_PORT)
         local_ip = self.config[DOMAIN][CONF_KNX_TUNNELING].get(CONF_KNX_LOCAL_IP)
         if gateway_port is None:
@@ -215,6 +215,7 @@ class KNXModule:
             gateway_ip=gateway_ip,
             gateway_port=gateway_port,
             local_ip=local_ip,
+            auto_reconnect=True,
         )
 
     def connection_config_auto(self):
@@ -291,7 +292,7 @@ class KNXAutomation:
         """Initialize Automation class."""
         self.hass = hass
         self.device = device
-        script_name = "{} turn ON script".format(device.get_name())
+        script_name = f"{device.get_name()} turn ON script"
         self.script = Script(hass, action, script_name)
 
         self.action = ActionCallback(

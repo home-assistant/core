@@ -9,10 +9,9 @@
         },
         "step": {
             "user": {
-                "description": "Gebe deine Sentry-DSN ein",
+                "description": "Gib deine Sentry-DSN ein",
                 "title": "Sentry"
             }
-        },
-        "title": "Sentry"
+        }
     }
 }

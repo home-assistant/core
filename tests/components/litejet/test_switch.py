@@ -31,7 +31,7 @@ class TestLiteJetSwitch(unittest.TestCase):
         self.switch_released_callbacks = {}
 
         def get_switch_name(number):
-            return "Mock Switch #" + str(number)
+            return f"Mock Switch #{number}"
 
         def on_switch_pressed(number, callback):
             self.switch_pressed_callbacks[number] = callback

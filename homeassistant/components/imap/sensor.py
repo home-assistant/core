@@ -130,7 +130,7 @@ class ImapSensor(Entity):
             try:
                 if await self.connection():
                     await self.refresh_email_count()
-                    await self.async_update_ha_state()
+                    self.async_write_ha_state()
 
                     idle = await self._connection.idle_start()
                     await self._connection.wait_server_push()
@@ -138,7 +138,7 @@ class ImapSensor(Entity):
                     with async_timeout.timeout(10):
                         await idle
                 else:
-                    await self.async_update_ha_state()
+                    self.async_write_ha_state()
             except (AioImapException, asyncio.TimeoutError):
                 self.disconnected()
 

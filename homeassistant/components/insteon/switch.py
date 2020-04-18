@@ -19,9 +19,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     state_name = device.states[state_key].name
 
     _LOGGER.debug(
-        "Adding device %s entity %s to Switch platform",
-        device.address.hex,
-        device.states[state_key].name,
+        "Adding device %s entity %s to Switch platform", device.address.hex, state_name,
     )
 
     new_entity = None

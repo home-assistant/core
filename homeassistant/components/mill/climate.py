@@ -6,6 +6,8 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     FAN_ON,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
@@ -168,12 +170,19 @@ class MillHeater(ClimateDevice):
         return MAX_TEMP
 
     @property
+    def hvac_action(self):
+        """Return current hvac i.e. heat, cool, idle."""
+        if self._heater.is_gen1 or self._heater.is_heating == 1:
+            return CURRENT_HVAC_HEAT
+        return CURRENT_HVAC_IDLE
+
+    @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
         """
-        if self._heater.is_gen1 or self._heater.is_heating == 1:
+        if self._heater.is_gen1 or self._heater.power_status == 1:
             return HVAC_MODE_HEAT
         return HVAC_MODE_OFF
 

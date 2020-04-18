@@ -1,6 +1,5 @@
 """Test the bootstrapping."""
 # pylint: disable=protected-access
-import asyncio
 import logging
 import os
 from unittest.mock import Mock
@@ -29,11 +28,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @patch("homeassistant.bootstrap.async_enable_logging", Mock())
-@asyncio.coroutine
-def test_home_assistant_core_config_validation(hass):
+async def test_home_assistant_core_config_validation(hass):
     """Test if we pass in wrong information for HA conf."""
     # Extensive HA conf validation testing is done
-    result = yield from bootstrap.async_from_config_dict(
+    result = await bootstrap.async_from_config_dict(
         {"homeassistant": {"latitude": "some string"}}, hass
     )
     assert result is None
@@ -50,18 +48,18 @@ async def test_load_hassio(hass):
 
 async def test_empty_setup(hass):
     """Test an empty set up loads the core."""
-    await bootstrap._async_set_up_integrations(hass, {})
+    await bootstrap.async_from_config_dict({}, hass)
     for domain in bootstrap.CORE_INTEGRATIONS:
         assert domain in hass.config.components, domain
 
 
-async def test_core_failure_aborts(hass, caplog):
+async def test_core_failure_loads_safe_mode(hass, caplog):
     """Test failing core setup aborts further setup."""
     with patch(
         "homeassistant.components.homeassistant.async_setup",
         return_value=mock_coro(False),
     ):
-        await bootstrap._async_set_up_integrations(hass, {"group": {}})
+        await bootstrap.async_from_config_dict({"group": {}}, hass)
 
     assert "core failed to initialize" in caplog.text
     # We aborted early, group not set up
@@ -250,7 +248,8 @@ async def test_setup_hass(
     log_no_color = Mock()
 
     with patch(
-        "homeassistant.config.async_hass_config_yaml", return_value={"browser": {}}
+        "homeassistant.config.async_hass_config_yaml",
+        return_value={"browser": {}, "frontend": {}},
     ):
         hass = await bootstrap.async_setup_hass(
             config_dir=get_test_config_dir(),
@@ -263,6 +262,7 @@ async def test_setup_hass(
         )
 
     assert "browser" in hass.config.components
+    assert "safe_mode" not in hass.config.components
 
     assert len(mock_enable_logging.mock_calls) == 1
     assert mock_enable_logging.mock_calls[0][1] == (
@@ -357,3 +357,58 @@ async def test_setup_hass_safe_mode(
     # Validate we didn't try to set up config entry.
     assert "browser" not in hass.config.components
     assert len(browser_setup.mock_calls) == 0
+
+
+async def test_setup_hass_invalid_core_config(
+    mock_enable_logging,
+    mock_is_virtual_env,
+    mock_mount_local_lib_path,
+    mock_ensure_config_exists,
+    mock_process_ha_config_upgrade,
+):
+    """Test it works."""
+    with patch(
+        "homeassistant.config.async_hass_config_yaml",
+        return_value={"homeassistant": {"non-existing": 1}},
+    ):
+        hass = await bootstrap.async_setup_hass(
+            config_dir=get_test_config_dir(),
+            verbose=False,
+            log_rotate_days=10,
+            log_file="",
+            log_no_color=False,
+            skip_pip=True,
+            safe_mode=False,
+        )
+
+    assert "safe_mode" in hass.config.components
+
+
+async def test_setup_safe_mode_if_no_frontend(
+    mock_enable_logging,
+    mock_is_virtual_env,
+    mock_mount_local_lib_path,
+    mock_ensure_config_exists,
+    mock_process_ha_config_upgrade,
+):
+    """Test we setup safe mode if frontend didn't load."""
+    verbose = Mock()
+    log_rotate_days = Mock()
+    log_file = Mock()
+    log_no_color = Mock()
+
+    with patch(
+        "homeassistant.config.async_hass_config_yaml",
+        return_value={"map": {}, "person": {"invalid": True}},
+    ):
+        hass = await bootstrap.async_setup_hass(
+            config_dir=get_test_config_dir(),
+            verbose=verbose,
+            log_rotate_days=log_rotate_days,
+            log_file=log_file,
+            log_no_color=log_no_color,
+            skip_pip=True,
+            safe_mode=False,
+        )
+
+    assert "safe_mode" in hass.config.components

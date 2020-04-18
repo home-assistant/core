@@ -65,13 +65,13 @@ class SatelIntegraSwitch(SwitchDevice):
             _LOGGER.debug("New state: %s", new_state)
             if new_state != self._state:
                 self._state = new_state
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         _LOGGER.debug("Switch: %s status: %s, turning on", self._name, self._state)
         await self._satel.set_output(self._code, self._device_number, True)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
@@ -79,7 +79,7 @@ class SatelIntegraSwitch(SwitchDevice):
             "Switch name: %s status: %s, turning off", self._name, self._state
         )
         await self._satel.set_output(self._code, self._device_number, False)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def is_on(self):

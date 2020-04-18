@@ -7,5 +7,6 @@
             "is_paused": "{entity_name} \u00e8 in pausa",
             "is_playing": "{entity_name} \u00e8 in esecuzione"
         }
-    }
+    },
+    "title": "Lettore multimediale"
 }

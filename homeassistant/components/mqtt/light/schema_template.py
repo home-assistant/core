@@ -1,9 +1,4 @@
-"""
-Support for MQTT Template lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.mqtt_template/
-"""
+"""Support for MQTT Template lights."""
 import logging
 
 import voluptuous as vol
@@ -50,6 +45,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
+from ..debug_info import log_messages
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,13 +94,12 @@ PLATFORM_SCHEMA_TEMPLATE = (
 
 
 async def async_setup_entity_template(
-    config, async_add_entities, config_entry, discovery_hash
+    config, async_add_entities, config_entry, discovery_data
 ):
     """Set up a MQTT Template light."""
-    async_add_entities([MqttTemplate(config, config_entry, discovery_hash)])
+    async_add_entities([MqttTemplate(config, config_entry, discovery_data)])
 
 
-# pylint: disable=too-many-ancestors
 class MqttTemplate(
     MqttAttributes,
     MqttAvailability,
@@ -115,7 +110,7 @@ class MqttTemplate(
 ):
     """Representation of a MQTT Template light."""
 
-    def __init__(self, config, config_entry, discovery_hash):
+    def __init__(self, config, config_entry, discovery_data):
         """Initialize a MQTT Template light."""
         self._state = False
         self._sub_state = None
@@ -139,7 +134,7 @@ class MqttTemplate(
 
         MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash, self.discovery_update)
+        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
@@ -221,6 +216,7 @@ class MqttTemplate(
         last_state = await self.async_get_last_state()
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new MQTT messages."""
             state = self._templates[
@@ -329,6 +325,7 @@ class MqttTemplate(
         )
         await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
+        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
 
     @property
     def brightness(self):
@@ -438,6 +435,9 @@ class MqttTemplate(
 
         if ATTR_EFFECT in kwargs:
             values["effect"] = kwargs.get(ATTR_EFFECT)
+
+            if self._optimistic:
+                self._effect = kwargs[ATTR_EFFECT]
 
         if ATTR_FLASH in kwargs:
             values["flash"] = kwargs.get(ATTR_FLASH)

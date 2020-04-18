@@ -31,7 +31,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -49,6 +48,7 @@ from . import (
     MqttEntityDeviceInfo,
     subscription,
 )
+from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
@@ -178,15 +178,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async def async_discover(discovery_payload):
         """Discover and add an MQTT cover."""
+        discovery_data = discovery_payload.discovery_data
         try:
-            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(
-                config, async_add_entities, config_entry, discovery_hash
+                config, async_add_entities, config_entry, discovery_data
             )
         except Exception:
-            if discovery_hash:
-                clear_discovery_hash(hass, discovery_hash)
+            clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
             raise
 
     async_dispatcher_connect(
@@ -195,10 +194,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(
-    config, async_add_entities, config_entry=None, discovery_hash=None
+    config, async_add_entities, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT Cover."""
-    async_add_entities([MqttCover(config, config_entry, discovery_hash)])
+    async_add_entities([MqttCover(config, config_entry, discovery_data)])
 
 
 class MqttCover(
@@ -210,7 +209,7 @@ class MqttCover(
 ):
     """Representation of a cover that can be controlled using MQTT."""
 
-    def __init__(self, config, config_entry, discovery_hash):
+    def __init__(self, config, config_entry, discovery_data):
         """Initialize the cover."""
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._position = None
@@ -228,7 +227,7 @@ class MqttCover(
 
         MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash, self.discovery_update)
+        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
@@ -269,7 +268,8 @@ class MqttCover(
         topics = {}
 
         @callback
-        def tilt_updated(msg):
+        @log_messages(self.hass, self.entity_id)
+        def tilt_message_received(msg):
             """Handle tilt updates."""
             payload = msg.payload
             if tilt_status_template is not None:
@@ -288,6 +288,7 @@ class MqttCover(
                 self.async_write_ha_state()
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def state_message_received(msg):
             """Handle new MQTT state messages."""
             payload = msg.payload
@@ -312,6 +313,7 @@ class MqttCover(
             self.async_write_ha_state()
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def position_message_received(msg):
             """Handle new MQTT state messages."""
             payload = msg.payload
@@ -355,7 +357,7 @@ class MqttCover(
             self._tilt_value = STATE_UNKNOWN
             topics["tilt_status_topic"] = {
                 "topic": self._config.get(CONF_TILT_STATUS_TOPIC),
-                "msg_callback": tilt_updated,
+                "msg_callback": tilt_message_received,
                 "qos": self._config[CONF_QOS],
             }
 
@@ -370,6 +372,7 @@ class MqttCover(
         )
         await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
+        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
 
     @property
     def should_poll(self):
@@ -527,9 +530,6 @@ class MqttCover(
 
     async def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        if ATTR_TILT_POSITION not in kwargs:
-            return
-
         position = float(kwargs[ATTR_TILT_POSITION])
 
         # The position needs to be between min and max
@@ -546,36 +546,31 @@ class MqttCover(
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         set_position_template = self._config.get(CONF_SET_POSITION_TEMPLATE)
-        if ATTR_POSITION in kwargs:
-            position = kwargs[ATTR_POSITION]
-            percentage_position = position
-            if set_position_template is not None:
-                try:
-                    position = set_position_template.async_render(**kwargs)
-                except TemplateError as ex:
-                    _LOGGER.error(ex)
-                    self._state = None
-            elif (
-                self._config[CONF_POSITION_OPEN] != 100
-                and self._config[CONF_POSITION_CLOSED] != 0
-            ):
-                position = self.find_in_range_from_percent(position, COVER_PAYLOAD)
+        position = kwargs[ATTR_POSITION]
+        percentage_position = position
+        if set_position_template is not None:
+            position = set_position_template.async_render(**kwargs)
+        elif (
+            self._config[CONF_POSITION_OPEN] != 100
+            and self._config[CONF_POSITION_CLOSED] != 0
+        ):
+            position = self.find_in_range_from_percent(position, COVER_PAYLOAD)
 
-            mqtt.async_publish(
-                self.hass,
-                self._config.get(CONF_SET_POSITION_TOPIC),
-                position,
-                self._config[CONF_QOS],
-                self._config[CONF_RETAIN],
+        mqtt.async_publish(
+            self.hass,
+            self._config.get(CONF_SET_POSITION_TOPIC),
+            position,
+            self._config[CONF_QOS],
+            self._config[CONF_RETAIN],
+        )
+        if self._optimistic:
+            self._state = (
+                STATE_CLOSED
+                if percentage_position == self._config[CONF_POSITION_CLOSED]
+                else STATE_OPEN
             )
-            if self._optimistic:
-                self._state = (
-                    STATE_CLOSED
-                    if percentage_position == self._config[CONF_POSITION_CLOSED]
-                    else STATE_OPEN
-                )
-                self._position = percentage_position
-                self.async_write_ha_state()
+            self._position = percentage_position
+            self.async_write_ha_state()
 
     async def async_toggle_tilt(self, **kwargs):
         """Toggle the entity."""

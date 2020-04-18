@@ -4,8 +4,10 @@ import logging
 from zlib import adler32
 
 import voluptuous as vol
+from zeroconf import InterfaceChoice
 
 from homeassistant.components import cover
+from homeassistant.components.cover import DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -23,6 +25,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
@@ -37,9 +40,11 @@ from .const import (
     CONF_FEATURE_LIST,
     CONF_FILTER,
     CONF_SAFE_MODE,
+    CONF_ZEROCONF_DEFAULT_INTERFACE,
     DEFAULT_AUTO_START,
     DEFAULT_PORT,
     DEFAULT_SAFE_MODE,
+    DEFAULT_ZEROCONF_DEFAULT_INTERFACE,
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_PM25,
@@ -62,7 +67,7 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 
-MAX_DEVICES = 100
+MAX_DEVICES = 150
 TYPES = Registry()
 
 # #### Driver Status ####
@@ -96,6 +101,10 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_SAFE_MODE, default=DEFAULT_SAFE_MODE): cv.boolean,
                 vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
                 vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
+                vol.Optional(
+                    CONF_ZEROCONF_DEFAULT_INTERFACE,
+                    default=DEFAULT_ZEROCONF_DEFAULT_INTERFACE,
+                ): cv.boolean,
             }
         )
     },
@@ -120,6 +129,9 @@ async def async_setup(hass, config):
     safe_mode = conf[CONF_SAFE_MODE]
     entity_filter = conf[CONF_FILTER]
     entity_config = conf[CONF_ENTITY_CONFIG]
+    interface_choice = (
+        InterfaceChoice.Default if config.get(CONF_ZEROCONF_DEFAULT_INTERFACE) else None
+    )
 
     homekit = HomeKit(
         hass,
@@ -130,6 +142,7 @@ async def async_setup(hass, config):
         entity_config,
         safe_mode,
         advertise_ip,
+        interface_choice,
     )
     await hass.async_add_executor_job(homekit.setup)
 
@@ -199,7 +212,7 @@ def get_accessory(hass, driver, state, aid, config):
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if device_class == "garage" and features & (
+        if device_class in (DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE) and features & (
             cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE
         ):
             a_type = "GarageDoorOpener"
@@ -236,7 +249,7 @@ def get_accessory(hass, driver, state, aid, config):
             TEMP_FAHRENHEIT,
         ):
             a_type = "TemperatureSensor"
-        elif device_class == DEVICE_CLASS_HUMIDITY and unit == "%":
+        elif device_class == DEVICE_CLASS_HUMIDITY and unit == UNIT_PERCENTAGE:
             a_type = "HumiditySensor"
         elif device_class == DEVICE_CLASS_PM25 or DEVICE_CLASS_PM25 in state.entity_id:
             a_type = "AirQualitySensor"
@@ -285,6 +298,7 @@ class HomeKit:
         entity_config,
         safe_mode,
         advertise_ip=None,
+        interface_choice=None,
     ):
         """Initialize a HomeKit object."""
         self.hass = hass
@@ -295,6 +309,7 @@ class HomeKit:
         self._config = entity_config
         self._safe_mode = safe_mode
         self._advertise_ip = advertise_ip
+        self._interface_choice = interface_choice
         self.status = STATUS_READY
 
         self.bridge = None
@@ -315,6 +330,7 @@ class HomeKit:
             port=self._port,
             persist_file=path,
             advertised_address=self._advertise_ip,
+            interface_choice=self._interface_choice,
         )
         self.bridge = HomeBridge(self.hass, self.driver, self._name)
         if self._safe_mode:
@@ -345,9 +361,17 @@ class HomeKit:
             return
         aid = generate_aid(state.entity_id)
         conf = self._config.pop(state.entity_id, {})
-        acc = get_accessory(self.hass, self.driver, state, aid, conf)
-        if acc is not None:
-            self.bridge.add_accessory(acc)
+        # If an accessory cannot be created or added due to an exception
+        # of any kind (usually in pyhap) it should not prevent
+        # the rest of the accessories from being created
+        try:
+            acc = get_accessory(self.hass, self.driver, state, aid, conf)
+            if acc is not None:
+                self.bridge.add_accessory(acc)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Failed to create a HomeKit accessory for %s", state.entity_id
+            )
 
     def remove_bridge_accessory(self, aid):
         """Try adding accessory to bridge if configured beforehand."""

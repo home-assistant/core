@@ -2,7 +2,9 @@
 import asyncio
 from unittest.mock import Mock
 
+from aiohttp import client_exceptions
 import aiohue
+from aiohue.discovery import URL_NUPNP
 from asynctest import CoroutineMock, patch
 import pytest
 import voluptuous as vol
@@ -60,11 +62,9 @@ async def test_flow_works(hass):
     assert result["step_id"] == "link"
 
     flow = next(
-        (
-            flow
-            for flow in hass.config_entries.flow.async_progress()
-            if flow["flow_id"] == result["flow_id"]
-        )
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
     )
     assert flow["context"]["unique_id"] == "aabbccddeeff"
 
@@ -77,6 +77,7 @@ async def test_flow_works(hass):
     assert result["data"] == {
         "host": "1.2.3.4",
         "username": "home-assistant#test-home",
+        "allow_hue_groups": False,
     }
 
     assert len(mock_bridge.initialize.mock_calls) == 1
@@ -84,7 +85,7 @@ async def test_flow_works(hass):
 
 async def test_flow_no_discovered_bridges(hass, aioclient_mock):
     """Test config flow discovers no bridges."""
-    aioclient_mock.get(const.API_NUPNP, json=[])
+    aioclient_mock.get(URL_NUPNP, json=[])
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": "user"}
@@ -95,9 +96,7 @@ async def test_flow_no_discovered_bridges(hass, aioclient_mock):
 
 async def test_flow_all_discovered_bridges_exist(hass, aioclient_mock):
     """Test config flow discovers only already configured bridges."""
-    aioclient_mock.get(
-        const.API_NUPNP, json=[{"internalipaddress": "1.2.3.4", "id": "bla"}]
-    )
+    aioclient_mock.get(URL_NUPNP, json=[{"internalipaddress": "1.2.3.4", "id": "bla"}])
     MockConfigEntry(
         domain="hue", unique_id="bla", data={"host": "1.2.3.4"}
     ).add_to_hass(hass)
@@ -111,9 +110,7 @@ async def test_flow_all_discovered_bridges_exist(hass, aioclient_mock):
 
 async def test_flow_one_bridge_discovered(hass, aioclient_mock):
     """Test config flow discovers one bridge."""
-    aioclient_mock.get(
-        const.API_NUPNP, json=[{"internalipaddress": "1.2.3.4", "id": "bla"}]
-    )
+    aioclient_mock.get(URL_NUPNP, json=[{"internalipaddress": "1.2.3.4", "id": "bla"}])
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": "user"}
@@ -130,7 +127,7 @@ async def test_flow_two_bridges_discovered(hass, aioclient_mock):
     ).add_to_hass(hass)
 
     aioclient_mock.get(
-        const.API_NUPNP,
+        URL_NUPNP,
         json=[
             {"internalipaddress": "1.2.3.4", "id": "bla"},
             {"internalipaddress": "5.6.7.8", "id": "beer"},
@@ -153,7 +150,7 @@ async def test_flow_two_bridges_discovered(hass, aioclient_mock):
 async def test_flow_two_bridges_discovered_one_new(hass, aioclient_mock):
     """Test config flow discovers two bridges."""
     aioclient_mock.get(
-        const.API_NUPNP,
+        URL_NUPNP,
         json=[
             {"internalipaddress": "1.2.3.4", "id": "bla"},
             {"internalipaddress": "5.6.7.8", "id": "beer"},
@@ -169,11 +166,9 @@ async def test_flow_two_bridges_discovered_one_new(hass, aioclient_mock):
     assert result["type"] == "form"
     assert result["step_id"] == "link"
     flow = next(
-        (
-            flow
-            for flow in hass.config_entries.flow.async_progress()
-            if flow["flow_id"] == result["flow_id"]
-        )
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
     )
     assert flow["context"]["unique_id"] == "beer"
 
@@ -259,7 +254,7 @@ async def test_flow_link_button_not_pressed(hass):
 async def test_flow_link_unknown_host(hass):
     """Test config flow ."""
     mock_bridge = get_mock_bridge(
-        mock_create_user=CoroutineMock(side_effect=aiohue.RequestError),
+        mock_create_user=CoroutineMock(side_effect=client_exceptions.ClientOSError),
     )
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
@@ -442,6 +437,7 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(hass):
     assert result["data"] == {
         "host": "2.2.2.2",
         "username": "username-abc",
+        "allow_hue_groups": False,
     }
     entries = hass.config_entries.async_entries("hue")
     assert len(entries) == 2

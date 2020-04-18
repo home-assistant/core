@@ -14,37 +14,28 @@
         "flow_title": "deCONZ Zigbee Gateway",
         "step": {
             "hassio_confirm": {
-                "data": {
-                    "allow_clip_sensor": "Import virtueller Sensoren zulassen",
-                    "allow_deconz_groups": "Import von deCONZ-Gruppen zulassen"
-                },
                 "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass er eine Verbindung mit dem deCONZ Gateway herstellt, der vom Add-on hass.io {addon} bereitgestellt wird?",
                 "title": "deCONZ Zigbee Gateway \u00fcber das Hass.io Add-on"
             },
             "init": {
-                "data": {
-                    "host": "Host",
-                    "port": "Port"
-                },
                 "title": "Definiere das deCONZ-Gateway"
             },
             "link": {
                 "description": "Entsperre dein deCONZ-Gateway, um es bei Home Assistant zu registrieren. \n\n 1. Gehe in die deCONZ-Systemeinstellungen \n 2. Dr\u00fccke die Taste \"Gateway entsperren\"",
                 "title": "Mit deCONZ verbinden"
             },
-            "options": {
+            "manual_confirm": {
                 "data": {
-                    "allow_clip_sensor": "Import virtueller Sensoren zulassen",
-                    "allow_deconz_groups": "Import von deCONZ-Gruppen zulassen"
-                },
-                "title": "Weitere Konfigurationsoptionen f\u00fcr deCONZ"
+                    "host": "Host",
+                    "port": "Port"
+                }
             }
-        },
-        "title": "deCONZ Zigbee Gateway"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Beide Tasten",
+            "bottom_buttons": "Untere Tasten",
             "button_1": "Erste Taste",
             "button_2": "Zweite Taste",
             "button_3": "Dritte Taste",
@@ -61,6 +52,7 @@
             "side_4": "Seite 4",
             "side_5": "Seite 5",
             "side_6": "Seite 6",
+            "top_buttons": "Obere Tasten",
             "turn_off": "Ausschalten",
             "turn_on": "Einschalten"
         },
@@ -96,19 +88,13 @@
     },
     "options": {
         "step": {
-            "async_step_deconz_devices": {
-                "data": {
-                    "allow_clip_sensor": "deCONZ CLIP-Sensoren zulassen",
-                    "allow_deconz_groups": "deCONZ-Lichtgruppen zulassen"
-                },
-                "description": "Konfigurieren der Sichtbarkeit von deCONZ-Ger\u00e4tetypen"
-            },
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "deCONZ CLIP-Sensoren zulassen",
                     "allow_deconz_groups": "deCONZ-Lichtgruppen zulassen"
                 },
-                "description": "Sichtbarkeit der deCONZ-Ger\u00e4tetypen konfigurieren"
+                "description": "Sichtbarkeit der deCONZ-Ger\u00e4tetypen konfigurieren",
+                "title": "deCONZ-Optionen"
             }
         }
     }

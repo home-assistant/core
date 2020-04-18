@@ -30,6 +30,8 @@ class TestFacebook(unittest.TestCase):
         expected_body = {
             "recipient": {"phone_number": target[0]},
             "message": {"text": message},
+            "messaging_type": "MESSAGE_TAG",
+            "tag": "ACCOUNT_UPDATE",
         }
         assert mock.last_request.json() == expected_body
 
@@ -53,6 +55,8 @@ class TestFacebook(unittest.TestCase):
             expected_body = {
                 "recipient": {"phone_number": target},
                 "message": {"text": message},
+                "messaging_type": "MESSAGE_TAG",
+                "tag": "ACCOUNT_UPDATE",
             }
             assert request.json() == expected_body
 
@@ -77,7 +81,12 @@ class TestFacebook(unittest.TestCase):
         assert mock.called
         assert mock.call_count == 1
 
-        expected_body = {"recipient": {"phone_number": target[0]}, "message": data}
+        expected_body = {
+            "recipient": {"phone_number": target[0]},
+            "message": data,
+            "messaging_type": "MESSAGE_TAG",
+            "tag": "ACCOUNT_UPDATE",
+        }
         assert mock.last_request.json() == expected_body
 
         expected_params = {"access_token": ["page-access-token"]}

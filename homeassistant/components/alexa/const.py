@@ -6,6 +6,7 @@ from homeassistant.components.climate import const as climate
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 DOMAIN = "alexa"
+EVENT_ALEXA_SMART_HOME = "alexa_smart_home"
 
 # Flash briefing constants
 CONF_UID = "uid"

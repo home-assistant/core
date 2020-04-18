@@ -37,7 +37,8 @@ def alexa_client(loop, hass, hass_client):
             alexa.DOMAIN,
             {
                 # Key is here to verify we allow other keys in config too
-                "homeassistant": {}
+                "homeassistant": {},
+                "alexa": {},
             },
         )
     )

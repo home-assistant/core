@@ -1,7 +1,6 @@
 """Support for ANEL PwrCtrl switches."""
 from datetime import timedelta
 import logging
-import socket
 
 from anel_pwrctrl import DeviceMaster
 import voluptuous as vol
@@ -31,11 +30,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up PwrCtrl devices/switches."""
-    host = config.get(CONF_HOST, None)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    port_recv = config.get(CONF_PORT_RECV)
-    port_send = config.get(CONF_PORT_SEND)
+    host = config.get(CONF_HOST)
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+    port_recv = config[CONF_PORT_RECV]
+    port_send = config[CONF_PORT_SEND]
 
     try:
         master = DeviceMaster(
@@ -45,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             write_port=port_recv,
         )
         master.query(ip_addr=host)
-    except socket.error as ex:
+    except OSError as ex:
         _LOGGER.error("Unable to discover PwrCtrl device: %s", str(ex))
         return False
 
@@ -75,9 +74,7 @@ class PwrCtrlSwitch(SwitchDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the device."""
-        return "{device}-{switch_idx}".format(
-            device=self._port.device.host, switch_idx=self._port.get_index()
-        )
+        return f"{self._port.device.host}-{self._port.get_index()}"
 
     @property
     def name(self):

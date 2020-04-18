@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Bridge ist bereits konfiguriert",
+            "already_configured": "Bridge ist bereits konfiguriert.",
             "already_in_progress": "Der Konfigurationsablauf f\u00fcr die Bridge wird bereits ausgef\u00fchrt."
         },
         "error": {
@@ -18,7 +18,6 @@
                 "description": "Du findest den Sicherheitscode auf der R\u00fcckseite deines Gateways.",
                 "title": "Sicherheitscode eingeben"
             }
-        },
-        "title": "IKEA TR\u00c5DFRI"
+        }
     }
 }

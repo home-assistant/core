@@ -4,5 +4,6 @@
             "locked": "{entity_name} fechada",
             "unlocked": "{entity_name} aberta"
         }
-    }
+    },
+    "title": "Fechadura"
 }

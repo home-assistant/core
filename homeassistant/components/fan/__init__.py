@@ -141,7 +141,6 @@ class FanEntity(ToggleEntity):
 
     def oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
-        pass
 
     async def async_oscillate(self, oscillating: bool):
         """Oscillate the fan."""

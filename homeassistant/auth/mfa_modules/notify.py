@@ -47,28 +47,28 @@ _LOGGER = logging.getLogger(__name__)
 
 def _generate_secret() -> str:
     """Generate a secret."""
-    import pyotp
+    import pyotp  # pylint: disable=import-outside-toplevel
 
     return str(pyotp.random_base32())
 
 
 def _generate_random() -> int:
     """Generate a 8 digit number."""
-    import pyotp
+    import pyotp  # pylint: disable=import-outside-toplevel
 
     return int(pyotp.random_base32(length=8, chars=list("1234567890")))
 
 
 def _generate_otp(secret: str, count: int) -> str:
     """Generate one time password."""
-    import pyotp
+    import pyotp  # pylint: disable=import-outside-toplevel
 
     return str(pyotp.HOTP(secret).at(count))
 
 
 def _verify_otp(secret: str, otp: str, count: int) -> bool:
     """Verify one time password."""
-    import pyotp
+    import pyotp  # pylint: disable=import-outside-toplevel
 
     return bool(pyotp.HOTP(secret).verify(otp, count))
 
@@ -204,7 +204,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             await self._async_load()
             assert self._user_settings is not None
 
-        notify_setting = self._user_settings.get(user_id, None)
+        notify_setting = self._user_settings.get(user_id)
         if notify_setting is None:
             return False
 
@@ -222,7 +222,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             await self._async_load()
             assert self._user_settings is not None
 
-        notify_setting = self._user_settings.get(user_id, None)
+        notify_setting = self._user_settings.get(user_id)
         if notify_setting is None:
             raise ValueError("Cannot find user_id")
 
@@ -246,7 +246,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             await self._async_load()
             assert self._user_settings is not None
 
-        notify_setting = self._user_settings.get(user_id, None)
+        notify_setting = self._user_settings.get(user_id)
         if notify_setting is None:
             _LOGGER.error("Cannot find user %s", user_id)
             return

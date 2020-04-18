@@ -121,7 +121,7 @@ class TileScanner:
 
         for tile in tiles:
             await self._async_see(
-                dev_id="tile_{0}".format(slugify(tile["tile_uuid"])),
+                dev_id="tile_{}".format(slugify(tile["tile_uuid"])),
                 gps=(
                     tile["last_tile_state"]["latitude"],
                     tile["last_tile_state"]["longitude"],

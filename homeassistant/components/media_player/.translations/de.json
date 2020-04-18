@@ -7,5 +7,6 @@
             "is_paused": "{entity_name} ist pausiert",
             "is_playing": "{entity_name} spielt"
         }
-    }
+    },
+    "title": "Mediaplayer"
 }

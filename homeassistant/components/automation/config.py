@@ -26,7 +26,7 @@ async def async_validate_config_item(hass, config, full_config=None):
     triggers = []
     for trigger in config[CONF_TRIGGER]:
         trigger_platform = importlib.import_module(
-            "..{}".format(trigger[CONF_PLATFORM]), __name__
+            f"..{trigger[CONF_PLATFORM]}", __name__
         )
         if hasattr(trigger_platform, "async_validate_trigger_config"):
             trigger = await trigger_platform.async_validate_trigger_config(

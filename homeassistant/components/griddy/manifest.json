@@ -1,0 +1,8 @@
+{
+  "domain": "griddy",
+  "name": "Griddy Power",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/griddy",
+  "requirements": ["griddypower==0.1.0"],
+  "codeowners": ["@bdraco"]
+}

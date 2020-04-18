@@ -7,6 +7,7 @@ from homematicip.aio.device import (
     AsyncFullFlushShutter,
     AsyncGarageDoorModuleTormatic,
 )
+from homematicip.aio.group import AsyncExtendedLinkedShutterGroup
 from homematicip.base.enums import DoorCommand, DoorState
 
 from homeassistant.components.cover import (
@@ -18,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericDevice
+from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +42,10 @@ async def async_setup_entry(
             entities.append(HomematicipCoverShutter(hap, device))
         elif isinstance(device, AsyncGarageDoorModuleTormatic):
             entities.append(HomematicipGarageDoorModuleTormatic(hap, device))
+
+    for group in hap.home.groups:
+        if isinstance(group, AsyncExtendedLinkedShutterGroup):
+            entities.append(HomematicipCoverShutterGroup(hap, group))
 
     if entities:
         async_add_entities(entities)
@@ -142,3 +148,12 @@ class HomematicipGarageDoorModuleTormatic(HomematicipGenericDevice, CoverDevice)
     async def async_stop_cover(self, **kwargs) -> None:
         """Stop the cover."""
         await self._device.send_door_command(DoorCommand.STOP)
+
+
+class HomematicipCoverShutterGroup(HomematicipCoverSlats, CoverDevice):
+    """Representation of a HomematicIP Cloud cover shutter group."""
+
+    def __init__(self, hap: HomematicipHAP, device, post: str = "ShutterGroup") -> None:
+        """Initialize switching group."""
+        device.modelType = f"HmIP-{post}"
+        super().__init__(hap, device, post)

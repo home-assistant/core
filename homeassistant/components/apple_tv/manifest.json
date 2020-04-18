@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/apple_tv",
   "requirements": ["pyatv==0.3.13"],
   "dependencies": ["configurator"],
+  "after_dependencies": ["discovery"],
   "codeowners": []
 }

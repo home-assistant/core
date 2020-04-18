@@ -12,5 +12,6 @@
             "turned_off": "{entity_name} blev slukket",
             "turned_on": "{entity_name} blev t\u00e6ndt"
         }
-    }
+    },
+    "title": "Bl\u00e6ser"
 }

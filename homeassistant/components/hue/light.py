@@ -1,5 +1,4 @@
 """Support for the Philips Hue lights."""
-import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
@@ -69,7 +68,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     Can only be called when a user accidentally mentions hue platform in their
     config. But even in that case it would have been ignored.
     """
-    pass
+
+
+def create_light(item_class, coordinator, bridge, is_group, api, item_id):
+    """Create the light."""
+    if is_group:
+        supported_features = 0
+        for light_id in api[item_id].lights:
+            if light_id not in bridge.api.lights:
+                continue
+            light = bridge.api.lights[light_id]
+            supported_features |= SUPPORT_HUE.get(light.type, SUPPORT_HUE_EXTENDED)
+        supported_features = supported_features or SUPPORT_HUE_EXTENDED
+    else:
+        supported_features = SUPPORT_HUE.get(api[item_id].type, SUPPORT_HUE_EXTENDED)
+    return item_class(coordinator, bridge, is_group, api[item_id], supported_features)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -100,16 +113,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         bridge.api.lights,
         {},
         async_add_entities,
-        partial(HueLight, light_coordinator, bridge, False),
+        partial(create_light, HueLight, light_coordinator, bridge, False),
     )
 
     # We add a listener after fetching the data, so manually trigger listener
-    light_coordinator.async_add_listener(update_lights)
+    bridge.reset_jobs.append(light_coordinator.async_add_listener(update_lights))
     update_lights()
-
-    bridge.reset_jobs.append(
-        lambda: light_coordinator.async_remove_listener(update_lights)
-    )
 
     api_version = tuple(int(v) for v in bridge.api.config.apiversion.split("."))
 
@@ -138,27 +147,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         bridge.api.groups,
         {},
         async_add_entities,
-        partial(HueLight, group_coordinator, bridge, True),
+        partial(create_light, HueLight, group_coordinator, bridge, True),
     )
 
-    group_coordinator.async_add_listener(update_groups)
+    bridge.reset_jobs.append(group_coordinator.async_add_listener(update_groups))
     await group_coordinator.async_refresh()
-
-    bridge.reset_jobs.append(
-        lambda: group_coordinator.async_remove_listener(update_groups)
-    )
 
 
 async def async_safe_fetch(bridge, fetch_method):
     """Safely fetch data."""
     try:
         with async_timeout.timeout(4):
-            return await bridge.async_request_call(fetch_method())
+            return await bridge.async_request_call(fetch_method)
     except aiohue.Unauthorized:
         await bridge.handle_unauthorized_error()
-        raise UpdateFailed
-    except (asyncio.TimeoutError, aiohue.AiohueException):
-        raise UpdateFailed
+        raise UpdateFailed("Unauthorized")
+    except (aiohue.AiohueException,) as err:
+        raise UpdateFailed(f"Hue error: {err}")
 
 
 @callback
@@ -170,7 +175,7 @@ def async_update_items(bridge, api, current, async_add_entities, create_item):
         if item_id in current:
             continue
 
-        current[item_id] = create_item(api[item_id])
+        current[item_id] = create_item(api, item_id)
         new_items.append(current[item_id])
 
     bridge.hass.async_create_task(remove_devices(bridge, api, current))
@@ -179,15 +184,26 @@ def async_update_items(bridge, api, current, async_add_entities, create_item):
         async_add_entities(new_items)
 
 
+def hue_brightness_to_hass(value):
+    """Convert hue brightness 1..254 to hass format 0..255."""
+    return min(255, round((value / 254) * 255))
+
+
+def hass_to_hue_brightness(value):
+    """Convert hass brightness 0..255 to hue 1..254 scale."""
+    return max(1, round((value / 255) * 254))
+
+
 class HueLight(Light):
     """Representation of a Hue light."""
 
-    def __init__(self, coordinator, bridge, is_group, light):
+    def __init__(self, coordinator, bridge, is_group, light, supported_features):
         """Initialize the light."""
         self.light = light
         self.coordinator = coordinator
         self.bridge = bridge
         self.is_group = is_group
+        self._supported_features = supported_features
 
         if is_group:
             self.is_osram = False
@@ -239,8 +255,11 @@ class HueLight(Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         if self.is_group:
-            return self.light.action.get("bri")
-        return self.light.state.get("bri")
+            bri = self.light.action.get("bri")
+        else:
+            bri = self.light.state.get("bri")
+
+        return hue_brightness_to_hass(bri)
 
     @property
     def _color_mode(self):
@@ -272,6 +291,22 @@ class HueLight(Light):
         return self.light.state.get("ct")
 
     @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        if self.is_group or "ct" not in self.light.controlcapabilities:
+            return super().min_mireds
+
+        return self.light.controlcapabilities["ct"]["min"]
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        if self.is_group or "ct" not in self.light.controlcapabilities:
+            return super().max_mireds
+
+        return self.light.controlcapabilities["ct"]["max"]
+
+    @property
     def is_on(self):
         """Return true if device is on."""
         if self.is_group:
@@ -290,7 +325,7 @@ class HueLight(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_HUE.get(self.light.type, SUPPORT_HUE_EXTENDED)
+        return self._supported_features
 
     @property
     def effect(self):
@@ -324,11 +359,9 @@ class HueLight(Light):
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
-        self.coordinator.async_add_listener(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """When entity will be removed from hass."""
-        self.coordinator.async_remove_listener(self.async_write_ha_state)
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     async def async_turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
@@ -352,7 +385,7 @@ class HueLight(Light):
             command["ct"] = max(self.min_mireds, min(temp, self.max_mireds))
 
         if ATTR_BRIGHTNESS in kwargs:
-            command["bri"] = kwargs[ATTR_BRIGHTNESS]
+            command["bri"] = hass_to_hue_brightness(kwargs[ATTR_BRIGHTNESS])
 
         flash = kwargs.get(ATTR_FLASH)
 
@@ -376,9 +409,13 @@ class HueLight(Light):
                 command["effect"] = "none"
 
         if self.is_group:
-            await self.bridge.async_request_call(self.light.set_action(**command))
+            await self.bridge.async_request_call(
+                partial(self.light.set_action, **command)
+            )
         else:
-            await self.bridge.async_request_call(self.light.set_state(**command))
+            await self.bridge.async_request_call(
+                partial(self.light.set_state, **command)
+            )
 
         await self.coordinator.async_request_refresh()
 
@@ -401,9 +438,13 @@ class HueLight(Light):
             command["alert"] = "none"
 
         if self.is_group:
-            await self.bridge.async_request_call(self.light.set_action(**command))
+            await self.bridge.async_request_call(
+                partial(self.light.set_action, **command)
+            )
         else:
-            await self.bridge.async_request_call(self.light.set_state(**command))
+            await self.bridge.async_request_call(
+                partial(self.light.set_state, **command)
+            )
 
         await self.coordinator.async_request_refresh()
 

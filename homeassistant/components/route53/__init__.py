@@ -7,7 +7,7 @@ import boto3
 from ipify import exceptions, get_ip
 import voluptuous as vol
 
-from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE
+from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE, HTTP_OK
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 
@@ -118,5 +118,5 @@ def _update_route53(
     )
     _LOGGER.debug("Response is %s", response)
 
-    if response["ResponseMetadata"]["HTTPStatusCode"] != 200:
+    if response["ResponseMetadata"]["HTTPStatusCode"] != HTTP_OK:
         _LOGGER.warning(response)

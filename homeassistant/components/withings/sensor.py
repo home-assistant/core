@@ -6,13 +6,17 @@ from withings_api.common import (
     MeasureGetMeasResponse,
     MeasureGroupAttribs,
     MeasureType,
-    SleepGetResponse,
     SleepGetSummaryResponse,
-    SleepState,
     get_measure_value,
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    MASS_KILOGRAMS,
+    SPEED_METERS_PER_SECOND,
+    TIME_SECONDS,
+    UNIT_PERCENTAGE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.entity import Entity
@@ -67,16 +71,6 @@ class WithingsMeasureAttribute(WithingsAttribute):
     """Model measure attributes."""
 
 
-class WithingsSleepStateAttribute(WithingsAttribute):
-    """Model sleep data attributes."""
-
-    def __init__(
-        self, measurement: str, friendly_name: str, unit_of_measurement: str, icon: str
-    ) -> None:
-        """Initialize sleep state attribute."""
-        super().__init__(measurement, None, friendly_name, unit_of_measurement, icon)
-
-
 class WithingsSleepSummaryAttribute(WithingsAttribute):
     """Models sleep summary attributes."""
 
@@ -86,35 +80,35 @@ WITHINGS_ATTRIBUTES = [
         const.MEAS_WEIGHT_KG,
         MeasureType.WEIGHT,
         "Weight",
-        const.UOM_MASS_KG,
+        MASS_KILOGRAMS,
         "mdi:weight-kilogram",
     ),
     WithingsMeasureAttribute(
         const.MEAS_FAT_MASS_KG,
         MeasureType.FAT_MASS_WEIGHT,
         "Fat Mass",
-        const.UOM_MASS_KG,
+        MASS_KILOGRAMS,
         "mdi:weight-kilogram",
     ),
     WithingsMeasureAttribute(
         const.MEAS_FAT_FREE_MASS_KG,
         MeasureType.FAT_FREE_MASS,
         "Fat Free Mass",
-        const.UOM_MASS_KG,
+        MASS_KILOGRAMS,
         "mdi:weight-kilogram",
     ),
     WithingsMeasureAttribute(
         const.MEAS_MUSCLE_MASS_KG,
         MeasureType.MUSCLE_MASS,
         "Muscle Mass",
-        const.UOM_MASS_KG,
+        MASS_KILOGRAMS,
         "mdi:weight-kilogram",
     ),
     WithingsMeasureAttribute(
         const.MEAS_BONE_MASS_KG,
         MeasureType.BONE_MASS,
         "Bone Mass",
-        const.UOM_MASS_KG,
+        MASS_KILOGRAMS,
         "mdi:weight-kilogram",
     ),
     WithingsMeasureAttribute(
@@ -149,7 +143,7 @@ WITHINGS_ATTRIBUTES = [
         const.MEAS_FAT_RATIO_PCT,
         MeasureType.FAT_RATIO,
         "Fat Ratio",
-        const.UOM_PERCENT,
+        UNIT_PERCENTAGE,
         None,
     ),
     WithingsMeasureAttribute(
@@ -174,51 +168,48 @@ WITHINGS_ATTRIBUTES = [
         "mdi:heart-pulse",
     ),
     WithingsMeasureAttribute(
-        const.MEAS_SPO2_PCT, MeasureType.SP02, "SP02", const.UOM_PERCENT, None
+        const.MEAS_SPO2_PCT, MeasureType.SP02, "SP02", UNIT_PERCENTAGE, None
     ),
     WithingsMeasureAttribute(
         const.MEAS_HYDRATION,
         MeasureType.HYDRATION,
         "Hydration",
-        const.UOM_PERCENT,
+        UNIT_PERCENTAGE,
         "mdi:water",
     ),
     WithingsMeasureAttribute(
         const.MEAS_PWV,
         MeasureType.PULSE_WAVE_VELOCITY,
         "Pulse Wave Velocity",
-        const.UOM_METERS_PER_SECOND,
+        SPEED_METERS_PER_SECOND,
         None,
-    ),
-    WithingsSleepStateAttribute(
-        const.MEAS_SLEEP_STATE, "Sleep state", None, "mdi:sleep"
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_WAKEUP_DURATION_SECONDS,
         GetSleepSummaryField.WAKEUP_DURATION.value,
         "Wakeup time",
-        const.UOM_SECONDS,
+        TIME_SECONDS,
         "mdi:sleep-off",
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_LIGHT_DURATION_SECONDS,
         GetSleepSummaryField.LIGHT_SLEEP_DURATION.value,
         "Light sleep",
-        const.UOM_SECONDS,
+        TIME_SECONDS,
         "mdi:sleep",
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_DEEP_DURATION_SECONDS,
         GetSleepSummaryField.DEEP_SLEEP_DURATION.value,
         "Deep sleep",
-        const.UOM_SECONDS,
+        TIME_SECONDS,
         "mdi:sleep",
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_REM_DURATION_SECONDS,
         GetSleepSummaryField.REM_SLEEP_DURATION.value,
         "REM sleep",
-        const.UOM_SECONDS,
+        TIME_SECONDS,
         "mdi:sleep",
     ),
     WithingsSleepSummaryAttribute(
@@ -232,14 +223,14 @@ WITHINGS_ATTRIBUTES = [
         const.MEAS_SLEEP_TOSLEEP_DURATION_SECONDS,
         GetSleepSummaryField.DURATION_TO_SLEEP.value,
         "Time to sleep",
-        const.UOM_SECONDS,
+        TIME_SECONDS,
         "mdi:sleep",
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_TOWAKEUP_DURATION_SECONDS,
         GetSleepSummaryField.DURATION_TO_WAKEUP.value,
         "Time to wakeup",
-        const.UOM_SECONDS,
+        TIME_SECONDS,
         "mdi:sleep-off",
     ),
     WithingsSleepSummaryAttribute(
@@ -314,8 +305,9 @@ class WithingsHealthSensor(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return "withings_{}_{}_{}".format(
-            self._slug, self._user_id, slugify(self._attribute.measurement)
+        return (
+            f"withings_{self._slug}_{self._user_id}_"
+            f"{slugify(self._attribute.measurement)}"
         )
 
     @property
@@ -352,11 +344,6 @@ class WithingsHealthSensor(Entity):
             await self._data_manager.update_measures()
             await self.async_update_measure(self._data_manager.measures)
 
-        elif isinstance(self._attribute, WithingsSleepStateAttribute):
-            _LOGGER.debug("Updating sleep state")
-            await self._data_manager.update_sleep()
-            await self.async_update_sleep_state(self._data_manager.sleep)
-
         elif isinstance(self._attribute, WithingsSleepSummaryAttribute):
             _LOGGER.debug("Updating sleep summary state")
             await self._data_manager.update_sleep_summary()
@@ -378,27 +365,6 @@ class WithingsHealthSensor(Entity):
             return
 
         self._state = round(value, 2)
-
-    async def async_update_sleep_state(self, data: SleepGetResponse) -> None:
-        """Update the sleep state data."""
-        if not data.series:
-            _LOGGER.debug("No sleep data, setting state to %s", None)
-            self._state = None
-            return
-
-        sorted_series = sorted(data.series, key=lambda serie: serie.startdate)
-        serie = sorted_series[len(sorted_series) - 1]
-        state = None
-        if serie.state == SleepState.AWAKE:
-            state = const.STATE_AWAKE
-        elif serie.state == SleepState.LIGHT:
-            state = const.STATE_LIGHT
-        elif serie.state == SleepState.DEEP:
-            state = const.STATE_DEEP
-        elif serie.state == SleepState.REM:
-            state = const.STATE_REM
-
-        self._state = state
 
     async def async_update_sleep_summary(self, data: SleepGetSummaryResponse) -> None:
         """Update the sleep summary data."""

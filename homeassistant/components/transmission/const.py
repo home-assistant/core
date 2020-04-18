@@ -1,13 +1,16 @@
 """Constants for the Transmission Bittorent Client component."""
+
+from homeassistant.const import DATA_RATE_MEGABYTES_PER_SECOND
+
 DOMAIN = "transmission"
 
 SENSOR_TYPES = {
     "active_torrents": ["Active Torrents", "Torrents"],
     "current_status": ["Status", None],
-    "download_speed": ["Down Speed", "MB/s"],
+    "download_speed": ["Down Speed", DATA_RATE_MEGABYTES_PER_SECOND],
     "paused_torrents": ["Paused Torrents", "Torrents"],
     "total_torrents": ["Total Torrents", "Torrents"],
-    "upload_speed": ["Up Speed", "MB/s"],
+    "upload_speed": ["Up Speed", DATA_RATE_MEGABYTES_PER_SECOND],
     "completed_torrents": ["Completed Torrents", "Torrents"],
     "started_torrents": ["Started Torrents", "Torrents"],
 }

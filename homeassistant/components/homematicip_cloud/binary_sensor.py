@@ -50,6 +50,7 @@ ATTR_ACCELERATION_SENSOR_MODE = "acceleration_sensor_mode"
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
 ATTR_ACCELERATION_SENSOR_SENSITIVITY = "acceleration_sensor_sensitivity"
 ATTR_ACCELERATION_SENSOR_TRIGGER_ANGLE = "acceleration_sensor_trigger_angle"
+ATTR_INTRUSION_ALARM = "intrusion_alarm"
 ATTR_MOISTURE_DETECTED = "moisture_detected"
 ATTR_MOTION_DETECTED = "motion_detected"
 ATTR_POWER_MAINS_FAILURE = "power_mains_failure"
@@ -227,7 +228,12 @@ class HomematicipSmokeDetector(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def is_on(self) -> bool:
         """Return true if smoke is detected."""
-        return self._device.smokeDetectorAlarmType != SmokeDetectorAlarmType.IDLE_OFF
+        if self._device.smokeDetectorAlarmType:
+            return (
+                self._device.smokeDetectorAlarmType
+                == SmokeDetectorAlarmType.PRIMARY_ALARM
+            )
+        return False
 
 
 class HomematicipWaterDetector(HomematicipGenericDevice, BinarySensorDevice):
@@ -417,9 +423,11 @@ class HomematicipSecuritySensorGroup(
         state_attr = super().device_state_attributes
 
         smoke_detector_at = getattr(self._device, "smokeDetectorAlarmType", None)
-        if smoke_detector_at and smoke_detector_at != SmokeDetectorAlarmType.IDLE_OFF:
-            state_attr[ATTR_SMOKE_DETECTOR_ALARM] = str(smoke_detector_at)
-
+        if smoke_detector_at:
+            if smoke_detector_at == SmokeDetectorAlarmType.PRIMARY_ALARM:
+                state_attr[ATTR_SMOKE_DETECTOR_ALARM] = str(smoke_detector_at)
+            if smoke_detector_at == SmokeDetectorAlarmType.INTRUSION_ALARM:
+                state_attr[ATTR_INTRUSION_ALARM] = str(smoke_detector_at)
         return state_attr
 
     @property

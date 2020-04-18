@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Mailgun",
     "step": {
       "user": {
         "title": "Set up the Mailgun Webhook",

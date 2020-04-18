@@ -103,12 +103,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 attribute_templates,
             )
         )
-    if not sensors:
-        _LOGGER.error("No sensors added")
-        return False
 
     async_add_entities(sensors)
-    return True
 
 
 class BinarySensorTemplate(BinarySensorDevice):
@@ -287,7 +283,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         def set_state():
             """Set state of template binary sensor."""
             self._state = state
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         # state without delay
         if (state and not self._delay_on) or (not state and not self._delay_off):

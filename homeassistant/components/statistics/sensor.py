@@ -69,7 +69,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     entity_id = config.get(CONF_ENTITY_ID)
     name = config.get(CONF_NAME)
     sampling_size = config.get(CONF_SAMPLING_SIZE)
-    max_age = config.get(CONF_MAX_AGE, None)
+    max_age = config.get(CONF_MAX_AGE)
     precision = config.get(CONF_PRECISION)
 
     async_add_entities(
@@ -267,7 +267,7 @@ class StatisticsSensor(Entity):
 
                     time_diff = (self.max_age - self.min_age).total_seconds()
                     if time_diff > 0:
-                        self.change_rate = self.average_change / time_diff
+                        self.change_rate = self.change / time_diff
 
                 self.change = round(self.change, self._precision)
                 self.average_change = round(self.average_change, self._precision)

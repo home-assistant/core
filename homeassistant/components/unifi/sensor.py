@@ -2,17 +2,13 @@
 import logging
 
 from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
+from homeassistant.const import DATA_MEGABYTES
 from homeassistant.core import callback
-from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_registry import DISABLED_CONFIG_ENTRY
 
 from .unifi_client import UniFiClient
 
 LOGGER = logging.getLogger(__name__)
-
-ATTR_RECEIVING = "receiving"
-ATTR_TRANSMITTING = "transmitting"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -24,40 +20,57 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     controller = get_controller_from_config_entry(hass, config_entry)
     sensors = {}
 
-    registry = await entity_registry.async_get_registry(hass)
+    option_allow_bandwidth_sensors = controller.option_allow_bandwidth_sensors
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     @callback
-    def update_controller():
+    def items_added():
         """Update the values of the controller."""
+        nonlocal option_allow_bandwidth_sensors
+
+        if not option_allow_bandwidth_sensors:
+            return
+
         add_entities(controller, async_add_entities, sensors)
 
     controller.listeners.append(
-        async_dispatcher_connect(hass, controller.signal_update, update_controller)
+        async_dispatcher_connect(hass, controller.signal_update, items_added)
     )
 
     @callback
-    def update_disable_on_entities():
+    def items_removed(mac_addresses: set) -> None:
+        """Items have been removed from the controller."""
+        remove_entities(controller, mac_addresses, sensors, entity_registry)
+
+    controller.listeners.append(
+        async_dispatcher_connect(hass, controller.signal_remove, items_removed)
+    )
+
+    @callback
+    def options_updated():
         """Update the values of the controller."""
-        for entity in sensors.values():
+        nonlocal option_allow_bandwidth_sensors
 
-            if entity.entity_registry_enabled_default == entity.enabled:
-                continue
+        if option_allow_bandwidth_sensors != controller.option_allow_bandwidth_sensors:
+            option_allow_bandwidth_sensors = controller.option_allow_bandwidth_sensors
 
-            disabled_by = None
-            if not entity.entity_registry_enabled_default and entity.enabled:
-                disabled_by = DISABLED_CONFIG_ENTRY
+            if option_allow_bandwidth_sensors:
+                items_added()
 
-            registry.async_update_entity(
-                entity.registry_entry.entity_id, disabled_by=disabled_by
-            )
+            else:
+                for sensor in sensors.values():
+                    hass.async_create_task(sensor.async_remove())
+
+                sensors.clear()
 
     controller.listeners.append(
         async_dispatcher_connect(
-            hass, controller.signal_options_update, update_disable_on_entities
+            hass, controller.signal_options_update, options_updated
         )
     )
 
-    update_controller()
+    items_added()
 
 
 @callback
@@ -84,20 +97,28 @@ def add_entities(controller, async_add_entities, sensors):
         async_add_entities(new_sensors)
 
 
+@callback
+def remove_entities(controller, mac_addresses, sensors, entity_registry):
+    """Remove select sensor entities."""
+    for mac in mac_addresses:
+
+        for direction in ("rx", "tx"):
+            item_id = f"{direction}-{mac}"
+
+            if item_id not in sensors:
+                continue
+
+            entity = sensors.pop(item_id)
+            controller.hass.async_create_task(entity.async_remove())
+
+
 class UniFiRxBandwidthSensor(UniFiClient):
     """Receiving bandwidth sensor."""
 
     @property
-    def entity_registry_enabled_default(self):
-        """Return if the entity should be enabled when first added to the entity registry."""
-        if self.controller.option_allow_bandwidth_sensors:
-            return True
-        return False
-
-    @property
     def state(self):
         """Return the state of the sensor."""
-        if self.is_wired:
+        if self._is_wired:
             return self.client.wired_rx_bytes / 1000000
         return self.client.raw.get("rx_bytes", 0) / 1000000
 
@@ -112,6 +133,11 @@ class UniFiRxBandwidthSensor(UniFiClient):
         """Return a unique identifier for this bandwidth sensor."""
         return f"rx-{self.client.mac}"
 
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return DATA_MEGABYTES
+
 
 class UniFiTxBandwidthSensor(UniFiRxBandwidthSensor):
     """Transmitting bandwidth sensor."""
@@ -119,7 +145,7 @@ class UniFiTxBandwidthSensor(UniFiRxBandwidthSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.is_wired:
+        if self._is_wired:
             return self.client.wired_tx_bytes / 1000000
         return self.client.raw.get("tx_bytes", 0) / 1000000
 

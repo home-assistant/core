@@ -7,9 +7,8 @@
         "step": {
             "confirm": {
                 "description": "\u00d8nsker du \u00e5 sette opp Google Cast?",
-                "title": "Google Cast"
+                "title": ""
             }
-        },
-        "title": "Google Cast"
+        }
     }
 }

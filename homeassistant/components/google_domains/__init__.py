@@ -18,8 +18,6 @@ INTERVAL = timedelta(minutes=5)
 
 DEFAULT_TIMEOUT = 10
 
-UPDATE_URL = "https://{}:{}@domains.google.com/nic/update"
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -62,7 +60,7 @@ async def async_setup(hass, config):
 
 async def _update_google_domains(hass, session, domain, user, password, timeout):
     """Update Google Domains."""
-    url = UPDATE_URL.format(user, password)
+    url = f"https://{user}:{password}@domains.google.com/nic/update"
 
     params = {"hostname": domain}
 
