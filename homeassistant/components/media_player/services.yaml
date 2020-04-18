@@ -156,3 +156,13 @@ shuffle_set:
     shuffle:
       description: True/false for enabling/disabling shuffle.
       example: true
+
+send_key:
+  description: Send key command to the media player.
+  fields:
+    entity_id:
+      description: Name(s) of entities to which send the key command.
+      example: "media_player.living_room_tv"
+    key:
+      description: The name of the key command to send. Valid values can be found in https://www.home-assistant.io/integrations/media_player#service-media_playersend_key. For integration-specific commands, consult the documentation.
+      example: 'up'

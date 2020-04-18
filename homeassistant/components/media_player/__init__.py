@@ -55,6 +55,7 @@ from .const import (
     ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
+    ATTR_KEY,
     ATTR_MEDIA_ALBUM_ARTIST,
     ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ARTIST,
@@ -82,6 +83,7 @@ from .const import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    SERVICE_SEND_KEY,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -91,6 +93,7 @@ from .const import (
     SUPPORT_SEEK,
     SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
+    SUPPORT_SEND_KEY,
     SUPPORT_SHUFFLE_SET,
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
@@ -322,6 +325,12 @@ async def async_setup(hass, config):
         {vol.Required(ATTR_MEDIA_SHUFFLE): cv.boolean},
         "async_set_shuffle",
         [SUPPORT_SHUFFLE_SET],
+    )
+    component.async_register_entity_service(
+        SERVICE_SEND_KEY,
+        {vol.Required(ATTR_KEY): cv.string},
+        "async_send_key",
+        [SUPPORT_SEND_KEY],
     )
 
     return True
@@ -633,6 +642,14 @@ class MediaPlayerDevice(Entity):
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
         await self.hass.async_add_job(self.set_shuffle, shuffle)
+
+    def send_key(self, key):
+        """Send key command."""
+        raise NotImplementedError()
+
+    async def async_send_key(self, key):
+        """Send key command."""
+        await self.hass.async_add_job(self.send_key, key)
 
     # No need to overwrite these.
     @property
