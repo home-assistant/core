@@ -4,6 +4,7 @@ import logging
 
 import asyncio
 import serial_asyncio
+from serial import SerialException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -91,19 +92,19 @@ class SerialSensor(Entity):
                         _LOGGER.debug("Received: %s", line)
                         self._state = line
                         self.async_write_ha_state()
-                    except Exception as e:
+                    except SerialException as e:
                         self._state = None
                         self._attributes = None
                         self.async_write_ha_state()
-                        _LOGGER.error("Error while reading serial device %s: " + str(e), device)
+                        _LOGGER.exception("Error while reading serial device %s: %s", device, str(e))
                         await asyncio.sleep(5)
                         break
-            except:
+            except SerialException as e:
                 self._state = None
                 self._attributes = None
                 self.async_write_ha_state()
                 if not logged_error:
-                    _LOGGER.exception("Unable to connect to the serial device %s. Retrying...", device)
+                    _LOGGER.exception("Unable to connect to the serial device %s: %s. Retrying...", device, str(e))
                     logged_error = True
                 await asyncio.sleep(5)
 
