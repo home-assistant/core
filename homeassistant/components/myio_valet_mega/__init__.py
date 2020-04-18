@@ -54,6 +54,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up config entry."""
+    _LOGGER.debug(DOMAIN)
     _server_name = slugify(config_entry.data[CONF_NAME])
     _server_status = "Offline"
     hass.data[_server_name] = {}
