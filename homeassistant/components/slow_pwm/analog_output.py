@@ -72,7 +72,7 @@ class SlowPWM(AnalogOutputDevice):
         # Listen for Homeassistant is started (and we can expect that it is safe to switch
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, ha_started)
 
-    async def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
         # Set value in parent instance
         await super().turn_on(**kwargs)
@@ -91,7 +91,7 @@ class SlowPWM(AnalogOutputDevice):
         if self._value > self._config[CONF_UP_THRES]:
             await self._switch_on()
 
-    async def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
         await super().turn_off(**kwargs)
         await self._stop_pwm_cycle()
