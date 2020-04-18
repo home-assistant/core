@@ -423,8 +423,9 @@ class GoogleEntity:
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
             device["customData"] = {
                 "webhookId": self.config.local_sdk_webhook_id,
-                "httpPort": self.hass.config.api.port,
+                "httpPort": self.hass.http.server_port,
                 "httpSSL": self.hass.config.api.use_ssl,
+                "baseUrl": self.hass.config.api.base_url,
                 "proxyDeviceId": agent_user_id,
             }
 
