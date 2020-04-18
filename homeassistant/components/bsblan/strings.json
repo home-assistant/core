@@ -1,6 +1,6 @@
 {
+  "title": "BSB-Lan",
   "config": {
-    "title": "BSB-Lan",
     "flow_title": "BSB-Lan: {name}",
     "step": {
       "user": {
@@ -13,9 +13,7 @@
       }
     },
     "error": {
-      "connection_error": "Failed to connect to BSB-Lan device.",
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error"
+      "connection_error": "Failed to connect to BSB-Lan device."
     },
     "abort": {
       "already_configured": "Device is already configured",

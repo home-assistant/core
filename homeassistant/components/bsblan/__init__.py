@@ -3,7 +3,6 @@ from datetime import timedelta
 import logging
 
 from bsblan import BSBLan, BSBLanConnectionError
-import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -16,7 +15,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DATA_BSBLAN_CLIENT, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=30)
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
