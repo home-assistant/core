@@ -181,9 +181,10 @@ class HomeAccessory(Accessory):
         else:
             battery_state = state.attributes.get(ATTR_BATTERY_LEVEL)
         if self.linked_battery_charging_sensor:
-            battery_charging_state = self.hass.states.get(
-                self.linked_battery_charging_sensor
-            ).state
+            battery_charging_state = (
+                self.hass.states.get(self.linked_battery_charging_sensor).state
+                == STATE_ON
+            )
             async_track_state_change(
                 self.hass,
                 self.linked_battery_charging_sensor,
