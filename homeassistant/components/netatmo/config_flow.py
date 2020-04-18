@@ -105,7 +105,7 @@ class NetatmoOptionsFlowHandler(config_entries.OptionsFlow):
 
             return await self._update_options()
 
-        weather_areas = [area for area in self.options[CONF_WEATHER_AREAS]]
+        weather_areas = list(self.options[CONF_WEATHER_AREAS])
 
         data_schema = vol.Schema(
             {
