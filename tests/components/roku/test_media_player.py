@@ -11,6 +11,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
     SERVICE_PLAY_MEDIA,
+    SERVICE_PLAY_PAUSE,
     SERVICE_SELECT_SOURCE,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PLAY,
