@@ -383,6 +383,9 @@ openerz-api==0.1.0
 # homeassistant.components.shiftr
 paho-mqtt==1.5.0
 
+# homeassistant.components.panasonic_viera
+panasonic_viera==0.3.5
+
 # homeassistant.components.aruba
 # homeassistant.components.cisco_ios
 # homeassistant.components.pandora
@@ -790,7 +793,6 @@ vsure==1.5.4
 # homeassistant.components.vultr
 vultr==0.1.2
 
-# homeassistant.components.panasonic_viera
 # homeassistant.components.wake_on_lan
 wakeonlan==1.1.6
 
