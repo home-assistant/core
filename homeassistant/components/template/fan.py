@@ -25,8 +25,8 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     STATE_OFF,
     STATE_ON,
-    STATE_UNKNOWN,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
