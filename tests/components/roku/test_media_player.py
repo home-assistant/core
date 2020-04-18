@@ -202,21 +202,21 @@ async def test_tv_services(hass: HomeAssistantType, requests_mock: Mocker) -> No
 
     with patch("roku.Roku._post") as remote_mock:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
+            MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: TV_ENTITY_ID}, blocking=True
         )
 
         remote_mock.assert_called_once_with("/keypress/VolumeUp")
 
     with patch("roku.Roku._post") as remote_mock:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_VOLUME_DOWN, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
+            MP_DOMAIN, SERVICE_VOLUME_DOWN, {ATTR_ENTITY_ID: TV_ENTITY_ID}, blocking=True
         )
 
         remote_mock.assert_called_once_with("/keypress/VolumeDown")
 
     with patch("roku.Roku._post") as remote_mock:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_VOLUME_MUTE, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
+            MP_DOMAIN, SERVICE_VOLUME_MUTE, {ATTR_ENTITY_ID: TV_ENTITY_ID}, blocking=True
         )
 
         remote_mock.assert_called_once_with("/keypress/VolumeMute")
