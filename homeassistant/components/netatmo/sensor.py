@@ -18,6 +18,7 @@ from homeassistant.const import (
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import async_entries_for_config_entry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -41,11 +42,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MODULES = "modules"
-CONF_STATION = "station"
-CONF_AREAS = "areas"
-
-DEFAULT_MODE = "avg"
 MODE_TYPES = {True: "max", False: "avg"}
 
 # This is the Netatmo data upload interval in seconds
@@ -124,14 +120,15 @@ NETATMO_DEVICE_TYPES = {
     "HomeCoachData": "home coach",
 }
 
+PUBLIC = "public"
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
     """Set up the Netatmo weather and homecoach platform."""
     auth = hass.data[DOMAIN][entry.entry_id][AUTH]
-
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    device_registry = await hass.helpers.device_registry.async_get_registry()
 
     def find_entities(data):
         """Find all entities."""
@@ -188,17 +185,12 @@ async def async_setup_entry(
                         area[CONF_SHOW_ON_MAP],
                     )
                 )
-        for entity in entities:
-            entity_id = entity_registry.async_get_or_create(
-                DOMAIN, "sensor", entity.unique_id
-            )
-            print("entity", entity.unique_id, ";", entity.entity_id, entity_id)
-            if entity_registry.async_is_registered(entity_id.entity_id):
-                print("entity", entity_id)
-                entity_registry.async_remove(entity_id.entity_id)
-            # hass.async_create_task(entity.async_remove())
 
-        add_entities(entities, async_add_entities)
+        for device in async_entries_for_config_entry(device_registry, entry.entry_id):
+            if device.model == "Public Weather stations":
+                device_registry.async_remove_device(device.id)
+
+        add_entities(entities, async_add_entities, hass)
 
     listeners = []
     listeners.append(
@@ -211,7 +203,7 @@ async def async_setup_entry(
 
 
 @callback
-def add_entities(entities, async_add_entities):
+def add_entities(entities, async_add_entities, hass):
     """Add new sensor entities."""
     async_add_entities(entities)
 
@@ -518,8 +510,8 @@ class NetatmoPublicSensor(Entity):
         self._icon = SENSOR_TYPES[self.type][2]
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
         self._show_on_map = show_on_map
-        self._unique_id = self._name
-        self._module_type = "public"
+        self._unique_id = f"{self._name.replace(' ', '-')}"
+        self._module_type = PUBLIC
 
     @property
     def name(self):
