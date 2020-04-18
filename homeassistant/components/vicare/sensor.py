@@ -57,7 +57,6 @@ SENSOR_TYPES = {
     SENSOR_BOILER_TEMPERATURE: {
         CONF_NAME: "Boiler Temperature",
         CONF_ICON: "mdi:thermometer",
-        CONF_TYPE: DEVICE_CLASS_TEMPERATURE,
         CONF_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         CONF_GETTER: lambda api: api.getBoilerTemperature(),
     },
@@ -65,21 +64,18 @@ SENSOR_TYPES = {
     SENSOR_COMPRESSOR_STARTS: {
         CONF_NAME: "Compressor Starts",
         CONF_ICON: "mdi:counter",
-        CONF_TYPE: None,
         CONF_UNIT_OF_MEASUREMENT: None,
         CONF_GETTER: lambda api: api.getCompressorStarts(),
     },
     SENSOR_COMPRESSOR_HOURS: {
         CONF_NAME: "Compressor Hours",
         CONF_ICON: "mdi:counter",
-        CONF_TYPE: None,
         CONF_UNIT_OF_MEASUREMENT: None,
         CONF_GETTER: lambda api: api.getCompressorHours(),
     },
     SENSOR_RETURN_TEMPERATURE: {
         CONF_NAME: "Return Temperature",
         CONF_ICON: "mdi:thermometer",
-        CONF_TYPE: DEVICE_CLASS_TEMPERATURE,
         CONF_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
         CONF_GETTER: lambda api: api.getReturnTemperature(),
     },
@@ -87,7 +83,7 @@ SENSOR_TYPES = {
 
 SENSORS_GENERIC = [SENSOR_OUTSIDE_TEMPERATURE, SENSOR_SUPPLY_TEMPERATURE]
 
-SENSORS_BY_TYPE = {
+SENSORS_BY_HEATINGTYPE = {
     HeatingType.gas: [
         SENSOR_BOILER_TEMPERATURE
     ],  # TODO: add additional gas sensors (consumption, etc.)
@@ -97,6 +93,7 @@ SENSORS_BY_TYPE = {
         SENSOR_RETURN_TEMPERATURE,
     ],
 }
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the ViCare sensor devices."""
@@ -109,7 +106,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = SENSORS_GENERIC
 
     if heating_type != HeatingType.generic:
-        sensors.extend(SENSORS_BY_TYPE[heating_type])
+        sensors.extend(SENSORS_BY_HEATINGTYPE[heating_type])
 
     add_entities(
         [
@@ -117,6 +114,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             for sensor in sensors
         ]
     )
+
 
 class ViCareSensor(Entity):
     """Representation of a ViCare sensor."""
