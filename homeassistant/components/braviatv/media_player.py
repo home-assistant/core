@@ -214,9 +214,6 @@ class BraviaTVDevice(MediaPlayerDevice):
         playing_info = await self.hass.async_add_executor_job(
             self._braviarc.get_playing_info
         )
-        if not playing_info:
-            self._channel_name = "App"
-            playing_info = {}
         self._program_name = playing_info.get("programTitle")
         self._channel_name = playing_info.get("title")
         self._program_media_type = playing_info.get("programMediaType")
@@ -225,6 +222,8 @@ class BraviaTVDevice(MediaPlayerDevice):
         self._source = self._get_source()
         self._duration = playing_info.get("durationSec")
         self._start_date_time = playing_info.get("startDateTime")
+        if not playing_info:
+            self._channel_name = "App"
 
     @property
     def name(self):
