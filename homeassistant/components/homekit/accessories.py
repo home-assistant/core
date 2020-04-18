@@ -242,12 +242,12 @@ class HomeAccessory(Accessory):
             self.update_battery, None, new_state.state == STATE_ON
         )
 
-    def update_battery(self, battery_level_state, battery_charging_state):
+    def update_battery(self, battery_level, battery_charging):
         """Update battery service if available.
 
         Only call this function if self._support_battery_level is True.
         """
-        battery_level = convert_to_float(battery_level_state)
+        battery_level = convert_to_float(battery_level)
         if battery_level is not None:
             if self._char_battery.value != battery_level:
                 self._char_battery.set_value(battery_level)
@@ -258,10 +258,10 @@ class HomeAccessory(Accessory):
                     "%s: Updated battery level to %d", self.entity_id, battery_level
                 )
 
-        if battery_charging_state is None:
+        if battery_charging is None:
             return
 
-        hk_charging = HK_CHARGING if battery_charging_state else HK_NOT_CHARGING
+        hk_charging = HK_CHARGING if battery_charging else HK_NOT_CHARGING
         if self._char_charging.value != hk_charging:
             self._char_charging.set_value(hk_charging)
             _LOGGER.debug(
