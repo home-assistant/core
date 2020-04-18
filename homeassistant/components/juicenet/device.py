@@ -15,7 +15,7 @@ class JuiceNetApi:
         self._devices = []
 
     def setup(self, hass):
-        """JuiceNet device setup."""
+        """JuiceNet device setup."""  # noqa: D403
         self._devices = self.api.get_devices()
 
     @property

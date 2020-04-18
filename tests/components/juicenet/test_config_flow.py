@@ -3,7 +3,6 @@ from asynctest import patch
 from asynctest.mock import MagicMock
 
 from homeassistant import config_entries, setup
-from homeassistant.components.juicenet.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.juicenet.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
 

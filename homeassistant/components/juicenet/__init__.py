@@ -10,7 +10,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, EXCEPTIONS
 
@@ -56,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         await hass.async_add_executor_job(juicenet.setup, hass)
     except EXCEPTIONS as error:
-        _LOGGER.error("Could not reach the JuiceNet API")
+        _LOGGER.error("Could not reach the JuiceNet API %s", error)
         raise ConfigEntryNotReady
 
     if not juicenet.devices:

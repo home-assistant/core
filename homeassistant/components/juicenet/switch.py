@@ -11,6 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the JuiceNet switches."""
     entities = []
     for device in hass.data[DOMAIN][config_entry.entry_id].devices:
         entities.append(JuiceNetChargeNowSwitch(device, hass))
