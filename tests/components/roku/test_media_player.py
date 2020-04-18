@@ -88,7 +88,11 @@ async def test_supported_features(
         == state.attributes.get("supported_features")
     )
 
-    # Features supported for Rokus
+
+async def test_tv_supported_features(
+    hass: HomeAssistantType, requests_mock: Mocker
+) -> None:
+    """Test supported features for Roku TV."""
     await setup_integration(
         hass,
         requests_mock,
