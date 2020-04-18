@@ -19,6 +19,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumDevice,
 )
+from homeassistant.helpers.entity import Entity
 
 from . import roomba_reported_state
 from .const import DOMAIN
@@ -55,18 +56,17 @@ STATE_MAP = {
 }
 
 
-class IRobotBase(StateVacuumDevice):
-    """Base class for iRobot robots."""
+class IRobotEntity(Entity):
+    """Base class for iRobot Entities."""
 
     def __init__(self, roomba, blid):
-        """Initialize the Roomba handler."""
+        """Initialize the iRobot handler."""
         self.vacuum = roomba
-        self.vacuum_state = roomba_reported_state(roomba)
         self._blid = blid
-        self._name = self.vacuum_state.get("name")
-        self._version = self.vacuum_state.get("softwareVer")
-        self._sku = self.vacuum_state.get("sku")
-        self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
+        vacuum_state = roomba_reported_state(roomba)
+        self._name = vacuum_state.get("name")
+        self._version = vacuum_state.get("softwareVer")
+        self._sku = vacuum_state.get("sku")
 
     @property
     def should_poll(self):
@@ -74,20 +74,43 @@ class IRobotBase(StateVacuumDevice):
         return False
 
     @property
-    def unique_id(self):
+    def robot_unique_id(self):
         """Return the uniqueid of the vacuum cleaner."""
         return f"roomba_{self._blid}"
+
+    @property
+    def unique_id(self):
+        """Return the uniqueid of the vacuum cleaner."""
+        return self.robot_unique_id
 
     @property
     def device_info(self):
         """Return the device info of the vacuum cleaner."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
+            "identifiers": {(DOMAIN, self.robot_unique_id)},
             "manufacturer": "iRobot",
             "name": str(self._name),
             "sw_version": self._version,
             "model": self._sku,
         }
+
+    def register_callback(self):
+        """Register callback function."""
+        self.vacuum.register_on_message_callback(self.on_message)
+
+    def on_message(self, json_data):
+        """Update state on message change."""
+        self.schedule_update_ha_state()
+
+
+class IRobotVacuum(IRobotEntity, StateVacuumDevice):
+    """Base class for iRobot robots."""
+
+    def __init__(self, roomba, blid):
+        """Initialize the iRobot handler."""
+        super().__init__(roomba, blid)
+        self.vacuum_state = roomba_reported_state(roomba)
+        self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
 
     @property
     def supported_features(self):
@@ -180,10 +203,6 @@ class IRobotBase(StateVacuumDevice):
             state_attrs[ATTR_POSITION] = position
 
         return state_attrs
-
-    def register_callback(self):
-        """Register callback function."""
-        self.vacuum.register_on_message_callback(self.on_message)
 
     def on_message(self, json_data):
         """Update state on message change."""

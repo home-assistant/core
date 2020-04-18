@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.vacuum import SUPPORT_FAN_SPEED
 
-from .irobot_base import SUPPORT_IROBOT, IRobotBase
+from .irobot_base import SUPPORT_IROBOT, IRobotVacuum
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ BRAAVA_SPRAY_AMOUNT = [1, 2, 3]
 SUPPORT_BRAAVA = SUPPORT_IROBOT | SUPPORT_FAN_SPEED
 
 
-class BraavaJet(IRobotBase):
+class BraavaJet(IRobotVacuum):
     """Braava Jet."""
 
     def __init__(self, roomba, blid):

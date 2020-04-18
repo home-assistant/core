@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.vacuum import SUPPORT_FAN_SPEED
 
-from .irobot_base import SUPPORT_IROBOT, IRobotBase
+from .irobot_base import SUPPORT_IROBOT, IRobotVacuum
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ FAN_SPEEDS = [FAN_SPEED_AUTOMATIC, FAN_SPEED_ECO, FAN_SPEED_PERFORMANCE]
 SUPPORT_ROOMBA_CARPET_BOOST = SUPPORT_IROBOT | SUPPORT_FAN_SPEED
 
 
-class RoombaVacuum(IRobotBase):
+class RoombaVacuum(IRobotVacuum):
     """Basic Roomba robot (without carpet boost)."""
 
     @property

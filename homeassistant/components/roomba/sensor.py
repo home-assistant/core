@@ -2,10 +2,10 @@
 import logging
 
 from homeassistant.const import DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
-from homeassistant.helpers.entity import Entity
 
 from . import roomba_reported_state
 from .const import BLID, DOMAIN, ROOMBA_SESSION
+from .irobot_base import IRobotEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,21 +20,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([roomba_vac], True)
 
 
-class RoombaBattery(Entity):
+class RoombaBattery(IRobotEntity):
     """Class to hold Roomba Sensor basic info."""
-
-    def __init__(self, roomba, blid):
-        """Initialize the sensor object."""
-        self.vacuum = roomba
-        vacuum_state = roomba_reported_state(roomba)
-        self._blid = blid
-        self._name = vacuum_state.get("name")
-        self._identifier = f"roomba_{self._blid}"
-
-    @property
-    def should_poll(self):
-        """Disable polling."""
-        return False
 
     @property
     def name(self):
@@ -62,19 +49,3 @@ class RoombaBattery(Entity):
         battery_level = roomba_reported_state(self.vacuum).get("batPct")
         _LOGGER.debug("Update battery level status from the vacuum: %s", battery_level)
         return battery_level
-
-    @property
-    def device_info(self):
-        """Return the device info of the vacuum cleaner."""
-        return {
-            "identifiers": {(DOMAIN, self._identifier)},
-            "name": str(self._name),
-        }
-
-    def register_callback(self):
-        """Register callback function."""
-        self.vacuum.register_on_message_callback(self.on_message)
-
-    def on_message(self, json_data):
-        """Update state on message change."""
-        self.schedule_update_ha_state()
