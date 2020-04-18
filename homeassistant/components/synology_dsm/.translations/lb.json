@@ -4,8 +4,7 @@
             "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "error": {
-            "login": "Feeler beim Login: iwwerpr\u00e9if de Benotzernumm & Passwuert",
-            "unknown": "Onbekannte Feeler: prob\u00e9ier sp\u00e9ider nach emol oder mat enger aner Konfiguratioun"
+            "login": "Feeler beim Login: iwwerpr\u00e9if de Benotzernumm & Passwuert"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {

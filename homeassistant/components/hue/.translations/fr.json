@@ -26,5 +26,11 @@
                 "title": "Hub de liaison"
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "double_buttons_1_3": "Premier et troisi\u00e8me boutons",
+            "double_buttons_2_4": "Deuxi\u00e8me et quatri\u00e8me boutons"
+        }
     }
 }

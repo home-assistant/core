@@ -17,15 +17,18 @@
                 "description": "Do you want to configure Home Assistant to connect to the deCONZ gateway provided by the Hass.io add-on {addon}?",
                 "title": "deCONZ Zigbee gateway via Hass.io add-on"
             },
-            "user": {
-                "data": {
-                    "host": "Select discovered deCONZ gateway"
-                },
-                "title": "Select deCONZ gateway"
+            "init": {
+                "title": "Define deCONZ gateway"
             },
             "link": {
                 "description": "Unlock your deCONZ gateway to register with Home Assistant.\n\n1. Go to deCONZ Settings -> Gateway -> Advanced\n2. Press \"Authenticate app\" button",
                 "title": "Link with deCONZ"
+            },
+            "manual_confirm": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
             },
             "manual_input": {
                 "data": {
@@ -33,6 +36,12 @@
                     "port": "Port"
                 },
                 "title": "Configure deCONZ gateway"
+            },
+            "user": {
+                "data": {
+                    "host": "Select discovered deCONZ gateway"
+                },
+                "title": "Select deCONZ gateway"
             }
         }
     },

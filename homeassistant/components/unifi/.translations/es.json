@@ -37,6 +37,7 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Tiempo en segundos desde la \u00faltima vez que se vio hasta considerarlo desconectado",
+                    "ignore_wired_bug": "Desactivar la l\u00f3gica para el bug cableado de UniFi",
                     "ssid_filter": "Seleccione los SSIDs para realizar seguimiento de clientes inal\u00e1mbricos",
                     "track_clients": "Seguimiento de los clientes de red",
                     "track_devices": "Rastree dispositivos de red (dispositivos Ubiquiti)",

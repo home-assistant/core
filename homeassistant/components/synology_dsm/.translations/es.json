@@ -4,8 +4,7 @@
             "already_configured": "El host ya est\u00e1 configurado."
         },
         "error": {
-            "login": "Error de inicio de sesi\u00f3n: comprueba tu nombre de usuario y contrase\u00f1a",
-            "unknown": "Error desconocido: por favor vuelve a intentarlo m\u00e1s tarde o usa otra configuraci\u00f3n"
+            "login": "Error de inicio de sesi\u00f3n: comprueba tu nombre de usuario y contrase\u00f1a"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {

@@ -1,10 +1,9 @@
 {
     "config": {
         "step": {
-            "manual_confirm": {
+            "user": {
                 "data": {
-                    "host": "",
-                    "port": ""
+                    "port": "Porta (opcional)"
                 }
             }
         }

@@ -37,6 +37,7 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "\u6700\u7d42\u51fa\u73fe\u5f8c\u8996\u70ba\u96e2\u958b\u7684\u6642\u9593\uff08\u4ee5\u79d2\u70ba\u55ae\u4f4d\uff09",
+                    "ignore_wired_bug": "\u95dc\u9589 UniFi \u6709\u7dda\u932f\u8aa4\u908f\u8f2f",
                     "ssid_filter": "\u9078\u64c7\u6240\u8981\u8ffd\u8e64\u7684\u7121\u7dda\u7db2\u8def",
                     "track_clients": "\u8ffd\u8e64\u7db2\u8def\u5ba2\u6236\u7aef",
                     "track_devices": "\u8ffd\u8e64\u7db2\u8def\u8a2d\u5099\uff08Ubiquiti \u8a2d\u5099\uff09",

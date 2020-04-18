@@ -4,8 +4,7 @@
             "already_configured": "Host bereits konfiguriert"
         },
         "error": {
-            "login": "Login-Fehler: Bitte \u00fcberpr\u00fcfen Sie Ihren Benutzernamen & Passwort",
-            "unknown": "Unbekannter Fehler: Bitte versuchen Sie es sp\u00e4ter noch einmal oder eine andere Konfiguration"
+            "login": "Login-Fehler: Bitte \u00fcberpr\u00fcfen Sie Ihren Benutzernamen & Passwort"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {

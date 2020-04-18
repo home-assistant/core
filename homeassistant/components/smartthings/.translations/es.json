@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "invalid_webhook_url": "Home Assistant no est\u00e1 configurado correctamente para recibir actualizaciones de SmartThings. La URL del webhook no es v\u00e1lida: \n > {webhook_url} \n\n Actualiza tu configuraci\u00f3n seg\u00fan las [instrucciones]({component_url}), reinicia Home Assistant e int\u00e9ntalo de nuevo.",
+            "no_available_locations": "No hay Ubicaciones SmartThings disponibles para configurar en Home Assistant."
+        },
         "error": {
             "app_setup_error": "No se pudo configurar el SmartApp.  Por favor, int\u00e9ntelo de nuevo.",
             "token_forbidden": "El token no tiene los \u00e1mbitos de OAuth necesarios.",
@@ -8,6 +12,23 @@
             "webhook_error": "SmartThings no ha podido validar el endpoint configurado en 'base_url'. Por favor, revisa los requisitos del componente."
         },
         "step": {
+            "authorize": {
+                "title": "Autorizar a Home Assistant"
+            },
+            "pat": {
+                "data": {
+                    "access_token": "Token de acceso"
+                },
+                "description": "Por favor, introduce un [token de acceso personal]({token_url}) de SmartThings creado seg\u00fan las [instrucciones]({component_url}). Se usar\u00e1 para crear la integraci\u00f3n de Home Assistant en tu cuenta de SmartThings.",
+                "title": "Introduce el token de acceso personal"
+            },
+            "select_location": {
+                "data": {
+                    "location_id": "Ubicaci\u00f3n"
+                },
+                "description": "Selecciona la Ubicaci\u00f3n SmartThings que quieres a\u00f1adir a Home Assistant. Se abrir\u00e1 una nueva ventana que te pedir\u00e1 que inicies sesi\u00f3n y autorices la instalaci\u00f3n de la integraci\u00f3n de Home Assistant en la ubicaci\u00f3n seleccionada.",
+                "title": "Seleccionar Ubicaci\u00f3n"
+            },
             "user": {
                 "description": "Por favor, introduce el [token de acceso personal]({token_url}) de SmartThings que se haya creado seg\u00fan las [instrucciones]({component_url}).",
                 "title": "Introduce el token de acceso personal"
