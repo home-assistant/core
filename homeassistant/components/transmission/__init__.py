@@ -355,8 +355,8 @@ class TransmissionData:
         actual_torrents = self.torrents
         actual_all_torrents = [var.name for var in actual_torrents]
 
-        tmp_all_torrents = list(set(self.all_torrents).difference(actual_all_torrents))
-        for var in tmp_all_torrents:
+        removed_torrents = list(set(self.all_torrents).difference(actual_all_torrents))
+        for var in removed_torrents:
             self.hass.bus.fire(EVENT_REMOVED_TORRENT, {"name": var})
         self.all_torrents = actual_all_torrents
 
