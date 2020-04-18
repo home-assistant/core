@@ -4,8 +4,7 @@
             "already_configured": "L'amfitri\u00f3 ja est\u00e0 configurat"
         },
         "error": {
-            "login": "Error d\u2019inici de sessi\u00f3: comprova el nom d'usuari i la contrasenya",
-            "unknown": "Error desconegut: torna-ho a provar m\u00e9s tard o revisa la configuraci\u00f3"
+            "login": "Error d\u2019inici de sessi\u00f3: comprova el nom d'usuari i la contrasenya"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {

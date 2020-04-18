@@ -18,15 +18,17 @@
                 "title": "deCONZ Zigbee Gateway via Hass.io add-on"
             },
             "init": {
-                "data": {
-                    "host": "Host",
-                    "port": "Poort"
-                },
                 "title": "Definieer deCONZ gateway"
             },
             "link": {
                 "description": "Ontgrendel je deCONZ gateway om te registreren met Home Assistant.\n\n1. Ga naar deCONZ systeeminstellingen (Instellingen -> Gateway -> Geavanceerd)\n2. Druk op de knop \"Gateway ontgrendelen\"",
                 "title": "Koppel met deCONZ"
+            },
+            "manual_confirm": {
+                "data": {
+                    "host": "Host",
+                    "port": "Poort"
+                }
             }
         }
     },

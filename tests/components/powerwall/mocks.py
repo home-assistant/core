@@ -36,6 +36,7 @@ async def _mock_powerwall_with_fixtures(hass):
         grid_status=GridStatus.CONNECTED,
         status=PowerwallStatusResponse(status),
         device_type=DeviceType(device_type["device_type"]),
+        serial_numbers=["TG0123456789AB", "TG9876543210BA"],
     )
 
 
@@ -47,6 +48,7 @@ def _mock_powerwall_return_value(
     grid_status=None,
     status=None,
     device_type=None,
+    serial_numbers=None,
 ):
     powerwall_mock = MagicMock(Powerwall("1.2.3.4"))
     powerwall_mock.get_site_info = Mock(return_value=site_info)
@@ -56,6 +58,7 @@ def _mock_powerwall_return_value(
     powerwall_mock.get_grid_status = Mock(return_value=grid_status)
     powerwall_mock.get_status = Mock(return_value=status)
     powerwall_mock.get_device_type = Mock(return_value=device_type)
+    powerwall_mock.get_serial_numbers = Mock(return_value=serial_numbers)
 
     return powerwall_mock
 

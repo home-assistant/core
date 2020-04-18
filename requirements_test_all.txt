@@ -359,7 +359,7 @@ nessclient==0.9.15
 netdisco==2.6.0
 
 # homeassistant.components.nexia
-nexia==0.9.1
+nexia==0.9.2
 
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.0.10
@@ -382,6 +382,9 @@ openerz-api==0.1.0
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
 paho-mqtt==1.5.0
+
+# homeassistant.components.panasonic_viera
+panasonic_viera==0.3.5
 
 # homeassistant.components.aruba
 # homeassistant.components.cisco_ios
@@ -600,10 +603,6 @@ pyps4-2ndscreen==1.0.7
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
 
-# homeassistant.components.modbus
-# homeassistant.components.serial
-pyserial-asyncio==0.4
-
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.2.4
 
@@ -641,7 +640,7 @@ python-miio==0.5.0.1
 python-nest==4.1.0
 
 # homeassistant.components.synology_dsm
-python-synology==0.5.0
+python-synology==0.6.0
 
 # homeassistant.components.tado
 python-tado==0.6.0
@@ -756,10 +755,10 @@ sunwatcher==0.2.1
 tellduslive==0.10.10
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.2.3
+tesla-powerwall==0.2.5
 
 # homeassistant.components.tesla
-teslajsonpy==0.7.0
+teslajsonpy==0.8.0
 
 # homeassistant.components.toon
 toonapilib==3.2.4
@@ -794,7 +793,6 @@ vsure==1.5.4
 # homeassistant.components.vultr
 vultr==0.1.2
 
-# homeassistant.components.panasonic_viera
 # homeassistant.components.wake_on_lan
 wakeonlan==1.1.6
 
@@ -822,7 +820,7 @@ ya_ma==0.3.8
 yahooweather==0.10
 
 # homeassistant.components.zeroconf
-zeroconf==0.25.0
+zeroconf==0.25.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.38

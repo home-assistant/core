@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "Host is al geconfigureerd."
         },
-        "error": {
-            "unknown": "Onbekende fout: probeer het later opnieuw of een andere configuratie"
-        },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
             "link": {

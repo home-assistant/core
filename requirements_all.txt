@@ -924,7 +924,7 @@ netdisco==2.6.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==0.9.1
+nexia==0.9.2
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -1000,7 +1000,7 @@ paho-mqtt==1.5.0
 panacotta==0.1
 
 # homeassistant.components.panasonic_viera
-panasonic_viera==0.3.2
+panasonic_viera==0.3.5
 
 # homeassistant.components.pcal9535a
 pcal9535a==0.7
@@ -1531,7 +1531,6 @@ pysdcp==1
 # homeassistant.components.sensibo
 pysensibo==1.0.3
 
-# homeassistant.components.modbus
 # homeassistant.components.serial
 pyserial-asyncio==0.4
 
@@ -1674,7 +1673,7 @@ python-sochain-api==0.0.2
 python-songpal==0.11.2
 
 # homeassistant.components.synology_dsm
-python-synology==0.5.0
+python-synology==0.6.0
 
 # homeassistant.components.tado
 python-tado==0.6.0
@@ -2020,10 +2019,10 @@ temperusb==1.5.3
 # tensorflow==1.13.2
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.2.3
+tesla-powerwall==0.2.5
 
 # homeassistant.components.tesla
-teslajsonpy==0.7.0
+teslajsonpy==0.8.0
 
 # homeassistant.components.thermoworks_smoke
 thermoworks_smoke==0.1.8
@@ -2106,7 +2105,6 @@ vtjp==0.1.14
 # homeassistant.components.vultr
 vultr==0.1.2
 
-# homeassistant.components.panasonic_viera
 # homeassistant.components.wake_on_lan
 wakeonlan==1.1.6
 
@@ -2182,7 +2180,7 @@ youtube_dl==2020.03.24
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.25.0
+zeroconf==0.25.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.38

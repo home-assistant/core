@@ -51,7 +51,7 @@ _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
 
 
 @bind_hass
-def attach(hass, obj):
+def attach(hass: HomeAssistantType, obj: Any) -> None:
     """Recursively attach hass to all template instances in list and dict."""
     if isinstance(obj, list):
         for child in obj:
@@ -63,7 +63,7 @@ def attach(hass, obj):
         obj.hass = hass
 
 
-def render_complex(value, variables=None):
+def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
     """Recursive template creator helper function."""
     if isinstance(value, list):
         return [render_complex(item, variables) for item in value]
@@ -307,11 +307,11 @@ class Template:
             and self.hass == other.hass
         )
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Hash code for template."""
         return hash(self.template)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Representation of Template."""
         return 'Template("' + self.template + '")'
 
@@ -333,7 +333,7 @@ class AllStates:
             raise TemplateError(f"Invalid domain name '{name}'")
         return DomainStates(self._hass, name)
 
-    def _collect_all(self):
+    def _collect_all(self) -> None:
         render_info = self._hass.data.get(_RENDER_INFO)
         if render_info is not None:
             # pylint: disable=protected-access
@@ -349,7 +349,7 @@ class AllStates:
             )
         )
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return number of states."""
         self._collect_all()
         return len(self._hass.states.async_entity_ids())
@@ -359,7 +359,7 @@ class AllStates:
         state = _get_state(self._hass, entity_id)
         return STATE_UNKNOWN if state is None else state.state
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Representation of All States."""
         return "<template AllStates>"
 
@@ -455,19 +455,21 @@ class TemplateState(State):
         return f"<template {rep[1:]}"
 
 
-def _collect_state(hass, entity_id):
+def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
     entity_collect = hass.data.get(_RENDER_INFO)
     if entity_collect is not None:
         # pylint: disable=protected-access
         entity_collect._entities.append(entity_id)
 
 
-def _wrap_state(hass, state):
+def _wrap_state(
+    hass: HomeAssistantType, state: Optional[State]
+) -> Optional[TemplateState]:
     """Wrap a state."""
     return None if state is None else TemplateState(hass, state)
 
 
-def _get_state(hass, entity_id):
+def _get_state(hass: HomeAssistantType, entity_id: str) -> Optional[TemplateState]:
     state = hass.states.get(entity_id)
     if state is None:
         # Only need to collect if none, if not none collect first actual
@@ -477,7 +479,9 @@ def _get_state(hass, entity_id):
     return _wrap_state(hass, state)
 
 
-def _resolve_state(hass, entity_id_or_state):
+def _resolve_state(
+    hass: HomeAssistantType, entity_id_or_state: Any
+) -> Union[State, TemplateState, None]:
     """Return state or entity_id if given."""
     if isinstance(entity_id_or_state, State):
         return entity_id_or_state

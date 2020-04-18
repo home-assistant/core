@@ -4,8 +4,7 @@
             "already_configured": "Host gi\u00e0 configurato"
         },
         "error": {
-            "login": "Errore di accesso: si prega di controllare il nome utente e la password",
-            "unknown": "Errore sconosciuto: riprovare pi\u00f9 tardi o un'altra configurazione"
+            "login": "Errore di accesso: si prega di controllare il nome utente e la password"
         },
         "flow_title": "Synology DSM {nome} ({host})",
         "step": {

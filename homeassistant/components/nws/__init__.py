@@ -3,7 +3,6 @@ import asyncio
 import datetime
 import logging
 
-import aiohttp
 from pynws import SimpleNWS
 import voluptuous as vol
 
@@ -12,10 +11,16 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_STATION, DOMAIN
+from .const import (
+    CONF_STATION,
+    COORDINATOR_FORECAST,
+    COORDINATOR_FORECAST_HOURLY,
+    COORDINATOR_OBSERVATION,
+    DOMAIN,
+    NWS_DATA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,11 +51,6 @@ def base_unique_id(latitude, longitude):
     return f"{latitude}_{longitude}"
 
 
-def signal_unique_id(latitude, longitude):
-    """Return unique id for signaling to entries in configuration from component."""
-    return f"{DOMAIN}_{base_unique_id(latitude,longitude)}"
-
-
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the National Weather Service (NWS) component."""
     hass.data.setdefault(DOMAIN, {})
@@ -66,14 +66,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     client_session = async_get_clientsession(hass)
 
-    nws_data = NwsData(hass, latitude, longitude, api_key, client_session)
-    hass.data[DOMAIN][entry.entry_id] = nws_data
+    # set_station only does IO when station is None
+    nws_data = SimpleNWS(latitude, longitude, api_key, client_session)
+    await nws_data.set_station(station)
 
-    # async_set_station only does IO when station is None
-    await nws_data.async_set_station(station)
-    await nws_data.async_update()
+    coordinator_observation = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"NWS observation station {station}",
+        update_method=nws_data.update_observation,
+        update_interval=DEFAULT_SCAN_INTERVAL,
+    )
 
-    async_track_time_interval(hass, nws_data.async_update, DEFAULT_SCAN_INTERVAL)
+    coordinator_forecast = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"NWS forecast station {station}",
+        update_method=nws_data.update_forecast,
+        update_interval=DEFAULT_SCAN_INTERVAL,
+    )
+
+    coordinator_forecast_hourly = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"NWS forecast hourly station {station}",
+        update_method=nws_data.update_forecast_hourly,
+        update_interval=DEFAULT_SCAN_INTERVAL,
+    )
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        NWS_DATA: nws_data,
+        COORDINATOR_OBSERVATION: coordinator_observation,
+        COORDINATOR_FORECAST: coordinator_forecast,
+        COORDINATOR_FORECAST_HOURLY: coordinator_forecast_hourly,
+    }
+
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator_observation.async_refresh()
+    await coordinator_forecast.async_refresh()
+    await coordinator_forecast_hourly.async_refresh()
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -97,99 +128,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         if len(hass.data[DOMAIN]) == 0:
             hass.data.pop(DOMAIN)
     return unload_ok
-
-
-class NwsData:
-    """Data class for National Weather Service integration."""
-
-    def __init__(self, hass, latitude, longitude, api_key, websession):
-        """Initialize the data."""
-        self.hass = hass
-        self.latitude = latitude
-        self.longitude = longitude
-        ha_api_key = f"{api_key} homeassistant"
-        self.nws = SimpleNWS(latitude, longitude, ha_api_key, websession)
-
-        self.update_observation_success = True
-        self.update_forecast_success = True
-        self.update_forecast_hourly_success = True
-
-    async def async_set_station(self, station):
-        """
-        Set to desired station.
-
-        If None, nearest station is used.
-        """
-        await self.nws.set_station(station)
-        _LOGGER.debug("Nearby station list: %s", self.nws.stations)
-
-    @property
-    def station(self):
-        """Return station name."""
-        return self.nws.station
-
-    @property
-    def observation(self):
-        """Return observation."""
-        return self.nws.observation
-
-    @property
-    def forecast(self):
-        """Return day+night forecast."""
-        return self.nws.forecast
-
-    @property
-    def forecast_hourly(self):
-        """Return hourly forecast."""
-        return self.nws.forecast_hourly
-
-    @staticmethod
-    async def _async_update_item(
-        update_call, update_type, station_name, previous_success
-    ):
-        """Update item and handle logging."""
-        try:
-            _LOGGER.debug("Updating %s for station %s", update_type, station_name)
-            await update_call()
-
-            if not previous_success:
-                _LOGGER.warning(
-                    "Success updating %s for station %s", update_type, station_name
-                )
-            success = True
-        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
-            if previous_success:
-                _LOGGER.warning(
-                    "Error updating %s for station %s: %s",
-                    update_type,
-                    station_name,
-                    err,
-                )
-            success = False
-        return success
-
-    async def async_update(self, now=None):
-        """Update all data."""
-
-        self.update_observation_success = await self._async_update_item(
-            self.nws.update_observation,
-            "observation",
-            self.station,
-            self.update_observation_success,
-        )
-        self.update_forecast_success = await self._async_update_item(
-            self.nws.update_forecast,
-            "forecast",
-            self.station,
-            self.update_forecast_success,
-        )
-        self.update_forecast_hourly_success = await self._async_update_item(
-            self.nws.update_forecast_hourly,
-            "forecast_hourly",
-            self.station,
-            self.update_forecast_hourly_success,
-        )
-
-        async_dispatcher_send(
-            self.hass, signal_unique_id(self.latitude, self.longitude)
-        )

@@ -90,6 +90,7 @@ FLOWS = [
     "opentherm_gw",
     "openuv",
     "owntracks",
+    "panasonic_viera",
     "plaato",
     "plex",
     "point",

@@ -4,8 +4,7 @@
             "already_configured": "Verten er allerede konfigurert"
         },
         "error": {
-            "login": "P\u00e5loggingsfeil: Vennligst sjekk brukernavnet ditt og passordet ditt",
-            "unknown": "Ukjent feil: pr\u00f8v p\u00e5 nytt senere eller en annen konfigurasjon"
+            "login": "P\u00e5loggingsfeil: Vennligst sjekk brukernavnet ditt og passordet ditt"
         },
         "flow_title": "Synology DSM {name} ( {host} )",
         "step": {

@@ -17,15 +17,17 @@
                 "title": "deCONZ Zigbee gateway a trav\u00e9s del complemento Hass.io"
             },
             "init": {
-                "data": {
-                    "host": "Host",
-                    "port": "Puerto"
-                },
                 "title": "Definir el gateway deCONZ"
             },
             "link": {
                 "description": "Desbloquee su puerta de enlace deCONZ para registrarse con Home Assistant. \n\n 1. Vaya a Configuraci\u00f3n deCONZ - > Gateway - > Avanzado \n 2. Presione el bot\u00f3n \"Autenticar aplicaci\u00f3n\"",
                 "title": "Enlazar con deCONZ"
+            },
+            "manual_confirm": {
+                "data": {
+                    "host": "Host",
+                    "port": "Puerto"
+                }
             }
         }
     },

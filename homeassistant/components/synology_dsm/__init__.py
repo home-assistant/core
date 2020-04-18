@@ -71,8 +71,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     unit = hass.config.units.temperature_unit
     use_ssl = entry.data[CONF_SSL]
     api_version = entry.data.get(CONF_API_VERSION, DEFAULT_DSM_VERSION)
+    device_token = entry.data.get("device_token")
 
-    api = SynoApi(hass, host, port, username, password, unit, use_ssl, api_version)
+    api = SynoApi(
+        hass, host, port, username, password, unit, use_ssl, device_token, api_version
+    )
 
     await api.async_setup()
 
@@ -105,6 +108,7 @@ class SynoApi:
         password: str,
         temp_unit: str,
         use_ssl: bool,
+        device_token: str,
         api_version: int,
     ):
         """Initialize the API wrapper class."""
@@ -114,6 +118,7 @@ class SynoApi:
         self._username = username
         self._password = password
         self._use_ssl = use_ssl
+        self._device_token = device_token
         self._api_version = api_version
         self.temp_unit = temp_unit
 
@@ -137,6 +142,7 @@ class SynoApi:
             self._username,
             self._password,
             self._use_ssl,
+            device_token=self._device_token,
             dsm_version=self._api_version,
         )
 

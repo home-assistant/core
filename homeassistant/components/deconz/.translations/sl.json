@@ -18,15 +18,17 @@
                 "title": "deCONZ Zigbee prehod preko dodatka Hass.io"
             },
             "init": {
-                "data": {
-                    "host": "Gostitelj",
-                    "port": "Vrata"
-                },
                 "title": "Dolo\u010dite deCONZ prehod"
             },
             "link": {
                 "description": "Odklenite va\u0161 deCONZ gateway za registracijo s Home Assistant-om. \n1. Pojdite v deCONZ sistemske nastavitve\n2. Pritisnite tipko \"odkleni prehod\"",
                 "title": "Povezava z deCONZ"
+            },
+            "manual_confirm": {
+                "data": {
+                    "host": "Gostitelj",
+                    "port": "Vrata"
+                }
             }
         }
     },
