@@ -98,3 +98,7 @@ class MyIOoptionsFlowHandler(config_entries.OptionsFlow):
 
 class CannotConnect:
     """Error to indicate we cannot connect."""
+
+
+class InvalidAuth:
+    """Error to indicate if invalid authentication."""
