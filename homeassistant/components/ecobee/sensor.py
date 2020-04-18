@@ -33,15 +33,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
                 dev.append(EcobeeSensor(data, sensor["name"], item["type"], index))
 
-        dev.append(
-            EcobeeSensor(
-                data,
-                data.ecobee.thermostats[index]["name"],
-                NOTIFICATIONS_KEY,
-                index,
-                data.ecobee.get_equipment_notifications(index),
+        if "notificationSettings" in data.ecobee.thermostats[index]:
+            dev.append(
+                EcobeeSensor(
+                    data,
+                    data.ecobee.thermostats[index]["name"],
+                    NOTIFICATIONS_KEY,
+                    index,
+                    data.ecobee.get_equipment_notifications(index),
+                )
             )
-        )
 
     async_add_entities(dev, True)
 
