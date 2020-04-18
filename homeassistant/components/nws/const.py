@@ -55,3 +55,8 @@ CONDITION_CLASSES = {
 
 DAYNIGHT = "daynight"
 HOURLY = "hourly"
+
+NWS_DATA = "nws data"
+COORDINATOR_OBSERVATION = "coordinator_observation"
+COORDINATOR_FORECAST = "coordinator_forecast"
+COORDINATOR_FORECAST_HOURLY = "coordinator_forecast_hourly"
