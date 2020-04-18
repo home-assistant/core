@@ -4,12 +4,14 @@ from requests_mock import Mocker
 
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_VOLUME_MUTED,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MP_DOMAIN,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
     SERVICE_PLAY_MEDIA,
+    SERVICE_SELECT_SOURCE,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
@@ -216,7 +218,7 @@ async def test_tv_services(hass: HomeAssistantType, requests_mock: Mocker) -> No
 
     with patch("roku.Roku._post") as remote_mock:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_VOLUME_MUTE, {ATTR_ENTITY_ID: TV_ENTITY_ID}, blocking=True
+            MP_DOMAIN, SERVICE_VOLUME_MUTE, {ATTR_ENTITY_ID: TV_ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True}, blocking=True
         )
 
         remote_mock.assert_called_once_with("/keypress/VolumeMute")
