@@ -401,7 +401,8 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
 
         return state_attr
 
-    async def async_scheduled_update(self, now):
+    @callback
+    def async_scheduled_update(self, now):
         """Update state at a scheduled point in time."""
         self.async_write_ha_state()
 
