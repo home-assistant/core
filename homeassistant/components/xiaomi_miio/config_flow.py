@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 
+# pylint: disable=unused-import
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
