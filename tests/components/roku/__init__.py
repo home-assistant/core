@@ -15,10 +15,7 @@ UPNP_SERIAL = "1GU48T017973"
 
 
 def mock_connection(
-    requests_mocker: Mocker,
-    device: str = "roku3",
-    app: str = "roku",
-    host: str = HOST,
+    requests_mocker: Mocker, device: str = "roku3", app: str = "roku", host: str = HOST,
 ) -> None:
     """Mock the Roku connection."""
     roku_url = f"http://{host}:8060"

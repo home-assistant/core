@@ -59,7 +59,7 @@ async def test_setup(hass: HomeAssistantType, requests_mock: Mocker) -> None:
     assert hass.states.get(TV_ENTITY_ID)
     assert tv.unique_id == TV_SERIAL
 
-   
+
 async def test_supported_features(
     hass: HomeAssistantType, requests_mock: Mocker
 ) -> None:
@@ -93,7 +93,9 @@ async def test_check_attributes(hass: HomeAssistantType, requests_mock: Mocker) 
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Roku"
 
 
-async def test_check_attributes_tv(hass: HomeAssistantType, requests_mock: Mocker) -> None:
+async def test_check_attributes_tv(
+    hass: HomeAssistantType, requests_mock: Mocker
+) -> None:
     """Test attributes for Roku TV."""
     await setup_integration(
         hass,
