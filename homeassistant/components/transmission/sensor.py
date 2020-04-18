@@ -75,7 +75,11 @@ class TransmissionSensor(Entity):
             """Update the state."""
             self.async_schedule_update_ha_state(True)
 
-        self.async_on_remove(async_dispatcher_connect(self.hass, DOMAIN, update))
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self._tm_client.api.signal_update, update
+            )
+        )
 
 
 class TransmissionSpeedSensor(TransmissionSensor):
