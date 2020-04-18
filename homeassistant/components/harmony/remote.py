@@ -166,7 +166,6 @@ class HarmonyRemote(remote.RemoteDevice):
         self.delay_secs = delay_secs
         self._available = False
         self._unique_id = unique_id
-        self._undo_dispatch_subscription = None
 
     @property
     def activity_names(self):
@@ -180,11 +179,6 @@ class HarmonyRemote(remote.RemoteDevice):
             activities.remove(ACTIVITY_POWER_OFF)
 
         return activities
-
-    async def async_will_remove_from_hass(self):
-        """Undo subscription."""
-        if self._undo_dispatch_subscription:
-            self._undo_dispatch_subscription()
 
     async def _async_update_options(self, data):
         """Change options when the options flow does."""
@@ -205,10 +199,12 @@ class HarmonyRemote(remote.RemoteDevice):
             disconnect=self.got_disconnected,
         )
 
-        self._undo_dispatch_subscription = async_dispatcher_connect(
-            self.hass,
-            f"{HARMONY_OPTIONS_UPDATE}-{self.unique_id}",
-            self._async_update_options,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{HARMONY_OPTIONS_UPDATE}-{self.unique_id}",
+                self._async_update_options,
+            )
         )
 
         # Store Harmony HUB config, this will also update our current
