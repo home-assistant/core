@@ -4,9 +4,9 @@ from requests_mock import Mocker
 
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_VOLUME_MUTED,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
@@ -124,9 +124,7 @@ async def test_attributes(hass: HomeAssistantType, requests_mock: Mocker) -> Non
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Roku"
 
 
-async def test_tv_attributes(
-    hass: HomeAssistantType, requests_mock: Mocker
-) -> None:
+async def test_tv_attributes(hass: HomeAssistantType, requests_mock: Mocker) -> None:
     """Test attributes for Roku TV."""
     await setup_integration(
         hass,
@@ -164,28 +162,40 @@ async def test_services(hass: HomeAssistantType, requests_mock: Mocker) -> None:
 
     with patch("roku.Roku._post") as remote_mock:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_MEDIA_NEXT_TRACK, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
+            MP_DOMAIN,
+            SERVICE_MEDIA_NEXT_TRACK,
+            {ATTR_ENTITY_ID: MAIN_ENTITY_ID},
+            blocking=True,
         )
 
         remote_mock.assert_called_once_with("/keypress/Fwd")
 
     with patch("roku.Roku._post") as remote_mock:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
+            MP_DOMAIN,
+            SERVICE_MEDIA_PREVIOUS_TRACK,
+            {ATTR_ENTITY_ID: MAIN_ENTITY_ID},
+            blocking=True,
         )
 
         remote_mock.assert_called_once_with("/keypress/Rev")
 
     with patch("roku.Roku._post") as remote_mock:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_SELECT_SOURCE, {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_INPUT_SOURCE: "Home"}, blocking=True
+            MP_DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_INPUT_SOURCE: "Home"},
+            blocking=True,
         )
 
         remote_mock.assert_called_once_with("/keypress/Home")
 
     with patch("roku.Roku._post") as remote_mock:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_SELECT_SOURCE, {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_INPUT_SOURCE: "Netflix"}, blocking=True
+            MP_DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_INPUT_SOURCE: "Netflix"},
+            blocking=True,
         )
 
         remote_mock.assert_called_once_with("/launch/12", params={"contentID": "12"})
@@ -211,14 +221,20 @@ async def test_tv_services(hass: HomeAssistantType, requests_mock: Mocker) -> No
 
     with patch("roku.Roku._post") as remote_mock:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_VOLUME_DOWN, {ATTR_ENTITY_ID: TV_ENTITY_ID}, blocking=True
+            MP_DOMAIN,
+            SERVICE_VOLUME_DOWN,
+            {ATTR_ENTITY_ID: TV_ENTITY_ID},
+            blocking=True,
         )
 
         remote_mock.assert_called_once_with("/keypress/VolumeDown")
 
     with patch("roku.Roku._post") as remote_mock:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_VOLUME_MUTE, {ATTR_ENTITY_ID: TV_ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True}, blocking=True
+            MP_DOMAIN,
+            SERVICE_VOLUME_MUTE,
+            {ATTR_ENTITY_ID: TV_ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
+            blocking=True,
         )
 
         remote_mock.assert_called_once_with("/keypress/VolumeMute")
