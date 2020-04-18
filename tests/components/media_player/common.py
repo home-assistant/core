@@ -5,6 +5,7 @@ components. Instead call the service directly.
 """
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
+    ATTR_KEY,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
@@ -15,6 +16,7 @@ from homeassistant.components.media_player.const import (
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
+    SERVICE_SEND_KEY,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -255,6 +257,22 @@ async def async_select_source(hass, source, entity_id=ENTITY_MATCH_ALL):
 def select_source(hass, source, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command to select input source."""
     hass.add_job(async_select_source, hass, source, entity_id)
+
+
+async def async_send_key(hass, key, entity_id=ENTITY_MATCH_ALL):
+    """Send the media player the command to send key."""
+    data = {ATTR_KEY: key}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    await hass.services.async_call(DOMAIN, SERVICE_SEND_KEY, data, blocking=True)
+
+
+@bind_hass
+def send_key(hass, key, entity_id=ENTITY_MATCH_ALL):
+    """Send the media player the command to send key."""
+    hass.add_job(async_send_key, hass, key, entity_id)
 
 
 async def async_clear_playlist(hass, entity_id=ENTITY_MATCH_ALL):
