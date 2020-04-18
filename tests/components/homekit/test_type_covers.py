@@ -411,6 +411,10 @@ async def test_window_open_close_with_position_and_stop(hass, hk_driver, cls, ev
     # Set from HomeKit
     call_stop_cover = async_mock_service(hass, DOMAIN, "stop_cover")
 
+    await hass.async_add_executor_job(acc.char_hold_position.client_update_value, 0)
+    await hass.async_block_till_done()
+    assert not call_stop_cover
+
     await hass.async_add_executor_job(acc.char_hold_position.client_update_value, 1)
     await hass.async_block_till_done()
     assert call_stop_cover

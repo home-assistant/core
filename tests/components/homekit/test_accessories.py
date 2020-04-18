@@ -282,6 +282,63 @@ async def test_linked_battery_charging_sensor(hass, hk_driver, caplog):
     assert acc._char_charging.value == 1
 
 
+async def test_linked_battery_sensor_and_linked_battery_charging_sensor(
+    hass, hk_driver, caplog
+):
+    """Test battery service with linked_battery_sensor and a linked_battery_charging_sensor."""
+    entity_id = "homekit.accessory"
+    linked_battery = "sensor.battery"
+    linked_battery_charging_sensor = "binary_sensor.battery_charging"
+    hass.states.async_set(entity_id, "open", {ATTR_BATTERY_LEVEL: 100})
+    hass.states.async_set(linked_battery, 50, None)
+    hass.states.async_set(linked_battery_charging_sensor, STATE_ON, None)
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory(
+        hass,
+        hk_driver,
+        "Battery Service",
+        entity_id,
+        2,
+        {
+            CONF_LINKED_BATTERY_SENSOR: linked_battery,
+            CONF_LINKED_BATTERY_CHARGING_SENSOR: linked_battery_charging_sensor,
+        },
+    )
+    acc.update_state = lambda x: None
+    assert acc.linked_battery_sensor == linked_battery
+
+    await acc.run_handler()
+    await hass.async_block_till_done()
+    assert acc._char_battery.value == 50
+    assert acc._char_low_battery.value == 0
+    assert acc._char_charging.value == 1
+
+    hass.states.async_set(linked_battery_charging_sensor, STATE_OFF, None)
+    await hass.async_block_till_done()
+    assert acc._char_battery.value == 50
+    assert acc._char_low_battery.value == 0
+    assert acc._char_charging.value == 0
+
+
+async def test_missing_linked_battery_charging_sensor(hass, hk_driver, caplog):
+    """Test battery service with linked_battery_charging_sensor that is mapping to a missing entity."""
+    entity_id = "homekit.accessory"
+    linked_battery_charging_sensor = "binary_sensor.battery_charging"
+    hass.states.async_set(entity_id, "open", {ATTR_BATTERY_LEVEL: 100})
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory(
+        hass,
+        hk_driver,
+        "Battery Service",
+        entity_id,
+        2,
+        {CONF_LINKED_BATTERY_CHARGING_SENSOR: linked_battery_charging_sensor},
+    )
+    assert acc.linked_battery_charging_sensor is None
+
+
 async def test_missing_linked_battery_sensor(hass, hk_driver, caplog):
     """Test battery service with missing linked_battery_sensor."""
     entity_id = "homekit.accessory"
