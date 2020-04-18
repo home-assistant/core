@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
+    CONF_ID,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -21,13 +22,16 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    ATTR_DELETE_DATA,
     ATTR_TORRENT,
     DATA_UPDATED,
+    DEFAULT_DELETE_DATA,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     SERVICE_ADD_TORRENT,
+    SERVICE_REMOVE_TORRENT,
 )
 from .errors import AuthenticationError, CannotConnect, UnknownError
 
@@ -36,6 +40,14 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_ADD_TORRENT_SCHEMA = vol.Schema(
     {vol.Required(ATTR_TORRENT): cv.string, vol.Required(CONF_NAME): cv.string}
+)
+
+SERVICE_REMOVE_TORRENT_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_ID): cv.positive_int,
+        vol.Optional(ATTR_DELETE_DATA, default=DEFAULT_DELETE_DATA): cv.boolean,
+    }
 )
 
 TRANS_SCHEMA = vol.All(
@@ -95,6 +107,7 @@ async def async_unload_entry(hass, config_entry):
 
     if not hass.data[DOMAIN]:
         hass.services.async_remove(DOMAIN, SERVICE_ADD_TORRENT)
+        hass.services.async_remove(DOMAIN, SERVICE_REMOVE_TORRENT)
 
     return True
 
@@ -186,8 +199,30 @@ class TransmissionClient:
                     "Could not add torrent: unsupported type or no permission"
                 )
 
+        def remove_torrent(service):
+            """Remove torrent."""
+            tm_client = None
+            for entry in self.hass.config_entries.async_entries(DOMAIN):
+                if entry.data[CONF_NAME] == service.data[CONF_NAME]:
+                    tm_client = self.hass.data[DOMAIN][entry.entry_id]
+                    break
+            if tm_client is None:
+                _LOGGER.error("Transmission instance is not found")
+                return
+            torrent_id = service.data[CONF_ID]
+            delete_data = service.data[ATTR_DELETE_DATA]
+            tm_client.tm_api.remove_torrent(torrent_id, delete_data=delete_data)
+            tm_client.api.update()
+
         self.hass.services.async_register(
             DOMAIN, SERVICE_ADD_TORRENT, add_torrent, schema=SERVICE_ADD_TORRENT_SCHEMA
+        )
+
+        self.hass.services.async_register(
+            DOMAIN,
+            SERVICE_REMOVE_TORRENT,
+            remove_torrent,
+            schema=SERVICE_REMOVE_TORRENT_SCHEMA,
         )
 
         self.config_entry.add_update_listener(self.async_options_updated)
