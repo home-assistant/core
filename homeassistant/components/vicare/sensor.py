@@ -1,3 +1,4 @@
+"""Viessmann ViCare sensor device."""
 import logging
 
 import requests
@@ -141,11 +142,6 @@ class ViCareSensor(Entity):
     def icon(self):
         """Icon to use in the frontend, if any."""
         return self._sensor[CONF_ICON]
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._sensor[CONF_GETTER](self._api)
 
     @property
     def state(self):
