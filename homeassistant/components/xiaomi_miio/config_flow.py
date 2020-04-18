@@ -11,7 +11,6 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_NAME,
 )
-import homeassistant.helpers.config_validation as cv
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +26,7 @@ GATEWAY_CONFIG = vol.Schema(
     }
 )
 
-CONFIG_SCHEMA = vol.Schema({vol.Optional(CONF_GATEWAY, default=False): bool,})
+CONFIG_SCHEMA = vol.Schema({vol.Optional(CONF_GATEWAY, default=False): bool})
 
 
 class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
