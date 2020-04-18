@@ -24,8 +24,8 @@ CONF_PROFILES = "profiles"
 SUPPORTED_LANGUAGES = [
     "ar-XA",
     "bn-IN",
-    "cs-CZ",
     "cmn-CN",
+    "cs-CZ",
     "da-DK",
     "de-DE",
     "el-GR",
