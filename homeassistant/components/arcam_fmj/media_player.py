@@ -86,7 +86,12 @@ class ArcamFmj(MediaPlayerDevice):
         audio_format, _ = self._state.get_incoming_audio_format()
         return bool(
             audio_format
-            in (IncomingAudioFormat.PCM, IncomingAudioFormat.ANALOGUE_DIRECT, None)
+            in (
+                IncomingAudioFormat.PCM,
+                IncomingAudioFormat.ANALOGUE_DIRECT,
+                IncomingAudioFormat.UNDETECTED,
+                None,
+            )
         )
 
     @property
