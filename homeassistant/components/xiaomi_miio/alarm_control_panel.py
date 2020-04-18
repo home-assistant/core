@@ -51,7 +51,7 @@ class XiaomiGatewayAlarm(AlarmControlPanel):
         self._name = gateway_name
         self._skip_update = False
         self._device_id = device_id
-        self._unique_id = "{}-{}-alarm".format(model, mac_address)
+        self._unique_id = f"{model}-{mac_address}-alarm"
         self._icon = "mdi:shield-home"
         self._available = None
         self._state = None
