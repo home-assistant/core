@@ -29,7 +29,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@config_entries.HANDLERS.register(DOMAIN)
 class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for MyIO Valet Mega."""
 
@@ -53,11 +52,10 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=user_input[CONF_NAME], data=user_input,)
 
-    @callback
     def _show_form(self, errors=None):
         """Show the form to the user."""
         return self.async_show_form(
-            step_id="user", data_schema=CONFIG_SCHEMA, errors=errors if errors else {},
+            step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
         )
 
     @staticmethod
