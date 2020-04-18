@@ -22,8 +22,14 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SOURCE,
+    SERVICE_NEXT_TRACK,
+    SERVICE_PREVIOUS_TRACK,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_UP,
     STATE_PLAYING,
 )
 from homeassistant.helpers.typing import HomeAssistantType
@@ -155,6 +161,34 @@ async def test_services(hass: HomeAssistantType, requests_mock: Mocker) -> None:
 
         remote_mock.assert_called_once_with("/keypress/PowerOn")
 
+    with patch("roku.Roku._post") as remote_mock:
+        await hass.services.async_call(
+            MP_DOMAIN, SERVICE_NEXT_TRACK, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
+        )
+
+        remote_mock.assert_called_once_with("/keypress/Fwd")
+
+    with patch("roku.Roku._post") as remote_mock:
+        await hass.services.async_call(
+            MP_DOMAIN, SERVICE_PREVIOUS_TRACK, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
+        )
+
+        remote_mock.assert_called_once_with("/keypress/Rev")
+
+    with patch("roku.Roku._post") as remote_mock:
+        await hass.services.async_call(
+            MP_DOMAIN, SERVICE_SELECT_SOURCE, {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_SOURCE: "Home"}, blocking=True
+        )
+
+        remote_mock.assert_called_once_with("/keypress/Home")
+
+    with patch("roku.Roku._post") as remote_mock:
+        await hass.services.async_call(
+            MP_DOMAIN, SERVICE_SELECT_SOURCE, {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_SOURCE: "Netflix"}, blocking=True
+        )
+
+        remote_mock.assert_called_once_with("/launch/12")
+
 
 async def test_tv_services(hass: HomeAssistantType, requests_mock: Mocker) -> None:
     """Test the media player services related to Roku TV."""
@@ -166,6 +200,27 @@ async def test_tv_services(hass: HomeAssistantType, requests_mock: Mocker) -> No
         host=TV_HOST,
         unique_id=TV_SERIAL,
     )
+
+    with patch("roku.Roku._post") as remote_mock:
+        await hass.services.async_call(
+            MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
+        )
+
+        remote_mock.assert_called_once_with("/keypress/VolumeUp")
+
+    with patch("roku.Roku._post") as remote_mock:
+        await hass.services.async_call(
+            MP_DOMAIN, SERVICE_VOLUME_DOWN, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
+        )
+
+        remote_mock.assert_called_once_with("/keypress/VolumeDown")
+
+    with patch("roku.Roku._post") as remote_mock:
+        await hass.services.async_call(
+            MP_DOMAIN, SERVICE_VOLUME_MUTE, {ATTR_ENTITY_ID: MAIN_ENTITY_ID}, blocking=True
+        )
+
+        remote_mock.assert_called_once_with("/keypress/VolumeMute")
 
     with patch("roku.Roku.launch") as tune_mock:
         await hass.services.async_call(
