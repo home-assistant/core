@@ -643,7 +643,7 @@ python-nest==4.1.0
 python-synology==0.6.0
 
 # homeassistant.components.tado
-python-tado==0.6.0
+python-tado==0.8.1
 
 # homeassistant.components.twitch
 python-twitch-client==0.6.0
