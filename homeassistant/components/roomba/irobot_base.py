@@ -52,6 +52,7 @@ STATE_MAP = {
     "hmUsrDock": STATE_RETURNING,
     "pause": STATE_PAUSED,
     "run": STATE_CLEANING,
+    "stop": STATE_IDLE,
     "stuck": STATE_ERROR,
 }
 
@@ -136,16 +137,15 @@ class IRobotVacuum(IRobotEntity, StateVacuumDevice):
     def state(self):
         """Return the state of the vacuum cleaner."""
         clean_mission_status = self.vacuum_state.get("cleanMissionStatus", {})
+        cycle = clean_mission_status.get("cycle")
         phase = clean_mission_status.get("phase")
-        if phase == "stop":
-            cycle = clean_mission_status.get("cycle")
-            if cycle == "none":
-                return STATE_IDLE
-            return STATE_PAUSED
         try:
-            return STATE_MAP[phase]
+            state = STATE_MAP[phase]
         except KeyError:
             return STATE_ERROR
+        if cycle != "none" and state != STATE_CLEANING and state != STATE_RETURNING:
+            state = STATE_PAUSED
+        return state
 
     @property
     def available(self) -> bool:
