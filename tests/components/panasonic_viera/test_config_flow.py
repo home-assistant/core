@@ -353,50 +353,6 @@ async def test_imported_flow_non_encrypted(hass):
     }
 
 
-async def test_imported_flow_not_connected_abort(hass):
-    """Test imported flow with connection error abortion."""
-
-    with patch(
-        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
-        side_effect=TimeoutError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOST: "1.2.3.4",
-                CONF_NAME: DEFAULT_NAME,
-                CONF_PORT: DEFAULT_PORT,
-                CONF_ON_ACTION: "test-on-action",
-            },
-        )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == REASON_NOT_CONNECTED
-
-
-async def test_imported_flow_unknown_abort(hass):
-    """Test imported flow with unknown error abortion."""
-
-    with patch(
-        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
-        side_effect=Exception,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOST: "1.2.3.4",
-                CONF_NAME: DEFAULT_NAME,
-                CONF_PORT: DEFAULT_PORT,
-                CONF_ON_ACTION: "test-on-action",
-            },
-        )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == REASON_UNKNOWN
-
-
 async def test_imported_flow_encrypted_valid_pin_code(hass):
     """Test imported flow with encryption and valid PIN code."""
 
@@ -531,6 +487,51 @@ async def test_imported_flow_encrypted_unknown_abort(hass):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PIN: "0000"},
     )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == REASON_UNKNOWN
+
+
+async def test_imported_flow_not_connected_error(hass):
+    """Test imported flow with connection error abortion."""
+
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        side_effect=TimeoutError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_HOST: "1.2.3.4",
+                CONF_NAME: DEFAULT_NAME,
+                CONF_PORT: DEFAULT_PORT,
+                CONF_ON_ACTION: "test-on-action",
+            },
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
+
+
+async def test_imported_flow_unknown_abort(hass):
+    """Test imported flow with unknown error abortion."""
+
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_HOST: "1.2.3.4",
+                CONF_NAME: DEFAULT_NAME,
+                CONF_PORT: DEFAULT_PORT,
+                CONF_ON_ACTION: "test-on-action",
+            },
+        )
 
     assert result["type"] == "abort"
     assert result["reason"] == REASON_UNKNOWN
