@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Awair",
+        "description": "You must register for an Awair developer access token at: https://developer.getawair.com/onboard/login",
+        "data": {
+          "access_token": "Awair access token"
+        }
+      }
+    },
+    "error": {
+      "auth": "Invalid access token.",
+      "unknown": "Unknown Awair API error."
+    },
+    "abort": {
+      "already_configured": "The Awair integration has already been set up for this access token.",
+      "no_devices": "No Awair devices found for this access token."
+    }
+  }
+}

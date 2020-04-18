@@ -14,6 +14,7 @@ FLOWS = [
     "ambiclimate",
     "ambient_station",
     "august",
+    "awair",
     "axis",
     "braviatv",
     "brother",
