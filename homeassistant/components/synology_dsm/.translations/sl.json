@@ -4,8 +4,7 @@
             "already_configured": "Gostitelj je \u017ee konfiguriran"
         },
         "error": {
-            "login": "Napaka pri prijavi: preverite svoje uporabni\u0161ko ime in geslo",
-            "unknown": "Neznana napaka: poskusite pozneje ali z drugo konfiguracijo"
+            "login": "Napaka pri prijavi: preverite svoje uporabni\u0161ko ime in geslo"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {

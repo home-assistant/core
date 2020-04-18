@@ -18,15 +18,17 @@
                 "title": "deCONZ Zigbee-gateway via Hass.io-tilf\u00f8jelse"
             },
             "init": {
-                "data": {
-                    "host": "V\u00e6rt",
-                    "port": "Port"
-                },
                 "title": "Definer deCONZ-gateway"
             },
             "link": {
                 "description": "L\u00e5s din deCONZ-gateway op for at registrere dig med Home Assistant. \n\n 1. G\u00e5 til deCONZ settings -> Gateway -> Advanced\n 2. Tryk p\u00e5 knappen \"Authenticate app\"",
                 "title": "Forbind med deCONZ"
+            },
+            "manual_confirm": {
+                "data": {
+                    "host": "V\u00e6rt",
+                    "port": "Port"
+                }
             }
         }
     },

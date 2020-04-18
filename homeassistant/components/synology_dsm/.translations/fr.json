@@ -5,7 +5,7 @@
         },
         "error": {
             "login": "Erreur de connexion: veuillez v\u00e9rifier votre nom d'utilisateur et votre mot de passe",
-            "unknown": "Erreur inconnue: veuillez r\u00e9essayer plus tard ou utilisez une autre configuration"
+            "missing_data": "Donn\u00e9es manquantes: veuillez r\u00e9essayer plus tard ou utilisez une autre configuration"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
@@ -25,8 +25,11 @@
                     "api_version": "Version du DSM",
                     "host": "H\u00f4te",
                     "password": "Mot de passe",
-                    "port": "Port (facultatif)"
-                }
+                    "port": "Port (facultatif)",
+                    "ssl": "Utilisez SSL/TLS pour vous connecter \u00e0 votre NAS",
+                    "username": "Nom d'utilisateur"
+                },
+                "title": "Synology DSM"
             }
         }
     }

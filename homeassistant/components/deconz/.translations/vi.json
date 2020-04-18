@@ -9,7 +9,7 @@
             "no_key": "Kh\u00f4ng th\u1ec3 l\u1ea5y kh\u00f3a API"
         },
         "step": {
-            "init": {
+            "manual_confirm": {
                 "data": {
                     "port": "C\u1ed5ng (gi\u00e1 tr\u1ecb m\u1eb7c \u0111\u1ecbnh: '80')"
                 }

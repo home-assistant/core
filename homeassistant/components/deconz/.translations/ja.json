@@ -4,7 +4,7 @@
             "no_key": "API\u30ad\u30fc\u3092\u53d6\u5f97\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f"
         },
         "step": {
-            "init": {
+            "manual_confirm": {
                 "data": {
                     "host": "\u30db\u30b9\u30c8",
                     "port": "\u30dd\u30fc\u30c8\uff08\u30c7\u30d5\u30a9\u30eb\u30c8\u5024\uff1a'80'\uff09"
