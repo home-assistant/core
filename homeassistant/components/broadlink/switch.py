@@ -113,7 +113,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         broadlink_device = blk.rm((host, DEFAULT_PORT), mac_addr, None)
         hass.add_job(async_setup_service, hass, host, broadlink_device)
         switches = generate_rm_switches(devices, broadlink_device)
-    if model in RM4_TYPES:
+    elif model in RM4_TYPES:
         broadlink_device = blk.rm4((host, DEFAULT_PORT), mac_addr, None)
         hass.add_job(async_setup_service, hass, host, broadlink_device)
         switches = generate_rm_switches(devices, broadlink_device)
