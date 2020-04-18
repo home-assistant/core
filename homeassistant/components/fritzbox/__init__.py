@@ -33,20 +33,26 @@ def ensure_unique_hosts(value):
 CONFIG_SCHEMA = vol.Schema(
     cv.deprecated(DOMAIN),
     {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-                        vol.Required(CONF_PASSWORD): cv.string,
-                        vol.Required(
-                            CONF_USERNAME, default=DEFAULT_USERNAME
-                        ): cv.string,
-                    }
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_DEVICES): vol.All(
+                    cv.ensure_list,
+                    [
+                        vol.Schema(
+                            {
+                                vol.Required(
+                                    CONF_HOST, default=DEFAULT_HOST
+                                ): cv.string,
+                                vol.Required(CONF_PASSWORD): cv.string,
+                                vol.Required(
+                                    CONF_USERNAME, default=DEFAULT_USERNAME
+                                ): cv.string,
+                            }
+                        )
+                    ],
+                    ensure_unique_hosts,
                 )
-            ],
-            ensure_unique_hosts,
+            }
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -56,7 +62,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the AVM Fritz!Box integration."""
     if DOMAIN in config:
-        for entry_config in config[DOMAIN]:
+        for entry_config in config[DOMAIN][CONF_DEVICES]:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN, context={"source": "import"}, data=entry_config

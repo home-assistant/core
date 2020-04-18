@@ -7,12 +7,12 @@ import pytest
 
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_FRIENDLY_NAME
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import MOCK_CONFIG
 
-MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][0]
+MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
 MOCK_SSDP_DATA = {
     ATTR_SSDP_LOCATION: "https://fake_host:12345/test",
     ATTR_UPNP_FRIENDLY_NAME: "fake_name",

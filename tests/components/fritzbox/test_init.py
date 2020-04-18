@@ -4,7 +4,7 @@ from unittest.mock import Mock, call
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
@@ -30,7 +30,12 @@ async def test_setup(hass: HomeAssistantType, fritz: Mock):
 
 async def test_setup_duplicate_config(hass: HomeAssistantType, fritz: Mock, caplog):
     """Test duplicate config of integration."""
-    DUPLICATE = {FB_DOMAIN: [MOCK_CONFIG[FB_DOMAIN][0], MOCK_CONFIG[FB_DOMAIN][0]]}
+    DUPLICATE = {
+        FB_DOMAIN: [
+            MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+            MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        ]
+    }
     assert not await async_setup_component(hass, FB_DOMAIN, DUPLICATE)
     await hass.async_block_till_done()
     assert not hass.states.async_entity_ids()
@@ -53,7 +58,9 @@ async def test_unload(hass: HomeAssistantType, fritz: Mock):
     entity_id = f"{SWITCH_DOMAIN}.fake_name"
 
     entry = MockConfigEntry(
-        domain=FB_DOMAIN, data=MOCK_CONFIG[FB_DOMAIN][0], unique_id=entity_id,
+        domain=FB_DOMAIN,
+        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        unique_id=entity_id,
     )
     entry.add_to_hass(hass)
 

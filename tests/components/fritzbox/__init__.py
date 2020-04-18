@@ -2,16 +2,18 @@
 from unittest.mock import Mock
 
 from homeassistant.components.fritzbox.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 MOCK_CONFIG = {
-    DOMAIN: [
-        {
-            CONF_HOST: "fake_host",
-            CONF_PASSWORD: "fake_pass",
-            CONF_USERNAME: "fake_user",
-        }
-    ]
+    DOMAIN: {
+        CONF_DEVICES: [
+            {
+                CONF_HOST: "fake_host",
+                CONF_PASSWORD: "fake_pass",
+                CONF_USERNAME: "fake_user",
+            }
+        ]
+    }
 }
 
 
