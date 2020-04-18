@@ -204,10 +204,11 @@ async def async_get_translations(
     resources: Dict[str, Any] = results[0]
 
     if category is not None:
-        resources = {
-            domain: {category: resources[domain].get(category) or {}}
-            for domain in resources
-        }
+        new_resources = {}
+        for domain, data in resources.items():
+            if category in data:
+                new_resources[domain] = {category: data[category]}
+        resources = new_resources
 
     resources = flatten({"component": resources})
 
@@ -215,10 +216,11 @@ async def async_get_translations(
         base_resources = results[1]
 
         if category is not None:
-            base_resources = {
-                domain: {category: base_resources[domain].get(category) or {}}
-                for domain in base_resources
-            }
+            new_base_resources = {}
+            for domain, data in base_resources.items():
+                if category in data:
+                    new_base_resources[domain] = {category: data[category]}
+            base_resources = new_base_resources
 
         base_resources = flatten({"component": base_resources})
 
