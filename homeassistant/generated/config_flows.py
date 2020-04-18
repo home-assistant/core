@@ -140,6 +140,7 @@ FLOWS = [
     "shopping_list",
     "simplisafe",
     "smappee",
+    "smarthab",
     "smartthings",
     "smhi",
     "sms",
