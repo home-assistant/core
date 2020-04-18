@@ -3,24 +3,22 @@ import logging
 
 from homeassistant.components.switch import SwitchEntity
 
-from . import DOMAIN, JuicenetDevice
+from .const import DOMAIN
+
+from .entity import JuiceNetDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Juicenet switch."""
-    api = hass.data[DOMAIN]["api"]
-
-    devs = []
-    for device in api.get_devices():
-        devs.append(JuicenetChargeNowSwitch(device, hass))
-
-    add_entities(devs)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    entities = []
+    for device in hass.data[DOMAIN][config_entry.entry_id].devices:
+        entities.append(JuiceNetChargeNowSwitch(device, hass))
+    async_add_entities(entities)
 
 
-class JuicenetChargeNowSwitch(JuicenetDevice, SwitchEntity):
-    """Implementation of a Juicenet switch."""
+class JuiceNetChargeNowSwitch(JuiceNetDevice, SwitchEntity):
+    """Implementation of a JuiceNet switch."""
 
     def __init__(self, device, hass):
         """Initialise the switch."""

@@ -1,0 +1,21 @@
+{
+  "title": "JuiceNet",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to JuiceNet",
+        "data": {
+          "token": "API Token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}

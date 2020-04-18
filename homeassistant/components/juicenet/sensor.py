@@ -10,7 +10,8 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity import Entity
 
-from . import DOMAIN, JuicenetDevice
+from .const import DOMAIN
+from .entity import JuiceNetDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,20 +26,17 @@ SENSOR_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Juicenet sensor."""
-    api = hass.data[DOMAIN]["api"]
-
-    dev = []
-    for device in api.get_devices():
-        for variable in SENSOR_TYPES:
-            dev.append(JuicenetSensorDevice(device, variable, hass))
-
-    add_entities(dev)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the JuiceNet Sensors."""
+    entities = []
+    for device in hass.data[DOMAIN][config_entry.entry_id].devices:
+        for sensor in SENSOR_TYPES:
+            entities.append(JuiceNetSensorDevice(device, sensor, hass))
+    async_add_entities(entities)
 
 
-class JuicenetSensorDevice(JuicenetDevice, Entity):
-    """Implementation of a Juicenet sensor."""
+class JuiceNetSensorDevice(JuiceNetDevice, Entity):
+    """Implementation of a JuiceNet sensor."""
 
     def __init__(self, device, sensor_type, hass):
         """Initialise the sensor."""
@@ -103,13 +101,3 @@ class JuicenetSensorDevice(JuicenetDevice, Entity):
         else:
             state = "Unknown"
         return state
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attributes = {}
-        if self.type == "status":
-            man_dev_id = self.device.id()
-            if man_dev_id:
-                attributes["manufacturer_device_id"] = man_dev_id
-        return attributes
