@@ -443,14 +443,12 @@ class HomeKit:
 
         ent_reg = await entity_registry.async_get_registry(self.hass)
 
-        domain_device_classes = {
-            ("binary_sensor", DEVICE_CLASS_BATTERY_CHARGING),
-            ("sensor", DEVICE_CLASS_BATTERY),
-        }
-
-        device_lookup = ent_reg.async_get_device_class_lookup(domain_device_classes)
-
-        _LOGGER.debug("device_lookup: %s", device_lookup)
+        device_lookup = ent_reg.async_get_device_class_lookup(
+            {
+                ("binary_sensor", DEVICE_CLASS_BATTERY_CHARGING),
+                ("sensor", DEVICE_CLASS_BATTERY),
+            }
+        )
 
         bridged_states = []
         for state in self.hass.states.async_all():
