@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Bridge is al geconfigureerd"
+            "already_configured": "Bridge is al geconfigureerd.",
+            "already_in_progress": "Bridge configuratie is al in volle gang."
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken met bridge",
@@ -17,7 +18,6 @@
                 "description": "U vindt de beveiligingscode op de achterkant van uw gateway.",
                 "title": "Voer beveiligingscode in"
             }
-        },
-        "title": "IKEA TR\u00c5DFRI"
+        }
     }
 }

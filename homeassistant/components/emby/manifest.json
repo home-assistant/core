@@ -1,0 +1,7 @@
+{
+  "domain": "emby",
+  "name": "Emby",
+  "documentation": "https://www.home-assistant.io/integrations/emby",
+  "requirements": ["pyemby==1.6"],
+  "codeowners": ["@mezz64"]
+}

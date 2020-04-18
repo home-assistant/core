@@ -1,0 +1,7 @@
+{
+  "domain": "homeworks",
+  "name": "Lutron Homeworks",
+  "documentation": "https://www.home-assistant.io/integrations/homeworks",
+  "requirements": ["pyhomeworks==0.0.6"],
+  "codeowners": []
+}

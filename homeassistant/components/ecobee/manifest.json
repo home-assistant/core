@@ -1,0 +1,8 @@
+{
+  "domain": "ecobee",
+  "name": "ecobee",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ecobee",
+  "requirements": ["python-ecobee-api==0.2.5"],
+  "codeowners": ["@marthoc"]
+}

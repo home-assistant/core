@@ -23,9 +23,9 @@
                 "data": {
                     "flow_impl": "Leverancier"
                 },
+                "description": "Kies met welke authenticatieprovider u wilt authenticeren met Point.",
                 "title": "Authenticatieleverancier"
             }
-        },
-        "title": "Minut Point"
+        }
     }
 }

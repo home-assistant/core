@@ -1,0 +1,7 @@
+{
+  "domain": "cmus",
+  "name": "cmus",
+  "documentation": "https://www.home-assistant.io/integrations/cmus",
+  "requirements": ["pycmus==0.1.1"],
+  "codeowners": []
+}

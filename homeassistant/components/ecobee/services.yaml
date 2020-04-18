@@ -1,0 +1,71 @@
+create_vacation:
+  description: >-
+    Create a vacation on the selected thermostat. Note: start/end date and time must all be specified
+    together for these parameters to have an effect. If start/end date and time are not specified, the
+    vacation will start immediately and last 14 days (unless deleted earlier).
+  fields:
+    entity_id:
+      description: ecobee thermostat on which to create the vacation (required).
+      example: "climate.kitchen"
+    vacation_name:
+      description: Name of the vacation to create; must be unique on the thermostat (required).
+      example: "Skiing"
+    cool_temp:
+      description: Cooling temperature during the vacation (required).
+      example: 23
+    heat_temp:
+      description: Heating temperature during the vacation (required).
+      example: 25
+    start_date:
+      description: >-
+        Date the vacation starts in the YYYY-MM-DD format (optional, immediately if not provided along with
+        start_time, end_date, and end_time).
+      example: "2019-03-15"
+    start_time:
+      description: Time the vacation starts, in the local time of the thermostat, in the 24-hour format "HH:MM:SS"
+      example: "20:00:00"
+    end_date:
+      description: >-
+        Date the vacation ends in the YYYY-MM-DD format (optional, 14 days from now if not provided along with
+        start_date, start_time, and end_time).
+      example: "2019-03-20"
+    end_time:
+      description: Time the vacation ends, in the local time of the thermostat, in the 24-hour format "HH:MM:SS"
+      example: "20:00:00"
+    fan_mode:
+      description: Fan mode of the thermostat during the vacation (auto or on) (optional, auto if not provided).
+      example: "on"
+    fan_min_on_time:
+      description: Minimum number of minutes to run the fan each hour (0 to 60) during the vacation (optional, 0 if not provided).
+      example: 30
+
+delete_vacation:
+  description: >-
+    Delete a vacation on the selected thermostat.
+  fields:
+    entity_id:
+      description: ecobee thermostat on which to delete the vacation (required).
+      example: "climate.kitchen"
+    vacation_name:
+      description: Name of the vacation to delete (required).
+      example: "Skiing"
+
+resume_program:
+  description: Resume the programmed schedule.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: "climate.kitchen"
+    resume_all:
+      description: Resume all events and return to the scheduled program. This default to false which removes only the top event.
+      example: true
+
+set_fan_min_on_time:
+  description: Set the minimum fan on time.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: "climate.kitchen"
+    fan_min_on_time:
+      description: New value of fan min on time.
+      example: 5

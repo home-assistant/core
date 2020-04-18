@@ -1,0 +1,7 @@
+{
+  "domain": "lupusec",
+  "name": "Lupus Electronics LUPUSEC",
+  "documentation": "https://www.home-assistant.io/integrations/lupusec",
+  "requirements": ["lupupy==0.0.18"],
+  "codeowners": ["@majuss"]
+}

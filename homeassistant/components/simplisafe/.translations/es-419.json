@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Cuenta ya registrada",
+            "invalid_credentials": "Credenciales no v\u00e1lidas"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Direcci\u00f3n de correo electr\u00f3nico"
+                },
+                "title": "Completa tu informaci\u00f3n"
+            }
+        }
+    }
+}

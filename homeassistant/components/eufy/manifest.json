@@ -1,0 +1,7 @@
+{
+  "domain": "eufy",
+  "name": "eufy",
+  "documentation": "https://www.home-assistant.io/integrations/eufy",
+  "requirements": ["lakeside==0.12"],
+  "codeowners": []
+}

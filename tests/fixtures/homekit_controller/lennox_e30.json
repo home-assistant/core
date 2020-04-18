@@ -1,0 +1,196 @@
+[
+    {
+        "aid": 1,
+        "services": [
+            {
+                "characteristics": [
+                    {
+                        "format": "bool",
+                        "iid": 2,
+                        "perms": [
+                            "pw"
+                        ],
+                        "type": "14"
+                    },
+                    {
+                        "format": "string",
+                        "iid": 3,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "20",
+                        "value": "Lennox"
+                    },
+                    {
+                        "format": "string",
+                        "iid": 4,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "21",
+                        "value": "E30 2B"
+                    },
+                    {
+                        "format": "string",
+                        "iid": 5,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "23",
+                        "value": "Lennox"
+                    },
+                    {
+                        "format": "string",
+                        "iid": 6,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "30",
+                        "value": "XXXXXXXX"
+                    },
+                    {
+                        "format": "string",
+                        "iid": 7,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "52",
+                        "value": "3.40.XX"
+                    },
+                    {
+                        "format": "string",
+                        "iid": 8,
+                        "perms": [
+                            "pr"
+                        ],
+                        "type": "53",
+                        "value": "3.0.XX"
+                    }
+                ],
+                "iid": 1,
+                "type": "3E"
+            },
+            {
+                "characteristics": [
+                    {
+                        "format": "uint8",
+                        "iid": 101,
+                        "maxValue": 2,
+                        "minStep": 1,
+                        "minValue": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "type": "F",
+                        "value": 1
+                    },
+                    {
+                        "format": "uint8",
+                        "iid": 102,
+                        "maxValue": 3,
+                        "minStep": 1,
+                        "minValue": 0,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "type": "33",
+                        "value": 3
+                    },
+                    {
+                        "format": "float",
+                        "iid": 103,
+                        "maxValue": 100,
+                        "minStep": 0.1,
+                        "minValue": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "type": "11",
+                        "unit": "celsius",
+                        "value": 20.5
+                    },
+                    {
+                        "format": "float",
+                        "iid": 104,
+                        "maxValue": 32,
+                        "minStep": 0.5,
+                        "minValue": 4.5,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "type": "35",
+                        "unit": "celsius",
+                        "value": 21
+                    },
+                    {
+                        "format": "uint8",
+                        "iid": 105,
+                        "maxValue": 1,
+                        "minStep": 1,
+                        "minValue": 0,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "type": "36",
+                        "value": 0
+                    },
+                    {
+                        "format": "float",
+                        "iid": 106,
+                        "maxValue": 37,
+                        "minStep": 0.5,
+                        "minValue": 16,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "type": "D",
+                        "unit": "celsius",
+                        "value": 29.5
+                    },
+                    {
+                        "format": "float",
+                        "iid": 107,
+                        "maxValue": 100,
+                        "minStep": 1,
+                        "minValue": 0,
+                        "perms": [
+                            "pr",
+                            "ev"
+                        ],
+                        "type": "10",
+                        "unit": "percentage",
+                        "value": 34
+                    },
+                    {
+                        "format": "float",
+                        "iid": 108,
+                        "maxValue": 32,
+                        "minStep": 0.5,
+                        "minValue": 4.5,
+                        "perms": [
+                            "pr",
+                            "pw",
+                            "ev"
+                        ],
+                        "type": "12",
+                        "unit": "celsius",
+                        "value": 21
+                    }
+                ],
+                "iid": 100,
+                "primary": true,
+                "type": "4A"
+            }
+        ]
+    }
+]

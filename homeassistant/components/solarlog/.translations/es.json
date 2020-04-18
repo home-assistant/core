@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "cannot_connect": "Si no se ha conectado, verifique la direcci\u00f3n del host"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "El nombre del host o la direcci\u00f3n IP de su dispositivo Solar-Log",
+                    "name": "El prefijo que se utilizar\u00e1 para los sensores Solar-Log"
+                },
+                "title": "Defina su conexi\u00f3n Solar-Log"
+            }
+        }
+    }
+}

@@ -1,0 +1,7 @@
+{
+  "domain": "supla",
+  "name": "Supla",
+  "documentation": "https://www.home-assistant.io/integrations/supla",
+  "requirements": ["pysupla==0.0.3"],
+  "codeowners": ["@mwegrzynek"]
+}

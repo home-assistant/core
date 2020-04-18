@@ -1,0 +1,18 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_hvac_mode": "HVAC Modus \u00e4nnere fir {entity_name}",
+            "set_preset_mode": "Preset \u00e4nnere fir {entity_name}"
+        },
+        "condition_type": {
+            "is_hvac_mode": "{entity_name} ass op e spezifesche HVAC Modus gesat",
+            "is_preset_mode": "{entity_name} ass op e spezifesche preset Modus gesat"
+        },
+        "trigger_type": {
+            "current_humidity_changed": "{entity_name} gemoosse Fiichtegkeet ge\u00e4nnert",
+            "current_temperature_changed": "{entity_name} gemoossen Temperatur ge\u00e4nnert",
+            "hvac_mode_changed": "{entity_name} HVAC Modus ge\u00e4nnert"
+        }
+    },
+    "title": "Klima"
+}

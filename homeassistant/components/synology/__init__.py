@@ -1,0 +1,1 @@
+"""The synology component."""

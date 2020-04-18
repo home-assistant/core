@@ -1,0 +1,7 @@
+{
+  "domain": "mqtt_room",
+  "name": "MQTT Room Presence",
+  "documentation": "https://www.home-assistant.io/integrations/mqtt_room",
+  "dependencies": ["mqtt"],
+  "codeowners": []
+}

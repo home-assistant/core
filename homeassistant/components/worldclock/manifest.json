@@ -1,0 +1,7 @@
+{
+  "domain": "worldclock",
+  "name": "Worldclock",
+  "documentation": "https://www.home-assistant.io/integrations/worldclock",
+  "codeowners": ["@fabaff"],
+  "quality_scale": "internal"
+}

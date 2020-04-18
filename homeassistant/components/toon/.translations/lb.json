@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "client_id": "Client ID vun der Konfiguratioun ass ong\u00eblteg.",
+            "client_secret": "Client Passwuert vun der Konfiguratioun ass ong\u00eblteg.",
+            "no_agreements": "D\u00ebse Kont huet keen Toon Ecran.",
+            "no_app": "Dir musst Toon konfigur\u00e9ieren, ier Dir d\u00ebs Authentifiz\u00e9ierung k\u00ebnnt benotzen.[Liest w.e.g. d'Instruktioune](https://www.home-assistant.io/components/toon/).",
+            "unknown_auth_fail": "Onerwaarte Feeler bei der Authentifikatioun."
+        },
+        "error": {
+            "credentials": "Ong\u00eblteg Login Informatioune.",
+            "display_exists": "Den ausgewielten Ecran ass scho konfigur\u00e9iert."
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Passwuert",
+                    "tenant": "Notzer",
+                    "username": "Benotzernumm"
+                },
+                "description": "Authentifikatioun mat \u00e4rem Eneco Toon Kont (net de Kont vum Entw\u00e9ckler)",
+                "title": "Toon Kont verbannnen"
+            },
+            "display": {
+                "data": {
+                    "display": "Ecran auswielen"
+                },
+                "description": "Wielt den Toon Ecran aus fir sech domat ze verbannen.",
+                "title": "Ecran auswielen"
+            }
+        }
+    }
+}

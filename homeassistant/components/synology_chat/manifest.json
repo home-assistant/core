@@ -1,0 +1,6 @@
+{
+  "domain": "synology_chat",
+  "name": "Synology Chat",
+  "documentation": "https://www.home-assistant.io/integrations/synology_chat",
+  "codeowners": []
+}

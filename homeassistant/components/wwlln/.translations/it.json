@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Questa posizione \u00e8 gi\u00e0 registrata."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitudine",
+                    "longitude": "Longitudine",
+                    "radius": "Raggio (utilizzando il tuo sistema di unit\u00e0 di misura di base)"
+                },
+                "title": "Inserisci le informazioni sulla tua posizione."
+            }
+        }
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Location is already configured."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mmi": "MMI",
+                    "radius": "Radius"
+                },
+                "title": "Fill in your filter details."
+            }
+        }
+    }
+}

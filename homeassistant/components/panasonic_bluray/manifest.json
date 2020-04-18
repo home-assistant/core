@@ -1,0 +1,7 @@
+{
+  "domain": "panasonic_bluray",
+  "name": "Panasonic Blu-Ray Player",
+  "documentation": "https://www.home-assistant.io/integrations/panasonic_bluray",
+  "requirements": ["panacotta==0.1"],
+  "codeowners": []
+}

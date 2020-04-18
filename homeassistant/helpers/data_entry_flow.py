@@ -2,9 +2,13 @@
 
 import voluptuous as vol
 
-from homeassistant import data_entry_flow, config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.const import HTTP_NOT_FOUND
+import homeassistant.helpers.config_validation as cv
+
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 
 class _BaseFlowManagerView(HomeAssistantView):
@@ -17,24 +21,26 @@ class _BaseFlowManagerView(HomeAssistantView):
     # pylint: disable=no-self-use
     def _prepare_result_json(self, result):
         """Convert result to JSON."""
-        if result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+        if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             data = result.copy()
-            data.pop('result')
-            data.pop('data')
+            data.pop("result")
+            data.pop("data")
             return data
 
-        if result['type'] != data_entry_flow.RESULT_TYPE_FORM:
+        if result["type"] != data_entry_flow.RESULT_TYPE_FORM:
             return result
 
-        import voluptuous_serialize
+        import voluptuous_serialize  # pylint: disable=import-outside-toplevel
 
         data = result.copy()
 
-        schema = data['data_schema']
+        schema = data["data_schema"]
         if schema is None:
-            data['data_schema'] = []
+            data["data_schema"] = []
         else:
-            data['data_schema'] = voluptuous_serialize.convert(schema)
+            data["data_schema"] = voluptuous_serialize.convert(
+                schema, custom_serializer=cv.custom_serializer
+            )
 
         return data
 
@@ -42,23 +48,24 @@ class _BaseFlowManagerView(HomeAssistantView):
 class FlowManagerIndexView(_BaseFlowManagerView):
     """View to create config flows."""
 
-    @RequestDataValidator(vol.Schema({
-        vol.Required('handler'): vol.Any(str, list),
-    }, extra=vol.ALLOW_EXTRA))
+    @RequestDataValidator(
+        vol.Schema({vol.Required("handler"): vol.Any(str, list)}, extra=vol.ALLOW_EXTRA)
+    )
     async def post(self, request, data):
         """Handle a POST request."""
-        if isinstance(data['handler'], list):
-            handler = tuple(data['handler'])
+        if isinstance(data["handler"], list):
+            handler = tuple(data["handler"])
         else:
-            handler = data['handler']
+            handler = data["handler"]
 
         try:
             result = await self._flow_mgr.async_init(
-                handler, context={'source': config_entries.SOURCE_USER})
+                handler, context={"source": config_entries.SOURCE_USER}
+            )
         except data_entry_flow.UnknownHandler:
-            return self.json_message('Invalid handler specified', 404)
+            return self.json_message("Invalid handler specified", HTTP_NOT_FOUND)
         except data_entry_flow.UnknownStep:
-            return self.json_message('Handler does not support init', 400)
+            return self.json_message("Handler does not support user", 400)
 
         result = self._prepare_result_json(result)
 
@@ -73,7 +80,7 @@ class FlowManagerResourceView(_BaseFlowManagerView):
         try:
             result = await self._flow_mgr.async_configure(flow_id)
         except data_entry_flow.UnknownFlow:
-            return self.json_message('Invalid flow specified', 404)
+            return self.json_message("Invalid flow specified", HTTP_NOT_FOUND)
 
         result = self._prepare_result_json(result)
 
@@ -85,9 +92,9 @@ class FlowManagerResourceView(_BaseFlowManagerView):
         try:
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
-            return self.json_message('Invalid flow specified', 404)
+            return self.json_message("Invalid flow specified", HTTP_NOT_FOUND)
         except vol.Invalid:
-            return self.json_message('User input malformed', 400)
+            return self.json_message("User input malformed", 400)
 
         result = self._prepare_result_json(result)
 
@@ -98,6 +105,6 @@ class FlowManagerResourceView(_BaseFlowManagerView):
         try:
             self._flow_mgr.async_abort(flow_id)
         except data_entry_flow.UnknownFlow:
-            return self.json_message('Invalid flow specified', 404)
+            return self.json_message("Invalid flow specified", HTTP_NOT_FOUND)
 
-        return self.json_message('Flow aborted')
+        return self.json_message("Flow aborted")

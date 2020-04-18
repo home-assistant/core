@@ -1,0 +1,7 @@
+{
+  "domain": "fastdotcom",
+  "name": "Fast.com",
+  "documentation": "https://www.home-assistant.io/integrations/fastdotcom",
+  "requirements": ["fastdotcom==0.0.3"],
+  "codeowners": ["@rohankapoorcom"]
+}

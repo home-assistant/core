@@ -1,0 +1,6 @@
+update:
+  description: Update all entities with fresh data from Twente Milieu
+  fields:
+    id:
+      description: Specific unique address ID to update
+      example: 1300012345

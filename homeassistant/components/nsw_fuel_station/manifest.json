@@ -1,0 +1,7 @@
+{
+  "domain": "nsw_fuel_station",
+  "name": "NSW Fuel Station Price",
+  "documentation": "https://www.home-assistant.io/integrations/nsw_fuel_station",
+  "requirements": ["nsw-fuel-api-client==1.0.10"],
+  "codeowners": ["@nickw444"]
+}

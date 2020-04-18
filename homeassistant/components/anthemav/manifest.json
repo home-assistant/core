@@ -1,0 +1,7 @@
+{
+  "domain": "anthemav",
+  "name": "Anthem A/V Receivers",
+  "documentation": "https://www.home-assistant.io/integrations/anthemav",
+  "requirements": ["anthemav==1.1.10"],
+  "codeowners": []
+}

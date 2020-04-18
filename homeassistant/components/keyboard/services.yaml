@@ -1,0 +1,17 @@
+volume_up:
+  description: Simulates a key press of the "Volume Up" button on Home Assistant's host machine.
+
+volume_down:
+  description: Simulates a key press of the "Volume Down" button on Home Assistant's host machine.
+
+volume_mute:
+  description: Simulates a key press of the "Volume Mute" button on Home Assistant's host machine.
+
+media_play_pause:
+  description: Simulates a key press of the "Media Play/Pause" button on Home Assistant's host machine.
+
+media_next_track:
+  description: Simulates a key press of the "Media Next Track" button on Home Assistant's host machine.
+
+media_prev_track:
+  description: Simulates a key press of the "Media Previous Track" button on Home Assistant's host machine.

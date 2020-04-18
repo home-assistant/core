@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "device_fail": "Ov\u00e4ntat fel vid skapande av enhet.",
+            "device_timeout": "Timeout f\u00f6r anslutning till enheten."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rddatorn"
+                },
+                "description": "Ange IP-adressen f\u00f6r din Daikin AC.",
+                "title": "Konfigurera Daikin AC"
+            }
+        }
+    }
+}

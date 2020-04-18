@@ -1,0 +1,6 @@
+{
+  "domain": "folder",
+  "name": "Folder",
+  "documentation": "https://www.home-assistant.io/integrations/folder",
+  "codeowners": []
+}

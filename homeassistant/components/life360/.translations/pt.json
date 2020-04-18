@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "invalid_username": "Nome de utilizador incorreto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Palavra-passe",
+                    "username": "Nome de Utilizador"
+                }
+            }
+        }
+    }
+}

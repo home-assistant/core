@@ -6,7 +6,7 @@ add_all_link:
       example: 1
     mode:
       description: Linking mode   controller - IM is controller   responder - IM is responder
-      example: 'controller'
+      example: "controller"
 delete_all_link:
   description: Tells the Insteon Modem (IM) to remove an All-Link record from the All-Link Database of the IM and a device. Once the IM is set to delete the link, press the link button on the corresponding device to complete the process.
   fields:
@@ -17,17 +17,17 @@ load_all_link_database:
   description: Load the All-Link Database for a device. WARNING - Loading a device All-LInk database is very time consuming and inconsistent. This may take a LONG time and may need to be repeated to obtain all records.
   fields:
     entity_id:
-      description: Name of the device to print
-      example: 'light.1a2b3c'
+      description: Name of the device to load. Use "all" to load the database of all devices.
+      example: "light.1a2b3c"
     reload:
       description: Reload all records. If true the current records are cleared from memory (does not effect the device) and the records are reloaded. If false the existing records are left in place and only missing records are added. Default is false.
-      example: 'true'
+      example: "true"
 print_all_link_database:
   description: Print the All-Link Database for a device. Requires that the All-Link Database is loaded into memory.
   fields:
     entity_id:
       description: Name of the device to print
-      example: 'light.1a2b3c'
+      example: "light.1a2b3c"
 print_im_all_link_database:
   description: Print the All-Link Database for the INSTEON Modem (IM).
 x10_all_units_off:
@@ -48,3 +48,15 @@ x10_all_lights_off:
     housecode:
       description: X10 house code
       example: c
+scene_on:
+  description: Trigger an INSTEON scene to turn ON.
+  fields:
+    group:
+      description: INSTEON group or scene number
+      example: 26
+scene_off:
+  description: Trigger an INSTEON scene to turn OFF.
+  fields:
+    group:
+      description: INSTEON group or scene number
+      example: 26

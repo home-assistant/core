@@ -1,0 +1,6 @@
+{
+  "domain": "command_line",
+  "name": "Command Line",
+  "documentation": "https://www.home-assistant.io/integrations/command_line",
+  "codeowners": []
+}

@@ -19,13 +19,13 @@
             },
             "user": {
                 "data": {
+                    "authorization_code": "Autorisasjonskode (kreves for manuell godkjenning)",
                     "email": "E-postadresse",
                     "password": "Passord"
                 },
                 "description": "Tom",
                 "title": "Google Hangouts p\u00e5logging"
             }
-        },
-        "title": "Google Hangouts"
+        }
     }
 }

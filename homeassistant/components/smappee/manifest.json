@@ -1,0 +1,7 @@
+{
+  "domain": "smappee",
+  "name": "Smappee",
+  "documentation": "https://www.home-assistant.io/integrations/smappee",
+  "requirements": ["smappy==0.2.16"],
+  "codeowners": []
+}

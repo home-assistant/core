@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "\u00c8 possibile configurare un solo account di Spotify.",
+            "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione",
+            "missing_configuration": "L'integrazione di Spotify non \u00e8 configurata. Si prega di seguire la documentazione."
+        },
+        "create_entry": {
+            "default": "Autenticato con successo con Spotify."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Scegli il metodo di autenticazione"
+            }
+        }
+    }
+}

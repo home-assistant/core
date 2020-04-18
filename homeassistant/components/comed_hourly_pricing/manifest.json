@@ -1,0 +1,6 @@
+{
+  "domain": "comed_hourly_pricing",
+  "name": "ComEd Hourly Pricing",
+  "documentation": "https://www.home-assistant.io/integrations/comed_hourly_pricing",
+  "codeowners": []
+}

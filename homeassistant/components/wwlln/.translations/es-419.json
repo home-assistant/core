@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "radius": "Radio (usando su sistema de unidad base)"
+                },
+                "title": "Complete su informaci\u00f3n de ubicaci\u00f3n."
+            }
+        }
+    }
+}

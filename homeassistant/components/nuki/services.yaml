@@ -1,0 +1,9 @@
+lock_n_go:
+  description: "Nuki Lock 'n' Go"
+  fields:
+    entity_id:
+      description: Entity id of the Nuki lock.
+      example: "lock.front_door"
+    unlatch:
+      description: Whether to unlatch the lock.
+      example: false

@@ -1,0 +1,7 @@
+{
+  "domain": "honeywell",
+  "name": "Honeywell Total Connect Comfort (US)",
+  "documentation": "https://www.home-assistant.io/integrations/honeywell",
+  "requirements": ["somecomfort==0.5.2"],
+  "codeowners": ["@zxdavb"]
+}

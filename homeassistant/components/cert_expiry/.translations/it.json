@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Questa combinazione di host e porta \u00e8 gi\u00e0 configurata",
+            "import_failed": "Importazione dalla configurazione non riuscita"
+        },
+        "error": {
+            "connection_refused": "Connessione rifiutata durante la connessione all'host",
+            "connection_timeout": "Tempo scaduto collegandosi a questo host",
+            "resolve_failed": "Questo host non pu\u00f2 essere risolto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "L'hostname del certificato",
+                    "name": "Il nome del certificato",
+                    "port": "La porta del certificato"
+                },
+                "title": "Definire il certificato da testare"
+            }
+        }
+    },
+    "title": "Scadenza certificato"
+}

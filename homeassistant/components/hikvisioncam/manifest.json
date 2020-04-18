@@ -1,0 +1,7 @@
+{
+  "domain": "hikvisioncam",
+  "name": "Hikvision",
+  "documentation": "https://www.home-assistant.io/integrations/hikvisioncam",
+  "requirements": ["hikvision==0.4"],
+  "codeowners": ["@fbradyirl"]
+}

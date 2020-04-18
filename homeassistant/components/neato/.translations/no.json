@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Allerede konfigurert",
+            "invalid_credentials": "Ugyldig brukerinformasjon"
+        },
+        "create_entry": {
+            "default": "Se [Neato dokumentasjon]({docs_url})."
+        },
+        "error": {
+            "invalid_credentials": "Ugyldig brukerinformasjon",
+            "unexpected_error": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "Brukernavn",
+                    "vendor": "Leverand\u00f8r"
+                },
+                "description": "Se [Neato dokumentasjon]({docs_url}).",
+                "title": "Neato kontoinformasjon"
+            }
+        }
+    }
+}

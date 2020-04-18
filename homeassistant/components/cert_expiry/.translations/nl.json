@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "connection_timeout": "Time-out bij verbinding maken met deze host",
+            "resolve_failed": "Deze host kon niet gevonden worden"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "De hostnaam van het certificaat",
+                    "name": "De naam van het certificaat",
+                    "port": "De poort van het certificaat"
+                },
+                "title": "Het certificaat defini\u00ebren dat moet worden getest"
+            }
+        }
+    },
+    "title": "Vervaldatum certificaat"
+}

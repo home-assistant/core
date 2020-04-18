@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "link": {
+                "description": "Debloca\u021bi gateway-ul DECONZ pentru a v\u0103 \u00eenregistra la Home Assistant. \n\n 1. Accesa\u021bi Set\u0103rile deCONZ - > Gateway - > Avansat \n 2. Ap\u0103sa\u021bi butonul \u201eAutentifica\u021bi aplica\u021bia\u201d"
+            },
+            "manual_confirm": {
+                "data": {
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

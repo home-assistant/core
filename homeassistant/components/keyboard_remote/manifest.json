@@ -1,0 +1,7 @@
+{
+  "domain": "keyboard_remote",
+  "name": "Keyboard Remote",
+  "documentation": "https://www.home-assistant.io/integrations/keyboard_remote",
+  "requirements": ["evdev==1.1.2", "aionotify==0.2.0"],
+  "codeowners": ["@bendavid"]
+}

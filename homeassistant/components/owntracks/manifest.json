@@ -1,0 +1,10 @@
+{
+  "domain": "owntracks",
+  "name": "OwnTracks",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/owntracks",
+  "requirements": ["PyNaCl==1.3.0"],
+  "dependencies": ["webhook"],
+  "after_dependencies": ["mqtt", "cloud"],
+  "codeowners": []
+}

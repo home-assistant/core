@@ -1,9 +1,12 @@
 """Decorator for view methods to help with data validation."""
-
 from functools import wraps
 import logging
 
 import voluptuous as vol
+
+from homeassistant.const import HTTP_BAD_REQUEST
+
+# mypy: allow-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,11 +22,15 @@ class RequestDataValidator:
 
     def __init__(self, schema, allow_empty=False):
         """Initialize the decorator."""
+        if isinstance(schema, dict):
+            schema = vol.Schema(schema)
+
         self._schema = schema
         self._allow_empty = allow_empty
 
     def __call__(self, method):
         """Decorate a function."""
+
         @wraps(method)
         async def wrapper(view, request, *args, **kwargs):
             """Wrap a request handler with data validation."""
@@ -31,18 +38,18 @@ class RequestDataValidator:
             try:
                 data = await request.json()
             except ValueError:
-                if not self._allow_empty or \
-                   (await request.content.read()) != b'':
-                    _LOGGER.error('Invalid JSON received.')
-                    return view.json_message('Invalid JSON.', 400)
+                if not self._allow_empty or (await request.content.read()) != b"":
+                    _LOGGER.error("Invalid JSON received.")
+                    return view.json_message("Invalid JSON.", HTTP_BAD_REQUEST)
                 data = {}
 
             try:
-                kwargs['data'] = self._schema(data)
+                kwargs["data"] = self._schema(data)
             except vol.Invalid as err:
-                _LOGGER.error('Data does not match schema: %s', err)
+                _LOGGER.error("Data does not match schema: %s", err)
                 return view.json_message(
-                    'Message format incorrect: {}'.format(err), 400)
+                    f"Message format incorrect: {err}", HTTP_BAD_REQUEST
+                )
 
             result = await method(view, request, *args, **kwargs)
             return result

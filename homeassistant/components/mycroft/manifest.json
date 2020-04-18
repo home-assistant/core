@@ -1,0 +1,7 @@
+{
+  "domain": "mycroft",
+  "name": "Mycroft",
+  "documentation": "https://www.home-assistant.io/integrations/mycroft",
+  "requirements": ["mycroftapi==2.0"],
+  "codeowners": []
+}

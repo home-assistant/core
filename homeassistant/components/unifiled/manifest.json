@@ -1,0 +1,7 @@
+{
+  "domain": "unifiled",
+  "name": "Ubiquiti UniFi LED",
+  "documentation": "https://www.home-assistant.io/integrations/unifiled",
+  "codeowners": ["@florisvdk"],
+  "requirements": ["unifiled==0.11"]
+}

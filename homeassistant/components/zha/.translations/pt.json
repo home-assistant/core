@@ -12,10 +12,16 @@
                     "radio_type": "Tipo de r\u00e1dio",
                     "usb_path": "Caminho do Dispositivo USB"
                 },
-                "description": "Vazio",
-                "title": ""
+                "title": "ZHA"
             }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "warn": "Avisar"
         },
-        "title": ""
+        "trigger_subtype": {
+            "left": "Esquerda"
+        }
     }
 }

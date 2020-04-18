@@ -1,0 +1,6 @@
+{
+  "domain": "clicksend",
+  "name": "ClickSend SMS",
+  "documentation": "https://www.home-assistant.io/integrations/clicksend",
+  "codeowners": []
+}

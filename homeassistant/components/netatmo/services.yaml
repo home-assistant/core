@@ -1,0 +1,10 @@
+# Describes the format for available Netatmo services
+set_schedule:
+  description: Set the heating schedule.
+  fields:
+    schedule_name:
+      description: Schedule name.
+      example: Standard
+    home_name:
+      description: Home name.
+      example: MyHome

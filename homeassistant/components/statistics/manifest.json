@@ -1,0 +1,8 @@
+{
+  "domain": "statistics",
+  "name": "Statistics",
+  "documentation": "https://www.home-assistant.io/integrations/statistics",
+  "after_dependencies": ["recorder"],
+  "codeowners": ["@fabaff"],
+  "quality_scale": "internal"
+}

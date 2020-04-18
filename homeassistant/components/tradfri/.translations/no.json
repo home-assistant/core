@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Bridge er allerede konfigurert"
+            "already_configured": "Bridge er allerede konfigurert.",
+            "already_in_progress": "Brokonfigurasjon er allerede i gang."
         },
         "error": {
             "cannot_connect": "Kan ikke koble til gatewayen.",
@@ -17,7 +18,6 @@
                 "description": "Du finner sikkerhetskoden p\u00e5 baksiden av gatewayen din.",
                 "title": "Skriv inn sikkerhetskode"
             }
-        },
-        "title": "Ikea Tr\u00e5dfri"
+        }
     }
 }

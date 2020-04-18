@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Bridge is already configured"
+            "already_configured": "Bridge is already configured.",
+            "already_in_progress": "Bridge configuration is already in progress."
         },
         "error": {
             "cannot_connect": "Unable to connect to the gateway.",
@@ -17,7 +18,6 @@
                 "description": "You can find the security code on the back of your gateway.",
                 "title": "Enter security code"
             }
-        },
-        "title": "IKEA TR\u00c5DFRI"
+        }
     }
 }

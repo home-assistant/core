@@ -14,7 +14,7 @@
                 "data": {
                     "2fa": "2FA PIN"
                 },
-                "title": "To-faktor-autentiserin"
+                "title": "To-faktor-autentisering"
             },
             "user": {
                 "data": {
@@ -23,7 +23,6 @@
                 },
                 "title": "Google Hangouts Login"
             }
-        },
-        "title": "Google Hangouts"
+        }
     }
 }

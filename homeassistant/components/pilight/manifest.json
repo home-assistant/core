@@ -1,0 +1,7 @@
+{
+  "domain": "pilight",
+  "name": "Pilight",
+  "documentation": "https://www.home-assistant.io/integrations/pilight",
+  "requirements": ["pilight==0.1.1"],
+  "codeowners": ["@trekky12"]
+}

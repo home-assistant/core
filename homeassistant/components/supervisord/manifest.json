@@ -1,0 +1,6 @@
+{
+  "domain": "supervisord",
+  "name": "Supervisord",
+  "documentation": "https://www.home-assistant.io/integrations/supervisord",
+  "codeowners": []
+}

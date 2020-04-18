@@ -1,0 +1,8 @@
+{
+  "domain": "iqvia",
+  "name": "IQVIA",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/iqvia",
+  "requirements": ["numpy==1.18.2", "pyiqvia==0.2.1"],
+  "codeowners": ["@bachya"]
+}

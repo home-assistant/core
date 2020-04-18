@@ -1,0 +1,7 @@
+{
+  "domain": "input_select",
+  "name": "Input Select",
+  "documentation": "https://www.home-assistant.io/integrations/input_select",
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
+}

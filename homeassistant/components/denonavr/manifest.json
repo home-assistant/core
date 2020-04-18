@@ -1,0 +1,7 @@
+{
+  "domain": "denonavr",
+  "name": "Denon AVR Network Receivers",
+  "documentation": "https://www.home-assistant.io/integrations/denonavr",
+  "requirements": ["denonavr==0.8.1"],
+  "codeowners": ["@scarface-4711", "@starkillerOG"]
+}

@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nie znaleziono w sieci urz\u0105dze\u0144 iZone.",
+            "single_instance_allowed": "Wymagana jest tylko jedna konfiguracja iZone."
+        },
+        "step": {
+            "confirm": {
+                "description": "Chcesz skonfigurowa\u0107 iZone?",
+                "title": "iZone"
+            }
+        }
+    }
+}

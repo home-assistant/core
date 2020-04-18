@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "port_exists": "El port ja est\u00e0 configurat"
+        },
+        "error": {
+            "connection_failed": "Ha fallat la connexi\u00f3 Velbus",
+            "port_exists": "El port ja est\u00e0 configurat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nom de la connexi\u00f3 Velbus",
+                    "port": "Cadena de connexi\u00f3"
+                },
+                "title": "Tipus de connexi\u00f3 Velbus"
+            }
+        }
+    }
+}

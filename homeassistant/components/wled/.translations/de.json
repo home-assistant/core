@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dieses WLED-Ger\u00e4t ist bereits konfiguriert.",
+            "connection_error": "Verbindung zum WLED-Ger\u00e4t fehlgeschlagen."
+        },
+        "error": {
+            "connection_error": "Verbindung zum WLED-Ger\u00e4t fehlgeschlagen."
+        },
+        "flow_title": "WLED: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostname oder IP-Adresse"
+                },
+                "description": "Richten Sie Ihren WLED f\u00fcr die Integration mit Home Assistant ein.",
+                "title": "Verkn\u00fcpfen Sie Ihre WLED"
+            },
+            "zeroconf_confirm": {
+                "description": "M\u00f6chten Sie die WLED mit dem Namen `{name}` zu Home Assistant hinzuf\u00fcgen?",
+                "title": "WLED-Ger\u00e4t entdeckt"
+            }
+        }
+    }
+}

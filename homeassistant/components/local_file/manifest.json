@@ -1,0 +1,6 @@
+{
+  "domain": "local_file",
+  "name": "Local File",
+  "documentation": "https://www.home-assistant.io/integrations/local_file",
+  "codeowners": []
+}

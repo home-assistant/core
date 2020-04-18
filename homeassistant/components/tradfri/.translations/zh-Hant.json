@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Bridge \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "Bridge \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002",
+            "already_in_progress": "Bridge \u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d\u3002"
         },
         "error": {
             "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3\u9598\u9053\u5668\u3002",
@@ -17,7 +18,6 @@
                 "description": "\u60a8\u53ef\u4ee5\u65bc\u9598\u9053\u5668\u80cc\u9762\u627e\u5230\u5b89\u5168\u78bc\u3002",
                 "title": "\u8f38\u5165\u5b89\u5168\u78bc"
             }
-        },
-        "title": "IKEA TR\u00c5DFRI"
+        }
     }
 }

@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dieses Ger\u00e4t wurde bereits konfiguriert",
+            "already_in_progress": "Dieses Ger\u00e4t wurde bereits konfiguriert",
+            "not_huawei_lte": "Kein Huawei LTE-Ger\u00e4t"
+        },
+        "error": {
+            "connection_failed": "Verbindung fehlgeschlagen.",
+            "connection_timeout": "Verbindungszeit\u00fcberschreitung",
+            "incorrect_password": "Ung\u00fcltiges Passwort",
+            "incorrect_username": "Ung\u00fcltiger Benutzername",
+            "incorrect_username_or_password": "Ung\u00fcltiger Benutzername oder Kennwort",
+            "invalid_url": "Ung\u00fcltige URL",
+            "login_attempts_exceeded": "Maximale Anzahl von Anmeldeversuchen \u00fcberschritten. Bitte versuche es sp\u00e4ter erneut",
+            "response_error": "Unbekannter Fehler vom Ger\u00e4t",
+            "unknown_connection_error": "Unbekannter Fehler beim Herstellen der Verbindung zum Ger\u00e4t"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "url": "URL",
+                    "username": "Benutzername"
+                },
+                "description": "Gib die Zugangsdaten zum Ger\u00e4t ein. Die Angabe von Benutzername und Passwort ist optional, erm\u00f6glicht aber die Unterst\u00fctzung weiterer Integrationsfunktionen. Andererseits kann die Verwendung einer autorisierten Verbindung zu Problemen beim Zugriff auf die Web-Schnittstelle des Ger\u00e4ts von au\u00dferhalb des Home Assistant f\u00fchren, w\u00e4hrend die Integration aktiv ist, und umgekehrt.",
+                "title": "Konfiguriere Huawei LTE"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Name des Benachrichtigungsdienstes (\u00c4nderung erfordert Neustart)",
+                    "recipient": "SMS-Benachrichtigungsempf\u00e4nger",
+                    "track_new_devices": "Neue Ger\u00e4te verfolgen"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,9 @@
+{
+  "domain": "esphome",
+  "name": "ESPHome",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/esphome",
+  "requirements": ["aioesphomeapi==2.6.1"],
+  "zeroconf": ["_esphomelib._tcp.local."],
+  "codeowners": ["@OttoWinter"]
+}

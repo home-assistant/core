@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "address_exists": "Address already set up."
+        },
+        "error": {
+            "connection_error": "Failed to connect.",
+            "invalid_address": "Address not found in Twente Milieu service area."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "house_letter": "House letter/additional",
+                    "house_number": "House number",
+                    "post_code": "Postal code"
+                },
+                "description": "Set up Twente Milieu providing waste collection information on your address.",
+                "title": "Twente Milieu"
+            }
+        }
+    }
+}

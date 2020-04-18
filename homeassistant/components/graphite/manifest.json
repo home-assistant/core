@@ -1,0 +1,6 @@
+{
+  "domain": "graphite",
+  "name": "Graphite",
+  "documentation": "https://www.home-assistant.io/integrations/graphite",
+  "codeowners": []
+}

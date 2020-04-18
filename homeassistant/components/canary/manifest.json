@@ -1,0 +1,8 @@
+{
+  "domain": "canary",
+  "name": "Canary",
+  "documentation": "https://www.home-assistant.io/integrations/canary",
+  "requirements": ["py-canary==0.5.0"],
+  "dependencies": ["ffmpeg"],
+  "codeowners": []
+}

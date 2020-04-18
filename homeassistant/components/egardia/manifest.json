@@ -1,0 +1,7 @@
+{
+  "domain": "egardia",
+  "name": "Egardia",
+  "documentation": "https://www.home-assistant.io/integrations/egardia",
+  "requirements": ["pythonegardia==1.0.40"],
+  "codeowners": ["@jeroenterheerdt"]
+}

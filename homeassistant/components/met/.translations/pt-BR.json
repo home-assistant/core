@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "O nome j\u00e1 existe"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Eleva\u00e7\u00e3o",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "name": "Nome"
+                },
+                "description": "Instituto de Meteorologia",
+                "title": "Localiza\u00e7\u00e3o"
+            }
+        }
+    }
+}

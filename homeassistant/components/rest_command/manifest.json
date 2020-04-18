@@ -1,0 +1,6 @@
+{
+  "domain": "rest_command",
+  "name": "RESTful Command",
+  "documentation": "https://www.home-assistant.io/integrations/rest_command",
+  "codeowners": []
+}

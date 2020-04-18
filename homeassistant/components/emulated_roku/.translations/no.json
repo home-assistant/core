@@ -11,11 +11,11 @@
                     "host_ip": "Vert IP",
                     "listen_port": "Lytte port",
                     "name": "Navn",
-                    "upnp_bind_multicast": "Bind multicast (True/False)"
+                    "upnp_bind_multicast": "Bind multicast (Sant/Usant)"
                 },
                 "title": "Definer serverkonfigurasjon"
             }
-        },
-        "title": "EmulatedRoku"
-    }
+        }
+    },
+    "title": ""
 }

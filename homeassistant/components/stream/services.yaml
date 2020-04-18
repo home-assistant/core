@@ -1,0 +1,15 @@
+record:
+  description: Make a .mp4 recording from a provided stream.
+  fields:
+    stream_source:
+      description: The input source for the stream.
+      example: "rtsp://my.stream.feed:554"
+    filename:
+      description: The file name string.
+      example: "/tmp/my_stream.mp4"
+    duration:
+      description: "Target recording length (in seconds). Default: 30"
+      example: 30
+    lookback:
+      description: "Target lookback period (in seconds) to include in addition to duration. Only available if there is currently an active HLS stream for stream_source. Default: 0"
+      example: 5

@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "port_exists": "\u6b64\u7aef\u53e3\u5df2\u914d\u7f6e\u5b8c\u6210"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "\u8fd9\u4e2avelbus\u8fde\u63a5\u7684\u540d\u79f0"
+                }
+            }
+        }
+    }
+}

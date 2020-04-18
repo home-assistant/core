@@ -7,10 +7,12 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "host": "Host"
+                },
                 "description": "Digite o endere\u00e7o IP do seu AC Daikin.",
                 "title": "Configurar o AC Daikin"
             }
-        },
-        "title": "AC Daikin"
+        }
     }
 }

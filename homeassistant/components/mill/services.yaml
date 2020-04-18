@@ -1,0 +1,15 @@
+set_room_temperature:
+  description: Set Mill room temperatures.
+  fields:
+    room_name:
+      description: Name of room to change.
+      example: "kitchen"
+    away_temp:
+      description: Away temp.
+      example: 12
+    comfort_temp:
+      description: Comfort temp.
+      example: 22
+    sleep_temp:
+      description: Sleep temp.
+      example: 17

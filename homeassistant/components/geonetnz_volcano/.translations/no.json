@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Beliggenhet er allerede registrert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Radius"
+                },
+                "title": "Fyll ut filterdetaljene."
+            }
+        }
+    }
+}

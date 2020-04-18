@@ -1,0 +1,6 @@
+{
+  "domain": "emoncms",
+  "name": "Emoncms",
+  "documentation": "https://www.home-assistant.io/integrations/emoncms",
+  "codeowners": ["@borpin"]
+}

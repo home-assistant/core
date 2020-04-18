@@ -1,0 +1,6 @@
+{
+  "domain": "prowl",
+  "name": "Prowl",
+  "documentation": "https://www.home-assistant.io/integrations/prowl",
+  "codeowners": []
+}

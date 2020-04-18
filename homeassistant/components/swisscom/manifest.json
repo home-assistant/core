@@ -1,0 +1,6 @@
+{
+  "domain": "swisscom",
+  "name": "Swisscom Internet-Box",
+  "documentation": "https://www.home-assistant.io/integrations/swisscom",
+  "codeowners": []
+}

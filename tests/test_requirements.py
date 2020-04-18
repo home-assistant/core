@@ -1,22 +1,33 @@
 """Test requirements module."""
 import os
-from unittest.mock import patch, call
+from pathlib import Path
+from unittest.mock import call, patch
+
+import pytest
 
 from homeassistant import loader, setup
 from homeassistant.requirements import (
-    CONSTRAINT_FILE, PackageLoadable, async_process_requirements)
+    CONSTRAINT_FILE,
+    PROGRESS_FILE,
+    RequirementsNotFound,
+    _install,
+    async_get_integration_with_requirements,
+    async_process_requirements,
+)
 
-import pkg_resources
+from tests.common import (
+    MockModule,
+    get_test_home_assistant,
+    mock_coro,
+    mock_integration,
+)
 
-from tests.common import get_test_home_assistant, MockModule, mock_coro
 
-RESOURCE_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..', 'resources'))
-
-TEST_NEW_REQ = 'pyhelloworld3==1.0.0'
-
-TEST_ZIP_REQ = 'file://{}#{}' \
-    .format(os.path.join(RESOURCE_DIR, 'pyhelloworld3.zip'), TEST_NEW_REQ)
+def env_without_wheel_links():
+    """Return env without wheel links."""
+    env = dict(os.environ)
+    env.pop("WHEEL_LINKS", None)
+    return env
 
 
 class TestRequirements:
@@ -34,92 +45,226 @@ class TestRequirements:
         """Clean up."""
         self.hass.stop()
 
-    @patch('os.path.dirname')
-    @patch('homeassistant.util.package.is_virtual_env', return_value=True)
-    @patch('homeassistant.util.package.install_package', return_value=True)
+    @patch("os.path.dirname")
+    @patch("homeassistant.util.package.is_virtual_env", return_value=True)
+    @patch("homeassistant.util.package.is_docker_env", return_value=False)
+    @patch("homeassistant.util.package.install_package", return_value=True)
+    @patch.dict(os.environ, env_without_wheel_links(), clear=True)
     def test_requirement_installed_in_venv(
-            self, mock_install, mock_venv, mock_dirname):
+        self, mock_install, mock_denv, mock_venv, mock_dirname
+    ):
         """Test requirement installed in virtual environment."""
-        mock_venv.return_value = True
-        mock_dirname.return_value = 'ha_package_path'
+        mock_dirname.return_value = "ha_package_path"
         self.hass.config.skip_pip = False
-        loader.set_component(
-            self.hass, 'comp',
-            MockModule('comp', requirements=['package==0.0.1']))
-        assert setup.setup_component(self.hass, 'comp')
-        assert 'comp' in self.hass.config.components
+        mock_integration(self.hass, MockModule("comp", requirements=["package==0.0.1"]))
+        assert setup.setup_component(self.hass, "comp", {})
+        assert "comp" in self.hass.config.components
         assert mock_install.call_args == call(
-            'package==0.0.1',
-            constraints=os.path.join('ha_package_path', CONSTRAINT_FILE))
+            "package==0.0.1",
+            constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
+            no_cache_dir=False,
+        )
 
-    @patch('os.path.dirname')
-    @patch('homeassistant.util.package.is_virtual_env', return_value=False)
-    @patch('homeassistant.util.package.install_package', return_value=True)
+    @patch("os.path.dirname")
+    @patch("homeassistant.util.package.is_virtual_env", return_value=False)
+    @patch("homeassistant.util.package.is_docker_env", return_value=False)
+    @patch("homeassistant.util.package.install_package", return_value=True)
+    @patch.dict(os.environ, env_without_wheel_links(), clear=True)
     def test_requirement_installed_in_deps(
-            self, mock_install, mock_venv, mock_dirname):
+        self, mock_install, mock_denv, mock_venv, mock_dirname
+    ):
         """Test requirement installed in deps directory."""
-        mock_dirname.return_value = 'ha_package_path'
+        mock_dirname.return_value = "ha_package_path"
         self.hass.config.skip_pip = False
-        loader.set_component(
-            self.hass, 'comp',
-            MockModule('comp', requirements=['package==0.0.1']))
-        assert setup.setup_component(self.hass, 'comp')
-        assert 'comp' in self.hass.config.components
+        mock_integration(self.hass, MockModule("comp", requirements=["package==0.0.1"]))
+        assert setup.setup_component(self.hass, "comp", {})
+        assert "comp" in self.hass.config.components
         assert mock_install.call_args == call(
-            'package==0.0.1', target=self.hass.config.path('deps'),
-            constraints=os.path.join('ha_package_path', CONSTRAINT_FILE))
+            "package==0.0.1",
+            target=self.hass.config.path("deps"),
+            constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
+            no_cache_dir=False,
+        )
 
 
 async def test_install_existing_package(hass):
     """Test an install attempt on an existing package."""
-    with patch('homeassistant.util.package.install_package',
-               return_value=mock_coro(True)) as mock_inst:
-        assert await async_process_requirements(
-            hass, 'test_component', ['hello==1.0.0'])
+    with patch(
+        "homeassistant.util.package.install_package", return_value=True
+    ) as mock_inst:
+        await async_process_requirements(hass, "test_component", ["hello==1.0.0"])
 
     assert len(mock_inst.mock_calls) == 1
 
-    with patch('homeassistant.requirements.PackageLoadable.loadable',
-               return_value=mock_coro(True)), \
-            patch(
-                'homeassistant.util.package.install_package') as mock_inst:
-        assert await async_process_requirements(
-            hass, 'test_component', ['hello==1.0.0'])
+    with patch("homeassistant.util.package.is_installed", return_value=True), patch(
+        "homeassistant.util.package.install_package"
+    ) as mock_inst:
+        await async_process_requirements(hass, "test_component", ["hello==1.0.0"])
 
     assert len(mock_inst.mock_calls) == 0
 
 
-async def test_check_package_global(hass):
-    """Test for an installed package."""
-    installed_package = list(pkg_resources.working_set)[0].project_name
-    assert await PackageLoadable(hass).loadable(installed_package)
+async def test_install_missing_package(hass):
+    """Test an install attempt on an existing package."""
+    with patch(
+        "homeassistant.util.package.install_package", return_value=False
+    ) as mock_inst:
+        with pytest.raises(RequirementsNotFound):
+            await async_process_requirements(hass, "test_component", ["hello==1.0.0"])
+
+    assert len(mock_inst.mock_calls) == 1
 
 
-async def test_check_package_zip(hass):
-    """Test for an installed zip package."""
-    assert not await PackageLoadable(hass).loadable(TEST_ZIP_REQ)
+async def test_get_integration_with_requirements(hass):
+    """Check getting an integration with loaded requirements."""
+    hass.config.skip_pip = False
+    mock_integration(
+        hass, MockModule("test_component_dep", requirements=["test-comp-dep==1.0.0"])
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            "test_component_after_dep", requirements=["test-comp-after-dep==1.0.0"]
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            "test_component",
+            requirements=["test-comp==1.0.0"],
+            dependencies=["test_component_dep"],
+            partial_manifest={"after_dependencies": ["test_component_after_dep"]},
+        ),
+    )
+
+    with patch(
+        "homeassistant.util.package.is_installed", return_value=False
+    ) as mock_is_installed, patch(
+        "homeassistant.util.package.install_package", return_value=True
+    ) as mock_inst:
+
+        integration = await async_get_integration_with_requirements(
+            hass, "test_component"
+        )
+        assert integration
+        assert integration.domain == "test_component"
+
+    assert len(mock_is_installed.mock_calls) == 3
+    assert sorted(mock_call[1][0] for mock_call in mock_is_installed.mock_calls) == [
+        "test-comp-after-dep==1.0.0",
+        "test-comp-dep==1.0.0",
+        "test-comp==1.0.0",
+    ]
+
+    assert len(mock_inst.mock_calls) == 3
+    assert sorted(mock_call[1][0] for mock_call in mock_inst.mock_calls) == [
+        "test-comp-after-dep==1.0.0",
+        "test-comp-dep==1.0.0",
+        "test-comp==1.0.0",
+    ]
 
 
-async def test_package_loadable_installed_twice(hass):
-    """Test that a package is loadable when installed twice.
+async def test_install_with_wheels_index(hass):
+    """Test an install attempt with wheels index URL."""
+    hass.config.skip_pip = False
+    mock_integration(hass, MockModule("comp", requirements=["hello==1.0.0"]))
 
-    If a package is installed twice, only the first version will be imported.
-    Test that package_loadable will only compare with the first package.
-    """
-    v1 = pkg_resources.Distribution(project_name='hello', version='1.0.0')
-    v2 = pkg_resources.Distribution(project_name='hello', version='2.0.0')
+    with patch("homeassistant.util.package.is_installed", return_value=False), patch(
+        "homeassistant.util.package.is_docker_env", return_value=True
+    ), patch("homeassistant.util.package.install_package") as mock_inst, patch.dict(
+        os.environ, {"WHEELS_LINKS": "https://wheels.hass.io/test"}
+    ), patch(
+        "os.path.dirname"
+    ) as mock_dir:
+        mock_dir.return_value = "ha_package_path"
+        assert await setup.async_setup_component(hass, "comp", {})
+        assert "comp" in hass.config.components
 
-    with patch('pkg_resources.find_distributions', side_effect=[[v1]]):
-        assert not await PackageLoadable(hass).loadable('hello==2.0.0')
+        assert mock_inst.call_args == call(
+            "hello==1.0.0",
+            find_links="https://wheels.hass.io/test",
+            constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
+            no_cache_dir=True,
+        )
 
-    with patch('pkg_resources.find_distributions', side_effect=[[v1], [v2]]):
-        assert not await PackageLoadable(hass).loadable('hello==2.0.0')
 
-    with patch('pkg_resources.find_distributions', side_effect=[[v2], [v1]]):
-        assert await PackageLoadable(hass).loadable('hello==2.0.0')
+async def test_install_on_docker(hass):
+    """Test an install attempt on an docker system env."""
+    hass.config.skip_pip = False
+    mock_integration(hass, MockModule("comp", requirements=["hello==1.0.0"]))
 
-    with patch('pkg_resources.find_distributions', side_effect=[[v2]]):
-        assert await PackageLoadable(hass).loadable('hello==2.0.0')
+    with patch("homeassistant.util.package.is_installed", return_value=False), patch(
+        "homeassistant.util.package.is_docker_env", return_value=True
+    ), patch("homeassistant.util.package.install_package") as mock_inst, patch(
+        "os.path.dirname"
+    ) as mock_dir, patch.dict(
+        os.environ, env_without_wheel_links(), clear=True
+    ):
+        mock_dir.return_value = "ha_package_path"
+        assert await setup.async_setup_component(hass, "comp", {})
+        assert "comp" in hass.config.components
 
-    with patch('pkg_resources.find_distributions', side_effect=[[v2]]):
-        assert await PackageLoadable(hass).loadable('Hello==2.0.0')
+        assert mock_inst.call_args == call(
+            "hello==1.0.0",
+            constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
+            no_cache_dir=True,
+        )
+
+
+async def test_progress_lock(hass):
+    """Test an install attempt on an existing package."""
+    progress_path = Path(hass.config.path(PROGRESS_FILE))
+    kwargs = {"hello": "world"}
+
+    def assert_env(req, **passed_kwargs):
+        """Assert the env."""
+        assert progress_path.exists()
+        assert req == "hello"
+        assert passed_kwargs == kwargs
+        return True
+
+    with patch("homeassistant.util.package.install_package", side_effect=assert_env):
+        _install(hass, "hello", kwargs)
+
+    assert not progress_path.exists()
+
+
+async def test_discovery_requirements_ssdp(hass):
+    """Test that we load discovery requirements."""
+    hass.config.skip_pip = False
+    ssdp = await loader.async_get_integration(hass, "ssdp")
+
+    mock_integration(
+        hass, MockModule("ssdp_comp", partial_manifest={"ssdp": [{"st": "roku:ecp"}]})
+    )
+    with patch(
+        "homeassistant.requirements.async_process_requirements",
+        side_effect=lambda _, _2, _3: mock_coro(),
+    ) as mock_process:
+        await async_get_integration_with_requirements(hass, "ssdp_comp")
+
+    assert len(mock_process.mock_calls) == 1
+    assert mock_process.mock_calls[0][1][2] == ssdp.requirements
+
+
+@pytest.mark.parametrize(
+    "partial_manifest",
+    [{"zeroconf": ["_googlecast._tcp.local."]}, {"homekit": {"models": ["LIFX"]}}],
+)
+async def test_discovery_requirements_zeroconf(hass, partial_manifest):
+    """Test that we load discovery requirements."""
+    hass.config.skip_pip = False
+    zeroconf = await loader.async_get_integration(hass, "zeroconf")
+
+    mock_integration(
+        hass, MockModule("comp", partial_manifest=partial_manifest),
+    )
+
+    with patch(
+        "homeassistant.requirements.async_process_requirements",
+        side_effect=lambda _, _2, _3: mock_coro(),
+    ) as mock_process:
+        await async_get_integration_with_requirements(hass, "comp")
+
+    assert len(mock_process.mock_calls) == 2  # zeroconf also depends on http
+    assert mock_process.mock_calls[0][1][2] == zeroconf.requirements

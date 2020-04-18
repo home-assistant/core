@@ -1,0 +1,56 @@
+# Describes the format for available services for KEBA charging staitons
+
+request_data:
+  description: >
+    Request new data from the charging station.
+
+authorize:
+  description: >
+    Authorizes a charging process with the predefined RFID tag of the configuration file.
+
+deauthorize:
+  description: >
+    Deauthorizes the running charging process with the predefined RFID tag of the configuration file.
+
+set_energy:
+  description: Sets the energy target after which the charging process stops.
+  fields:
+    energy:
+      description: >
+        The energy target to stop charging in kWh. Setting 0 disables the limit.
+      example: 10.0
+
+set_current:
+  description: Sets the maximum current for charging processes.
+  fields:
+    current:
+      description: >
+        The maximum current used for the charging process in A. Allowed are values between
+        6 A and 63 A. Invalid values are discardedand the default is set to 6 A.
+        The value is also depending on the DIP-switchsettings and the used cable of the
+        charging station
+      example: 16
+enable:
+  description: >
+    Starts a charging process if charging station is authorized.
+
+disable:
+  description: >
+    Stops the charging process if charging station is authorized.
+
+set_failsafe:
+  description: >
+    Set the failsafe mode of the charging station. If all parameters are 0, the failsafe mode will be disabled.
+  fields:
+    failsafe_timeout:
+      description: >
+        Timeout in seconds after which the failsafe mode is triggered, if set_current was not executed during this time.
+      example: 30
+    failsafe_fallback:
+      description: >
+        Fallback current in A to be set after timeout.
+      example: 6
+    failsafe_persist:
+      description: >
+        If failsafe_persist is 0, the failsafe option is only until charging station reboot. If failsafe_persist is 1, the failsafe option will survive a reboot.
+      example: 0

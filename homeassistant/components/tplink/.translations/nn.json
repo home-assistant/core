@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "title": "TP-Link Smart Home"
+            }
+        }
+    }
+}

@@ -19,13 +19,13 @@
             },
             "user": {
                 "data": {
+                    "authorization_code": "Auktoriseringskod (kr\u00e4vs vid manuell verifiering)",
                     "email": "E-postadress",
                     "password": "L\u00f6senord"
                 },
                 "description": "Missing english translation",
                 "title": "Google Hangouts-inloggning"
             }
-        },
-        "title": "Google Hangouts"
+        }
     }
 }

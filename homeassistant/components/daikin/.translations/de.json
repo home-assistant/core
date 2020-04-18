@@ -10,10 +10,9 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Geben Sie die IP-Adresse Ihrer Daikin AC ein.",
+                "description": "Gib die IP-Adresse deiner Daikin AC ein.",
                 "title": "Daikin AC konfigurieren"
             }
-        },
-        "title": "Daikin AC"
+        }
     }
 }

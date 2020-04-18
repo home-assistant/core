@@ -1,0 +1,12 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_idle": "{entity_name} waart",
+            "is_off": "{entity_name} ass aus",
+            "is_on": "{entity_name} ass un",
+            "is_paused": "{entity_name} ass paus\u00e9iert",
+            "is_playing": "{entity_name} spillt"
+        }
+    },
+    "title": "Medie Spiller"
+}

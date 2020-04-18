@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44 Almond \u5e33\u865f\u3002",
+            "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 Almond \u4f3a\u670d\u5668\u3002",
+            "missing_configuration": "\u8acb\u53c3\u8003\u76f8\u95dc\u6587\u4ef6\u4ee5\u4e86\u89e3\u5982\u4f55\u8a2d\u5b9a Almond\u3002"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Home Assistant \u4ee5\u4f7f\u7528 Hass.io \u9644\u52a0\u7d44\u4ef6\uff1a{addon} \u9023\u7dda\u81f3 Almond\uff1f",
+                "title": "\u4f7f\u7528 Hass.io \u9644\u52a0\u7d44\u4ef6 Almond"
+            },
+            "pick_implementation": {
+                "title": "\u9078\u64c7\u9a57\u8b49\u6a21\u5f0f"
+            }
+        }
+    }
+}

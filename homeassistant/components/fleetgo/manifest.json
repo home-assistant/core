@@ -1,0 +1,7 @@
+{
+  "domain": "fleetgo",
+  "name": "FleetGO",
+  "documentation": "https://www.home-assistant.io/integrations/fleetgo",
+  "requirements": ["ritassist==0.9.2"],
+  "codeowners": []
+}

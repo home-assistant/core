@@ -1,0 +1,45 @@
+power_on:
+  description: Power on all devices which supports it.
+select_device:
+  description: Select HDMI device.
+  fields:
+    device:
+      description: Address of device to select. Can be entity_id, physical address or alias from configuration.
+      example: '"switch.hdmi_1" or "1.1.0.0" or "01:10"'
+send_command:
+  description: Sends CEC command into HDMI CEC capable adapter.
+  fields:
+    att:
+      description: Optional parameters.
+      example: [0, 2]
+    cmd:
+      description: 'Command itself. Could be decimal number or string with hexadeximal notation: "0x10".'
+      example: 144 or "0x90"
+    dst:
+      description: 'Destination for command. Could be decimal number or string with hexadeximal notation: "0x10".'
+      example: 5 or "0x5"
+    raw:
+      description: >-
+        Raw CEC command in format "00:00:00:00" where first two digits
+        are source and destination, second byte is command and optional other bytes
+        are command parameters. If raw command specified, other params are ignored.
+      example: '"10:36"'
+    src:
+      description: 'Source of command. Could be decimal number or string with hexadeximal notation: "0x10".'
+      example: 12 or "0xc"
+standby:
+  description: Standby all devices which supports it.
+update:
+  description: Update devices state from network.
+volume:
+  description: Increase or decrease volume of system.
+  fields:
+    down:
+      description: Decreases volume x levels.
+      example: 3
+    mute:
+      description: Mutes audio system. Value should be on, off or toggle.
+      example: toggle
+    up:
+      description: Increases volume x levels.
+      example: 3

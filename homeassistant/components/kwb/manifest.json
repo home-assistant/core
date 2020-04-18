@@ -1,0 +1,7 @@
+{
+  "domain": "kwb",
+  "name": "KWB Easyfire",
+  "documentation": "https://www.home-assistant.io/integrations/kwb",
+  "requirements": ["pykwb==0.0.8"],
+  "codeowners": []
+}

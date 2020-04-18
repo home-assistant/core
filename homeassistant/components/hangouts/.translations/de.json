@@ -5,7 +5,7 @@
             "unknown": "Ein unbekannter Fehler ist aufgetreten."
         },
         "error": {
-            "invalid_2fa": "Ung\u00fcltige 2-Faktor Authentifizierung, bitte versuchen Sie es erneut.",
+            "invalid_2fa": "Ung\u00fcltige 2-Faktor Authentifizierung, bitte versuche es erneut.",
             "invalid_2fa_method": "Ung\u00fcltige 2FA Methode (mit Telefon verifizieren)",
             "invalid_login": "Ung\u00fcltige Daten, bitte erneut versuchen."
         },
@@ -19,13 +19,13 @@
             },
             "user": {
                 "data": {
+                    "authorization_code": "Autorisierungscode (f\u00fcr die manuelle Authentifizierung erforderlich)",
                     "email": "E-Mail-Adresse",
                     "password": "Passwort"
                 },
                 "description": "Leer",
                 "title": "Google Hangouts Login"
             }
-        },
-        "title": "Google Hangouts"
+        }
     }
 }

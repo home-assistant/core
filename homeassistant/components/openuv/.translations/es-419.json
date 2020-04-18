@@ -7,10 +7,12 @@
         "step": {
             "user": {
                 "data": {
+                    "api_key": "Clave API de OpenUV",
                     "elevation": "Elevaci\u00f3n",
                     "latitude": "Latitud",
                     "longitude": "Longitud"
-                }
+                },
+                "title": "Completa tu informaci\u00f3n"
             }
         }
     }

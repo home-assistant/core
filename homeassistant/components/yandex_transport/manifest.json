@@ -1,0 +1,7 @@
+{
+  "domain": "yandex_transport",
+  "name": "Yandex Transport",
+  "documentation": "https://www.home-assistant.io/integrations/yandex_transport",
+  "requirements": ["ya_ma==0.3.8"],
+  "codeowners": ["@rishatik92"]
+}

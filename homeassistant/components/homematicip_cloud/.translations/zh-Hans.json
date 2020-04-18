@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u63a5\u5165\u70b9\u5df2\u7ecf\u914d\u7f6e\u5b8c\u6210",
+            "already_configured": "\u63a5\u5165\u70b9\u5df2\u914d\u7f6e",
             "connection_aborted": "\u65e0\u6cd5\u8fde\u63a5\u5230 HMIP \u670d\u52a1\u5668",
             "unknown": "\u53d1\u751f\u672a\u77e5\u9519\u8bef\u3002"
         },
@@ -24,7 +24,6 @@
                 "description": "\u6309\u4e0b\u63a5\u5165\u70b9\u4e0a\u7684\u84dd\u8272\u6309\u94ae\u7136\u540e\u70b9\u51fb\u63d0\u4ea4\u6309\u94ae\uff0c\u4ee5\u5c06 HomematicIP \u6ce8\u518c\u5230 Home Assistant\u3002\n\n![\u63a5\u5165\u70b9\u7684\u6309\u94ae\u4f4d\u7f6e]\n(/static/images/config_flows/config_homematicip_cloud.png)",
                 "title": "\u8fde\u63a5\u63a5\u5165\u70b9"
             }
-        },
-        "title": "HomematicIP Cloud"
+        }
     }
 }
