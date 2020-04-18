@@ -1,22 +1,19 @@
 """Support for Xiomi Gateway alarm control panels."""
 
-import asyncio
 from functools import partial
 import logging
 
-from miio import DeviceException, gateway
+from miio import DeviceException
 
 from homeassistant.components.alarm_control_panel import (
     SUPPORT_ALARM_ARM_AWAY,
     AlarmControlPanel,
 )
 from homeassistant.const import (
-    CONF_NAME,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
 )
-from homeassistant.exceptions import PlatformNotReady
 
 from .const import DOMAIN
 
@@ -71,11 +68,12 @@ class XiaomiGatewayAlarm(AlarmControlPanel):
 
     @property
     def device_id(self):
-        """Return the ID of this Hue light."""
+        """Return the device id of the gateway."""
         return self._device_id
 
     @property
     def device_info(self):
+        """Return the device info of the gateway."""
         return {
             "identifiers": {(DOMAIN, self._device_id)},
         }
