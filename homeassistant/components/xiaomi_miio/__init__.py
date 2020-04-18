@@ -58,7 +58,7 @@ async def async_setup_entry(
 
     hass.data[DOMAIN][entry.entry_id] = gateway_device
 
-    gateway_model = "{}-{}".format(gateway_info.model, gateway_info.hardware_version)
+    gateway_model = f"{gateway_info.model}-{gateway_info.hardware_version}"
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
