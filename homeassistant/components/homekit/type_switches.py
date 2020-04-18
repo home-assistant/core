@@ -11,6 +11,12 @@ from pyhap.const import (
 
 from homeassistant.components.script import ATTR_CAN_CANCEL
 from homeassistant.components.switch import DOMAIN
+from homeassistant.components.vacuum import (
+    DOMAIN as VACUUM_DOMAIN,
+    SERVICE_RETURN_TO_BASE,
+    SERVICE_START,
+    STATE_CLEANING,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_TYPE,
@@ -141,6 +147,25 @@ class Switch(HomeAccessory):
             return
 
         current_state = new_state.state == STATE_ON
+        if self.char_on.value is not current_state:
+            _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
+            self.char_on.set_value(current_state)
+
+
+@TYPES.register("DockVacuum")
+class DockVacuum(Switch):
+    """Generate a Switch accessory."""
+
+    def set_state(self, value):
+        """Move switch state to value if call came from HomeKit."""
+        _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
+        params = {ATTR_ENTITY_ID: self.entity_id}
+        service = SERVICE_START if value else SERVICE_RETURN_TO_BASE
+        self.call_service(VACUUM_DOMAIN, service, params)
+
+    def update_state(self, new_state):
+        """Update switch state after state changed."""
+        current_state = new_state.state in (STATE_CLEANING, STATE_ON)
         if self.char_on.value is not current_state:
             _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
             self.char_on.set_value(current_state)
