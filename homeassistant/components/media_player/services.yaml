@@ -164,5 +164,5 @@ send_key:
       description: Name(s) of entities to which send the key command.
       example: "media_player.living_room_tv"
     key:
-      description: The name of the key command to send. Valid values can be found in https://www.home-assistant.io/integrations/media_player#service-media_playersend_key. For integration-specific commands, consult the documentation.
+      description: The name of the key command to send. Default valid values are 'power', 'volume_up', 'volume_down', 'mute', 'up', 'down', 'left' 'right', 'select', 'back', 'exit', 'home', 'play', 'pause', 'play_pause', 'fast_forward', 'rewind', 'next_track' and 'previous_track'. For integration-specific commands, consult their documentation.
       example: 'up'
