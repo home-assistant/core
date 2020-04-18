@@ -44,18 +44,19 @@ class SMSNotificationService(BaseNotificationService):
             encoded = gammu.EncodeSMS(smsinfo)  # pylint: disable=no-member
         except gammu.GSMError as exc:  # pylint: disable=no-member
             _LOGGER.error("Encoding message %s failed: %s", message, exc)
-        else:
-            # Send messages
-            for encoded_message in encoded:
-                # Prepare message data
-                gammu_message = {
-                    "Text": encoded_message["Text"],
-                    # We tell that we want to use first SMSC number stored in phone
-                    "SMSC": {"Location": 1},
-                    "Number": self.number,
-                }
-                try:
-                    # Actually send the message
-                    self.gateway.SendSMS(gammu_message)
-                except gammu.GSMError as exc:  # pylint: disable=no-member
-                    _LOGGER.error("Sending to %s failed: %s", self.number, exc)
+            return
+
+        # Send messages
+        for encoded_message in encoded:
+            # Prepare message data
+            gammu_message = {
+                "Text": encoded_message["Text"],
+                # We tell that we want to use first SMSC number stored in phone
+                "SMSC": {"Location": 1},
+                "Number": self.number,
+            }
+            try:
+                # Actually send the message
+                self.gateway.SendSMS(gammu_message)
+            except gammu.GSMError as exc:  # pylint: disable=no-member
+                _LOGGER.error("Sending to %s failed: %s", self.number, exc)
