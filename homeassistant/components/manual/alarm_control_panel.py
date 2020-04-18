@@ -31,6 +31,7 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.helpers.restore_state import RestoreEntity
