@@ -44,7 +44,7 @@ async def async_setup(hass, config) -> bool:
     hub = pysmarthab.SmartHab()
 
     try:
-        hub.login(username, password)
+        await hass.async_add_executor_job(hub.login, username, password)
     except pysmarthab.RequestFailedException as ex:
         _LOGGER.error("Error while trying to reach SmartHab API.")
         _LOGGER.debug(ex, exc_info=True)
@@ -75,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     hub = pysmarthab.SmartHab()
 
     try:
-        hub.login(username, password)
+        await hass.async_add_executor_job(hub.login, username, password)
     except pysmarthab.RequestFailedException as ex:
         _LOGGER.error("Error while trying to reach SmartHab API.")
         _LOGGER.debug(ex, exc_info=True)

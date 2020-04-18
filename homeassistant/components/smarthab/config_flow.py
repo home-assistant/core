@@ -69,7 +69,3 @@ class SmartHabConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=username, data={CONF_EMAIL: username, CONF_PASSWORD: password},
         )
-
-    async def async_step_import(self, user_input=None):
-        """Import a config entry."""
-        return await self.async_step_user(user_input)
