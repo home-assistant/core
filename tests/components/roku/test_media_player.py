@@ -22,7 +22,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SOURCE,
     SERVICE_NEXT_TRACK,
     SERVICE_PREVIOUS_TRACK,
     SERVICE_TURN_OFF,
@@ -177,14 +176,14 @@ async def test_services(hass: HomeAssistantType, requests_mock: Mocker) -> None:
 
     with patch("roku.Roku._post") as remote_mock:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_SELECT_SOURCE, {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_SOURCE: "Home"}, blocking=True
+            MP_DOMAIN, SERVICE_SELECT_SOURCE, {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_INPUT_SOURCE: "Home"}, blocking=True
         )
 
         remote_mock.assert_called_once_with("/keypress/Home")
 
     with patch("roku.Roku._post") as remote_mock:
         await hass.services.async_call(
-            MP_DOMAIN, SERVICE_SELECT_SOURCE, {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_SOURCE: "Netflix"}, blocking=True
+            MP_DOMAIN, SERVICE_SELECT_SOURCE, {ATTR_ENTITY_ID: MAIN_ENTITY_ID, ATTR_INPUT_SOURCE: "Netflix"}, blocking=True
         )
 
         remote_mock.assert_called_once_with("/launch/12")
