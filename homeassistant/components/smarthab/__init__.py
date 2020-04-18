@@ -53,7 +53,7 @@ def setup(hass, config) -> bool:
     # Pass hub object to child platforms
     hass.data[DOMAIN] = {DATA_HUB: hub}
 
-    load_platform(hass, "light", DOMAIN, None, config)
-    load_platform(hass, "cover", DOMAIN, None, config)
+    load_platform(hass, "light", DOMAIN, {}, config)
+    load_platform(hass, "cover", DOMAIN, {}, config)
 
     return True

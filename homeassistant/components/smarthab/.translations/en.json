@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "service": "Error while trying to reach SmartHab. Check your connection. Service might be down.",
+            "wrong_login": "Invalid credentials: please check your email and password."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "email": "Email"
+                },
+                "description": "For added security, be sure to use a secondary account, created from the SmartHab application.",
+                "title": "Setup SmartHab"
+            }
+        }
+    }
+}
