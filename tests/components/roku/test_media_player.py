@@ -81,8 +81,32 @@ async def test_supported_features(
         == state.attributes.get("supported_features")
     )
 
+    # Features supported for Rokus
+    await setup_integration(
+        hass,
+        requests_mock,
+        device="rokutv",
+        app="tvinput-dtv",
+        host=TV_HOST,
+        unique_id=TV_SERIAL,
+    )
 
-async def test_check_attributes(hass: HomeAssistantType, requests_mock: Mocker) -> None:
+    state = hass.states.get(TV_ENTITY_ID)
+    assert (
+        SUPPORT_PREVIOUS_TRACK
+        | SUPPORT_NEXT_TRACK
+        | SUPPORT_VOLUME_SET
+        | SUPPORT_VOLUME_MUTE
+        | SUPPORT_SELECT_SOURCE
+        | SUPPORT_PLAY
+        | SUPPORT_PLAY_MEDIA
+        | SUPPORT_TURN_ON
+        | SUPPORT_TURN_OFF
+        == state.attributes.get("supported_features")
+    )
+
+
+async def test_attributes(hass: HomeAssistantType, requests_mock: Mocker) -> None:
     """Test attributes."""
     await setup_integration(hass, requests_mock)
 
@@ -93,7 +117,7 @@ async def test_check_attributes(hass: HomeAssistantType, requests_mock: Mocker) 
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Roku"
 
 
-async def test_check_attributes_tv(
+async def test_tv_attributes(
     hass: HomeAssistantType, requests_mock: Mocker
 ) -> None:
     """Test attributes for Roku TV."""
@@ -113,17 +137,9 @@ async def test_check_attributes_tv(
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Antenna TV"
 
 
-async def test_main_services(hass: HomeAssistantType, requests_mock: Mocker) -> None:
+async def test_services(hass: HomeAssistantType, requests_mock: Mocker) -> None:
     """Test the different media player services."""
     await setup_integration(hass, requests_mock)
-    await setup_integration(
-        hass,
-        requests_mock,
-        device="rokutv",
-        app="tvinput-dtv",
-        host=TV_HOST,
-        unique_id=TV_SERIAL,
-    )
 
     with patch("roku.Roku._post") as remote_mock:
         await hass.services.async_call(
@@ -138,6 +154,18 @@ async def test_main_services(hass: HomeAssistantType, requests_mock: Mocker) -> 
         )
 
         remote_mock.assert_called_once_with("/keypress/PowerOn")
+
+
+async def test_tv_services(hass: HomeAssistantType, requests_mock: Mocker) -> None:
+    """Test the media player services related to Roku TV."""
+    await setup_integration(
+        hass,
+        requests_mock,
+        device="rokutv",
+        app="tvinput-dtv",
+        host=TV_HOST,
+        unique_id=TV_SERIAL,
+    )
 
     with patch("roku.Roku.launch") as tune_mock:
         await hass.services.async_call(
