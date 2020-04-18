@@ -4,61 +4,27 @@ from datetime import timedelta
 import errno
 import logging
 
-import voluptuous as vol
+from wiffi import WiffiTcpServer
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
 from .binary_sensor import BoolEntity
 from .const import DOMAIN
 from .sensor import NumberEntity, StringEntity
-from .wiffi import WiffiTcpServer
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_SERVERS = "servers"
-
-SERVER_CONFIG = vol.Schema({vol.Required(CONF_PORT): cv.port}, extra=vol.ALLOW_EXTRA)
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {vol.Required(CONF_SERVERS): vol.All(cv.ensure_list, [SERVER_CONFIG])}
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 PLATFORMS = ["sensor", "binary_sensor"]
 
 
-@callback
-def configured_entries(hass):
-    """Return a set contains the server ports of the configured wiffi integrations."""
-    return set(
-        entry.data[CONF_PORT] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
-
-
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the wiffi component. config contains data from configuration.yaml."""
-    entries = configured_entries(hass)
-    if DOMAIN in config:
-        for server in config[DOMAIN][CONF_SERVERS]:
-            port = server[CONF_PORT]
-            if port not in entries:
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": SOURCE_IMPORT},
-                        data={CONF_PORT: port},
-                    )
-                )
     return True
 
 

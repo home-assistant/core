@@ -6,13 +6,13 @@ from collections import OrderedDict
 import errno
 
 import voluptuous as vol
+from wiffi import WiffiTcpServer
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PORT
 from homeassistant.core import callback
 
 from .const import DEFAULT_PORT, DOMAIN
-from .wiffi import WiffiTcpServer
 
 
 @config_entries.HANDLERS.register(DOMAIN)

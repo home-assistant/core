@@ -2176,6 +2176,9 @@ webexteamssdk==1.1.1
 # homeassistant.components.gpmdp
 websocket-client==0.54.0
 
+# homeassistant.components.wiffi
+wiffi==1.0.0
+
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.4.0
 

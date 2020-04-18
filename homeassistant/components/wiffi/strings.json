@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "STALL WIFFI",
     "step": {
       "user": {
         "title": "Setup TCP server for WIFFI devices",
