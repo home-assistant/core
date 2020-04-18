@@ -101,7 +101,7 @@ class ProliphixThermostat(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return the current state of the thermostat."""
-        state = self._pdp.hvac_mode
+        state = self._pdp.hvac_state
         if state in (1, 2):
             return HVAC_MODE_OFF
         if state == 3:
