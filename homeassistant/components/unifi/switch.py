@@ -135,47 +135,7 @@ def add_entities(controller, async_add_entities, switches_off):
         async_add_entities(switches)
 
 
-class UniFiSwitch(UniFiClient, SwitchDevice):
-    """UniFi switch base class."""
-
-    TYPE = ""
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this switch."""
-        return f"{self.TYPE}-{self.client.mac}"
-
-    async def async_added_to_hass(self) -> None:
-        """Client entity created."""
-        self.controller.entities[DOMAIN][self.TYPE].add(self.client.mac)
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, self.controller.signal_options_update, self.options_updated
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, self.controller.signal_remove, self.remove_item
-            )
-        )
-        await super().async_added_to_hass()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect client object when removed."""
-        await super().async_will_remove_from_hass()
-        self.controller.entities[DOMAIN][self.TYPE].remove(self.client.mac)
-
-    async def options_updated(self) -> None:
-        """Config entry options are updated, remove entity if option is disabled."""
-        raise NotImplementedError
-
-    async def remove_item(self, mac_addresses: set) -> None:
-        """Remove entity if client MAC is part of set."""
-        if self.client.mac in mac_addresses:
-            await self.async_remove()
-
-
-class UniFiPOEClientSwitch(UniFiSwitch, RestoreEntity):
+class UniFiPOEClientSwitch(UniFiClient, SwitchDevice, RestoreEntity):
     """Representation of a client that uses POE."""
 
     TYPE = POE_SWITCH
@@ -269,7 +229,7 @@ class UniFiPOEClientSwitch(UniFiSwitch, RestoreEntity):
             await self.async_remove()
 
 
-class UniFiBlockClientSwitch(UniFiSwitch):
+class UniFiBlockClientSwitch(UniFiClient, SwitchDevice):
     """Representation of a blockable client."""
 
     TYPE = BLOCK_SWITCH

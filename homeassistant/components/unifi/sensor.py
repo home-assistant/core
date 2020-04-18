@@ -53,51 +53,19 @@ def add_entities(controller, async_add_entities):
 class UniFiBandwidthSensor(UniFiClient):
     """UniFi bandwidth sensor base class."""
 
-    TYPE = ""
-
     @property
     def name(self) -> str:
         """Return the name of the client."""
         return f"{super().name} {self.TYPE.upper()}"
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique identifier for this bandwidth sensor."""
-        return f"{self.TYPE}-{self.client.mac}"
-
-    @property
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity."""
         return DATA_MEGABYTES
 
-    async def async_added_to_hass(self) -> None:
-        """Client entity created."""
-        self.controller.entities[DOMAIN][self.TYPE].add(self.client.mac)
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, self.controller.signal_options_update, self.options_updated
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, self.controller.signal_remove, self.remove_item
-            )
-        )
-        await super().async_added_to_hass()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect client object when removed."""
-        await super().async_will_remove_from_hass()
-        self.controller.entities[DOMAIN][self.TYPE].remove(self.client.mac)
-
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.controller.option_allow_bandwidth_sensors:
-            await self.async_remove()
-
-    async def remove_item(self, mac_addresses: set) -> None:
-        """Remove entity if client MAC is part of set."""
-        if self.client.mac in mac_addresses:
             await self.async_remove()
 
 

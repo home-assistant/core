@@ -5,6 +5,7 @@ from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
 from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
+from homeassistant.components.unifi.unifi_entity_base import UniFiBase
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -221,26 +222,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
         return attributes
 
-    async def async_added_to_hass(self) -> None:
-        """Client entity created."""
-        self.controller.entities[DOMAIN][self.TYPE].add(self.client.mac)
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, self.controller.signal_options_update, self.options_updated
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, self.controller.signal_remove, self.remove_item
-            )
-        )
-        await super().async_added_to_hass()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect client object when removed."""
-        await super().async_will_remove_from_hass()
-        self.controller.entities[DOMAIN][self.TYPE].remove(self.client.mac)
-
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.controller.option_track_clients:
@@ -256,46 +237,31 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             ):
                 await self.async_remove()
 
-    async def remove_item(self, mac_addresses: set) -> None:
-        """Remove entity if client MAC is part of set."""
-        if self.client.mac in mac_addresses:
-            await self.async_remove()
 
-
-class UniFiDeviceTracker(ScannerEntity):
+class UniFiDeviceTracker(UniFiBase, ScannerEntity):
     """Representation of a network infrastructure device."""
 
     TYPE = DEVICE_TRACKER
 
     def __init__(self, device, controller):
         """Set up tracked device."""
+        super().__init__(controller)
         self.device = device
-        self.controller = controller
+
+    @property
+    def mac(self):
+        """Return MAC of device."""
+        return self.device.mac
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
+        await super().async_added_to_hass()
         LOGGER.debug("New device %s (%s)", self.entity_id, self.device.mac)
-        self.controller.entities[DOMAIN][self.TYPE].add(self.device.mac)
         self.device.register_callback(self.async_update_callback)
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, self.controller.signal_reachable, self.async_update_callback
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, self.controller.signal_options_update, self.options_updated
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, self.controller.signal_remove, self.remove_item
-            )
-        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
-        self.controller.entities[DOMAIN][self.TYPE].remove(self.device.mac)
+        await super().async_will_remove_from_hass()
         self.device.remove_callback(self.async_update_callback)
 
     @callback
@@ -369,17 +335,7 @@ class UniFiDeviceTracker(ScannerEntity):
 
         return attributes
 
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return True
-
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.controller.option_track_devices:
-            await self.async_remove()
-
-    async def remove_item(self, mac_addresses: set) -> None:
-        """Remove entity if client MAC is part of set."""
-        if self.device.mac in mac_addresses:
             await self.async_remove()
