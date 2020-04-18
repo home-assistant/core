@@ -57,7 +57,8 @@ async def async_setup_entry(
                 zone_config.get(SERVICE_TURN_ON),
             )
             for zone, zone_config in config[CONF_ZONE].items()
-        ]
+        ],
+        True,
     )
 
     return True
