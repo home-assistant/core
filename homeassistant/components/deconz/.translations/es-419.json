@@ -13,33 +13,23 @@
         },
         "step": {
             "hassio_confirm": {
-                "data": {
-                    "allow_clip_sensor": "Permitir la importaci\u00f3n de sensores virtuales",
-                    "allow_deconz_groups": "Permitir la importaci\u00f3n de grupos deCONZ"
-                },
                 "description": "\u00bfDesea configurar Home Assistant para conectarse a la puerta de enlace deCONZ proporcionada por el complemento hass.io {addon}?",
                 "title": "deCONZ Zigbee gateway a trav\u00e9s del complemento Hass.io"
             },
             "init": {
-                "data": {
-                    "host": "Host",
-                    "port": "Puerto"
-                },
                 "title": "Definir el gateway deCONZ"
             },
             "link": {
                 "description": "Desbloquee su puerta de enlace deCONZ para registrarse con Home Assistant. \n\n 1. Vaya a Configuraci\u00f3n deCONZ - > Gateway - > Avanzado \n 2. Presione el bot\u00f3n \"Autenticar aplicaci\u00f3n\"",
                 "title": "Enlazar con deCONZ"
             },
-            "options": {
+            "manual_confirm": {
                 "data": {
-                    "allow_clip_sensor": "Permitir la importaci\u00f3n de sensores virtuales",
-                    "allow_deconz_groups": "Permitir la importaci\u00f3n de grupos deCONZ"
-                },
-                "title": "Opciones de configuraci\u00f3n adicionales para deCONZ"
+                    "host": "Host",
+                    "port": "Puerto"
+                }
             }
-        },
-        "title": "deCONZ Zigbee gateway"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -58,17 +48,6 @@
         "trigger_type": {
             "remote_button_rotated": "Bot\u00f3n girado \"{subtype}\"",
             "remote_gyro_activated": "Dispositivo agitado"
-        }
-    },
-    "options": {
-        "step": {
-            "async_step_deconz_devices": {
-                "data": {
-                    "allow_clip_sensor": "Permitir sensores deCONZ CLIP",
-                    "allow_deconz_groups": "Permitir grupos de luz deCONZ"
-                },
-                "description": "Configurar la visibilidad de los tipos de dispositivos deCONZ"
-            }
         }
     }
 }

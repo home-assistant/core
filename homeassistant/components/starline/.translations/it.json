@@ -36,7 +36,6 @@
                 "description": "Email e password dell'account StarLine",
                 "title": "Credenziali utente"
             }
-        },
-        "title": "StarLine"
+        }
     }
 }

@@ -40,14 +40,11 @@ def setup(hass, config):
     """Set up the Zabbix component."""
 
     conf = config[DOMAIN]
-    if conf[CONF_SSL]:
-        schema = "https"
-    else:
-        schema = "http"
+    protocol = "https" if config[CONF_SSL] else "http"
 
-    url = urljoin("{}://{}".format(schema, conf[CONF_HOST]), conf[CONF_PATH])
-    username = conf.get(CONF_USERNAME, None)
-    password = conf.get(CONF_PASSWORD, None)
+    url = urljoin(f"{protocol}://{conf[CONF_HOST]}", conf[CONF_PATH])
+    username = conf.get(CONF_USERNAME)
+    password = conf.get(CONF_PASSWORD)
 
     zapi = ZabbixAPI(url)
     try:

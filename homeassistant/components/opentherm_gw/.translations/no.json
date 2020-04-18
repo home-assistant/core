@@ -10,15 +10,12 @@
             "init": {
                 "data": {
                     "device": "Bane eller URL-adresse",
-                    "floor_temperature": "Gulv klimatemperatur",
-                    "id": "ID",
-                    "name": "Navn",
-                    "precision": "Klima temperaturpresisjon"
+                    "id": "",
+                    "name": "Navn"
                 },
                 "title": "OpenTherm Gateway"
             }
-        },
-        "title": "OpenTherm Gateway"
+        }
     },
     "options": {
         "step": {

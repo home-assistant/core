@@ -1,17 +1,13 @@
 """Config flow for Sense integration."""
 import logging
 
-from sense_energy import (
-    ASyncSenseable,
-    SenseAPITimeoutException,
-    SenseAuthenticationException,
-)
+from sense_energy import ASyncSenseable, SenseAuthenticationException
 import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT
 
-from .const import ACTIVE_UPDATE_RATE, DEFAULT_TIMEOUT
+from .const import ACTIVE_UPDATE_RATE, DEFAULT_TIMEOUT, SENSE_TIMEOUT_EXCEPTIONS
 
 from .const import DOMAIN  # pylint:disable=unused-import; pylint:disable=unused-import
 
@@ -55,7 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
                 await self.async_set_unique_id(user_input[CONF_EMAIL])
                 return self.async_create_entry(title=info["title"], data=user_input)
-            except SenseAPITimeoutException:
+            except SENSE_TIMEOUT_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             except SenseAuthenticationException:
                 errors["base"] = "invalid_auth"

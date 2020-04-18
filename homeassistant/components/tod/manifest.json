@@ -2,8 +2,6 @@
   "domain": "tod",
   "name": "Times of the Day",
   "documentation": "https://www.home-assistant.io/integrations/tod",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": [],
   "quality_scale": "internal"
 }

@@ -11,7 +11,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, HTTP_OK, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
@@ -59,9 +59,9 @@ def due_in_minutes(timestamp):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dublin public transport sensor."""
-    name = config.get(CONF_NAME)
-    stop = config.get(CONF_STOP_ID)
-    route = config.get(CONF_ROUTE)
+    name = config[CONF_NAME]
+    stop = config[CONF_STOP_ID]
+    route = config[CONF_ROUTE]
 
     data = PublicTransportData(stop, route)
     add_entities([DublinPublicTransportSensor(data, stop, route, name)], True)
@@ -94,7 +94,7 @@ class DublinPublicTransportSensor(Entity):
         if self._times is not None:
             next_up = "None"
             if len(self._times) > 1:
-                next_up = self._times[1][ATTR_ROUTE] + " in "
+                next_up = f"{self._times[1][ATTR_ROUTE]} in "
                 next_up += self._times[1][ATTR_DUE_IN]
 
             return {
@@ -148,7 +148,7 @@ class PublicTransportData:
 
         response = requests.get(_RESOURCE, params, timeout=10)
 
-        if response.status_code != 200:
+        if response.status_code != HTTP_OK:
             self.info = [
                 {ATTR_DUE_AT: "n/a", ATTR_ROUTE: self.route, ATTR_DUE_IN: "n/a"}
             ]

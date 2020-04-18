@@ -13,5 +13,6 @@
             "locked": "{entity_name} locked",
             "unlocked": "{entity_name} unlocked"
         }
-    }
+    },
+    "title": "Lock"
 }

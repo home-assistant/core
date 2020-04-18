@@ -36,7 +36,6 @@
                 "description": "StarLine account email and password",
                 "title": "User credentials"
             }
-        },
-        "title": "StarLine"
+        }
     }
 }

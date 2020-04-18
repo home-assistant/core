@@ -1,7 +1,7 @@
 """Support for Waterfurnace."""
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.const import TEMP_FAHRENHEIT, UNIT_PERCENTAGE
+from homeassistant.const import POWER_WATT, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
@@ -24,7 +24,7 @@ class WFSensorConfig:
 
 SENSORS = [
     WFSensorConfig("Furnace Mode", "mode"),
-    WFSensorConfig("Total Power", "totalunitpower", "mdi:flash", "W"),
+    WFSensorConfig("Total Power", "totalunitpower", "mdi:flash", POWER_WATT),
     WFSensorConfig(
         "Active Setpoint", "tstatactivesetpoint", "mdi:thermometer", TEMP_FAHRENHEIT
     ),
@@ -39,10 +39,10 @@ SENSORS = [
     WFSensorConfig(
         "Humidity", "tstatrelativehumidity", "mdi:water-percent", UNIT_PERCENTAGE
     ),
-    WFSensorConfig("Compressor Power", "compressorpower", "mdi:flash", "W"),
-    WFSensorConfig("Fan Power", "fanpower", "mdi:flash", "W"),
-    WFSensorConfig("Aux Power", "auxpower", "mdi:flash", "W"),
-    WFSensorConfig("Loop Pump Power", "looppumppower", "mdi:flash", "W"),
+    WFSensorConfig("Compressor Power", "compressorpower", "mdi:flash", POWER_WATT),
+    WFSensorConfig("Fan Power", "fanpower", "mdi:flash", POWER_WATT),
+    WFSensorConfig("Aux Power", "auxpower", "mdi:flash", POWER_WATT),
+    WFSensorConfig("Loop Pump Power", "looppumppower", "mdi:flash", POWER_WATT),
     WFSensorConfig("Compressor Speed", "actualcompressorspeed", "mdi:speedometer"),
     WFSensorConfig("Fan Speed", "airflowcurrentspeed", "mdi:fan"),
 ]
@@ -105,8 +105,10 @@ class WaterFurnaceSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.async_update_callback
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                UPDATE_TOPIC, self.async_update_callback
+            )
         )
 
     @callback
@@ -114,4 +116,4 @@ class WaterFurnaceSensor(Entity):
         """Update state."""
         if self.client.data is not None:
             self._state = getattr(self.client.data, self._attr, None)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

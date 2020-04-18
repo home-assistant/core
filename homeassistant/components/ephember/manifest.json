@@ -3,6 +3,5 @@
   "name": "EPH Controls",
   "documentation": "https://www.home-assistant.io/integrations/ephember",
   "requirements": ["pyephember==0.3.1"],
-  "dependencies": [],
   "codeowners": ["@ttroy50"]
 }

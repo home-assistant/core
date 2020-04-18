@@ -1,12 +1,14 @@
 """Test the translation helper."""
-# pylint: disable=protected-access
+import asyncio
 from os import path
-from unittest.mock import patch
+import pathlib
 
+from asynctest import Mock, patch
 import pytest
 
 from homeassistant.generated import config_flows
 import homeassistant.helpers.translation as translation
+from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
@@ -43,14 +45,28 @@ async def test_component_translation_file(hass):
     assert await async_setup_component(hass, "test_standalone", {"test_standalone"})
     assert await async_setup_component(hass, "test_package", {"test_package"})
 
+    (
+        int_test,
+        int_test_embedded,
+        int_test_standalone,
+        int_test_package,
+    ) = await asyncio.gather(
+        async_get_integration(hass, "test"),
+        async_get_integration(hass, "test_embedded"),
+        async_get_integration(hass, "test_standalone"),
+        async_get_integration(hass, "test_package"),
+    )
+
     assert path.normpath(
-        await translation.component_translation_file(hass, "switch.test", "en")
+        translation.component_translation_file("switch.test", "en", int_test)
     ) == path.normpath(
         hass.config.path("custom_components", "test", ".translations", "switch.en.json")
     )
 
     assert path.normpath(
-        await translation.component_translation_file(hass, "switch.test_embedded", "en")
+        translation.component_translation_file(
+            "switch.test_embedded", "en", int_test_embedded
+        )
     ) == path.normpath(
         hass.config.path(
             "custom_components", "test_embedded", ".translations", "switch.en.json"
@@ -58,12 +74,14 @@ async def test_component_translation_file(hass):
     )
 
     assert (
-        await translation.component_translation_file(hass, "test_standalone", "en")
+        translation.component_translation_file(
+            "test_standalone", "en", int_test_standalone
+        )
         is None
     )
 
     assert path.normpath(
-        await translation.component_translation_file(hass, "test_package", "en")
+        translation.component_translation_file("test_package", "en", int_test_package)
     ) == path.normpath(
         hass.config.path(
             "custom_components", "test_package", ".translations", "en.json"
@@ -118,6 +136,8 @@ async def test_get_translations(hass, mock_config_flows):
 async def test_get_translations_loads_config_flows(hass, mock_config_flows):
     """Test the get translations helper loads config flow translations."""
     mock_config_flows.append("component1")
+    integration = Mock(file_path=pathlib.Path(__file__))
+    integration.name = "Component 1"
 
     with patch.object(
         translation, "component_translation_file", return_value=mock_coro("bla.json")
@@ -125,6 +145,12 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
         translation,
         "load_translations_files",
         return_value={"component1": {"hello": "world"}},
+    ), patch(
+        "homeassistant.helpers.translation.async_get_integration",
+        return_value=integration,
     ):
         translations = await translation.async_get_translations(hass, "en")
-    assert translations == {"component.component1.hello": "world"}
+    assert translations == {
+        "component.component1.title": "Component 1",
+        "component.component1.hello": "world",
+    }

@@ -86,7 +86,8 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
         },
     )
 
-    with patch("homeassistant.components.spotify.config_flow.Spotify"):
+    with patch("homeassistant.components.spotify.config_flow.Spotify") as spotify_mock:
+        spotify_mock.return_value.current_user.return_value = {"id": "fake_id"}
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["data"]["auth_implementation"] == DOMAIN

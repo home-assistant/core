@@ -7,5 +7,6 @@
             "is_paused": "{entity_name} er sat p\u00e5 pause",
             "is_playing": "{entity_name} afspiller"
         }
-    }
+    },
+    "title": "Medieafspiller"
 }

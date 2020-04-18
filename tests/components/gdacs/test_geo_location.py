@@ -28,7 +28,9 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_START,
+    LENGTH_KILOMETERS,
 )
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
@@ -97,6 +99,8 @@ async def test_setup(hass):
         all_states = hass.states.async_all()
         # 3 geolocation and 1 sensor entities
         assert len(all_states) == 4
+        entity_registry = await async_get_registry(hass)
+        assert len(entity_registry.entities) == 4
 
         state = hass.states.get("geo_location.drought_name_1")
         assert state is not None
@@ -121,7 +125,7 @@ async def test_setup(hass):
             ATTR_EVENT_TYPE: "Drought",
             ATTR_SEVERITY: "Severity 1",
             ATTR_VULNERABILITY: "Vulnerability 1",
-            ATTR_UNIT_OF_MEASUREMENT: "km",
+            ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             ATTR_SOURCE: "gdacs",
             ATTR_ICON: "mdi:water-off",
         }
@@ -137,7 +141,7 @@ async def test_setup(hass):
             ATTR_FRIENDLY_NAME: "Tropical Cyclone: Name 2",
             ATTR_DESCRIPTION: "Description 2",
             ATTR_EVENT_TYPE: "Tropical Cyclone",
-            ATTR_UNIT_OF_MEASUREMENT: "km",
+            ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             ATTR_SOURCE: "gdacs",
             ATTR_ICON: "mdi:weather-hurricane",
         }
@@ -154,7 +158,7 @@ async def test_setup(hass):
             ATTR_DESCRIPTION: "Description 3",
             ATTR_EVENT_TYPE: "Tropical Cyclone",
             ATTR_COUNTRY: "Country 2",
-            ATTR_UNIT_OF_MEASUREMENT: "km",
+            ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             ATTR_SOURCE: "gdacs",
             ATTR_ICON: "mdi:weather-hurricane",
         }
@@ -184,6 +188,7 @@ async def test_setup(hass):
 
         all_states = hass.states.async_all()
         assert len(all_states) == 1
+        assert len(entity_registry.entities) == 1
 
 
 async def test_setup_imperial(hass):

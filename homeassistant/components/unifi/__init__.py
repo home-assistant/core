@@ -7,7 +7,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .config_flow import get_controller_id_from_config_entry
-from .const import ATTR_MANUFACTURER, DOMAIN, UNIFI_WIRELESS_CLIENTS
+from .const import ATTR_MANUFACTURER, DOMAIN, LOGGER, UNIFI_WIRELESS_CLIENTS
 from .controller import UniFiController
 
 SAVE_DELAY = 10
@@ -40,6 +40,10 @@ async def async_setup_entry(hass, config_entry):
     controller_id = get_controller_id_from_config_entry(config_entry)
     hass.data[DOMAIN][controller_id] = controller
 
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)
+
+    LOGGER.debug("UniFi config options %s", config_entry.options)
+
     if controller.mac is None:
         return True
 
@@ -52,8 +56,6 @@ async def async_setup_entry(hass, config_entry):
         name="UniFi Controller",
         # sw_version=config.raw['swversion'],
     )
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)
 
     return True
 

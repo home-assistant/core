@@ -53,10 +53,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the CUPS sensor."""
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    printers = config.get(CONF_PRINTERS)
-    is_cups = config.get(CONF_IS_CUPS_SERVER)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    printers = config[CONF_PRINTERS]
+    is_cups = config[CONF_IS_CUPS_SERVER]
 
     if is_cups:
         data = CupsData(host, port, None)

@@ -10,13 +10,21 @@
         "step": {
             "user": {
                 "data": {
-                    "code": "Kode (for Home Assistant)",
                     "password": "Passord",
                     "username": "E-postadresse"
                 },
                 "title": "Fyll ut informasjonen din"
             }
-        },
-        "title": "SimpliSafe"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Kode (brukt i home assistant ui)"
+                },
+                "title": "Konfigurer SimpliSafe"
+            }
+        }
     }
 }

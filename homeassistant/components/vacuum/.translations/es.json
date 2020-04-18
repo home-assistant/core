@@ -12,5 +12,6 @@
             "cleaning": "{entity_name} empez\u00f3 a limpiar",
             "docked": "{entity_name} en la base"
         }
-    }
+    },
+    "title": "Aspiradora"
 }

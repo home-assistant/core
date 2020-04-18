@@ -2,7 +2,5 @@
   "domain": "ddwrt",
   "name": "DD-WRT",
   "documentation": "https://www.home-assistant.io/integrations/ddwrt",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": []
 }

@@ -2,18 +2,24 @@
 from abc import abstractmethod
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDevice,
+)
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import (
+from .const import (
+    DOMAIN as DOMAIN_RACHIO,
+    KEY_DEVICE_ID,
+    KEY_STATUS,
+    KEY_SUBTYPE,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
     STATUS_OFFLINE,
     STATUS_ONLINE,
-    SUBTYPE_OFFLINE,
-    SUBTYPE_ONLINE,
-    RachioDeviceInfoProvider,
 )
-from .const import DOMAIN as DOMAIN_RACHIO, KEY_DEVICE_ID, KEY_STATUS, KEY_SUBTYPE
+from .entity import RachioDevice
+from .webhooks import SUBTYPE_COLD_REBOOT, SUBTYPE_OFFLINE, SUBTYPE_ONLINE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,51 +38,48 @@ def _create_entities(hass, config_entry):
     return entities
 
 
-class RachioControllerBinarySensor(RachioDeviceInfoProvider, BinarySensorDevice):
+class RachioControllerBinarySensor(RachioDevice, BinarySensorDevice):
     """Represent a binary sensor that reflects a Rachio state."""
 
     def __init__(self, controller, poll=True):
         """Set up a new Rachio controller binary sensor."""
         super().__init__(controller)
-
         if poll:
             self._state = self._poll_update()
         else:
             self._state = None
 
     @property
-    def should_poll(self) -> bool:
-        """Declare that this entity pushes its state to HA."""
-        return False
-
-    @property
     def is_on(self) -> bool:
         """Return whether the sensor has a 'true' value."""
         return self._state
 
-    def _handle_any_update(self, *args, **kwargs) -> None:
+    @callback
+    def _async_handle_any_update(self, *args, **kwargs) -> None:
         """Determine whether an update event applies to this device."""
         if args[0][KEY_DEVICE_ID] != self._controller.controller_id:
             # For another device
             return
 
         # For this device
-        self._handle_update(args, kwargs)
+        self._async_handle_update(args, kwargs)
 
     @abstractmethod
     def _poll_update(self, data=None) -> bool:
         """Request the state from the API."""
-        pass
 
     @abstractmethod
-    def _handle_update(self, *args, **kwargs) -> None:
+    def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle an update to the state of this sensor."""
-        pass
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_RACHIO_CONTROLLER_UPDATE, self._handle_any_update
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_RACHIO_CONTROLLER_UPDATE,
+                self._async_handle_any_update,
+            )
         )
 
 
@@ -91,7 +94,7 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
     @property
     def name(self) -> str:
         """Return the name of this sensor including the controller name."""
-        return f"{self._controller.name} online"
+        return self._controller.name
 
     @property
     def unique_id(self) -> str:
@@ -101,7 +104,7 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
     @property
     def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return "connectivity"
+        return DEVICE_CLASS_CONNECTIVITY
 
     @property
     def icon(self) -> str:
@@ -121,11 +124,15 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
             '"%s" reported in unknown state "%s"', self.name, data[KEY_STATUS]
         )
 
-    def _handle_update(self, *args, **kwargs) -> None:
+    @callback
+    def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle an update to the state of this sensor."""
-        if args[0][0][KEY_SUBTYPE] == SUBTYPE_ONLINE:
+        if (
+            args[0][0][KEY_SUBTYPE] == SUBTYPE_ONLINE
+            or args[0][0][KEY_SUBTYPE] == SUBTYPE_COLD_REBOOT
+        ):
             self._state = True
         elif args[0][0][KEY_SUBTYPE] == SUBTYPE_OFFLINE:
             self._state = False
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Locatie al geregistreerd"
-        },
         "step": {
             "user": {
                 "data": {
@@ -11,7 +8,6 @@
                 },
                 "title": "Vul uw filtergegevens in."
             }
-        },
-        "title": "GeoNet NZ Quakes"
+        }
     }
 }

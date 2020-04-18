@@ -1,6 +1,7 @@
 """The tests for the discovery component."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+from asynctest import patch
 import pytest
 
 from homeassistant import config_entries

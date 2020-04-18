@@ -1,0 +1,26 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "Habilitar {entity_name} fuera de casa",
+            "arm_home": "Habilitar {entity_name} en casa",
+            "arm_night": "Habilitar {entity_name} de noche",
+            "disarm": "Deshabilitar {entity_name}",
+            "trigger": "Activar {entity_name}"
+        },
+        "condition_type": {
+            "is_armed_away": "{entity_name} est\u00e1 habilitada fuera de casa",
+            "is_armed_home": "{entity_name} est\u00e1 habilitada en casa",
+            "is_armed_night": "{entity_name} est\u00e1 habilitada de noche",
+            "is_disarmed": "{entity_name} est\u00e1 deshabilitada",
+            "is_triggered": "{entity_name} est\u00e1 activada"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} habilitada fuera de casa",
+            "armed_home": "{entity_name} habilitada en casa",
+            "armed_night": "{entity_name} habilitada de noche",
+            "disarmed": "{entity_name} deshabilitada",
+            "triggered": "{entity_name} activada"
+        }
+    },
+    "title": "Panel de control de alarma"
+}

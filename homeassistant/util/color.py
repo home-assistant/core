@@ -424,7 +424,7 @@ def color_rgbw_to_rgb(r: int, g: int, b: int, w: int) -> Tuple[int, int, int]:
 
 def color_rgb_to_hex(r: int, g: int, b: int) -> str:
     """Return a RGB color from a hex color string."""
-    return "{0:02x}{1:02x}{2:02x}".format(round(r), round(g), round(b))
+    return "{:02x}{:02x}{:02x}".format(round(r), round(g), round(b))
 
 
 def rgb_hex_to_rgb_list(hex_string: str) -> List[int]:

@@ -2,7 +2,5 @@
   "domain": "syslog",
   "name": "Syslog",
   "documentation": "https://www.home-assistant.io/integrations/syslog",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": ["@fabaff"]
 }

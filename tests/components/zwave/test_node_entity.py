@@ -13,6 +13,7 @@ import tests.mock.zwave as mock_zwave
 async def test_maybe_schedule_update(hass, mock_openzwave):
     """Test maybe schedule update."""
     base_entity = node_entity.ZWaveBaseEntity()
+    base_entity.entity_id = "zwave.bla"
     base_entity.hass = hass
 
     with patch.object(hass.loop, "call_later") as mock_call_later:
@@ -21,12 +22,12 @@ async def test_maybe_schedule_update(hass, mock_openzwave):
 
         base_entity._schedule_update()
         assert len(mock_call_later.mock_calls) == 1
+        assert base_entity._update_scheduled is True
 
         do_update = mock_call_later.mock_calls[0][1][1]
 
-        with patch.object(hass, "async_add_job") as mock_add_job:
-            do_update()
-            assert mock_add_job.called
+        do_update()
+        assert base_entity._update_scheduled is False
 
         base_entity._schedule_update()
         assert len(mock_call_later.mock_calls) == 2
@@ -614,7 +615,7 @@ class TestZWaveNodeEntity(unittest.TestCase):
 
     def test_name(self):
         """Test name property."""
-        assert "Mock Node" == self.entity.name
+        assert self.entity.name == "Mock Node"
 
     def test_state_before_update(self):
         """Test state before update was called."""
@@ -624,33 +625,33 @@ class TestZWaveNodeEntity(unittest.TestCase):
         """Test state property."""
         self.node.is_ready = False
         self.entity.node_changed()
-        assert "initializing" == self.entity.state
+        assert self.entity.state == "initializing"
 
         self.node.is_failed = True
         self.node.query_stage = "Complete"
         self.entity.node_changed()
-        assert "dead" == self.entity.state
+        assert self.entity.state == "dead"
 
         self.node.is_failed = False
         self.node.is_awake = False
         self.entity.node_changed()
-        assert "sleeping" == self.entity.state
+        assert self.entity.state == "sleeping"
 
     def test_state_ready(self):
         """Test state property."""
         self.node.query_stage = "Complete"
         self.node.is_ready = True
         self.entity.node_changed()
-        assert "ready" == self.entity.state
+        assert self.entity.state == "ready"
 
         self.node.is_failed = True
         self.entity.node_changed()
-        assert "dead" == self.entity.state
+        assert self.entity.state == "dead"
 
         self.node.is_failed = False
         self.node.is_awake = False
         self.entity.node_changed()
-        assert "sleeping" == self.entity.state
+        assert self.entity.state == "sleeping"
 
     def test_not_polled(self):
         """Test should_poll property."""
@@ -658,7 +659,7 @@ class TestZWaveNodeEntity(unittest.TestCase):
 
     def test_unique_id(self):
         """Test unique_id."""
-        assert "node-567" == self.entity.unique_id
+        assert self.entity.unique_id == "node-567"
 
     def test_unique_id_missing_data(self):
         """Test unique_id."""

@@ -92,7 +92,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
         # These imports shouldn't be moved to the top, because they depend on code from the model_dir.
         # (The model_dir is created during the manual setup process. See integration docs.)
-        import tensorflow as tf
+        import tensorflow as tf  # pylint: disable=import-outside-toplevel
+
+        # pylint: disable=import-outside-toplevel
         from object_detection.utils import label_map_util
     except ImportError:
         _LOGGER.error(
@@ -104,7 +106,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         # Display warning that PIL will be used if no OpenCV is found.
-        import cv2  # noqa: F401 pylint: disable=unused-import
+        import cv2  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel
     except ImportError:
         _LOGGER.warning(
             "No OpenCV library found. TensorFlow will process image with "
@@ -166,7 +168,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "TensorFlow {0}".format(split_entity_id(camera_entity)[1])
+            self._name = "TensorFlow {}".format(split_entity_id(camera_entity)[1])
         self._session = session
         self._graph = detection_graph
         self._category_index = category_index
@@ -256,7 +258,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
                 1,
                 1,
             ]:
-                label = "{} Detection Area".format(category.capitalize())
+                label = f"{category.capitalize()} Detection Area"
                 draw_box(
                     draw,
                     self._category_areas[category],
@@ -268,7 +270,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
             # Draw detected objects
             for instance in values:
-                label = "{0} {1:.1f}%".format(category, instance["score"])
+                label = "{} {:.1f}%".format(category, instance["score"])
                 draw_box(
                     draw, instance["box"], img_width, img_height, label, (255, 255, 0)
                 )
@@ -281,7 +283,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         """Process the image."""
 
         try:
-            import cv2  # pylint: disable=import-error
+            import cv2  # pylint: disable=import-error, import-outside-toplevel
 
             img = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
             inp = img[:, :, [2, 1, 0]]  # BGR->RGB

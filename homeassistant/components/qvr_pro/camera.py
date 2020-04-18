@@ -90,6 +90,13 @@ class QVRProCamera(Camera):
 
     def camera_image(self):
         """Get image bytes from camera."""
+        try:
+            return self._client.get_snapshot(self.guid)
+
+        except QVRResponseError as ex:
+            _LOGGER.error("Error getting image: %s", ex)
+            self._client.connect()
+
         return self._client.get_snapshot(self.guid)
 
     async def stream_source(self):

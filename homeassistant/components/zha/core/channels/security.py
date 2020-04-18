@@ -7,7 +7,7 @@ https://home-assistant.io/integrations/zha/
 import asyncio
 import logging
 
-from zigpy.exceptions import DeliveryError
+from zigpy.exceptions import ZigbeeException
 import zigpy.zcl.clusters.security as security
 
 from homeassistant.core import callback
@@ -30,8 +30,6 @@ _LOGGER = logging.getLogger(__name__)
 class IasAce(ZigbeeChannel):
     """IAS Ancillary Control Equipment channel."""
 
-    pass
-
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(security.IasWd.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(security.IasWd.cluster_id)
@@ -51,7 +49,7 @@ class IasWd(ZigbeeChannel):
         """Get the specified bit from the value."""
         return (value & (1 << bit)) != 0
 
-    async def squawk(
+    async def issue_squawk(
         self,
         mode=WARNING_DEVICE_SQUAWK_MODE_ARMED,
         strobe=WARNING_DEVICE_STROBE_YES,
@@ -76,7 +74,7 @@ class IasWd(ZigbeeChannel):
 
         await self.squawk(value)
 
-    async def start_warning(
+    async def issue_start_warning(
         self,
         mode=WARNING_DEVICE_MODE_EMERGENCY,
         strobe=WARNING_DEVICE_STROBE_YES,
@@ -153,7 +151,7 @@ class IASZoneChannel(ZigbeeChannel):
                 self._cluster.ep_attribute,
                 res[0],
             )
-        except DeliveryError as ex:
+        except ZigbeeException as ex:
             self.debug(
                 "Failed to write cie_addr: %s to '%s' cluster: %s",
                 str(ieee),

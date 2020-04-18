@@ -96,7 +96,7 @@ class TestNSWFuelStation(unittest.TestCase):
         fake_entities = ["my_fake_station_p95", "my_fake_station_e10"]
 
         for entity_id in fake_entities:
-            state = self.hass.states.get("sensor.{}".format(entity_id))
+            state = self.hass.states.get(f"sensor.{entity_id}")
             assert state is not None
 
     @patch(

@@ -129,7 +129,7 @@ async def test_cover(hass):
         await hass.async_block_till_done()
         set_callback.assert_called_with("put", "/lights/1/state", json={"bri_inc": 0})
 
-    """Test that a reported cover position of 255 (deconz-rest-api < 2.05.73) is interpreted correctly."""
+    # Test that a reported cover position of 255 (deconz-rest-api < 2.05.73) is interpreted correctly.
     deconz_old_brightness_cover = hass.states.get("cover.deconz_old_brightness_cover")
     assert deconz_old_brightness_cover.state == "open"
 

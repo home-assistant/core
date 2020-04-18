@@ -1,13 +1,12 @@
 {
     "config": {
         "step": {
-            "init": {
+            "manual_confirm": {
                 "data": {
                     "host": "",
                     "port": ""
                 }
             }
-        },
-        "title": "deCONZ Zigbee l\u00fc\u00fcs"
+        }
     }
 }
