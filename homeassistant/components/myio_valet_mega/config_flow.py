@@ -13,7 +13,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-from .const import CONF_PORT_APP, CONF_REFRESH_TIME, DEFAULT_REFRESH_TIME, DOMAIN
+from .const import CONF_PORT_APP, CONF_REFRESH_TIME, DEFAULT_REFRESH_TIME
 
 _LOGGER = logging.getLogger(__name__)
 
