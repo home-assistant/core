@@ -1,6 +1,5 @@
 """Support for Xiaomi Miio."""
 import logging
-import asyncio
 from homeassistant.const import (
     CONF_HOST,
     CONF_TOKEN,
@@ -9,7 +8,7 @@ from homeassistant.const import (
 from miio import DeviceException, gateway
 
 from homeassistant import config_entries, core
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 
