@@ -37,6 +37,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
 
     pdp = proliphix.PDP(host, username, password)
+    pdp.update()
 
     add_entities([ProliphixThermostat(pdp)], True)
 
