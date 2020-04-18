@@ -164,3 +164,31 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
     }
 
     assert "component1" not in hass.config.components
+
+
+async def test_get_translations_while_loading_components(hass):
+    """Test the get translations helper loads config flow translations."""
+    integration = Mock(file_path=pathlib.Path(__file__))
+    integration.name = "Component 1"
+    hass.config.components.add("component1")
+
+    async def mock_load_translation_files(files):
+        """Mock load translation files."""
+        # Mimic race condition by loading a component during setup
+        await async_setup_component(hass, "persistent_notification", {})
+        return {"component1": {"hello": "world"}}
+
+    with patch.object(
+        translation, "component_translation_file", return_value=mock_coro("bla.json")
+    ), patch.object(
+        translation, "load_translations_files", side_effect=mock_load_translation_files,
+    ), patch(
+        "homeassistant.helpers.translation.async_get_integration",
+        return_value=integration,
+    ):
+        translations = await translation.async_get_translations(hass, "en")
+
+    assert translations == {
+        "component.component1.title": "Component 1",
+        "component.component1.hello": "world",
+    }

@@ -120,7 +120,7 @@ async def async_get_component_resources(
 
     # Calculate the missing components and platforms
     missing_loaded = components - set(translation_cache)
-    missing_domains = {loaded.split(".")[-1] for loaded in missing_loaded}
+    missing_domains = list({loaded.split(".")[-1] for loaded in missing_loaded})
 
     missing_integrations = dict(
         zip(
@@ -175,14 +175,18 @@ async def async_get_translations(
     integration: Optional[str] = None,
     config_flow: Optional[bool] = None,
 ) -> Dict[str, Any]:
-    """Return all backend translations."""
+    """Return all backend translations.
+
+    If integration specified, load it for that one.
+    Otherwise default to loaded intgrations combined with config flow
+    integrations if config_flow is true.
+    """
     if integration is not None:
         components = {integration}
+    elif config_flow:
+        components = hass.config.components | await async_get_config_flows(hass)
     else:
-        components = hass.config.components
-
-        if config_flow:
-            components = components | await async_get_config_flows(hass)
+        components = set(hass.config.components)
 
     lock = hass.data.get(TRANSLATION_LOAD_LOCK)
     if lock is None:
