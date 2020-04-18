@@ -596,8 +596,6 @@ omit =
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
     homeassistant/components/rocketchat/notify.py
-    homeassistant/components/roku/__init__.py
-    homeassistant/components/roku/media_player.py
     homeassistant/components/roku/remote.py
     homeassistant/components/roomba/vacuum.py
     homeassistant/components/route53/*
