@@ -28,4 +28,5 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         constructor = RoombaVacuum
 
     roomba_vac = constructor(roomba, blid)
+    roomba_vac.register_callback()
     async_add_entities([roomba_vac], True)

@@ -52,9 +52,6 @@ class IRobotBase(VacuumDevice):
         self._sku = self.vacuum_state.get("sku")
         self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
 
-        # Register callback function
-        self.vacuum.register_on_message_callback(self.on_message)
-
     @property
     def should_poll(self):
         """Disable polling."""
@@ -162,6 +159,10 @@ class IRobotBase(VacuumDevice):
             state_attrs[ATTR_POSITION] = position
 
         return state_attrs
+
+    def register_callback(self):
+        """Register callback function."""
+        self.vacuum.register_on_message_callback(self.on_message)
 
     def on_message(self, json_data):
         """Update state on message change."""

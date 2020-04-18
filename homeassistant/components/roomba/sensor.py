@@ -16,6 +16,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     roomba = domain_data[ROOMBA_SESSION]
     blid = domain_data[BLID]
     roomba_vac = RoombaBattery(roomba, blid)
+    roomba_vac.register_callback()
     async_add_entities([roomba_vac], True)
 
 
@@ -29,9 +30,6 @@ class RoombaBattery(Entity):
         self._blid = blid
         self._name = vacuum_state.get("name")
         self._identifier = f"roomba_{self._blid}"
-
-        # Register callback function
-        self.vacuum.register_on_message_callback(self.on_message)
 
     @property
     def should_poll(self):
@@ -72,6 +70,10 @@ class RoombaBattery(Entity):
             "identifiers": {(DOMAIN, self._identifier)},
             "name": str(self._name),
         }
+
+    def register_callback(self):
+        """Register callback function."""
+        self.vacuum.register_on_message_callback(self.on_message)
 
     def on_message(self, json_data):
         """Update state on message change."""

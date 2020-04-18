@@ -17,6 +17,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     status = roomba_reported_state(roomba).get("bin", {})
     if "full" in status:
         roomba_vac = RoombaBinStatus(roomba, blid)
+        roomba_vac.register_callback()
         async_add_entities([roomba_vac], True)
 
 
@@ -32,9 +33,6 @@ class RoombaBinStatus(BinarySensorDevice):
         self._blid = blid
         self._name = vacuum_state.get("name")
         self._identifier = f"roomba_{self._blid}"
-
-        # Register callback function
-        self.vacuum.register_on_message_callback(self.on_message)
 
     @property
     def should_poll(self):
@@ -72,6 +70,10 @@ class RoombaBinStatus(BinarySensorDevice):
             "identifiers": {(DOMAIN, self._identifier)},
             "name": str(self._name),
         }
+
+    def register_callback(self):
+        """Register callback function."""
+        self.vacuum.register_on_message_callback(self.on_message)
 
     def on_message(self, json_data):
         """Update state on message change."""
