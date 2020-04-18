@@ -274,10 +274,12 @@ async def test_linked_battery_charging_sensor(hass, hk_driver, caplog):
     assert acc._char_charging.value == 1
 
     hass.states.async_set(linked_battery_charging_sensor, STATE_OFF, None)
+    await acc.run_handler()
     await hass.async_block_till_done()
     assert acc._char_charging.value == 0
 
     hass.states.async_set(linked_battery_charging_sensor, STATE_ON, None)
+    await acc.run_handler()
     await hass.async_block_till_done()
     assert acc._char_charging.value == 1
 
