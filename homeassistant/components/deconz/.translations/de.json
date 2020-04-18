@@ -18,15 +18,17 @@
                 "title": "deCONZ Zigbee Gateway \u00fcber das Hass.io Add-on"
             },
             "init": {
-                "data": {
-                    "host": "Host",
-                    "port": "Port"
-                },
                 "title": "Definiere das deCONZ-Gateway"
             },
             "link": {
                 "description": "Entsperre dein deCONZ-Gateway, um es bei Home Assistant zu registrieren. \n\n 1. Gehe in die deCONZ-Systemeinstellungen \n 2. Dr\u00fccke die Taste \"Gateway entsperren\"",
                 "title": "Mit deCONZ verbinden"
+            },
+            "manual_confirm": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
             }
         }
     },
