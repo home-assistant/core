@@ -6,6 +6,7 @@ import pytest
 from zeroconf import InterfaceChoice
 
 from homeassistant import setup
+from homeassistant.components.binary_sensor import DEVICE_CLASS_BATTERY_CHARGING
 from homeassistant.components.homekit import (
     MAX_DEVICES,
     STATUS_READY,
@@ -28,20 +29,37 @@ from homeassistant.components.homekit.const import (
     SERVICE_HOMEKIT_START,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
+    DEVICE_CLASS_BATTERY,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    STATE_ON,
 )
 from homeassistant.core import State
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.entityfilter import generate_filter
 
+from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 from tests.components.homekit.common import patch_debounce
 
 IP_ADDRESS = "127.0.0.1"
 PATH_HOMEKIT = "homeassistant.components.homekit"
+
+
+@pytest.fixture
+def device_reg(hass):
+    """Return an empty, loaded, registry."""
+    return mock_device_registry(hass)
+
+
+@pytest.fixture
+def entity_reg(hass):
+    """Return an empty, loaded, registry."""
+    return mock_registry(hass)
 
 
 @pytest.fixture(scope="module")
@@ -421,3 +439,69 @@ async def test_homekit_too_many_accessories(hass, hk_driver):
         await homekit.async_start()
         await hass.async_block_till_done()
         assert mock_warn.called is True
+
+
+async def test_homekit_finds_linked_batteries(
+    hass, hk_driver, debounce_patcher, device_reg, entity_reg
+):
+    """Test HomeKit start method."""
+    homekit = HomeKit(hass, None, None, None, {}, {"light.demo": {}}, None, None)
+    homekit.driver = hk_driver
+    homekit._filter = Mock(return_value=True)
+    homekit.bridge = HomeBridge(hass, hk_driver, "mock_bridge")
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    binary_charging_sensor = entity_reg.async_get_or_create(
+        "binary_sensor",
+        "light",
+        "battery_charging",
+        device_id=device_entry.id,
+        device_class=DEVICE_CLASS_BATTERY_CHARGING,
+    )
+    battery_sensor = entity_reg.async_get_or_create(
+        "sensor",
+        "light",
+        "battery",
+        device_id=device_entry.id,
+        device_class=DEVICE_CLASS_BATTERY,
+    )
+    light = entity_reg.async_get_or_create(
+        "light", "light", "demo", device_id=device_entry.id
+    )
+
+    hass.states.async_set(
+        binary_charging_sensor.entity_id,
+        STATE_ON,
+        {ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY_CHARGING},
+    )
+    hass.states.async_set(
+        battery_sensor.entity_id, 30, {ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY}
+    )
+    hass.states.async_set(light.entity_id, STATE_ON)
+
+    def _mock_get_accessory(*args, **kwargs):
+        return [None, "acc", None]
+
+    with patch.object(homekit.bridge, "add_accessory"), patch(
+        f"{PATH_HOMEKIT}.show_setup_message"
+    ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
+        "pyhap.accessory_driver.AccessoryDriver.start"
+    ):
+        await homekit.async_start()
+
+    mock_get_acc.assert_called_with(
+        hass,
+        hk_driver,
+        ANY,
+        ANY,
+        {
+            "linked_battery_charging_sensor": "binary_sensor.light_battery_charging",
+            "linked_battery_sensor": "sensor.light_battery",
+        },
+    )
