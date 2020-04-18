@@ -2,7 +2,6 @@
 
 import requests
 
-
 DOMAIN = "juicenet"
 
 EXCEPTIONS = (requests.exceptions.ConnectionError, ValueError)

@@ -4,7 +4,6 @@ import logging
 from homeassistant.components.switch import SwitchEntity
 
 from .const import DOMAIN
-
 from .entity import JuiceNetDevice
 
 _LOGGER = logging.getLogger(__name__)
