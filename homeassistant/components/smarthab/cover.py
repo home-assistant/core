@@ -20,10 +20,19 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the SmartHab roller shutters platform."""
-
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up SmartHab covers from a config entry."""
     hub = hass.data[DOMAIN][DATA_HUB]
+    await _async_setup(hub, async_add_entities)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the SmartHab roller shutters platform."""
+    hub = hass.data[DOMAIN][DATA_HUB]
+    await _async_setup(hub, async_add_entities)
+
+
+async def _async_setup(hub, async_add_entities):
     devices = hub.get_device_list()
 
     _LOGGER.debug("Found a total of %s devices", str(len(devices)))
@@ -34,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if isinstance(cover, pysmarthab.Shutter)
     )
 
-    add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 class SmartHabCover(CoverEntity):

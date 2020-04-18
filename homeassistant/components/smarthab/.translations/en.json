@@ -10,7 +10,7 @@
                     "password": "Password",
                     "email": "Email"
                 },
-                "description": "For added security, be sure to use a secondary account, created from the SmartHab application.",
+                "description": "For technical reasons, be sure to use a secondary account specific to your Home Assistant setup. You can create one from the SmartHab application.",
                 "title": "Setup SmartHab"
             }
         }
