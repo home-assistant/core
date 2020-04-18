@@ -18,15 +18,11 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 
-from . import DOMAIN, CONF_GATEWAYS, KEY_GATEWAY_DEVICE, KEY_GATEWAY_INFO
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ["python-miio==0.5.0.1"]
-
-ATTR_MODEL = "model"
-ATTR_FIRMWARE_VERSION = "firmware_version"
-ATTR_HARDWARE_VERSION = "hardware_version"
 
 XIAOMI_STATE_ARMED_VALUE = "on"
 XIAOMI_STATE_DISARMED_VALUE = "off"
@@ -34,33 +30,34 @@ XIAOMI_STATE_ARMING_VALUE = "oning"
 XIAOMI_SUCCESS = ["ok"]
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Perform the setup for Xiaomi Miio devices."""
-    for gw_device in hass.data[DOMAIN][CONF_GATEWAYS]:
-        device = XiaomiGatewayAlarm(gw_device.get(KEY_GATEWAY_DEVICE), gw_device.get(CONF_NAME), gw_device.get(KEY_GATEWAY_INFO))
-        add_entities([device], update_before_add=True)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Hue lights from a config entry."""
+    devices = []
+    gateway = hass.data[DOMAIN][config_entry.entry_id]
+    device = XiaomiGatewayAlarm(
+        gateway,
+        config_entry.title + " Alarm",
+        config_entry.data.get("model"),
+        config_entry.data.get("mac"),
+        config_entry.data.get("gateway_id"),
+    )
+    devices.append(device)
+    async_add_entities(devices)
 
 
 class XiaomiGatewayAlarm(AlarmControlPanel):
     """Representation of the XiaomiGatewayAlarm."""
 
-    def __init__(self, gateway_device, gateway_name, device_info):
+    def __init__(self, gateway_device, gateway_name, model, mac_address, device_id):
         """Initialize the entity."""
         self._gateway = gateway_device
         self._name = gateway_name
         self._skip_update = False
-        self._model = device_info.model
-        self._unique_id = "{}-{}-alarm".format(
-            device_info.model, device_info.mac_address
-        )
+        self._device_id = device_id
+        self._unique_id = "{}-{}-alarm".format(model, mac_address)
         self._icon = "mdi:shield-home"
         self._available = None
         self._state = None
-        self._state_attrs = {
-            ATTR_MODEL: self._model,
-            ATTR_FIRMWARE_VERSION: device_info.firmware_version,
-            ATTR_HARDWARE_VERSION: device_info.hardware_version,
-        }
 
     @property
     def should_poll(self):
@@ -71,6 +68,17 @@ class XiaomiGatewayAlarm(AlarmControlPanel):
     def unique_id(self):
         """Return an unique ID."""
         return self._unique_id
+
+    @property
+    def device_id(self):
+        """Return the ID of this Hue light."""
+        return self._device_id
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, self._device_id)},
+        }
 
     @property
     def name(self):
@@ -91,11 +99,6 @@ class XiaomiGatewayAlarm(AlarmControlPanel):
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        return self._state_attrs
 
     @property
     def supported_features(self) -> int:
