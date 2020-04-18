@@ -1,17 +1,13 @@
 """Config flow to configure Xiaomi Miio."""
 import logging
 
-from .const import DOMAIN
-import voluptuous as vol
 from miio import DeviceException, gateway
+import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_TOKEN,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
