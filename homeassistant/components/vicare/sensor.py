@@ -82,7 +82,7 @@ SENSORS_GENERIC = [SENSOR_OUTSIDE_TEMPERATURE, SENSOR_SUPPLY_TEMPERATURE]
 SENSORS_BY_HEATINGTYPE = {
     HeatingType.gas: [
         SENSOR_BOILER_TEMPERATURE
-    ],  # TODO: add additional gas sensors (consumption, etc.)
+    ],  # add additional gas sensors (consumption, etc.)
     HeatingType.heatpump: [
         SENSOR_COMPRESSOR_HOURS,
         SENSOR_COMPRESSOR_STARTS,
@@ -115,18 +115,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ViCareSensor(Entity):
     """Representation of a ViCare sensor."""
 
-    def __init__(self, name, api, type):
+    def __init__(self, name, api, sensortype):
         """Initialize the sensor."""
-        self._sensor = SENSOR_TYPES[type]
+        self._sensor = SENSOR_TYPES[sensortype]
         self._name = f"{name} {self._sensor[CONF_NAME]}"
         self._api = api
-        self._type = type
+        self._sensortype = sensortype
         self._state = None
 
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"{self._api.service.id}-{self._type}"
+        return f"{self._api.service.id}-{self._sensortype}"
 
     @property
     def name(self):
