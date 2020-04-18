@@ -1,17 +1,23 @@
 """Base class for iRobot devices."""
+import asyncio
 import logging
 
 from homeassistant.components.vacuum import (
+    STATE_CLEANING,
+    STATE_DOCKED,
+    STATE_ERROR,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_RETURNING,
     SUPPORT_BATTERY,
     SUPPORT_LOCATE,
     SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME,
     SUPPORT_SEND_COMMAND,
-    SUPPORT_STATUS,
+    SUPPORT_START,
+    SUPPORT_STATE,
     SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    VacuumDevice,
+    StateVacuumDevice,
 )
 
 from . import roomba_reported_state
@@ -31,15 +37,25 @@ SUPPORT_IROBOT = (
     | SUPPORT_PAUSE
     | SUPPORT_RETURN_HOME
     | SUPPORT_SEND_COMMAND
-    | SUPPORT_STATUS
+    | SUPPORT_START
+    | SUPPORT_STATE
     | SUPPORT_STOP
-    | SUPPORT_TURN_OFF
-    | SUPPORT_TURN_ON
     | SUPPORT_LOCATE
 )
 
+STATE_MAP = {
+    "": STATE_IDLE,
+    "charge": STATE_DOCKED,
+    "hmMidMsn": STATE_CLEANING,  # Recharging at the middle of a cycle
+    "hmPostMsn": STATE_RETURNING,  # Cycle finished
+    "hmUsrDock": STATE_RETURNING,
+    "pause": STATE_PAUSED,
+    "run": STATE_CLEANING,
+    "stuck": STATE_ERROR,
+}
 
-class IRobotBase(VacuumDevice):
+
+class IRobotBase(StateVacuumDevice):
     """Base class for iRobot robots."""
 
     def __init__(self, roomba, blid):
@@ -94,14 +110,19 @@ class IRobotBase(VacuumDevice):
         return self.vacuum_state.get("batPct")
 
     @property
-    def status(self):
-        """Return the status of the vacuum cleaner."""
-        return self.vacuum.current_state
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
-        return self.status == "Running"
+    def state(self):
+        """Return the state of the vacuum cleaner."""
+        clean_mission_status = self.vacuum_state.get("cleanMissionStatus", {})
+        phase = clean_mission_status.get("phase")
+        if phase == "stop":
+            cycle = clean_mission_status.get("cycle")
+            if cycle == "none":
+                return STATE_IDLE
+            return STATE_PAUSED
+        try:
+            return STATE_MAP[phase]
+        except KeyError:
+            return STATE_ERROR
 
     @property
     def available(self) -> bool:
@@ -131,7 +152,7 @@ class IRobotBase(VacuumDevice):
 
         # Only add cleaning time and cleaned area attrs when the vacuum is
         # currently on
-        if self.is_on:
+        if self.state == STATE_CLEANING:
             # Get clean mission status
             mission_state = state.get("cleanMissionStatus", {})
             cleaning_time = mission_state.get("mssnM")
@@ -172,38 +193,29 @@ class IRobotBase(VacuumDevice):
         )
         self.schedule_update_ha_state()
 
-    async def async_turn_on(self, **kwargs):
-        """Turn the vacuum on."""
-        await self.hass.async_add_executor_job(self.vacuum.send_command, "start")
-
-    async def async_turn_off(self, **kwargs):
-        """Turn the vacuum off and return to home."""
-        await self.async_stop()
-        await self.async_return_to_base()
+    async def async_start(self):
+        """Start or resume the cleaning task."""
+        if self.state == STATE_PAUSED:
+            await self.hass.async_add_executor_job(self.vacuum.send_command, "resume")
+        else:
+            await self.hass.async_add_executor_job(self.vacuum.send_command, "start")
 
     async def async_stop(self, **kwargs):
         """Stop the vacuum cleaner."""
         await self.hass.async_add_executor_job(self.vacuum.send_command, "stop")
 
-    async def async_resume(self, **kwargs):
-        """Resume the cleaning cycle."""
-        await self.hass.async_add_executor_job(self.vacuum.send_command, "resume")
-
     async def async_pause(self):
         """Pause the cleaning cycle."""
         await self.hass.async_add_executor_job(self.vacuum.send_command, "pause")
 
-    async def async_start_pause(self, **kwargs):
-        """Pause the cleaning task or resume it."""
-        if self.vacuum_state and self.is_on:  # vacuum is running
-            await self.async_pause()
-        elif self.status == "Stopped":  # vacuum is stopped
-            await self.async_resume()
-        else:  # vacuum is off
-            await self.async_turn_on()
-
     async def async_return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
+        if self.state == STATE_CLEANING:
+            await self.async_pause()
+            for _ in range(0, 10):
+                if self.state == STATE_PAUSED:
+                    break
+                await asyncio.sleep(1)
         await self.hass.async_add_executor_job(self.vacuum.send_command, "dock")
 
     async def async_locate(self, **kwargs):
