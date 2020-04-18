@@ -1,4 +1,6 @@
 """Tests for the Roku component."""
+from requests_mock import Mocker
+
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.typing import HomeAssistantType
@@ -32,16 +34,24 @@ class MockDeviceInfo:
             self.roku_type,
         )
 
+def mock_connection(requests_mocker: Mocker, device: str = "roku3"):
+    """Mock the Roku connection."""
+    base_url = f"http://{HOST}:8060"
+    device_info_fixture = f"roku/{device}-device-info.xml"
+
+    requests_mocker.get(
+        f"{base_url}/query/device-info",
+        text=load_fixture(device_info_fixture),
+    )
+
 
 async def setup_integration(
     hass: HomeAssistantType,
-    skip_entry_setup: bool = False,
+    requests_mocker: Mocker,
     device: str = "roku3",
+    skip_entry_setup: bool = False,
 ) -> MockConfigEntry:
     """Set up the Roku integration in Home Assistant."""
-    device_fixture = f"roku/{device}-device-info.xml"
-    device_body = load_fixture(device_fixture)
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=UPNP_SERIAL,
@@ -51,6 +61,7 @@ async def setup_integration(
     entry.add_to_hass(hass)
 
     if not skip_entry_setup:
+        mock_connection(requests_mocker, device)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
