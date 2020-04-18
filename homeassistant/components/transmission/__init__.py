@@ -30,6 +30,9 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    EVENT_DOWNLOADED_TORRENT,
+    EVENT_REMOVED_TORRENT,
+    EVENT_STARTED_TORRENT,
     SERVICE_ADD_TORRENT,
     SERVICE_REMOVE_TORRENT,
 )
@@ -276,6 +279,7 @@ class TransmissionData:
         self._api = api
         self.completed_torrents = []
         self.started_torrents = []
+        self.all_torrents = []
 
     @property
     def host(self):
@@ -296,6 +300,7 @@ class TransmissionData:
 
             self.check_completed_torrent()
             self.check_started_torrent()
+            self.check_removed_torrent()
             _LOGGER.debug("Torrent Data for %s Updated", self.host)
 
             self.available = True
@@ -326,7 +331,7 @@ class TransmissionData:
         )
 
         for var in tmp_completed_torrents:
-            self.hass.bus.fire("transmission_downloaded_torrent", {"name": var})
+            self.hass.bus.fire(EVENT_DOWNLOADED_TORRENT, {"name": var})
 
         self.completed_torrents = actual_completed_torrents
 
@@ -342,8 +347,18 @@ class TransmissionData:
         )
 
         for var in tmp_started_torrents:
-            self.hass.bus.fire("transmission_started_torrent", {"name": var})
+            self.hass.bus.fire(EVENT_STARTED_TORRENT, {"name": var})
         self.started_torrents = actual_started_torrents
+
+    def check_removed_torrent(self):
+        """Get removed torrent functionality."""
+        actual_torrents = self.torrents
+        actual_all_torrents = [var.name for var in actual_torrents]
+
+        tmp_all_torrents = list(set(self.all_torrents).difference(actual_all_torrents))
+        for var in tmp_all_torrents:
+            self.hass.bus.fire(EVENT_REMOVED_TORRENT, {"name": var})
+        self.all_torrents = actual_all_torrents
 
     def start_torrents(self):
         """Start all torrents."""

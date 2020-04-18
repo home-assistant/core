@@ -18,3 +18,7 @@ SERVICE_ADD_TORRENT = "add_torrent"
 SERVICE_REMOVE_TORRENT = "remove_torrent"
 
 DATA_UPDATED = "transmission_data_updated"
+
+EVENT_STARTED_TORRENT = "transmission_started_torrent"
+EVENT_REMOVED_TORRENT = "transmission_removed_torrent"
+EVENT_DOWNLOADED_TORRENT = "transmission_downloaded_torrent"
