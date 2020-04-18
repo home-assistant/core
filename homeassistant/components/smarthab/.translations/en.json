@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "service": "Error while trying to reach SmartHab. Check your connection. Service might be down.",
+            "service": "Error while trying to reach SmartHab. Service might be down. Check your connection.",
             "wrong_login": "Invalid credentials: please check your email and password."
         },
         "step": {
