@@ -5,6 +5,7 @@ DEVICE_PRECISION_LEEWAY = 6
 DOMAIN = "homekit"
 HOMEKIT_FILE = ".homekit.state"
 HOMEKIT_NOTIFY_ID = 4663548
+AID_STORAGE = "homekit-aid-allocations"
 
 
 # #### Attributes ####
