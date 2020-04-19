@@ -59,7 +59,7 @@ async def test_setup(hass: HomeAssistantType, requests_mock: Mocker) -> None:
 
 async def test_idle_setup(hass: HomeAssistantType, requests_mock: Mocker) -> None:
     """Test setup with idle device."""
-    with patch("roku.Roku.power_state", return_value="Off") as power_mock:
+    with patch("homeassistant.components.roku.Roku.power_state", return_value="Off") as power_mock:
         await setup_integration(hass, requests_mock)
 
     power_mock.assert_called()
