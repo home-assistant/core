@@ -16,7 +16,6 @@
                 "description": "You will need the API Token from https://home.juice.net/Manage.",
                 "title": "Connect to JuiceNet"
             }
-        },
-        "title": "JuiceNet"
+        }
     }
 }
