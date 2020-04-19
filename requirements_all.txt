@@ -905,7 +905,7 @@ mycroftapi==2.0
 n26==0.2.7
 
 # homeassistant.components.nad
-nad_receiver==0.0.11
+nad_receiver==0.0.12
 
 # homeassistant.components.keenetic_ndms2
 ndms2_client==0.0.11
