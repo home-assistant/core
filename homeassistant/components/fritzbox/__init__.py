@@ -25,32 +25,34 @@ def ensure_unique_hosts(value):
     return value
 
 
-CONFIG_SCHEMA = vol.All(
-    cv.deprecated(DOMAIN),
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_DEVICES): vol.All(
-                    cv.ensure_list,
-                    [
-                        vol.Schema(
-                            {
-                                vol.Required(
-                                    CONF_HOST, default=DEFAULT_HOST
-                                ): cv.string,
-                                vol.Required(CONF_PASSWORD): cv.string,
-                                vol.Required(
-                                    CONF_USERNAME, default=DEFAULT_USERNAME
-                                ): cv.string,
-                            }
-                        )
-                    ],
-                    ensure_unique_hosts,
-                )
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = vol.Schema(
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_DEVICES): vol.All(
+                        cv.ensure_list,
+                        [
+                            vol.Schema(
+                                {
+                                    vol.Required(
+                                        CONF_HOST, default=DEFAULT_HOST
+                                    ): cv.string,
+                                    vol.Required(CONF_PASSWORD): cv.string,
+                                    vol.Required(
+                                        CONF_USERNAME, default=DEFAULT_USERNAME
+                                    ): cv.string,
+                                }
+                            )
+                        ],
+                        ensure_unique_hosts,
+                    )
+                }
+            )
+        },
+        extra=vol.ALLOW_EXTRA,
+    )
 )
 
 

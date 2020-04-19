@@ -1,5 +1,4 @@
 """Config flow for AVM Fritz!Box."""
-import socket
 from urllib.parse import urlparse
 
 from pyfritzhome import Fritzhome, LoginError
@@ -82,12 +81,14 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            ip_address = await self.hass.async_add_executor_job(
-                socket.gethostbyname, user_input[CONF_HOST]
-            )
 
-            await self.async_set_unique_id(ip_address, raise_on_progress=False)
-            self._abort_if_unique_id_configured()
+            for entry in self.hass.config_entries.async_entries(DOMAIN):
+                if entry.data[CONF_HOST] == user_input[CONF_HOST]:
+                    if entry.data != user_input:
+                        self.hass.config_entries.async_update_entry(
+                            entry, data=user_input
+                        )
+                    return self.async_abort(reason="already_configured")
 
             self._host = user_input[CONF_HOST]
             self._name = user_input[CONF_HOST]
@@ -109,10 +110,17 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_ssdp(self, user_input):
         """Handle a flow initialized by discovery."""
         host = urlparse(user_input[ATTR_SSDP_LOCATION]).hostname
-        ip_address = await self.hass.async_add_executor_job(socket.gethostbyname, host)
+        self.context[CONF_HOST] = host
 
-        await self.async_set_unique_id(ip_address)
-        self._abort_if_unique_id_configured()
+        for progress in self._async_in_progress():
+            if progress.get("context", {}).get(CONF_HOST) == host:
+                return self.async_abort(reason="already_in_progress")
+
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if entry.data[CONF_HOST] == host:
+                if entry.data != user_input:
+                    self.hass.config_entries.async_update_entry(entry, data=user_input)
+                return self.async_abort(reason="already_configured")
 
         self._host = host
         self._name = user_input[ATTR_UPNP_FRIENDLY_NAME]
