@@ -111,10 +111,10 @@ def build_resources(
 
         if isinstance(new_value, dict):
             domain_resources.setdefault(category, {}).update(
-                translation_cache[component][category]
+                new_value
             )
         else:
-            domain_resources[category] = translation_cache[component][category]
+            domain_resources[category] = new_value
 
     return {"component": resources}
 
