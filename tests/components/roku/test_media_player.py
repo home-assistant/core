@@ -97,36 +97,35 @@ async def test_tv_setup(hass: HomeAssistantType, requests_mock: Mocker) -> None:
     assert tv.unique_id == TV_SERIAL
 
 
-async def test_availability(
-    hass: HomeAssistantType, requests_mock: Mocker
-) -> None:
+async def test_availability(hass: HomeAssistantType, requests_mock: Mocker) -> None:
+    """Test entity availability."""
     now = dt_util.utcnow()
     future = now + timedelta(minutes=1)
 
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         await setup_integration(hass, requests_mock)
 
-    with patch(
-        "roku.Roku._get", side_effect=RokuException,
-    ), patch("homeassistant.util.dt.utcnow", return_value=future):
+    with patch("roku.Roku._get", side_effect=RokuException,), patch(
+        "homeassistant.util.dt.utcnow", return_value=future
+    ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
         assert hass.states.get(MAIN_ENTITY_ID).state == STATE_UNAVAILABLE
 
     future += timedelta(minutes=1)
 
-    with patch(
-        "roku.Roku._get", side_effect=RequestsConnectionError,
-    ), patch("homeassistant.util.dt.utcnow", return_value=future):
+    with patch("roku.Roku._get", side_effect=RequestsConnectionError,), patch(
+        "homeassistant.util.dt.utcnow", return_value=future
+    ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
         assert hass.states.get(MAIN_ENTITY_ID).state == STATE_UNAVAILABLE
 
     future += timedelta(minutes=1)
 
-    with patch(
-        "roku.Roku._get", side_effect=RequestsReadTimeout,
-    ), patch("homeassistant.util.dt.utcnow", return_value=future):
+    with patch("roku.Roku._get", side_effect=RequestsReadTimeout,), patch(
+        "homeassistant.util.dt.utcnow", return_value=future
+    ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
         assert hass.states.get(MAIN_ENTITY_ID).state == STATE_UNAVAILABLE
