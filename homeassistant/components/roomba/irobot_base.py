@@ -247,4 +247,3 @@ class IRobotVacuum(IRobotEntity, StateVacuumDevice):
         await self.hass.async_add_executor_job(
             self.vacuum.send_command, command, params
         )
-        return True
