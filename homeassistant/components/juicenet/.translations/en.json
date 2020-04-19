@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "JuiceNet is already configured"
+            "already_configured": "This JuiceNet account is already configured"
         },
         "error": {
             "cannot_connect": "Failed to connect, please try again",

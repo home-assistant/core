@@ -1,6 +1,7 @@
 """The JuiceNet integration."""
 import asyncio
 import logging
+import requests
 
 from pyjuicenet import Api
 import voluptuous as vol
@@ -53,7 +54,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         await hass.async_add_executor_job(juicenet.setup, hass)
-    except EXCEPTIONS as error:
+    except ValueError as error:
+        _LOGGER.error("JuiceNet Error %s", error)
+        return False
+    except requests.exceptions.ConnectionError as error:
         _LOGGER.error("Could not reach the JuiceNet API %s", error)
         raise ConfigEntryNotReady
 
