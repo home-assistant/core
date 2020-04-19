@@ -214,7 +214,7 @@ async def test_homekit_setup_safe_mode(hass, hk_driver):
 
 async def test_homekit_add_accessory(hass):
     """Add accessory if config exists and get_acc returns an accessory."""
-    homekit = HomeKit("hass", None, None, None, lambda entity_id: True, {}, None, None)
+    homekit = HomeKit(hass, None, None, None, lambda entity_id: True, {}, None, None)
     homekit.driver = "driver"
     homekit.bridge = mock_bridge = Mock()
 
@@ -305,6 +305,8 @@ async def test_homekit_start_with_a_broken_accessory(hass, hk_driver, debounce_p
     """Test HomeKit start method."""
     pin = b"123-45-678"
     entity_filter = generate_filter(["cover", "light"], ["demo.test"], [], [])
+
+    assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     homekit = HomeKit(hass, None, None, None, entity_filter, {}, None, None)
     homekit.bridge = Mock()
