@@ -25,6 +25,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -44,6 +45,9 @@ from .util import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# We want to fire remote commands right away
+PARALLEL_UPDATES = 0
 
 ATTR_CHANNEL = "channel"
 ATTR_CURRENT_ACTIVITY = "current_activity"
@@ -110,44 +114,14 @@ async def async_setup_entry(
     _LOGGER.debug("Harmony Remote: %s", device)
 
     async_add_entities([device])
-    register_services(hass)
 
+    platform = entity_platform.current_platform.get()
 
-def register_services(hass):
-    """Register all services for harmony devices."""
-
-    async def _apply_service(service, service_func, *service_func_args):
-        """Handle services to apply."""
-        entity_ids = service.data.get("entity_id")
-
-        want_devices = [
-            hass.data[DOMAIN][config_entry_id] for config_entry_id in hass.data[DOMAIN]
-        ]
-
-        if entity_ids:
-            want_devices = [
-                device for device in want_devices if device.entity_id in entity_ids
-            ]
-
-        for device in want_devices:
-            await service_func(device, *service_func_args)
-
-    async def _sync_service(service):
-        await _apply_service(service, HarmonyRemote.sync)
-
-    async def _change_channel_service(service):
-        channel = service.data.get(ATTR_CHANNEL)
-        await _apply_service(service, HarmonyRemote.change_channel, channel)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SYNC, _sync_service, schema=HARMONY_SYNC_SCHEMA
+    platform.async_register_entity_service(
+        SERVICE_SYNC, HARMONY_SYNC_SCHEMA, "sync",
     )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CHANGE_CHANNEL,
-        _change_channel_service,
-        schema=HARMONY_CHANGE_CHANNEL_SCHEMA,
+    platform.async_register_entity_service(
+        SERVICE_CHANGE_CHANNEL, HARMONY_CHANGE_CHANNEL_SCHEMA, "change_channel"
     )
 
 
