@@ -1,0 +1,24 @@
+{
+  "title": "Flick Electric",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Flick Login Credentials",
+        "data": {
+          "username": "Username",
+          "password": "Password",
+          "client_id": "Client ID (Optional)",
+          "client_secret": "Client Secret (Optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "That account is already configured"
+    }
+  }
+}

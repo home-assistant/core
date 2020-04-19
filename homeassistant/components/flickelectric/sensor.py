@@ -1,13 +1,13 @@
 """Support for Flick Electric Pricing data."""
-import asyncio
-from datetime import datetime as dt, timedelta
+from datetime import timedelta
 import logging
 
-import aiohttp
 import async_timeout
+from pyflick import FlickAPI, FlickPrice
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_FRIENDLY_NAME,
@@ -16,16 +16,17 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+
+from .const import ATTR_END_AT, ATTR_START_AT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 _AUTH_URL = "https://api.flick.energy/identity/oauth/token"
 _RESOURCE = "https://api.flick.energy/customer/mobile_provider/price"
 
-SCAN_INTERVAL = timedelta(minutes=1)
-
-_TOKEN_REFRESH_INTERVAL = timedelta(days=1)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 ATTRIBUTION = "Data provided by Flick Electric"
 FRIENDLY_NAME = "Flick Power Price"
@@ -41,114 +42,58 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
+    """Flick Sensor Setup."""
+    api: FlickAPI = hass.data[DOMAIN][entry.entry_id]
+
+    async_add_entities([FlickPricingSensor(api)], True)
+
+
 class FlickPricingSensor(Entity):
-    """Implementation of the Flick Pricing sensor."""
+    """Entity object for Flick Electric sensor."""
 
-    def __init__(
-        self,
-        loop,
-        websession: aiohttp.ClientSession,
-        username: str,
-        password: str,
-        client_id: str,
-        client_secret: str,
-    ):
-        """Initialize the sensor."""
-
-        self.loop = loop
-        self._username: str = username
-        self._password: str = password
-        self.websession: aiohttp.ClientSession = websession
-
-        if client_id:
-            self._client_id: str = client_id
-        else:
-            self._client_id: str = "le37iwi3qctbduh39fvnpevt1m2uuvz"
-
-        if client_secret:
-            self._client_secret: str = client_secret
-        else:
-            self._client_secret: str = "ignwy9ztnst3azswww66y9vd9zt6qnt"
-
-        self._name: str = FRIENDLY_NAME
-        self._state = None
-        self._unit_of_measurement: str = UNIT_NAME
-        self._attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_FRIENDLY_NAME: FRIENDLY_NAME,
-        }
-
-        self._token = None
-        self._token_next_refresh = dt.now()
+    def __init__(self, api: FlickAPI):
+        """Entity object for Flick Electric sensor."""
+        self._api: FlickAPI = api
+        self._price: FlickPrice = None
+        self._attributes = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return FRIENDLY_NAME
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        return self._price.price
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        return UNIT_NAME
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 
-    async def _refresh_token(self):
-        try:
-            with async_timeout.timeout(60):
-
-                data = aiohttp.FormData()
-                data.add_field("grant_type", "password")
-                data.add_field("client_id", self._client_id)
-                data.add_field("client_secret", self._client_secret)
-                data.add_field("username", self._username)
-                data.add_field("password", self._password)
-
-                response = await self.websession.post(_AUTH_URL, data=data)
-                response = await response.json()
-
-                self._token = response["id_token"]
-                self._token_next_refresh = dt.now() + _TOKEN_REFRESH_INTERVAL
-        except (asyncio.TimeoutError, aiohttp.ClientError, ValueError, KeyError) as err:
-            _LOGGER.error("Could not get auth token from FlickElectric API: %s", err)
-
     async def async_update(self):
         """Get the Flick Pricing data from the web service."""
+        # TODO: Build in check for 30 minute intervals (with jitter)
+        with async_timeout.timeout(60):
+            self._price = await self._api.getPricing()
 
-        next_refresh = self._token_next_refresh
-        if next_refresh < dt.now():
-            await self._refresh_token()
+        # Update Attributes
 
-        try:
-            with async_timeout.timeout(60):
-                headers = {"Authorization": f"Bearer {self._token}"}
-                response = await self.websession.get(_RESOURCE, headers=headers)
+        self._attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_FRIENDLY_NAME: FRIENDLY_NAME,
+        }
 
-                data = await response.json()
-                needle = data["needle"]
-                self._state = float(needle["price"])
-
-                attributes = {
-                    ATTR_ATTRIBUTION: ATTRIBUTION,
-                    ATTR_FRIENDLY_NAME: FRIENDLY_NAME,
-                }
-
-                attributes["start_at"] = needle["start_at"]
-                attributes["end_at"] = needle["end_at"]
-                for component in needle["components"]:
-                    attributes[component["charge_setter"]] = float(component["value"])
-
-                self._attributes = attributes
-
-        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
-            _LOGGER.error("Could not get data from Flick API: %s", err)
-        except (ValueError, KeyError):
-            _LOGGER.warning("Could not update status for %s", self.name)
+        self._attributes[ATTR_START_AT] = self._price.start_at
+        self._attributes[ATTR_END_AT] = self._price.end_at
+        for component in self._price.components:
+            self._attributes[component.charge_setter] = float(component.value)

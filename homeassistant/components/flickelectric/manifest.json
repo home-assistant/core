@@ -3,7 +3,9 @@
   "name": "Flick Electric",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flickelectric/",
-  "requirements": ["PyFlick==0.0.1"],
+  "requirements": [
+    "PyFlick==0.0.1"
+  ],
   "codeowners": [
     "@ZephireNZ"
   ]

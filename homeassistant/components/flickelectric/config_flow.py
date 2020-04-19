@@ -1,5 +1,4 @@
 """Config Flow for Flick Electric integration."""
-from pyflick.const import DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -16,8 +15,8 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_CLIENT_ID, default=DEFAULT_CLIENT_ID): str,
-        vol.Required(CONF_CLIENT_SECRET, default=DEFAULT_CLIENT_SECRET): str,
+        vol.Optional(CONF_CLIENT_ID): str,
+        vol.Optional(CONF_CLIENT_SECRET): str,
     }
 )
 
@@ -25,9 +24,14 @@ DATA_SCHEMA = vol.Schema(
 class FlickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Flick config flow."""
 
+    VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+
     async def async_step_user(self, config):
         """Handle gathering login info."""
         if config is not None:
+            # TODO: Validate Login
+
             await self.async_set_unique_id(f"flickelectric_{config[CONF_USERNAME]}")
             self._abort_if_unique_id_configured()
 
