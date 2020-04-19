@@ -217,6 +217,7 @@ async def test_homekit_add_accessory(hass):
     homekit = HomeKit(hass, None, None, None, lambda entity_id: True, {}, None, None)
     homekit.driver = "driver"
     homekit.bridge = mock_bridge = Mock()
+    homekit.bridge.accessories = range(10)
 
     assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -253,6 +254,8 @@ async def test_homekit_entity_filter(hass):
 
     entity_filter = generate_filter(["cover"], ["demo.test"], [], [])
     homekit = HomeKit(hass, None, None, None, entity_filter, {}, None, None)
+    homekit.bridge = Mock()
+    homekit.bridge.accessories = {}
 
     with patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc:
         mock_get_acc.return_value = None
@@ -360,6 +363,7 @@ async def test_homekit_reset_accessories(hass):
     entity_id = "light.demo"
     homekit = HomeKit(hass, None, None, None, {}, {entity_id: {}}, None)
     homekit.bridge = Mock()
+    homekit.bridge.accessories = {}
 
     with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit), patch(
         f"{PATH_HOMEKIT}.HomeKit.setup"
@@ -388,10 +392,15 @@ async def test_homekit_reset_accessories(hass):
 
 async def test_homekit_too_many_accessories(hass, hk_driver):
     """Test adding too many accessories to HomeKit."""
-    homekit = HomeKit(hass, None, None, None, None, None, None)
+
+    entity_filter = generate_filter(["cover", "light"], ["demo.test"], [], [])
+
+    homekit = HomeKit(hass, None, None, None, entity_filter, {}, None, None)
     homekit.bridge = Mock()
     homekit.bridge.accessories = range(MAX_DEVICES + 1)
     homekit.driver = hk_driver
+
+    hass.states.async_set("light.demo", "on")
 
     with patch("pyhap.accessory_driver.AccessoryDriver.start"), patch(
         "pyhap.accessory_driver.AccessoryDriver.add_accessory"

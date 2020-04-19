@@ -9,39 +9,47 @@ can't change the hash without causing breakages for HA users.
 
 This module generates and stores them in a HA storage.
 """
-import hashlib
 import logging
 import random
 from zlib import adler32
+
+from fnvhash import fnv1a_32
 
 from homeassistant.core import callback
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
 
-AID_MANAGER_STORAGE_KEY = f"{DOMAIN}-aid-storage"
+AID_MANAGER_STORAGE_KEY = f"{DOMAIN}.aids"
 AID_MANAGER_STORAGE_VERSION = 1
 AID_MANAGER_SAVE_DELAY = 2
+
+INVALID_AIDS = (0, 1)
+
+AID_MIN = 2
+AID_MAX = 18446744073709551615
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def generate_aids(unique_id, entity_id):
-    """Generate accessory aid with zlib adler32."""
+    """Generate accessory aid."""
 
     # Backward compatibility: Previously HA used to *only* do adler32 on the entity id.
     # Not stable if entity ID changes
     # Not robust against collisions
     yield adler32(entity_id.encode("utf-8"))
 
-    # Use adler32 on a sha of the unique id
-    yield adler32(hashlib.sha512(unique_id.encode("utf-8")).digest())
+    # Use fnv1a_32 of the unique id as
+    # fnv1a_32 has less collisions than
+    # adler32
+    yield fnv1a_32(unique_id.encode("utf-8"))
 
     # If called again resort to random allocations.
     # Given the size of the range its unlikely we'll encounter duplicates
     # But try a few times regardless
     for _ in range(5):
-        yield random.randrange(2, 18446744073709551615)
+        yield random.randrange(AID_MIN, AID_MAX)
 
 
 class AccessoryAidStorage:
@@ -78,8 +86,11 @@ class AccessoryAidStorage:
     def get_or_allocate_aid_for_entity_id(self, entity_id):
         """Generate a stable aid for an entity id."""
         entity = self._entity_registry.async_get(entity_id)
+
         if entity:
-            return self._get_or_allocate_aid(entity.unique_id, entity.entity_id)
+            return self._get_or_allocate_aid(
+                self._get_system_unique_id(entity), entity.entity_id
+            )
 
         _LOGGER.warning(
             "Entity '%s' does not have a stable unique identifier so aid allocation will be unstable and may cause collisions",
@@ -87,13 +98,17 @@ class AccessoryAidStorage:
         )
         return adler32(entity_id.encode("utf-8"))
 
+    def _get_system_unique_id(self, entity):
+        """Determine the system wide unique_id for an entity."""
+        return f"{entity.platform}.{entity.domain}.{entity.unique_id}"
+
     def _get_or_allocate_aid(self, unique_id, entity_id):
         """Allocate (and return) a new aid for an accessory."""
         if unique_id in self.allocations:
             return self.allocations[unique_id]
 
         for aid in generate_aids(unique_id, entity_id):
-            if aid in (0, 1):
+            if aid in INVALID_AIDS:
                 continue
             if aid not in self.allocated_aids:
                 self.allocations[unique_id] = aid

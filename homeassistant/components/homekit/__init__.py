@@ -356,6 +356,15 @@ class HomeKit:
         """Try adding accessory to bridge if configured beforehand."""
         if not state or not self._filter(state.entity_id):
             return
+
+        if len(self.bridge.accessories) >= MAX_DEVICES:
+            _LOGGER.warning(
+                "Cannot add %s as this would exceeded the %d device limit. Consider using the filter option.",
+                state.entity_id,
+                MAX_DEVICES,
+            )
+            return
+
         aid = self.hass.data[AID_STORAGE].get_or_allocate_aid_for_entity_id(
             state.entity_id
         )
@@ -399,16 +408,11 @@ class HomeKit:
 
         for state in self.hass.states.all():
             self.add_bridge_accessory(state)
+
         self.driver.add_accessory(self.bridge)
 
         if not self.driver.state.paired:
             show_setup_message(self.hass, self.driver.state.pincode)
-
-        if len(self.bridge.accessories) > MAX_DEVICES:
-            _LOGGER.warning(
-                "You have exceeded the device limit, which might "
-                "cause issues. Consider using the filter option."
-            )
 
         _LOGGER.debug("Driver start")
         self.hass.add_job(self.driver.start)
