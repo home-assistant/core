@@ -39,6 +39,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
+    STATE_HOME,
     STATE_PLAYING,
     STATE_STANDBY,
     STATE_UNAVAILABLE,
@@ -135,7 +136,7 @@ async def test_availability(hass: HomeAssistantType, requests_mock: Mocker) -> N
     with patch("homeassistant.util.dt.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
-        assert hass.states.get(MAIN_ENTITY_ID).state == "home"
+        assert hass.states.get(MAIN_ENTITY_ID).state == STATE_HOME
 
 
 async def test_supported_features(
@@ -193,7 +194,7 @@ async def test_attributes(hass: HomeAssistantType, requests_mock: Mocker) -> Non
     await setup_integration(hass, requests_mock)
 
     state = hass.states.get(MAIN_ENTITY_ID)
-    assert state.state == "home"
+    assert state.state == STATE_HOME
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) is None
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Roku"
