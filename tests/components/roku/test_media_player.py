@@ -16,7 +16,6 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
     MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_MOVIE,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     SUPPORT_NEXT_TRACK,
