@@ -104,7 +104,7 @@ class SerialSensor(Entity):
                 self._attributes = None
                 self.async_write_ha_state()
                 if not logged_error:
-                    _LOGGER.exception("Unable to connect to the serial device %s: %s. Retrying...", device, str(e))
+                    _LOGGER.exception("Unable to connect to the serial device %s: %s. Will retry", device, e)
                     logged_error = True
                 await asyncio.sleep(5)
 
