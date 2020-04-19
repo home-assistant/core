@@ -104,12 +104,15 @@ def build_resources(
             domain_resources.update(translation_cache[component])
             continue
 
-        if category not in translation_cache[component]:
+        new_value = translation_cache[component].get(category)
+
+        if new_value is None:
             continue
 
-        domain_resources.setdefault(category, {}).update(
-            translation_cache[component][category]
-        )
+        if isinstance(new_value, dict):
+            domain_resources.setdefault(category, {}).update(new_value)
+        else:
+            domain_resources[category] = new_value
 
     return {"component": resources}
 
