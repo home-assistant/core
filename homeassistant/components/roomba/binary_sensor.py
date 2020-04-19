@@ -18,7 +18,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     status = roomba_reported_state(roomba).get("bin", {})
     if "full" in status:
         roomba_vac = RoombaBinStatus(roomba, blid)
-        roomba_vac.register_callback()
         async_add_entities([roomba_vac], True)
 
 

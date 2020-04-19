@@ -95,7 +95,7 @@ class IRobotEntity(Entity):
             "model": self._sku,
         }
 
-    def register_callback(self):
+    async def async_added_to_hass(self):
         """Register callback function."""
         self.vacuum.register_on_message_callback(self.on_message)
 

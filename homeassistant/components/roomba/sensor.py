@@ -16,7 +16,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     roomba = domain_data[ROOMBA_SESSION]
     blid = domain_data[BLID]
     roomba_vac = RoombaBattery(roomba, blid)
-    roomba_vac.register_callback()
     async_add_entities([roomba_vac], True)
 
 
