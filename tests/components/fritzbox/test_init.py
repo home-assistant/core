@@ -31,10 +31,12 @@ async def test_setup(hass: HomeAssistantType, fritz: Mock):
 async def test_setup_duplicate_config(hass: HomeAssistantType, fritz: Mock, caplog):
     """Test duplicate config of integration."""
     DUPLICATE = {
-        FB_DOMAIN: [
-            MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
-            MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
-        ]
+        FB_DOMAIN: {
+            CONF_DEVICES: [
+                MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+                MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+            ]
+        }
     }
     assert not await async_setup_component(hass, FB_DOMAIN, DUPLICATE)
     await hass.async_block_till_done()
