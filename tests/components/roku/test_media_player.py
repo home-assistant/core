@@ -59,7 +59,10 @@ async def test_setup(hass: HomeAssistantType, requests_mock: Mocker) -> None:
 
 async def test_idle_setup(hass: HomeAssistantType, requests_mock: Mocker) -> None:
     """Test setup with idle device."""
-    with patch("homeassistant.components.roku.Roku.power_state", new_callable=PropertyMock(return_value="Off")) as power_mock:
+    with patch(
+        "homeassistant.components.roku.Roku.power_state",
+        new_callable=PropertyMock(return_value="Off"),
+    ):
         await setup_integration(hass, requests_mock)
 
     state = hass.states.get(MAIN_ENTITY_ID)
