@@ -11,8 +11,9 @@ async def test_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    print(result)
     assert result["type"] == "form"
-    assert result["errors"] == {}
+    assert result["errors"] == {} or result["errors"] is None
 
     with patch(
         "homeassistant.components.flickelectric.async_setup", return_value=True
