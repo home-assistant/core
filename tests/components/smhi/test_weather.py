@@ -1,31 +1,30 @@
 """Test for the smhi weather entity."""
 import asyncio
-import logging
 from datetime import datetime
+import logging
 from unittest.mock import Mock, patch
 
+from homeassistant.components.smhi import weather as weather_smhi
+from homeassistant.components.smhi.const import ATTR_SMHI_CLOUDINESS
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
-    ATTR_WEATHER_TEMPERATURE,
+    ATTR_WEATHER_ATTRIBUTION,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
-    ATTR_FORECAST_TEMP_LOW,
+    ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_VISIBILITY,
-    ATTR_WEATHER_ATTRIBUTION,
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
-    ATTR_FORECAST_PRECIPITATION,
     DOMAIN as WEATHER_DOMAIN,
 )
-from homeassistant.components.smhi import weather as weather_smhi
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 
-from tests.common import load_fixture, MockConfigEntry
-
-from homeassistant.components.smhi.const import ATTR_SMHI_CLOUDINESS
+from tests.common import MockConfigEntry, load_fixture
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,11 +72,6 @@ async def test_setup_hass(hass: HomeAssistant, aioclient_mock) -> None:
     assert forecast[ATTR_FORECAST_TEMP_LOW] == 6
     assert forecast[ATTR_FORECAST_PRECIPITATION] == 0
     assert forecast[ATTR_FORECAST_CONDITION] == "partlycloudy"
-
-
-async def test_setup_plattform(hass):
-    """Test that setup plattform does nothing."""
-    assert await weather_smhi.async_setup_platform(hass, None, None) is None
 
 
 def test_properties_no_data(hass: HomeAssistant) -> None:

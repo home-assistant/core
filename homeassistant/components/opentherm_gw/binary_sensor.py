@@ -10,7 +10,6 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from . import DOMAIN
 from .const import BINARY_SENSOR_INFO, DATA_GATEWAYS, DATA_OPENTHERM_GW
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -62,6 +61,11 @@ class OpenThermBinarySensor(BinarySensorDevice):
         self._unsub_updates()
 
     @property
+    def available(self):
+        """Return availability of the sensor."""
+        return self._state is not None
+
+    @property
     def entity_registry_enabled_default(self):
         """Disable binary_sensors by default."""
         return False
@@ -69,8 +73,9 @@ class OpenThermBinarySensor(BinarySensorDevice):
     @callback
     def receive_report(self, status):
         """Handle status updates from the component."""
-        self._state = bool(status.get(self._var))
-        self.async_schedule_update_ha_state()
+        state = status.get(self._var)
+        self._state = None if state is None else bool(state)
+        self.async_write_ha_state()
 
     @property
     def name(self):

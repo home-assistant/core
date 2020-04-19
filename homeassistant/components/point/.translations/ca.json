@@ -3,7 +3,7 @@
         "abort": {
             "already_setup": "Nom\u00e9s pots configurar un compte de Point.",
             "authorize_url_fail": "S'ha produ\u00eft un error desconegut al generar l'URL d'autoritzaci\u00f3.",
-            "authorize_url_timeout": "S'ha acabat el temps d'espera mentre \u00e9s generava l'URL d'autoritzaci\u00f3.",
+            "authorize_url_timeout": "S'ha acabat el temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
             "external_setup": "Point s'ha configurat correctament des d'un altre flux de dades.",
             "no_flows": "Necessites configurar Point abans de poder autenticar-t'hi. Llegeix les [instruccions](https://www.home-assistant.io/components/point/)."
         },
@@ -26,7 +26,6 @@
                 "description": "Tria quin prove\u00efdor d'autenticaci\u00f3 vols utilitzar per autenticar-te amb Point.",
                 "title": "Prove\u00efdor d'autenticaci\u00f3"
             }
-        },
-        "title": "Minut Point"
+        }
     }
 }

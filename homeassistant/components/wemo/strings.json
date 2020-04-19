@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Wemo",
     "step": {
       "confirm": {
         "title": "Wemo",

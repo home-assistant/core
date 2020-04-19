@@ -5,22 +5,22 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    CoverDevice,
     DEVICE_CLASS_GARAGE,
     PLATFORM_SCHEMA,
-    SUPPORT_OPEN,
     SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    CoverDevice,
 )
 from homeassistant.const import (
-    CONF_NAME,
-    STATE_CLOSED,
-    STATE_OPEN,
     CONF_COVERS,
     CONF_HOST,
+    CONF_NAME,
     CONF_PORT,
     CONF_SSL,
     CONF_VERIFY_SSL,
+    STATE_CLOSED,
     STATE_CLOSING,
+    STATE_OPEN,
     STATE_OPENING,
 )
 import homeassistant.helpers.config_validation as cv
@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             CONF_NAME: device_config.get(CONF_NAME),
             CONF_HOST: device_config.get(CONF_HOST),
             CONF_PORT: device_config.get(CONF_PORT),
-            CONF_SSL: device_config.get(CONF_SSL),
+            CONF_SSL: device_config[CONF_SSL],
             CONF_VERIFY_SSL: device_config.get(CONF_VERIFY_SSL),
             CONF_DEVICE_KEY: device_config.get(CONF_DEVICE_KEY),
         }
@@ -79,8 +79,9 @@ class OpenGarageCover(CoverDevice):
 
     def __init__(self, args):
         """Initialize the cover."""
-        self.opengarage_url = "{}://{}:{}".format(
-            "https" if args[CONF_SSL] else "http", args[CONF_HOST], args[CONF_PORT]
+        self.opengarage_url = (
+            f"{'https' if args[CONF_SSL] else 'http'}://"
+            f"{args[CONF_HOST]}:{args[CONF_PORT]}"
         )
         self._name = args[CONF_NAME]
         self._device_key = args[CONF_DEVICE_KEY]

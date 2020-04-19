@@ -1,25 +1,28 @@
 """The tests for numeric state automation."""
 from datetime import timedelta
-import pytest
 from unittest.mock import patch
 
+import pytest
+import voluptuous as vol
+
 import homeassistant.components.automation as automation
+from homeassistant.components.automation import numeric_state
 from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
-    mock_component,
-    async_fire_time_changed,
     assert_setup_component,
+    async_fire_time_changed,
     async_mock_service,
+    mock_component,
 )
 from tests.components.automation import common
 
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -1228,3 +1231,11 @@ async def test_if_fires_on_entities_change_overlap_for_template(hass, calls):
         await hass.async_block_till_done()
         assert 2 == len(calls)
         assert "test.entity_2 - 0:00:10" == calls[1].data["some"]
+
+
+def test_below_above():
+    """Test above cannot be above below."""
+    with pytest.raises(vol.Invalid):
+        numeric_state.TRIGGER_SCHEMA(
+            {"platform": "numeric_state", "above": 1200, "below": 1000}
+        )

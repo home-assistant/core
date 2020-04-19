@@ -5,8 +5,8 @@ from xs1_api_client.api_constants import ActuatorType
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    SUPPORT_TARGET_TEMPERATURE,
     HVAC_MODE_HEAT,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE
 
@@ -115,7 +115,6 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
-        pass
 
     async def async_update(self):
         """Also update the sensor when available."""

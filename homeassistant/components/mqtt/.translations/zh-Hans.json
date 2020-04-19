@@ -25,7 +25,28 @@
                 "description": "\u662f\u5426\u8981\u914d\u7f6e Home Assistant \u8fde\u63a5\u5230 Hass.io \u52a0\u8f7d\u9879 {addon} \u63d0\u4f9b\u7684 MQTT \u670d\u52a1\u5668\uff1f",
                 "title": "\u6765\u81ea Hass.io \u52a0\u8f7d\u9879\u7684 MQTT \u670d\u52a1\u5668"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "\u7b2c\u4e00\u4e2a\u6309\u94ae",
+            "button_2": "\u7b2c\u4e8c\u4e2a\u6309\u94ae",
+            "button_3": "\u7b2c\u4e09\u4e2a\u6309\u94ae",
+            "button_4": "\u7b2c\u56db\u4e2a\u6309\u94ae",
+            "button_5": "\u7b2c\u4e94\u4e2a\u6309\u94ae",
+            "button_6": "\u7b2c\u516d\u4e2a\u6309\u94ae",
+            "turn_off": "\u5173\u95ed",
+            "turn_on": "\u6253\u5f00"
         },
-        "title": "MQTT"
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" \u53cc\u51fb",
+            "button_long_press": "\"{subtype}\" \u6301\u7eed\u6309\u4e0b",
+            "button_long_release": "\"{subtype}\" \u957f\u6309\u540e\u91ca\u653e",
+            "button_quadruple_press": "\"{subtype}\" \u56db\u8fde\u51fb",
+            "button_quintuple_press": "\"{subtype}\" \u4e94\u8fde\u51fb",
+            "button_short_press": "\"{subtype}\" \u6309\u4e0b",
+            "button_short_release": "\"{subtype}\" \u91ca\u653e",
+            "button_triple_press": "\"{subtype}\" \u4e09\u8fde\u51fb"
+        }
     }
 }

@@ -1,24 +1,31 @@
 """Test Google Assistant helpers."""
-from asynctest.mock import Mock, patch, call
 from datetime import timedelta
+
+from asynctest.mock import Mock, call, patch
 import pytest
-from homeassistant.setup import async_setup_component
+
 from homeassistant.components.google_assistant import helpers
-from homeassistant.components.google_assistant.const import EVENT_COMMAND_RECEIVED
+from homeassistant.components.google_assistant.const import (  # noqa: F401
+    EVENT_COMMAND_RECEIVED,
+    NOT_EXPOSE_LOCAL,
+)
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
+
 from . import MockConfig
 
 from tests.common import (
     async_capture_events,
-    async_mock_service,
     async_fire_time_changed,
+    async_mock_service,
 )
 
 
 async def test_google_entity_sync_serialize_with_local_sdk(hass):
     """Test sync serialize attributes of a GoogleEntity."""
     hass.states.async_set("light.ceiling_lights", "off")
-    hass.config.api = Mock(port=1234, use_ssl=True)
+    hass.config.api = Mock(port=1234, use_ssl=True, base_url="https://hostname:1234")
+    hass.http = Mock(server_port=1234)
     config = MockConfig(
         hass=hass,
         local_sdk_webhook_id="mock-webhook-id",
@@ -39,7 +46,17 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
         "httpSSL": True,
         "proxyDeviceId": None,
         "webhookId": "mock-webhook-id",
+        "baseUrl": "https://hostname:1234",
     }
+
+    for device_type in NOT_EXPOSE_LOCAL:
+        with patch(
+            "homeassistant.components.google_assistant.helpers.get_google_type",
+            return_value=device_type,
+        ):
+            serialized = await entity.sync_serialize(None)
+            assert "otherDeviceIds" not in serialized
+            assert "customData" not in serialized
 
 
 async def test_config_local_sdk(hass, hass_client):

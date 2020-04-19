@@ -2,9 +2,10 @@
 import asyncio
 from functools import partial
 
-from nest.nest import NestAuth, AUTHORIZE_URL, AuthorizationError
+from nest.nest import AUTHORIZE_URL, AuthorizationError, NestAuth
 
 from homeassistant.core import callback
+
 from . import config_flow
 from .const import DOMAIN
 

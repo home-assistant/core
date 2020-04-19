@@ -52,7 +52,7 @@ class CloudProvider(Provider):
     """NabuCasa speech API provider."""
 
     def __init__(self, cloud: Cloud) -> None:
-        """Hass NabuCasa Speech to text."""
+        """Home Assistant NabuCasa Speech to text."""
         self.cloud = cloud
 
     @property

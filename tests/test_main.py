@@ -1,5 +1,5 @@
 """Test methods in __main__."""
-from unittest.mock import patch, PropertyMock
+from unittest.mock import PropertyMock, patch
 
 from homeassistant import __main__ as main
 from homeassistant.const import REQUIRED_PYTHON_VER

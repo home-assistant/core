@@ -1,10 +1,10 @@
 """Support for SolarEdge-local Monitoring API."""
-import logging
-from datetime import timedelta
-import statistics
 from copy import deepcopy
+from datetime import timedelta
+import logging
+import statistics
 
-from requests.exceptions import HTTPError, ConnectTimeout
+from requests.exceptions import ConnectTimeout, HTTPError
 from solaredge_local import SolarEdge
 import voluptuous as vol
 
@@ -12,10 +12,12 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
-    POWER_WATT,
     ENERGY_WATT_HOUR,
+    FREQUENCY_HERTZ,
+    POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_VOLT,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -40,12 +42,24 @@ INVERTER_MODES = (
 # Supported sensor types:
 # Key: ['json_key', 'name', unit, icon, attribute name]
 SENSOR_TYPES = {
-    "current_AC_voltage": ["gridvoltage", "Grid Voltage", "V", "mdi:current-ac", None],
-    "current_DC_voltage": ["dcvoltage", "DC Voltage", "V", "mdi:current-dc", None],
+    "current_AC_voltage": [
+        "gridvoltage",
+        "Grid Voltage",
+        UNIT_VOLT,
+        "mdi:current-ac",
+        None,
+    ],
+    "current_DC_voltage": [
+        "dcvoltage",
+        "DC Voltage",
+        UNIT_VOLT,
+        "mdi:current-dc",
+        None,
+    ],
     "current_frequency": [
         "gridfrequency",
         "Grid Frequency",
-        "Hz",
+        FREQUENCY_HERTZ,
         "mdi:current-ac",
         None,
     ],
@@ -122,7 +136,7 @@ SENSOR_TYPES = {
     "optimizer_voltage": [
         "optimizervoltage",
         "Average Optimizer Voltage",
-        "V",
+        UNIT_VOLT,
         "mdi:solar-panel",
         None,
     ],

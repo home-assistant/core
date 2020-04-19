@@ -6,7 +6,7 @@ detect_location_info and elevation are mocked by default during tests.
 import asyncio
 import collections
 import math
-from typing import Any, Optional, Tuple, Dict
+from typing import Any, Dict, Optional, Tuple
 
 import aiohttp
 
@@ -172,6 +172,10 @@ async def _get_ipapi(session: aiohttp.ClientSession) -> Optional[Dict[str, Any]]
     try:
         raw_info = await resp.json()
     except (aiohttp.ClientError, ValueError):
+        return None
+
+    # ipapi allows 30k free requests/month. Some users exhaust those.
+    if raw_info.get("latitude") == "Sign up to access":
         return None
 
     return {

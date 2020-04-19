@@ -6,7 +6,7 @@ from aiohttp.web import Response
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.zwave import DEVICE_CONFIG_SCHEMA_ENTRY, const
-from homeassistant.const import HTTP_NOT_FOUND, HTTP_OK
+from homeassistant.const import HTTP_BAD_REQUEST, HTTP_NOT_FOUND, HTTP_OK
 import homeassistant.core as ha
 import homeassistant.helpers.config_validation as cv
 
@@ -51,7 +51,7 @@ class ZWaveLogView(HomeAssistantView):
         try:
             lines = int(request.query.get("lines", 0))
         except ValueError:
-            return Response(text="Invalid datetime", status=400)
+            return Response(text="Invalid datetime", status=HTTP_BAD_REQUEST)
 
         hass = request.app["hass"]
         response = await hass.async_add_job(self._get_log, hass, lines)
@@ -61,7 +61,7 @@ class ZWaveLogView(HomeAssistantView):
     def _get_log(self, hass, lines):
         """Retrieve the logfile content."""
         logfilepath = hass.config.path(OZW_LOG_FILENAME)
-        with open(logfilepath, "r") as logfile:
+        with open(logfilepath) as logfile:
             data = (line.rstrip() for line in logfile)
             if lines == 0:
                 loglines = list(data)
@@ -226,7 +226,7 @@ class ZWaveProtectionView(HomeAssistantView):
                 return self.json(protection_options)
             protections = node.get_protections()
             protection_options = {
-                "value_id": "{0:d}".format(list(protections)[0]),
+                "value_id": "{:d}".format(list(protections)[0]),
                 "selected": node.get_protection_item(list(protections)[0]),
                 "options": node.get_protection_items(list(protections)[0]),
             }

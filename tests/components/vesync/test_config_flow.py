@@ -1,8 +1,10 @@
 """Test for vesync config flow."""
 from unittest.mock import patch
+
 from homeassistant import data_entry_flow
-from homeassistant.components.vesync import config_flow, DOMAIN
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.components.vesync import DOMAIN, config_flow
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
 from tests.common import MockConfigEntry
 
 

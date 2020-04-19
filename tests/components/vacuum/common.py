@@ -10,20 +10,20 @@ from homeassistant.components.vacuum import (
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
     SERVICE_PAUSE,
+    SERVICE_RETURN_TO_BASE,
     SERVICE_SEND_COMMAND,
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_START_PAUSE,
     SERVICE_STOP,
-    SERVICE_RETURN_TO_BASE,
 )
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    ENTITY_MATCH_ALL,
 )
 from homeassistant.loader import bind_hass
 

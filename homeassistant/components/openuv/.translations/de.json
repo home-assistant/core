@@ -12,9 +12,8 @@
                     "latitude": "Breitengrad",
                     "longitude": "L\u00e4ngengrad"
                 },
-                "title": "Gebe deine Informationen ein"
+                "title": "Gib deine Informationen ein"
             }
-        },
-        "title": "OpenUV"
+        }
     }
 }

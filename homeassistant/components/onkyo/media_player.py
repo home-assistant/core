@@ -2,12 +2,13 @@
 import logging
 from typing import List
 
-import voluptuous as vol
 import eiscp
 from eiscp import eISCP
+import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
+    DOMAIN,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_SELECT_SOURCE,
@@ -16,14 +17,13 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
-    DOMAIN,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     STATE_OFF,
     STATE_ON,
-    ATTR_ENTITY_ID,
 )
 import homeassistant.helpers.config_validation as cv
 

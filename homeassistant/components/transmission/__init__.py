@@ -22,12 +22,12 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     ATTR_TORRENT,
+    DATA_UPDATED,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     SERVICE_ADD_TORRENT,
-    DATA_UPDATED,
 )
 from .errors import AuthenticationError, CannotConnect, UnknownError
 
@@ -196,7 +196,7 @@ class TransmissionClient:
     def add_options(self):
         """Add options for entry."""
         if not self.config_entry.options:
-            scan_interval = self.config_entry.data.pop(
+            scan_interval = self.config_entry.data.get(
                 CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
             )
             options = {CONF_SCAN_INTERVAL: scan_interval}

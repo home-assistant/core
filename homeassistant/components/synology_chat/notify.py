@@ -5,14 +5,13 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.const import CONF_RESOURCE, CONF_VERIFY_SSL
-import homeassistant.helpers.config_validation as cv
-
 from homeassistant.components.notify import (
     ATTR_DATA,
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_RESOURCE, CONF_VERIFY_SSL, HTTP_OK
+import homeassistant.helpers.config_validation as cv
 
 ATTR_FILE_URL = "file_url"
 
@@ -58,7 +57,7 @@ class SynologyChatNotificationService(BaseNotificationService):
             self._resource, data=to_send, timeout=10, verify=self._verify_ssl
         )
 
-        if response.status_code not in (200, 201):
+        if response.status_code not in (HTTP_OK, 201):
             _LOGGER.exception(
                 "Error sending message. Response %d: %s:",
                 response.status_code,

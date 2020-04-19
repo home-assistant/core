@@ -1,25 +1,26 @@
 """Config flow to configure StarLine component."""
 from typing import Optional
+
 from starline import StarlineAuth
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant import config_entries, core
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import (  # pylint: disable=unused-import
-    DOMAIN,
     CONF_APP_ID,
     CONF_APP_SECRET,
-    CONF_MFA_CODE,
     CONF_CAPTCHA_CODE,
-    LOGGER,
-    ERROR_AUTH_APP,
-    ERROR_AUTH_USER,
-    ERROR_AUTH_MFA,
-    DATA_USER_ID,
-    DATA_SLNET_TOKEN,
-    DATA_SLID_TOKEN,
+    CONF_MFA_CODE,
     DATA_EXPIRES,
+    DATA_SLID_TOKEN,
+    DATA_SLNET_TOKEN,
+    DATA_USER_ID,
+    DOMAIN,
+    ERROR_AUTH_APP,
+    ERROR_AUTH_MFA,
+    ERROR_AUTH_USER,
+    LOGGER,
 )
 
 
@@ -84,6 +85,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_authenticate_user(error)
         return self._async_form_auth_captcha(error)
 
+    @core.callback
     def _async_form_auth_app(self, error=None):
         """Authenticate application form."""
         errors = {}
@@ -105,6 +107,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @core.callback
     def _async_form_auth_user(self, error=None):
         """Authenticate user form."""
         errors = {}
@@ -126,6 +129,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @core.callback
     def _async_form_auth_mfa(self, error=None):
         """Authenticate mfa form."""
         errors = {}
@@ -145,6 +149,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"phone_number": self._phone_number},
         )
 
+    @core.callback
     def _async_form_auth_captcha(self, error=None):
         """Captcha verification form."""
         errors = {}

@@ -1,4 +1,5 @@
 """Support for Z-Wave."""
+# pylint: disable=import-outside-toplevel
 import asyncio
 import copy
 from importlib import import_module
@@ -8,62 +9,60 @@ from pprint import pprint
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback, CoreState
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import CoreState, callback
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import (
+    async_get_registry as async_get_device_registry,
+)
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import (
     async_get_registry as async_get_entity_registry,
 )
-from homeassistant.helpers.device_registry import (
-    async_get_registry as async_get_device_registry,
-)
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-)
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.util import convert
 import homeassistant.util.dt as dt_util
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
 
-from . import const
 from . import config_flow  # noqa: F401 pylint: disable=unused-import
-from . import websocket_api as wsapi
+from . import const, websocket_api as wsapi, workaround
 from .const import (
     CONF_AUTOHEAL,
+    CONF_CONFIG_PATH,
     CONF_DEBUG,
+    CONF_NETWORK_KEY,
     CONF_POLLING_INTERVAL,
     CONF_USB_STICK_PATH,
-    CONF_CONFIG_PATH,
-    CONF_NETWORK_KEY,
+    DATA_DEVICES,
+    DATA_ENTITY_VALUES,
+    DATA_NETWORK,
+    DATA_ZWAVE_CONFIG,
     DEFAULT_CONF_AUTOHEAL,
     DEFAULT_CONF_USB_STICK_PATH,
-    DEFAULT_POLLING_INTERVAL,
     DEFAULT_DEBUG,
+    DEFAULT_POLLING_INTERVAL,
     DOMAIN,
-    DATA_DEVICES,
-    DATA_NETWORK,
-    DATA_ENTITY_VALUES,
-    DATA_ZWAVE_CONFIG,
 )
-from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
-from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
+from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
 from .util import (
+    check_has_unique_id,
     check_node_schema,
     check_value_schema,
-    node_name,
-    check_has_unique_id,
     is_node_parsed,
     node_device_id_and_name,
+    node_name,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -128,8 +127,8 @@ SET_CONFIG_PARAMETER_SCHEMA = vol.Schema(
 SET_NODE_VALUE_SCHEMA = vol.Schema(
     {
         vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
-        vol.Required(const.ATTR_VALUE_ID): vol.Coerce(int),
-        vol.Required(const.ATTR_CONFIG_VALUE): vol.Coerce(int),
+        vol.Required(const.ATTR_VALUE_ID): vol.Any(vol.Coerce(int), cv.string),
+        vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(vol.Coerce(int), cv.string),
     }
 )
 
@@ -262,7 +261,7 @@ def _obj_to_dict(obj):
 
 def _value_name(value):
     """Return the name of the value."""
-    return "{} {}".format(node_name(value.node), value.label).strip()
+    return f"{node_name(value.node)} {value.label}".strip()
 
 
 def nice_print_node(node):
@@ -272,7 +271,7 @@ def nice_print_node(node):
         value_id: _obj_to_dict(value) for value_id, value in node.values.items()
     }
 
-    _LOGGER.info("FOUND NODE %s \n" "%s", node.product_name, node_dict)
+    _LOGGER.info("FOUND NODE %s \n%s", node.product_name, node_dict)
 
 
 def get_config_value(node, value_index, tries=5):
@@ -298,7 +297,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if discovery_info is None or DATA_NETWORK not in hass.data:
         return False
 
-    device = hass.data[DATA_DEVICES].get(discovery_info[const.DISCOVERY_DEVICE], None)
+    device = hass.data[DATA_DEVICES].get(discovery_info[const.DISCOVERY_DEVICE])
     if device is None:
         return False
 
@@ -437,7 +436,6 @@ async def async_setup_entry(hass, config_entry):
         platform=None,
         scan_interval=DEFAULT_SCAN_INTERVAL,
         entity_namespace=None,
-        async_entities_added_callback=lambda: None,
     )
     platform.config_entry = config_entry
 
@@ -473,7 +471,7 @@ async def async_setup_entry(hass, config_entry):
         @callback
         def _on_timeout(sec):
             _LOGGER.warning(
-                "Z-Wave node %d not ready after %d seconds, " "continuing anyway",
+                "Z-Wave node %d not ready after %d seconds, continuing anyway",
                 entity.node_id,
                 sec,
             )
@@ -523,7 +521,7 @@ async def async_setup_entry(hass, config_entry):
     def network_complete():
         """Handle the querying of all nodes on network."""
         _LOGGER.info(
-            "Z-Wave network is complete. All nodes on the network " "have been queried"
+            "Z-Wave network is complete. All nodes on the network have been queried"
         )
         hass.bus.fire(const.EVENT_NETWORK_COMPLETE)
 
@@ -681,7 +679,7 @@ async def async_setup_entry(hass, config_entry):
             if value.type == const.TYPE_BOOL:
                 value.data = int(selection == "True")
                 _LOGGER.info(
-                    "Setting config parameter %s on Node %s " "with bool selection %s",
+                    "Setting configuration parameter %s on Node %s with bool selection %s",
                     param,
                     node_id,
                     str(selection),
@@ -690,7 +688,7 @@ async def async_setup_entry(hass, config_entry):
             if value.type == const.TYPE_LIST:
                 value.data = str(selection)
                 _LOGGER.info(
-                    "Setting config parameter %s on Node %s " "with list selection %s",
+                    "Setting configuration parameter %s on Node %s with list selection %s",
                     param,
                     node_id,
                     str(selection),
@@ -700,7 +698,7 @@ async def async_setup_entry(hass, config_entry):
                 network.manager.pressButton(value.value_id)
                 network.manager.releaseButton(value.value_id)
                 _LOGGER.info(
-                    "Setting config parameter %s on Node %s "
+                    "Setting configuration parameter %s on Node %s "
                     "with button selection %s",
                     param,
                     node_id,
@@ -709,7 +707,7 @@ async def async_setup_entry(hass, config_entry):
                 return
             value.data = int(selection)
             _LOGGER.info(
-                "Setting config parameter %s on Node %s " "with selection %s",
+                "Setting configuration parameter %s on Node %s with selection %s",
                 param,
                 node_id,
                 selection,
@@ -717,7 +715,7 @@ async def async_setup_entry(hass, config_entry):
             return
         node.set_config_param(param, selection, size)
         _LOGGER.info(
-            "Setting unknown config parameter %s on Node %s " "with selection %s",
+            "Setting unknown configuration parameter %s on Node %s with selection %s",
             param,
             node_id,
             selection,
@@ -828,9 +826,7 @@ async def async_setup_entry(hass, config_entry):
             )
             return
         _LOGGER.info(
-            "Node %s on instance %s does not have resettable " "meters.",
-            node_id,
-            instance,
+            "Node %s on instance %s does not have resettable meters.", node_id, instance
         )
 
     def heal_node(service):
@@ -1211,7 +1207,6 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
 
     def value_added(self):
         """Handle a new value of this entity."""
-        pass
 
     def value_changed(self):
         """Handle a changed value for this entity's node."""
@@ -1237,7 +1232,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
                 ent_reg.async_update_entity(self.entity_id, new_entity_id=new_entity_id)
                 return
         # else for the above two ifs, update if not using update_entity
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Add device to dict."""
@@ -1265,7 +1260,6 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
 
     def update_properties(self):
         """Update on data changes for node values."""
-        pass
 
     @property
     def should_poll(self):

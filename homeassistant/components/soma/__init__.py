@@ -1,20 +1,18 @@
 """Support for Soma Smartshades."""
 import logging
 
-import voluptuous as vol
 from api.soma_api import SomaApi
 from requests import RequestException
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from homeassistant.const import CONF_HOST, CONF_PORT
-
-from .const import DOMAIN, HOST, PORT, API
-
+from .const import API, DOMAIN, HOST, PORT
 
 DEVICES = "devices"
 

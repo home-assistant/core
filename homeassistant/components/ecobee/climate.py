@@ -6,37 +6,37 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_OFF,
-    ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_HIGH,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
-    SUPPORT_FAN_MODE,
-    PRESET_AWAY,
+    ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_DRY,
+    CURRENT_HVAC_FAN,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     FAN_AUTO,
     FAN_ON,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_COOL,
-    SUPPORT_PRESET_MODE,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_OFF,
+    PRESET_AWAY,
     PRESET_NONE,
-    CURRENT_HVAC_FAN,
-    CURRENT_HVAC_DRY,
+    SUPPORT_AUX_HEAT,
+    SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    STATE_ON,
     ATTR_TEMPERATURE,
+    STATE_ON,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.util.temperature import convert
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.temperature import convert
 
-from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER, _LOGGER
+from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 from .util import ecobee_date, ecobee_time
 
 ATTR_COOL_TEMP = "cool_temp"
@@ -64,7 +64,7 @@ ECOBEE_HVAC_TO_HASS = collections.OrderedDict(
     [
         ("heat", HVAC_MODE_HEAT),
         ("cool", HVAC_MODE_COOL),
-        ("auto", HVAC_MODE_AUTO),
+        ("auto", HVAC_MODE_HEAT_COOL),
         ("off", HVAC_MODE_OFF),
         ("auxHeatOnly", HVAC_MODE_HEAT),
     ]
@@ -154,11 +154,6 @@ SUPPORT_FLAGS = (
     | SUPPORT_TARGET_TEMPERATURE_RANGE
     | SUPPORT_FAN_MODE
 )
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up ecobee thermostat."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -264,7 +259,7 @@ class Thermostat(ClimateDevice):
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         self._name = self.thermostat["name"]
         self.vacation = None
-        self._last_active_hvac_mode = HVAC_MODE_AUTO
+        self._last_active_hvac_mode = HVAC_MODE_HEAT_COOL
 
         self._operation_list = []
         if (
@@ -275,7 +270,7 @@ class Thermostat(ClimateDevice):
         if self.thermostat["settings"]["coolStages"]:
             self._operation_list.append(HVAC_MODE_COOL)
         if len(self._operation_list) == 2:
-            self._operation_list.insert(0, HVAC_MODE_AUTO)
+            self._operation_list.insert(0, HVAC_MODE_HEAT_COOL)
         self._operation_list.append(HVAC_MODE_OFF)
 
         self._preset_modes = {
@@ -352,21 +347,21 @@ class Thermostat(ClimateDevice):
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
-        if self.hvac_mode == HVAC_MODE_AUTO:
+        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
             return self.thermostat["runtime"]["desiredHeat"] / 10.0
         return None
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
-        if self.hvac_mode == HVAC_MODE_AUTO:
+        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
             return self.thermostat["runtime"]["desiredCool"] / 10.0
         return None
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self.hvac_mode == HVAC_MODE_AUTO:
+        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
             return None
         if self.hvac_mode == HVAC_MODE_HEAT:
             return self.thermostat["runtime"]["desiredHeat"] / 10.0
@@ -550,7 +545,7 @@ class Thermostat(ClimateDevice):
             self.hold_preference(),
         )
         _LOGGER.debug(
-            "Setting ecobee hold_temp to: heat=%s, is=%s, " "cool=%s, is=%s",
+            "Setting ecobee hold_temp to: heat=%s, is=%s, cool=%s, is=%s",
             heat_temp,
             isinstance(heat_temp, (int, float)),
             cool_temp,
@@ -561,7 +556,7 @@ class Thermostat(ClimateDevice):
 
     def set_fan_mode(self, fan_mode):
         """Set the fan mode.  Valid values are "on" or "auto"."""
-        if fan_mode.lower() != STATE_ON and fan_mode.lower() != HVAC_MODE_AUTO:
+        if fan_mode.lower() not in (FAN_ON, FAN_AUTO):
             error = "Invalid fan_mode value:  Valid values are 'on' or 'auto'"
             _LOGGER.error(error)
             return
@@ -604,7 +599,7 @@ class Thermostat(ClimateDevice):
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
 
-        if self.hvac_mode == HVAC_MODE_AUTO and (
+        if self.hvac_mode == HVAC_MODE_HEAT_COOL and (
             low_temp is not None or high_temp is not None
         ):
             self.set_auto_temp_hold(low_temp, high_temp)

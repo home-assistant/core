@@ -1,13 +1,13 @@
 """The tests for the broadlink component."""
-from datetime import timedelta
 from base64 import b64decode
-from unittest.mock import MagicMock, patch, call
+from datetime import timedelta
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
-from homeassistant.util.dt import utcnow
 from homeassistant.components.broadlink import async_setup_service, data_packet
 from homeassistant.components.broadlink.const import DOMAIN, SERVICE_LEARN, SERVICE_SEND
+from homeassistant.util.dt import utcnow
 
 DUMMY_IR_PACKET = (
     "JgBGAJKVETkRORA6ERQRFBEUERQRFBE5ETkQOhAVEBUQFREUEBUQ"
@@ -69,7 +69,7 @@ async def test_learn(hass):
 
         assert mock_create.call_count == 1
         assert mock_create.call_args == call(
-            "Received packet is: {}".format(DUMMY_IR_PACKET), title="Broadlink switch"
+            f"Received packet is: {DUMMY_IR_PACKET}", title="Broadlink switch"
         )
 
 

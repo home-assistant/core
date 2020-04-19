@@ -1,22 +1,26 @@
 """The test for state automation."""
 from datetime import timedelta
-
-import pytest
 from unittest.mock import patch
 
+import pytest
+
+import homeassistant.components.automation as automation
 from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-import homeassistant.components.automation as automation
 
-from tests.common import async_fire_time_changed, assert_setup_component, mock_component
+from tests.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    async_mock_service,
+    mock_component,
+)
 from tests.components.automation import common
-from tests.common import async_mock_service
 
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -513,6 +517,30 @@ async def test_if_fires_on_entity_change_with_for(hass, calls):
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
     assert 1 == len(calls)
+
+
+async def test_if_fires_on_entity_removal(hass, calls):
+    """Test for firing on entity removal, when new_state is None."""
+    context = Context()
+    hass.states.async_set("test.entity", "hello")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "state", "entity_id": "test.entity"},
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.async_remove("test.entity", context=context)
+    await hass.async_block_till_done()
+    assert 1 == len(calls)
+    assert calls[0].context.parent_id == context.id
 
 
 async def test_if_fires_on_for_condition(hass, calls):

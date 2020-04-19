@@ -6,7 +6,7 @@ import voluptuous_serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.components import websocket_api
-from homeassistant.core import callback, HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 WS_TYPE_SETUP_MFA = "auth/setup_mfa"
 SCHEMA_WS_SETUP_MFA = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
@@ -28,25 +28,27 @@ DATA_SETUP_FLOW_MGR = "auth_mfa_setup_flow_manager"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass):
-    """Init mfa setup flow manager."""
+class MfaFlowManager(data_entry_flow.FlowManager):
+    """Manage multi factor authentication flows."""
 
-    async def _async_create_setup_flow(handler, context, data):
+    async def async_create_flow(self, handler_key, *, context, data):
         """Create a setup flow. handler is a mfa module."""
-        mfa_module = hass.auth.get_auth_mfa_module(handler)
+        mfa_module = self.hass.auth.get_auth_mfa_module(handler_key)
         if mfa_module is None:
-            raise ValueError(f"Mfa module {handler} is not found")
+            raise ValueError(f"Mfa module {handler_key} is not found")
 
         user_id = data.pop("user_id")
         return await mfa_module.async_setup_flow(user_id)
 
-    async def _async_finish_setup_flow(flow, flow_result):
-        _LOGGER.debug("flow_result: %s", flow_result)
-        return flow_result
+    async def async_finish_flow(self, flow, result):
+        """Complete an mfs setup flow."""
+        _LOGGER.debug("flow_result: %s", result)
+        return result
 
-    hass.data[DATA_SETUP_FLOW_MGR] = data_entry_flow.FlowManager(
-        hass, _async_create_setup_flow, _async_finish_setup_flow
-    )
+
+async def async_setup(hass):
+    """Init mfa setup flow manager."""
+    hass.data[DATA_SETUP_FLOW_MGR] = MfaFlowManager(hass)
 
     hass.components.websocket_api.async_register_command(
         WS_TYPE_SETUP_MFA, websocket_setup_mfa, SCHEMA_WS_SETUP_MFA

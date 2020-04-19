@@ -1,25 +1,25 @@
 """Support for Sinch notifications."""
 import logging
 
-import voluptuous as vol
 from clx.xms.api import MtBatchTextSmsResult
 from clx.xms.client import Client
 from clx.xms.exceptions import (
     ErrorResponseException,
-    UnexpectedResponseException,
-    UnauthorizedException,
     NotFoundException,
+    UnauthorizedException,
+    UnexpectedResponseException,
 )
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
-    ATTR_MESSAGE,
     ATTR_DATA,
+    ATTR_MESSAGE,
     ATTR_TARGET,
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONF_API_KEY, CONF_SENDER
+import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "sinch"
 
@@ -83,7 +83,7 @@ class SinchNotificationService(BaseNotificationService):
                 )
         except ErrorResponseException as ex:
             _LOGGER.error(
-                "Caught ErrorResponseException. Response code: %d (%s)",
+                "Caught ErrorResponseException. Response code: %s (%s)",
                 ex.error_code,
                 ex,
             )

@@ -1,4 +1,5 @@
 """Common code for Withings."""
+from asyncio import run_coroutine_threadsafe
 import datetime
 from functools import partial
 import logging
@@ -6,15 +7,14 @@ import re
 import time
 from typing import Any, Dict
 
-from asyncio import run_coroutine_threadsafe
 import requests
 from withings_api import (
     AbstractWithingsApi,
-    SleepGetResponse,
     MeasureGetMeasResponse,
+    SleepGetResponse,
     SleepGetSummaryResponse,
 )
-from withings_api.common import UnauthorizedException, AuthFailedException
+from withings_api.common import AuthFailedException, UnauthorizedException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -38,20 +38,16 @@ NOT_AUTHENTICATED_ERROR = re.compile(
 class NotAuthenticatedError(HomeAssistantError):
     """Raise when not authenticated with the service."""
 
-    pass
-
 
 class ServiceError(HomeAssistantError):
     """Raise when the service has an error."""
-
-    pass
 
 
 class ThrottleData:
     """Throttle data."""
 
     def __init__(self, interval: int, data: Any):
-        """Constructor."""
+        """Initialize throttle data."""
         self._time = int(time.time())
         self._interval = interval
         self._data = data
@@ -108,7 +104,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
             partial(
                 requests.request,
                 method,
-                "%s/%s" % (self.URL, path),
+                f"{self.URL}/{path}",
                 params=params,
                 headers={
                     "Authorization": "Bearer %s"
@@ -126,7 +122,7 @@ class WithingsDataManager:
     service_available = None
 
     def __init__(self, hass: HomeAssistant, profile: str, api: ConfigEntryWithingsApi):
-        """Constructor."""
+        """Initialize data manager."""
         self._hass = hass
         self._api = api
         self._profile = profile
@@ -259,8 +255,8 @@ class WithingsDataManager:
 
     async def update_sleep(self) -> SleepGetResponse:
         """Update the sleep data."""
-        end_date = int(time.time())
-        start_date = end_date - (6 * 60 * 60)
+        end_date = dt.now()
+        start_date = end_date - datetime.timedelta(hours=2)
 
         def function():
             return self._api.sleep_get(startdate=start_date, enddate=end_date)

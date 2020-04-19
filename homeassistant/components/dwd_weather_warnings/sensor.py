@@ -1,9 +1,6 @@
 """
 Support for getting statistical data from a DWD Weather Warnings.
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.dwd_weather_warnings/
-
 Data is fetched from DWD:
 https://rcccm.dwd.de/DE/wetter/warnungen_aktuell/objekt_einbindung/objekteinbindung.html
 
@@ -12,19 +9,20 @@ Unwetterwarnungen (Stufe 3)
 Warnungen vor markantem Wetter (Stufe 2)
 Wetterwarnungen (Stufe 1)
 """
-import logging
-import json
 from datetime import timedelta
+import json
+import logging
 
 import voluptuous as vol
 
+from homeassistant.components.rest.sensor import RestData
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE as HA_USER_AGENT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_MONITORED_CONDITIONS
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
-from homeassistant.components.rest.sensor import RestData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,10 +133,13 @@ class DwdWeatherWarningsSensor(Entity):
         else:
             raise Exception("Unknown warning type")
 
-        data["warning_count"] = self._api.data[prefix + "_warning_count"]
+        data["warning_count"] = self._api.data[f"{prefix}_warning_count"]
         i = 0
-        for event in self._api.data[prefix + "_warnings"]:
+        for event in self._api.data[f"{prefix}_warnings"]:
             i = i + 1
+
+            # dictionary for the attribute containing the complete warning as json
+            event_json = event.copy()
 
             data[f"warning_{i}_name"] = event["event"]
             data[f"warning_{i}_level"] = event["level"]
@@ -154,11 +155,15 @@ class DwdWeatherWarningsSensor(Entity):
                 data[f"warning_{i}_start"] = dt_util.as_local(
                     dt_util.utc_from_timestamp(event["start"] / 1000)
                 )
+                event_json["start"] = data[f"warning_{i}_start"]
 
             if event["end"] is not None:
                 data[f"warning_{i}_end"] = dt_util.as_local(
                     dt_util.utc_from_timestamp(event["end"] / 1000)
                 )
+                event_json["end"] = data[f"warning_{i}_end"]
+
+            data[f"warning_{i}"] = event_json
 
         return data
 
@@ -177,14 +182,12 @@ class DwdWeatherWarningsAPI:
 
     def __init__(self, region_name):
         """Initialize the data object."""
-        resource = "{}{}{}?{}".format(
-            "https://",
-            "www.dwd.de",
-            "/DWD/warnungen/warnapp_landkreise/json/warnings.json",
-            "jsonp=loadWarnings",
-        )
+        resource = "https://www.dwd.de/DWD/warnungen/warnapp_landkreise/json/warnings.json?jsonp=loadWarnings"
 
-        self._rest = RestData("GET", resource, None, None, None, True)
+        # a User-Agent is necessary for this rest api endpoint (#29496)
+        headers = {"User-Agent": HA_USER_AGENT}
+
+        self._rest = RestData("GET", resource, None, headers, None, True)
         self.region_name = region_name
         self.region_id = None
         self.region_state = None

@@ -7,7 +7,10 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import HTTP_NOT_FOUND
+from homeassistant.core import callback
 from homeassistant.exceptions import Unauthorized
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
@@ -23,16 +26,14 @@ async def async_setup(hass):
     hass.http.register_view(ConfigManagerFlowResourceView(hass.config_entries.flow))
     hass.http.register_view(ConfigManagerAvailableFlowView)
 
-    hass.http.register_view(
-        OptionManagerFlowIndexView(hass.config_entries.options.flow)
-    )
-    hass.http.register_view(
-        OptionManagerFlowResourceView(hass.config_entries.options.flow)
-    )
+    hass.http.register_view(OptionManagerFlowIndexView(hass.config_entries.options))
+    hass.http.register_view(OptionManagerFlowResourceView(hass.config_entries.options))
 
+    hass.components.websocket_api.async_register_command(config_entry_update)
     hass.components.websocket_api.async_register_command(config_entries_progress)
     hass.components.websocket_api.async_register_command(system_options_list)
     hass.components.websocket_api.async_register_command(system_options_update)
+    hass.components.websocket_api.async_register_command(ignore_config_flow)
 
     return True
 
@@ -48,7 +49,9 @@ def _prepare_json(result):
     if schema is None:
         data["data_schema"] = []
     else:
-        data["data_schema"] = voluptuous_serialize.convert(schema)
+        data["data_schema"] = voluptuous_serialize.convert(
+            schema, custom_serializer=cv.custom_serializer
+        )
 
     return data
 
@@ -63,30 +66,9 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
         """List available config entries."""
         hass = request.app["hass"]
 
-        results = []
-
-        for entry in hass.config_entries.async_entries():
-            handler = config_entries.HANDLERS.get(entry.domain)
-            supports_options = (
-                # Guard in case handler is no longer registered (custom compnoent etc)
-                handler is not None
-                # pylint: disable=comparison-with-callable
-                and handler.async_get_options_flow
-                != config_entries.ConfigFlow.async_get_options_flow
-            )
-            results.append(
-                {
-                    "entry_id": entry.entry_id,
-                    "domain": entry.domain,
-                    "title": entry.title,
-                    "source": entry.source,
-                    "state": entry.state,
-                    "connection_class": entry.connection_class,
-                    "supports_options": supports_options,
-                }
-            )
-
-        return self.json(results)
+        return self.json(
+            [entry_json(entry) for entry in hass.config_entries.async_entries()]
+        )
 
 
 class ConfigManagerEntryResourceView(HomeAssistantView):
@@ -105,7 +87,7 @@ class ConfigManagerEntryResourceView(HomeAssistantView):
         try:
             result = await hass.config_entries.async_remove(entry_id)
         except config_entries.UnknownEntry:
-            return self.json_message("Invalid entry specified", 404)
+            return self.json_message("Invalid entry specified", HTTP_NOT_FOUND)
 
         return self.json(result)
 
@@ -284,3 +266,83 @@ async def system_options_update(hass, connection, msg):
 
     hass.config_entries.async_update_entry(entry, system_options=changes)
     connection.send_result(msg["id"], entry.system_options.as_dict())
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {"type": "config_entries/update", "entry_id": str, vol.Optional("title"): str}
+)
+async def config_entry_update(hass, connection, msg):
+    """Update config entry system options."""
+    changes = dict(msg)
+    changes.pop("id")
+    changes.pop("type")
+    entry_id = changes.pop("entry_id")
+
+    entry = hass.config_entries.async_get_entry(entry_id)
+
+    if entry is None:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
+        )
+        return
+
+    hass.config_entries.async_update_entry(entry, **changes)
+    connection.send_result(msg["id"], entry_json(entry))
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command({"type": "config_entries/ignore_flow", "flow_id": str})
+async def ignore_config_flow(hass, connection, msg):
+    """Ignore a config flow."""
+    flow = next(
+        (
+            flw
+            for flw in hass.config_entries.flow.async_progress()
+            if flw["flow_id"] == msg["flow_id"]
+        ),
+        None,
+    )
+
+    if flow is None:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
+        )
+        return
+
+    if "unique_id" not in flow["context"]:
+        connection.send_error(
+            msg["id"], "no_unique_id", "Specified flow has no unique ID."
+        )
+        return
+
+    await hass.config_entries.flow.async_init(
+        flow["handler"],
+        context={"source": config_entries.SOURCE_IGNORE},
+        data={"unique_id": flow["context"]["unique_id"]},
+    )
+    connection.send_result(msg["id"])
+
+
+@callback
+def entry_json(entry: config_entries.ConfigEntry) -> dict:
+    """Return JSON value of a config entry."""
+    handler = config_entries.HANDLERS.get(entry.domain)
+    supports_options = (
+        # Guard in case handler is no longer registered (custom compnoent etc)
+        handler is not None
+        # pylint: disable=comparison-with-callable
+        and handler.async_get_options_flow
+        != config_entries.ConfigFlow.async_get_options_flow
+    )
+    return {
+        "entry_id": entry.entry_id,
+        "domain": entry.domain,
+        "title": entry.title,
+        "source": entry.source,
+        "state": entry.state,
+        "connection_class": entry.connection_class,
+        "supports_options": supports_options,
+    }

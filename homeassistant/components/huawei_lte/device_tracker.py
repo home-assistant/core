@@ -13,11 +13,12 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.const import CONF_URL
+from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from . import HuaweiLteBaseEntity
 from .const import DOMAIN, KEY_WLAN_HOST_LIST, UPDATE_SIGNAL
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,6 +71,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_new_entities(hass, router.url, async_add_entities, tracked)
 
 
+@callback
 def async_add_new_entities(hass, router_url, async_add_entities, tracked):
     """Add new entities that are not already being tracked."""
     router = hass.data[DOMAIN].routers[router_url]

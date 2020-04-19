@@ -1,18 +1,17 @@
 """The tests for the Dark Sky platform."""
+from datetime import timedelta
 import re
 import unittest
 from unittest.mock import MagicMock, patch
-from datetime import timedelta
-
-from requests.exceptions import HTTPError
-import requests_mock
 
 import forecastio
+from requests.exceptions import HTTPError
+import requests_mock
 
 from homeassistant.components.darksky import sensor as darksky
 from homeassistant.setup import setup_component
 
-from tests.common import load_fixture, get_test_home_assistant, MockDependency
+from tests.common import MockDependency, get_test_home_assistant, load_fixture
 
 VALID_CONFIG_MINIMAL = {
     "sensor": {
@@ -31,7 +30,7 @@ INVALID_CONFIG_MINIMAL = {
         "api_key": "foo",
         "forecast": [1, 2],
         "hourly_forecast": [1, 2],
-        "monitored_conditions": ["sumary", "iocn", "temperature_high"],
+        "monitored_conditions": ["summary", "iocn", "temperature_high"],
         "scan_interval": timedelta(seconds=120),
     }
 }
@@ -157,7 +156,7 @@ class TestDarkSkySetup(unittest.TestCase):
         url = "https://api.darksky.net/forecast/{}/{},{}?units=auto".format(
             self.key, str(self.lat), str(self.lon)
         )
-        msg = "400 Client Error: Bad Request for url: {}".format(url)
+        msg = f"400 Client Error: Bad Request for url: {url}"
         mock_get_forecast.side_effect = HTTPError(msg)
 
         response = darksky.setup_platform(

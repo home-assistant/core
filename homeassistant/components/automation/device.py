@@ -7,7 +7,6 @@ from homeassistant.components.device_automation import (
 )
 from homeassistant.const import CONF_DOMAIN
 
-
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)

@@ -7,11 +7,11 @@ from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     HVAC_MODE_HEAT,
-    PRESET_ECO,
-    PRESET_COMFORT,
-    SUPPORT_TARGET_TEMPERATURE,
     HVAC_MODE_OFF,
+    PRESET_COMFORT,
+    PRESET_ECO,
     SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,

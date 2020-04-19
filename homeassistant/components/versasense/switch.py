@@ -5,14 +5,14 @@ from homeassistant.components.switch import SwitchDevice
 
 from . import DOMAIN
 from .const import (
-    PERIPHERAL_STATE_ON,
-    PERIPHERAL_STATE_OFF,
-    KEY_IDENTIFIER,
-    KEY_PARENT_NAME,
-    KEY_PARENT_MAC,
-    KEY_UNIT,
-    KEY_MEASUREMENT,
     KEY_CONSUMER,
+    KEY_IDENTIFIER,
+    KEY_MEASUREMENT,
+    KEY_PARENT_MAC,
+    KEY_PARENT_NAME,
+    KEY_UNIT,
+    PERIPHERAL_STATE_OFF,
+    PERIPHERAL_STATE_ON,
 )
 
 _LOGGER = logging.getLogger(__name__)

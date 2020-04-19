@@ -1,19 +1,19 @@
 """Support for Yeelight Sunflower color bulbs (not Yeelight Blue or WiFi)."""
 import logging
 
-import yeelightsunflower
 import voluptuous as vol
+import yeelightsunflower
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
-    Light,
-    ATTR_HS_COLOR,
-    SUPPORT_COLOR,
     ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
+    ATTR_HS_COLOR,
     PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    Light,
 )
 from homeassistant.const import CONF_HOST
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)

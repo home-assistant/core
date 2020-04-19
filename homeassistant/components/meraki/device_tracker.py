@@ -1,19 +1,14 @@
-"""
-Support for the Meraki CMX location service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.meraki/
-
-"""
-import logging
+"""Support for the Meraki CMX location service."""
 import json
+import logging
 
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
+
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import HTTP_BAD_REQUEST, HTTP_UNPROCESSABLE_ENTITY
 from homeassistant.core import callback
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER
+import homeassistant.helpers.config_validation as cv
 
 CONF_VALIDATOR = "validator"
 CONF_SECRET = "secret"

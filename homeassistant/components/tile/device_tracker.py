@@ -1,13 +1,13 @@
 """Support for Tile® Bluetooth trackers."""
-import logging
 from datetime import timedelta
+import logging
 
 from pytile import async_login
 from pytile.errors import SessionExpiredError, TileError
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
-from homeassistant.const import CONF_USERNAME, CONF_MONITORED_VARIABLES, CONF_PASSWORD
+from homeassistant.const import CONF_MONITORED_VARIABLES, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
@@ -121,7 +121,7 @@ class TileScanner:
 
         for tile in tiles:
             await self._async_see(
-                dev_id="tile_{0}".format(slugify(tile["tile_uuid"])),
+                dev_id="tile_{}".format(slugify(tile["tile_uuid"])),
                 gps=(
                     tile["last_tile_state"]["latitude"],
                     tile["last_tile_state"]["longitude"],

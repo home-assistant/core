@@ -7,24 +7,23 @@ import aiohttp
 import async_timeout
 from hass_nabucasa import cloud_api
 
+from homeassistant.components.alexa import (
+    config as alexa_config,
+    entities as alexa_entities,
+    errors as alexa_errors,
+    state_report as alexa_state_report,
+)
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_BAD_REQUEST
 from homeassistant.core import callback
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.dt import utcnow
-from homeassistant.components.alexa import (
-    config as alexa_config,
-    errors as alexa_errors,
-    entities as alexa_entities,
-    state_report as alexa_state_report,
-)
-
 
 from .const import (
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
-    PREF_SHOULD_EXPOSE,
     DEFAULT_SHOULD_EXPOSE,
+    PREF_SHOULD_EXPOSE,
     RequireRelink,
 )
 
@@ -80,6 +79,12 @@ class AlexaConfig(alexa_config.AbstractConfig):
         return self._endpoint
 
     @property
+    def locale(self):
+        """Return config locale."""
+        # Not clear how to determine locale atm.
+        return "en-US"
+
+    @property
     def entity_config(self):
         """Return entity config."""
         return self._config.get(CONF_ENTITY_CONFIG) or {}
@@ -109,14 +114,14 @@ class AlexaConfig(alexa_config.AbstractConfig):
         resp = await cloud_api.async_alexa_access_token(self._cloud)
         body = await resp.json()
 
-        if resp.status == 400:
+        if resp.status == HTTP_BAD_REQUEST:
             if body["reason"] in ("RefreshTokenNotFound", "UnknownRegion"):
                 if self.should_report_state:
                     await self._prefs.async_update(alexa_report_state=False)
                     self.hass.components.persistent_notification.async_create(
-                        "There was an error reporting state to Alexa ({}). "
+                        f"There was an error reporting state to Alexa ({body['reason']}). "
                         "Please re-link your Alexa skill via the Alexa app to "
-                        "continue using it.".format(body["reason"]),
+                        "continue using it.",
                         "Alexa state reporting disabled",
                         "cloud_alexa_report",
                     )

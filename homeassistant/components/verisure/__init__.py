@@ -1,11 +1,10 @@
 """Support for Verisure devices."""
+from datetime import timedelta
 import logging
 import threading
-from datetime import timedelta
 
 from jsonpath import jsonpath
 import verisure
-
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -15,8 +14,8 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers import discovery
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +75,7 @@ DEVICE_SERIAL_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_SERIAL): cv.string})
 
 def setup(hass, config):
     """Set up the Verisure component."""
-    global HUB
+    global HUB  # pylint: disable=global-statement
     HUB = VerisureHub(config[DOMAIN])
     HUB.update_overview = Throttle(config[DOMAIN][CONF_SCAN_INTERVAL])(
         HUB.update_overview

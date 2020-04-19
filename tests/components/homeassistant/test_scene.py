@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.homeassistant import scene as ha_scene
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -17,7 +18,7 @@ async def test_reload_config_service(hass):
         "homeassistant.config.load_yaml_config_file",
         autospec=True,
         return_value={"scene": {"name": "Hallo", "entities": {"light.kitchen": "on"}}},
-    ), patch("homeassistant.config.find_config_file", return_value=""):
+    ):
         await hass.services.async_call("scene", "reload", blocking=True)
         await hass.async_block_till_done()
 
@@ -27,7 +28,7 @@ async def test_reload_config_service(hass):
         "homeassistant.config.load_yaml_config_file",
         autospec=True,
         return_value={"scene": {"name": "Bye", "entities": {"light.kitchen": "on"}}},
-    ), patch("homeassistant.config.find_config_file", return_value=""):
+    ):
         await hass.services.async_call("scene", "reload", blocking=True)
         await hass.async_block_till_done()
 
@@ -209,3 +210,81 @@ async def test_ensure_no_intersection(hass):
         await hass.async_block_till_done()
     assert "entities and snapshot_entities must not overlap" in str(ex.value)
     assert hass.states.get("scene.hallo") is None
+
+
+async def test_scenes_with_entity(hass):
+    """Test finding scenes with a specific entity."""
+    assert await async_setup_component(
+        hass,
+        "scene",
+        {
+            "scene": [
+                {"name": "scene_1", "entities": {"light.kitchen": "on"}},
+                {"name": "scene_2", "entities": {"light.living_room": "off"}},
+                {
+                    "name": "scene_3",
+                    "entities": {"light.kitchen": "on", "light.living_room": "off"},
+                },
+            ]
+        },
+    )
+
+    assert sorted(ha_scene.scenes_with_entity(hass, "light.kitchen")) == [
+        "scene.scene_1",
+        "scene.scene_3",
+    ]
+
+
+async def test_entities_in_scene(hass):
+    """Test finding entities in a scene."""
+    assert await async_setup_component(
+        hass,
+        "scene",
+        {
+            "scene": [
+                {"name": "scene_1", "entities": {"light.kitchen": "on"}},
+                {"name": "scene_2", "entities": {"light.living_room": "off"}},
+                {
+                    "name": "scene_3",
+                    "entities": {"light.kitchen": "on", "light.living_room": "off"},
+                },
+            ]
+        },
+    )
+
+    for scene_id, entities in (
+        ("scene.scene_1", ["light.kitchen"]),
+        ("scene.scene_2", ["light.living_room"]),
+        ("scene.scene_3", ["light.kitchen", "light.living_room"]),
+    ):
+        assert ha_scene.entities_in_scene(hass, scene_id) == entities
+
+
+async def test_config(hass):
+    """Test passing config in YAML."""
+    assert await async_setup_component(
+        hass,
+        "scene",
+        {
+            "scene": [
+                {
+                    "id": "scene_id",
+                    "name": "Scene Icon",
+                    "icon": "mdi:party",
+                    "entities": {"light.kitchen": "on"},
+                },
+                {
+                    "name": "Scene No Icon",
+                    "entities": {"light.kitchen": {"state": "on"}},
+                },
+            ]
+        },
+    )
+
+    icon = hass.states.get("scene.scene_icon")
+    assert icon is not None
+    assert icon.attributes["icon"] == "mdi:party"
+
+    no_icon = hass.states.get("scene.scene_no_icon")
+    assert no_icon is not None
+    assert "icon" not in no_icon.attributes

@@ -3,6 +3,11 @@ import unittest
 
 from homeassistant.components import weather
 from homeassistant.components.weather import (
+    ATTR_FORECAST,
+    ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TEMP_LOW,
     ATTR_WEATHER_ATTRIBUTION,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_OZONE,
@@ -10,14 +15,9 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
-    ATTR_FORECAST,
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
 )
-from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.setup import setup_component
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from tests.common import get_test_home_assistant
 

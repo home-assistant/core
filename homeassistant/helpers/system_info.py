@@ -6,6 +6,7 @@ from typing import Dict
 from homeassistant.const import __version__ as current_version
 from homeassistant.loader import bind_hass
 from homeassistant.util.package import is_virtual_env
+
 from .typing import HomeAssistantType
 
 
@@ -22,14 +23,13 @@ async def async_get_system_info(hass: HomeAssistantType) -> Dict:
         "arch": platform.machine(),
         "timezone": str(hass.config.time_zone),
         "os_name": platform.system(),
+        "os_version": platform.release(),
     }
 
     if platform.system() == "Windows":
         info_object["os_version"] = platform.win32_ver()[0]
     elif platform.system() == "Darwin":
         info_object["os_version"] = platform.mac_ver()[0]
-    elif platform.system() == "FreeBSD":
-        info_object["os_version"] = platform.release()
     elif platform.system() == "Linux":
         info_object["docker"] = os.path.isfile("/.dockerenv")
 

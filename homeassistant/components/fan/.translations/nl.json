@@ -4,7 +4,7 @@
             "turn_off": "Schakel {entity_name} uit",
             "turn_on": "Schakel {entity_name} in"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_off": "{entity_name} is uitgeschakeld",
             "is_on": "{entity_name} is ingeschakeld"
         },
@@ -12,5 +12,6 @@
             "turned_off": "{entity_name} uitgeschakeld",
             "turned_on": "{entity_name} ingeschakeld"
         }
-    }
+    },
+    "title": "Ventilator"
 }

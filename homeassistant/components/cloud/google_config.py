@@ -2,19 +2,19 @@
 import asyncio
 import logging
 
-import async_timeout
+from hass_nabucasa import cloud_api
 from hass_nabucasa.google_report_state import ErrorResponse
 
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.components.google_assistant.helpers import AbstractConfig
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_OK
 from homeassistant.helpers import entity_registry
 
 from .const import (
-    PREF_SHOULD_EXPOSE,
-    DEFAULT_SHOULD_EXPOSE,
     CONF_ENTITY_CONFIG,
-    PREF_DISABLE_2FA,
     DEFAULT_DISABLE_2FA,
+    DEFAULT_SHOULD_EXPOSE,
+    PREF_DISABLE_2FA,
+    PREF_SHOULD_EXPOSE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,6 +77,12 @@ class CloudGoogleConfig(AbstractConfig):
         """Return Cloud User account."""
         return self._user
 
+    async def async_initialize(self):
+        """Perform async initialization of config."""
+        await super().async_initialize()
+        # Remove bad data that was there until 0.103.6 - Jan 6, 2020
+        self._store.pop_agent_user_id(self._user)
+
     def should_expose(self, state):
         """If a state object should be exposed."""
         return self._should_expose_entity_id(state.entity_id)
@@ -92,6 +98,15 @@ class CloudGoogleConfig(AbstractConfig):
         entity_configs = self._prefs.google_entity_configs
         entity_config = entity_configs.get(entity_id, {})
         return entity_config.get(PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE)
+
+    @property
+    def agent_user_id(self):
+        """Return Agent User Id to use for query responses."""
+        return self._cloud.username
+
+    def get_agent_user_id(self, context):
+        """Get agent user ID making request."""
+        return self.agent_user_id
 
     def should_2fa(self, state):
         """If an entity should be checked for 2FA."""
@@ -109,23 +124,11 @@ class CloudGoogleConfig(AbstractConfig):
     async def _async_request_sync_devices(self, agent_user_id: str):
         """Trigger a sync with Google."""
         if self._sync_entities_lock.locked():
-            return 200
-
-        websession = self.hass.helpers.aiohttp_client.async_get_clientsession()
+            return HTTP_OK
 
         async with self._sync_entities_lock:
-            with async_timeout.timeout(10):
-                await self._cloud.auth.async_check_token()
-
-            _LOGGER.debug("Requesting sync")
-
-            with async_timeout.timeout(30):
-                req = await websession.post(
-                    self._cloud.google_actions_sync_url,
-                    headers={"authorization": self._cloud.id_token},
-                )
-                _LOGGER.debug("Finished requesting syncing: %s", req.status)
-                return req.status
+            resp = await cloud_api.async_google_actions_request_sync(self._cloud)
+            return resp.status
 
     async def _async_prefs_updated(self, prefs):
         """Handle updated preferences."""

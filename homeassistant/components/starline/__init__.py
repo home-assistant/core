@@ -1,17 +1,18 @@
 """The StarLine component."""
 import voluptuous as vol
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .account import StarlineAccount
 from .const import (
-    DOMAIN,
-    PLATFORMS,
-    SERVICE_UPDATE_STATE,
-    SERVICE_SET_SCAN_INTERVAL,
     CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    PLATFORMS,
+    SERVICE_SET_SCAN_INTERVAL,
+    SERVICE_UPDATE_STATE,
 )
 
 

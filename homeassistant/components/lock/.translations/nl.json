@@ -13,5 +13,6 @@
             "locked": "{entity_name} vergrendeld",
             "unlocked": "{entity_name} ontgrendeld"
         }
-    }
+    },
+    "title": "Slot"
 }

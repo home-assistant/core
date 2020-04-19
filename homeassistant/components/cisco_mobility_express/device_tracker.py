@@ -43,8 +43,8 @@ def get_scanner(hass, config):
         config[CONF_HOST],
         config[CONF_USERNAME],
         config[CONF_PASSWORD],
-        config.get(CONF_SSL),
-        config.get(CONF_VERIFY_SSL),
+        config[CONF_SSL],
+        config[CONF_VERIFY_SSL],
     )
     if not controller.is_logged_in():
         return None
@@ -89,5 +89,5 @@ class CiscoMEDeviceScanner(DeviceScanner):
         """Check the Cisco ME controller for devices."""
         self.last_results = self.controller.get_associated_devices()
         _LOGGER.debug(
-            "Cisco Mobility Express controller returned:" " %s", self.last_results
+            "Cisco Mobility Express controller returned: %s", self.last_results
         )

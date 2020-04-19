@@ -1,7 +1,6 @@
 """The tests for generic camera component."""
-import io
-
 from datetime import timedelta
+import io
 
 from homeassistant import core as ha
 from homeassistant.setup import async_setup_component

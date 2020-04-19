@@ -3,24 +3,24 @@ from datetime import timedelta
 import unittest
 from unittest import mock
 
-from homeassistant.const import (
-    MATCH_ALL,
-    EVENT_HOMEASSISTANT_START,
-    STATE_UNAVAILABLE,
-    STATE_ON,
-    STATE_OFF,
-)
 from homeassistant import setup
 from homeassistant.components.template import binary_sensor as template
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+    MATCH_ALL,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template as template_hlpr
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
-    get_test_home_assistant,
     assert_setup_component,
     async_fire_time_changed,
+    get_test_home_assistant,
 )
 
 

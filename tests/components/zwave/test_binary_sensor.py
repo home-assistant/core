@@ -1,11 +1,10 @@
 """Test Z-Wave binary sensors."""
 import datetime
-
 from unittest.mock import patch
 
-from homeassistant.components.zwave import const, binary_sensor
+from homeassistant.components.zwave import binary_sensor, const
 
-from tests.mock.zwave import MockNode, MockValue, MockEntityValues, value_changed
+from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
 
 
 def test_get_device_detects_none(mock_openzwave):

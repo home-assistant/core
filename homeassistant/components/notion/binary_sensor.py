@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.core import callback
 
 from . import (
     BINARY_SENSOR_TYPES,
@@ -75,7 +76,8 @@ class NotionBinarySensor(NotionEntity, BinarySensorDevice):
         if task["task_type"] == SENSOR_SMOKE_CO:
             return self._state != "no_alarm"
 
-    async def async_update(self):
+    @callback
+    def update_from_latest_data(self):
         """Fetch new state data for the sensor."""
         task = self._notion.tasks[self._task_id]
 

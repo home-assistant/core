@@ -1,5 +1,6 @@
 """The test for the Facebook notify module."""
 import unittest
+
 import requests_mock
 
 # import homeassistant.components.facebook as facebook
@@ -29,6 +30,8 @@ class TestFacebook(unittest.TestCase):
         expected_body = {
             "recipient": {"phone_number": target[0]},
             "message": {"text": message},
+            "messaging_type": "MESSAGE_TAG",
+            "tag": "ACCOUNT_UPDATE",
         }
         assert mock.last_request.json() == expected_body
 
@@ -52,6 +55,8 @@ class TestFacebook(unittest.TestCase):
             expected_body = {
                 "recipient": {"phone_number": target},
                 "message": {"text": message},
+                "messaging_type": "MESSAGE_TAG",
+                "tag": "ACCOUNT_UPDATE",
             }
             assert request.json() == expected_body
 
@@ -76,7 +81,12 @@ class TestFacebook(unittest.TestCase):
         assert mock.called
         assert mock.call_count == 1
 
-        expected_body = {"recipient": {"phone_number": target[0]}, "message": data}
+        expected_body = {
+            "recipient": {"phone_number": target[0]},
+            "message": data,
+            "messaging_type": "MESSAGE_TAG",
+            "tag": "ACCOUNT_UPDATE",
+        }
         assert mock.last_request.json() == expected_body
 
         expected_params = {"access_token": ["page-access-token"]}
@@ -87,7 +97,7 @@ class TestFacebook(unittest.TestCase):
         """Test sending a message without a target."""
         mock.register_uri(requests_mock.POST, facebook.BASE_URL, status_code=200)
 
-        self.facebook.send_message(message="goin nowhere")
+        self.facebook.send_message(message="going nowhere")
         assert not mock.called
 
     @requests_mock.Mocker()

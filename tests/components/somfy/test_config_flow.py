@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import data_entry_flow, setup, config_entries
-from homeassistant.components.somfy import config_flow, DOMAIN
+from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.somfy import DOMAIN, config_flow
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry

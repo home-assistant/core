@@ -4,7 +4,6 @@ import getpass
 
 from homeassistant.util.yaml import _SECRET_NAMESPACE
 
-
 # mypy: allow-untyped-defs
 
 REQUIREMENTS = ["credstash==1.15.0"]
@@ -30,7 +29,7 @@ def run(args):
         "value", help="The value to save when putting a secret", nargs="?", default=None
     )
 
-    # pylint: disable=import-error, no-member
+    # pylint: disable=import-error, no-member, import-outside-toplevel
     import credstash
 
     args = parser.parse_args(args)

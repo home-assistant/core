@@ -1,19 +1,20 @@
 """The tests for Climate device triggers."""
-import voluptuous_serialize
 import pytest
+import voluptuous_serialize
 
-from homeassistant.components.climate import DOMAIN, const, device_trigger
-from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
-from homeassistant.helpers import device_registry, config_validation as cv
+from homeassistant.components.climate import DOMAIN, const, device_trigger
+from homeassistant.const import TEMP_CELSIUS
+from homeassistant.helpers import config_validation as cv, device_registry
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
     assert_lists_same,
+    async_get_device_automations,
     async_mock_service,
     mock_device_registry,
     mock_registry,
-    async_get_device_automations,
 )
 
 
@@ -31,7 +32,7 @@ def entity_reg(hass):
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -228,13 +229,13 @@ async def test_get_trigger_capabilities_temp_humid(hass, type):
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
-            "description": {"suffix": "°C"},
+            "description": {"suffix": TEMP_CELSIUS},
             "name": "above",
             "optional": True,
             "type": "float",
         },
         {
-            "description": {"suffix": "°C"},
+            "description": {"suffix": TEMP_CELSIUS},
             "name": "below",
             "optional": True,
             "type": "float",

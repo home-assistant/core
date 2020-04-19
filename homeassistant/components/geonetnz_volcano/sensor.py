@@ -3,11 +3,11 @@ import logging
 from typing import Optional
 
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
-    ATTR_ATTRIBUTION,
-    ATTR_LONGITUDE,
-    ATTR_LATITUDE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -23,7 +23,6 @@ from .const import (
     DEFAULT_ICON,
     DOMAIN,
     FEED,
-    SIGNAL_UPDATE_ENTITY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,7 +78,7 @@ class GeonetnzVolcanoSensor(Entity):
         """Call when entity is added to hass."""
         self._remove_signal_update = async_dispatcher_connect(
             self.hass,
-            SIGNAL_UPDATE_ENTITY.format(self._external_id),
+            f"geonetnz_volcano_update_{self._external_id}",
             self._update_callback,
         )
 

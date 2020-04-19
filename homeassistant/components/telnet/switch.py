@@ -16,9 +16,9 @@ from homeassistant.const import (
     CONF_COMMAND_STATE,
     CONF_NAME,
     CONF_PORT,
-    CONF_TIMEOUT,
     CONF_RESOURCE,
     CONF_SWITCHES,
+    CONF_TIMEOUT,
     CONF_VALUE_TEMPLATE,
 )
 import homeassistant.helpers.config_validation as cv

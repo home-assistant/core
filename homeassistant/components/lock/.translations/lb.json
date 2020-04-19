@@ -13,5 +13,6 @@
             "locked": "{entity_name} gespaart",
             "unlocked": "{entity_name} entspaart"
         }
-    }
+    },
+    "title": "Schlass"
 }

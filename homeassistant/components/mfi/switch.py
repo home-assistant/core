@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SSL = True
 DEFAULT_VERIFY_SSL = True
 
-SWITCH_MODELS = ["Outlet", "Output 5v", "Output 12v", "Output 24v"]
+SWITCH_MODELS = ["Outlet", "Output 5v", "Output 12v", "Output 24v", "Dimmer Switch"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -40,7 +40,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    use_tls = config.get(CONF_SSL)
+    use_tls = config[CONF_SSL]
     verify_tls = config.get(CONF_VERIFY_SSL)
     default_port = 6443 if use_tls else 6080
     port = int(config.get(CONF_PORT, default_port))
@@ -113,7 +113,7 @@ class MfiSwitch(SwitchDevice):
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes fof the device."""
+        """Return the state attributes for the device."""
         attr = {}
         attr["volts"] = round(self._port.data.get("v_rms", 0), 1)
         attr["amps"] = round(self._port.data.get("i_rms", 0), 1)

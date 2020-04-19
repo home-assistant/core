@@ -5,7 +5,7 @@ import requests_mock
 
 from homeassistant.setup import setup_component
 
-from tests.common import load_fixture, get_test_home_assistant
+from tests.common import get_test_home_assistant, load_fixture
 
 token = "9p6QGJ7dpZfO3fqPTBk1fyEmjV1cGoLT"
 multi_sensor_token = "9r6QGF7dpZfO3fqPTBl1fyRmjV1cGoLT"
@@ -35,27 +35,25 @@ def mock_responses(mock):
     """Mock responses for Efergy."""
     base_url = "https://engage.efergy.com/mobile_proxy/"
     mock.get(
-        "{}getInstant?token={}".format(base_url, token),
-        text=load_fixture("efergy_instant.json"),
+        f"{base_url}getInstant?token={token}", text=load_fixture("efergy_instant.json"),
     )
     mock.get(
-        "{}getEnergy?token={}&offset=300&period=day".format(base_url, token),
+        f"{base_url}getEnergy?token={token}&offset=300&period=day",
         text=load_fixture("efergy_energy.json"),
     )
     mock.get(
-        "{}getBudget?token={}".format(base_url, token),
-        text=load_fixture("efergy_budget.json"),
+        f"{base_url}getBudget?token={token}", text=load_fixture("efergy_budget.json"),
     )
     mock.get(
-        "{}getCost?token={}&offset=300&period=day".format(base_url, token),
+        f"{base_url}getCost?token={token}&offset=300&period=day",
         text=load_fixture("efergy_cost.json"),
     )
     mock.get(
-        "{}getCurrentValuesSummary?token={}".format(base_url, token),
+        f"{base_url}getCurrentValuesSummary?token={token}",
         text=load_fixture("efergy_current_values_single.json"),
     )
     mock.get(
-        "{}getCurrentValuesSummary?token={}".format(base_url, multi_sensor_token),
+        f"{base_url}getCurrentValuesSummary?token={multi_sensor_token}",
         text=load_fixture("efergy_current_values_multi.json"),
     )
 

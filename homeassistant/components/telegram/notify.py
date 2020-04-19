@@ -3,8 +3,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_LOCATION
-
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
@@ -13,6 +11,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import ATTR_LOCATION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,14 +62,14 @@ class TelegramNotificationService(BaseNotificationService):
 
         # Send a photo, video, document, or location
         if data is not None and ATTR_PHOTO in data:
-            photos = data.get(ATTR_PHOTO, None)
+            photos = data.get(ATTR_PHOTO)
             photos = photos if isinstance(photos, list) else [photos]
             for photo_data in photos:
                 service_data.update(photo_data)
                 self.hass.services.call(DOMAIN, "send_photo", service_data=service_data)
             return
         if data is not None and ATTR_VIDEO in data:
-            videos = data.get(ATTR_VIDEO, None)
+            videos = data.get(ATTR_VIDEO)
             videos = videos if isinstance(videos, list) else [videos]
             for video_data in videos:
                 service_data.update(video_data)

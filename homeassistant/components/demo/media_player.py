@@ -48,7 +48,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_setup_platform(hass, {}, async_add_entities)
 
 
-YOUTUBE_COVER_URL_FORMAT = "https://img.youtube.com/vi/{}/hqdefault.jpg"
 SOUND_MODE_LIST = ["Dummy Music", "Dummy Movie"]
 DEFAULT_SOUND_MODE = "Dummy Music"
 
@@ -238,7 +237,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
     @property
     def media_image_url(self):
         """Return the image url of current playing media."""
-        return YOUTUBE_COVER_URL_FORMAT.format(self.youtube_id)
+        return f"https://img.youtube.com/vi/{self.youtube_id}/hqdefault.jpg"
 
     @property
     def media_title(self):
@@ -340,7 +339,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     @property
     def media_image_url(self):
         """Return the image url of current playing media."""
-        return "https://graph.facebook.com/v2.5/107771475912710/" "picture?type=large"
+        return "https://graph.facebook.com/v2.5/107771475912710/picture?type=large"
 
     @property
     def media_title(self):

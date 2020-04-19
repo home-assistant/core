@@ -2,9 +2,7 @@
   "domain": "discovery",
   "name": "Discovery",
   "documentation": "https://www.home-assistant.io/integrations/discovery",
-  "requirements": [
-    "netdisco==2.6.0"
-  ],
-  "dependencies": [],
-  "codeowners": []
+  "requirements": ["netdisco==2.6.0"],
+  "codeowners": [],
+  "quality_scale": "internal"
 }

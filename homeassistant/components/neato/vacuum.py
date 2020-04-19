@@ -84,11 +84,6 @@ SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Neato vacuum."""
-    pass
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Neato vacuum with config entry."""
     dev = []
@@ -165,7 +160,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         _LOGGER.debug("Running Neato Vacuums update")
         try:
             if self._robot_stats is None:
-                self._robot_stats = self.robot.get_robot_info().json()
+                self._robot_stats = self.robot.get_general_info().json().get("data")
         except NeatoRobotException:
             _LOGGER.warning("Couldn't fetch robot information of %s", self._name)
 
@@ -204,10 +199,16 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             if robot_alert is None:
                 self._clean_state = STATE_CLEANING
                 self._status_state = (
-                    MODE.get(self._state["cleaning"]["mode"])
-                    + " "
-                    + ACTION.get(self._state["action"])
+                    f"{MODE.get(self._state['cleaning']['mode'])} "
+                    f"{ACTION.get(self._state['action'])}"
                 )
+                if (
+                    "boundary" in self._state["cleaning"]
+                    and "name" in self._state["cleaning"]["boundary"]
+                ):
+                    self._status_state += (
+                        f" {self._state['cleaning']['boundary']['name']}"
+                    )
             else:
                 self._status_state = robot_alert
         elif self._state["state"] == 3:
@@ -319,10 +320,9 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         """Device info for neato robot."""
         info = {"identifiers": {(NEATO_DOMAIN, self._robot_serial)}, "name": self._name}
         if self._robot_stats:
-            info["manufacturer"] = self._robot_stats["data"]["mfg_name"]
-            info["model"] = self._robot_stats["data"]["modelName"]
-        if self._state:
-            info["sw_version"] = self._state["meta"]["firmware"]
+            info["manufacturer"] = self._robot_stats["battery"]["vendor"]
+            info["model"] = self._robot_stats["model"]
+            info["sw_version"] = self._robot_stats["firmware"]
 
     def start(self):
         """Start cleaning or resume cleaning."""

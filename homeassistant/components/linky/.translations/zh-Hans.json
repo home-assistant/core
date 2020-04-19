@@ -1,7 +1,7 @@
 {
     "config": {
-        "abort": {
-            "username_exists": "\u8d26\u6237\u5df2\u914d\u7f6e\u5b8c\u6210"
+        "error": {
+            "wrong_login": "\u767b\u5f55\u51fa\u9519\uff1a\u8bf7\u68c0\u67e5\u60a8\u7684\u7535\u5b50\u90ae\u7bb1\u548c\u5bc6\u7801"
         },
         "step": {
             "user": {

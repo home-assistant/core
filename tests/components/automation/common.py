@@ -3,14 +3,18 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
-from homeassistant.components.automation import DOMAIN, SERVICE_TRIGGER
+from homeassistant.components.automation import (
+    CONF_SKIP_CONDITION,
+    DOMAIN,
+    SERVICE_TRIGGER,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
-    SERVICE_TOGGLE,
-    SERVICE_RELOAD,
     ENTITY_MATCH_ALL,
+    SERVICE_RELOAD,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
 from homeassistant.loader import bind_hass
 
@@ -37,13 +41,16 @@ async def async_toggle(hass, entity_id=ENTITY_MATCH_ALL):
 
 
 @bind_hass
-async def async_trigger(hass, entity_id=ENTITY_MATCH_ALL):
+async def async_trigger(hass, entity_id=ENTITY_MATCH_ALL, skip_condition=True):
     """Trigger specified automation or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data[CONF_SKIP_CONDITION] = skip_condition
     await hass.services.async_call(DOMAIN, SERVICE_TRIGGER, data)
 
 
 @bind_hass
-async def async_reload(hass):
+async def async_reload(hass, context=None):
     """Reload the automation from config."""
-    await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
+    await hass.services.async_call(
+        DOMAIN, SERVICE_RELOAD, blocking=True, context=context
+    )

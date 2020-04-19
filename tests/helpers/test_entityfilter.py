@@ -1,5 +1,5 @@
 """The tests for the EntityFilter component."""
-from homeassistant.helpers.entityfilter import generate_filter, FILTER_SCHEMA
+from homeassistant.helpers.entityfilter import FILTER_SCHEMA, generate_filter
 
 
 def test_no_filters_case_1():

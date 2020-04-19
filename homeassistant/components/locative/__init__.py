@@ -2,21 +2,21 @@
 import logging
 from typing import Dict
 
-import voluptuous as vol
 from aiohttp import web
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.const import (
-    HTTP_UNPROCESSABLE_ENTITY,
+    ATTR_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    STATE_NOT_HOME,
     CONF_WEBHOOK_ID,
-    ATTR_ID,
     HTTP_OK,
+    HTTP_UNPROCESSABLE_ENTITY,
+    STATE_NOT_HOME,
 )
 from homeassistant.helpers import config_entry_flow
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,9 +93,7 @@ async def handle_webhook(hass, webhook_id, request):
         # before the previous zone was exited. The enter message will
         # be sent first, then the exit message will be sent second.
         return web.Response(
-            text="Ignoring exit from {} (already in {})".format(
-                location_name, current_state
-            ),
+            text=f"Ignoring exit from {location_name} (already in {current_state})",
             status=HTTP_OK,
         )
 

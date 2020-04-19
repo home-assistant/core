@@ -1,9 +1,12 @@
 """Constants used be the HomeKit component."""
 # #### Misc ####
 DEBOUNCE_TIMEOUT = 0.5
+DEVICE_PRECISION_LEEWAY = 6
 DOMAIN = "homekit"
 HOMEKIT_FILE = ".homekit.state"
 HOMEKIT_NOTIFY_ID = 4663548
+AID_STORAGE = "homekit-aid-allocations"
+
 
 # #### Attributes ####
 ATTR_DISPLAY_NAME = "display_name"
@@ -20,12 +23,14 @@ CONF_FILTER = "filter"
 CONF_LINKED_BATTERY_SENSOR = "linked_battery_sensor"
 CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
 CONF_SAFE_MODE = "safe_mode"
+CONF_ZEROCONF_DEFAULT_INTERFACE = "zeroconf_default_interface"
 
 # #### Config Defaults ####
 DEFAULT_AUTO_START = True
 DEFAULT_LOW_BATTERY_THRESHOLD = 20
 DEFAULT_PORT = 51827
 DEFAULT_SAFE_MODE = False
+DEFAULT_ZEROCONF_DEFAULT_INTERFACE = False
 
 # #### Features ####
 FEATURE_ON_OFF = "on_off"
@@ -108,6 +113,7 @@ CHAR_CURRENT_POSITION = "CurrentPosition"
 CHAR_CURRENT_HUMIDITY = "CurrentRelativeHumidity"
 CHAR_CURRENT_SECURITY_STATE = "SecuritySystemCurrentState"
 CHAR_CURRENT_TEMPERATURE = "CurrentTemperature"
+CHAR_CURRENT_TILT_ANGLE = "CurrentHorizontalTiltAngle"
 CHAR_CURRENT_VISIBILITY_STATE = "CurrentVisibilityState"
 CHAR_FIRMWARE_REVISION = "FirmwareRevision"
 CHAR_HEATING_THRESHOLD_TEMPERATURE = "HeatingThresholdTemperature"
@@ -141,8 +147,11 @@ CHAR_SWING_MODE = "SwingMode"
 CHAR_TARGET_DOOR_STATE = "TargetDoorState"
 CHAR_TARGET_HEATING_COOLING = "TargetHeatingCoolingState"
 CHAR_TARGET_POSITION = "TargetPosition"
+CHAR_TARGET_HUMIDITY = "TargetRelativeHumidity"
 CHAR_TARGET_SECURITY_STATE = "SecuritySystemTargetState"
 CHAR_TARGET_TEMPERATURE = "TargetTemperature"
+CHAR_TARGET_TILT_ANGLE = "TargetHorizontalTiltAngle"
+CHAR_HOLD_POSITION = "HoldPosition"
 CHAR_TEMP_DISPLAY_UNITS = "TemperatureDisplayUnits"
 CHAR_VALVE_TYPE = "ValveType"
 CHAR_VOLUME = "Volume"
@@ -192,3 +201,15 @@ KEY_PREVIOUS_TRACK = "previous_track"
 KEY_REWIND = "rewind"
 KEY_SELECT = "select"
 KEY_PLAY_PAUSE = "play_pause"
+
+# #### Door states ####
+HK_DOOR_OPEN = 0
+HK_DOOR_CLOSED = 1
+HK_DOOR_OPENING = 2
+HK_DOOR_CLOSING = 3
+HK_DOOR_STOPPED = 4
+
+# ### Position State ####
+HK_POSITION_GOING_TO_MIN = 0
+HK_POSITION_GOING_TO_MAX = 1
+HK_POSITION_STOPPED = 2

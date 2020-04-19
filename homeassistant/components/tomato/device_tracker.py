@@ -6,7 +6,6 @@ import re
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
@@ -14,12 +13,14 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import (
     CONF_HOST,
+    CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_VERIFY_SSL,
-    CONF_PASSWORD,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    HTTP_OK,
 )
+import homeassistant.helpers.config_validation as cv
 
 CONF_HTTP_ID = "http_id"
 
@@ -102,7 +103,7 @@ class TomatoDeviceScanner(DeviceScanner):
 
             # Calling and parsing the Tomato api here. We only need the
             # wldev and dhcpd_lease values.
-            if response.status_code == 200:
+            if response.status_code == HTTP_OK:
 
                 for param, value in self.parse_api_pattern.findall(response.text):
 
@@ -113,10 +114,7 @@ class TomatoDeviceScanner(DeviceScanner):
             if response.status_code == 401:
                 # Authentication error
                 _LOGGER.exception(
-                    (
-                        "Failed to authenticate, "
-                        "please check your username and password"
-                    )
+                    "Failed to authenticate, please check your username and password"
                 )
                 return False
 
@@ -124,7 +122,7 @@ class TomatoDeviceScanner(DeviceScanner):
             # We get this if we could not connect to the router or
             # an invalid http_id was supplied.
             _LOGGER.exception(
-                "Failed to connect to the router or " "invalid http_id supplied"
+                "Failed to connect to the router or invalid http_id supplied"
             )
             return False
 

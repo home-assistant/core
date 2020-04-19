@@ -1,21 +1,20 @@
 """Support for Waterfurnaces."""
 from datetime import timedelta
 import logging
-import time
 import threading
+import time
 
 import voluptuous as vol
 from waterfurnace.waterfurnace import WaterFurnace, WFCredentialError, WFException
 
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv, discovery
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "waterfurnace"
-UPDATE_TOPIC = DOMAIN + "_update"
+UPDATE_TOPIC = f"{DOMAIN}_update"
 SCAN_INTERVAL = timedelta(seconds=10)
 ERROR_INTERVAL = timedelta(seconds=300)
 MAX_FAILS = 10

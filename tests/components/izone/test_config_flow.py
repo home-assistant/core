@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.izone.const import IZONE, DISPATCH_CONTROLLER_DISCOVERED
+from homeassistant.components.izone.const import DISPATCH_CONTROLLER_DISCOVERED, IZONE
 
 from tests.common import mock_coro
 

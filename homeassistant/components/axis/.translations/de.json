@@ -12,6 +12,7 @@
             "device_unavailable": "Ger\u00e4t ist nicht verf\u00fcgbar",
             "faulty_credentials": "Ung\u00fcltige Anmeldeinformationen"
         },
+        "flow_title": "Achsenger\u00e4t: {name} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -22,7 +23,7 @@
                 },
                 "title": "Axis Ger\u00e4t einrichten"
             }
-        },
-        "title": "Axis Ger\u00e4t"
-    }
+        }
+    },
+    "title": "Axis Ger\u00e4t"
 }

@@ -1,7 +1,7 @@
 """Support for Fibaro binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorDevice
+from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ICON
 
 from . import FIBARO_DEVICES, FibaroDevice
@@ -40,7 +40,7 @@ class FibaroBinarySensor(FibaroDevice, BinarySensorDevice):
         """Initialize the binary_sensor."""
         self._state = None
         super().__init__(fibaro_device)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        self.entity_id = f"{DOMAIN}.{self.ha_id}"
         stype = None
         devconf = fibaro_device.device_config
         if fibaro_device.type in SENSOR_TYPES:

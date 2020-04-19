@@ -1,10 +1,9 @@
 """The template component."""
 
+from itertools import chain
 import logging
 
-from itertools import chain
 from homeassistant.const import MATCH_ALL
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -12,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 def initialise_templates(hass, templates, attribute_templates=None):
     """Initialise templates and attribute templates."""
     if attribute_templates is None:
-        attribute_templates = dict()
+        attribute_templates = {}
     for template in chain(templates.values(), attribute_templates.values()):
         if template is None:
             continue
@@ -24,7 +23,7 @@ def extract_entities(
 ):
     """Extract entity ids from templates and attribute templates."""
     if attribute_templates is None:
-        attribute_templates = dict()
+        attribute_templates = {}
     entity_ids = set()
     if manual_entity_ids is None:
         invalid_templates = []

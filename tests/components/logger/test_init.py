@@ -3,8 +3,8 @@ from collections import namedtuple
 import logging
 import unittest
 
-from homeassistant.setup import setup_component
 from homeassistant.components import logger
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 

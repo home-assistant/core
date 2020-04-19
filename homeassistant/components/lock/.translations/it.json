@@ -13,5 +13,6 @@
             "locked": "{entity_name} \u00e8 bloccato",
             "unlocked": "{entity_name} \u00e8 sbloccato"
         }
-    }
+    },
+    "title": "Serratura"
 }

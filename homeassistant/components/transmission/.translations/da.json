@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "V\u00e6rten er allerede konfigureret.",
-            "one_instance_allowed": "Det er kun n\u00f8dvendigt med en ops\u00e6tning."
+            "already_configured": "V\u00e6rten er allerede konfigureret."
         },
         "error": {
             "cannot_connect": "Kunne ikke oprette forbindelse til v\u00e6rt",
@@ -10,12 +9,6 @@
             "wrong_credentials": "Ugyldigt brugernavn eller adgangskode"
         },
         "step": {
-            "options": {
-                "data": {
-                    "scan_interval": "Opdateringsfrekvens"
-                },
-                "title": "Konfigurer indstillinger"
-            },
             "user": {
                 "data": {
                     "host": "V\u00e6rt",
@@ -24,10 +17,9 @@
                     "port": "Port",
                     "username": "Brugernavn"
                 },
-                "title": "Konfigurer Transmission klient"
+                "title": "Konfigurer Transmission-klient"
             }
-        },
-        "title": "Transmission"
+        }
     },
     "options": {
         "step": {
@@ -35,7 +27,6 @@
                 "data": {
                     "scan_interval": "Opdateringsfrekvens"
                 },
-                "description": "Konfigurationsindstillinger for Transmission",
                 "title": "Konfigurationsindstillinger for Transmission"
             }
         }

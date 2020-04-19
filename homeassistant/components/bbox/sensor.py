@@ -1,27 +1,25 @@
 """Support for Bbox Bouygues Modem Router."""
-import logging
 from datetime import timedelta
+import logging
 
-import requests
 import pybbox
-
+import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
-    CONF_MONITORED_VARIABLES,
     ATTR_ATTRIBUTION,
+    CONF_MONITORED_VARIABLES,
+    CONF_NAME,
+    DATA_RATE_MEGABITS_PER_SECOND,
     DEVICE_CLASS_TIMESTAMP,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
-
-BANDWIDTH_MEGABITS_SECONDS = "Mb/s"
 
 ATTRIBUTION = "Powered by Bouygues Telecom"
 
@@ -33,22 +31,22 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 SENSOR_TYPES = {
     "down_max_bandwidth": [
         "Maximum Download Bandwidth",
-        BANDWIDTH_MEGABITS_SECONDS,
+        DATA_RATE_MEGABITS_PER_SECOND,
         "mdi:download",
     ],
     "up_max_bandwidth": [
         "Maximum Upload Bandwidth",
-        BANDWIDTH_MEGABITS_SECONDS,
+        DATA_RATE_MEGABITS_PER_SECOND,
         "mdi:upload",
     ],
     "current_down_bandwidth": [
         "Currently Used Download Bandwidth",
-        BANDWIDTH_MEGABITS_SECONDS,
+        DATA_RATE_MEGABITS_PER_SECOND,
         "mdi:download",
     ],
     "current_up_bandwidth": [
         "Currently Used Upload Bandwidth",
-        BANDWIDTH_MEGABITS_SECONDS,
+        DATA_RATE_MEGABITS_PER_SECOND,
         "mdi:upload",
     ],
     "uptime": ["Uptime", None, "mdi:clock"],
@@ -76,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error(error)
         return False
 
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
 
     sensors = []
     for variable in config[CONF_MONITORED_VARIABLES]:

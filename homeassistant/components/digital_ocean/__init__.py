@@ -1,13 +1,13 @@
 """Support for Digital Ocean."""
-import logging
 from datetime import timedelta
+import logging
 
 import digitalocean
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def setup(hass, config):
     """Set up the Digital Ocean component."""
 
     conf = config[DOMAIN]
-    access_token = conf.get(CONF_ACCESS_TOKEN)
+    access_token = conf[CONF_ACCESS_TOKEN]
 
     digital = DigitalOcean(access_token)
 

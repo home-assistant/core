@@ -5,8 +5,8 @@ components. Instead call the service directly.
 """
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
-    ATTR_SPEED,
     ATTR_OSCILLATING,
+    ATTR_SPEED,
     DOMAIN,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
@@ -14,9 +14,9 @@ from homeassistant.components.fan import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
     ENTITY_MATCH_ALL,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
 
 

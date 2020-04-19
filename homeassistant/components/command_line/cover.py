@@ -4,15 +4,15 @@ import subprocess
 
 import voluptuous as vol
 
-from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
+from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
 from homeassistant.const import (
     CONF_COMMAND_CLOSE,
     CONF_COMMAND_OPEN,
     CONF_COMMAND_STATE,
     CONF_COMMAND_STOP,
     CONF_COVERS,
-    CONF_VALUE_TEMPLATE,
     CONF_FRIENDLY_NAME,
+    CONF_VALUE_TEMPLATE,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -91,7 +91,7 @@ class CommandCover(CoverDevice):
         """Execute the actual commands."""
         _LOGGER.info("Running command: %s", command)
 
-        success = subprocess.call(command, shell=True) == 0
+        success = subprocess.call(command, shell=True) == 0  # nosec # shell by design
 
         if not success:
             _LOGGER.error("Command failed: %s", command)
@@ -104,7 +104,9 @@ class CommandCover(CoverDevice):
         _LOGGER.info("Running state command: %s", command)
 
         try:
-            return_value = subprocess.check_output(command, shell=True)
+            return_value = subprocess.check_output(
+                command, shell=True  # nosec # shell by design
+            )
             return return_value.strip().decode("utf-8")
         except subprocess.CalledProcessError:
             _LOGGER.error("Command failed: %s", command)

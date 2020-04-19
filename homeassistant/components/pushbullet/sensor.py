@@ -2,13 +2,11 @@
 import logging
 import threading
 
-from pushbullet import PushBullet
-from pushbullet import InvalidKeyError
-from pushbullet import Listener
+from pushbullet import InvalidKeyError, Listener, PushBullet
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -79,7 +77,7 @@ class PushBulletNotificationSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format("Pushbullet", self._element)
+        return f"Pushbullet {self._element}"
 
     @property
     def state(self):

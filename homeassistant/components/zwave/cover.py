@@ -1,35 +1,32 @@
 """Support for Z-Wave covers."""
 import logging
-from homeassistant.core import callback
+
 from homeassistant.components.cover import (
-    DOMAIN,
-    SUPPORT_OPEN,
-    SUPPORT_CLOSE,
     ATTR_POSITION,
+    DOMAIN,
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    CoverDevice,
 )
-from homeassistant.components.cover import CoverDevice
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from . import (
-    ZWaveDeviceEntity,
     CONF_INVERT_OPENCLOSE_BUTTONS,
     CONF_INVERT_PERCENT,
+    ZWaveDeviceEntity,
     workaround,
 )
 from .const import (
-    COMMAND_CLASS_SWITCH_MULTILEVEL,
-    COMMAND_CLASS_SWITCH_BINARY,
     COMMAND_CLASS_BARRIER_OPERATOR,
+    COMMAND_CLASS_SWITCH_BINARY,
+    COMMAND_CLASS_SWITCH_MULTILEVEL,
     DATA_NETWORK,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old method of setting up Z-Wave covers."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

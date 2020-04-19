@@ -5,26 +5,26 @@ import logging
 import time
 from typing import Optional
 
+from aiohttp import ClientError, ClientSession
 import async_timeout
-from aiohttp import ClientSession, ClientError
-from pyalmond import AlmondLocalAuth, AbstractAlmondWebAuth, WebAlmondAPI
+from pyalmond import AbstractAlmondWebAuth, AlmondLocalAuth, WebAlmondAPI
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, CoreState, Context
-from homeassistant.const import CONF_TYPE, CONF_HOST, EVENT_HOMEASSISTANT_START
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant import config_entries
 from homeassistant.auth.const import GROUP_ID_ADMIN
+from homeassistant.components import conversation
+from homeassistant.const import CONF_HOST, CONF_TYPE, EVENT_HOMEASSISTANT_START
+from homeassistant.core import Context, CoreState, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
-    config_validation as cv,
+    aiohttp_client,
     config_entry_oauth2_flow,
+    config_validation as cv,
     event,
     intent,
-    aiohttp_client,
-    storage,
     network,
+    storage,
 )
-from homeassistant import config_entries
-from homeassistant.components import conversation
 
 from . import config_flow
 from .const import DOMAIN, TYPE_LOCAL, TYPE_OAUTH2
@@ -286,15 +286,13 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         buffer = ""
         for message in response["messages"]:
             if message["type"] == "text":
-                buffer += "\n" + message["text"]
+                buffer += f"\n{message['text']}"
             elif message["type"] == "picture":
-                buffer += "\n Picture: " + message["url"]
+                buffer += f"\n Picture: {message['url']}"
             elif message["type"] == "rdl":
                 buffer += (
-                    "\n Link: "
-                    + message["rdl"]["displayTitle"]
-                    + " "
-                    + message["rdl"]["webCallback"]
+                    f"\n Link: {message['rdl']['displayTitle']} "
+                    f"{message['rdl']['webCallback']}"
                 )
             elif message["type"] == "choice":
                 if first_choice:

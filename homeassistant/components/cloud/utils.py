@@ -1,7 +1,7 @@
 """Helper functions for cloud components."""
 from typing import Any, Dict
 
-from aiohttp import web, payload
+from aiohttp import payload, web
 
 
 def aiohttp_serialize_response(response: web.Response) -> Dict[str, Any]:

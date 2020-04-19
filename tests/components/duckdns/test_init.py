@@ -1,13 +1,14 @@
 """Test the DuckDNS component."""
 from datetime import timedelta
 import logging
+
 import pytest
 
+from homeassistant.components import duckdns
+from homeassistant.components.duckdns import async_track_time_interval_backoff
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component
-from homeassistant.components import duckdns
 from homeassistant.util.dt import utcnow
-from homeassistant.components.duckdns import async_track_time_interval_backoff
 
 from tests.common import async_fire_time_changed
 

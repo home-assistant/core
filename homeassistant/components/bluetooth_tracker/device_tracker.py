@@ -1,7 +1,7 @@
 """Tracking for bluetooth devices."""
 import asyncio
 import logging
-from typing import List, Set, Tuple, Optional
+from typing import List, Optional, Set, Tuple
 
 # pylint: disable=import-error
 import bluetooth
@@ -112,7 +112,7 @@ async def async_setup_scanner(
     hass: HomeAssistantType, config: dict, async_see, discovery_info=None
 ):
     """Set up the Bluetooth Scanner."""
-    device_id: int = config.get(CONF_DEVICE_ID)
+    device_id: int = config[CONF_DEVICE_ID]
     interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     request_rssi = config.get(CONF_REQUEST_RSSI, False)
     update_bluetooth_lock = asyncio.Lock()

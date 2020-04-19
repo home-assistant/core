@@ -1,13 +1,14 @@
 """The tests for the litejet component."""
+from datetime import timedelta
 import logging
 from unittest import mock
-from datetime import timedelta
+
 import pytest
 
 from homeassistant import setup
-import homeassistant.util.dt as dt_util
 from homeassistant.components import litejet
 import homeassistant.components.automation as automation
+import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, async_mock_service
 
@@ -21,13 +22,13 @@ ENTITY_OTHER_SWITCH_NUMBER = 2
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 def get_switch_name(number):
     """Get a mock switch name."""
-    return "Mock Switch #" + str(number)
+    return f"Mock Switch #{number}"
 
 
 @pytest.fixture
@@ -53,7 +54,7 @@ def mock_lj(hass):
         mock_lj.on_switch_pressed.side_effect = on_switch_pressed
         mock_lj.on_switch_released.side_effect = on_switch_released
 
-        config = {"litejet": {"port": "/tmp/this_will_be_mocked"}}
+        config = {"litejet": {"port": "/dev/serial/by-id/mock-litejet"}}
         assert hass.loop.run_until_complete(
             setup.async_setup_component(hass, litejet.DOMAIN, config)
         )

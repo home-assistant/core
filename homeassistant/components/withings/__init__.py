@@ -7,11 +7,11 @@ import voluptuous as vol
 from withings_api import WithingsAuth
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.helpers import config_validation as cv, config_entry_oauth2_flow
 
 from . import config_flow, const
-from .common import _LOGGER, get_data_manager, NotAuthenticatedError
+from .common import _LOGGER, NotAuthenticatedError, get_data_manager
 
 DOMAIN = const.DOMAIN
 

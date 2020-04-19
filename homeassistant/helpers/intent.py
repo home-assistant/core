@@ -5,13 +5,12 @@ from typing import Any, Callable, Dict, Iterable, Optional
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_SUPPORTED_FEATURES
-from homeassistant.core import callback, State, T, Context
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
+from homeassistant.core import Context, State, T, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
-from homeassistant.const import ATTR_ENTITY_ID
 
 _LOGGER = logging.getLogger(__name__)
 _SlotsType = Dict[str, Any]
@@ -159,7 +158,7 @@ class IntentHandler:
 
     def __repr__(self) -> str:
         """Represent a string of an intent handler."""
-        return "<{} - {}>".format(self.__class__.__name__, self.intent_type)
+        return f"<{self.__class__.__name__} - {self.intent_type}>"
 
 
 def _fuzzymatch(name: str, items: Iterable[T], key: Callable[[T], str]) -> Optional[T]:

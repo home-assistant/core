@@ -29,13 +29,13 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_TOKEN,
     STATE_IDLE,
-    STATE_STANDBY,
     STATE_PLAYING,
+    STATE_STANDBY,
     STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
-from tests.common import MockConfigEntry, mock_device_registry, mock_registry, mock_coro
 
+from tests.common import MockConfigEntry, mock_coro, mock_device_registry, mock_registry
 
 MOCK_CREDS = "123412341234abcd12341234abcd12341234abcd12341234abcd12341234abcd"
 MOCK_NAME = "ha_ps4_name"
@@ -156,7 +156,7 @@ async def mock_ddp_response(hass, mock_status_data, games=None):
 
     mock_code = mock_status_data.get("status_code")
     mock_status = mock_status_data.get("status")
-    mock_status_header = "{} {}".format(mock_code, mock_status)
+    mock_status_header = f"{mock_code} {mock_status}"
     mock_response = get_ddp_message(mock_status_header, mock_status_data).encode()
 
     if games is None:
@@ -179,7 +179,7 @@ async def test_media_player_is_setup_correctly_with_entry(hass):
 
     # Test that entity is added to hass.
     assert hass.data[PS4_DATA].protocol is not None
-    assert mock_entity_id == "media_player.{}".format(MOCK_NAME)
+    assert mock_entity_id == f"media_player.{MOCK_NAME}"
     assert mock_state == STATE_UNKNOWN
 
 

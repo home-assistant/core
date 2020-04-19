@@ -41,5 +41,6 @@
             "unsafe": "{entity_name} a devenit nesigur",
             "vibration": "{entity_name} a \u00eenceput s\u0103 detecteze vibra\u021biile"
         }
-    }
+    },
+    "title": "Senzor binar"
 }

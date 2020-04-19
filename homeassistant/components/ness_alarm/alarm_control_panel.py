@@ -2,6 +2,8 @@
 
 import logging
 
+from nessclient import ArmingState
+
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -43,8 +45,10 @@ class NessAlarmPanel(alarm.AlarmControlPanel):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_ARMING_STATE_CHANGED, self._handle_arming_state_change
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_ARMING_STATE_CHANGED, self._handle_arming_state_change
+            )
         )
 
     @property
@@ -91,7 +95,6 @@ class NessAlarmPanel(alarm.AlarmControlPanel):
     @callback
     def _handle_arming_state_change(self, arming_state):
         """Handle arming state update."""
-        from nessclient import ArmingState
 
         if arming_state == ArmingState.UNKNOWN:
             self._state = None
@@ -110,4 +113,4 @@ class NessAlarmPanel(alarm.AlarmControlPanel):
         else:
             _LOGGER.warning("Unhandled arming state: %s", arming_state)
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

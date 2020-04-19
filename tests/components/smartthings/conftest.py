@@ -1,4 +1,5 @@
 """Test configuration and mocks for the SmartThings component."""
+import secrets
 from uuid import uuid4
 
 from asynctest import Mock, patch
@@ -104,7 +105,7 @@ def app_fixture(hass, config_file):
     app.app_type = "WEBHOOK_SMART_APP"
     app.classifications = [CLASSIFICATION_AUTOMATION]
     app.display_name = "Home Assistant"
-    app.description = hass.config.location_name + " at " + hass.config.api.base_url
+    app.description = f"{hass.config.location_name} at {hass.config.api.base_url}"
     app.single_instance = True
     app.webhook_target_url = webhook.async_generate_url(
         hass, hass.data[DOMAIN][CONF_WEBHOOK_ID]
@@ -160,7 +161,7 @@ def installed_apps_fixture(installed_app, locations, app):
 @pytest.fixture(name="config_file")
 def config_file_fixture():
     """Fixture representing the local config file contents."""
-    return {CONF_INSTANCE_ID: str(uuid4()), CONF_WEBHOOK_ID: webhook.generate_secret()}
+    return {CONF_INSTANCE_ID: str(uuid4()), CONF_WEBHOOK_ID: secrets.token_hex()}
 
 
 @pytest.fixture(name="smartthings_mock")

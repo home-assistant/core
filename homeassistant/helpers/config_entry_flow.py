@@ -1,6 +1,8 @@
 """Helpers for data entry flows for config entries."""
-from typing import Callable, Awaitable, Union
+from typing import Awaitable, Callable, Union
+
 from homeassistant import config_entries
+
 from .typing import HomeAssistantType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs

@@ -1,16 +1,16 @@
 """The tests for the Datadog component."""
-from unittest import mock
 import unittest
+from unittest import mock
 
+import homeassistant.components.datadog as datadog
 from homeassistant.const import (
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.setup import setup_component
-import homeassistant.components.datadog as datadog
 import homeassistant.core as ha
+from homeassistant.setup import setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
 
@@ -150,19 +150,16 @@ class TestDatadog(unittest.TestCase):
                 mock_client.gauge.assert_has_calls(
                     [
                         mock.call(
-                            "ha.sensor.{}".format(attribute),
+                            f"ha.sensor.{attribute}",
                             value,
                             sample_rate=1,
-                            tags=["entity:{}".format(state.entity_id)],
+                            tags=[f"entity:{state.entity_id}"],
                         )
                     ]
                 )
 
             assert mock_client.gauge.call_args == mock.call(
-                "ha.sensor",
-                out,
-                sample_rate=1,
-                tags=["entity:{}".format(state.entity_id)],
+                "ha.sensor", out, sample_rate=1, tags=[f"entity:{state.entity_id}"],
             )
 
             mock_client.gauge.reset_mock()

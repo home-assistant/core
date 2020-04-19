@@ -14,10 +14,9 @@
                     "house_number": "Hausnummer",
                     "post_code": "Postleitzahl"
                 },
-                "description": "Richten Sie Twente Milieu mit Informationen zur Abfallsammlung unter Ihrer Adresse ein.",
+                "description": "Richte Twente Milieu mit Informationen zur Abfallsammlung unter Ihrer Adresse ein.",
                 "title": "Twente Milieu"
             }
-        },
-        "title": "Twente Milieu"
+        }
     }
 }

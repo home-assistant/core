@@ -5,14 +5,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import Entity
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -23,6 +22,9 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 # On means low, Off means normal
 DEVICE_CLASS_BATTERY = "battery"
+
+# On means charging, Off means not charging
+DEVICE_CLASS_BATTERY_CHARGING = "battery_charging"
 
 # On means cold, Off means normal
 DEVICE_CLASS_COLD = "cold"
@@ -92,6 +94,7 @@ DEVICE_CLASS_WINDOW = "window"
 
 DEVICE_CLASSES = [
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_COLD,
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_DOOR,

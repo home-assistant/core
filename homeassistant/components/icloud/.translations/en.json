@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account already configured",
+            "no_device": "None of your devices have \"Find my iPhone\" activated"
+        },
+        "error": {
+            "login": "Login error: please check your email & password",
+            "send_verification_code": "Failed to send verification code",
+            "validate_verification_code": "Failed to verify your verification code, choose a trust device and start the verification again"
+        },
+        "step": {
+            "trusted_device": {
+                "data": {
+                    "trusted_device": "Trusted device"
+                },
+                "description": "Select your trusted device",
+                "title": "iCloud trusted device"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Email",
+                    "with_family": "With family"
+                },
+                "description": "Enter your credentials",
+                "title": "iCloud credentials"
+            },
+            "verification_code": {
+                "data": {
+                    "verification_code": "Verification code"
+                },
+                "description": "Please enter the verification code you just received from iCloud",
+                "title": "iCloud verification code"
+            }
+        }
+    }
+}

@@ -1,14 +1,16 @@
 """The test for the min/max sensor platform."""
 import unittest
 
-from homeassistant.setup import setup_component
 from homeassistant.const import (
-    STATE_UNKNOWN,
-    STATE_UNAVAILABLE,
     ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
 )
+from homeassistant.setup import setup_component
+
 from tests.common import get_test_home_assistant
 
 
@@ -219,7 +221,7 @@ class TestMinMaxSensor(unittest.TestCase):
         state = self.hass.states.get("sensor.test")
 
         assert str(float(self.values[0])) == state.state
-        assert "°C" == state.attributes.get("unit_of_measurement")
+        assert state.attributes.get("unit_of_measurement") == TEMP_CELSIUS
 
         self.hass.states.set(
             entity_ids[1], self.values[1], {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT}
@@ -229,17 +231,17 @@ class TestMinMaxSensor(unittest.TestCase):
         state = self.hass.states.get("sensor.test")
 
         assert STATE_UNKNOWN == state.state
-        assert "ERR" == state.attributes.get("unit_of_measurement")
+        assert state.attributes.get("unit_of_measurement") == "ERR"
 
         self.hass.states.set(
-            entity_ids[2], self.values[2], {ATTR_UNIT_OF_MEASUREMENT: "%"}
+            entity_ids[2], self.values[2], {ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE}
         )
         self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test")
 
         assert STATE_UNKNOWN == state.state
-        assert "ERR" == state.attributes.get("unit_of_measurement")
+        assert state.attributes.get("unit_of_measurement") == "ERR"
 
     def test_last_sensor(self):
         """Test the last sensor."""

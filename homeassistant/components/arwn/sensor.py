@@ -3,8 +3,8 @@ import json
 import logging
 
 from homeassistant.components import mqtt
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_DEGREE
 from homeassistant.core import callback
-from homeassistant.const import TEMP_FAHRENHEIT, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
@@ -32,7 +32,7 @@ def discover_sensors(topic, payload):
             unit = TEMP_CELSIUS
         return ArwnSensor(name, "temp", unit)
     if domain == "moisture":
-        name = parts[2] + " Moisture"
+        name = f"{parts[2]} Moisture"
         return ArwnSensor(name, "moisture", unit, "mdi:water-percent")
     if domain == "rain":
         if len(parts) >= 3 and parts[2] == "today":
@@ -45,12 +45,12 @@ def discover_sensors(topic, payload):
         return (
             ArwnSensor("Wind Speed", "speed", unit, "mdi:speedometer"),
             ArwnSensor("Wind Gust", "gust", unit, "mdi:speedometer"),
-            ArwnSensor("Wind Direction", "direction", "°", "mdi:compass"),
+            ArwnSensor("Wind Direction", "direction", UNIT_DEGREE, "mdi:compass"),
         )
 
 
 def _slug(name):
-    return "sensor.arwn_{}".format(slugify(name))
+    return f"sensor.arwn_{slugify(name)}"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -119,7 +119,7 @@ class ArwnSensor(Entity):
         """Update the sensor with the most recent event."""
         self.event = {}
         self.event.update(event)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def state(self):

@@ -6,9 +6,10 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import DATA_MEGABYTES
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +64,7 @@ class Folder(Entity):
         self._number_of_files = None
         self._size = None
         self._name = os.path.split(os.path.split(folder_path)[0])[1]
-        self._unit_of_measurement = "MB"
+        self._unit_of_measurement = DATA_MEGABYTES
         self._file_list = None
 
     def update(self):

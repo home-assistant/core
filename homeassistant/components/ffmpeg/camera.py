@@ -2,11 +2,11 @@
 import asyncio
 import logging
 
-import voluptuous as vol
 from haffmpeg.camera import CameraMjpeg
-from haffmpeg.tools import ImageFrame, IMAGE_JPEG
+from haffmpeg.tools import IMAGE_JPEG, ImageFrame
+import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera, SUPPORT_STREAM
+from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 import homeassistant.helpers.config_validation as cv

@@ -7,7 +7,8 @@ import pytest
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry
-from tests.common import mock_device_registry, flush_store
+
+from tests.common import flush_store, mock_device_registry
 
 
 @pytest.fixture
@@ -339,7 +340,7 @@ async def test_no_unnecessary_changes(registry):
         identifiers={("hue", "456"), ("bla", "123")},
     )
     with patch(
-        "homeassistant.helpers.device_registry" ".DeviceRegistry.async_schedule_save"
+        "homeassistant.helpers.device_registry.DeviceRegistry.async_schedule_save"
     ) as mock_save:
         entry2 = registry.async_get_or_create(
             config_entry_id="1234", identifiers={("hue", "456")}
@@ -479,3 +480,21 @@ async def test_loading_race_condition(hass):
 
         mock_load.assert_called_once_with()
         assert results[0] == results[1]
+
+
+async def test_update_sw_version(registry):
+    """Verify that we can update software version of a device."""
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bla", "123")},
+    )
+    assert not entry.sw_version
+    sw_version = "0x20020263"
+
+    with patch.object(registry, "async_schedule_save") as mock_save:
+        updated_entry = registry.async_update_device(entry.id, sw_version=sw_version)
+
+    assert mock_save.call_count == 1
+    assert updated_entry != entry
+    assert updated_entry.sw_version == sw_version

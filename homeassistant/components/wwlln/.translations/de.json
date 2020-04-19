@@ -1,7 +1,7 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Standort bereits registriert"
+        "abort": {
+            "already_configured": "Dieser Standort ist bereits registriert."
         },
         "step": {
             "user": {
@@ -12,7 +12,6 @@
                 },
                 "title": "Gib deine Standortinformationen ein."
             }
-        },
-        "title": "Weltweites Blitzlokalisierungsnetzwerk (WWLLN)"
+        }
     }
 }

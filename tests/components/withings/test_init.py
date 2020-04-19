@@ -10,26 +10,26 @@ from withings_api.common import SleepModel, SleepState
 
 import homeassistant.components.http as http
 from homeassistant.components.withings import (
+    CONFIG_SCHEMA,
     async_setup,
     async_setup_entry,
     const,
-    CONFIG_SCHEMA,
 )
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .common import (
-    assert_state_equals,
-    configure_integration,
-    setup_hass,
     WITHINGS_GET_DEVICE_RESPONSE,
     WITHINGS_GET_DEVICE_RESPONSE_EMPTY,
+    WITHINGS_MEASURES_RESPONSE,
+    WITHINGS_MEASURES_RESPONSE_EMPTY,
     WITHINGS_SLEEP_RESPONSE,
     WITHINGS_SLEEP_RESPONSE_EMPTY,
     WITHINGS_SLEEP_SUMMARY_RESPONSE,
     WITHINGS_SLEEP_SUMMARY_RESPONSE_EMPTY,
-    WITHINGS_MEASURES_RESPONSE,
-    WITHINGS_MEASURES_RESPONSE_EMPTY,
+    assert_state_equals,
+    configure_integration,
+    setup_hass,
 )
 
 
@@ -199,7 +199,7 @@ async def test_upgrade_token(
 
     with requests_mock.mock() as rqmck:
         rqmck.get(
-            re.compile(AbstractWithingsApi.URL + "/v2/user?.*action=getdevice(&.*|$)"),
+            re.compile(f"{AbstractWithingsApi.URL}/v2/user?.*action=getdevice(&.*|$)"),
             status_code=200,
             json=WITHINGS_GET_DEVICE_RESPONSE_EMPTY,
         )
@@ -255,7 +255,7 @@ async def test_auth_failure(
 
     with requests_mock.mock() as rqmck:
         rqmck.get(
-            re.compile(AbstractWithingsApi.URL + "/v2/user?.*action=getdevice(&.*|$)"),
+            re.compile(f"{AbstractWithingsApi.URL}/v2/user?.*action=getdevice(&.*|$)"),
             status_code=200,
             json={"status": 401, "body": {}},
         )
@@ -308,8 +308,13 @@ async def test_full_setup(hass: HomeAssistant, aiohttp_client, aioclient_mock) -
                     {
                         "startdate": "2019-02-01 00:00:00",
                         "enddate": "2019-02-01 01:00:00",
+                        "state": SleepState.REM.real,
+                    },
+                    {
+                        "startdate": "2019-02-01 01:00:00",
+                        "enddate": "2019-02-01 02:00:00",
                         "state": SleepState.AWAKE.real,
-                    }
+                    },
                 ],
             },
         },
@@ -330,10 +335,15 @@ async def test_full_setup(hass: HomeAssistant, aiohttp_client, aioclient_mock) -
                 "model": SleepModel.TRACKER.real,
                 "series": [
                     {
+                        "startdate": "2019-02-01 01:00:00",
+                        "enddate": "2019-02-01 02:00:00",
+                        "state": SleepState.LIGHT.real,
+                    },
+                    {
                         "startdate": "2019-02-01 00:00:00",
                         "enddate": "2019-02-01 01:00:00",
-                        "state": SleepState.LIGHT.real,
-                    }
+                        "state": SleepState.REM.real,
+                    },
                 ],
             },
         },
@@ -356,8 +366,18 @@ async def test_full_setup(hass: HomeAssistant, aiohttp_client, aioclient_mock) -
                     {
                         "startdate": "2019-02-01 00:00:00",
                         "enddate": "2019-02-01 01:00:00",
+                        "state": SleepState.LIGHT.real,
+                    },
+                    {
+                        "startdate": "2019-02-01 02:00:00",
+                        "enddate": "2019-02-01 03:00:00",
                         "state": SleepState.REM.real,
-                    }
+                    },
+                    {
+                        "startdate": "2019-02-01 01:00:00",
+                        "enddate": "2019-02-01 02:00:00",
+                        "state": SleepState.AWAKE.real,
+                    },
                 ],
             },
         },
@@ -392,13 +412,8 @@ async def test_full_setup(hass: HomeAssistant, aiohttp_client, aioclient_mock) -
         (profiles[0], const.MEAS_SLEEP_RESPIRATORY_RATE_AVERAGE, 2320),
         (profiles[0], const.MEAS_SLEEP_RESPIRATORY_RATE_MIN, 2520),
         (profiles[0], const.MEAS_SLEEP_RESPIRATORY_RATE_MAX, 2720),
-        (profiles[0], const.MEAS_SLEEP_STATE, const.STATE_DEEP),
-        (profiles[1], const.MEAS_SLEEP_STATE, STATE_UNKNOWN),
         (profiles[1], const.MEAS_HYDRATION, STATE_UNKNOWN),
-        (profiles[2], const.MEAS_SLEEP_STATE, const.STATE_AWAKE),
-        (profiles[3], const.MEAS_SLEEP_STATE, const.STATE_LIGHT),
         (profiles[3], const.MEAS_FAT_FREE_MASS_KG, STATE_UNKNOWN),
-        (profiles[4], const.MEAS_SLEEP_STATE, const.STATE_REM),
     )
     for (profile, meas, value) in expected_states:
         assert_state_equals(hass, profile, meas, value)

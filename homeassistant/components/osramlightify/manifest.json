@@ -2,9 +2,6 @@
   "domain": "osramlightify",
   "name": "Osramlightify",
   "documentation": "https://www.home-assistant.io/integrations/osramlightify",
-  "requirements": [
-    "lightify==1.0.7.2"
-  ],
-  "dependencies": [],
+  "requirements": ["lightify==1.0.7.2"],
   "codeowners": []
 }

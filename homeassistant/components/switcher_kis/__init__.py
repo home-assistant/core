@@ -20,6 +20,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import (
     ContextType,
+    DiscoveryInfoType,
     EventType,
     HomeAssistantType,
     ServiceCallType,
@@ -100,7 +101,7 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
     await v2bridge.start()
 
     async def async_stop_bridge(event: EventType) -> None:
-        """On homeassistant stop, gracefully stop the bridge if running."""
+        """On Home Assistant stop, gracefully stop the bridge if running."""
         await v2bridge.stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_bridge)
@@ -115,7 +116,7 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
     hass.data[DOMAIN] = {DATA_DEVICE: device_data}
 
     async def async_switch_platform_discovered(
-        platform: str, discovery_info: Optional[Dict]
+        platform: str, discovery_info: DiscoveryInfoType
     ) -> None:
         """Use for registering services after switch platform is discovered."""
         if platform != DOMAIN:

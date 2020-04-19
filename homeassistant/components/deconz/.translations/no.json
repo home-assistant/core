@@ -14,37 +14,28 @@
         "flow_title": "deCONZ Zigbee gateway ({host})",
         "step": {
             "hassio_confirm": {
-                "data": {
-                    "allow_clip_sensor": "Tillat import av virtuelle sensorer",
-                    "allow_deconz_groups": "Tillat import av deCONZ grupper"
-                },
-                "description": "\u00d8nsker du \u00e5 konfigurere Home Assistent for \u00e5 koble til deCONZ gateway gitt av Hass.io tillegget {addon}?",
+                "description": "Vil du konfigurere Home Assistant til \u00e5 koble seg til deCONZ-gateway levert av Hass.io-tillegget {addon} ?",
                 "title": "deCONZ Zigbee gateway via Hass.io tillegg"
             },
             "init": {
-                "data": {
-                    "host": "Vert",
-                    "port": "Port"
-                },
                 "title": "Definer deCONZ-gatewayen"
             },
             "link": {
                 "description": "L\u00e5s opp deCONZ-gatewayen din for \u00e5 registrere deg med Home Assistant. \n\n 1. G\u00e5 til deCONZ-systeminnstillinger -> Gateway -> Avansert \n 2. Trykk p\u00e5 \"L\u00e5s opp gateway\" knappen",
                 "title": "Koble til deCONZ"
             },
-            "options": {
+            "manual_confirm": {
                 "data": {
-                    "allow_clip_sensor": "Tillat import av virtuelle sensorer",
-                    "allow_deconz_groups": "Tillat import av deCONZ grupper"
-                },
-                "title": "Ekstra konfigurasjonsalternativer for deCONZ"
+                    "host": "Vert",
+                    "port": ""
+                }
             }
-        },
-        "title": "deCONZ Zigbee gateway"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Begge knappene",
+            "bottom_buttons": "Nederste knappene",
             "button_1": "F\u00f8rste knapp",
             "button_2": "Andre knapp",
             "button_3": "Tredje knapp",
@@ -61,6 +52,7 @@
             "side_4": "Side 4",
             "side_5": "Side 5",
             "side_6": "Side 6",
+            "top_buttons": "\u00d8verste knappene",
             "turn_off": "Skru av",
             "turn_on": "Sl\u00e5 p\u00e5"
         },
@@ -77,32 +69,32 @@
             "remote_button_short_release": "\"{subtype}\"-knappen sluppet",
             "remote_button_triple_press": "\"{subtype}\"-knappen trippel klikket",
             "remote_double_tap": "Enheten \" {subtype} \" dobbeltklikket",
+            "remote_double_tap_any_side": "Enheten dobbeltklikket p\u00e5 alle sider",
             "remote_falling": "Enheten er i fritt fall",
+            "remote_flip_180_degrees": "Enheten er snudd 180 grader",
+            "remote_flip_90_degrees": "Enheten er snudd 90 grader",
             "remote_gyro_activated": "Enhet er ristet",
             "remote_moved": "Enheten ble flyttet med \"{under type}\" opp",
+            "remote_moved_any_side": "Enheten flyttet med alle sider opp",
             "remote_rotate_from_side_1": "Enheten rotert fra \"side 1\" til \" {subtype} \"",
             "remote_rotate_from_side_2": "Enheten rotert fra \"side 2\" til \" {subtype} \"",
             "remote_rotate_from_side_3": "Enheten rotert fra \"side 3\" til \" {subtype} \"",
             "remote_rotate_from_side_4": "Enheten rotert fra \"side 4\" til \" {subtype} \"",
             "remote_rotate_from_side_5": "Enheten rotert fra \"side 5\" til \" {subtype} \"",
-            "remote_rotate_from_side_6": "Enheten rotert fra \"side 6\" til \" {subtype} \""
+            "remote_rotate_from_side_6": "Enheten rotert fra \"side 6\" til \" {subtype} \"",
+            "remote_turned_clockwise": "Enheten dreide med klokken",
+            "remote_turned_counter_clockwise": "Enheten dreide mot klokken"
         }
     },
     "options": {
         "step": {
-            "async_step_deconz_devices": {
-                "data": {
-                    "allow_clip_sensor": "Tillat deCONZ CLIP-sensorer",
-                    "allow_deconz_groups": "Tillat deCONZ lys grupper"
-                },
-                "description": "Konfigurere synlighet av deCONZ enhetstyper"
-            },
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Tillat deCONZ CLIP-sensorer",
                     "allow_deconz_groups": "Tillat deCONZ lys grupper"
                 },
-                "description": "Konfigurere synlighet av deCONZ enhetstyper"
+                "description": "Konfigurere synlighet av deCONZ enhetstyper",
+                "title": "deCONZ alternativer"
             }
         }
     }

@@ -1,16 +1,16 @@
 """Tests for the Verisure platform."""
 
 from contextlib import contextmanager
-from unittest.mock import patch, call
-from homeassistant.const import STATE_UNLOCKED
-from homeassistant.setup import async_setup_component
+from unittest.mock import call, patch
+
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
 )
 from homeassistant.components.verisure import DOMAIN as VERISURE_DOMAIN
-
+from homeassistant.const import STATE_UNLOCKED
+from homeassistant.setup import async_setup_component
 
 NO_DEFAULT_LOCK_CODE_CONFIG = {
     "verisure": {
@@ -74,8 +74,8 @@ async def setup_verisure_locks(hass, config):
     with mock_hub(config):
         await async_setup_component(hass, VERISURE_DOMAIN, config)
         await hass.async_block_till_done()
-        # lock.door_lock, group.all_locks, ethernet_status
-        assert len(hass.states.async_all()) == 3
+        # lock.door_lock, ethernet_status
+        assert len(hass.states.async_all()) == 2
 
 
 async def test_verisure_no_default_code(hass):

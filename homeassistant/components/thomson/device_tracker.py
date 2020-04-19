@@ -5,13 +5,13 @@ import telnetlib
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,9 +98,9 @@ class ThomsonDeviceScanner(DeviceScanner):
             telnet.read_until(b"Password : ")
             telnet.write((self.password + "\r\n").encode("ascii"))
             telnet.read_until(b"=>")
-            telnet.write(("hostmgr list\r\n").encode("ascii"))
+            telnet.write(b"hostmgr list\r\n")
             devices_result = telnet.read_until(b"=>").split(b"\r\n")
-            telnet.write("exit\r\n".encode("ascii"))
+            telnet.write(b"exit\r\n")
         except EOFError:
             _LOGGER.exception("Unexpected response from router")
             return

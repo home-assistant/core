@@ -1,27 +1,25 @@
 """Test cases for the switcher_kis component."""
 
 from datetime import timedelta
-from typing import Any, Generator, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Generator
 
 from pytest import raises
 
-from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.components.switcher_kis import (
     CONF_AUTO_OFF,
-    DOMAIN,
     DATA_DEVICE,
+    DOMAIN,
     SERVICE_SET_AUTO_OFF_NAME,
     SERVICE_SET_AUTO_OFF_SCHEMA,
     SIGNAL_SWITCHER_DEVICE_UPDATE,
 )
-from homeassistant.core import callback, Context
+from homeassistant.const import CONF_ENTITY_ID
+from homeassistant.core import Context, callback
+from homeassistant.exceptions import Unauthorized, UnknownUser
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.exceptions import Unauthorized, UnknownUser
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
-
-from tests.common import async_mock_service, async_fire_time_changed
 
 from .consts import (
     DUMMY_AUTO_OFF_SET,
@@ -37,6 +35,8 @@ from .consts import (
     MANDATORY_CONFIGURATION,
     SWITCH_ENTITY_ID,
 )
+
+from tests.common import async_fire_time_changed, async_mock_service
 
 if TYPE_CHECKING:
     from tests.common import MockUser

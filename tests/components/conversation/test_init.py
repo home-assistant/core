@@ -1,10 +1,10 @@
 """The tests for the Conversation component."""
 import pytest
 
-from homeassistant.core import DOMAIN as HASS_DOMAIN, Context
-from homeassistant.setup import async_setup_component
 from homeassistant.components import conversation
+from homeassistant.core import DOMAIN as HASS_DOMAIN, Context
 from homeassistant.helpers import intent
+from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_intent, async_mock_service
 
@@ -201,11 +201,9 @@ async def test_toggle_intent(hass, sentence):
 
 async def test_http_api(hass, hass_client):
     """Test the HTTP conversation API."""
-    result = await async_setup_component(hass, "homeassistant", {})
-    assert result
-
-    result = await async_setup_component(hass, "conversation", {})
-    assert result
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, "intent", {})
 
     client = await hass_client()
     hass.states.async_set("light.kitchen", "off")

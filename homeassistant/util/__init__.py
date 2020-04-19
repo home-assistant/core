@@ -1,23 +1,23 @@
 """Helper methods for various modules."""
 import asyncio
 from datetime import datetime, timedelta
-import threading
-import re
 import enum
-import socket
-import random
-import string
 from functools import wraps
+import random
+import re
+import socket
+import string
+import threading
 from types import MappingProxyType
 from typing import (
     Any,
+    Callable,
+    Coroutine,
+    Iterable,
+    KeysView,
     Optional,
     TypeVar,
-    Callable,
-    KeysView,
     Union,
-    Iterable,
-    Coroutine,
 )
 
 import slugify as unicode_slug
@@ -44,16 +44,16 @@ def sanitize_path(path: str) -> str:
     return RE_SANITIZE_PATH.sub("", path)
 
 
-def slugify(text: str) -> str:
+def slugify(text: str, *, separator: str = "_") -> str:
     """Slugify a given text."""
-    return unicode_slug.slugify(text, separator="_")  # type: ignore
+    return unicode_slug.slugify(text, separator=separator)  # type: ignore
 
 
 def repr_helper(inp: Any) -> str:
     """Help creating a more readable string representation of objects."""
     if isinstance(inp, (dict, MappingProxyType)):
         return ", ".join(
-            repr_helper(key) + "=" + repr_helper(item) for key, item in inp.items()
+            f"{repr_helper(key)}={repr_helper(item)}" for key, item in inp.items()
         )
     if isinstance(inp, datetime):
         return as_local(inp).isoformat()
@@ -101,7 +101,7 @@ def get_local_ip() -> str:
         sock.connect(("8.8.8.8", 80))
 
         return sock.getsockname()[0]  # type: ignore
-    except socket.error:
+    except OSError:
         try:
             return socket.gethostbyname(socket.gethostname())
         except socket.gaierror:

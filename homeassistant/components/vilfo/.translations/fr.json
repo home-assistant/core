@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Connectez-vous au routeur Vilfo"
+            }
+        }
+    }
+}

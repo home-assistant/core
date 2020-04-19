@@ -20,7 +20,6 @@
                 "description": "Ali \u017eelite dodati WLED z imenom `{name}` v Home Assistant?",
                 "title": "Odkrite WLED naprave"
             }
-        },
-        "title": "WLED"
+        }
     }
 }

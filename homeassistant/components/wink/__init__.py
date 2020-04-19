@@ -6,8 +6,8 @@ import os
 import time
 
 from aiohttp.web import Response
-import pywink
 from pubnubsubhandler import PubNubSubscriptionHandler
+import pywink
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -233,15 +233,13 @@ def _request_app_setup(hass, config):
 
     start_url = f"{hass.config.api.base_url}{WINK_AUTH_CALLBACK_PATH}"
 
-    description = """Please create a Wink developer app at
+    description = f"""Please create a Wink developer app at
                      https://developer.wink.com.
-                     Add a Redirect URI of {}.
+                     Add a Redirect URI of {start_url}.
                      They will provide you a Client ID and secret
                      after reviewing your request.
                      (This can take several days).
-                     """.format(
-        start_url
-    )
+                     """
 
     hass.data[DOMAIN]["configuring"][DOMAIN] = configurator.request_config(
         DOMAIN,
@@ -351,9 +349,7 @@ def setup(hass, config):
         # Home .
         else:
 
-            redirect_uri = "{}{}".format(
-                hass.config.api.base_url, WINK_AUTH_CALLBACK_PATH
-            )
+            redirect_uri = f"{hass.config.api.base_url}{WINK_AUTH_CALLBACK_PATH}"
 
             wink_auth_start_url = pywink.get_authorization_url(
                 config_file.get(ATTR_CLIENT_ID), redirect_uri
@@ -695,7 +691,7 @@ class WinkAuthCallbackView(HomeAssistantView):
 
         response_message = """Wink has been successfully authorized!
          You can close this window now! For the best results you should reboot
-         HomeAssistant"""
+         Home Assistant"""
         html_response = """<html><head><title>Wink Auth</title></head>
                 <body><h1>{}</h1></body></html>"""
 
@@ -740,7 +736,7 @@ class WinkDevice(Entity):
         try:
             if message is None:
                 _LOGGER.error(
-                    "Error on pubnub update for %s " "polling API for current state",
+                    "Error on pubnub update for %s polling API for current state",
                     self.name,
                 )
                 self.schedule_update_ha_state(True)
@@ -749,8 +745,7 @@ class WinkDevice(Entity):
                 self.schedule_update_ha_state()
         except (ValueError, KeyError, AttributeError):
             _LOGGER.error(
-                "Error in pubnub JSON for %s " "polling API for current state",
-                self.name,
+                "Error in pubnub JSON for %s polling API for current state", self.name
             )
             self.schedule_update_ha_state(True)
 
@@ -763,7 +758,7 @@ class WinkDevice(Entity):
     def unique_id(self):
         """Return the unique id of the Wink device."""
         if hasattr(self.wink, "capability") and self.wink.capability() is not None:
-            return "{}_{}".format(self.wink.object_id(), self.wink.capability())
+            return f"{self.wink.object_id()}_{self.wink.capability()}"
         return self.wink.object_id()
 
     @property
@@ -913,7 +908,7 @@ class WinkNimbusDialDevice(WinkDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return self.parent.name() + " dial " + str(self.wink.index() + 1)
+        return f"{self.parent.name()} dial {self.wink.index() + 1}"
 
     @property
     def device_state_attributes(self):

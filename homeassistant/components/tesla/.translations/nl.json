@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Fout bij verbinden; controleer het netwerk en probeer het opnieuw",
+            "identifier_exists": "E-mail al geregistreerd",
+            "invalid_credentials": "Ongeldige inloggegevens",
+            "unknown_error": "Onbekende fout, meldt u log info"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "E-mailadres"
+                },
+                "description": "Vul alstublieft uw gegevens in.",
+                "title": "Tesla - Configuratie"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Seconden tussen scans"
+                }
+            }
+        }
+    }
+}

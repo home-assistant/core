@@ -1,23 +1,30 @@
 """HTML5 Push Messaging notification service."""
 from datetime import datetime, timedelta
-
 from functools import partial
-from urllib.parse import urlparse
 import json
 import logging
 import time
+from urllib.parse import urlparse
 import uuid
 
 from aiohttp.hdrs import AUTHORIZATION
 import jwt
-from pywebpush import WebPusher
 from py_vapid import Vapid
+from pywebpush import WebPusher
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.components import websocket_api
 from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    ATTR_TARGET,
+    ATTR_TITLE,
+    ATTR_TITLE_DEFAULT,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import (
     HTTP_BAD_REQUEST,
     HTTP_INTERNAL_SERVER_ERROR,
@@ -28,15 +35,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import ensure_unique_string
 from homeassistant.util.json import load_json, save_json
-
-from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_TARGET,
-    ATTR_TITLE,
-    ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
-    BaseNotificationService,
-)
 
 from .const import DOMAIN, SERVICE_DISMISS
 
@@ -337,7 +335,7 @@ class HTML5PushCallbackView(HomeAssistantView):
     def check_authorization_header(self, request):
         """Check the authorization header."""
 
-        auth = request.headers.get(AUTHORIZATION, None)
+        auth = request.headers.get(AUTHORIZATION)
         if not auth:
             return self.json_message(
                 "Authorization header is expected", status_code=HTTP_UNAUTHORIZED
@@ -347,12 +345,12 @@ class HTML5PushCallbackView(HomeAssistantView):
 
         if parts[0].lower() != "bearer":
             return self.json_message(
-                "Authorization header must " "start with Bearer",
+                "Authorization header must start with Bearer",
                 status_code=HTTP_UNAUTHORIZED,
             )
         if len(parts) != 2:
             return self.json_message(
-                "Authorization header must " "be Bearer token",
+                "Authorization header must be Bearer token",
                 status_code=HTTP_UNAUTHORIZED,
             )
 
@@ -394,7 +392,7 @@ class HTML5PushCallbackView(HomeAssistantView):
                 humanize_error(event_payload, ex),
             )
 
-        event_name = "{}.{}".format(NOTIFY_CALLBACK_EVENT, event_payload[ATTR_TYPE])
+        event_name = f"{NOTIFY_CALLBACK_EVENT}.{event_payload[ATTR_TYPE]}"
         request.app["hass"].bus.fire(event_name, event_payload)
         return self.json({"status": "ok", "event": event_payload[ATTR_TYPE]})
 
@@ -509,7 +507,7 @@ class HTML5NotificationService(BaseNotificationService):
                 info = REGISTER_SCHEMA(info)
             except vol.Invalid:
                 _LOGGER.error(
-                    "%s is not a valid HTML5 push notification" " target", target
+                    "%s is not a valid HTML5 push notification target", target
                 )
                 continue
             payload[ATTR_DATA][ATTR_JWT] = add_jwt(

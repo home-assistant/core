@@ -1,9 +1,9 @@
 """Test cases around the demo fan platform."""
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import fan
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.setup import async_setup_component
 
 from tests.components.fan import common
 

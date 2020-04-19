@@ -6,11 +6,12 @@ from homeassistant.components.device_tracker.config_entry import (
     ScannerEntity,
 )
 from homeassistant.components.device_tracker.const import (
-    SOURCE_TYPE_ROUTER,
     ATTR_SOURCE_TYPE,
     DOMAIN,
+    SOURCE_TYPE_ROUTER,
 )
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME, ATTR_BATTERY_LEVEL
+from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_HOME, STATE_NOT_HOME
+
 from tests.common import MockConfigEntry
 
 

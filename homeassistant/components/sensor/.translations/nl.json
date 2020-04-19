@@ -22,5 +22,6 @@
             "timestamp": "{entity_name} tijdstip gewijzigd",
             "value": "{entity_name} waarde gewijzigd"
         }
-    }
+    },
+    "title": "Sensor"
 }

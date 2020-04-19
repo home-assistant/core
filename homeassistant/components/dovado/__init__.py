@@ -1,18 +1,18 @@
 """Support for Dovado router."""
-import logging
 from datetime import timedelta
+import logging
 
 import dovado
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_USERNAME,
-    CONF_PASSWORD,
     CONF_HOST,
+    CONF_PASSWORD,
     CONF_PORT,
+    CONF_USERNAME,
     DEVICE_DEFAULT_NAME,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,8 +41,8 @@ def setup(hass, config):
 
     hass.data[DOMAIN] = DovadoData(
         dovado.Dovado(
-            config[DOMAIN].get(CONF_USERNAME),
-            config[DOMAIN].get(CONF_PASSWORD),
+            config[DOMAIN][CONF_USERNAME],
+            config[DOMAIN][CONF_PASSWORD],
             config[DOMAIN].get(CONF_HOST),
             config[DOMAIN].get(CONF_PORT),
         )

@@ -1,10 +1,10 @@
 """Config flow to configure the IQVIA component."""
 
 from collections import OrderedDict
-import voluptuous as vol
 
 from pyiqvia import Client
 from pyiqvia.errors import InvalidZipError
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
@@ -16,9 +16,9 @@ from .const import CONF_ZIP_CODE, DOMAIN
 @callback
 def configured_instances(hass):
     """Return a set of configured IQVIA instances."""
-    return set(
+    return {
         entry.data[CONF_ZIP_CODE] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
 @config_entries.HANDLERS.register(DOMAIN)

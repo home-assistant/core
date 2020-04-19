@@ -1,12 +1,12 @@
 """Support for sensor value(s) stored in local files."""
-import os
 import logging
+import os
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_VALUE_TEMPLATE, CONF_NAME, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,7 +77,7 @@ class FileSensor(Entity):
     def update(self):
         """Get the latest entry from a file and updates the state."""
         try:
-            with open(self._file_path, "r", encoding="utf-8") as file_data:
+            with open(self._file_path, encoding="utf-8") as file_data:
                 for line in file_data:
                     data = line
                 data = data.strip()

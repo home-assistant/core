@@ -17,9 +17,9 @@ from homeassistant.components.remote import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    ENTITY_MATCH_ALL,
 )
 from homeassistant.loader import bind_hass
 

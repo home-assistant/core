@@ -1,5 +1,6 @@
 """Tests for StarLine config flow."""
 import requests_mock
+
 from homeassistant.components.starline import config_flow
 
 TEST_APP_ID = "666"
@@ -64,7 +65,7 @@ async def test_flow_works(hass):
             },
         )
         assert result["type"] == "create_entry"
-        assert result["title"] == "Application {}".format(TEST_APP_ID)
+        assert result["title"] == f"Application {TEST_APP_ID}"
 
 
 async def test_step_auth_app_code_falls(hass):

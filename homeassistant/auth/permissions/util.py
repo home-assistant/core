@@ -1,6 +1,5 @@
 """Helpers to deal with permissions."""
 from functools import wraps
-
 from typing import Callable, Dict, List, Optional, cast
 
 from .const import SUBCAT_ALL

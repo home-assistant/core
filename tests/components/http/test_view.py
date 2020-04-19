@@ -2,8 +2,8 @@
 from unittest.mock import Mock
 
 from aiohttp.web_exceptions import (
-    HTTPInternalServerError,
     HTTPBadRequest,
+    HTTPInternalServerError,
     HTTPUnauthorized,
 )
 import pytest

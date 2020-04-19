@@ -16,7 +16,6 @@
                 "description": "Viz https://www.home-assistant.io/docs/z-wave/installation/ pro informace o konfigura\u010dn\u00edch prom\u011bnn\u00fdch",
                 "title": "Nastavit Z-Wave"
             }
-        },
-        "title": "Z-Wave"
+        }
     }
 }

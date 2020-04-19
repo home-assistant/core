@@ -1,13 +1,9 @@
 {
   "config": {
-    "title": "Abode",
     "step": {
       "user": {
         "title": "Fill in your Abode login information",
-        "data": {
-          "username": "Email Address",
-          "password": "Password"
-        }
+        "data": { "username": "Email Address", "password": "Password" }
       }
     },
     "error": {

@@ -6,25 +6,25 @@ import asynctest
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_state_v2 import DysonEnvironmentalSensorV2State
 
-import homeassistant.components.dyson.air_quality as dyson
 from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.air_quality import (
-    DOMAIN as AIQ_DOMAIN,
+    ATTR_NO2,
     ATTR_PM_2_5,
     ATTR_PM_10,
-    ATTR_NO2,
+    DOMAIN as AIQ_DOMAIN,
 )
+import homeassistant.components.dyson.air_quality as dyson
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
+
+from .common import load_mock_device
 
 
 def _get_dyson_purecool_device():
     """Return a valid device as provided by the Dyson web services."""
     device = mock.Mock(spec=DysonPureCool)
-    device.serial = "XX-XXXXX-XX"
+    load_mock_device(device)
     device.name = "Living room"
-    device.connect = mock.Mock(return_value=True)
-    device.auto_connect = mock.Mock(return_value=True)
     device.environmental_state.particulate_matter_25 = "0014"
     device.environmental_state.particulate_matter_10 = "0025"
     device.environmental_state.nitrogen_dioxide = "0042"

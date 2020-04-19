@@ -139,11 +139,9 @@ async def async_migrate_entry(hass, entry):
                 config_entries.async_update_entry(entry)
                 return True
 
-    msg = """{} for the PlayStation 4 Integration.
+    msg = f"""{reason[version]} for the PlayStation 4 Integration.
             Please remove the PS4 Integration and re-configure
-            [here](/config/integrations).""".format(
-        reason[version]
-    )
+            [here](/config/integrations)."""
 
     hass.components.persistent_notification.async_create(
         title="PlayStation 4 Integration Configuration Requires Update",

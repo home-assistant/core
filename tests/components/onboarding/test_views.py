@@ -4,14 +4,15 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import onboarding
 from homeassistant.components.onboarding import const, views
+from homeassistant.const import HTTP_FORBIDDEN
+from homeassistant.setup import async_setup_component
+
+from . import mock_storage
 
 from tests.common import CLIENT_ID, register_auth_provider
 from tests.components.met.conftest import mock_weather  # noqa: F401
-
-from . import mock_storage
 
 
 @pytest.fixture(autouse=True)
@@ -65,7 +66,7 @@ async def test_onboarding_user_already_done(hass, hass_storage, aiohttp_client):
         },
     )
 
-    assert resp.status == 403
+    assert resp.status == HTTP_FORBIDDEN
 
 
 async def test_onboarding_user(hass, hass_storage, aiohttp_client):
@@ -98,7 +99,7 @@ async def test_onboarding_user(hass, hass_storage, aiohttp_client):
     assert user.name == "Test Name"
     assert len(user.credentials) == 1
     assert user.credentials[0].data["username"] == "test-user"
-    assert len(hass.data["person"].storage_data) == 1
+    assert len(hass.data["person"][1].async_items()) == 1
 
     # Validate refresh token 1
     resp = await client.post(
@@ -179,7 +180,7 @@ async def test_onboarding_user_race(hass, hass_storage, aiohttp_client):
 
     res1, res2 = await asyncio.gather(resp1, resp2)
 
-    assert sorted([res1.status, res2.status]) == [200, 403]
+    assert sorted([res1.status, res2.status]) == [200, HTTP_FORBIDDEN]
 
 
 async def test_onboarding_integration(hass, hass_storage, hass_client):

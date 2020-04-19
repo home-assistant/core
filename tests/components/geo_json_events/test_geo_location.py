@@ -1,29 +1,29 @@
 """The tests for the geojson platform."""
-from asynctest.mock import patch, MagicMock, call
+from asynctest.mock import MagicMock, call, patch
 
 from homeassistant.components import geo_location
-from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.geo_json_events.geo_location import (
-    SCAN_INTERVAL,
     ATTR_EXTERNAL_ID,
-    SIGNAL_DELETE_ENTITY,
-    SIGNAL_UPDATE_ENTITY,
+    SCAN_INTERVAL,
 )
+from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.const import (
-    CONF_URL,
-    EVENT_HOMEASSISTANT_START,
-    CONF_RADIUS,
+    ATTR_FRIENDLY_NAME,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_RADIUS,
+    CONF_URL,
+    EVENT_HOMEASSISTANT_START,
+    LENGTH_KILOMETERS,
 )
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
-from tests.common import assert_setup_component, async_fire_time_changed
 import homeassistant.util.dt as dt_util
+
+from tests.common import assert_setup_component, async_fire_time_changed
 
 URL = "http://geo.json.local/geo_json_events.json"
 CONFIG = {
@@ -90,7 +90,7 @@ async def test_setup(hass):
                 ATTR_LATITUDE: -31.0,
                 ATTR_LONGITUDE: 150.0,
                 ATTR_FRIENDLY_NAME: "Title 1",
-                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
                 ATTR_SOURCE: "geo_json_events",
             }
             assert round(abs(float(state.state) - 15.5), 7) == 0
@@ -103,7 +103,7 @@ async def test_setup(hass):
                 ATTR_LATITUDE: -31.1,
                 ATTR_LONGITUDE: 150.1,
                 ATTR_FRIENDLY_NAME: "Title 2",
-                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
                 ATTR_SOURCE: "geo_json_events",
             }
             assert round(abs(float(state.state) - 20.5), 7) == 0
@@ -116,7 +116,7 @@ async def test_setup(hass):
                 ATTR_LATITUDE: -31.2,
                 ATTR_LONGITUDE: 150.2,
                 ATTR_FRIENDLY_NAME: "Title 3",
-                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
                 ATTR_SOURCE: "geo_json_events",
             }
             assert round(abs(float(state.state) - 25.5), 7) == 0
@@ -189,8 +189,8 @@ async def test_setup_race_condition(hass):
 
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 15.5, (-31.0, 150.0))
-    delete_signal = SIGNAL_DELETE_ENTITY.format("1234")
-    update_signal = SIGNAL_UPDATE_ENTITY.format("1234")
+    delete_signal = f"geo_json_events_delete_1234"
+    update_signal = f"geo_json_events_update_1234"
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()

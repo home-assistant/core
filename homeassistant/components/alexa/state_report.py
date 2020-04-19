@@ -6,8 +6,8 @@ import logging
 import aiohttp
 import async_timeout
 
-import homeassistant.util.dt as dt_util
 from homeassistant.const import MATCH_ALL, STATE_ON
+import homeassistant.util.dt as dt_util
 
 from .const import API_CHANGE, Cause
 from .entities import ENTITY_ADAPTERS
@@ -26,6 +26,9 @@ async def async_enable_proactive_mode(hass, smart_home_config):
     await smart_home_config.async_get_access_token()
 
     async def async_entity_state_listener(changed_entity, old_state, new_state):
+        if not hass.is_running:
+            return
+
         if not new_state:
             return
 

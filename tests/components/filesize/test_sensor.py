@@ -1,11 +1,11 @@
 """The tests for the filesize sensor."""
-import unittest
 import os
+import unittest
 
 from homeassistant.components.filesize.sensor import CONF_FILE_PATHS
 from homeassistant.setup import setup_component
-from tests.common import get_test_home_assistant
 
+from tests.common import get_test_home_assistant
 
 TEST_DIR = os.path.join(os.path.dirname(__file__))
 TEST_FILE = os.path.join(TEST_DIR, "mock_file_test_filesize.txt")
@@ -23,7 +23,7 @@ class TestFileSensor(unittest.TestCase):
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.whitelist_external_dirs = set((TEST_DIR))
+        self.hass.config.whitelist_external_dirs = {TEST_DIR}
 
     def teardown_method(self, method):
         """Stop everything that was started."""
