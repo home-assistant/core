@@ -194,7 +194,7 @@ async def test_get_translations_while_loading_components(hass):
     }
 
 
-async def test_get_translation_titles_for_config_flow(hass):
+async def test_get_translation_categories(hass):
     """Test the get translations helper loads config flow translations."""
     with patch.object(translation, "async_get_config_flows", return_value={"light"}):
         translations = await translation.async_get_translations(
