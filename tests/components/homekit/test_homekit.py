@@ -397,7 +397,8 @@ async def test_homekit_too_many_accessories(hass, hk_driver):
 
     homekit = HomeKit(hass, None, None, None, entity_filter, {}, None, None)
     homekit.bridge = Mock()
-    homekit.bridge.accessories = range(MAX_DEVICES + 1)
+    # The bridge itself counts as an accessory
+    homekit.bridge.accessories = range(MAX_DEVICES)
     homekit.driver = hk_driver
 
     hass.states.async_set("light.demo", "on")

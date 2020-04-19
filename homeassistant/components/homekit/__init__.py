@@ -357,7 +357,8 @@ class HomeKit:
         if not state or not self._filter(state.entity_id):
             return
 
-        if len(self.bridge.accessories) >= MAX_DEVICES:
+        # The bridge itself counts as an accessory
+        if len(self.bridge.accessories) + 1 >= MAX_DEVICES:
             _LOGGER.warning(
                 "Cannot add %s as this would exceeded the %d device limit. Consider using the filter option.",
                 state.entity_id,
