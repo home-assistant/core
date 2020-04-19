@@ -207,7 +207,7 @@ async def test_reset_after_successful_setup(hass):
     """Calling reset when the entry has been setup."""
     controller = await setup_unifi_integration(hass)
 
-    assert len(controller.listeners) == 9
+    assert len(controller.listeners) == 6
 
     result = await controller.async_reset()
     await hass.async_block_till_done()

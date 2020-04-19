@@ -15,10 +15,9 @@ from aiounifi.events import (
     WIRELESS_CLIENT_UNBLOCKED,
 )
 
+from homeassistant.components.unifi.unifi_entity_base import UniFiBase
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 LOGGER = logging.getLogger(__name__)
 
@@ -32,31 +31,33 @@ WIRELESS_CLIENT = (
 )
 
 
-class UniFiClient(Entity):
+class UniFiClient(UniFiBase):
     """Base class for UniFi clients."""
 
     def __init__(self, client, controller) -> None:
         """Set up client."""
+        super().__init__(controller)
         self.client = client
-        self.controller = controller
 
         self._is_wired = self.client.mac not in controller.wireless_clients
         self.is_blocked = self.client.blocked
         self.wired_connection = None
         self.wireless_connection = None
 
+    @property
+    def mac(self):
+        """Return MAC of client."""
+        return self.client.mac
+
     async def async_added_to_hass(self) -> None:
         """Client entity created."""
+        await super().async_added_to_hass()
         LOGGER.debug("New client %s (%s)", self.entity_id, self.client.mac)
         self.client.register_callback(self.async_update_callback)
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, self.controller.signal_reachable, self.async_update_callback
-            )
-        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect client object when removed."""
+        await super().async_will_remove_from_hass()
         self.client.remove_callback(self.async_update_callback)
 
     @callback
@@ -94,6 +95,11 @@ class UniFiClient(Entity):
         return self._is_wired
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for this switch."""
+        return f"{self.TYPE}-{self.client.mac}"
+
+    @property
     def name(self) -> str:
         """Return the name of the client."""
         return self.client.name or self.client.hostname
@@ -107,8 +113,3 @@ class UniFiClient(Entity):
     def device_info(self) -> dict:
         """Return a client description for device registry."""
         return {"connections": {(CONNECTION_NETWORK_MAC, self.client.mac)}}
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return True
