@@ -136,7 +136,7 @@ async def test_availability(
     with patch("homeassistant.util.dt.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
-        assert hass.states.get(MAIN_ENTITY_ID).state == STATE_PLAYING
+        assert hass.states.get(MAIN_ENTITY_ID).state == "home"
 
 
 async def test_supported_features(
