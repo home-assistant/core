@@ -368,6 +368,8 @@ async def test_homekit_stop(hass):
     homekit = HomeKit(hass, None, None, None, None, None, None)
     homekit.driver = Mock()
 
+    assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
     assert homekit.status == STATUS_READY
     await homekit.async_stop()
     await hass.async_block_till_done()
@@ -445,6 +447,8 @@ async def test_homekit_finds_linked_batteries(
     hass, hk_driver, debounce_patcher, device_reg, entity_reg
 ):
     """Test HomeKit start method."""
+    assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
     homekit = HomeKit(hass, None, None, None, {}, {"light.demo": {}}, None, None)
     homekit.driver = hk_driver
     homekit._filter = Mock(return_value=True)
