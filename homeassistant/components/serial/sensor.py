@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -42,7 +43,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     sensor = SerialSensor(name, port, baudrate, value_template)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, sensor.stop_serial_read())
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, sensor.stop_serial_read)
     async_add_entities([sensor], True)
 
 
@@ -120,7 +121,8 @@ class SerialSensor(Entity):
         self.async_write_ha_state()
         await asyncio.sleep(5)
 
-    async def stop_serial_read(self):
+    @callback
+    def stop_serial_read(self, event):
         """Close resources."""
         if self._serial_loop_task:
             self._serial_loop_task.cancel()
