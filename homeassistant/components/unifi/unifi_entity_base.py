@@ -39,21 +39,24 @@ class UniFiBase(Entity):
 
         Remove entity if no entry in entity registry exist.
         Remove entity registry entry if no entry in device registry exist.
-        Remove device registry entry if there is only one linked entity.
+        Remove device registry entry if there is only one linked entity (this entity).
         Remove entity registry entry if there are more than one entity linked to the device registry entry.
         """
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
         entity_entry = entity_registry.async_get(self.entity_id)
         if not entity_entry:
-            return await super().async_remove()
+            await super().async_remove()
+            return
 
         device_registry = await self.hass.helpers.device_registry.async_get_registry()
         device_entry = device_registry.async_get(entity_entry.device_id)
         if not device_entry:
-            return entity_registry.async_remove(self.entity_id)
+            entity_registry.async_remove(self.entity_id)
+            return
 
         if len(async_entries_for_device(entity_registry, entity_entry.device_id)) == 1:
-            return device_registry.async_remove_device(device_entry.id)
+            device_registry.async_remove_device(device_entry.id)
+            return
 
         entity_registry.async_remove(self.entity_id)
 
