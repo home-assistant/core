@@ -192,3 +192,17 @@ async def test_get_translations_while_loading_components(hass):
         "component.component1.title": "Component 1",
         "component.component1.hello": "world",
     }
+
+
+async def test_get_translation_categories(hass):
+    """Test the get translations helper loads config flow translations."""
+    with patch.object(translation, "async_get_config_flows", return_value={"light"}):
+        translations = await translation.async_get_translations(
+            hass, "en", "title", None, True
+        )
+        assert "component.light.title" in translations
+
+        translations = await translation.async_get_translations(
+            hass, "en", "device_automation", None, True
+        )
+        assert "component.light.device_automation.action_type.turn_on" in translations
