@@ -15,7 +15,8 @@ from zlib import adler32
 
 from fnvhash import fnv1a_32
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
@@ -32,7 +33,12 @@ AID_MAX = 18446744073709551615
 _LOGGER = logging.getLogger(__name__)
 
 
-def generate_aids(unique_id, entity_id):
+def get_system_unique_id(entity: RegistryEntry):
+    """Determine the system wide unique_id for an entity."""
+    return f"{entity.platform}.{entity.domain}.{entity.unique_id}"
+
+
+def _generate_aids(unique_id: str, entity_id: str) -> int:
     """Generate accessory aid."""
 
     # Backward compatibility: Previously HA used to *only* do adler32 on the entity id.
@@ -60,7 +66,7 @@ class AccessoryAidStorage:
     persist over reboots.
     """
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant):
         """Create a new entity map store."""
         self.hass = hass
         self.store = Store(hass, AID_MANAGER_STORAGE_VERSION, AID_MANAGER_STORAGE_KEY)
@@ -83,13 +89,13 @@ class AccessoryAidStorage:
         self.allocations = raw_storage.get("unique_ids", {})
         self.allocated_aids = set(self.allocations.values())
 
-    def get_or_allocate_aid_for_entity_id(self, entity_id):
+    def get_or_allocate_aid_for_entity_id(self, entity_id: str):
         """Generate a stable aid for an entity id."""
         entity = self._entity_registry.async_get(entity_id)
 
         if entity:
             return self._get_or_allocate_aid(
-                self._get_system_unique_id(entity), entity.entity_id
+                get_system_unique_id(entity), entity.entity_id
             )
 
         _LOGGER.warning(
@@ -98,39 +104,35 @@ class AccessoryAidStorage:
         )
         return adler32(entity_id.encode("utf-8"))
 
-    def _get_system_unique_id(self, entity):
-        """Determine the system wide unique_id for an entity."""
-        return f"{entity.platform}.{entity.domain}.{entity.unique_id}"
-
-    def _get_or_allocate_aid(self, unique_id, entity_id):
+    def _get_or_allocate_aid(self, unique_id: str, entity_id: str):
         """Allocate (and return) a new aid for an accessory."""
         if unique_id in self.allocations:
             return self.allocations[unique_id]
 
-        for aid in generate_aids(unique_id, entity_id):
+        for aid in _generate_aids(unique_id, entity_id):
             if aid in INVALID_AIDS:
                 continue
             if aid not in self.allocated_aids:
                 self.allocations[unique_id] = aid
                 self.allocated_aids.add(aid)
-                self._async_schedule_save()
+                self.async_schedule_save()
                 return aid
 
         raise ValueError(
             f"Unable to generate unique aid allocation for {entity_id} [{unique_id}]"
         )
 
-    def delete_aid(self, unique_id):
+    def delete_aid(self, unique_id: str):
         """Delete an aid allocation."""
         if unique_id not in self.allocations:
             return
 
         aid = self.allocations.pop(unique_id)
         self.allocated_aids.discard(aid)
-        self._async_schedule_save()
+        self.async_schedule_save()
 
     @callback
-    def _async_schedule_save(self):
+    def async_schedule_save(self):
         """Schedule saving the entity map cache."""
         self.store.async_delay_save(self._data_to_save, AID_MANAGER_SAVE_DELAY)
 
