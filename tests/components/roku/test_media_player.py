@@ -49,6 +49,25 @@ TV_SERIAL = "YN00H5555555"
 async def test_setup(hass: HomeAssistantType, requests_mock: Mocker) -> None:
     """Test setup with basic config."""
     await setup_integration(hass, requests_mock)
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+
+    main = entity_registry.async_get(MAIN_ENTITY_ID)
+    assert hass.states.get(MAIN_ENTITY_ID)
+    assert main.unique_id == UPNP_SERIAL
+
+
+async def test_idle_setup(hass: HomeAssistantType, requests_mock: Mocker) -> None:
+    """Test setup with idle device."""
+    with patch("roku.Roku.power_state", return_value="Off"):
+        await setup_integration(hass, requests_mock)
+
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.state == STATE_STANDBY
+
+
+async def test_tv_setup(hass: HomeAssistantType, requests_mock: Mocker) -> None:
+    """Test Roku TV setup."""
     await setup_integration(
         hass,
         requests_mock,
@@ -60,22 +79,9 @@ async def test_setup(hass: HomeAssistantType, requests_mock: Mocker) -> None:
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
-    main = entity_registry.async_get(MAIN_ENTITY_ID)
-    assert hass.states.get(MAIN_ENTITY_ID)
-    assert main.unique_id == UPNP_SERIAL
-
     tv = entity_registry.async_get(TV_ENTITY_ID)
     assert hass.states.get(TV_ENTITY_ID)
     assert tv.unique_id == TV_SERIAL
-
-
-async def test_setup_idle(hass: HomeAssistantType, requests_mock: Mocker) -> None:
-    """Test setup with basic config."""
-    with patch("roku.Roku.power_state", return_value="Off"):
-        await setup_integration(hass, requests_mock)
-
-    state = hass.states.get(MAIN_ENTITY_ID)
-    assert state.state == STATE_STANDBY
 
 
 async def test_supported_features(
