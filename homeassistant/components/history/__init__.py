@@ -4,7 +4,9 @@ from datetime import timedelta
 from itertools import groupby
 import logging
 import time
+from typing import Optional, cast
 
+from aiohttp import web
 from sqlalchemy import and_, func
 import voluptuous as vol
 
@@ -337,20 +339,22 @@ class HistoryPeriodView(HomeAssistantView):
         self.filters = filters
         self.use_include_order = use_include_order
 
-    async def get(self, request, datetime=None):
+    async def get(
+        self, request: web.Request, datetime: Optional[str] = None
+    ) -> web.Response:
         """Return history over a period of time."""
 
         if datetime:
-            datetime = dt_util.parse_datetime(datetime)
+            datetime_ = dt_util.parse_datetime(datetime)
 
-            if datetime is None:
+            if datetime_ is None:
                 return self.json_message("Invalid datetime", HTTP_BAD_REQUEST)
 
         now = dt_util.utcnow()
 
         one_day = timedelta(days=1)
-        if datetime:
-            start_time = dt_util.as_utc(datetime)
+        if datetime_:
+            start_time = dt_util.as_utc(datetime_)
         else:
             start_time = now - one_day
 
@@ -376,14 +380,17 @@ class HistoryPeriodView(HomeAssistantView):
 
         hass = request.app["hass"]
 
-        return await hass.async_add_executor_job(
-            self._sorted_significant_states_json,
-            hass,
-            start_time,
-            end_time,
-            entity_ids,
-            include_start_time_state,
-            significant_changes_only,
+        return cast(
+            web.Response,
+            await hass.async_add_executor_job(
+                self._sorted_significant_states_json,
+                hass,
+                start_time,
+                end_time,
+                entity_ids,
+                include_start_time_state,
+                significant_changes_only,
+            ),
         )
 
     def _sorted_significant_states_json(
