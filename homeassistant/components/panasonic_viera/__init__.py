@@ -7,7 +7,11 @@ from urllib.request import URLError
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
 import voluptuous as vol
 
-from homeassistant.components.media_player.const import MEDIA_TYPE_URL
+from homeassistant.components.media_player.const import (
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    MEDIA_TYPE_URL,
+)
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
@@ -44,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["media_player", "remote"]
+PLATFORMS = [MEDIA_PLAYER_DOMAIN, REMOTE_DOMAIN]
 
 
 async def async_setup(hass, config):
@@ -97,7 +101,7 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    return all(
+    unload_ok = all(
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(config_entry, component)
@@ -105,6 +109,11 @@ async def async_unload_entry(hass, config_entry):
             ]
         )
     )
+
+    if unload_ok:
+        hass.data[DOMAIN].pop(config_entry.data[CONF_HOST])
+
+    return unload_ok
 
 
 class Remote:
