@@ -46,6 +46,9 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# We want to fire remote commands right away
+PARALLEL_UPDATES = 0
+
 ATTR_CHANNEL = "channel"
 ATTR_CURRENT_ACTIVITY = "current_activity"
 
@@ -111,11 +114,6 @@ async def async_setup_entry(
     _LOGGER.debug("Harmony Remote: %s", device)
 
     async_add_entities([device])
-    register_services()
-
-
-def register_services():
-    """Register all services for harmony devices."""
 
     platform = entity_platform.current_platform.get()
 
