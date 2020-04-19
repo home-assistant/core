@@ -7,6 +7,8 @@ from typing import Dict
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
+from homeassistant.helpers.config_validation import schema_with_slug_keys
+
 from .model import Config, Integration
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,7 +90,7 @@ def gen_strings_schema(config: Config, integration: Integration):
                 vol.Optional("trigger_type"): {str: str},
                 vol.Optional("trigger_subtype"): {str: str},
             },
-            vol.Optional("state"): {str: str},
+            vol.Optional("state"): {str: {str: str}},
         }
     )
 
@@ -109,6 +111,26 @@ def gen_auth_schema(config: Config, integration: Integration):
     )
 
 
+def gen_platform_strings_schema(config: Config, integration: Integration):
+    """Generate platform strings schema like strings.sensor.json."""
+
+    def key_validator(value):
+        """Key validator."""
+        if not value.startswith(f"{integration.domain}__"):
+            raise vol.Invalid(
+                f"Keys need to start with '{integration.domain}__'. Key {value} is invalid"
+            )
+        return value
+
+    return vol.Schema(
+        {
+            vol.Optional("state"): schema_with_slug_keys(
+                {str: str}, slug_validator=key_validator
+            )
+        }
+    )
+
+
 ONBOARDING_SCHEMA = vol.Schema({vol.Required("area"): {str: str}})
 
 
@@ -116,24 +138,35 @@ def validate_translation_file(config: Config, integration: Integration):
     """Validate translation files for integration."""
     strings_file = integration.path / "strings.json"
 
-    if not strings_file.is_file():
-        return
+    if strings_file.is_file():
+        strings = json.loads(strings_file.read_text())
 
-    strings = json.loads(strings_file.read_text())
+        if integration.domain == "auth":
+            schema = gen_auth_schema(config, integration)
+        elif integration.domain == "onboarding":
+            schema = ONBOARDING_SCHEMA
+        else:
+            schema = gen_strings_schema(config, integration)
 
-    if integration.domain == "auth":
-        schema = gen_auth_schema(config, integration)
-    elif integration.domain == "onboarding":
-        schema = ONBOARDING_SCHEMA
-    else:
-        schema = gen_strings_schema(config, integration)
+        try:
+            schema(strings)
+        except vol.Invalid as err:
+            integration.add_error(
+                "translations", f"Invalid strings.json: {humanize_error(strings, err)}"
+            )
 
-    try:
-        schema(strings)
-    except vol.Invalid as err:
-        integration.add_error(
-            "translations", f"Invalid strings.json: {humanize_error(strings, err)}"
-        )
+    for path in integration.path.glob("strings.*.json"):
+        strings = json.loads(path.read_text())
+        schema = gen_platform_strings_schema(config, integration)
+
+        try:
+            schema(strings)
+        except vol.Invalid as err:
+            msg = f"Invalid {path.name}: {humanize_error(strings, err)}"
+            if config.specific_integrations:
+                integration.add_warning("translations", msg)
+            else:
+                integration.add_error("translations", msg)
 
 
 def validate(integrations: Dict[str, Integration], config: Config):
