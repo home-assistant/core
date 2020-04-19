@@ -73,12 +73,16 @@ class SerialSensor(Entity):
                 reader, _ = await serial_asyncio.open_serial_connection(
                     url=device, baudrate=rate, **kwargs
                 )
-            except SerialException as e:
+            except SerialException as exc:
                 self._state = None
                 self._attributes = None
                 self.async_write_ha_state()
                 if not logged_error:
-                    _LOGGER.exception("Unable to connect to the serial device %s: %s. Will retry", device, e)
+                    _LOGGER.exception(
+                        "Unable to connect to the serial device %s: %s. Will retry",
+                        device,
+                        exc,
+                    )
                     logged_error = True
                 await asyncio.sleep(5)
             else:
@@ -86,11 +90,13 @@ class SerialSensor(Entity):
                 while True:
                     try:
                         line = await reader.readline()
-                    except SerialException as e:
+                    except SerialException as exc:
                         self._state = None
                         self._attributes = None
                         self.async_write_ha_state()
-                        _LOGGER.exception("Error while reading serial device %s: %s", device, str(e))
+                        _LOGGER.exception(
+                            "Error while reading serial device %s: %s", device, exc
+                        )
                         await asyncio.sleep(5)
                         break
                     else:
@@ -105,7 +111,9 @@ class SerialSensor(Entity):
                                 self._attributes = data
 
                         if self._template is not None:
-                            line = self._template.async_render_with_possible_json_value(line)
+                            line = self._template.async_render_with_possible_json_value(
+                                line
+                            )
 
                         _LOGGER.debug("Received: %s", line)
                         self._state = line
