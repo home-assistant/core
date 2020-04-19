@@ -1,7 +1,6 @@
 """Support for Apple HomeKit."""
 import ipaddress
 import logging
-from zlib import adler32
 
 import voluptuous as vol
 from zeroconf import InterfaceChoice
@@ -32,7 +31,9 @@ from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
 
+from .aidmanager import AccessoryAidStorage
 from .const import (
+    AID_STORAGE,
     BRIDGE_NAME,
     CONF_ADVERTISE_IP,
     CONF_AUTO_START,
@@ -119,6 +120,9 @@ RESET_ACCESSORY_SERVICE_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the HomeKit component."""
     _LOGGER.debug("Begin setup HomeKit")
+
+    aid_storage = hass.data[AID_STORAGE] = AccessoryAidStorage(hass)
+    await aid_storage.async_initialize()
 
     conf = config[DOMAIN]
     name = conf[CONF_NAME]
@@ -277,14 +281,6 @@ def get_accessory(hass, driver, state, aid, config):
     return TYPES[a_type](hass, driver, name, state.entity_id, aid, config)
 
 
-def generate_aid(entity_id):
-    """Generate accessory aid with zlib adler32."""
-    aid = adler32(entity_id.encode("utf-8"))
-    if aid in (0, 1):
-        return None
-    return aid
-
-
 class HomeKit:
     """Class to handle all actions between HomeKit and Home Assistant."""
 
@@ -339,9 +335,10 @@ class HomeKit:
 
     def reset_accessories(self, entity_ids):
         """Reset the accessory to load the latest configuration."""
+        aid_storage = self.hass.data[AID_STORAGE]
         removed = []
         for entity_id in entity_ids:
-            aid = generate_aid(entity_id)
+            aid = aid_storage.get_or_allocate_aid_for_entity_id(entity_id)
             if aid not in self.bridge.accessories:
                 _LOGGER.warning(
                     "Could not reset accessory. entity_id not found %s", entity_id
@@ -359,7 +356,19 @@ class HomeKit:
         """Try adding accessory to bridge if configured beforehand."""
         if not state or not self._filter(state.entity_id):
             return
-        aid = generate_aid(state.entity_id)
+
+        # The bridge itself counts as an accessory
+        if len(self.bridge.accessories) + 1 >= MAX_DEVICES:
+            _LOGGER.warning(
+                "Cannot add %s as this would exceeded the %d device limit. Consider using the filter option.",
+                state.entity_id,
+                MAX_DEVICES,
+            )
+            return
+
+        aid = self.hass.data[AID_STORAGE].get_or_allocate_aid_for_entity_id(
+            state.entity_id
+        )
         conf = self._config.pop(state.entity_id, {})
         # If an accessory cannot be created or added due to an exception
         # of any kind (usually in pyhap) it should not prevent
@@ -400,16 +409,11 @@ class HomeKit:
 
         for state in self.hass.states.all():
             self.add_bridge_accessory(state)
+
         self.driver.add_accessory(self.bridge)
 
         if not self.driver.state.paired:
             show_setup_message(self.hass, self.driver.state.pincode)
-
-        if len(self.bridge.accessories) > MAX_DEVICES:
-            _LOGGER.warning(
-                "You have exceeded the device limit, which might "
-                "cause issues. Consider using the filter option."
-            )
 
         _LOGGER.debug("Driver start")
         self.hass.add_job(self.driver.start)
