@@ -1,25 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La Samsung TV ja configurada.",
-            "already_in_progress": "La configuraci\u00f3 de la Samsung TV ja est\u00e0 en curs.",
-            "auth_missing": "Home Assistant no est\u00e0 autenticat per connectar-se amb aquesta Samsung TV.",
-            "not_successful": "No s'ha pogut connectar amb el dispositiu Samsung TV.",
-            "not_supported": "Actualment aquest dispositiu Samsung TV no \u00e9s compatible."
+            "already_configured": "Aquest televisor Samsung ja configurat.",
+            "already_in_progress": "La configuraci\u00f3 del televisor Samsung ja est\u00e0 en curs.",
+            "auth_missing": "Home Assistant no est\u00e0 autenticat per connectar-se amb aquest televisor Samsung. V\u00e9s a la configuraci\u00f3 del televisor per autoritzar a Home Assistant.",
+            "not_successful": "No s'ha pogut connectar amb el dispositiu el televisor Samsung.",
+            "not_supported": "Actualment aquest televisor Samsung no \u00e9s compatible."
         },
-        "flow_title": "Samsung TV: {model}",
+        "flow_title": "Televisor Samsung: {model}",
         "step": {
             "confirm": {
-                "description": "Vols configurar la Samsung TV {model}? Si mai abans l'has connectat a Home Assistant haur\u00edes de veure una finestra emergent a la TV demanant autenticaci\u00f3. Les configuracuons manuals d'aquesta TV es sobreescriuran.",
-                "title": "Samsung TV"
+                "description": "Vols configurar el televisior Samsung {model}? Si mai abans l'has connectat a Home Assistant haur\u00edes de veure una finestra emergent a la pantalla del televisor demanant autenticaci\u00f3. Les configuracions manuals d'aquest televisor es sobreescriuran.",
+                "title": "Televisor Samsung"
             },
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3 o adre\u00e7a IP",
                     "name": "Nom"
                 },
-                "description": "Introdeix les dades de la Samsung TV. Si mai abans l'has connectat a Home Assistant haur\u00edes de veure una finestra emergent demanant autenticaci\u00f3.",
-                "title": "Samsung TV"
+                "description": "Introdeix les dades del televisor Samsung. Si mai abans l'has connectat a Home Assistant haur\u00edes de veure una finestra emergent demanant autenticaci\u00f3.",
+                "title": "Televisor Samsung"
             }
         }
     }
