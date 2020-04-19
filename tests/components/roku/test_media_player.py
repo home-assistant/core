@@ -33,6 +33,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -66,6 +67,15 @@ async def test_setup(hass: HomeAssistantType, requests_mock: Mocker) -> None:
     tv = entity_registry.async_get(TV_ENTITY_ID)
     assert hass.states.get(TV_ENTITY_ID)
     assert tv.unique_id == TV_SERIAL
+
+
+async def test_setup_idle(hass: HomeAssistantType, requests_mock: Mocker) -> None:
+    """Test setup with basic config."""
+    with patch("roku.Roku.power_state", return_value="Off"):
+        await setup_integration(hass, requests_mock)
+
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.state == STATE_STANDBY
 
 
 async def test_supported_features(
