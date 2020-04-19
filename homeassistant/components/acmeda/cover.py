@@ -65,11 +65,11 @@ class AcmedaCover(AcmedaBase, CoverDevice):
     def supported_features(self):
         """Flag supported features."""
         supported_features = 0
-        if self.current_cover_position:
+        if self.current_cover_position is not None:
             supported_features |= (
                 SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
             )
-        if self.current_cover_tilt_position:
+        if self.current_cover_tilt_position is not None:
             supported_features |= (
                 SUPPORT_OPEN_TILT
                 | SUPPORT_CLOSE_TILT
