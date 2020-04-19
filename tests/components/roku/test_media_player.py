@@ -1,5 +1,5 @@
 """Tests for the Roku Media Player platform."""
-from asynctest import patch
+from asynctest import PropertyMock, patch
 from requests_mock import Mocker
 
 from homeassistant.components.media_player.const import (
@@ -25,6 +25,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -32,6 +33,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -47,6 +49,28 @@ TV_SERIAL = "YN00H5555555"
 async def test_setup(hass: HomeAssistantType, requests_mock: Mocker) -> None:
     """Test setup with basic config."""
     await setup_integration(hass, requests_mock)
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+
+    main = entity_registry.async_get(MAIN_ENTITY_ID)
+    assert hass.states.get(MAIN_ENTITY_ID)
+    assert main.unique_id == UPNP_SERIAL
+
+
+async def test_idle_setup(hass: HomeAssistantType, requests_mock: Mocker) -> None:
+    """Test setup with idle device."""
+    with patch(
+        "homeassistant.components.roku.Roku.power_state",
+        new_callable=PropertyMock(return_value="Off"),
+    ):
+        await setup_integration(hass, requests_mock)
+
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.state == STATE_STANDBY
+
+
+async def test_tv_setup(hass: HomeAssistantType, requests_mock: Mocker) -> None:
+    """Test Roku TV setup."""
     await setup_integration(
         hass,
         requests_mock,
@@ -57,10 +81,6 @@ async def test_setup(hass: HomeAssistantType, requests_mock: Mocker) -> None:
     )
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
-
-    main = entity_registry.async_get(MAIN_ENTITY_ID)
-    assert hass.states.get(MAIN_ENTITY_ID)
-    assert main.unique_id == UPNP_SERIAL
 
     tv = entity_registry.async_get(TV_ENTITY_ID)
     assert hass.states.get(TV_ENTITY_ID)
@@ -163,6 +183,16 @@ async def test_services(hass: HomeAssistantType, requests_mock: Mocker) -> None:
         )
 
         remote_mock.assert_called_once_with("/keypress/PowerOn")
+
+    with patch("roku.Roku._post") as remote_mock:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_MEDIA_PLAY_PAUSE,
+            {ATTR_ENTITY_ID: MAIN_ENTITY_ID},
+            blocking=True,
+        )
+
+        remote_mock.assert_called_once_with("/keypress/Play")
 
     with patch("roku.Roku._post") as remote_mock:
         await hass.services.async_call(
