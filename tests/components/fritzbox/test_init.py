@@ -45,15 +45,6 @@ async def test_setup_duplicate_config(hass: HomeAssistantType, fritz: Mock, capl
     assert "duplicate host entries found" in caplog.text
 
 
-async def test_setup_duplicate_entries(hass: HomeAssistantType, fritz: Mock):
-    """Test duplicate setup of integration."""
-    assert await async_setup_component(hass, FB_DOMAIN, MOCK_CONFIG) is True
-    await hass.async_block_till_done()
-    assert len(hass.config_entries.async_entries()) == 1
-    assert await async_setup_component(hass, FB_DOMAIN, MOCK_CONFIG) is True
-    assert len(hass.config_entries.async_entries()) == 1
-
-
 async def test_unload(hass: HomeAssistantType, fritz: Mock):
     """Test unload of integration."""
     fritz().get_devices.return_value = [FritzDeviceSwitchMock()]

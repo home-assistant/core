@@ -22,4 +22,4 @@ DOMAIN = "fritzbox"
 
 LOGGER = logging.getLogger(__package__)
 
-SUPPORTED_DOMAINS = ["binary_sensor", "climate", "switch", "sensor"]
+PLATFORMS = ["binary_sensor", "climate", "switch", "sensor"]

@@ -1,4 +1,5 @@
 """Support for AVM Fritz!Box smarthome devices."""
+import asyncio
 import socket
 
 from pyfritzhome import Fritzhome
@@ -13,13 +14,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from .const import (
-    CONF_CONNECTIONS,
-    DEFAULT_HOST,
-    DEFAULT_USERNAME,
-    DOMAIN,
-    SUPPORTED_DOMAINS,
-)
+from .const import CONF_CONNECTIONS, DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN, PLATFORMS
 
 
 def ensure_unique_hosts(value):
@@ -30,7 +25,7 @@ def ensure_unique_hosts(value):
     return value
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = vol.All(
     cv.deprecated(DOMAIN),
     {
         DOMAIN: vol.Schema(
@@ -84,9 +79,9 @@ async def async_setup_entry(hass, entry):
     hass.data.setdefault(DOMAIN, {CONF_CONNECTIONS: {}, CONF_DEVICES: set()})
     hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id] = fritz
 
-    for domain in SUPPORTED_DOMAINS:
+    for component in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, domain)
+            hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
     def logout_fritzbox(event):
@@ -103,7 +98,15 @@ async def async_unload_entry(hass, entry):
     fritz = hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id]
     await hass.async_add_executor_job(fritz.logout)
 
-    for domain in SUPPORTED_DOMAINS:
-        await hass.config_entries.async_forward_entry_unload(entry, domain)
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN][CONF_CONNECTIONS].pop(entry.entry_id)
 
-    return True
+    return unload_ok
