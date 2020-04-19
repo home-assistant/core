@@ -10,6 +10,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice,
 )
 from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_platform
 
 from .const import DOMAIN
 
@@ -42,11 +44,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 device=binarysensor,
                 room_name=session.room(binarysensor.room_id).name,
                 controller_ip=config_entry.data[CONF_IP_ADDRESS],
+                hass=hass,
             )
         )
 
     if device:
         async_add_entities(device)
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        "smokedetector_check", {}, "async_request_smoketest",
+    )
 
 
 class ShutterContactSensor(BinarySensorDevice):
@@ -160,11 +169,18 @@ class ShutterContactSensor(BinarySensorDevice):
 class SmokeDetectorSensor(BinarySensorDevice):
     """Representation of a SHC smoke detector sensor."""
 
-    def __init__(self, device: SHCSmokeDetector, room_name: str, controller_ip: str):
+    def __init__(
+        self,
+        device: SHCSmokeDetector,
+        room_name: str,
+        controller_ip: str,
+        hass: HomeAssistant,
+    ):
         """Initialize the SHC device."""
         self._device = device
         self._room_name = room_name
         self._controller_ip = controller_ip
+        self._hass = hass
 
     async def async_added_to_hass(self):
         """Subscribe to SHC events."""
@@ -263,3 +279,8 @@ class SmokeDetectorSensor(BinarySensorDevice):
             else None
         )
         return state_attr
+
+    async def async_request_smoketest(self):
+        """Request smokedetector test."""
+        _LOGGER.debug("Requesting smoke test on entity %s", self.name)
+        await self._hass.async_add_executor_job(self._device.smoketest_requested)
