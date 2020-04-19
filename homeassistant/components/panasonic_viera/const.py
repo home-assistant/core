@@ -15,3 +15,5 @@ ERROR_INVALID_PIN_CODE = "invalid_pin_code"
 
 REASON_NOT_CONNECTED = "not_connected"
 REASON_UNKNOWN = "unknown"
+
+ATTR_REMOTE = "remote"
