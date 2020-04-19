@@ -39,6 +39,7 @@ from .const import (
     TADO_HVAC_ACTION_TO_HA_HVAC_ACTION,
     TADO_MODES_WITH_NO_TEMP_SETTING,
     TADO_SWING_OFF,
+    TADO_SWING_ON,
     TADO_TO_HA_FAN_MODE_MAP,
     TADO_TO_HA_HVAC_MODE_MAP,
     TYPE_AIR_CONDITIONING,
@@ -398,10 +399,7 @@ class TadoClimate(TadoZoneEntity, ClimateDevice):
     def swing_modes(self):
         """Swing modes for the device."""
         if self._support_flags & SUPPORT_SWING_MODE:
-            # Currently we only support off.
-            # On will be added in the future in an update
-            # to PyTado
-            return [TADO_SWING_OFF]
+            return [TADO_SWING_ON, TADO_SWING_OFF]
         return None
 
     def set_swing_mode(self, swing_mode):
@@ -415,6 +413,7 @@ class TadoClimate(TadoZoneEntity, ClimateDevice):
         self._current_tado_fan_speed = self._tado_zone_data.current_fan_speed
         self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
         self._current_tado_hvac_action = self._tado_zone_data.current_hvac_action
+        self._current_tado_swing_mode = self._tado_zone_data.current_swing_mode
 
     @callback
     def _async_update_callback(self):
