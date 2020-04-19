@@ -207,9 +207,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumDevice):
     def on_message(self, json_data):
         """Update state on message change."""
         _LOGGER.debug("Got new state from the vacuum: %s", json_data)
-        self.vacuum_state = self.vacuum.master_state.get("state", {}).get(
-            "reported", {}
-        )
+        self.vacuum_state = roomba_reported_state(self.vacuum)
         self.schedule_update_ha_state()
 
     async def async_start(self):
