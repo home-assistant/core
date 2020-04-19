@@ -1,5 +1,5 @@
 """Tests for the Roku Media Player platform."""
-from asynctest import patch
+from asynctest import PropertyMock, patch
 from requests_mock import Mocker
 
 from homeassistant.components.media_player.const import (
@@ -59,7 +59,7 @@ async def test_setup(hass: HomeAssistantType, requests_mock: Mocker) -> None:
 
 async def test_idle_setup(hass: HomeAssistantType, requests_mock: Mocker) -> None:
     """Test setup with idle device."""
-    with patch("homeassistant.components.roku.Roku.power_state", return_value="Off") as power_mock:
+    with patch("homeassistant.components.roku.Roku.power_state", new_callable=PropertyMock(return_value="Off")) as power_mock:
         await setup_integration(hass, requests_mock)
 
     power_mock.assert_called()
