@@ -68,7 +68,6 @@ class LutronLed(LutronDevice, SwitchDevice):
 
     def __init__(self, area_name, keypad_name, scene_device, led_device, controller):
         """Initialize the switch."""
-        self._prev_state = None
         self._keypad_name = keypad_name
         self._scene_name = scene_device.name
         super().__init__(area_name, led_device, controller)
@@ -84,10 +83,11 @@ class LutronLed(LutronDevice, SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {}
-        attr["keypad"] = self._keypad_name
-        attr["scene"] = self._scene_name
-        attr["led"] = self._lutron_device.name
+        attr = {
+            "keypad": self._keypad_name,
+            "scene": self._scene_name,
+            "led": self._lutron_device.name,
+        }
         return attr
 
     @property
@@ -98,11 +98,8 @@ class LutronLed(LutronDevice, SwitchDevice):
     @property
     def name(self):
         """Return the name of the LED."""
-        return "{} {}: {} LED".format(
-            self._area_name, self._keypad_name, self._scene_name
-        )
+        return f"{self._area_name} {self._keypad_name}: {self._scene_name} LED"
 
     def update(self):
         """Call when forcing a refresh of the device."""
-        if self._prev_state is None:
-            self._prev_state = self._lutron_device.state
+        self._lutron_device.state
