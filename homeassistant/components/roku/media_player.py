@@ -66,12 +66,7 @@ class RokuDevice(MediaPlayerDevice):
             self._power_state = self.roku.power_state
             self.ip_address = self.roku.host
             self.channels = self.get_source_list()
-
-            if self.roku.current_app is not None:
-                self.current_app = self.roku.current_app
-            else:
-                self.current_app = None
-
+            self.current_app = self.roku.current_app
             self._available = True
         except (RequestsConnectionError, RequestsReadTimeout, RokuException):
             self._available = False
@@ -141,9 +136,7 @@ class RokuDevice(MediaPlayerDevice):
         """Content type of current playing media."""
         if self.current_app is None:
             return None
-        if self.current_app.name == "Power Saver":
-            return None
-        if self.current_app.name == "Roku":
+        if self.current_app.name in ("Power Saver", "Roku"):
             return None
         return MEDIA_TYPE_MOVIE
 
@@ -152,9 +145,7 @@ class RokuDevice(MediaPlayerDevice):
         """Image url of current playing media."""
         if self.current_app is None:
             return None
-        if self.current_app.name == "Roku":
-            return None
-        if self.current_app.name == "Power Saver":
+        if self.current_app.name in ("Power Saver", "Roku"):
             return None
         if self.current_app.id is None:
             return None
