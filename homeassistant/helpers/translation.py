@@ -110,9 +110,7 @@ def build_resources(
             continue
 
         if isinstance(new_value, dict):
-            domain_resources.setdefault(category, {}).update(
-                new_value
-            )
+            domain_resources.setdefault(category, {}).update(new_value)
         else:
             domain_resources[category] = new_value
 
