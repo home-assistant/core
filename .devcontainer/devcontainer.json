@@ -13,7 +13,7 @@
     "esbenp.prettier-vscode"
   ],
   "mounts": [
-    "source=/media/psf/Home/Documents/GitHub,target=/home,type=bind,consistency=cache"
+    "source=/media/psf/Home/Documents/Development,target=/home,type=bind,consistency=cache"
   ],
   "settings": {
     "python.pythonPath": "/usr/local/bin/python",
