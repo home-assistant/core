@@ -85,18 +85,11 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchDevice):
         mydata = self.hass.data[DATA_HYDRAWISE].data
         _LOGGER.debug("Updating Hydrawise switch: %s", self._name)
         if self._sensor_type == "manual_watering":
-            if not mydata.running:
-                self._state = False
-            else:
-                self._state = int(mydata.running[0]["relay"]) == self.data["relay"]
+            self._state = mydata.relays[self.data["relay"] - 1]["timestr"] == "Now"
         elif self._sensor_type == "auto_watering":
-            for relay in mydata.relays:
-                if relay["relay"] == self.data["relay"]:
-                    if relay.get("suspended") is not None:
-                        self._state = False
-                    else:
-                        self._state = True
-                    break
+            self._state = (mydata.relays[self.data["relay"] - 1]["timestr"] != "") and (
+                mydata.relays[self.data["relay"] - 1]["timestr"] != "Now"
+            )
 
     @property
     def icon(self):

@@ -32,17 +32,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        if sensor_type in ["status", "rain_sensor"]:
+        if sensor_type == "status":
             sensors.append(
-                HydrawiseBinarySensor(hydrawise.controller_status, sensor_type)
+                HydrawiseBinarySensor(hydrawise.current_controller, sensor_type)
             )
-
         else:
             # create a sensor for each zone
             for zone in hydrawise.relays:
-                zone_data = zone
-                zone_data["running"] = hydrawise.controller_status.get("running", False)
-                sensors.append(HydrawiseBinarySensor(zone_data, sensor_type))
+                sensors.append(HydrawiseBinarySensor(zone, sensor_type))
 
     add_entities(sensors, True)
 
@@ -61,14 +58,8 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorDevice):
         mydata = self.hass.data[DATA_HYDRAWISE].data
         if self._sensor_type == "status":
             self._state = mydata.status == "All good!"
-        elif self._sensor_type == "rain_sensor":
-            for sensor in mydata.sensors:
-                if sensor["name"] == "Rain":
-                    self._state = sensor["active"] == 1
         elif self._sensor_type == "is_watering":
-            if not mydata.running:
-                self._state = False
-            elif int(mydata.running[0]["relay"]) == self.data["relay"]:
+            if mydata.relays[self.data["relay"] - 1]["timestr"] == "Now":
                 self._state = True
             else:
                 self._state = False

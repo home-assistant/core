@@ -46,10 +46,9 @@ DEVICE_MAP = {
     "next_cycle": ["Next Cycle", "mdi:calendar-clock", "", ""],
     "status": ["Status", "", "connectivity", ""],
     "watering_time": ["Watering Time", "mdi:water-pump", "", TIME_MINUTES],
-    "rain_sensor": ["Rain Sensor", "", "moisture", ""],
 }
 
-BINARY_SENSORS = ["is_watering", "status", "rain_sensor"]
+BINARY_SENSORS = ["is_watering", "status"]
 
 SENSORS = ["next_cycle", "watering_time"]
 

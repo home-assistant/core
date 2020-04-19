@@ -1,5 +1,6 @@
 """Support for Hydrawise sprinkler sensors."""
 import logging
+import time
 
 import voluptuous as vol
 
@@ -45,24 +46,20 @@ class HydrawiseSensor(HydrawiseEntity):
         mydata = self.hass.data[DATA_HYDRAWISE].data
         _LOGGER.debug("Updating Hydrawise sensor: %s", self._name)
         if self._sensor_type == "watering_time":
-            if not mydata.running:
-                self._state = 0
+            if mydata.relays[self.data["relay"] - 1]["timestr"] == "Now":
+                self._state = int(mydata.relays[self.data["relay"] - 1]["run"] / 60)
             else:
-                if int(mydata.running[0]["relay"]) == self.data["relay"]:
-                    self._state = int(mydata.running[0]["time_left"] / 60)
-                else:
-                    self._state = 0
+                self._state = 0
         else:  # _sensor_type == 'next_cycle'
-            for relay in mydata.relays:
-                if relay["relay"] == self.data["relay"]:
-                    if relay["nicetime"] == "Not scheduled":
-                        self._state = "not_scheduled"
-                    else:
-                        self._state = (
-                            relay["nicetime"].split(",")[0]
-                            + " "
-                            + relay["nicetime"].split(" ")[3]
-                        )
+            # 31536000 = seconds in 1 year
+            if mydata.relays[self.data["relay"] - 1]["time"] > 31536000:
+                self._state = "not_scheduled"
+            else:
+                self._state = time.asctime(
+                    time.localtime(
+                        time.time() + mydata.relays[self.data["relay"] - 1]["time"]
+                    )
+                )
 
     @property
     def icon(self):
