@@ -9,7 +9,11 @@ from . import get_entity_ids
 
 
 async def async_reproduce_states(
-    hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
+    hass: HomeAssistantType,
+    states: Iterable[State],
+    *,
+    context: Optional[Context] = None,
+    transition: Optional[float] = None,
 ) -> None:
     """Reproduce component states."""
 
@@ -27,4 +31,6 @@ async def async_reproduce_states(
                     context=state.context,
                 )
             )
-    await async_reproduce_state(hass, states_copy, blocking=True, context=context)
+    await async_reproduce_state(
+        hass, states_copy, context=context, transition=transition
+    )

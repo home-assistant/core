@@ -69,8 +69,9 @@ def get_changed_since(
 async def async_reproduce_state(
     hass: HomeAssistantType,
     states: Union[State, Iterable[State]],
-    blocking: bool = False,
+    *,
     context: Optional[Context] = None,
+    transition: Optional[float] = None,
 ) -> None:
     """Reproduce a list of states on multiple domains."""
     if isinstance(states, State):
@@ -97,7 +98,7 @@ async def async_reproduce_state(
             return
 
         await platform.async_reproduce_states(  # type: ignore
-            hass, states_by_domain, context=context
+            hass, states_by_domain, context=context, transition=transition
         )
 
     if to_call:

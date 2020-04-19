@@ -24,7 +24,11 @@ VALID_STATES = {STATUS_IDLE, STATUS_ACTIVE, STATUS_PAUSED}
 
 
 async def _async_reproduce_state(
-    hass: HomeAssistantType, state: State, context: Optional[Context] = None
+    hass: HomeAssistantType,
+    state: State,
+    *,
+    context: Optional[Context] = None,
+    transition: Optional[float] = None,
 ) -> None:
     """Reproduce a single state."""
     cur_state = hass.states.get(state.entity_id)
@@ -62,9 +66,16 @@ async def _async_reproduce_state(
 
 
 async def async_reproduce_states(
-    hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
+    hass: HomeAssistantType,
+    states: Iterable[State],
+    *,
+    context: Optional[Context] = None,
+    transition: Optional[float] = None,
 ) -> None:
     """Reproduce Timer states."""
     await asyncio.gather(
-        *(_async_reproduce_state(hass, state, context) for state in states)
+        *(
+            _async_reproduce_state(hass, state, context=context, transition=transition)
+            for state in states
+        )
     )
