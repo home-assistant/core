@@ -10,7 +10,6 @@ from roku import RokuException
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_MOVIE,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
@@ -138,7 +137,7 @@ class RokuDevice(MediaPlayerDevice):
             return None
         if self.current_app.name in ("Power Saver", "Roku"):
             return None
-        return MEDIA_TYPE_MOVIE
+        return MEDIA_TYPE_CHANNEL
 
     @property
     def media_image_url(self):
