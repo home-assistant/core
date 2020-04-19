@@ -45,8 +45,4 @@ class RoombaBinStatus(IRobotEntity, BinarySensorDevice):
     @property
     def state(self):
         """Return the state of the sensor."""
-        bin_status = (
-            roomba_reported_state(self.vacuum).get("bin", {}).get("full", False)
-        )
-        _LOGGER.debug("Update Full Bin status from the vacuum: %s", bin_status)
-        return bin_status
+        return roomba_reported_state(self.vacuum).get("bin", {}).get("full", False)

@@ -46,6 +46,4 @@ class RoombaBattery(IRobotEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        battery_level = roomba_reported_state(self.vacuum).get("batPct")
-        _LOGGER.debug("Update battery level status from the vacuum: %s", battery_level)
-        return battery_level
+        return roomba_reported_state(self.vacuum).get("batPct")
