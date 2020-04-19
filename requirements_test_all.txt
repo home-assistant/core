@@ -7,7 +7,7 @@
 HAP-python==2.8.2
 
 # homeassistant.components.flickelectric
-PyFlick==0.0.1
+PyFlick==0.0.2
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks

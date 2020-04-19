@@ -83,7 +83,7 @@ class FlickPricingSensor(Entity):
 
     async def async_update(self):
         """Get the Flick Pricing data from the web service."""
-        if self._price.end_at >= utcnow():
+        if self._price and self._price.end_at >= utcnow():
             return  # Power price data is still valid
 
         with async_timeout.timeout(60):
