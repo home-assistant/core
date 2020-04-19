@@ -73,6 +73,15 @@ class SerialSensor(Entity):
                 reader, _ = await serial_asyncio.open_serial_connection(
                     url=device, baudrate=rate, **kwargs
                 )
+            except SerialException as e:
+                self._state = None
+                self._attributes = None
+                self.async_write_ha_state()
+                if not logged_error:
+                    _LOGGER.exception("Unable to connect to the serial device %s: %s. Will retry", device, e)
+                    logged_error = True
+                await asyncio.sleep(5)
+            else:
                 _LOGGER.info("Serial device %s connected", device)
                 while True:
                     try:
@@ -101,14 +110,6 @@ class SerialSensor(Entity):
                         _LOGGER.debug("Received: %s", line)
                         self._state = line
                         self.async_write_ha_state()
-            except SerialException as e:
-                self._state = None
-                self._attributes = None
-                self.async_write_ha_state()
-                if not logged_error:
-                    _LOGGER.exception("Unable to connect to the serial device %s: %s. Will retry", device, e)
-                    logged_error = True
-                await asyncio.sleep(5)
 
     async def stop_serial_read(self):
         """Close resources."""
