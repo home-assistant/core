@@ -55,15 +55,10 @@ homeassistant/components/bizkaibus/* @UgaitzEtxebarria
 homeassistant/components/blink/* @fronzbot
 homeassistant/components/bmp280/* @belidzs
 homeassistant/components/bmw_connected_drive/* @gerard33
-<<<<<<< HEAD
-homeassistant/components/braviatv/* @robbiet480
-homeassistant/components/broadlink/* @danielhiversen @felipediel @embak
-=======
 homeassistant/components/bom/* @maddenp
 homeassistant/components/braviatv/* @robbiet480 @bieniu
-homeassistant/components/broadlink/* @danielhiversen @felipediel
+homeassistant/components/broadlink/* @danielhiversen @felipediel @embak
 homeassistant/components/brother/* @bieniu
->>>>>>> upstream/dev
 homeassistant/components/brunt/* @eavanvalkenburg
 homeassistant/components/bt_smarthub/* @jxwolstenholme
 homeassistant/components/buienradar/* @mjj4791 @ties
