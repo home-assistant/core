@@ -197,15 +197,8 @@ class LgTVDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        if self._on_action_script and self._off_action_script:
-            return SUPPORT_LGTV | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
-
         if self._on_action_script:
             return SUPPORT_LGTV | SUPPORT_TURN_ON
-
-        if self._off_action_script:
-            return SUPPORT_LGTV | SUPPORT_TURN_OFF
-
         return SUPPORT_LGTV
 
     @property
