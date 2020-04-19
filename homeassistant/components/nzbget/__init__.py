@@ -72,7 +72,9 @@ def setup(hass, config):
     scan_interval = config[DOMAIN][CONF_SCAN_INTERVAL]
 
     try:
-        nzbget_api = pynzbgetapi.NZBGetAPI(host, username, password, ssl, ssl, port)
+        nzbget_api = pynzbgetapi.NZBGetAPI(
+            host, username, password, ssl, ssl, port=port
+        )
         nzbget_api.version()
     except pynzbgetapi.NZBGetAPIException as conn_err:
         _LOGGER.error("Error setting up NZBGet API: %s", conn_err)
