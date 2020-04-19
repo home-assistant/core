@@ -16,7 +16,7 @@ from homeassistant.components.device_tracker import (
     ATTR_GPS_ACCURACY,
     ATTR_LOCATION_NAME,
 )
-from homeassistant.components.frontend import MANIFEST_JSON
+from homeassistant.components.frontend import DATA_PANELS, MANIFEST_JSON
 from homeassistant.components.sensor import DEVICE_CLASSES as SENSOR_CLASSES
 from homeassistant.components.zone.const import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import (
@@ -484,3 +484,15 @@ async def webhook_get_config(hass, config_entry, data):
         pass
 
     return webhook_response(resp, registration=config_entry.data)
+
+
+@WEBHOOK_COMMANDS.register("get_panels")
+async def webhook_get_panels(hass, config_entry, data):
+    """Handle a get panels webhook."""
+    panels_data = hass.data[DATA_PANELS]
+    panels = []
+    _LOGGER.warning(panels_data)
+    for panel in panels_data:
+        panels.append(panels_data[panel].to_response())
+
+    return webhook_response(panels, registration=config_entry.data)
