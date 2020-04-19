@@ -57,7 +57,7 @@ class SerialSensor(Entity):
         self._baudrate = baudrate
         self._serial_loop_task = None
         self._template = value_template
-        self._attributes = []
+        self._attributes = None
 
     async def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""
@@ -74,9 +74,6 @@ class SerialSensor(Entity):
                     url=device, baudrate=rate, **kwargs
                 )
             except SerialException as exc:
-                self._state = None
-                self._attributes = None
-                self.async_write_ha_state()
                 if not logged_error:
                     _LOGGER.exception(
                         "Unable to connect to the serial device %s: %s. Will retry",
@@ -84,20 +81,17 @@ class SerialSensor(Entity):
                         exc,
                     )
                     logged_error = True
-                await asyncio.sleep(5)
+                await self._handle_error()
             else:
                 _LOGGER.info("Serial device %s connected", device)
                 while True:
                     try:
                         line = await reader.readline()
                     except SerialException as exc:
-                        self._state = None
-                        self._attributes = None
-                        self.async_write_ha_state()
                         _LOGGER.exception(
                             "Error while reading serial device %s: %s", device, exc
                         )
-                        await asyncio.sleep(5)
+                        await self._handle_error()
                         break
                     else:
                         line = line.decode("utf-8").strip()
@@ -118,6 +112,13 @@ class SerialSensor(Entity):
                         _LOGGER.debug("Received: %s", line)
                         self._state = line
                         self.async_write_ha_state()
+
+    async def _handle_error(self):
+        """Handle error for serial connection."""
+        self._state = None
+        self._attributes = None
+        self.async_write_ha_state()
+        await asyncio.sleep(5)
 
     async def stop_serial_read(self):
         """Close resources."""
