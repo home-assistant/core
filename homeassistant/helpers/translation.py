@@ -111,7 +111,7 @@ def build_resources(
             translation_cache[component][category]
         )
 
-    return resources
+    return {"component": resources}
 
 
 async def async_get_component_cache(
@@ -210,14 +210,10 @@ async def async_get_translations(
     async with lock:
         results = await asyncio.gather(*tasks)
 
-    resources = flatten(
-        {"component": build_resources(results[0], components, category)}
-    )
+    resources = flatten(build_resources(results[0], components, category))
 
     if language != "en":
-        base_resources = flatten(
-            {"component": build_resources(results[1], components, category)}
-        )
+        base_resources = flatten(build_resources(results[1], components, category))
         resources = {**base_resources, **resources}
 
     return resources
