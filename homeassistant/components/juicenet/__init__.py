@@ -1,9 +1,9 @@
 """The JuiceNet integration."""
 import asyncio
 import logging
-import requests
 
 from pyjuicenet import Api
+import requests
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
