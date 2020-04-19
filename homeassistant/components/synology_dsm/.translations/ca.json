@@ -4,10 +4,17 @@
             "already_configured": "L'amfitri\u00f3 ja est\u00e0 configurat"
         },
         "error": {
-            "login": "Error d\u2019inici de sessi\u00f3: comprova el nom d'usuari i la contrasenya"
+            "login": "Error d\u2019inici de sessi\u00f3: comprova el nom d'usuari i la contrasenya",
+            "otp_failed": "L'autenticaci\u00f3 en dos passos ha fallat, torna-ho a provar amb un nou codi"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Codi"
+                },
+                "title": "Synology DSM: autenticaci\u00f3 en dos passos"
+            },
             "link": {
                 "data": {
                     "api_version": "Versi\u00f3 DSM",
