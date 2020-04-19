@@ -1,10 +1,10 @@
 """Support for reading data from a serial port."""
+import asyncio
 import json
 import logging
 
-import asyncio
-import serial_asyncio
 from serial import SerialException
+import serial_asyncio
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
