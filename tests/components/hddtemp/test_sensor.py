@@ -3,6 +3,7 @@ import socket
 import unittest
 from unittest.mock import patch
 
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
@@ -48,11 +49,9 @@ class TelnetMock:
         """Return sample values."""
         if self.host == "alice.local":
             raise ConnectionRefusedError
-        elif self.host == "bob.local":
+        if self.host == "bob.local":
             raise socket.gaierror
-        else:
-            return self.sample_data
-        return None
+        return self.sample_data
 
 
 class TestHDDTempSensor(unittest.TestCase):
@@ -66,25 +65,25 @@ class TestHDDTempSensor(unittest.TestCase):
             "/dev/sda1": {
                 "device": "/dev/sda1",
                 "temperature": "29",
-                "unit_of_measurement": "°C",
+                "unit_of_measurement": TEMP_CELSIUS,
                 "model": "WDC WD30EZRX-12DC0B0",
             },
             "/dev/sdb1": {
                 "device": "/dev/sdb1",
                 "temperature": "32",
-                "unit_of_measurement": "°C",
+                "unit_of_measurement": TEMP_CELSIUS,
                 "model": "WDC WD15EADS-11P7B2",
             },
             "/dev/sdc1": {
                 "device": "/dev/sdc1",
                 "temperature": "29",
-                "unit_of_measurement": "°C",
+                "unit_of_measurement": TEMP_CELSIUS,
                 "model": "WDC WD20EARX-22MMMB0",
             },
             "/dev/sdd1": {
                 "device": "/dev/sdd1",
                 "temperature": "32",
-                "unit_of_measurement": "°C",
+                "unit_of_measurement": TEMP_CELSIUS,
                 "model": "WDC WD15EARS-00Z5B1",
             },
         }
@@ -112,7 +111,7 @@ class TestHDDTempSensor(unittest.TestCase):
         )
         assert (
             state.attributes.get("friendly_name")
-            == "HD Temperature " + reference["device"]
+            == f"HD Temperature {reference['device']}"
         )
 
     @patch("telnetlib.Telnet", new=TelnetMock)
@@ -125,7 +124,7 @@ class TestHDDTempSensor(unittest.TestCase):
 
         reference = self.reference[state.attributes.get("device")]
 
-        assert state.attributes.get("friendly_name") == "FooBar " + reference["device"]
+        assert state.attributes.get("friendly_name") == f"FooBar {reference['device']}"
 
     @patch("telnetlib.Telnet", new=TelnetMock)
     def test_hddtemp_one_disk(self):
@@ -145,7 +144,7 @@ class TestHDDTempSensor(unittest.TestCase):
         )
         assert (
             state.attributes.get("friendly_name")
-            == "HD Temperature " + reference["device"]
+            == f"HD Temperature {reference['device']}"
         )
 
     @patch("telnetlib.Telnet", new=TelnetMock)
@@ -181,7 +180,7 @@ class TestHDDTempSensor(unittest.TestCase):
             )
             assert (
                 state.attributes.get("friendly_name")
-                == "HD Temperature " + reference["device"]
+                == f"HD Temperature {reference['device']}"
             )
 
     @patch("telnetlib.Telnet", new=TelnetMock)

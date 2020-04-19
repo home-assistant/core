@@ -4,7 +4,7 @@ import json
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.mqtt import DOMAIN
+from homeassistant.components.mqtt import DOMAIN, debug_info
 from homeassistant.components.mqtt.device_trigger import async_attach_trigger
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.setup import async_setup_component
@@ -757,6 +757,40 @@ async def test_attach_remove_late2(hass, device_reg, mqtt_mock):
     assert len(calls) == 0
 
 
+async def test_entity_device_info_with_connection(hass, mqtt_mock):
+    """Test MQTT device registry integration."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps(
+        {
+            "automation_type": "trigger",
+            "topic": "test-topic",
+            "type": "foo",
+            "subtype": "bar",
+            "device": {
+                "connections": [["mac", "02:5b:26:a8:dc:12"]],
+                "manufacturer": "Whatever",
+                "name": "Beer",
+                "model": "Glass",
+                "sw_version": "0.1-beta",
+            },
+        }
+    )
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device(set(), {("mac", "02:5b:26:a8:dc:12")})
+    assert device is not None
+    assert device.connections == {("mac", "02:5b:26:a8:dc:12")}
+    assert device.manufacturer == "Whatever"
+    assert device.name == "Beer"
+    assert device.model == "Glass"
+    assert device.sw_version == "0.1-beta"
+
+
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     """Test MQTT device registry integration."""
     entry = MockConfigEntry(domain=DOMAIN)
@@ -772,7 +806,6 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
             "subtype": "bar",
             "device": {
                 "identifiers": ["helloworld"],
-                "connections": [["mac", "02:5b:26:a8:dc:12"]],
                 "manufacturer": "Whatever",
                 "name": "Beer",
                 "model": "Glass",
@@ -786,7 +819,6 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     device = registry.async_get_device({("mqtt", "helloworld")}, set())
     assert device is not None
     assert device.identifiers == {("mqtt", "helloworld")}
-    assert device.connections == {("mac", "02:5b:26:a8:dc:12")}
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"
@@ -1072,3 +1104,44 @@ async def test_cleanup_device_with_entity2(hass, device_reg, entity_reg, mqtt_mo
     # Verify device registry entry is cleared
     device_entry = device_reg.async_get_device({("mqtt", "helloworld")}, set())
     assert device_entry is None
+
+
+async def test_trigger_debug_info(hass, mqtt_mock):
+    """Test debug_info.
+
+    This is a test helper for MQTT debug_info.
+    """
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    config = {
+        "platform": "mqtt",
+        "automation_type": "trigger",
+        "topic": "test-topic",
+        "type": "foo",
+        "subtype": "bar",
+        "device": {
+            "connections": [["mac", "02:5b:26:a8:dc:12"]],
+            "manufacturer": "Whatever",
+            "name": "Beer",
+            "model": "Glass",
+            "sw_version": "0.1-beta",
+        },
+    }
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device(set(), {("mac", "02:5b:26:a8:dc:12")})
+    assert device is not None
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"]) == 0
+    assert len(debug_info_data["triggers"]) == 1
+    assert (
+        debug_info_data["triggers"][0]["discovery_data"]["topic"]
+        == "homeassistant/device_automation/bla/config"
+    )
+    assert debug_info_data["triggers"][0]["discovery_data"]["payload"] == config

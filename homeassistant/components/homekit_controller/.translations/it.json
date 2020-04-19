@@ -34,7 +34,7 @@
                 "description": "Selezionare il dispositivo che si desidera abbinare",
                 "title": "Abbina con accessorio HomeKit"
             }
-        },
-        "title": "Accessorio HomeKit"
-    }
+        }
+    },
+    "title": "Accessorio HomeKit"
 }

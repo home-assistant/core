@@ -22,5 +22,6 @@
             "timestamp": "{entity_name} tidst\u00e4mpel \u00e4ndras",
             "value": "{entity_name} v\u00e4rde \u00e4ndras"
         }
-    }
+    },
+    "title": "Sensor"
 }

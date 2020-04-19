@@ -5,7 +5,7 @@ from rachiopy import Rachio
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, HTTP_OK
 from homeassistant.core import callback
 
 from .const import (
@@ -33,13 +33,13 @@ async def validate_input(hass: core.HomeAssistant, data):
     try:
         data = await hass.async_add_executor_job(rachio.person.getInfo)
         _LOGGER.debug("rachio.person.getInfo: %s", data)
-        if int(data[0][KEY_STATUS]) != 200:
+        if int(data[0][KEY_STATUS]) != HTTP_OK:
             raise InvalidAuth
 
         rachio_id = data[1][KEY_ID]
         data = await hass.async_add_executor_job(rachio.person.get, rachio_id)
         _LOGGER.debug("rachio.person.get: %s", data)
-        if int(data[0][KEY_STATUS]) != 200:
+        if int(data[0][KEY_STATUS]) != HTTP_OK:
             raise CannotConnect
 
         username = data[1][KEY_USERNAME]
@@ -61,11 +61,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
-        _LOGGER.debug("async_step_user: %s", user_input)
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_API_KEY])
+            self._abort_if_unique_id_configured()
             try:
                 info = await validate_input(self.hass, user_input)
-                await self.async_set_unique_id(user_input[CONF_API_KEY])
                 return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -81,6 +81,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_homekit(self, homekit_info):
         """Handle HomeKit discovery."""
+        if self._async_current_entries():
+            # We can see rachio on the network to tell them to configure
+            # it, but since the device will not give up the account it is
+            # bound to and there can be multiple rachio systems on a single
+            # account, we avoid showing the device as discovered once
+            # they already have one configured as they can always
+            # add a new one via "+"
+            return self.async_abort(reason="already_configured")
         return await self.async_step_user()
 
     async def async_step_import(self, user_input):

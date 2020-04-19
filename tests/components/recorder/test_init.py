@@ -1,5 +1,6 @@
 """The tests for the Recorder component."""
 # pylint: disable=protected-access
+from datetime import datetime, timedelta
 import unittest
 from unittest.mock import patch
 
@@ -10,8 +11,9 @@ from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import Events, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import MATCH_ALL
-from homeassistant.core import callback
+from homeassistant.core import ATTR_NOW, EVENT_TIME_CHANGED, callback
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .common import wait_recording_done
 
@@ -109,7 +111,7 @@ def _add_entities(hass, entity_ids):
     """Add entities."""
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
     for idx, entity_id in enumerate(entity_ids):
-        hass.states.set(entity_id, "state{}".format(idx), attributes)
+        hass.states.set(entity_id, f"state{idx}", attributes)
     wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
@@ -198,8 +200,8 @@ def test_recorder_setup_failure():
         setup.side_effect = ImportError("driver not found")
         rec = Recorder(
             hass,
+            auto_purge=True,
             keep_days=7,
-            purge_interval=2,
             commit_interval=1,
             uri="sqlite://",
             db_max_retries=10,
@@ -227,5 +229,31 @@ async def test_defaults_set(hass):
         assert await async_setup_component(hass, "history", {})
 
     assert recorder_config is not None
+    assert recorder_config["auto_purge"]
     assert recorder_config["purge_keep_days"] == 10
-    assert recorder_config["purge_interval"] == 1
+
+
+def test_auto_purge(hass_recorder):
+    """Test saving and restoring a state."""
+    hass = hass_recorder()
+
+    original_tz = dt_util.DEFAULT_TIME_ZONE
+
+    tz = dt_util.get_time_zone("Europe/Copenhagen")
+    dt_util.set_default_time_zone(tz)
+
+    test_time = tz.localize(datetime(2020, 1, 1, 4, 12, 0))
+
+    with patch(
+        "homeassistant.components.recorder.purge.purge_old_data"
+    ) as purge_old_data:
+        for delta in (-1, 0, 1):
+            hass.bus.fire(
+                EVENT_TIME_CHANGED, {ATTR_NOW: test_time + timedelta(seconds=delta)}
+            )
+            hass.block_till_done()
+            hass.data[DATA_INSTANCE].block_till_done()
+
+        assert len(purge_old_data.mock_calls) == 1
+
+    dt_util.set_default_time_zone(original_tz)

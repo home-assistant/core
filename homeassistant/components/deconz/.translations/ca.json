@@ -14,37 +14,41 @@
         "flow_title": "Passarel\u00b7la d'enlla\u00e7 deCONZ Zigbee ({host})",
         "step": {
             "hassio_confirm": {
-                "data": {
-                    "allow_clip_sensor": "Permet la importaci\u00f3 de sensors virtuals",
-                    "allow_deconz_groups": "Permet la importaci\u00f3 de grups deCONZ"
-                },
                 "description": "Vols configurar Home Assistant perqu\u00e8 es connecti amb la passarel\u00b7la deCONZ proporcionada pel complement de Hass.io: {addon}?",
                 "title": "Passarel\u00b7la d'enlla\u00e7 deCONZ Zigbee (complement de Hass.io)"
             },
             "init": {
-                "data": {
-                    "host": "Amfitri\u00f3",
-                    "port": "Port"
-                },
                 "title": "Definici\u00f3 de la passarel\u00b7la deCONZ"
             },
             "link": {
                 "description": "Desbloqueja la teva passarel\u00b7la d'enlla\u00e7 deCONZ per a registrar-te amb Home Assistant.\n\n1. V\u00e9s a la configuraci\u00f3 del sistema deCONZ -> Passarel\u00b7la -> Avan\u00e7at\n2. Prem el bot\u00f3 \"Autenticar applicaci\u00f3\"",
                 "title": "Vincular amb deCONZ"
             },
-            "options": {
+            "manual_confirm": {
                 "data": {
-                    "allow_clip_sensor": "Permet la importaci\u00f3 de sensors virtuals",
-                    "allow_deconz_groups": "Permetre la importaci\u00f3 de grups deCONZ"
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
                 },
-                "title": "Opcions de configuraci\u00f3 addicionals de deCONZ"
+                "title": "Configuraci\u00f3 de la passarel\u00b7la deCONZ"
+            },
+            "user": {
+                "data": {
+                    "host": "Selecciona la passarel\u00b7la deCONZ descoberta"
+                },
+                "title": "Selecci\u00f3 de la passarel\u00b7la deCONZ"
             }
-        },
-        "title": "Passarel\u00b7la d'enlla\u00e7 deCONZ Zigbee"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Ambd\u00f3s botons",
+            "bottom_buttons": "Botons inferiors",
             "button_1": "Primer bot\u00f3",
             "button_2": "Segon bot\u00f3",
             "button_3": "Tercer bot\u00f3",
@@ -61,6 +65,7 @@
             "side_4": "cara 4",
             "side_5": "cara 5",
             "side_6": "cara 6",
+            "top_buttons": "Botons superiors",
             "turn_off": "Desactiva",
             "turn_on": "Activa"
         },
@@ -96,13 +101,6 @@
     },
     "options": {
         "step": {
-            "async_step_deconz_devices": {
-                "data": {
-                    "allow_clip_sensor": "Permet sensors deCONZ CLIP",
-                    "allow_deconz_groups": "Permet grups de llums deCONZ"
-                },
-                "description": "Configura la visibilitat dels tipus dels dispositius deCONZ"
-            },
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Permet sensors deCONZ CLIP",

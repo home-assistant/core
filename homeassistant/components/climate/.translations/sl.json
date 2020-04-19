@@ -13,5 +13,6 @@
             "current_temperature_changed": "{entity_name} izmerjena temperaturna sprememba",
             "hvac_mode_changed": "{entity_name} HVAC na\u010din spremenjen"
         }
-    }
+    },
+    "title": "Klimat"
 }

@@ -156,7 +156,7 @@ def calc_allowed_references(integration: Integration) -> Set[str]:
     """Return a set of allowed references."""
     allowed_references = (
         ALLOWED_USED_COMPONENTS
-        | set(integration.manifest["dependencies"])
+        | set(integration.manifest.get("dependencies", []))
         | set(integration.manifest.get("after_dependencies", []))
     )
 
@@ -249,8 +249,11 @@ def validate(integrations: Dict[str, Integration], config):
 
         validate_dependencies(integrations, integration)
 
+        if config.specific_integrations:
+            continue
+
         # check that all referenced dependencies exist
-        for dep in integration.manifest["dependencies"]:
+        for dep in integration.manifest.get("dependencies", []):
             if dep not in integrations:
                 integration.add_error(
                     "dependencies", f"Dependency {dep} does not exist"

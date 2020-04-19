@@ -12,5 +12,6 @@
             "cleaning": "{entity_name} zacznie sprz\u0105ta\u0107",
             "docked": "{entity_name} wr\u00f3ci do bazy"
         }
-    }
+    },
+    "title": "Odkurzacz"
 }

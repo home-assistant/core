@@ -1,9 +1,7 @@
 {
   "config": {
     "step": {
-      "pick_implementation": {
-        "title": "Pick Authentication Method"
-      },
+      "pick_implementation": { "title": "Pick Authentication Method" },
       "hassio_confirm": {
         "title": "Almond via Hass.io add-on",
         "description": "Do you want to configure Home Assistant to connect to Almond provided by the Hass.io add-on: {addon}?"
@@ -13,7 +11,6 @@
       "already_setup": "You can only configure one Almond account.",
       "cannot_connect": "Unable to connect to the Almond server.",
       "missing_configuration": "Please check the documentation on how to set up Almond."
-    },
-    "title": "Almond"
+    }
   }
 }

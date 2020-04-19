@@ -12,5 +12,6 @@
             "cleaning": "{entity_name} ha comen\u00e7at a netejar",
             "docked": "{entity_name} acoblada"
         }
-    }
+    },
+    "title": "Aspirador"
 }

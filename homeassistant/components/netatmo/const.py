@@ -14,12 +14,12 @@ MODELS = {
     "NOC": "Smart Outdoor Camera",
     "NSD": "Smart Smoke Alarm",
     "NACamDoorTag": "Smart Door and Window Sensors",
+    "NHC": "Smart Indoor Air Quality Monitor",
     "NAMain": "Smart Home Weather station – indoor module",
     "NAModule1": "Smart Home Weather station – outdoor module",
     "NAModule4": "Smart Additional Indoor module",
     "NAModule3": "Smart Rain Gauge",
     "NAModule2": "Smart Anemometer",
-    "NHC": "Home Coach",
 }
 
 AUTH = "netatmo_auth"
@@ -32,6 +32,7 @@ CONF_CLOUDHOOK_URL = "cloudhook_url"
 OAUTH2_AUTHORIZE = "https://api.netatmo.com/oauth2/authorize"
 OAUTH2_TOKEN = "https://api.netatmo.com/oauth2/token"
 
+DATA_DEVICE_IDS = "netatmo_device_ids"
 DATA_PERSONS = "netatmo_persons"
 
 NETATMO_WEBHOOK_URL = None

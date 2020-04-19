@@ -144,7 +144,7 @@ class PushCamera(Camera):
             self._state = STATE_IDLE
             self._expired_listener = None
             _LOGGER.debug("Reset state")
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._expired_listener:
             self._expired_listener()
@@ -153,7 +153,7 @@ class PushCamera(Camera):
             self.hass, reset_state, dt_util.utcnow() + self._timeout
         )
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_camera_image(self):
         """Return a still image response."""

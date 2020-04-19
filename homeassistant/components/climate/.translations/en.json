@@ -13,5 +13,6 @@
             "current_temperature_changed": "{entity_name} measured temperature changed",
             "hvac_mode_changed": "{entity_name} HVAC mode changed"
         }
-    }
+    },
+    "title": "Climate"
 }

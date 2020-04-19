@@ -36,7 +36,6 @@ from homeassistant.core import (
     Context,
     HomeAssistant,
     callback,
-    is_callback,
 )
 from homeassistant.helpers import (
     condition,
@@ -679,10 +678,7 @@ class Script:
 
     def _changed(self):
         if self.change_listener:
-            if is_callback(self.change_listener):
-                self.change_listener()
-            else:
-                self._hass.async_add_job(self.change_listener)
+            self._hass.async_run_job(self.change_listener)
 
     @property
     def is_running(self) -> bool:
@@ -817,7 +813,9 @@ class Script:
 
     def _log(self, msg, *args, level=logging.INFO):
         if self.name:
-            msg = f"{self.name}: {msg}"
+            msg = f"%s: {msg}"
+            args = [self.name, *args]
+
         if level == _LOG_EXCEPTION:
             self._logger.exception(msg, *args)
         else:

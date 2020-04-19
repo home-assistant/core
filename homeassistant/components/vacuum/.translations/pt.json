@@ -6,5 +6,6 @@
         "condition_type": {
             "is_cleaning": "{entity_name} est\u00e1 a limpar"
         }
-    }
+    },
+    "title": "Aspira\u00e7\u00e3o"
 }

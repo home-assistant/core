@@ -58,6 +58,7 @@ from .const import (
     PIN_TO_ZONE,
     STATE_HIGH,
     STATE_LOW,
+    UNDO_UPDATE_LISTENER,
     UPDATE_ENDPOINT,
     ZONE_TO_PIN,
     ZONES,
@@ -91,7 +92,7 @@ def ensure_zone(value):
     return str(value)
 
 
-def import_validator(config):
+def import_device_validator(config):
     """Validate zones and reformat for import."""
     config = copy.deepcopy(config)
     io_cfgs = {}
@@ -117,7 +118,19 @@ def import_validator(config):
     config.pop(CONF_SWITCHES, None)
     config.pop(CONF_BLINK, None)
     config.pop(CONF_DISCOVERY, None)
+    config.pop(CONF_API_HOST, None)
     config.pop(CONF_IO, None)
+    return config
+
+
+def import_validator(config):
+    """Reformat for import."""
+    config = copy.deepcopy(config)
+
+    # push api_host into device configs
+    for device in config.get(CONF_DEVICES, []):
+        device[CONF_API_HOST] = config.get(CONF_API_HOST, "")
+
     return config
 
 
@@ -179,23 +192,27 @@ DEVICE_SCHEMA_YAML = vol.All(
             vol.Inclusive(CONF_HOST, "host_info"): cv.string,
             vol.Inclusive(CONF_PORT, "host_info"): cv.port,
             vol.Optional(CONF_BLINK, default=True): cv.boolean,
+            vol.Optional(CONF_API_HOST, default=""): vol.Any("", cv.url),
             vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
         }
     ),
-    import_validator,
+    import_device_validator,
 )
 
 # pylint: disable=no-value-for-parameter
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_ACCESS_TOKEN): cv.string,
-                vol.Optional(CONF_API_HOST): vol.Url(),
-                vol.Optional(CONF_DEVICES): vol.All(
-                    cv.ensure_list, [DEVICE_SCHEMA_YAML]
-                ),
-            }
+        DOMAIN: vol.All(
+            import_validator,
+            vol.Schema(
+                {
+                    vol.Required(CONF_ACCESS_TOKEN): cv.string,
+                    vol.Optional(CONF_API_HOST): vol.Url(),
+                    vol.Optional(CONF_DEVICES): vol.All(
+                        cv.ensure_list, [DEVICE_SCHEMA_YAML]
+                    ),
+                }
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -229,7 +246,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         # hass.async_add_job to avoid a deadlock.
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=device,
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=device
             )
         )
     return True
@@ -238,7 +255,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up panel from a config entry."""
     client = AlarmPanel(hass, entry)
-    # create a data store in hass.data[DOMAIN][CONF_DEVICES]
+    # creates a panel data store in hass.data[DOMAIN][CONF_DEVICES]
     await client.async_save_data()
 
     try:
@@ -251,7 +268,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
-    entry.add_update_listener(async_entry_updated)
+
+    # config entry specific data to enable unload
+    hass.data[DOMAIN][entry.entry_id] = {
+        UNDO_UPDATE_LISTENER: entry.add_update_listener(async_entry_updated)
+    }
     return True
 
 
@@ -265,8 +286,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+
+    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+
     if unload_ok:
         hass.data[DOMAIN][CONF_DEVICES].pop(entry.data[CONF_ID])
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
@@ -298,7 +323,7 @@ class KonnectedView(HomeAssistantView):
         hass = request.app["hass"]
         data = hass.data[DOMAIN]
 
-        auth = request.headers.get(AUTHORIZATION, None)
+        auth = request.headers.get(AUTHORIZATION)
         tokens = []
         if hass.data[DOMAIN].get(CONF_ACCESS_TOKEN):
             tokens.extend([hass.data[DOMAIN][CONF_ACCESS_TOKEN]])
@@ -306,6 +331,7 @@ class KonnectedView(HomeAssistantView):
             [
                 entry.data[CONF_ACCESS_TOKEN]
                 for entry in hass.config_entries.async_entries(DOMAIN)
+                if entry.data.get(CONF_ACCESS_TOKEN)
             ]
         )
         if auth is None or not next(
@@ -318,11 +344,9 @@ class KonnectedView(HomeAssistantView):
             payload = await request.json()
         except json.decoder.JSONDecodeError:
             _LOGGER.error(
-                (
-                    "Your Konnected device software may be out of "
-                    "date. Visit https://help.konnected.io for "
-                    "updating instructions."
-                )
+                "Your Konnected device software may be out of "
+                "date. Visit https://help.konnected.io for "
+                "updating instructions."
             )
 
         device = data[CONF_DEVICES].get(device_id)
@@ -333,6 +357,7 @@ class KonnectedView(HomeAssistantView):
 
         try:
             zone_num = str(payload.get(CONF_ZONE) or PIN_TO_ZONE[payload[CONF_PIN]])
+            payload[CONF_ZONE] = zone_num
             zone_data = device[CONF_BINARY_SENSORS].get(zone_num) or next(
                 (s for s in device[CONF_SENSORS] if s[CONF_ZONE] == zone_num), None
             )
@@ -372,11 +397,9 @@ class KonnectedView(HomeAssistantView):
                 request.query.get(CONF_ZONE) or PIN_TO_ZONE[request.query[CONF_PIN]]
             )
             zone = next(
-                (
-                    switch
-                    for switch in device[CONF_SWITCHES]
-                    if switch[CONF_ZONE] == zone_num
-                )
+                switch
+                for switch in device[CONF_SWITCHES]
+                if switch[CONF_ZONE] == zone_num
             )
 
         except StopIteration:
@@ -404,7 +427,7 @@ class KonnectedView(HomeAssistantView):
         zone_entity_id = zone.get(ATTR_ENTITY_ID)
         if zone_entity_id:
             resp["state"] = self.binary_value(
-                hass.states.get(zone_entity_id).state, zone[CONF_ACTIVATION],
+                hass.states.get(zone_entity_id).state, zone[CONF_ACTIVATION]
             )
             return self.json(resp)
 

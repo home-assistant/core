@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Solar-Log",
     "step": {
       "user": {
         "title": "Define your Solar-Log connection",
@@ -14,8 +13,6 @@
       "already_configured": "Device is already configured",
       "cannot_connect": "Failed to connect, please verify host address"
     },
-    "abort": {
-      "already_configured": "Device is already configured"
-    }
+    "abort": { "already_configured": "Device is already configured" }
   }
 }

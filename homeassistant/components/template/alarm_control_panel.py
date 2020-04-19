@@ -24,6 +24,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
     STATE_UNAVAILABLE,
 )
@@ -38,9 +39,10 @@ _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING,
+    STATE_ALARM_TRIGGERED,
     STATE_UNAVAILABLE,
 ]
 
@@ -234,7 +236,7 @@ class AlarmControlPanelTemplate(AlarmControlPanel):
             _LOGGER.error("No script action defined for %s", state)
 
         if optimistic_set:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_alarm_arm_away(self, code=None):
         """Arm the panel to Away."""

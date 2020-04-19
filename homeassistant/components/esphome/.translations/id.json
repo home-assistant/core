@@ -10,6 +10,9 @@
                 },
                 "description": "Silakan masukkan kata kunci yang Anda atur di konfigurasi Anda.",
                 "title": "Masukkan kata kunci"
+            },
+            "user": {
+                "title": "[%key:component::esphome::title%]"
             }
         }
     }

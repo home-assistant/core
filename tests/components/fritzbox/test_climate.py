@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 import requests
 
 from homeassistant.components.fritzbox.climate import FritzboxThermostat
+from homeassistant.const import TEMP_CELSIUS
 
 
 class TestFritzboxClimate(unittest.TestCase):
@@ -51,7 +52,7 @@ class TestFritzboxClimate(unittest.TestCase):
 
     def test_temperature_unit(self):
         """Test temperature_unit property."""
-        assert "°C" == self.thermostat.temperature_unit
+        assert TEMP_CELSIUS == self.thermostat.temperature_unit
 
     def test_precision(self):
         """Test precision property."""

@@ -3,7 +3,8 @@
 
 from asynctest import call, patch
 
-from homeassistant.components import dynalite
+import homeassistant.components.dynalite.const as dynalite
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_ROOM
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -17,8 +18,7 @@ async def test_empty_config(hass):
 
 
 async def test_async_setup(hass):
-    """Test a successful setup."""
-    host = "1.2.3.4"
+    """Test a successful setup with all of the different options."""
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
@@ -30,8 +30,46 @@ async def test_async_setup(hass):
                 dynalite.DOMAIN: {
                     dynalite.CONF_BRIDGES: [
                         {
-                            dynalite.CONF_HOST: host,
-                            dynalite.CONF_AREA: {"1": {dynalite.CONF_NAME: "Name"}},
+                            CONF_HOST: "1.2.3.4",
+                            CONF_PORT: 1234,
+                            dynalite.CONF_AUTO_DISCOVER: True,
+                            dynalite.CONF_POLL_TIMER: 5.5,
+                            dynalite.CONF_AREA: {
+                                "1": {
+                                    CONF_NAME: "Name1",
+                                    dynalite.CONF_CHANNEL: {"4": {}},
+                                    dynalite.CONF_NO_DEFAULT: True,
+                                },
+                                "2": {CONF_NAME: "Name2"},
+                                "3": {
+                                    CONF_NAME: "Name3",
+                                    dynalite.CONF_TEMPLATE: CONF_ROOM,
+                                },
+                                "4": {
+                                    CONF_NAME: "Name4",
+                                    dynalite.CONF_TEMPLATE: dynalite.CONF_TIME_COVER,
+                                },
+                            },
+                            dynalite.CONF_DEFAULT: {dynalite.CONF_FADE: 2.3},
+                            dynalite.CONF_ACTIVE: dynalite.ACTIVE_INIT,
+                            dynalite.CONF_PRESET: {
+                                "5": {CONF_NAME: "pres5", dynalite.CONF_FADE: 4.5}
+                            },
+                            dynalite.CONF_TEMPLATE: {
+                                CONF_ROOM: {
+                                    dynalite.CONF_ROOM_ON: 6,
+                                    dynalite.CONF_ROOM_OFF: 7,
+                                },
+                                dynalite.CONF_TIME_COVER: {
+                                    dynalite.CONF_OPEN_PRESET: 8,
+                                    dynalite.CONF_CLOSE_PRESET: 9,
+                                    dynalite.CONF_STOP_PRESET: 10,
+                                    dynalite.CONF_CHANNEL_COVER: 3,
+                                    dynalite.CONF_DURATION: 2.2,
+                                    dynalite.CONF_TILT_TIME: 3.3,
+                                    dynalite.CONF_DEVICE_CLASS: "awning",
+                                },
+                            },
                         }
                     ]
                 }
@@ -39,6 +77,35 @@ async def test_async_setup(hass):
         )
         await hass.async_block_till_done()
     assert len(hass.config_entries.async_entries(dynalite.DOMAIN)) == 1
+
+
+async def test_async_setup_bad_config1(hass):
+    """Test a successful with bad config on templates."""
+    with patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
+        return_value=True,
+    ):
+        assert not await async_setup_component(
+            hass,
+            dynalite.DOMAIN,
+            {
+                dynalite.DOMAIN: {
+                    dynalite.CONF_BRIDGES: [
+                        {
+                            CONF_HOST: "1.2.3.4",
+                            dynalite.CONF_AREA: {
+                                "1": {
+                                    dynalite.CONF_TEMPLATE: dynalite.CONF_TIME_COVER,
+                                    CONF_NAME: "Name",
+                                    dynalite.CONF_ROOM_ON: 7,
+                                }
+                            },
+                        }
+                    ]
+                }
+            },
+        )
+        await hass.async_block_till_done()
 
 
 async def test_async_setup_bad_config2(hass):
@@ -55,8 +122,8 @@ async def test_async_setup_bad_config2(hass):
                 dynalite.DOMAIN: {
                     dynalite.CONF_BRIDGES: [
                         {
-                            dynalite.CONF_HOST: host,
-                            dynalite.CONF_AREA: {"WRONG": {dynalite.CONF_NAME: "Name"}},
+                            CONF_HOST: host,
+                            dynalite.CONF_AREA: {"WRONG": {CONF_NAME: "Name"}},
                         }
                     ]
                 }
@@ -69,7 +136,7 @@ async def test_async_setup_bad_config2(hass):
 async def test_unload_entry(hass):
     """Test being able to unload an entry."""
     host = "1.2.3.4"
-    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
+    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={CONF_HOST: host})
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",

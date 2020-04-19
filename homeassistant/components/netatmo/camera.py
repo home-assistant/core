@@ -84,21 +84,11 @@ class NetatmoCamera(Camera):
         self._unique_id = f"{self._camera_id}-{self._camera_type}"
         self._verify_ssl = verify_ssl
         self._quality = quality
-
-        # URLs
         self._vpnurl = None
         self._localurl = None
-
-        # Monitoring status
         self._status = None
-
-        # SD Card status
         self._sd_status = None
-
-        # Power status
         self._alim_status = None
-
-        # Is local
         self._is_local = None
 
     def camera_image(self):
@@ -219,8 +209,6 @@ class NetatmoCamera(Camera):
 
     def update(self):
         """Update entity status."""
-
-        # Refresh camera data
         self._data.update()
 
         camera = self._data.camera_data.get_camera(cid=self._camera_id)

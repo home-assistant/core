@@ -1,6 +1,6 @@
 {
   "domain": "mobile_app",
-  "name": "Home Assistant Mobile App Support",
+  "name": "Mobile App",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mobile_app",
   "requirements": ["PyNaCl==1.3.0"],

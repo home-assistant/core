@@ -32,6 +32,7 @@ from .const import (
 
 DECONZ_MANUFACTURERURL = "http://www.dresden-elektronik.de"
 CONF_SERIAL = "serial"
+CONF_MANUAL_INPUT = "Manually define gateway"
 
 
 @callback
@@ -62,18 +63,17 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.bridges = []
         self.deconz_config = {}
 
-    async def async_step_init(self, user_input=None):
-        """Needed in order to not require re-translation of strings."""
-        return await self.async_step_user(user_input)
-
     async def async_step_user(self, user_input=None):
         """Handle a deCONZ config flow start.
 
-        If only one bridge is found go to link step.
-        If more than one bridge is found let user choose bridge to link.
+        Let user choose between discovered bridges and manual configuration.
         If no bridge is found allow user to manually input configuration.
         """
         if user_input is not None:
+
+            if CONF_MANUAL_INPUT == user_input[CONF_HOST]:
+                return await self.async_step_manual_input()
+
             for bridge in self.bridges:
                 if bridge[CONF_HOST] == user_input[CONF_HOST]:
                     self.bridge_id = bridge[CONF_BRIDGE_ID]
@@ -82,9 +82,6 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_PORT: bridge[CONF_PORT],
                     }
                     return await self.async_step_link()
-
-            self.deconz_config = user_input
-            return await self.async_step_link()
 
         session = aiohttp_client.async_get_clientsession(self.hass)
 
@@ -97,22 +94,29 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         LOGGER.debug("Discovered deCONZ gateways %s", pformat(self.bridges))
 
-        if len(self.bridges) == 1:
-            return await self.async_step_user(self.bridges[0])
-
-        if len(self.bridges) > 1:
+        if self.bridges:
             hosts = []
 
             for bridge in self.bridges:
                 hosts.append(bridge[CONF_HOST])
 
+            hosts.append(CONF_MANUAL_INPUT)
+
             return self.async_show_form(
-                step_id="init",
-                data_schema=vol.Schema({vol.Required(CONF_HOST): vol.In(hosts)}),
+                step_id="user",
+                data_schema=vol.Schema({vol.Optional(CONF_HOST): vol.In(hosts)}),
             )
 
+        return await self.async_step_manual_input()
+
+    async def async_step_manual_input(self, user_input=None):
+        """Manual configuration."""
+        if user_input:
+            self.deconz_config = user_input
+            return await self.async_step_link()
+
         return self.async_show_form(
-            step_id="init",
+            step_id="manual_input",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): str,

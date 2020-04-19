@@ -429,3 +429,12 @@ async def test_hmip_security_sensor_group(hass, default_mock_hap_factory):
     assert ha_state.attributes[ATTR_GROUP_MEMBER_UNREACHABLE]
     assert ha_state.attributes[ATTR_SABOTAGE]
     assert ha_state.attributes[ATTR_WINDOW_STATE] == WindowState.OPEN
+
+    await async_manipulate_test_data(
+        hass,
+        hmip_device,
+        "smokeDetectorAlarmType",
+        SmokeDetectorAlarmType.INTRUSION_ALARM,
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_ON

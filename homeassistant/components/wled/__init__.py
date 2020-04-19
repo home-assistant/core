@@ -26,7 +26,7 @@ from .const import (
     DOMAIN,
 )
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=5)
 WLED_COMPONENTS = (LIGHT_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
@@ -94,7 +94,7 @@ def wled_exception_handler(func):
     async def handler(self, *args, **kwargs):
         try:
             await func(self, *args, **kwargs)
-            await self.coordinator.async_refresh()
+            self.coordinator.update_listeners()
 
         except WLEDConnectionError as error:
             _LOGGER.error("Error communicating with API: %s", error)
@@ -128,7 +128,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> WLEDDevice:
         """Fetch data from WLED."""
         try:
-            return await self.wled.update()
+            return await self.wled.update(full_update=not self.last_update_success)
         except WLEDError as error:
             raise UpdateFailed(f"Invalid response from API: {error}")
 

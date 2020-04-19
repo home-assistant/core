@@ -12,5 +12,6 @@
             "turned_off": "{entity_name} disattivato",
             "turned_on": "{entity_name} attivato"
         }
-    }
+    },
+    "title": "Ventilatore"
 }

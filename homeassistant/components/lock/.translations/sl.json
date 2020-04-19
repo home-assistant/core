@@ -13,5 +13,6 @@
             "locked": "{entity_name} zaklenjen/a",
             "unlocked": "{entity_name} odklenjen/a"
         }
-    }
+    },
+    "title": "Klju\u010davnice"
 }

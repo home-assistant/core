@@ -20,6 +20,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
+    SUPPORT_TRANSITION,
     Light,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -69,6 +70,14 @@ class HomematicipLight(HomematicipGenericDevice, Light):
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the light device."""
         super().__init__(hap, device)
+
+    @property
+    def name(self) -> str:
+        """Return the name of the multi switch channel."""
+        label = self._get_label_by_channel(1)
+        if label:
+            return label
+        return super().name
 
     @property
     def is_on(self) -> bool:
@@ -192,12 +201,15 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     @property
     def name(self) -> str:
         """Return the name of the generic device."""
+        label = self._get_label_by_channel(self.channel)
+        if label:
+            return label
         return f"{super().name} Notification"
 
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
+        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_TRANSITION
 
     @property
     def unique_id(self) -> str:

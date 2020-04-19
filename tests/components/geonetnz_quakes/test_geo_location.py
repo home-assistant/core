@@ -24,6 +24,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_START,
+    LENGTH_KILOMETERS,
 )
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.setup import async_setup_component
@@ -94,7 +95,7 @@ async def test_setup(hass):
             ATTR_DEPTH: 10.5,
             ATTR_MMI: 5,
             ATTR_QUALITY: "best",
-            ATTR_UNIT_OF_MEASUREMENT: "km",
+            ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             ATTR_SOURCE: "geonetnz_quakes",
             ATTR_ICON: "mdi:pulse",
         }
@@ -109,7 +110,7 @@ async def test_setup(hass):
             ATTR_LONGITUDE: -3.1,
             ATTR_FRIENDLY_NAME: "Title 2",
             ATTR_MAGNITUDE: 4.6,
-            ATTR_UNIT_OF_MEASUREMENT: "km",
+            ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             ATTR_SOURCE: "geonetnz_quakes",
             ATTR_ICON: "mdi:pulse",
         }
@@ -124,7 +125,7 @@ async def test_setup(hass):
             ATTR_LONGITUDE: -3.2,
             ATTR_FRIENDLY_NAME: "Title 3",
             ATTR_LOCALITY: "Locality 3",
-            ATTR_UNIT_OF_MEASUREMENT: "km",
+            ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
             ATTR_SOURCE: "geonetnz_quakes",
             ATTR_ICON: "mdi:pulse",
         }

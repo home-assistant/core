@@ -12,5 +12,6 @@
             "turned_off": "{entity_name} ki lett kapcsolva",
             "turned_on": "{entity_name} be lett kapcsolva"
         }
-    }
+    },
+    "title": "Ventil\u00e1tor"
 }

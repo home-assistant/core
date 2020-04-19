@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 import pytest
 
 from homeassistant.components.stream import request_stream
+from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -49,7 +50,7 @@ async def test_hls_stream(hass, hass_client):
 
     # Ensure playlist not accessible after stream ends
     fail_response = await http_client.get(parsed_url.path)
-    assert fail_response.status == 404
+    assert fail_response.status == HTTP_NOT_FOUND
 
 
 @pytest.mark.skip("Flaky in CI")
@@ -86,7 +87,7 @@ async def test_stream_timeout(hass, hass_client):
 
     # Ensure playlist not accessible
     fail_response = await http_client.get(parsed_url.path)
-    assert fail_response.status == 404
+    assert fail_response.status == HTTP_NOT_FOUND
 
 
 @pytest.mark.skip("Flaky in CI")

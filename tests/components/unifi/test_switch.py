@@ -1,6 +1,9 @@
 """UniFi POE control platform tests."""
 from copy import deepcopy
 
+from aiounifi.controller import MESSAGE_CLIENT_REMOVED
+from aiounifi.websocket import SIGNAL_DATA
+
 from homeassistant import config_entries
 from homeassistant.components import unifi
 import homeassistant.components.switch as switch
@@ -173,6 +176,7 @@ BLOCKED = {
     "ip": "10.0.0.1",
     "is_guest": False,
     "is_wired": False,
+    "last_seen": 1562600145,
     "mac": "00:00:00:00:01:01",
     "name": "Block Client 1",
     "noted": True,
@@ -184,6 +188,7 @@ UNBLOCKED = {
     "ip": "10.0.0.2",
     "is_guest": False,
     "is_wired": True,
+    "last_seen": 1562600145,
     "mac": "00:00:00:00:01:02",
     "name": "Block Client 2",
     "noted": True,
@@ -209,7 +214,7 @@ async def test_no_clients(hass):
     )
 
     assert len(controller.mock_requests) == 4
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_entity_ids("switch")) == 0
 
 
 async def test_controller_not_client(hass):
@@ -222,7 +227,7 @@ async def test_controller_not_client(hass):
     )
 
     assert len(controller.mock_requests) == 4
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_entity_ids("switch")) == 0
     cloudkey = hass.states.get("switch.cloud_key")
     assert cloudkey is None
 
@@ -240,7 +245,7 @@ async def test_not_admin(hass):
     )
 
     assert len(controller.mock_requests) == 4
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_entity_ids("switch")) == 0
 
 
 async def test_switches(hass):
@@ -258,7 +263,7 @@ async def test_switches(hass):
     )
 
     assert len(controller.mock_requests) == 4
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_entity_ids("switch")) == 3
 
     switch_1 = hass.states.get("switch.poe_client_1")
     assert switch_1 is not None
@@ -286,7 +291,7 @@ async def test_switches(hass):
     assert controller.mock_requests[4] == {
         "json": {"mac": "00:00:00:00:01:01", "cmd": "block-sta"},
         "method": "post",
-        "path": "s/{site}/cmd/stamgr/",
+        "path": "/cmd/stamgr",
     }
 
     await hass.services.async_call(
@@ -296,8 +301,40 @@ async def test_switches(hass):
     assert controller.mock_requests[5] == {
         "json": {"mac": "00:00:00:00:01:01", "cmd": "unblock-sta"},
         "method": "post",
-        "path": "s/{site}/cmd/stamgr/",
+        "path": "/cmd/stamgr",
     }
+
+
+async def test_remove_switches(hass):
+    """Test the update_items function with some clients."""
+    controller = await setup_unifi_integration(
+        hass,
+        options={CONF_BLOCK_CLIENT: [UNBLOCKED["mac"]]},
+        clients_response=[CLIENT_1, UNBLOCKED],
+        devices_response=[DEVICE_1],
+    )
+    assert len(hass.states.async_entity_ids("switch")) == 2
+
+    poe_switch = hass.states.get("switch.poe_client_1")
+    assert poe_switch is not None
+
+    block_switch = hass.states.get("switch.block_client_2")
+    assert block_switch is not None
+
+    controller.api.websocket._data = {
+        "meta": {"message": MESSAGE_CLIENT_REMOVED},
+        "data": [CLIENT_1, UNBLOCKED],
+    }
+    controller.api.session_handler(SIGNAL_DATA)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids("switch")) == 0
+
+    poe_switch = hass.states.get("switch.poe_client_1")
+    assert poe_switch is None
+
+    block_switch = hass.states.get("switch.block_client_2")
+    assert block_switch is None
 
 
 async def test_new_client_discovered_on_block_control(hass):
@@ -312,7 +349,7 @@ async def test_new_client_discovered_on_block_control(hass):
     )
 
     assert len(controller.mock_requests) == 4
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_entity_ids("switch")) == 0
 
     blocked = hass.states.get("switch.block_client_1")
     assert blocked is None
@@ -324,7 +361,7 @@ async def test_new_client_discovered_on_block_control(hass):
     controller.api.session_handler("data")
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_entity_ids("switch")) == 1
     blocked = hass.states.get("switch.block_client_1")
     assert blocked is not None
 
@@ -336,7 +373,7 @@ async def test_option_block_clients(hass):
         options={CONF_BLOCK_CLIENT: [BLOCKED["mac"]]},
         clients_all_response=[BLOCKED, UNBLOCKED],
     )
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_entity_ids("switch")) == 1
 
     # Add a second switch
     hass.config_entries.async_update_entry(
@@ -344,28 +381,28 @@ async def test_option_block_clients(hass):
         options={CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]]},
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_entity_ids("switch")) == 2
 
     # Remove the second switch again
     hass.config_entries.async_update_entry(
         controller.config_entry, options={CONF_BLOCK_CLIENT: [BLOCKED["mac"]]},
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_entity_ids("switch")) == 1
 
     # Enable one and remove another one
     hass.config_entries.async_update_entry(
         controller.config_entry, options={CONF_BLOCK_CLIENT: [UNBLOCKED["mac"]]},
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_entity_ids("switch")) == 1
 
     # Remove one
     hass.config_entries.async_update_entry(
         controller.config_entry, options={CONF_BLOCK_CLIENT: []},
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_entity_ids("switch")) == 0
 
 
 async def test_new_client_discovered_on_poe_control(hass):
@@ -378,7 +415,7 @@ async def test_new_client_discovered_on_poe_control(hass):
     )
 
     assert len(controller.mock_requests) == 4
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_entity_ids("switch")) == 1
 
     controller.api.websocket._data = {
         "meta": {"message": "sta:sync"},
@@ -391,13 +428,13 @@ async def test_new_client_discovered_on_poe_control(hass):
         "switch", "turn_off", {"entity_id": "switch.poe_client_1"}, blocking=True
     )
     assert len(controller.mock_requests) == 5
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_entity_ids("switch")) == 2
     assert controller.mock_requests[4] == {
         "json": {
             "port_overrides": [{"port_idx": 1, "portconf_id": "1a1", "poe_mode": "off"}]
         },
         "method": "put",
-        "path": "s/{site}/rest/device/mock-id",
+        "path": "/rest/device/mock-id",
     }
 
     await hass.services.async_call(
@@ -411,7 +448,7 @@ async def test_new_client_discovered_on_poe_control(hass):
             ]
         },
         "method": "put",
-        "path": "s/{site}/rest/device/mock-id",
+        "path": "/rest/device/mock-id",
     }
 
     switch_2 = hass.states.get("switch.poe_client_2")
@@ -430,7 +467,7 @@ async def test_ignore_multiple_poe_clients_on_same_port(hass):
     )
 
     assert len(controller.mock_requests) == 4
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_entity_ids("device_tracker")) == 3
 
     switch_1 = hass.states.get("switch.poe_client_1")
     switch_2 = hass.states.get("switch.poe_client_2")
@@ -481,7 +518,7 @@ async def test_restoring_client(hass):
     )
 
     assert len(controller.mock_requests) == 4
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_entity_ids("switch")) == 2
 
     device_1 = hass.states.get("switch.client_1")
     assert device_1 is not None

@@ -83,7 +83,7 @@ class SinchNotificationService(BaseNotificationService):
                 )
         except ErrorResponseException as ex:
             _LOGGER.error(
-                "Caught ErrorResponseException. Response code: %d (%s)",
+                "Caught ErrorResponseException. Response code: %s (%s)",
                 ex.error_code,
                 ex,
             )

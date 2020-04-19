@@ -1,5 +1,7 @@
 """Shared class to maintain Plex server instances."""
 import logging
+import ssl
+from urllib.parse import urlparse
 
 import plexapi.myplex
 import plexapi.playqueue
@@ -9,7 +11,9 @@ import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.core import callback
+from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     CONF_CLIENT_IDENTIFIER,
@@ -17,6 +21,7 @@ from .const import (
     CONF_MONITORED_USERS,
     CONF_SERVER,
     CONF_USE_EPISODE_ART,
+    DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
@@ -26,7 +31,7 @@ from .const import (
     X_PLEX_PRODUCT,
     X_PLEX_VERSION,
 )
-from .errors import NoServersFound, ServerNotSpecified
+from .errors import NoServersFound, ServerNotSpecified, ShouldUpdateConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,9 +45,9 @@ plexapi.X_PLEX_VERSION = X_PLEX_VERSION
 class PlexServer:
     """Manages a single Plex server connection."""
 
-    def __init__(self, hass, server_config, options=None):
+    def __init__(self, hass, server_config, known_server_id=None, options=None):
         """Initialize a Plex server instance."""
-        self._hass = hass
+        self.hass = hass
         self._plex_server = None
         self._known_clients = set()
         self._known_idle = set()
@@ -50,11 +55,19 @@ class PlexServer:
         self._token = server_config.get(CONF_TOKEN)
         self._server_name = server_config.get(CONF_SERVER)
         self._verify_ssl = server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+        self._server_id = known_server_id
         self.options = options
         self.server_choice = None
         self._accounts = []
         self._owner_username = None
         self._version = None
+        self.async_update_platforms = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=DEBOUNCE_TIMEOUT,
+            immediate=True,
+            function=self._async_update_platforms,
+        ).async_call
 
         # Header conditionally added as it is not available in config entry v1
         if CONF_CLIENT_IDENTIFIER in server_config:
@@ -64,6 +77,7 @@ class PlexServer:
 
     def connect(self):
         """Connect to a Plex server directly, obtaining direct URL if necessary."""
+        config_entry_update_needed = False
 
         def _connect_with_token():
             account = plexapi.myplex.MyPlexAccount(token=self._token)
@@ -92,8 +106,33 @@ class PlexServer:
                 self._url, self._token, session
             )
 
+        def _update_plexdirect_hostname():
+            account = plexapi.myplex.MyPlexAccount(token=self._token)
+            matching_server = [
+                x.name
+                for x in account.resources()
+                if x.clientIdentifier == self._server_id
+            ][0]
+            self._plex_server = account.resource(matching_server).connect(timeout=10)
+
         if self._url:
-            _connect_with_url()
+            try:
+                _connect_with_url()
+            except requests.exceptions.SSLError as error:
+                while error and not isinstance(error, ssl.SSLCertVerificationError):
+                    error = error.__context__  # pylint: disable=no-member
+                if isinstance(error, ssl.SSLCertVerificationError):
+                    domain = urlparse(self._url).netloc.split(":")[0]
+                    if domain.endswith("plex.direct") and error.args[0].startswith(
+                        f"hostname '{domain}' doesn't match"
+                    ):
+                        _LOGGER.warning(
+                            "Plex SSL certificate's hostname changed, updating."
+                        )
+                        _update_plexdirect_hostname()
+                        config_entry_update_needed = True
+                else:
+                    raise
         else:
             _connect_with_token()
 
@@ -102,6 +141,7 @@ class PlexServer:
             for account in self._plex_server.systemAccounts()
             if account.name
         ]
+        _LOGGER.debug("Linked accounts: %s", self.accounts)
 
         owner_account = [
             account.name
@@ -110,21 +150,30 @@ class PlexServer:
         ]
         if owner_account:
             self._owner_username = owner_account[0]
+            _LOGGER.debug("Server owner found: '%s'", self._owner_username)
 
         self._version = self._plex_server.version
 
-    def refresh_entity(self, machine_identifier, device, session):
+        if config_entry_update_needed:
+            raise ShouldUpdateConfigEntry
+
+    @callback
+    def async_refresh_entity(self, machine_identifier, device, session):
         """Forward refresh dispatch to media_player."""
         unique_id = f"{self.machine_identifier}:{machine_identifier}"
         _LOGGER.debug("Refreshing %s", unique_id)
-        dispatcher_send(
-            self._hass,
+        async_dispatcher_send(
+            self.hass,
             PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(unique_id),
             device,
             session,
         )
 
-    def update_platforms(self):
+    def _fetch_platform_data(self):
+        """Fetch all data from the Plex server in a single method."""
+        return (self._plex_server.clients(), self._plex_server.sessions())
+
+    async def _async_update_platforms(self):
         """Update the platform entities."""
         _LOGGER.debug("Updating devices")
 
@@ -146,13 +195,14 @@ class PlexServer:
                 monitored_users.add(new_user)
 
         try:
-            devices = self._plex_server.clients()
-            sessions = self._plex_server.sessions()
-        except plexapi.exceptions.BadRequest:
-            _LOGGER.exception("Error requesting Plex client data from server")
-            return
-        except requests.exceptions.RequestException as ex:
-            _LOGGER.warning(
+            devices, sessions = await self.hass.async_add_executor_job(
+                self._fetch_platform_data
+            )
+        except (
+            plexapi.exceptions.BadRequest,
+            requests.exceptions.RequestException,
+        ) as ex:
+            _LOGGER.error(
                 "Could not connect to Plex server: %s (%s)", self.friendly_name, ex
             )
             return
@@ -171,9 +221,11 @@ class PlexServer:
                 continue
             session_username = session.usernames[0]
             for player in session.players:
-                if session_username not in monitored_users:
+                if session_username and session_username not in monitored_users:
                     ignored_clients.add(player.machineIdentifier)
-                    _LOGGER.debug("Ignoring Plex client owned by %s", session_username)
+                    _LOGGER.debug(
+                        "Ignoring Plex client owned by '%s'", session_username
+                    )
                     continue
                 self._known_idle.discard(player.machineIdentifier)
                 available_clients.setdefault(
@@ -192,7 +244,7 @@ class PlexServer:
             if client_id in new_clients:
                 new_entity_configs.append(client_data)
             else:
-                self.refresh_entity(
+                self.async_refresh_entity(
                     client_id, client_data["device"], client_data.get("session")
                 )
 
@@ -202,18 +254,18 @@ class PlexServer:
             self._known_clients - self._known_idle - ignored_clients
         ).difference(available_clients)
         for client_id in idle_clients:
-            self.refresh_entity(client_id, None, None)
+            self.async_refresh_entity(client_id, None, None)
             self._known_idle.add(client_id)
 
         if new_entity_configs:
-            dispatcher_send(
-                self._hass,
+            async_dispatcher_send(
+                self.hass,
                 PLEX_NEW_MP_SIGNAL.format(self.machine_identifier),
                 new_entity_configs,
             )
 
-        dispatcher_send(
-            self._hass,
+        async_dispatcher_send(
+            self.hass,
             PLEX_UPDATE_SENSOR_SIGNAL.format(self.machine_identifier),
             sessions,
         )

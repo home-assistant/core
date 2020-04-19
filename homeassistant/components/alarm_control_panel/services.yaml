@@ -5,7 +5,7 @@ alarm_disarm:
   fields:
     entity_id:
       description: Name of alarm control panel to disarm.
-      example: 'alarm_control_panel.downstairs'
+      example: "alarm_control_panel.downstairs"
     code:
       description: An optional code to disarm the alarm control panel with.
       example: 1234
@@ -15,7 +15,7 @@ alarm_arm_custom_bypass:
   fields:
     entity_id:
       description: Name of alarm control panel to arm custom bypass.
-      example: 'alarm_control_panel.downstairs'
+      example: "alarm_control_panel.downstairs"
     code:
       description: An optional code to arm custom bypass the alarm control panel with.
       example: 1234
@@ -25,7 +25,7 @@ alarm_arm_home:
   fields:
     entity_id:
       description: Name of alarm control panel to arm home.
-      example: 'alarm_control_panel.downstairs'
+      example: "alarm_control_panel.downstairs"
     code:
       description: An optional code to arm home the alarm control panel with.
       example: 1234
@@ -35,7 +35,7 @@ alarm_arm_away:
   fields:
     entity_id:
       description: Name of alarm control panel to arm away.
-      example: 'alarm_control_panel.downstairs'
+      example: "alarm_control_panel.downstairs"
     code:
       description: An optional code to arm away the alarm control panel with.
       example: 1234
@@ -45,7 +45,7 @@ alarm_arm_night:
   fields:
     entity_id:
       description: Name of alarm control panel to arm night.
-      example: 'alarm_control_panel.downstairs'
+      example: "alarm_control_panel.downstairs"
     code:
       description: An optional code to arm night the alarm control panel with.
       example: 1234
@@ -55,7 +55,7 @@ alarm_trigger:
   fields:
     entity_id:
       description: Name of alarm control panel to trigger.
-      example: 'alarm_control_panel.downstairs'
+      example: "alarm_control_panel.downstairs"
     code:
       description: An optional code to trigger the alarm control panel with.
       example: 1234

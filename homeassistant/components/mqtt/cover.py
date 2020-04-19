@@ -31,7 +31,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -49,6 +48,7 @@ from . import (
     MqttEntityDeviceInfo,
     subscription,
 )
+from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
@@ -268,7 +268,8 @@ class MqttCover(
         topics = {}
 
         @callback
-        def tilt_updated(msg):
+        @log_messages(self.hass, self.entity_id)
+        def tilt_message_received(msg):
             """Handle tilt updates."""
             payload = msg.payload
             if tilt_status_template is not None:
@@ -287,6 +288,7 @@ class MqttCover(
                 self.async_write_ha_state()
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def state_message_received(msg):
             """Handle new MQTT state messages."""
             payload = msg.payload
@@ -311,6 +313,7 @@ class MqttCover(
             self.async_write_ha_state()
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def position_message_received(msg):
             """Handle new MQTT state messages."""
             payload = msg.payload
@@ -354,7 +357,7 @@ class MqttCover(
             self._tilt_value = STATE_UNKNOWN
             topics["tilt_status_topic"] = {
                 "topic": self._config.get(CONF_TILT_STATUS_TOPIC),
-                "msg_callback": tilt_updated,
+                "msg_callback": tilt_message_received,
                 "qos": self._config[CONF_QOS],
             }
 
@@ -527,9 +530,6 @@ class MqttCover(
 
     async def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        if ATTR_TILT_POSITION not in kwargs:
-            return
-
         position = float(kwargs[ATTR_TILT_POSITION])
 
         # The position needs to be between min and max
@@ -546,36 +546,31 @@ class MqttCover(
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         set_position_template = self._config.get(CONF_SET_POSITION_TEMPLATE)
-        if ATTR_POSITION in kwargs:
-            position = kwargs[ATTR_POSITION]
-            percentage_position = position
-            if set_position_template is not None:
-                try:
-                    position = set_position_template.async_render(**kwargs)
-                except TemplateError as ex:
-                    _LOGGER.error(ex)
-                    self._state = None
-            elif (
-                self._config[CONF_POSITION_OPEN] != 100
-                and self._config[CONF_POSITION_CLOSED] != 0
-            ):
-                position = self.find_in_range_from_percent(position, COVER_PAYLOAD)
+        position = kwargs[ATTR_POSITION]
+        percentage_position = position
+        if set_position_template is not None:
+            position = set_position_template.async_render(**kwargs)
+        elif (
+            self._config[CONF_POSITION_OPEN] != 100
+            and self._config[CONF_POSITION_CLOSED] != 0
+        ):
+            position = self.find_in_range_from_percent(position, COVER_PAYLOAD)
 
-            mqtt.async_publish(
-                self.hass,
-                self._config.get(CONF_SET_POSITION_TOPIC),
-                position,
-                self._config[CONF_QOS],
-                self._config[CONF_RETAIN],
+        mqtt.async_publish(
+            self.hass,
+            self._config.get(CONF_SET_POSITION_TOPIC),
+            position,
+            self._config[CONF_QOS],
+            self._config[CONF_RETAIN],
+        )
+        if self._optimistic:
+            self._state = (
+                STATE_CLOSED
+                if percentage_position == self._config[CONF_POSITION_CLOSED]
+                else STATE_OPEN
             )
-            if self._optimistic:
-                self._state = (
-                    STATE_CLOSED
-                    if percentage_position == self._config[CONF_POSITION_CLOSED]
-                    else STATE_OPEN
-                )
-                self._position = percentage_position
-                self.async_write_ha_state()
+            self._position = percentage_position
+            self.async_write_ha_state()
 
     async def async_toggle_tilt(self, **kwargs):
         """Toggle the entity."""

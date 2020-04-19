@@ -4,5 +4,6 @@
             "is_home": "{entity_name} otthon van",
             "is_not_home": "{entity_name} nincs otthon"
         }
-    }
+    },
+    "title": "Eszk\u00f6z nyomk\u00f6vet\u0151"
 }

@@ -29,7 +29,6 @@
                 "description": "Please enter connection settings of your [ESPHome](https://esphomelib.com/) node.",
                 "title": "ESPHome"
             }
-        },
-        "title": "ESPHome"
+        }
     }
 }

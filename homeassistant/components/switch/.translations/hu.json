@@ -7,13 +7,12 @@
         },
         "condition_type": {
             "is_off": "{entity_name} ki van kapcsolva",
-            "is_on": "{entity_name} be van kapcsolva",
-            "turn_off": "{entity_name} ki lett kapcsolva",
-            "turn_on": "{entity_name} be lett kapcsolva"
+            "is_on": "{entity_name} be van kapcsolva"
         },
         "trigger_type": {
             "turned_off": "{entity_name} ki lett kapcsolva",
             "turned_on": "{entity_name} be lett kapcsolva"
         }
-    }
+    },
+    "title": "Kapcsol\u00f3"
 }

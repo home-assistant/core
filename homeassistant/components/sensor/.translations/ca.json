@@ -22,5 +22,6 @@
             "timestamp": "Marca de temps de {entity_name}",
             "value": "Valor de {entity_name}"
         }
-    }
+    },
+    "title": "Sensors"
 }

@@ -47,12 +47,12 @@ def get_time_until(departure_time=None):
         return 0
 
     delta = dt_util.utc_from_timestamp(int(departure_time)) - dt_util.now()
-    return round((delta.total_seconds() / 60))
+    return round(delta.total_seconds() / 60)
 
 
 def get_delay_in_minutes(delay=0):
     """Get the delay in minutes from a delay in seconds."""
-    return round((int(delay) / 60))
+    return round(int(delay) / 60)
 
 
 def get_ride_duration(departure_time, arrival_time, delay=0):
@@ -60,7 +60,7 @@ def get_ride_duration(departure_time, arrival_time, delay=0):
     duration = dt_util.utc_from_timestamp(
         int(arrival_time)
     ) - dt_util.utc_from_timestamp(int(departure_time))
-    duration_time = int(round((duration.total_seconds() / 60)))
+    duration_time = int(round(duration.total_seconds() / 60))
     return duration_time + get_delay_in_minutes(delay)
 
 
@@ -152,11 +152,15 @@ class NMBSLiveBoard(Entity):
     def update(self):
         """Set the state equal to the next departure."""
         liveboard = self._api_client.get_liveboard(self._station)
+
+        if liveboard is None or not liveboard["departures"]:
+            return
+
         next_departure = liveboard["departures"]["departure"][0]
 
         self._attrs = next_departure
-        self._state = "Track {} - {}".format(
-            next_departure["platform"], next_departure["station"]
+        self._state = (
+            f"Track {next_departure['platform']} - {next_departure['station']}"
         )
 
 
@@ -265,6 +269,9 @@ class NMBSSensor(Entity):
         connections = self._api_client.get_connections(
             self._station_from, self._station_to
         )
+
+        if connections is None or not connections["connection"]:
+            return
 
         if int(connections["connection"][0]["departure"]["left"]) > 0:
             next_connection = connections["connection"][1]

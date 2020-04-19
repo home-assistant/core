@@ -1,14 +1,19 @@
 """Config flow for Vizio."""
 import copy
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from pyvizio import VizioAsync, async_guess_device_type
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_CLASS_TV
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_ZEROCONF, ConfigEntry
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_IMPORT,
+    SOURCE_ZEROCONF,
+    ConfigEntry,
+)
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
@@ -23,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_APPS,
@@ -124,8 +130,8 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
             default_include_or_exclude = (
                 CONF_EXCLUDE
                 if self.config_entry.options
-                and CONF_EXCLUDE in self.config_entry.options.get(CONF_APPS)
-                else CONF_EXCLUDE
+                and CONF_EXCLUDE in self.config_entry.options.get(CONF_APPS, {})
+                else CONF_INCLUDE
             )
             options.update(
                 {
@@ -197,8 +203,13 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Check if new config entry matches any existing config entries
             for entry in self.hass.config_entries.async_entries(DOMAIN):
+                # If source is ignore bypass host and name check and continue through loop
+                if entry.source == SOURCE_IGNORE:
+                    continue
+
                 if _host_is_same(entry.data[CONF_HOST], user_input[CONF_HOST]):
                     errors[CONF_HOST] = "host_exists"
+
                 if entry.data[CONF_NAME] == user_input[CONF_NAME]:
                     errors[CONF_NAME] = "name_exists"
 
@@ -269,6 +280,10 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         # Check if new config entry matches any existing config entries
         for entry in self.hass.config_entries.async_entries(DOMAIN):
+            # If source is ignore bypass host check and continue through loop
+            if entry.source == SOURCE_IGNORE:
+                continue
+
             if _host_is_same(entry.data[CONF_HOST], import_config[CONF_HOST]):
                 updated_options = {}
                 updated_data = {}
@@ -318,7 +333,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_user(user_input=import_config)
 
     async def async_step_zeroconf(
-        self, discovery_info: Dict[str, Any] = None
+        self, discovery_info: Optional[DiscoveryInfoType] = None
     ) -> Dict[str, Any]:
         """Handle zeroconf discovery."""
 
@@ -326,6 +341,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             unique_id=discovery_info[CONF_HOST].split(":")[0], raise_on_progress=True
         )
+        self._abort_if_unique_id_configured()
 
         discovery_info[
             CONF_HOST
@@ -333,6 +349,10 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Check if new config entry matches any existing config entries and abort if so
         for entry in self.hass.config_entries.async_entries(DOMAIN):
+            # If source is ignore bypass host check and continue through loop
+            if entry.source == SOURCE_IGNORE:
+                continue
+
             if _host_is_same(entry.data[CONF_HOST], discovery_info[CONF_HOST]):
                 return self.async_abort(reason="already_setup")
 

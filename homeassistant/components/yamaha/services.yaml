@@ -3,10 +3,10 @@ enable_output:
   fields:
     entity_id:
       description: Name(s) of entities to enable/disable port on.
-      example: 'media_player.yamaha'
+      example: "media_player.yamaha"
     port:
       description: Name of port to enable/disable.
-      example: 'hdmi1'
+      example: "hdmi1"
     enabled:
       description: Boolean indicating if port should be enabled or not.
       example: true

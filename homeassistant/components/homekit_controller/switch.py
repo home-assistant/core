@@ -1,7 +1,11 @@
 """Support for Homekit switches."""
 import logging
 
-from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import (
+    CharacteristicsTypes,
+    InUseValues,
+    IsConfiguredValues,
+)
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
@@ -12,21 +16,9 @@ OUTLET_IN_USE = "outlet_in_use"
 
 _LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up Homekit lock."""
-    hkid = config_entry.data["AccessoryPairingID"]
-    conn = hass.data[KNOWN_DEVICES][hkid]
-
-    @callback
-    def async_add_service(aid, service):
-        if service["stype"] not in ("switch", "outlet"):
-            return False
-        info = {"aid": aid, "iid": service["iid"]}
-        async_add_entities([HomeKitSwitch(conn, info)], True)
-        return True
-
-    conn.add_listener(async_add_service)
+ATTR_IN_USE = "in_use"
+ATTR_IS_CONFIGURED = "is_configured"
+ATTR_REMAINING_DURATION = "remaining_duration"
 
 
 class HomeKitSwitch(HomeKitEntity, SwitchDevice):
@@ -55,3 +47,77 @@ class HomeKitSwitch(HomeKitEntity, SwitchDevice):
         outlet_in_use = self.service.value(CharacteristicsTypes.OUTLET_IN_USE)
         if outlet_in_use is not None:
             return {OUTLET_IN_USE: outlet_in_use}
+
+
+class HomeKitValve(HomeKitEntity, SwitchDevice):
+    """Represents a valve in an irrigation system."""
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity cares about."""
+        return [
+            CharacteristicsTypes.ACTIVE,
+            CharacteristicsTypes.IN_USE,
+            CharacteristicsTypes.IS_CONFIGURED,
+            CharacteristicsTypes.REMAINING_DURATION,
+        ]
+
+    async def async_turn_on(self, **kwargs):
+        """Turn the specified valve on."""
+        await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: True})
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the specified valve off."""
+        await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
+
+    @property
+    def icon(self) -> str:
+        """Return the icon."""
+        return "mdi:water"
+
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self.service.value(CharacteristicsTypes.ACTIVE)
+
+    @property
+    def device_state_attributes(self):
+        """Return the optional state attributes."""
+        attrs = {}
+
+        in_use = self.service.value(CharacteristicsTypes.IN_USE)
+        if in_use is not None:
+            attrs[ATTR_IN_USE] = in_use == InUseValues.IN_USE
+
+        is_configured = self.service.value(CharacteristicsTypes.IS_CONFIGURED)
+        if is_configured is not None:
+            attrs[ATTR_IS_CONFIGURED] = is_configured == IsConfiguredValues.CONFIGURED
+
+        remaining = self.service.value(CharacteristicsTypes.REMAINING_DURATION)
+        if remaining is not None:
+            attrs[ATTR_REMAINING_DURATION] = remaining
+
+        return attrs
+
+
+ENTITY_TYPES = {
+    "switch": HomeKitSwitch,
+    "outlet": HomeKitSwitch,
+    "valve": HomeKitValve,
+}
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Homekit switches."""
+    hkid = config_entry.data["AccessoryPairingID"]
+    conn = hass.data[KNOWN_DEVICES][hkid]
+
+    @callback
+    def async_add_service(aid, service):
+        entity_class = ENTITY_TYPES.get(service["stype"])
+        if not entity_class:
+            return False
+        info = {"aid": aid, "iid": service["iid"]}
+        async_add_entities([entity_class(conn, info)], True)
+        return True
+
+    conn.add_listener(async_add_service)

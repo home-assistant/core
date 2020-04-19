@@ -25,6 +25,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
 
 from .const import (
+    CONF_ZONE_RUN_TIME,
     DATA_CLIENT,
     DATA_PROGRAMS,
     DATA_PROVISION_SETTINGS,
@@ -33,6 +34,8 @@ from .const import (
     DATA_ZONES,
     DATA_ZONES_DETAILS,
     DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_ZONE_RUN,
     DOMAIN,
     PROGRAM_UPDATE_TOPIC,
     SENSOR_UPDATE_TOPIC,
@@ -41,19 +44,14 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_LISTENER = "listener"
-
 CONF_CONTROLLERS = "controllers"
 CONF_PROGRAM_ID = "program_id"
 CONF_SECONDS = "seconds"
 CONF_ZONE_ID = "zone_id"
-CONF_ZONE_RUN_TIME = "zone_run_time"
 
 DEFAULT_ATTRIBUTION = "Data provided by Green Electronics LLC"
 DEFAULT_ICON = "mdi:water"
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 DEFAULT_SSL = True
-DEFAULT_ZONE_RUN = 60 * 10
 
 SERVICE_ALTER_PROGRAM = vol.Schema({vol.Required(CONF_PROGRAM_ID): cv.positive_int})
 
@@ -109,7 +107,6 @@ async def async_setup(hass, config):
     """Set up the RainMachine component."""
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_CLIENT] = {}
-    hass.data[DOMAIN][DATA_LISTENER] = {}
 
     if DOMAIN not in config:
         return True
@@ -143,7 +140,7 @@ async def async_setup_entry(hass, config_entry):
             config_entry.data[CONF_IP_ADDRESS],
             config_entry.data[CONF_PASSWORD],
             port=config_entry.data[CONF_PORT],
-            ssl=config_entry.data[CONF_SSL],
+            ssl=config_entry.data.get(CONF_SSL, DEFAULT_SSL),
         )
     except RainMachineError as err:
         _LOGGER.error("An error occurred: %s", err)
@@ -156,8 +153,10 @@ async def async_setup_entry(hass, config_entry):
         rainmachine = RainMachine(
             hass,
             controller,
-            config_entry.data[CONF_ZONE_RUN_TIME],
-            config_entry.data[CONF_SCAN_INTERVAL],
+            config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN),
+            config_entry.data.get(
+                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL.total_seconds()
+            ),
         )
 
     # Update the data object, which at this point (prior to any sensors registering
@@ -259,9 +258,6 @@ async def async_setup_entry(hass, config_entry):
 async def async_unload_entry(hass, config_entry):
     """Unload an OpenUV config entry."""
     hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
-
-    remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(config_entry.entry_id)
-    remove_listener()
 
     tasks = [
         hass.config_entries.async_forward_entry_unload(config_entry, component)
@@ -414,7 +410,6 @@ class RainMachineEntity(Entity):
         """Initialize."""
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._device_class = None
-        self._dispatcher_handlers = []
         self._name = None
         self.rainmachine = rainmachine
 
@@ -430,9 +425,9 @@ class RainMachineEntity(Entity):
             "identifiers": {(DOMAIN, self.rainmachine.controller.mac)},
             "name": self.rainmachine.controller.name,
             "manufacturer": "RainMachine",
-            "model": "Version {0} (API: {1})".format(
-                self.rainmachine.controller.hardware_version,
-                self.rainmachine.controller.api_version,
+            "model": (
+                f"Version {self.rainmachine.controller.hardware_version} "
+                f"(API: {self.rainmachine.controller.api_version})"
             ),
             "sw_version": self.rainmachine.controller.software_version,
         }
@@ -455,9 +450,10 @@ class RainMachineEntity(Entity):
     @callback
     def _update_state(self):
         """Update the state."""
-        self.async_schedule_update_ha_state(True)
+        self.update_from_latest_data()
+        self.async_write_ha_state()
 
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listener when removed."""
-        for handler in self._dispatcher_handlers:
-            handler()
+    @callback
+    def update_from_latest_data(self):
+        """Update the entity."""
+        raise NotImplementedError
