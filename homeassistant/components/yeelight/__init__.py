@@ -147,7 +147,7 @@ def setup(hass, config):
     def device_discovered(_, info):
         _LOGGER.debug("Adding autodetected %s", info["hostname"])
 
-        name = "yeelight_%s_%s" % (info["device_type"], info["properties"]["mac"])
+        name = "yeelight_{}_{}".format(info["device_type"], info["properties"]["mac"])
 
         device_config = DEVICE_SCHEMA({CONF_NAME: name})
 
@@ -238,20 +238,29 @@ class YeelightDevice:
         return self._model
 
     @property
-    def is_nightlight_enabled(self) -> bool:
-        """Return true / false if nightlight is currently enabled."""
-        if self.bulb is None:
-            return False
-
-        return self._active_mode == ACTIVE_MODE_NIGHTLIGHT
-
-    @property
     def is_nightlight_supported(self) -> bool:
         """Return true / false if nightlight is supported."""
         if self.model:
             return self.bulb.get_model_specs().get("night_light", False)
 
-        return self._active_mode is not None
+        # It should support both ceiling and other lights
+        return self._nightlight_brightness is not None
+
+    @property
+    def is_nightlight_enabled(self) -> bool:
+        """Return true / false if nightlight is currently enabled."""
+        if self.bulb is None:
+            return False
+
+        # Only ceiling lights have active_mode, from SDK docs:
+        # active_mode 0: daylight mode / 1: moonlight mode (ceiling light only)
+        if self._active_mode is not None:
+            return self._active_mode == ACTIVE_MODE_NIGHTLIGHT
+
+        if self._nightlight_brightness is not None:
+            return int(self._nightlight_brightness) > 0
+
+        return False
 
     @property
     def is_color_flow_enabled(self) -> bool:
@@ -265,6 +274,10 @@ class YeelightDevice:
     @property
     def _color_flow(self):
         return self.bulb.last_properties.get("flowing")
+
+    @property
+    def _nightlight_brightness(self):
+        return self.bulb.last_properties.get("nl_br")
 
     @property
     def type(self):

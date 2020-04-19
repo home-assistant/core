@@ -16,7 +16,7 @@ CONF_WEBHOOK_URL = "webhook_url"
 
 BASE_URL = "http://example.com"
 CLOUDHOOK = False
-SECRET = "secret"
+SECRET = "test-secret"
 WEBHOOK_ID = "webhook_id"
 WEBHOOK_URL = f"{BASE_URL}/api/webhook/webhook_id"
 
@@ -33,7 +33,7 @@ def mock_webhook_id():
 @pytest.fixture(name="secret")
 def mock_secret():
     """Mock secret."""
-    with patch("binascii.hexlify", return_value=str.encode(SECRET)):
+    with patch("secrets.token_hex", return_value=SECRET):
         yield
 
 
@@ -126,7 +126,7 @@ async def test_user_not_supports_encryption(hass, not_supports_encryption):
 async def test_unload(hass):
     """Test unloading a config flow."""
     with patch(
-        "homeassistant.config_entries.ConfigEntries" ".async_forward_entry_setup"
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup"
     ) as mock_forward:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "import"}, data={}
@@ -140,7 +140,7 @@ async def test_unload(hass):
     assert entry.data["webhook_id"] in hass.data["webhook"]
 
     with patch(
-        "homeassistant.config_entries.ConfigEntries" ".async_forward_entry_unload",
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_unload",
         return_value=mock_coro(),
     ) as mock_unload:
         assert await hass.config_entries.async_unload(entry.entry_id)

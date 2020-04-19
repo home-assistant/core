@@ -1,11 +1,5 @@
 {
     "config": {
-        "abort": {
-            "username_exists": "Conta j\u00e1 configurada"
-        },
-        "error": {
-            "username_exists": "Conta j\u00e1 configurada"
-        },
         "step": {
             "user": {
                 "data": {

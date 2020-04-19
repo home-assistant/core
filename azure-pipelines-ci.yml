@@ -24,7 +24,6 @@ resources:
 variables:
   - name: PythonMain
     value: '37'
-  - group: codecov
 
 stages:
 
@@ -43,7 +42,15 @@ stages:
 
           . venv/bin/activate
           pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
-          pre-commit install-hooks --config .pre-commit-config-all.yaml
+          pre-commit install-hooks
+    - script: |
+        . venv/bin/activate
+        pre-commit run --hook-stage manual check-executables-have-shebangs --all-files
+      displayName: 'Run executables check'
+    - script: |
+        . venv/bin/activate
+        pre-commit run codespell --all-files
+      displayName: 'Run codespell'
     - script: |
         . venv/bin/activate
         pre-commit run flake8 --all-files
@@ -60,6 +67,20 @@ stages:
         . venv/bin/activate
         pre-commit run check-json --all-files
       displayName: 'Run check-json'
+    - script: |
+        . venv/bin/activate
+        pre-commit run yamllint --all-files
+      displayName: 'Run yamllint'
+    - script: |
+        . venv/bin/activate
+        pre-commit run pyupgrade --all-files --show-diff-on-failure
+      displayName: 'Run pyupgrade'
+    # Prettier seems to hang on Azure, unknown why yet.
+    # Temporarily disable the check to no block PRs
+    # - script: |
+    #     . venv/bin/activate
+    #     pre-commit run prettier --all-files --show-diff-on-failure
+    #   displayName: 'Run prettier'
   - job: 'Validate'
     pool:
       vmImage: 'ubuntu-latest'
@@ -75,7 +96,7 @@ stages:
           pip install -e .
     - script: |
         . venv/bin/activate
-        python -m script.hassfest validate
+        python -m script.hassfest --action validate
       displayName: 'Validate manifests'
     - script: |
         . venv/bin/activate
@@ -94,7 +115,7 @@ stages:
 
           . venv/bin/activate
           pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
-          pre-commit install-hooks --config .pre-commit-config-all.yaml
+          pre-commit install-hooks
     - script: |
         . venv/bin/activate
         pre-commit run black --all-files --show-diff-on-failure
@@ -190,8 +211,8 @@ stages:
 
           . venv/bin/activate
           pip install -e . -r requirements_test.txt -c homeassistant/package_constraints.txt
-          pre-commit install-hooks --config .pre-commit-config-all.yaml
+          pre-commit install-hooks
     - script: |
         . venv/bin/activate
-        pre-commit run --config .pre-commit-config-all.yaml mypy --all-files
+        pre-commit run mypy --all-files
       displayName: 'Run mypy'

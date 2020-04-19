@@ -18,7 +18,6 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     SUPPORT_TRANSITION,
 )
-from homeassistant.components.smartthings import light
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -66,11 +65,6 @@ def light_devices_fixture(device_factory):
             },
         ),
     ]
-
-
-async def test_async_setup_platform():
-    """Test setup platform does nothing (it uses config entries)."""
-    await light.async_setup_platform(None, None, None)
 
 
 async def test_entity_state(hass, light_devices):
@@ -200,7 +194,7 @@ async def test_turn_on_with_minimal_brightness(hass, light_devices):
     """
     Test lights set to lowest brightness when converted scale would be zero.
 
-    SmartThings light brightness is a percentage (0-100), but HASS uses a
+    SmartThings light brightness is a percentage (0-100), but Home Assistant uses a
     0-255 scale.  This tests if a really low value (1-2) is passed, we don't
     set the level to zero, which turns off the lights in SmartThings.
     """

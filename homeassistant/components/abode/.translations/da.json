@@ -12,11 +12,10 @@
             "user": {
                 "data": {
                     "password": "Adgangskode",
-                    "username": "Email adresse"
+                    "username": "Email-adresse"
                 },
                 "title": "Udfyld dine Abode-loginoplysninger"
             }
-        },
-        "title": "Abode"
+        }
     }
 }

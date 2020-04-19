@@ -4,7 +4,13 @@ import unittest
 from unittest import mock
 
 import homeassistant.components.influxdb as influxdb
-from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON, STATE_STANDBY
+from homeassistant.const import (
+    EVENT_STATE_CHANGED,
+    STATE_OFF,
+    STATE_ON,
+    STATE_STANDBY,
+    UNIT_PERCENTAGE,
+)
 from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
@@ -102,7 +108,7 @@ class TestInfluxDB(unittest.TestCase):
                 "unit_of_measurement": "foobars",
                 "longitude": "1.1",
                 "latitude": "2.2",
-                "battery_level": "99%",
+                "battery_level": f"99{UNIT_PERCENTAGE}",
                 "temperature": "20c",
                 "last_seen": "Last seen 23 minutes ago",
                 "updated_at": datetime.datetime(2017, 1, 1, 0, 0),
@@ -124,7 +130,7 @@ class TestInfluxDB(unittest.TestCase):
                     "fields": {
                         "longitude": 1.1,
                         "latitude": 2.2,
-                        "battery_level_str": "99%",
+                        "battery_level_str": f"99{UNIT_PERCENTAGE}",
                         "battery_level": 99.0,
                         "temperature_str": "20c",
                         "temperature": 20.0,
@@ -246,14 +252,14 @@ class TestInfluxDB(unittest.TestCase):
             state = mock.MagicMock(
                 state=1,
                 domain="fake",
-                entity_id="fake.{}".format(entity_id),
+                entity_id=f"fake.{entity_id}",
                 object_id=entity_id,
                 attributes={},
             )
             event = mock.MagicMock(data={"new_state": state}, time_fired=12345)
             body = [
                 {
-                    "measurement": "fake.{}".format(entity_id),
+                    "measurement": f"fake.{entity_id}",
                     "tags": {"domain": "fake", "entity_id": entity_id},
                     "time": 12345,
                     "fields": {"value": 1},
@@ -278,14 +284,14 @@ class TestInfluxDB(unittest.TestCase):
             state = mock.MagicMock(
                 state=1,
                 domain=domain,
-                entity_id="{}.something".format(domain),
+                entity_id=f"{domain}.something",
                 object_id="something",
                 attributes={},
             )
             event = mock.MagicMock(data={"new_state": state}, time_fired=12345)
             body = [
                 {
-                    "measurement": "{}.something".format(domain),
+                    "measurement": f"{domain}.something",
                     "tags": {"domain": domain, "entity_id": "something"},
                     "time": 12345,
                     "fields": {"value": 1},
@@ -320,14 +326,14 @@ class TestInfluxDB(unittest.TestCase):
             state = mock.MagicMock(
                 state=1,
                 domain="fake",
-                entity_id="fake.{}".format(entity_id),
+                entity_id=f"fake.{entity_id}",
                 object_id=entity_id,
                 attributes={},
             )
             event = mock.MagicMock(data={"new_state": state}, time_fired=12345)
             body = [
                 {
-                    "measurement": "fake.{}".format(entity_id),
+                    "measurement": f"fake.{entity_id}",
                     "tags": {"domain": "fake", "entity_id": entity_id},
                     "time": 12345,
                     "fields": {"value": 1},
@@ -362,14 +368,14 @@ class TestInfluxDB(unittest.TestCase):
             state = mock.MagicMock(
                 state=1,
                 domain=domain,
-                entity_id="{}.something".format(domain),
+                entity_id=f"{domain}.something",
                 object_id="something",
                 attributes={},
             )
             event = mock.MagicMock(data={"new_state": state}, time_fired=12345)
             body = [
                 {
-                    "measurement": "{}.something".format(domain),
+                    "measurement": f"{domain}.something",
                     "tags": {"domain": domain, "entity_id": "something"},
                     "time": 12345,
                     "fields": {"value": 1},
@@ -404,14 +410,14 @@ class TestInfluxDB(unittest.TestCase):
             state = mock.MagicMock(
                 state=1,
                 domain=domain,
-                entity_id="{}.something".format(domain),
+                entity_id=f"{domain}.something",
                 object_id="something",
                 attributes={},
             )
             event = mock.MagicMock(data={"new_state": state}, time_fired=12345)
             body = [
                 {
-                    "measurement": "{}.something".format(domain),
+                    "measurement": f"{domain}.something",
                     "tags": {"domain": domain, "entity_id": "something"},
                     "time": 12345,
                     "fields": {"value": 1},
@@ -432,14 +438,14 @@ class TestInfluxDB(unittest.TestCase):
             state = mock.MagicMock(
                 state=1,
                 domain="other",
-                entity_id="other.{}".format(entity_id),
+                entity_id=f"other.{entity_id}",
                 object_id=entity_id,
                 attributes={},
             )
             event = mock.MagicMock(data={"new_state": state}, time_fired=12345)
             body = [
                 {
-                    "measurement": "other.{}".format(entity_id),
+                    "measurement": f"other.{entity_id}",
                     "tags": {"domain": "other", "entity_id": entity_id},
                     "time": 12345,
                     "fields": {"value": 1},
@@ -526,7 +532,7 @@ class TestInfluxDB(unittest.TestCase):
             state = mock.MagicMock(
                 state=1,
                 domain="fake",
-                entity_id="fake.{}".format(entity_id),
+                entity_id=f"fake.{entity_id}",
                 object_id=entity_id,
                 attributes={},
             )
@@ -660,7 +666,7 @@ class TestInfluxDB(unittest.TestCase):
             state = mock.MagicMock(
                 state=1,
                 domain=comp["domain"],
-                entity_id=comp["domain"] + "." + comp["id"],
+                entity_id=f"{comp['domain']}.{comp['id']}",
                 object_id=comp["id"],
                 attributes={},
             )

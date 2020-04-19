@@ -5,8 +5,9 @@ import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, STATE_ON
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
     CONF_AUTOMATIC_ADD,
@@ -67,8 +68,16 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
         RECEIVED_EVT_SUBSCRIBERS.append(switch_update)
 
 
-class RfxtrxSwitch(RfxtrxDevice, SwitchDevice):
+class RfxtrxSwitch(RfxtrxDevice, SwitchDevice, RestoreEntity):
     """Representation of a RFXtrx switch."""
+
+    async def async_added_to_hass(self):
+        """Restore RFXtrx switch device state (ON/OFF)."""
+        await super().async_added_to_hass()
+
+        old_state = await self.async_get_last_state()
+        if old_state is not None:
+            self._state = old_state.state == STATE_ON
 
     def turn_on(self, **kwargs):
         """Turn the device on."""

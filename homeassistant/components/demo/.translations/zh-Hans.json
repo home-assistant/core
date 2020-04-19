@@ -1,0 +1,19 @@
+{
+    "options": {
+        "step": {
+            "options_1": {
+                "data": {
+                    "bool": "\u5e03\u5c14\u9009\u9879",
+                    "int": "\u6570\u503c\u8f93\u5165"
+                }
+            },
+            "options_2": {
+                "data": {
+                    "multi": "\u591a\u91cd\u9009\u62e9",
+                    "select": "\u9009\u62e9\u9009\u9879",
+                    "string": "\u5b57\u7b26\u4e32\u503c"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u4e09\u661f\u96fb\u8996\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "\u4e09\u661f\u96fb\u8996\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d\u3002",
+            "auth_missing": "Home Assistant \u672a\u7372\u5f97\u9a57\u8b49\u4ee5\u9023\u7dda\u81f3\u6b64\u4e09\u661f\u96fb\u8996\u3002\u8acb\u6aa2\u67e5\u60a8\u7684\u96fb\u8996\u8a2d\u5b9a\u4ee5\u76e1\u8208\u9a57\u8b49\u3002",
+            "not_successful": "\u7121\u6cd5\u9023\u7dda\u81f3\u4e09\u661f\u96fb\u8996\u8a2d\u5099\u3002",
+            "not_supported": "\u4e0d\u652f\u63f4\u6b64\u6b3e\u4e09\u661f\u96fb\u8996\u3002"
+        },
+        "flow_title": "\u4e09\u661f\u96fb\u8996\uff1a{model}",
+        "step": {
+            "confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a\u4e09\u661f\u96fb\u8996 {model}\uff1f\u5047\u5982\u60a8\u4e4b\u524d\u672a\u66fe\u9023\u7dda\u81f3 Home Assistant\uff0c\u61c9\u8a72\u6703\u65bc\u96fb\u8996\u4e0a\u6536\u5230\u9a57\u8b49\u8a0a\u606f\u3002\u624b\u52d5\u8a2d\u5b9a\u5c07\u6703\u8986\u84cb\u539f\u8a2d\u5b9a\u3002",
+                "title": "\u4e09\u661f\u96fb\u8996"
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u6216 IP \u4f4d\u5740",
+                    "name": "\u540d\u7a31"
+                },
+                "description": "\u8f38\u5165\u4e09\u661f\u96fb\u8996\u8cc7\u8a0a\u3002\u5047\u5982\u60a8\u4e4b\u524d\u672a\u66fe\u9023\u7dda\u81f3 Home Assistant\uff0c\u61c9\u8a72\u6703\u65bc\u96fb\u8996\u4e0a\u6536\u5230\u9a57\u8b49\u8a0a\u606f\u3002",
+                "title": "\u4e09\u661f\u96fb\u8996"
+            }
+        }
+    }
+}

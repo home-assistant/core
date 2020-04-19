@@ -22,7 +22,7 @@ def mock_controller_assert():
 
 @pytest.fixture(name="controller")
 def mock_controller():
-    """Mock a successfull velbus controller."""
+    """Mock a successful velbus controller."""
     controller = Mock()
     with patch("velbus.Controller", return_value=controller):
         yield controller

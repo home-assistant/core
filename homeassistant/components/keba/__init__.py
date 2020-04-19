@@ -42,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 _SERVICE_MAP = {
-    "request_data": "request_data",
+    "request_data": "async_request_data",
     "set_energy": "async_set_energy",
     "set_current": "async_set_current",
     "authorize": "async_start",
@@ -66,7 +66,7 @@ async def async_setup(hass, config):
         _LOGGER.error("Could not find a charging station at %s", host)
         return False
 
-    # Set failsafe mode at start up of home assistant
+    # Set failsafe mode at start up of Home Assistant
     failsafe = config[DOMAIN][CONF_FS]
     timeout = config[DOMAIN][CONF_FS_TIMEOUT] if failsafe else 0
     fallback = config[DOMAIN][CONF_FS_FALLBACK] if failsafe else 0
@@ -179,6 +179,11 @@ class KebaHandler(KebaKeContact):
 
         # initial data is already loaded, thus update the component
         listener()
+
+    async def async_request_data(self, param):
+        """Request new data in async way."""
+        await self.request_data()
+        _LOGGER.debug("New data from KEBA wallbox requested")
 
     async def async_set_energy(self, param):
         """Set energy target in async way."""

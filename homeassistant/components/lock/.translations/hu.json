@@ -13,5 +13,6 @@
             "locked": "{entity_name} be lett z\u00e1rva",
             "unlocked": "{entity_name} ki lett nyitva"
         }
-    }
+    },
+    "title": "Z\u00e1r"
 }

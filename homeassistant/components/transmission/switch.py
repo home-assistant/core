@@ -11,11 +11,6 @@ from .const import DOMAIN, SWITCH_TYPES
 _LOGGING = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import config from configuration.yaml."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Transmission switch."""
 
@@ -85,7 +80,7 @@ class TransmissionSwitch(ToggleEntity):
     def turn_off(self, **kwargs):
         """Turn the device off."""
         if self.type == "on_off":
-            _LOGGING.debug("Stoping all torrents")
+            _LOGGING.debug("Stopping all torrents")
             self._tm_client.api.stop_torrents()
         if self.type == "turtle_mode":
             _LOGGING.debug("Turning Turtle Mode of Transmission off")

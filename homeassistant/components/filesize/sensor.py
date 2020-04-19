@@ -6,6 +6,7 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import DATA_MEGABYTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -42,7 +43,7 @@ class Filesize(Entity):
         self._size = None
         self._last_updated = None
         self._name = path.split("/")[-1]
-        self._unit_of_measurement = "MB"
+        self._unit_of_measurement = DATA_MEGABYTES
 
     def update(self):
         """Update the sensor."""

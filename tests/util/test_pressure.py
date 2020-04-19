@@ -1,4 +1,4 @@
-"""Test homeassistant pressure utility functions."""
+"""Test Home Assistant pressure utility functions."""
 import pytest
 
 from homeassistant.const import (

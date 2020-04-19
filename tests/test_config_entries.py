@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from asynctest import CoroutineMock
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, loader
@@ -251,8 +252,7 @@ async def test_remove_entry(hass, manager):
 
     # Check entity state got added
     assert hass.states.get("light.test_entity") is not None
-    # Group all_lights, light.test_entity
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 1
 
     # Check entity got added to entity registry
     ent_reg = await hass.helpers.entity_registry.async_get_registry()
@@ -275,8 +275,7 @@ async def test_remove_entry(hass, manager):
 
     # Check that entity state has been removed
     assert hass.states.get("light.test_entity") is None
-    # Just Group all_lights
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 0
 
     # Check that entity registry entry has been removed
     entity_entry_list = list(ent_reg.entities.values())
@@ -316,12 +315,10 @@ async def test_remove_entry_handles_callback_error(hass, manager):
     assert [item.entry_id for item in manager.async_entries()] == []
 
 
-@asyncio.coroutine
-def test_remove_entry_raises(hass, manager):
+async def test_remove_entry_raises(hass, manager):
     """Test if a component raises while removing entry."""
 
-    @asyncio.coroutine
-    def mock_unload_entry(hass, entry):
+    async def mock_unload_entry(hass, entry):
         """Mock unload entry function."""
         raise Exception("BROKEN")
 
@@ -339,14 +336,13 @@ def test_remove_entry_raises(hass, manager):
         "test3",
     ]
 
-    result = yield from manager.async_remove("test2")
+    result = await manager.async_remove("test2")
 
     assert result == {"require_restart": True}
     assert [item.entry_id for item in manager.async_entries()] == ["test1", "test3"]
 
 
-@asyncio.coroutine
-def test_remove_entry_if_not_loaded(hass, manager):
+async def test_remove_entry_if_not_loaded(hass, manager):
     """Test that we can remove an entry that is not loaded."""
     mock_unload_entry = MagicMock(return_value=mock_coro(True))
 
@@ -362,7 +358,7 @@ def test_remove_entry_if_not_loaded(hass, manager):
         "test3",
     ]
 
-    result = yield from manager.async_remove("test2")
+    result = await manager.async_remove("test2")
 
     assert result == {"require_restart": False}
     assert [item.entry_id for item in manager.async_entries()] == ["test1", "test3"]
@@ -370,8 +366,7 @@ def test_remove_entry_if_not_loaded(hass, manager):
     assert len(mock_unload_entry.mock_calls) == 0
 
 
-@asyncio.coroutine
-def test_add_entry_calls_setup_entry(hass, manager):
+async def test_add_entry_calls_setup_entry(hass, manager):
     """Test we call setup_config_entry."""
     mock_setup_entry = MagicMock(return_value=mock_coro(True))
 
@@ -379,18 +374,19 @@ def test_add_entry_calls_setup_entry(hass, manager):
     mock_entity_platform(hass, "config_flow.comp", None)
 
     class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
 
         VERSION = 1
 
-        @asyncio.coroutine
-        def async_step_user(self, user_input=None):
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
             return self.async_create_entry(title="title", data={"token": "supersecret"})
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow, "beer": 5}):
-        yield from manager.flow.async_init(
+        await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
-        yield from hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert len(mock_setup_entry.mock_calls) == 1
     p_hass, p_entry = mock_setup_entry.mock_calls[0][1]
@@ -399,8 +395,7 @@ def test_add_entry_calls_setup_entry(hass, manager):
     assert p_entry.data == {"token": "supersecret"}
 
 
-@asyncio.coroutine
-def test_entries_gets_entries(manager):
+async def test_entries_gets_entries(manager):
     """Test entries are filtered by domain."""
     MockConfigEntry(domain="test").add_to_manager(manager)
     entry1 = MockConfigEntry(domain="test2")
@@ -411,8 +406,7 @@ def test_entries_gets_entries(manager):
     assert manager.async_entries("test2") == [entry1, entry2]
 
 
-@asyncio.coroutine
-def test_domains_gets_uniques(manager):
+async def test_domains_gets_uniques(manager):
     """Test we only return each domain once."""
     MockConfigEntry(domain="test").add_to_manager(manager)
     MockConfigEntry(domain="test2").add_to_manager(manager)
@@ -431,10 +425,13 @@ async def test_saving_and_loading(hass):
     mock_entity_platform(hass, "config_flow.test", None)
 
     class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
         VERSION = 5
         CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
         async def async_step_user(self, user_input=None):
+            """Test user step."""
             await self.async_set_unique_id("unique")
             return self.async_create_entry(title="Test Title", data={"token": "abcd"})
 
@@ -444,11 +441,13 @@ async def test_saving_and_loading(hass):
         )
 
     class Test2Flow(config_entries.ConfigFlow):
+        """Test flow."""
+
         VERSION = 3
         CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
-        @asyncio.coroutine
-        def async_step_user(self, user_input=None):
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
             return self.async_create_entry(
                 title="Test 2 Title", data={"username": "bla"}
             )
@@ -458,6 +457,8 @@ async def test_saving_and_loading(hass):
             "test", context={"source": config_entries.SOURCE_USER}
         )
 
+    assert len(hass.config_entries.async_entries()) == 2
+
     # To trigger the call_later
     async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
     # To execute the save
@@ -466,6 +467,8 @@ async def test_saving_and_loading(hass):
     # Now load written data in new config manager
     manager = config_entries.ConfigEntries(hass, {})
     await manager.async_initialize()
+
+    assert len(manager.async_entries()) == 2
 
     # Ensure same order
     for orig, loaded in zip(
@@ -526,9 +529,12 @@ async def test_discovery_notification(hass):
     with patch.dict(config_entries.HANDLERS):
 
         class TestFlow(config_entries.ConfigFlow, domain="test"):
+            """Test flow."""
+
             VERSION = 5
 
             async def async_step_discovery(self, user_input=None):
+                """Test discovery step."""
                 if user_input is not None:
                     return self.async_create_entry(
                         title="Test Title", data={"token": "abcd"}
@@ -558,9 +564,12 @@ async def test_discovery_notification_not_created(hass):
     await async_setup_component(hass, "persistent_notification", {})
 
     class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
         VERSION = 5
 
         async def async_step_discovery(self, user_input=None):
+            """Test discovery step."""
             return self.async_abort(reason="test")
 
     with patch.dict(config_entries.HANDLERS, {"test": TestFlow}):
@@ -683,25 +692,28 @@ async def test_entry_options(hass, manager):
     entry.add_to_manager(manager)
 
     class TestFlow:
+        """Test flow."""
+
         @staticmethod
         @callback
         def async_get_options_flow(config_entry):
+            """Test options flow."""
+
             class OptionsFlowHandler(data_entry_flow.FlowHandler):
-                pass
+                """Test options flow handler."""
 
             return OptionsFlowHandler()
 
     config_entries.HANDLERS["test"] = TestFlow()
-    flow = await manager.options._async_create_flow(
+    flow = await manager.options.async_create_flow(
         entry.entry_id, context={"source": "test"}, data=None
     )
 
     flow.handler = entry.entry_id  # Used to keep reference to config entry
 
-    await manager.options._async_finish_flow(flow, {"data": {"second": True}})
+    await manager.options.async_finish_flow(flow, {"data": {"second": True}})
 
     assert entry.data == {"first": True}
-
     assert entry.options == {"second": True}
 
 
@@ -1012,10 +1024,12 @@ async def test_unqiue_id_persisted(hass, manager):
     mock_entity_platform(hass, "config_flow.comp", None)
 
     class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
 
         VERSION = 1
 
         async def async_step_user(self, user_input=None):
+            """Test user step."""
             await self.async_set_unique_id("mock-unique-id")
             return self.async_create_entry(title="mock-title", data={})
 
@@ -1056,10 +1070,12 @@ async def test_unique_id_existing_entry(hass, manager):
     mock_entity_platform(hass, "config_flow.comp", None)
 
     class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
 
         VERSION = 1
 
         async def async_step_user(self, user_input=None):
+            """Test user step."""
             existing_entry = await self.async_set_unique_id("mock-unique-id")
 
             assert existing_entry is not None
@@ -1082,16 +1098,93 @@ async def test_unique_id_existing_entry(hass, manager):
     assert len(async_remove_entry.mock_calls) == 1
 
 
+async def test_unique_id_update_existing_entry(hass, manager):
+    """Test that we update an entry if there already is an entry with unique ID."""
+    hass.config.components.add("comp")
+    entry = MockConfigEntry(
+        domain="comp",
+        data={"additional": "data", "host": "0.0.0.0"},
+        unique_id="mock-unique-id",
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass, MockModule("comp"),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            await self.async_set_unique_id("mock-unique-id")
+            await self._abort_if_unique_id_configured(updates={"host": "1.1.1.1"})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data["host"] == "1.1.1.1"
+    assert entry.data["additional"] == "data"
+
+
+async def test_unique_id_not_update_existing_entry(hass, manager):
+    """Test that we do not update an entry if existing entry has the data."""
+    hass.config.components.add("comp")
+    entry = MockConfigEntry(
+        domain="comp",
+        data={"additional": "data", "host": "0.0.0.0"},
+        unique_id="mock-unique-id",
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass, MockModule("comp"),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            await self.async_set_unique_id("mock-unique-id")
+            await self._abort_if_unique_id_configured(updates={"host": "0.0.0.0"})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
+        "homeassistant.config_entries.ConfigEntries.async_update_entry"
+    ) as async_update_entry:
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data["host"] == "0.0.0.0"
+    assert entry.data["additional"] == "data"
+    assert len(async_update_entry.mock_calls) == 0
+
+
 async def test_unique_id_in_progress(hass, manager):
     """Test that we abort if there is already a flow in progress with same unique id."""
     mock_integration(hass, MockModule("comp"))
     mock_entity_platform(hass, "config_flow.comp", None)
 
     class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
 
         VERSION = 1
 
         async def async_step_user(self, user_input=None):
+            """Test user step."""
             await self.async_set_unique_id("mock-unique-id")
             return self.async_show_form(step_id="discovery")
 
@@ -1120,10 +1213,12 @@ async def test_finish_flow_aborts_progress(hass, manager):
     mock_entity_platform(hass, "config_flow.comp", None)
 
     class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
 
         VERSION = 1
 
         async def async_step_user(self, user_input=None):
+            """Test user step."""
             await self.async_set_unique_id("mock-unique-id", raise_on_progress=False)
 
             if user_input is None:
@@ -1155,10 +1250,12 @@ async def test_unique_id_ignore(hass, manager):
     mock_entity_platform(hass, "config_flow.comp", None)
 
     class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
 
         VERSION = 1
 
         async def async_step_user(self, user_input=None):
+            """Test user flow."""
             await self.async_set_unique_id("mock-unique-id")
             return self.async_show_form(step_id="discovery")
 
@@ -1195,10 +1292,12 @@ async def test_unignore_step_form(hass, manager):
     mock_entity_platform(hass, "config_flow.comp", None)
 
     class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
 
         VERSION = 1
 
         async def async_step_unignore(self, user_input):
+            """Test unignore step."""
             unique_id = user_input["unique_id"]
             await self.async_set_unique_id(unique_id)
             return self.async_show_form(step_id="discovery")
@@ -1237,10 +1336,12 @@ async def test_unignore_create_entry(hass, manager):
     mock_entity_platform(hass, "config_flow.comp", None)
 
     class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
 
         VERSION = 1
 
         async def async_step_unignore(self, user_input):
+            """Test unignore step."""
             unique_id = user_input["unique_id"]
             await self.async_set_unique_id(unique_id)
             return self.async_create_entry(title="yo", data={})
@@ -1282,6 +1383,7 @@ async def test_unignore_default_impl(hass, manager):
     mock_entity_platform(hass, "config_flow.comp", None)
 
     class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
 
         VERSION = 1
 
@@ -1303,3 +1405,156 @@ async def test_unignore_default_impl(hass, manager):
 
         assert len(hass.config_entries.async_entries("comp")) == 0
         assert len(hass.config_entries.flow.async_progress()) == 0
+
+
+async def test_partial_flows_hidden(hass, manager):
+    """Test that flows that don't have a cur_step and haven't finished initing are hidden."""
+    async_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
+    mock_entity_platform(hass, "config_flow.comp", None)
+    await async_setup_component(hass, "persistent_notification", {})
+
+    # A flag to test our assertion that `async_step_discovery` was called and is in its blocked state
+    # This simulates if the step was e.g. doing network i/o
+    discovery_started = asyncio.Event()
+
+    # A flag to allow `async_step_discovery` to resume after we have verified the uninited flow is not
+    # visible and has not triggered a discovery alert. This lets us control when the mocked network
+    # i/o is complete.
+    pause_discovery = asyncio.Event()
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_discovery(self, user_input):
+            """Test discovery step."""
+            discovery_started.set()
+            await pause_discovery.wait()
+            return self.async_show_form(step_id="someform")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        # Start a config entry flow and wait for it to be blocked
+        init_task = asyncio.ensure_future(
+            manager.flow.async_init(
+                "comp",
+                context={"source": config_entries.SOURCE_DISCOVERY},
+                data={"unique_id": "mock-unique-id"},
+            )
+        )
+        await discovery_started.wait()
+
+        # While it's blocked it shouldn't be visible or trigger discovery notifications
+        assert len(hass.config_entries.flow.async_progress()) == 0
+
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_discovery")
+        assert state is None
+
+        # Let the flow init complete
+        pause_discovery.set()
+
+        # When it's complete it should now be visible in async_progress and have triggered
+        # discovery notifications
+        result = await init_task
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert len(hass.config_entries.flow.async_progress()) == 1
+
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_discovery")
+        assert state is not None
+
+
+async def test_async_setup_init_entry(hass):
+    """Test a config entry being initialized during integration setup."""
+
+    async def mock_async_setup(hass, config):
+        """Mock setup."""
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                "comp", context={"source": config_entries.SOURCE_IMPORT}, data={},
+            )
+        )
+        return True
+
+    async_setup_entry = CoroutineMock(return_value=True)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp", async_setup=mock_async_setup, async_setup_entry=async_setup_entry
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+    await async_setup_component(hass, "persistent_notification", {})
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_import(self, user_input):
+            """Test import step creating entry."""
+            return self.async_create_entry(title="title", data={})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        assert await async_setup_component(hass, "comp", {})
+
+        await hass.async_block_till_done()
+
+        assert len(async_setup_entry.mock_calls) == 1
+
+        entries = hass.config_entries.async_entries("comp")
+        assert len(entries) == 1
+        assert entries[0].state == config_entries.ENTRY_STATE_LOADED
+
+
+async def test_async_setup_update_entry(hass):
+    """Test a config entry being updated during integration setup."""
+    entry = MockConfigEntry(domain="comp", data={"value": "initial"})
+    entry.add_to_hass(hass)
+
+    async def mock_async_setup(hass, config):
+        """Mock setup."""
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                "comp", context={"source": config_entries.SOURCE_IMPORT}, data={},
+            )
+        )
+        return True
+
+    async def mock_async_setup_entry(hass, entry):
+        """Mock setting up an entry."""
+        assert entry.data["value"] == "updated"
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=mock_async_setup,
+            async_setup_entry=mock_async_setup_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+    await async_setup_component(hass, "persistent_notification", {})
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_import(self, user_input):
+            """Test import step updating existing entry."""
+            self.hass.config_entries.async_update_entry(
+                entry, data={"value": "updated"}
+            )
+            return self.async_abort(reason="yo")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        assert await async_setup_component(hass, "comp", {})
+
+        entries = hass.config_entries.async_entries("comp")
+        assert len(entries) == 1
+        assert entries[0].state == config_entries.ENTRY_STATE_LOADED
+        assert entries[0].data == {"value": "updated"}

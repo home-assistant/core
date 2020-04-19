@@ -13,5 +13,6 @@
             "current_temperature_changed": "Changement de temp\u00e9rature mesur\u00e9e pour {entity_name}",
             "hvac_mode_changed": "Mode HVAC chang\u00e9 pour {entity_name}"
         }
-    }
+    },
+    "title": "Thermostat"
 }

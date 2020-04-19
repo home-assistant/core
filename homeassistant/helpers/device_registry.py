@@ -155,6 +155,7 @@ class DeviceRegistry:
         name=_UNDEF,
         name_by_user=_UNDEF,
         new_identifiers=_UNDEF,
+        sw_version=_UNDEF,
         via_device_id=_UNDEF,
         remove_config_entry_id=_UNDEF,
     ):
@@ -165,6 +166,7 @@ class DeviceRegistry:
             name=name,
             name_by_user=name_by_user,
             new_identifiers=new_identifiers,
+            sw_version=sw_version,
             via_device_id=via_device_id,
             remove_config_entry_id=remove_config_entry_id,
         )
@@ -260,6 +262,7 @@ class DeviceRegistry:
 
         return new
 
+    @callback
     def async_remove_device(self, device_id: str) -> None:
         """Remove a device from the device registry."""
         del self.devices[device_id]
@@ -375,3 +378,15 @@ async def async_get_registry(hass: HomeAssistantType) -> DeviceRegistry:
 def async_entries_for_area(registry: DeviceRegistry, area_id: str) -> List[DeviceEntry]:
     """Return entries that match an area."""
     return [device for device in registry.devices.values() if device.area_id == area_id]
+
+
+@callback
+def async_entries_for_config_entry(
+    registry: DeviceRegistry, config_entry_id: str
+) -> List[DeviceEntry]:
+    """Return entries that match a config entry."""
+    return [
+        device
+        for device in registry.devices.values()
+        if config_entry_id in device.config_entries
+    ]

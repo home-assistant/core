@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Roku device is already configured",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, please try again"
+        },
+        "flow_title": "Roku: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Do you want to set up {name}?",
+                "title": "Roku"
+            },
+            "user": {
+                "data": {
+                    "host": "Host or IP address"
+                },
+                "description": "Enter your Roku information.",
+                "title": "Roku"
+            }
+        }
+    }
+}

@@ -31,6 +31,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_PIN,
     CONF_SSL,
     CONF_TIMEOUT,
     CONF_USERNAME,
@@ -66,6 +67,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             vol.Coerce(int), vol.Range(min=1)
         ),
         vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PIN): cv.string,
     }
 )
 
@@ -75,17 +77,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    pin = config.get(CONF_PIN)
     host = config.get(CONF_HOST)
     timeout = config.get(CONF_TIMEOUT)
     humidifier = config.get(CONF_HUMIDIFIER)
 
-    if config.get(CONF_SSL):
-        proto = "https"
-    else:
-        proto = "http"
+    protocol = "https" if config[CONF_SSL] else "http"
 
     client = VenstarColorTouch(
-        addr=host, timeout=timeout, user=username, password=password, proto=proto
+        addr=host,
+        timeout=timeout,
+        user=username,
+        password=password,
+        pin=pin,
+        proto=protocol,
     )
 
     add_entities([VenstarThermostat(client, humidifier)], True)

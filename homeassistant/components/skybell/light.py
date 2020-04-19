@@ -27,12 +27,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 def _to_skybell_level(level):
-    """Convert the given HASS light level (0-255) to Skybell (0-100)."""
+    """Convert the given Home Assistant light level (0-255) to Skybell (0-100)."""
     return int((level * 100) / 255)
 
 
 def _to_hass_level(level):
-    """Convert the given Skybell (0-100) light level to HASS (0-255)."""
+    """Convert the given Skybell (0-100) light level to Home Assistant (0-255)."""
     return int((level * 255) / 100)
 
 

@@ -114,7 +114,7 @@ def _is_mobile_beacon(data, mobile_beacons):
 def _device_name(data):
     """Return name of device tracker."""
     if ATTR_BEACON_ID in data:
-        return "{}_{}".format(BEACON_DEV_PREFIX, data["name"])
+        return f"{BEACON_DEV_PREFIX}_{data['name']}"
     return data["device"]
 
 

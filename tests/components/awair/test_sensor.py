@@ -16,10 +16,14 @@ from homeassistant.components.awair.sensor import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import parse_datetime, utcnow
@@ -153,7 +157,7 @@ async def test_awair_score(hass):
     sensor = hass.states.get("sensor.awair_score")
     assert sensor.state == "78"
     assert sensor.attributes["device_class"] == DEVICE_CLASS_SCORE
-    assert sensor.attributes["unit_of_measurement"] == "%"
+    assert sensor.attributes["unit_of_measurement"] == UNIT_PERCENTAGE
 
 
 async def test_awair_temp(hass):
@@ -173,7 +177,7 @@ async def test_awair_humid(hass):
     sensor = hass.states.get("sensor.awair_humidity")
     assert sensor.state == "32.7"
     assert sensor.attributes["device_class"] == DEVICE_CLASS_HUMIDITY
-    assert sensor.attributes["unit_of_measurement"] == "%"
+    assert sensor.attributes["unit_of_measurement"] == UNIT_PERCENTAGE
 
 
 async def test_awair_co2(hass):
@@ -183,7 +187,7 @@ async def test_awair_co2(hass):
     sensor = hass.states.get("sensor.awair_co2")
     assert sensor.state == "612"
     assert sensor.attributes["device_class"] == DEVICE_CLASS_CARBON_DIOXIDE
-    assert sensor.attributes["unit_of_measurement"] == "ppm"
+    assert sensor.attributes["unit_of_measurement"] == CONCENTRATION_PARTS_PER_MILLION
 
 
 async def test_awair_voc(hass):
@@ -193,7 +197,7 @@ async def test_awair_voc(hass):
     sensor = hass.states.get("sensor.awair_voc")
     assert sensor.state == "1012"
     assert sensor.attributes["device_class"] == DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS
-    assert sensor.attributes["unit_of_measurement"] == "ppb"
+    assert sensor.attributes["unit_of_measurement"] == CONCENTRATION_PARTS_PER_BILLION
 
 
 async def test_awair_dust(hass):
@@ -205,7 +209,10 @@ async def test_awair_dust(hass):
     sensor = hass.states.get("sensor.awair_pm2_5")
     assert sensor.state == "6.2"
     assert sensor.attributes["device_class"] == DEVICE_CLASS_PM2_5
-    assert sensor.attributes["unit_of_measurement"] == "µg/m3"
+    assert (
+        sensor.attributes["unit_of_measurement"]
+        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    )
 
 
 async def test_awair_unsupported_sensors(hass):

@@ -28,7 +28,7 @@ class TestMicrosoftFaceDetectSetup:
         self.hass.stop()
 
     @patch(
-        "homeassistant.components.microsoft_face." "MicrosoftFace.update_store",
+        "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
         return_value=mock_coro(),
     )
     def test_setup_platform(self, store_mock):
@@ -49,7 +49,7 @@ class TestMicrosoftFaceDetectSetup:
         assert self.hass.states.get("image_processing.microsoftface_demo_camera")
 
     @patch(
-        "homeassistant.components.microsoft_face." "MicrosoftFace.update_store",
+        "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
         return_value=mock_coro(),
     )
     def test_setup_platform_name(self, store_mock):
@@ -86,7 +86,7 @@ class TestMicrosoftFaceDetect:
             mf.DOMAIN: {"api_key": "12345678abcdef6"},
         }
 
-        self.endpoint_url = "https://westus.{0}".format(mf.FACE_API_URL)
+        self.endpoint_url = f"https://westus.{mf.FACE_API_URL}"
 
     def teardown_method(self):
         """Stop everything that was started."""
@@ -115,9 +115,7 @@ class TestMicrosoftFaceDetect:
         setup_component(self.hass, ip.DOMAIN, self.config)
 
         state = self.hass.states.get("camera.demo_camera")
-        url = "{0}{1}".format(
-            self.hass.config.api.base_url, state.attributes.get(ATTR_ENTITY_PICTURE)
-        )
+        url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
         face_events = []
 

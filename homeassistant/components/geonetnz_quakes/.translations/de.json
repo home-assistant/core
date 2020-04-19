@@ -1,7 +1,7 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Standort bereits registriert"
+        "abort": {
+            "already_configured": "Der Standort ist bereits konfiguriert."
         },
         "step": {
             "user": {
@@ -9,9 +9,8 @@
                     "mmi": "MMI",
                     "radius": "Radius"
                 },
-                "title": "F\u00fcllen Sie Ihre Filterdaten aus."
+                "title": "F\u00fclle deine Filterdaten aus."
             }
-        },
-        "title": "GeoNet NZ Erdbeben"
+        }
     }
 }

@@ -13,5 +13,6 @@
             "locked": "{entity_name} verrouill\u00e9",
             "unlocked": "{entity_name} d\u00e9verrouill\u00e9"
         }
-    }
+    },
+    "title": "Verrou"
 }

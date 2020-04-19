@@ -31,6 +31,8 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 TYPE_DIMMABLE = "dimmable"
 TYPE_SWITCHABLE = "switchable"
 TYPE_HYBRID = "hybrid"
@@ -80,7 +82,7 @@ def entity_type_for_device_id(device_id):
         "newkaku": TYPE_HYBRID
     }
     protocol = device_id.split("_")[0]
-    return entity_type_mapping.get(protocol, None)
+    return entity_type_mapping.get(protocol)
 
 
 def entity_class_for_type(entity_type):
@@ -157,14 +159,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
 
 
-# pylint: disable=too-many-ancestors
 class RflinkLight(SwitchableRflinkDevice, Light):
     """Representation of a Rflink light."""
 
-    pass
 
-
-# pylint: disable=too-many-ancestors
 class DimmableRflinkLight(SwitchableRflinkDevice, Light):
     """Rflink light device that support dimming."""
 
@@ -210,7 +208,6 @@ class DimmableRflinkLight(SwitchableRflinkDevice, Light):
         return SUPPORT_BRIGHTNESS
 
 
-# pylint: disable=too-many-ancestors
 class HybridRflinkLight(SwitchableRflinkDevice, Light):
     """Rflink light device that sends out both dim and on/off commands.
 
@@ -274,7 +271,6 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light):
         return SUPPORT_BRIGHTNESS
 
 
-# pylint: disable=too-many-ancestors
 class ToggleRflinkLight(SwitchableRflinkDevice, Light):
     """Rflink light device which sends out only 'on' commands.
 

@@ -33,7 +33,10 @@ class CommandLineNotificationService(BaseNotificationService):
         """Send a message to a command line."""
         try:
             proc = subprocess.Popen(
-                self.command, universal_newlines=True, stdin=subprocess.PIPE, shell=True
+                self.command,
+                universal_newlines=True,
+                stdin=subprocess.PIPE,
+                shell=True,  # nosec # shell by design
             )
             proc.communicate(input=message)
             if proc.returncode != 0:

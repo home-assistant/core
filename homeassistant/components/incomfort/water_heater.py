@@ -5,7 +5,10 @@ from typing import Any, Dict
 
 from aiohttp import ClientResponseError
 
-from homeassistant.components.water_heater import ENTITY_ID_FORMAT, WaterHeaterDevice
+from homeassistant.components.water_heater import (
+    DOMAIN as WATER_HEATER_DOMAIN,
+    WaterHeaterDevice,
+)
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -35,7 +38,7 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterDevice):
         super().__init__()
 
         self._unique_id = f"{heater.serial_no}"
-        self.entity_id = ENTITY_ID_FORMAT.format(DOMAIN)
+        self.entity_id = f"{WATER_HEATER_DOMAIN}.{DOMAIN}"
         self._name = "Boiler"
 
         self._client = client

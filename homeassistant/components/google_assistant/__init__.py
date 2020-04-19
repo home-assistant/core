@@ -65,6 +65,7 @@ def _check_report_state(data):
 
 GOOGLE_ASSISTANT_SCHEMA = vol.All(
     cv.deprecated(CONF_ALLOW_UNLOCK, invalidation_version="0.95"),
+    cv.deprecated(CONF_API_KEY, invalidation_version="0.105"),
     vol.Schema(
         {
             vol.Required(CONF_PROJECT_ID): cv.string,

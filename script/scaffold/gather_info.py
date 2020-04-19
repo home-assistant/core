@@ -56,7 +56,7 @@ def gather_info(arguments) -> Info:
 
 YES_NO = {
     "validators": [["Type either 'yes' or 'no'", lambda value: value in ("yes", "no")]],
-    "convertor": lambda value: value == "yes",
+    "converter": lambda value: value == "yes",
 }
 
 
@@ -155,8 +155,8 @@ def _gather_info(fields) -> dict:
                     break
 
             if hint is None:
-                if "convertor" in info:
-                    value = info["convertor"](value)
+                if "converter" in info:
+                    value = info["converter"](value)
                 answers[key] = value
 
     return answers

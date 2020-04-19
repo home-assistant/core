@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Mostek jest ju\u017c skonfigurowany",
+            "already_configured": "Mostek jest ju\u017c skonfigurowany.",
             "already_in_progress": "Konfiguracja mostka jest ju\u017c w toku."
         },
         "error": {
@@ -18,7 +18,6 @@
                 "description": "Mo\u017cesz znale\u017a\u0107 kod bezpiecze\u0144stwa z ty\u0142u bramki.",
                 "title": "Wprowad\u017a kod bezpiecze\u0144stwa"
             }
-        },
-        "title": "IKEA TR\u00c5DFRI"
+        }
     }
 }

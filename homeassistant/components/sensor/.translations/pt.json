@@ -22,5 +22,6 @@
             "timestamp": "momento temporal de {entity_name}",
             "value": "valor {entity_name}"
         }
-    }
+    },
+    "title": "Sensor"
 }

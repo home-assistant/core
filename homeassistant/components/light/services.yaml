@@ -36,6 +36,12 @@ turn_on:
     brightness_pct:
       description: Number between 0..100 indicating percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness and 100 is the maximum brightness supported by the light.
       example: 47
+    brightness_step:
+      description: Change brightness by an amount. Should be between -255..255.
+      example: -25.5
+    brightness_step_pct:
+      description: Change brightness by a percentage. Should be between -100..100.
+      example: -10
     profile:
       description: Name of a light profile to use.
       example: relax

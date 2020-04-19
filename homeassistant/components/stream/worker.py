@@ -95,7 +95,7 @@ def stream_worker(hass, stream, quit_event):
         if packet.is_keyframe:
             # Calculate the segment duration by multiplying the presentation
             # timestamp by the time base, which gets us total seconds.
-            # By then dividing by the seqence, we can calculate how long
+            # By then dividing by the sequence, we can calculate how long
             # each segment is, assuming the stream starts from 0.
             segment_duration = (packet.pts * packet.time_base) / sequence
             # Save segment to outputs

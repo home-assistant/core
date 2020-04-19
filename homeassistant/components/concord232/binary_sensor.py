@@ -44,10 +44,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Concord232 binary sensor platform."""
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    exclude = config.get(CONF_EXCLUDE_ZONES)
-    zone_types = config.get(CONF_ZONE_TYPES)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    exclude = config[CONF_EXCLUDE_ZONES]
+    zone_types = config[CONF_ZONE_TYPES]
     sensors = []
 
     try:

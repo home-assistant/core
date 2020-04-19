@@ -7,5 +7,6 @@
             "is_paused": "{entity_name} je zaustavljen",
             "is_playing": "{entity_name} predvaja"
         }
-    }
+    },
+    "title": "Medijski predvajalnik"
 }

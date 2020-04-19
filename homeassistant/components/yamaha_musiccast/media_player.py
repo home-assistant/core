@@ -232,7 +232,7 @@ class YamahaDevice(MediaPlayerDevice):
         self._zone.update_status()
 
     def update_hass(self):
-        """Push updates to HASS."""
+        """Push updates to Home Assistant."""
         if self.entity_id:
             _LOGGER.debug("update_hass: pushing updates")
             self.schedule_update_ha_state()

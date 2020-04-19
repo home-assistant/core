@@ -4,6 +4,8 @@ import asyncio
 import unittest
 from unittest.mock import Mock, patch
 
+import pytest
+import voluptuous as vol
 import yaml
 
 from homeassistant import config
@@ -11,9 +13,12 @@ import homeassistant.components as comps
 from homeassistant.components.homeassistant import (
     SERVICE_CHECK_CONFIG,
     SERVICE_RELOAD_CORE_CONFIG,
+    SERVICE_SET_LOCATION,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
     EVENT_CORE_CONFIG_UPDATE,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
@@ -24,9 +29,8 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.core as ha
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import entity
-import homeassistant.helpers.intent as intent
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -249,95 +253,6 @@ class TestComponentsCore(unittest.TestCase):
         assert not mock_stop.called
 
 
-async def test_turn_on_intent(hass):
-    """Test HassTurnOn intent."""
-    result = await async_setup_component(hass, "homeassistant", {})
-    assert result
-
-    hass.states.async_set("light.test_light", "off")
-    calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
-
-    response = await intent.async_handle(
-        hass, "test", "HassTurnOn", {"name": {"value": "test light"}}
-    )
-    await hass.async_block_till_done()
-
-    assert response.speech["plain"]["speech"] == "Turned test light on"
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == "light"
-    assert call.service == "turn_on"
-    assert call.data == {"entity_id": ["light.test_light"]}
-
-
-async def test_turn_off_intent(hass):
-    """Test HassTurnOff intent."""
-    result = await async_setup_component(hass, "homeassistant", {})
-    assert result
-
-    hass.states.async_set("light.test_light", "on")
-    calls = async_mock_service(hass, "light", SERVICE_TURN_OFF)
-
-    response = await intent.async_handle(
-        hass, "test", "HassTurnOff", {"name": {"value": "test light"}}
-    )
-    await hass.async_block_till_done()
-
-    assert response.speech["plain"]["speech"] == "Turned test light off"
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == "light"
-    assert call.service == "turn_off"
-    assert call.data == {"entity_id": ["light.test_light"]}
-
-
-async def test_toggle_intent(hass):
-    """Test HassToggle intent."""
-    result = await async_setup_component(hass, "homeassistant", {})
-    assert result
-
-    hass.states.async_set("light.test_light", "off")
-    calls = async_mock_service(hass, "light", SERVICE_TOGGLE)
-
-    response = await intent.async_handle(
-        hass, "test", "HassToggle", {"name": {"value": "test light"}}
-    )
-    await hass.async_block_till_done()
-
-    assert response.speech["plain"]["speech"] == "Toggled test light"
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == "light"
-    assert call.service == "toggle"
-    assert call.data == {"entity_id": ["light.test_light"]}
-
-
-async def test_turn_on_multiple_intent(hass):
-    """Test HassTurnOn intent with multiple similar entities.
-
-    This tests that matching finds the proper entity among similar names.
-    """
-    result = await async_setup_component(hass, "homeassistant", {})
-    assert result
-
-    hass.states.async_set("light.test_light", "off")
-    hass.states.async_set("light.test_lights_2", "off")
-    hass.states.async_set("light.test_lighter", "off")
-    calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
-
-    response = await intent.async_handle(
-        hass, "test", "HassTurnOn", {"name": {"value": "test lights"}}
-    )
-    await hass.async_block_till_done()
-
-    assert response.speech["plain"]["speech"] == "Turned test lights 2 on"
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == "light"
-    assert call.service == "turn_on"
-    assert call.data == {"entity_id": ["light.test_lights_2"]}
-
-
 async def test_turn_on_to_not_block_for_domains_without_service(hass):
     """Test if turn_on is blocking domain with no service."""
     await async_setup_component(hass, "homeassistant", {})
@@ -411,3 +326,63 @@ async def test_setting_location(hass):
     assert len(events) == 1
     assert hass.config.latitude == 30
     assert hass.config.longitude == 40
+
+
+async def test_require_admin(hass, hass_read_only_user):
+    """Test services requiring admin."""
+    await async_setup_component(hass, "homeassistant", {})
+
+    for service in (
+        SERVICE_HOMEASSISTANT_RESTART,
+        SERVICE_HOMEASSISTANT_STOP,
+        SERVICE_CHECK_CONFIG,
+        SERVICE_RELOAD_CORE_CONFIG,
+    ):
+        with pytest.raises(Unauthorized):
+            await hass.services.async_call(
+                ha.DOMAIN,
+                service,
+                {},
+                context=ha.Context(user_id=hass_read_only_user.id),
+                blocking=True,
+            )
+            assert False, f"Should have raises for {service}"
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            ha.DOMAIN,
+            SERVICE_SET_LOCATION,
+            {"latitude": 0, "longitude": 0},
+            context=ha.Context(user_id=hass_read_only_user.id),
+            blocking=True,
+        )
+
+
+async def test_turn_on_off_toggle_schema(hass, hass_read_only_user):
+    """Test the schemas for the turn on/off/toggle services."""
+    await async_setup_component(hass, "homeassistant", {})
+
+    for service in SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE:
+        for invalid in None, "nothing", ENTITY_MATCH_ALL, ENTITY_MATCH_NONE:
+            with pytest.raises(vol.Invalid):
+                await hass.services.async_call(
+                    ha.DOMAIN,
+                    service,
+                    {"entity_id": invalid},
+                    context=ha.Context(user_id=hass_read_only_user.id),
+                    blocking=True,
+                )
+
+
+async def test_not_allowing_recursion(hass, caplog):
+    """Test we do not allow recursion."""
+    await async_setup_component(hass, "homeassistant", {})
+
+    for service in SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE:
+        await hass.services.async_call(
+            ha.DOMAIN, service, {"entity_id": "homeassistant.light"}, blocking=True,
+        )
+        assert (
+            f"Called service homeassistant.{service} with invalid entity IDs homeassistant.light"
+            in caplog.text
+        ), service

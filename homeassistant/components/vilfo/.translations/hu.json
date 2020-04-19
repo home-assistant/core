@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Router hostname vagy IP"
+                },
+                "title": "Csatlakoz\u00e1s a Vilfo routerhez"
+            }
+        }
+    }
+}

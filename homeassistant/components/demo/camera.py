@@ -1,6 +1,6 @@
 """Demo camera platform that has a fake camera."""
 import logging
-import os
+from pathlib import Path
 
 from homeassistant.components.camera import SUPPORT_ON_OFF, Camera
 
@@ -28,16 +28,12 @@ class DemoCamera(Camera):
         self.is_streaming = True
         self._images_index = 0
 
-    def camera_image(self):
+    async def async_camera_image(self):
         """Return a faked still image response."""
         self._images_index = (self._images_index + 1) % 4
+        image_path = Path(__file__).parent / f"demo_{self._images_index}.jpg"
 
-        image_path = os.path.join(
-            os.path.dirname(__file__), f"demo_{self._images_index}.jpg"
-        )
-        _LOGGER.debug("Loading camera_image: %s", image_path)
-        with open(image_path, "rb") as file:
-            return file.read()
+        return await self.hass.async_add_executor_job(image_path.read_bytes)
 
     @property
     def name(self):
@@ -48,7 +44,7 @@ class DemoCamera(Camera):
     def should_poll(self):
         """Demo camera doesn't need poll.
 
-        Need explicitly call schedule_update_ha_state() after state changed.
+        Need explicitly call async_write_ha_state() after state changed.
         """
         return False
 
@@ -67,22 +63,22 @@ class DemoCamera(Camera):
         """Camera Motion Detection Status."""
         return self._motion_status
 
-    def enable_motion_detection(self):
+    async def async_enable_motion_detection(self):
         """Enable the Motion detection in base station (Arm)."""
         self._motion_status = True
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def disable_motion_detection(self):
+    async def async_disable_motion_detection(self):
         """Disable the motion detection in base station (Disarm)."""
         self._motion_status = False
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def turn_off(self):
+    async def async_turn_off(self):
         """Turn off camera."""
         self.is_streaming = False
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def turn_on(self):
+    async def async_turn_on(self):
         """Turn on camera."""
         self.is_streaming = True
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

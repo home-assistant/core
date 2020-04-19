@@ -42,7 +42,7 @@ class N26CardSwitch(SwitchDevice):
     @property
     def name(self) -> str:
         """Friendly name of the sensor."""
-        return "card_{}".format(self._card["id"])
+        return f"card_{self._card['id']}"
 
     @property
     def is_on(self):

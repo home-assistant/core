@@ -177,10 +177,9 @@ class BaseNotificationService:
         """
         raise NotImplementedError()
 
-    def async_send_message(self, message, **kwargs):
+    async def async_send_message(self, message, **kwargs):
         """Send a message.
 
         kwargs can contain ATTR_TITLE to specify a title.
-        This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(partial(self.send_message, message, **kwargs))
+        await self.hass.async_add_job(partial(self.send_message, message, **kwargs))

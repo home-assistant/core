@@ -14,5 +14,6 @@
             "disarmed": "{entity_name} hat\u00e1stalan\u00edtva lett",
             "triggered": "{entity_name} riaszt\u00e1sba ker\u00fclt"
         }
-    }
+    },
+    "title": "Riaszt\u00f3 k\u00f6zpont"
 }

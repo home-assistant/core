@@ -610,7 +610,7 @@ async def test_automation_with_bad_condition(hass, caplog):
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -761,3 +761,17 @@ async def test_automation_with_bad_trigger(hass, caplog):
     )
 
     assert "required key not provided" in caplog.text
+
+
+async def test_websocket_device_not_found(hass, hass_ws_client):
+    """Test caling command with unknown device."""
+    await async_setup_component(hass, "device_automation", {})
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 1, "type": "device_automation/action/list", "device_id": "non-existing"}
+    )
+    msg = await client.receive_json()
+
+    assert msg["id"] == 1
+    assert not msg["success"]
+    assert msg["error"] == {"code": "not_found", "message": "Device not found"}

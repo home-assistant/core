@@ -46,11 +46,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Concord232 alarm control panel platform."""
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
     code = config.get(CONF_CODE)
-    mode = config.get(CONF_MODE)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    mode = config[CONF_MODE]
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
 
     url = f"http://{host}:{port}"
 

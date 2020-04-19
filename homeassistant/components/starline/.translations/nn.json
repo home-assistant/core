@@ -4,7 +4,6 @@
             "auth_captcha": {
                 "description": "{captcha_img}"
             }
-        },
-        "title": "StarLine"
+        }
     }
 }

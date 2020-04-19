@@ -39,19 +39,29 @@ from homeassistant.const import (
     CONF_ALIAS,
     CONF_BELOW,
     CONF_CONDITION,
+    CONF_CONTINUE_ON_TIMEOUT,
+    CONF_DELAY,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_ENTITY_NAMESPACE,
+    CONF_EVENT,
+    CONF_EVENT_DATA,
+    CONF_EVENT_DATA_TEMPLATE,
     CONF_FOR,
     CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
+    CONF_SCENE,
+    CONF_SERVICE,
+    CONF_SERVICE_TEMPLATE,
     CONF_STATE,
     CONF_TIMEOUT,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     CONF_VALUE_TEMPLATE,
+    CONF_WAIT_TEMPLATE,
     ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
     TEMP_CELSIUS,
@@ -135,7 +145,7 @@ def boolean(value: Any) -> bool:
     elif isinstance(value, Number):
         # type ignore: https://github.com/python/mypy/issues/3186
         return value != 0  # type: ignore
-    raise vol.Invalid("invalid boolean value {}".format(value))
+    raise vol.Invalid(f"invalid boolean value {value}")
 
 
 def isdevice(value: Any) -> str:
@@ -144,7 +154,7 @@ def isdevice(value: Any) -> str:
         os.stat(value)
         return str(value)
     except OSError:
-        raise vol.Invalid("No device at {} found".format(value))
+        raise vol.Invalid(f"No device at {value} found")
 
 
 def matches_regex(regex: str) -> Callable[[Any], str]:
@@ -154,13 +164,11 @@ def matches_regex(regex: str) -> Callable[[Any], str]:
     def validator(value: Any) -> str:
         """Validate that value matches the given regex."""
         if not isinstance(value, str):
-            raise vol.Invalid("not a string value: {}".format(value))
+            raise vol.Invalid(f"not a string value: {value}")
 
         if not compiled.match(value):
             raise vol.Invalid(
-                "value {} does not match regular expression {}".format(
-                    value, compiled.pattern
-                )
+                f"value {value} does not match regular expression {compiled.pattern}"
             )
 
         return value
@@ -175,10 +183,10 @@ def is_regex(value: Any) -> Pattern[Any]:
         return r
     except TypeError:
         raise vol.Invalid(
-            "value {} is of the wrong type for a regular expression".format(value)
+            f"value {value} is of the wrong type for a regular expression"
         )
     except re.error:
-        raise vol.Invalid("value {} is not a valid regular expression".format(value))
+        raise vol.Invalid(f"value {value} is not a valid regular expression")
 
 
 def isfile(value: Any) -> str:
@@ -220,7 +228,7 @@ def entity_id(value: Any) -> str:
     if valid_entity_id(str_value):
         return str_value
 
-    raise vol.Invalid("Entity ID {} is an invalid entity id".format(value))
+    raise vol.Invalid(f"Entity ID {value} is an invalid entity id")
 
 
 def entity_ids(value: Union[str, List]) -> List[str]:
@@ -233,7 +241,9 @@ def entity_ids(value: Union[str, List]) -> List[str]:
     return [entity_id(ent_id) for ent_id in value]
 
 
-comp_entity_ids = vol.Any(vol.All(vol.Lower, ENTITY_MATCH_ALL), entity_ids)
+comp_entity_ids = vol.Any(
+    vol.All(vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)), entity_ids
+)
 
 
 def entity_domain(domain: str) -> Callable[[Any], str]:
@@ -256,9 +266,7 @@ def entities_domain(domain: str) -> Callable[[Union[str, List]], List[str]]:
         for ent_id in values:
             if split_entity_id(ent_id)[0] != domain:
                 raise vol.Invalid(
-                    "Entity ID '{}' does not belong to domain '{}'".format(
-                        ent_id, domain
-                    )
+                    f"Entity ID '{ent_id}' does not belong to domain '{domain}'"
                 )
         return values
 
@@ -307,7 +315,7 @@ def time(value: Any) -> time_sys:
         raise vol.Invalid("Not a parseable type")
 
     if time_val is None:
-        raise vol.Invalid("Invalid time specified: {}".format(value))
+        raise vol.Invalid(f"Invalid time specified: {value}")
 
     return time_val
 
@@ -330,7 +338,7 @@ def date(value: Any) -> date_sys:
 
 def time_period_str(value: str) -> timedelta:
     """Validate and transform time offset."""
-    if isinstance(value, int):
+    if isinstance(value, int):  # type: ignore
         raise vol.Invalid("Make sure you wrap time values in quotes")
     if not isinstance(value, str):
         raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
@@ -368,7 +376,7 @@ def time_period_seconds(value: Union[int, str]) -> timedelta:
     try:
         return timedelta(seconds=int(value))
     except (ValueError, TypeError):
-        raise vol.Invalid("Expected seconds, got {}".format(value))
+        raise vol.Invalid(f"Expected seconds, got {value}")
 
 
 time_period = vol.Any(time_period_str, time_period_seconds, timedelta, time_period_dict)
@@ -400,10 +408,23 @@ def service(value: Any) -> str:
     str_value = string(value).lower()
     if valid_entity_id(str_value):
         return str_value
-    raise vol.Invalid("Service {} does not match format <domain>.<name>".format(value))
+    raise vol.Invalid(f"Service {value} does not match format <domain>.<name>")
 
 
-def schema_with_slug_keys(value_schema: Union[T, Callable]) -> Callable:
+def slug(value: Any) -> str:
+    """Validate value is a valid slug."""
+    if value is None:
+        raise vol.Invalid("Slug should not be None")
+    str_value = str(value)
+    slg = util_slugify(str_value)
+    if str_value == slg:
+        return str_value
+    raise vol.Invalid(f"invalid slug {value} (try {slg})")
+
+
+def schema_with_slug_keys(
+    value_schema: Union[T, Callable], *, slug_validator: Callable[[Any], str] = slug
+) -> Callable:
     """Ensure dicts have slugs as keys.
 
     Replacement of vol.Schema({cv.slug: value_schema}) to prevent misleading
@@ -417,22 +438,11 @@ def schema_with_slug_keys(value_schema: Union[T, Callable]) -> Callable:
             raise vol.Invalid("expected dictionary")
 
         for key in value.keys():
-            slug(key)
+            slug_validator(key)
 
         return cast(Dict, schema(value))
 
     return verify
-
-
-def slug(value: Any) -> str:
-    """Validate value is a valid slug."""
-    if value is None:
-        raise vol.Invalid("Slug should not be None")
-    str_value = str(value)
-    slg = util_slugify(str_value)
-    if str_value == slg:
-        return str_value
-    raise vol.Invalid("invalid slug {} (try {})".format(value, slg))
 
 
 def slugify(value: Any) -> str:
@@ -442,7 +452,7 @@ def slugify(value: Any) -> str:
     slg = util_slugify(str(value))
     if slg:
         return slg
-    raise vol.Invalid("Unable to slugify {}".format(value))
+    raise vol.Invalid(f"Unable to slugify {value}")
 
 
 def string(value: Any) -> str:
@@ -484,7 +494,7 @@ def template(value: Optional[Any]) -> template_helper.Template:
         template_value.ensure_valid()
         return cast(template_helper.Template, template_value)
     except TemplateError as ex:
-        raise vol.Invalid("invalid template ({})".format(ex))
+        raise vol.Invalid(f"invalid template ({ex})")
 
 
 def template_complex(value: Any) -> Any:
@@ -515,7 +525,7 @@ def datetime(value: Any) -> datetime_sys:
         date_val = None
 
     if date_val is None:
-        raise vol.Invalid("Invalid datetime specified: {}".format(value))
+        raise vol.Invalid(f"Invalid datetime specified: {value}")
 
     return date_val
 
@@ -544,9 +554,9 @@ def socket_timeout(value: Optional[Any]) -> object:
         float_value = float(value)
         if float_value > 0.0:
             return float_value
-        raise vol.Invalid("Invalid socket timeout value." " float > 0.0 required.")
-    except Exception as _:
-        raise vol.Invalid("Invalid socket timeout: {err}".format(err=_))
+        raise vol.Invalid("Invalid socket timeout value. float > 0.0 required.")
+    except Exception as err:
+        raise vol.Invalid(f"Invalid socket timeout: {err}")
 
 
 # pylint: disable=no-value-for-parameter
@@ -587,6 +597,25 @@ def ensure_list_csv(value: Any) -> List:
     if isinstance(value, str):
         return [member.strip() for member in value.split(",")]
     return ensure_list(value)
+
+
+class multi_select:
+    """Multi select validator returning list of selected values."""
+
+    def __init__(self, options: dict) -> None:
+        """Initialize multi select."""
+        self.options = options
+
+    def __call__(self, selected: list) -> list:
+        """Validate input."""
+        if not isinstance(selected, list):
+            raise vol.Invalid("Not a list")
+
+        for value in selected:
+            if value not in self.options:
+                raise vol.Invalid(f"{value} is not a valid option")
+
+        return selected
 
 
 def deprecated(
@@ -686,6 +715,30 @@ def deprecated(
     return validator
 
 
+def key_value_schemas(
+    key: str, value_schemas: Dict[str, vol.Schema]
+) -> Callable[[Any], Dict[str, Any]]:
+    """Create a validator that validates based on a value for specific key.
+
+    This gives better error messages.
+    """
+
+    def key_value_validator(value: Any) -> Dict[str, Any]:
+        if not isinstance(value, dict):
+            raise vol.Invalid("Expected a dictionary")
+
+        key_value = value.get(key)
+
+        if key_value not in value_schemas:
+            raise vol.Invalid(
+                f"Unexpected value for {key}: '{key_value}'. Expected {', '.join(value_schemas)}"
+            )
+
+        return cast(Dict[str, Any], value_schemas[key_value](value))
+
+    return key_value_validator
+
+
 # Validator helpers
 
 
@@ -700,8 +753,8 @@ def key_dependency(
             raise vol.Invalid("key dependencies require a dict")
         if key in value and dependency not in value:
             raise vol.Invalid(
-                'dependency violation - key "{}" requires '
-                'key "{}" to exist'.format(key, dependency)
+                f'dependency violation - key "{key}" requires '
+                f'key "{dependency}" to exist'
             )
 
         return value
@@ -713,6 +766,9 @@ def custom_serializer(schema: Any) -> Any:
     """Serialize additional types for voluptuous_serialize."""
     if schema is positive_time_period_dict:
         return {"type": "positive_time_period_dict"}
+
+    if isinstance(schema, multi_select):
+        return {"type": "multi_select", "options": schema.options}
 
     return voluptuous_serialize.UNSUPPORTED
 
@@ -728,6 +784,8 @@ PLATFORM_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
+ENTITY_SERVICE_FIELDS = (ATTR_ENTITY_ID, ATTR_AREA_ID)
+
 
 def make_entity_service_schema(
     schema: dict, *, extra: int = vol.PREVENT_EXTRA
@@ -738,20 +796,22 @@ def make_entity_service_schema(
             {
                 **schema,
                 vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
-                vol.Optional(ATTR_AREA_ID): vol.All(ensure_list, [str]),
+                vol.Optional(ATTR_AREA_ID): vol.Any(
+                    ENTITY_MATCH_NONE, vol.All(ensure_list, [str])
+                ),
             },
             extra=extra,
         ),
-        has_at_least_one_key(ATTR_ENTITY_ID, ATTR_AREA_ID),
+        has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
     )
 
 
 EVENT_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ALIAS): string,
-        vol.Required("event"): string,
-        vol.Optional("event_data"): dict,
-        vol.Optional("event_data_template"): {match_all: template_complex},
+        vol.Required(CONF_EVENT): string,
+        vol.Optional(CONF_EVENT_DATA): dict,
+        vol.Optional(CONF_EVENT_DATA_TEMPLATE): {match_all: template_complex},
     }
 )
 
@@ -759,14 +819,14 @@ SERVICE_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Optional(CONF_ALIAS): string,
-            vol.Exclusive("service", "service name"): service,
-            vol.Exclusive("service_template", "service name"): template,
+            vol.Exclusive(CONF_SERVICE, "service name"): service,
+            vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): template,
             vol.Optional("data"): dict,
             vol.Optional("data_template"): {match_all: template_complex},
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
         }
     ),
-    has_at_least_one_key("service", "service_template"),
+    has_at_least_one_key(CONF_SERVICE, CONF_SERVICE_TEMPLATE),
 )
 
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
@@ -874,22 +934,25 @@ DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
 
 DEVICE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-CONDITION_SCHEMA: vol.Schema = vol.Any(
-    NUMERIC_STATE_CONDITION_SCHEMA,
-    STATE_CONDITION_SCHEMA,
-    SUN_CONDITION_SCHEMA,
-    TEMPLATE_CONDITION_SCHEMA,
-    TIME_CONDITION_SCHEMA,
-    ZONE_CONDITION_SCHEMA,
-    AND_CONDITION_SCHEMA,
-    OR_CONDITION_SCHEMA,
-    DEVICE_CONDITION_SCHEMA,
+CONDITION_SCHEMA: vol.Schema = key_value_schemas(
+    CONF_CONDITION,
+    {
+        "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+        "state": STATE_CONDITION_SCHEMA,
+        "sun": SUN_CONDITION_SCHEMA,
+        "template": TEMPLATE_CONDITION_SCHEMA,
+        "time": TIME_CONDITION_SCHEMA,
+        "zone": ZONE_CONDITION_SCHEMA,
+        "and": AND_CONDITION_SCHEMA,
+        "or": OR_CONDITION_SCHEMA,
+        "device": DEVICE_CONDITION_SCHEMA,
+    },
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ALIAS): string,
-        vol.Required("delay"): vol.Any(
+        vol.Required(CONF_DELAY): vol.Any(
             vol.All(time_period, positive_timedelta), template, template_complex
         ),
     }
@@ -898,9 +961,9 @@ _SCRIPT_DELAY_SCHEMA = vol.Schema(
 _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ALIAS): string,
-        vol.Required("wait_template"): template,
+        vol.Required(CONF_WAIT_TEMPLATE): template,
         vol.Optional(CONF_TIMEOUT): vol.All(time_period, positive_timedelta),
-        vol.Optional("continue_on_timeout"): boolean,
+        vol.Optional(CONF_CONTINUE_ON_TIMEOUT): boolean,
     }
 )
 
@@ -910,19 +973,57 @@ DEVICE_ACTION_BASE_SCHEMA = vol.Schema(
 
 DEVICE_ACTION_SCHEMA = DEVICE_ACTION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-_SCRIPT_SCENE_SCHEMA = vol.Schema({vol.Required("scene"): entity_domain("scene")})
+_SCRIPT_SCENE_SCHEMA = vol.Schema({vol.Required(CONF_SCENE): entity_domain("scene")})
 
-SCRIPT_SCHEMA = vol.All(
-    ensure_list,
-    [
-        vol.Any(
-            SERVICE_SCHEMA,
-            _SCRIPT_DELAY_SCHEMA,
-            _SCRIPT_WAIT_TEMPLATE_SCHEMA,
-            EVENT_SCHEMA,
-            CONDITION_SCHEMA,
-            DEVICE_ACTION_SCHEMA,
-            _SCRIPT_SCENE_SCHEMA,
-        )
-    ],
-)
+SCRIPT_ACTION_DELAY = "delay"
+SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
+SCRIPT_ACTION_CHECK_CONDITION = "condition"
+SCRIPT_ACTION_FIRE_EVENT = "event"
+SCRIPT_ACTION_CALL_SERVICE = "call_service"
+SCRIPT_ACTION_DEVICE_AUTOMATION = "device"
+SCRIPT_ACTION_ACTIVATE_SCENE = "scene"
+
+
+def determine_script_action(action: dict) -> str:
+    """Determine action type."""
+    if CONF_DELAY in action:
+        return SCRIPT_ACTION_DELAY
+
+    if CONF_WAIT_TEMPLATE in action:
+        return SCRIPT_ACTION_WAIT_TEMPLATE
+
+    if CONF_CONDITION in action:
+        return SCRIPT_ACTION_CHECK_CONDITION
+
+    if CONF_EVENT in action:
+        return SCRIPT_ACTION_FIRE_EVENT
+
+    if CONF_DEVICE_ID in action:
+        return SCRIPT_ACTION_DEVICE_AUTOMATION
+
+    if CONF_SCENE in action:
+        return SCRIPT_ACTION_ACTIVATE_SCENE
+
+    return SCRIPT_ACTION_CALL_SERVICE
+
+
+ACTION_TYPE_SCHEMAS: Dict[str, Callable[[Any], dict]] = {
+    SCRIPT_ACTION_CALL_SERVICE: SERVICE_SCHEMA,
+    SCRIPT_ACTION_DELAY: _SCRIPT_DELAY_SCHEMA,
+    SCRIPT_ACTION_WAIT_TEMPLATE: _SCRIPT_WAIT_TEMPLATE_SCHEMA,
+    SCRIPT_ACTION_FIRE_EVENT: EVENT_SCHEMA,
+    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_SCHEMA,
+    SCRIPT_ACTION_DEVICE_AUTOMATION: DEVICE_ACTION_SCHEMA,
+    SCRIPT_ACTION_ACTIVATE_SCENE: _SCRIPT_SCENE_SCHEMA,
+}
+
+
+def script_action(value: Any) -> dict:
+    """Validate a script action."""
+    if not isinstance(value, dict):
+        raise vol.Invalid("expected dictionary")
+
+    return ACTION_TYPE_SCHEMAS[determine_script_action(value)](value)
+
+
+SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])

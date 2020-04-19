@@ -1,7 +1,7 @@
 # Describes the format for available zha services
 
 permit:
-  description: Allow nodes to join the ZigBee network.
+  description: Allow nodes to join the Zigbee network.
   fields:
     duration:
       description: Time to permit joins, in seconds
@@ -11,7 +11,7 @@ permit:
       example: "00:0d:6f:00:05:7d:2d:34"
 
 remove:
-  description: Remove a node from the ZigBee network.
+  description: Remove a node from the Zigbee network.
   fields:
     ieee_address:
       description: IEEE address of the node to remove
@@ -78,7 +78,7 @@ issue_zigbee_cluster_command:
       example: "server"
     args:
       description: args to pass to the command
-      example: '[arg1, arg2, argN]'
+      example: "[arg1, arg2, argN]"
     manufacturer:
       description: manufacturer code
       example: 0x00FC
@@ -98,7 +98,7 @@ issue_zigbee_group_command:
       example: 0
     args:
       description: args to pass to the command
-      example: '[arg1, arg2, argN]'
+      example: "[arg1, arg2, argN]"
     manufacturer:
       description: manufacturer code
       example: 0x00FC

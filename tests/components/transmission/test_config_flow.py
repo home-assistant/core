@@ -6,12 +6,12 @@ import pytest
 from transmissionrpc.error import TransmissionError
 
 from homeassistant import data_entry_flow
+from homeassistant.components import transmission
 from homeassistant.components.transmission import config_flow
 from homeassistant.components.transmission.const import (
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -73,6 +73,15 @@ def mock_api_unknown_error():
         yield
 
 
+@pytest.fixture(name="transmission_setup", autouse=True)
+def transmission_setup_fixture():
+    """Mock transmission entry setup."""
+    with patch(
+        "homeassistant.components.transmission.async_setup_entry", return_value=True
+    ):
+        yield
+
+
 def init_config_flow(hass):
     """Init a configuration flow."""
     flow = config_flow.TransmissionFlowHandler()
@@ -80,17 +89,21 @@ def init_config_flow(hass):
     return flow
 
 
-async def test_flow_works(hass, api):
+async def test_flow_user_config(hass, api):
     """Test user config."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_user()
+    result = await hass.config_entries.flow.async_init(
+        transmission.DOMAIN, context={"source": "user"}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    # test with required fields only
-    result = await flow.async_step_user(
-        {CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT}
+
+async def test_flow_required_fields(hass, api):
+    """Test with required fields only."""
+    result = await hass.config_entries.flow.async_init(
+        transmission.DOMAIN,
+        context={"source": "user"},
+        data={CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -99,8 +112,12 @@ async def test_flow_works(hass, api):
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
 
-    # test with all provided
-    result = await flow.async_step_user(MOCK_ENTRY)
+
+async def test_flow_all_provided(hass, api):
+    """Test with all provided."""
+    result = await hass.config_entries.flow.async_init(
+        transmission.DOMAIN, context={"source": "user"}, data=MOCK_ENTRY
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
@@ -114,7 +131,7 @@ async def test_flow_works(hass, api):
 async def test_options(hass):
     """Test updating options."""
     entry = MockConfigEntry(
-        domain=DOMAIN,
+        domain=transmission.DOMAIN,
         title=CONF_NAME,
         data=MOCK_ENTRY,
         options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
@@ -174,13 +191,14 @@ async def test_import(hass, api):
 async def test_host_already_configured(hass, api):
     """Test host is already configured."""
     entry = MockConfigEntry(
-        domain=DOMAIN,
+        domain=transmission.DOMAIN,
         data=MOCK_ENTRY,
         options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
     )
     entry.add_to_hass(hass)
-    flow = init_config_flow(hass)
-    result = await flow.async_step_user(MOCK_ENTRY)
+    result = await hass.config_entries.flow.async_init(
+        transmission.DOMAIN, context={"source": "user"}, data=MOCK_ENTRY
+    )
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -189,7 +207,7 @@ async def test_host_already_configured(hass, api):
 async def test_name_already_configured(hass, api):
     """Test name is already configured."""
     entry = MockConfigEntry(
-        domain=DOMAIN,
+        domain=transmission.DOMAIN,
         data=MOCK_ENTRY,
         options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
     )
@@ -197,8 +215,9 @@ async def test_name_already_configured(hass, api):
 
     mock_entry = MOCK_ENTRY.copy()
     mock_entry[CONF_HOST] = "0.0.0.0"
-    flow = init_config_flow(hass)
-    result = await flow.async_step_user(mock_entry)
+    result = await hass.config_entries.flow.async_init(
+        transmission.DOMAIN, context={"source": "user"}, data=mock_entry
+    )
 
     assert result["type"] == "form"
     assert result["errors"] == {CONF_NAME: "name_exists"}

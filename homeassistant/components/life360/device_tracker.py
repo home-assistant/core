@@ -5,9 +5,9 @@ import logging
 from life360 import Life360Error
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import CONF_SCAN_INTERVAL
-from homeassistant.components.device_tracker.const import (
-    ENTITY_ID_FORMAT as DT_ENTITY_ID_FORMAT,
+from homeassistant.components.device_tracker import (
+    CONF_SCAN_INTERVAL,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
 )
 from homeassistant.components.zone import async_active_zone
 from homeassistant.const import (
@@ -72,7 +72,7 @@ def _include_name(filter_dict, name):
 
 
 def _exc_msg(exc):
-    return "{}: {}".format(exc.__class__.__name__, str(exc))
+    return f"{exc.__class__.__name__}: {exc}"
 
 
 def _dump_filter(filter_dict, desc, func=lambda x: x):
@@ -162,7 +162,7 @@ class Life360Scanner:
             msg = f"{key}: {err_msg}"
             if _errs >= self._error_threshold:
                 if _errs == self._max_errs:
-                    msg = "Suppressing further errors until OK: " + msg
+                    msg = f"Suppressing further errors until OK: {msg}"
                 _LOGGER.error(msg)
             elif _errs >= self._warning_threshold:
                 _LOGGER.warning(msg)
@@ -180,14 +180,14 @@ class Life360Scanner:
             if overdue and not reported and now - self._started > EVENT_DELAY:
                 self._hass.bus.fire(
                     EVENT_UPDATE_OVERDUE,
-                    {ATTR_ENTITY_ID: DT_ENTITY_ID_FORMAT.format(dev_id)},
+                    {ATTR_ENTITY_ID: f"{DEVICE_TRACKER_DOMAIN}.{dev_id}"},
                 )
                 reported = True
             elif not overdue and reported:
                 self._hass.bus.fire(
                     EVENT_UPDATE_RESTORED,
                     {
-                        ATTR_ENTITY_ID: DT_ENTITY_ID_FORMAT.format(dev_id),
+                        ATTR_ENTITY_ID: f"{DEVICE_TRACKER_DOMAIN}.{dev_id}",
                         ATTR_WAIT: str(last_seen - (prev_seen or self._started)).split(
                             "."
                         )[0],
@@ -195,7 +195,10 @@ class Life360Scanner:
                 )
                 reported = False
 
-        self._dev_data[dev_id] = last_seen or prev_seen, reported
+        # Don't remember last_seen unless it's really an update.
+        if not last_seen or prev_seen and last_seen <= prev_seen:
+            last_seen = prev_seen
+        self._dev_data[dev_id] = last_seen, reported
 
         return prev_seen
 
@@ -211,14 +214,24 @@ class Life360Scanner:
             err_msg = member["issues"]["title"]
             if err_msg:
                 if member["issues"]["dialog"]:
-                    err_msg += ": " + member["issues"]["dialog"]
+                    err_msg += f": {member['issues']['dialog']}"
             else:
                 err_msg = "Location information missing"
             self._err(dev_id, err_msg)
             return
 
         # Only update when we truly have an update.
-        if not last_seen or prev_seen and last_seen <= prev_seen:
+        if not last_seen:
+            _LOGGER.warning("%s: Ignoring update because timestamp is missing", dev_id)
+            return
+        if prev_seen and last_seen < prev_seen:
+            _LOGGER.warning(
+                "%s: Ignoring update because timestamp is older than last timestamp",
+                dev_id,
+            )
+            _LOGGER.debug("%s < %s", last_seen, prev_seen)
+            return
+        if last_seen == prev_seen:
             return
 
         lat = loc.get("latitude")
@@ -240,7 +253,7 @@ class Life360Scanner:
 
         msg = f"Updating {dev_id}"
         if prev_seen:
-            msg += "; Time since last update: {}".format(last_seen - prev_seen)
+            msg += f"; Time since last update: {last_seen - prev_seen}"
         _LOGGER.debug(msg)
 
         if self._max_gps_accuracy is not None and gps_accuracy > self._max_gps_accuracy:
@@ -389,10 +402,10 @@ class Life360Scanner:
                         places = api.get_circle_places(circle_id)
                         place_data = "Circle's Places:"
                         for place in places:
-                            place_data += "\n- name: {}".format(place["name"])
-                            place_data += "\n  latitude: {}".format(place["latitude"])
-                            place_data += "\n  longitude: {}".format(place["longitude"])
-                            place_data += "\n  radius: {}".format(place["radius"])
+                            place_data += f"\n- name: {place['name']}"
+                            place_data += f"\n  latitude: {place['latitude']}"
+                            place_data += f"\n  longitude: {place['longitude']}"
+                            place_data += f"\n  radius: {place['radius']}"
                         if not places:
                             place_data += " None"
                         _LOGGER.debug(place_data)

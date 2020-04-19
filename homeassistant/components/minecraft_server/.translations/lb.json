@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen mam Server. Iwwerpr\u00e9if den Numm a Port a prob\u00e9ier nach emol. G\u00e9i och s\u00e9cher dass op d'mannst Minecraft Versioun 1.7 um Server leeft.",
+            "invalid_ip": "IP Adress ass ong\u00eblteg (MAC Adress konnt net best\u00ebmmt ginn). Korrig\u00e9iert et a prob\u00e9iert et nach eng K\u00e9ier w.e.g.",
+            "invalid_port": "Port muss zw\u00ebscht 1024 a 65535 sinn. Korrig\u00e9iert et a prob\u00e9iert et nach eng K\u00e9ier w.e.g."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Apparat",
+                    "name": "Numm"
+                },
+                "description": "Riicht deng Minecraft Server Instanz a fir d'Iwwerwaachung z'erlaben",
+                "title": "Verbann d\u00e4in Minecraft Server"
+            }
+        }
+    }
+}

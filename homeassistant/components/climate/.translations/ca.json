@@ -13,5 +13,6 @@
             "current_temperature_changed": "Ha canviat la temperatura mesurada per {entity_name}",
             "hvac_mode_changed": "El mode HVAC de {entity_name} ha canviat"
         }
-    }
+    },
+    "title": "Climatitzaci\u00f3"
 }
