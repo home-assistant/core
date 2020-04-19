@@ -15,10 +15,18 @@
             "authorize": {
                 "title": "Autoritzaci\u00f3 de Home Assistant"
             },
+            "pat": {
+                "data": {
+                    "access_token": "Testimoni d'acc\u00e9s"
+                },
+                "description": "Introdueix un [testimoni d'acc\u00e9s personal]({token_url}) de SmartThings creat a partir de les [instruccions]({component_url}). S\u2019utilitzar\u00e0 per crear la integraci\u00f3 de Home Assistant dins el teu compte de SmartThings.",
+                "title": "Introdueix el testimoni d'acc\u00e9s personal"
+            },
             "select_location": {
                 "data": {
                     "location_id": "Ubicaci\u00f3"
                 },
+                "description": "Selecciona la ubicaci\u00f3 de SmartThings que vols afegir a Home Assistant. A continuaci\u00f3, s'obrir\u00e0 una finestra on se't demanar\u00e0 que inici\u00efs sessi\u00f3 i autoritzis la instal\u00b7laci\u00f3 de la integraci\u00f3 de Home Assistant a la ubicaci\u00f3 seleccionada.",
                 "title": "Selecci\u00f3 d'ubicaci\u00f3"
             },
             "user": {

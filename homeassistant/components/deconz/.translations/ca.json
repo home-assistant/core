@@ -29,6 +29,19 @@
                     "host": "Amfitri\u00f3",
                     "port": "Port"
                 }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                },
+                "title": "Configuraci\u00f3 de la passarel\u00b7la deCONZ"
+            },
+            "user": {
+                "data": {
+                    "host": "Selecciona la passarel\u00b7la deCONZ descoberta"
+                },
+                "title": "Selecci\u00f3 de la passarel\u00b7la deCONZ"
             }
         }
     },
