@@ -8,15 +8,14 @@ _LOGGER = logging.getLogger(__name__)
 class JuiceNetApi:
     """Represent a connection to JuiceNet."""
 
-    def __init__(self, api, config_entry):
+    def __init__(self, api):
         """Create an object from the provided API instance."""
         self.api = api
-        self.config_entry = config_entry
         self._devices = []
 
-    def setup(self, hass):
+    async def setup(self):
         """JuiceNet device setup."""  # noqa: D403
-        self._devices = self.api.get_devices()
+        self._devices = await self.api.get_devices()
 
     @property
     def devices(self) -> list:

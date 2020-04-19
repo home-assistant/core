@@ -5,9 +5,8 @@ from pyjuicenet import Api
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.components.juicenet.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
-
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 

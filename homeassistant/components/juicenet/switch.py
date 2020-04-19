@@ -1,10 +1,9 @@
 """Support for monitoring juicenet/juicepoint/juicebox based EVSE switches."""
 import logging
 
+from homeassistant.components.juicenet.const import DOMAIN
+from homeassistant.components.juicenet.entity import JuiceNetDevice
 from homeassistant.components.switch import SwitchEntity
-
-from .const import DOMAIN
-from .entity import JuiceNetDevice
 
 _LOGGER = logging.getLogger(__name__)
 

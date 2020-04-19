@@ -6,14 +6,13 @@ from pyjuicenet import Api
 import requests
 import voluptuous as vol
 
+from homeassistant.components.juicenet.const import DOMAIN
+from homeassistant.components.juicenet.device import JuiceNetApi
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-
-from .const import DOMAIN
-from .device import JuiceNetApi
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,10 +49,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     access_token = config[CONF_ACCESS_TOKEN]
     api = Api(access_token)
 
-    juicenet = JuiceNetApi(api, hass)
+    juicenet = JuiceNetApi(api)
 
     try:
-        await hass.async_add_executor_job(juicenet.setup, hass)
+        await hass.async_add_executor_job(juicenet.setup)
     except ValueError as error:
         _LOGGER.error("JuiceNet Error %s", error)
         return False
