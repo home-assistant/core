@@ -7,7 +7,8 @@ DOMAIN = "ecobee"
 DATA_ECOBEE_CONFIG = "ecobee_config"
 
 CONF_INDEX = "index"
-CONF_REFRESH_TOKEN = "refresh_token"
+CONF_API_KEY = "API_KEY"
+CONF_REFRESH_TOKEN = "REFRESH_TOKEN"
 
 ECOBEE_MODEL_TO_NAME = {
     "idtSmart": "ecobee Smart",

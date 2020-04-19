@@ -6,12 +6,12 @@ from pyecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN, Ecobee, ExpiredTokenE
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 
 from .const import (
     _LOGGER,
+    CONF_API_KEY,
     CONF_REFRESH_TOKEN,
     DATA_ECOBEE_CONFIG,
     DOMAIN,
@@ -50,10 +50,12 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up ecobee via a config entry."""
-    api_key = entry.data[CONF_API_KEY]
-    refresh_token = entry.data[CONF_REFRESH_TOKEN]
 
-    data = EcobeeData(hass, entry, api_key=api_key, refresh_token=refresh_token)
+    _config = {}
+    _config.update(entry.data)
+    if bool(entry.options):
+        _config.update(entry.options)
+    data = EcobeeData(hass, entry, _config)
 
     if not await data.refresh():
         return False
@@ -81,13 +83,11 @@ class EcobeeData:
     Also handle refreshing tokens and updating config entry with refreshed tokens.
     """
 
-    def __init__(self, hass, entry, api_key, refresh_token):
+    def __init__(self, hass, entry, config: dict = None):
         """Initialize the Ecobee data object."""
         self._hass = hass
         self._entry = entry
-        self.ecobee = Ecobee(
-            config={ECOBEE_API_KEY: api_key, ECOBEE_REFRESH_TOKEN: refresh_token}
-        )
+        self.ecobee = Ecobee(config=config)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def update(self):

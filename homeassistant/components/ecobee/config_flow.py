@@ -9,11 +9,10 @@ from pyecobee import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistantError, callback
 from homeassistant.util.json import load_json
 
-from .const import _LOGGER, CONF_REFRESH_TOKEN, DATA_ECOBEE_CONFIG, DOMAIN
+from .const import _LOGGER, CONF_API_KEY, CONF_REFRESH_TOKEN, DATA_ECOBEE_CONFIG, DOMAIN
 
 
 class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -140,7 +139,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(title=DOMAIN, data=user_input)
 
         return self.async_show_form(
             step_id="init",
