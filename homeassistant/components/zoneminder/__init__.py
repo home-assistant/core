@@ -58,9 +58,9 @@ def setup(hass, config):
     success = True
 
     for conf in config[DOMAIN]:
-        protocol = "https" if conf.get(CONF_SSL) else "http"
+        protocol = "https" if conf[CONF_SSL] else "http"
 
-        host_name = conf.get(CONF_HOST)
+        host_name = conf[CONF_HOST]
         server_origin = f"{protocol}://{host_name}"
         zm_client = ZoneMinder(
             server_origin,
