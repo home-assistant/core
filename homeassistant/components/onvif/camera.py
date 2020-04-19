@@ -501,7 +501,7 @@ class ONVIFHassCamera(Camera):
                         "PanTilt": {"x": speed_val, "y": speed_val},
                         "Zoom": {"x": speed_val},
                     }
-                    await self._ptz_service.GotoPreset(req)                    
+                    await self._ptz_service.GotoPreset(req)
             except exceptions.ONVIFError as err:
                 if "Bad Request" in err.reason:
                     self._ptz_service = None
