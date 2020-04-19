@@ -213,6 +213,9 @@ ephem==3.7.7.0
 # homeassistant.components.feedreader
 feedparser-homeassistant==5.2.2.dev1
 
+# homeassistant.components.homekit
+fnvhash==0.1.0
+
 # homeassistant.components.foobot
 foobot_async==0.3.1
 
