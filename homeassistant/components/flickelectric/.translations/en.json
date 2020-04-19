@@ -1,0 +1,16 @@
+{
+    "title": "Flick Electric",
+    "config": {
+      "step": {
+        "user": {
+          "title": "Flick Login Details",
+          "data": {
+            "username": "Username",
+            "password": "Password",
+            "client_id": "Client ID",
+            "client_secret": "Client Secret"
+          }
+        }
+      }
+    }
+  }

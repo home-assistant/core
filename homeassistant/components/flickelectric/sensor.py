@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -40,25 +39,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_CLIENT_SECRET): cv.string,
     }
 )
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Flick sensor."""
-    websession = async_get_clientsession(hass)
-
-    async_add_entities(
-        [
-            FlickPricingSensor(
-                hass.loop,
-                websession,
-                config[CONF_USERNAME],
-                config[CONF_PASSWORD],
-                config.get(CONF_CLIENT_ID),
-                config.get(CONF_CLIENT_SECRET),
-            )
-        ],
-        True,
-    )
 
 
 class FlickPricingSensor(Entity):
