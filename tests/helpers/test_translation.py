@@ -35,7 +35,7 @@ def test_flatten():
     }
 
 
-async def test_component_translation_file(hass):
+async def test_component_translation_path(hass):
     """Test the component translation file function."""
     assert await async_setup_component(
         hass,
@@ -58,13 +58,13 @@ async def test_component_translation_file(hass):
     )
 
     assert path.normpath(
-        translation.component_translation_file("switch.test", "en", int_test)
+        translation.component_translation_path("switch.test", "en", int_test)
     ) == path.normpath(
         hass.config.path("custom_components", "test", ".translations", "switch.en.json")
     )
 
     assert path.normpath(
-        translation.component_translation_file(
+        translation.component_translation_path(
             "switch.test_embedded", "en", int_test_embedded
         )
     ) == path.normpath(
@@ -74,14 +74,14 @@ async def test_component_translation_file(hass):
     )
 
     assert (
-        translation.component_translation_file(
+        translation.component_translation_path(
             "test_standalone", "en", int_test_standalone
         )
         is None
     )
 
     assert path.normpath(
-        translation.component_translation_file("test_package", "en", int_test_package)
+        translation.component_translation_path("test_package", "en", int_test_package)
     ) == path.normpath(
         hass.config.path(
             "custom_components", "test_package", ".translations", "en.json"
@@ -101,7 +101,10 @@ def test_load_translations_files(hass):
     assert translation.load_translations_files(
         {"switch.test": file1, "invalid": file2}
     ) == {
-        "switch.test": {"state": {"string1": "Value 1", "string2": "Value 2"}},
+        "switch.test": {
+            "state": {"string1": "Value 1", "string2": "Value 2"},
+            "something": "else",
+        },
         "invalid": {},
     }
 
@@ -115,10 +118,12 @@ async def test_get_translations(hass, mock_config_flows):
 
     translations = await translation.async_get_translations(hass, "en")
 
+    assert translations["component.switch.something"] == "else"
     assert translations["component.switch.state.string1"] == "Value 1"
     assert translations["component.switch.state.string2"] == "Value 2"
 
-    translations = await translation.async_get_translations(hass, "de")
+    translations = await translation.async_get_translations(hass, "de", "state")
+    assert "component.switch.something" not in translations
     assert translations["component.switch.state.string1"] == "German Value 1"
     assert translations["component.switch.state.string2"] == "German Value 2"
 
@@ -140,7 +145,7 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
     integration.name = "Component 1"
 
     with patch.object(
-        translation, "component_translation_file", return_value=mock_coro("bla.json")
+        translation, "component_translation_path", return_value=mock_coro("bla.json")
     ), patch.object(
         translation,
         "load_translations_files",
@@ -149,7 +154,40 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
         "homeassistant.helpers.translation.async_get_integration",
         return_value=integration,
     ):
+        translations = await translation.async_get_translations(
+            hass, "en", config_flow=True
+        )
+
+    assert translations == {
+        "component.component1.title": "Component 1",
+        "component.component1.hello": "world",
+    }
+
+    assert "component1" not in hass.config.components
+
+
+async def test_get_translations_while_loading_components(hass):
+    """Test the get translations helper loads config flow translations."""
+    integration = Mock(file_path=pathlib.Path(__file__))
+    integration.name = "Component 1"
+    hass.config.components.add("component1")
+
+    async def mock_load_translation_files(files):
+        """Mock load translation files."""
+        # Mimic race condition by loading a component during setup
+        await async_setup_component(hass, "persistent_notification", {})
+        return {"component1": {"hello": "world"}}
+
+    with patch.object(
+        translation, "component_translation_path", return_value=mock_coro("bla.json")
+    ), patch.object(
+        translation, "load_translations_files", side_effect=mock_load_translation_files,
+    ), patch(
+        "homeassistant.helpers.translation.async_get_integration",
+        return_value=integration,
+    ):
         translations = await translation.async_get_translations(hass, "en")
+
     assert translations == {
         "component.component1.title": "Component 1",
         "component.component1.hello": "world",
