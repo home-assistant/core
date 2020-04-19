@@ -2,31 +2,22 @@
 import logging
 
 import gammu  # pylint: disable=import-error, no-member
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, DEVICE_CLASS_SIGNAL_STRENGTH
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import DEVICE_CLASS_SIGNAL_STRENGTH
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import DOMAIN, SMS_GATEWAY, SMS_GSM_SIGNAL_SENSOR_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "GSM Signal"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the GSM Signal Sensor sensor."""
-    name = config.get(CONF_NAME)
-    gateway = hass.data[DOMAIN]
-    add_entities(
-        [GSMSignalSensor(hass, gateway, name,)], True,
-    )
+    name = SMS_GSM_SIGNAL_SENSOR_NAME
+    gateway = hass.data[DOMAIN][SMS_GATEWAY]
+    entities = []
+    entities.append(GSMSignalSensor(hass, gateway, name,))
+    async_add_entities(entities, True)
 
 
 class GSMSignalSensor(Entity):
