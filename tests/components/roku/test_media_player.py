@@ -213,7 +213,7 @@ async def test_tv_attributes(hass: HomeAssistantType, requests_mock: Mocker) -> 
     state = hass.states.get(TV_ENTITY_ID)
     assert state.state == STATE_PLAYING
 
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_MOVIE
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_CHANNEL
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Antenna TV"
 
 
