@@ -77,21 +77,6 @@ class SerialSensor(Entity):
                 while True:
                     try:
                         line = await reader.readline()
-                        line = line.decode("utf-8").strip()
-
-                        try:
-                            data = json.loads(line)
-                            if isinstance(data, dict):
-                                self._attributes = data
-                        except ValueError:
-                            pass
-
-                        if self._template is not None:
-                            line = self._template.async_render_with_possible_json_value(line)
-
-                        _LOGGER.debug("Received: %s", line)
-                        self._state = line
-                        self.async_write_ha_state()
                     except SerialException as e:
                         self._state = None
                         self._attributes = None
@@ -99,6 +84,23 @@ class SerialSensor(Entity):
                         _LOGGER.exception("Error while reading serial device %s: %s", device, str(e))
                         await asyncio.sleep(5)
                         break
+                    else:
+                        line = line.decode("utf-8").strip()
+
+                        try:
+                            data = json.loads(line)
+                        except ValueError:
+                            pass
+                        else:
+                            if isinstance(data, dict):
+                                self._attributes = data
+
+                        if self._template is not None:
+                            line = self._template.async_render_with_possible_json_value(line)
+
+                        _LOGGER.debug("Received: %s", line)
+                        self._state = line
+                        self.async_write_ha_state()
             except SerialException as e:
                 self._state = None
                 self._attributes = None
