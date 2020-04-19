@@ -491,7 +491,6 @@ async def webhook_get_panels(hass, config_entry, data):
     """Handle a get panels webhook."""
     panels_data = hass.data[DATA_PANELS]
     panels = []
-    _LOGGER.warning(panels_data)
     for panel in panels_data:
         panels.append(panels_data[panel].to_response())
 
