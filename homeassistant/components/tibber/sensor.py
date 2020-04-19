@@ -10,7 +10,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, dt as dt_util
 
-from . import DOMAIN as TIBBER_DOMAIN
+from .const import DOMAIN as TIBBER_DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,10 +20,8 @@ SCAN_INTERVAL = timedelta(minutes=1)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Tibber sensor."""
-    if discovery_info is None:
-        return
 
     tibber_connection = hass.data.get(TIBBER_DOMAIN)
 
@@ -70,6 +68,25 @@ class TibberSensor(Entity):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def device_id(self):
+        """Return the ID of the physical device this sensor is part of."""
+        return self.unique_id
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        device_info = {
+            "identifiers": {(TIBBER_DOMAIN, self.device_id)},
+            "name": self.name,
+            "manufacturer": MANUFACTURER,
+        }
+        if isinstance(self, TibberSensorElPrice):
+            device_info["model"] = "Price Sensor"
+        elif isinstance(self, TibberSensorRT):
+            device_info["model"] = "Tibber Pulse"
+        return device_info
 
 
 class TibberSensorElPrice(TibberSensor):

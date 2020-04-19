@@ -13,9 +13,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
-DOMAIN = "tibber"
+from .const import DATA_HASS_CONFIG, DOMAIN
 
 FIRST_RETRY_TIME = 60
+PLATFORMS = [
+    "sensor",
+]
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
@@ -25,12 +28,17 @@ CONFIG_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config, retry_delay=FIRST_RETRY_TIME):
+async def async_setup(hass, config):
     """Set up the Tibber component."""
-    conf = config.get(DOMAIN)
+    hass.data[DATA_HASS_CONFIG] = config
+    return True
+
+
+async def async_setup_entry(hass, entry, retry_delay=FIRST_RETRY_TIME):
+    """Set up a config entry."""
 
     tibber_connection = tibber.Tibber(
-        conf[CONF_ACCESS_TOKEN],
+        access_token=entry.data[CONF_ACCESS_TOKEN],
         websession=async_get_clientsession(hass),
         time_zone=dt_util.DEFAULT_TIME_ZONE,
     )
@@ -48,9 +56,9 @@ async def async_setup(hass, config, retry_delay=FIRST_RETRY_TIME):
 
         async def retry_setup(now):
             """Retry setup if a timeout happens on Tibber API."""
-            await async_setup(hass, config, retry_delay=min(2 * retry_delay, 900))
+            await async_setup_entry(hass, entry, retry_delay=min(2 * retry_delay, 900))
 
-        async_call_later(hass, retry_delay, retry_setup)
+        async_call_later(hass, entry, retry_setup)
 
         return True
     except aiohttp.ClientError as err:
@@ -60,7 +68,36 @@ async def async_setup(hass, config, retry_delay=FIRST_RETRY_TIME):
         _LOGGER.error("Failed to login. %s", exp)
         return False
 
-    for component in ["sensor", "notify"]:
-        discovery.load_platform(hass, component, DOMAIN, {CONF_NAME: DOMAIN}, config)
+    for component in PLATFORMS:
+        print(component)
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
 
+    # set up notify platform, no entry support for notify component yet,
+    # have to use discovery to load platform.
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass, "notify", DOMAIN, {CONF_NAME: DOMAIN}, hass.data.get(DATA_HASS_CONFIG)
+        )
+    )
     return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(config_entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    # -How to unload notify?
+
+    if unload_ok:
+        tibber_connection = hass.data.get(DOMAIN)
+        await tibber_connection.rt_disconnect()
+
+    return unload_ok
