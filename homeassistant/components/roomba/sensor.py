@@ -16,7 +16,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     roomba = domain_data[ROOMBA_SESSION]
     blid = domain_data[BLID]
     roomba_vac = RoombaBattery(roomba, blid)
-    roomba_vac.register_callback()
     async_add_entities([roomba_vac], True)
 
 
@@ -46,6 +45,4 @@ class RoombaBattery(IRobotEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        battery_level = roomba_reported_state(self.vacuum).get("batPct")
-        _LOGGER.debug("Update battery level status from the vacuum: %s", battery_level)
-        return battery_level
+        return roomba_reported_state(self.vacuum).get("batPct")

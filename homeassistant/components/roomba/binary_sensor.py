@@ -18,7 +18,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     status = roomba_reported_state(roomba).get("bin", {})
     if "full" in status:
         roomba_vac = RoombaBinStatus(roomba, blid)
-        roomba_vac.register_callback()
         async_add_entities([roomba_vac], True)
 
 
@@ -45,8 +44,4 @@ class RoombaBinStatus(IRobotEntity, BinarySensorDevice):
     @property
     def state(self):
         """Return the state of the sensor."""
-        bin_status = (
-            roomba_reported_state(self.vacuum).get("bin", {}).get("full", False)
-        )
-        _LOGGER.debug("Update Full Bin status from the vacuum: %s", bin_status)
-        return bin_status
+        return roomba_reported_state(self.vacuum).get("bin", {}).get("full", False)
