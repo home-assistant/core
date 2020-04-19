@@ -18,5 +18,14 @@
     "abort": {
       "one_instance_only": "This integration currently supports only one ecobee instance."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Notification Options",
+        "description": "Select whether or not to retrieve notifications for Ecobee thermostats.",
+        "data": { "INCLUDE_NOTIFICATIONS": "Retrieve Notifications" }
+      }
+    }
   }
 }
