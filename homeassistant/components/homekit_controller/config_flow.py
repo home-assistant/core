@@ -3,7 +3,6 @@ import logging
 import re
 
 import aiohomekit
-from aiohomekit.controller.ip import IpPairing
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -207,23 +206,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         # directly as it has side effects (will ask the device to show a
         # pairing code)
         return self._async_step_pair_show_form()
-
-    async def async_import_legacy_pairing(self, discovery_props, pairing_data):
-        """Migrate a legacy pairing to config entries."""
-
-        hkid = discovery_props["id"]
-
-        _LOGGER.info(
-            (
-                "Legacy configuration %s for homekit"
-                "accessory migrated to configuration entries"
-            ),
-            hkid,
-        )
-
-        pairing = IpPairing(pairing_data)
-
-        return await self._entry_from_accessory(pairing)
 
     async def async_step_pair(self, pair_info=None):
         """Pair with a new HomeKit accessory."""
