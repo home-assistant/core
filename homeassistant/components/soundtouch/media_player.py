@@ -468,13 +468,13 @@ class SoundTouchDevice(MediaPlayerEntity):
         # In addition to this shortcoming, libsoundtouch seems to report the "is_master"
         # property wrong on some slaves, so the only reliable way to detect if the current
         # devices is the master, is by comparing the master_id of the zone with the device_id
-        if zone_status.master_id == self._device.config.device_id:
+        if self.entity_id is not None and zone_status.master_id == self._device.config.device_id:
             return self._build_zone_info(self.entity_id, zone_status.slaves)
 
         # The master device has to be searched by it's ID and not IP since libsoundtouch / BOSE API
         # do not return the IP of the master for some slave objects/responses
         master_instance = self._get_instance_by_id(zone_status.master_id)
-        if master_instance is not None:
+        if master_instance is not None and master_instance.entity_id is not None:
             master_zone_status = master_instance.device.zone_status()
             return self._build_zone_info(
                 master_instance.entity_id, master_zone_status.slaves
@@ -487,7 +487,7 @@ class SoundTouchDevice(MediaPlayerEntity):
     def _get_instance_by_ip(self, ip_address):
         """Search and return a SoundTouchDevice instance by it's IP address."""
         for instance in self.hass.data[DATA_SOUNDTOUCH]:
-            if instance and instance.config["host"] == ip_address:
+            if instance and instance.device.config.device_ip == ip_address:
                 return instance
         return None
 
