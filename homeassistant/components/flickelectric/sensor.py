@@ -19,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util.dt import utcnow
 
 from .const import ATTR_END_AT, ATTR_START_AT, DOMAIN
 
@@ -82,12 +83,13 @@ class FlickPricingSensor(Entity):
 
     async def async_update(self):
         """Get the Flick Pricing data from the web service."""
-        # TODO: Build in check for 30 minute intervals (with jitter)
+        if self._price.end_at >= utcnow():
+            return  # Power price data is still valid
+
         with async_timeout.timeout(60):
             self._price = await self._api.getPricing()
 
         # Update Attributes
-
         self._attributes = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_FRIENDLY_NAME: FRIENDLY_NAME,
