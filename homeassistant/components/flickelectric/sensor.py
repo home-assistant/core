@@ -33,15 +33,6 @@ ATTRIBUTION = "Data provided by Flick Electric"
 FRIENDLY_NAME = "Flick Power Price"
 UNIT_NAME = "cents"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_CLIENT_ID): cv.string,
-        vol.Optional(CONF_CLIENT_SECRET): cv.string,
-    }
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
