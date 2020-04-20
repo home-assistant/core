@@ -38,14 +38,14 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         credentials_valid = await self.hass.async_add_executor_job(
             mydevolo.credentials_valid
         )
-        if credentials_valid:
-            _LOGGER.debug("Credentials valid")
-            return self.async_create_entry(
-                title="devolo Home Control",
-                data={CONF_PASSWORD: password, CONF_USERNAME: user},
-            )
-        else:
+        if not credentials_valid:
             return self._show_form({"base": "invalid_credentials"})
+
+        _LOGGER.debug("Credentials valid")
+        return self.async_create_entry(
+            title="devolo Home Control",
+            data={CONF_PASSWORD: password, CONF_USERNAME: user},
+        )
 
     @callback
     def _show_form(self, errors=None):
