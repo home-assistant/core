@@ -1,21 +1,17 @@
 {
   "config": {
-    "title": "Lutron Caséta",
     "step": {
-      "user": {
-        "title": "Connect to the device",
-        "data": {
-          "host": "Host"
-        }
+      "import_failed": {
+        "title": "Failed to import Caséta bridge configuration.",
+        "description": "Couldn’t setup bridge (host: {host}) imported from configuration.yaml."
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect, please try again",
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error"
+      "cannot_connect": "Failed to connect to Caséta bridge; check your host and certificate configuration."
     },
     "abort": {
-      "already_configured": "Device is already configured"
+      "already_configured": "Caséta bridge already configured.",
+      "cannot_connect": "Cancelled setup of Caséta bridge due to connection failure."
     }
   }
 }
