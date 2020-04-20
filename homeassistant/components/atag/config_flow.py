@@ -1,11 +1,11 @@
 """Config flow for the Atag component."""
-from aiohttp import ClientSession
 from pyatag import DEFAULT_PORT, AtagDataStore, AtagException
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import DOMAIN  # pylint: disable=unused-import
 
@@ -29,11 +29,10 @@ class AtagConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if not user_input:
             return await self._show_form()
-
+        session = async_get_clientsession(self.hass)
         try:
-            async with ClientSession() as session:
-                atag = AtagDataStore(session, **user_input)
-                await atag.async_check_pair_status()
+            atag = AtagDataStore(session, **user_input)
+            await atag.async_check_pair_status()
 
         except AtagException:
             return await self._show_form({"base": "connection_error"})

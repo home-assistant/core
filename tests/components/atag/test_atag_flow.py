@@ -2,9 +2,10 @@
 from unittest.mock import PropertyMock
 
 from asynctest import patch
+from pyatag import AtagException
 
-from homeassistant import data_entry_flow
-from homeassistant.components.atag import config_flow
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.atag import DOMAIN
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
@@ -44,9 +45,13 @@ async def test_connection_error(hass):
 
     with patch(
         "homeassistant.components.atag.config_flow.AtagDataStore.async_check_pair_status",
-        side_effect=AtagException()
+        side_effect=AtagException(),
     ):
-        result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=FIXTURE_USER_INPUT,
+        )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
