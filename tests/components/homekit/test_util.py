@@ -199,7 +199,7 @@ async def test_show_setup_msg(hass):
 
     call_create_notification = async_mock_service(hass, DOMAIN, "create")
 
-    await hass.async_add_executor_job(show_setup_message, hass, pincode)
+    await hass.async_add_executor_job(show_setup_message, hass, pincode, "X-HM://0")
     await hass.async_block_till_done()
 
     assert call_create_notification

@@ -255,4 +255,4 @@ class HomeDriver(AccessoryDriver):
     def unpair(self, client_uuid):
         """Override super function to show setup message if unpaired."""
         super().unpair(client_uuid)
-        show_setup_message(self.hass, self.state.pincode)
+        show_setup_message(self.hass, self.state.pincode, self.accessory.xhm_uri())
