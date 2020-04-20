@@ -62,8 +62,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     if mydevolo.maintenance():
         raise ConfigEntryNotReady
 
-    mydevolo.get_gateway_ids()
-    gateway_id = mydevolo._gateway_ids[0]
+    gateway_id = mydevolo.get_gateway_ids()[0]
     mprm_url = mydevolo.mprm
 
     try:
