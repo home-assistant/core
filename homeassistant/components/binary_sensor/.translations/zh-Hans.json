@@ -51,5 +51,87 @@
             "light": "{entity_name} \u5f00\u59cb\u68c0\u6d4b\u5230\u5149\u7ebf"
         }
     },
+    "state": {
+        "_": {
+            "off": "\u5173\u95ed",
+            "on": "\u5f00\u542f"
+        },
+        "battery": {
+            "off": "\u6b63\u5e38",
+            "on": "\u4f4e"
+        },
+        "cold": {
+            "off": "\u6b63\u5e38",
+            "on": "\u8fc7\u51b7"
+        },
+        "connectivity": {
+            "off": "\u5df2\u65ad\u5f00",
+            "on": "\u5df2\u8fde\u63a5"
+        },
+        "door": {
+            "off": "\u5173\u95ed",
+            "on": "\u5f00\u542f"
+        },
+        "garage_door": {
+            "off": "\u5173\u95ed",
+            "on": "\u5f00\u542f"
+        },
+        "gas": {
+            "off": "\u6b63\u5e38",
+            "on": "\u89e6\u53d1"
+        },
+        "heat": {
+            "off": "\u6b63\u5e38",
+            "on": "\u8fc7\u70ed"
+        },
+        "lock": {
+            "off": "\u4e0a\u9501",
+            "on": "\u89e3\u9501"
+        },
+        "moisture": {
+            "off": "\u5e72\u71e5",
+            "on": "\u6e7f\u6da6"
+        },
+        "motion": {
+            "off": "\u672a\u89e6\u53d1",
+            "on": "\u89e6\u53d1"
+        },
+        "occupancy": {
+            "off": "\u672a\u89e6\u53d1",
+            "on": "\u5df2\u89e6\u53d1"
+        },
+        "opening": {
+            "off": "\u5173\u95ed",
+            "on": "\u5f00\u542f"
+        },
+        "presence": {
+            "off": "\u79bb\u5f00",
+            "on": "\u5728\u5bb6"
+        },
+        "problem": {
+            "off": "\u6b63\u5e38",
+            "on": "\u5f02\u5e38"
+        },
+        "safety": {
+            "off": "\u5b89\u5168",
+            "on": "\u5371\u9669"
+        },
+        "smoke": {
+            "off": "\u6b63\u5e38",
+            "on": "\u89e6\u53d1"
+        },
+        "sound": {
+            "off": "\u6b63\u5e38",
+            "on": "\u89e6\u53d1"
+        },
+        "vibration": {
+            "off": "\u6b63\u5e38",
+            "on": "\u89e6\u53d1"
+        },
+        "window": {
+            "off": "\u5173\u95ed",
+            "on": "\u5f00\u542f"
+        }
+    },
     "title": "\u4e8c\u5143\u4f20\u611f\u5668"
 }

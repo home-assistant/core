@@ -25,5 +25,14 @@
             "tilt_position": "{entity_name} kipp positioun ge\u00e4nnert"
         }
     },
+    "state": {
+        "_": {
+            "closed": "Zou",
+            "closing": "G\u00ebtt zougemaach",
+            "open": "Op",
+            "opening": "G\u00ebtt opgemaach",
+            "stopped": "Gestoppt"
+        }
+    },
     "title": "Paart"
 }

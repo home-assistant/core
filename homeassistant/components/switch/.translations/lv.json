@@ -5,5 +5,11 @@
             "turned_on": "{entity_name} tika iesl\u0113gta"
         }
     },
+    "state": {
+        "_": {
+            "off": "Izsl\u0113gts",
+            "on": "Iesl\u0113gts"
+        }
+    },
     "title": "Sl\u0113dzis"
 }

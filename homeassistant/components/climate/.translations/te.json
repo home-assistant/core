@@ -1,3 +1,13 @@
 {
+    "state": {
+        "_": {
+            "auto": "\u0c26\u0c3e\u0c28\u0c02\u0c24\u0c1f \u0c05\u0c26\u0c47",
+            "cool": "\u0c1a\u0c32\u0c4d\u0c32\u0c17\u0c3e",
+            "dry": "\u0c2a\u0c4a\u0c21\u0c3f",
+            "fan_only": "\u0c2b\u0c4d\u0c2f\u0c3e\u0c28\u0c4d \u0c2e\u0c3e\u0c24\u0c4d\u0c30\u0c2e\u0c47",
+            "heat": "\u0c35\u0c46\u0c1a\u0c4d\u0c1a\u0c17\u0c3e",
+            "off": "\u0c06\u0c2b\u0c4d"
+        }
+    },
     "title": "\u0c35\u0c3e\u0c24\u0c3e\u0c35\u0c30\u0c23\u0c02"
 }

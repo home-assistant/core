@@ -1,3 +1,13 @@
 {
+    "state": {
+        "_": {
+            "auto": "Awto",
+            "cool": "Sefydlog",
+            "dry": "Sych",
+            "fan_only": "Fan yn unig",
+            "heat": "Gwres",
+            "off": "i ffwrdd"
+        }
+    },
     "title": "Hinsawdd"
 }

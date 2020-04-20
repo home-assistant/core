@@ -1,0 +1,20 @@
+{
+    "state": {
+        "_": {
+            "clear-night": "Klar, Nacht",
+            "cloudy": "Bedeckt",
+            "fog": "N\u00e4bu",
+            "hail": "H\u00e4gu",
+            "lightning": "Blitz\u00e4",
+            "lightning-rainy": "Blitz\u00e4, R\u00e4ge",
+            "partlycloudy": "Teilwis bedeckt",
+            "pouring": "Sch\u00fctte",
+            "rainy": "R\u00e4gn\u00e4risch",
+            "snowy": "Schneie",
+            "snowy-rainy": "Schneie, r\u00e4gnerisch",
+            "sunny": "sunnig",
+            "windy": "windig",
+            "windy-variant": "windig"
+        }
+    }
+}

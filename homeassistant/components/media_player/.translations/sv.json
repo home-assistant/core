@@ -8,5 +8,15 @@
             "is_playing": "{entity_name} spelar"
         }
     },
+    "state": {
+        "_": {
+            "idle": "Inaktiv",
+            "off": "Av",
+            "on": "P\u00e5",
+            "paused": "Pausad",
+            "playing": "Spelar",
+            "standby": "Vilol\u00e4ge"
+        }
+    },
     "title": "Mediaspelare"
 }

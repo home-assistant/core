@@ -1,3 +1,12 @@
 {
+    "state": {
+        "_": {
+            "closed": "Cerrado",
+            "closing": "Cerrando",
+            "open": "Abierto",
+            "opening": "Abriendo",
+            "stopped": "Detenido"
+        }
+    },
     "title": "Portada"
 }

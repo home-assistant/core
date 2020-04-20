@@ -1,3 +1,17 @@
 {
+    "state": {
+        "_": {
+            "closed": "Suletud",
+            "home": "Kodus",
+            "locked": "Lukus",
+            "not_home": "Eemal",
+            "off": "V\u00e4ljas",
+            "ok": "OK",
+            "on": "Sees",
+            "open": "Avatud",
+            "problem": "Probleem",
+            "unlocked": "Lukustamata"
+        }
+    },
     "title": "Grupp"
 }

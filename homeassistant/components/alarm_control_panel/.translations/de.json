@@ -22,5 +22,19 @@
             "triggered": "{entity_name} ausgel\u00f6st"
         }
     },
+    "state": {
+        "_": {
+            "armed": "Aktiv",
+            "armed_away": "Aktiv, abwesend",
+            "armed_custom_bypass": "Aktiv, benutzerdefiniert",
+            "armed_home": "Aktiv, zu Hause",
+            "armed_night": "Aktiv, Nacht",
+            "arming": "Aktiviere",
+            "disarmed": "Inaktiv",
+            "disarming": "Deaktiviere",
+            "pending": "Ausstehend",
+            "triggered": "Ausgel\u00f6st"
+        }
+    },
     "title": "Alarmanlage"
 }

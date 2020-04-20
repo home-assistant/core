@@ -1,3 +1,10 @@
 {
+    "state": {
+        "_": {
+            "idle": "Neaktivan",
+            "recording": "Snimanje",
+            "streaming": "Oda\u0161ilja"
+        }
+    },
     "title": "Kamera"
 }

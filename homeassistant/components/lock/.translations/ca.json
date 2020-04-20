@@ -14,5 +14,11 @@
             "unlocked": "{entity_name} s'ha desbloquejat"
         }
     },
+    "state": {
+        "_": {
+            "locked": "Bloquejat",
+            "unlocked": "Desbloquejat"
+        }
+    },
     "title": "Panys"
 }

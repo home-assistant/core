@@ -1,3 +1,10 @@
 {
+    "state": {
+        "_": {
+            "idle": "Ne\u010dinn\u00e1",
+            "recording": "Z\u00e1znam",
+            "streaming": "Streamovanie"
+        }
+    },
     "title": "Kamera"
 }

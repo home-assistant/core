@@ -1,3 +1,14 @@
 {
+    "state": {
+        "_": {
+            "auto": "Outo",
+            "cool": "Koel",
+            "dry": "Droog",
+            "fan_only": "Slegs waaier",
+            "heat": "Hitte",
+            "heat_cool": "Verhit/Verkoel",
+            "off": "Af"
+        }
+    },
     "title": "Klimaat"
 }

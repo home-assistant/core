@@ -1,12 +1,14 @@
 {
     "state": {
-        "first_quarter": "F\u00f6rsta halvm\u00e5ne",
-        "full_moon": "Fullm\u00e5ne",
-        "last_quarter": "Sista halvm\u00e5ne",
-        "new_moon": "Nym\u00e5ne",
-        "waning_crescent": "Avtagande m\u00e5nsk\u00e4ra",
-        "waning_gibbous": "Avtagande halvm\u00e5ne",
-        "waxing_crescent": "Tilltagande m\u00e5nsk\u00e4ra",
-        "waxing_gibbous": "Tilltagande halvm\u00e5ne"
+        "moon__phase": {
+            "first_quarter": "F\u00f6rsta halvm\u00e5ne",
+            "full_moon": "Fullm\u00e5ne",
+            "last_quarter": "Sista halvm\u00e5ne",
+            "new_moon": "Nym\u00e5ne",
+            "waning_crescent": "Avtagande m\u00e5nsk\u00e4ra",
+            "waning_gibbous": "Avtagande halvm\u00e5ne",
+            "waxing_crescent": "Tilltagande m\u00e5nsk\u00e4ra",
+            "waxing_gibbous": "Tilltagande halvm\u00e5ne"
+        }
     }
 }

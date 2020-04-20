@@ -1,8 +1,16 @@
 {
     "state": {
-        "autumn": "jesie\u0144",
-        "spring": "wiosna",
-        "summer": "lato",
-        "winter": "zima"
+        "season__season": {
+            "autumn": "jesie\u0144",
+            "spring": "wiosna",
+            "summer": "lato",
+            "winter": "zima"
+        },
+        "season__season__": {
+            "autumn": "jesie\u0144",
+            "spring": "wiosna",
+            "summer": "lato",
+            "winter": "zima"
+        }
     }
 }

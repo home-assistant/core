@@ -1,3 +1,13 @@
 {
+    "state": {
+        "_": {
+            "idle": "Em espera",
+            "off": "Desligado",
+            "on": "Ligado",
+            "paused": "Em pausa",
+            "playing": "A reproduzir",
+            "standby": "Em espera"
+        }
+    },
     "title": "Leitor multim\u00e9dia"
 }

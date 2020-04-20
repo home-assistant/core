@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "ok": "OK",
+            "problem": "Problema"
+        }
+    },
     "title": "Planta"
 }

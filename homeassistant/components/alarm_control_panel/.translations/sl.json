@@ -22,5 +22,19 @@
             "triggered": "{entity_name} spro\u017een"
         }
     },
+    "state": {
+        "_": {
+            "armed": "Omogo\u010den",
+            "armed_away": "Omogo\u010den-zunaj",
+            "armed_custom_bypass": "Vklopljen izjeme po meri",
+            "armed_home": "Omogo\u010den-doma",
+            "armed_night": "Omogo\u010den-no\u010d",
+            "arming": "Omogo\u010danje",
+            "disarmed": "Onemogo\u010den",
+            "disarming": "Onemogo\u010danje",
+            "pending": "V teku",
+            "triggered": "Spro\u017een"
+        }
+    },
     "title": "Nadzorna plo\u0161\u010da Alarma"
 }

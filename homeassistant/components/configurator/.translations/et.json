@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "configure": "Seadista",
+            "configured": "Seadistatud"
+        }
+    },
     "title": "Seadistaja"
 }

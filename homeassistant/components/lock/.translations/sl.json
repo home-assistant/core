@@ -14,5 +14,11 @@
             "unlocked": "{entity_name} odklenjen/a"
         }
     },
+    "state": {
+        "_": {
+            "locked": "Zaklenjeno",
+            "unlocked": "Odklenjeno"
+        }
+    },
     "title": "Klju\u010davnice"
 }

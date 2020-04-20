@@ -5,5 +5,17 @@
                 "description": "Sj\u00e5 [www.home-assistant.io/docs/z-wave/installation/](https://www.home-assistant.io/docs/z-wave/installation/) for informasjon om konfigurasjonsvariablene."
             }
         }
+    },
+    "state": {
+        "_": {
+            "dead": "D\u00f8d",
+            "initializing": "Initialiserer",
+            "ready": "Klar",
+            "sleeping": "S\u00f8v"
+        },
+        "query_stage": {
+            "dead": "D\u00f8d ({query_stage})",
+            "initializing": "Initialiserer ({query_stage})"
+        }
     }
 }

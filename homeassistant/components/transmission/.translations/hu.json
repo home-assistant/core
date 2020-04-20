@@ -17,5 +17,14 @@
                 "title": "\u00c1tviteli \u00fcgyf\u00e9l be\u00e1ll\u00edt\u00e1sa"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Friss\u00edt\u00e9si gyakoris\u00e1g"
+                }
+            }
+        }
     }
 }

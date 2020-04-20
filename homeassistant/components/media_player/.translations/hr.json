@@ -1,3 +1,13 @@
 {
+    "state": {
+        "_": {
+            "idle": "Neaktivan",
+            "off": "Isklju\u010den",
+            "on": "Uklju\u010den",
+            "paused": "Pauzirano",
+            "playing": "Prikazivanje",
+            "standby": "U stanju \u010dekanja"
+        }
+    },
     "title": "Media player"
 }

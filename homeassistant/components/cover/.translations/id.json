@@ -1,3 +1,12 @@
 {
+    "state": {
+        "_": {
+            "closed": "Tertutup",
+            "closing": "Menutup",
+            "open": "Buka",
+            "opening": "Membuka",
+            "stopped": "Terhenti"
+        }
+    },
     "title": "Penutup"
 }

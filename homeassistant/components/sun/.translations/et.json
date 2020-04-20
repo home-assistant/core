@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "above_horizon": "T\u00f5usnud",
+            "below_horizon": "Loojunud"
+        }
+    },
     "title": "P\u00e4ike"
 }

@@ -1,3 +1,13 @@
 {
+    "state": {
+        "_": {
+            "auto": "Auto",
+            "cool": "Hladno",
+            "dry": "Suh",
+            "fan_only": "Samo ventilator",
+            "heat": "Toplota",
+            "off": "Isklju\u010den"
+        }
+    },
     "title": "Klima"
 }

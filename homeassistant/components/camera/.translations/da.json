@@ -1,3 +1,10 @@
 {
+    "state": {
+        "_": {
+            "idle": "Inaktiv",
+            "recording": "Optager",
+            "streaming": "Streamer"
+        }
+    },
     "title": "Kamera"
 }

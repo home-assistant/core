@@ -14,5 +14,11 @@
             "unlocked": "{entity_name} ki lett nyitva"
         }
     },
+    "state": {
+        "_": {
+            "locked": "Bez\u00e1rva",
+            "unlocked": "Kinyitva"
+        }
+    },
     "title": "Z\u00e1r"
 }

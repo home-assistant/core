@@ -23,5 +23,11 @@
             "value": "Valor de {entity_name}"
         }
     },
+    "state": {
+        "_": {
+            "off": "Desactivat",
+            "on": "Activat"
+        }
+    },
     "title": "Sensors"
 }

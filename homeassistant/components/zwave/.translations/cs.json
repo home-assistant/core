@@ -17,5 +17,17 @@
                 "title": "Nastavit Z-Wave"
             }
         }
+    },
+    "state": {
+        "_": {
+            "dead": "Nereaguje",
+            "initializing": "Inicializace",
+            "ready": "P\u0159ipraveno",
+            "sleeping": "\u00dasporn\u00fd re\u017eim"
+        },
+        "query_stage": {
+            "dead": "Nereaguje ({query_stage})",
+            "initializing": "Inicializace ( {query_stage} )"
+        }
     }
 }

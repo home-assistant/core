@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "above_horizon": "\u00dcberem Horizont",
+            "below_horizon": "Underem Horizont"
+        }
+    },
     "title": "Sunne"
 }

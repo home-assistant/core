@@ -13,5 +13,17 @@
             "docked": "{entity_name} acoblada"
         }
     },
+    "state": {
+        "_": {
+            "cleaning": "Netejant",
+            "docked": "Aparcat",
+            "error": "Error",
+            "idle": "Inactiu",
+            "off": "Apagat",
+            "on": "Enc\u00e8s",
+            "paused": "Pausat",
+            "returning": "Retornant a la base"
+        }
+    },
     "title": "Aspirador"
 }

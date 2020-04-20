@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "home": "\uc7ac\uc2e4",
+            "not_home": "\uc678\ucd9c"
+        }
+    },
     "title": "\uad6c\uc131\uc6d0"
 }

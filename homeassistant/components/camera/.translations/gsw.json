@@ -1,3 +1,10 @@
 {
+    "state": {
+        "_": {
+            "idle": "L\u00e4\u00e4rlauf",
+            "recording": "Nimt uf",
+            "streaming": "Streamt"
+        }
+    },
     "title": "Kamera"
 }

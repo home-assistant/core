@@ -25,5 +25,14 @@
             "tilt_position": "{entity_name} ver\u00e4ndert die Neigungsposition"
         }
     },
+    "state": {
+        "_": {
+            "closed": "Geschlossen",
+            "closing": "Schlie\u00dft",
+            "open": "Offen",
+            "opening": "\u00d6ffnet",
+            "stopped": "Angehalten"
+        }
+    },
     "title": "Abdeckung"
 }

@@ -23,5 +23,11 @@
             "value": "{entity_name} valori cambiati"
         }
     },
+    "state": {
+        "_": {
+            "off": "Spento",
+            "on": "Acceso"
+        }
+    },
     "title": "Sensore"
 }

@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "home": "Em casa",
+            "not_home": "Ausente"
+        }
+    },
     "title": "Rastreador de dispositivo"
 }

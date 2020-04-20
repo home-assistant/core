@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "above_horizon": "Sobre l'horitz\u00f3",
+            "below_horizon": "Sota l'horitz\u00f3"
+        }
+    },
     "title": "Sol"
 }

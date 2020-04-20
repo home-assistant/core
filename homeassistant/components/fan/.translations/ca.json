@@ -13,5 +13,11 @@
             "turned_on": "{entity_name} s'ha enc\u00e8s"
         }
     },
+    "state": {
+        "_": {
+            "off": "Apagat",
+            "on": "Enc\u00e8s"
+        }
+    },
     "title": "Ventiladors"
 }

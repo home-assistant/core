@@ -4,6 +4,8 @@
             "already_configured": "D\u00ebse Printer ass scho konfigur\u00e9iert.",
             "connection_error": "Feeler beim verbannen mam Printer.",
             "connection_upgrade": "Feeler beim verbannen mam Printer well eng Aktualis\u00e9ierung vun der Verbindung erfuerderlech ass.",
+            "ipp_error": "IPP Feeler opgetrueden.",
+            "ipp_version_error": "IPP Versioun net vum Printer \u00ebnnerst\u00ebtzt.",
             "parse_error": "Feeler beim ausliesen vun der \u00c4ntwert vum Printer."
         },
         "error": {

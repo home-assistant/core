@@ -17,5 +17,17 @@
                 "title": "Configura\u021bi Z-Wave"
             }
         }
+    },
+    "state": {
+        "_": {
+            "dead": "Inactiv",
+            "initializing": "Se ini\u021bializeaz\u0103",
+            "ready": "Disponibil",
+            "sleeping": "Adormit"
+        },
+        "query_stage": {
+            "dead": "Inactiv ({query_stage})",
+            "initializing": "Se ini\u021bializeaz\u0103 ({query_stage})"
+        }
     }
 }

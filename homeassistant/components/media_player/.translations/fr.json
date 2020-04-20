@@ -8,5 +8,15 @@
             "is_playing": "{entity_name} joue"
         }
     },
+    "state": {
+        "_": {
+            "idle": "En veille",
+            "off": "\u00c9teint",
+            "on": "Marche",
+            "paused": "En pause",
+            "playing": "Lecture en cours",
+            "standby": "En veille"
+        }
+    },
     "title": "Lecteur multim\u00e9dia"
 }

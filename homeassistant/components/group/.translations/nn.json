@@ -1,3 +1,17 @@
 {
+    "state": {
+        "_": {
+            "closed": "Lukka",
+            "home": "Heime",
+            "locked": "L\u00e5st",
+            "not_home": "Borte",
+            "off": "Av",
+            "ok": "Ok",
+            "on": "P\u00e5",
+            "open": "Open",
+            "problem": "Problem",
+            "unlocked": "Ul\u00e5st"
+        }
+    },
     "title": "Gruppe"
 }

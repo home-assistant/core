@@ -89,5 +89,87 @@
             "vibration": "{entity_name}\u5df2\u5075\u6e2c\u5230\u9707\u52d5"
         }
     },
+    "state": {
+        "_": {
+            "off": "\u95dc\u9589",
+            "on": "\u958b\u555f"
+        },
+        "battery": {
+            "off": "\u96fb\u91cf\u6b63\u5e38",
+            "on": "\u96fb\u91cf\u4f4e"
+        },
+        "cold": {
+            "off": "\u4e0d\u51b7",
+            "on": "\u51b7"
+        },
+        "connectivity": {
+            "off": "\u5df2\u65b7\u7dda",
+            "on": "\u5df2\u9023\u7dda"
+        },
+        "door": {
+            "off": "\u5df2\u95dc\u9589",
+            "on": "\u5df2\u958b\u555f"
+        },
+        "garage_door": {
+            "off": "\u95dc\u9589",
+            "on": "\u5df2\u958b\u555f"
+        },
+        "gas": {
+            "off": "\u672a\u89f8\u767c",
+            "on": "\u5df2\u89f8\u767c"
+        },
+        "heat": {
+            "off": "\u4e0d\u71b1",
+            "on": "\u71b1"
+        },
+        "lock": {
+            "off": "\u5df2\u4e0a\u9396",
+            "on": "\u5df2\u89e3\u9396"
+        },
+        "moisture": {
+            "off": "\u4e7e\u71e5",
+            "on": "\u6fd5\u6f64"
+        },
+        "motion": {
+            "off": "\u7121\u4eba",
+            "on": "\u6709\u4eba"
+        },
+        "occupancy": {
+            "off": "\u672a\u89f8\u767c",
+            "on": "\u5df2\u89f8\u767c"
+        },
+        "opening": {
+            "off": "\u95dc\u9589",
+            "on": "\u958b\u555f"
+        },
+        "presence": {
+            "off": "\u96e2\u5bb6",
+            "on": "\u5728\u5bb6"
+        },
+        "problem": {
+            "off": "\u78ba\u5b9a",
+            "on": "\u554f\u984c"
+        },
+        "safety": {
+            "off": "\u5b89\u5168",
+            "on": "\u5371\u96aa"
+        },
+        "smoke": {
+            "off": "\u672a\u89f8\u767c",
+            "on": "\u5df2\u89f8\u767c"
+        },
+        "sound": {
+            "off": "\u5df2\u89e3\u9664",
+            "on": "\u5df2\u89f8\u767c"
+        },
+        "vibration": {
+            "off": "\u672a\u5075\u6e2c",
+            "on": "\u5075\u6e2c"
+        },
+        "window": {
+            "off": "\u95dc\u9589",
+            "on": "\u958b\u555f"
+        }
+    },
     "title": "\u4e8c\u9032\u4f4d\u50b3\u611f\u5668"
 }

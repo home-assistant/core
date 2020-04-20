@@ -1,3 +1,13 @@
 {
+    "state": {
+        "_": {
+            "idle": "Inactiv",
+            "off": "Oprit",
+            "on": "Pornit",
+            "paused": "\u00cen pauz\u0103",
+            "playing": "Ruleaz\u0103",
+            "standby": "\u00cen a\u0219teptare"
+        }
+    },
     "title": "Media Player"
 }

@@ -17,5 +17,17 @@
                 "title": "Nastavite Z-Wave"
             }
         }
+    },
+    "state": {
+        "_": {
+            "dead": "Mrtev",
+            "initializing": "Inicializacija",
+            "ready": "Pripravljen",
+            "sleeping": "Spanje"
+        },
+        "query_stage": {
+            "dead": "Mrtev ({query_stage})",
+            "initializing": "Inicializacija ({query_stage})"
+        }
     }
 }

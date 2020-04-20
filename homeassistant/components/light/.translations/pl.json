@@ -16,5 +16,11 @@
             "turned_on": "nast\u0105pi w\u0142\u0105czenie {entity_name}"
         }
     },
+    "state": {
+        "_": {
+            "off": "wy\u0142\u0105czony",
+            "on": "w\u0142\u0105czony"
+        }
+    },
     "title": "\u015awiat\u0142o"
 }

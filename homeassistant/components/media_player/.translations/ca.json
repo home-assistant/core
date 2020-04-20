@@ -8,5 +8,15 @@
             "is_playing": "{entity_name} est\u00e0 reproduint"
         }
     },
+    "state": {
+        "_": {
+            "idle": "Inactiu",
+            "off": "Apagat",
+            "on": "Enc\u00e8s",
+            "paused": "Pausat",
+            "playing": "Reproduint",
+            "standby": "En espera"
+        }
+    },
     "title": "Reproductor multim\u00e8dia"
 }

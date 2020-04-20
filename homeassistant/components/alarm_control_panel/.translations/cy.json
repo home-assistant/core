@@ -1,3 +1,17 @@
 {
+    "state": {
+        "_": {
+            "armed": "Arfogi",
+            "armed_away": "Arfog i ffwrdd",
+            "armed_custom_bypass": "Ffordd osgoi larwm personol",
+            "armed_home": "Arfogi gartref",
+            "armed_night": "Arfog nos",
+            "arming": "Arfogi",
+            "disarmed": "Diarfogi",
+            "disarming": "Ddiarfogi",
+            "pending": "Yn yr arfaeth",
+            "triggered": "Sbarduno"
+        }
+    },
     "title": "Panel rheoli larwm"
 }

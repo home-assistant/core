@@ -1,8 +1,10 @@
 {
     "state": {
-        "first_quarter": "Prvn\u00ed \u010dtvr\u0165",
-        "full_moon": "\u00dapln\u011bk",
-        "waxing_crescent": "Dor\u016fstaj\u00edc\u00ed srpek",
-        "waxing_gibbous": "Prvn\u00ed \u010dtvr\u0165"
+        "moon__phase": {
+            "first_quarter": "Prvn\u00ed \u010dtvr\u0165",
+            "full_moon": "\u00dapln\u011bk",
+            "waxing_crescent": "Dor\u016fstaj\u00edc\u00ed srpek",
+            "waxing_gibbous": "Prvn\u00ed \u010dtvr\u0165"
+        }
     }
 }

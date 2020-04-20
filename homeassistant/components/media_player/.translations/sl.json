@@ -8,5 +8,15 @@
             "is_playing": "{entity_name} predvaja"
         }
     },
+    "state": {
+        "_": {
+            "idle": "V pripravljenosti",
+            "off": "Izklju\u010den",
+            "on": "Vklopljen",
+            "paused": "Na pavzi",
+            "playing": "Predvaja",
+            "standby": "V pripravljenosti"
+        }
+    },
     "title": "Medijski predvajalnik"
 }

@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "above_horizon": "powy\u017cej horyzontu",
+            "below_horizon": "poni\u017cej horyzontu"
+        }
+    },
     "title": "S\u0142o\u0144ce"
 }

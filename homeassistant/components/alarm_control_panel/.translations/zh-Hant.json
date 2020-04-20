@@ -22,5 +22,19 @@
             "triggered": "{entity_name}\u5df2\u89f8\u767c"
         }
     },
+    "state": {
+        "_": {
+            "armed": "\u5df2\u8b66\u6212",
+            "armed_away": "\u96e2\u5bb6\u8b66\u6212",
+            "armed_custom_bypass": "\u8b66\u6212\u6a21\u5f0f\u72c0\u614b",
+            "armed_home": "\u5728\u5bb6\u8b66\u6212",
+            "armed_night": "\u591c\u9593\u8b66\u6212",
+            "arming": "\u8b66\u6212\u4e2d",
+            "disarmed": "\u8b66\u6212\u89e3\u9664",
+            "disarming": "\u89e3\u9664\u4e2d",
+            "pending": "\u7b49\u5f85\u4e2d",
+            "triggered": "\u5df2\u89f8\u767c"
+        }
+    },
     "title": "\u8b66\u6212\u63a7\u5236\u9762\u677f"
 }

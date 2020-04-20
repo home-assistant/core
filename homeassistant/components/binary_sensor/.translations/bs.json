@@ -1,3 +1,61 @@
 {
+    "state": {
+        "_": {
+            "off": "Isklju\u010den",
+            "on": "Uklju\u010den"
+        },
+        "battery": {
+            "off": "Normalno",
+            "on": "Nisko"
+        },
+        "connectivity": {
+            "off": "Nepovezan",
+            "on": "Povezan"
+        },
+        "gas": {
+            "off": "\u010cist",
+            "on": "Otkriven"
+        },
+        "moisture": {
+            "off": "Suho",
+            "on": "Mokar"
+        },
+        "motion": {
+            "off": "\u010cist",
+            "on": "Otkriven"
+        },
+        "occupancy": {
+            "off": "\u010cist",
+            "on": "Otkriven"
+        },
+        "opening": {
+            "off": "Zatvoren",
+            "on": "Otvoren"
+        },
+        "presence": {
+            "off": "Odsutan",
+            "on": "Kod ku\u0107e"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Problem"
+        },
+        "safety": {
+            "off": "Siguran",
+            "on": "Nesiguran"
+        },
+        "smoke": {
+            "off": "\u010cist",
+            "on": "Otkriven"
+        },
+        "sound": {
+            "off": "\u010cist",
+            "on": "Otkriven"
+        },
+        "vibration": {
+            "off": "\u010cist",
+            "on": "Otkriven"
+        }
+    },
     "title": "Binarni senzor"
 }

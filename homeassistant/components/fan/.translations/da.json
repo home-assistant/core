@@ -13,5 +13,11 @@
             "turned_on": "{entity_name} blev t\u00e6ndt"
         }
     },
+    "state": {
+        "_": {
+            "off": "Fra",
+            "on": "Til"
+        }
+    },
     "title": "Bl\u00e6ser"
 }

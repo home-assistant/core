@@ -1,3 +1,14 @@
 {
+    "state": {
+        "_": {
+            "auto": "Autom\u00e1tico",
+            "cool": "Frio",
+            "dry": "Seco",
+            "fan_only": "Apenas ventilador",
+            "heat": "Quente",
+            "heat_cool": "Quente/Frio",
+            "off": "Desligado"
+        }
+    },
     "title": "Clima"
 }

@@ -1,0 +1,21 @@
+{
+    "state": {
+        "_": {
+            "clear-night": "\u591c\u95f4\u6674\u6717",
+            "cloudy": "\u9634",
+            "exceptional": "\u7279\u6b8a",
+            "fog": "\u96fe",
+            "hail": "\u51b0\u96f9",
+            "lightning": "\u96f7\u7535",
+            "lightning-rainy": "\u96f7\u9635\u96e8",
+            "partlycloudy": "\u591a\u4e91",
+            "pouring": "\u66b4\u96e8",
+            "rainy": "\u96e8",
+            "snowy": "\u96ea",
+            "snowy-rainy": "\u96e8\u5939\u96ea",
+            "sunny": "\u6674",
+            "windy": "\u6709\u98ce",
+            "windy-variant": "\u6709\u98ce"
+        }
+    }
+}

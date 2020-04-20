@@ -1,3 +1,13 @@
 {
+    "state": {
+        "_": {
+            "idle": "Lepotilassa",
+            "off": "Pois",
+            "on": "P\u00e4\u00e4ll\u00e4",
+            "paused": "Pys\u00e4ytetty",
+            "playing": "Toistaa",
+            "standby": "Lepotilassa"
+        }
+    },
     "title": "Mediatoistin"
 }

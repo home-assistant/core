@@ -1,12 +1,14 @@
 {
     "state": {
-        "first_quarter": "F\u00f8rste kvartal",
-        "full_moon": "Fuldm\u00e5ne",
-        "last_quarter": "Sidste kvartal",
-        "new_moon": "Nym\u00e5ne",
-        "waning_crescent": "Aftagende halvm\u00e5ne",
-        "waning_gibbous": "Aftagende m\u00e5ne",
-        "waxing_crescent": "Tiltagende halvm\u00e5ne",
-        "waxing_gibbous": "Tiltagende m\u00e5ne"
+        "moon__phase": {
+            "first_quarter": "F\u00f8rste kvartal",
+            "full_moon": "Fuldm\u00e5ne",
+            "last_quarter": "Sidste kvartal",
+            "new_moon": "Nym\u00e5ne",
+            "waning_crescent": "Aftagende halvm\u00e5ne",
+            "waning_gibbous": "Aftagende m\u00e5ne",
+            "waxing_crescent": "Tiltagende halvm\u00e5ne",
+            "waxing_gibbous": "Tiltagende m\u00e5ne"
+        }
     }
 }

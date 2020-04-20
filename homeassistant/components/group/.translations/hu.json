@@ -1,3 +1,17 @@
 {
+    "state": {
+        "_": {
+            "closed": "Z\u00e1rva",
+            "home": "Otthon",
+            "locked": "Bez\u00e1rva",
+            "not_home": "T\u00e1vol",
+            "off": "Ki",
+            "ok": "OK",
+            "on": "Be",
+            "open": "Nyitva",
+            "problem": "Probl\u00e9ma",
+            "unlocked": "Kinyitva"
+        }
+    },
     "title": "Csoport"
 }

@@ -17,5 +17,17 @@
                 "title": "St\u00e4lla in Z-Wave"
             }
         }
+    },
+    "state": {
+        "_": {
+            "dead": "D\u00f6d",
+            "initializing": "Initierar",
+            "ready": "Redo",
+            "sleeping": "Sovande"
+        },
+        "query_stage": {
+            "dead": "D\u00f6d ({query_stage})",
+            "initializing": "Initierar ({query_stage})"
+        }
     }
 }

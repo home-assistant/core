@@ -1,12 +1,14 @@
 {
     "state": {
-        "first_quarter": "Quart creixent",
-        "full_moon": "Lluna plena",
-        "last_quarter": "Quart minvant",
-        "new_moon": "Lluna nova",
-        "waning_crescent": "Minvant (Lluna vella)",
-        "waning_gibbous": "Gibosa minvant",
-        "waxing_crescent": "Lluna nova visible",
-        "waxing_gibbous": "Gibosa creixent"
+        "moon__phase": {
+            "first_quarter": "Quart creixent",
+            "full_moon": "Lluna plena",
+            "last_quarter": "Quart minvant",
+            "new_moon": "Lluna nova",
+            "waning_crescent": "Minvant (Lluna vella)",
+            "waning_gibbous": "Gibosa minvant",
+            "waxing_crescent": "Lluna nova visible",
+            "waxing_gibbous": "Gibosa creixent"
+        }
     }
 }

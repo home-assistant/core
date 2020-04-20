@@ -25,5 +25,14 @@
             "tilt_position": "{entity_name} vippeposition \u00e6ndres"
         }
     },
+    "state": {
+        "_": {
+            "closed": "Lukket",
+            "closing": "Lukker",
+            "open": "\u00c5ben",
+            "opening": "\u00c5bner",
+            "stopped": "Stoppet"
+        }
+    },
     "title": "Gardin/port"
 }

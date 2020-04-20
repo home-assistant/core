@@ -13,5 +13,11 @@
             "turned_on": "{entity_name} be lett kapcsolva"
         }
     },
+    "state": {
+        "_": {
+            "off": "Ki",
+            "on": "Be"
+        }
+    },
     "title": "Ventil\u00e1tor"
 }

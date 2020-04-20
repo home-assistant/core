@@ -5,5 +5,11 @@
             "is_not_home": "{entity_name} n\u00e3o est\u00e1 em casa"
         }
     },
+    "state": {
+        "_": {
+            "home": "Casa",
+            "not_home": "Fora"
+        }
+    },
     "title": "Monitorizador de dispositivos"
 }

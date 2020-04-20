@@ -1,3 +1,14 @@
 {
+    "state": {
+        "_": {
+            "auto": "T\u01b0\u0323 \u0111\u00f4\u0323ng",
+            "cool": "M\u00e1t m\u1ebb",
+            "dry": "Kh\u00f4",
+            "fan_only": "Ch\u1ec9 c\u00f3 qu\u1ea1t",
+            "heat": "Nhi\u1ec7t",
+            "heat_cool": "N\u00f3ng/L\u1ea1nh",
+            "off": "T\u1eaft"
+        }
+    },
     "title": "Kh\u00ed h\u1eadu"
 }

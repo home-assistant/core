@@ -89,5 +89,87 @@
             "vibration": "{entity_name} \uc774(\uac00) \uc9c4\ub3d9\uc744 \uac10\uc9c0\ud560 \ub54c"
         }
     },
+    "state": {
+        "_": {
+            "off": "\uaebc\uc9d0",
+            "on": "\ucf1c\uc9d0"
+        },
+        "battery": {
+            "off": "\ubcf4\ud1b5",
+            "on": "\ub0ae\uc74c"
+        },
+        "cold": {
+            "off": "\ubcf4\ud1b5",
+            "on": "\uc800\uc628"
+        },
+        "connectivity": {
+            "off": "\uc5f0\uacb0\ud574\uc81c\ub428",
+            "on": "\uc5f0\uacb0\ub428"
+        },
+        "door": {
+            "off": "\ub2eb\ud798",
+            "on": "\uc5f4\ub9bc"
+        },
+        "garage_door": {
+            "off": "\ub2eb\ud798",
+            "on": "\uc5f4\ub9bc"
+        },
+        "gas": {
+            "off": "\uc774\uc0c1\uc5c6\uc74c",
+            "on": "\uac10\uc9c0\ub428"
+        },
+        "heat": {
+            "off": "\ubcf4\ud1b5",
+            "on": "\uace0\uc628"
+        },
+        "lock": {
+            "off": "\uc7a0\uae40",
+            "on": "\ud574\uc81c"
+        },
+        "moisture": {
+            "off": "\uac74\uc870\ud568",
+            "on": "\uc2b5\ud568"
+        },
+        "motion": {
+            "off": "\uc774\uc0c1\uc5c6\uc74c",
+            "on": "\uac10\uc9c0\ub428"
+        },
+        "occupancy": {
+            "off": "\uc774\uc0c1\uc5c6\uc74c",
+            "on": "\uac10\uc9c0\ub428"
+        },
+        "opening": {
+            "off": "\ub2eb\ud798",
+            "on": "\uc5f4\ub9bc"
+        },
+        "presence": {
+            "off": "\uc678\ucd9c",
+            "on": "\uc7ac\uc2e4"
+        },
+        "problem": {
+            "off": "\ubb38\uc81c\uc5c6\uc74c",
+            "on": "\ubb38\uc81c\uc788\uc74c"
+        },
+        "safety": {
+            "off": "\uc548\uc804",
+            "on": "\uc704\ud5d8"
+        },
+        "smoke": {
+            "off": "\uc774\uc0c1\uc5c6\uc74c",
+            "on": "\uac10\uc9c0\ub428"
+        },
+        "sound": {
+            "off": "\uc774\uc0c1\uc5c6\uc74c",
+            "on": "\uac10\uc9c0\ub428"
+        },
+        "vibration": {
+            "off": "\uc774\uc0c1\uc5c6\uc74c",
+            "on": "\uac10\uc9c0\ub428"
+        },
+        "window": {
+            "off": "\ub2eb\ud798",
+            "on": "\uc5f4\ub9bc"
+        }
+    },
     "title": "\uc774\uc9c4\uc13c\uc11c"
 }

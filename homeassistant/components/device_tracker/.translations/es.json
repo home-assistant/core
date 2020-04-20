@@ -5,5 +5,11 @@
             "is_not_home": "{entity_name} no est\u00e1 en casa"
         }
     },
+    "state": {
+        "_": {
+            "home": "En casa",
+            "not_home": "Fuera de casa"
+        }
+    },
     "title": "Rastreador de dispositivo"
 }

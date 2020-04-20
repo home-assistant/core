@@ -14,5 +14,16 @@
             "hvac_mode_changed": "{entity_name} HVAC mode changed"
         }
     },
+    "state": {
+        "_": {
+            "auto": "Auto",
+            "cool": "Cool",
+            "dry": "Dry",
+            "fan_only": "Fan only",
+            "heat": "Heat",
+            "heat_cool": "Heat/Cool",
+            "off": "Off"
+        }
+    },
     "title": "Climate"
 }

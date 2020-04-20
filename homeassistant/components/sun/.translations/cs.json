@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "above_horizon": "Nad horizontem",
+            "below_horizon": "Za horizontem"
+        }
+    },
     "title": "Slunce"
 }

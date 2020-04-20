@@ -22,5 +22,19 @@
             "triggered": "{entity_name} ausgel\u00e9ist"
         }
     },
+    "state": {
+        "_": {
+            "armed": "Aktiv\u00e9iert",
+            "armed_away": "Aktiv\u00e9iert \u00cbnnerwee",
+            "armed_custom_bypass": "Aktiv, Benotzerdefin\u00e9iert",
+            "armed_home": "Aktiv\u00e9iert Doheem",
+            "armed_night": "Aktiv\u00e9iert Nuecht",
+            "arming": "Aktiv\u00e9ieren",
+            "disarmed": "Desaktiv\u00e9iert",
+            "disarming": "Desaktiv\u00e9ieren",
+            "pending": "Ustoend",
+            "triggered": "Ausgel\u00e9ist"
+        }
+    },
     "title": "Kontroll Feld Alarm"
 }

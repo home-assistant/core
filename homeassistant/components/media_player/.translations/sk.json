@@ -1,3 +1,13 @@
 {
+    "state": {
+        "_": {
+            "idle": "Ne\u010dinn\u00fd",
+            "off": "Vypnut\u00fd",
+            "on": "Zapnut\u00fd",
+            "paused": "Pozastaven\u00fd",
+            "playing": "Prehr\u00e1vanie",
+            "standby": "Pohotovostn\u00fd re\u017eim"
+        }
+    },
     "title": "Prehr\u00e1va\u010d m\u00e9di\u00ed"
 }

@@ -83,5 +83,87 @@
             "turned_on": "{entity_name} encendido"
         }
     },
+    "state": {
+        "_": {
+            "off": "Desactivado",
+            "on": "Encendido"
+        },
+        "battery": {
+            "off": "Normal",
+            "on": "Baja"
+        },
+        "cold": {
+            "off": "Normal",
+            "on": "Fr\u00edo"
+        },
+        "connectivity": {
+            "off": "Desconectado",
+            "on": "Conectado"
+        },
+        "door": {
+            "off": "Cerrada",
+            "on": "Abierta"
+        },
+        "garage_door": {
+            "off": "Cerrada",
+            "on": "Abierta"
+        },
+        "gas": {
+            "off": "Despejado",
+            "on": "Detectado"
+        },
+        "heat": {
+            "off": "Normal",
+            "on": "Caliente"
+        },
+        "lock": {
+            "off": "Bloqueado",
+            "on": "Desbloqueado"
+        },
+        "moisture": {
+            "off": "Seco",
+            "on": "Humedo"
+        },
+        "motion": {
+            "off": "Despejado",
+            "on": "Detectado"
+        },
+        "occupancy": {
+            "off": "Despejado",
+            "on": "Detectado"
+        },
+        "opening": {
+            "off": "Cerrado",
+            "on": "Abierto"
+        },
+        "presence": {
+            "off": "Fuera de casa",
+            "on": "En Casa"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Problema"
+        },
+        "safety": {
+            "off": "Seguro",
+            "on": "Inseguro"
+        },
+        "smoke": {
+            "off": "Despejado",
+            "on": "Detectado"
+        },
+        "sound": {
+            "off": "Despejado",
+            "on": "Detectado"
+        },
+        "vibration": {
+            "off": "Despejado",
+            "on": "Detectado"
+        },
+        "window": {
+            "off": "Cerrada",
+            "on": "Abierta"
+        }
+    },
     "title": "Sensor binario"
 }

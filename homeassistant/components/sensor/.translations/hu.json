@@ -23,5 +23,11 @@
             "value": "{entity_name} \u00e9rt\u00e9ke v\u00e1ltozik"
         }
     },
+    "state": {
+        "_": {
+            "off": "Ki",
+            "on": "Be"
+        }
+    },
     "title": "\u00c9rz\u00e9kel\u0151"
 }

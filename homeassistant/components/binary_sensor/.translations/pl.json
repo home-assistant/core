@@ -89,5 +89,87 @@
             "vibration": "sensor {entity_name} wykryje wibracje"
         }
     },
+    "state": {
+        "_": {
+            "off": "wy\u0142\u0105czony",
+            "on": "w\u0142\u0105czony"
+        },
+        "battery": {
+            "off": "na\u0142adowana",
+            "on": "roz\u0142adowana"
+        },
+        "cold": {
+            "off": "normalnie",
+            "on": "zimno"
+        },
+        "connectivity": {
+            "off": "offline",
+            "on": "online"
+        },
+        "door": {
+            "off": "zamkni\u0119te",
+            "on": "otwarte"
+        },
+        "garage_door": {
+            "off": "zamkni\u0119ta",
+            "on": "otwarta"
+        },
+        "gas": {
+            "off": "brak",
+            "on": "wykryto"
+        },
+        "heat": {
+            "off": "normalnie",
+            "on": "gor\u0105co"
+        },
+        "lock": {
+            "off": "zamkni\u0119ty",
+            "on": "otwarty"
+        },
+        "moisture": {
+            "off": "brak wilgoci",
+            "on": "wilgo\u0107"
+        },
+        "motion": {
+            "off": "brak",
+            "on": "wykryto"
+        },
+        "occupancy": {
+            "off": "brak",
+            "on": "wykryto"
+        },
+        "opening": {
+            "off": "zamkni\u0119te",
+            "on": "otwarte"
+        },
+        "presence": {
+            "off": "poza domem",
+            "on": "w domu"
+        },
+        "problem": {
+            "off": "ok",
+            "on": "problem"
+        },
+        "safety": {
+            "off": "brak zagro\u017cenia",
+            "on": "zagro\u017cenie"
+        },
+        "smoke": {
+            "off": "brak",
+            "on": "wykryto"
+        },
+        "sound": {
+            "off": "brak",
+            "on": "wykryto"
+        },
+        "vibration": {
+            "off": "brak",
+            "on": "wykryto"
+        },
+        "window": {
+            "off": "zamkni\u0119te",
+            "on": "otwarte"
+        }
+    },
     "title": "Sensor binarny"
 }

@@ -13,5 +13,11 @@
             "turned_on": "{entity_name} \u88ab\u5f00\u542f"
         }
     },
+    "state": {
+        "_": {
+            "off": "\u5173\u95ed",
+            "on": "\u5f00"
+        }
+    },
     "title": "\u98ce\u6247"
 }

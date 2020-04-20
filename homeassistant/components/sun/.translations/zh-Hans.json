@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "above_horizon": "\u65e5\u51fa",
+            "below_horizon": "\u65e5\u843d"
+        }
+    },
     "title": "\u592a\u9633"
 }

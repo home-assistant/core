@@ -1,12 +1,14 @@
 {
     "state": {
-        "first_quarter": "Premier quartier",
-        "full_moon": "Pleine lune",
-        "last_quarter": "Dernier quartier",
-        "new_moon": "Nouvelle lune",
-        "waning_crescent": "Dernier croissant",
-        "waning_gibbous": "Gibbeuse d\u00e9croissante",
-        "waxing_crescent": "Premier croissant",
-        "waxing_gibbous": "Gibbeuse croissante"
+        "moon__phase": {
+            "first_quarter": "Premier quartier",
+            "full_moon": "Pleine lune",
+            "last_quarter": "Dernier quartier",
+            "new_moon": "Nouvelle lune",
+            "waning_crescent": "Dernier croissant",
+            "waning_gibbous": "Gibbeuse d\u00e9croissante",
+            "waxing_crescent": "Premier croissant",
+            "waxing_gibbous": "Gibbeuse croissante"
+        }
     }
 }

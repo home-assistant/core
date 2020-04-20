@@ -17,5 +17,17 @@
                 "title": "Ops\u00e6t Z-Wave"
             }
         }
+    },
+    "state": {
+        "_": {
+            "dead": "D\u00f8d",
+            "initializing": "Initialiserer",
+            "ready": "Klar",
+            "sleeping": "Sover"
+        },
+        "query_stage": {
+            "dead": "D\u00f8d ({query_stage})",
+            "initializing": "Initialiserer ( {query_stage} )"
+        }
     }
 }

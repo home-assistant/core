@@ -1,3 +1,17 @@
 {
+    "state": {
+        "_": {
+            "closed": "\u039a\u03bb\u03b5\u03b9\u03c3\u03c4\u03cc",
+            "home": "\u03a3\u03c0\u03af\u03c4\u03b9",
+            "locked": "\u039a\u03bb\u03b5\u03b9\u03b4\u03c9\u03bc\u03ad\u03bd\u03bf",
+            "not_home": "\u0395\u03ba\u03c4\u03cc\u03c2 \u03a3\u03c0\u03b9\u03c4\u03b9\u03bf\u03cd",
+            "off": "\u0391\u03bd\u03b5\u03bd\u03b5\u03c1\u03b3\u03cc",
+            "ok": "\u0395\u03bd\u03c4\u03ac\u03be\u03b5\u03b9",
+            "on": "\u0395\u03bd\u03b5\u03c1\u03b3\u03cc",
+            "open": "\u0391\u03bd\u03bf\u03b9\u03c7\u03c4\u03cc",
+            "problem": "\u03a0\u03c1\u03cc\u03b2\u03bb\u03b7\u03bc\u03b1",
+            "unlocked": "\u039e\u03b5\u03ba\u03bb\u03b5\u03af\u03b4\u03c9\u03c4\u03bf"
+        }
+    },
     "title": "\u039f\u03bc\u03ac\u03b4\u03b1"
 }

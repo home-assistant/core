@@ -89,5 +89,87 @@
             "vibration": "{entity_name} begyndte at registrere vibration"
         }
     },
+    "state": {
+        "_": {
+            "off": "Fra",
+            "on": "Til"
+        },
+        "battery": {
+            "off": "Normal",
+            "on": "Lav"
+        },
+        "cold": {
+            "off": "Normal",
+            "on": "Kold"
+        },
+        "connectivity": {
+            "off": "Afbrudt",
+            "on": "Forbundet"
+        },
+        "door": {
+            "off": "Lukket",
+            "on": "\u00c5ben"
+        },
+        "garage_door": {
+            "off": "Lukket",
+            "on": "\u00c5ben"
+        },
+        "gas": {
+            "off": "Ikke registreret",
+            "on": "Registreret"
+        },
+        "heat": {
+            "off": "Normal",
+            "on": "Varm"
+        },
+        "lock": {
+            "off": "L\u00e5st",
+            "on": "Ul\u00e5st"
+        },
+        "moisture": {
+            "off": "T\u00f8r",
+            "on": "Fugtig"
+        },
+        "motion": {
+            "off": "Ikke registreret",
+            "on": "Registreret"
+        },
+        "occupancy": {
+            "off": "Ikke registreret",
+            "on": "Registreret"
+        },
+        "opening": {
+            "off": "Lukket",
+            "on": "\u00c5ben"
+        },
+        "presence": {
+            "off": "Ude",
+            "on": "Hjemme"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Problem"
+        },
+        "safety": {
+            "off": "Sikret",
+            "on": "Usikret"
+        },
+        "smoke": {
+            "off": "Ikke registreret",
+            "on": "Registreret"
+        },
+        "sound": {
+            "off": "Ikke registreret",
+            "on": "Registreret"
+        },
+        "vibration": {
+            "off": "Ikke registreret",
+            "on": "Registreret"
+        },
+        "window": {
+            "off": "Lukket",
+            "on": "\u00c5ben"
+        }
+    },
     "title": "Bin\u00e6r sensor"
 }

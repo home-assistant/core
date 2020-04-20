@@ -8,5 +8,15 @@
             "is_playing": "{entity_name} spielt"
         }
     },
+    "state": {
+        "_": {
+            "idle": "Unt\u00e4tig",
+            "off": "Aus",
+            "on": "An",
+            "paused": "Pausiert",
+            "playing": "Spielt",
+            "standby": "Standby"
+        }
+    },
     "title": "Mediaplayer"
 }

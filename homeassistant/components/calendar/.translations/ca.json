@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "off": "Desactivat",
+            "on": "Activat"
+        }
+    },
     "title": "Calendari"
 }

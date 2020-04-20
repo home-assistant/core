@@ -22,5 +22,19 @@
             "triggered": "{entity_name} attivato"
         }
     },
+    "state": {
+        "_": {
+            "armed": "Attivo",
+            "armed_away": "Attivo fuori casa",
+            "armed_custom_bypass": "Attivo con bypass",
+            "armed_home": "Attivo in casa",
+            "armed_night": "Attivo Notte",
+            "arming": "In attivazione",
+            "disarmed": "Disattivo",
+            "disarming": "In disattivazione",
+            "pending": "In sospeso",
+            "triggered": "Attivato"
+        }
+    },
     "title": "Pannello di Controllo degli Allarmi"
 }

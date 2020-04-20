@@ -1,3 +1,17 @@
 {
+    "state": {
+        "_": {
+            "closed": "zamkni\u0119te",
+            "home": "w domu",
+            "locked": "zamkni\u0119ty",
+            "not_home": "poza domem",
+            "off": "wy\u0142\u0105czony",
+            "ok": "ok",
+            "on": "w\u0142\u0105czony",
+            "open": "otwarte",
+            "problem": "problem",
+            "unlocked": "otwarty"
+        }
+    },
     "title": "Grupa"
 }

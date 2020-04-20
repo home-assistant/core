@@ -8,5 +8,15 @@
             "is_playing": "{entity_name} spillt"
         }
     },
+    "state": {
+        "_": {
+            "idle": "Waart",
+            "off": "Aus",
+            "on": "Un",
+            "paused": "Pauseiert",
+            "playing": "Spillt",
+            "standby": "Standby"
+        }
+    },
     "title": "Medie Spiller"
 }

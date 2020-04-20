@@ -14,5 +14,16 @@
             "hvac_mode_changed": "{entity_name} Modo HVAC cambiado"
         }
     },
+    "state": {
+        "_": {
+            "auto": "Autom\u00e1tico",
+            "cool": "Fr\u00edo",
+            "dry": "Seco",
+            "fan_only": "S\u00f3lo ventilador",
+            "heat": "Calor",
+            "heat_cool": "Calor/Fr\u00edo",
+            "off": "Apagado"
+        }
+    },
     "title": "Climatizaci\u00f3n"
 }
