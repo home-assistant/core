@@ -70,14 +70,7 @@ CLOUD_API_SCHEMA = vol.Schema(
     }
 )
 
-NODE_PRO_SCHEMA = vol.Schema(
-    {vol.Required(CONF_IP_ADDRESS): cv.string, vol.Required(CONF_PASSWORD): cv.string}
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [vol.Any(CLOUD_API_SCHEMA, NODE_PRO_SCHEMA)])},
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = vol.Schema({DOMAIN: CLOUD_API_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
 @callback
@@ -103,30 +96,19 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
-    for observable in config[DOMAIN]:
-        if CONF_IP_ADDRESS in observable:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=observable
-                )
+    conf = config[DOMAIN]
+
+    for geography in conf.get(
+        CONF_GEOGRAPHIES,
+        [{CONF_LATITUDE: hass.config.latitude, CONF_LONGITUDE: hass.config.longitude}],
+    ):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={CONF_API_KEY: conf[CONF_API_KEY], **geography},
             )
-        else:
-            for geography in observable.get(
-                CONF_GEOGRAPHIES,
-                [
-                    {
-                        CONF_LATITUDE: hass.config.latitude,
-                        CONF_LONGITUDE: hass.config.longitude,
-                    }
-                ],
-            ):
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": SOURCE_IMPORT},
-                        data={CONF_API_KEY: observable[CONF_API_KEY], **geography},
-                    )
-                )
+        )
 
     return True
 

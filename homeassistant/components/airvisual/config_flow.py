@@ -123,8 +123,6 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
-        if CONF_IP_ADDRESS in import_config:
-            return await self.async_step_node_pro(import_config)
         return await self.async_step_geography(import_config)
 
     async def async_step_node_pro(self, user_input=None):
