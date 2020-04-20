@@ -81,9 +81,7 @@ def load_translations_files(
 
 
 def build_resources(
-    translation_cache: Dict[str, Dict[str, Any]],
-    components: Set[str],
-    category: Optional[str],
+    translation_cache: Dict[str, Dict[str, Any]], components: Set[str], category: str,
 ) -> Dict[str, Dict[str, Any]]:
     """Build the resources response for the given components."""
     # Build response
@@ -96,23 +94,49 @@ def build_resources(
 
         domain_resources = resources.setdefault(domain, {})
 
-        # Add the translations for this component to the domain resources.
-        # Since clients cannot determine which platform an entity belongs to,
-        # all translations for a domain will be returned together.
-
-        if category is None:
-            domain_resources.update(translation_cache[component])
-            continue
+        # Integrations are able to provide translations for their entities under other
+        # integrations if they don't have an existing device class. This is done by
+        # using a custom device class prefixed with their domain and two underscores.
+        # These files are in platform specific files in the integration folder with
+        # names like `strings.sensor.json`.
+        # We are going to merge the translations for the custom device classes into
+        # the translations of sensor.
 
         new_value = translation_cache[component].get(category)
 
         if new_value is None:
             continue
 
-        if isinstance(new_value, dict):
-            domain_resources.setdefault(category, {}).update(new_value)
-        else:
+        cur_value = domain_resources.get(category)
+
+        # If not exists, set value.
+        if cur_value is None:
             domain_resources[category] = new_value
+
+        # If exists, and a list, append
+        elif isinstance(cur_value, list):
+            cur_value.append(new_value)
+
+        # If exists, and a dict make it a list with 2 entries.
+        else:
+            domain_resources[category] = [cur_value, new_value]
+
+    # Merge all the lists
+    for domain, domain_resources in list(resources.items()):
+        if not isinstance(domain_resources.get(category), list):
+            continue
+
+        merged = {}
+        for entry in domain_resources[category]:
+            if isinstance(entry, dict):
+                merged.update(entry)
+            else:
+                _LOGGER.error(
+                    "An integration providing translations for %s provided invalid data: %s",
+                    domain,
+                    entry,
+                )
+        domain_resources[category] = merged
 
     return {"component": resources}
 
@@ -183,7 +207,7 @@ async def async_get_component_cache(
 async def async_get_translations(
     hass: HomeAssistantType,
     language: str,
-    category: Optional[str] = None,
+    category: str,
     integration: Optional[str] = None,
     config_flow: Optional[bool] = None,
 ) -> Dict[str, Any]:

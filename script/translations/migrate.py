@@ -11,29 +11,38 @@ def create_lookup(results):
     return {key["key_name"]["web"]: key for key in results}
 
 
-def rename_keys(to_migrate):
+def rename_keys(project_id, to_migrate):
     """Rename keys.
 
     to_migrate is Dict[from_key] = to_key.
     """
     updates = []
 
-    lokalise = get_api()
+    lokalise = get_api(project_id)
+
+    from_key_data = lokalise.keys_list({"filter_keys": ",".join(to_migrate)})
+    if len(from_key_data) != len(to_migrate):
+        print(
+            f"Lookin up keys in Lokalise returns {len(from_key_data)} results, expected {len(to_migrate)}"
+        )
+        return
+
+    from_key_lookup = create_lookup(from_key_data)
 
     print("Gathering IDs")
 
     for from_key, to_key in to_migrate.items():
-        key_data = lokalise.keys_list({"filter_keys": from_key})
-        if len(key_data) != 1:
-            print(
-                f"Lookin up {from_key} key in Lokalise returns {len(key_data)} results, expected 1"
-            )
-            continue
-
-        updates.append({"key_id": key_data[0]["key_id"], "key_name": to_key})
+        updates.append(
+            {"key_id": from_key_lookup[from_key]["key_id"], "key_name": to_key}
+        )
 
     pprint(updates)
 
+    print()
+    while input("Type YES to confirm: ") != "YES":
+        pass
+
+    return
     print()
     print("Updating keys")
     pprint(lokalise.keys_bulk_update(updates).json())
@@ -123,7 +132,7 @@ def find_and_rename_keys():
             to_key = f"component::{integration.name}::title"
             to_migrate[from_key] = to_key
 
-    rename_keys(to_migrate)
+    rename_keys(CORE_PROJECT_ID, to_migrate)
 
 
 def find_different_languages():
@@ -163,6 +172,22 @@ def interactive_update():
 
 def run():
     """Migrate translations."""
-    interactive_update()
+    rename_keys(
+        CORE_PROJECT_ID,
+        {
+            "component::moon::platform::sensor::state::new_moon": "component::moon::platform::sensor::state::moon__phase::new_moon",
+            "component::moon::platform::sensor::state::waxing_crescent": "component::moon::platform::sensor::state::moon__phase::waxing_crescent",
+            "component::moon::platform::sensor::state::first_quarter": "component::moon::platform::sensor::state::moon__phase::first_quarter",
+            "component::moon::platform::sensor::state::waxing_gibbous": "component::moon::platform::sensor::state::moon__phase::waxing_gibbous",
+            "component::moon::platform::sensor::state::full_moon": "component::moon::platform::sensor::state::moon__phase::full_moon",
+            "component::moon::platform::sensor::state::waning_gibbous": "component::moon::platform::sensor::state::moon__phase::waning_gibbous",
+            "component::moon::platform::sensor::state::last_quarter": "component::moon::platform::sensor::state::moon__phase::last_quarter",
+            "component::moon::platform::sensor::state::waning_crescent": "component::moon::platform::sensor::state::moon__phase::waning_crescent",
+            "component::season::platform::sensor::state::spring": "component::season::platform::sensor::state::season__season__::spring",
+            "component::season::platform::sensor::state::summer": "component::season::platform::sensor::state::season__season__::summer",
+            "component::season::platform::sensor::state::autumn": "component::season::platform::sensor::state::season__season__::autumn",
+            "component::season::platform::sensor::state::winter": "component::season::platform::sensor::state::season__season__::winter",
+        },
+    )
 
     return 0
