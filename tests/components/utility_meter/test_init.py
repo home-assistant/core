@@ -11,7 +11,11 @@ from homeassistant.components.utility_meter.const import (
     SERVICE_SELECT_NEXT_TARIFF,
     SERVICE_SELECT_TARIFF,
 )
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ENERGY_KILO_WATT_HOUR,
+    EVENT_HOMEASSISTANT_START,
+)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -36,13 +40,16 @@ async def test_services(hass):
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     entity_id = config[DOMAIN]["energy_bill"]["source"]
-    hass.states.async_set(entity_id, 1, {"unit_of_measurement": "kWh"})
+    hass.states.async_set(entity_id, 1, {"unit_of_measurement": ENERGY_KILO_WATT_HOUR})
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.states.async_set(
-            entity_id, 3, {"unit_of_measurement": "kWh"}, force_update=True
+            entity_id,
+            3,
+            {"unit_of_measurement": ENERGY_KILO_WATT_HOUR},
+            force_update=True,
         )
         await hass.async_block_till_done()
 
@@ -60,7 +67,10 @@ async def test_services(hass):
     now += timedelta(seconds=10)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.states.async_set(
-            entity_id, 4, {"unit_of_measurement": "kWh"}, force_update=True
+            entity_id,
+            4,
+            {"unit_of_measurement": ENERGY_KILO_WATT_HOUR},
+            force_update=True,
         )
         await hass.async_block_till_done()
 
@@ -78,7 +88,10 @@ async def test_services(hass):
     now += timedelta(seconds=10)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.states.async_set(
-            entity_id, 5, {"unit_of_measurement": "kWh"}, force_update=True
+            entity_id,
+            5,
+            {"unit_of_measurement": ENERGY_KILO_WATT_HOUR},
+            force_update=True,
         )
         await hass.async_block_till_done()
 

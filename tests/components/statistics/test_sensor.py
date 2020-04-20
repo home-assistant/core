@@ -36,7 +36,7 @@ class TestStatisticsSensor(unittest.TestCase):
         self.variance = round(statistics.variance(self.values), 2)
         self.change = round(self.values[-1] - self.values[0], 2)
         self.average_change = round(self.change / (len(self.values) - 1), 2)
-        self.change_rate = round(self.average_change / (60 * (self.count - 1)), 2)
+        self.change_rate = round(self.change / (60 * (self.count - 1)), 2)
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -102,7 +102,7 @@ class TestStatisticsSensor(unittest.TestCase):
         assert self.mean == state.attributes.get("mean")
         assert self.count == state.attributes.get("count")
         assert self.total == state.attributes.get("total")
-        assert "°C" == state.attributes.get("unit_of_measurement")
+        assert TEMP_CELSIUS == state.attributes.get("unit_of_measurement")
         assert self.change == state.attributes.get("change")
         assert self.average_change == state.attributes.get("average_change")
 

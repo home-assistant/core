@@ -13,6 +13,8 @@ from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
     DATA_GIGABYTES,
+    HTTP_OK,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -24,13 +26,11 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Start.ca"
 CONF_TOTAL_BANDWIDTH = "total_bandwidth"
 
-PERCENT = "%"
-
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 REQUEST_TIMEOUT = 5  # seconds
 
 SENSOR_TYPES = {
-    "usage": ["Usage Ratio", PERCENT, "mdi:percent"],
+    "usage": ["Usage Ratio", UNIT_PERCENTAGE, "mdi:percent"],
     "usage_gb": ["Usage", DATA_GIGABYTES, "mdi:download"],
     "limit": ["Data limit", DATA_GIGABYTES, "mdi:download"],
     "used_download": ["Used Download", DATA_GIGABYTES, "mdi:download"],
@@ -147,7 +147,7 @@ class StartcaData:
         url = f"https://www.start.ca/support/usage/api?key={self.api_key}"
         with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await self.websession.get(url)
-        if req.status != 200:
+        if req.status != HTTP_OK:
             _LOGGER.error("Request failed with status: %u", req.status)
             return False
 

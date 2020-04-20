@@ -16,6 +16,7 @@ from homeassistant.const import (
     STATE_CLOSED,
     STATE_OPEN,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -36,7 +37,7 @@ SENSOR_TYPE_WINDOWHANDLE = "windowhandle"
 SENSOR_TYPES = {
     SENSOR_TYPE_HUMIDITY: {
         "name": "Humidity",
-        "unit": "%",
+        "unit": UNIT_PERCENTAGE,
         "icon": "mdi:water-percent",
         "class": DEVICE_CLASS_HUMIDITY,
     },

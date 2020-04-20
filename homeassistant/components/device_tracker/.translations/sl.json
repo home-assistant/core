@@ -4,5 +4,6 @@
             "is_home": "{entity_name} je doma",
             "is_not_home": "{entity_name} ni doma"
         }
-    }
+    },
+    "title": "Sledilnik naprave"
 }

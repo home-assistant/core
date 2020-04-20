@@ -82,9 +82,9 @@ def setup(hass, config):
 
     conf = config[DOMAIN]
 
-    net_id = conf.get(CONF_DEVICE)
+    net_id = conf[CONF_DEVICE]
     ip_address = conf.get(CONF_IP_ADDRESS)
-    port = conf.get(CONF_PORT)
+    port = conf[CONF_PORT]
 
     client = pyads.Connection(net_id, port, ip_address)
 

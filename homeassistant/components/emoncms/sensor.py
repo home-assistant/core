@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
+    HTTP_OK,
     POWER_WATT,
     STATE_UNKNOWN,
 )
@@ -37,7 +38,6 @@ CONF_SENSOR_NAMES = "sensor_names"
 
 DECIMALS = 2
 DEFAULT_UNIT = POWER_WATT
-
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 ONLY_INCL_EXCL_NONE = "only_include_exclude_or_none"
@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     url = config.get(CONF_URL)
     sensorid = config.get(CONF_ID)
     value_template = config.get(CONF_VALUE_TEMPLATE)
-    unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+    config_unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     exclude_feeds = config.get(CONF_EXCLUDE_FEEDID)
     include_only_feeds = config.get(CONF_ONLY_INCLUDE_FEEDID)
     sensor_names = config.get(CONF_SENSOR_NAMES)
@@ -104,6 +104,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         name = None
         if sensor_names is not None:
             name = sensor_names.get(int(elem["id"]), None)
+
+        unit = elem.get("unit")
+        if unit:
+            unit_of_measurement = unit
+        else:
+            unit_of_measurement = config_unit
 
         sensors.append(
             EmonCmsSensor(
@@ -240,7 +246,7 @@ class EmonCmsData:
             _LOGGER.error(exception)
             return
         else:
-            if req.status_code == 200:
+            if req.status_code == HTTP_OK:
                 self.data = req.json()
             else:
                 _LOGGER.error(

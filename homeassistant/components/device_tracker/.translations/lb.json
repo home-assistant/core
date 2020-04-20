@@ -4,5 +4,6 @@
             "is_home": "{entity_name} ass doheem",
             "is_not_home": "{entity_name} ass net doheem"
         }
-    }
+    },
+    "title": "Apparat Verfolgung"
 }

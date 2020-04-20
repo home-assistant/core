@@ -45,7 +45,7 @@ CUSTOM_WARNING = (
     "You are using a custom integration for %s which has not "
     "been tested by Home Assistant. This component might "
     "cause stability problems, be sure to disable it if you "
-    "do experience issues with Home Assistant."
+    "experience issues with Home Assistant."
 )
 _UNDEF = object()
 
@@ -70,11 +70,11 @@ async def _async_get_custom_components(
         return {}
 
     try:
-        import custom_components
+        import custom_components  # pylint: disable=import-outside-toplevel
     except ImportError:
         return {}
 
-    def get_sub_directories(paths: List) -> List:
+    def get_sub_directories(paths: List[str]) -> List[pathlib.Path]:
         """Return all sub directories in a set of paths."""
         return [
             entry
@@ -127,6 +127,7 @@ async def async_get_custom_components(
 
 async def async_get_config_flows(hass: "HomeAssistant") -> Set[str]:
     """Return cached list of config flows."""
+    # pylint: disable=import-outside-toplevel
     from homeassistant.generated.config_flows import FLOWS
 
     flows: Set[str] = set()
@@ -204,6 +205,7 @@ class Integration:
         self.pkg_path = pkg_path
         self.file_path = file_path
         self.manifest = manifest
+        manifest["is_built_in"] = self.is_built_in
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
 
     @property
@@ -317,7 +319,7 @@ async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integrati
         event.set()
         return integration
 
-    from homeassistant import components
+    from homeassistant import components  # pylint: disable=import-outside-toplevel
 
     integration = await hass.async_add_executor_job(
         Integration.resolve_from_root, hass, components, domain
@@ -418,14 +420,11 @@ def _load_file(
             parts = []
             for part in path.split("."):
                 parts.append(part)
-                white_listed_errors.append(
-                    "No module named '{}'".format(".".join(parts))
-                )
+                white_listed_errors.append(f"No module named '{'.'.join(parts)}'")
 
             if str(err) not in white_listed_errors:
                 _LOGGER.exception(
-                    ("Error loading %s. Make sure all dependencies are installed"),
-                    path,
+                    ("Error loading %s. Make sure all dependencies are installed"), path
                 )
 
     return None
@@ -506,7 +505,7 @@ async def async_component_dependencies(hass: "HomeAssistant", domain: str) -> Se
 
 
 async def _async_component_dependencies(
-    hass: "HomeAssistant", domain: str, loaded: Set[str], loading: Set
+    hass: "HomeAssistant", domain: str, loaded: Set[str], loading: Set[str]
 ) -> Set[str]:
     """Recursive function to get component dependencies.
 

@@ -621,11 +621,11 @@ def test_deprecated_with_invalidation_version(caplog, schema, version):
     test_data = {"mars": True}
     with pytest.raises(vol.MultipleInvalid) as exc_info:
         invalidated_schema(test_data)
-    assert (
+    assert str(exc_info.value) == (
         "The 'mars' option (with value 'True') is deprecated, "
         "please remove it from your configuration. This option will "
         "become invalid in version 0.1.0"
-    ) == str(exc_info.value)
+    )
 
 
 def test_deprecated_with_replacement_key_and_invalidation_version(
@@ -681,11 +681,11 @@ def test_deprecated_with_replacement_key_and_invalidation_version(
     test_data = {"mars": True}
     with pytest.raises(vol.MultipleInvalid) as exc_info:
         invalidated_schema(test_data)
-    assert (
+    assert str(exc_info.value) == (
         "The 'mars' option (with value 'True') is deprecated, "
         "please replace it with 'jupiter'. This option will become "
         "invalid in version 0.1.0"
-    ) == str(exc_info.value)
+    )
 
 
 def test_deprecated_with_default(caplog, schema):
@@ -833,11 +833,11 @@ def test_deprecated_with_replacement_key_invalidation_version_default(
     test_data = {"mars": True}
     with pytest.raises(vol.MultipleInvalid) as exc_info:
         invalidated_schema(test_data)
-    assert (
+    assert str(exc_info.value) == (
         "The 'mars' option (with value 'True') is deprecated, "
         "please replace it with 'jupiter'. This option will become "
         "invalid in version 0.1.0"
-    ) == str(exc_info.value)
+    )
 
 
 def test_deprecated_cant_find_module():
@@ -1008,7 +1008,10 @@ def test_key_value_schemas():
     for mode in None, "invalid":
         with pytest.raises(vol.Invalid) as excinfo:
             schema({"mode": mode})
-        assert str(excinfo.value) == f"Unexpected key {mode}. Expected number, string"
+        assert (
+            str(excinfo.value)
+            == f"Unexpected value for mode: '{mode}'. Expected number, string"
+        )
 
     with pytest.raises(vol.Invalid) as excinfo:
         schema({"mode": "number", "data": "string-value"})
@@ -1020,3 +1023,25 @@ def test_key_value_schemas():
 
     for mode, data in (("number", 1), ("string", "hello")):
         schema({"mode": mode, "data": data})
+
+
+def test_script(caplog):
+    """Test script validation is user friendly."""
+    for data, msg in (
+        ({"delay": "{{ invalid"}, "should be format 'HH:MM'"),
+        ({"wait_template": "{{ invalid"}, "invalid template"),
+        ({"condition": "invalid"}, "Unexpected value for condition: 'invalid'"),
+        ({"event": None}, "string value is None for dictionary value @ data['event']"),
+        (
+            {"device_id": None},
+            "string value is None for dictionary value @ data['device_id']",
+        ),
+        (
+            {"scene": "light.kitchen"},
+            "Entity ID 'light.kitchen' does not belong to domain 'scene'",
+        ),
+    ):
+        with pytest.raises(vol.Invalid) as excinfo:
+            cv.script_action(data)
+
+        assert msg in str(excinfo.value)

@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cette zone de chargement est d\u00e9j\u00e0 configur\u00e9e"
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "loadzone": "Zone de charge (point d'\u00e9tablissement)"
+                }
+            }
+        }
+    }
+}

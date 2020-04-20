@@ -2,6 +2,13 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_TEMPERATURE,
+)
+
 from tests.components.homekit_controller.common import setup_test_component
 
 TEMPERATURE = ("temperature", "temperature.current")
@@ -75,6 +82,8 @@ async def test_temperature_sensor_read_state(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.state == "20"
 
+    assert state.attributes["device_class"] == DEVICE_CLASS_TEMPERATURE
+
 
 async def test_humidity_sensor_read_state(hass, utcnow):
     """Test reading the state of a HomeKit humidity sensor accessory."""
@@ -90,6 +99,8 @@ async def test_humidity_sensor_read_state(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.state == "20"
 
+    assert state.attributes["device_class"] == DEVICE_CLASS_HUMIDITY
+
 
 async def test_light_level_sensor_read_state(hass, utcnow):
     """Test reading the state of a HomeKit temperature sensor accessory."""
@@ -104,6 +115,8 @@ async def test_light_level_sensor_read_state(hass, utcnow):
     helper.characteristics[LIGHT_LEVEL].value = 20
     state = await helper.poll_and_get_state()
     assert state.state == "20"
+
+    assert state.attributes["device_class"] == DEVICE_CLASS_ILLUMINANCE
 
 
 async def test_carbon_dioxide_level_sensor_read_state(hass, utcnow):
@@ -136,6 +149,8 @@ async def test_battery_level_sensor(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.state == "20"
     assert state.attributes["icon"] == "mdi:battery-20"
+
+    assert state.attributes["device_class"] == DEVICE_CLASS_BATTERY
 
 
 async def test_battery_charging(hass, utcnow):

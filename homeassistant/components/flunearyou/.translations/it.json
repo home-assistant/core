@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Queste coordinate sono gi\u00e0 registrate."
+        },
+        "error": {
+            "general_error": "Si \u00e8 verificato un errore sconosciuto."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitudine",
+                    "longitude": "Logitudine"
+                },
+                "description": "Monitorare i repot basati su utenti e CDC per una coppia di coordinate.",
+                "title": "Configurare Flu Near You"
+            }
+        }
+    }
+}

@@ -462,10 +462,6 @@ class FibaroDevice(Entity):
         """Get polling requirement from fibaro device."""
         return False
 
-    def update(self):
-        """Call to update state."""
-        pass
-
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""

@@ -11,8 +11,12 @@
         },
         "step": {
             "confirm": {
-                "description": "Modello: {model}\nHost: {host}\nPorta: {port}\n\n\u00c8 possibile configurare il comportamento di I/O e del pannello nelle impostazioni del Pannello Allarmi di Konnected.",
+                "description": "Modello: {model}\nID: {id}\nHost: {host}\nPorta: {port}\n\n\u00c8 possibile configurare il comportamento di I/O e del pannello nelle impostazioni del Pannello Allarmi di Konnected.",
                 "title": "Dispositivo Konnected pronto"
+            },
+            "import_confirm": {
+                "description": "In configuration.yaml \u00e8 stato individuato un pannello di allarme Konnected con ID {id}. Questo flusso consentir\u00e0 di importarlo in una voce di configurazione.",
+                "title": "Importa dispositivo Konnected"
             },
             "user": {
                 "data": {
@@ -22,16 +26,16 @@
                 "description": "Si prega di inserire le informazioni dell'host per il tuo Pannello Konnected.",
                 "title": "Rileva il dispositivo Konnected"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
             "not_konn_panel": "Non \u00e8 un dispositivo Konnected.io riconosciuto"
         },
         "error": {
+            "bad_host": "URL dell'host API di sostituzione non valido",
             "one": "uno",
-            "other": "altro"
+            "other": "altri"
         },
         "step": {
             "options_binary": {
@@ -82,7 +86,9 @@
             },
             "options_misc": {
                 "data": {
-                    "blink": "Attiva il lampeggio del LED del pannello durante l'invio del cambiamento di stato "
+                    "api_host": "Sovrascrivi l'URL dell'host API (opzionale)",
+                    "blink": "Attiva il lampeggio del LED del pannello durante l'invio del cambiamento di stato ",
+                    "override_api_host": "Sovrascrivi l'URL predefinito del pannello host API di Home Assistant"
                 },
                 "description": "Seleziona il comportamento desiderato per il tuo pannello",
                 "title": "Configura Altro"
@@ -91,14 +97,14 @@
                 "data": {
                     "activation": "Uscita quando acceso",
                     "momentary": "Durata impulso (ms) (opzionale)",
+                    "more_states": "Configurare stati aggiuntivi per questa zona",
                     "name": "Nome (opzionale)",
                     "pause": "Pausa tra gli impulsi (ms) (opzionale)",
                     "repeat": "Numero di volte da ripetere (-1 = infinito) (opzionale)"
                 },
-                "description": "Selezionare le opzioni di uscita per {zona}",
+                "description": "Selezionare le opzioni di uscita per {zone}: stato {state}",
                 "title": "Configurare l'uscita commutabile"
             }
-        },
-        "title": "Opzioni del pannello di allarme Konnected"
+        }
     }
 }

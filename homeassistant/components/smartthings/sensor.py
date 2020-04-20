@@ -16,6 +16,8 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
+    UNIT_VOLT,
 )
 
 from . import SmartThingsEntity
@@ -34,10 +36,12 @@ CAPABILITY_TO_SENSORS = {
         Map(Attribute.air_quality, "Air Quality", "CAQI", None)
     ],
     Capability.alarm: [Map(Attribute.alarm, "Alarm", None, None)],
-    Capability.audio_volume: [Map(Attribute.volume, "Volume", "%", None)],
-    Capability.battery: [Map(Attribute.battery, "Battery", "%", DEVICE_CLASS_BATTERY)],
+    Capability.audio_volume: [Map(Attribute.volume, "Volume", UNIT_PERCENTAGE, None)],
+    Capability.battery: [
+        Map(Attribute.battery, "Battery", UNIT_PERCENTAGE, DEVICE_CLASS_BATTERY)
+    ],
     Capability.body_mass_index_measurement: [
-        Map(Attribute.bmi_measurement, "Body Mass Index", "kg/m^2", None)
+        Map(Attribute.bmi_measurement, "Body Mass Index", f"{MASS_KILOGRAMS}/m^2", None)
     ],
     Capability.body_weight_measurement: [
         Map(Attribute.body_weight_measurement, "Body Weight", MASS_KILOGRAMS, None)
@@ -109,7 +113,7 @@ CAPABILITY_TO_SENSORS = {
         Map(Attribute.illuminance, "Illuminance", "lux", DEVICE_CLASS_ILLUMINANCE)
     ],
     Capability.infrared_level: [
-        Map(Attribute.infrared_level, "Infrared Level", "%", None)
+        Map(Attribute.infrared_level, "Infrared Level", UNIT_PERCENTAGE, None)
     ],
     Capability.media_input_source: [
         Map(Attribute.input_source, "Media Input Source", None, None)
@@ -147,7 +151,7 @@ CAPABILITY_TO_SENSORS = {
         Map(
             Attribute.humidity,
             "Relative Humidity Measurement",
-            "%",
+            UNIT_PERCENTAGE,
             DEVICE_CLASS_HUMIDITY,
         )
     ],
@@ -230,7 +234,7 @@ CAPABILITY_TO_SENSORS = {
         Map(Attribute.ultraviolet_index, "Ultraviolet Index", None, None)
     ],
     Capability.voltage_measurement: [
-        Map(Attribute.voltage, "Voltage Measurement", "V", None)
+        Map(Attribute.voltage, "Voltage Measurement", UNIT_VOLT, None)
     ],
     Capability.washer_mode: [Map(Attribute.washer_mode, "Washer Mode", None, None)],
     Capability.washer_operating_state: [

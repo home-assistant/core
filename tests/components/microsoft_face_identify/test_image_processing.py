@@ -87,7 +87,7 @@ class TestMicrosoftFaceIdentify:
             mf.DOMAIN: {"api_key": "12345678abcdef6"},
         }
 
-        self.endpoint_url = "https://westus.{0}".format(mf.FACE_API_URL)
+        self.endpoint_url = f"https://westus.{mf.FACE_API_URL}"
 
     def teardown_method(self):
         """Stop everything that was started."""
@@ -116,9 +116,7 @@ class TestMicrosoftFaceIdentify:
         setup_component(self.hass, ip.DOMAIN, self.config)
 
         state = self.hass.states.get("camera.demo_camera")
-        url = "{0}{1}".format(
-            self.hass.config.api.base_url, state.attributes.get(ATTR_ENTITY_PICTURE)
-        )
+        url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
         face_events = []
 

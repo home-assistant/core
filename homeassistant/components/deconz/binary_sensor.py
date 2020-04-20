@@ -37,7 +37,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     gateway.option_allow_clip_sensor
                     or not sensor.type.startswith("CLIP")
                 )
-                and sensor.deconz_id not in gateway.deconz_ids.values()
             ):
                 entities.append(DeconzBinarySensor(sensor, gateway))
 
@@ -65,7 +64,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):
 
         keys = {"on", "reachable", "state"}
         if force_update or self._device.changed_keys.intersection(keys):
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def is_on(self):

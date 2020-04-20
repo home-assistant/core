@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONTENT_TYPE_JSON,
     TEMP_CELSIUS,
     TIME_SECONDS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -71,7 +72,13 @@ SENSOR_TYPES = {
     # API Endpoint, Group, Key, unit, icon
     "Temperatures": ["printer", "temperature", "*", TEMP_CELSIUS],
     "Current State": ["printer", "state", "text", None, "mdi:printer-3d"],
-    "Job Percentage": ["job", "progress", "completion", "%", "mdi:file-percent"],
+    "Job Percentage": [
+        "job",
+        "progress",
+        "completion",
+        UNIT_PERCENTAGE,
+        "mdi:file-percent",
+    ],
     "Time Remaining": [
         "job",
         "progress",
@@ -137,9 +144,10 @@ def setup(hass, config):
 
     for printer in config[DOMAIN]:
         name = printer[CONF_NAME]
-        ssl = "s" if printer[CONF_SSL] else ""
-        base_url = "http{}://{}:{}{}api/".format(
-            ssl, printer[CONF_HOST], printer[CONF_PORT], printer[CONF_PATH]
+        protocol = "https" if printer[CONF_SSL] else "http"
+        base_url = (
+            f"{protocol}://{printer[CONF_HOST]}:{printer[CONF_PORT]}"
+            f"{printer[CONF_PATH]}api/"
         )
         api_key = printer[CONF_API_KEY]
         number_of_tools = printer[CONF_NUMBER_OF_TOOLS]

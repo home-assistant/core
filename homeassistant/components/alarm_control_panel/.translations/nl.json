@@ -14,5 +14,6 @@
             "disarmed": "{entity_name} uitgeschakeld",
             "triggered": "{entity_name} geactiveerd"
         }
-    }
+    },
+    "title": "Alarm bedieningspaneel"
 }

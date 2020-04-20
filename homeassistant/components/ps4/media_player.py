@@ -5,7 +5,7 @@ import logging
 from pyps4_2ndscreen.errors import NotReady, PSDataIncomplete
 import pyps4_2ndscreen.ps4 as pyps4
 
-from homeassistant.components.media_player import ENTITY_IMAGE_URL, MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
@@ -352,7 +352,7 @@ class PS4Device(MediaPlayerDevice):
         else:
             _sw_version = status["system-version"]
             _sw_version = _sw_version[1:4]
-            sw_version = "{}.{}".format(_sw_version[0], _sw_version[1:])
+            sw_version = f"{_sw_version[0]}.{_sw_version[1:]}"
             self._info = {
                 "name": status["host-name"],
                 "model": "PlayStation 4",
@@ -387,8 +387,9 @@ class PS4Device(MediaPlayerDevice):
         if self._state == STATE_PLAYING and self._media_content_id is not None:
             image_hash = self.media_image_hash
             if image_hash is not None:
-                return ENTITY_IMAGE_URL.format(
-                    self.entity_id, self.access_token, image_hash
+                return (
+                    f"/api/media_player_proxy/{self.entity_id}?"
+                    f"token={self.access_token}&cache={image_hash}"
                 )
         return MEDIA_IMAGE_DEFAULT
 

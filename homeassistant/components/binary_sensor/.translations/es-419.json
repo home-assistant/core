@@ -28,6 +28,7 @@
             "is_not_occupied": "{entity_name} no est\u00e1 ocupado",
             "is_not_open": "{entity_name} est\u00e1 cerrado",
             "is_not_plugged_in": "{entity_name} est\u00e1 desconectado",
+            "is_not_present": "{entity_name} no est\u00e1 presente",
             "is_not_unsafe": "{entity_name} es seguro",
             "is_occupied": "{entity_name} est\u00e1 ocupado",
             "is_off": "{entity_name} est\u00e1 apagado",
@@ -44,7 +45,6 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} bater\u00eda baja",
-            "closed": "{entity_name} cerrado",
             "cold": "{entity_name} se enfri\u00f3",
             "connected": "{entity_name} conectado",
             "gas": "{entity_name} comenz\u00f3 a detectar gas",
@@ -52,7 +52,6 @@
             "light": "{entity_name} comenz\u00f3 a detectar luz",
             "locked": "{entity_name} bloqueado",
             "moist": "{entity_name} se humedeci\u00f3",
-            "moist\u00a7": "{entity_name} se humedeci\u00f3",
             "motion": "{entity_name} comenz\u00f3 a detectar movimiento",
             "moving": "{entity_name} comenz\u00f3 a moverse",
             "no_gas": "{entity_name} dej\u00f3 de detectar gas",
@@ -83,5 +82,6 @@
             "turned_off": "{entity_name} apagado",
             "turned_on": "{entity_name} encendido"
         }
-    }
+    },
+    "title": "Sensor binario"
 }

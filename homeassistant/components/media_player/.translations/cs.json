@@ -7,5 +7,6 @@
             "is_paused": "{entity_name} je pozastaven",
             "is_playing": "{entity_name} p\u0159ehr\u00e1v\u00e1"
         }
-    }
+    },
+    "title": "P\u0159ehr\u00e1va\u010d m\u00e9di\u00ed"
 }

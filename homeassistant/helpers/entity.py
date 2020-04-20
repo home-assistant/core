@@ -35,7 +35,7 @@ from homeassistant.helpers.entity_registry import (
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 from homeassistant.util.async_ import run_callback_threadsafe
 
-# mypy: allow-untyped-defs, no-check-untyped-defs, no-warn-return-any
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -319,11 +319,7 @@ class Entity(ABC):
         else:
             state = self.state
 
-            if state is None:
-                state = STATE_UNKNOWN
-            else:
-                state = str(state)
-
+            state = STATE_UNKNOWN if state is None else str(state)
             attr.update(self.state_attributes or {})
             attr.update(self.device_state_attributes or {})
 
@@ -488,6 +484,12 @@ class Entity(ABC):
             self._on_remove = []
         self._on_remove.append(func)
 
+    async def async_removed_from_registry(self) -> None:
+        """Run when entity has been removed from entity registry.
+
+        To be extended by integrations.
+        """
+
     async def async_remove(self) -> None:
         """Remove entity from Home Assistant."""
         assert self.hass is not None
@@ -498,7 +500,7 @@ class Entity(ABC):
             while self._on_remove:
                 self._on_remove.pop()()
 
-        self.hass.states.async_remove(self.entity_id)
+        self.hass.states.async_remove(self.entity_id, context=self._context)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass.
@@ -534,6 +536,10 @@ class Entity(ABC):
     async def _async_registry_updated(self, event):
         """Handle entity registry update."""
         data = event.data
+        if data["action"] == "remove" and data["entity_id"] == self.entity_id:
+            await self.async_removed_from_registry()
+            await self.async_remove()
+
         if (
             data["action"] != "update"
             or data.get("old_entity_id", data["entity_id"]) != self.entity_id
@@ -612,7 +618,7 @@ class ToggleEntity(Entity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        await self.hass.async_add_job(ft.partial(self.turn_on, **kwargs))
+        await self.hass.async_add_executor_job(ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -620,7 +626,7 @@ class ToggleEntity(Entity):
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        await self.hass.async_add_job(ft.partial(self.turn_off, **kwargs))
+        await self.hass.async_add_executor_job(ft.partial(self.turn_off, **kwargs))
 
     def toggle(self, **kwargs: Any) -> None:
         """Toggle the entity."""

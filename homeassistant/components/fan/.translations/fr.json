@@ -12,5 +12,6 @@
             "turned_off": "{entity_name} est \u00e9teint",
             "turned_on": "{entity_name} allum\u00e9"
         }
-    }
+    },
+    "title": "Ventilateur"
 }

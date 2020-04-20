@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     DATA_GIGABITS,
     TIME_DAYS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -27,7 +28,6 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 
 PRICE = "CAD"
-PERCENT = "%"
 
 DEFAULT_NAME = "EBox"
 
@@ -36,7 +36,7 @@ SCAN_INTERVAL = timedelta(minutes=15)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 SENSOR_TYPES = {
-    "usage": ["Usage", PERCENT, "mdi:percent"],
+    "usage": ["Usage", UNIT_PERCENTAGE, "mdi:percent"],
     "balance": ["Balance", PRICE, "mdi:square-inc-cash"],
     "limit": ["Data limit", DATA_GIGABITS, "mdi:download"],
     "days_left": ["Days left", TIME_DAYS, "mdi:calendar-today"],

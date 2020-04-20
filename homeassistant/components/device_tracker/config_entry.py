@@ -62,9 +62,14 @@ class TrackerEntity(BaseTrackerEntity):
     """Represent a tracked device."""
 
     @property
+    def should_poll(self):
+        """No polling for entities that have location pushed."""
+        return False
+
+    @property
     def force_update(self):
-        """All updates need to be written to the state machine."""
-        return True
+        """All updates need to be written to the state machine if we're not polling."""
+        return not self.should_poll
 
     @property
     def location_accuracy(self):

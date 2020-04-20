@@ -15,13 +15,13 @@
                 "description": "Si prega di inserire le tue informazioni.",
                 "title": "Tesla - Configurazione"
             }
-        },
-        "title": "Tesla"
+        }
     },
     "options": {
         "step": {
             "init": {
                 "data": {
+                    "enable_wake_on_start": "Forza il risveglio delle auto all'avvio",
                     "scan_interval": "Secondi tra le scansioni"
                 }
             }

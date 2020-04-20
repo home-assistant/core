@@ -23,6 +23,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.All(
             cv.ensure_list,
             [
+                cv.deprecated(CONF_PORT),
                 vol.Schema(
                     {
                         vol.Required(CONF_HOST): cv.string,
@@ -30,7 +31,7 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional(CONF_PORT): cv.port,
                         vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
                     }
-                )
+                ),
             ],
             ensure_unique_hosts,
         )

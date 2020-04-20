@@ -17,7 +17,6 @@
                 "description": "Harap masukkan informasi koneksi dari broker MQTT Anda.",
                 "title": "MQTT"
             }
-        },
-        "title": "MQTT"
+        }
     }
 }

@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation device tracker from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN] = []
+    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -83,12 +83,14 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         return SOURCE_TYPE_ROUTER
 
     @callback
-    def async_battery_percentage_remaining_updated(self, value):
+    def async_battery_percentage_remaining_updated(self, attr_id, attr_name, value):
         """Handle tracking."""
+        if not attr_name == "battery_percentage_remaining":
+            return
         self.debug("battery_percentage_remaining updated: %s", value)
         self._connected = True
         self._battery_level = Battery.formatter(value)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def battery_level(self):

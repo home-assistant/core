@@ -3,6 +3,5 @@
   "name": "KNX",
   "documentation": "https://www.home-assistant.io/integrations/knx",
   "requirements": ["xknx==0.11.2"],
-  "dependencies": [],
   "codeowners": ["@Julius2342"]
 }

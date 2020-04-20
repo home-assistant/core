@@ -44,7 +44,7 @@ ATTR_DISPLAYTIME = "displaytime"
 
 async def async_get_service(hass, config, discovery_info=None):
     """Return the notify service."""
-    url = "{}:{}".format(config.get(CONF_HOST), config.get(CONF_PORT))
+    url = f"{config.get(CONF_HOST)}:{config.get(CONF_PORT)}"
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)

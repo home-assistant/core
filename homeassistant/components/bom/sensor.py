@@ -19,8 +19,11 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    LENGTH_KILOMETERS,
+    LENGTH_METERS,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -68,12 +71,12 @@ SENSOR_TYPES = {
     "press_msl": ["Pressure msl", "msl"],
     "press_tend": ["Pressure Tend", None],
     "rain_trace": ["Rain Today", "mm"],
-    "rel_hum": ["Relative Humidity", "%"],
+    "rel_hum": ["Relative Humidity", UNIT_PERCENTAGE],
     "sea_state": ["Sea State", None],
     "swell_dir_worded": ["Swell Direction", None],
-    "swell_height": ["Swell Height", "m"],
+    "swell_height": ["Swell Height", LENGTH_METERS],
     "swell_period": ["Swell Period", None],
-    "vis_km": ["Visability km", "km"],
+    "vis_km": [f"Visability {LENGTH_KILOMETERS}", LENGTH_KILOMETERS],
     "weather": ["Weather", None],
     "wind_dir": ["Wind Direction", None],
     "wind_spd_kmh": ["Wind Speed kmh", SPEED_KILOMETERS_PER_HOUR],

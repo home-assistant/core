@@ -11,8 +11,12 @@
         },
         "step": {
             "confirm": {
-                "description": "Modell: {model}\nHost: {host}\nPort: {port}\n\nDir k\u00ebnnt den I/O a Panel Verhaalen an de Konnected Alarm Panel Astellunge konfigur\u00e9ieren.",
+                "description": "Modell: {model}\nID: {id}\nHost: {host}\nPort: {port}\n\nDir k\u00ebnnt den I/O a Panel Verhaalen an de Konnected Alarm Panel Astellunge konfigur\u00e9ieren.",
                 "title": "Konnected Apparat parat"
+            },
+            "import_confirm": {
+                "description": "Ee Konnected Alarm Pael mat der ID {id} gouf an der configuration.yaml entdeckt. D\u00ebsen Oflaf erlaabt et als eng Konfiguratioun z'import\u00e9ieren.",
+                "title": "Konnected Apparat import\u00e9ieren"
             },
             "user": {
                 "data": {
@@ -22,14 +26,14 @@
                 "description": "Informatioune vum Konnected Panel aginn.",
                 "title": "Konnected Apparat entdecken"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
             "not_konn_panel": "Keen erkannten Konnected.io Apparat"
         },
         "error": {
+            "bad_host": "Iwwerschriwwen API Host URL ong\u00eblteg",
             "one": "Ee",
             "other": "M\u00e9i"
         },
@@ -82,7 +86,9 @@
             },
             "options_misc": {
                 "data": {
-                    "blink": "Blink panel LED un wann Status \u00c4nnerung gesch\u00e9ckt g\u00ebtt"
+                    "api_host": "API Host URL iwwerschr\u00e9iwen (optionell)",
+                    "blink": "Blink panel LED un wann Status \u00c4nnerung gesch\u00e9ckt g\u00ebtt",
+                    "override_api_host": "Standard Home Assistant API Host Tableau URL iwwerschr\u00e9iwen"
                 },
                 "description": "Wielt w.e.g. dat gew\u00ebnschte Verhalen fir \u00c4re Panel aus",
                 "title": "Divers Optioune astellen"
@@ -91,14 +97,14 @@
                 "data": {
                     "activation": "Ausgang wann un",
                     "momentary": "Pulsatiounsdauer (ms) (optional)",
+                    "more_states": "Zous\u00e4tzlesch Zoust\u00e4nn fir d\u00ebs Zon konfigur\u00e9ieren",
                     "name": "Numm (optional)",
                     "pause": "Pausen zw\u00ebscht den Impulser (ms) (optional)",
                     "repeat": "Unzuel vu Widderhuelungen (-1= onendlech) (optional)"
                 },
-                "description": "Wielt w.e.g. d'Ausgaboptiounen fir {zone}",
+                "description": "Wielt w.e.g. d'Ausgaboptiounen fir {zone}: Status {state}",
                 "title": "\u00cbmschltbaren Ausgang konfigur\u00e9ieren"
             }
-        },
-        "title": "Konnected Alarm Panneau Optiounen"
+        }
     }
 }

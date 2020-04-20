@@ -18,19 +18,31 @@ async def init_integration(
 
     fixture = "wled/rgb.json" if not rgbw else "wled/rgbw.json"
     aioclient_mock.get(
-        "http://example.local:80/json/",
+        "http://192.168.1.123:80/json/",
         text=load_fixture(fixture),
         headers={"Content-Type": "application/json"},
     )
 
     aioclient_mock.post(
-        "http://example.local:80/json/state",
-        json={"success": True},
+        "http://192.168.1.123:80/json/state",
+        json={},
+        headers={"Content-Type": "application/json"},
+    )
+
+    aioclient_mock.get(
+        "http://192.168.1.123:80/json/info",
+        json={},
+        headers={"Content-Type": "application/json"},
+    )
+
+    aioclient_mock.get(
+        "http://192.168.1.123:80/json/state",
+        json={},
         headers={"Content-Type": "application/json"},
     )
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "example.local", CONF_MAC: "aabbccddeeff"}
+        domain=DOMAIN, data={CONF_HOST: "192.168.1.123", CONF_MAC: "aabbccddeeff"}
     )
 
     entry.add_to_hass(hass)

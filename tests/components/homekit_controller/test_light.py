@@ -6,6 +6,9 @@ from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
 
 from tests.components.homekit_controller.common import setup_test_component
 
+LIGHT_BULB_NAME = "Light Bulb"
+LIGHT_BULB_ENTITY_ID = "light.testdevice"
+
 LIGHT_ON = ("lightbulb", "on")
 LIGHT_BRIGHTNESS = ("lightbulb", "brightness")
 LIGHT_HUE = ("lightbulb", "hue")
@@ -15,7 +18,7 @@ LIGHT_COLOR_TEMP = ("lightbulb", "color-temperature")
 
 def create_lightbulb_service(accessory):
     """Define lightbulb characteristics."""
-    service = accessory.add_service(ServicesTypes.LIGHTBULB)
+    service = accessory.add_service(ServicesTypes.LIGHTBULB, name=LIGHT_BULB_NAME)
 
     on_char = service.add_char(CharacteristicsTypes.ON)
     on_char.value = 0
@@ -110,6 +113,35 @@ async def test_switch_read_light_state(hass, utcnow):
     assert state.state == "off"
 
 
+async def test_switch_push_light_state(hass, utcnow):
+    """Test that we can read the state of a HomeKit light accessory."""
+    helper = await setup_test_component(hass, create_lightbulb_service_with_hs)
+
+    # Initial state is that the light is off
+    state = hass.states.get(LIGHT_BULB_ENTITY_ID)
+    assert state.state == "off"
+
+    await helper.update_named_service(
+        LIGHT_BULB_NAME,
+        {
+            CharacteristicsTypes.ON: True,
+            CharacteristicsTypes.BRIGHTNESS: 100,
+            CharacteristicsTypes.HUE: 4,
+            CharacteristicsTypes.SATURATION: 5,
+        },
+    )
+
+    state = hass.states.get(LIGHT_BULB_ENTITY_ID)
+    assert state.state == "on"
+    assert state.attributes["brightness"] == 255
+    assert state.attributes["hs_color"] == (4, 5)
+
+    # Simulate that device switched off in the real world not via HA
+    await helper.update_named_service(LIGHT_BULB_NAME, {CharacteristicsTypes.ON: False})
+    state = hass.states.get(LIGHT_BULB_ENTITY_ID)
+    assert state.state == "off"
+
+
 async def test_switch_read_light_state_color_temp(hass, utcnow):
     """Test that we can read the color_temp of a  light accessory."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_color_temp)
@@ -124,6 +156,29 @@ async def test_switch_read_light_state_color_temp(hass, utcnow):
     helper.characteristics[LIGHT_COLOR_TEMP].value = 400
 
     state = await helper.poll_and_get_state()
+    assert state.state == "on"
+    assert state.attributes["brightness"] == 255
+    assert state.attributes["color_temp"] == 400
+
+
+async def test_switch_push_light_state_color_temp(hass, utcnow):
+    """Test that we can read the state of a HomeKit light accessory."""
+    helper = await setup_test_component(hass, create_lightbulb_service_with_color_temp)
+
+    # Initial state is that the light is off
+    state = hass.states.get(LIGHT_BULB_ENTITY_ID)
+    assert state.state == "off"
+
+    await helper.update_named_service(
+        LIGHT_BULB_NAME,
+        {
+            CharacteristicsTypes.ON: True,
+            CharacteristicsTypes.BRIGHTNESS: 100,
+            CharacteristicsTypes.COLOR_TEMPERATURE: 400,
+        },
+    )
+
+    state = hass.states.get(LIGHT_BULB_ENTITY_ID)
     assert state.state == "on"
     assert state.attributes["brightness"] == 255
     assert state.attributes["color_temp"] == 400

@@ -36,7 +36,7 @@ VALUE_TO_STATE = dict(enumerate(STATE_LIST))
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation Door Lock from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN] = []
+    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -87,7 +87,7 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
         if not isinstance(result, list) or result[0] is not Status.SUCCESS:
             self.error("Error with lock_door: %s", result)
             return
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_unlock(self, **kwargs):
         """Unlock the lock."""
@@ -95,7 +95,7 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
         if not isinstance(result, list) or result[0] is not Status.SUCCESS:
             self.error("Error with unlock_door: %s", result)
             return
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_update(self):
         """Attempt to retrieve state from the lock."""
@@ -103,10 +103,10 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
         await self.async_get_state()
 
     @callback
-    def async_set_state(self, state):
+    def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
-        self._state = VALUE_TO_STATE.get(state, self._state)
-        self.async_schedule_update_ha_state()
+        self._state = VALUE_TO_STATE.get(value, self._state)
+        self.async_write_ha_state()
 
     async def async_get_state(self, from_cache=True):
         """Attempt to retrieve state from the lock."""

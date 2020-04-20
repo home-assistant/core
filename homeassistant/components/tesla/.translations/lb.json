@@ -15,13 +15,13 @@
                 "description": "F\u00ebllt \u00e4r Informatiounen aus.",
                 "title": "Tesla - Konfiguratioun"
             }
-        },
-        "title": "Tesla"
+        }
     },
     "options": {
         "step": {
             "init": {
                 "data": {
+                    "enable_wake_on_start": "Forc\u00e9ier d'Erw\u00e4chen vun den Autoen beim starten",
                     "scan_interval": "Sekonnen t\u00ebscht Scannen"
                 }
             }

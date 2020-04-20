@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Lokalitet er allerede registreret"
-        },
         "step": {
             "user": {
                 "data": {
@@ -12,7 +9,6 @@
                 },
                 "title": "Udfyld dine lokalitetsoplysninger."
             }
-        },
-        "title": "World Wide Lightning Location Network (WWLLN)"
+        }
     }
 }

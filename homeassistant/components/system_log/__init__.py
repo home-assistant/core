@@ -1,5 +1,5 @@
 """Support for system log."""
-from collections import OrderedDict
+from collections import OrderedDict, deque
 import logging
 import re
 import traceback
@@ -55,28 +55,21 @@ SERVICE_WRITE_SCHEMA = vol.Schema(
 
 def _figure_out_source(record, call_stack, hass):
     paths = [HOMEASSISTANT_PATH[0], hass.config.config_dir]
-    try:
-        # If netdisco is installed check its path too.
-        # pylint: disable=import-outside-toplevel
-        from netdisco import __path__ as netdisco_path
 
-        paths.append(netdisco_path[0])
-    except ImportError:
-        pass
     # If a stack trace exists, extract file names from the entire call stack.
     # The other case is when a regular "log" is made (without an attached
     # exception). In that case, just use the file where the log was made from.
     if record.exc_info:
-        stack = [x[0] for x in traceback.extract_tb(record.exc_info[2])]
+        stack = [(x[0], x[1]) for x in traceback.extract_tb(record.exc_info[2])]
     else:
         index = -1
         for i, frame in enumerate(call_stack):
-            if frame == record.pathname:
+            if frame[0] == record.pathname:
                 index = i
                 break
         if index == -1:
             # For some reason we couldn't find pathname in the stack.
-            stack = [record.pathname]
+            stack = [(record.pathname, record.lineno)]
         else:
             stack = call_stack[0 : index + 1]
 
@@ -86,11 +79,11 @@ def _figure_out_source(record, call_stack, hass):
     for pathname in reversed(stack):
 
         # Try to match with a file within Home Assistant
-        match = re.match(paths_re, pathname)
+        match = re.match(paths_re, pathname[0])
         if match:
-            return match.group(1)
+            return [match.group(1), pathname[1]]
     # Ok, we don't know what this is
-    return record.pathname
+    return (record.pathname, record.lineno)
 
 
 class LogEntry:
@@ -98,10 +91,10 @@ class LogEntry:
 
     def __init__(self, record, stack, source):
         """Initialize a log entry."""
-        self.first_occured = self.timestamp = record.created
+        self.first_occurred = self.timestamp = record.created
         self.name = record.name
         self.level = record.levelname
-        self.message = record.getMessage()
+        self.message = deque([record.getMessage()], maxlen=5)
         self.exception = ""
         self.root_cause = None
         if record.exc_info:
@@ -112,14 +105,20 @@ class LogEntry:
                 self.root_cause = str(traceback.extract_tb(tb)[-1])
         self.source = source
         self.count = 1
-
-    def hash(self):
-        """Calculate a key for DedupStore."""
-        return frozenset([self.name, self.message, self.root_cause])
+        self.hash = str([self.name, *self.source, self.root_cause])
 
     def to_dict(self):
         """Convert object into dict to maintain backward compatibility."""
-        return vars(self)
+        return {
+            "name": self.name,
+            "message": list(self.message),
+            "level": self.level,
+            "source": self.source,
+            "timestamp": self.timestamp,
+            "exception": self.exception,
+            "count": self.count,
+            "first_occurred": self.first_occurred,
+        }
 
 
 class DedupStore(OrderedDict):
@@ -132,12 +131,16 @@ class DedupStore(OrderedDict):
 
     def add_entry(self, entry):
         """Add a new entry."""
-        key = str(entry.hash())
+        key = entry.hash
 
         if key in self:
             # Update stored entry
-            self[key].count += 1
-            self[key].timestamp = entry.timestamp
+            existing = self[key]
+            existing.count += 1
+            existing.timestamp = entry.timestamp
+
+            if entry.message[0] not in existing.message:
+                existing.message.append(entry.message[0])
 
             self.move_to_end(key)
         else:
@@ -172,7 +175,7 @@ class LogErrorHandler(logging.Handler):
         if record.levelno >= logging.WARN:
             stack = []
             if not record.exc_info:
-                stack = [f for f, _, _, _ in traceback.extract_stack()]
+                stack = [(f[0], f[1]) for f in traceback.extract_stack()]
 
             entry = LogEntry(
                 record, stack, _figure_out_source(record, stack, self.hass)

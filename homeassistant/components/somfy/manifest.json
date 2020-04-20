@@ -1,6 +1,6 @@
 {
   "domain": "somfy",
-  "name": "Somfy Open API",
+  "name": "Somfy",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/somfy",
   "dependencies": ["http"],

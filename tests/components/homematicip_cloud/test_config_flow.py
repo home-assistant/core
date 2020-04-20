@@ -16,12 +16,15 @@ DEFAULT_CONFIG = {HMIPC_HAPID: "ABC123", HMIPC_PIN: "123", HMIPC_NAME: "hmip"}
 IMPORT_CONFIG = {HMIPC_HAPID: "ABC123", HMIPC_AUTHTOKEN: "123", HMIPC_NAME: "hmip"}
 
 
-async def test_flow_works(hass):
+async def test_flow_works(hass, simple_mock_home):
     """Test config flow."""
 
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
         return_value=False,
+    ), patch(
+        "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.get_auth",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             HMIPC_DOMAIN, context={"source": "user"}, data=DEFAULT_CONFIG
@@ -32,11 +35,9 @@ async def test_flow_works(hass):
     assert result["errors"] == {"base": "press_the_button"}
 
     flow = next(
-        (
-            flow
-            for flow in hass.config_entries.flow.async_progress()
-            if flow["flow_id"] == result["flow_id"]
-        )
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
     )
     assert flow["context"]["unique_id"] == "ABC123"
 
@@ -49,6 +50,8 @@ async def test_flow_works(hass):
     ), patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_register",
         return_value=True,
+    ), patch(
+        "homeassistant.components.homematicip_cloud.hap.HomematicipHAP.async_connect",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -137,7 +140,7 @@ async def test_init_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_import_config(hass):
+async def test_import_config(hass, simple_mock_home):
     """Test importing a host with an existing config file."""
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
@@ -148,6 +151,8 @@ async def test_import_config(hass):
     ), patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_register",
         return_value=True,
+    ), patch(
+        "homeassistant.components.homematicip_cloud.hap.HomematicipHAP.async_connect",
     ):
         result = await hass.config_entries.flow.async_init(
             HMIPC_DOMAIN, context={"source": "import"}, data=IMPORT_CONFIG

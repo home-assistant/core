@@ -4,5 +4,6 @@
             "is_home": "{entity_name} est\u00e1 em casa",
             "is_not_home": "{entity_name} n\u00e3o est\u00e1 em casa"
         }
-    }
+    },
+    "title": "Monitorizador de dispositivos"
 }

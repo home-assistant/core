@@ -2,7 +2,17 @@
 import asyncio
 from functools import partial, wraps
 import logging
-from typing import Callable
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+)
 
 import voluptuous as vol
 
@@ -10,6 +20,8 @@ from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_ENTITY_ID,
+    CONF_SERVICE,
+    CONF_SERVICE_TEMPLATE,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
 )
@@ -20,17 +32,19 @@ from homeassistant.exceptions import (
     Unauthorized,
     UnknownUser,
 )
-from homeassistant.helpers import template, typing
+from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType, TemplateVarsType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
 
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity import Entity  # noqa
+
+
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
-CONF_SERVICE = "service"
-CONF_SERVICE_TEMPLATE = "service_template"
 CONF_SERVICE_ENTITY_ID = "entity_id"
 CONF_SERVICE_DATA = "data"
 CONF_SERVICE_DATA_TEMPLATE = "data_template"
@@ -42,8 +56,12 @@ SERVICE_DESCRIPTION_CACHE = "service_description_cache"
 
 @bind_hass
 def call_from_config(
-    hass, config, blocking=False, variables=None, validate_config=True
-):
+    hass: HomeAssistantType,
+    config: ConfigType,
+    blocking: bool = False,
+    variables: TemplateVarsType = None,
+    validate_config: bool = True,
+) -> None:
     """Call a service based on a config hash."""
     asyncio.run_coroutine_threadsafe(
         async_call_from_config(hass, config, blocking, variables, validate_config),
@@ -53,15 +71,40 @@ def call_from_config(
 
 @bind_hass
 async def async_call_from_config(
-    hass, config, blocking=False, variables=None, validate_config=True, context=None
-):
+    hass: HomeAssistantType,
+    config: ConfigType,
+    blocking: bool = False,
+    variables: TemplateVarsType = None,
+    validate_config: bool = True,
+    context: Optional[ha.Context] = None,
+) -> None:
     """Call a service based on a config hash."""
+    try:
+        parms = async_prepare_call_from_config(hass, config, variables, validate_config)
+    except HomeAssistantError as ex:
+        if blocking:
+            raise
+        _LOGGER.error(ex)
+    else:
+        await hass.services.async_call(*parms, blocking, context)
+
+
+@ha.callback
+@bind_hass
+def async_prepare_call_from_config(
+    hass: HomeAssistantType,
+    config: ConfigType,
+    variables: TemplateVarsType = None,
+    validate_config: bool = False,
+) -> Tuple[str, str, Dict[str, Any]]:
+    """Prepare to call a service based on a config hash."""
     if validate_config:
         try:
             config = cv.SERVICE_SCHEMA(config)
         except vol.Invalid as ex:
-            _LOGGER.error("Invalid config for calling service: %s", ex)
-            return
+            raise HomeAssistantError(
+                f"Invalid config for calling service: {ex}"
+            ) from ex
 
     if CONF_SERVICE in config:
         domain_service = config[CONF_SERVICE]
@@ -71,17 +114,15 @@ async def async_call_from_config(
             domain_service = config[CONF_SERVICE_TEMPLATE].async_render(variables)
             domain_service = cv.service(domain_service)
         except TemplateError as ex:
-            if blocking:
-                raise
-            _LOGGER.error("Error rendering service name template: %s", ex)
-            return
-        except vol.Invalid:
-            if blocking:
-                raise
-            _LOGGER.error("Template rendered invalid service: %s", domain_service)
-            return
+            raise HomeAssistantError(
+                f"Error rendering service name template: {ex}"
+            ) from ex
+        except vol.Invalid as ex:
+            raise HomeAssistantError(
+                f"Template rendered invalid service: {domain_service}"
+            ) from ex
 
-    domain, service_name = domain_service.split(".", 1)
+    domain, service = domain_service.split(".", 1)
     service_data = dict(config.get(CONF_SERVICE_DATA, {}))
 
     if CONF_SERVICE_DATA_TEMPLATE in config:
@@ -91,19 +132,18 @@ async def async_call_from_config(
                 template.render_complex(config[CONF_SERVICE_DATA_TEMPLATE], variables)
             )
         except TemplateError as ex:
-            _LOGGER.error("Error rendering data template: %s", ex)
-            return
+            raise HomeAssistantError(f"Error rendering data template: {ex}") from ex
 
     if CONF_SERVICE_ENTITY_ID in config:
         service_data[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
 
-    await hass.services.async_call(
-        domain, service_name, service_data, blocking=blocking, context=context
-    )
+    return domain, service, service_data
 
 
 @bind_hass
-def extract_entity_ids(hass, service_call, expand_group=True):
+def extract_entity_ids(
+    hass: HomeAssistantType, service_call: ha.ServiceCall, expand_group: bool = True
+) -> Set[str]:
     """Extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
@@ -114,7 +154,12 @@ def extract_entity_ids(hass, service_call, expand_group=True):
 
 
 @bind_hass
-async def async_extract_entities(hass, entities, service_call, expand_group=True):
+async def async_extract_entities(
+    hass: HomeAssistantType,
+    entities: Iterable["Entity"],
+    service_call: ha.ServiceCall,
+    expand_group: bool = True,
+) -> List["Entity"]:
     """Extract a list of entity objects from a service call.
 
     Will convert group entity ids to the entity ids it represents.
@@ -148,7 +193,9 @@ async def async_extract_entities(hass, entities, service_call, expand_group=True
 
 
 @bind_hass
-async def async_extract_entity_ids(hass, service_call, expand_group=True):
+async def async_extract_entity_ids(
+    hass: HomeAssistantType, service_call: ha.ServiceCall, expand_group: bool = True
+) -> Set[str]:
     """Extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
@@ -156,7 +203,7 @@ async def async_extract_entity_ids(hass, service_call, expand_group=True):
     entity_ids = service_call.data.get(ATTR_ENTITY_ID)
     area_ids = service_call.data.get(ATTR_AREA_ID)
 
-    extracted = set()
+    extracted: Set[str] = set()
 
     if entity_ids in (None, ENTITY_MATCH_NONE) and area_ids in (
         None,
@@ -216,7 +263,9 @@ async def _load_services_file(hass: HomeAssistantType, domain: str) -> JSON_TYPE
 
 
 @bind_hass
-async def async_get_all_descriptions(hass):
+async def async_get_all_descriptions(
+    hass: HomeAssistantType,
+) -> Dict[str, Dict[str, Any]]:
     """Return descriptions (i.e. user documentation) for all service calls."""
     descriptions_cache = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
     format_cache_key = "{}.{}".format
@@ -243,7 +292,7 @@ async def async_get_all_descriptions(hass):
             loaded[domain] = content
 
     # Build response
-    descriptions = {}
+    descriptions: Dict[str, Dict[str, Any]] = {}
     for domain in services:
         descriptions[domain] = {}
 
@@ -271,7 +320,9 @@ async def async_get_all_descriptions(hass):
 
 @ha.callback
 @bind_hass
-def async_set_service_schema(hass, domain, service, schema):
+def async_set_service_schema(
+    hass: HomeAssistantType, domain: str, service: str, schema: Dict[str, Any]
+) -> None:
     """Register a description for a service."""
     hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
@@ -444,7 +495,7 @@ async def _handle_entity_call(hass, entity, func, data, context):
 @bind_hass
 @ha.callback
 def async_register_admin_service(
-    hass: typing.HomeAssistantType,
+    hass: HomeAssistantType,
     domain: str,
     service: str,
     service_func: Callable,

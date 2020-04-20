@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SHOW_ON_MAP,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -42,7 +43,7 @@ TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
 SENSORS = {
     SENSOR_TEMPERATURE: ["Temperature", "mdi:thermometer", TEMP_CELSIUS],
-    SENSOR_HUMIDITY: ["Humidity", "mdi:water-percent", "%"],
+    SENSOR_HUMIDITY: ["Humidity", "mdi:water-percent", UNIT_PERCENTAGE],
     SENSOR_PRESSURE: ["Pressure", "mdi:arrow-down-bold", "Pa"],
     SENSOR_PRESSURE_AT_SEALEVEL: ["Pressure at sealevel", "mdi:download", "Pa"],
     SENSOR_PM10: [

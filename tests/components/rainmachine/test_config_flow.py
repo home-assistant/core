@@ -4,7 +4,7 @@ from unittest.mock import patch
 from regenmaschine.errors import RainMachineError
 
 from homeassistant import data_entry_flow
-from homeassistant.components.rainmachine import DOMAIN, config_flow
+from homeassistant.components.rainmachine import CONF_ZONE_RUN_TIME, DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_IP_ADDRESS,
@@ -29,30 +29,12 @@ async def test_duplicate_error(hass):
     MockConfigEntry(domain=DOMAIN, unique_id="192.168.1.100", data=conf).add_to_hass(
         hass
     )
-    flow = config_flow.RainMachineFlowHandler()
-    flow.hass = hass
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=conf
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_get_configured_instances(hass):
-    """Test retrieving all configured instances."""
-    conf = {
-        CONF_IP_ADDRESS: "192.168.1.100",
-        CONF_PASSWORD: "password",
-        CONF_PORT: 8080,
-        CONF_SSL: True,
-    }
-
-    MockConfigEntry(domain=DOMAIN, unique_id="192.168.1.100", data=conf).add_to_hass(
-        hass
-    )
-
-    assert len(config_flow.configured_instances(hass)) == 1
 
 
 async def test_invalid_password(hass):
@@ -116,6 +98,7 @@ async def test_step_import(hass):
             CONF_PORT: 8080,
             CONF_SSL: True,
             CONF_SCAN_INTERVAL: 60,
+            CONF_ZONE_RUN_TIME: 600,
         }
 
 
@@ -147,4 +130,5 @@ async def test_step_user(hass):
             CONF_PORT: 8080,
             CONF_SSL: True,
             CONF_SCAN_INTERVAL: 60,
+            CONF_ZONE_RUN_TIME: 600,
         }

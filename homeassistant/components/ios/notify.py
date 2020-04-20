@@ -92,8 +92,8 @@ class iOSNotificationService(BaseNotificationService):
 
             if req.status_code != 201:
                 fallback_error = req.json().get("errorMessage", "Unknown error")
-                fallback_message = "Internal server error, please try again later: {}".format(
-                    fallback_error
+                fallback_message = (
+                    f"Internal server error, please try again later: {fallback_error}"
                 )
                 message = req.json().get("message", fallback_message)
                 if req.status_code == 429:

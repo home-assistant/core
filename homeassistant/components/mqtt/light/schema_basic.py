@@ -51,6 +51,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
+from ..debug_info import log_messages
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -146,12 +147,12 @@ PLATFORM_SCHEMA_BASIC = (
 
 
 async def async_setup_entity_basic(
-    config, async_add_entities, config_entry, discovery_hash=None
+    config, async_add_entities, config_entry, discovery_data=None
 ):
     """Set up a MQTT Light."""
     config.setdefault(CONF_STATE_VALUE_TEMPLATE, config.get(CONF_VALUE_TEMPLATE))
 
-    async_add_entities([MqttLight(config, config_entry, discovery_hash)])
+    async_add_entities([MqttLight(config, config_entry, discovery_data)])
 
 
 class MqttLight(
@@ -164,7 +165,7 @@ class MqttLight(
 ):
     """Representation of a MQTT light."""
 
-    def __init__(self, config, config_entry, discovery_hash):
+    def __init__(self, config, config_entry, discovery_data):
         """Initialize MQTT light."""
         self._state = False
         self._sub_state = None
@@ -194,7 +195,7 @@ class MqttLight(
 
         MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash, self.discovery_update)
+        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
@@ -292,6 +293,7 @@ class MqttLight(
         last_state = await self.async_get_last_state()
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new MQTT messages."""
             payload = templates[CONF_STATE](msg.payload)
@@ -315,6 +317,7 @@ class MqttLight(
             self._state = last_state.state == STATE_ON
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def brightness_received(msg):
             """Handle new MQTT messages for the brightness."""
             payload = templates[CONF_BRIGHTNESS](msg.payload)
@@ -346,6 +349,7 @@ class MqttLight(
             self._brightness = None
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def rgb_received(msg):
             """Handle new MQTT messages for RGB."""
             payload = templates[CONF_RGB](msg.payload)
@@ -377,6 +381,7 @@ class MqttLight(
             self._hs = (0, 0)
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def color_temp_received(msg):
             """Handle new MQTT messages for color temperature."""
             payload = templates[CONF_COLOR_TEMP](msg.payload)
@@ -406,6 +411,7 @@ class MqttLight(
             self._color_temp = None
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def effect_received(msg):
             """Handle new MQTT messages for effect."""
             payload = templates[CONF_EFFECT](msg.payload)
@@ -435,6 +441,7 @@ class MqttLight(
             self._effect = None
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def hs_received(msg):
             """Handle new MQTT messages for hs color."""
             payload = templates[CONF_HS](msg.payload)
@@ -466,6 +473,7 @@ class MqttLight(
             self._hs = (0, 0)
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def white_value_received(msg):
             """Handle new MQTT messages for white value."""
             payload = templates[CONF_WHITE_VALUE](msg.payload)
@@ -497,6 +505,7 @@ class MqttLight(
             self._white_value = None
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def xy_received(msg):
             """Handle new MQTT messages for xy color."""
             payload = templates[CONF_XY](msg.payload)
@@ -535,6 +544,7 @@ class MqttLight(
         )
         await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
+        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
 
     @property
     def brightness(self):
@@ -674,7 +684,7 @@ class MqttLight(
                     {"red": rgb[0], "green": rgb[1], "blue": rgb[2]}
                 )
             else:
-                rgb_color_str = "{},{},{}".format(*rgb)
+                rgb_color_str = f"{rgb[0]},{rgb[1]},{rgb[2]}"
 
             mqtt.async_publish(
                 self.hass,
@@ -694,7 +704,7 @@ class MqttLight(
             mqtt.async_publish(
                 self.hass,
                 self._topic[CONF_HS_COMMAND_TOPIC],
-                "{},{}".format(*hs_color),
+                f"{hs_color[0]},{hs_color[1]}",
                 self._config[CONF_QOS],
                 self._config[CONF_RETAIN],
             )
@@ -709,7 +719,7 @@ class MqttLight(
             mqtt.async_publish(
                 self.hass,
                 self._topic[CONF_XY_COMMAND_TOPIC],
-                "{},{}".format(*xy_color),
+                f"{xy_color[0]},{xy_color[1]}",
                 self._config[CONF_QOS],
                 self._config[CONF_RETAIN],
             )
@@ -752,7 +762,7 @@ class MqttLight(
                     {"red": rgb[0], "green": rgb[1], "blue": rgb[2]}
                 )
             else:
-                rgb_color_str = "{},{},{}".format(*rgb)
+                rgb_color_str = f"{rgb[0]},{rgb[1]},{rgb[2]}"
 
             mqtt.async_publish(
                 self.hass,

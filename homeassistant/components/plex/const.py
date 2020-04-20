@@ -9,13 +9,13 @@ DEFAULT_PORT = 32400
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
+DEBOUNCE_TIMEOUT = 1
 DISPATCHERS = "dispatchers"
 PLATFORMS = frozenset(["media_player", "sensor"])
 PLATFORMS_COMPLETED = "platforms_completed"
 SERVERS = "servers"
 WEBSOCKETS = "websockets"
 
-PLEX_CONFIG_FILE = "plex.conf"
 PLEX_MEDIA_PLAYER_OPTIONS = "plex_mp_options"
 PLEX_SERVER_CONFIG = "server_config"
 

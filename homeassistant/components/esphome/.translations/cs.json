@@ -7,6 +7,9 @@
             "discovery_confirm": {
                 "description": "Chcete do domovsk\u00e9ho asistenta p\u0159idat uzel ESPHome `{name}`?",
                 "title": "Nalezen uzel ESPHome"
+            },
+            "user": {
+                "title": "[%key:component::esphome::title%]"
             }
         }
     }

@@ -8,6 +8,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -682,6 +684,36 @@ async def test_report_playback_state(hass):
     properties.assert_equal(
         "Alexa.PlaybackStateReporter", "playbackState", {"state": "STOPPED"}
     )
+
+
+async def test_report_speaker_volume(hass):
+    """Test Speaker reports volume correctly."""
+    hass.states.async_set(
+        "media_player.test_speaker",
+        "on",
+        {
+            "friendly_name": "Test media player speaker",
+            "supported_features": SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET,
+            "volume_level": None,
+            "device_class": "speaker",
+        },
+    )
+    properties = await reported_properties(hass, "media_player.test_speaker")
+    properties.assert_not_has_property("Alexa.Speaker", "volume")
+
+    for good_value in range(101):
+        hass.states.async_set(
+            "media_player.test_speaker",
+            "on",
+            {
+                "friendly_name": "Test media player speaker",
+                "supported_features": SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET,
+                "volume_level": good_value / 100,
+                "device_class": "speaker",
+            },
+        )
+        properties = await reported_properties(hass, "media_player.test_speaker")
+        properties.assert_equal("Alexa.Speaker", "volume", good_value)
 
 
 async def test_report_image_processing(hass):

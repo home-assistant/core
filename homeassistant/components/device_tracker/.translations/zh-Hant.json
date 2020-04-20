@@ -4,5 +4,6 @@
             "is_home": "{entity_name}\u5728\u5bb6",
             "is_not_home": "{entity_name}\u4e0d\u5728\u5bb6"
         }
-    }
+    },
+    "title": "\u8a2d\u5099\u8ffd\u8e64\u5668"
 }

@@ -1,11 +1,12 @@
 """Support for Apple HomeKit."""
 import ipaddress
 import logging
-from zlib import adler32
 
 import voluptuous as vol
+from zeroconf import InterfaceChoice
 
 from homeassistant.components import cover
+from homeassistant.components.cover import DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -23,13 +24,16 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
 
+from .aidmanager import AccessoryAidStorage
 from .const import (
+    AID_STORAGE,
     BRIDGE_NAME,
     CONF_ADVERTISE_IP,
     CONF_AUTO_START,
@@ -37,9 +41,11 @@ from .const import (
     CONF_FEATURE_LIST,
     CONF_FILTER,
     CONF_SAFE_MODE,
+    CONF_ZEROCONF_DEFAULT_INTERFACE,
     DEFAULT_AUTO_START,
     DEFAULT_PORT,
     DEFAULT_SAFE_MODE,
+    DEFAULT_ZEROCONF_DEFAULT_INTERFACE,
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_PM25,
@@ -62,7 +68,7 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 
-MAX_DEVICES = 100
+MAX_DEVICES = 150
 TYPES = Registry()
 
 # #### Driver Status ####
@@ -96,6 +102,10 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_SAFE_MODE, default=DEFAULT_SAFE_MODE): cv.boolean,
                 vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
                 vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
+                vol.Optional(
+                    CONF_ZEROCONF_DEFAULT_INTERFACE,
+                    default=DEFAULT_ZEROCONF_DEFAULT_INTERFACE,
+                ): cv.boolean,
             }
         )
     },
@@ -111,6 +121,9 @@ async def async_setup(hass, config):
     """Set up the HomeKit component."""
     _LOGGER.debug("Begin setup HomeKit")
 
+    aid_storage = hass.data[AID_STORAGE] = AccessoryAidStorage(hass)
+    await aid_storage.async_initialize()
+
     conf = config[DOMAIN]
     name = conf[CONF_NAME]
     port = conf[CONF_PORT]
@@ -120,6 +133,9 @@ async def async_setup(hass, config):
     safe_mode = conf[CONF_SAFE_MODE]
     entity_filter = conf[CONF_FILTER]
     entity_config = conf[CONF_ENTITY_CONFIG]
+    interface_choice = (
+        InterfaceChoice.Default if config.get(CONF_ZEROCONF_DEFAULT_INTERFACE) else None
+    )
 
     homekit = HomeKit(
         hass,
@@ -130,6 +146,7 @@ async def async_setup(hass, config):
         entity_config,
         safe_mode,
         advertise_ip,
+        interface_choice,
     )
     await hass.async_add_executor_job(homekit.setup)
 
@@ -199,7 +216,7 @@ def get_accessory(hass, driver, state, aid, config):
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if device_class == "garage" and features & (
+        if device_class in (DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE) and features & (
             cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE
         ):
             a_type = "GarageDoorOpener"
@@ -236,7 +253,7 @@ def get_accessory(hass, driver, state, aid, config):
             TEMP_FAHRENHEIT,
         ):
             a_type = "TemperatureSensor"
-        elif device_class == DEVICE_CLASS_HUMIDITY and unit == "%":
+        elif device_class == DEVICE_CLASS_HUMIDITY and unit == UNIT_PERCENTAGE:
             a_type = "HumiditySensor"
         elif device_class == DEVICE_CLASS_PM25 or DEVICE_CLASS_PM25 in state.entity_id:
             a_type = "AirQualitySensor"
@@ -264,14 +281,6 @@ def get_accessory(hass, driver, state, aid, config):
     return TYPES[a_type](hass, driver, name, state.entity_id, aid, config)
 
 
-def generate_aid(entity_id):
-    """Generate accessory aid with zlib adler32."""
-    aid = adler32(entity_id.encode("utf-8"))
-    if aid in (0, 1):
-        return None
-    return aid
-
-
 class HomeKit:
     """Class to handle all actions between HomeKit and Home Assistant."""
 
@@ -285,6 +294,7 @@ class HomeKit:
         entity_config,
         safe_mode,
         advertise_ip=None,
+        interface_choice=None,
     ):
         """Initialize a HomeKit object."""
         self.hass = hass
@@ -295,6 +305,7 @@ class HomeKit:
         self._config = entity_config
         self._safe_mode = safe_mode
         self._advertise_ip = advertise_ip
+        self._interface_choice = interface_choice
         self.status = STATUS_READY
 
         self.bridge = None
@@ -315,6 +326,7 @@ class HomeKit:
             port=self._port,
             persist_file=path,
             advertised_address=self._advertise_ip,
+            interface_choice=self._interface_choice,
         )
         self.bridge = HomeBridge(self.hass, self.driver, self._name)
         if self._safe_mode:
@@ -323,9 +335,10 @@ class HomeKit:
 
     def reset_accessories(self, entity_ids):
         """Reset the accessory to load the latest configuration."""
+        aid_storage = self.hass.data[AID_STORAGE]
         removed = []
         for entity_id in entity_ids:
-            aid = generate_aid(entity_id)
+            aid = aid_storage.get_or_allocate_aid_for_entity_id(entity_id)
             if aid not in self.bridge.accessories:
                 _LOGGER.warning(
                     "Could not reset accessory. entity_id not found %s", entity_id
@@ -343,11 +356,31 @@ class HomeKit:
         """Try adding accessory to bridge if configured beforehand."""
         if not state or not self._filter(state.entity_id):
             return
-        aid = generate_aid(state.entity_id)
+
+        # The bridge itself counts as an accessory
+        if len(self.bridge.accessories) + 1 >= MAX_DEVICES:
+            _LOGGER.warning(
+                "Cannot add %s as this would exceeded the %d device limit. Consider using the filter option.",
+                state.entity_id,
+                MAX_DEVICES,
+            )
+            return
+
+        aid = self.hass.data[AID_STORAGE].get_or_allocate_aid_for_entity_id(
+            state.entity_id
+        )
         conf = self._config.pop(state.entity_id, {})
-        acc = get_accessory(self.hass, self.driver, state, aid, conf)
-        if acc is not None:
-            self.bridge.add_accessory(acc)
+        # If an accessory cannot be created or added due to an exception
+        # of any kind (usually in pyhap) it should not prevent
+        # the rest of the accessories from being created
+        try:
+            acc = get_accessory(self.hass, self.driver, state, aid, conf)
+            if acc is not None:
+                self.bridge.add_accessory(acc)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Failed to create a HomeKit accessory for %s", state.entity_id
+            )
 
     def remove_bridge_accessory(self, aid):
         """Try adding accessory to bridge if configured beforehand."""
@@ -376,16 +409,11 @@ class HomeKit:
 
         for state in self.hass.states.all():
             self.add_bridge_accessory(state)
+
         self.driver.add_accessory(self.bridge)
 
         if not self.driver.state.paired:
             show_setup_message(self.hass, self.driver.state.pincode)
-
-        if len(self.bridge.accessories) > MAX_DEVICES:
-            _LOGGER.warning(
-                "You have exceeded the device limit, which might "
-                "cause issues. Consider using the filter option."
-            )
 
         _LOGGER.debug("Driver start")
         self.hass.add_job(self.driver.start)

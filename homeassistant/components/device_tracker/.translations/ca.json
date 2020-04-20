@@ -4,5 +4,6 @@
             "is_home": "{entity_name} \u00e9s a casa",
             "is_not_home": "{entity_name} no \u00e9s a casa"
         }
-    }
+    },
+    "title": "Seguiment de dispositius"
 }

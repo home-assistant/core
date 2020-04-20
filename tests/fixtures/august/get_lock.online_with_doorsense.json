@@ -17,7 +17,7 @@
    "Created" : "2000-00-00T00:00:00.447Z",
    "HouseID" : "123",
    "HouseName" : "Test",
-   "LockID" : "ABC",
+   "LockID" : "online_with_doorsense",
    "LockName" : "Online door with doorsense",
    "LockStatus" : {
       "dateTime" : "2017-12-10T04:48:30.272Z",

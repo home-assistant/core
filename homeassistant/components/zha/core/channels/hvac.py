@@ -1,7 +1,7 @@
 """HVAC channels module for Zigbee Home Automation."""
 import logging
 
-from zigpy.exceptions import DeliveryError
+from zigpy.exceptions import ZigbeeException
 import zigpy.zcl.clusters.hvac as hvac
 
 from homeassistant.core import callback
@@ -17,8 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 class Dehumidification(ZigbeeChannel):
     """Dehumidification channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.Fan.cluster_id)
 class FanChannel(ZigbeeChannel):
@@ -33,15 +31,17 @@ class FanChannel(ZigbeeChannel):
 
         try:
             await self.cluster.write_attributes({"fan_mode": value})
-        except DeliveryError as ex:
+        except ZigbeeException as ex:
             self.error("Could not set speed: %s", ex)
             return
 
     async def async_update(self):
         """Retrieve latest state."""
         result = await self.get_attribute_value("fan_mode", from_cache=True)
-
-        self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", result)
+        if result is not None:
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", 0, "fan_mode", result
+            )
 
     @callback
     def attribute_updated(self, attrid, value):
@@ -51,7 +51,9 @@ class FanChannel(ZigbeeChannel):
             "Attribute report '%s'[%s] = %s", self.cluster.name, attr_name, value
         )
         if attrid == self._value_attribute:
-            self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value)
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
+            )
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
@@ -63,18 +65,12 @@ class FanChannel(ZigbeeChannel):
 class Pump(ZigbeeChannel):
     """Pump channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.Thermostat.cluster_id)
 class Thermostat(ZigbeeChannel):
     """Thermostat channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.UserInterface.cluster_id)
 class UserInterface(ZigbeeChannel):
     """User interface (thermostat) channel."""
-
-    pass

@@ -11,6 +11,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -27,10 +28,10 @@ SENSOR_TYPES = {
     "last_capture": ["Last", None, "run-fast"],
     "total_cameras": ["Arlo Cameras", None, "video"],
     "captured_today": ["Captured Today", None, "file-video"],
-    "battery_level": ["Battery Level", "%", "battery-50"],
+    "battery_level": ["Battery Level", UNIT_PERCENTAGE, "battery-50"],
     "signal_strength": ["Signal Strength", None, "signal"],
     "temperature": ["Temperature", TEMP_CELSIUS, "thermometer"],
-    "humidity": ["Humidity", "%", "water-percent"],
+    "humidity": ["Humidity", UNIT_PERCENTAGE, "water-percent"],
     "air_quality": ["Air Quality", CONCENTRATION_PARTS_PER_MILLION, "biohazard"],
 }
 
@@ -50,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
+    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         if sensor_type == "total_cameras":
             sensors.append(ArloSensor(SENSOR_TYPES[sensor_type][0], arlo, sensor_type))
         else:
@@ -91,7 +92,11 @@ class ArloSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_ARLO, self._update_callback)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_ARLO, self._update_callback
+            )
+        )
 
     @callback
     def _update_callback(self):

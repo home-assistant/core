@@ -1,6 +1,7 @@
 """Code to handle a Hue bridge."""
 import asyncio
 from functools import partial
+import logging
 
 from aiohttp import client_exceptions
 import aiohue
@@ -9,6 +10,7 @@ import slugify as unicode_slug
 import voluptuous as vol
 
 from homeassistant import core
+from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
@@ -24,7 +26,8 @@ SCENE_SCHEMA = vol.Schema(
     {vol.Required(ATTR_GROUP_NAME): cv.string, vol.Required(ATTR_SCENE_NAME): cv.string}
 )
 # How long should we sleep if the hub is busy
-HUB_BUSY_SLEEP = 0.01
+HUB_BUSY_SLEEP = 0.5
+_LOGGER = logging.getLogger(__name__)
 
 
 class HueBridge:
@@ -123,11 +126,16 @@ class HueBridge:
                 except (
                     client_exceptions.ClientOSError,
                     client_exceptions.ClientResponseError,
+                    client_exceptions.ServerDisconnectedError,
                 ) as err:
-                    if tries == 3 or (
-                        # We only retry if it's a server error. So raise on all 4XX errors.
+                    if tries == 3:
+                        _LOGGER.error("Request failed %s times, giving up.", tries)
+                        raise
+
+                    # We only retry if it's a server error. So raise on all 4XX errors.
+                    if (
                         isinstance(err, client_exceptions.ClientResponseError)
-                        and err.status < 500
+                        and err.status < HTTP_INTERNAL_SERVER_ERROR
                     ):
                         raise
 

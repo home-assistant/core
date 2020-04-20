@@ -71,7 +71,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     host = config.get(CONF_HOST)
     key = config.get(CONF_API_KEY)
     port = config.get(CONF_PORT)
-    ssl = config.get(CONF_SSL)
+    ssl = config[CONF_SSL]
 
     if port is None:
         port = DEFAULT_SSL_PORT if ssl else DEFAULT_PORT
@@ -166,7 +166,7 @@ class EmbyDevice(MediaPlayerDevice):
             self.media_status_last_position = None
             self.media_status_received = None
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def available(self):
@@ -190,9 +190,7 @@ class EmbyDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return (
-            f"Emby - {self.device.client} - {self.device.name}" or DEVICE_DEFAULT_NAME
-        )
+        return f"Emby {self.device.name}" or DEVICE_DEFAULT_NAME
 
     @property
     def should_poll(self):
@@ -307,7 +305,7 @@ class EmbyDevice(MediaPlayerDevice):
         """Flag media player features that are supported."""
         if self.supports_remote_control:
             return SUPPORT_EMBY
-        return None
+        return 0
 
     async def async_media_play(self):
         """Play media."""

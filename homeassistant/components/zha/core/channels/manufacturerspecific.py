@@ -14,13 +14,13 @@ from ..const import (
     SIGNAL_ATTR_UPDATED,
     UNKNOWN,
 )
-from .base import AttributeListeningChannel, ZigbeeChannel
+from .base import ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.SMARTTHINGS_HUMIDITY_CLUSTER)
-class SmartThingsHumidity(AttributeListeningChannel):
+class SmartThingsHumidity(ZigbeeChannel):
     """Smart Things Humidity channel."""
 
     REPORT_CONFIG = [
@@ -39,10 +39,18 @@ class OsramButton(ZigbeeChannel):
     REPORT_CONFIG = []
 
 
+@registries.CHANNEL_ONLY_CLUSTERS.register(0xFCC0)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFCC0)
+class OppleRemote(ZigbeeChannel):
+    """Opple button channel."""
+
+    REPORT_CONFIG = []
+
+
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
     registries.SMARTTHINGS_ACCELERATION_CLUSTER
 )
-class SmartThingsAcceleration(AttributeListeningChannel):
+class SmartThingsAcceleration(ZigbeeChannel):
     """Smart Things Acceleration channel."""
 
     REPORT_CONFIG = [
@@ -56,7 +64,12 @@ class SmartThingsAcceleration(AttributeListeningChannel):
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
         if attrid == self.value_attribute:
-            self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value)
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+                attrid,
+                self._cluster.attributes.get(attrid, [UNKNOWN])[0],
+                value,
+            )
             return
 
         self.zha_send_event(

@@ -75,7 +75,7 @@ async def webhook_id_fixture(hass, client):
 
 async def test_missing_data(hass, client, webhook_id):
     """Test missing data."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
     data = {"lat": "1.0", "lon": "1.1", "id": "123"}
 
     # No data
@@ -100,7 +100,7 @@ async def test_missing_data(hass, client, webhook_id):
 
 async def test_enter_and_exit(hass, client, webhook_id):
     """Test when there is a known zone."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
     data = {"lat": str(HOME_LATITUDE), "lon": str(HOME_LONGITUDE), "id": "123"}
 
     # Enter the Home
@@ -142,7 +142,7 @@ async def test_enter_and_exit(hass, client, webhook_id):
 
 async def test_enter_with_attrs(hass, client, webhook_id):
     """Test when additional attributes are present."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
     data = {
         "timestamp": 123456789,
         "lat": "1.0",
@@ -191,7 +191,7 @@ async def test_enter_with_attrs(hass, client, webhook_id):
 
 async def test_two_devices(hass, client, webhook_id):
     """Test updating two different devices."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data_device_1 = {"lat": "1.0", "lon": "1.1", "id": "device_1"}
 
@@ -223,7 +223,7 @@ async def test_two_devices(hass, client, webhook_id):
 )
 async def test_load_unload_entry(hass, client, webhook_id):
     """Test that the appropriate dispatch signals are added and removed."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
     data = {"lat": str(HOME_LATITUDE), "lon": str(HOME_LONGITUDE), "id": "123"}
 
     # Enter the Home

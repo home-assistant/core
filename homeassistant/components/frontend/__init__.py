@@ -171,6 +171,8 @@ def async_register_built_in_panel(
     frontend_url_path=None,
     config=None,
     require_admin=False,
+    *,
+    update=False,
 ):
     """Register a built-in panel."""
     panel = Panel(
@@ -184,8 +186,8 @@ def async_register_built_in_panel(
 
     panels = hass.data.setdefault(DATA_PANELS, {})
 
-    if panel.frontend_url_path in panels:
-        _LOGGER.warning("Overwriting integration %s", panel.frontend_url_path)
+    if not update and panel.frontend_url_path in panels:
+        raise ValueError(f"Overwriting panel {panel.frontend_url_path}")
 
     panels[panel.frontend_url_path] = panel
 
@@ -274,8 +276,7 @@ async def async_setup(hass, config):
 
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
-    for panel in ("kiosk", "states", "profile"):
-        async_register_built_in_panel(hass, panel)
+    async_register_built_in_panel(hass, "profile")
 
     # To smooth transition to new urls, add redirects to new urls of dev tools
     # Added June 27, 2019. Can be removed in 2021.
@@ -420,11 +421,9 @@ class IndexView(web_urldispatcher.AbstractResource):
 
     def freeze(self) -> None:
         """Freeze the resource."""
-        pass
 
     def raw_match(self, path: str) -> bool:
         """Perform a raw match against path."""
-        pass
 
     def get_template(self):
         """Get template."""
@@ -537,7 +536,13 @@ def websocket_get_themes(hass, connection, msg):
 
 
 @websocket_api.websocket_command(
-    {"type": "frontend/get_translations", vol.Required("language"): str}
+    {
+        "type": "frontend/get_translations",
+        vol.Required("language"): str,
+        vol.Required("category"): str,
+        vol.Optional("integration"): str,
+        vol.Optional("config_flow"): bool,
+    }
 )
 @websocket_api.async_response
 async def websocket_get_translations(hass, connection, msg):
@@ -545,7 +550,13 @@ async def websocket_get_translations(hass, connection, msg):
 
     Async friendly.
     """
-    resources = await async_get_translations(hass, msg["language"])
+    resources = await async_get_translations(
+        hass,
+        msg["language"],
+        msg["category"],
+        msg.get("integration"),
+        msg.get("config_flow"),
+    )
     connection.send_message(
         websocket_api.result_message(msg["id"], {"resources": resources})
     )

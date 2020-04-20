@@ -3,8 +3,10 @@ import asyncio
 
 import voluptuous as vol
 
+from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.const import HTTP_FORBIDDEN
 from homeassistant.core import callback
 
 from .const import (
@@ -94,12 +96,12 @@ class UserOnboardingView(_BaseOnboardingView):
 
         async with self._lock:
             if self._async_is_done():
-                return self.json_message("User step already done", 403)
+                return self.json_message("User step already done", HTTP_FORBIDDEN)
 
             provider = _async_get_hass_provider(hass)
             await provider.async_initialize()
 
-            user = await hass.auth.async_create_user(data["name"])
+            user = await hass.auth.async_create_user(data["name"], [GROUP_ID_ADMIN])
             await hass.async_add_executor_job(
                 provider.data.add_auth, data["username"], data["password"]
             )
@@ -115,7 +117,7 @@ class UserOnboardingView(_BaseOnboardingView):
 
             # Create default areas using the users supplied language.
             translations = await hass.helpers.translation.async_get_translations(
-                data["language"]
+                data["language"], "area", DOMAIN
             )
 
             area_registry = await hass.helpers.area_registry.async_get_registry()
@@ -146,7 +148,9 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
 
         async with self._lock:
             if self._async_is_done():
-                return self.json_message("Core config step already done", 403)
+                return self.json_message(
+                    "Core config step already done", HTTP_FORBIDDEN
+                )
 
             await self._async_mark_done(hass)
 
@@ -172,7 +176,9 @@ class IntegrationOnboardingView(_BaseOnboardingView):
 
         async with self._lock:
             if self._async_is_done():
-                return self.json_message("Integration step already done", 403)
+                return self.json_message(
+                    "Integration step already done", HTTP_FORBIDDEN
+                )
 
             await self._async_mark_done(hass)
 

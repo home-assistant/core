@@ -8,7 +8,6 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
-                    "show_all_controls": "Mostrar todos os controles",
                     "use_episode_art": "Usar arte epis\u00f3dio"
                 },
                 "description": "Op\u00e7\u00f5es para Plex Media Players"

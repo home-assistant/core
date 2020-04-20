@@ -85,7 +85,7 @@ class MHZ19Sensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{}: {}".format(self._name, SENSOR_TYPES[self._sensor_type][0])
+        return f"{self._name}: {SENSOR_TYPES[self._sensor_type][0]}"
 
     @property
     def state(self):
@@ -124,7 +124,7 @@ class MHZClient:
         """Initialize the sensor."""
         self.co2sensor = co2sens
         self._serial = serial
-        self.data = dict()
+        self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

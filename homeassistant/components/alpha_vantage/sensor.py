@@ -64,7 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Alpha Vantage sensor."""
-    api_key = config.get(CONF_API_KEY)
+    api_key = config[CONF_API_KEY]
     symbols = config.get(CONF_SYMBOLS, [])
     conversions = config.get(CONF_FOREIGN_EXCHANGE, [])
 
@@ -162,8 +162,8 @@ class AlphaVantageForeignExchange(Entity):
     def __init__(self, foreign_exchange, config):
         """Initialize the sensor."""
         self._foreign_exchange = foreign_exchange
-        self._from_currency = config.get(CONF_FROM)
-        self._to_currency = config.get(CONF_TO)
+        self._from_currency = config[CONF_FROM]
+        self._to_currency = config[CONF_TO]
         if CONF_NAME in config:
             self._name = config.get(CONF_NAME)
         else:

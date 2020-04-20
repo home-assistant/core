@@ -1,4 +1,5 @@
 {
+  "title": "Vacuum",
   "device_automation": {
     "condition_type": {
       "is_docked": "{entity_name} is docked",

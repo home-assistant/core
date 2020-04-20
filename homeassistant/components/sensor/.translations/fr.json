@@ -22,5 +22,6 @@
             "timestamp": "{entity_name} modification d'horodatage",
             "value": "Changements de valeur de {entity_name}"
         }
-    }
+    },
+    "title": "Capteur"
 }

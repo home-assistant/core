@@ -221,7 +221,7 @@ def test_match_rule_claim_channels_color(channel):
 
     rule = registries.MatchRule(channel_names="on_off", aux_channels={"color", "level"})
     claimed = rule.claim_channels([ch_color, ch_level, ch_onoff])
-    assert {"color", "level", "on_off"} == set([ch.name for ch in claimed])
+    assert {"color", "level", "on_off"} == {ch.name for ch in claimed}
 
 
 @pytest.mark.parametrize(
@@ -253,4 +253,64 @@ def test_match_rule_claim_channels(rule, match, channel, channels):
     channels.append(ch_power)
 
     claimed = rule.claim_channels(channels)
-    assert match == set([ch.name for ch in claimed])
+    assert match == {ch.name for ch in claimed}
+
+
+@pytest.fixture
+def entity_registry():
+    """Registry fixture."""
+    return registries.ZHAEntityRegistry()
+
+
+@pytest.mark.parametrize(
+    "manufacturer, model, match_name",
+    (
+        ("random manufacturer", "random model", "OnOff"),
+        ("random manufacturer", MODEL, "OnOffModel"),
+        (MANUFACTURER, "random model", "OnOffManufacturer"),
+        (MANUFACTURER, MODEL, "OnOffModelManufacturer"),
+        (MANUFACTURER, "some model", "OnOffMultimodel"),
+    ),
+)
+def test_weighted_match(channel, entity_registry, manufacturer, model, match_name):
+    """Test weightedd match."""
+
+    s = mock.sentinel
+
+    @entity_registry.strict_match(
+        s.component,
+        channel_names="on_off",
+        models={MODEL, "another model", "some model"},
+    )
+    class OnOffMultimodel:
+        pass
+
+    @entity_registry.strict_match(s.component, channel_names="on_off")
+    class OnOff:
+        pass
+
+    @entity_registry.strict_match(
+        s.component, channel_names="on_off", manufacturers=MANUFACTURER
+    )
+    class OnOffManufacturer:
+        pass
+
+    @entity_registry.strict_match(s.component, channel_names="on_off", models=MODEL)
+    class OnOffModel:
+        pass
+
+    @entity_registry.strict_match(
+        s.component, channel_names="on_off", models=MODEL, manufacturers=MANUFACTURER
+    )
+    class OnOffModelManufacturer:
+        pass
+
+    ch_on_off = channel("on_off", 6)
+    ch_level = channel("level", 8)
+
+    match, claimed = entity_registry.get_entity(
+        s.component, manufacturer, model, [ch_on_off, ch_level]
+    )
+
+    assert match.__name__ == match_name
+    assert claimed == [ch_on_off]

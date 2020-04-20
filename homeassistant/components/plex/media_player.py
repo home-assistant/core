@@ -1,7 +1,6 @@
 """Support to interface with the Plex API."""
 import json
 import logging
-from xml.etree.ElementTree import ParseError
 
 import plexapi.exceptions
 import requests.exceptions
@@ -17,7 +16,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
@@ -39,14 +37,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Plex media_player platform.
-
-    Deprecated.
-    """
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -334,6 +324,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
 
     def force_idle(self):
         """Force client to idle."""
+        self._player_state = STATE_IDLE
         self._state = STATE_IDLE
         self.session = None
         self._clear_media_details()
@@ -481,46 +472,6 @@ class PlexMediaPlayer(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        # force show all controls
-        if self.plex_server.option_show_all_controls:
-            return (
-                SUPPORT_PAUSE
-                | SUPPORT_PREVIOUS_TRACK
-                | SUPPORT_NEXT_TRACK
-                | SUPPORT_STOP
-                | SUPPORT_VOLUME_SET
-                | SUPPORT_PLAY
-                | SUPPORT_PLAY_MEDIA
-                | SUPPORT_TURN_OFF
-                | SUPPORT_VOLUME_MUTE
-            )
-
-        # no mute support
-        if self.make.lower() == "shield android tv":
-            _LOGGER.debug(
-                "Shield Android TV client detected, disabling mute controls: %s",
-                self.name,
-            )
-            return (
-                SUPPORT_PAUSE
-                | SUPPORT_PREVIOUS_TRACK
-                | SUPPORT_NEXT_TRACK
-                | SUPPORT_STOP
-                | SUPPORT_VOLUME_SET
-                | SUPPORT_PLAY
-                | SUPPORT_PLAY_MEDIA
-                | SUPPORT_TURN_OFF
-            )
-
-        # Only supports play,pause,stop (and off which really is stop)
-        if self.make.lower().startswith("tivo"):
-            _LOGGER.debug(
-                "Tivo client detected, only enabling pause, play, "
-                "stop, and off controls: %s",
-                self.name,
-            )
-            return SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_TURN_OFF
-
         if self.device and "playback" in self._device_protocol_capabilities:
             return (
                 SUPPORT_PAUSE
@@ -530,7 +481,6 @@ class PlexMediaPlayer(MediaPlayerDevice):
                 | SUPPORT_VOLUME_SET
                 | SUPPORT_PLAY
                 | SUPPORT_PLAY_MEDIA
-                | SUPPORT_TURN_OFF
                 | SUPPORT_VOLUME_MUTE
             )
 
@@ -541,7 +491,6 @@ class PlexMediaPlayer(MediaPlayerDevice):
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.setVolume(int(volume * 100), self._active_media_plexapi_type)
             self._volume_level = volume  # store since we can't retrieve
-            self.plex_server.update_platforms()
 
     @property
     def volume_level(self):
@@ -580,36 +529,26 @@ class PlexMediaPlayer(MediaPlayerDevice):
         """Send play command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.play(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def media_pause(self):
         """Send pause command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.pause(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def media_stop(self):
         """Send stop command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.stop(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
-
-    def turn_off(self):
-        """Turn the client off."""
-        # Fake it since we can't turn the client off
-        self.media_stop()
 
     def media_next_track(self):
         """Send next track command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.skipNext(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def media_previous_track(self):
         """Send previous track command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.skipPrevious(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
@@ -638,13 +577,8 @@ class PlexMediaPlayer(MediaPlayerDevice):
         playqueue = self.plex_server.create_playqueue(media, shuffle=shuffle)
         try:
             self.device.playMedia(playqueue)
-        except ParseError:
-            # Temporary workaround for Plexamp / plexapi issue
-            pass
         except requests.exceptions.ConnectTimeout:
             _LOGGER.error("Timed out playing on %s", self.name)
-
-        self.plex_server.update_platforms()
 
     def _get_music_media(self, library_name, src):
         """Find music media and return a Plex media object."""

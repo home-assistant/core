@@ -39,7 +39,7 @@ RIGHT_METHOD = "right"
 INTEGRATION_METHOD = [TRAPEZOIDAL_METHOD, LEFT_METHOD, RIGHT_METHOD]
 
 # SI Metric prefixes
-UNIT_PREFIXES = {None: 1, "k": 10 ** 3, "G": 10 ** 6, "T": 10 ** 9}
+UNIT_PREFIXES = {None: 1, "k": 10 ** 3, "M": 10 ** 6, "G": 10 ** 9, "T": 10 ** 12}
 
 # SI Time prefixes
 UNIT_TIME = {
@@ -105,8 +105,8 @@ class IntegrationSensor(RestoreEntity):
         self._name = name if name is not None else f"{source_entity} integral"
 
         if unit_of_measurement is None:
-            self._unit_template = "{}{}{}".format(
-                "" if unit_prefix is None else unit_prefix, "{}", unit_time
+            self._unit_template = (
+                f"{'' if unit_prefix is None else unit_prefix}{{}}{unit_time}"
             )
             # we postpone the definition of unit_of_measurement to later
             self._unit_of_measurement = None
@@ -172,7 +172,7 @@ class IntegrationSensor(RestoreEntity):
                 _LOGGER.error("Could not calculate integral: %s", err)
             else:
                 self._state += integral
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
 
         async_track_state_change(self.hass, self._sensor_source_id, calc_integration)
 

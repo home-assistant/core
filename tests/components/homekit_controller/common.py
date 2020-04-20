@@ -4,10 +4,10 @@ import json
 import os
 from unittest import mock
 
-from aiohomekit.exceptions import AccessoryNotFoundError
-from aiohomekit.model import Accessory
+from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
+from aiohomekit.testing import FakeController
 
 from homeassistant import config_entries
 from homeassistant.components.homekit_controller import config_flow
@@ -20,77 +20,6 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
-
-
-class FakePairing:
-    """
-    A test fake that pretends to be a paired HomeKit accessory.
-
-    This only contains methods and values that exist on the upstream Pairing
-    class.
-    """
-
-    def __init__(self, accessories):
-        """Create a fake pairing from an accessory model."""
-        self.accessories = accessories
-        self.pairing_data = {}
-        self.available = True
-
-    async def list_accessories_and_characteristics(self):
-        """Fake implementation of list_accessories_and_characteristics."""
-        accessories = [a.to_accessory_and_service_list() for a in self.accessories]
-        # replicate what happens upstream right now
-        self.pairing_data["accessories"] = accessories
-        return accessories
-
-    async def get_characteristics(self, characteristics):
-        """Fake implementation of get_characteristics."""
-        if not self.available:
-            raise AccessoryNotFoundError("Accessory not found")
-
-        results = {}
-        for aid, cid in characteristics:
-            for accessory in self.accessories:
-                if aid != accessory.aid:
-                    continue
-                for service in accessory.services:
-                    for char in service.characteristics:
-                        if char.iid != cid:
-                            continue
-                        results[(aid, cid)] = {"value": char.get_value()}
-        return results
-
-    async def put_characteristics(self, characteristics):
-        """Fake implementation of put_characteristics."""
-        for aid, cid, new_val in characteristics:
-            for accessory in self.accessories:
-                if aid != accessory.aid:
-                    continue
-                for service in accessory.services:
-                    for char in service.characteristics:
-                        if char.iid != cid:
-                            continue
-                        char.set_value(new_val)
-        return {}
-
-
-class FakeController:
-    """
-    A test fake that pretends to be a paired HomeKit accessory.
-
-    This only contains methods and values that exist on the upstream Controller
-    class.
-    """
-
-    def __init__(self):
-        """Create a Fake controller with no pairings."""
-        self.pairings = {}
-
-    def add(self, accessories):
-        """Create and register a fake pairing for a simulated accessory."""
-        pairing = FakePairing(accessories)
-        self.pairings["00:00:00:00:00:00"] = pairing
-        return pairing
 
 
 class Helper:
@@ -110,6 +39,11 @@ class Helper:
             for char in service.characteristics:
                 char_name = CharacteristicsTypes.get_short(char.type)
                 self.characteristics[(service_name, char_name)] = char
+
+    async def update_named_service(self, service, characteristics):
+        """Update a service."""
+        self.pairing.testing.update_named_service(service, characteristics)
+        await self.hass.async_block_till_done()
 
     async def poll_and_get_state(self):
         """Trigger a time based poll and return the current entity state."""
@@ -133,7 +67,7 @@ async def setup_accessories_from_file(hass, path):
         load_fixture, os.path.join("homekit_controller", path)
     )
     accessories_json = json.loads(accessories_fixture)
-    accessories = Accessory.setup_accessories_from_list(accessories_json)
+    accessories = Accessories.from_list(accessories_json)
     return accessories
 
 
@@ -151,35 +85,26 @@ async def setup_platform(hass):
 async def setup_test_accessories(hass, accessories):
     """Load a fake homekit device based on captured JSON profile."""
     fake_controller = await setup_platform(hass)
-    pairing = fake_controller.add(accessories)
 
-    discovery_info = {
-        "name": "TestDevice",
-        "host": "127.0.0.1",
-        "port": 8080,
-        "properties": {"md": "TestDevice", "id": "00:00:00:00:00:00", "c#": 1},
-    }
+    pairing_id = "00:00:00:00:00:00"
 
-    pairing.pairing_data.update(
-        {"AccessoryPairingID": discovery_info["properties"]["id"]}
-    )
+    accessories_obj = Accessories()
+    for accessory in accessories:
+        accessories_obj.add_accessory(accessory)
+    pairing = await fake_controller.add_paired_device(accessories_obj, pairing_id)
 
     config_entry = MockConfigEntry(
         version=1,
         domain="homekit_controller",
         entry_id="TestData",
-        data=pairing.pairing_data,
+        data={"AccessoryPairingID": pairing_id},
         title="test",
         connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
     )
-
     config_entry.add_to_hass(hass)
 
-    pairing_cls_loc = "homeassistant.components.homekit_controller.connection.IpPairing"
-    with mock.patch(pairing_cls_loc) as pairing_cls:
-        pairing_cls.return_value = pairing
-        await config_entry.async_setup(hass)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     return config_entry, pairing
 
@@ -189,7 +114,11 @@ async def device_config_changed(hass, accessories):
     # Update the accessories our FakePairing knows about
     controller = hass.data[CONTROLLER]
     pairing = controller.pairings["00:00:00:00:00:00"]
-    pairing.accessories = accessories
+
+    accessories_obj = Accessories()
+    for accessory in accessories:
+        accessories_obj.add_accessory(accessory)
+    pairing.accessories = accessories_obj
 
     discovery_info = {
         "name": "TestDevice",
@@ -224,7 +153,9 @@ async def setup_test_component(hass, setup_accessory, capitalize=False, suffix=N
 
     If suffix is set, entityId will include the suffix
     """
-    accessory = Accessory("TestDevice", "example.com", "Test", "0001", "0.1")
+    accessory = Accessory.create_with_info(
+        "TestDevice", "example.com", "Test", "0001", "0.1"
+    )
     setup_accessory(accessory)
 
     domain = None
@@ -237,5 +168,5 @@ async def setup_test_component(hass, setup_accessory, capitalize=False, suffix=N
     assert domain, "Cannot map test homekit services to Home Assistant domain"
 
     config_entry, pairing = await setup_test_accessories(hass, [accessory])
-    entity = "testdevice" if suffix is None else "testdevice_{}".format(suffix)
+    entity = "testdevice" if suffix is None else f"testdevice_{suffix}"
     return Helper(hass, ".".join((domain, entity)), pairing, accessory, config_entry)
