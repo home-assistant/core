@@ -1,7 +1,6 @@
 """Config flow to configure Xiaomi Miio."""
 import logging
 
-from miio import DeviceException, gateway
 import voluptuous as vol
 
 from homeassistant import config_entries
