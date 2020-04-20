@@ -251,8 +251,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
     if config.specific_integrations:
         all_strings = None
     else:
-        upload.generate_upload_data()
-        all_strings = json.loads(upload.LOCAL_FILE.read_text())
+        all_strings = upload.generate_upload_data()
 
     for integration in integrations.values():
         validate_translation_file(config, integration, all_strings)
