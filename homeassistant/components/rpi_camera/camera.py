@@ -20,6 +20,8 @@ CONF_IMAGE_ROTATION = "image_rotation"
 CONF_IMAGE_WIDTH = "image_width"
 CONF_TIMELAPSE = "timelapse"
 CONF_VERTICAL_FLIP = "vertical_flip"
+CONF_OVERLAY_METADATA = "overlay_metadata"
+CONF_OVERLAY_TIMESTAMP = "overlay_timestamp"
 
 DEFAULT_HORIZONTAL_FLIP = 0
 DEFAULT_IMAGE_HEIGHT = 480
@@ -49,6 +51,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_VERTICAL_FLIP, default=DEFAULT_VERTICAL_FLIP): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=1)
         ),
+        vol.Optional(CONF_OVERLAY_METADATA): vol.All(
+            vol.Coerce(int), vol.Range(min=4, max=2056)
+        ),
+        vol.Optional(CONF_OVERLAY_TIMESTAMP): cv.string,
     }
 )
 
@@ -76,6 +82,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         CONF_HORIZONTAL_FLIP: config.get(CONF_HORIZONTAL_FLIP),
         CONF_VERTICAL_FLIP: config.get(CONF_VERTICAL_FLIP),
         CONF_FILE_PATH: config.get(CONF_FILE_PATH),
+        CONF_OVERLAY_METADATA: config.get(CONF_OVERLAY_METADATA),
+        CONF_OVERLAY_TIMESTAMP: config.get(CONF_OVERLAY_TIMESTAMP),
     }
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, kill_raspistill)
@@ -141,6 +149,16 @@ class RaspberryCamera(Camera):
 
         if device_info[CONF_VERTICAL_FLIP]:
             cmd_args.append("-vf")
+
+        if device_info[CONF_OVERLAY_METADATA]:
+            cmd_args.append("-a")
+            cmd_args.append(str(device_info[CONF_OVERLAY_METADATA]))
+
+        if device_info[CONF_OVERLAY_TIMESTAMP]:
+            cmd_args.append("-a")
+            cmd_args.append("4")
+            cmd_args.append("-a")
+            cmd_args.append(str(device_info[CONF_OVERLAY_TIMESTAMP]))
 
         subprocess.Popen(cmd_args, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
