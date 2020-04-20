@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Callable, List
+from typing import Any, Callable, List, NamedTuple
 
 from pyHS100 import (
     Discover,
@@ -13,6 +13,8 @@ from pyHS100 import (
     SmartStrip,
 )
 
+from homeassistant.core import callback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
@@ -128,13 +130,20 @@ def get_static_devices(config_data) -> SmartDevices:
     return SmartDevices(lights, switches)
 
 
+class ProcessObjectResult(NamedTuple):
+    """The result of processing an object in async_add_entities_retry."""
+
+    object: Any
+    result: bool
+
+
 async def async_add_entities_retry(
     hass: HomeAssistantType,
     async_add_entities: Callable[[List[Any], bool], None],
     objects: List[Any],
-    callback: Callable[[Any, Callable], None],
+    add_entity_callback: Callable[[Any, Callable], None],
     interval: timedelta = timedelta(seconds=60),
-):
+) -> Callable[[], None]:
     """
     Add entities now and retry later if issues are encountered.
 
@@ -145,50 +154,59 @@ async def async_add_entities_retry(
     :param async_add_entities: The callback provided to a
     platform's async_setup.
     :param objects: The objects to create as entities.
-    :param callback: The callback that will perform the add.
+    :param add_entity_callback: The callback that will perform the add.
     :param interval: THe time between attempts to add.
     :return: A callback to cancel the retries.
     """
-    add_objects = objects.copy()
+    add_objects = list(objects)
+    cancel_func1 = None
 
-    is_cancelled = False
+    @callback
+    def cancel() -> None:
+        nonlocal cancel_func1
+        cancel_func1()
 
-    def cancel_interval_callback():
-        nonlocal is_cancelled
-        is_cancelled = True
+    async def process_object(add_object) -> ProcessObjectResult:
+        nonlocal add_entity_callback
+        nonlocal async_add_entities
+        try:
+            _LOGGER.debug("Attempting to add object of type %s", type(add_object))
+            result = await hass.async_add_job(
+                add_entity_callback, add_object, async_add_entities
+            )
+            if result is not False:
+                _LOGGER.debug("Object added")
+                result = True
 
-    async def process_objects_loop(delay: int):
-        if is_cancelled:
-            return
+        except SmartDeviceException as ex:
+            _LOGGER.debug(str(ex))
+            result = False
 
-        await process_objects()
+        return ProcessObjectResult(object=add_object, result=result)
 
-        if not add_objects:
-            return
+    @callback
+    async def process_objects(*args) -> None:
+        nonlocal add_objects
 
-        await asyncio.sleep(delay)
+        # Process objects in parallel.
+        results: List[ProcessObjectResult] = await asyncio.gather(
+            *[process_object(add_object) for add_object in tuple(add_objects)],
+            loop=hass.loop,
+        )
 
-        hass.async_create_task(process_objects_loop(delay))
+        for result in results:
+            if result.result:
+                add_objects.remove(result.object)
 
-    async def process_objects(*args):
-        # Process each object.
-        for add_object in list(add_objects):
-            # Call the individual item callback.
-            try:
-                _LOGGER.debug("Attempting to add object of type %s", type(add_object))
-                result = await hass.async_add_job(
-                    callback, add_object, async_add_entities
-                )
-            except SmartDeviceException as ex:
-                _LOGGER.debug(str(ex))
-                result = False
+        if add_objects:
+            _LOGGER.debug("Waiting to try adding objects again.")
+        else:
+            cancel()
 
-            if result is True or result is None:
-                _LOGGER.debug("Added object.")
-                add_objects.remove(add_object)
-            else:
-                _LOGGER.debug("Failed to add object, will try again later")
+    # Schedule the retry interval.
+    cancel_func1 = async_track_time_interval(hass, process_objects, interval)
 
-    await process_objects_loop(interval.seconds)
+    # Attempt to add the objects.
+    await process_objects()
 
-    return cancel_interval_callback
+    return cancel
