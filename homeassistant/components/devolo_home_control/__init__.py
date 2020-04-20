@@ -87,9 +87,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    await hass.config_entries.async_forward_entry_unload(config_entry, "switch")
+    unload = await hass.config_entries.async_forward_entry_unload(
+        config_entry, "switch"
+    )
 
-    if hass.data[DOMAIN]:
-        hass.data[DOMAIN]["homecontrol"].websocket_disconnect()
-        del hass.data[DOMAIN]["homecontrol"]
-    return True
+    hass.data[DOMAIN]["homecontrol"].websocket_disconnect()
+    del hass.data[DOMAIN]["homecontrol"]
+    return unload
