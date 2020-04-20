@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             add_entities([BloomSkySensor(bloomsky, device, variable)], True)
 
 
-class BloomSkySensor(BinarySensorDevice):
+class BloomSkySensor(BinarySensorEntity):
     """Representation of a single binary sensor in a BloomSky device."""
 
     def __init__(self, bs, device, sensor_name):

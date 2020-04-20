@@ -11,14 +11,14 @@ class TestBinarySensor(unittest.TestCase):
 
     def test_state(self):
         """Test binary sensor state."""
-        sensor = binary_sensor.BinarySensorDevice()
+        sensor = binary_sensor.BinarySensorEntity()
         assert STATE_OFF == sensor.state
         with mock.patch(
-            "homeassistant.components.binary_sensor.BinarySensorDevice.is_on",
+            "homeassistant.components.binary_sensor.BinarySensorEntity.is_on",
             new=False,
         ):
-            assert STATE_OFF == binary_sensor.BinarySensorDevice().state
+            assert STATE_OFF == binary_sensor.BinarySensorEntity().state
         with mock.patch(
-            "homeassistant.components.binary_sensor.BinarySensorDevice.is_on", new=True,
+            "homeassistant.components.binary_sensor.BinarySensorEntity.is_on", new=True,
         ):
-            assert STATE_ON == binary_sensor.BinarySensorDevice().state
+            assert STATE_ON == binary_sensor.BinarySensorEntity().state

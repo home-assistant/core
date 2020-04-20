@@ -15,6 +15,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = "binary_sensor"
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -142,7 +144,7 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class BinarySensorDevice(Entity):
+class BinarySensorEntity(Entity):
     """Represent a binary sensor."""
 
     @property
@@ -159,3 +161,15 @@ class BinarySensorDevice(Entity):
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return None
+
+
+class BinarySensorDevice(BinarySensorEntity):
+    """Represent a binary sensor (for backwards compatibility)."""
+
+    def __init__(self, *args, **kwargs):
+        """Print deprecation warning."""
+        _LOGGER.warning(
+            "BinarySensorDevice is deprecated, change to BinarySensorEntity in %s",
+            self.__class__.__name__,
+        )
+        BinarySensorEntity.__init__(*args, **kwargs)

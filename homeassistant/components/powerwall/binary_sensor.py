@@ -6,7 +6,7 @@ from tesla_powerwall import GridStatus
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_CONNECTIVITY,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import DEVICE_CLASS_POWER
 
@@ -57,7 +57,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class PowerWallRunningSensor(PowerWallEntity, BinarySensorDevice):
+class PowerWallRunningSensor(PowerWallEntity, BinarySensorEntity):
     """Representation of an Powerwall running sensor."""
 
     @property
@@ -90,7 +90,7 @@ class PowerWallRunningSensor(PowerWallEntity, BinarySensorDevice):
         }
 
 
-class PowerWallConnectedSensor(PowerWallEntity, BinarySensorDevice):
+class PowerWallConnectedSensor(PowerWallEntity, BinarySensorEntity):
     """Representation of an Powerwall connected sensor."""
 
     @property
@@ -114,7 +114,7 @@ class PowerWallConnectedSensor(PowerWallEntity, BinarySensorDevice):
         return self._coordinator.data[POWERWALL_API_SITEMASTER].connected_to_tesla
 
 
-class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorDevice):
+class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorEntity):
     """Representation of an Powerwall grid status sensor."""
 
     @property
