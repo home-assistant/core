@@ -63,11 +63,6 @@ class CoronavirusSensor(Entity):
         return SENSORS[self.info_type]
 
     @property
-    def unit_of_measurement(self):
-        """Return unit of measurement."""
-        return "people"
-
-    @property
     def device_state_attributes(self):
         """Return device attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
