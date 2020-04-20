@@ -9,9 +9,11 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 
 # pylint: disable=unused-import
 from .const import DOMAIN
+from .gateway import ConnectXiaomiGateway
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_FLOW_TYPE = "config_flow_device"
 CONF_GATEWAY = "gateway"
 DEFAULT_GATEWAY_NAME = "Xiaomi Gateway"
 
@@ -32,11 +34,6 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def __init__(self):
-        """Initialize the Xiaomi Miio flow."""
-        self._gateway = None
-        self._gateway_info = None
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         errors = {}
@@ -54,39 +51,29 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_gateway(self, user_input=None):
         """Handle a flow initialized by the user to configure a gateway."""
         errors = {}
-        host = user_input.get(CONF_HOST)
-        token = user_input.get(CONF_TOKEN)
-        if user_input is not None and host is not None and token is not None:
+        if user_input is not None:
+            host = user_input.get(CONF_HOST)
+            token = user_input.get(CONF_TOKEN)
+
             # Try to connect to a Xiaomi Gateway.
-            _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
+            connect_gateway_class = ConnectXiaomiGateway()
+            await connect_gateway_class.async_connect_gateway(host, token)
+            gateway_info = connect_gateway_class.gateway_info
 
-            try:
-                self._gateway = gateway.Gateway(host, token)
-                self._gateway_info = self._gateway.info()
-                _LOGGER.info(
-                    "%s %s %s detected",
-                    self._gateway_info.model,
-                    self._gateway_info.firmware_version,
-                    self._gateway_info.hardware_version,
-                )
-
-                unique_id = f"{self._gateway_info.model}-{self._gateway_info.mac_address}-gateway"
+            if gateway_info is not None:
+                unique_id = f"{gateway_info.model}-{gateway_info.mac_address}-gateway"
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME),
                     data={
+                        CONF_FLOW_TYPE: CONF_GATEWAY,
                         CONF_HOST: host,
                         CONF_TOKEN: token,
                         "gateway_id": unique_id,
-                        "model": self._gateway_info.model,
-                        "mac": self._gateway_info.mac_address,
+                        "model": gateway_info.model,
+                        "mac": gateway_info.mac_address,
                     },
-                )
-
-            except DeviceException:
-                _LOGGER.error(
-                    "DeviceException during setup of xiaomi gateway with host %s", host
                 )
 
             errors["base"] = "connect_error"
