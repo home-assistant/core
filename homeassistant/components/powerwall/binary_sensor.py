@@ -138,7 +138,7 @@ class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorEntity):
         return self._coordinator.data[POWERWALL_API_GRID_STATUS] == GridStatus.CONNECTED
 
 
-class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorDevice):
+class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
     """Representation of an Powerwall grid status sensor."""
 
     @property
