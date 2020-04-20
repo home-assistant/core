@@ -204,9 +204,6 @@ async def test_webhook_handle_get_panels(hass, create_registrations, webhook_cli
 
     hass_panels = hass.data[DATA_PANELS]
 
-    print("TIMMO")
-    print(hass_panels)
-
     expected_json = []
     for panel in hass_panels:
         expected_json.append(hass_panels[panel].to_response())
