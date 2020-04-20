@@ -19,8 +19,8 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.flickelectric.config_flow.FlickConfigFlow._validate_input",
-        return_value=True,
+        "homeassistant.components.flickelectric.config_flow.SimpleFlickAuth.async_get_access_token",
+        return_value="123456789abcdef",
     ), patch(
         "homeassistant.components.flickelectric.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -32,7 +32,7 @@ async def test_form(hass):
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Flick Electric"
+    assert result2["title"] == "Flick Electric: test-username"
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
