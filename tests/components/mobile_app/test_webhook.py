@@ -3,6 +3,7 @@ import logging
 
 import pytest
 
+from homeassistant.components.frontend import DATA_PANELS, DOMAIN as FRONTEND_DOMAIN
 from homeassistant.components.mobile_app.const import CONF_SECRET
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
@@ -186,6 +187,33 @@ async def test_webhook_handle_get_config(hass, create_registrations, webhook_cli
     }
 
     assert expected_dict == json
+
+
+async def test_webhook_handle_get_panels(hass, create_registrations, webhook_client):
+    """Test that we can get panels properly."""
+    await async_setup_component(
+        hass, FRONTEND_DOMAIN, {FRONTEND_DOMAIN: {}},
+    )
+
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={"type": "get_panels"},
+    )
+
+    assert resp.status == 200
+
+    hass_panels = hass.data[DATA_PANELS]
+
+    print("TIMMO")
+    print(hass_panels)
+
+    expected_json = []
+    for panel in hass_panels:
+        expected_json.append(hass_panels[panel].to_response())
+
+    json = await resp.json()
+
+    assert expected_json == json
 
 
 async def test_webhook_returns_error_incorrect_json(
