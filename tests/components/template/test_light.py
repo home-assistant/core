@@ -8,6 +8,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
+    ATTR_WHITE_VALUE,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import callback
@@ -35,7 +36,7 @@ class TestTemplateLight:
 
         @callback
         def record_call(service):
-            """Track function calls.."""
+            """Track function calls."""
             self.calls.append(service)
 
         self.hass.services.register("test", "automation", record_call)
@@ -493,6 +494,105 @@ class TestTemplateLight:
         assert len(self.calls) == 1
         state = self.hass.states.get("light.test_template_light")
         assert state.state == STATE_OFF
+
+    def test_white_value_action_no_template(self):
+        """Test setting white value with optimistic template."""
+        assert setup.setup_component(
+            self.hass,
+            "light",
+            {
+                "light": {
+                    "platform": "template",
+                    "lights": {
+                        "test_template_light": {
+                            "value_template": "{{1 == 1}}",
+                            "turn_on": {
+                                "service": "light.turn_on",
+                                "entity_id": "light.test_state",
+                            },
+                            "turn_off": {
+                                "service": "light.turn_off",
+                                "entity_id": "light.test_state",
+                            },
+                            "set_white_value": {
+                                "service": "test.automation",
+                                "data_template": {
+                                    "entity_id": "test.test_state",
+                                    "white_value": "{{white_value}}",
+                                },
+                            },
+                        }
+                    },
+                }
+            },
+        )
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("light.test_template_light")
+        assert state.attributes.get("white_value") is None
+
+        common.turn_on(
+            self.hass, "light.test_template_light", **{ATTR_WHITE_VALUE: 124}
+        )
+        self.hass.block_till_done()
+        assert len(self.calls) == 1
+        assert self.calls[0].data["white_value"] == "124"
+
+        state = self.hass.states.get("light.test_template_light")
+        assert state is not None
+        assert state.attributes.get("white_value") == 124
+
+    @pytest.mark.parametrize(
+        "expected_white_value,template",
+        [
+            (255, "{{255}}"),
+            (None, "{{256}}"),
+            (None, "{{x - 12}}"),
+            (None, "{{ none }}"),
+            (None, ""),
+        ],
+    )
+    def test_white_value_template(self, expected_white_value, template):
+        """Test the template for the white value."""
+        with assert_setup_component(1, "light"):
+            assert setup.setup_component(
+                self.hass,
+                "light",
+                {
+                    "light": {
+                        "platform": "template",
+                        "lights": {
+                            "test_template_light": {
+                                "value_template": "{{ 1 == 1 }}",
+                                "turn_on": {
+                                    "service": "light.turn_on",
+                                    "entity_id": "light.test_state",
+                                },
+                                "turn_off": {
+                                    "service": "light.turn_off",
+                                    "entity_id": "light.test_state",
+                                },
+                                "set_white_value": {
+                                    "service": "light.turn_on",
+                                    "data_template": {
+                                        "entity_id": "light.test_state",
+                                        "white_value": "{{white_value}}",
+                                    },
+                                },
+                                "white_value_template": template,
+                            }
+                        },
+                    }
+                },
+            )
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("light.test_template_light")
+        assert state is not None
+        assert state.attributes.get("white_value") == expected_white_value
 
     def test_level_action_no_template(self):
         """Test setting brightness with optimistic template."""
@@ -955,7 +1055,6 @@ class TestTemplateLight:
 
 async def test_available_template_with_entities(hass):
     """Test availability templates with values from other entities."""
-
     await setup.async_setup_component(
         hass,
         "light",
