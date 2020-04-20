@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
@@ -144,12 +144,6 @@ class DevoloSwitch(SwitchDevice):
             _LOGGER.debug("No valid message received")
             _LOGGER.debug(message)
         self.async_schedule_update_ha_state()
-
-    def message_from_publisher(self, message):
-        """Trigger hass to update the device."""
-        _LOGGER.debug('%s got message "%s"', self.name, message)
-        dispatcher_send(self.hass, self._device_instance.itemName, message)
-        # self.device.update(message)
 
 
 class Subscriber:
