@@ -1,6 +1,8 @@
 """Test the devolo_home_control config flow."""
 from unittest.mock import patch
 
+from devolo_home_control_api.mydevolo import Mydevolo
+
 from homeassistant import config_entries, setup
 from homeassistant.components.devolo_home_control.const import DOMAIN
 
@@ -9,6 +11,7 @@ from tests.common import mock_coro
 
 async def test_form(hass):
     """Test we get the form."""
+    Mydevolo()
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -17,15 +20,15 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.devolo_home_control.config_flow._login_data_valid",
-        return_value=mock_coro({"title": "devolo Home Control"}),
-    ), patch(
         "homeassistant.components.devolo_home_control.async_setup",
         return_value=mock_coro(True),
     ) as mock_setup, patch(
         "homeassistant.components.devolo_home_control.async_setup_entry",
         return_value=mock_coro(True),
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.devolo_home_control.Mydevolo.credentials_valid",
+        return_value=True,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": "test-username", "password": "test-password"},
