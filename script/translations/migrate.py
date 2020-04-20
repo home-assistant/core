@@ -42,10 +42,9 @@ def rename_keys(project_id, to_migrate):
     while input("Type YES to confirm: ") != "YES":
         pass
 
-    return
     print()
     print("Updating keys")
-    pprint(lokalise.keys_bulk_update(updates).json())
+    pprint(lokalise.keys_bulk_update(updates))
 
 
 def migrate_project_keys_translations(from_project_id, to_project_id, to_migrate):
