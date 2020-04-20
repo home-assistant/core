@@ -1,5 +1,5 @@
 """Config Flow for Flick Electric integration."""
-from asyncio import TimeoutError
+import asyncio
 import logging
 
 import async_timeout
@@ -7,7 +7,7 @@ from pyflick.authentication import AuthException, SimpleFlickAuth
 from pyflick.const import DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries, exceptions
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -45,9 +45,14 @@ class FlickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             client_secret=user_input.get(CONF_CLIENT_SECRET, DEFAULT_CLIENT_SECRET),
         )
 
-        with async_timeout.timeout(60):
-            token = await auth.async_get_access_token()
-
+        try:
+            with async_timeout.timeout(60):
+                token = await auth.async_get_access_token()
+        except asyncio.TimeoutError:
+            raise CannotConnect()
+        except AuthException:
+            raise InvalidAuth()
+        else:
             return token is not None
 
     async def async_step_user(self, user_input):
@@ -55,8 +60,15 @@ class FlickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                await self._validate_input(user_input)
-
+                self._validate_input(user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
                 await self.async_set_unique_id(
                     f"flickelectric_{user_input[CONF_USERNAME]}"
                 )
@@ -66,14 +78,15 @@ class FlickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=f"Flick Electric: {user_input[CONF_USERNAME]}",
                     data=user_input,
                 )
-            except TimeoutError:
-                errors["base"] = "cannot_connect"
-            except AuthException:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid auth."""
