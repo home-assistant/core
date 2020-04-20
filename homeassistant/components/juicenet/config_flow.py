@@ -1,7 +1,8 @@
 """Config flow for JuiceNet integration."""
 import logging
 
-from pyjuicenet import Api
+import aiohttp
+from pyjuicenet import Api, TokenError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -9,6 +10,7 @@ from homeassistant.components.juicenet.const import (  # pylint:disable=unused-i
     DOMAIN,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,14 +22,15 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    juicenet = Api(data[CONF_ACCESS_TOKEN])
+    session = async_get_clientsession(hass)
+    juicenet = Api(data[CONF_ACCESS_TOKEN], session)
 
     try:
-        data = await hass.async_add_executor_job(juicenet.get_devices)
-    except ValueError as error:
-        _LOGGER.error("Value Error %s", error)
+        await juicenet.get_devices()
+    except TokenError as error:
+        _LOGGER.error("Token Error %s", error)
         raise InvalidAuth
-    except Exception as error:
+    except aiohttp.ClientError as error:
         _LOGGER.error("Error connecting %s", error)
         raise CannotConnect
 

@@ -1,7 +1,11 @@
 """Support for monitoring juicenet/juicepoint/juicebox based EVSE switches."""
 import logging
 
-from homeassistant.components.juicenet.const import DOMAIN
+from homeassistant.components.juicenet.const import (
+    DOMAIN,
+    JUICENET_API,
+    JUICENET_COORDINATOR,
+)
 from homeassistant.components.juicenet.entity import JuiceNetDevice
 from homeassistant.components.switch import SwitchEntity
 
@@ -11,32 +15,36 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the JuiceNet switches."""
     entities = []
-    for device in hass.data[DOMAIN][config_entry.entry_id].devices:
-        entities.append(JuiceNetChargeNowSwitch(device, hass))
+    juicenet_data = hass.data[DOMAIN][config_entry.entry_id]
+    api = juicenet_data[JUICENET_API]
+    coordinator = juicenet_data[JUICENET_COORDINATOR]
+
+    for device in api.devices:
+        entities.append(JuiceNetChargeNowSwitch(device, coordinator))
     async_add_entities(entities)
 
 
 class JuiceNetChargeNowSwitch(JuiceNetDevice, SwitchEntity):
     """Implementation of a JuiceNet switch."""
 
-    def __init__(self, device, hass):
+    def __init__(self, device, coordinator):
         """Initialise the switch."""
-        super().__init__(device, "charge_now", hass)
+        super().__init__(device, "charge_now", coordinator)
 
     @property
     def name(self):
         """Return the name of the device."""
-        return f"{self.device.name()} Charge Now"
+        return f"{self.device.name} Charge Now"
 
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.device.getOverrideTime() != 0
+        return self.device.override_time != 0
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Charge now."""
-        self.device.setOverride(True)
+        await self.device.set_override(True)
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Don't charge now."""
-        self.device.setOverride(False)
+        await self.device.set_override(False)

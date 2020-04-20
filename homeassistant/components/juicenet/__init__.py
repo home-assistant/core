@@ -1,18 +1,25 @@
 """The JuiceNet integration."""
 import asyncio
+from datetime import timedelta
 import logging
 
-from pyjuicenet import Api
-import requests
+import aiohttp
+from pyjuicenet import Api, TokenError
 import voluptuous as vol
 
-from homeassistant.components.juicenet.const import DOMAIN
+from homeassistant.components.juicenet.const import (
+    DOMAIN,
+    JUICENET_API,
+    JUICENET_COORDINATOR,
+)
 from homeassistant.components.juicenet.device import JuiceNetApi
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,18 +52,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     config = entry.data
 
-    # Configure API
+    session = async_get_clientsession(hass)
+
     access_token = config[CONF_ACCESS_TOKEN]
-    api = Api(access_token)
+    api = Api(access_token, session)
 
     juicenet = JuiceNetApi(api)
 
     try:
-        await hass.async_add_executor_job(juicenet.setup)
-    except ValueError as error:
+        await juicenet.setup()
+    except TokenError as error:
         _LOGGER.error("JuiceNet Error %s", error)
         return False
-    except requests.exceptions.ConnectionError as error:
+    except aiohttp.ClientError as error:
         _LOGGER.error("Could not reach the JuiceNet API %s", error)
         raise ConfigEntryNotReady
 
@@ -65,7 +73,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return False
     _LOGGER.info("%d JuiceNet device(s) found", len(juicenet.devices))
 
-    hass.data[DOMAIN][entry.entry_id] = juicenet
+    async def async_update_data():
+        """Update all device states from the JuiceNet API."""
+        for device in juicenet.devices:
+            await device.update_state(True)
+        return True
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="JuiceNet",
+        update_method=async_update_data,
+        update_interval=timedelta(seconds=30),
+    )
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        JUICENET_API: juicenet,
+        JUICENET_COORDINATOR: coordinator,
+    }
+
+    await coordinator.async_refresh()
 
     for component in PLATFORMS:
         hass.async_create_task(

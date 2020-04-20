@@ -1,6 +1,8 @@
 """Test the JuiceNet config flow."""
+import aiohttp
 from asynctest import patch
 from asynctest.mock import MagicMock
+from pyjuicenet import TokenError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.juicenet.const import DOMAIN
@@ -22,11 +24,9 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    juicenet_mock = MagicMock()
-    type(juicenet_mock).get_devices = MagicMock(return_value=[])
-
     with patch(
-        "homeassistant.components.juicenet.config_flow.Api", return_value=juicenet_mock
+        "homeassistant.components.juicenet.config_flow.Api.get_devices",
+        return_value=MagicMock(),
     ), patch(
         "homeassistant.components.juicenet.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -50,11 +50,9 @@ async def test_form_invalid_auth(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    juicenet_mock = MagicMock()
-    type(juicenet_mock).get_devices = MagicMock(side_effect=ValueError)
-
     with patch(
-        "homeassistant.components.juicenet.config_flow.Api", return_value=juicenet_mock
+        "homeassistant.components.juicenet.config_flow.Api.get_devices",
+        side_effect=TokenError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_ACCESS_TOKEN: "access_token"}
@@ -70,11 +68,9 @@ async def test_form_cannot_connect(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    juicenet_mock = MagicMock()
-    type(juicenet_mock).get_devices = MagicMock(side_effect=Exception)
-
     with patch(
-        "homeassistant.components.juicenet.config_flow.Api", return_value=juicenet_mock
+        "homeassistant.components.juicenet.config_flow.Api.get_devices",
+        side_effect=aiohttp.ClientError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_ACCESS_TOKEN: "access_token"}

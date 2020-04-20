@@ -1,7 +1,11 @@
 """Support for monitoring juicenet/juicepoint/juicebox based EVSE sensors."""
 import logging
 
-from homeassistant.components.juicenet.const import DOMAIN
+from homeassistant.components.juicenet.const import (
+    DOMAIN,
+    JUICENET_API,
+    JUICENET_COORDINATOR,
+)
 from homeassistant.components.juicenet.entity import JuiceNetDevice
 from homeassistant.const import (
     ENERGY_WATT_HOUR,
@@ -28,32 +32,36 @@ SENSOR_TYPES = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the JuiceNet Sensors."""
     entities = []
-    for device in hass.data[DOMAIN][config_entry.entry_id].devices:
+    juicenet_data = hass.data[DOMAIN][config_entry.entry_id]
+    api = juicenet_data[JUICENET_API]
+    coordinator = juicenet_data[JUICENET_COORDINATOR]
+
+    for device in api.devices:
         for sensor in SENSOR_TYPES:
-            entities.append(JuiceNetSensorDevice(device, sensor, hass))
+            entities.append(JuiceNetSensorDevice(device, sensor, coordinator))
     async_add_entities(entities)
 
 
 class JuiceNetSensorDevice(JuiceNetDevice, Entity):
     """Implementation of a JuiceNet sensor."""
 
-    def __init__(self, device, sensor_type, hass):
+    def __init__(self, device, sensor_type, coordinator):
         """Initialise the sensor."""
-        super().__init__(device, sensor_type, hass)
+        super().__init__(device, sensor_type, coordinator)
         self._name = SENSOR_TYPES[sensor_type][0]
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
     @property
     def name(self):
         """Return the name of the device."""
-        return f"{self.device.name()} {self._name}"
+        return f"{self.device.name} {self._name}"
 
     @property
     def icon(self):
         """Return the icon of the sensor."""
         icon = None
         if self.type == "status":
-            status = self.device.getStatus()
+            status = self.device.status
             if status == "standby":
                 icon = "mdi:power-plug-off"
             elif status == "plugged":
@@ -84,19 +92,19 @@ class JuiceNetSensorDevice(JuiceNetDevice, Entity):
         """Return the state."""
         state = None
         if self.type == "status":
-            state = self.device.getStatus()
+            state = self.device.status
         elif self.type == "temperature":
-            state = self.device.getTemperature()
+            state = self.device.temperature
         elif self.type == "voltage":
-            state = self.device.getVoltage()
+            state = self.device.voltage
         elif self.type == "amps":
-            state = self.device.getAmps()
+            state = self.device.amps
         elif self.type == "watts":
-            state = self.device.getWatts()
+            state = self.device.watts
         elif self.type == "charge_time":
-            state = self.device.getChargeTime()
+            state = self.device.charge_time
         elif self.type == "energy_added":
-            state = self.device.getEnergyAdded()
+            state = self.device.energy_added
         else:
             state = "Unknown"
         return state
