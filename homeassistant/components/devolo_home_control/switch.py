@@ -3,6 +3,8 @@ import logging
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
@@ -21,7 +23,9 @@ async def async_setup_entry(
         for binary_switch in device.binary_switch_property:
             entities.append(
                 DevoloSwitch(
-                    hass=hass, device_instance=device, element_uid=binary_switch,
+                    homecontrol=hass.data[DOMAIN]["homecontrol"],
+                    device_instance=device,
+                    element_uid=binary_switch,
                 )
             )
     async_add_entities(entities)
@@ -30,14 +34,14 @@ async def async_setup_entry(
 class DevoloSwitch(SwitchDevice):
     """Representation of an Awesome Light."""
 
-    def __init__(self, hass, device_instance, element_uid):
+    def __init__(self, homecontrol, device_instance, element_uid):
         """Initialize an devolo Switch."""
         self._device_instance = device_instance
 
         # Create the unique ID
         self._unique_id = element_uid
 
-        self._homecontrol = hass.data[DOMAIN]["homecontrol"]
+        self._homecontrol = homecontrol
         self._name = self._device_instance.itemName
         self._available = self._device_instance.is_online()
 
@@ -60,9 +64,14 @@ class DevoloSwitch(SwitchDevice):
             ).current
         else:
             self._consumption = None
-        self._subscriber = Subscriber(self._device_instance.itemName, device=self)
+
+    async def async_added_to_hass(self):
+        """Call when entity is added to hass."""
+        self._subscriber = async_dispatcher_connect(
+            self.hass, self._device_instance.itemName, self.update
+        )
         self._homecontrol.publisher.register(
-            self._device_instance.uid, self._subscriber
+            self._device_instance.uid, self._subscriber, self.update
         )
 
     @property
@@ -120,6 +129,7 @@ class DevoloSwitch(SwitchDevice):
         self._is_on = False
         self._binary_switch_property.set_binary_switch(state=False)
 
+    @callback
     def update(self, message=None):
         """Update the binary switch state and consumption."""
         if message[0].startswith("devolo.BinarySwitch"):
@@ -134,6 +144,12 @@ class DevoloSwitch(SwitchDevice):
             _LOGGER.debug("No valid message received")
             _LOGGER.debug(message)
         self.async_schedule_update_ha_state()
+
+    def message_from_publisher(self, message):
+        """Trigger hass to update the device."""
+        _LOGGER.debug('%s got message "%s"', self.name, message)
+        dispatcher_send(self.hass, self._device_instance.itemName, message)
+        # self.device.update(message)
 
 
 class Subscriber:
