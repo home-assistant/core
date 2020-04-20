@@ -9,11 +9,13 @@ from homeassistant.helpers.entity_registry import async_entries_for_device
 class UniFiBase(Entity):
     """UniFi entity base class."""
 
+    DOMAIN = ""
     TYPE = ""
 
     def __init__(self, controller) -> None:
         """Set up UniFi entity base."""
         self.controller = controller
+        self.controller.entities[self.DOMAIN][self.TYPE].add(self.mac)
 
     @property
     def mac(self):
@@ -22,7 +24,6 @@ class UniFiBase(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
-        self.controller.entities[self.platform.domain][self.TYPE].add(self.mac)
         for signal, method in (
             (self.controller.signal_reachable, self.async_update_callback),
             (self.controller.signal_options_update, self.options_updated),
