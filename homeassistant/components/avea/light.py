@@ -11,41 +11,25 @@ from homeassistant.components.light import (
     Light,
 )
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.device_registry as dr
 import homeassistant.util.color as color_util
-
-from .const import DOMAIN as AVEA_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_AVEA = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up Avea Light from a config entry."""
-    lights = await hass.async_add_executor_job(discovery, hass)
-    entities = []
-    
-    for light in lights:
-        entities.append(AveaLight(light))
-
-    async_add_entities(entities, True)
-    return True
-    
-def discovery(hass):
-    lights = []
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Avea platform."""
     try:
         nearby_bulbs = avea.discover_avea_bulbs()
         for bulb in nearby_bulbs:
             bulb.get_name()
             bulb.get_brightness()
-            if bulb.name != 'Unknown':
-                lights.append(bulb)
-            else:
-                _LOGGER.warning("Found Avea bulb but could got get the name: %s", vars(bulb))
     except OSError as err:
         raise PlatformNotReady from err
-    return lights
+
+    add_entities(AveaLight(bulb) for bulb in nearby_bulbs)
+
 
 class AveaLight(Light):
     """Representation of an Avea."""
@@ -53,43 +37,19 @@ class AveaLight(Light):
     def __init__(self, light):
         """Initialize an AveaLight."""
         self._light = light
-        self._mac = light.addr
         self._name = light.name
         self._state = None
         self._brightness = light.brightness
-        
-    @property
-    def device_info(self):
-        """Return information about the device."""
-        info = {
-            "identifiers": {(AVEA_DOMAIN, self.unique_id)},
-            "name": self._name,
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            "manufacturer": "Elgato",
-            "model": "Avea",
-        }
-
-        return info
 
     @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_AVEA
-        
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._mac
 
     @property
     def name(self):
         """Return the display name of this light."""
         return self._name
-        
-    @property
-    def entity_registry_enabled_default(self):
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return True
 
     @property
     def brightness(self):
