@@ -67,6 +67,12 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
+        _LOGGER.debug("Credentials valid")
+        return self.async_create_entry(
+            title="devolo Home Control",
+            data={CONF_PASSWORD: password, CONF_USERNAME: user},
+        )
+
     @callback
     def _show_form(self, errors=None):
         """Show the form to the user."""
