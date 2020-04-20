@@ -276,6 +276,9 @@ def find_frontend_states():
         strings.write_text(json.dumps(content, indent=2) + "\n")
 
     pprint(to_migrate)
+    return
+
+    migrate_project_keys_translations(FRONTEND_PROJECT_ID, CORE_PROJECT_ID, to_migrate)
 
 
 def run():

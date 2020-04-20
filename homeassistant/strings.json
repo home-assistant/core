@@ -3,8 +3,6 @@
     "state": {
       "off": "Off",
       "on": "On",
-      "unknown": "Unknown",
-      "unavailable": "Unavailable",
       "open": "Open",
       "closed": "Closed",
       "connected": "Connected",
