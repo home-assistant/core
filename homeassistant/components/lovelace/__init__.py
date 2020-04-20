@@ -73,7 +73,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     mode = config[DOMAIN][CONF_MODE]
     yaml_resources = config[DOMAIN].get(CONF_RESOURCES)
 
-    frontend.async_register_built_in_panel(hass, DOMAIN, config={"mode": mode})
+    frontend.async_register_built_in_panel(
+        hass, DOMAIN, "Overview", config={"mode": mode}
+    )
 
     async def reload_resources_service_handler(service_call: ServiceCallType) -> None:
         """Reload yaml resources."""

@@ -146,7 +146,7 @@ async def async_setup(hass, config):
     hass.http.register_view(LogbookView(config.get(DOMAIN, {})))
 
     hass.components.frontend.async_register_built_in_panel(
-        "logbook", "logbook", "hass:format-list-bulleted-type"
+        "logbook", "Logbook", "hass:format-list-bulleted-type"
     )
 
     hass.services.async_register(DOMAIN, "log", log_message, schema=LOG_MESSAGE_SCHEMA)

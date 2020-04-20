@@ -108,7 +108,7 @@ async def async_setup_entry(hass, config_entry):
     hass.http.register_view(ClearCompletedItemsView)
 
     hass.components.frontend.async_register_built_in_panel(
-        "shopping-list", "shopping_list", "mdi:cart"
+        "shopping-list", "Shopping List", "mdi:cart"
     )
 
     hass.components.websocket_api.async_register_command(

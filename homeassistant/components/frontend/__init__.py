@@ -276,7 +276,7 @@ async def async_setup(hass, config):
 
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
-    async_register_built_in_panel(hass, "profile")
+    async_register_built_in_panel(hass, "profile", "Profile")
 
     # To smooth transition to new urls, add redirects to new urls of dev tools
     # Added June 27, 2019. Can be removed in 2021.
@@ -286,8 +286,8 @@ async def async_setup(hass, config):
     async_register_built_in_panel(
         hass,
         "developer-tools",
+        "Developer Tools",
         require_admin=True,
-        sidebar_title="developer_tools",
         sidebar_icon="hass:hammer",
     )
 
