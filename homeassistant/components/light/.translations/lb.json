@@ -3,6 +3,7 @@
         "action_type": {
             "brightness_decrease": "{entity_name} Hellegkeet reduz\u00e9ieren",
             "brightness_increase": "{entity_name} Hellegkeet erh\u00e9ijen",
+            "flash": "Flash {entity_name}",
             "toggle": "{entity_name} \u00ebmschalten",
             "turn_off": "{entity_name} ausschalten",
             "turn_on": "{entity_name} uschalten"
@@ -14,6 +15,12 @@
         "trigger_type": {
             "turned_off": "{entity_name} gouf ausgeschalt",
             "turned_on": "{entity_name} gouf ugeschalt"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Aus",
+            "on": "Un"
         }
     },
     "title": "Luucht"

@@ -13,5 +13,11 @@
             "turned_on": "{entity_name} ligou-se"
         }
     },
+    "state": {
+        "_": {
+            "off": "Desligada",
+            "on": "Ligado"
+        }
+    },
     "title": "Vento\u00ednha"
 }

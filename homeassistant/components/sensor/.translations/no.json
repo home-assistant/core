@@ -22,5 +22,6 @@
             "timestamp": "{entity_name} tidsstempel endringer",
             "value": "{entity_name} verdi endringer"
         }
-    }
+    },
+    "title": "Sensor"
 }

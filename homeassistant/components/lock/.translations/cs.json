@@ -10,5 +10,11 @@
             "is_unlocked": "{entity_name} je odem\u010deno"
         }
     },
+    "state": {
+        "_": {
+            "locked": "Zam\u010deno",
+            "unlocked": "Odem\u010deno"
+        }
+    },
     "title": "Z\u00e1mek"
 }

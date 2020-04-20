@@ -1,3 +1,17 @@
 {
+    "state": {
+        "_": {
+            "closed": "\ub2eb\ud798",
+            "home": "\uc7ac\uc2e4",
+            "locked": "\uc7a0\uae40",
+            "not_home": "\uc678\ucd9c",
+            "off": "\uaebc\uc9d0",
+            "ok": "\ubb38\uc81c\uc5c6\uc74c",
+            "on": "\ucf1c\uc9d0",
+            "open": "\uc5f4\ub9bc",
+            "problem": "\ubb38\uc81c\uc788\uc74c",
+            "unlocked": "\ud574\uc81c"
+        }
+    },
     "title": "\uadf8\ub8f9"
 }

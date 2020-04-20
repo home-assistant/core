@@ -25,5 +25,14 @@
             "tilt_position": "{entity_name} spremembe nagiba"
         }
     },
+    "state": {
+        "_": {
+            "closed": "Zaprto",
+            "closing": "Zapiranje",
+            "open": "Odprto",
+            "opening": "Odpiranje",
+            "stopped": "Ustavljeno"
+        }
+    },
     "title": "Cover"
 }

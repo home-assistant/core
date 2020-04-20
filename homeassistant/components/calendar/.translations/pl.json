@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "off": "wy\u0142\u0105czony",
+            "on": "w\u0142\u0105czony"
+        }
+    },
     "title": "Kalendarz"
 }

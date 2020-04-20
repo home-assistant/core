@@ -15,5 +15,14 @@
             "opening": "{entity_name} est\u00e1 a abrir"
         }
     },
+    "state": {
+        "_": {
+            "closed": "Fechada",
+            "closing": "A fechar",
+            "open": "Aberta",
+            "opening": "A abrir",
+            "stopped": "Parado"
+        }
+    },
     "title": "Cobertura"
 }

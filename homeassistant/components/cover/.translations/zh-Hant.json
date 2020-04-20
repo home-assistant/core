@@ -25,5 +25,14 @@
             "tilt_position": "{entity_name}\u6a19\u984c\u4f4d\u7f6e\u8b8a\u66f4"
         }
     },
+    "state": {
+        "_": {
+            "closed": "\u95dc\u9589",
+            "closing": "\u95dc\u9589\u4e2d",
+            "open": "\u958b\u555f",
+            "opening": "\u958b\u555f\u4e2d",
+            "stopped": "\u505c\u6b62"
+        }
+    },
     "title": "\u6372\u7c3e/\u9580"
 }

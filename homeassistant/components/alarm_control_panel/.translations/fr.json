@@ -22,5 +22,19 @@
             "triggered": "{entity_name} d\u00e9clench\u00e9"
         }
     },
+    "state": {
+        "_": {
+            "armed": "Activ\u00e9",
+            "armed_away": "Enclench\u00e9e (absent)",
+            "armed_custom_bypass": "Activ\u00e9e avec exception",
+            "armed_home": "Enclench\u00e9e (pr\u00e9sent)",
+            "armed_night": "Enclench\u00e9 (nuit)",
+            "arming": "Activation",
+            "disarmed": "D\u00e9sactiv\u00e9e",
+            "disarming": "D\u00e9sactivation",
+            "pending": "En attente",
+            "triggered": "D\u00e9clench\u00e9"
+        }
+    },
     "title": "Panneau de contr\u00f4le d'alarme"
 }

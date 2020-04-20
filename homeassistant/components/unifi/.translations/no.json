@@ -37,6 +37,7 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Tid i sekunder fra sist sett til den ble ansett borte",
+                    "ignore_wired_bug": "Deaktiver UniFi kablet feillogikk",
                     "ssid_filter": "Velg SSID-er for \u00e5 spore tr\u00e5dl\u00f8se klienter p\u00e5",
                     "track_clients": "Spor nettverksklienter",
                     "track_devices": "Spore nettverksenheter (Ubiquiti-enheter)",

@@ -14,5 +14,16 @@
             "hvac_mode_changed": "zmieni si\u0119 tryb HVAC {entity_name}"
         }
     },
+    "state": {
+        "_": {
+            "auto": "automatyczny",
+            "cool": "ch\u0142odzenie",
+            "dry": "osuszanie",
+            "fan_only": "tylko wentylator",
+            "heat": "grzanie",
+            "heat_cool": "grzanie/ch\u0142odzenie",
+            "off": "wy\u0142\u0105czony"
+        }
+    },
     "title": "Klimat"
 }

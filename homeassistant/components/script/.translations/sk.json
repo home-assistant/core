@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "off": "Vypnut\u00fd",
+            "on": "Zapnut\u00fd"
+        }
+    },
     "title": "Skript"
 }

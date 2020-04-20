@@ -1,3 +1,14 @@
 {
+    "state": {
+        "_": {
+            "auto": "\u05d0\u05d5\u05d8\u05d5\u05de\u05d8\u05d9",
+            "cool": "\u05e7\u05e8\u05d5\u05e8",
+            "dry": "\u05d9\u05d1\u05e9",
+            "fan_only": "\u05de\u05d0\u05d5\u05d5\u05e8\u05e8 \u05d1\u05dc\u05d1\u05d3",
+            "heat": "\u05d7\u05d9\u05de\u05d5\u05dd",
+            "heat_cool": "\u05d7\u05d9\u05de\u05d5\u05dd/\u05e7\u05d9\u05e8\u05d5\u05e8",
+            "off": "\u05db\u05d1\u05d5\u05d9"
+        }
+    },
     "title": "\u05d0\u05b7\u05e7\u05dc\u05b4\u05d9\u05dd"
 }

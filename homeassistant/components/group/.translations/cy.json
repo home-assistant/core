@@ -1,3 +1,17 @@
 {
+    "state": {
+        "_": {
+            "closed": "Wedi cau",
+            "home": "Gartref",
+            "locked": " Cloi",
+            "not_home": "Dim gartref",
+            "off": "i ffwrdd",
+            "ok": "Iawn",
+            "on": "Ar",
+            "open": "Agored",
+            "problem": "Problem",
+            "unlocked": "Dadgloi"
+        }
+    },
     "title": "Gr\u0175p"
 }

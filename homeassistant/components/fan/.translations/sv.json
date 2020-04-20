@@ -13,5 +13,11 @@
             "turned_on": "{entity_name} aktiverades"
         }
     },
+    "state": {
+        "_": {
+            "off": "Av",
+            "on": "P\u00e5"
+        }
+    },
     "title": "Fl\u00e4kt"
 }

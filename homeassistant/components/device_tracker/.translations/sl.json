@@ -5,5 +5,11 @@
             "is_not_home": "{entity_name} ni doma"
         }
     },
+    "state": {
+        "_": {
+            "home": "Doma",
+            "not_home": "Odsoten"
+        }
+    },
     "title": "Sledilnik naprave"
 }

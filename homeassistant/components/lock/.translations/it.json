@@ -14,5 +14,11 @@
             "unlocked": "{entity_name} \u00e8 sbloccato"
         }
     },
+    "state": {
+        "_": {
+            "locked": "Bloccato",
+            "unlocked": "Sbloccato"
+        }
+    },
     "title": "Serratura"
 }

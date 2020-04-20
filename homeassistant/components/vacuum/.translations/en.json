@@ -13,5 +13,17 @@
             "docked": "{entity_name} docked"
         }
     },
+    "state": {
+        "_": {
+            "cleaning": "Cleaning",
+            "docked": "Docked",
+            "error": "Error",
+            "idle": "Idle",
+            "off": "Off",
+            "on": "On",
+            "paused": "Paused",
+            "returning": "Returning to dock"
+        }
+    },
     "title": "Vacuum"
 }

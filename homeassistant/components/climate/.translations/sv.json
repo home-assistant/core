@@ -14,5 +14,16 @@
             "hvac_mode_changed": "{entity_name} HVAC-l\u00e4ge har \u00e4ndrats"
         }
     },
+    "state": {
+        "_": {
+            "auto": "Automatisk",
+            "cool": "Kyla",
+            "dry": "Avfuktning",
+            "fan_only": "Endast fl\u00e4kt",
+            "heat": "V\u00e4rme",
+            "heat_cool": "V\u00e4rme/Kyla",
+            "off": "Av"
+        }
+    },
     "title": "Klimat"
 }

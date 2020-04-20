@@ -13,5 +13,17 @@
             "docked": "{entity_name}\u5df2\u56de\u5145\u96fb\u7ad9"
         }
     },
+    "state": {
+        "_": {
+            "cleaning": "\u6e05\u6383\u4e2d",
+            "docked": "\u5145\u96fb\u4e2d",
+            "error": "\u932f\u8aa4",
+            "idle": "\u66ab\u505c",
+            "off": "\u95dc\u9589",
+            "on": "\u958b\u555f",
+            "paused": "\u66ab\u505c",
+            "returning": "\u8fd4\u56de\u5145\u96fb"
+        }
+    },
     "title": "\u5438\u5875\u5668"
 }

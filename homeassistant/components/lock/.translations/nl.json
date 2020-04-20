@@ -14,5 +14,11 @@
             "unlocked": "{entity_name} ontgrendeld"
         }
     },
+    "state": {
+        "_": {
+            "locked": "Vergrendeld",
+            "unlocked": "Ontgrendeld"
+        }
+    },
     "title": "Slot"
 }

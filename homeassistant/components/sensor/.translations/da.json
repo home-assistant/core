@@ -23,5 +23,11 @@
             "value": "{entity_name} v\u00e6rdi \u00e6ndres"
         }
     },
+    "state": {
+        "_": {
+            "off": "Fra",
+            "on": "Til"
+        }
+    },
     "title": "Sensor"
 }

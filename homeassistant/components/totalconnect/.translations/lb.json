@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kont ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "login": "Feeler beim Login: iwwerpr\u00e9if de Benotzernumm & Passwuert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                }
+            }
+        }
+    }
+}

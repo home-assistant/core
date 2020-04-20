@@ -1,3 +1,17 @@
 {
+    "state": {
+        "_": {
+            "closed": "\u00cenchis",
+            "home": "Acas\u0103",
+            "locked": "Blocat",
+            "not_home": "Plecat",
+            "off": "Oprit",
+            "ok": "OK",
+            "on": "Pornit",
+            "open": "Deschis",
+            "problem": "Problem\u0103",
+            "unlocked": "Deblocat"
+        }
+    },
     "title": "Grup"
 }

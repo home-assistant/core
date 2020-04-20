@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "off": "Itzalita",
+            "on": "Piztuta"
+        }
+    },
     "title": "Automatizazioa"
 }

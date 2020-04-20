@@ -1,3 +1,15 @@
 {
+    "state": {
+        "_": {
+            "cleaning": "\u010ci\u0161\u0107enje",
+            "docked": "Usidreni",
+            "error": "Gre\u0161ka",
+            "idle": "Neaktivan",
+            "off": "Uga\u0161eno",
+            "on": "Upaljeno",
+            "paused": "Pauzirano",
+            "returning": "Povratak na dok"
+        }
+    },
     "title": "Vakuum"
 }

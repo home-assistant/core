@@ -8,5 +8,15 @@
             "is_playing": "{entity_name} lej\u00e1tszik"
         }
     },
+    "state": {
+        "_": {
+            "idle": "T\u00e9tlen",
+            "off": "Ki",
+            "on": "Be",
+            "paused": "Sz\u00fcnetel",
+            "playing": "Lej\u00e1tsz\u00e1s",
+            "standby": "K\u00e9szenl\u00e9t"
+        }
+    },
     "title": "M\u00e9dialej\u00e1tsz\u00f3"
 }

@@ -13,5 +13,17 @@
             "docked": "{entity_name} agganciato"
         }
     },
+    "state": {
+        "_": {
+            "cleaning": "Pulendo",
+            "docked": "In base",
+            "error": "Errore",
+            "idle": "Inattivo",
+            "off": "Spento",
+            "on": "Acceso",
+            "paused": "In pausa",
+            "returning": "Ritorno alla base"
+        }
+    },
     "title": "Aspirapolvere"
 }

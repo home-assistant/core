@@ -1,7 +1,9 @@
 {
     "state": {
-        "first_quarter": "Cuarto creciente",
-        "full_moon": "Luna llena",
-        "last_quarter": "Cuarto menguante"
+        "moon__phase": {
+            "first_quarter": "Cuarto creciente",
+            "full_moon": "Luna llena",
+            "last_quarter": "Cuarto menguante"
+        }
     }
 }

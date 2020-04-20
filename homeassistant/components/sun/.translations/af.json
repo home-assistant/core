@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "above_horizon": "Bo horison",
+            "below_horizon": "Onder horison"
+        }
+    },
     "title": "Son"
 }

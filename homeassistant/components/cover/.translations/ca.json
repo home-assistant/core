@@ -25,5 +25,14 @@
             "tilt_position": "Canvia la inclinaci\u00f3 de {entity_name}"
         }
     },
+    "state": {
+        "_": {
+            "closed": "Tancada",
+            "closing": "Tancant",
+            "open": "Oberta",
+            "opening": "Obrint",
+            "stopped": "Aturat"
+        }
+    },
     "title": "Coberta"
 }

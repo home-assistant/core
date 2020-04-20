@@ -1,12 +1,14 @@
 {
     "state": {
-        "first_quarter": "Prvi krajec",
-        "full_moon": "Polna luna",
-        "last_quarter": "Zadnji krajec",
-        "new_moon": "Mlaj",
-        "waning_crescent": "Zadnji izbo\u010dec",
-        "waning_gibbous": "Zadnji srpec",
-        "waxing_crescent": "Prvi izbo\u010dec",
-        "waxing_gibbous": "Prvi srpec"
+        "moon__phase": {
+            "first_quarter": "Prvi krajec",
+            "full_moon": "Polna luna",
+            "last_quarter": "Zadnji krajec",
+            "new_moon": "Mlaj",
+            "waning_crescent": "Zadnji izbo\u010dec",
+            "waning_gibbous": "Zadnji srpec",
+            "waxing_crescent": "Prvi izbo\u010dec",
+            "waxing_gibbous": "Prvi srpec"
+        }
     }
 }

@@ -14,5 +14,16 @@
             "hvac_mode_changed": "{entity_name} HVAC Modus ge\u00e4nnert"
         }
     },
+    "state": {
+        "_": {
+            "auto": "Auto",
+            "cool": "Kill",
+            "dry": "Dr\u00e9chen",
+            "fan_only": "N\u00ebmme Ventilator",
+            "heat": "Heizen",
+            "heat_cool": "H\u00ebtzen/Ofkillen",
+            "off": "Aus"
+        }
+    },
     "title": "Klima"
 }

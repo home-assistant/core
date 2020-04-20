@@ -17,5 +17,11 @@
             "turned_on": "{entity_name} attivato"
         }
     },
+    "state": {
+        "_": {
+            "off": "Spento",
+            "on": "Acceso"
+        }
+    },
     "title": "Luce"
 }

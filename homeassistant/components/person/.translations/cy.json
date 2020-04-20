@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "home": "Gartref",
+            "not_home": "I ffwrdd"
+        }
+    },
     "title": "Person"
 }

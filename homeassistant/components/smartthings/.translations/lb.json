@@ -8,6 +8,21 @@
             "webhook_error": "SmartThings konnt den an der 'base_url' defin\u00e9ierten Endpoint net valid\u00e9ieren. Iwwerpr\u00e9ift d'Viraussetzunge vun d\u00ebser Komponente"
         },
         "step": {
+            "authorize": {
+                "title": "Home Assistant erlaaben"
+            },
+            "pat": {
+                "data": {
+                    "access_token": "Acc\u00e8ss Jeton"
+                },
+                "title": "Pers\u00e9inlechen Acc\u00e8ss Jeton uginn"
+            },
+            "select_location": {
+                "data": {
+                    "location_id": "Standuert"
+                },
+                "title": "Standuert auswielen"
+            },
             "user": {
                 "description": "Gitt w.e.g. ee [Pers\u00e9inlechen Acc\u00e8s Jeton]({token_url}) vu SmartThings an dee via [d'Instruktiounen] ({component_url}) erstallt gouf.",
                 "title": "Pers\u00e9inlechen Acc\u00e8ss Jeton uginn"

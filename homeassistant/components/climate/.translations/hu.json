@@ -14,5 +14,16 @@
             "hvac_mode_changed": "{entity_name} f\u0171t\u00e9s, szell\u0151z\u00e9s \u00e9s l\u00e9gkondicion\u00e1l\u00e1s (HVAC) \u00fczemm\u00f3d megv\u00e1ltozott"
         }
     },
+    "state": {
+        "_": {
+            "auto": "Automatikus",
+            "cool": "H\u0171t\u00e9s",
+            "dry": "Sz\u00e1raz",
+            "fan_only": "Csak ventil\u00e1tor",
+            "heat": "F\u0171t\u00e9s",
+            "heat_cool": "F\u0171t\u00e9s/H\u0171t\u00e9s",
+            "off": "Ki"
+        }
+    },
     "title": "H\u0171t\u00e9s/f\u0171t\u00e9s"
 }

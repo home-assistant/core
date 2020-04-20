@@ -1,3 +1,12 @@
 {
+    "state": {
+        "_": {
+            "closed": "\u039a\u03bb\u03b5\u03b9\u03c3\u03c4\u03cc",
+            "closing": "\u039a\u03bb\u03b5\u03af\u03c3\u03b9\u03bc\u03bf",
+            "open": "\u0391\u03bd\u03bf\u03b9\u03c7\u03c4\u03cc",
+            "opening": "\u0386\u03bd\u03bf\u03b9\u03b3\u03bc\u03b1",
+            "stopped": "\u03a3\u03c4\u03b1\u03bc\u03ac\u03c4\u03b7\u03c3\u03b5"
+        }
+    },
     "title": "\u039a\u03ac\u03bb\u03c5\u03c8\u03b7"
 }

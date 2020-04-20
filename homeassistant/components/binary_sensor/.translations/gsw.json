@@ -1,3 +1,64 @@
 {
+    "state": {
+        "_": {
+            "off": "Us",
+            "on": "Ah"
+        },
+        "battery": {
+            "off": "Normau",
+            "on": "Nidrig"
+        },
+        "connectivity": {
+            "off": "Trennt",
+            "on": "Verbunge"
+        },
+        "gas": {
+            "off": "Frei",
+            "on": "Erk\u00e4nnt"
+        },
+        "heat": {
+            "on": "Heiss"
+        },
+        "moisture": {
+            "off": "Troch\u00e4",
+            "on": "Nass"
+        },
+        "motion": {
+            "off": "Ok",
+            "on": "Erch\u00e4nt"
+        },
+        "occupancy": {
+            "off": "Ok",
+            "on": "Erch\u00e4nt"
+        },
+        "opening": {
+            "off": "Gschlos\u00e4",
+            "on": "Off\u00e4"
+        },
+        "presence": {
+            "off": "Nid Dahei",
+            "on": "Dahei"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Problem"
+        },
+        "safety": {
+            "off": "Sicher",
+            "on": "Unsicher"
+        },
+        "smoke": {
+            "off": "Ok",
+            "on": "Erch\u00e4nt"
+        },
+        "sound": {
+            "off": "Ok",
+            "on": "Erch\u00e4nt"
+        },
+        "vibration": {
+            "off": "Ok",
+            "on": "Erch\u00e4nt"
+        }
+    },
     "title": "Bin\u00e4re Sensor"
 }

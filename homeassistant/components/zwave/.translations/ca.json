@@ -17,5 +17,17 @@
                 "title": "Configuraci\u00f3 de Z-Wave"
             }
         }
+    },
+    "state": {
+        "_": {
+            "dead": "No disponible",
+            "initializing": "Inicialitzant",
+            "ready": "A punt",
+            "sleeping": "Dormint"
+        },
+        "query_stage": {
+            "dead": "No disponible ({query_stage})",
+            "initializing": "Inicialitzant ({query_stage})"
+        }
     }
 }

@@ -13,5 +13,11 @@
             "turned_on": "{entity_name} gouf ugeschalt"
         }
     },
+    "state": {
+        "_": {
+            "off": "Aus",
+            "on": "Un"
+        }
+    },
     "title": "Ventilator"
 }

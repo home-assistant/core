@@ -23,5 +23,11 @@
             "value": "{entity_name} spremembe vrednosti"
         }
     },
+    "state": {
+        "_": {
+            "off": "Izklju\u010den",
+            "on": "Vklopljen"
+        }
+    },
     "title": "Senzor"
 }

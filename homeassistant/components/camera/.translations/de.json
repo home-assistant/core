@@ -1,3 +1,10 @@
 {
+    "state": {
+        "_": {
+            "idle": "Unt\u00e4tig",
+            "recording": "Aufnehmen",
+            "streaming": "\u00dcbertr\u00e4gt"
+        }
+    },
     "title": "Kamera"
 }

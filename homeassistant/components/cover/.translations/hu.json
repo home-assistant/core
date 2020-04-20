@@ -25,5 +25,14 @@
             "tilt_position": "{entity_name} d\u00f6nt\u00e9si poz\u00edci\u00f3ja v\u00e1ltozik"
         }
     },
+    "state": {
+        "_": {
+            "closed": "Z\u00e1rva",
+            "closing": "Z\u00e1r\u00e1s",
+            "open": "Nyitva",
+            "opening": "Nyit\u00e1s",
+            "stopped": "Meg\u00e1ll\u00edtva"
+        }
+    },
     "title": "Bor\u00edt\u00f3"
 }

@@ -12,5 +12,6 @@
             "cleaning": "{entity_name} startet rengj\u00f8ringen",
             "docked": "{entity_name} dokket"
         }
-    }
+    },
+    "title": "St\u00f8vsuger"
 }

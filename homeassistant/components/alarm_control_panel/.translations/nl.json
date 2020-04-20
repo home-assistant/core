@@ -15,5 +15,19 @@
             "triggered": "{entity_name} geactiveerd"
         }
     },
+    "state": {
+        "_": {
+            "armed": "Ingeschakeld",
+            "armed_away": "Ingeschakeld afwezig",
+            "armed_custom_bypass": "Ingeschakeld met overbrugging(en)",
+            "armed_home": "Ingeschakeld thuis",
+            "armed_night": "Ingeschakeld nacht",
+            "arming": "Schakelt in",
+            "disarmed": "Uitgeschakeld",
+            "disarming": "Schakelt uit",
+            "pending": "In wacht",
+            "triggered": "Geactiveerd"
+        }
+    },
     "title": "Alarm bedieningspaneel"
 }

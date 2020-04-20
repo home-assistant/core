@@ -17,5 +17,17 @@
                 "title": "Set up Z-Wave"
             }
         }
+    },
+    "state": {
+        "_": {
+            "dead": "Dead",
+            "initializing": "Initializing",
+            "ready": "Ready",
+            "sleeping": "Sleeping"
+        },
+        "query_stage": {
+            "dead": "Dead",
+            "initializing": "Initializing"
+        }
     }
 }

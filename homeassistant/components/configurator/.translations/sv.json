@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "configure": "Konfigurera",
+            "configured": "Konfigurerad"
+        }
+    },
     "title": "Konfiguratorn"
 }

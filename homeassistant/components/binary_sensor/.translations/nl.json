@@ -89,5 +89,87 @@
             "vibration": "{entity_name} begon trillingen te detecteren"
         }
     },
+    "state": {
+        "_": {
+            "off": "Uit",
+            "on": "Aan"
+        },
+        "battery": {
+            "off": "Normaal",
+            "on": "Laag"
+        },
+        "cold": {
+            "off": "Normaal",
+            "on": "Koud"
+        },
+        "connectivity": {
+            "off": "Verbroken",
+            "on": "Verbonden"
+        },
+        "door": {
+            "off": "Dicht",
+            "on": "Open"
+        },
+        "garage_door": {
+            "off": "Dicht",
+            "on": "Open"
+        },
+        "gas": {
+            "off": "Niet gedetecteerd",
+            "on": "Gedetecteerd"
+        },
+        "heat": {
+            "off": "Normaal",
+            "on": "Heet"
+        },
+        "lock": {
+            "off": "Vergrendeld",
+            "on": "Ontgrendeld"
+        },
+        "moisture": {
+            "off": "Droog",
+            "on": "Vochtig"
+        },
+        "motion": {
+            "off": "Niet gedetecteerd",
+            "on": "Gedetecteerd"
+        },
+        "occupancy": {
+            "off": "Niet gedetecteerd",
+            "on": "Gedetecteerd"
+        },
+        "opening": {
+            "off": "Gesloten",
+            "on": "Open"
+        },
+        "presence": {
+            "off": "Afwezig",
+            "on": "Thuis"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Probleem"
+        },
+        "safety": {
+            "off": "Veilig",
+            "on": "Onveilig"
+        },
+        "smoke": {
+            "off": "Niet gedetecteerd",
+            "on": "Gedetecteerd"
+        },
+        "sound": {
+            "off": "Niet gedetecteerd",
+            "on": "Gedetecteerd"
+        },
+        "vibration": {
+            "off": "Niet gedetecteerd",
+            "on": "Gedetecteerd"
+        },
+        "window": {
+            "off": "Dicht",
+            "on": "Open"
+        }
+    },
     "title": "Binaire sensor"
 }

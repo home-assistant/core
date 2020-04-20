@@ -14,5 +14,11 @@
             "unlocked": "{entity_name} desbloqueado"
         }
     },
+    "state": {
+        "_": {
+            "locked": "Bloqueado",
+            "unlocked": "Desbloqueado"
+        }
+    },
     "title": "Cerradura"
 }

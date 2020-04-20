@@ -1,3 +1,14 @@
 {
+    "state": {
+        "_": {
+            "auto": "Automatika",
+            "cool": "Chladenie",
+            "dry": "Su\u0161enie",
+            "fan_only": "Iba ventil\u00e1tor",
+            "heat": "K\u00farenie",
+            "heat_cool": "Vykurovanie / Chladenie",
+            "off": "Vypnut\u00e9"
+        }
+    },
     "title": "Klimatiz\u00e1cia"
 }

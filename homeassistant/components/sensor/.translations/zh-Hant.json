@@ -23,5 +23,11 @@
             "value": "{entity_name}\u503c\u8b8a\u66f4"
         }
     },
+    "state": {
+        "_": {
+            "off": "\u95dc\u9589",
+            "on": "\u958b\u5553"
+        }
+    },
     "title": "\u50b3\u611f\u5668"
 }

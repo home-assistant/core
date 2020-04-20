@@ -23,5 +23,11 @@
             "value": "{entity_name} Wert\u00e4nderungen"
         }
     },
+    "state": {
+        "_": {
+            "off": "Aus",
+            "on": "An"
+        }
+    },
     "title": "Sensor"
 }

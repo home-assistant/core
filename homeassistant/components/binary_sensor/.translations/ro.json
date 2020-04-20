@@ -42,5 +42,87 @@
             "vibration": "{entity_name} a \u00eenceput s\u0103 detecteze vibra\u021biile"
         }
     },
+    "state": {
+        "_": {
+            "off": "Oprit",
+            "on": "Pornit"
+        },
+        "battery": {
+            "off": "Normal",
+            "on": "Sc\u0103zuta"
+        },
+        "cold": {
+            "off": "Normal",
+            "on": "Rece"
+        },
+        "connectivity": {
+            "off": "Deconectat",
+            "on": "Conectat"
+        },
+        "door": {
+            "off": "\u00cenchis",
+            "on": "Deschis"
+        },
+        "garage_door": {
+            "off": "\u00cenchis",
+            "on": "Deschis"
+        },
+        "gas": {
+            "off": "Liber",
+            "on": "Detec\u021bie"
+        },
+        "heat": {
+            "off": "Normal",
+            "on": "Fierbinte"
+        },
+        "lock": {
+            "off": "Blocat",
+            "on": "Deblocat"
+        },
+        "moisture": {
+            "off": "Uscat",
+            "on": "Umed"
+        },
+        "motion": {
+            "off": "Liber",
+            "on": "Detec\u021bie"
+        },
+        "occupancy": {
+            "off": "Liber",
+            "on": "Detec\u021bie"
+        },
+        "opening": {
+            "off": "\u00cenchis",
+            "on": "Deschis"
+        },
+        "presence": {
+            "off": "Plecat",
+            "on": "Acas\u0103"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Problem\u0103"
+        },
+        "safety": {
+            "off": "Sigur",
+            "on": "Nesigur"
+        },
+        "smoke": {
+            "off": "Liber",
+            "on": "Detec\u021bie"
+        },
+        "sound": {
+            "off": "Liber",
+            "on": "Detec\u021bie"
+        },
+        "vibration": {
+            "off": "Liber",
+            "on": "Detec\u021bie"
+        },
+        "window": {
+            "off": "\u00cenchis",
+            "on": "Deschis"
+        }
+    },
     "title": "Senzor binar"
 }

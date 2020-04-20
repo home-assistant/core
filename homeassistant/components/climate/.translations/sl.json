@@ -14,5 +14,16 @@
             "hvac_mode_changed": "{entity_name} HVAC na\u010din spremenjen"
         }
     },
+    "state": {
+        "_": {
+            "auto": "Samodejno",
+            "cool": "Mrzlo",
+            "dry": "Suho",
+            "fan_only": "Samo ventilator",
+            "heat": "Toplo",
+            "heat_cool": "Gretje/Hlajenje",
+            "off": "Izklju\u010den"
+        }
+    },
     "title": "Klimat"
 }

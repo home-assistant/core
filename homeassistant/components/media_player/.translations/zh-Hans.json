@@ -8,5 +8,15 @@
             "is_playing": "{entity_name} \u6b63\u5728\u64ad\u653e"
         }
     },
+    "state": {
+        "_": {
+            "idle": "\u7a7a\u95f2",
+            "off": "\u5173",
+            "on": "\u5f00",
+            "paused": "\u5df2\u6682\u505c",
+            "playing": "\u6b63\u5728\u64ad\u653e",
+            "standby": "\u5f85\u673a"
+        }
+    },
     "title": "\u64ad\u653e\u5668"
 }

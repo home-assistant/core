@@ -5,5 +5,11 @@
             "is_not_home": "{entity_name} \uc774(\uac00) \uc678\ucd9c \uc911\uc774\uba74"
         }
     },
+    "state": {
+        "_": {
+            "home": "\uc7ac\uc2e4",
+            "not_home": "\uc678\ucd9c"
+        }
+    },
     "title": "\ucd94\uc801 \uae30\uae30"
 }

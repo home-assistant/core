@@ -13,5 +13,17 @@
             "docked": "{entity_name} er i dock"
         }
     },
+    "state": {
+        "_": {
+            "cleaning": "G\u00f8r rent",
+            "docked": "I dock",
+            "error": "Fejl",
+            "idle": "Inaktiv",
+            "off": "Off",
+            "on": "On",
+            "paused": "Sat p\u00e5 pause",
+            "returning": "Vender tilbage til dock"
+        }
+    },
     "title": "St\u00f8vsuger"
 }

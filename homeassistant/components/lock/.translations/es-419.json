@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "locked": "Cerrado",
+            "unlocked": "Abierto"
+        }
+    },
     "title": "Cerrar"
 }

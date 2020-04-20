@@ -5,5 +5,11 @@
             "unlocked": "{entity_name} \u88ab\u89e3\u9501"
         }
     },
+    "state": {
+        "_": {
+            "locked": "\u9501\u5b9a",
+            "unlocked": "\u89e3\u9501"
+        }
+    },
     "title": "\u9501"
 }

@@ -10,5 +10,11 @@
             "is_on": "{entity_name} est\u00e1 ligado"
         }
     },
+    "state": {
+        "_": {
+            "off": "Desligada",
+            "on": "Ligada"
+        }
+    },
     "title": "Luz"
 }

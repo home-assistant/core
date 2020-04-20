@@ -29,6 +29,19 @@
                     "host": "Host",
                     "port": "Port"
                 }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Apparat",
+                    "port": "Port"
+                },
+                "title": "deCONZ Gateway ariichten"
+            },
+            "user": {
+                "data": {
+                    "host": "Entdeckte deCONZ Gateway auswielen"
+                },
+                "title": "deCONZ Gateway auswielen"
             }
         }
     },

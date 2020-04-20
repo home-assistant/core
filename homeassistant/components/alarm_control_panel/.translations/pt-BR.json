@@ -15,5 +15,19 @@
             "triggered": "{entity_name} acionado"
         }
     },
+    "state": {
+        "_": {
+            "armed": "Armado",
+            "armed_away": "Armado ausente",
+            "armed_custom_bypass": "Armado em \u00e1reas espec\u00edficas",
+            "armed_home": "Armado casa",
+            "armed_night": "Armado noite",
+            "arming": "Armando",
+            "disarmed": "Desarmado",
+            "disarming": "Desarmando",
+            "pending": "Pendente",
+            "triggered": "Acionado"
+        }
+    },
     "title": "Painel de controle do alarme"
 }

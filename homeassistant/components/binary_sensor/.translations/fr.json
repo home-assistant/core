@@ -89,5 +89,87 @@
             "vibration": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter les vibrations"
         }
     },
+    "state": {
+        "_": {
+            "off": "Inactif",
+            "on": "Actif"
+        },
+        "battery": {
+            "off": "Normal",
+            "on": "Faible"
+        },
+        "cold": {
+            "off": "Normale",
+            "on": "Froid"
+        },
+        "connectivity": {
+            "off": "D\u00e9connect\u00e9",
+            "on": "Connect\u00e9"
+        },
+        "door": {
+            "off": "Ferm\u00e9e",
+            "on": "Ouverte"
+        },
+        "garage_door": {
+            "off": "Ferm\u00e9e",
+            "on": "Ouverte"
+        },
+        "gas": {
+            "off": "Non d\u00e9tect\u00e9",
+            "on": "D\u00e9tect\u00e9"
+        },
+        "heat": {
+            "off": "Normale",
+            "on": "Chaud"
+        },
+        "lock": {
+            "off": "Verrouill\u00e9",
+            "on": "D\u00e9verrouill\u00e9"
+        },
+        "moisture": {
+            "off": "Sec",
+            "on": "Humide"
+        },
+        "motion": {
+            "off": "RAS",
+            "on": "D\u00e9tect\u00e9"
+        },
+        "occupancy": {
+            "off": "RAS",
+            "on": "D\u00e9tect\u00e9"
+        },
+        "opening": {
+            "off": "Ferm\u00e9",
+            "on": "Ouvert"
+        },
+        "presence": {
+            "off": "Absent",
+            "on": "Pr\u00e9sent"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Probl\u00e8me"
+        },
+        "safety": {
+            "off": "S\u00e9curis\u00e9",
+            "on": "Dangereux"
+        },
+        "smoke": {
+            "off": "RAS",
+            "on": "D\u00e9tect\u00e9"
+        },
+        "sound": {
+            "off": "RAS",
+            "on": "D\u00e9tect\u00e9"
+        },
+        "vibration": {
+            "off": "RAS",
+            "on": "D\u00e9tect\u00e9e"
+        },
+        "window": {
+            "off": "Ferm\u00e9e",
+            "on": "Ouverte"
+        }
+    },
     "title": "Capteur binaire"
 }

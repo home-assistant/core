@@ -21,5 +21,6 @@
             "disarmed": "{entity_name} deaktivert",
             "triggered": "{entity_name} utl\u00f8st"
         }
-    }
+    },
+    "title": "Alarm kontrollpanel"
 }

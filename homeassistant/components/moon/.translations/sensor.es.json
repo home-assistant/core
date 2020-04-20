@@ -1,12 +1,14 @@
 {
     "state": {
-        "first_quarter": "Cuarto creciente",
-        "full_moon": "Luna llena",
-        "last_quarter": "Cuarto menguante",
-        "new_moon": "Luna nueva",
-        "waning_crescent": "Menguante",
-        "waning_gibbous": "Gibosa menguante",
-        "waxing_crescent": "Nueva visible",
-        "waxing_gibbous": "Gibosa creciente"
+        "moon__phase": {
+            "first_quarter": "Cuarto creciente",
+            "full_moon": "Luna llena",
+            "last_quarter": "Cuarto menguante",
+            "new_moon": "Luna nueva",
+            "waning_crescent": "Menguante",
+            "waning_gibbous": "Gibosa menguante",
+            "waxing_crescent": "Nueva visible",
+            "waxing_gibbous": "Gibosa creciente"
+        }
     }
 }

@@ -1,3 +1,17 @@
 {
+    "state": {
+        "_": {
+            "armed": "Bersenjata",
+            "armed_away": "Armed away",
+            "armed_custom_bypass": "Armed custom bypass",
+            "armed_home": "Armed home",
+            "armed_night": "Armed night",
+            "arming": "Mempersenjatai",
+            "disarmed": "Dilucuti",
+            "disarming": "Melucuti",
+            "pending": "Tertunda",
+            "triggered": "Terpicu"
+        }
+    },
     "title": "Kontrol panel alarm"
 }

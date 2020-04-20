@@ -6,5 +6,19 @@
             "disarm": "Desarmar {entity_name}"
         }
     },
+    "state": {
+        "_": {
+            "armed": "Armado",
+            "armed_away": "Armado ausente",
+            "armed_custom_bypass": "Armado com desvio personalizado",
+            "armed_home": "Armado Casa",
+            "armed_night": "Armado noite",
+            "arming": "A armar",
+            "disarmed": "Desarmado",
+            "disarming": "A desarmar",
+            "pending": "Pendente",
+            "triggered": "Despoletado"
+        }
+    },
     "title": "Painel de controlo do alarme"
 }

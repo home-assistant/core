@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "above_horizon": "Nad obzorjem",
+            "below_horizon": "Pod obzorjem"
+        }
+    },
     "title": "Sonce"
 }

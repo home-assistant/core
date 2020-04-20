@@ -17,5 +17,17 @@
                 "title": "Z-Wave einrichten"
             }
         }
+    },
+    "state": {
+        "_": {
+            "dead": "Nicht erreichbar",
+            "initializing": "Initialisierend",
+            "ready": "Bereit",
+            "sleeping": "Schlafend"
+        },
+        "query_stage": {
+            "dead": "Nicht erreichbar ({query_stage})",
+            "initializing": "Initialisiere ({query_stage})"
+        }
     }
 }

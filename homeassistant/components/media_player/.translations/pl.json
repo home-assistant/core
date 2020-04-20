@@ -8,5 +8,15 @@
             "is_playing": "{entity_name} odtwarza media"
         }
     },
+    "state": {
+        "_": {
+            "idle": "nieaktywny",
+            "off": "wy\u0142\u0105czony",
+            "on": "w\u0142\u0105czony",
+            "paused": "wstrzymany",
+            "playing": "odtwarzanie",
+            "standby": "tryb czuwania"
+        }
+    },
     "title": "Odtwarzacz medi\u00f3w"
 }

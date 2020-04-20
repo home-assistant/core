@@ -8,5 +8,15 @@
             "is_playing": "{entity_name} afspiller"
         }
     },
+    "state": {
+        "_": {
+            "idle": "Inaktiv",
+            "off": "Slukket",
+            "on": "T\u00e6ndt",
+            "paused": "Sat p\u00e5 pause",
+            "playing": "Afspiller",
+            "standby": "Standby"
+        }
+    },
     "title": "Medieafspiller"
 }

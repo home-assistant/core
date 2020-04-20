@@ -89,5 +89,87 @@
             "vibration": "{entity_name} je za\u010del odkrivat vibracije"
         }
     },
+    "state": {
+        "_": {
+            "off": "Izklju\u010den",
+            "on": "Vklopljen"
+        },
+        "battery": {
+            "off": "Normalno",
+            "on": "Nizko"
+        },
+        "cold": {
+            "off": "Normalno",
+            "on": "Hladno"
+        },
+        "connectivity": {
+            "off": "Povezava prekinjena",
+            "on": "Povezan"
+        },
+        "door": {
+            "off": "Zaprto",
+            "on": "Odprto"
+        },
+        "garage_door": {
+            "off": "Zaprto",
+            "on": "Odprto"
+        },
+        "gas": {
+            "off": "\u010cisto",
+            "on": "Zaznano"
+        },
+        "heat": {
+            "off": "Normalno",
+            "on": "Vro\u010de"
+        },
+        "lock": {
+            "off": "Zaklenjeno",
+            "on": "Odklenjeno"
+        },
+        "moisture": {
+            "off": "Suho",
+            "on": "Mokro"
+        },
+        "motion": {
+            "off": "\u010cisto",
+            "on": "Zaznano"
+        },
+        "occupancy": {
+            "off": "\u010cisto",
+            "on": "Zaznano"
+        },
+        "opening": {
+            "off": "Zaprto",
+            "on": "Odprto"
+        },
+        "presence": {
+            "off": "Odsoten",
+            "on": "Doma"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Te\u017eava"
+        },
+        "safety": {
+            "off": "Varno",
+            "on": "Nevarno"
+        },
+        "smoke": {
+            "off": "\u010cisto",
+            "on": "Zaznano"
+        },
+        "sound": {
+            "off": "\u010cisto",
+            "on": "Zaznano"
+        },
+        "vibration": {
+            "off": "\u010cisto",
+            "on": "Zaznano"
+        },
+        "window": {
+            "off": "Zaprto",
+            "on": "Odprto"
+        }
+    },
     "title": "Binarni senzor"
 }

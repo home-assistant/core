@@ -89,5 +89,87 @@
             "vibration": "{entity_name} b\u00f6rjade detektera vibrationer"
         }
     },
+    "state": {
+        "_": {
+            "off": "Av",
+            "on": "P\u00e5"
+        },
+        "battery": {
+            "off": "Normal",
+            "on": "L\u00e5g"
+        },
+        "cold": {
+            "off": "Normal",
+            "on": "Kallt"
+        },
+        "connectivity": {
+            "off": "Fr\u00e5nkopplad",
+            "on": "Ansluten"
+        },
+        "door": {
+            "off": "St\u00e4ngd",
+            "on": "\u00d6ppen"
+        },
+        "garage_door": {
+            "off": "St\u00e4ngd",
+            "on": "\u00d6ppen"
+        },
+        "gas": {
+            "off": "Klart",
+            "on": "Detekterad"
+        },
+        "heat": {
+            "off": "Normal",
+            "on": "Varmt"
+        },
+        "lock": {
+            "off": "L\u00e5st",
+            "on": "Ol\u00e5st"
+        },
+        "moisture": {
+            "off": "Torr",
+            "on": "Bl\u00f6t"
+        },
+        "motion": {
+            "off": "Klart",
+            "on": "Detekterad"
+        },
+        "occupancy": {
+            "off": "Tomt",
+            "on": "Detekterad"
+        },
+        "opening": {
+            "off": "St\u00e4ngd",
+            "on": "\u00d6ppen"
+        },
+        "presence": {
+            "off": "Borta",
+            "on": "Hemma"
+        },
+        "problem": {
+            "off": "Ok",
+            "on": "Problem"
+        },
+        "safety": {
+            "off": "S\u00e4ker",
+            "on": "Os\u00e4ker"
+        },
+        "smoke": {
+            "off": "Klart",
+            "on": "Detekterad"
+        },
+        "sound": {
+            "off": "Klart",
+            "on": "Detekterad"
+        },
+        "vibration": {
+            "off": "Klart",
+            "on": "Detekterad"
+        },
+        "window": {
+            "off": "St\u00e4ngt",
+            "on": "\u00d6ppet"
+        }
+    },
     "title": "Bin\u00e4r sensor"
 }

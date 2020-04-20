@@ -8,5 +8,19 @@
             "trigger": "Spustit {entity_name}"
         }
     },
+    "state": {
+        "_": {
+            "armed": "Aktivn\u00ed",
+            "armed_away": "Aktivn\u00ed re\u017eim mimo domov",
+            "armed_custom_bypass": "Aktivn\u00ed u\u017eivatelsk\u00fdm obejit\u00edm",
+            "armed_home": "Aktivn\u00ed re\u017eim doma",
+            "armed_night": "Aktivn\u00ed no\u010dn\u00ed re\u017eim",
+            "arming": "Aktivov\u00e1n\u00ed",
+            "disarmed": "Neaktivn\u00ed",
+            "disarming": "Deaktivov\u00e1n\u00ed",
+            "pending": "Nadch\u00e1zej\u00edc\u00ed",
+            "triggered": "Spu\u0161t\u011bno"
+        }
+    },
     "title": "Ovl\u00e1dac\u00ed panel alarmu"
 }

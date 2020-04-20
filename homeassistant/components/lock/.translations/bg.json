@@ -14,5 +14,11 @@
             "unlocked": "{entity_name} \u043e\u0442\u043a\u043b\u044e\u0447\u0435\u043d"
         }
     },
+    "state": {
+        "_": {
+            "locked": "\u0417\u0430\u043a\u043b\u044e\u0447\u0435\u043d",
+            "unlocked": "\u041e\u0442\u043a\u043b\u044e\u0447\u0435\u043d"
+        }
+    },
     "title": "\u041a\u043b\u044e\u0447\u0430\u043b\u043a\u0430"
 }

@@ -13,5 +13,17 @@
             "docked": "{entity_name} en la base"
         }
     },
+    "state": {
+        "_": {
+            "cleaning": "Limpiando",
+            "docked": "En base",
+            "error": "Error",
+            "idle": "Inactivo",
+            "off": "Apagado",
+            "on": "Encendido",
+            "paused": "En pausa",
+            "returning": "Volviendo a la base"
+        }
+    },
     "title": "Aspiradora"
 }

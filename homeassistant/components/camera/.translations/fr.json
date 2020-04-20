@@ -1,3 +1,10 @@
 {
+    "state": {
+        "_": {
+            "idle": "En veille",
+            "recording": "Enregistrement",
+            "streaming": "Diffusion en cours"
+        }
+    },
     "title": "Cam\u00e9ra"
 }

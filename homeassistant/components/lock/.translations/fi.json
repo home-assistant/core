@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "locked": "Lukittu",
+            "unlocked": "Auki"
+        }
+    },
     "title": "Lukko"
 }

@@ -1,12 +1,14 @@
 {
     "state": {
-        "first_quarter": "pierwsza kwadra",
-        "full_moon": "pe\u0142nia",
-        "last_quarter": "ostatnia kwadra",
-        "new_moon": "n\u00f3w",
-        "waning_crescent": "sierp ubywaj\u0105cy",
-        "waning_gibbous": "ubywaj\u0105cy garbaty",
-        "waxing_crescent": "sierp przybywaj\u0105cy",
-        "waxing_gibbous": "przybywaj\u0105cy garbaty"
+        "moon__phase": {
+            "first_quarter": "pierwsza kwadra",
+            "full_moon": "pe\u0142nia",
+            "last_quarter": "ostatnia kwadra",
+            "new_moon": "n\u00f3w",
+            "waning_crescent": "sierp ubywaj\u0105cy",
+            "waning_gibbous": "ubywaj\u0105cy garbaty",
+            "waxing_crescent": "sierp przybywaj\u0105cy",
+            "waxing_gibbous": "przybywaj\u0105cy garbaty"
+        }
     }
 }

@@ -23,5 +23,11 @@
             "value": "{entity_name} \uac12\uc774 \ubc14\ub014 \ub54c"
         }
     },
+    "state": {
+        "_": {
+            "off": "\uaebc\uc9d0",
+            "on": "\ucf1c\uc9d0"
+        }
+    },
     "title": "\uc13c\uc11c"
 }

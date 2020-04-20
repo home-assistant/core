@@ -1,3 +1,85 @@
 {
+    "state": {
+        "_": {
+            "off": "Desligado",
+            "on": "Ligado"
+        },
+        "battery": {
+            "off": "Normal",
+            "on": "Fraca"
+        },
+        "cold": {
+            "off": "Normal",
+            "on": "Frio"
+        },
+        "connectivity": {
+            "off": "Desconectado",
+            "on": "Conectado"
+        },
+        "door": {
+            "off": "Fechado",
+            "on": "Aberto"
+        },
+        "garage_door": {
+            "off": "Fechado",
+            "on": "Aberto"
+        },
+        "gas": {
+            "off": "Limpo",
+            "on": "Detectado"
+        },
+        "heat": {
+            "off": "Normal",
+            "on": "Quente"
+        },
+        "lock": {
+            "off": "Trancado",
+            "on": "Desbloqueado"
+        },
+        "moisture": {
+            "off": "Seco",
+            "on": "Molhado"
+        },
+        "motion": {
+            "off": "Desligado",
+            "on": "Detectado"
+        },
+        "occupancy": {
+            "off": "Desocupado",
+            "on": "Detectado"
+        },
+        "opening": {
+            "off": "Fechado",
+            "on": "Aberto"
+        },
+        "presence": {
+            "off": "Ausente",
+            "on": "Em casa"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Problema"
+        },
+        "safety": {
+            "off": "Seguro",
+            "on": "N\u00e3o seguro"
+        },
+        "smoke": {
+            "off": "Limpo",
+            "on": "Detectado"
+        },
+        "sound": {
+            "off": "Limpo",
+            "on": "Detectado"
+        },
+        "vibration": {
+            "off": "Limpo",
+            "on": "Detectado"
+        },
+        "window": {
+            "off": "Fechado",
+            "on": "Aberto"
+        }
+    },
     "title": "Sensor bin\u00e1rio"
 }

@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "home": "Doma",
+            "not_home": "Pre\u010d"
+        }
+    },
     "title": "Sledovanie zariadenia"
 }

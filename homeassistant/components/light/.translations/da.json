@@ -16,5 +16,11 @@
             "turned_on": "{entity_name} t\u00e6ndte"
         }
     },
+    "state": {
+        "_": {
+            "off": "Slukket",
+            "on": "T\u00e6ndt"
+        }
+    },
     "title": "Lys"
 }

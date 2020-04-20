@@ -14,5 +14,11 @@
             "unlocked": "{entity_name} unlocked"
         }
     },
+    "state": {
+        "_": {
+            "locked": "Locked",
+            "unlocked": "Unlocked"
+        }
+    },
     "title": "Lock"
 }

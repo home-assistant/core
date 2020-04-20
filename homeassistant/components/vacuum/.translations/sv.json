@@ -13,5 +13,17 @@
             "docked": "{entity_name} dockad"
         }
     },
+    "state": {
+        "_": {
+            "cleaning": "St\u00e4dar",
+            "docked": "Dockad",
+            "error": "Fel",
+            "idle": "Inaktiv",
+            "off": "Av",
+            "on": "P\u00e5",
+            "paused": "Pausad",
+            "returning": "\u00c5terg\u00e5r till docka"
+        }
+    },
     "title": "Dammsugare"
 }

@@ -5,5 +5,11 @@
             "is_not_home": "{entity_name} non \u00e8 in casa"
         }
     },
+    "state": {
+        "_": {
+            "home": "A casa",
+            "not_home": "Fuori casa"
+        }
+    },
     "title": "Tracciatore dispositivo"
 }

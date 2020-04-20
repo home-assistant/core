@@ -17,5 +17,17 @@
                 "title": "Stel Z-Wave in"
             }
         }
+    },
+    "state": {
+        "_": {
+            "dead": "Onbereikbaar",
+            "initializing": "Initialiseren",
+            "ready": "Gereed",
+            "sleeping": "Slaapt"
+        },
+        "query_stage": {
+            "dead": "Onbereikbaar ({query_stage})",
+            "initializing": "Initialiseren ( {query_stage} )"
+        }
     }
 }

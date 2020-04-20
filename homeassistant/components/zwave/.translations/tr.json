@@ -7,5 +7,17 @@
                 }
             }
         }
+    },
+    "state": {
+        "_": {
+            "dead": "\u00d6l\u00fc",
+            "initializing": "Ba\u015flat\u0131l\u0131yor",
+            "ready": "Haz\u0131r",
+            "sleeping": "Uyuyor"
+        },
+        "query_stage": {
+            "dead": "\u00d6l\u00fc ({query_stage})",
+            "initializing": "Ba\u015flat\u0131l\u0131yor ( {query_stage} )"
+        }
     }
 }

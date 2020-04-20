@@ -13,5 +13,17 @@
             "docked": "{entity_name} \uc774(\uac00) \ub3c4\ud0b9\ub420 \ub54c"
         }
     },
+    "state": {
+        "_": {
+            "cleaning": "\uccad\uc18c\uc911",
+            "docked": "\ucda9\uc804\uc911",
+            "error": "\uc791\ub3d9 \uc624\ub958",
+            "idle": "\ub300\uae30\uc911",
+            "off": "\uaebc\uc9d0",
+            "on": "\ucf1c\uc9d0",
+            "paused": "\uc77c\uc2dc\uc911\uc9c0\ub428",
+            "returning": "\ucda9\uc804 \ubcf5\uadc0 \uc911"
+        }
+    },
     "title": "\uccad\uc18c\uae30"
 }

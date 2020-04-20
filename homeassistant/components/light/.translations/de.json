@@ -17,5 +17,11 @@
             "turned_on": "{entity_name} eingeschaltet"
         }
     },
+    "state": {
+        "_": {
+            "off": "Aus",
+            "on": "An"
+        }
+    },
     "title": "Licht"
 }

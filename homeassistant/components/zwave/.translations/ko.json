@@ -17,5 +17,17 @@
                 "title": "Z-Wave \uc124\uc815"
             }
         }
+    },
+    "state": {
+        "_": {
+            "dead": "\uc751\ub2f5\uc5c6\uc74c",
+            "initializing": "\ucd08\uae30\ud654\uc911",
+            "ready": "\uc900\ube44",
+            "sleeping": "\uc808\uc804\ubaa8\ub4dc"
+        },
+        "query_stage": {
+            "dead": "\uc751\ub2f5\uc5c6\uc74c ({query_stage})",
+            "initializing": "\ucd08\uae30\ud654\uc911 ({query_stage})"
+        }
     }
 }

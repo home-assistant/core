@@ -23,5 +23,11 @@
             "value": "hodnota {entity_name} se zm\u011bn\u00ed"
         }
     },
+    "state": {
+        "_": {
+            "off": "Neaktivn\u00ed",
+            "on": "Aktivn\u00ed"
+        }
+    },
     "title": "Senzor"
 }

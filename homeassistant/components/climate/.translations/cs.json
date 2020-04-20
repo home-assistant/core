@@ -1,3 +1,14 @@
 {
+    "state": {
+        "_": {
+            "auto": "Automatika",
+            "cool": "Chlazen\u00ed",
+            "dry": "Vysou\u0161en\u00ed",
+            "fan_only": "Pouze ventil\u00e1tor",
+            "heat": "Topen\u00ed",
+            "heat_cool": "Vyt\u00e1p\u011bn\u00ed/Chlazen\u00ed",
+            "off": "Neaktivn\u00ed"
+        }
+    },
     "title": "Klimatizace"
 }
