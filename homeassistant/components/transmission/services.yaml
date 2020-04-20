@@ -9,7 +9,7 @@ add_torrent:
       example: http://releases.ubuntu.com/19.04/ubuntu-19.04-desktop-amd64.iso.torrent
 
 remove_torrent:
-  description: Demove a torrent
+  description: Remove a torrent
   fields:
     name:
       description: Instance name as entered during entry config
