@@ -2,10 +2,6 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries, setup
-from homeassistant.components.devolo_home_control.config_flow import (
-    CannotConnect,
-    InvalidAuth,
-)
 from homeassistant.components.devolo_home_control.const import DOMAIN
 
 from tests.common import mock_coro
@@ -44,41 +40,3 @@ async def test_form(hass):
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_invalid_auth(hass):
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.devolo_home_control.config_flow._login_data_valid",
-        side_effect=InvalidAuth,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_credentials"}
-
-
-async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.devolo_home_control.config_flow._login_data_valid",
-        side_effect=CannotConnect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_credentials"}
