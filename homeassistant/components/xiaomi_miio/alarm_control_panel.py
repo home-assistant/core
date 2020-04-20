@@ -22,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 XIAOMI_STATE_ARMED_VALUE = "on"
 XIAOMI_STATE_DISARMED_VALUE = "off"
 XIAOMI_STATE_ARMING_VALUE = "oning"
-XIAOMI_SUCCESS = ["ok"]
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -99,13 +98,9 @@ class XiaomiGatewayAlarm(AlarmControlPanel):
         """Call a device command handling error messages."""
         try:
             result = await self.hass.async_add_executor_job(partial(func, *args, **kwargs))
-
             _LOGGER.debug("Response received from miio device: %s", result)
-
-            return result == XIAOMI_SUCCESS
         except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
-            return False
 
     async def async_alarm_arm_away(self, code=None):
         """Turn on."""
