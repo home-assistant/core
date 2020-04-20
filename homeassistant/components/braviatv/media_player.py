@@ -1,4 +1,5 @@
 """Support for interface with a Bravia TV."""
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -144,12 +145,12 @@ class BraviaTVDevice(MediaPlayerDevice):
         self._unique_id = unique_id
         self._device_info = device_info
         self._ignored_sources = ignored_sources
-        self._state_change = False
+        self._state_lock = asyncio.Lock()
         self._need_refresh = True
 
     async def async_update(self):
         """Update TV info."""
-        if self._state_change:
+        if self._state_lock.locked():
             return
 
         if self._state == STATE_OFF:
@@ -303,17 +304,15 @@ class BraviaTVDevice(MediaPlayerDevice):
         """Set volume level, range 0..1."""
         self._braviarc.set_volume_level(volume)
 
-    def turn_on(self):
+    async def async_turn_on(self):
         """Turn the media player on."""
-        self._state_change = True
-        self._braviarc.turn_on()
-        self._state_change = False
+        async with self._state_lock:
+            await self.hass.async_add_executor_job(self._braviarc.turn_on)
 
-    def turn_off(self):
+    async def async_turn_off(self):
         """Turn off media player."""
-        self._state_change = True
-        self._braviarc.turn_off()
-        self._state_change = False
+        async with self._state_lock:
+            await self.hass.async_add_executor_job(self._braviarc.turn_off)
 
     def volume_up(self):
         """Volume up the media player."""
