@@ -170,10 +170,12 @@ class BraviaTVDevice(MediaPlayerDevice):
                 return
 
             self._state = STATE_ON
-            if await self._async_refresh_volume():
-                if await self._async_refresh_channels():
-                    await self._async_refresh_playing_info()
-                    return
+            if (
+                await self._async_refresh_volume()
+                and await self._async_refresh_channels()
+            ):
+                await self._async_refresh_playing_info()
+                return
         self._state = STATE_OFF
 
     def _get_source(self):
