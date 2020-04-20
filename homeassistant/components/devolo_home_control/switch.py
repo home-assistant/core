@@ -46,12 +46,8 @@ class DevoloSwitch(SwitchDevice):
         self._available = self._device_instance.is_online()
 
         # Get the brand and model information
-        try:
-            self._brand = self._device_instance.brand
-            self._model = self._device_instance.name
-        except AttributeError:
-            self._brand = None
-            self._model = None
+        self._brand = self._device_instance.brand
+        self._model = self._device_instance.name
 
         self._binary_switch_property = self._device_instance.binary_switch_property.get(
             self._unique_id
