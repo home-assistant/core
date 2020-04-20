@@ -11,7 +11,14 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_TOKEN,
+    CONF_URL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -25,6 +32,8 @@ from .const import (  # pylint: disable=unused-import
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
     CONF_USE_EPISODE_ART,
+    DEFAULT_PORT,
+    DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     PLEX_SERVER_CONFIG,
@@ -36,6 +45,8 @@ from .const import (  # pylint: disable=unused-import
 )
 from .errors import NoServersFound, ServerNotSpecified
 from .server import PlexServer
+
+USER_SCHEMA = vol.Schema({vol.Required("manual_setup", default=False): bool})
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -68,14 +79,49 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.plexauth = None
         self.token = None
         self.client_id = None
+        self._manual = False
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        return self.async_show_form(step_id="start_website_auth")
+        if user_input is not None:
+            if user_input["manual_setup"]:
+                self._manual = True
+                return await self.async_step_manual_setup()
+            return await self.async_step_plex_website_auth()
+        return self.async_show_form(step_id="user", data_schema=USER_SCHEMA)
 
-    async def async_step_start_website_auth(self, user_input=None):
-        """Show a form before starting external authentication."""
-        return await self.async_step_plex_website_auth()
+    async def async_step_manual_setup(self, user_input=None, errors=None):
+        """Begin manual configuration."""
+        if user_input is not None and errors is None:
+            host = user_input.get(CONF_HOST)
+            port = user_input.get(CONF_PORT)
+            prefix = "https" if user_input.get(CONF_SSL) else "http"
+            user_input[CONF_URL] = f"{prefix}://{host}:{port}"
+            return await self.async_step_server_validate(user_input)
+
+        previous_input = user_input or {}
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=previous_input.get(CONF_HOST, "")): str,
+                vol.Required(
+                    CONF_PORT, default=previous_input.get(CONF_PORT, DEFAULT_PORT)
+                ): int,
+                vol.Required(
+                    CONF_SSL, default=previous_input.get(CONF_SSL, DEFAULT_SSL)
+                ): bool,
+                vol.Required(
+                    CONF_VERIFY_SSL,
+                    default=previous_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+                ): bool,
+                vol.Optional(
+                    CONF_TOKEN, default=previous_input.get(CONF_TOKEN, "")
+                ): str,
+            }
+        )
+        return self.async_show_form(
+            step_id="manual_setup", data_schema=data_schema, errors=errors
+        )
 
     async def async_step_server_validate(self, server_config):
         """Validate a provided configuration."""
@@ -96,6 +142,9 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized):
             _LOGGER.error("Invalid credentials provided, config not created")
             errors["base"] = "faulty_credentials"
+        except requests.exceptions.SSLError as error:
+            _LOGGER.error("SSL certificate error: [%s]", error)
+            errors["base"] = "ssl_error"
         except (plexapi.exceptions.NotFound, requests.exceptions.ConnectionError):
             server_identifier = (
                 server_config.get(CONF_URL) or plex_server.server_choice or "Unknown"
@@ -119,7 +168,13 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if errors:
             if is_importing:
                 return self.async_abort(reason="non-interactive")
-            return self.async_show_form(step_id="start_website_auth", errors=errors)
+            if self._manual:
+                return await self.async_step_manual_setup(
+                    user_input=server_config, errors=errors
+                )
+            return self.async_show_form(
+                step_id="user", data_schema=USER_SCHEMA, errors=errors
+            )
 
         server_id = plex_server.machine_identifier
 
