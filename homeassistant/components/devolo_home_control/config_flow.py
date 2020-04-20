@@ -13,19 +13,11 @@ from .const import DOMAIN  # pylint:disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 
-def _login_data_valid(user, password):
-    """Validate the given login data."""
-    mydevolo = Mydevolo.get_instance()
-    mydevolo.user = user
-    mydevolo.password = password
-    mydevolo.uuid  # pylint: disable=pointless-statement
-
-
 class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a devolo HomeControl config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     def __init__(self):
         """Initialize devolo Home Control flow."""
@@ -41,13 +33,21 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self._show_form(user_input)
             user = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
-            _login_data_valid(user=user, password=password)
-            _LOGGER.debug("Credentials valid")
-            return self.async_create_entry(
-                title="devolo Home Control",
-                data={CONF_PASSWORD: password, CONF_USERNAME: user},
+            mydevolo = Mydevolo.get_instance()
+            mydevolo.user = user
+            mydevolo.password = password
+            credentials_valid = await self.hass.async_add_executor_job(
+                mydevolo.credentials_valid
             )
-        except (WrongCredentialsError):
+            if credentials_valid:
+                _LOGGER.debug("Credentials valid")
+                return self.async_create_entry(
+                    title="devolo Home Control",
+                    data={CONF_PASSWORD: password, CONF_USERNAME: user},
+                )
+            else:
+                raise WrongCredentialsError
+        except WrongCredentialsError:
             return self._show_form({"base": "invalid_credentials"})
 
     @callback
