@@ -3,7 +3,7 @@ import asyncio
 
 from bravia_tv import BraviaRC
 
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MAC
 
 from .const import DOMAIN
 
@@ -18,9 +18,10 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up a config entry."""
     host = config_entry.data[CONF_HOST]
+    mac = config_entry.data[CONF_MAC]
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = BraviaRC(host)
+    hass.data[DOMAIN][config_entry.entry_id] = BraviaRC(host, mac)
 
     for component in PLATFORMS:
         hass.async_create_task(
