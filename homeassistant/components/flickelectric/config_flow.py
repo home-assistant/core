@@ -66,8 +66,6 @@ class FlickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=f"Flick Electric: {user_input[CONF_USERNAME]}",
                     data=user_input,
                 )
-            except data_entry_flow.AbortFlow as e:
-                errors["base"] = e.reason
             except TimeoutError:
                 errors["base"] = "cannot_connect"
             except AuthException:
