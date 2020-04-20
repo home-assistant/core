@@ -61,13 +61,15 @@ class DevoloSwitch(SwitchDevice):
         else:
             self._consumption = None
 
+        self.subscriber = None
+
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self._subscriber = async_dispatcher_connect(
+        self.subscriber = async_dispatcher_connect(
             self.hass, self._device_instance.itemName, self.update
         )
         self._homecontrol.publisher.register(
-            self._device_instance.uid, self._subscriber, self.update
+            self._device_instance.uid, self.subscriber, self.update
         )
 
     @property
