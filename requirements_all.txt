@@ -1298,7 +1298,7 @@ pyflunearyou==1.0.7
 pyfnip==0.2
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.4.0
+pyfritzhome==0.4.2
 
 # homeassistant.components.fronius
 pyfronius==0.4.6
