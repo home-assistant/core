@@ -11,8 +11,6 @@ import homeassistant.helpers.translation as translation
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
-
 
 @pytest.fixture
 def mock_config_flows():
@@ -146,7 +144,7 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
     integration.name = "Component 1"
 
     with patch.object(
-        translation, "component_translation_path", return_value=mock_coro("bla.json")
+        translation, "component_translation_path", return_value="bla.json"
     ), patch.object(
         translation,
         "load_translations_files",
@@ -179,7 +177,7 @@ async def test_get_translations_while_loading_components(hass):
         return {"component1": {"hello": "world"}}
 
     with patch.object(
-        translation, "component_translation_path", return_value=mock_coro("bla.json")
+        translation, "component_translation_path", return_value="bla.json"
     ), patch.object(
         translation, "load_translations_files", side_effect=mock_load_translation_files,
     ), patch(
@@ -223,7 +221,7 @@ async def test_translation_merging(hass, caplog):
     hass.config.components.add("sensor.bad_translations")
 
     with patch.object(
-        translation, "component_translation_path", return_value=mock_coro("bla.json")
+        translation, "component_translation_path", return_value="bla.json"
     ), patch.object(
         translation,
         "load_translations_files",
