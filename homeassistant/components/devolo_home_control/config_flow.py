@@ -21,7 +21,6 @@ def _login_data_valid(user, password):
     mydevolo.uuid  # pylint: disable=pointless-statement
 
 
-@config_entries.HANDLERS.register(DOMAIN)
 class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a devolo HomeControl config flow."""
 
