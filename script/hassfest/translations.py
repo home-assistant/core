@@ -7,7 +7,8 @@ from typing import Dict
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.helpers.config_validation import schema_with_slug_keys
+import homeassistant.helpers.config_validation as cv
+from homeassistant.util import slugify
 
 from .model import Config, Integration
 
@@ -90,7 +91,9 @@ def gen_strings_schema(config: Config, integration: Integration):
                 vol.Optional("trigger_type"): {str: str},
                 vol.Optional("trigger_subtype"): {str: str},
             },
-            vol.Optional("state"): {str: {str: str}},
+            vol.Optional("state"): cv.schema_with_slug_keys(
+                cv.schema_with_slug_keys(str)
+            ),
         }
     )
 
@@ -114,18 +117,25 @@ def gen_auth_schema(config: Config, integration: Integration):
 def gen_platform_strings_schema(config: Config, integration: Integration):
     """Generate platform strings schema like strings.sensor.json."""
 
-    def key_validator(value):
+    def device_class_validator(value):
         """Key validator."""
         if not value.startswith(f"{integration.domain}__"):
             raise vol.Invalid(
-                f"Keys need to start with '{integration.domain}__'. Key {value} is invalid"
+                f"Device class need to start with '{integration.domain}__'. Key {value} is invalid"
             )
+
+        slug_friendly = value.replace("__", "_", 1)
+        slugged = slugify(slug_friendly)
+
+        if slug_friendly != slugged:
+            raise vol.Invalid(f"invalid device class {value}")
+
         return value
 
     return vol.Schema(
         {
-            vol.Optional("state"): schema_with_slug_keys(
-                {str: str}, slug_validator=key_validator
+            vol.Optional("state"): cv.schema_with_slug_keys(
+                cv.schema_with_slug_keys(str), slug_validator=device_class_validator
             )
         }
     )
