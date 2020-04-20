@@ -6,6 +6,7 @@ import aiohttp
 import tibber
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -30,7 +31,20 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, config):
     """Set up the Tibber component."""
+
     hass.data[DATA_HASS_CONFIG] = config
+
+    if DOMAIN not in config:
+        return True
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=config[DOMAIN],
+        )
+    )
+
     return True
 
 
@@ -69,7 +83,6 @@ async def async_setup_entry(hass, entry, retry_delay=FIRST_RETRY_TIME):
         return False
 
     for component in PLATFORMS:
-        print(component)
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
@@ -94,7 +107,6 @@ async def async_unload_entry(hass, config_entry):
             ]
         )
     )
-    # -How to unload notify?
 
     if unload_ok:
         tibber_connection = hass.data.get(DOMAIN)
