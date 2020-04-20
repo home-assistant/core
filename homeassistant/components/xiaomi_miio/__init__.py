@@ -1,13 +1,13 @@
 """Support for Xiaomi Miio."""
 import logging
 
-from miio import DeviceException, gateway
-
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers import device_registry as dr
 
+from .config_flow import CONF_FLOW_TYPE, CONF_GATEWAY
 from .const import DOMAIN
+from .gateway import ConnectXiaomiGateway
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,30 +22,32 @@ async def async_setup(hass: core.HomeAssistant, config: dict):
 async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
-    """Set up the Xiaomi Miio component from a config entry."""
+    """Set up the Xiaomi Miio components from a config entry."""
+    hass.data[DOMAIN] = {}
+    if entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
+        if not await async_setup_gateway_entry(hass, entry):
+            return False
+
+    return True
+
+async def async_setup_gateway_entry(
+    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+):
+    """Set up the Xiaomi Gateway component from a config entry."""
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_TOKEN]
     name = entry.title
     gateway_id = entry.data["gateway_id"]
-    _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
     # Connect to gateway
-    try:
-        gateway_device = gateway.Gateway(host, token)
-        gateway_info = gateway_device.info()
-        _LOGGER.debug(
-            "%s %s %s detected",
-            gateway_info.model,
-            gateway_info.firmware_version,
-            gateway_info.hardware_version,
-        )
-    except DeviceException:
-        _LOGGER.error(
-            "DeviceException during setup of xiaomi gateway with host %s", host
-        )
+    connect_gateway_class = ConnectXiaomiGateway()
+    await hass.async_add_job(connect_gateway_class.async_connect_gateway(host, token))
+    gateway_info = connect_gateway_class.gateway_info
+
+    if gateway_info is None:
         return False
 
-    hass.data[DOMAIN][entry.entry_id] = gateway_device
+    hass.data[DOMAIN][entry.entry_id] = connect_gateway_class.gateway_device
 
     gateway_model = f"{gateway_info.model}-{gateway_info.hardware_version}"
 
