@@ -36,6 +36,14 @@ def removed_title_validator(config, integration, value):
     return value
 
 
+def lowercase_validator(value):
+    """Validate value is lowercase."""
+    if value.lower() != value:
+        raise vol.Invalid("Needs to be lowercase")
+
+    return value
+
+
 def gen_data_entry_schema(
     *,
     config: Config,
@@ -92,7 +100,8 @@ def gen_strings_schema(config: Config, integration: Integration):
                 vol.Optional("trigger_subtype"): {str: str},
             },
             vol.Optional("state"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(str)
+                cv.schema_with_slug_keys(str, slug_validator=lowercase_validator),
+                slug_validator=vol.Any("_", cv.slug),
             ),
         }
     )
@@ -115,10 +124,23 @@ def gen_auth_schema(config: Config, integration: Integration):
 
 
 def gen_platform_strings_schema(config: Config, integration: Integration):
-    """Generate platform strings schema like strings.sensor.json."""
+    """Generate platform strings schema like strings.sensor.json.
+
+    Example of valid data:
+    {
+        "state": {
+            "moon__phase": {
+                "full": "Full"
+            }
+        }
+    }
+    """
 
     def device_class_validator(value):
-        """Key validator."""
+        """Key validator for platorm states.
+
+        Platform states are only allowed to provide states for device classes they prefix.
+        """
         if not value.startswith(f"{integration.domain}__"):
             raise vol.Invalid(
                 f"Device class need to start with '{integration.domain}__'. Key {value} is invalid"
@@ -128,14 +150,17 @@ def gen_platform_strings_schema(config: Config, integration: Integration):
         slugged = slugify(slug_friendly)
 
         if slug_friendly != slugged:
-            raise vol.Invalid(f"invalid device class {value}")
+            raise vol.Invalid(
+                f"invalid device class {value}. After domain__, needs to be all lowercase, no spaces."
+            )
 
         return value
 
     return vol.Schema(
         {
             vol.Optional("state"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(str), slug_validator=device_class_validator
+                cv.schema_with_slug_keys(str, slug_validator=lowercase_validator),
+                slug_validator=device_class_validator,
             )
         }
     )

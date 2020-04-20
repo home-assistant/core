@@ -1,9 +1,13 @@
 """Migrate things."""
 import json
+import pathlib
 from pprint import pprint
+import re
 
 from .const import CORE_PROJECT_ID, FRONTEND_PROJECT_ID, INTEGRATIONS_DIR
 from .lokalise import get_api
+
+FRONTEND_REPO = pathlib.Path("../frontend/")
 
 
 def create_lookup(results):
@@ -169,24 +173,113 @@ def interactive_update():
         print()
 
 
+STATE_REWRITE = {
+    "Off": "[%key:common::state::off%]",
+    "On": "[%key:common::state::on%]",
+    "Unknown": "[%key:common::state::unknown%]",
+    "Unavailable": "[%key:common::state::unavailable%]",
+    "Open": "[%key:common::state::open%]",
+    "Closed": "[%key:common::state::closed%]",
+    "Connected": "[%key:common::state::connected%]",
+    "Disconnected": "[%key:common::state::disconnected%]",
+    "Locked": "[%key:common::state::locked%]",
+    "Unlocked": "[%key:common::state::unlocked%]",
+    "Active": "[%key:common::state::idle%]",
+    "Idle": "[%key:common::state::auto%]",
+    "Standby": "[%key:common::state::standby%]",
+    "Home": "[%key:common::state::home%]",
+    "Away": "[%key:common::state::not_home%]",
+    "[%key:state::default::off%]": "[%key:common::state::off%]",
+    "[%key:state::default::on%]": "[%key:common::state::on%]",
+    "[%key:state::cover::open%]": "[%key:common::state::open%]",
+    "[%key:state::cover::closed%]": "[%key:common::state::closed%]",
+    "[%key:state::lock::locked%]": "[%key:common::state::locked%]",
+    "[%key:state::lock::unlocked%]": "[%key:common::state::unlocked%]",
+}
+SKIP_DOMAIN = {"default", "scene"}
+STATES_WITH_DEV_CLASS = {"binary_sensor", "zwave"}
+
+
+def find_frontend_states():
+    """Find frontend states.
+
+    Source key -> target key
+    Add key to integrations strings.json
+    """
+    frontend_states = json.loads(
+        (FRONTEND_REPO / "src/translations/en.json").read_text()
+    )["state"]
+
+    # domain => state object
+    to_write = {}
+
+    for domain, states in frontend_states.items():
+        if domain in SKIP_DOMAIN:
+            continue
+
+        if domain in STATES_WITH_DEV_CLASS:
+            domain_to_write = dict(states)
+
+            # Rewrite "default" device class to _
+            if "default" in domain_to_write:
+                domain_to_write["_"] = domain_to_write.pop("default")
+        else:
+            domain_to_write = {"_": states}
+
+        # Map out common values with
+        for dev_class_states in domain_to_write.values():
+            for key, value in dev_class_states.copy().items():
+                if value in STATE_REWRITE:
+                    dev_class_states[key] = STATE_REWRITE[value]
+                    continue
+
+                match = re.match(r"\[\%key:state::(\w+)::(.+)\%\]", value)
+
+                if not match:
+                    continue
+
+                dev_class_states[key] = "[%key:component::{}::state::{}%]".format(
+                    *match.groups()
+                )
+
+        to_write[domain] = domain_to_write
+
+        # TODO create to_migrate dict for migrate_project_keys_translations
+
+    for domain, state in to_write.items():
+        strings = INTEGRATIONS_DIR / domain / "strings.json"
+        if strings.is_file():
+            content = json.loads(strings.read_text())
+        else:
+            content = {}
+
+        content["state"] = state
+        strings.write_text(json.dumps(content, indent=2) + "\n")
+
+
 def run():
     """Migrate translations."""
-    rename_keys(
-        CORE_PROJECT_ID,
-        {
-            "component::moon::platform::sensor::state::new_moon": "component::moon::platform::sensor::state::moon__phase::new_moon",
-            "component::moon::platform::sensor::state::waxing_crescent": "component::moon::platform::sensor::state::moon__phase::waxing_crescent",
-            "component::moon::platform::sensor::state::first_quarter": "component::moon::platform::sensor::state::moon__phase::first_quarter",
-            "component::moon::platform::sensor::state::waxing_gibbous": "component::moon::platform::sensor::state::moon__phase::waxing_gibbous",
-            "component::moon::platform::sensor::state::full_moon": "component::moon::platform::sensor::state::moon__phase::full_moon",
-            "component::moon::platform::sensor::state::waning_gibbous": "component::moon::platform::sensor::state::moon__phase::waning_gibbous",
-            "component::moon::platform::sensor::state::last_quarter": "component::moon::platform::sensor::state::moon__phase::last_quarter",
-            "component::moon::platform::sensor::state::waning_crescent": "component::moon::platform::sensor::state::moon__phase::waning_crescent",
-            "component::season::platform::sensor::state::spring": "component::season::platform::sensor::state::season__season__::spring",
-            "component::season::platform::sensor::state::summer": "component::season::platform::sensor::state::season__season__::summer",
-            "component::season::platform::sensor::state::autumn": "component::season::platform::sensor::state::season__season__::autumn",
-            "component::season::platform::sensor::state::winter": "component::season::platform::sensor::state::season__season__::winter",
-        },
-    )
+    # Import new common keys
+    # migrate_project_keys_translations(
+    #     FRONTEND_PROJECT_ID,
+    #     CORE_PROJECT_ID,
+    #     {
+    #         "state::default::off": "common::state::off",
+    #         "state::default::on": "common::state::on",
+    #         "state::default::unknown": "common::state::unknown",
+    #         "state::default::unavailable": "common::state::unavailable",
+    #         "state::cover::open": "common::state::open",
+    #         "state::cover::closed": "common::state::closed",
+    #         "state::binary_sensor::connectivity::on": "common::state::connected",
+    #         "state::binary_sensor::connectivity::off": "common::state::disconnected",
+    #         "state::lock::locked": "common::state::locked",
+    #         "state::lock::unlocked": "common::state::unlocked",
+    #         "state::camera::idle": "common::state::idle",
+    #         "state::climate::auto": "common::state::auto",
+    #         "state::media_player::standby": "common::state::standby",
+    #     },
+    # )
+
+    find_frontend_states()
 
     return 0
