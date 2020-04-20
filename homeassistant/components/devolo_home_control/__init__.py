@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components import switch as ha_switch
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -69,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             gateway_id=gateway_id, url=mprm_url
         )
     except ConnectionError:
-        return False
+        raise ConfigEntryNotReady
 
     for platform in PLATFORMS:
         hass.async_create_task(
