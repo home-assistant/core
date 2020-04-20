@@ -9,8 +9,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
 
-logging.basicConfig(level=logging.DEBUG)
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -20,10 +18,10 @@ async def async_setup_entry(
     """Get all devices and setup the switch devices via config entry."""
     devices = hass.data[DOMAIN]["homecontrol"].binary_switch_devices
 
-    devices_list = []
+    entities = []
     for device in devices:
         for i in range(len(device.binary_switch_property)):
-            devices_list.append(
+            entities.append(
                 DevoloSwitch(
                     hass=hass,
                     device_instance=device,
@@ -32,7 +30,7 @@ async def async_setup_entry(
                     ),
                 )
             )
-    async_add_entities(devices_list, False)
+    async_add_entities(entities, False)
 
 
 class DevoloSwitch(SwitchDevice):
@@ -85,7 +83,7 @@ class DevoloSwitch(SwitchDevice):
     def device_info(self):
         """Return the device info."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
+            "identifiers": {(DOMAIN, self._device_instance.uid)},
             "name": self.name,
             "manufacturer": self._brand,
             "model": self._model,
@@ -144,7 +142,7 @@ class DevoloSwitch(SwitchDevice):
         else:
             _LOGGER.debug("No valid message received")
             _LOGGER.debug(message)
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
 
 class Subscriber:
