@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "invalid_webhook_url": "Home Assistant ist nicht richtig konfiguriert, um Updates von SmartThings zu erhalten. Die Webhook-URL ist ung\u00fcltig: \n > {webhook_url} \n\n Bitte aktualisieren Sie Ihre Konfiguration gem\u00e4\u00df den [Anweisungen] ({component_url}), starten Sie den Home Assistant neu und versuchen Sie es erneut.",
+            "no_available_locations": "In Home Assistant sind keine SmartThings-Standorte zum Einrichten verf\u00fcgbar."
+        },
         "error": {
             "app_setup_error": "SmartApp kann nicht eingerichtet werden. Bitte versuche es erneut.",
             "token_forbidden": "Das Token verf\u00fcgt nicht \u00fcber die erforderlichen OAuth-Bereiche.",
@@ -15,12 +19,14 @@
                 "data": {
                     "access_token": "Zugangstoken"
                 },
+                "description": "Bitte geben Sie ein SmartThings [Personal Access Token] ({token_url}) ein, das gem\u00e4\u00df den [Anweisungen] ({component_url}) erstellt wurde. Dies wird zur Erstellung der Home Assistant-Integration in Ihrem SmartThings-Konto verwendet.",
                 "title": "Gib den pers\u00f6nlichen Zugangstoken an"
             },
             "select_location": {
                 "data": {
                     "location_id": "Standort"
                 },
+                "description": "Bitte w\u00e4hlen Sie den SmartThings-Standort aus, den Sie Home Assistant hinzuf\u00fcgen m\u00f6chten. Wir \u00f6ffnen dann ein neues Fenster und bitten Sie, sich anzumelden und die Installation der Home Assistant-Integration am ausgew\u00e4hlten Standort zu autorisieren.",
                 "title": "Standort ausw\u00e4hlen"
             },
             "user": {

@@ -4,6 +4,8 @@
             "already_configured": "Dieser Drucker ist bereits konfiguriert",
             "connection_error": "Verbindung zum Drucker fehlgeschlagen.",
             "connection_upgrade": "Verbindung zum Drucker fehlgeschlagen, da ein Verbindungsupgrade erforderlich ist.",
+            "ipp_error": "IPP-Fehler festgestellt.",
+            "ipp_version_error": "IPP-Version wird vom Drucker nicht unterst\u00fctzt.",
             "parse_error": "Antwort vom Drucker konnte nicht analysiert werden."
         },
         "error": {

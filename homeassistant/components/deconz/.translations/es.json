@@ -29,6 +29,19 @@
                     "host": "Host",
                     "port": "Puerto"
                 }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Host",
+                    "port": "Puerto"
+                },
+                "title": "Configurar la puerta de enlace deCONZ"
+            },
+            "user": {
+                "data": {
+                    "host": "Seleccione la puerta de enlace descubierta deCONZ"
+                },
+                "title": "Seleccione la puerta de enlace deCONZ"
             }
         }
     },

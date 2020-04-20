@@ -4,10 +4,18 @@
             "already_configured": "\u4e3b\u6a5f\u7aef\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
-            "login": "\u767b\u5165\u932f\u8aa4\uff1a\u8acb\u78ba\u8a8d\u96fb\u5b50\u90f5\u4ef6\u8207\u5bc6\u78bc"
+            "login": "\u767b\u5165\u932f\u8aa4\uff1a\u8acb\u78ba\u8a8d\u96fb\u5b50\u90f5\u4ef6\u8207\u5bc6\u78bc",
+            "missing_data": "\u7f3a\u5c11\u8cc7\u6599\uff1a\u8acb\u7a0d\u5f8c\u91cd\u8a66\u6216\u4f7f\u7528\u5176\u4ed6\u8a2d\u5b9a",
+            "otp_failed": "\u5169\u6b65\u9a5f\u9a57\u8b49\u5931\u6557\uff0c\u8acb\u91cd\u65b0\u53d6\u5f97\u4ee3\u78bc\u5f8c\u91cd\u8a66"
         },
         "flow_title": "\u7fa4\u6689 DSM {name} ({host})",
         "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "\u4ee3\u78bc"
+                },
+                "title": "Synology DSM\uff1a\u96d9\u91cd\u9a57\u8b49"
+            },
             "link": {
                 "data": {
                     "api_version": "DSM \u7248\u672c",

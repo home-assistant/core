@@ -5,6 +5,7 @@
         },
         "error": {
             "login": "Error d\u2019inici de sessi\u00f3: comprova el nom d'usuari i la contrasenya",
+            "missing_data": "Falten dades: torna-ho a provar m\u00e9s tard o prova una altra configuraci\u00f3 diferent",
             "otp_failed": "L'autenticaci\u00f3 en dos passos ha fallat, torna-ho a provar amb un nou codi"
         },
         "flow_title": "Synology DSM {name} ({host})",

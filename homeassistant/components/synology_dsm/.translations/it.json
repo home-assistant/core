@@ -4,10 +4,18 @@
             "already_configured": "Host gi\u00e0 configurato"
         },
         "error": {
-            "login": "Errore di accesso: si prega di controllare il nome utente e la password"
+            "login": "Errore di accesso: si prega di controllare il nome utente e la password",
+            "missing_data": "Dati mancanti: si prega di riprovare pi\u00f9 tardi o un'altra configurazione",
+            "otp_failed": "Autenticazione in due fasi fallita, riprovare con un nuovo codice di accesso"
         },
         "flow_title": "Synology DSM {nome} ({host})",
         "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Codice"
+                },
+                "title": "Synology DSM: autenticazione in due fasi"
+            },
             "link": {
                 "data": {
                     "api_version": "Versione DSM",
