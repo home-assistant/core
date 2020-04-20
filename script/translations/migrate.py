@@ -51,30 +51,53 @@ def rename_keys(project_id, to_migrate):
     pprint(lokalise.keys_bulk_update(updates))
 
 
+def list_keys_helper(lokalise, keys, params={}, *, validate=True):
+    """List keys in chunks so it doesn't exceed max URL length."""
+    results = []
+
+    for i in range(0, len(keys), 100):
+        filter_keys = keys[i : i + 100]
+        from_key_data = lokalise.keys_list(
+            {
+                **params,
+                "filter_keys": ",".join(filter_keys),
+                "limit": len(filter_keys) + 1,
+            }
+        )
+
+        if len(from_key_data) == len(filter_keys) or not validate:
+            results.extend(from_key_data)
+            continue
+
+        print(
+            f"Lookin up keys in Lokalise returns {len(from_key_data)} results, expected {len(keys)}"
+        )
+        searched = set(filter_keys)
+        returned = set(create_lookup(from_key_data))
+        print("Not found:", ", ".join(searched - returned))
+        raise ValueError
+
+    return results
+
+
 def migrate_project_keys_translations(from_project_id, to_project_id, to_migrate):
     """Migrate keys and translations from one project to another.
 
     to_migrate is Dict[from_key] = to_key.
     """
     from_lokalise = get_api(from_project_id)
-    to_lokalise = get_api(to_project_id, True)
-
-    from_key_data = from_lokalise.keys_list(
-        {"filter_keys": ",".join(to_migrate), "include_translations": 1}
-    )
-    if len(from_key_data) != len(to_migrate):
-        print(
-            f"Lookin up keys in Lokalise returns {len(from_key_data)} results, expected {len(to_migrate)}"
-        )
-        return
-
-    from_key_lookup = create_lookup(from_key_data)
+    to_lokalise = get_api(to_project_id)
 
     # Fetch keys in target
     # We are going to skip migrating existing keys
-    to_key_data = to_lokalise.keys_list(
-        {"filter_keys": ",".join(to_migrate.values()), "include_translations": 1}
-    )
+    print("Checking which target keys exist..")
+    try:
+        to_key_data = list_keys_helper(
+            to_lokalise, list(to_migrate.values()), validate=False
+        )
+    except ValueError:
+        return
+
     existing = set(create_lookup(to_key_data))
 
     missing = [key for key in to_migrate.values() if key not in existing]
@@ -82,6 +105,19 @@ def migrate_project_keys_translations(from_project_id, to_project_id, to_migrate
     if not missing:
         print("All keys to migrate exist already, nothing to do")
         return
+
+    # Fetch keys whose translations we're importing
+    print("Fetch translations that we're importing..")
+    try:
+        from_key_data = list_keys_helper(
+            from_lokalise,
+            [key for key, value in to_migrate.items() if value not in existing],
+            {"include_translations": 1},
+        )
+    except ValueError:
+        return
+
+    from_key_lookup = create_lookup(from_key_data)
 
     print("Creating", ", ".join(missing))
     to_key_lookup = create_lookup(
@@ -303,7 +339,7 @@ def run():
     #         "state::binary_sensor::connectivity::off": "common::state::disconnected",
     #         "state::lock::locked": "common::state::locked",
     #         "state::lock::unlocked": "common::state::unlocked",
-    #         "state::camera::active": "common::state::active",
+    #         "state::timer::active": "common::state::active",
     #         "state::camera::idle": "common::state::idle",
     #         "state::media_player::standby": "common::state::standby",
     #         "state::media_player::paused": "common::state::paused",

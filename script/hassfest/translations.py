@@ -229,7 +229,6 @@ def validate_translation_file(config: Config, integration: Integration, all_stri
         return
 
     # Validate references
-
     for reference in references:
         parts = reference["ref"].split("::")
         search = all_strings
