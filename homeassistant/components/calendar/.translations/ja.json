@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "off": "\u30aa\u30d5",
+            "on": "\u30aa\u30f3"
+        }
+    },
     "title": "\u30ab\u30ec\u30f3\u30c0\u30fc"
 }

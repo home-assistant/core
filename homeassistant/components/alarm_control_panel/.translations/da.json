@@ -15,5 +15,19 @@
             "triggered": "{entity_name} udl\u00f8st"
         }
     },
+    "state": {
+        "_": {
+            "armed": "Tilkoblet",
+            "armed_away": "Tilkoblet ude",
+            "armed_custom_bypass": "Tilkoblet brugerdefineret bypass",
+            "armed_home": "Tilkoblet hjemme",
+            "armed_night": "Tilkoblet nat",
+            "arming": "Tilkobler",
+            "disarmed": "Frakoblet",
+            "disarming": "Frakobler",
+            "pending": "Afventer",
+            "triggered": "Udl\u00f8st"
+        }
+    },
     "title": "Alarmkontrolpanel"
 }

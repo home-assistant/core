@@ -17,5 +17,17 @@
                 "title": "Configurar o Z-Wave"
             }
         }
+    },
+    "state": {
+        "_": {
+            "dead": "Morto",
+            "initializing": "Iniciando",
+            "ready": "Pronto",
+            "sleeping": "Dormindo"
+        },
+        "query_stage": {
+            "dead": "Morto ({query_stage})",
+            "initializing": "Iniciando ( {query_stage} )"
+        }
     }
 }

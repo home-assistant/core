@@ -1,3 +1,12 @@
 {
+    "state": {
+        "_": {
+            "closed": "\u0e1b\u0e34\u0e14",
+            "closing": "\u0e01\u0e33\u0e25\u0e31\u0e07\u0e1b\u0e34\u0e14",
+            "open": "\u0e40\u0e1b\u0e34\u0e14",
+            "opening": "\u0e01\u0e33\u0e25\u0e31\u0e07\u0e40\u0e1b\u0e34\u0e14",
+            "stopped": "\u0e2b\u0e22\u0e38\u0e14"
+        }
+    },
     "title": "\u0e21\u0e48\u0e32\u0e19"
 }

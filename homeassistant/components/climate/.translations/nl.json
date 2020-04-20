@@ -14,5 +14,16 @@
             "hvac_mode_changed": "{entity_name} HVAC-modus gewijzigd"
         }
     },
+    "state": {
+        "_": {
+            "auto": "Auto",
+            "cool": "Koelen",
+            "dry": "Droog",
+            "fan_only": "Alleen ventilatie",
+            "heat": "Verwarmen",
+            "heat_cool": "Verwarmen/Koelen",
+            "off": "Uit"
+        }
+    },
     "title": "Klimaat"
 }

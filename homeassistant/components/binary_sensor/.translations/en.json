@@ -89,5 +89,87 @@
             "vibration": "{entity_name} started detecting vibration"
         }
     },
+    "state": {
+        "_": {
+            "off": "Off",
+            "on": "On"
+        },
+        "battery": {
+            "off": "Normal",
+            "on": "Low"
+        },
+        "cold": {
+            "off": "Normal",
+            "on": "Cold"
+        },
+        "connectivity": {
+            "off": "Disconnected",
+            "on": "Connected"
+        },
+        "door": {
+            "off": "Closed",
+            "on": "Open"
+        },
+        "garage_door": {
+            "off": "Closed",
+            "on": "Open"
+        },
+        "gas": {
+            "off": "Clear",
+            "on": "Detected"
+        },
+        "heat": {
+            "off": "Normal",
+            "on": "Hot"
+        },
+        "lock": {
+            "off": "Locked",
+            "on": "Unlocked"
+        },
+        "moisture": {
+            "off": "Dry",
+            "on": "Wet"
+        },
+        "motion": {
+            "off": "Clear",
+            "on": "Detected"
+        },
+        "occupancy": {
+            "off": "Clear",
+            "on": "Detected"
+        },
+        "opening": {
+            "off": "Closed",
+            "on": "Open"
+        },
+        "presence": {
+            "off": "[%key:component::device_tracker::state::not_home%]",
+            "on": "[%key:component::device_tracker::state::home%]"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Problem"
+        },
+        "safety": {
+            "off": "Safe",
+            "on": "Unsafe"
+        },
+        "smoke": {
+            "off": "Clear",
+            "on": "Detected"
+        },
+        "sound": {
+            "off": "Clear",
+            "on": "Detected"
+        },
+        "vibration": {
+            "off": "Clear",
+            "on": "Detected"
+        },
+        "window": {
+            "off": "Closed",
+            "on": "Open"
+        }
+    },
     "title": "Binary sensor"
 }

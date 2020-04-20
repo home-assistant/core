@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "locked": "Blocat",
+            "unlocked": "Deblocat"
+        }
+    },
     "title": "Blocare"
 }

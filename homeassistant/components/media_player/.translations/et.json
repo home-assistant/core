@@ -1,3 +1,13 @@
 {
+    "state": {
+        "_": {
+            "idle": "Ootel",
+            "off": "V\u00e4ljas",
+            "on": "Sees",
+            "paused": "Peatatud",
+            "playing": "M\u00e4ngib",
+            "standby": "Unere\u017eiimil"
+        }
+    },
     "title": "Meediam\u00e4ngija"
 }

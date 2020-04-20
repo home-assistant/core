@@ -1,3 +1,10 @@
 {
+    "state": {
+        "_": {
+            "idle": "V pripravljenosti",
+            "recording": "Snemanje",
+            "streaming": "Pretakanje"
+        }
+    },
     "title": "Kamera"
 }

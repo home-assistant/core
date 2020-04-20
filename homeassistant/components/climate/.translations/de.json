@@ -14,5 +14,16 @@
             "hvac_mode_changed": "{entity_name} HVAC-Modus ge\u00e4ndert"
         }
     },
+    "state": {
+        "_": {
+            "auto": "Automatisch",
+            "cool": "K\u00fchlen",
+            "dry": "Entfeuchten",
+            "fan_only": "Nur Ventilator",
+            "heat": "Heizen",
+            "heat_cool": "Heizen/K\u00fchlen",
+            "off": "Aus"
+        }
+    },
     "title": "Klima"
 }

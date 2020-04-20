@@ -23,5 +23,11 @@
             "value": "Cambios de valor de la {entity_name}"
         }
     },
+    "state": {
+        "_": {
+            "off": "Apagado",
+            "on": "Encendido"
+        }
+    },
     "title": "Sensor"
 }

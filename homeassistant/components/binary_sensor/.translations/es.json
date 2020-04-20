@@ -89,5 +89,87 @@
             "vibration": "{entity_name} empez\u00f3 a detectar vibraciones"
         }
     },
+    "state": {
+        "_": {
+            "off": "Apagado",
+            "on": "Encendido"
+        },
+        "battery": {
+            "off": "Normal",
+            "on": "Bajo"
+        },
+        "cold": {
+            "off": "Normal",
+            "on": "Frio"
+        },
+        "connectivity": {
+            "off": "Desconectado",
+            "on": "Conectado"
+        },
+        "door": {
+            "off": "Cerrada",
+            "on": "Abierta"
+        },
+        "garage_door": {
+            "off": "Cerrada",
+            "on": "Abierta"
+        },
+        "gas": {
+            "off": "No detectado",
+            "on": "Detectado"
+        },
+        "heat": {
+            "off": "Normal",
+            "on": "Caliente"
+        },
+        "lock": {
+            "off": "Bloqueado",
+            "on": "Desbloqueado"
+        },
+        "moisture": {
+            "off": "Seco",
+            "on": "H\u00famedo"
+        },
+        "motion": {
+            "off": "Sin movimiento",
+            "on": "Detectado"
+        },
+        "occupancy": {
+            "off": "No detectado",
+            "on": "Detectado"
+        },
+        "opening": {
+            "off": "Cerrado",
+            "on": "Abierto"
+        },
+        "presence": {
+            "off": "Fuera de casa",
+            "on": "En casa"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Problema"
+        },
+        "safety": {
+            "off": "Seguro",
+            "on": "Inseguro"
+        },
+        "smoke": {
+            "off": "No detectado",
+            "on": "Detectado"
+        },
+        "sound": {
+            "off": "No detectado",
+            "on": "Detectado"
+        },
+        "vibration": {
+            "off": "No detectado",
+            "on": "Detectado"
+        },
+        "window": {
+            "off": "Cerrada",
+            "on": "Abierta"
+        }
+    },
     "title": "Sensor binario"
 }

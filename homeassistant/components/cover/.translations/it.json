@@ -25,5 +25,14 @@
             "tilt_position": "{entity_name} cambiamenti della posizione d'inclinazione"
         }
     },
+    "state": {
+        "_": {
+            "closed": "Chiuso",
+            "closing": "In chiusura",
+            "open": "Aperto",
+            "opening": "In apertura",
+            "stopped": "Arrestato"
+        }
+    },
     "title": "Chiusure"
 }

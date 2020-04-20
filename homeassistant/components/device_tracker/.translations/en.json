@@ -5,5 +5,11 @@
             "is_not_home": "{entity_name} is not home"
         }
     },
+    "state": {
+        "_": {
+            "home": "Home",
+            "not_home": "Away"
+        }
+    },
     "title": "Device tracker"
 }

@@ -1,3 +1,15 @@
 {
+    "state": {
+        "_": {
+            "cleaning": "Imuroi",
+            "docked": "Telakoituna",
+            "error": "Virhe",
+            "idle": "Lepotilassa",
+            "off": "Pois p\u00e4\u00e4lt\u00e4",
+            "on": "P\u00e4\u00e4ll\u00e4",
+            "paused": "Pys\u00e4ytetty",
+            "returning": "Palaamassa telakkaan"
+        }
+    },
     "title": "Imuri"
 }

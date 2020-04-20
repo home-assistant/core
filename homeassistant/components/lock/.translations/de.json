@@ -14,5 +14,11 @@
             "unlocked": "{entity_name} entsperrt"
         }
     },
+    "state": {
+        "_": {
+            "locked": "Verriegelt",
+            "unlocked": "Entriegelt"
+        }
+    },
     "title": "Schloss"
 }

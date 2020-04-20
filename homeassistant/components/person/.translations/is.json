@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "home": "Heima",
+            "not_home": "Fjarverandi"
+        }
+    },
     "title": "Pers\u00f3na"
 }

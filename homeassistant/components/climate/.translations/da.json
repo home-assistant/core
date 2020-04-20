@@ -14,5 +14,16 @@
             "hvac_mode_changed": "{entity_name} klimaanl\u00e6gstilstand \u00e6ndret"
         }
     },
+    "state": {
+        "_": {
+            "auto": "Auto",
+            "cool": "K\u00f8l",
+            "dry": "T\u00f8r",
+            "fan_only": "Kun bl\u00e6ser",
+            "heat": "Varme",
+            "heat_cool": "Opvarm/k\u00f8l",
+            "off": "Fra"
+        }
+    },
     "title": "Klima"
 }

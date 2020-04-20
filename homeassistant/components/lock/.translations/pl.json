@@ -14,5 +14,11 @@
             "unlocked": "nast\u0105pi otwarcie {entity_name}"
         }
     },
+    "state": {
+        "_": {
+            "locked": "zamkni\u0119ty",
+            "unlocked": "otwarty"
+        }
+    },
     "title": "Zamek"
 }

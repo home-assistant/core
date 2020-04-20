@@ -17,5 +17,11 @@
             "turned_on": "{entity_name} enc\u00e8s"
         }
     },
+    "state": {
+        "_": {
+            "off": "Apagada",
+            "on": "Encesa"
+        }
+    },
     "title": "Llums"
 }

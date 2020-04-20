@@ -22,5 +22,19 @@
             "triggered": "{entity_name} disparat/ada"
         }
     },
+    "state": {
+        "_": {
+            "armed": "Activada",
+            "armed_away": "Activada, mode fora",
+            "armed_custom_bypass": "Activada, bypass personalitzat",
+            "armed_home": "Activada, mode a casa",
+            "armed_night": "Activada, mode nocturn",
+            "arming": "Activant",
+            "disarmed": "Desactivada",
+            "disarming": "Desactivant",
+            "pending": "Pendent",
+            "triggered": "Disparada"
+        }
+    },
     "title": "Panell de control d'alarma"
 }

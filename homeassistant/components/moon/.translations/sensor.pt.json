@@ -1,7 +1,9 @@
 {
     "state": {
-        "first_quarter": "Quarto crescente",
-        "full_moon": "Lua cheia",
-        "new_moon": "Lua nova"
+        "moon__phase": {
+            "first_quarter": "Quarto crescente",
+            "full_moon": "Lua cheia",
+            "new_moon": "Lua nova"
+        }
     }
 }

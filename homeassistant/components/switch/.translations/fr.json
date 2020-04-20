@@ -14,5 +14,11 @@
             "turned_on": "{entity_name} allum\u00e9"
         }
     },
+    "state": {
+        "_": {
+            "off": "Inactif",
+            "on": "On"
+        }
+    },
     "title": "Interrupteur"
 }

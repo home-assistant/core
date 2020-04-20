@@ -13,5 +13,17 @@
             "docked": "{entity_name} an der Statioun"
         }
     },
+    "state": {
+        "_": {
+            "cleaning": "Botzt",
+            "docked": "Agedockt",
+            "error": "Feeler",
+            "idle": "Waart",
+            "off": "Aus",
+            "on": "Un",
+            "paused": "Pauseiert",
+            "returning": "K\u00ebnnt zur Statioun zer\u00e9ck"
+        }
+    },
     "title": "Staubsauger"
 }

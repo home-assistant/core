@@ -1,3 +1,15 @@
 {
+    "state": {
+        "_": {
+            "cleaning": "Notiek uzkop\u0161ana",
+            "docked": "Pie doka",
+            "error": "K\u013c\u016bda",
+            "idle": "D\u012bkst\u0101v\u0113",
+            "off": "Izsl\u0113gts",
+            "on": "Iesl\u0113gts",
+            "paused": "Aptur\u0113ts",
+            "returning": "Ce\u013c\u0101 pie doka"
+        }
+    },
     "title": "Putek\u013cs\u016bc\u0113js"
 }

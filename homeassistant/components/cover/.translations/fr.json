@@ -20,5 +20,14 @@
             "tilt_position": "{entity_name} changement d'inclinaison"
         }
     },
+    "state": {
+        "_": {
+            "closed": "Ferm\u00e9",
+            "closing": "Fermeture",
+            "open": "Ouvert",
+            "opening": "Ouverture",
+            "stopped": "Arr\u00eat\u00e9"
+        }
+    },
     "title": "Volets"
 }

@@ -9,5 +9,14 @@
             "is_tilt_position": "pozice naklon\u011bn\u00ed {entity_name} je"
         }
     },
+    "state": {
+        "_": {
+            "closed": "Zav\u0159eno",
+            "closing": "Zav\u00edr\u00e1n\u00ed",
+            "open": "Otev\u0159eno",
+            "opening": "Otev\u00edr\u00e1n\u00ed",
+            "stopped": "Zastaveno"
+        }
+    },
     "title": "Roleta"
 }

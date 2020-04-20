@@ -1,8 +1,16 @@
 {
     "state": {
-        "autumn": "Tardor",
-        "spring": "Primavera",
-        "summer": "Estiu",
-        "winter": "Hivern"
+        "season__season": {
+            "autumn": "Tardor",
+            "spring": "Primavera",
+            "summer": "Estiu",
+            "winter": "Hivern"
+        },
+        "season__season__": {
+            "autumn": "Tardor",
+            "spring": "Primavera",
+            "summer": "Estiu",
+            "winter": "Hivern"
+        }
     }
 }

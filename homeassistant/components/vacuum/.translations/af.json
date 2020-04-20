@@ -1,3 +1,15 @@
 {
+    "state": {
+        "_": {
+            "cleaning": "Skoonmaak",
+            "docked": "Vasgemeer by hawe",
+            "error": "Fout",
+            "idle": "Onaktief",
+            "off": "Af",
+            "on": "Aan",
+            "paused": "Onderbreek",
+            "returning": "Oppad terug hawe toe"
+        }
+    },
     "title": "Vakuum"
 }

@@ -28,7 +28,7 @@
                 "data": {
                     "arp_ping": "ARP-ping enged\u00e9lyez\u00e9se",
                     "detection_time": "Otthoni intervallumk\u00e9nt vegye figyelembe",
-                    "force_dhcp": "A szkennel\u00e9s k\u00e9nyszer\u00edt\u00e9se DHCP seg\u00edts\u00e9g\u00e9vel"
+                    "force_dhcp": "A felder\u00edt\u00e9s k\u00e9nyszer\u00edt\u00e9se DHCP seg\u00edts\u00e9g\u00e9vel"
                 }
             }
         }

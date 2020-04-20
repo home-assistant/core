@@ -88,5 +88,6 @@
             "unsafe": "{entity_name} ble usikker",
             "vibration": "{entity_name} begynte \u00e5 oppdage vibrasjon"
         }
-    }
+    },
+    "title": "Bin\u00e6r sensor"
 }

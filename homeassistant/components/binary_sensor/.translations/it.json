@@ -89,5 +89,87 @@
             "vibration": "{entity_name} iniziato a rilevare le vibrazioni"
         }
     },
+    "state": {
+        "_": {
+            "off": "Spento",
+            "on": "Acceso"
+        },
+        "battery": {
+            "off": "Normale",
+            "on": "Basso"
+        },
+        "cold": {
+            "off": "Normale",
+            "on": "Freddo"
+        },
+        "connectivity": {
+            "off": "Disconnesso",
+            "on": "Connesso"
+        },
+        "door": {
+            "off": "Chiusa",
+            "on": "Aperta"
+        },
+        "garage_door": {
+            "off": "Chiusa",
+            "on": "Aperta"
+        },
+        "gas": {
+            "off": "Assente",
+            "on": "Rilevato"
+        },
+        "heat": {
+            "off": "Normale",
+            "on": "Caldo"
+        },
+        "lock": {
+            "off": "Bloccato",
+            "on": "Sbloccato"
+        },
+        "moisture": {
+            "off": "Asciutto",
+            "on": "Bagnato"
+        },
+        "motion": {
+            "off": "Assente",
+            "on": "Rilevato"
+        },
+        "occupancy": {
+            "off": "Vuoto",
+            "on": "Rilevato"
+        },
+        "opening": {
+            "off": "Chiuso",
+            "on": "Aperta"
+        },
+        "presence": {
+            "off": "Fuori casa",
+            "on": "A casa"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Problema"
+        },
+        "safety": {
+            "off": "Sicuro",
+            "on": "Non Sicuro"
+        },
+        "smoke": {
+            "off": "Assente",
+            "on": "Rilevato"
+        },
+        "sound": {
+            "off": "Assente",
+            "on": "Rilevato"
+        },
+        "vibration": {
+            "off": "Assente",
+            "on": "Rilevata"
+        },
+        "window": {
+            "off": "Chiusa",
+            "on": "Aperta"
+        }
+    },
     "title": "Sensore binario"
 }

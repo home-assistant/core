@@ -17,5 +17,17 @@
                 "title": "Konfiguracja Z-Wave"
             }
         }
+    },
+    "state": {
+        "_": {
+            "dead": "martwy",
+            "initializing": "inicjalizacja",
+            "ready": "gotowy",
+            "sleeping": "u\u015bpiony"
+        },
+        "query_stage": {
+            "dead": "martwy ({query_stage})",
+            "initializing": "inicjalizacja ({query_stage})"
+        }
     }
 }

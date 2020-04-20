@@ -17,5 +17,14 @@
             "tilt_position": "{entity_name} lutningsposition \u00e4ndras"
         }
     },
+    "state": {
+        "_": {
+            "closed": "St\u00e4ngd",
+            "closing": "St\u00e4nger",
+            "open": "\u00d6ppen",
+            "opening": "\u00d6ppnar",
+            "stopped": "Stoppad"
+        }
+    },
     "title": "Rullgardin"
 }

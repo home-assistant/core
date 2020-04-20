@@ -23,5 +23,11 @@
             "value": "{entity_name} waarde gewijzigd"
         }
     },
+    "state": {
+        "_": {
+            "off": "Uit",
+            "on": "Aan"
+        }
+    },
     "title": "Sensor"
 }

@@ -14,5 +14,11 @@
             "unlocked": "{entity_name}\u5df2\u89e3\u9396"
         }
     },
+    "state": {
+        "_": {
+            "locked": "\u5df2\u4e0a\u9396",
+            "unlocked": "\u5df2\u89e3\u9396"
+        }
+    },
     "title": "\u9580\u9396"
 }

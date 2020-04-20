@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "off": "Desativado",
+            "on": "Ligado"
+        }
+    },
     "title": "Script"
 }

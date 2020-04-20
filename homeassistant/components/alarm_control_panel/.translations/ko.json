@@ -22,5 +22,19 @@
             "triggered": "{entity_name} \uc774(\uac00) \ud2b8\ub9ac\uac70\ub420 \ub54c"
         }
     },
+    "state": {
+        "_": {
+            "armed": "\uacbd\ube44\uc911",
+            "armed_away": "\uacbd\ube44\uc911(\uc678\ucd9c)",
+            "armed_custom_bypass": "\uacbd\ube44\uc911(\uc0ac\uc6a9\uc790 \uc6b0\ud68c)",
+            "armed_home": "\uacbd\ube44\uc911(\uc7ac\uc2e4)",
+            "armed_night": "\uacbd\ube44\uc911(\uc57c\uac04)",
+            "arming": "\uacbd\ube44\uc911",
+            "disarmed": "\ud574\uc81c\ub428",
+            "disarming": "\ud574\uc81c\uc911",
+            "pending": "\ubcf4\ub958\uc911",
+            "triggered": "\uc791\ub3d9\ub428"
+        }
+    },
     "title": "\uc54c\ub78c\uc81c\uc5b4\ud310"
 }

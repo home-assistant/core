@@ -89,5 +89,87 @@
             "vibration": "{entity_name} huet ugefaange Vibratiounen z'entdecken"
         }
     },
+    "state": {
+        "_": {
+            "off": "Aus",
+            "on": "Un"
+        },
+        "battery": {
+            "off": "Normal",
+            "on": "Niddreg"
+        },
+        "cold": {
+            "off": "Normal",
+            "on": "Kal"
+        },
+        "connectivity": {
+            "off": "Net Verbonnen",
+            "on": "Verbonnen"
+        },
+        "door": {
+            "off": "Zou",
+            "on": "Op"
+        },
+        "garage_door": {
+            "off": "Zou",
+            "on": "Op"
+        },
+        "gas": {
+            "off": "Kloer",
+            "on": "Detekt\u00e9iert"
+        },
+        "heat": {
+            "off": "Normal",
+            "on": "Waarm"
+        },
+        "lock": {
+            "off": "Gespaart",
+            "on": "Net gespaart"
+        },
+        "moisture": {
+            "off": "Dr\u00e9chen",
+            "on": "Naass"
+        },
+        "motion": {
+            "off": "Roueg",
+            "on": "Detekt\u00e9iert"
+        },
+        "occupancy": {
+            "off": "Roueg",
+            "on": "Detekt\u00e9iert"
+        },
+        "opening": {
+            "off": "Zou",
+            "on": "Op"
+        },
+        "presence": {
+            "off": "\u00cbnnerwee",
+            "on": "Doheem"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Problem"
+        },
+        "safety": {
+            "off": "S\u00e9cher",
+            "on": "Ons\u00e9cher"
+        },
+        "smoke": {
+            "off": "Kloer",
+            "on": "Detekt\u00e9iert"
+        },
+        "sound": {
+            "off": "Roueg",
+            "on": "Detekt\u00e9iert"
+        },
+        "vibration": {
+            "off": "Kloer",
+            "on": "Detekt\u00e9iert"
+        },
+        "window": {
+            "off": "Zou",
+            "on": "Op"
+        }
+    },
     "title": "Bin\u00e4ren Sensor"
 }

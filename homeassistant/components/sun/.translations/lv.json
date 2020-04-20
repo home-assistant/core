@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "above_horizon": "Virs horizonta",
+            "below_horizon": "Zem horizonta"
+        }
+    },
     "title": "Saule"
 }

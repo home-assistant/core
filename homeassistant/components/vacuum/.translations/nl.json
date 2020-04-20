@@ -13,5 +13,17 @@
             "docked": "{entity_name} is bij basisstation"
         }
     },
+    "state": {
+        "_": {
+            "cleaning": "Reinigen",
+            "docked": "Gedockt",
+            "error": "Fout",
+            "idle": "Inactief",
+            "off": "Uit",
+            "on": "Aan",
+            "paused": "Gepauseerd",
+            "returning": "Terugkeren naar dock"
+        }
+    },
     "title": "Stofzuigen"
 }

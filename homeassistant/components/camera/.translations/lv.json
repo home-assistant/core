@@ -1,3 +1,10 @@
 {
+    "state": {
+        "_": {
+            "idle": "D\u012bkst\u0101ve",
+            "recording": "Ieraksta",
+            "streaming": "Straum\u0113"
+        }
+    },
     "title": "Kamera"
 }

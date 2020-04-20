@@ -1,3 +1,10 @@
 {
+    "state": {
+        "_": {
+            "idle": "Inactivo",
+            "recording": "Grabando",
+            "streaming": "Streaming"
+        }
+    },
     "title": "C\u00e1mara"
 }

@@ -1,3 +1,17 @@
 {
+    "state": {
+        "_": {
+            "closed": "\u0110\u00e3 \u0111\u00f3ng",
+            "home": "\u1ede nh\u00e0",
+            "locked": "Kho\u00e1",
+            "not_home": "\u0110i v\u1eafng",
+            "off": "T\u1eaft",
+            "ok": "OK",
+            "on": "B\u1eadt",
+            "open": "M\u1edf",
+            "problem": "V\u1ea5n \u0111\u1ec1",
+            "unlocked": "M\u1edf kho\u00e1"
+        }
+    },
     "title": "Nh\u00f3m"
 }

@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "off": "Aus",
+            "on": "An"
+        }
+    },
     "title": "Boolescher Wert eingeben"
 }

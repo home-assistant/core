@@ -22,5 +22,19 @@
             "triggered": "{entity_name} triggered"
         }
     },
+    "state": {
+        "_": {
+            "armed": "Armed",
+            "armed_away": "Armed away",
+            "armed_custom_bypass": "Armed custom bypass",
+            "armed_home": "Armed home",
+            "armed_night": "Armed night",
+            "arming": "Arming",
+            "disarmed": "Disarmed",
+            "disarming": "Disarming",
+            "pending": "Pending",
+            "triggered": "Triggered"
+        }
+    },
     "title": "Alarm control panel"
 }

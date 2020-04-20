@@ -25,5 +25,14 @@
             "tilt_position": "{entity_name} tilt position changes"
         }
     },
+    "state": {
+        "_": {
+            "closed": "Closed",
+            "closing": "Closing",
+            "open": "Open",
+            "opening": "Opening",
+            "stopped": "Stopped"
+        }
+    },
     "title": "Cover"
 }

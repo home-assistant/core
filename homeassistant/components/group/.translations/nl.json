@@ -1,3 +1,17 @@
 {
+    "state": {
+        "_": {
+            "closed": "Gesloten",
+            "home": "Thuis",
+            "locked": "Vergrendeld",
+            "not_home": "Afwezig",
+            "off": "Uit",
+            "ok": "OK",
+            "on": "Aan",
+            "open": "Open",
+            "problem": "Probleem",
+            "unlocked": "Ontgrendeld"
+        }
+    },
     "title": "Groep"
 }

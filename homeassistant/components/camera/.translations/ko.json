@@ -1,3 +1,10 @@
 {
+    "state": {
+        "_": {
+            "idle": "\ub300\uae30\uc911",
+            "recording": "\ub179\ud654\uc911",
+            "streaming": "\uc2a4\ud2b8\ub9ac\ubc0d"
+        }
+    },
     "title": "\uce74\uba54\ub77c"
 }

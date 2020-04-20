@@ -6,5 +6,11 @@
             "unlock": "Desbloquear {entity_name}"
         }
     },
+    "state": {
+        "_": {
+            "locked": "Trancado",
+            "unlocked": "Destrancado"
+        }
+    },
     "title": "Trancar"
 }

@@ -29,6 +29,19 @@
                     "host": "Vert",
                     "port": ""
                 }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Vert",
+                    "port": "Port"
+                },
+                "title": "Konfigurer deCONZ gateway"
+            },
+            "user": {
+                "data": {
+                    "host": "Velg oppdaget deCONZ gateway"
+                },
+                "title": "Velg deCONZ gateway"
             }
         }
     },

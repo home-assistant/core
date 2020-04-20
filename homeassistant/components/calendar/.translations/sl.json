@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "off": "Izklju\u010den",
+            "on": "Vklopljen"
+        }
+    },
     "title": "Koledar"
 }

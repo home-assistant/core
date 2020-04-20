@@ -23,5 +23,11 @@
             "value": "valor {entity_name}"
         }
     },
+    "state": {
+        "_": {
+            "off": "Desligado",
+            "on": "Ligado"
+        }
+    },
     "title": "Sensor"
 }

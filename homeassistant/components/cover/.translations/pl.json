@@ -25,5 +25,14 @@
             "tilt_position": "zmieni si\u0119 pochylenie pokrywy {entity_name}"
         }
     },
+    "state": {
+        "_": {
+            "closed": "zamkni\u0119ta",
+            "closing": "zamykanie",
+            "open": "otwarta",
+            "opening": "otwieranie",
+            "stopped": "zatrzymany"
+        }
+    },
     "title": "Pokrywa"
 }

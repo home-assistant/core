@@ -14,5 +14,11 @@
             "turned_on": "{entity_name} t\u00e6ndte"
         }
     },
+    "state": {
+        "_": {
+            "off": "Fra",
+            "on": "Til"
+        }
+    },
     "title": "Kontakt"
 }

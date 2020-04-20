@@ -15,5 +15,19 @@
             "triggered": "{entity_name} riaszt\u00e1sba ker\u00fclt"
         }
     },
+    "state": {
+        "_": {
+            "armed": "\u00c9les\u00edtve",
+            "armed_away": "\u00c9les\u00edtve t\u00e1vol",
+            "armed_custom_bypass": "\u00c9les\u00edtve \u00e1thidal\u00e1ssal",
+            "armed_home": "\u00c9les\u00edtve otthon",
+            "armed_night": "\u00c9les\u00edtve \u00e9jszaka",
+            "arming": "\u00c9les\u00edt\u00e9s",
+            "disarmed": "Hat\u00e1stalan\u00edtva",
+            "disarming": "Hat\u00e1stalan\u00edt\u00e1s",
+            "pending": "F\u00fcgg\u0151ben",
+            "triggered": "Riaszt\u00e1s"
+        }
+    },
     "title": "Riaszt\u00f3 k\u00f6zpont"
 }

@@ -15,5 +15,19 @@
             "triggered": "{entity_name} utl\u00f6st"
         }
     },
+    "state": {
+        "_": {
+            "armed": "Larmat",
+            "armed_away": "Larmat",
+            "armed_custom_bypass": "Larm f\u00f6rbikopplat",
+            "armed_home": "Hemmalarmat",
+            "armed_night": "Nattlarmat",
+            "arming": "Tillkopplar",
+            "disarmed": "Avlarmat",
+            "disarming": "Fr\u00e5nkopplar",
+            "pending": "V\u00e4ntande",
+            "triggered": "Utl\u00f6st"
+        }
+    },
     "title": "Larmkontrollpanel"
 }

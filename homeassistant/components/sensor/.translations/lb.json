@@ -23,5 +23,11 @@
             "value": "{entity_name} W\u00e4ert \u00e4nnert"
         }
     },
+    "state": {
+        "_": {
+            "off": "Aus",
+            "on": "Un"
+        }
+    },
     "title": "Sensor"
 }

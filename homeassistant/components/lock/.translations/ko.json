@@ -14,5 +14,11 @@
             "unlocked": "{entity_name} \uc774(\uac00) \uc7a0\uae08\uc774 \ud574\uc81c\ub420 \ub54c"
         }
     },
+    "state": {
+        "_": {
+            "locked": "\uc7a0\uae40",
+            "unlocked": "\ud574\uc81c"
+        }
+    },
     "title": "\uc7a0\uae40"
 }

@@ -89,5 +89,87 @@
             "vibration": "{entity_name} rezg\u00e9st \u00e9rz\u00e9kel"
         }
     },
+    "state": {
+        "_": {
+            "off": "Ki",
+            "on": "Be"
+        },
+        "battery": {
+            "off": "Norm\u00e1l",
+            "on": "Alacsony"
+        },
+        "cold": {
+            "off": "Norm\u00e1l",
+            "on": "Hideg"
+        },
+        "connectivity": {
+            "off": "Lekapcsol\u00f3dva",
+            "on": "Kapcsol\u00f3dva"
+        },
+        "door": {
+            "off": "Z\u00e1rva",
+            "on": "Nyitva"
+        },
+        "garage_door": {
+            "off": "Z\u00e1rva",
+            "on": "Nyitva"
+        },
+        "gas": {
+            "off": "Norm\u00e1l",
+            "on": "\u00c9szlelve"
+        },
+        "heat": {
+            "off": "Norm\u00e1l",
+            "on": "Meleg"
+        },
+        "lock": {
+            "off": "Bez\u00e1rva",
+            "on": "Kinyitva"
+        },
+        "moisture": {
+            "off": "Sz\u00e1raz",
+            "on": "Nedves"
+        },
+        "motion": {
+            "off": "Norm\u00e1l",
+            "on": "\u00c9szlelve"
+        },
+        "occupancy": {
+            "off": "Norm\u00e1l",
+            "on": "\u00c9szlelve"
+        },
+        "opening": {
+            "off": "Z\u00e1rva",
+            "on": "Nyitva"
+        },
+        "presence": {
+            "off": "T\u00e1vol",
+            "on": "Otthon"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Probl\u00e9ma"
+        },
+        "safety": {
+            "off": "Biztons\u00e1gos",
+            "on": "Nem biztons\u00e1gos"
+        },
+        "smoke": {
+            "off": "Norm\u00e1l",
+            "on": "\u00c9szlelve"
+        },
+        "sound": {
+            "off": "Norm\u00e1l",
+            "on": "\u00c9szlelve"
+        },
+        "vibration": {
+            "off": "Norm\u00e1l",
+            "on": "\u00c9szlelve"
+        },
+        "window": {
+            "off": "Z\u00e1rva",
+            "on": "Nyitva"
+        }
+    },
     "title": "Bin\u00e1ris \u00e9rz\u00e9kel\u0151"
 }

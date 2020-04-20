@@ -17,5 +17,14 @@
             "tilt_position": "{entity_name} kantel positiewijzigingen"
         }
     },
+    "state": {
+        "_": {
+            "closed": "Gesloten",
+            "closing": "Sluit",
+            "open": "Open",
+            "opening": "Opent",
+            "stopped": "Gestopt"
+        }
+    },
     "title": "Bedekking"
 }

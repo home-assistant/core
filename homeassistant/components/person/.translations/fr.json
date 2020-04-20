@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "home": "Pr\u00e9sent",
+            "not_home": "Absent"
+        }
+    },
     "title": "Personne"
 }

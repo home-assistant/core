@@ -1,8 +1,16 @@
 {
     "state": {
-        "autumn": "Hierscht",
-        "spring": "Fr\u00e9ijoer",
-        "summer": "Summer",
-        "winter": "Wanter"
+        "season__season": {
+            "autumn": "Hierscht",
+            "spring": "Fr\u00e9ijoer",
+            "summer": "Summer",
+            "winter": "Wanter"
+        },
+        "season__season__": {
+            "autumn": "Hierscht",
+            "spring": "Fr\u00e9ijoer",
+            "summer": "Summer",
+            "winter": "Wanter"
+        }
     }
 }

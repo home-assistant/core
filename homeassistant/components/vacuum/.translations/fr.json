@@ -13,5 +13,17 @@
             "docked": "{entity_name} connect\u00e9"
         }
     },
+    "state": {
+        "_": {
+            "cleaning": "Nettoyage",
+            "docked": "Sur la base",
+            "error": "Erreur",
+            "idle": "Inactif",
+            "off": "Off",
+            "on": "On",
+            "paused": "En pause",
+            "returning": "Retourne \u00e0 la base"
+        }
+    },
     "title": "Aspirateur"
 }

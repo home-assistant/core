@@ -89,5 +89,87 @@
             "vibration": "{entity_name} ha comen\u00e7at a detectar vibraci\u00f3"
         }
     },
+    "state": {
+        "_": {
+            "off": "Desactivat",
+            "on": "Activat"
+        },
+        "battery": {
+            "off": "Normal",
+            "on": "Baixa"
+        },
+        "cold": {
+            "off": "Normal",
+            "on": "Fred"
+        },
+        "connectivity": {
+            "off": "Desconnectat",
+            "on": "Connectat"
+        },
+        "door": {
+            "off": "Tancada",
+            "on": "Oberta"
+        },
+        "garage_door": {
+            "off": "Tancada",
+            "on": "Oberta"
+        },
+        "gas": {
+            "off": "Lliure",
+            "on": "Detectat"
+        },
+        "heat": {
+            "off": "Normal",
+            "on": "Calent"
+        },
+        "lock": {
+            "off": "Bloquejat",
+            "on": "Desbloquejat"
+        },
+        "moisture": {
+            "off": "Sec",
+            "on": "Humit"
+        },
+        "motion": {
+            "off": "Lliure",
+            "on": "Detectat"
+        },
+        "occupancy": {
+            "off": "Lliure",
+            "on": "Detectat"
+        },
+        "opening": {
+            "off": "Tancat",
+            "on": "Obert"
+        },
+        "presence": {
+            "off": "Lliure",
+            "on": "Detectat"
+        },
+        "problem": {
+            "off": "Correcte",
+            "on": "Problema"
+        },
+        "safety": {
+            "off": "Segur",
+            "on": "No segur"
+        },
+        "smoke": {
+            "off": "Lliure",
+            "on": "Detectat"
+        },
+        "sound": {
+            "off": "Lliure",
+            "on": "Detectat"
+        },
+        "vibration": {
+            "off": "Lliure",
+            "on": "Detectat"
+        },
+        "window": {
+            "off": "Tancada",
+            "on": "Oberta"
+        }
+    },
     "title": "Sensor binari"
 }

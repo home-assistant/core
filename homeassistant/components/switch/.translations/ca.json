@@ -14,5 +14,11 @@
             "turned_on": "{entity_name} activat"
         }
     },
+    "state": {
+        "_": {
+            "off": "Apagat",
+            "on": "Enc\u00e8s"
+        }
+    },
     "title": "Interruptors"
 }

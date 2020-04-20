@@ -23,5 +23,11 @@
             "value": "zmieni si\u0119 warto\u015b\u0107 {entity_name}"
         }
     },
+    "state": {
+        "_": {
+            "off": "wy\u0142\u0105czony",
+            "on": "w\u0142\u0105czony"
+        }
+    },
     "title": "Sensor"
 }

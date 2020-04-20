@@ -4,10 +4,16 @@
             "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "error": {
-            "login": "Feeler beim Login: iwwerpr\u00e9if de Benotzernumm & Passwuert"
+            "login": "Feeler beim Login: iwwerpr\u00e9if de Benotzernumm & Passwuert",
+            "otp_failed": "Feeler mam 2-Faktor-Authentifikatiouns, prob\u00e9ier mat engem neie Code"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Code"
+                }
+            },
             "link": {
                 "data": {
                     "api_version": "DSM Versioun",

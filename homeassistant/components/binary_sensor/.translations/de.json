@@ -89,5 +89,87 @@
             "vibration": "{entity_name} detektiert Vibrationen"
         }
     },
+    "state": {
+        "_": {
+            "off": "Aus",
+            "on": "An"
+        },
+        "battery": {
+            "off": "Normal",
+            "on": "Schwach"
+        },
+        "cold": {
+            "off": "Normal",
+            "on": "Kalt"
+        },
+        "connectivity": {
+            "off": "Getrennt",
+            "on": "Verbunden"
+        },
+        "door": {
+            "off": "Geschlossen",
+            "on": "Offen"
+        },
+        "garage_door": {
+            "off": "Geschlossen",
+            "on": "Offen"
+        },
+        "gas": {
+            "off": "Normal",
+            "on": "Erkannt"
+        },
+        "heat": {
+            "off": "Normal",
+            "on": "Hei\u00df"
+        },
+        "lock": {
+            "off": "Verriegelt",
+            "on": "Entriegelt"
+        },
+        "moisture": {
+            "off": "Trocken",
+            "on": "Nass"
+        },
+        "motion": {
+            "off": "Ruhig",
+            "on": "Bewegung erkannt"
+        },
+        "occupancy": {
+            "off": "Frei",
+            "on": "Belegt"
+        },
+        "opening": {
+            "off": "Geschlossen",
+            "on": "Offen"
+        },
+        "presence": {
+            "off": "Abwesend",
+            "on": "Zu Hause"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Problem"
+        },
+        "safety": {
+            "off": "Sicher",
+            "on": "Unsicher"
+        },
+        "smoke": {
+            "off": "OK",
+            "on": "Rauch erkannt"
+        },
+        "sound": {
+            "off": "Stille",
+            "on": "Ger\u00e4usch erkannt"
+        },
+        "vibration": {
+            "off": "Normal",
+            "on": "Vibration"
+        },
+        "window": {
+            "off": "Geschlossen",
+            "on": "Offen"
+        }
+    },
     "title": "Bin\u00e4rsensor"
 }

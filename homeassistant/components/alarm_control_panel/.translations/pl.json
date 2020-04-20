@@ -22,5 +22,19 @@
             "triggered": "{entity_name} zostanie wyzwolony"
         }
     },
+    "state": {
+        "_": {
+            "armed": "uzbrojony",
+            "armed_away": "uzbrojony (poza domem)",
+            "armed_custom_bypass": "uzbrojony (cz\u0119\u015bciowo)",
+            "armed_home": "uzbrojony (w domu)",
+            "armed_night": "uzbrojony (noc)",
+            "arming": "uzbrajanie",
+            "disarmed": "rozbrojony",
+            "disarming": "rozbrajanie",
+            "pending": "oczekuje",
+            "triggered": "wyzwolony"
+        }
+    },
     "title": "Panel kontrolny alarmu"
 }

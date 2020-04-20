@@ -14,5 +14,16 @@
             "hvac_mode_changed": "{entity_name} \u7684\u8fd0\u884c\u6a21\u5f0f\u53d8\u5316"
         }
     },
+    "state": {
+        "_": {
+            "auto": "\u81ea\u52a8",
+            "cool": "\u5236\u51b7",
+            "dry": "\u9664\u6e7f",
+            "fan_only": "\u4ec5\u9001\u98ce",
+            "heat": "\u5236\u70ed",
+            "heat_cool": "\u5236\u70ed/\u5236\u51b7",
+            "off": "\u5173"
+        }
+    },
     "title": "\u7a7a\u8c03"
 }

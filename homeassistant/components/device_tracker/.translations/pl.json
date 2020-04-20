@@ -5,5 +5,11 @@
             "is_not_home": "urz\u0105dzenie {entity_name} jest poza domem"
         }
     },
+    "state": {
+        "_": {
+            "home": "w domu",
+            "not_home": "poza domem"
+        }
+    },
     "title": "\u015aledzenie urz\u0105dze\u0144"
 }

@@ -1,3 +1,85 @@
 {
+    "state": {
+        "_": {
+            "off": "i ffwrdd",
+            "on": "Ar"
+        },
+        "battery": {
+            "off": "Arferol",
+            "on": "Isel"
+        },
+        "cold": {
+            "off": "Arferol",
+            "on": "Oer"
+        },
+        "connectivity": {
+            "off": "Wedi datgysylltu",
+            "on": "Cysylltiedig"
+        },
+        "door": {
+            "off": "Cau",
+            "on": "Agor"
+        },
+        "garage_door": {
+            "off": "Cau",
+            "on": "Agor"
+        },
+        "gas": {
+            "off": "Clir",
+            "on": "Wedi'i ganfod"
+        },
+        "heat": {
+            "off": "Arferol",
+            "on": "Poeth"
+        },
+        "lock": {
+            "off": "Cloi",
+            "on": "Dad-gloi"
+        },
+        "moisture": {
+            "off": "Sych",
+            "on": "Gwlyb"
+        },
+        "motion": {
+            "off": "Clir",
+            "on": "Wedi'i ganfod"
+        },
+        "occupancy": {
+            "off": "Clir",
+            "on": "Wedi'i ganfod"
+        },
+        "opening": {
+            "off": "Cau",
+            "on": "Agor"
+        },
+        "presence": {
+            "off": "Allan",
+            "on": "Gartref"
+        },
+        "problem": {
+            "off": "iawn",
+            "on": "Problem"
+        },
+        "safety": {
+            "off": "Diogel",
+            "on": "Anniogel"
+        },
+        "smoke": {
+            "off": "Clir",
+            "on": "Wedi'i ganfod"
+        },
+        "sound": {
+            "off": "Clir",
+            "on": "Wedi'i ganfod"
+        },
+        "vibration": {
+            "off": "Clir",
+            "on": "Wedi'i ganfod"
+        },
+        "window": {
+            "off": "Cau",
+            "on": "Agored"
+        }
+    },
     "title": "Synhwyrydd deuaidd"
 }

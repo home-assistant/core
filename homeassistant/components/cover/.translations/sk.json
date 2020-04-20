@@ -1,3 +1,12 @@
 {
+    "state": {
+        "_": {
+            "closed": "Zatvoren\u00e9",
+            "closing": "Zatv\u00e1ra sa",
+            "open": "Otvoren\u00e9",
+            "opening": "Otv\u00e1ra sa",
+            "stopped": "Zastaven\u00e9"
+        }
+    },
     "title": "Kryt"
 }

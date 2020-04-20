@@ -1,3 +1,13 @@
 {
+    "state": {
+        "_": {
+            "idle": "Segur",
+            "off": "i ffwrdd",
+            "on": "Ar",
+            "paused": "Wedi rhewi",
+            "playing": "Chwarae",
+            "standby": "Gorffwys"
+        }
+    },
     "title": "Chwaraewr cyfryngau"
 }

@@ -14,5 +14,11 @@
             "turned_on": "{entity_name} \uc774(\uac00) \ucf1c\uc9c8 \ub54c"
         }
     },
+    "state": {
+        "_": {
+            "off": "\uaebc\uc9d0",
+            "on": "\ucf1c\uc9d0"
+        }
+    },
     "title": "\uc2a4\uc704\uce58"
 }

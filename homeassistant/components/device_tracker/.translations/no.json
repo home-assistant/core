@@ -4,5 +4,6 @@
             "is_home": "{entity_name} er hjemme",
             "is_not_home": "{entity_name} er ikke hjemme"
         }
-    }
+    },
+    "title": "Enhetssporing"
 }

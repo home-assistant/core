@@ -13,5 +13,17 @@
             "docked": "{entity_name} priklju\u010den"
         }
     },
+    "state": {
+        "_": {
+            "cleaning": "\u010cistim",
+            "docked": "Priklju\u010den",
+            "error": "Napaka",
+            "idle": "V pripravljenosti",
+            "off": "Izklju\u010den",
+            "on": "Vklju\u010den",
+            "paused": "Zaustavljeno",
+            "returning": "Vra\u010dam se na postajo"
+        }
+    },
     "title": "Sesam"
 }

@@ -14,6 +14,10 @@
                 "description": "Model: {model} \nHost: {host} \nPort: {port} \n\nMo\u017cesz skonfigurowa\u0107 IO i zachowanie  panelu w ustawieniach Konnected Alarm Panel.",
                 "title": "Urz\u0105dzenie Konnected gotowe"
             },
+            "import_confirm": {
+                "description": "Panel alarmu Konnected o identyfikatorze {id} zosta\u0142 wykryty w pliku configuration.yaml. Ten kreator pozwoli ci zaimportowa\u0107 go do integracji.",
+                "title": "Import urz\u0105dzenia Konnected"
+            },
             "user": {
                 "data": {
                     "host": "Adres IP urz\u0105dzenia Konnected",

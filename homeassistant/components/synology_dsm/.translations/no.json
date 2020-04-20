@@ -4,10 +4,18 @@
             "already_configured": "Verten er allerede konfigurert"
         },
         "error": {
-            "login": "P\u00e5loggingsfeil: Vennligst sjekk brukernavnet ditt og passordet ditt"
+            "login": "P\u00e5loggingsfeil: Vennligst sjekk brukernavnet ditt og passordet ditt",
+            "missing_data": "Manglende data: Pr\u00f8v p\u00e5 nytt senere eller en annen konfigurasjon",
+            "otp_failed": "To-trinns autentisering mislyktes. Pr\u00f8v p\u00e5 nytt med en ny passkode"
         },
         "flow_title": "Synology DSM {name} ( {host} )",
         "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Kode"
+                },
+                "title": "Synology DSM: totrinns autentisering"
+            },
             "link": {
                 "data": {
                     "api_version": "DSM-versjon",

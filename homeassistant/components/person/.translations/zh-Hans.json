@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "home": "\u5728\u5bb6",
+            "not_home": "\u79bb\u5f00"
+        }
+    },
     "title": "\u4e2a\u4eba"
 }

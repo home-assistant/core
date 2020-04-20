@@ -1,3 +1,17 @@
 {
+    "state": {
+        "_": {
+            "armed": "Viritetty",
+            "armed_away": "Viritetty (poissa)",
+            "armed_custom_bypass": "Virityksen ohittaminen",
+            "armed_home": "Viritetty (kotona)",
+            "armed_night": "Viritetty (y\u00f6)",
+            "arming": "Viritys",
+            "disarmed": "Viritys pois",
+            "disarming": "Virityksen poisto",
+            "pending": "Odottaa",
+            "triggered": "Lauennut"
+        }
+    },
     "title": "H\u00e4lytysasetukset"
 }

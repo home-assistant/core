@@ -8,5 +8,15 @@
             "is_playing": "{entity_name} \uc774(\uac00) \uc7ac\uc0dd \uc911\uc774\uba74"
         }
     },
+    "state": {
+        "_": {
+            "idle": "\ub300\uae30\uc911",
+            "off": "\uaebc\uc9d0",
+            "on": "\ucf1c\uc9d0",
+            "paused": "\uc77c\uc2dc\uc911\uc9c0",
+            "playing": "\uc7ac\uc0dd\uc911",
+            "standby": "\uc900\ube44\uc911"
+        }
+    },
     "title": "\ubbf8\ub514\uc5b4\uc7ac\uc0dd\uae30"
 }

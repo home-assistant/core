@@ -1,12 +1,14 @@
 {
     "state": {
-        "first_quarter": "\u4e0a\u5f26\u6708",
-        "full_moon": "\u6ee1\u6708",
-        "last_quarter": "\u4e0b\u5f26\u6708",
-        "new_moon": "\u65b0\u6708",
-        "waning_crescent": "\u6b8b\u6708",
-        "waning_gibbous": "\u4e8f\u51f8\u6708",
-        "waxing_crescent": "\u5ce8\u7709\u6708",
-        "waxing_gibbous": "\u76c8\u51f8\u6708"
+        "moon__phase": {
+            "first_quarter": "\u4e0a\u5f26\u6708",
+            "full_moon": "\u6ee1\u6708",
+            "last_quarter": "\u4e0b\u5f26\u6708",
+            "new_moon": "\u65b0\u6708",
+            "waning_crescent": "\u6b8b\u6708",
+            "waning_gibbous": "\u4e8f\u51f8\u6708",
+            "waxing_crescent": "\u5ce8\u7709\u6708",
+            "waxing_gibbous": "\u76c8\u51f8\u6708"
+        }
     }
 }

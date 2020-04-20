@@ -13,5 +13,17 @@
             "docked": "{entity_name} angedockt"
         }
     },
+    "state": {
+        "_": {
+            "cleaning": "Reinigen",
+            "docked": "Angedockt",
+            "error": "Fehler",
+            "idle": "Standby",
+            "off": "Aus",
+            "on": "An",
+            "paused": "Pausiert",
+            "returning": "R\u00fcckkehr zur Dockingstation"
+        }
+    },
     "title": "Vacuum"
 }

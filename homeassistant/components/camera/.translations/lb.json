@@ -1,3 +1,10 @@
 {
+    "state": {
+        "_": {
+            "idle": "Roueg",
+            "recording": "H\u00eblt Op",
+            "streaming": "Streamt"
+        }
+    },
     "title": "Kamera"
 }

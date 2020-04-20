@@ -1,3 +1,12 @@
 {
+    "state": {
+        "_": {
+            "closed": "Suljettu",
+            "closing": "Suljetaan",
+            "open": "Auki",
+            "opening": "Avataan",
+            "stopped": "Pys\u00e4ytetty"
+        }
+    },
     "title": "Kaihtimet"
 }

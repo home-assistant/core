@@ -22,5 +22,19 @@
             "triggered": "{entity_name} activado"
         }
     },
+    "state": {
+        "_": {
+            "armed": "Armado",
+            "armed_away": "Armado fuera de casa",
+            "armed_custom_bypass": "Armada Zona Espec\u00edfica",
+            "armed_home": "Armado en casa",
+            "armed_night": "Armado noche",
+            "arming": "Armando",
+            "disarmed": "Desarmado",
+            "disarming": "Desarmando",
+            "pending": "Pendiente",
+            "triggered": "Disparada"
+        }
+    },
     "title": "Panel de control de alarmas"
 }

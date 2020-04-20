@@ -14,5 +14,16 @@
             "hvac_mode_changed": "Mode HVAC chang\u00e9 pour {entity_name}"
         }
     },
+    "state": {
+        "_": {
+            "auto": "Auto",
+            "cool": "Frais",
+            "dry": "Sec",
+            "fan_only": "Ventilateur seul",
+            "heat": "Chauffe",
+            "heat_cool": "Chaud/Froid",
+            "off": "Inactif"
+        }
+    },
     "title": "Thermostat"
 }

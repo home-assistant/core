@@ -13,5 +13,17 @@
             "docked": "{entity_name} dokkolt"
         }
     },
+    "state": {
+        "_": {
+            "cleaning": "Takar\u00edt\u00e1s",
+            "docked": "Dokkolva",
+            "error": "Hiba",
+            "idle": "T\u00e9tlen",
+            "off": "Ki",
+            "on": "Be",
+            "paused": "Sz\u00fcneteltetve",
+            "returning": "Dokkol\u00e1s folyamatban"
+        }
+    },
     "title": "Porsz\u00edv\u00f3"
 }

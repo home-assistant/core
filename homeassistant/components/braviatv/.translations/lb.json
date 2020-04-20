@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebse Fernseh ass scho konfigur\u00e9iert."
+        },
+        "error": {
+            "invalid_host": "Ong\u00ebltege Numm oder IP Adresse.",
+            "unsupported_model": "D\u00e4in TV Modell g\u00ebtt net \u00ebnnerst\u00ebtzt."
+        },
+        "step": {
+            "authorize": {
+                "data": {
+                    "pin": "PIN Code"
+                },
+                "title": "Sony Bravia TV erlaaben"
+            },
+            "user": {
+                "data": {
+                    "host": "TV Host Numm oder IP Adresse"
+                },
+                "title": "Sony Bravia TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "ignored_sources": "L\u00ebscht vun ignor\u00e9ierte Quellen"
+                },
+                "title": "Optioune fir Sony Bravia TV"
+            }
+        }
+    }
+}

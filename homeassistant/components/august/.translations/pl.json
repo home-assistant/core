@@ -13,13 +13,17 @@
                 "data": {
                     "login_method": "Metoda logowania",
                     "password": "Has\u0142o",
+                    "timeout": "Limit czasu (sekundy)",
                     "username": "Nazwa u\u017cytkownika"
-                }
+                },
+                "description": "Je\u015bli metod\u0105 logowania jest 'e-mail', nazw\u0105 u\u017cytkownika b\u0119dzie adres e-mail. Je\u015bli metod\u0105 logowania jest 'telefon', nazw\u0105 u\u017cytkownika b\u0119dzie numer telefonu w formacie '+NNNNNNNNN'.",
+                "title": "Konfiguracja konta August"
             },
             "validation": {
                 "data": {
                     "code": "Kod weryfikacyjny"
                 },
+                "description": "Sprawd\u017a {login_method} ({username}) i wprowad\u017a kod weryfikacyjny poni\u017cej",
                 "title": "Uwierzytelnianie dwusk\u0142adnikowe"
             }
         }
