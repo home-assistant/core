@@ -43,9 +43,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # Check which device needs to be connected.
             if user_input.get(CONF_GATEWAY):
-                return self.async_show_form(
-                    step_id="gateway", data_schema=GATEWAY_CONFIG
-                )
+                return await self.async_step_gateway()
 
             errors["base"] = "no_device_selected"
 
@@ -60,7 +58,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         token = user_input.get(CONF_TOKEN)
         if user_input is not None and host is not None and token is not None:
             # Try to connect to a Xiaomi Gateway.
-            _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
+            _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
             try:
                 self._gateway = gateway.Gateway(host, token)
@@ -72,10 +70,9 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self._gateway_info.hardware_version,
                 )
 
-                unique_id = "{}-{}-gateway".format(
-                    self._gateway_info.model, self._gateway_info.mac_address
-                )
+                unique_id = f"{self._gateway_info.model}-{self._gateway_info.mac_address}-gateway"
                 await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME),
                     data={
