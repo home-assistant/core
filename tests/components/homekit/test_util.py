@@ -10,6 +10,8 @@ from homeassistant.components.homekit.const import (
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
     HOMEKIT_NOTIFY_ID,
+    HOMEKIT_PAIRING_QR,
+    HOMEKIT_PAIRING_QR_SECRET,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -201,6 +203,8 @@ async def test_show_setup_msg(hass):
 
     await hass.async_add_executor_job(show_setup_message, hass, pincode, "X-HM://0")
     await hass.async_block_till_done()
+    assert hass.data[HOMEKIT_PAIRING_QR_SECRET]
+    assert hass.data[HOMEKIT_PAIRING_QR]
 
     assert call_create_notification
     assert call_create_notification[0].data[ATTR_NOTIFICATION_ID] == HOMEKIT_NOTIFY_ID
