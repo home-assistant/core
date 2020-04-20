@@ -13,7 +13,10 @@ class UniFiBase(Entity):
     TYPE = ""
 
     def __init__(self, controller) -> None:
-        """Set up UniFi entity base."""
+        """Set up UniFi entity base.
+
+        Register mac to controller entities to cover disabled entities.
+        """
         self.controller = controller
         self.controller.entities[self.DOMAIN][self.TYPE].add(self.mac)
 
@@ -33,7 +36,7 @@ class UniFiBase(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
-        self.controller.entities[self.platform.domain][self.TYPE].remove(self.mac)
+        self.controller.entities[self.DOMAIN][self.TYPE].remove(self.mac)
 
     async def async_remove(self):
         """Clean up when removing entity.
