@@ -833,6 +833,48 @@ def test_now(mock_is_safe, hass):
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
+def test_relative_time(mock_is_safe, hass):
+    """Test relative_time method."""
+    now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+    with patch("homeassistant.util.dt.now", return_value=now):
+        assert (
+            "1 hour"
+            == template.Template(
+                '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}',
+                hass,
+            ).async_render()
+        )
+        assert (
+            "2 hours"
+            == template.Template(
+                '{{relative_time(strptime("2000-01-01 09:00:00 +01:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+                hass,
+            ).async_render()
+        )
+        assert (
+            "1 hour"
+            == template.Template(
+                '{{relative_time(strptime("2000-01-01 03:00:00 -06:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+                hass,
+            ).async_render()
+        )
+        assert (
+            str(template.strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z"))
+            == template.Template(
+                '{{relative_time(strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+                hass,
+            ).async_render()
+        )
+        assert (
+            "string"
+            == template.Template('{{relative_time("string")}}', hass,).async_render()
+        )
+
+
+@patch(
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
+    return_value=True,
+)
 def test_utcnow(mock_is_safe, hass):
     """Test utcnow method."""
     now = dt_util.utcnow()
