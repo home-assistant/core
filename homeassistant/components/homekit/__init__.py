@@ -5,7 +5,7 @@ import logging
 import voluptuous as vol
 from zeroconf import InterfaceChoice
 
-from homeassistant.components import cover
+from homeassistant.components import cover, vacuum
 from homeassistant.components.cover import DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.const import (
@@ -267,6 +267,13 @@ def get_accessory(hass, driver, state, aid, config):
     elif state.domain == "switch":
         switch_type = config.get(CONF_TYPE, TYPE_SWITCH)
         a_type = SWITCH_TYPES[switch_type]
+
+    elif state.domain == "vacuum":
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if features & (vacuum.SUPPORT_START | vacuum.SUPPORT_RETURN_HOME):
+            a_type = "DockVacuum"
+        else:
+            a_type = "Switch"
 
     elif state.domain in ("automation", "input_boolean", "remote", "scene", "script"):
         a_type = "Switch"
