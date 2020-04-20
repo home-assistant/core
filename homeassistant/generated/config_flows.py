@@ -35,6 +35,7 @@ FLOWS = [
     "flume",
     "flunearyou",
     "freebox",
+    "fritzbox",
     "garmin_connect",
     "gdacs",
     "geofency",
