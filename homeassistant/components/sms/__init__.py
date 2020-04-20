@@ -72,11 +72,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
 
-    gateway = hass.data[DOMAIN][SMS_GATEWAY]
-    gateway.Terminate()
-    hass.data[DOMAIN][SMS_GATEWAY] = None
-
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+        if SMS_GATEWAY in hass.data[DOMAIN]:
+            gateway = hass.data[DOMAIN][SMS_GATEWAY]
+            hass.data[DOMAIN].pop(SMS_GATEWAY)
+            gateway.Terminate()
 
     return unload_ok

@@ -19,6 +19,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the SMS notification service."""
+    if SMS_GATEWAY not in hass.data[DOMAIN]:
+        _LOGGER.error("SMS gateway not found, cannot initialize service")
+        return
     gateway = hass.data[DOMAIN][SMS_GATEWAY]
     number = config[CONF_RECIPIENT]
     return SMSNotificationService(gateway, number)
