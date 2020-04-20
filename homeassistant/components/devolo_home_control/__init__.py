@@ -50,19 +50,20 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     """Set up the devolo account from a config entry."""
     conf = entry.data
     hass.data.setdefault(DOMAIN, {})
+    mydevolo = Mydevolo.get_instance()
 
     try:
-        mydevolo = Mydevolo.get_instance()
         mydevolo.user = conf.get(CONF_USERNAME)
         mydevolo.password = conf.get(CONF_PASSWORD)
     except (WrongCredentialsError, WrongUrlError):
         create_config_flow(hass=hass)
-        return False
+        raise ConfigEntryNotReady
 
-    if mydevolo.maintenance:
-        return False
+    if mydevolo.maintenance():
+        raise ConfigEntryNotReady
 
-    gateway_id = mydevolo.gateway_ids[0]
+    mydevolo.get_gateway_ids()
+    gateway_id = mydevolo._gateway_ids[0]
     mprm_url = mydevolo.mprm
 
     try:
