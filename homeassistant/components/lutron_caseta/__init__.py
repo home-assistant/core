@@ -9,14 +9,12 @@ from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
+from .const import CONF_CA_CERTS, CONF_CERTFILE, CONF_KEYFILE
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "lutron_caseta"
 DATA_BRIDGE_CONFIG = "lutron_caseta_bridges"
-
-CONF_KEYFILE = "keyfile"
-CONF_CERTFILE = "certfile"
-CONF_CA_CERTS = "ca_certs"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -47,19 +45,19 @@ async def async_setup(hass, base_config):
         return True
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data.setdefault(DATA_BRIDGE_CONFIG, {})
 
     for config in bridge_configs:
-        host = config[CONF_HOST]
-
-        # Store bridge configs keyed by host
-        hass.data[DATA_BRIDGE_CONFIG][host] = config
-
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_IMPORT},
-                data={"host": host},
+                # extract the config keys one-by-one just to be explicit
+                data={
+                    CONF_HOST: config[CONF_HOST],
+                    CONF_KEYFILE: config[CONF_KEYFILE],
+                    CONF_CERTFILE: config[CONF_CERTFILE],
+                    CONF_CA_CERTS: config[CONF_CA_CERTS],
+                },
             )
         )
 
@@ -69,12 +67,10 @@ async def async_setup(hass, base_config):
 async def async_setup_entry(hass, config_entry):
     """Set up a bridge from a config entry."""
 
-    host = config_entry.data["host"]
-
-    config = hass.data[DATA_BRIDGE_CONFIG][host]
-    keyfile = hass.config.path(config[CONF_KEYFILE])
-    certfile = hass.config.path(config[CONF_CERTFILE])
-    ca_certs = hass.config.path(config[CONF_CA_CERTS])
+    host = config_entry.data[CONF_HOST]
+    keyfile = config_entry.data[CONF_KEYFILE]
+    certfile = config_entry.data[CONF_CERTFILE]
+    ca_certs = config_entry.data[CONF_CA_CERTS]
 
     bridge = Smartbridge.create_tls(
         hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
