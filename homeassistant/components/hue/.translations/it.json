@@ -35,13 +35,17 @@
             "button_4": "Quarto pulsante",
             "dim_down": "Diminuisce luminosit\u00e0",
             "dim_up": "Aumenta luminosit\u00e0",
+            "double_buttons_1_3": "Pulsanti Primo e Terzo",
+            "double_buttons_2_4": "Pulsanti Secondo e Quarto",
             "turn_off": "Spento",
             "turn_on": "Acceso"
         },
         "trigger_type": {
             "remote_button_long_release": "Pulsante \"{subtype}\" rilasciato dopo una lunga pressione",
             "remote_button_short_press": "Pulsante \"{subtype}\" premuto",
-            "remote_button_short_release": "Pulsante \"{subtype}\" rilasciato"
+            "remote_button_short_release": "Pulsante \"{subtype}\" rilasciato",
+            "remote_double_button_long_press": "Entrambi i \"{subtype}\" rilasciati dopo una lunga pressione",
+            "remote_double_button_short_press": "Entrambi i \"{subtype}\" rilasciati"
         }
     }
 }

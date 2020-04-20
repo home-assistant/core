@@ -29,6 +29,19 @@
                     "host": "Host",
                     "port": "Port"
                 }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "Konfigurieren Sie das deCONZ-Gateway"
+            },
+            "user": {
+                "data": {
+                    "host": "W\u00e4hlen Sie das erkannte deCONZ-Gateway aus"
+                },
+                "title": "W\u00e4hlen Sie das deCONZ-Gateway"
             }
         }
     },
