@@ -15,7 +15,7 @@
       "on": "[%key:common::state::on%]",
       "playing": "Playing",
       "paused": "Paused",
-      "idle": "[%key:common::state::auto%]",
+      "idle": "[%key:common::state::idle%]",
       "standby": "[%key:common::state::standby%]"
     }
   }

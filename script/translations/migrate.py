@@ -184,9 +184,9 @@ STATE_REWRITE = {
     "Disconnected": "[%key:common::state::disconnected%]",
     "Locked": "[%key:common::state::locked%]",
     "Unlocked": "[%key:common::state::unlocked%]",
-    "Active": "[%key:common::state::idle%]",
-    "Idle": "[%key:common::state::auto%]",
+    "Active": "[%key:common::state::active%]",
     "Standby": "[%key:common::state::standby%]",
+    "Idle": "[%key:common::state::idle%]",
     "Home": "[%key:common::state::home%]",
     "Away": "[%key:common::state::not_home%]",
     "[%key:state::default::off%]": "[%key:common::state::off%]",
@@ -198,6 +198,7 @@ STATE_REWRITE = {
 }
 SKIP_DOMAIN = {"default", "scene"}
 STATES_WITH_DEV_CLASS = {"binary_sensor", "zwave"}
+GROUP_DELETE = {"opening", "closing", "stopped"}  # They don't exist
 
 
 def find_frontend_states():
@@ -212,19 +213,39 @@ def find_frontend_states():
 
     # domain => state object
     to_write = {}
+    to_migrate = {}
 
     for domain, states in frontend_states.items():
         if domain in SKIP_DOMAIN:
             continue
 
+        to_key_base = f"component::{domain}::state"
+        from_key_base = f"state::{domain}"
+
         if domain in STATES_WITH_DEV_CLASS:
+
             domain_to_write = dict(states)
+
+            for device_class, dev_class_states in domain_to_write.items():
+                to_device_class = "_" if device_class == "default" else device_class
+                for key in dev_class_states:
+                    to_migrate[
+                        f"{from_key_base}::{device_class}::{key}"
+                    ] = f"{to_key_base}::{to_device_class}::{key}"
 
             # Rewrite "default" device class to _
             if "default" in domain_to_write:
                 domain_to_write["_"] = domain_to_write.pop("default")
+
         else:
+            if domain == "group":
+                for key in GROUP_DELETE:
+                    states.pop(key)
+
             domain_to_write = {"_": states}
+
+            for key in states:
+                to_migrate[f"{from_key_base}::{key}"] = f"{to_key_base}::_::{key}"
 
         # Map out common values with
         for dev_class_states in domain_to_write.values():
@@ -244,8 +265,6 @@ def find_frontend_states():
 
         to_write[domain] = domain_to_write
 
-        # TODO create to_migrate dict for migrate_project_keys_translations
-
     for domain, state in to_write.items():
         strings = INTEGRATIONS_DIR / domain / "strings.json"
         if strings.is_file():
@@ -255,6 +274,8 @@ def find_frontend_states():
 
         content["state"] = state
         strings.write_text(json.dumps(content, indent=2) + "\n")
+
+    pprint(to_migrate)
 
 
 def run():
