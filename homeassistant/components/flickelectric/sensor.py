@@ -4,20 +4,10 @@ import logging
 
 import async_timeout
 from pyflick import FlickAPI, FlickPrice
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_FRIENDLY_NAME,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utcnow
 
