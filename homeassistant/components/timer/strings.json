@@ -1,8 +1,8 @@
 {
   "state": {
     "_": {
-      "active": "active",
-      "idle": "idle",
+      "active": "[%key:common::state::active%]",
+      "idle": "[%key:common::state::idle%]",
       "paused": "paused"
     }
   }
