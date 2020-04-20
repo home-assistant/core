@@ -1,1 +1,9 @@
-{ "title": "Script" }
+{
+  "title": "Script",
+  "state": {
+    "_": {
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]"
+    }
+  }
+}
