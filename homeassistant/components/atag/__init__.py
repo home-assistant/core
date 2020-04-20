@@ -33,7 +33,6 @@ DOMAIN = "atag"
 DATA_LISTENER = f"{DOMAIN}_listener"
 SIGNAL_UPDATE_ATAG = f"{DOMAIN}_update"
 PLATFORMS = [CLIMATE, WATER_HEATER, SENSOR]
-SCAN_INTERVAL = timedelta(seconds=30)
 HOUR = "h"
 FIRE = "fire"
 PERCENTAGE = "%"
