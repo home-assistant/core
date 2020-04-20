@@ -34,17 +34,17 @@ async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up the Xiaomi Miio component from a config entry."""
-    host = entry.data.get(CONF_HOST)
-    token = entry.data.get(CONF_TOKEN)
+    host = entry.data[CONF_HOST]
+    token = entry.data[CONF_TOKEN]
     name = entry.title
-    gateway_id = entry.data.get("gateway_id")
-    _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
+    gateway_id = entry.data["gateway_id"]
+    _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
     # Connect to gateway
     try:
         gateway_device = gateway.Gateway(host, token)
         gateway_info = gateway_device.info()
-        _LOGGER.info(
+        _LOGGER.debug(
             "%s %s %s detected",
             gateway_info.model,
             gateway_info.firmware_version,
@@ -72,7 +72,7 @@ async def async_setup_entry(
     )
 
     for component in GATEWAY_PLATFORMS:
-        hass.async_add_job(
+        hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
