@@ -16,17 +16,6 @@ GATEWAY_PLATFORMS = ["alarm_control_panel"]
 
 async def async_setup(hass: core.HomeAssistant, config: dict):
     """Set up the Xiaomi Miio component."""
-    conf = config.get(DOMAIN)
-    hass.data.setdefault(DOMAIN, {})
-
-    if not conf:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
-        )
-    )
     return True
 
 
