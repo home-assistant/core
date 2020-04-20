@@ -6,93 +6,28 @@ https://home-assistant.io/integrations/numato#sensor
 import logging
 
 from numato_gpio import NumatoGpioError
-import voluptuous as vol
 
 import homeassistant.components.numato as numato
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_ID, CONF_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_ID, CONF_NAME, CONF_SENSORS
 from homeassistant.helpers.entity import Entity
+
+from . import CONF_DST_RANGE, CONF_DST_UNIT, CONF_PORTS, CONF_SRC_RANGE, DOMAIN
 
 DEPENDENCIES = ["numato"]
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Numato GPIO ADC"
-CONF_DEVICES = "devices"
-CONF_PORTS = "ports"
-DEFAULT_SRC_RANGE = [0, 1024]
-DEFAULT_DST_RANGE = [0.0, 100.0]
-DEFAULT_UNIT = "%"
-CONF_SRC_RANGE = "source_range"
-CONF_DST_RANGE = "destination_range"
-CONF_DST_UNIT = "unit"
 ICON = "mdi:gauge"
-PORT_RANGE = range(1, 8)  # ports 0-7 are adc capable
-
-
-def int_range(rng):
-    """Validate the input array to describe a range by two integers."""
-    if not (isinstance(rng[0], int) and isinstance(rng[1], int)):
-        raise vol.Invalid(f"Only integers are allowed: {rng}")
-    if len(rng) != 2:
-        raise vol.Invalid(f"Only two numbers allowed in a range: {rng}")
-    if rng[0] > rng[1]:
-        raise vol.Invalid(f"Lower range bound must come first: {rng}")
-    return rng
-
-
-def float_range(rng):
-    """Validate the input array to describe a range by two floats."""
-    try:
-        coe = vol.Coerce(float)
-        coe(rng[0])
-        coe(rng[1])
-    except vol.CoerceInvalid:
-        raise vol.Invalid(f"Only int or float values are allowed: {rng}")
-    if len(rng) != 2:
-        raise vol.Invalid(f"Only two numbers allowed in a range: {rng}")
-    if rng[0] > rng[1]:
-        raise vol.Invalid(f"Lower range bound must come first: {rng}")
-    return rng
-
-
-def adc_port_number(num):
-    """Validate input number to be in the range of ADC enabled ports."""
-    try:
-        num = int(num)
-    except (ValueError):
-        raise vol.Invalid(f"Port numbers must be integers: {num}")
-    if num not in range(1, 8):
-        raise vol.Invalid(f"Only port numbers from 1 to 7 are ADC capable: {num}")
-    return num
-
-
-_ADC_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_SRC_RANGE, default=DEFAULT_SRC_RANGE): int_range,
-        vol.Optional(CONF_DST_RANGE, default=DEFAULT_DST_RANGE): float_range,
-        vol.Optional(CONF_DST_UNIT, default=DEFAULT_UNIT): cv.string,
-    }
-)
-
-_PORTS_SCHEMA = vol.Schema({adc_port_number: _ADC_SCHEMA})
-_DEVICE_SCHEMA = vol.Schema(
-    {vol.Required(CONF_ID): cv.positive_int, vol.Required(CONF_PORTS): _PORTS_SCHEMA}
-)
-_DEVICES_SCHEMA = vol.All(list, [_DEVICE_SCHEMA])
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_DEVICES): _DEVICES_SCHEMA})
 
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the configured Numato USB GPIO ADC sensor ports."""
     sensors = []
-    devices = config.get(CONF_DEVICES)
-    for device in devices:
+    devices = hass.data[DOMAIN]
+    for device in [d for d in devices if CONF_SENSORS in d]:
         device_id = device[CONF_ID]
-        ports = device[CONF_PORTS]
+        ports = device[CONF_SENSORS][CONF_PORTS]
         for port_id, adc_def in ports.items():
             try:
                 sensors.append(

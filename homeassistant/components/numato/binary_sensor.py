@@ -7,12 +7,11 @@ https://home-assistant.io/integrations/numato#binary-sensor
 import logging
 
 from numato_gpio import NumatoGpioError
-import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
-import homeassistant.components.numato as numato
-from homeassistant.const import CONF_ID, DEVICE_DEFAULT_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.const import DEVICE_DEFAULT_NAME
+
+from . import CONF_BINARY_SENSORS, CONF_ID, DOMAIN, edge_detect, read_input, setup_input
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,28 +23,18 @@ DEFAULT_INVERT_LOGIC = False
 
 DEPENDENCIES = ["numato"]
 
-_PORTS_SCHEMA = vol.Schema({cv.positive_int: cv.string})
-_DEVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ID): cv.positive_int,
-        vol.Required(CONF_PORTS): _PORTS_SCHEMA,
-        vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
-    }
-)
-_DEVICES_SCHEMA = vol.All(list, [_DEVICE_SCHEMA])
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_DEVICES): _DEVICES_SCHEMA})
-
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the configured Numato USB GPIO binary sensor ports."""
 
     binary_sensors = []
-    devices = config.get(CONF_DEVICES)
-    for device in devices:
+    devices = hass.data[DOMAIN]
+    for device in [d for d in devices if CONF_BINARY_SENSORS in d]:
         device_id = device[CONF_ID]
-        invert_logic = device[CONF_INVERT_LOGIC]
-        ports = device[CONF_PORTS]
+        platform = device[CONF_BINARY_SENSORS]
+        invert_logic = platform[CONF_INVERT_LOGIC]
+        ports = platform[CONF_PORTS]
         for port_id, port_name in ports.items():
             try:
                 binary_sensors.append(
@@ -72,13 +61,13 @@ class NumatoGPIOBinarySensor(BinarySensorDevice):
         self._port = port
         self._invert_logic = invert_logic
         self._state = None
-        numato.setup_input(self._device_id, self._port)
+        setup_input(self._device_id, self._port)
 
         def read_gpio(port, level):
             self._state = level
             self.schedule_update_ha_state()
 
-        numato.edge_detect(self._device_id, self._port, read_gpio)
+        edge_detect(self._device_id, self._port, read_gpio)
 
     @property
     def should_poll(self):
@@ -98,7 +87,7 @@ class NumatoGPIOBinarySensor(BinarySensorDevice):
     def update(self):
         """Update the GPIO state."""
         try:
-            self._state = numato.read_input(self._device_id, self._port)
+            self._state = read_input(self._device_id, self._port)
         except NumatoGpioError as err:
             self._state = None
             _LOGGER.error(

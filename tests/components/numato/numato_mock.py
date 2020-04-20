@@ -69,8 +69,11 @@ class NumatoModuleMock:
 
     inject_error = False
 
-    def discover():
-        """Mockup for the numato device discovery."""
+    def discover(_):
+        """Mockup for the numato device discovery.
+
+        Ignore the device list argument, mock discovers /dev/ttyACM0.
+        """
         if NumatoModuleMock.inject_error:
             return
         NumatoModuleMock.devices[0] = NumatoModuleMock.NumatoDeviceMock("/dev/ttyACM0")
