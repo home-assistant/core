@@ -20,8 +20,8 @@
   },
   "state": {
     "query_stage": {
-      "initializing": "[%key:component::zwave::state::default::initializing%]",
-      "dead": "[%key:component::zwave::state::default::dead%]"
+      "initializing": "[%key:component::zwave::state::_::initializing%]",
+      "dead": "[%key:component::zwave::state::_::dead%]"
     },
     "_": {
       "initializing": "Initializing",

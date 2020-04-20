@@ -2,8 +2,10 @@
 from functools import partial
 import json
 import logging
+import re
 from typing import Dict
 
+from script.translations import upload
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -18,12 +20,27 @@ UNDEFINED = 0
 REQUIRED = 1
 REMOVED = 2
 
+RE_REFERENCE = r"\[\%key:(.+)\%\]"
+
 REMOVED_TITLE_MSG = (
     "config.title key has been moved out of config and into the root of strings.json. "
     "Starting Home Assistant 0.109 you only need to define this key in the root "
     "if the title needs to be different than the name of your integration in the "
     "manifest."
 )
+
+
+def find_references(strings, prefix, found):
+    """Find references."""
+    for key, value in strings.items():
+        if isinstance(value, dict):
+            find_references(value, f"{prefix}::{key}", found)
+            continue
+
+        match = re.match(RE_REFERENCE, value)
+
+        if match:
+            found.append({"source": f"{prefix}::{key}", "ref": match.groups()[0]})
 
 
 def removed_title_validator(config, integration, value):
@@ -169,9 +186,10 @@ def gen_platform_strings_schema(config: Config, integration: Integration):
 ONBOARDING_SCHEMA = vol.Schema({vol.Required("area"): {str: str}})
 
 
-def validate_translation_file(config: Config, integration: Integration):
+def validate_translation_file(config: Config, integration: Integration, all_strings):
     """Validate translation files for integration."""
     strings_file = integration.path / "strings.json"
+    references = []
 
     if strings_file.is_file():
         strings = json.loads(strings_file.read_text())
@@ -189,6 +207,8 @@ def validate_translation_file(config: Config, integration: Integration):
             integration.add_error(
                 "translations", f"Invalid strings.json: {humanize_error(strings, err)}"
             )
+        else:
+            find_references(strings, "strings.json", references)
 
     for path in integration.path.glob("strings.*.json"):
         strings = json.loads(path.read_text())
@@ -202,9 +222,37 @@ def validate_translation_file(config: Config, integration: Integration):
                 integration.add_warning("translations", msg)
             else:
                 integration.add_error("translations", msg)
+        else:
+            find_references(strings, path.name, references)
+
+    if config.specific_integrations:
+        return
+
+    # Validate references
+
+    for reference in references:
+        parts = reference["ref"].split("::")
+        search = all_strings
+        key = parts.pop(0)
+        while parts and key in search:
+            search = search[key]
+            key = parts.pop(0)
+
+        if parts:
+            print(key, list(search))
+            integration.add_error(
+                "translations",
+                f"{reference['source']} contains invalid reference {reference['ref']}: Could not find {key}",
+            )
 
 
 def validate(integrations: Dict[str, Integration], config: Config):
     """Handle JSON files inside integrations."""
+    if config.specific_integrations:
+        all_strings = None
+    else:
+        upload.generate_upload_data()
+        all_strings = json.loads(upload.LOCAL_FILE.read_text())
+
     for integration in integrations.values():
-        validate_translation_file(config, integration)
+        validate_translation_file(config, integration, all_strings)
