@@ -376,7 +376,7 @@ bt_proximity==0.2
 bthomehub5-devicelist==0.1.1
 
 # homeassistant.components.bt_smarthub
-btsmarthub_devicelist==0.1.3
+btsmarthub_devicelist==0.2.0
 
 # homeassistant.components.buienradar
 buienradar==1.0.4
