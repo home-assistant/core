@@ -37,6 +37,7 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Tempo in secondi dall'ultima volta che viene visto fino a quando non \u00e8 considerato lontano",
+                    "ignore_wired_bug": "Disattivare la logica dei bug cablati UniFi",
                     "ssid_filter": "Selezionare gli SSID su cui tracciare i client wireless",
                     "track_clients": "Traccia i client di rete",
                     "track_devices": "Tracciare i dispositivi di rete (dispositivi Ubiquiti)",

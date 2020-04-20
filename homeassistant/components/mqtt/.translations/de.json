@@ -41,11 +41,11 @@
         "trigger_type": {
             "button_double_press": "\"{subtype}\" doppelt angeklickt",
             "button_long_press": "\"{subtype}\" kontinuierlich gedr\u00fcckt",
-            "button_long_release": "\"{subtype}\" nach langem Dr\u00fccken freigegeben",
+            "button_long_release": "\"{subtype}\" nach langem Dr\u00fccken losgelassen",
             "button_quadruple_press": "\"{subtype}\" Vierfach geklickt",
             "button_quintuple_press": "\"{subtype}\" f\u00fcnffach geklickt",
             "button_short_press": "\"{subtype}\" gedr\u00fcckt",
-            "button_short_release": "\"{subtype}\" freigegeben",
+            "button_short_release": "\"{subtype}\" losgelassen",
             "button_triple_press": "\"{subtype}\" dreifach geklickt"
         }
     }

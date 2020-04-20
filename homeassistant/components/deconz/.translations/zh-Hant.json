@@ -29,6 +29,19 @@
                     "host": "\u4e3b\u6a5f\u7aef",
                     "port": "\u901a\u8a0a\u57e0"
                 }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "port": "\u901a\u8a0a\u57e0"
+                },
+                "title": "\u8a2d\u5b9a deCONZ \u9598\u9053\u5668"
+            },
+            "user": {
+                "data": {
+                    "host": "\u9078\u64c7\u6240\u63a2\u7d22\u5230\u7684 deCONZ \u9598\u9053\u5668"
+                },
+                "title": "\u9078\u64c7 deCONZ \u9598\u9053\u5668"
             }
         }
     },

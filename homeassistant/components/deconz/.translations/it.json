@@ -29,6 +29,19 @@
                     "host": "Host",
                     "port": "Porta"
                 }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Host",
+                    "port": "Porta"
+                },
+                "title": "Configurare il gateway deCONZ"
+            },
+            "user": {
+                "data": {
+                    "host": "Selezionare il gateway deCONZ rilevato"
+                },
+                "title": "Selezionare il gateway deCONZ"
             }
         }
     },

@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "no_homes": "Es sind keine Standorte mit diesem Tado-Konto verkn\u00fcpft.",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
@@ -24,6 +25,7 @@
                 "data": {
                     "fallback": "Aktivieren Sie den Fallback-Modus."
                 },
+                "description": "Der Fallback-Modus wechselt beim n\u00e4chsten Zeitplanwechsel nach dem manuellen Anpassen einer Zone zu Smart Schedule.",
                 "title": "Passen Sie die Tado-Optionen an."
             }
         }
