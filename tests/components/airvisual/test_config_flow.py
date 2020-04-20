@@ -48,7 +48,10 @@ async def test_duplicate_error(hass):
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=node_pro_conf
+        DOMAIN, context={"source": SOURCE_USER}, data={"type": "AirVisual Node/Pro"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=node_pro_conf
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -81,7 +84,10 @@ async def test_node_pro_error(hass):
         "pyairvisual.node.Node.from_samba", side_effect=NodeProError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=node_pro_conf
+            DOMAIN, context={"source": SOURCE_USER}, data={"type": "AirVisual Node/Pro"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=node_pro_conf
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {CONF_IP_ADDRESS: "unable_to_connect"}
@@ -191,7 +197,10 @@ async def test_step_node_pro(hass):
         "homeassistant.components.airvisual.async_setup_entry", return_value=True
     ), patch("pyairvisual.node.Node.from_samba"):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+            DOMAIN, context={"source": SOURCE_USER}, data={"type": "AirVisual Node/Pro"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=conf
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "Node/Pro (192.168.1.100)"
@@ -208,7 +217,6 @@ async def test_step_import(hass):
         CONF_LATITUDE: 51.528308,
         CONF_LONGITUDE: -0.3817765,
     }
-    node_pro_conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "my_password"}
 
     with patch(
         "homeassistant.components.airvisual.async_setup_entry", return_value=True
@@ -223,20 +231,6 @@ async def test_step_import(hass):
             CONF_API_KEY: "abcde12345",
             CONF_LATITUDE: 51.528308,
             CONF_LONGITUDE: -0.3817765,
-        }
-
-    with patch(
-        "homeassistant.components.airvisual.async_setup_entry", return_value=True
-    ), patch("pyairvisual.node.Node.from_samba"):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=node_pro_conf
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "Node/Pro (192.168.1.100)"
-        assert result["data"] == {
-            CONF_IP_ADDRESS: "192.168.1.100",
-            CONF_PASSWORD: "my_password",
         }
 
 
