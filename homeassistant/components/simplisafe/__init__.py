@@ -419,13 +419,14 @@ class SimpliSafe:
         self.systems = {}
         self.websocket = SimpliSafeWebsocket(hass, api.websocket)
 
-    async def _async_process_new_notifications(self, system):
+    @callback
+    def _async_process_new_notifications(self, system):
         """Act on any new system notifications."""
-        while self._hass.state != CoreState.running:
+        if self._hass.state != CoreState.running:
             # If HASS isn't fully running yet, it may cause the SIMPLISAFE_NOTIFICATION
             # event to fire before dependent components (like automation) are fully
-            # ready. Therefore, we sleep until that time:
-            await asyncio.sleep(1)
+            # ready. If that's the case, skip:
+            return
 
         old_notifications = self._system_notifications.get(system.system_id, [])
         latest_notifications = system.notifications
@@ -496,7 +497,7 @@ class SimpliSafe:
             """Update a system."""
             await system.update()
 
-            asyncio.create_task(self._async_process_new_notifications(system))
+            self._async_process_new_notifications(system)
 
             _LOGGER.debug('Updated REST API data for "%s"', system.address)
             async_dispatcher_send(
