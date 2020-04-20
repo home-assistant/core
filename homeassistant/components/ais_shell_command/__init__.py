@@ -706,8 +706,6 @@ def _flush_logs(hass, call):
     os.system("rm -rf /data/data/pl.sviete.dom/files/home/.cache/pip")
     # recorder.purge if recorder exists
     if hass.services.has_service("recorder", "purge"):
-        import homeassistant.components.ais_files as ais_files
-
         keep_days = 2
         if ais_global.G_DB_SETTINGS_INFO is not None:
             # take keep days from settings
