@@ -11,8 +11,6 @@ import homeassistant.helpers.translation as translation
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
-
 
 @pytest.fixture
 def mock_config_flows():
@@ -111,14 +109,13 @@ def test_load_translations_files(hass):
 
 async def test_get_translations(hass, mock_config_flows):
     """Test the get translations helper."""
-    translations = await translation.async_get_translations(hass, "en")
+    translations = await translation.async_get_translations(hass, "en", "state")
     assert translations == {}
 
     assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
 
-    translations = await translation.async_get_translations(hass, "en")
+    translations = await translation.async_get_translations(hass, "en", "state")
 
-    assert translations["component.switch.something"] == "else"
     assert translations["component.switch.state.string1"] == "Value 1"
     assert translations["component.switch.state.string2"] == "Value 2"
 
@@ -128,12 +125,14 @@ async def test_get_translations(hass, mock_config_flows):
     assert translations["component.switch.state.string2"] == "German Value 2"
 
     # Test a partial translation
-    translations = await translation.async_get_translations(hass, "es")
+    translations = await translation.async_get_translations(hass, "es", "state")
     assert translations["component.switch.state.string1"] == "Spanish Value 1"
     assert translations["component.switch.state.string2"] == "Value 2"
 
     # Test that an untranslated language falls back to English.
-    translations = await translation.async_get_translations(hass, "invalid-language")
+    translations = await translation.async_get_translations(
+        hass, "invalid-language", "state"
+    )
     assert translations["component.switch.state.string1"] == "Value 1"
     assert translations["component.switch.state.string2"] == "Value 2"
 
@@ -145,7 +144,7 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
     integration.name = "Component 1"
 
     with patch.object(
-        translation, "component_translation_path", return_value=mock_coro("bla.json")
+        translation, "component_translation_path", return_value="bla.json"
     ), patch.object(
         translation,
         "load_translations_files",
@@ -155,11 +154,10 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
         return_value=integration,
     ):
         translations = await translation.async_get_translations(
-            hass, "en", config_flow=True
+            hass, "en", "hello", config_flow=True
         )
 
     assert translations == {
-        "component.component1.title": "Component 1",
         "component.component1.hello": "world",
     }
 
@@ -179,17 +177,16 @@ async def test_get_translations_while_loading_components(hass):
         return {"component1": {"hello": "world"}}
 
     with patch.object(
-        translation, "component_translation_path", return_value=mock_coro("bla.json")
+        translation, "component_translation_path", return_value="bla.json"
     ), patch.object(
         translation, "load_translations_files", side_effect=mock_load_translation_files,
     ), patch(
         "homeassistant.helpers.translation.async_get_integration",
         return_value=integration,
     ):
-        translations = await translation.async_get_translations(hass, "en")
+        translations = await translation.async_get_translations(hass, "en", "hello")
 
     assert translations == {
-        "component.component1.title": "Component 1",
         "component.component1.hello": "world",
     }
 
@@ -206,3 +203,39 @@ async def test_get_translation_categories(hass):
             hass, "en", "device_automation", None, True
         )
         assert "component.light.device_automation.action_type.turn_on" in translations
+
+
+async def test_translation_merging(hass, caplog):
+    """Test we merge translations of two integrations."""
+    hass.config.components.add("sensor.moon")
+    hass.config.components.add("sensor.season")
+    hass.config.components.add("sensor")
+
+    translations = await translation.async_get_translations(hass, "en", "state")
+
+    assert "component.sensor.state.moon__phase.first_quarter" in translations
+    assert "component.sensor.state.season__season.summer" in translations
+
+    # Merge in some bad translation data
+    integration = Mock(file_path=pathlib.Path(__file__))
+    hass.config.components.add("sensor.bad_translations")
+
+    with patch.object(
+        translation, "component_translation_path", return_value="bla.json"
+    ), patch.object(
+        translation,
+        "load_translations_files",
+        return_value={"sensor.bad_translations": {"state": "bad data"}},
+    ), patch(
+        "homeassistant.helpers.translation.async_get_integration",
+        return_value=integration,
+    ):
+        translations = await translation.async_get_translations(hass, "en", "state")
+
+        assert "component.sensor.state.moon__phase.first_quarter" in translations
+        assert "component.sensor.state.season__season.summer" in translations
+
+    assert (
+        "An integration providing translations for sensor provided invalid data: bad data"
+        in caplog.text
+    )
