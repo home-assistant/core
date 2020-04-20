@@ -70,8 +70,6 @@ class GriddyPriceSensor(Entity):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self._coordinator.async_add_listener(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """Undo subscription."""
-        self._coordinator.async_remove_listener(self.async_write_ha_state)
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
