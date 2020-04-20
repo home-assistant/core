@@ -12,7 +12,6 @@
             "pick_implementation": {
                 "title": "Scegli il metodo di autenticazione"
             }
-        },
-        "title": "Netatmo"
+        }
     }
 }

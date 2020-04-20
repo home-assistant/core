@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Network UPS Tools (NUT)",
     "step": {
       "user": {
         "title": "Connect to the NUT server",
@@ -13,32 +12,26 @@
       },
       "ups": {
         "title": "Choose the UPS to Monitor",
-        "data": {
-          "alias": "Alias",
-          "resources": "Resources"
-        }
+        "data": { "alias": "Alias", "resources": "Resources" }
       },
       "resources": {
         "title": "Choose the Resources to Monitor",
-        "data": {
-          "resources": "Resources"
-        }
+        "data": { "resources": "Resources" }
       }
     },
     "error": {
       "cannot_connect": "Failed to connect, please try again",
       "unknown": "Unexpected error"
     },
-    "abort": {
-      "already_configured": "Device is already configured"
-    }
+    "abort": { "already_configured": "Device is already configured" }
   },
   "options": {
     "step": {
       "init": {
         "description": "Choose Sensor Resources.",
         "data": {
-          "resources": "Resources"
+          "resources": "Resources",
+          "scan_interval": "Scan Interval (seconds)"
         }
       }
     }

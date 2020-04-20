@@ -99,6 +99,7 @@ class MediaPlayer(HomeAccessory):
     def __init__(self, *args):
         """Initialize a Switch accessory object."""
         super().__init__(*args, category=CATEGORY_SWITCH)
+        state = self.hass.states.get(self.entity_id)
         self._flag = {
             FEATURE_ON_OFF: False,
             FEATURE_PLAY_PAUSE: False,
@@ -144,6 +145,7 @@ class MediaPlayer(HomeAccessory):
             self.chars[FEATURE_TOGGLE_MUTE] = serv_toggle_mute.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_toggle_mute
             )
+        self.update_state(state)
 
     def generate_service_name(self, mode):
         """Generate name for individual service."""
@@ -201,7 +203,8 @@ class MediaPlayer(HomeAccessory):
                 _LOGGER.debug(
                     '%s: Set current state for "on_off" to %s', self.entity_id, hk_state
                 )
-                self.chars[FEATURE_ON_OFF].set_value(hk_state)
+                if self.chars[FEATURE_ON_OFF].value != hk_state:
+                    self.chars[FEATURE_ON_OFF].set_value(hk_state)
             self._flag[FEATURE_ON_OFF] = False
 
         if self.chars[FEATURE_PLAY_PAUSE]:
@@ -212,7 +215,8 @@ class MediaPlayer(HomeAccessory):
                     self.entity_id,
                     hk_state,
                 )
-                self.chars[FEATURE_PLAY_PAUSE].set_value(hk_state)
+                if self.chars[FEATURE_PLAY_PAUSE].value != hk_state:
+                    self.chars[FEATURE_PLAY_PAUSE].set_value(hk_state)
             self._flag[FEATURE_PLAY_PAUSE] = False
 
         if self.chars[FEATURE_PLAY_STOP]:
@@ -223,7 +227,8 @@ class MediaPlayer(HomeAccessory):
                     self.entity_id,
                     hk_state,
                 )
-                self.chars[FEATURE_PLAY_STOP].set_value(hk_state)
+                if self.chars[FEATURE_PLAY_STOP].value != hk_state:
+                    self.chars[FEATURE_PLAY_STOP].set_value(hk_state)
             self._flag[FEATURE_PLAY_STOP] = False
 
         if self.chars[FEATURE_TOGGLE_MUTE]:
@@ -234,7 +239,8 @@ class MediaPlayer(HomeAccessory):
                     self.entity_id,
                     current_state,
                 )
-                self.chars[FEATURE_TOGGLE_MUTE].set_value(current_state)
+                if self.chars[FEATURE_TOGGLE_MUTE].value != current_state:
+                    self.chars[FEATURE_TOGGLE_MUTE].set_value(current_state)
             self._flag[FEATURE_TOGGLE_MUTE] = False
 
 
@@ -245,6 +251,7 @@ class TelevisionMediaPlayer(HomeAccessory):
     def __init__(self, *args):
         """Initialize a Switch accessory object."""
         super().__init__(*args, category=CATEGORY_TELEVISION)
+        state = self.hass.states.get(self.entity_id)
 
         self._flag = {
             CHAR_ACTIVE: False,
@@ -336,6 +343,8 @@ class TelevisionMediaPlayer(HomeAccessory):
                 serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE, value=False)
                 _LOGGER.debug("%s: Added source %s.", self.entity_id, source)
 
+        self.update_state(state)
+
     def set_on_off(self, value):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state for "on_off" to %s', self.entity_id, value)
@@ -396,12 +405,16 @@ class TelevisionMediaPlayer(HomeAccessory):
         current_state = new_state.state
 
         # Power state television
-        hk_state = current_state not in (STATE_OFF, STATE_UNKNOWN)
+        hk_state = 0
+        if current_state not in ("None", STATE_OFF, STATE_UNKNOWN):
+            hk_state = 1
+
         if not self._flag[CHAR_ACTIVE]:
             _LOGGER.debug(
                 "%s: Set current active state to %s", self.entity_id, hk_state
             )
-            self.char_active.set_value(hk_state)
+            if self.char_active.value != hk_state:
+                self.char_active.set_value(hk_state)
         self._flag[CHAR_ACTIVE] = False
 
         # Set mute state
@@ -413,7 +426,8 @@ class TelevisionMediaPlayer(HomeAccessory):
                     self.entity_id,
                     current_mute_state,
                 )
-                self.char_mute.set_value(current_mute_state)
+                if self.char_mute.value != current_mute_state:
+                    self.char_mute.set_value(current_mute_state)
             self._flag[CHAR_MUTE] = False
 
         # Set active input
@@ -425,11 +439,13 @@ class TelevisionMediaPlayer(HomeAccessory):
                 )
                 if source_name in self.sources:
                     index = self.sources.index(source_name)
-                    self.char_input_source.set_value(index)
+                    if self.char_input_source.value != index:
+                        self.char_input_source.set_value(index)
                 else:
                     _LOGGER.warning(
                         "%s: Sources out of sync. Restart Home Assistant",
                         self.entity_id,
                     )
-                    self.char_input_source.set_value(0)
+                    if self.char_input_source.value != 0:
+                        self.char_input_source.set_value(0)
             self._flag[CHAR_ACTIVE_IDENTIFIER] = False

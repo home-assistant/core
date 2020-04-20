@@ -6,5 +6,6 @@
         "condition_type": {
             "is_hvac_mode": "{entity_name} est\u00e1 configurado en un modo HVAC espec\u00edfico"
         }
-    }
+    },
+    "title": "Clima"
 }

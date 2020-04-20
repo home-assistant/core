@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Synology DSM",
     "flow_title": "Synology DSM {name} ({host})",
     "step": {
       "user": {
@@ -12,6 +11,12 @@
           "api_version": "DSM version",
           "username": "Username",
           "password": "Password"
+        }
+      },
+      "2sa": {
+        "title": "Synology DSM: two-step authentication",
+        "data": {
+          "otp_code": "Code"
         }
       },
       "link": {
@@ -28,10 +33,9 @@
     },
     "error": {
       "login": "Login error: please check your username & password",
-      "unknown": "Unknown error: please retry later or an other configuration"
+      "missing_data": "Missing data: please retry later or an other configuration",
+      "otp_failed": "Two-step authentication failed, retry with a new pass code"
     },
-    "abort": {
-      "already_configured": "Host already configured"
-    }
+    "abort": { "already_configured": "Host already configured" }
   }
 }

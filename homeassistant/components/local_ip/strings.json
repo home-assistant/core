@@ -1,6 +1,6 @@
 {
+  "title": "Local IP Address",
   "config": {
-    "title": "Local IP Address",
     "step": {
       "user": {
         "title": "Local IP Address",

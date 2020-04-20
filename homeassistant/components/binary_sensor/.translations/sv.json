@@ -88,5 +88,6 @@
             "unsafe": "{entity_name} blev os\u00e4ker",
             "vibration": "{entity_name} b\u00f6rjade detektera vibrationer"
         }
-    }
+    },
+    "title": "Bin\u00e4r sensor"
 }

@@ -3,7 +3,10 @@
         "abort": {
             "already_configured": "Dieser Drucker ist bereits konfiguriert",
             "connection_error": "Verbindung zum Drucker fehlgeschlagen.",
-            "connection_upgrade": "Verbindung zum Drucker fehlgeschlagen, da ein Verbindungsupgrade erforderlich ist."
+            "connection_upgrade": "Verbindung zum Drucker fehlgeschlagen, da ein Verbindungsupgrade erforderlich ist.",
+            "ipp_error": "IPP-Fehler festgestellt.",
+            "ipp_version_error": "IPP-Version wird vom Drucker nicht unterst\u00fctzt.",
+            "parse_error": "Antwort vom Drucker konnte nicht analysiert werden."
         },
         "error": {
             "connection_error": "Verbindung zum Drucker fehlgeschlagen.",
@@ -26,7 +29,6 @@
                 "description": "M\u00f6chten Sie den Drucker mit dem Namen \"{name}\" zu Home Assistant hinzuf\u00fcgen?",
                 "title": "Entdeckter Drucker"
             }
-        },
-        "title": "Internet-Druckprotokoll (IPP)"
+        }
     }
 }

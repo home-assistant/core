@@ -1,4 +1,5 @@
 {
+  "title": "Cover",
   "device_automation": {
     "action_type": {
       "open": "Open {entity_name}",

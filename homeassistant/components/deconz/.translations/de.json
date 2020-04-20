@@ -18,22 +18,37 @@
                 "title": "deCONZ Zigbee Gateway \u00fcber das Hass.io Add-on"
             },
             "init": {
-                "data": {
-                    "host": "Host",
-                    "port": "Port"
-                },
                 "title": "Definiere das deCONZ-Gateway"
             },
             "link": {
                 "description": "Entsperre dein deCONZ-Gateway, um es bei Home Assistant zu registrieren. \n\n 1. Gehe in die deCONZ-Systemeinstellungen \n 2. Dr\u00fccke die Taste \"Gateway entsperren\"",
                 "title": "Mit deCONZ verbinden"
+            },
+            "manual_confirm": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "Konfigurieren Sie das deCONZ-Gateway"
+            },
+            "user": {
+                "data": {
+                    "host": "W\u00e4hlen Sie das erkannte deCONZ-Gateway aus"
+                },
+                "title": "W\u00e4hlen Sie das deCONZ-Gateway"
             }
-        },
-        "title": "deCONZ Zigbee Gateway"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Beide Tasten",
+            "bottom_buttons": "Untere Tasten",
             "button_1": "Erste Taste",
             "button_2": "Zweite Taste",
             "button_3": "Dritte Taste",
@@ -50,6 +65,7 @@
             "side_4": "Seite 4",
             "side_5": "Seite 5",
             "side_6": "Seite 6",
+            "top_buttons": "Obere Tasten",
             "turn_off": "Ausschalten",
             "turn_on": "Einschalten"
         },

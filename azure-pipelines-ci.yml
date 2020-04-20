@@ -96,7 +96,7 @@ stages:
           pip install -e .
     - script: |
         . venv/bin/activate
-        python -m script.hassfest validate
+        python -m script.hassfest --action validate
       displayName: 'Validate manifests'
     - script: |
         . venv/bin/activate

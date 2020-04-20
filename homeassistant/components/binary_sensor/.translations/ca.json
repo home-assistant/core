@@ -88,5 +88,6 @@
             "unsafe": "{entity_name} es torna insegur",
             "vibration": "{entity_name} ha comen\u00e7at a detectar vibraci\u00f3"
         }
-    }
+    },
+    "title": "Sensor binari"
 }

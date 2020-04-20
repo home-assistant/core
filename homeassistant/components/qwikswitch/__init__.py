@@ -205,9 +205,7 @@ async def async_setup(hass, config):
         # If button pressed, fire a hass event
         if QS_ID in qspacket:
             if qspacket.get(QS_CMD, "") in cmd_buttons:
-                hass.bus.async_fire(
-                    "qwikswitch.button.{}".format(qspacket[QS_ID]), qspacket
-                )
+                hass.bus.async_fire(f"qwikswitch.button.{qspacket[QS_ID]}", qspacket)
                 return
 
             if qspacket[QS_ID] in sensor_ids:

@@ -8,15 +8,11 @@
     },
     "step": {
       "user": {
-        "data": {
-          "username": "Email Address",
-          "password": "Password"
-        },
+        "data": { "username": "Email Address", "password": "Password" },
         "description": "Please enter your information.",
         "title": "Tesla - Configuration"
       }
-    },
-    "title": "Tesla"
+    }
   },
   "options": {
     "step": {

@@ -75,12 +75,12 @@ def add_entity(device: SmartBulb, async_add_entities):
 
 def brightness_to_percentage(byt):
     """Convert brightness from absolute 0..255 to percentage."""
-    return int((byt * 100.0) / 255.0)
+    return round((byt * 100.0) / 255.0)
 
 
 def brightness_from_percentage(percent):
     """Convert percentage to absolute value 0..255."""
-    return (percent * 255.0) / 100.0
+    return round((percent * 255.0) / 100.0)
 
 
 class LightState(NamedTuple):

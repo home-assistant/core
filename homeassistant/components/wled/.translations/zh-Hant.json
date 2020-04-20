@@ -20,7 +20,6 @@
                 "description": "\u662f\u5426\u8981\u65b0\u589e WLED \u540d\u7a31\u300c{name}\u300d\u8a2d\u5099\u81f3 Home Assistant\uff1f",
                 "title": "\u81ea\u52d5\u63a2\u7d22\u5230 WLED \u8a2d\u5099"
             }
-        },
-        "title": "WLED"
+        }
     }
 }

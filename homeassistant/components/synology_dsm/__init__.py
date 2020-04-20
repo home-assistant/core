@@ -71,8 +71,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     unit = hass.config.units.temperature_unit
     use_ssl = entry.data[CONF_SSL]
     api_version = entry.data.get(CONF_API_VERSION, DEFAULT_DSM_VERSION)
+    device_token = entry.data.get("device_token")
 
-    api = SynoApi(hass, host, port, username, password, unit, use_ssl, api_version)
+    api = SynoApi(
+        hass, host, port, username, password, unit, use_ssl, device_token, api_version
+    )
 
     await api.async_setup()
 
@@ -105,6 +108,7 @@ class SynoApi:
         password: str,
         temp_unit: str,
         use_ssl: bool,
+        device_token: str,
         api_version: int,
     ):
         """Initialize the API wrapper class."""
@@ -114,6 +118,7 @@ class SynoApi:
         self._username = username
         self._password = password
         self._use_ssl = use_ssl
+        self._device_token = device_token
         self._api_version = api_version
         self.temp_unit = temp_unit
 
@@ -137,17 +142,22 @@ class SynoApi:
             self._username,
             self._password,
             self._use_ssl,
+            device_token=self._device_token,
             dsm_version=self._api_version,
         )
-        self.information = self._dsm.information
-        self.utilisation = self._dsm.utilisation
-        self.storage = self._dsm.storage
 
+        await self._hass.async_add_executor_job(self._fetch_device_configuration)
         await self.update()
 
         self._unsub_dispatcher = async_track_time_interval(
             self._hass, self.update, SCAN_INTERVAL
         )
+
+    def _fetch_device_configuration(self):
+        """Fetch initial device config."""
+        self.information = self._dsm.information
+        self.utilisation = self._dsm.utilisation
+        self.storage = self._dsm.storage
 
     async def async_unload(self):
         """Stop interacting with the NAS and prepare for removal from hass."""

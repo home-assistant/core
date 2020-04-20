@@ -18,6 +18,9 @@ CONF_ZONE = "zone"
 CONF_PREFIX = "prefix"
 
 
+BARE_TEMP_FAHRENHEIT = "F"
+BARE_TEMP_CELSIUS = "C"
+
 ELK_ELEMENTS = {
     CONF_AREA: Max.AREAS.value,
     CONF_COUNTER: Max.COUNTERS.value,
@@ -29,3 +32,8 @@ ELK_ELEMENTS = {
     CONF_THERMOSTAT: Max.THERMOSTATS.value,
     CONF_ZONE: Max.ZONES.value,
 }
+
+
+ATTR_CHANGED_BY_KEYPAD = "changed_by_keypad"
+ATTR_CHANGED_BY_ID = "changed_by_id"
+ATTR_CHANGED_BY_TIME = "changed_by_time"

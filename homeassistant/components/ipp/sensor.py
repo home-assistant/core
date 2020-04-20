@@ -60,6 +60,12 @@ class IPPSensor(IPPEntity):
         """Initialize IPP sensor."""
         self._unit_of_measurement = unit_of_measurement
         self._key = key
+        self._unique_id = None
+
+        if coordinator.data.info.uuid is not None:
+            self._unique_id = f"{coordinator.data.info.uuid}_{key}"
+        elif coordinator.data.info.serial is not None:
+            self._unique_id = f"{coordinator.data.info.serial}_{key}"
 
         super().__init__(
             entry_id=entry_id,
@@ -72,7 +78,7 @@ class IPPSensor(IPPEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
-        return f"{self.coordinator.data.info.uuid}_{self._key}"
+        return self._unique_id
 
     @property
     def unit_of_measurement(self) -> str:

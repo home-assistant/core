@@ -17,12 +17,11 @@
                     "host": "Host (Direcci\u00f3n IP)",
                     "name": "Nombre del dispositivo",
                     "password": "Contrase\u00f1a",
-                    "username": "Nombre de usuario"
+                    "username": "Usuario"
                 },
                 "title": "Conectar con DoorBird"
             }
-        },
-        "title": "DoorBird"
+        }
     },
     "options": {
         "step": {

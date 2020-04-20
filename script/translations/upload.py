@@ -6,7 +6,7 @@ import pathlib
 import re
 import subprocess
 
-from .const import DOCKER_IMAGE, INTEGRATIONS_DIR, PROJECT_ID
+from .const import CORE_PROJECT_ID, DOCKER_IMAGE, INTEGRATIONS_DIR
 from .error import ExitApp
 from .util import get_current_branch, get_lokalise_token
 
@@ -32,7 +32,7 @@ def run_upload_docker():
             "--token",
             get_lokalise_token(),
             "import",
-            PROJECT_ID,
+            CORE_PROJECT_ID,
             "--file",
             CONTAINER_FILE,
             "--lang_iso",
@@ -49,13 +49,8 @@ def run_upload_docker():
         raise ExitApp("Failed to download translations")
 
 
-def run(args):
-    """Run the script."""
-    if get_current_branch() != "dev" and os.environ.get("AZURE_BRANCH") != "dev":
-        raise ExitApp(
-            "Please only run the translations upload script from a clean checkout of dev."
-        )
-
+def generate_upload_data():
+    """Generate the data for uploading."""
     translations = {"component": {}}
 
     for path in INTEGRATIONS_DIR.glob(f"*{os.sep}strings*.json"):
@@ -71,7 +66,21 @@ def run(args):
 
         parent.update(json.loads(path.read_text()))
 
+    return translations
+
+
+def run():
+    """Run the script."""
+    if get_current_branch() != "dev" and os.environ.get("AZURE_BRANCH") != "dev":
+        raise ExitApp(
+            "Please only run the translations upload script from a clean checkout of dev."
+        )
+
+    translations = generate_upload_data()
+
     LOCAL_FILE.parent.mkdir(parents=True, exist_ok=True)
     LOCAL_FILE.write_text(json.dumps(translations, indent=4, sort_keys=True))
 
-    # run_upload_docker()
+    run_upload_docker()
+
+    return 0

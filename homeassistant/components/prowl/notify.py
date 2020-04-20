@@ -39,7 +39,7 @@ class ProwlNotificationService(BaseNotificationService):
         """Send the message to the user."""
         response = None
         session = None
-        url = "{}{}".format(_RESOURCE, "add")
+        url = f"{_RESOURCE}add"
         data = kwargs.get(ATTR_DATA)
         payload = {
             "apikey": self._api_key,

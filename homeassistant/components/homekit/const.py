@@ -5,6 +5,7 @@ DEVICE_PRECISION_LEEWAY = 6
 DOMAIN = "homekit"
 HOMEKIT_FILE = ".homekit.state"
 HOMEKIT_NOTIFY_ID = 4663548
+AID_STORAGE = "homekit-aid-allocations"
 
 
 # #### Attributes ####
@@ -21,12 +22,14 @@ CONF_FILTER = "filter"
 CONF_LINKED_BATTERY_SENSOR = "linked_battery_sensor"
 CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
 CONF_SAFE_MODE = "safe_mode"
+CONF_ZEROCONF_DEFAULT_INTERFACE = "zeroconf_default_interface"
 
 # #### Config Defaults ####
 DEFAULT_AUTO_START = True
 DEFAULT_LOW_BATTERY_THRESHOLD = 20
 DEFAULT_PORT = 51827
 DEFAULT_SAFE_MODE = False
+DEFAULT_ZEROCONF_DEFAULT_INTERFACE = False
 
 # #### Features ####
 FEATURE_ON_OFF = "on_off"
@@ -146,6 +149,7 @@ CHAR_TARGET_HUMIDITY = "TargetRelativeHumidity"
 CHAR_TARGET_SECURITY_STATE = "SecuritySystemTargetState"
 CHAR_TARGET_TEMPERATURE = "TargetTemperature"
 CHAR_TARGET_TILT_ANGLE = "TargetHorizontalTiltAngle"
+CHAR_HOLD_POSITION = "HoldPosition"
 CHAR_TEMP_DISPLAY_UNITS = "TemperatureDisplayUnits"
 CHAR_VALVE_TYPE = "ValveType"
 CHAR_VOLUME = "Volume"
@@ -180,3 +184,15 @@ THRESHOLD_CO2 = 1000
 # #### Default values ####
 DEFAULT_MIN_TEMP_WATER_HEATER = 40  # °C
 DEFAULT_MAX_TEMP_WATER_HEATER = 60  # °C
+
+# #### Door states ####
+HK_DOOR_OPEN = 0
+HK_DOOR_CLOSED = 1
+HK_DOOR_OPENING = 2
+HK_DOOR_CLOSING = 3
+HK_DOOR_STOPPED = 4
+
+# ### Position State ####
+HK_POSITION_GOING_TO_MIN = 0
+HK_POSITION_GOING_TO_MAX = 1
+HK_POSITION_STOPPED = 2

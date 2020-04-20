@@ -536,7 +536,13 @@ def websocket_get_themes(hass, connection, msg):
 
 
 @websocket_api.websocket_command(
-    {"type": "frontend/get_translations", vol.Required("language"): str}
+    {
+        "type": "frontend/get_translations",
+        vol.Required("language"): str,
+        vol.Required("category"): str,
+        vol.Optional("integration"): str,
+        vol.Optional("config_flow"): bool,
+    }
 )
 @websocket_api.async_response
 async def websocket_get_translations(hass, connection, msg):
@@ -544,7 +550,13 @@ async def websocket_get_translations(hass, connection, msg):
 
     Async friendly.
     """
-    resources = await async_get_translations(hass, msg["language"])
+    resources = await async_get_translations(
+        hass,
+        msg["language"],
+        msg["category"],
+        msg.get("integration"),
+        msg.get("config_flow"),
+    )
     connection.send_message(
         websocket_api.result_message(msg["id"], {"resources": resources})
     )

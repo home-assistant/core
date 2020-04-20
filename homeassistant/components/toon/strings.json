@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Toon",
     "step": {
       "authenticate": {
         "title": "Link your Toon account",
@@ -14,9 +13,7 @@
       "display": {
         "title": "Select display",
         "description": "Select the Toon display to connect with.",
-        "data": {
-          "display": "Choose display"
-        }
+        "data": { "display": "Choose display" }
       }
     },
     "error": {

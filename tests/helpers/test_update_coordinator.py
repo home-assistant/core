@@ -41,6 +41,8 @@ async def test_async_refresh(crd):
     await crd.async_refresh()
     assert crd.data == 1
     assert crd.last_update_success is True
+    # Make sure we didn't schedule a refresh because we have 0 listeners
+    assert crd._unsub_refresh is None
 
     updates = []
 
@@ -50,6 +52,7 @@ async def test_async_refresh(crd):
     unsub = crd.async_add_listener(update_callback)
     await crd.async_refresh()
     assert updates == [2]
+    assert crd._unsub_refresh is not None
 
     # Test unsubscribing through function
     unsub()

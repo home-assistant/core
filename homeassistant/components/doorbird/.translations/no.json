@@ -10,6 +10,7 @@
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
+        "flow_title": "DoorBird {name} ( {host} )",
         "step": {
             "user": {
                 "data": {
@@ -20,8 +21,7 @@
                 },
                 "title": "Koble til DoorBird"
             }
-        },
-        "title": "DoorBird"
+        }
     },
     "options": {
         "step": {

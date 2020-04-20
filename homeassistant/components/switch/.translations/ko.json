@@ -13,5 +13,6 @@
             "turned_off": "{entity_name} \uc774(\uac00) \uaebc\uc9c8 \ub54c",
             "turned_on": "{entity_name} \uc774(\uac00) \ucf1c\uc9c8 \ub54c"
         }
-    }
+    },
+    "title": "\uc2a4\uc704\uce58"
 }

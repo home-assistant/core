@@ -88,5 +88,6 @@
             "unsafe": "{entity_name} est devenu dangereux",
             "vibration": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter les vibrations"
         }
-    }
+    },
+    "title": "Capteur binaire"
 }

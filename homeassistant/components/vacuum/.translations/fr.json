@@ -12,5 +12,6 @@
             "cleaning": "{entity_name} commence \u00e0 nettoyer",
             "docked": "{entity_name} connect\u00e9"
         }
-    }
+    },
+    "title": "Aspirateur"
 }

@@ -146,19 +146,16 @@ def numeric_state(
     variables: TemplateVarsType = None,
 ) -> bool:
     """Test a numeric state condition."""
-    return cast(
-        bool,
-        run_callback_threadsafe(
-            hass.loop,
-            async_numeric_state,
-            hass,
-            entity,
-            below,
-            above,
-            value_template,
-            variables,
-        ).result(),
-    )
+    return run_callback_threadsafe(
+        hass.loop,
+        async_numeric_state,
+        hass,
+        entity,
+        below,
+        above,
+        value_template,
+        variables,
+    ).result()
 
 
 def async_numeric_state(
@@ -353,12 +350,9 @@ def template(
     hass: HomeAssistant, value_template: Template, variables: TemplateVarsType = None
 ) -> bool:
     """Test if template condition matches."""
-    return cast(
-        bool,
-        run_callback_threadsafe(
-            hass.loop, async_template, hass, value_template, variables
-        ).result(),
-    )
+    return run_callback_threadsafe(
+        hass.loop, async_template, hass, value_template, variables
+    ).result()
 
 
 def async_template(

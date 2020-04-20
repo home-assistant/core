@@ -18,22 +18,37 @@
                 "title": "Add-on deCONZ Zigbee v\u00eda Hass.io"
             },
             "init": {
-                "data": {
-                    "host": "Host",
-                    "port": "Puerto"
-                },
                 "title": "Definir pasarela deCONZ"
             },
             "link": {
                 "description": "Desbloquea tu gateway de deCONZ para registrarte con Home Assistant.\n\n1. Dir\u00edgete a deCONZ Settings -> Gateway -> Advanced\n2. Pulsa el bot\u00f3n \"Authenticate app\"",
                 "title": "Enlazar con deCONZ"
+            },
+            "manual_confirm": {
+                "data": {
+                    "host": "Host",
+                    "port": "Puerto"
+                }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Host",
+                    "port": "Puerto"
+                },
+                "title": "Configurar la puerta de enlace deCONZ"
+            },
+            "user": {
+                "data": {
+                    "host": "Seleccione la puerta de enlace descubierta deCONZ"
+                },
+                "title": "Seleccione la puerta de enlace deCONZ"
             }
-        },
-        "title": "Pasarela Zigbee deCONZ"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Ambos botones",
+            "bottom_buttons": "Botones inferiores",
             "button_1": "Primer bot\u00f3n",
             "button_2": "Segundo bot\u00f3n",
             "button_3": "Tercer bot\u00f3n",
@@ -50,6 +65,7 @@
             "side_4": "Lado 4",
             "side_5": "Lado 5",
             "side_6": "Lado 6",
+            "top_buttons": "Botones superiores",
             "turn_off": "Apagar",
             "turn_on": "Encender"
         },

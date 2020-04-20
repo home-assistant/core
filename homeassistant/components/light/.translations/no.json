@@ -3,6 +3,7 @@
         "action_type": {
             "brightness_decrease": "Reduser lysstyrken p\u00e5 {entity_name}",
             "brightness_increase": "\u00d8k lysstyrken p\u00e5 {entity_name}",
+            "flash": "Flash {entity_name}",
             "toggle": "Veksle {entity_name}",
             "turn_off": "Sl\u00e5 av {entity_name}",
             "turn_on": "Sl\u00e5 p\u00e5 {entity_name}"

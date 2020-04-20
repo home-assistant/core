@@ -19,7 +19,6 @@
                 "description": "Bitte gib den von ecobee.com erhaltenen API-Schl\u00fcssel ein.",
                 "title": "ecobee API-Schl\u00fcssel"
             }
-        },
-        "title": "ecobee"
+        }
     }
 }

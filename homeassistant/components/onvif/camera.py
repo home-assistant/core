@@ -411,8 +411,11 @@ class ONVIFHassCamera(Camera):
             req = media_service.create_type("GetSnapshotUri")
             req.ProfileToken = profiles[self._profile_index].token
 
-            snapshot_uri = await media_service.GetSnapshotUri(req)
-            self._snapshot = snapshot_uri.Uri
+            try:
+                snapshot_uri = await media_service.GetSnapshotUri(req)
+                self._snapshot = snapshot_uri.Uri
+            except ServerDisconnectedError as err:
+                _LOGGER.debug("Camera does not support GetSnapshotUri: %s", err)
 
             _LOGGER.debug(
                 "ONVIF Camera Using the following URL for %s snapshot: %s",

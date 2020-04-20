@@ -88,5 +88,6 @@
             "unsafe": "{entity_name} diventato non sicuro",
             "vibration": "{entity_name} iniziato a rilevare le vibrazioni"
         }
-    }
+    },
+    "title": "Sensore binario"
 }

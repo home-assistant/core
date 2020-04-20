@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Glances",
     "step": {
       "user": {
         "title": "Setup Glances",
@@ -20,17 +19,13 @@
       "cannot_connect": "Unable to connect to host",
       "wrong_version": "Version not supported (2 or 3 only)"
     },
-    "abort": {
-      "already_configured": "Host is already configured."
-    }
+    "abort": { "already_configured": "Host is already configured." }
   },
   "options": {
     "step": {
       "init": {
         "description": "Configure options for Glances",
-        "data": {
-          "scan_interval": "Update frequency"
-        }
+        "data": { "scan_interval": "Update frequency" }
       }
     }
   }

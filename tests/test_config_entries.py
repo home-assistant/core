@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from asynctest import CoroutineMock
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, loader
@@ -1463,3 +1464,97 @@ async def test_partial_flows_hidden(hass, manager):
         await hass.async_block_till_done()
         state = hass.states.get("persistent_notification.config_entry_discovery")
         assert state is not None
+
+
+async def test_async_setup_init_entry(hass):
+    """Test a config entry being initialized during integration setup."""
+
+    async def mock_async_setup(hass, config):
+        """Mock setup."""
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                "comp", context={"source": config_entries.SOURCE_IMPORT}, data={},
+            )
+        )
+        return True
+
+    async_setup_entry = CoroutineMock(return_value=True)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp", async_setup=mock_async_setup, async_setup_entry=async_setup_entry
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+    await async_setup_component(hass, "persistent_notification", {})
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_import(self, user_input):
+            """Test import step creating entry."""
+            return self.async_create_entry(title="title", data={})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        assert await async_setup_component(hass, "comp", {})
+
+        await hass.async_block_till_done()
+
+        assert len(async_setup_entry.mock_calls) == 1
+
+        entries = hass.config_entries.async_entries("comp")
+        assert len(entries) == 1
+        assert entries[0].state == config_entries.ENTRY_STATE_LOADED
+
+
+async def test_async_setup_update_entry(hass):
+    """Test a config entry being updated during integration setup."""
+    entry = MockConfigEntry(domain="comp", data={"value": "initial"})
+    entry.add_to_hass(hass)
+
+    async def mock_async_setup(hass, config):
+        """Mock setup."""
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                "comp", context={"source": config_entries.SOURCE_IMPORT}, data={},
+            )
+        )
+        return True
+
+    async def mock_async_setup_entry(hass, entry):
+        """Mock setting up an entry."""
+        assert entry.data["value"] == "updated"
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=mock_async_setup,
+            async_setup_entry=mock_async_setup_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+    await async_setup_component(hass, "persistent_notification", {})
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_import(self, user_input):
+            """Test import step updating existing entry."""
+            self.hass.config_entries.async_update_entry(
+                entry, data={"value": "updated"}
+            )
+            return self.async_abort(reason="yo")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        assert await async_setup_component(hass, "comp", {})
+
+        entries = hass.config_entries.async_entries("comp")
+        assert len(entries) == 1
+        assert entries[0].state == config_entries.ENTRY_STATE_LOADED
+        assert entries[0].data == {"value": "updated"}

@@ -13,5 +13,6 @@
             "current_temperature_changed": "{entity_name} m\u00e9rt h\u0151m\u00e9rs\u00e9klete megv\u00e1ltozott",
             "hvac_mode_changed": "{entity_name} f\u0171t\u00e9s, szell\u0151z\u00e9s \u00e9s l\u00e9gkondicion\u00e1l\u00e1s (HVAC) \u00fczemm\u00f3d megv\u00e1ltozott"
         }
-    }
+    },
+    "title": "H\u0171t\u00e9s/f\u0171t\u00e9s"
 }

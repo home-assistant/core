@@ -88,5 +88,6 @@
             "unsafe": "{entity_name} je postal nevaren",
             "vibration": "{entity_name} je za\u010del odkrivat vibracije"
         }
-    }
+    },
+    "title": "Binarni senzor"
 }

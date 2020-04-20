@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             CONF_NAME: device_config.get(CONF_NAME),
             CONF_HOST: device_config.get(CONF_HOST),
             CONF_PORT: device_config.get(CONF_PORT),
-            CONF_SSL: device_config.get(CONF_SSL),
+            CONF_SSL: device_config[CONF_SSL],
             CONF_VERIFY_SSL: device_config.get(CONF_VERIFY_SSL),
             CONF_DEVICE_KEY: device_config.get(CONF_DEVICE_KEY),
         }
@@ -80,7 +80,7 @@ class OpenGarageCover(CoverDevice):
     def __init__(self, args):
         """Initialize the cover."""
         self.opengarage_url = (
-            f"http{'s' if args[CONF_SSL] else ''}://"
+            f"{'https' if args[CONF_SSL] else 'http'}://"
             f"{args[CONF_HOST]}:{args[CONF_PORT]}"
         )
         self._name = args[CONF_NAME]

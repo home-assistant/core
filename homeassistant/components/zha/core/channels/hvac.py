@@ -1,7 +1,7 @@
 """HVAC channels module for Zigbee Home Automation."""
 import logging
 
-from zigpy.exceptions import DeliveryError
+from zigpy.exceptions import ZigbeeException
 import zigpy.zcl.clusters.hvac as hvac
 
 from homeassistant.core import callback
@@ -31,7 +31,7 @@ class FanChannel(ZigbeeChannel):
 
         try:
             await self.cluster.write_attributes({"fan_mode": value})
-        except DeliveryError as ex:
+        except ZigbeeException as ex:
             self.error("Could not set speed: %s", ex)
             return
 

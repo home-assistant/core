@@ -25,8 +25,7 @@
                 "description": "\u6309\u4e0b Bridge \u4e0a\u7684\u6309\u9215\uff0c\u4ee5\u5c07 Philips Hue \u8a3b\u518a\u81f3 Home Assistant\u3002\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
                 "title": "\u9023\u7d50 Hub"
             }
-        },
-        "title": "Philips Hue"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
@@ -36,13 +35,17 @@
             "button_4": "\u7b2c\u56db\u500b\u6309\u9215",
             "dim_down": "\u8abf\u6697",
             "dim_up": "\u8abf\u4eae",
+            "double_buttons_1_3": "\u7b2c\u4e00\u8207\u7b2c\u4e09\u500b\u6309\u9215",
+            "double_buttons_2_4": "\u7b2c\u4e8c\u8207\u7b2c\u56db\u500b\u6309\u9215",
             "turn_off": "\u95dc\u9589",
             "turn_on": "\u958b\u555f"
         },
         "trigger_type": {
             "remote_button_long_release": "\"{subtype}\" \u6309\u9215\u9577\u6309\u5f8c\u91cb\u653e",
             "remote_button_short_press": "\"{subtype}\" \u6309\u9215\u5df2\u6309\u4e0b",
-            "remote_button_short_release": "\"{subtype}\" \u6309\u9215\u5df2\u91cb\u653e"
+            "remote_button_short_release": "\"{subtype}\" \u6309\u9215\u5df2\u91cb\u653e",
+            "remote_double_button_long_press": "\"{subtype}\" \u4e00\u8d77\u9577\u6309\u5f8c\u91cb\u653e",
+            "remote_double_button_short_press": "\"{subtype}\" \u4e00\u8d77\u91cb\u653e"
         }
     }
 }

@@ -21,11 +21,7 @@
                 },
                 "title": "Set up UniFi Controller"
             }
-        },
-        "title": "UniFi Controller"
-    },
-    "error": {
-        "unknown_client_mac": "No client available in UniFi on that MAC address"
+        }
     },
     "options": {
         "step": {
@@ -41,6 +37,7 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Time in seconds from last seen until considered away",
+                    "ignore_wired_bug": "Disable UniFi wired bug logic",
                     "ssid_filter": "Select SSIDs to track wireless clients on",
                     "track_clients": "Track network clients",
                     "track_devices": "Track network devices (Ubiquiti devices)",

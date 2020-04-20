@@ -7,5 +7,6 @@
             "is_paused": "{entity_name} \u00e4r pausad",
             "is_playing": "{entity_name} spelar"
         }
-    }
+    },
+    "title": "Mediaspelare"
 }

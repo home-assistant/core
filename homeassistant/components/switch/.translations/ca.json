@@ -13,5 +13,6 @@
             "turned_off": "{entity_name} desactivat",
             "turned_on": "{entity_name} activat"
         }
-    }
+    },
+    "title": "Interruptors"
 }

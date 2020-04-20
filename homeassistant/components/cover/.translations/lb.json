@@ -24,5 +24,6 @@
             "position": "{entity_name} positioun \u00e4nnert",
             "tilt_position": "{entity_name} kipp positioun ge\u00e4nnert"
         }
-    }
+    },
+    "title": "Paart"
 }

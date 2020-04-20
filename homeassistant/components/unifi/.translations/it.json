@@ -21,18 +21,15 @@
                 },
                 "title": "Configura l'UniFi Controller"
             }
-        },
-        "title": "UniFi Controller"
-    },
-    "error": {
-        "unknown_client_mac": "Nessun client disponibile in UniFi su quell'indirizzo MAC"
+        }
     },
     "options": {
         "step": {
             "client_control": {
                 "data": {
                     "block_client": "Client controllati per l'accesso alla rete",
-                    "new_client": "Aggiungere un nuovo client per il controllo dell'accesso alla rete"
+                    "new_client": "Aggiungere un nuovo client per il controllo dell'accesso alla rete",
+                    "poe_clients": "Consentire il controllo POE dei client"
                 },
                 "description": "Configurare i controlli client \n\nCreare interruttori per i numeri di serie dei quali si desidera controllare l'accesso alla rete.",
                 "title": "Opzioni UniFi 2/3"
@@ -40,6 +37,7 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Tempo in secondi dall'ultima volta che viene visto fino a quando non \u00e8 considerato lontano",
+                    "ignore_wired_bug": "Disattivare la logica dei bug cablati UniFi",
                     "ssid_filter": "Selezionare gli SSID su cui tracciare i client wireless",
                     "track_clients": "Traccia i client di rete",
                     "track_devices": "Tracciare i dispositivi di rete (dispositivi Ubiquiti)",

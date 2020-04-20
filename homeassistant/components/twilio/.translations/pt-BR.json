@@ -12,7 +12,6 @@
                 "description": "Tem certeza de que deseja configurar o Twilio?",
                 "title": "Configurar o Twilio Webhook"
             }
-        },
-        "title": "Twilio"
+        }
     }
 }

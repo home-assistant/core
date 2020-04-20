@@ -45,6 +45,7 @@ omit =
     homeassistant/components/arest/sensor.py
     homeassistant/components/arest/switch.py
     homeassistant/components/arlo/*
+    homeassistant/components/arris_tg2492lg/*
     homeassistant/components/aruba/device_tracker.py
     homeassistant/components/arwn/sensor.py
     homeassistant/components/asterisk_cdr/mailbox.py
@@ -80,7 +81,10 @@ omit =
     homeassistant/components/bom/camera.py
     homeassistant/components/bom/sensor.py
     homeassistant/components/bom/weather.py
+    homeassistant/components/braviatv/__init__.py
+    homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/media_player.py
+    homeassistant/components/broadlink/const.py
     homeassistant/components/broadlink/remote.py
     homeassistant/components/broadlink/sensor.py
     homeassistant/components/broadlink/switch.py
@@ -520,6 +524,7 @@ omit =
     homeassistant/components/osramlightify/light.py
     homeassistant/components/otp/sensor.py
     homeassistant/components/panasonic_bluray/media_player.py
+    homeassistant/components/panasonic_viera/__init__.py
     homeassistant/components/panasonic_viera/media_player.py
     homeassistant/components/pandora/media_player.py
     homeassistant/components/pcal9535a/*
@@ -592,9 +597,12 @@ omit =
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
     homeassistant/components/rocketchat/notify.py
-    homeassistant/components/roku/__init__.py
-    homeassistant/components/roku/media_player.py
     homeassistant/components/roku/remote.py
+    homeassistant/components/roomba/binary_sensor.py
+    homeassistant/components/roomba/braava.py
+    homeassistant/components/roomba/irobot_base.py
+    homeassistant/components/roomba/roomba.py
+    homeassistant/components/roomba/sensor.py
     homeassistant/components/roomba/vacuum.py
     homeassistant/components/route53/*
     homeassistant/components/rova/sensor.py
@@ -648,7 +656,7 @@ omit =
     homeassistant/components/smarthab/*
     homeassistant/components/sms/*
     homeassistant/components/smtp/notify.py
-    homeassistant/components/snapcast/media_player.py
+    homeassistant/components/snapcast/*
     homeassistant/components/snmp/*
     homeassistant/components/sochain/sensor.py
     homeassistant/components/socialblade/sensor.py

@@ -26,8 +26,7 @@
                 "description": "Konnected \ud328\ub110\uc758 \ud638\uc2a4\ud2b8 \uc815\ubcf4\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.",
                 "title": "Konnected \uae30\uae30 \ucc3e\uae30"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
@@ -104,7 +103,6 @@
                 "description": "{zone} \uad6c\uc5ed\uc5d0 \ub300\ud55c \ucd9c\ub825 \uc635\uc158\uc744 \uc120\ud0dd\ud574\uc8fc\uc138\uc694: \uc0c1\ud0dc {state}",
                 "title": "\uc2a4\uc704\uce58 \ucd9c\ub825 \uad6c\uc131"
             }
-        },
-        "title": "Konnected \uc54c\ub78c \ud328\ub110 \uc635\uc158"
+        }
     }
 }

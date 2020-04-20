@@ -34,7 +34,7 @@
                 "description": "Selecteer het apparaat waarmee u wilt koppelen",
                 "title": "Koppel met HomeKit accessoire"
             }
-        },
-        "title": "HomeKit Accessoires"
-    }
+        }
+    },
+    "title": "HomeKit Accessoires"
 }

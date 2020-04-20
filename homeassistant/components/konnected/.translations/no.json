@@ -26,8 +26,7 @@
                 "description": "Vennligst skriv inn verten informasjon for din Konnected Panel.",
                 "title": "Oppdag Konnected Enheten"
             }
-        },
-        "title": ""
+        }
     },
     "options": {
         "abort": {
@@ -104,7 +103,6 @@
                 "description": "Velg outputalternativer for {zone} : state {state}",
                 "title": "Konfigurere Valgbare Utgang"
             }
-        },
-        "title": "Alternativer for Konnected Alarm Panel"
+        }
     }
 }

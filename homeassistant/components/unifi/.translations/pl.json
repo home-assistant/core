@@ -21,11 +21,7 @@
                 },
                 "title": "Konfiguracja kontrolera UniFi"
             }
-        },
-        "title": "Kontroler UniFi"
-    },
-    "error": {
-        "unknown_client_mac": "Brak klienta w UniFi z tym adresem MAC"
+        }
     },
     "options": {
         "step": {

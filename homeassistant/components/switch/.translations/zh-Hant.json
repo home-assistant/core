@@ -13,5 +13,6 @@
             "turned_off": "{entity_name}\u5df2\u95dc\u9589",
             "turned_on": "{entity_name}\u5df2\u958b\u555f"
         }
-    }
+    },
+    "title": "\u958b\u95dc"
 }

@@ -26,8 +26,7 @@
                 "description": "Indtast v\u00e6rtsinformationen for dit Konnected-panel.",
                 "title": "Find Konnected-enhed"
             }
-        },
-        "title": "Konnected.io"
+        }
     },
     "options": {
         "abort": {
@@ -102,7 +101,6 @@
                 "description": "V\u00e6lg outputindstillingerne for {zone}",
                 "title": "Konfigurer skifteligt output"
             }
-        },
-        "title": "Indstillinger for Konnected-alarmpanel"
+        }
     }
 }

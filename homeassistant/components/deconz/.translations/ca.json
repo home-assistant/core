@@ -18,22 +18,37 @@
                 "title": "Passarel\u00b7la d'enlla\u00e7 deCONZ Zigbee (complement de Hass.io)"
             },
             "init": {
-                "data": {
-                    "host": "Amfitri\u00f3",
-                    "port": "Port"
-                },
                 "title": "Definici\u00f3 de la passarel\u00b7la deCONZ"
             },
             "link": {
                 "description": "Desbloqueja la teva passarel\u00b7la d'enlla\u00e7 deCONZ per a registrar-te amb Home Assistant.\n\n1. V\u00e9s a la configuraci\u00f3 del sistema deCONZ -> Passarel\u00b7la -> Avan\u00e7at\n2. Prem el bot\u00f3 \"Autenticar applicaci\u00f3\"",
                 "title": "Vincular amb deCONZ"
+            },
+            "manual_confirm": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                },
+                "title": "Configuraci\u00f3 de la passarel\u00b7la deCONZ"
+            },
+            "user": {
+                "data": {
+                    "host": "Selecciona la passarel\u00b7la deCONZ descoberta"
+                },
+                "title": "Selecci\u00f3 de la passarel\u00b7la deCONZ"
             }
-        },
-        "title": "Passarel\u00b7la d'enlla\u00e7 deCONZ Zigbee"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Ambd\u00f3s botons",
+            "bottom_buttons": "Botons inferiors",
             "button_1": "Primer bot\u00f3",
             "button_2": "Segon bot\u00f3",
             "button_3": "Tercer bot\u00f3",
@@ -50,6 +65,7 @@
             "side_4": "cara 4",
             "side_5": "cara 5",
             "side_6": "cara 6",
+            "top_buttons": "Botons superiors",
             "turn_off": "Desactiva",
             "turn_on": "Activa"
         },
