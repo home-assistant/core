@@ -14,5 +14,16 @@
       "set_hvac_mode": "Change HVAC mode on {entity_name}",
       "set_preset_mode": "Change preset on {entity_name}"
     }
+  },
+  "state": {
+    "_": {
+      "off": "[%key:common::state::off%]",
+      "heat": "Heat",
+      "cool": "Cool",
+      "heat_cool": "Heat/Cool",
+      "auto": "Auto",
+      "dry": "Dry",
+      "fan_only": "Fan only"
+    }
   }
 }
