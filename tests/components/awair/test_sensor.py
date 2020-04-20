@@ -39,7 +39,7 @@ from .const import (
     USER_FIXTURE,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 
 async def setup_awair(hass, fixtures):
@@ -48,7 +48,9 @@ async def setup_awair(hass, fixtures):
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=CONFIG_ENTRY_UNIQUE_ID, data=CONFIG
     )
-    with patch("python_awair.AwairClient.query", side_effect=fixtures):
+    with patch(
+        "python_awair.AwairClient.query", side_effect=[mock_coro(f) for f in fixtures]
+    ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
