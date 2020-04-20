@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Den h\u00e4r skrivaren \u00e4r redan konfigurerad.",
+            "connection_error": "Misslyckades att konfigurera skrivaren.",
+            "connection_upgrade": "Misslyckades att ansluta till skrivaren d\u00e5 anslutningen beh\u00f6ver uppgraderas.",
+            "parse_error": "Det gick inte att först\u00e5 svaret från skrivaren."
+        },
+        "error": {
+            "connection_error": "Kunde inte ansluta till skrivaren.",
+            "connection_upgrade": "Kunde inte ansluta till skrivaren. F\u00f6rs\u00f6k igen med SSL/TLS alternativet ifyllt."
+        },
+        "flow_title": "Printer: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "base_path": "Relativ s\u00f6kv\u00e4g till skrivaren",
+                    "host": "Host eller IP address",
+                    "port": "Port",
+                    "ssl": "Skrivaren st\u00f6djer kommuntikation \u00f6ver SSL/TLS",
+                    "verify_ssl": "Skrivaren anv\u00e4nder ett korrekt SSL certifikat"
+                },
+                "description": "S\u00e4tt upp din skrivare \u00f6ver Internet Printing Protocol (IPP) f\u00f6r att integrera den med Home Assistant.",
+                "title": "L\u00e4nka din skrivare"
+            },
+            "zeroconf_confirm": {
+                "description": "Vill du l\u00e4gga till skrivaren med namn `{name}` till Home Assistant?",
+                "title": "Uppt\u00e4ckte skrivare"
+            }
+        },
+        "title": "Internet Printing Protocol (IPP)"
+    }
+}
