@@ -34,19 +34,11 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_PASSWORD): str,
         }
 
-    async def _show_setup_form(self, errors=None):
-        """Show the setup form to the user."""
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(self.data_schema),
-            errors=errors or {},
-        )
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         try:
             if user_input is None:
-                return await self._show_setup_form(user_input)
+                return await self._show_form(user_input)
             user = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
             _login_data_valid(user=user, password=password)
