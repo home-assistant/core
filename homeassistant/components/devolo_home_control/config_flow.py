@@ -45,8 +45,6 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     title="devolo Home Control",
                     data={CONF_PASSWORD: password, CONF_USERNAME: user},
                 )
-            else:
-                raise WrongCredentialsError
         except WrongCredentialsError:
             return self._show_form({"base": "invalid_credentials"})
 
