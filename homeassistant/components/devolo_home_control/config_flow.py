@@ -38,7 +38,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         try:
             if user_input is None:
-                return await self._show_form(user_input)
+                return self._show_form(user_input)
             user = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
             _login_data_valid(user=user, password=password)

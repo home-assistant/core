@@ -1,8 +1,6 @@
 """Platform for light integration."""
 import logging
 
-from devolo_home_control_api.homecontrol import get_sub_device_uid_from_element_uid
-
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
@@ -20,14 +18,10 @@ async def async_setup_entry(
 
     entities = []
     for device in devices:
-        for i in range(len(device.binary_switch_property)):
+        for binary_switch in device.binary_switch_property:
             entities.append(
                 DevoloSwitch(
-                    hass=hass,
-                    device_instance=device,
-                    sub_uid=get_sub_device_uid_from_element_uid(
-                        [*device.binary_switch_property][i]
-                    ),
+                    hass=hass, device_instance=device, element_uid=binary_switch,
                 )
             )
     async_add_entities(entities)
@@ -36,15 +30,12 @@ async def async_setup_entry(
 class DevoloSwitch(SwitchDevice):
     """Representation of an Awesome Light."""
 
-    def __init__(self, hass, device_instance, sub_uid):
+    def __init__(self, hass, device_instance, element_uid):
         """Initialize an devolo Switch."""
         self._device_instance = device_instance
 
         # Create the unique ID
-        if sub_uid is not None:
-            self._unique_id = self._device_instance.uid + "#" + str(sub_uid)
-        else:
-            self._unique_id = self._device_instance.uid
+        self._unique_id = element_uid
 
         self._homecontrol = hass.data[DOMAIN]["homecontrol"]
         self._name = self._device_instance.itemName
@@ -59,13 +50,13 @@ class DevoloSwitch(SwitchDevice):
             self._model = None
 
         self._binary_switch_property = self._device_instance.binary_switch_property.get(
-            "devolo.BinarySwitch:" + self._unique_id
+            self._unique_id
         )
         self._is_on = self._binary_switch_property.state
 
         if hasattr(self._device_instance, "consumption_property"):
             self._consumption = self._device_instance.consumption_property.get(
-                "devolo.Meter:" + self._unique_id
+                self._unique_id.replace("BinarySwitch", "Meter")
             ).current
         else:
             self._consumption = None
