@@ -3,6 +3,5 @@
   "name": "Yamaha Network Receivers",
   "documentation": "https://www.home-assistant.io/integrations/yamaha",
   "requirements": ["rxv==0.6.0"],
-  "dependencies": [],
   "codeowners": []
 }

@@ -19,7 +19,6 @@
                 "description": "Please enter connection settings of your SOMA Connect.",
                 "title": "SOMA Connect"
             }
-        },
-        "title": "Soma"
+        }
     }
 }

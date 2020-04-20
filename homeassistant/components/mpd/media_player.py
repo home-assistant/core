@@ -133,8 +133,8 @@ class MpdDevice(MediaPlayerDevice):
         self._status = self._client.status()
         self._currentsong = self._client.currentsong()
 
-        position = self._status["time"]
-        if self._media_position != position:
+        position = self._status.get("time")
+        if position is not None and self._media_position != position:
             self._media_position_updated_at = dt_util.utcnow()
             self._media_position = position
 
@@ -249,7 +249,7 @@ class MpdDevice(MediaPlayerDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
         if self._status is None:
-            return None
+            return 0
 
         supported = SUPPORT_MPD
         if "volume" in self._status:

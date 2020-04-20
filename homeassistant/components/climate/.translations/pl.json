@@ -13,5 +13,6 @@
             "current_temperature_changed": "zmieni si\u0119 zmierzona temperatura {entity_name}",
             "hvac_mode_changed": "zmieni si\u0119 tryb HVAC {entity_name}"
         }
-    }
+    },
+    "title": "Klimat"
 }

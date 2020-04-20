@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -27,6 +28,7 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from .const import (
+    CONF_IGNORE_NEW_SHARED_USERS,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
     CONF_SHOW_ALL_CONTROLS,
@@ -44,13 +46,18 @@ from .const import (
     SERVERS,
     WEBSOCKETS,
 )
+from .errors import ShouldUpdateConfigEntry
 from .server import PlexServer
 
-MEDIA_PLAYER_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_USE_EPISODE_ART, default=False): cv.boolean,
-        vol.Optional(CONF_SHOW_ALL_CONTROLS, default=False): cv.boolean,
-    }
+MEDIA_PLAYER_SCHEMA = vol.All(
+    cv.deprecated(CONF_SHOW_ALL_CONTROLS, invalidation_version="0.110"),
+    vol.Schema(
+        {
+            vol.Optional(CONF_USE_EPISODE_ART, default=False): cv.boolean,
+            vol.Optional(CONF_SHOW_ALL_CONTROLS): cv.boolean,
+            vol.Optional(CONF_IGNORE_NEW_SHARED_USERS, default=False): cv.boolean,
+        }
+    ),
 )
 
 SERVER_CONFIG_SCHEMA = vol.Schema(
@@ -93,10 +100,10 @@ def _async_setup_plex(hass, config):
     if MP_DOMAIN in server_config:
         hass.data.setdefault(PLEX_MEDIA_PLAYER_OPTIONS, server_config.pop(MP_DOMAIN))
     if CONF_HOST in server_config:
-        prefix = "https" if server_config.pop(CONF_SSL) else "http"
+        protocol = "https" if server_config.pop(CONF_SSL) else "http"
         server_config[
             CONF_URL
-        ] = f"{prefix}://{server_config.pop(CONF_HOST)}:{server_config.pop(CONF_PORT)}"
+        ] = f"{protocol}://{server_config.pop(CONF_HOST)}:{server_config.pop(CONF_PORT)}"
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             PLEX_DOMAIN,
@@ -110,6 +117,11 @@ async def async_setup_entry(hass, entry):
     """Set up Plex from a config entry."""
     server_config = entry.data[PLEX_SERVER_CONFIG]
 
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            entry, unique_id=entry.data[CONF_SERVER_IDENTIFIER]
+        )
+
     if MP_DOMAIN not in entry.options:
         options = dict(entry.options)
         options.setdefault(
@@ -118,16 +130,27 @@ async def async_setup_entry(hass, entry):
         )
         hass.config_entries.async_update_entry(entry, options=options)
 
-    plex_server = PlexServer(hass, server_config, entry.options)
+    plex_server = PlexServer(
+        hass, server_config, entry.data[CONF_SERVER_IDENTIFIER], entry.options
+    )
     try:
         await hass.async_add_executor_job(plex_server.connect)
+    except ShouldUpdateConfigEntry:
+        new_server_data = {
+            **entry.data[PLEX_SERVER_CONFIG],
+            CONF_URL: plex_server.url_in_use,
+            CONF_SERVER: plex_server.friendly_name,
+        }
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, PLEX_SERVER_CONFIG: new_server_data}
+        )
     except requests.exceptions.ConnectionError as error:
         _LOGGER.error(
             "Plex server (%s) could not be reached: [%s]",
             server_config[CONF_URL],
             error,
         )
-        return False
+        raise ConfigEntryNotReady
     except (
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.Unauthorized,
@@ -152,7 +175,7 @@ async def async_setup_entry(hass, entry):
     unsub = async_dispatcher_connect(
         hass,
         PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id),
-        plex_server.update_platforms,
+        plex_server.async_update_platforms,
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS].setdefault(server_id, [])
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)

@@ -142,11 +142,14 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool
 class AdGuardHomeEntity(Entity):
     """Defines a base AdGuard Home entity."""
 
-    def __init__(self, adguard, name: str, icon: str) -> None:
+    def __init__(
+        self, adguard, name: str, icon: str, enabled_default: bool = True
+    ) -> None:
         """Initialize the AdGuard Home entity."""
-        self._name = name
-        self._icon = icon
         self._available = True
+        self._enabled_default = enabled_default
+        self._icon = icon
+        self._name = name
         self.adguard = adguard
 
     @property
@@ -160,12 +163,20 @@ class AdGuardHomeEntity(Entity):
         return self._icon
 
     @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._enabled_default
+
+    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
     async def async_update(self) -> None:
         """Update AdGuard Home entity."""
+        if not self.enabled:
+            return
+
         try:
             await self._adguard_update()
             self._available = True

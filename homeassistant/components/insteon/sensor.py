@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 
-from . import InsteonEntity
+from .insteon_entity import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 

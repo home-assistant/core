@@ -14,37 +14,41 @@
         "flow_title": "Gateway Zigbee deCONZ ({host})",
         "step": {
             "hassio_confirm": {
-                "data": {
-                    "allow_clip_sensor": "Consenti l'importazione di sensori virtuali",
-                    "allow_deconz_groups": "Consenti l'importazione di gruppi deCONZ"
-                },
                 "description": "Vuoi configurare Home Assistant per connettersi al gateway deCONZ fornito dal componente aggiuntivo di Hass.io: {addon}?",
                 "title": "Gateway Pigmee deCONZ tramite il componente aggiuntivo di Hass.io"
             },
             "init": {
-                "data": {
-                    "host": "Host",
-                    "port": "Porta"
-                },
                 "title": "Definisci il gateway deCONZ"
             },
             "link": {
                 "description": "Sblocca il tuo gateway deCONZ per registrarti con Home Assistant.\n\n1. Vai a Impostazioni deCONZ -> Gateway -> Avanzate\n2. Premere il pulsante \"Autentica app\"",
                 "title": "Collega con deCONZ"
             },
-            "options": {
+            "manual_confirm": {
                 "data": {
-                    "allow_clip_sensor": "Consenti l'importazione di sensori virtuali",
-                    "allow_deconz_groups": "Consenti l'importazione di gruppi deCONZ"
+                    "host": "Host",
+                    "port": "Porta"
+                }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Host",
+                    "port": "Porta"
                 },
-                "title": "Opzioni di configurazione extra per deCONZ"
+                "title": "Configurare il gateway deCONZ"
+            },
+            "user": {
+                "data": {
+                    "host": "Selezionare il gateway deCONZ rilevato"
+                },
+                "title": "Selezionare il gateway deCONZ"
             }
-        },
-        "title": "Gateway Zigbee deCONZ"
+        }
     },
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Entrambi",
+            "bottom_buttons": "Pulsanti inferiori",
             "button_1": "Primo",
             "button_2": "Secondo pulsante",
             "button_3": "Terzo pulsante",
@@ -61,6 +65,7 @@
             "side_4": "Lato 4",
             "side_5": "Lato 5",
             "side_6": "Lato 6",
+            "top_buttons": "Pulsanti superiori",
             "turn_off": "Spegnere",
             "turn_on": "Accendere"
         },
@@ -96,19 +101,13 @@
     },
     "options": {
         "step": {
-            "async_step_deconz_devices": {
-                "data": {
-                    "allow_clip_sensor": "Consentire sensori CLIP deCONZ",
-                    "allow_deconz_groups": "Consentire gruppi luce deCONZ"
-                },
-                "description": "Configurare la visibilit\u00e0 dei tipi di dispositivi deCONZ"
-            },
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Consentire sensori CLIP deCONZ",
                     "allow_deconz_groups": "Consentire gruppi luce deCONZ"
                 },
-                "description": "Configurare la visibilit\u00e0 dei tipi di dispositivi deCONZ"
+                "description": "Configurare la visibilit\u00e0 dei tipi di dispositivi deCONZ",
+                "title": "Opzioni deCONZ"
             }
         }
     }

@@ -18,7 +18,7 @@
                 "title": "Passwuert aginn"
             },
             "discovery_confirm": {
-                "description": "W\u00ebllt dir den ESPHome Provider `{name}` am 'Home Assistant dob\u00e4isetzen?",
+                "description": "W\u00ebllt dir den ESPHome Provider `{name}` am Home Assistant dob\u00e4isetzen?",
                 "title": "Entdeckten ESPHome Provider"
             },
             "user": {
@@ -27,9 +27,8 @@
                     "port": "Port"
                 },
                 "description": "Gitt Verbindungs Informatioune vun \u00e4rem [ESPHome](https://esphomelib.com/) an.",
-                "title": "ESPHome"
+                "title": "[%key:component::esphome::title%]"
             }
-        },
-        "title": "ESPHome"
+        }
     }
 }

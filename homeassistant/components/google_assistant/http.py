@@ -10,7 +10,7 @@ import jwt
 
 # Typing imports
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
@@ -30,6 +30,7 @@ from .const import (
     HOMEGRAPH_TOKEN_URL,
     REPORT_STATE_BASE_URL,
     REQUEST_SYNC_BASE_URL,
+    SOURCE_CLOUD,
 )
 from .helpers import AbstractConfig
 from .smart_home import async_handle_message
@@ -52,7 +53,7 @@ def _get_homegraph_jwt(time, iss, key):
 
 async def _get_homegraph_token(hass, jwt_signed):
     headers = {
-        "Authorization": "Bearer {}".format(jwt_signed),
+        "Authorization": f"Bearer {jwt_signed}",
         "Content-Type": "application/x-www-form-urlencoded",
     }
     data = {
@@ -176,15 +177,15 @@ class GoogleConfig(AbstractConfig):
             return error.status
         except (asyncio.TimeoutError, ClientError):
             _LOGGER.error("Could not contact %s", url)
-            return 500
+            return HTTP_INTERNAL_SERVER_ERROR
 
     async def async_call_homegraph_api(self, url, data):
-        """Call a homegraph api with authenticaiton."""
+        """Call a homegraph api with authentication."""
         session = async_get_clientsession(self.hass)
 
         async def _call():
             headers = {
-                "Authorization": "Bearer {}".format(self._access_token),
+                "Authorization": f"Bearer {self._access_token}",
                 "X-GFE-SSL": "yes",
             }
             async with session.post(url, headers=headers, json=data) as res:
@@ -211,7 +212,7 @@ class GoogleConfig(AbstractConfig):
             return error.status
         except (asyncio.TimeoutError, ClientError):
             _LOGGER.error("Could not contact %s", url)
-            return 500
+            return HTTP_INTERNAL_SERVER_ERROR
 
     async def async_report_state(self, message, agent_user_id: str):
         """Send a state report to Google."""
@@ -238,6 +239,10 @@ class GoogleAssistantView(HomeAssistantView):
         """Handle Google Assistant requests."""
         message: dict = await request.json()
         result = await async_handle_message(
-            request.app["hass"], self.config, request["hass_user"].id, message
+            request.app["hass"],
+            self.config,
+            request["hass_user"].id,
+            message,
+            SOURCE_CLOUD,
         )
         return self.json(result)

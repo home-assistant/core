@@ -4,5 +4,6 @@
             "is_home": "{entity_name} is thuis",
             "is_not_home": "{entity_name} is niet thuis"
         }
-    }
+    },
+    "title": "Apparaat tracker"
 }

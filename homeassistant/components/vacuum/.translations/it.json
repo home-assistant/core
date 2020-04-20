@@ -12,5 +12,6 @@
             "cleaning": "{entity_name} ha iniziato la pulizia",
             "docked": "{entity_name} agganciato"
         }
-    }
+    },
+    "title": "Aspirapolvere"
 }

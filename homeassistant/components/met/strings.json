@@ -1,20 +1,17 @@
 {
-    "config": {
-        "title": "Met.no",
-        "step": {
-            "user": {
-                "title": "Location",
-                "description": "Meteorologisk institutt",
-                "data": {
-                    "name": "Name",
-                    "latitude": "Latitude",
-                    "longitude": "Longitude",
-                    "elevation": "Elevation"
-                }
-            }
-        },
-        "error": {
-            "name_exists": "Location already exists"
+  "config": {
+    "step": {
+      "user": {
+        "title": "Location",
+        "description": "Meteorologisk institutt",
+        "data": {
+          "name": "Name",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "elevation": "Elevation"
         }
-    }
+      }
+    },
+    "error": { "name_exists": "Location already exists" }
+  }
 }

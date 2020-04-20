@@ -3,6 +3,5 @@
   "name": "SmartHab",
   "documentation": "https://www.home-assistant.io/integrations/smarthab",
   "requirements": ["smarthab==0.20"],
-  "dependencies": [],
   "codeowners": ["@outadoc"]
 }

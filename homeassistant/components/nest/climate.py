@@ -151,7 +151,9 @@ class NestThermostat(ClimateDevice):
             """Update device state."""
             await self.async_update_ha_state(True)
 
-        async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE, async_update_state)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE, async_update_state)
+        )
 
     @property
     def supported_features(self):

@@ -3,6 +3,5 @@
   "name": "Pushetta",
   "documentation": "https://www.home-assistant.io/integrations/pushetta",
   "requirements": ["pushetta==1.0.15"],
-  "dependencies": [],
   "codeowners": []
 }

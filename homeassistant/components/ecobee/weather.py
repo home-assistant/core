@@ -23,15 +23,10 @@ from .const import (
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up the ecobee weather platform."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the ecobee weather platform."""
     data = hass.data[DOMAIN]
-    dev = list()
+    dev = []
     for index in range(len(data.ecobee.thermostats)):
         thermostat = data.ecobee.get_thermostat(index)
         if "weather" in thermostat:
@@ -169,7 +164,7 @@ class EcobeeWeather(WeatherEntity):
         if "forecasts" not in self.weather:
             return None
 
-        forecasts = list()
+        forecasts = []
         for day in range(1, 5):
             forecast = _process_forecast(self.weather["forecasts"][day])
             if forecast is None:
@@ -184,12 +179,12 @@ class EcobeeWeather(WeatherEntity):
         """Get the latest weather data."""
         await self.data.update()
         thermostat = self.data.ecobee.get_thermostat(self._index)
-        self.weather = thermostat.get("weather", None)
+        self.weather = thermostat.get("weather")
 
 
 def _process_forecast(json):
     """Process a single ecobee API forecast to return expected values."""
-    forecast = dict()
+    forecast = {}
     try:
         forecast[ATTR_FORECAST_TIME] = datetime.strptime(
             json["dateTime"], "%Y-%m-%d %H:%M:%S"

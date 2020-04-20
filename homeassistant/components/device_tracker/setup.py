@@ -109,9 +109,7 @@ async def async_extract_config(hass, config):
             legacy.append(platform)
         else:
             raise ValueError(
-                "Unable to determine type for {}: {}".format(
-                    platform.name, platform.type
-                )
+                f"Unable to determine type for {platform.name}: {platform.type}"
             )
 
     return legacy
@@ -172,7 +170,7 @@ def async_setup_scanner_platform(
             try:
                 extra_attributes = await scanner.async_get_extra_attributes(mac)
             except NotImplementedError:
-                extra_attributes = dict()
+                extra_attributes = {}
 
             kwargs = {
                 "mac": mac,

@@ -13,5 +13,6 @@
             "current_temperature_changed": "Gemessene Temperatur von {entity_name} ge\u00e4ndert",
             "hvac_mode_changed": "{entity_name} HVAC-Modus ge\u00e4ndert"
         }
-    }
+    },
+    "title": "Klima"
 }

@@ -12,5 +12,6 @@
             "cleaning": "{entity_name} huet ugefaange mam botzen",
             "docked": "{entity_name} an der Statioun"
         }
-    }
+    },
+    "title": "Staubsauger"
 }

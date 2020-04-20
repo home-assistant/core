@@ -80,7 +80,7 @@ MEDIA_MODES = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Denon platform."""
-    denon = DenonDevice(config.get(CONF_NAME), config.get(CONF_HOST))
+    denon = DenonDevice(config[CONF_NAME], config[CONF_HOST])
 
     if denon.update():
         add_entities([denon])
@@ -187,7 +187,7 @@ class DenonDevice(MediaPlayerDevice):
                 "NSE8",
             ]
             for line in self.telnet_request(telnet, "NSE", all_lines=True):
-                self._mediainfo += line[len(answer_codes.pop(0)) :] + "\n"
+                self._mediainfo += f"{line[len(answer_codes.pop(0)) :]}\n"
         else:
             self._mediainfo = self.source
 
@@ -257,11 +257,12 @@ class DenonDevice(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self.telnet_command("MV" + str(round(volume * self._volume_max)).zfill(2))
+        self.telnet_command(f"MV{round(volume * self._volume_max):02}")
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
-        self.telnet_command("MU" + ("ON" if mute else "OFF"))
+        mute_status = "ON" if mute else "OFF"
+        self.telnet_command(f"MU{mute_status})")
 
     def media_play(self):
         """Play media player."""
@@ -289,4 +290,4 @@ class DenonDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        self.telnet_command("SI" + self._source_list.get(source))
+        self.telnet_command(f"SI{self._source_list.get(source)}")

@@ -22,5 +22,6 @@
             "timestamp": "zmieni si\u0119 znacznik czasu {entity_name}",
             "value": "zmieni si\u0119 warto\u015b\u0107 {entity_name}"
         }
-    }
+    },
+    "title": "Sensor"
 }

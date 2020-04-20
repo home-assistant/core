@@ -38,6 +38,13 @@ SWITCHES = {
         "state": {"reachable": True},
         "uniqueid": "00:00:00:00:00:00:00:03-00",
     },
+    "5": {
+        "id": "On off relay id",
+        "name": "On off relay",
+        "state": {"on": True, "reachable": True},
+        "type": "On/Off light",
+        "uniqueid": "00:00:00:00:00:00:00:04-00",
+    },
 }
 
 
@@ -68,7 +75,8 @@ async def test_switches(hass):
     assert "switch.smart_plug" in gateway.deconz_ids
     assert "switch.warning_device" in gateway.deconz_ids
     assert "switch.unsupported_switch" not in gateway.deconz_ids
-    assert len(hass.states.async_all()) == 4
+    assert "switch.on_off_relay" in gateway.deconz_ids
+    assert len(hass.states.async_all()) == 5
 
     on_off_switch = hass.states.get("switch.on_off_switch")
     assert on_off_switch.state == "on"
@@ -79,6 +87,9 @@ async def test_switches(hass):
     warning_device = hass.states.get("switch.warning_device")
     assert warning_device.state == "on"
 
+    on_off_relay = hass.states.get("switch.on_off_relay")
+    assert on_off_relay.state == "on"
+
     state_changed_event = {
         "t": "event",
         "e": "changed",
@@ -86,7 +97,7 @@ async def test_switches(hass):
         "id": "1",
         "state": {"on": False},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     state_changed_event = {
         "t": "event",
         "e": "changed",
@@ -94,7 +105,7 @@ async def test_switches(hass):
         "id": "3",
         "state": {"alert": None},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     on_off_switch = hass.states.get("switch.on_off_switch")

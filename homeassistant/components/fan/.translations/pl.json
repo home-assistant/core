@@ -12,5 +12,6 @@
             "turned_off": "nast\u0105pi wy\u0142\u0105czenie {entity_name}",
             "turned_on": "nast\u0105pi w\u0142\u0105czenie {entity_name}"
         }
-    }
+    },
+    "title": "Wentylator"
 }

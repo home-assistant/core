@@ -1,6 +1,4 @@
 # Describes the format for available OpenUV services
-
----
 update_data:
   description: Request new data from OpenUV. Consumes two API calls.
 

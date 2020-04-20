@@ -1,5 +1,4 @@
 """Script to check the configuration file."""
-
 import argparse
 from collections import OrderedDict
 from glob import glob
@@ -16,7 +15,7 @@ import homeassistant.util.yaml.loader as yaml_loader
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==4.0.2",)
+REQUIREMENTS = ("colorlog==4.1.0",)
 
 _LOGGER = logging.getLogger(__name__)
 # pylint: disable=protected-access
@@ -35,6 +34,7 @@ ERROR_STR = "General Errors"
 
 def color(the_color, *args, reset=None):
     """Color helper."""
+    # pylint: disable=import-outside-toplevel
     from colorlog.escape_codes import escape_codes, parse_colors
 
     try:
@@ -118,7 +118,7 @@ def run(script_args: List) -> int:
                 if domain == ERROR_STR:
                     continue
                 print(" ", color(C_HEAD, domain + ":"))
-                dump_dict(res["components"].get(domain, None))
+                dump_dict(res["components"].get(domain))
 
     if args.secrets:
         flatsecret: Dict[str, str] = {}
@@ -186,7 +186,7 @@ def check(config_dir, secrets=False):
             continue
         # The * in the key is removed to find the mock_function (side_effect)
         # This allows us to use one side_effect to patch multiple locations
-        mock_function = locals()["mock_" + key.replace("*", "")]
+        mock_function = locals()[f"mock_{key.replace('*', '')}"]
         PATCHES[key] = patch(val[0], side_effect=mock_function)
 
     # Start all patches
@@ -233,9 +233,7 @@ def line_info(obj, **kwargs):
     """Display line config source."""
     if hasattr(obj, "__config_file__"):
         return color(
-            "cyan",
-            "[source {}:{}]".format(obj.__config_file__, obj.__line__ or "?"),
-            **kwargs,
+            "cyan", f"[source {obj.__config_file__}:{obj.__line__ or '?'}]", **kwargs
         )
     return "?"
 

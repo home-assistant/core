@@ -5,11 +5,7 @@ import logging
 from pystiebeleltron import pystiebeleltron
 import voluptuous as vol
 
-from homeassistant.components.modbus import (
-    CONF_HUB,
-    DEFAULT_HUB,
-    DOMAIN as MODBUS_DOMAIN,
-)
+from homeassistant.components.modbus.const import CONF_HUB, DEFAULT_HUB, MODBUS_DOMAIN
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv

@@ -77,7 +77,7 @@ HOME_ASSISTANT_UPNP_CLASS_MAPPING = {
     MEDIA_TYPE_EPISODE: "object.item.videoItem",
     MEDIA_TYPE_CHANNEL: "object.item.videoItem",
     MEDIA_TYPE_IMAGE: "object.item.imageItem",
-    MEDIA_TYPE_PLAYLIST: "object.item.playlist",
+    MEDIA_TYPE_PLAYLIST: "object.item.playlistItem",
 }
 UPNP_CLASS_DEFAULT = "object.item"
 HOME_ASSISTANT_UPNP_MIME_TYPE_MAPPING = {
@@ -99,10 +99,10 @@ def catch_request_errors():
         """Call wrapper for decorator."""
 
         @functools.wraps(func)
-        def wrapper(self, *args, **kwargs):
+        async def wrapper(self, *args, **kwargs):
             """Catch asyncio.TimeoutError, aiohttp.ClientError errors."""
             try:
-                return func(self, *args, **kwargs)
+                return await func(self, *args, **kwargs)
             except (asyncio.TimeoutError, aiohttp.ClientError):
                 _LOGGER.error("Error during call %s", func.__name__)
 

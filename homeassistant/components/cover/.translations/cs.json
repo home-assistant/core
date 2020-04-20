@@ -8,5 +8,6 @@
             "is_position": "pozice {entity_name} je",
             "is_tilt_position": "pozice naklon\u011bn\u00ed {entity_name} je"
         }
-    }
+    },
+    "title": "Roleta"
 }

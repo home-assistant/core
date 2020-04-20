@@ -1,4 +1,4 @@
-"""Plugable auth modules for Home Assistant."""
+"""Pluggable auth modules for Home Assistant."""
 import importlib
 import logging
 import types

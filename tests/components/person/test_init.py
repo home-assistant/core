@@ -1,7 +1,7 @@
 """The tests for the person component."""
 import logging
-from unittest.mock import patch
 
+from asynctest import patch
 import pytest
 
 from homeassistant.components import person
@@ -514,6 +514,18 @@ async def test_ws_update(hass, hass_ws_client, storage_setup):
             "id": 6,
             "type": "person/update",
             "person_id": persons[0]["id"],
+            "user_id": persons[0]["user_id"],
+        }
+    )
+    resp = await client.receive_json()
+
+    assert resp["success"]
+
+    resp = await client.send_json(
+        {
+            "id": 7,
+            "type": "person/update",
+            "person_id": persons[0]["id"],
             "name": "Updated Name",
             "device_trackers": [DEVICE_TRACKER_2],
             "user_id": None,
@@ -741,7 +753,7 @@ async def test_reload(hass, hass_admin_user):
                 {"name": "Person 3", "id": "id-3"},
             ]
         },
-    ), patch("homeassistant.config.find_config_file", return_value=""):
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RELOAD,
@@ -761,3 +773,15 @@ async def test_reload(hass, hass_admin_user):
     assert state_2 is None
     assert state_3 is not None
     assert state_3.name == "Person 3"
+
+
+async def test_person_storage_fixing_device_trackers(storage_collection):
+    """Test None device trackers become lists."""
+    with patch.object(
+        storage_collection.store,
+        "async_load",
+        return_value={"items": [{"id": "bla", "name": "bla", "device_trackers": None}]},
+    ):
+        await storage_collection.async_load()
+
+    assert storage_collection.data["bla"]["device_trackers"] == []

@@ -40,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle Huawei LTE config flow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
@@ -247,9 +247,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
+
+        # Recipients are persisted as a list, but handled as comma separated string in UI
+
         if user_input is not None:
             # Preserve existing options, for example *_from_yaml markers
             data = {**self.config_entry.options, **user_input}
+            if not isinstance(data[CONF_RECIPIENT], list):
+                data[CONF_RECIPIENT] = [
+                    x.strip() for x in data[CONF_RECIPIENT].split(",")
+                ]
             return self.async_create_entry(title="", data=data)
 
         data_schema = vol.Schema(
@@ -262,7 +269,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ): str,
                 vol.Optional(
                     CONF_RECIPIENT,
-                    default=self.config_entry.options.get(CONF_RECIPIENT, ""),
+                    default=", ".join(
+                        self.config_entry.options.get(CONF_RECIPIENT, [])
+                    ),
                 ): str,
             }
         )

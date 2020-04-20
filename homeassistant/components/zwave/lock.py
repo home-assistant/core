@@ -153,11 +153,6 @@ CLEAR_USERCODE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old method of setting up Z-Wave locks."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Z-Wave Lock from Config Entry."""
 
@@ -185,7 +180,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if len(str(usercode)) < 4:
                 _LOGGER.error(
                     "Invalid code provided: (%s) "
-                    "usercode must be atleast 4 and at most"
+                    "usercode must be at least 4 and at most"
                     " %s digits",
                     usercode,
                     len(value.data),
@@ -342,21 +337,20 @@ class ZwaveLock(ZWaveDeviceEntity, LockDevice):
             )
 
         if alarm_type == 21:
-            self._lock_status = "{}{}".format(
-                LOCK_ALARM_TYPE.get(str(alarm_type)),
-                MANUAL_LOCK_ALARM_LEVEL.get(str(alarm_level)),
+            self._lock_status = (
+                f"{LOCK_ALARM_TYPE.get(str(alarm_type))}"
+                f"{MANUAL_LOCK_ALARM_LEVEL.get(str(alarm_level))}"
             )
             return
         if str(alarm_type) in ALARM_TYPE_STD:
-            self._lock_status = "{}{}".format(
-                LOCK_ALARM_TYPE.get(str(alarm_type)), str(alarm_level)
-            )
+            self._lock_status = f"{LOCK_ALARM_TYPE.get(str(alarm_type))}{alarm_level}"
             return
         if alarm_type == 161:
-            self._lock_status = "{}{}".format(
-                LOCK_ALARM_TYPE.get(str(alarm_type)),
-                TAMPER_ALARM_LEVEL.get(str(alarm_level)),
+            self._lock_status = (
+                f"{LOCK_ALARM_TYPE.get(str(alarm_type))}"
+                f"{TAMPER_ALARM_LEVEL.get(str(alarm_level))}"
             )
+
             return
         if alarm_type != 0:
             self._lock_status = LOCK_ALARM_TYPE.get(str(alarm_type))

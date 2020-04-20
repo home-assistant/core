@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Sentry jest ju\u017c skonfigurowane"
+            "already_configured": "Sentry jest ju\u017c skonfigurowane."
         },
         "error": {
             "bad_dsn": "Nieprawid\u0142owy DSN",
@@ -12,7 +12,6 @@
                 "description": "Wprowad\u017a DSN Sentry",
                 "title": "Sentry"
             }
-        },
-        "title": "Sentry"
+        }
     }
 }

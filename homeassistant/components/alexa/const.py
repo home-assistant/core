@@ -6,6 +6,7 @@ from homeassistant.components.climate import const as climate
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 DOMAIN = "alexa"
+EVENT_ALEXA_SMART_HOME = "alexa_smart_home"
 
 # Flash briefing constants
 CONF_UID = "uid"
@@ -82,20 +83,6 @@ PERCENTAGE_FAN_MAP = {
     fan.SPEED_LOW: 33,
     fan.SPEED_MEDIUM: 66,
     fan.SPEED_HIGH: 100,
-}
-
-RANGE_FAN_MAP = {
-    fan.SPEED_OFF: 0,
-    fan.SPEED_LOW: 1,
-    fan.SPEED_MEDIUM: 2,
-    fan.SPEED_HIGH: 3,
-}
-
-SPEED_FAN_MAP = {
-    0: fan.SPEED_OFF,
-    1: fan.SPEED_LOW,
-    2: fan.SPEED_MEDIUM,
-    3: fan.SPEED_HIGH,
 }
 
 

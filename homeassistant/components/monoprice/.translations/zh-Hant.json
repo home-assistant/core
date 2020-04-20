@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "\u5e8f\u5217\u57e0",
+                    "source_1": "\u4f86\u6e90 #1 \u540d\u7a31",
+                    "source_2": "\u4f86\u6e90 #2 \u540d\u7a31",
+                    "source_3": "\u4f86\u6e90 #3 \u540d\u7a31",
+                    "source_4": "\u4f86\u6e90 #4 \u540d\u7a31",
+                    "source_5": "\u4f86\u6e90 #5 \u540d\u7a31",
+                    "source_6": "\u4f86\u6e90 #6 \u540d\u7a31"
+                },
+                "title": "\u9023\u7dda\u81f3\u8a2d\u5099"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source_1": "\u4f86\u6e90 #1 \u540d\u7a31",
+                    "source_2": "\u4f86\u6e90 #2 \u540d\u7a31",
+                    "source_3": "\u4f86\u6e90 #3 \u540d\u7a31",
+                    "source_4": "\u4f86\u6e90 #4 \u540d\u7a31",
+                    "source_5": "\u4f86\u6e90 #5 \u540d\u7a31",
+                    "source_6": "\u4f86\u6e90 #6 \u540d\u7a31"
+                },
+                "title": "\u8a2d\u5b9a\u4f86\u6e90"
+            }
+        }
+    }
+}

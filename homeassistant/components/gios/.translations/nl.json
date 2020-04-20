@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "GIO\u015a-integratie voor dit meetstation is al geconfigureerd."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken met de GIO\u015a-server.",
+            "invalid_sensors_data": "Ongeldige sensorgegevens voor dit meetstation.",
+            "wrong_station_id": "ID van het meetstation is niet correct."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Naam van de integratie",
+                    "station_id": "ID van het meetstation"
+                },
+                "description": "GIO\u015a (Poolse hoofdinspectie van milieubescherming) luchtkwaliteitintegratie instellen. Als u hulp nodig hebt bij de configuratie, kijk dan hier: https://www.home-assistant.io/integrations/gios",
+                "title": "GIO\u015a (Poolse hoofdinspectie van milieubescherming)"
+            }
+        }
+    }
+}

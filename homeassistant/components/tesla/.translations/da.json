@@ -15,8 +15,7 @@
                 "description": "Indtast dine oplysninger.",
                 "title": "Tesla - Konfiguration"
             }
-        },
-        "title": "Tesla"
+        }
     },
     "options": {
         "step": {

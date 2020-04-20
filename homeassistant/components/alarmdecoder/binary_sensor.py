@@ -79,20 +79,28 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_ZONE_FAULT, self._fault_callback
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_ZONE_FAULT, self._fault_callback
+            )
         )
 
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_ZONE_RESTORE, self._restore_callback
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_ZONE_RESTORE, self._restore_callback
+            )
         )
 
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_RFX_MESSAGE, self._rfx_message_callback
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_RFX_MESSAGE, self._rfx_message_callback
+            )
         )
 
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_REL_MESSAGE, self._rel_message_callback
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_REL_MESSAGE, self._rel_message_callback
+            )
         )
 
     @property
@@ -138,7 +146,7 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
 
     def _restore_callback(self, zone):
         """Update the zone's state, if needed."""
-        if zone is None or int(zone) == self._zone_number:
+        if zone is None or (int(zone) == self._zone_number and not self._loop):
             self._state = 0
             self.schedule_update_ha_state()
 

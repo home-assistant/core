@@ -28,7 +28,7 @@ class LeafPluggedInSensor(LeafEntity, BinarySensorDevice):
     @property
     def name(self):
         """Sensor name."""
-        return "{} {}".format(self.car.leaf.nickname, "Plug Status")
+        return f"{self.car.leaf.nickname} Plug Status"
 
     @property
     def is_on(self):
@@ -49,7 +49,7 @@ class LeafChargingSensor(LeafEntity, BinarySensorDevice):
     @property
     def name(self):
         """Sensor name."""
-        return "{} {}".format(self.car.leaf.nickname, "Charging Status")
+        return f"{self.car.leaf.nickname} Charging Status"
 
     @property
     def is_on(self):

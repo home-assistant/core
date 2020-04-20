@@ -1,4 +1,5 @@
 {
+  "title": "Binary sensor",
   "device_automation": {
     "condition_type": {
       "is_bat_low": "{entity_name} battery is low",
@@ -87,7 +88,6 @@
       "not_opened": "{entity_name} closed",
       "turned_on": "{entity_name} turned on",
       "turned_off": "{entity_name} turned off"
-
     }
   }
 }

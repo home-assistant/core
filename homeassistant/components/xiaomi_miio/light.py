@@ -19,7 +19,6 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
-    ATTR_ENTITY_ID,
     ATTR_HS_COLOR,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
@@ -27,7 +26,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     Light,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import color, dt
@@ -719,7 +718,7 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
         """Initialize the light device."""
         name = f"{name} Ambient Light"
         if unique_id is not None:
-            unique_id = "{}-{}".format(unique_id, "ambient")
+            unique_id = f"{unique_id}-ambient"
         super().__init__(name, light, model, unique_id)
 
     async def async_turn_on(self, **kwargs):

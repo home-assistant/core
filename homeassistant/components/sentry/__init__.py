@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
@@ -51,6 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         dsn=conf.get(CONF_DSN),
         environment=conf.get(CONF_ENVIRONMENT),
         integrations=[sentry_logging],
+        release=f"homeassistant-{__version__}",
     )
 
     return True

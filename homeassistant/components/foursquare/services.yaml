@@ -1,29 +1,45 @@
 checkin:
   description: Check a user into a Foursquare venue.
   fields:
-    alt: {description: 'Altitude of the user''s location, in meters. [Optional]',
-      example: 0}
-    altAcc: {description: 'Vertical accuracy of the user''s location, in meters.',
-      example: 1}
-    broadcast: {description: 'Who to broadcast this check-in to. Accepts a comma-delimited
+    alt:
+      description: Altitude of the user's location, in meters. [Optional]
+      example: 0
+    altAcc:
+      description: Vertical accuracy of the user's location, in meters.
+      example: 1
+    broadcast:
+      description: >-
+        Who to broadcast this check-in to. Accepts a comma-delimited
         list of values: private (off the grid) or public (share with friends), facebook
         share on facebook, twitter share on twitter, followers share with followers
         (celebrity mode users only), If no valid value is found, the default is public.
-        [Optional]', example: 'public,twitter'}
-    eventId: {description: 'The event the user is checking in to. [Optional]', example: UHR8THISVNT}
-    ll: {description: 'Latitude and longitude of the user''s location. Only specify
+        [Optional]
+      example: "public,twitter"
+    eventId:
+      description: The event the user is checking in to. [Optional]
+      example: UHR8THISVNT
+    ll:
+      description: >-
+        Latitude and longitude of the user's location. Only specify
         this field if you have a GPS or other device reported location for the user
-        at the time of check-in. [Optional]', example: '33.7,44.2'}
-    llAcc: {description: 'Accuracy of the user''s latitude and longitude, in meters.
-        [Optional]', example: 1}
-    mentions: {description: 'Mentions in your check-in. This parameter is a semicolon-delimited
+        at the time of check-in. [Optional]
+      example: "33.7,44.2"
+    llAcc:
+      description: Accuracy of the user's latitude and longitude, in meters. [Optional]
+      example: 1
+    mentions:
+      description: >-
+        Mentions in your check-in. This parameter is a semicolon-delimited
         list of mentions. A single mention is of the form "start,end,userid", where
         start is the index of the first character in the shout representing the mention,
         end is the index of the first character in the shout after the mention, and
         userid is the userid of the user being mentioned. If userid is prefixed with
         "fbu-", this indicates a Facebook userid that is being mention. Character
-        indices in shouts are 0-based. [Optional]', example: '5,10,HZXXY3Y;15,20,GZYYZ3Z;25,30,fbu-GZXY13Y'}
-    shout: {description: 'A message about your check-in. The maximum length of this
-        field is 140 characters. [Optional]', example: There are crayons! Crayons!}
-    venueId: {description: 'The Foursquare venue where the user is checking in. [Required]',
-      example: IHR8THISVNU}
+        indices in shouts are 0-based. [Optional]
+      example: "5,10,HZXXY3Y;15,20,GZYYZ3Z;25,30,fbu-GZXY13Y"
+    shout:
+      description: A message about your check-in. The maximum length of this field is 140 characters. [Optional]
+      example: There are crayons! Crayons!
+    venueId:
+      description: The Foursquare venue where the user is checking in. [Required]
+      example: IHR8THISVNU

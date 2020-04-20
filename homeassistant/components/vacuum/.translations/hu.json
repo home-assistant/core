@@ -12,5 +12,6 @@
             "cleaning": "{entity_name} elkezdett takar\u00edtani",
             "docked": "{entity_name} dokkolt"
         }
-    }
+    },
+    "title": "Porsz\u00edv\u00f3"
 }

@@ -51,11 +51,15 @@ _LOGGER = logging.getLogger(__name__)
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
-BASIC_DATA = helpers.RequestData(BASIC_CONFIG, "test-agent", REQ_ID, None)
+BASIC_DATA = helpers.RequestData(
+    BASIC_CONFIG, "test-agent", const.SOURCE_CLOUD, REQ_ID, None
+)
 
 PIN_CONFIG = MockConfig(secure_devices_pin="1234")
 
-PIN_DATA = helpers.RequestData(PIN_CONFIG, "test-agent", REQ_ID, None)
+PIN_DATA = helpers.RequestData(
+    PIN_CONFIG, "test-agent", const.SOURCE_CLOUD, REQ_ID, None
+)
 
 
 async def test_brightness_light(hass):
@@ -553,6 +557,32 @@ async def test_temperature_setting_climate_onoff(hass):
     assert len(calls) == 1
 
 
+async def test_temperature_setting_climate_no_modes(hass):
+    """Test TemperatureSetting trait support for climate domain not supporting any modes."""
+    assert helpers.get_google_type(climate.DOMAIN, None) is not None
+    assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None)
+
+    hass.config.units.temperature_unit = TEMP_CELSIUS
+
+    trt = trait.TemperatureSettingTrait(
+        hass,
+        State(
+            "climate.bla",
+            climate.HVAC_MODE_AUTO,
+            {
+                climate.ATTR_HVAC_MODES: [],
+                climate.ATTR_MIN_TEMP: None,
+                climate.ATTR_MAX_TEMP: None,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+    assert trt.sync_attributes() == {
+        "availableThermostatModes": "heat",
+        "thermostatTemperatureUnit": "C",
+    }
+
+
 async def test_temperature_setting_climate_range(hass):
     """Test TemperatureSetting trait support for climate domain - range."""
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
@@ -815,10 +845,8 @@ async def test_lock_unlock_unlock(hass):
     assert err.value.code == const.ERR_CHALLENGE_NOT_SETUP
 
     # Test with 2FA override
-    with patch(
-        "homeassistant.components.google_assistant.helpers"
-        ".AbstractConfig.should_2fa",
-        return_value=False,
+    with patch.object(
+        BASIC_CONFIG, "should_2fa", return_value=False,
     ):
         await trt.execute(trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {"lock": False}, {})
     assert len(calls) == 2
@@ -1502,7 +1530,8 @@ async def test_openclose_cover_no_position(hass):
 
 
 @pytest.mark.parametrize(
-    "device_class", (cover.DEVICE_CLASS_DOOR, cover.DEVICE_CLASS_GARAGE)
+    "device_class",
+    (cover.DEVICE_CLASS_DOOR, cover.DEVICE_CLASS_GARAGE, cover.DEVICE_CLASS_GATE),
 )
 async def test_openclose_cover_secure(hass, device_class):
     """Test OpenClose trait support for cover domain."""

@@ -7,7 +7,6 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    CONF_AWAY_HIDE,
     CONF_CONSIDER_HOME,
     CONF_NEW_DEVICE_DEFAULTS,
     CONF_TRACK_NEW,
@@ -17,6 +16,7 @@ from homeassistant.components.unifi_direct.device_tracker import (
     CONF_PORT,
     DOMAIN,
     PLATFORM_SCHEMA,
+    UnifiDeviceScanner,
     _response_to_json,
     get_scanner,
 )
@@ -38,7 +38,7 @@ def setup_comp(hass):
         os.remove(yaml_devices)
 
 
-@patch(scanner_path, return_value=mock.MagicMock())
+@patch(scanner_path, return_value=mock.MagicMock(spec=UnifiDeviceScanner))
 async def test_get_scanner(unifi_mock, hass):
     """Test creating an Unifi direct scanner with a password."""
     conf_dict = {
@@ -49,7 +49,7 @@ async def test_get_scanner(unifi_mock, hass):
             CONF_PASSWORD: "fake_pass",
             CONF_TRACK_NEW: True,
             CONF_CONSIDER_HOME: timedelta(seconds=180),
-            CONF_NEW_DEVICE_DEFAULTS: {CONF_TRACK_NEW: True, CONF_AWAY_HIDE: False},
+            CONF_NEW_DEVICE_DEFAULTS: {CONF_TRACK_NEW: True},
         }
     }
 

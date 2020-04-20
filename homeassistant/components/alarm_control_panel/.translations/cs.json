@@ -7,5 +7,6 @@
             "disarm": "Deaktivovat {entity_name}",
             "trigger": "Spustit {entity_name}"
         }
-    }
+    },
+    "title": "Ovl\u00e1dac\u00ed panel alarmu"
 }

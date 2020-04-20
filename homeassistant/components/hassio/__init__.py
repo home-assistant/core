@@ -143,6 +143,14 @@ def is_hassio(hass):
     return DOMAIN in hass.config.components
 
 
+@callback
+def get_supervisor_ip():
+    """Return the supervisor ip address."""
+    if "SUPERVISOR" not in os.environ:
+        return None
+    return os.environ["SUPERVISOR"].partition(":")[0]
+
+
 async def async_setup(hass, config):
     """Set up the Hass.io component."""
     # Check local setup
@@ -190,18 +198,17 @@ async def async_setup(hass, config):
 
     hass.http.register_view(HassIOView(host, websession))
 
-    if "frontend" in hass.config.components:
-        await hass.components.panel_custom.async_register_panel(
-            frontend_url_path="hassio",
-            webcomponent_name="hassio-main",
-            sidebar_title="Hass.io",
-            sidebar_icon="hass:home-assistant",
-            js_url="/api/hassio/app/entrypoint.js",
-            embed_iframe=True,
-            require_admin=True,
-        )
+    await hass.components.panel_custom.async_register_panel(
+        frontend_url_path="hassio",
+        webcomponent_name="hassio-main",
+        sidebar_title="Supervisor",
+        sidebar_icon="hass:home-assistant",
+        js_url="/api/hassio/app/entrypoint.js",
+        embed_iframe=True,
+        require_admin=True,
+    )
 
-    await hassio.update_hass_api(config.get("http", {}), refresh_token.token)
+    await hassio.update_hass_api(config.get("http", {}), refresh_token)
 
     async def push_config(_):
         """Push core config to Hass.io."""
@@ -290,7 +297,7 @@ async def async_setup(hass, config):
     async_setup_discovery_view(hass, hassio)
 
     # Init auth Hass.io feature
-    async_setup_auth_view(hass)
+    async_setup_auth_view(hass, user)
 
     # Init ingress Hass.io feature
     async_setup_ingress_view(hass, host)

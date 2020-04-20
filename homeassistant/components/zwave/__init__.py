@@ -1,4 +1,5 @@
 """Support for Z-Wave."""
+# pylint: disable=import-outside-toplevel
 import asyncio
 import copy
 from importlib import import_module
@@ -79,14 +80,12 @@ CONF_REFRESH_DELAY = "delay"
 CONF_DEVICE_CONFIG = "device_config"
 CONF_DEVICE_CONFIG_GLOB = "device_config_glob"
 CONF_DEVICE_CONFIG_DOMAIN = "device_config_domain"
-CONF_TILT_OPEN_POSITION = "tilt_open_position"
 
 DEFAULT_CONF_IGNORED = False
 DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS = False
 DEFAULT_CONF_INVERT_PERCENT = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
-DEFAULT_CONF_TILT_OPEN_POSITION = 50
 
 SUPPORTED_PLATFORMS = [
     "binary_sensor",
@@ -128,8 +127,8 @@ SET_CONFIG_PARAMETER_SCHEMA = vol.Schema(
 SET_NODE_VALUE_SCHEMA = vol.Schema(
     {
         vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
-        vol.Required(const.ATTR_VALUE_ID): vol.Coerce(int),
-        vol.Required(const.ATTR_CONFIG_VALUE): vol.Coerce(int),
+        vol.Required(const.ATTR_VALUE_ID): vol.Any(vol.Coerce(int), cv.string),
+        vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(vol.Coerce(int), cv.string),
     }
 )
 
@@ -216,9 +215,6 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema(
         vol.Optional(
             CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY
         ): cv.positive_int,
-        vol.Optional(
-            CONF_TILT_OPEN_POSITION, default=DEFAULT_CONF_TILT_OPEN_POSITION
-        ): cv.positive_int,
     }
 )
 
@@ -265,7 +261,7 @@ def _obj_to_dict(obj):
 
 def _value_name(value):
     """Return the name of the value."""
-    return "{} {}".format(node_name(value.node), value.label).strip()
+    return f"{node_name(value.node)} {value.label}".strip()
 
 
 def nice_print_node(node):
@@ -301,7 +297,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if discovery_info is None or DATA_NETWORK not in hass.data:
         return False
 
-    device = hass.data[DATA_DEVICES].get(discovery_info[const.DISCOVERY_DEVICE], None)
+    device = hass.data[DATA_DEVICES].get(discovery_info[const.DISCOVERY_DEVICE])
     if device is None:
         return False
 
@@ -683,7 +679,7 @@ async def async_setup_entry(hass, config_entry):
             if value.type == const.TYPE_BOOL:
                 value.data = int(selection == "True")
                 _LOGGER.info(
-                    "Setting config parameter %s on Node %s with bool selection %s",
+                    "Setting configuration parameter %s on Node %s with bool selection %s",
                     param,
                     node_id,
                     str(selection),
@@ -692,7 +688,7 @@ async def async_setup_entry(hass, config_entry):
             if value.type == const.TYPE_LIST:
                 value.data = str(selection)
                 _LOGGER.info(
-                    "Setting config parameter %s on Node %s with list selection %s",
+                    "Setting configuration parameter %s on Node %s with list selection %s",
                     param,
                     node_id,
                     str(selection),
@@ -702,7 +698,7 @@ async def async_setup_entry(hass, config_entry):
                 network.manager.pressButton(value.value_id)
                 network.manager.releaseButton(value.value_id)
                 _LOGGER.info(
-                    "Setting config parameter %s on Node %s "
+                    "Setting configuration parameter %s on Node %s "
                     "with button selection %s",
                     param,
                     node_id,
@@ -711,7 +707,7 @@ async def async_setup_entry(hass, config_entry):
                 return
             value.data = int(selection)
             _LOGGER.info(
-                "Setting config parameter %s on Node %s with selection %s",
+                "Setting configuration parameter %s on Node %s with selection %s",
                 param,
                 node_id,
                 selection,
@@ -719,7 +715,7 @@ async def async_setup_entry(hass, config_entry):
             return
         node.set_config_param(param, selection, size)
         _LOGGER.info(
-            "Setting unknown config parameter %s on Node %s with selection %s",
+            "Setting unknown configuration parameter %s on Node %s with selection %s",
             param,
             node_id,
             selection,
@@ -830,9 +826,7 @@ async def async_setup_entry(hass, config_entry):
             )
             return
         _LOGGER.info(
-            "Node %s on instance %s does not have resettable meters.",
-            node_id,
-            instance,
+            "Node %s on instance %s does not have resettable meters.", node_id, instance
         )
 
     def heal_node(service):
@@ -1213,7 +1207,6 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
 
     def value_added(self):
         """Handle a new value of this entity."""
-        pass
 
     def value_changed(self):
         """Handle a changed value for this entity's node."""
@@ -1239,7 +1232,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
                 ent_reg.async_update_entity(self.entity_id, new_entity_id=new_entity_id)
                 return
         # else for the above two ifs, update if not using update_entity
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Add device to dict."""
@@ -1267,7 +1260,6 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
 
     def update_properties(self):
         """Update on data changes for node values."""
-        pass
 
     @property
     def should_poll(self):

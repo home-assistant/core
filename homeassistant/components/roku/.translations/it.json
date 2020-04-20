@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo Roku \u00e8 gi\u00e0 configurato",
+            "unknown": "Errore imprevisto"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi, si prega di riprovare"
+        },
+        "flow_title": "Roku: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "data": {
+                    "one": "uno",
+                    "other": "altri"
+                },
+                "description": "Vuoi impostare {name}?",
+                "title": "Roku"
+            },
+            "user": {
+                "data": {
+                    "host": "Host o indirizzo IP"
+                },
+                "description": "Inserisci le tue informazioni Roku.",
+                "title": "Roku"
+            }
+        }
+    }
+}

@@ -6,10 +6,9 @@
         },
         "step": {
             "confirm": {
-                "description": "M\u00f6chten Sie iZone einrichten?",
+                "description": "M\u00f6chtest du iZone einrichten?",
                 "title": "iZone"
             }
-        },
-        "title": "iZone"
+        }
     }
 }

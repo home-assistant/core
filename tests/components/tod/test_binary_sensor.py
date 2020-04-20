@@ -24,7 +24,7 @@ class TestBinarySensorTod(unittest.TestCase):
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.latitute = 50.27583
+        self.hass.config.latitude = 50.27583
         self.hass.config.longitude = 18.98583
 
     def teardown_method(self, method):

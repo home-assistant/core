@@ -113,8 +113,8 @@ def _custom_tasks(template, info) -> None:
     elif template == "config_flow":
         info.update_manifest(config_flow=True)
         info.update_strings(
+            title=info.name,
             config={
-                "title": info.name,
                 "step": {
                     "user": {"title": "Connect to the device", "data": {"host": "Host"}}
                 },
@@ -124,14 +124,14 @@ def _custom_tasks(template, info) -> None:
                     "unknown": "Unexpected error",
                 },
                 "abort": {"already_configured": "Device is already configured"},
-            }
+            },
         )
 
     elif template == "config_flow_discovery":
         info.update_manifest(config_flow=True)
         info.update_strings(
+            title=info.name,
             config={
-                "title": info.name,
                 "step": {
                     "confirm": {
                         "title": info.name,
@@ -142,14 +142,14 @@ def _custom_tasks(template, info) -> None:
                     "single_instance_allowed": f"Only a single configuration of {info.name} is possible.",
                     "no_devices_found": f"No {info.name} devices found on the network.",
                 },
-            }
+            },
         )
 
     elif template == "config_flow_oauth2":
         info.update_manifest(config_flow=True)
         info.update_strings(
+            title=info.name,
             config={
-                "title": info.name,
                 "step": {
                     "pick_implementation": {"title": "Pick Authentication Method"}
                 },
@@ -159,7 +159,7 @@ def _custom_tasks(template, info) -> None:
                 "create_entry": {
                     "default": f"Successfully authenticated with {info.name}."
                 },
-            }
+            },
         )
         _append(
             info.integration_dir / "const.py",

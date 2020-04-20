@@ -1,7 +1,13 @@
 """Constants for the opentherm_gw integration."""
 import pyotgw.vars as gw_vars
 
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import (
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    TIME_HOURS,
+    TIME_MINUTES,
+    UNIT_PERCENTAGE,
+)
 
 ATTR_GW_ID = "gateway_id"
 ATTR_LEVEL = "level"
@@ -31,10 +37,8 @@ SERVICE_SET_OAT = "set_outside_temperature"
 SERVICE_SET_SB_TEMP = "set_setback_temperature"
 
 UNIT_BAR = "bar"
-UNIT_HOUR = "h"
 UNIT_KW = "kW"
-UNIT_L_MIN = "L/min"
-UNIT_PERCENT = "%"
+UNIT_L_MIN = f"L/{TIME_MINUTES}"
 
 BINARY_SENSOR_INFO = {
     # [device_class, friendly_name format]
@@ -117,7 +121,7 @@ SENSOR_INFO = {
     gw_vars.DATA_MASTER_MEMBERID: [None, None, "Thermostat Member ID {}"],
     gw_vars.DATA_SLAVE_MEMBERID: [None, None, "Boiler Member ID {}"],
     gw_vars.DATA_SLAVE_OEM_FAULT: [None, None, "Boiler OEM Fault Code {}"],
-    gw_vars.DATA_COOLING_CONTROL: [None, UNIT_PERCENT, "Cooling Control Signal {}"],
+    gw_vars.DATA_COOLING_CONTROL: [None, UNIT_PERCENTAGE, "Cooling Control Signal {}"],
     gw_vars.DATA_CONTROL_SETPOINT_2: [
         DEVICE_CLASS_TEMPERATURE,
         TEMP_CELSIUS,
@@ -130,13 +134,13 @@ SENSOR_INFO = {
     ],
     gw_vars.DATA_SLAVE_MAX_RELATIVE_MOD: [
         None,
-        UNIT_PERCENT,
+        UNIT_PERCENTAGE,
         "Boiler Maximum Relative Modulation {}",
     ],
     gw_vars.DATA_SLAVE_MAX_CAPACITY: [None, UNIT_KW, "Boiler Maximum Capacity {}"],
     gw_vars.DATA_SLAVE_MIN_MOD_LEVEL: [
         None,
-        UNIT_PERCENT,
+        UNIT_PERCENTAGE,
         "Boiler Minimum Modulation Level {}",
     ],
     gw_vars.DATA_ROOM_SETPOINT: [
@@ -144,7 +148,7 @@ SENSOR_INFO = {
         TEMP_CELSIUS,
         "Room Setpoint {}",
     ],
-    gw_vars.DATA_REL_MOD_LEVEL: [None, UNIT_PERCENT, "Relative Modulation Level {}"],
+    gw_vars.DATA_REL_MOD_LEVEL: [None, UNIT_PERCENTAGE, "Relative Modulation Level {}"],
     gw_vars.DATA_CH_WATER_PRESS: [None, UNIT_BAR, "Central Heating Water Pressure {}"],
     gw_vars.DATA_DHW_FLOW_RATE: [None, UNIT_L_MIN, "Hot Water Flow Rate {}"],
     gw_vars.DATA_ROOM_SETPOINT_2: [
@@ -237,10 +241,10 @@ SENSOR_INFO = {
     gw_vars.DATA_CH_PUMP_STARTS: [None, None, "Central Heating Pump Starts {}"],
     gw_vars.DATA_DHW_PUMP_STARTS: [None, None, "Hot Water Pump Starts {}"],
     gw_vars.DATA_DHW_BURNER_STARTS: [None, None, "Hot Water Burner Starts {}"],
-    gw_vars.DATA_TOTAL_BURNER_HOURS: [None, UNIT_HOUR, "Total Burner Hours {}"],
-    gw_vars.DATA_CH_PUMP_HOURS: [None, UNIT_HOUR, "Central Heating Pump Hours {}"],
-    gw_vars.DATA_DHW_PUMP_HOURS: [None, UNIT_HOUR, "Hot Water Pump Hours {}"],
-    gw_vars.DATA_DHW_BURNER_HOURS: [None, UNIT_HOUR, "Hot Water Burner Hours {}"],
+    gw_vars.DATA_TOTAL_BURNER_HOURS: [None, TIME_HOURS, "Total Burner Hours {}"],
+    gw_vars.DATA_CH_PUMP_HOURS: [None, TIME_HOURS, "Central Heating Pump Hours {}"],
+    gw_vars.DATA_DHW_PUMP_HOURS: [None, TIME_HOURS, "Hot Water Pump Hours {}"],
+    gw_vars.DATA_DHW_BURNER_HOURS: [None, TIME_HOURS, "Hot Water Burner Hours {}"],
     gw_vars.DATA_MASTER_OT_VERSION: [None, None, "Thermostat OpenTherm Version {}"],
     gw_vars.DATA_SLAVE_OT_VERSION: [None, None, "Boiler OpenTherm Version {}"],
     gw_vars.DATA_MASTER_PRODUCT_TYPE: [None, None, "Thermostat Product Type {}"],

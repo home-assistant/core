@@ -8,6 +8,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -315,12 +317,22 @@ async def test_report_fan_speed_state(hass):
     hass.states.async_set(
         "fan.off",
         "off",
-        {"friendly_name": "Off fan", "speed": "off", "supported_features": 1},
+        {
+            "friendly_name": "Off fan",
+            "speed": "off",
+            "supported_features": 1,
+            "speed_list": ["off", "low", "medium", "high"],
+        },
     )
     hass.states.async_set(
         "fan.low_speed",
         "on",
-        {"friendly_name": "Low speed fan", "speed": "low", "supported_features": 1},
+        {
+            "friendly_name": "Low speed fan",
+            "speed": "low",
+            "supported_features": 1,
+            "speed_list": ["off", "low", "medium", "high"],
+        },
     )
     hass.states.async_set(
         "fan.medium_speed",
@@ -329,12 +341,18 @@ async def test_report_fan_speed_state(hass):
             "friendly_name": "Medium speed fan",
             "speed": "medium",
             "supported_features": 1,
+            "speed_list": ["off", "low", "medium", "high"],
         },
     )
     hass.states.async_set(
         "fan.high_speed",
         "on",
-        {"friendly_name": "High speed fan", "speed": "high", "supported_features": 1},
+        {
+            "friendly_name": "High speed fan",
+            "speed": "high",
+            "supported_features": 1,
+            "speed_list": ["off", "low", "medium", "high"],
+        },
     )
 
     properties = await reported_properties(hass, "fan.off")
@@ -361,25 +379,24 @@ async def test_report_fan_speed_state(hass):
 async def test_report_fan_oscillating(hass):
     """Test ToggleController reports fan oscillating correctly."""
     hass.states.async_set(
-        "fan.off",
+        "fan.oscillating_off",
         "off",
-        {"friendly_name": "Off fan", "speed": "off", "supported_features": 3},
+        {"friendly_name": "fan oscillating off", "supported_features": 2},
     )
     hass.states.async_set(
-        "fan.low_speed",
+        "fan.oscillating_on",
         "on",
         {
-            "friendly_name": "Low speed fan",
-            "speed": "low",
+            "friendly_name": "Fan oscillating on",
             "oscillating": True,
-            "supported_features": 3,
+            "supported_features": 2,
         },
     )
 
-    properties = await reported_properties(hass, "fan.off")
+    properties = await reported_properties(hass, "fan.oscillating_off")
     properties.assert_equal("Alexa.ToggleController", "toggleState", "OFF")
 
-    properties = await reported_properties(hass, "fan.low_speed")
+    properties = await reported_properties(hass, "fan.oscillating_on")
     properties.assert_equal("Alexa.ToggleController", "toggleState", "ON")
 
 
@@ -667,6 +684,36 @@ async def test_report_playback_state(hass):
     properties.assert_equal(
         "Alexa.PlaybackStateReporter", "playbackState", {"state": "STOPPED"}
     )
+
+
+async def test_report_speaker_volume(hass):
+    """Test Speaker reports volume correctly."""
+    hass.states.async_set(
+        "media_player.test_speaker",
+        "on",
+        {
+            "friendly_name": "Test media player speaker",
+            "supported_features": SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET,
+            "volume_level": None,
+            "device_class": "speaker",
+        },
+    )
+    properties = await reported_properties(hass, "media_player.test_speaker")
+    properties.assert_not_has_property("Alexa.Speaker", "volume")
+
+    for good_value in range(101):
+        hass.states.async_set(
+            "media_player.test_speaker",
+            "on",
+            {
+                "friendly_name": "Test media player speaker",
+                "supported_features": SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET,
+                "volume_level": good_value / 100,
+                "device_class": "speaker",
+            },
+        )
+        properties = await reported_properties(hass, "media_player.test_speaker")
+        properties.assert_equal("Alexa.Speaker", "volume", good_value)
 
 
 async def test_report_image_processing(hass):
