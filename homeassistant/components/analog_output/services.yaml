@@ -36,18 +36,23 @@ toggle:
 decrement:
   description: Decrement the value of an analog output entity by its stepping.
   fields:
-    entity_id: {description: Entity id of the analog output that should be decremented.,
-      example: analog_output.device}
+    entity_id:
+      description: Entity id of the analog output that should be decremented.
+      example: "analog_output.device"
+
 increment:
   description: Increment the value of an analog output entity by its stepping.
   fields:
-    entity_id: {description: Entity id of the analog output that should be incremented.,
-      example: analog_output.device}
+    entity_id:
+      description: Entity id of the analog output that should be incremented.
+      example: "analog_output.device"
 
 set_value:
   description: Set the value of an analog output entity.
   fields:
-    entity_id: {description: Entity id of the analog output to set the new value.,
-      example: analog_outut.device}
-    value: {description: The target value the entity should be set to., example: 42}
-
+    entity_id:
+      description: Entity id of the analog output to set the new value.
+      example: "analog_output.device"
+    value:
+      description: The target value the entity should be set to.
+      example: 42
