@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN
+from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
