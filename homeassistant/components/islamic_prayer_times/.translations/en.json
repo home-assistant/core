@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Islamic Prayer Times",
     "step": {
       "user": {
         "title": "Set up Islamic Prayer Times",
@@ -12,7 +11,6 @@
     }
   },
   "options": {
-    "title": "Configure options for Islamic Prayer Times",
     "step": {
       "init": {
         "data": {
