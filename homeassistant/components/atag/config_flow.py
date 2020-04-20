@@ -49,10 +49,3 @@ class AtagConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(DATA_SCHEMA),
             errors=errors if errors else {},
         )
-
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
-
-        return await self.async_step_user(import_config)

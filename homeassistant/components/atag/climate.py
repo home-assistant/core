@@ -31,10 +31,10 @@ SUPPORT_PRESET = [
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Load a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_devices([AtagThermostat(coordinator, ENTITY_TYPES[CLIMATE])])
+    async_add_entities([AtagThermostat(coordinator, ENTITY_TYPES[CLIMATE])])
 
 
 class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
@@ -90,16 +90,6 @@ class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
     def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
         return self.coordinator.atag.target_temperature
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return DEFAULT_MAX_TEMP
-
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return DEFAULT_MIN_TEMP
 
     @property
     def preset_mode(self) -> Optional[str]:
