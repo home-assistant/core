@@ -3,7 +3,7 @@
     "_": {
       "active": "[%key:common::state::active%]",
       "idle": "[%key:common::state::idle%]",
-      "paused": "paused"
+      "paused": "[%key:common::state::paused%]"
     }
   }
 }

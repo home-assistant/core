@@ -12,6 +12,7 @@
       "active": "Active",
       "idle": "Idle",
       "standby": "Standby",
+      "paused": "Paused",
       "home": "Home",
       "not_home": "Away"
     }
