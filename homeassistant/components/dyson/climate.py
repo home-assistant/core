@@ -59,9 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass.data[DYSON_CLIMATE_DEVICES] = []
 
     # Get Dyson Devices from parent component
-    device_serials = [
-        device.device_serial for device in hass.data[DYSON_CLIMATE_DEVICES]
-    ]
+    device_serials = [device.serial for device in hass.data[DYSON_CLIMATE_DEVICES]]
 
     for device in hass.data[DYSON_DEVICES]:
         if device.serial not in device_serials:
@@ -89,11 +87,11 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
 
     def on_message(self, message):
         """Call when new messages received from the climate."""
-        if not isinstance(message, DysonPureHotCoolState):
-            return
-
-        _LOGGER.debug("Message received for climate device %s : %s", self.name, message)
-        self.schedule_update_ha_state()
+        if isinstance(message, DysonPureHotCoolState):
+            _LOGGER.debug(
+                "Message received for climate device %s : %s", self.name, message
+            )
+            self.schedule_update_ha_state()
 
     @property
     def should_poll(self):
@@ -222,7 +220,7 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
         return 37
 
     @property
-    def device_serial(self):
+    def serial(self):
         """Return fan's serial number."""
         return self._device.serial
 
@@ -240,12 +238,12 @@ class DysonPureHotCoolDevice(ClimateDevice):
         self.hass.async_add_job(self._device.add_message_listener, self.on_message)
 
     def on_message(self, message):
-        """Call when new messages received from the climate."""
-        if not isinstance(message, DysonPureHotCoolV2State):
-            return
-
-        _LOGGER.debug("Message received for climate device %s : %s", self.name, message)
-        self.schedule_update_ha_state()
+        """Call when new messages received from the climate device."""
+        if isinstance(message, DysonPureHotCoolV2State):
+            _LOGGER.debug(
+                "Message received for climate device %s : %s", self.name, message
+            )
+            self.schedule_update_ha_state()
 
     @property
     def should_poll(self):
@@ -401,6 +399,6 @@ class DysonPureHotCoolDevice(ClimateDevice):
         return 37
 
     @property
-    def device_serial(self):
+    def serial(self):
         """Return fan's serial number."""
         return self._device.serial

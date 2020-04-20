@@ -1,4 +1,5 @@
 """Test the Dyson fan component."""
+import json
 import unittest
 from unittest import mock
 
@@ -7,9 +8,11 @@ from libpurecool.const import FocusMode, HeatMode, HeatState, HeatTarget
 from libpurecool.dyson_pure_hotcool import DysonPureHotCool
 from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
 from libpurecool.dyson_pure_state import DysonPureHotCoolState
+from libpurecool.dyson_pure_state_v2 import DysonPureHotCoolV2State
 
 from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.climate import DOMAIN
+from homeassistant.components.climate.const import ATTR_HVAC_ACTION, CURRENT_HVAC_HEAT
 from homeassistant.components.dyson import climate as dyson
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers import discovery
@@ -48,6 +51,8 @@ def _get_dyson_purehotcool_device():
     device = mock.Mock(spec=DysonPureHotCool)
     load_mock_device(device)
     device.name = "Living room"
+    device.state.heat_target = "0000"
+    device.state.heat_mode = HeatMode.HEAT_OFF.value
     return device
 
 
@@ -382,4 +387,80 @@ async def test_purehotcool_component_setup_only_once(devices, login, hass):
     ]
 
     assert len(climate_devices) == 1
-    assert climate_devices[0].device_serial == "XX-XXXXX-XX"
+    assert climate_devices[0].serial == "XX-XXXXX-XX"
+
+
+@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@asynctest.patch(
+    "libpurecool.dyson.DysonAccount.devices", return_value=[_get_device_off()],
+)
+async def test_purehotcoollink_component_setup_only_once(devices, login, hass):
+    """Test if entities are created only once."""
+    config = _get_config()
+    await async_setup_component(hass, dyson_parent.DOMAIN, config)
+    await hass.async_block_till_done()
+    discovery.load_platform(hass, "climate", dyson_parent.DOMAIN, {}, config)
+    await hass.async_block_till_done()
+
+    climate_devices = [
+        device
+        for device in hass.data[DOMAIN].entities
+        if device.platform.platform_name == dyson_parent.DOMAIN
+    ]
+
+    assert len(climate_devices) == 1
+    assert climate_devices[0].serial == "XX-XXXXX-XX"
+
+
+@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@asynctest.patch(
+    "libpurecool.dyson.DysonAccount.devices",
+    return_value=[_get_dyson_purehotcool_device()],
+)
+async def test_purehotcool_update_state(devices, login, hass):
+    """Test state update."""
+    device = devices.return_value[0]
+    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await hass.async_block_till_done()
+    event = {
+        "msg": "CURRENT-STATE",
+        "product-state": {
+            "fpwr": "ON",
+            "fdir": "OFF",
+            "auto": "OFF",
+            "oscs": "ON",
+            "oson": "ON",
+            "nmod": "OFF",
+            "rhtm": "ON",
+            "fnst": "FAN",
+            "ercd": "11E1",
+            "wacd": "NONE",
+            "nmdv": "0004",
+            "fnsp": "0002",
+            "bril": "0002",
+            "corf": "ON",
+            "cflr": "0085",
+            "hflr": "0095",
+            "sltm": "OFF",
+            "osal": "0045",
+            "osau": "0095",
+            "ancp": "CUST",
+            "tilt": "OK",
+            "hsta": "HEAT",
+            "hmax": "2986",
+            "hmod": "HEAT",
+        },
+    }
+    device.state = DysonPureHotCoolV2State(json.dumps(event))
+
+    for call in device.add_message_listener.call_args_list:
+        callback = call[0][0]
+        if type(callback.__self__) == dyson.DysonPureHotCoolDevice:
+            callback(device.state)
+
+    await hass.async_block_till_done()
+    device_state = hass.states.get("climate.living_room")
+    attributes = device_state.attributes
+
+    assert attributes[ATTR_TEMPERATURE] == 25
+    assert attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
