@@ -142,17 +142,3 @@ class DevoloSwitch(SwitchDevice):
             _LOGGER.debug("No valid message received")
             _LOGGER.debug(message)
         self.async_schedule_update_ha_state()
-
-
-class Subscriber:
-    """Subscriber class for the publisher in mprm websocket class."""
-
-    def __init__(self, name, device):
-        """Initiate the device."""
-        self.name = name
-        self.device = device
-
-    def update(self, message):
-        """Trigger hass to update the device."""
-        _LOGGER.debug('%s got message "%s"', self.name, message)
-        self.device.update(message)
