@@ -6,7 +6,8 @@ DOMAIN = "homekit"
 HOMEKIT_FILE = ".homekit.state"
 HOMEKIT_NOTIFY_ID = 4663548
 AID_STORAGE = "homekit-aid-allocations"
-
+HOMEKIT_PAIRING_QR = "homekit-pairing-qr"
+HOMEKIT_PAIRING_QR_SECRET = "homekit-pairing-qr-secret"
 
 # #### Attributes ####
 ATTR_DISPLAY_NAME = "display_name"
