@@ -152,6 +152,8 @@ class DeviceRegistry:
         device_id,
         *,
         area_id=_UNDEF,
+        manufacturer=_UNDEF,
+        model=_UNDEF,
         name=_UNDEF,
         name_by_user=_UNDEF,
         new_identifiers=_UNDEF,
@@ -163,6 +165,8 @@ class DeviceRegistry:
         return self._async_update_device(
             device_id,
             area_id=area_id,
+            manufacturer=manufacturer,
+            model=model,
             name=name,
             name_by_user=name_by_user,
             new_identifiers=new_identifiers,
