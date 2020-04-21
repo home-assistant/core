@@ -3558,7 +3558,7 @@ DEVICES = [
             1: {
                 "device_type": 512,
                 "endpoint_id": 1,
-                "in_clusters": [0, 3, 4, 5, 6, 8, 10, 21, 256, 65544, 54545],
+                "in_clusters": [0, 3, 4, 5, 6, 8, 10, 21, 256, 64544, 64545],
                 "out_clusters": [3, 64544],
                 "profile_id": 260,
             }
