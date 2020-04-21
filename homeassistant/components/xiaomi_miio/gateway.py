@@ -1,3 +1,4 @@
+"""Code to handle a Xiaomi Gateway."""
 import logging
 
 from miio import DeviceException, gateway
