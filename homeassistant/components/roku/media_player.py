@@ -84,6 +84,7 @@ class RokuDevice(MediaPlayerDevice):
         """Return the name of the device."""
         if self._device_info.user_device_name:
             return self._device_info.user_device_name
+
         return f"Roku {self._device_info.serial_num}"
 
     @property
@@ -97,8 +98,10 @@ class RokuDevice(MediaPlayerDevice):
 
         if self.current_app.name == "Power Saver" or self.current_app.is_screensaver:
             return STATE_IDLE
+
         if self.current_app.name == "Roku":
             return STATE_HOME
+
         if self.current_app.name is not None:
             return STATE_PLAYING
 
@@ -133,19 +136,17 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        if self.current_app is None:
+        if self.current_app is None or self.current_app.name in ("Power Saver", "Roku"):
             return None
-        if self.current_app.name in ("Power Saver", "Roku"):
-            return None
+
         return MEDIA_TYPE_CHANNEL
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        if self.current_app is None:
+        if self.current_app is None or self.current_app.name in ("Power Saver", "Roku"):
             return None
-        if self.current_app.name in ("Power Saver", "Roku"):
-            return None
+
         if self.current_app.id is None:
             return None
 
@@ -223,14 +224,17 @@ class RokuDevice(MediaPlayerDevice):
                 MEDIA_TYPE_CHANNEL,
             )
             return
+
         if self.current_app is not None:
             self.roku.launch(self.roku["tvinput.dtv"], {"ch": media_id})
 
     def select_source(self, source):
         """Select input source."""
-        if self.current_app is not None:
-            if source == "Home":
-                self.roku.home()
-            else:
-                channel = self.roku[source]
-                channel.launch()
+        if self.current_app is None:
+            return
+
+        if source == "Home":
+            self.roku.home()
+        else:
+            channel = self.roku[source]
+            channel.launch()
