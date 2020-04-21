@@ -13,14 +13,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     ALREADY_CONFIGURED,
     CANNOT_CONNECT,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
     DEFAULT_SETUP_TIMEOUT,
     DOMAIN,
     UNKNOWN,
     UNSUPPORTED_VERSION,
 )
-
-DEFAULT_HOST = "192.168.0.2"
-DEFAULT_PORT = 80
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -39,3 +39,6 @@ BLEBOX_TO_HASS_COVER_STATES = {
     # 7 is not used
     8: STATE_OPEN,  # safety stop
 }
+
+DEFAULT_HOST = "192.168.0.2"
+DEFAULT_PORT = 80
