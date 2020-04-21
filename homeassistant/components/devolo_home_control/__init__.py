@@ -5,44 +5,21 @@ from devolo_home_control_api.mydevolo import (
     WrongCredentialsError,
     WrongUrlError,
 )
-import voluptuous as vol
 
 from homeassistant.components import switch as ha_switch
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .config_flow import create_config_flow
-from .const import DEFAULT_MPRM, DEFAULT_MYDEVOLO, DOMAIN, PLATFORMS
+from .const import DOMAIN, HOMECONTROL, MYDEVOLO, PLATFORMS
 
 SUPPORTED_PLATFORMS = [ha_switch.DOMAIN]
-
-SERVER_CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Optional("mydevolo", default=DEFAULT_MYDEVOLO): cv.string,
-            vol.Optional("mprm", default=DEFAULT_MPRM): cv.string,
-            vol.Required(CONF_PASSWORD): cv.string,
-            vol.Required(CONF_USERNAME): cv.string,
-        }
-    )
-)
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: SERVER_CONFIG_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
     """Get all devices and add them to hass."""
-    mydevolo = Mydevolo()
-    try:
-        # We need this because of staging purposes, but don't want to show this on the UI
-        mydevolo.url = config.get(DOMAIN).get("mydevolo")
-        mydevolo.mprm = config.get(DOMAIN).get("mprm")
-    except AttributeError:
-        mydevolo.url = "https://www.mydevolo.com"
-        mydevolo.mprm = "https://homecontrol.mydevolo.com"
     return True
 
 
@@ -50,11 +27,15 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     """Set up the devolo account from a config entry."""
     conf = entry.data
     hass.data.setdefault(DOMAIN, {})
-    mydevolo = Mydevolo.get_instance()
-
+    try:
+        mydevolo = Mydevolo.get_instance()
+    except SyntaxError:
+        mydevolo = Mydevolo()
     try:
         mydevolo.user = conf.get(CONF_USERNAME)
         mydevolo.password = conf.get(CONF_PASSWORD)
+        mydevolo.url = conf.get(MYDEVOLO)
+        mydevolo.mprm = conf.get(HOMECONTROL)
     except (WrongCredentialsError, WrongUrlError):
         create_config_flow(hass=hass)
         raise ConfigEntryNotReady

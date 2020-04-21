@@ -8,7 +8,13 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import (  # pylint:disable=unused-import
+    DEFAULT_MPRM,
+    DEFAULT_MYDEVOLO,
+    DOMAIN,
+    HOMECONTROL,
+    MYDEVOLO,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,8 +28,10 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize devolo Home Control flow."""
         self.data_schema = {
-            vol.Required(CONF_USERNAME, default=""): str,
+            vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
+            vol.Required(MYDEVOLO, default=DEFAULT_MYDEVOLO): str,
+            vol.Required(HOMECONTROL, default=DEFAULT_MPRM): str,
         }
 
     async def async_step_user(self, user_input=None):
@@ -32,9 +40,14 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self._show_form(user_input)
         user = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
-        mydevolo = Mydevolo.get_instance()
+        try:
+            mydevolo = Mydevolo.get_instance()
+        except SyntaxError:
+            mydevolo = Mydevolo()
         mydevolo.user = user
         mydevolo.password = password
+        mydevolo.url = user_input.get(MYDEVOLO)
+        mydevolo.mprm = user_input.get(HOMECONTROL)
         credentials_valid = await self.hass.async_add_executor_job(
             mydevolo.credentials_valid
         )
@@ -44,7 +57,12 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Credentials valid")
         return self.async_create_entry(
             title="devolo Home Control",
-            data={CONF_PASSWORD: password, CONF_USERNAME: user},
+            data={
+                CONF_PASSWORD: password,
+                CONF_USERNAME: user,
+                MYDEVOLO: mydevolo.url,
+                HOMECONTROL: mydevolo.mprm,
+            },
         )
 
     @callback
