@@ -5,6 +5,7 @@ import blebox_uniapi
 import pytest
 
 from homeassistant.components.blebox import async_setup_entry
+from homeassistant.components.blebox.const import DOMAIN
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .conftest import mock_config, patch_product_identify
@@ -42,3 +43,20 @@ async def test_setup_failure_on_connection(hass):
             [call("Identify failed at %s:%d (%s)", "172.100.123.4", 80, mock.ANY,)]
         )
         assert isinstance(error.call_args[0][3], blebox_uniapi.error.ConnectionError)
+
+
+async def test_unload_config_entry(hass):
+    """Test that unloading works properly."""
+    patch_product_identify(None)
+
+    entry = mock_config()
+
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.data[DOMAIN]
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert not hass.data.get(DOMAIN)

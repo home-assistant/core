@@ -19,7 +19,7 @@ from .const import (
     BLEBOX_TO_HASS_COVER_STATES,
     BLEBOX_TO_HASS_DEVICE_CLASSES,
     DOMAIN,
-    PRODUCTS,
+    PRODUCT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add):
     """Set up a BleBox entry."""
 
-    product = hass.data[DOMAIN][PRODUCTS][config_entry.entry_id]
+    product = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
     return await async_create_blebox_entities(
         product, async_add, BleBoxCoverEntity, "covers"
     )

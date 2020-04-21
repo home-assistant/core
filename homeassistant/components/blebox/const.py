@@ -11,7 +11,7 @@ from homeassistant.components.cover import (
 )
 
 DOMAIN = "blebox"
-PRODUCTS = "products"
+PRODUCT = "product"
 
 DEFAULT_SETUP_TIMEOUT = 3
 

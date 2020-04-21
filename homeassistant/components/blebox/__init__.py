@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCTS
+from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,8 +44,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryNotReady from ex
 
     domain = hass.data.setdefault(DOMAIN, {})
-    products = domain.setdefault(PRODUCTS, {})
-    products[entry.entry_id] = product
+    domain_entry = domain.setdefault(entry.entry_id, {})
+    product = domain_entry.setdefault(PRODUCT, product)
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -65,6 +65,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
