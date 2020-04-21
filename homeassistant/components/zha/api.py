@@ -238,17 +238,14 @@ async def websocket_get_groupable_devices_2(hass, connection, msg):
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
 
     devices = [device for device in zha_gateway.devices.values() if device.is_groupable]
-
     groupable_devices = []
 
     for device in devices:
         entity_refs = zha_gateway.device_registry.get(device.ieee)
-        device_info = device.zha_device_info
-        endpoint_info = []
         for ep_id in device.async_get_groupable_endpoints():
-            endpoint_info.append(
+            groupable_devices.append(
                 {
-                    "endpoint": ep_id,
+                    "endpoint_id": ep_id,
                     "entities": [
                         {
                             "name": zha_gateway.ha_entity_registry.async_get(
@@ -264,9 +261,9 @@ async def websocket_get_groupable_devices_2(hass, connection, msg):
                         ].cluster.endpoint.endpoint_id
                         == ep_id
                     ],
+                    "device": device.zha_device_info,
                 }
             )
-        groupable_devices.append({"device": device_info, "endpoints": endpoint_info})
 
     connection.send_result(msg[ID], groupable_devices)
 
