@@ -88,6 +88,11 @@ class JenkinsSensor(Entity):
         return self._unique_id
 
     @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return "mdi:git"
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
