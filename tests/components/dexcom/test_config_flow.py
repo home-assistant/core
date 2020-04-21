@@ -73,3 +73,21 @@ async def test_form_session_error(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "session_error"}
+
+
+async def test_form_error(hass):
+    """Test we handle error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.dexcom.config_flow.Dexcom", side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "test_username", CONF_PASSWORD: "test_password"},
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
