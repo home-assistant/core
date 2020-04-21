@@ -3,6 +3,7 @@
 
 from jenkinsapi.custom_exceptions import UnknownJob
 from jenkinsapi.jenkins import Jenkins
+from requests.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -36,21 +37,24 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     repository = config.get(CONF_REPOSITORY)
     branch = config.get(CONF_BRANCH)
 
-    _LOGGER.debug(f"url: {jenkins_url}")
-    _LOGGER.debug(f"repo: {repository}")
-    _LOGGER.debug(f"branch: {branch}")
-
-    server = Jenkins(jenkins_url)
-
-    sensors = []
+    try:
+        server = Jenkins(jenkins_url)
+        _LOGGER.debug(f"Successfully connected to {jenkins_url}")
+    except HTTPError:
+        _LOGGER.error(
+            f"Could not connect to {jenkins_url}. Is the specified URL correct?"
+        )
+        return False
 
     # Fetch the configured jobs and add as sensors
+    sensors = []
     try:
         job = server.get_job(f"{repository}/{branch}")
         sensors.append(JenkinsSensor(repository, branch, job))
+        _LOGGER.debug(f"Added sensor for {repository}/{branch}")
     except UnknownJob:
         _LOGGER.error(
-            f'Could not find a job for repository "{repository}" and branch "{branch}".'
+            f'Could not find a job for repository "{repository}" and branch "{branch}". Is there a job with at least one build for this on {jenkins_url}?'
         )
 
     add_entities(sensors, True)
