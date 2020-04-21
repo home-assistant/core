@@ -5,7 +5,6 @@ from binascii import unhexlify
 from datetime import timedelta
 import logging
 import re
-import socket
 
 import voluptuous as vol
 
@@ -73,22 +72,36 @@ def async_setup_service(hass, host, device):
     if hass.services.has_service(DOMAIN, SERVICE_LEARN):
         return
 
+    async def _attempt(device, function, *args):
+        """Retry a socket-related function until it succeeds."""
+        for retry in range(DEFAULT_RETRY):
+            if retry and not await _connect(device):
+                continue
+            try:
+                await hass.async_add_executor_job(function, *args)
+            except OSError:
+                continue
+            return
+        raise ConnectionError
+
+    async def _connect(device):
+        """Connect to the remote."""
+        try:
+            auth = await hass.async_add_executor_job(device.auth)
+        except OSError:
+            auth = False
+        return auth
+
     async def _learn_command(call):
         """Learn a packet from remote."""
 
         device = hass.data[DOMAIN][call.data[CONF_HOST]]
 
-        for retry in range(DEFAULT_RETRY):
-            try:
-                await hass.async_add_executor_job(device.enter_learning)
-                break
-            except (socket.timeout, ValueError):
-                try:
-                    await hass.async_add_executor_job(device.auth)
-                except socket.timeout:
-                    if retry == DEFAULT_RETRY - 1:
-                        _LOGGER.error("Failed to enter learning mode")
-                        return
+        try:
+            await _attempt(device, device.enter_learning)
+        except ConnectionError:
+            _LOGGER.error("Failed to enter learning mode")
+            return
 
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
@@ -117,16 +130,11 @@ def async_setup_service(hass, host, device):
         device = hass.data[DOMAIN][call.data[CONF_HOST]]
         packets = call.data[CONF_PACKET]
         for packet in packets:
-            for retry in range(DEFAULT_RETRY):
-                try:
-                    await hass.async_add_executor_job(device.send_data, packet)
-                    break
-                except (socket.timeout, ValueError):
-                    try:
-                        await hass.async_add_executor_job(device.auth)
-                    except socket.timeout:
-                        if retry == DEFAULT_RETRY - 1:
-                            _LOGGER.error("Failed to send packet to device")
+            try:
+                await _attempt(device, device.send_data, packet)
+            except ConnectionError:
+                _LOGGER.error("Failed to send packet to device")
+                return
 
     hass.services.async_register(
         DOMAIN, SERVICE_SEND, _send_packet, schema=SERVICE_SEND_SCHEMA

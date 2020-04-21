@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_TYPE,
     STATE_ON,
 )
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import Throttle, slugify
@@ -139,9 +140,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     broadlink_device.timeout = config.get(CONF_TIMEOUT)
     try:
-        broadlink_device.auth()
+        auth = broadlink_device.auth()
     except OSError:
+        auth = False
+    if not auth:
         _LOGGER.error("Failed to connect to device")
+        raise PlatformNotReady
 
     add_entities(switches)
 
