@@ -41,14 +41,12 @@ async def async_setup_gateway_entry(
     gateway_id = entry.data["gateway_id"]
 
     # Connect to gateway
-    connect_gateway_class = ConnectXiaomiGateway()
-    await hass.async_add_job(connect_gateway_class.async_connect_gateway(host, token))
-    gateway_info = connect_gateway_class.gateway_info
-
-    if gateway_info is None:
+    gateway = ConnectXiaomiGateway()
+    if not await gateway.async_connect_gateway(host, token):
         return False
+    gateway_info = gateway.gateway_info
 
-    hass.data[DOMAIN][entry.entry_id] = connect_gateway_class.gateway_device
+    hass.data[DOMAIN][entry.entry_id] = gateway.gateway_device
 
     gateway_model = f"{gateway_info.model}-{gateway_info.hardware_version}"
 
