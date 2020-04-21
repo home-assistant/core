@@ -24,7 +24,8 @@ def log_messages(hass: HomeAssistantType, entity_id: str) -> MessageCallbackType
         messages = debug_info["entities"][entity_id]["subscriptions"][
             msg.subscribed_topic
         ]
-        messages.append((msg.payload, msg.topic))
+        if msg not in messages:
+            messages.append(msg)
 
     def _decorator(msg_callback: MessageCallbackType):
         @wraps(msg_callback)
@@ -125,7 +126,8 @@ async def info_for_device(hass, device_id):
             {
                 "topic": topic,
                 "messages": [
-                    {"payload": msg[0], "topic": msg[1]} for msg in list(messages)
+                    {"payload": msg.payload, "time": msg.timestamp, "topic": msg.topic}
+                    for msg in list(messages)
                 ],
             }
             for topic, messages in entity_info["subscriptions"].items()
