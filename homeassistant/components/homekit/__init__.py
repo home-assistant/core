@@ -134,7 +134,7 @@ async def async_setup(hass, config):
     aid_storage = hass.data[AID_STORAGE] = AccessoryAidStorage(hass)
     await aid_storage.async_initialize()
 
-    hass.http.register_view(HomeKitParingQRView)
+    hass.http.register_view(HomeKitPairingQRView)
 
     conf = config[DOMAIN]
     name = conf[CONF_NAME]
