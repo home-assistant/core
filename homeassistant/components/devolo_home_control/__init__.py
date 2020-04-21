@@ -77,10 +77,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
+    def shutdown(event):
+        hass.data[DOMAIN]["homecontrol"].websocket_disconnect(
+            f"websocket disconnect requested by {EVENT_HOMEASSISTANT_STOP}"
+        )
+
     # Listen when EVENT_HOMEASSISTANT_STOP is fired
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, hass.data[DOMAIN]["homecontrol"].websocket_disconnect
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
     return True
 
