@@ -42,7 +42,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class XiaomiGatewayAlarm(AlarmControlPanel):
     """Representation of the XiaomiGatewayAlarm."""
 
-    def __init__(self, gateway_device, gateway_name, model, mac_address, gateway_device_id):
+    def __init__(
+        self, gateway_device, gateway_name, model, mac_address, gateway_device_id
+    ):
         """Initialize the entity."""
         self._gateway = gateway_device
         self._name = gateway_name
@@ -97,14 +99,18 @@ class XiaomiGatewayAlarm(AlarmControlPanel):
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a device command handling error messages."""
         try:
-            result = await self.hass.async_add_executor_job(partial(func, *args, **kwargs))
+            result = await self.hass.async_add_executor_job(
+                partial(func, *args, **kwargs)
+            )
             _LOGGER.debug("Response received from miio device: %s", result)
         except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
 
     async def async_alarm_arm_away(self, code=None):
         """Turn on."""
-        await self._try_command("Turning the alarm on failed: %s", self._gateway.alarm.on)
+        await self._try_command(
+            "Turning the alarm on failed: %s", self._gateway.alarm.on
+        )
 
     async def async_alarm_disarm(self, code=None):
         """Turn off."""
