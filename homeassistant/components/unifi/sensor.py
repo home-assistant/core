@@ -53,6 +53,8 @@ def add_entities(controller, async_add_entities):
 class UniFiBandwidthSensor(UniFiClient):
     """UniFi bandwidth sensor base class."""
 
+    DOMAIN = DOMAIN
+
     @property
     def name(self) -> str:
         """Return the name of the client."""

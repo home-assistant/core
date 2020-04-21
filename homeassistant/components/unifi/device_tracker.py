@@ -120,6 +120,7 @@ def add_entities(controller, async_add_entities):
 class UniFiClientTracker(UniFiClient, ScannerEntity):
     """Representation of a network client."""
 
+    DOMAIN = DOMAIN
     TYPE = CLIENT_TRACKER
 
     def __init__(self, client, controller):
@@ -241,12 +242,13 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 class UniFiDeviceTracker(UniFiBase, ScannerEntity):
     """Representation of a network infrastructure device."""
 
+    DOMAIN = DOMAIN
     TYPE = DEVICE_TRACKER
 
     def __init__(self, device, controller):
         """Set up tracked device."""
-        super().__init__(controller)
         self.device = device
+        super().__init__(controller)
 
     @property
     def mac(self):
