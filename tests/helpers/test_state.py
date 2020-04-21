@@ -68,17 +68,16 @@ async def test_call_to_component(hass):
             context = "dummy_context"
 
             await state.async_reproduce_state(
-                hass,
-                [state_media_player, state_climate],
-                blocking=True,
-                context=context,
+                hass, [state_media_player, state_climate], context=context,
             )
 
             media_player_fun.assert_called_once_with(
-                hass, [state_media_player], context=context
+                hass, [state_media_player], context=context, reproduce_options=None
             )
 
-            climate_fun.assert_called_once_with(hass, [state_climate], context=context)
+            climate_fun.assert_called_once_with(
+                hass, [state_climate], context=context, reproduce_options=None
+            )
 
 
 async def test_get_changed_since(hass):
