@@ -53,20 +53,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def devices_from_config(domain_config):
-    """Parse configuration and add Rflink switch devices."""
-    devices = []
+def entities_from_config(domain_config):
+    """Parse configuration and add Rflink switch entities."""
+    entities = []
     for entity_id, config in domain_config[CONF_DEVICES].items():
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
         device = RflinkSwitch(entity_id, **device_config)
-        devices.append(device)
+        entities.append(device)
 
-    return devices
+    return entities
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Rflink platform."""
-    async_add_entities(devices_from_config(config))
+    async_add_entities(entities_from_config(config))
 
 
 class RflinkSwitch(SwitchableRflinkDevice, SwitchEntity):
