@@ -2,9 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "This BleBox device is already configured.",
-      "address_already_configured": "A BleBox device is already configured at {address}.",
-      "no_devices_found": "No BleBox devices devices found on the network.",
-      "single_instance_allowed": "Only a single configuration of BleBox devices is possible."
+      "address_already_configured": "A BleBox device is already configured at {address}."
     },
     "error": {
       "cannot_connect": "Unable to connect to the BleBox device. (Check the logs for errors.)",
