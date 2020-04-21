@@ -2161,9 +2161,6 @@ xs1-api-client==2.3.5
 # homeassistant.components.yandex_transport
 ya_ma==0.3.8
 
-# homeassistant.components.yweather
-yahooweather==0.10
-
 # homeassistant.components.yale_smart_alarm
 yalesmartalarmclient==0.1.6
 
