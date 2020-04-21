@@ -106,7 +106,8 @@ def add_entities(controller, async_add_entities):
                         continue
                 else:
                     if (
-                        controller.option_ssid_filter
+                        item.essid
+                        and controller.option_ssid_filter
                         and item.essid not in controller.option_ssid_filter
                     ):
                         continue
