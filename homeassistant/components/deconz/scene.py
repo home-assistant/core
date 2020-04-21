@@ -1,4 +1,6 @@
 """Support for deCONZ scenes."""
+from typing import Any
+
 from homeassistant.components.scene import Scene
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -18,10 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     @callback
     def async_add_scene(scenes):
         """Add scene from deCONZ."""
-        entities = []
-
-        for scene in scenes:
-            entities.append(DeconzScene(scene, gateway))
+        entities = [DeconzScene(scene, gateway) for scene in scenes]
 
         async_add_entities(entities)
 
@@ -51,7 +50,7 @@ class DeconzScene(Scene):
         del self.gateway.deconz_ids[self.entity_id]
         self._scene = None
 
-    async def async_activate(self):
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         await self._scene.async_set_state({})
 
