@@ -1,5 +1,6 @@
 """Tests for Plex config flow."""
 import copy
+import ssl
 
 import plexapi.exceptions
 import requests.exceptions
@@ -532,6 +533,14 @@ async def test_multiple_servers_with_import(hass):
 async def test_manual_config(hass):
     """Test creating via manual configuration."""
 
+    class WrongCertValidaitionException(requests.exceptions.SSLError):
+        """Mock the exception showing an unmatched error."""
+
+        def __init__(self):
+            self.__context__ = ssl.SSLCertVerificationError(
+                "some random message that doesn't match"
+            )
+
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": "user"}
     )
@@ -556,6 +565,42 @@ async def test_manual_config(hass):
         CONF_TOKEN: MOCK_TOKEN,
     }
 
+    MANUAL_SERVER_NO_HOST_OR_TOKEN = {
+        CONF_PORT: MOCK_SERVERS[0][CONF_PORT],
+        CONF_SSL: False,
+        CONF_VERIFY_SSL: True,
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MANUAL_SERVER_NO_HOST_OR_TOKEN
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual_setup"
+    assert result["errors"]["base"] == "host_or_token"
+
+    with patch(
+        "plexapi.server.PlexServer", side_effect=requests.exceptions.SSLError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MANUAL_SERVER
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual_setup"
+    assert result["errors"]["base"] == "ssl_error"
+
+    with patch(
+        "plexapi.server.PlexServer", side_effect=WrongCertValidaitionException,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MANUAL_SERVER
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual_setup"
+    assert result["errors"]["base"] == "ssl_error"
+
     with patch(
         "homeassistant.components.plex.PlexServer.connect",
         side_effect=requests.exceptions.SSLError,
@@ -573,6 +618,40 @@ async def test_manual_config(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MANUAL_SERVER
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == mock_plex_server.friendlyName
+    assert result["data"][CONF_SERVER] == mock_plex_server.friendlyName
+    assert result["data"][CONF_SERVER_IDENTIFIER] == mock_plex_server.machineIdentifier
+    assert result["data"][PLEX_SERVER_CONFIG][CONF_URL] == mock_plex_server._baseurl
+    assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
+
+
+async def test_manual_config_with_token(hass):
+    """Test creating via manual configuration with only token."""
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"manual_setup": True}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual_setup"
+
+    mock_plex_server = MockPlexServer()
+
+    with patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()), patch(
+        "plexapi.server.PlexServer", return_value=mock_plex_server
+    ), patch("homeassistant.components.plex.PlexWebsocket.listen"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_TOKEN: MOCK_TOKEN}
         )
 
     assert result["type"] == "create_entry"

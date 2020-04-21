@@ -11,11 +11,11 @@
       "manual_setup": {
         "title": "Manual Plex Configuration",
         "data": {
-          "host": "Host",
+          "host": "Host (Optional)",
           "port": "Port",
           "ssl": "Use SSL",
           "verify_ssl": "Verify SSL certificate",
-          "token": "Token (if required)"
+          "token": "Token (Optional)"
         }
       },
       "select_server": {
@@ -26,6 +26,7 @@
     },
     "error": {
       "faulty_credentials": "Authorization failed",
+      "host_or_token": "Must provide at least one of Host or Token",
       "no_servers": "No servers linked to account",
       "not_found": "Plex server not found",
       "ssl_error": "SSL certificate issue"
