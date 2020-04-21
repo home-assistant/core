@@ -148,13 +148,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             self.cancel_scheduled_update = None
             self.async_write_ha_state()
 
-        if (
-            not self.is_wired
-            and self.controller.option_ssid_filter
-            and self.client.essid not in self.controller.option_ssid_filter
-        ):
-            return False
-
         if (self.is_wired and self.wired_connection) or (
             not self.is_wired and self.wireless_connection
         ):
@@ -173,6 +166,15 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
                     _scheduled_update,
                     dt_util.utcnow() + self.controller.option_detection_time,
                 )
+
+        if (
+            not self.is_wired
+            and self.client.essid
+            and self.controller.option_ssid_filter
+            and self.client.essid not in self.controller.option_ssid_filter
+            and not self.cancel_scheduled_update
+        ):
+            return False
 
         if self.is_disconnected is not None:
             return not self.is_disconnected
