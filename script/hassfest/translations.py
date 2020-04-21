@@ -1,5 +1,6 @@
 """Validate integration translation files."""
 from functools import partial
+import os
 import json
 import logging
 import re
@@ -28,6 +29,29 @@ REMOVED_TITLE_MSG = (
     "if the title needs to be different than the name of your integration in the "
     "manifest."
 )
+
+MOVED_TRANSLATIONS_DIRECTORY_MSG = (
+    "The '.translations' directory has been moved, the new name is 'translations', "
+    "starting with Home Assistant 0.111 your translations will no longer "
+    "load if you do not move/rename this "
+)
+
+
+def check_translations_directory_name(config: Config, integration: Integration) -> None:
+    """Check that the correct name is used for the translations directory"""
+    legacy_translations = integration.path / ".translations"
+    translations = integration.path / "translations"
+
+    if translations.is_dir():
+        # No action required
+        return
+
+    if legacy_translations.is_dir():
+        if config.specific_integrations:
+            # Don't mark it as an error yet for custom components to allow backwards compat.
+            integration.add_warning("translations", MOVED_TRANSLATIONS_DIRECTORY_MSG)
+        else:
+            os.rename(str(legacy_translations), str(translations))
 
 
 def find_references(strings, prefix, found):
@@ -188,6 +212,7 @@ ONBOARDING_SCHEMA = vol.Schema({vol.Required("area"): {str: str}})
 
 def validate_translation_file(config: Config, integration: Integration, all_strings):
     """Validate translation files for integration."""
+    check_translations_directory_name(config, integration)
     strings_file = integration.path / "strings.json"
     references = []
 
