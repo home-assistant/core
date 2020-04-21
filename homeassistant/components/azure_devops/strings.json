@@ -14,7 +14,7 @@
         "description": "Set up an Azure DevOps instance to access your project. A Personal Access Token is only required for a private project.",
         "title": "Add Azure DevOps Project"
       }
-    },
-    "title": "Azure DevOps"
-  }
+    }
+  },
+  "title": "Azure DevOps"
 }
