@@ -67,6 +67,7 @@ class JenkinsSensor(Entity):
         self.repository = repository
         self.branch = branch
         self._name = f"{repository} {branch}"
+        self._unique_id = f"{self.repository}_{self.branch}"
         self._state = None
 
         self.update()
@@ -75,6 +76,11 @@ class JenkinsSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the sensor."""
+        return self._unique_id
 
     @property
     def state(self):
