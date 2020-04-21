@@ -10,12 +10,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .binary_sensor import BoolEntity
-from .const import DOMAIN
-from .sensor import NumberEntity, StringEntity
+from .const import CREATE_ENTITY_SIGNAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +29,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Set up wiffi from a config entry, config_entry contains data from config entry database."""
     # create api object
-    api = WiffiIntegrationApi(hass, config_entry)
+    api = WiffiIntegrationApi(hass)
+    api.setup(config_entry)
 
     # store api object
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = api
@@ -40,7 +39,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         await api.server.start_server()
     except OSError as exc:
         if exc.errno != errno.EADDRINUSE:
-            raise
+            _LOGGER.error(f"start_server failed, errno: {exc.errno}")
+            return False
         _LOGGER.error("port %s already in use", config_entry.data[CONF_PORT])
         raise ConfigEntryNotReady from exc
 
@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Unload a config entry."""
-    api = hass.data[DOMAIN][config_entry.entry_id]  # type ::= WiffiIntegrationApi
+    api: "WiffiIntegrationApi" = hass.data[DOMAIN][config_entry.entry_id]
     await api.server.close_server()
 
     unload_ok = all(
@@ -75,14 +75,19 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 class WiffiIntegrationApi:
     """API object for wiffi handling. Stored in hass.data."""
 
-    def __init__(self, hass, config_entry):
+    def __init__(self, hass):
         """Initialize the instance."""
         self._hass = hass
-        self._server = WiffiTcpServer(config_entry.data[CONF_PORT], self)
+        self._server = None
         self._known_devices = {}
         self._async_add_entities = {}
+        self._periodic_callback = None
+
+    def setup(self, config_entry):
+        """Set up api instance."""
+        self._server = WiffiTcpServer(config_entry.data[CONF_PORT], self)
         self._periodic_callback = async_track_time_interval(
-            hass, self._periodic_tick, timedelta(seconds=10)
+            self._hass, self._periodic_tick, timedelta(seconds=10)
         )
 
     def shutdown(self):
@@ -91,50 +96,18 @@ class WiffiIntegrationApi:
         Remove listener for periodic callbacks.
         """
         remove_listener = self._periodic_callback
-        remove_listener()
+        if remove_listener is not None:
+            remove_listener()
 
     async def __call__(self, device, metrics):
-        """Process callback from by TCP server if new data arives from a device."""
+        """Process callback from TCP server if new data arrives from a device."""
         if device.mac_address not in self._known_devices:
             # add all entities of new device
             self._known_devices[device.mac_address] = {}
 
-            device_info = {
-                "connections": {
-                    (device_registry.CONNECTION_NETWORK_MAC, device.mac_address)
-                },
-                "identifiers": {(DOMAIN, device.mac_address)},
-                "manufacturer": "stall.biz",
-                "name": f"{device.moduletype} {device.mac_address}",
-                "model": device.moduletype,
-                "sw_version": device.sw_version,
-            }
-
-            sensor_entities = []
-            bool_entities = []
-
-            # unique entity id
-            entity_id = device.mac_address.replace(":", "")
-
-            for metric in metrics:
-                entity = None
-                if metric.is_number:
-                    entity = NumberEntity(entity_id, device_info, metric)
-                    sensor_entities.append(entity)
-                elif metric.is_string:
-                    entity = StringEntity(entity_id, device_info, metric)
-                    sensor_entities.append(entity)
-                elif metric.is_bool:
-                    entity = BoolEntity(entity_id, device_info, metric)
-                    bool_entities.append(entity)
-                else:
-                    # unknown type -> ignore
-                    continue
-
-                self._known_devices[device.mac_address][metric.id] = entity
-
-            self._async_add_entities["sensor"](sensor_entities)
-            self._async_add_entities["binary_sensor"](bool_entities)
+            async_dispatcher_send(
+                self._hass, CREATE_ENTITY_SIGNAL, self, device, metrics
+            )
 
         else:
             # update all entities
@@ -163,4 +136,8 @@ class WiffiIntegrationApi:
         for entities in self._known_devices.values():
             for entity in entities.values():
                 if entity is not None:
-                    entity.check_expiration_date()
+                    entity.async_check_expiration_date()
+
+    def add_entity(self, mac_address, metric_id, entity):
+        """Add entity to list of known entities."""
+        self._known_devices[mac_address][metric_id] = entity

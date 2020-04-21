@@ -10,8 +10,9 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
 )
 from homeassistant.const import PRESSURE_MBAR, TEMP_CELSIUS
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DOMAIN
+from .const import CREATE_ENTITY_SIGNAL, DOMAIN
 from .entity_base import WiffiEntity
 from .wiffi_strings import (
     WIFFI_UOM_DEGREE,
@@ -42,13 +43,36 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         stem
     ] = async_add_entities
 
+    async_dispatcher_connect(hass, CREATE_ENTITY_SIGNAL, create_entity)
+
+
+def create_entity(api, device, metrics):
+    """Create platform specific entities."""
+    entities = []
+    for metric in metrics:
+        entity = None
+        if metric.is_number:
+            entity = NumberEntity(device, metric)
+            entities.append(entity)
+        elif metric.is_string:
+            entity = StringEntity(device, metric)
+            entities.append(entity)
+        else:
+            # unknown type -> ignore
+            continue
+
+        api.add_entity(device.mac_address, metric.id, entity)
+
+    stem = Path(__file__).stem  # stem = filename without py
+    api.async_add_entities[stem](entities)
+
 
 class NumberEntity(WiffiEntity):
     """Entity for wiffi metrics which have a number value."""
 
-    def __init__(self, device_id, device_info, metric):
+    def __init__(self, device, metric):
         """Initialize the entity."""
-        WiffiEntity.__init__(self, device_id, device_info, metric)
+        WiffiEntity.__init__(self, device, metric)
         self._device_class = determine_device_class(metric)
         self._unit_of_measurement = convert_unit_of_measurement(
             metric.unit_of_measurement
@@ -88,9 +112,9 @@ class NumberEntity(WiffiEntity):
 class StringEntity(WiffiEntity):
     """Entity for wiffi metrics which have a string value."""
 
-    def __init__(self, device_id, device_info, metric):
+    def __init__(self, device, metric):
         """Initialize the entity."""
-        WiffiEntity.__init__(self, device_id, device_info, metric)
+        WiffiEntity.__init__(self, device, metric)
         self._value = metric.value
         self.reset_expiration_date()
 

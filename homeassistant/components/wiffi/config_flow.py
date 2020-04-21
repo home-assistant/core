@@ -2,7 +2,6 @@
 
 Used by UI to setup a wiffi integration.
 """
-from collections import OrderedDict
 import errno
 
 import voluptuous as vol
@@ -10,7 +9,6 @@ from wiffi import WiffiTcpServer
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PORT
-from homeassistant.core import callback
 
 from .const import DEFAULT_PORT, DOMAIN
 
@@ -22,7 +20,6 @@ class WiffiFlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
-    @callback
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
         return await self.async_step_user(import_config)
@@ -56,8 +53,7 @@ class WiffiFlowHandler(config_entries.ConfigFlow):
 
     def _show_form(self, errors=None):
         """Show the config flow form to the user."""
-        data_schema = OrderedDict()
-        data_schema[vol.Required(CONF_PORT, default=DEFAULT_PORT)] = int
+        data_schema = {vol.Required(CONF_PORT, default=DEFAULT_PORT): int}
 
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema(data_schema), errors=errors or {}

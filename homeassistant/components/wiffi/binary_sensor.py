@@ -4,8 +4,9 @@ import logging
 from pathlib import Path
 
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DOMAIN
+from .const import CREATE_ENTITY_SIGNAL, DOMAIN
 from .entity_base import WiffiEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,6 +23,26 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         stem
     ] = async_add_entities
 
+    async_dispatcher_connect(hass, CREATE_ENTITY_SIGNAL, create_entity)
+
+
+def create_entity(api, device, metrics):
+    """Create platform specific entities."""
+    entities = []
+    for metric in metrics:
+        entity = None
+        if metric.is_bool:
+            entity = BoolEntity(device, metric)
+            entities.append(entity)
+        else:
+            # unknown type -> ignore
+            continue
+
+        api.add_entity(device.mac_address, metric.id, entity)
+
+    stem = Path(__file__).stem  # stem = filename without py
+    api.async_add_entities[stem](entities)
+
 
 class BoolEntity(WiffiEntity):
     """Entity for wiffi metrics which have a boolean value.
@@ -32,9 +53,9 @@ class BoolEntity(WiffiEntity):
     property we just copied this part from BinarySensorDevice.
     """
 
-    def __init__(self, device_id, device_info, metric):
+    def __init__(self, device, metric):
         """Initialize the entity."""
-        WiffiEntity.__init__(self, device_id, device_info, metric)
+        WiffiEntity.__init__(self, device, metric)
         self._value = metric.value
         self.reset_expiration_date()
 
