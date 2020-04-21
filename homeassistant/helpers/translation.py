@@ -198,7 +198,9 @@ async def async_get_component_strings(
             files_to_load[loaded] = path
 
     # Load files
-    load_translations_job = hass.async_add_job(load_translations_files, files_to_load)
+    load_translations_job = hass.async_add_executor_job(
+        load_translations_files, files_to_load
+    )
     assert load_translations_job is not None
     loaded_translations = await load_translations_job
 
