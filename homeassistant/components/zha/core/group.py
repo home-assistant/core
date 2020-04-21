@@ -44,22 +44,20 @@ class ZHAGroupMember(LogMixin):
         zha_device_registry = self.device.gateway.device_registry
         member_info: Dict[str, Any] = {}
         member_info["endpoint_id"] = self.endpoint_id
-        member_info["device"] = self.device.device_info
-        member_info["entities"] = (
-            [
-                {
-                    "name": ha_entity_registry.async_get(entity_ref.reference_id).name,
-                    "original_name": ha_entity_registry.async_get(
-                        entity_ref.reference_id
-                    ).original_name,
-                }
-                for entity_ref in zha_device_registry.get(self.device.ieee)
-                if list(entity_ref.cluster_channels.values())[
-                    0
-                ].cluster.endpoint.endpoint_id
-                == self.endpoint_id
-            ],
-        )
+        member_info["device"] = self.device.zha_device_info
+        member_info["entities"] = [
+            {
+                "name": ha_entity_registry.async_get(entity_ref.reference_id).name,
+                "original_name": ha_entity_registry.async_get(
+                    entity_ref.reference_id
+                ).original_name,
+            }
+            for entity_ref in zha_device_registry.get(self.device.ieee)
+            if list(entity_ref.cluster_channels.values())[
+                0
+            ].cluster.endpoint.endpoint_id
+            == self.endpoint_id
+        ]
         return member_info
 
 
