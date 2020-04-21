@@ -2,6 +2,6 @@
   "domain": "jenkins",
   "name": "Jenkins",
   "documentation": "https://www.home-assistant.io/integrations/jenkins",
-  "requirements": ["jenkinsapi==0.3.11"],
+  "requirements": ["jenkinsapi==0.3.11", "requests==2.23.0"],
   "codeowners": ["@jadlers", "@Callet91"]
 }
