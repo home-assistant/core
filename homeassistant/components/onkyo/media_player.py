@@ -118,20 +118,20 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 
 
-def _parse_onkyo_tuple(tuple):
+def _parse_onkyo_tuple(tup):
     """Parse a tuple returned from the eiscp library."""
-    if len(tuple) < 2:
+    if len(tup) < 2:
         return None
 
-    if isinstance(tuple[1], str):
-        return tuple[1].split(",")
+    if isinstance(tup[1], str):
+        return tup[1].split(",")
 
-    return tuple[1]
+    return tup[1]
 
 
-def _tuple_get(tuple, index, default=None):
+def _tuple_get(tup, index, default=None):
     """Return a tuple item at index or a default value if it doesn't exist."""
-    return (tuple[index : index + 1] or [default])[0]
+    return (tup[index : index + 1] or [default])[0]
 
 
 def determine_zones(receiver):
