@@ -11,10 +11,10 @@ from libpurecool.dyson_pure_state import DysonPureHotCoolState
 from libpurecool.dyson_pure_state_v2 import DysonPureHotCoolV2State
 
 from homeassistant.components import dyson as dyson_parent
-from homeassistant.components.climate import DOMAIN
+from homeassistant.components.climate import DOMAIN, SERVICE_SET_TEMPERATURE
 from homeassistant.components.climate.const import ATTR_HVAC_ACTION, CURRENT_HVAC_HEAT
 from homeassistant.components.dyson import climate as dyson
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
@@ -464,3 +464,51 @@ async def test_purehotcool_update_state(devices, login, hass):
 
     assert attributes[ATTR_TEMPERATURE] == 25
     assert attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
+
+
+@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@asynctest.patch(
+    "libpurecool.dyson.DysonAccount.devices",
+    return_value=[_get_dyson_purehotcool_device()],
+)
+async def test_purehotcool_set_temperature(devices, login, hass):
+    """Test set temperature."""
+    device = devices.return_value[0]
+    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await hass.async_block_till_done()
+    device_state = hass.states.get("climate.living_room")
+    attributes = device_state.attributes
+    min_temp = attributes["min_temp"]
+    max_temp = attributes["max_temp"]
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "climate.bed_room", ATTR_TEMPERATURE: 23},
+        True,
+    )
+    assert device.set_heat_target.call_count == 0
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "climate.living_room", ATTR_TEMPERATURE: 23},
+        True,
+    )
+    device.set_heat_target.assert_called_with("2960")
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "climate.living_room", ATTR_TEMPERATURE: min_temp - 1},
+        True,
+    )
+    device.set_heat_target.assert_called_with(HeatTarget.celsius(min_temp))
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "climate.living_room", ATTR_TEMPERATURE: max_temp + 1},
+        True,
+    )
+    device.set_heat_target.assert_called_with(HeatTarget.celsius(max_temp))
