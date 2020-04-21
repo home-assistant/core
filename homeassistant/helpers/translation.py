@@ -3,7 +3,8 @@ import asyncio
 import logging
 from typing import Any, Dict, Optional, Set
 
-from homeassistant.core import callback
+from homeassistant.const import EVENT_COMPONENT_LOADED
+from homeassistant.core import Event, callback
 from homeassistant.loader import (
     Integration,
     async_get_config_flows,
@@ -18,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 TRANSLATION_LOAD_LOCK = "translation_load_lock"
 TRANSLATION_STRING_CACHE = "translation_string_cache"
+TRANSLATION_FLATTEN_CACHE = "translation_flatten_cache"
 
 
 def recursive_flatten(prefix: Any, data: Dict) -> Dict[str, Any]:
@@ -220,6 +222,37 @@ async def async_get_component_cache(
     return translation_cache
 
 
+class FlatCache:
+    """Cache for flattened translations."""
+
+    def __init__(self, hass: HomeAssistantType) -> None:
+        """Initialize the cache."""
+        self.hass = hass
+        self.cache: Dict[str, Dict[str, Dict[str, str]]] = {}
+
+    @callback
+    def async_setup(self) -> None:
+        """Initialize the cache clear listeners."""
+        self.hass.bus.async_listen(EVENT_COMPONENT_LOADED, self._async_component_loaded)
+
+    @callback
+    def _async_component_loaded(self, event: Event) -> None:
+        """Clear cache when a new component is loaded."""
+        self.cache = {}
+
+    @callback
+    def async_get_cache(self, language: str, category: str) -> Optional[Dict[str, str]]:
+        """Get cache."""
+        return self.cache.setdefault(language, {}).get(category)
+
+    @callback
+    def async_set_cache(
+        self, language: str, category: str, data: Dict[str, str]
+    ) -> None:
+        """Set cache."""
+        self.cache.setdefault(language, {})[category] = data
+
+
 @bind_hass
 async def async_get_translations(
     hass: HomeAssistantType,
@@ -234,23 +267,37 @@ async def async_get_translations(
     Otherwise default to loaded intgrations combined with config flow
     integrations if config_flow is true.
     """
-    if integration is not None:
-        components = {integration}
-    elif config_flow:
-        components = hass.config.components | await async_get_config_flows(hass)
-    else:
-        components = set(hass.config.components)
-
-    # Only 'state' supports merging, so remove platforms from selection
-    if category == "state":
-        resource_func = merge_resources
-    else:
-        resource_func = build_resources
-        components = {component for component in components if "." not in component}
-
     lock = hass.data.get(TRANSLATION_LOAD_LOCK)
     if lock is None:
         lock = hass.data[TRANSLATION_LOAD_LOCK] = asyncio.Lock()
+
+    if integration is not None:
+        components = {integration}
+    elif config_flow:
+        # When it's a config flow, we're going to merge the cached loaded component results
+        # with the integrations that have not been loaded yet. We merge this at the end.
+        # We can't cache with config flow, as we can't monitor it during runtime.
+        components = (await async_get_config_flows(hass)) - hass.config.components
+    else:
+        cache = hass.data.get(TRANSLATION_FLATTEN_CACHE)
+        if cache is None:
+            cache = hass.data[TRANSLATION_FLATTEN_CACHE] = FlatCache(hass)
+            cache.async_setup()
+
+        cached_resources = cache.async_get_cache(language, category)
+
+        if cached_resources is not None:
+            return cached_resources
+
+        # Only 'state' supports merging, so remove platforms from selection
+        if category == "state":
+            components = set(hass.config.components)
+        else:
+            components = {
+                component
+                for component in hass.config.components
+                if "." not in component
+            }
 
     tasks = [async_get_component_cache(hass, language, components)]
 
@@ -261,10 +308,24 @@ async def async_get_translations(
     async with lock:
         results = await asyncio.gather(*tasks)
 
+    if category == "state":
+        resource_func = merge_resources
+    else:
+        resource_func = build_resources
+
     resources = flatten(resource_func(results[0], components, category))
 
     if language != "en":
         base_resources = flatten(resource_func(results[1], components, category))
         resources = {**base_resources, **resources}
+
+    if integration is not None:
+        pass
+    elif config_flow:
+        loaded_comp_resources = await async_get_translations(hass, language, category)
+        resources.update(loaded_comp_resources)
+    else:
+        assert cache is not None
+        cache.async_set_cache(language, category, resources)
 
     return resources
