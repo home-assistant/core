@@ -80,10 +80,7 @@ def get_component_path(lang, component):
         return os.path.join(
             "homeassistant", "components", component, "translations", f"{lang}.json"
         )
-    else:
-        return os.path.join(
-            "homeassistant", "components", "translations", f"{component}.{lang}.json"
-        )
+    raise ExitApp(f"Integration {component} not found under homeassistant/components/")
 
 
 def get_platform_path(lang, component, platform):
