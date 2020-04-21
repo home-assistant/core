@@ -410,18 +410,28 @@ class AisCloudWS:
         ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
         return ws_resp
 
-    def post_backup(self, file):
+    def post_backup(self, file, backup_type):
         self.setCloudToken()
-        rest_url = self.url + "backup"
+        if backup_type == "ha":
+            rest_url = self.url + "backup"
+        elif backup_type == "zigbee":
+            rest_url = self.url + "backup_zigbee"
+        elif backup_type == "zwave":
+            rest_url = self.url + "backup_zwave"
         with open(file, "rb") as payload:
             ws_resp = requests.post(
                 rest_url, headers=CLOUD_WS_HEADER, data=payload, timeout=60
             )
         return ws_resp
 
-    def download_backup(self, file):
+    def download_backup(self, file, backup_type):
         self.setCloudToken()
-        rest_url = self.url + "backup"
+        if backup_type == "ha":
+            rest_url = self.url + "backup"
+        elif backup_type == "zigbee":
+            rest_url = self.url + "backup_zigbee"
+        elif backup_type == "zwave":
+            rest_url = self.url + "backup_zwave"
         ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=60)
         with open(file, "wb") as f:
             for chunk in ws_resp.iter_content(1024):
@@ -1546,94 +1556,202 @@ class AisColudData:
         import subprocess
 
         password = ""
+        # all, ha, zigbee
+        backup_type = "all"
         info_text = "kompresuje"
         home_dir = "/data/data/pl.sviete.dom/files/home/"
+        if "type" in call.data:
+            backup_type = call.data["type"]
         if "password" in call.data:
             password = call.data["password"]
         if password != "":
             info_text += " i szyfruje"
             password = "-p" + password
 
-        # 0. chmod
-        try:
-            ret = subprocess.check_output(
-                'su -c "chmod -R 755 /data/data/pl.sviete.dom/files/home/AIS"',
-                shell=True,  # nosec
-            )
-        except Exception as e:
-            _LOGGER.error("do_backup chmod: " + str(e))
+        # HA backup
+        if backup_type in ("all", "ha"):
+            # 0. chmod
+            try:
+                ret = subprocess.check_output(
+                    'su -c "chmod -R 755 /data/data/pl.sviete.dom/files/home/AIS"',
+                    shell=True,  # nosec
+                )
+            except Exception as e:
+                _LOGGER.error("do_backup chmod: " + str(e))
 
-        # 1. zip files
-        self.get_backup_info(
-            call, 1, None, info_text + " bieżącą konfigurację", None, None
-        )
-        try:
-
-            ret = subprocess.check_output(
-                "rm " + home_dir + "backup.zip", shell=True  # nosec
-            )
-        except Exception as e:
-            pass
-        try:
-            ret = subprocess.check_output(
-                "7za a -mmt=2 "
-                + password
-                + " -xr\!deps"
-                + " -xr\!ais_update"
-                + " -xr\!*.log"
-                + " -xr\!*.db"
-                + " -xr\!home-assistant* "
-                + home_dir
-                + "backup.zip "
-                + home_dir
-                + "AIS/.",
-                shell=True,  # nosec
-            )
-        except Exception as e:
-            self.get_backup_info(call, 0, str(e))
-            _LOGGER.error("do_backup 7za: " + str(e))
-            return
-        # 2. check backup size
-        # size in bytes 1 Byte = 0.000001 MB
-        b = os.path.getsize(home_dir + "backup.zip")
-        mb = b * 0.000001
-        if mb > 11:
+            # 1. zip files
             self.get_backup_info(
                 call,
-                0,
-                "Maksymalny rozmiar kopii zapasowej konfiguracji to 10 MB. "
-                + "Twoja konfiguracja zajmuje "
-                + str(round(mb))
-                + " MB. Przed wykonaniem kopii usuń niepotrzebne zasoby z galerii (np. pliki wideo)."
-                + " Jeżeli dodałeś ręcznie jakieś niestandardowe komponenty do folderu z konfiguracją: "
-                + "~/AIS to też zajmują one miejsce i zalecamy je usunąć przed wykonaniem kopii.",
+                1,
+                None,
+                info_text + " bieżącą konfigurację Home Assistant",
+                None,
+                None,
             )
-            _LOGGER.error("Backup size, is to big, in bytes: " + str(b))
-            return
+            try:
+                ret = subprocess.check_output(
+                    "rm " + home_dir + "backup.zip", shell=True  # nosec
+                )
+            except Exception as e:
+                pass
+            try:
+                ret = subprocess.check_output(
+                    "7za a -mmt=2 "
+                    + password
+                    + " -xr\!deps"
+                    + " -xr\!ais_update"
+                    + " -xr\!*.log"
+                    + " -xr\!*.db"
+                    + " -xr\!home-assistant* "
+                    + home_dir
+                    + "backup.zip "
+                    + home_dir
+                    + "AIS/.",
+                    shell=True,  # nosec
+                )
+            except Exception as e:
+                self.get_backup_info(call, 0, str(e))
+                _LOGGER.error("do_backup 7za: " + str(e))
+                return
+            # 2. check backup size
+            # size in bytes 1 Byte = 0.000001 MB
+            b = os.path.getsize(home_dir + "backup.zip")
+            mb = b * 0.000001
+            if mb > 11:
+                self.get_backup_info(
+                    call,
+                    0,
+                    "Maksymalny rozmiar kopii zapasowej konfiguracji Home Assistant to 10 MB. "
+                    + "Twoja konfiguracja zajmuje "
+                    + str(round(mb))
+                    + " MB. Przed wykonaniem kopii usuń niepotrzebne zasoby z galerii (np. pliki wideo)."
+                    + " Jeżeli dodałeś ręcznie jakieś niestandardowe komponenty do folderu z konfiguracją: "
+                    + "~/AIS to też zajmują one miejsce i zalecamy je usunąć przed wykonaniem kopii.",
+                )
+                _LOGGER.error("Backup size, is to big, in bytes: " + str(b))
+                return
 
-        # 3. upload to cloud
-        self.get_backup_info(
-            call,
-            1,
-            None,
-            "Wysyłam kopie konfiguracji do portalu integratora",
-            None,
-            None,
-        )
-        try:
-            ws_resp = self.cloud.post_backup(home_dir + "backup.zip")
-        except Exception as e:
-            self.get_backup_info(call, 0, str(e))
-            _LOGGER.error("post_backup: " + str(e))
-            return
-
-        if ws_resp.status_code != 200:
+            # 3. upload to cloud
             self.get_backup_info(
-                call, 0, "Podczas wysyłania kopii wystąpił problem " + ws_resp.text
+                call,
+                1,
+                None,
+                "Wysyłam kopie konfiguracji Home Assistant do portalu integratora",
+                None,
+                None,
             )
-        else:
-            # refresh
-            self.get_backup_info(call, 0, "", "Kopia zapasowa konfiguracji wykonana")
+            try:
+                ws_resp = self.cloud.post_backup(home_dir + "backup.zip", "ha")
+            except Exception as e:
+                self.get_backup_info(call, 0, str(e))
+                _LOGGER.error("post_backup ha: " + str(e))
+                return
+
+            if ws_resp.status_code != 200:
+                self.get_backup_info(
+                    call,
+                    0,
+                    "Podczas wysyłania kopii konfiguracji Home Assistant wystąpił problem "
+                    + ws_resp.text,
+                )
+                return
+
+            # clean up
+            try:
+                ret = subprocess.check_output(
+                    "rm " + home_dir + "backup.zip", shell=True  # nosec
+                )
+            except Exception as e:
+                pass
+
+        # Zigbee backup
+        if backup_type in ("all", "zigbee"):
+            # 1. zip files
+            self.get_backup_info(
+                call, 1, None, info_text + " bieżącą konfigurację Zigbee", None, None
+            )
+            # clean up
+            try:
+                ret = subprocess.check_output(
+                    "rm " + home_dir + "zigbee_backup.zip", shell=True  # nosec
+                )
+            except Exception as e:
+                pass
+            try:
+                c = (
+                    "7za a -mmt=2 "
+                    + password
+                    + " -xr\!log "
+                    + home_dir
+                    + "zigbee_backup.zip "
+                    + home_dir
+                    + "zigbee2mqtt/data/."
+                )
+                _LOGGER.error("c: " + c)
+                ret = subprocess.check_output(
+                    "7za a -mmt=2 "
+                    + password
+                    + " -xr\!logs "
+                    + home_dir
+                    + "zigbee_backup.zip "
+                    + home_dir
+                    + "zigbee2mqtt/data/.",
+                    shell=True,  # nosec
+                )
+            except Exception as e:
+                self.get_backup_info(call, 0, str(e))
+                _LOGGER.error("do_backup zigbee 7za: " + str(e))
+                return
+            # 2. check backup size
+            # size in bytes 1 Byte = 0.000001 MB
+            b = os.path.getsize(home_dir + "zigbee_backup.zip")
+            mb = b * 0.000001
+            if mb > 11:
+                self.get_backup_info(
+                    call,
+                    0,
+                    "Maksymalny rozmiar kopii zapasowej konfiguracji Zigbee to 10 MB. "
+                    + "Twoja konfiguracja zajmuje "
+                    + str(round(mb)),
+                )
+                _LOGGER.error("Backup zigbee size, is to big, in bytes: " + str(b))
+                return
+
+            # 3. upload to cloud
+            self.get_backup_info(
+                call,
+                1,
+                None,
+                "Wysyłam kopie konfiguracji zigbee do portalu integratora",
+                None,
+                None,
+            )
+            try:
+                ws_resp = self.cloud.post_backup(
+                    home_dir + "zigbee_backup.zip", "zigbee"
+                )
+            except Exception as e:
+                self.get_backup_info(call, 0, str(e))
+                _LOGGER.error("post_backup zigbee: " + str(e))
+                return
+
+            if ws_resp.status_code != 200:
+                self.get_backup_info(
+                    call,
+                    0,
+                    "Podczas wysyłania kopii konfiguracji zigbee wystąpił problem "
+                    + ws_resp.text,
+                )
+                return
+            # clean up
+            try:
+                ret = subprocess.check_output(
+                    "rm " + home_dir + "zigbee_backup.zip", shell=True  # nosec
+                )
+            except Exception as e:
+                pass
+        # refresh
+        self.get_backup_info(call, 0, "", "Kopia zapasowa konfiguracji wykonana")
 
     def restore_backup(self, call):
         import subprocess
@@ -1641,53 +1759,118 @@ class AisColudData:
         home_dir = "/data/data/pl.sviete.dom/files/home/"
         password = ""
         info_text = ""
+        # all, ha, zigbee
+        backup_type = ""
         if "password" in call.data:
             password = call.data["password"]
         if password != "":
             info_text = " i deszyfruje"
-        # we need to use password even if it's empty - to prevent the prompt
-        password = "-p" + password
-        # 1. download
-        self.get_backup_info(call, 1, None, None, None, "Pobieram kopie konfiguracji")
-        try:
-            ws_resp = self.cloud.download_backup(home_dir + "backup.zip")
-        except Exception as e:
-            self.get_backup_info(call, 0, str(e))
-            return
-        # 2. extract
-        self.get_backup_info(call, 1, None, None, None, "Rozpakowuje" + info_text)
-        try:
-            ret = subprocess.check_output(
-                "7z x -mmt=2 "
-                + password
-                + " -o"
-                + home_dir
-                + "AIS_BACKUP "
-                + home_dir
-                + "backup.zip "
-                + "-y",
-                shell=True,  # nosec
-            )
-        except Exception as e:
-            self.get_backup_info(call, 0, None, None, str(e), None)
-            return
-        # 3. copy files to AIS
-        self.get_backup_info(call, 1, None, None, None, "Podmieniam konfigurację ")
-        try:
-            ret = subprocess.check_output(
-                "cp -fa " + home_dir + "AIS_BACKUP/. " + home_dir + "AIS",
-                shell=True,  # nosec
-            )
-            ret = subprocess.check_output(
-                "rm " + home_dir + "backup.zip", shell=True  # nosec
-            )
-            ret = subprocess.check_output(
-                "rm -rf " + home_dir + "AIS_BACKUP", shell=True  # nosec
-            )
+        if "type" in call.data:
+            backup_type = call.data["type"]
 
-        except Exception as e:
-            self.get_backup_info(call, 0, None, None, str(e), None)
-            return
+        # HA backup
+        if backup_type in ("all", "ha"):
+            # we need to use password even if it's empty - to prevent the prompt
+            password = "-p" + password
+            # 1. download
+            self.get_backup_info(
+                call, 1, None, None, None, "Pobieram kopie konfiguracji"
+            )
+            try:
+                ws_resp = self.cloud.download_backup(home_dir + "backup.zip", "ha")
+            except Exception as e:
+                self.get_backup_info(call, 0, str(e))
+                return
+            # 2. extract
+            self.get_backup_info(call, 1, None, None, None, "Rozpakowuje" + info_text)
+            try:
+                ret = subprocess.check_output(
+                    "7z x -mmt=2 "
+                    + password
+                    + " -o"
+                    + home_dir
+                    + "AIS_BACKUP "
+                    + home_dir
+                    + "backup.zip "
+                    + "-y",
+                    shell=True,  # nosec
+                )
+            except Exception as e:
+                self.get_backup_info(call, 0, None, None, str(e), None)
+                return
+            # 3. copy files to AIS
+            self.get_backup_info(call, 1, None, None, None, "Podmieniam konfigurację ")
+            try:
+                ret = subprocess.check_output(
+                    "cp -fa " + home_dir + "AIS_BACKUP/. " + home_dir + "AIS",
+                    shell=True,  # nosec
+                )
+                ret = subprocess.check_output(
+                    "rm " + home_dir + "backup.zip", shell=True  # nosec
+                )
+                ret = subprocess.check_output(
+                    "rm -rf " + home_dir + "AIS_BACKUP", shell=True  # nosec
+                )
+
+            except Exception as e:
+                self.get_backup_info(call, 0, None, None, str(e), None)
+                return
+
+        # Zigbee backup
+        if backup_type in ("all", "zigbee"):
+            # we need to use password even if it's empty - to prevent the prompt
+            password = "-p" + password
+            # 1. download
+            self.get_backup_info(
+                call, 1, None, None, None, "Pobieram kopie konfiguracji zigbee"
+            )
+            try:
+                ws_resp = self.cloud.download_backup(
+                    home_dir + "zigbee_backup.zip", "zigbee"
+                )
+            except Exception as e:
+                self.get_backup_info(call, 0, str(e))
+                return
+            # 2. extract
+            self.get_backup_info(call, 1, None, None, None, "Rozpakowuje" + info_text)
+            try:
+                ret = subprocess.check_output(
+                    "7z x -mmt=2 "
+                    + password
+                    + " -o"
+                    + home_dir
+                    + "AIS_ZIGBEE_BACKUP "
+                    + home_dir
+                    + "zigbee_backup.zip "
+                    + "-y",
+                    shell=True,  # nosec
+                )
+            except Exception as e:
+                self.get_backup_info(call, 0, None, None, str(e), None)
+                return
+            # 3. copy files to AIS
+            self.get_backup_info(
+                call, 1, None, None, None, "Podmieniam konfigurację zigbee "
+            )
+            try:
+                ret = subprocess.check_output(
+                    "cp -fa "
+                    + home_dir
+                    + "AIS_ZIGBEE_BACKUP/. "
+                    + home_dir
+                    + "zigbee2mqtt/data",
+                    shell=True,  # nosec
+                )
+                ret = subprocess.check_output(
+                    "rm " + home_dir + "zigbee_backup.zip", shell=True  # nosec
+                )
+                ret = subprocess.check_output(
+                    "rm -rf " + home_dir + "AIS_ZIGBEE_BACKUP", shell=True  # nosec
+                )
+
+            except Exception as e:
+                self.get_backup_info(call, 0, None, None, str(e), None)
+                return
 
         # refresh
         self.get_backup_info(
