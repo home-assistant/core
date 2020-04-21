@@ -40,6 +40,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
 from homeassistant.loader import bind_hass
+from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
 
@@ -945,7 +946,8 @@ class MQTT:
                 self.async_publish(  # pylint: disable=no-value-for-parameter
                     *attr.astuple(
                         self.birth_message,
-                        filter=lambda attr, value: attr.name != "subscribed_topic",
+                        filter=lambda attr, value: attr.name
+                        not in ["subscribed_topic", "timestamp"],
                     )
                 )
             )
@@ -962,6 +964,7 @@ class MQTT:
             " (retained)" if msg.retain else "",
             msg.payload,
         )
+        timestamp = dt_util.utcnow()
 
         for subscription in self.subscriptions:
             if not _match_topic(subscription.topic, msg.topic):
@@ -983,7 +986,14 @@ class MQTT:
 
             self.hass.async_run_job(
                 subscription.callback,
-                Message(msg.topic, payload, msg.qos, msg.retain, subscription.topic),
+                Message(
+                    msg.topic,
+                    payload,
+                    msg.qos,
+                    msg.retain,
+                    subscription.topic,
+                    timestamp,
+                ),
             )
 
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
