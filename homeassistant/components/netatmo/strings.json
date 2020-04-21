@@ -31,7 +31,7 @@
       },
       "public_weather_areas": {
         "data": {
-          "new_area": "New area",
+          "new_area": "Area name",
           "weather_areas": "Weather areas"
         },
         "description": "Configure public weather sensors.",
