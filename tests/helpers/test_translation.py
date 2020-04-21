@@ -221,24 +221,24 @@ async def test_translation_merging(hass, caplog):
     hass.bus.async_fire(EVENT_COMPONENT_LOADED)
     await hass.async_block_till_done()
 
-    # Merge in some bad translation data
-    integration = Mock(file_path=pathlib.Path(__file__))
-    hass.config.components.add("sensor.bad_translations")
+    # Patch in some bad translation data
+
+    orig_load_translations = translation.load_translations_files
+
+    def mock_load_translations_files(files):
+        """Mock loading."""
+        result = orig_load_translations(files)
+        result["sensor.season"] = {"state": "bad data"}
+        return result
 
     with patch.object(
-        translation, "component_translation_path", return_value="bla.json"
-    ), patch.object(
         translation,
         "load_translations_files",
-        return_value={"sensor.bad_translations": {"state": "bad data"}},
-    ), patch(
-        "homeassistant.helpers.translation.async_get_integration",
-        return_value=integration,
+        side_effect=mock_load_translations_files,
     ):
         translations = await translation.async_get_translations(hass, "en", "state")
 
         assert "component.sensor.state.moon__phase.first_quarter" in translations
-        assert "component.sensor.state.season__season.summer" in translations
 
     assert (
         "An integration providing translations for sensor provided invalid data: bad data"
