@@ -39,7 +39,7 @@ def run_download_docker():
             "json",
             "--unzip_to",
             "/opt/dest",
-        ],
+        ]
     )
     print()
 
@@ -78,12 +78,9 @@ def get_component_path(lang, component):
     """Get the component translation path."""
     if os.path.isdir(os.path.join("homeassistant", "components", component)):
         return os.path.join(
-            "homeassistant", "components", component, ".translations", f"{lang}.json"
+            "homeassistant", "components", component, "translations", f"{lang}.json"
         )
-    else:
-        return os.path.join(
-            "homeassistant", "components", ".translations", f"{component}.{lang}.json"
-        )
+    raise ExitApp(f"Integration {component} not found under homeassistant/components/")
 
 
 def get_platform_path(lang, component, platform):
@@ -94,7 +91,7 @@ def get_platform_path(lang, component, platform):
             "components",
             component,
             platform,
-            ".translations",
+            "translations",
             f"{lang}.json",
         )
     else:
@@ -102,7 +99,7 @@ def get_platform_path(lang, component, platform):
             "homeassistant",
             "components",
             component,
-            ".translations",
+            "translations",
             f"{platform}.{lang}.json",
         )
 
