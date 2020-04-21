@@ -73,6 +73,7 @@ class JenkinsSensor(Entity):
         self._name = f"{repository} {branch}"
         self._unique_id = f"{self.repository}_{self.branch}"
         self._state = None
+        self._attributes = None
 
         self.update()
 
@@ -91,7 +92,20 @@ class JenkinsSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
+
     def update(self):
         """Fetch the latest build and update state."""
         last_build = self.job.get_last_build()
         self._state = last_build.get_status()
+
+        self._attributes = {
+            "Build Number": last_build.buildno,
+            "Build Time": str(last_build.get_timestamp()),
+            "Build Duration": str(last_build.get_duration()),
+            "Jenkins build URL": last_build.get_build_url(),
+            "Repository URL": last_build.get_repo_url(),
+        }
