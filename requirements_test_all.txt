@@ -819,9 +819,6 @@ xmltodict==0.12.0
 # homeassistant.components.yandex_transport
 ya_ma==0.3.8
 
-# homeassistant.components.yweather
-yahooweather==0.10
-
 # homeassistant.components.zeroconf
 zeroconf==0.25.1
 
