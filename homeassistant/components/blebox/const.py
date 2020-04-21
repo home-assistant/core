@@ -15,10 +15,11 @@ PRODUCTS = "products"
 
 DEFAULT_SETUP_TIMEOUT = 3
 
-UNSUPPORTED_VERSION = "unsupported_version"
-CANNOT_CONNECT = "cannot_connect"
-UNKNOWN = "unknown"
+# translation strings
 ALREADY_CONFIGURED = "address_already_configured"
+CANNOT_CONNECT = "cannot_connect"
+UNSUPPORTED_VERSION = "unsupported_version"
+UNKNOWN = "unknown"
 
 BLEBOX_TO_HASS_DEVICE_CLASSES = {
     "shutter": DEVICE_CLASS_SHUTTER,
