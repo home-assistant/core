@@ -47,6 +47,7 @@ OPi.GPIO==0.4.0
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 Plugwise_Smile==0.2.1
 =======
 Plugwise_Smile==0.1.2
@@ -57,6 +58,9 @@ Plugwise_Smile==0.1.5
 =======
 Plugwise_Smile==0.1.6
 >>>>>>> Bump module version, battery version and valve position
+=======
+Plugwise_Smile==0.1.23
+>>>>>>> Catchup and version bump
 
 # homeassistant.components.essent
 PyEssent==0.13
