@@ -42,8 +42,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-MODE_TYPES = {True: "max", False: "avg"}
-
 # This is the Netatmo data upload interval in seconds
 NETATMO_UPDATE_INTERVAL = 600
 
@@ -181,7 +179,7 @@ async def async_setup_entry(
                         area[CONF_AREA_NAME],
                         data,
                         sensor_type,
-                        MODE_TYPES[area[CONF_PUBLIC_MODE]],
+                        area[CONF_PUBLIC_MODE],
                         area[CONF_SHOW_ON_MAP],
                     )
                 )

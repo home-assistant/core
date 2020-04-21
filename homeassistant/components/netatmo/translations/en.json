@@ -34,7 +34,7 @@
           "lon_ne": "Longitude North-East corner",
           "lat_sw": "Latitude South-West corner",
           "lon_sw": "Longitude South-West corner",
-          "mode": "avg/max",
+          "mode": "Calculation",
           "show_on_map": "Show on map"
 >>>>>>> Add public weather sensors back in
         },
