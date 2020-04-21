@@ -30,6 +30,7 @@ async def async_setup_entry(
 
     return True
 
+
 async def async_setup_gateway_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
