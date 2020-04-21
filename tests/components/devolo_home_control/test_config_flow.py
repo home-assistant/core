@@ -31,7 +31,12 @@ async def test_form(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
+            {
+                "username": "test-username",
+                "password": "test-password",
+                "Home_Control_URL": "https://homecontrol.mydevolo.com",
+                "Mydevolo_URL": "https://www.mydevolo.com",
+            },
         )
 
     assert result2["type"] == "create_entry"
@@ -39,6 +44,8 @@ async def test_form(hass):
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
+        "Home_Control_URL": "https://homecontrol.mydevolo.com",
+        "Mydevolo_URL": "https://www.mydevolo.com",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
