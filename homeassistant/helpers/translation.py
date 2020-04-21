@@ -19,6 +19,12 @@ _LOGGER = logging.getLogger(__name__)
 TRANSLATION_LOAD_LOCK = "translation_load_lock"
 TRANSLATION_STRING_CACHE = "translation_string_cache"
 
+MOVED_TRANSLATIONS_DIRECTORY_MSG = (
+    "%s: the '.translations' directory has been moved, the new name is 'translations', "
+    "starting with Home Assistant 0.111 your translations will no longer "
+    "load if you do not move/rename this "
+)
+
 
 def recursive_flatten(prefix: Any, data: Dict) -> Dict[str, Any]:
     """Return a flattened representation of dict data."""
@@ -43,10 +49,10 @@ def component_translation_path(
     """Return the translation json file location for a component.
 
     For component:
-     - components/hue/.translations/nl.json
+     - components/hue/translations/nl.json
 
     For platform:
-     - components/hue/.translations/light.nl.json
+     - components/hue/translations/light.nl.json
 
     If component is just a single file, will return None.
     """
@@ -54,17 +60,24 @@ def component_translation_path(
     domain = parts[-1]
     is_platform = len(parts) == 2
 
-    if is_platform:
-        filename = f"{parts[0]}.{language}.json"
-        return str(integration.file_path / ".translations" / filename)
-
     # If it's a component that is just one file, we don't support translations
     # Example custom_components/my_component.py
     if integration.file_path.name != domain:
         return None
 
-    filename = f"{language}.json"
-    return str(integration.file_path / ".translations" / filename)
+    if is_platform:
+        filename = f"{parts[0]}.{language}.json"
+    else:
+        filename = f"{language}.json"
+
+    translation_legacy_path = integration.file_path / ".translations"
+    translation_path = integration.file_path / "translations"
+
+    if translation_legacy_path.is_dir() and not translation_path.is_dir():
+        _LOGGER.warning(MOVED_TRANSLATIONS_DIRECTORY_MSG, domain)
+        return str(translation_legacy_path / filename)
+
+    return str(translation_path / filename)
 
 
 def load_translations_files(

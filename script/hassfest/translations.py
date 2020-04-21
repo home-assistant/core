@@ -44,6 +44,7 @@ def check_translations_directory_name(config: Config, integration: Integration) 
 
     if translations.is_dir():
         # No action required
+        os.rename(str(translations), str(legacy_translations))
         return
 
     if legacy_translations.is_dir():

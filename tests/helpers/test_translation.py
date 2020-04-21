@@ -58,7 +58,7 @@ async def test_component_translation_path(hass):
     assert path.normpath(
         translation.component_translation_path("switch.test", "en", int_test)
     ) == path.normpath(
-        hass.config.path("custom_components", "test", ".translations", "switch.en.json")
+        hass.config.path("custom_components", "test", "translations", "switch.en.json")
     )
 
     assert path.normpath(
@@ -67,7 +67,7 @@ async def test_component_translation_path(hass):
         )
     ) == path.normpath(
         hass.config.path(
-            "custom_components", "test_embedded", ".translations", "switch.en.json"
+            "custom_components", "test_embedded", "translations", "switch.en.json"
         )
     )
 
@@ -81,9 +81,7 @@ async def test_component_translation_path(hass):
     assert path.normpath(
         translation.component_translation_path("test_package", "en", int_test_package)
     ) == path.normpath(
-        hass.config.path(
-            "custom_components", "test_package", ".translations", "en.json"
-        )
+        hass.config.path("custom_components", "test_package", "translations", "en.json")
     )
 
 
@@ -91,10 +89,10 @@ def test_load_translations_files(hass):
     """Test the load translation files function."""
     # Test one valid and one invalid file
     file1 = hass.config.path(
-        "custom_components", "test", ".translations", "switch.en.json"
+        "custom_components", "test", "translations", "switch.en.json"
     )
     file2 = hass.config.path(
-        "custom_components", "test", ".translations", "invalid.json"
+        "custom_components", "test", "translations", "invalid.json"
     )
     assert translation.load_translations_files(
         {"switch.test": file1, "invalid": file2}
