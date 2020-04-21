@@ -129,14 +129,10 @@ class PwThermostat(ClimateEntity):
             if self._cooling_state:
                 return CURRENT_HVAC_COOL
             return CURRENT_HVAC_IDLE
-        else:
-            if (
-                self._central_heating_state is not None
-                or self._boiler_state is not None
-            ):
-                if self._thermostat > self._temperature:
-                    return CURRENT_HVAC_HEAT
-            return CURRENT_HVAC_IDLE
+        if self._central_heating_state is not None or self._boiler_state is not None:
+            if self._thermostat > self._temperature:
+                return CURRENT_HVAC_HEAT
+        return CURRENT_HVAC_IDLE
 
     @property
     def name(self):
