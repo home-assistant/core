@@ -56,11 +56,10 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not self.braviarc.is_connected():
             raise CannotConnect()
 
-        try:
-            system_info = await self.hass.async_add_executor_job(
-                self.braviarc.get_system_info
-            )
-        except (KeyError, TypeError):
+        system_info = await self.hass.async_add_executor_job(
+            self.braviarc.get_system_info
+        )
+        if not system_info:
             raise ModelNotSupported()
 
         await self.async_set_unique_id(system_info[ATTR_CID].lower())
