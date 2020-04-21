@@ -27,6 +27,7 @@ SUPPORT_PRESET = [
     PRESET_BOOST,
 ]
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+HVAC_MODES = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -60,12 +61,13 @@ class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
         """Return hvac operation ie. heat, cool mode."""
         if not self._on:
             return HVAC_MODE_OFF
-        return self.coordinator.atag.hvac_mode
+        if self.coordinator.atag.hvac_mode in HVAC_MODES:
+            return self.coordinator.atag.hvac_mode
 
     @property
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes."""
-        return [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
+        return HVAC_MODES
 
     @property
     def hvac_action(self) -> Optional[str]:
