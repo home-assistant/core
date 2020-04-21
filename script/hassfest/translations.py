@@ -1,6 +1,5 @@
 """Validate integration translation files."""
 from functools import partial
-import os
 import json
 import logging
 import re
@@ -37,7 +36,7 @@ MOVED_TRANSLATIONS_DIRECTORY_MSG = (
 )
 
 
-def check_translations_directory_name(config: Config, integration: Integration) -> None:
+def check_translations_directory_name(integration: Integration) -> None:
     """Check that the correct name is used for the translations directory."""
     legacy_translations = integration.path / ".translations"
     translations = integration.path / "translations"
@@ -47,11 +46,7 @@ def check_translations_directory_name(config: Config, integration: Integration) 
         return
 
     if legacy_translations.is_dir():
-        if config.specific_integrations:
-            # Don't mark it as an error yet for custom components to allow backwards compat.
-            integration.add_warning("translations", MOVED_TRANSLATIONS_DIRECTORY_MSG)
-        else:
-            os.rename(str(legacy_translations), str(translations))
+        integration.add_warning("translations", MOVED_TRANSLATIONS_DIRECTORY_MSG)
 
 
 def find_references(strings, prefix, found):
@@ -212,7 +207,9 @@ ONBOARDING_SCHEMA = vol.Schema({vol.Required("area"): {str: str}})
 
 def validate_translation_file(config: Config, integration: Integration, all_strings):
     """Validate translation files for integration."""
-    check_translations_directory_name(config, integration)
+    if config.specific_integrations:
+        check_translations_directory_name(integration)
+
     strings_file = integration.path / "strings.json"
     references = []
 
