@@ -138,6 +138,7 @@ def add_entities(controller, async_add_entities, switches_off):
 class UniFiPOEClientSwitch(UniFiClient, SwitchDevice, RestoreEntity):
     """Representation of a client that uses POE."""
 
+    DOMAIN = DOMAIN
     TYPE = POE_SWITCH
 
     def __init__(self, client, controller):
@@ -232,6 +233,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchDevice, RestoreEntity):
 class UniFiBlockClientSwitch(UniFiClient, SwitchDevice):
     """Representation of a blockable client."""
 
+    DOMAIN = DOMAIN
     TYPE = BLOCK_SWITCH
 
     @property
