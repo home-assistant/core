@@ -38,7 +38,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         websession=websession,
     )
 
-    await api.connect()
+    try:
+        await api.connect()
+    except asyncio.TimeoutError:
+        _LOGGER.error("Timeout while connecting to Smile")
 
     if api.smile_type == "power":
         update_interval = timedelta(seconds=10)
