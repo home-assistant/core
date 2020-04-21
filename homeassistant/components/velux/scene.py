@@ -1,5 +1,5 @@
 """Support for VELUX scenes."""
-from typing import Optional
+from typing import Any
 
 from homeassistant.components.scene import Scene
 
@@ -25,6 +25,6 @@ class VeluxScene(Scene):
         """Return the name of the scene."""
         return self.scene.name
 
-    async def async_activate(self, transition: Optional[float] = None) -> None:
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         await self.scene.run(wait_for_completion=False)

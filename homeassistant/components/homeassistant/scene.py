@@ -1,7 +1,7 @@
 """Allow users to set and activate scenes."""
 from collections import namedtuple
 import logging
-from typing import List, Optional
+from typing import Any, List
 
 import voluptuous as vol
 
@@ -188,11 +188,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def apply_service(call):
         """Apply a scene."""
+        reproduce_options = {}
+
+        if ATTR_TRANSITION in call.data:
+            reproduce_options[ATTR_TRANSITION] = call.data.get(ATTR_TRANSITION)
+
         await async_reproduce_state(
             hass,
             call.data[CONF_ENTITIES].values(),
             context=call.context,
-            transition=call.data.get(ATTR_TRANSITION),
+            reproduce_options=reproduce_options,
         )
 
     hass.services.async_register(
@@ -298,11 +303,11 @@ class HomeAssistantScene(Scene):
             attributes[CONF_ID] = unique_id
         return attributes
 
-    async def async_activate(self, transition: Optional[float] = None) -> None:
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
         await async_reproduce_state(
             self.hass,
             self.scene_config.states.values(),
             context=self._context,
-            transition=transition,
+            reproduce_options=kwargs,
         )

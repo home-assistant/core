@@ -1,6 +1,6 @@
 """Support for Lutron Caseta scenes."""
 import logging
-from typing import Optional
+from typing import Any
 
 from homeassistant.components.scene import Scene
 
@@ -35,6 +35,6 @@ class LutronCasetaScene(Scene):
         """Return the name of the scene."""
         return self._scene_name
 
-    async def async_activate(self, transition: Optional[float] = None) -> None:
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self._bridge.activate_scene(self._scene_id)

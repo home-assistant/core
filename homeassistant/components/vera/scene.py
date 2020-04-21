@@ -1,6 +1,6 @@
 """Support for Vera scenes."""
 import logging
-from typing import Callable, List, Optional
+from typing import Any, Callable, List
 
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
@@ -46,7 +46,7 @@ class VeraScene(Scene):
         """Update the scene status."""
         self.vera_scene.refresh()
 
-    def activate(self, transition: Optional[float] = None) -> None:
+    def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self.vera_scene.activate()
 

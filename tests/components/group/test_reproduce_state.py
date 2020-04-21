@@ -49,5 +49,5 @@ async def test_reproduce_group(hass):
                 clone_state(state, "switch.test1"),
             ],
             context=context,
-            transition=None,
+            reproduce_options=None,
         )

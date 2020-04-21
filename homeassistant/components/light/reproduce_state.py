@@ -75,7 +75,7 @@ async def _async_reproduce_state(
     state: State,
     *,
     context: Optional[Context] = None,
-    transition: Optional[float] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce a single state."""
     cur_state = hass.states.get(state.entity_id)
@@ -104,8 +104,8 @@ async def _async_reproduce_state(
 
     service_data: Dict[str, Any] = {ATTR_ENTITY_ID: state.entity_id}
 
-    if transition is not None:
-        service_data[ATTR_TRANSITION] = transition
+    if reproduce_options is not None and ATTR_TRANSITION in reproduce_options:
+        service_data[ATTR_TRANSITION] = reproduce_options[ATTR_TRANSITION]
 
     if state.state == STATE_ON:
         service = SERVICE_TURN_ON
@@ -133,12 +133,14 @@ async def async_reproduce_states(
     states: Iterable[State],
     *,
     context: Optional[Context] = None,
-    transition: Optional[float] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce Light states."""
     await asyncio.gather(
         *(
-            _async_reproduce_state(hass, state, context=context, transition=transition)
+            _async_reproduce_state(
+                hass, state, context=context, reproduce_options=reproduce_options
+            )
             for state in states
         )
     )

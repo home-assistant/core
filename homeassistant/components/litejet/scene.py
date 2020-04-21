@@ -1,6 +1,6 @@
 """Support for LiteJet scenes."""
 import logging
-from typing import Optional
+from typing import Any
 
 from homeassistant.components import litejet
 from homeassistant.components.scene import Scene
@@ -41,6 +41,6 @@ class LiteJetScene(Scene):
         """Return the device-specific state attributes."""
         return {ATTR_NUMBER: self._index}
 
-    def activate(self, transition: Optional[float] = None) -> None:
+    def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self._lj.activate_scene(self._index)

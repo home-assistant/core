@@ -1,6 +1,6 @@
 """Support for Lutron scenes."""
 import logging
-from typing import Optional
+from typing import Any
 
 from homeassistant.components.scene import Scene
 
@@ -31,7 +31,7 @@ class LutronScene(LutronDevice, Scene):
         self._keypad_name = keypad_name
         self._led = lutron_led
 
-    def activate(self, transition: Optional[float] = None) -> None:
+    def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self._lutron_device.press()
 

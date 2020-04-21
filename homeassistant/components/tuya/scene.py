@@ -1,5 +1,5 @@
 """Support for the Tuya scenes."""
-from typing import Optional
+from typing import Any
 
 from homeassistant.components.scene import DOMAIN, Scene
 
@@ -31,6 +31,6 @@ class TuyaScene(TuyaDevice, Scene):
         super().__init__(tuya)
         self.entity_id = ENTITY_ID_FORMAT.format(tuya.object_id())
 
-    def activate(self, transition: Optional[float] = None) -> None:
+    def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self.tuya.activate()

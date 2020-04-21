@@ -1,7 +1,7 @@
 """Reproduce an NEW_NAME state."""
 import asyncio
 import logging
-from typing import Iterable, Optional
+from typing import Any, Dict, Iterable, Optional
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -26,7 +26,7 @@ async def _async_reproduce_state(
     state: State,
     *,
     context: Optional[Context] = None,
-    transition: Optional[float] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce a single state."""
     cur_state = hass.states.get(state.entity_id)
@@ -71,7 +71,7 @@ async def async_reproduce_states(
     states: Iterable[State],
     *,
     context: Optional[Context] = None,
-    transition: Optional[float] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce NEW_NAME states."""
     # TODO pick one and remove other one
@@ -79,11 +79,13 @@ async def async_reproduce_states(
     # Reproduce states in parallel.
     await asyncio.gather(
         *(
-            _async_reproduce_state(hass, state, context=context, transition=transition)
+            _async_reproduce_state(
+                hass, state, context=context, reproduce_options=reproduce_options
+            )
             for state in states
         )
     )
 
     # Alternative: Reproduce states in sequence
     # for state in states:
-    #     await _async_reproduce_state(hass, state, context=context, transition=transition)
+    #     await _async_reproduce_state(hass, state, context=context, reproduce_options=reproduce_options)

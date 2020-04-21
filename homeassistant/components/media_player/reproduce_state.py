@@ -1,6 +1,6 @@
 """Module that groups code required to handle state restore for component."""
 import asyncio
-from typing import Iterable, Optional
+from typing import Any, Dict, Iterable, Optional
 
 from homeassistant.const import (
     SERVICE_MEDIA_PAUSE,
@@ -43,7 +43,7 @@ async def _async_reproduce_states(
     state: State,
     *,
     context: Optional[Context] = None,
-    transition: Optional[float] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce component states."""
 
@@ -98,12 +98,14 @@ async def async_reproduce_states(
     states: Iterable[State],
     *,
     context: Optional[Context] = None,
-    transition: Optional[float] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce component states."""
     await asyncio.gather(
         *(
-            _async_reproduce_states(hass, state, context=context, transition=transition)
+            _async_reproduce_states(
+                hass, state, context=context, reproduce_options=reproduce_options
+            )
             for state in states
         )
     )

@@ -1,7 +1,7 @@
 """Support for LIFX Cloud scenes."""
 import asyncio
 import logging
-from typing import Optional
+from typing import Any
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION
@@ -74,7 +74,7 @@ class LifxCloudScene(Scene):
         """Return the name of the scene."""
         return self._name
 
-    async def async_activate(self, transition: Optional[float] = None) -> None:
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         url = f"https://api.lifx.com/v1/scenes/scene_id:{self._uuid}/activate"
 

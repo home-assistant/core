@@ -1,5 +1,5 @@
 """Support for LCN scenes."""
-from typing import Optional
+from typing import Any
 
 import pypck
 
@@ -65,7 +65,7 @@ class LcnScene(LcnDevice, Scene):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
 
-    def activate(self, transition: Optional[float] = None) -> None:
+    def activate(self, **kwargs: Any) -> None:
         """Activate scene."""
         self.address_connection.activate_scene(
             self.register_id,

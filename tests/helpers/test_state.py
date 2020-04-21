@@ -72,11 +72,11 @@ async def test_call_to_component(hass):
             )
 
             media_player_fun.assert_called_once_with(
-                hass, [state_media_player], context=context, transition=None
+                hass, [state_media_player], context=context, reproduce_options=None
             )
 
             climate_fun.assert_called_once_with(
-                hass, [state_climate], context=context, transition=None
+                hass, [state_climate], context=context, reproduce_options=None
             )
 
 

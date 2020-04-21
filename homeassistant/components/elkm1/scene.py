@@ -1,5 +1,5 @@
 """Support for control of ElkM1 tasks ("macros")."""
-from typing import Optional
+from typing import Any
 
 from homeassistant.components.scene import Scene
 
@@ -19,6 +19,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class ElkTask(ElkAttachedEntity, Scene):
     """Elk-M1 task as scene."""
 
-    async def async_activate(self, transition: Optional[float] = None) -> None:
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate the task."""
         self._element.activate()

@@ -1,5 +1,5 @@
 """Support for KNX scenes."""
-from typing import Optional
+from typing import Any
 
 import voluptuous as vol
 from xknx.devices import Scene as XknxScene
@@ -67,6 +67,6 @@ class KNXScene(Scene):
         """Return the name of the scene."""
         return self.scene.name
 
-    async def async_activate(self, transition: Optional[float] = None) -> None:
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         await self.scene.run()

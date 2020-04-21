@@ -2,7 +2,7 @@
 import functools as ft
 import importlib
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 import voluptuous as vol
 
@@ -97,13 +97,13 @@ class Scene(Entity):
         """Return the state of the scene."""
         return STATE
 
-    def activate(self, transition: Optional[float] = None) -> None:
+    def activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
         raise NotImplementedError()
 
-    async def async_activate(self, transition: Optional[float] = None) -> None:
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
         assert self.hass
-        task = self.hass.async_add_job(ft.partial(self.activate, transition=transition))
+        task = self.hass.async_add_job(ft.partial(self.activate, **kwargs))
         if task:
             await task

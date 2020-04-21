@@ -1,5 +1,5 @@
 """Support for scenes through the SmartThings cloud API."""
-from typing import Optional
+from typing import Any
 
 from homeassistant.components.scene import Scene
 
@@ -19,7 +19,7 @@ class SmartThingsScene(Scene):
         """Init the scene class."""
         self._scene = scene
 
-    async def async_activate(self, transition: Optional[float] = None) -> None:
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene."""
         await self._scene.execute()
 

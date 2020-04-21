@@ -1,7 +1,7 @@
 """Reproduce an Cover state."""
 import asyncio
 import logging
-from typing import Iterable, Optional
+from typing import Any, Dict, Iterable, Optional
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -37,7 +37,7 @@ async def _async_reproduce_state(
     state: State,
     *,
     context: Optional[Context] = None,
-    transition: Optional[float] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce a single state."""
     cur_state = hass.states.get(state.entity_id)
@@ -118,13 +118,15 @@ async def async_reproduce_states(
     states: Iterable[State],
     *,
     context: Optional[Context] = None,
-    transition: Optional[float] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce Cover states."""
     # Reproduce states in parallel.
     await asyncio.gather(
         *(
-            _async_reproduce_state(hass, state, context=context, transition=transition)
+            _async_reproduce_state(
+                hass, state, context=context, reproduce_options=reproduce_options
+            )
             for state in states
         )
     )
