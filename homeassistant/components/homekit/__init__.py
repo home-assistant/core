@@ -11,6 +11,7 @@ from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_SERVICE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_IP_ADDRESS,
@@ -26,6 +27,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     UNIT_PERCENTAGE,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
@@ -34,6 +36,8 @@ from homeassistant.util.decorator import Registry
 from .aidmanager import AccessoryAidStorage
 from .const import (
     AID_STORAGE,
+    ATTR_DISPLAY_NAME,
+    ATTR_VALUE,
     BRIDGE_NAME,
     CONF_ADVERTISE_IP,
     CONF_AUTO_START,
@@ -50,6 +54,7 @@ from .const import (
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_PM25,
     DOMAIN,
+    EVENT_HOMEKIT_CHANGED,
     HOMEKIT_FILE,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     SERVICE_HOMEKIT_START,
@@ -167,6 +172,26 @@ async def async_setup(hass, config):
         SERVICE_HOMEKIT_RESET_ACCESSORY,
         handle_homekit_reset_accessory,
         schema=RESET_ACCESSORY_SERVICE_SCHEMA,
+    )
+
+    @callback
+    def async_describe_logbook_event(event):
+        """Describe a logbook event."""
+        data = event.data
+        entity_id = data.get(ATTR_ENTITY_ID)
+        value = data.get(ATTR_VALUE)
+
+        value_msg = f" to {value}" if value else ""
+        message = f"send command {data[ATTR_SERVICE]}{value_msg} for {data[ATTR_DISPLAY_NAME]}"
+
+        return {
+            "name": "HomeKit",
+            "message": message,
+            "entity_id": entity_id,
+        }
+
+    hass.components.logbook.async_describe_event(
+        DOMAIN, EVENT_HOMEKIT_CHANGED, async_describe_logbook_event
     )
 
     if auto_start:
