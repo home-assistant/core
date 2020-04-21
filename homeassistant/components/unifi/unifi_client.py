@@ -36,8 +36,8 @@ class UniFiClient(UniFiBase):
 
     def __init__(self, client, controller) -> None:
         """Set up client."""
-        super().__init__(controller)
         self.client = client
+        super().__init__(controller)
 
         self._is_wired = self.client.mac not in controller.wireless_clients
         self.is_blocked = self.client.blocked
