@@ -4,15 +4,28 @@ import unittest
 from unittest import mock
 
 import asynctest
-from libpurecool.const import FocusMode, HeatMode, HeatState, HeatTarget
+from libpurecool.const import FanSpeed, FocusMode, HeatMode, HeatState, HeatTarget
 from libpurecool.dyson_pure_hotcool import DysonPureHotCool
 from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
 from libpurecool.dyson_pure_state import DysonPureHotCoolState
 from libpurecool.dyson_pure_state_v2 import DysonPureHotCoolV2State
 
 from homeassistant.components import dyson as dyson_parent
-from homeassistant.components.climate import DOMAIN, SERVICE_SET_TEMPERATURE
-from homeassistant.components.climate.const import ATTR_HVAC_ACTION, CURRENT_HVAC_HEAT
+from homeassistant.components.climate import (
+    DOMAIN,
+    SERVICE_SET_FAN_MODE,
+    SERVICE_SET_TEMPERATURE,
+)
+from homeassistant.components.climate.const import (
+    ATTR_FAN_MODE,
+    ATTR_HVAC_ACTION,
+    CURRENT_HVAC_HEAT,
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_OFF,
+)
 from homeassistant.components.dyson import climate as dyson
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers import discovery
@@ -487,7 +500,7 @@ async def test_purehotcool_set_temperature(devices, login, hass):
         {ATTR_ENTITY_ID: "climate.bed_room", ATTR_TEMPERATURE: 23},
         True,
     )
-    assert device.set_heat_target.call_count == 0
+    device.set_heat_target.assert_not_called()
 
     await hass.services.async_call(
         DOMAIN,
@@ -495,6 +508,7 @@ async def test_purehotcool_set_temperature(devices, login, hass):
         {ATTR_ENTITY_ID: "climate.living_room", ATTR_TEMPERATURE: 23},
         True,
     )
+    assert device.set_heat_target.call_count == 1
     device.set_heat_target.assert_called_with("2960")
 
     await hass.services.async_call(
@@ -503,6 +517,7 @@ async def test_purehotcool_set_temperature(devices, login, hass):
         {ATTR_ENTITY_ID: "climate.living_room", ATTR_TEMPERATURE: min_temp - 1},
         True,
     )
+    assert device.set_heat_target.call_count == 2
     device.set_heat_target.assert_called_with(HeatTarget.celsius(min_temp))
 
     await hass.services.async_call(
@@ -511,4 +526,69 @@ async def test_purehotcool_set_temperature(devices, login, hass):
         {ATTR_ENTITY_ID: "climate.living_room", ATTR_TEMPERATURE: max_temp + 1},
         True,
     )
+    assert device.set_heat_target.call_count == 3
     device.set_heat_target.assert_called_with(HeatTarget.celsius(max_temp))
+
+
+@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@asynctest.patch(
+    "libpurecool.dyson.DysonAccount.devices",
+    return_value=[_get_dyson_purehotcool_device()],
+)
+async def test_purehotcool_set_fan_mode(devices, login, hass):
+    """Test set fan mode."""
+    device = devices.return_value[0]
+    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: "climate.bed_room", ATTR_FAN_MODE: FAN_OFF},
+        True,
+    )
+    device.turn_off.assert_not_called()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: "climate.living_room", ATTR_FAN_MODE: FAN_OFF},
+        True,
+    )
+    assert device.turn_off.call_count == 1
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: "climate.living_room", ATTR_FAN_MODE: FAN_LOW},
+        True,
+    )
+    assert device.set_fan_speed.call_count == 1
+    device.set_fan_speed.assert_called_with(FanSpeed.FAN_SPEED_4)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: "climate.living_room", ATTR_FAN_MODE: FAN_MEDIUM},
+        True,
+    )
+    assert device.set_fan_speed.call_count == 2
+    device.set_fan_speed.assert_called_with(FanSpeed.FAN_SPEED_7)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: "climate.living_room", ATTR_FAN_MODE: FAN_HIGH},
+        True,
+    )
+    assert device.set_fan_speed.call_count == 3
+    device.set_fan_speed.assert_called_with(FanSpeed.FAN_SPEED_10)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: "climate.living_room", ATTR_FAN_MODE: FAN_AUTO},
+        True,
+    )
+    assert device.set_fan_speed.call_count == 4
+    device.set_fan_speed.assert_called_with(FanSpeed.FAN_SPEED_AUTO)
