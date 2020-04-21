@@ -68,6 +68,7 @@ async def test_import(hass):
         assert result["data"] == {
             CONF_HOST: "bravia-host",
             CONF_PIN: "1234",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
         }
 
 
@@ -216,6 +217,7 @@ async def test_create_entry(hass):
         assert result["data"] == {
             CONF_HOST: "bravia-host",
             CONF_PIN: "1234",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
         }
 
 
