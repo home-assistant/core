@@ -473,8 +473,8 @@ class HomeKit:
 class HomeKitParingQRView(HomeAssistantView):
     """Display the homekit pairing code at a protected url."""
 
-    url = "/api/homekit/paringqr"
-    name = "api:homekit:paringqr"
+    url = "/api/homekit/pairingqr"
+    name = "api:homekit:pairingqr"
     requires_auth = False
 
     # pylint: disable=no-self-use

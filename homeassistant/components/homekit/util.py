@@ -218,16 +218,16 @@ def show_setup_message(hass, pincode, uri):
     buffer = io.BytesIO()
     url = pyqrcode.create(uri)
     url.svg(buffer, scale=5)
-    paring_secret = secrets.token_hex(32)
+    pairing_secret = secrets.token_hex(32)
 
     hass.data[HOMEKIT_PAIRING_QR] = buffer.getvalue()
-    hass.data[HOMEKIT_PAIRING_QR_SECRET] = paring_secret
+    hass.data[HOMEKIT_PAIRING_QR_SECRET] = pairing_secret
 
     message = (
         f"To set up Home Assistant in the Home App, "
         f"scan the QR code or enter the following code:\n"
         f"### {pin}\n"
-        f"![image](/api/homekit/paringqr?{paring_secret})"
+        f"![image](/api/homekit/pairingqr?{pairing_secret})"
     )
     hass.components.persistent_notification.create(
         message, "HomeKit Setup", HOMEKIT_NOTIFY_ID
