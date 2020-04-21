@@ -140,7 +140,7 @@ bomradarloop==0.1.4
 bravia-tv==1.0.1
 
 # homeassistant.components.broadlink
-broadlink==0.13.1
+broadlink==0.13.2
 
 # homeassistant.components.brother
 brother==0.1.13
