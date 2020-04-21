@@ -38,7 +38,7 @@ MOVED_TRANSLATIONS_DIRECTORY_MSG = (
 
 
 def check_translations_directory_name(config: Config, integration: Integration) -> None:
-    """Check that the correct name is used for the translations directory"""
+    """Check that the correct name is used for the translations directory."""
     legacy_translations = integration.path / ".translations"
     translations = integration.path / "translations"
 
