@@ -1,0 +1,21 @@
+{
+  "title": "Mill",
+  "config": {
+    "abort": {
+      "already_configured": "A Mill account is already configured."
+    },
+    "error": {
+      "connection_error": "Error connecting to Mill"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        },
+        "description": "Enter your Mill aco",
+        "title": "Mill"
+      }
+    }
+  }
+}

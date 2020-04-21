@@ -29,6 +29,7 @@ from .const import (
     ATTR_ROOM_NAME,
     ATTR_SLEEP_TEMP,
     DOMAIN,
+    MANUFACTURER,
     MAX_TEMP,
     MIN_TEMP,
     SERVICE_SET_ROOM_TEMP,
@@ -37,10 +38,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
-)
 
 SET_ROOM_TEMP_SCHEMA = vol.Schema(
     {
@@ -52,11 +49,13 @@ SET_ROOM_TEMP_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Mill heater."""
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up the Mill climate."""
+    print(entry)
+
     mill_data_connection = Mill(
-        config[CONF_USERNAME],
-        config[CONF_PASSWORD],
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
         websession=async_get_clientsession(hass),
     )
     if not await mill_data_connection.connect():
@@ -218,3 +217,19 @@ class MillHeater(ClimateEntity):
     async def async_update(self):
         """Retrieve latest state."""
         self._heater = await self._conn.update_device(self._heater.device_id)
+
+    @property
+    def device_id(self):
+        """Return the ID of the physical device this sensor is part of."""
+        return self.unique_id
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        device_info = {
+            "identifiers": {(DOMAIN, self.device_id)},
+            "name": self.name,
+            "manufacturer": MANUFACTURER,
+            "model": f"generation {1 if self._heater.is_gen1 else 2}",
+        }
+        return device_info
