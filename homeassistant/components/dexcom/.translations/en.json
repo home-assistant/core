@@ -1,11 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "This Dexcom Share account has already been configured."
+        },
         "error": {
             "account_error": "Invalid authentication, please try again.",
             "session_error": "Failed to connect, please try again.",
             "unknown": "Unexpected error occured."
         },
-        "flow_title": "Dexcom",
         "step": {
             "user": {
                 "data": {
@@ -15,7 +17,6 @@
                 "description": "Enter Dexcom Share credentials, note that Dexcom Share must be enabled on your Dexcom app.",
                 "title": "Setup Dexcom integration"
             }
-        },
-        "title": "Dexcom"
+        }
     }
 }
