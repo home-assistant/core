@@ -137,10 +137,10 @@ bellows-homeassistant==0.15.2
 bomradarloop==0.1.4
 
 # homeassistant.components.braviatv
-bravia-tv==1.0.1
+bravia-tv==1.0.2
 
 # homeassistant.components.broadlink
-broadlink==0.13.1
+broadlink==0.13.2
 
 # homeassistant.components.brother
 brother==0.1.13
@@ -484,7 +484,7 @@ pyblackbird==0.5
 pybotvac==0.0.17
 
 # homeassistant.components.cast
-pychromecast==4.2.3
+pychromecast==5.0.0
 
 # homeassistant.components.coolmaster
 pycoolmasternet==0.0.4
@@ -818,9 +818,6 @@ xmltodict==0.12.0
 
 # homeassistant.components.yandex_transport
 ya_ma==0.3.8
-
-# homeassistant.components.yweather
-yahooweather==0.10
 
 # homeassistant.components.zeroconf
 zeroconf==0.25.1

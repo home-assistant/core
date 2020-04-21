@@ -556,7 +556,6 @@ omit =
     homeassistant/components/pulseaudio_loopback/switch.py
     homeassistant/components/pushbullet/notify.py
     homeassistant/components/pushbullet/sensor.py
-    homeassistant/components/pushetta/notify.py
     homeassistant/components/pushover/notify.py
     homeassistant/components/pushsafer/notify.py
     homeassistant/components/pvoutput/sensor.py
