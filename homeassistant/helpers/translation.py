@@ -80,10 +80,10 @@ def load_translations_files(
     return loaded
 
 
-def build_resources(
+def merge_resources(
     translation_cache: Dict[str, Dict[str, Any]], components: Set[str], category: str,
 ) -> Dict[str, Dict[str, Any]]:
-    """Build the resources response for the given components."""
+    """Build and merge the resources response for the given components and platforms."""
     # Build response
     resources: Dict[str, Dict[str, Any]] = {}
     for component in components:
@@ -137,6 +137,23 @@ def build_resources(
                     entry,
                 )
         domain_resources[category] = merged
+
+    return {"component": resources}
+
+
+def build_resources(
+    translation_cache: Dict[str, Dict[str, Any]], components: Set[str], category: str,
+) -> Dict[str, Dict[str, Any]]:
+    """Build the resources response for the given components."""
+    # Build response
+    resources: Dict[str, Dict[str, Any]] = {}
+    for component in components:
+        new_value = translation_cache[component].get(category)
+
+        if new_value is None:
+            continue
+
+        resources[component] = {category: new_value}
 
     return {"component": resources}
 
@@ -224,6 +241,13 @@ async def async_get_translations(
     else:
         components = set(hass.config.components)
 
+    # Only 'state' supports merging, so remove platforms from selection
+    if category == "state":
+        resource_func = merge_resources
+    else:
+        resource_func = build_resources
+        components = {component for component in components if "." not in component}
+
     lock = hass.data.get(TRANSLATION_LOAD_LOCK)
     if lock is None:
         lock = hass.data[TRANSLATION_LOAD_LOCK] = asyncio.Lock()
@@ -237,10 +261,10 @@ async def async_get_translations(
     async with lock:
         results = await asyncio.gather(*tasks)
 
-    resources = flatten(build_resources(results[0], components, category))
+    resources = flatten(resource_func(results[0], components, category))
 
     if language != "en":
-        base_resources = flatten(build_resources(results[1], components, category))
+        base_resources = flatten(resource_func(results[1], components, category))
         resources = {**base_resources, **resources}
 
     return resources
