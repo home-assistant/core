@@ -293,7 +293,7 @@ async def test_homekit_start(hass, hk_driver, debounce_patcher):
         await hass.async_add_executor_job(homekit.start)
 
     mock_add_acc.assert_called_with(state)
-    mock_setup_msg.assert_called_with(hass, pin)
+    mock_setup_msg.assert_called_with(hass, pin, ANY)
     hk_driver_add_acc.assert_called_with(homekit.bridge)
     assert hk_driver_start.called
     assert homekit.status == STATUS_RUNNING
@@ -328,7 +328,7 @@ async def test_homekit_start_with_a_broken_accessory(hass, hk_driver, debounce_p
     ) as hk_driver_start:
         await hass.async_add_executor_job(homekit.start)
 
-    mock_setup_msg.assert_called_with(hass, pin)
+    mock_setup_msg.assert_called_with(hass, pin, ANY)
     hk_driver_add_acc.assert_called_with(homekit.bridge)
     assert hk_driver_start.called
     assert homekit.status == STATUS_RUNNING
@@ -405,6 +405,8 @@ async def test_homekit_too_many_accessories(hass, hk_driver):
 
     with patch("pyhap.accessory_driver.AccessoryDriver.start"), patch(
         "pyhap.accessory_driver.AccessoryDriver.add_accessory"
-    ), patch("homeassistant.components.homekit._LOGGER.warning") as mock_warn:
+    ), patch("homeassistant.components.homekit._LOGGER.warning") as mock_warn, patch(
+        f"{PATH_HOMEKIT}.show_setup_message"
+    ):
         await hass.async_add_executor_job(homekit.start)
         assert mock_warn.called is True
