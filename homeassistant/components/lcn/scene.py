@@ -65,7 +65,7 @@ class LcnScene(LcnDevice, Scene):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
 
-    def activate(self, **kwargs: Any) -> None:
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene."""
         self.address_connection.activate_scene(
             self.register_id,
