@@ -145,7 +145,7 @@ def merge_resources(
 
 def build_resources(
     translation_cache: Dict[str, Dict[str, Any]], components: Set[str], category: str,
-) -> Dict[str, Dict[str, Any]]:
+) -> Dict[str, Dict[str, Dict[str, Any]]]:
     """Build the resources response for the given components."""
     # Build response
     resources: Dict[str, Dict[str, Any]] = {}
