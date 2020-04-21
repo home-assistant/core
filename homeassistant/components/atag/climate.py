@@ -108,17 +108,17 @@ class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
         if self._on and await self.coordinator.atag.set_temp(
             kwargs.get(ATTR_TEMPERATURE)
         ):
-            await self.coordinator.async_refresh()
+            self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         self._on = hvac_mode != HVAC_MODE_OFF
         if self._on:
             await self.coordinator.atag.set_hvac_mode(hvac_mode)
-        await self.coordinator.async_refresh()
+        self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if self._on:
             await self.coordinator.atag.set_hold_mode(preset_mode)
-        await self.coordinator.async_refresh()
+        self.async_write_ha_state()

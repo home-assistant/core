@@ -52,7 +52,7 @@ class AtagWaterHeater(AtagEntity, WaterHeaterDevice):
     async def set_temperature(self, **kwargs):
         """Set new target temperature."""
         if await self.coordinator.atag.dhw_set_temp(kwargs.get(ATTR_TEMPERATURE)):
-            await self.coordinator.async_refresh()
+            self.async_write_ha_state()
 
     @property
     def target_temperature(self):
