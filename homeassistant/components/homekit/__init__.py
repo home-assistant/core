@@ -470,7 +470,7 @@ class HomeKit:
         self.hass.add_job(self.driver.stop)
 
 
-class HomeKitParingQRView(HomeAssistantView):
+class HomeKitPairingQRView(HomeAssistantView):
     """Display the homekit pairing code at a protected url."""
 
     url = "/api/homekit/pairingqr"
