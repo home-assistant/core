@@ -139,7 +139,7 @@ async def test_switch_device(hass, aioclient_mock, qs_devices):
 
     # ask hass to turn on and verify command is sent to device
     aioclient_mock.mock_calls.clear()
-    aioclient_mock.get("http://127.0.0.1:2020/@a00001=100")
+    aioclient_mock.get("http://127.0.0.1:2020/@a00001=100", json={"data": "OK"})
     await hass.services.async_call(
         "switch", "turn_on", {"entity_id": "switch.switch_1"}, blocking=True
     )
@@ -150,22 +150,13 @@ async def test_switch_device(hass, aioclient_mock, qs_devices):
         None,
         None,
     ) in aioclient_mock.mock_calls
-
-    # verify state is still off (command not really sent)
-    state_obj = hass.states.get("switch.switch_1")
-    assert state_obj.state == "off"
-    # check if setting the value in the network show in hass
-    qs_devices[0]["val"] = "ON"
-    listen_mock.queue_response(
-        json={"id": "@a00001", "cmd": "STATUS.ACK", "data": "ON"},
-    )
-    await hass.async_block_till_done()
+    # verify state is on
     state_obj = hass.states.get("switch.switch_1")
     assert state_obj.state == "on"
 
     # ask hass to turn off and verify command is sent to device
     aioclient_mock.mock_calls.clear()
-    aioclient_mock.get("http://127.0.0.1:2020/@a00001=0")
+    aioclient_mock.get("http://127.0.0.1:2020/@a00001=0", json={"data": "OK"})
     await hass.services.async_call(
         "switch", "turn_off", {"entity_id": "switch.switch_1"}, blocking=True
     )
@@ -175,6 +166,18 @@ async def test_switch_device(hass, aioclient_mock, qs_devices):
         None,
         None,
     ) in aioclient_mock.mock_calls
+    # verify state is off
+    state_obj = hass.states.get("switch.switch_1")
+    assert state_obj.state == "off"
+
+    # check if setting the value in the network show in hass
+    qs_devices[0]["val"] = "ON"
+    listen_mock.queue_response(
+        json={"id": "@a00001", "cmd": "STATUS.ACK", "data": "ON"},
+    )
+    await hass.async_block_till_done()
+    state_obj = hass.states.get("switch.switch_1")
+    assert state_obj.state == "on"
 
     listen_mock.stop()
 
@@ -200,7 +203,7 @@ async def test_light_device(hass, aioclient_mock, qs_devices):
 
     # ask hass to turn off and verify command is sent to device
     aioclient_mock.mock_calls.clear()
-    aioclient_mock.get("http://127.0.0.1:2020/@a00003=0")
+    aioclient_mock.get("http://127.0.0.1:2020/@a00003=0", json={"data": "OK"})
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": "light.dim_3"}, blocking=True
     )
@@ -235,7 +238,7 @@ async def test_light_device(hass, aioclient_mock, qs_devices):
 
     # ask hass to turn on and verify command is sent to device
     aioclient_mock.mock_calls.clear()
-    aioclient_mock.get("http://127.0.0.1:2020/@a00003=100")
+    aioclient_mock.get("http://127.0.0.1:2020/@a00003=100", json={"data": "OK"})
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": "light.dim_3"}, blocking=True
     )
