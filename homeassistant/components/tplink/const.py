@@ -2,4 +2,4 @@
 import datetime
 
 DOMAIN = "tplink"
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=8)
+MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=5)

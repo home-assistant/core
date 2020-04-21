@@ -9,6 +9,7 @@ from kasa import (
     SmartBulb,
     SmartDevice,
     SmartDeviceException,
+    SmartDimmer,
     SmartPlug,
     SmartStrip,
 )
@@ -77,22 +78,12 @@ async def async_discover_devices(
         if existing_devices.has_device_with_host(dev.host):
             continue
 
-        if dev.is_strip:
-            for plug in dev.plugs:
-                switches.append(plug)
-        elif dev.is_plug:
-            try:
-                if dev.is_dimmable:  # Dimmers act as lights
-                    lights.append(dev)
-                else:
-                    switches.append(dev)
-            except SmartDeviceException as ex:
-                _LOGGER.error("Unable to connect to device %s: %s", dev.host, ex)
-
-        elif dev.is_bulb:
+        if dev.is_strip or dev.is_plug:
+            switches.append(dev)
+        elif dev.is_dimmer or dev.is_bulb:
             lights.append(dev)
         else:
-            _LOGGER.error("Unknown smart device type: %s", type(dev))
+            _LOGGER.error("Unknown smart device type: %s", dev.device_type)
 
     return SmartDevices(lights, switches)
 
@@ -112,11 +103,9 @@ def get_static_devices(config_data) -> SmartDevices:
             elif type_ == CONF_SWITCH:
                 switches.append(SmartPlug(host))
             elif type_ == CONF_STRIP:
-                for plug in SmartStrip(host).plugs:
-                    switches.append(plug)
-            # Dimmers need to be defined as smart plugs to work correctly.
+                switches.append(SmartStrip(host))
             elif type_ == CONF_DIMMER:
-                lights.append(SmartPlug(host))
+                lights.append(SmartDimmer(host))
 
     return SmartDevices(lights, switches)
 
