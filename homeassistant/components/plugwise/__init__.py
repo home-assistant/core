@@ -20,7 +20,8 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["climate"]
+SENSOR = ["sensor"]
+CLIMATE = ["binary_sensor", "climate", "sensor", "switch"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -32,20 +33,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Plugwise Smiles from a config entry."""
     websession = async_get_clientsession(hass, verify_ssl=False)
     api = Smile(
-        host=entry.data["host"], password=entry.data["password"], websession=websession,
+        host=entry.data.get("host"),
+        password=entry.data.get("password"),
+        websession=websession,
     )
 
-    try:
-        await api.connect()
-    except asyncio.TimeoutError:
-        _LOGGER.error("Timeout while connecting to Smile")
+    await api.connect()
 
     if api.smile_type == "power":
         update_interval = timedelta(seconds=10)
     else:
         update_interval = timedelta(seconds=60)
 
-    _LOGGER.debug("Plugwise async update interval %s", update_interval)
+    api.get_all_devices()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": api,
@@ -54,18 +54,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
     }
 
-    _LOGGER.debug("Plugwise gateway is %s", api.gateway_id)
     device_registry = await dr.async_get_registry(hass)
-    _LOGGER.debug("Plugwise device registry  %s", device_registry)
-    result = device_registry.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, api.gateway_id)},
         manufacturer="Plugwise",
-        name=f"{entry.title} - {api.smile_name} Gateway",
-        model=api.smile_name,
+        name=entry.title,
+        model=f"Smile {api.smile_name}",
         sw_version=api.smile_version[0],
     )
-    _LOGGER.debug("Plugwise device registry  %s", result)
+
+    single_master_thermostat = api.single_master_thermostat()
+    PLATFORMS = CLIMATE
+    if single_master_thermostat is None:
+        PLATFORMS = SENSOR
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -88,7 +90,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                for component in CLIMATE
             ]
         )
     )
@@ -141,12 +143,9 @@ class SmileDataUpdater:
 
     async def async_refresh_all(self, _now: Optional[int] = None) -> None:
         """Time to update."""
-        _LOGGER.debug("Plugwise Smile updating with interval: %s", self.update_interval)
         if not self.listeners:
             _LOGGER.error("Plugwise Smile has no listeners, not updating")
             return
-
-        _LOGGER.debug("Plugwise Smile updating data using: %s", self.update_method)
 
         await self.api.full_update_device()
 
