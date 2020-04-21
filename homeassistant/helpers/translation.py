@@ -78,7 +78,9 @@ def load_translations_files(
 
         if not isinstance(loaded_json, dict):
             _LOGGER.warning(
-                f"Translation file is unexpected type {type(loaded_json)}. Expected dict for {translation_file}"
+                "Translation file is unexpected type %s. Expected dict for %s",
+                type(loaded_json),
+                translation_file,
             )
             continue
 
