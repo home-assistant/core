@@ -4,8 +4,10 @@ from miio import DeviceException, gateway
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class ConnectXiaomiGateway:
     """Class to async connect to a Xiaomi Gateway."""
+
     def __init__(self):
         """Initialize the entity."""
         self._gateway_device = None
