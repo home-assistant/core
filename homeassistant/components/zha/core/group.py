@@ -1,26 +1,43 @@
 """Group for Zigbee Home Automation."""
 import asyncio
+import collections
 import logging
 from typing import Any, Dict, List
 
-from zigpy.types.named import EUI64
+import zigpy.exceptions
 
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .helpers import LogMixin
-from .typing import ZhaDeviceType, ZhaGatewayType, ZigpyEndpointType, ZigpyGroupType
+from .typing import (
+    ZhaDeviceType,
+    ZhaGatewayType,
+    ZhaGroupType,
+    ZigpyEndpointType,
+    ZigpyGroupType,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+GroupMember = collections.namedtuple("GroupMember", "ieee endpoint_id")
 
 
 class ZHAGroupMember(LogMixin):
     """Composite object that represents a device endpoint in a Zigbee group."""
 
-    def __init__(self, zha_device: ZhaDeviceType, endpoint_id: int):
+    def __init__(
+        self, zha_group: ZhaGroupType, zha_device: ZhaDeviceType, endpoint_id: int
+    ):
         """Initialize the group member."""
+        self._zha_group = zha_group
         self._zha_device: ZhaDeviceType = zha_device
         self._endpoint_id: int = endpoint_id
+
+    @property
+    def group(self) -> ZhaGroupType:
+        """Return the group this member belongs to."""
+        return self._zha_group
 
     @property
     def endpoint_id(self) -> int:
@@ -60,6 +77,27 @@ class ZHAGroupMember(LogMixin):
         ]
         return member_info
 
+    async def async_remove_from_group(self):
+        """Remove the device endpoint from the provided zigbee group."""
+        try:
+            await self._zha_device.device.endpoints[
+                self._endpoint_id
+            ].remove_from_group(self._zha_group.group_id)
+        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+            self.debug(
+                "Failed to remove endpoint: %s for device '%s' from group: 0x%04x ex: %s",
+                self._endpoint_id,
+                self._zha_device.ieee,
+                self._zha_group.group_id,
+                str(ex),
+            )
+
+    def log(self, level: int, msg: str, *args):
+        """Log a message."""
+        msg = f"[%s](%s): {msg}"
+        args = (f"0x{self._zha_group.group_id:04x}", self.endpoint_id) + args
+        _LOGGER.log(level, msg, *args)
+
 
 class ZHAGroup(LogMixin):
     """ZHA Zigbee group object."""
@@ -94,40 +132,46 @@ class ZHAGroup(LogMixin):
     def members(self) -> List[ZHAGroupMember]:
         """Return the ZHA devices that are members of this group."""
         return [
-            ZHAGroupMember(self._zha_gateway.devices.get(member_ieee), endpoint_id)
+            ZHAGroupMember(
+                self, self._zha_gateway.devices.get(member_ieee), endpoint_id
+            )
             for (member_ieee, endpoint_id) in self._zigpy_group.members.keys()
             if member_ieee in self._zha_gateway.devices
         ]
 
-    async def async_add_members(self, member_ieee_addresses: List[EUI64]) -> None:
+    async def async_add_members(self, members: List[GroupMember]) -> None:
         """Add members to this group."""
-        if len(member_ieee_addresses) > 1:
+        if len(members) > 1:
             tasks = []
-            for ieee in member_ieee_addresses:
+            for member in members:
                 tasks.append(
-                    self._zha_gateway.devices[ieee].async_add_to_group(self.group_id)
-                )
-            await asyncio.gather(*tasks)
-        else:
-            await self._zha_gateway.devices[
-                member_ieee_addresses[0]
-            ].async_add_to_group(self.group_id)
-
-    async def async_remove_members(self, member_ieee_addresses: List[EUI64]) -> None:
-        """Remove members from this group."""
-        if len(member_ieee_addresses) > 1:
-            tasks = []
-            for ieee in member_ieee_addresses:
-                tasks.append(
-                    self._zha_gateway.devices[ieee].async_remove_from_group(
-                        self.group_id
+                    self._zha_gateway.devices[member.ieee].async_add_endpoint_to_group(
+                        member.endpoint_id, self.group_id
                     )
                 )
             await asyncio.gather(*tasks)
         else:
             await self._zha_gateway.devices[
-                member_ieee_addresses[0]
-            ].async_remove_from_group(self.group_id)
+                members[0].ieee
+            ].async_add_endpoint_to_group(members[0].endpoint_id, self.group_id)
+
+    async def async_remove_members(self, members: List[GroupMember]) -> None:
+        """Remove members from this group."""
+        if len(members) > 1:
+            tasks = []
+            for member in members:
+                tasks.append(
+                    self._zha_gateway.devices[
+                        member.ieee
+                    ].async_remove_endpoint_from_group(
+                        member.endpoint_id, self.group_id
+                    )
+                )
+            await asyncio.gather(*tasks)
+        else:
+            await self._zha_gateway.devices[
+                members[0].ieee
+            ].async_remove_endpoint_from_group(members[0].endpoint_id, self.group_id)
 
     @property
     def member_entity_ids(self) -> List[str]:

@@ -604,7 +604,7 @@ class ZHAGateway:
         if group and group.members:
             tasks = []
             for member in group.members:
-                tasks.append(member.async_remove_from_group(group_id))
+                tasks.append(member.async_remove_from_group())
             if tasks:
                 await asyncio.gather(*tasks)
         self.application_controller.groups.pop(group_id)

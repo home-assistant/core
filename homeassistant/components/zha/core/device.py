@@ -562,7 +562,15 @@ class ZHADevice(LogMixin):
 
     async def async_add_to_group(self, group_id):
         """Add this device to the provided zigbee group."""
-        await self._zigpy_device.add_to_group(group_id)
+        try:
+            await self._zigpy_device.add_to_group(group_id)
+        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+            self.debug(
+                "Failed to add device '%s' to group: 0x%04x ex: %s",
+                self._zigpy_device.ieee,
+                group_id,
+                str(ex),
+            )
 
     async def async_remove_from_group(self, group_id):
         """Remove this device from the provided zigbee group."""
@@ -571,6 +579,34 @@ class ZHADevice(LogMixin):
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
             self.debug(
                 "Failed to remove device '%s' from group: 0x%04x ex: %s",
+                self._zigpy_device.ieee,
+                group_id,
+                str(ex),
+            )
+
+    async def async_add_endpoint_to_group(self, endpoint_id, group_id):
+        """Add the device endpoint to the provided zigbee group."""
+        try:
+            await self._zigpy_device.endpoints[int(endpoint_id)].add_to_group(group_id)
+        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+            self.debug(
+                "Failed to add endpoint: %s for device: '%s' to group: 0x%04x ex: %s",
+                endpoint_id,
+                self._zigpy_device.ieee,
+                group_id,
+                str(ex),
+            )
+
+    async def async_remove_endpoint_from_group(self, endpoint_id, group_id):
+        """Remove the device endpoint from the provided zigbee group."""
+        try:
+            await self._zigpy_device.endpoints[int(endpoint_id)].remove_from_group(
+                group_id
+            )
+        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+            self.debug(
+                "Failed to remove endpoint: %s for device '%s' from group: 0x%04x ex: %s",
+                endpoint_id,
                 self._zigpy_device.ieee,
                 group_id,
                 str(ex),

@@ -53,6 +53,7 @@ from .core.const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
+from .core.group import GroupMember
 from .core.helpers import async_is_bindable_target, get_matched_clusters
 
 _LOGGER = logging.getLogger(__name__)
@@ -365,13 +366,27 @@ async def websocket_remove_groups(hass, connection, msg):
     connection.send_result(msg[ID], ret_groups)
 
 
+def is_group_member(value: Any) -> GroupMember:
+    """Validate and transform a group member."""
+    if not isinstance(value, Mapping):
+        raise vol.Invalid("Not a group member")
+    try:
+        group_member = GroupMember(
+            ieee=EUI64.convert(value["ieee"]), endpoint_id=value["endpoint_id"]
+        )
+    except KeyError:
+        raise vol.Invalid("Not a group member")
+
+    return group_member
+
+
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/group/members/add",
         vol.Required(GROUP_ID): cv.positive_int,
-        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [EUI64.convert]),
+        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [is_group_member]),
     }
 )
 async def websocket_add_group_members(hass, connection, msg):
@@ -401,7 +416,7 @@ async def websocket_add_group_members(hass, connection, msg):
     {
         vol.Required(TYPE): "zha/group/members/remove",
         vol.Required(GROUP_ID): cv.positive_int,
-        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [EUI64.convert]),
+        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [is_group_member]),
     }
 )
 async def websocket_remove_group_members(hass, connection, msg):
