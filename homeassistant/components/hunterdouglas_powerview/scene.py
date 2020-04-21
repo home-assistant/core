@@ -1,5 +1,6 @@
 """Support for Powerview scenes from a Powerview hub."""
 import logging
+from typing import Any
 
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.resources.scene import Scene as PvScene
@@ -97,6 +98,6 @@ class PowerViewScene(Scene):
         """Icon to use in the frontend."""
         return "mdi:blinds"
 
-    async def async_activate(self):
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
         await self._scene.activate()

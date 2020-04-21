@@ -29,7 +29,6 @@ async def test_reproducing_states(hass, caplog):
             # Should not raise
             State("input_text.non_existing", VALID_TEXT1),
         ],
-        blocking=True,
     )
 
     # Test that entity is in desired state
@@ -42,7 +41,6 @@ async def test_reproducing_states(hass, caplog):
             # Should not raise
             State("input_text.non_existing", VALID_TEXT2),
         ],
-        blocking=True,
     )
 
     # Test that the state was changed
@@ -50,7 +48,7 @@ async def test_reproducing_states(hass, caplog):
 
     # Test setting state to invalid state (length too long)
     await hass.helpers.state.async_reproduce_state(
-        [State("input_text.test_text", INVALID_TEXT1)], blocking=True
+        [State("input_text.test_text", INVALID_TEXT1)]
     )
 
     # The entity state should be unchanged
@@ -58,7 +56,7 @@ async def test_reproducing_states(hass, caplog):
 
     # Test setting state to invalid state (length too short)
     await hass.helpers.state.async_reproduce_state(
-        [State("input_text.test_text", INVALID_TEXT2)], blocking=True
+        [State("input_text.test_text", INVALID_TEXT2)]
     )
 
     # The entity state should be unchanged
