@@ -14,7 +14,8 @@
                   "Mydevolo_URL": "mydevolo URL",
                   "Home_Control_URL": "Home Control URL"
                 },
-              "description": "Set up your devolo Home Control."
+              "description": "Set up your devolo Home Control.",
+              "title": "devolo Home Control"
             }
         }
     }
