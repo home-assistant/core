@@ -11,7 +11,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from . import _LOGGER
-from .const import CONF_BRANCH, CONF_REPOSITORY, DEFAULT_BRANCH
+from .const import CONF_BRANCH, CONF_REPOSITORY, DEFAULT_BRANCH, DOMAIN
 
 # Validating configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -78,7 +78,7 @@ class JenkinsSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of the sensor."""
-        return self._unique_id
+        return "_".join([DOMAIN, self.repository, self.branch])
 
     @property
     def icon(self):
