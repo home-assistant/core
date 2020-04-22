@@ -259,8 +259,7 @@ def validate_translation_file(config: Config, integration: Integration, all_stri
             search = search[key]
             key = parts.pop(0)
 
-        if parts:
-            print(key, list(search))
+        if parts or key not in search:
             integration.add_error(
                 "translations",
                 f"{reference['source']} contains invalid reference {reference['ref']}: Could not find {key}",
