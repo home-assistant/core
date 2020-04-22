@@ -7,9 +7,12 @@ import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_EPISODE,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TVSHOW,
+    MEDIA_TYPE_VIDEO,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -558,8 +561,9 @@ class PlexMediaPlayer(MediaPlayerDevice):
             )
             return
 
+        media_type = media_type.lower()
         src = json.loads(media_id)
-        if media_type == "KEY" and isinstance(src, int):
+        if media_type == "plex" and isinstance(src, int):
             try:
                 media = self.plex_server.fetch_item(src)
             except plexapi.exceptions.NotFound:
@@ -572,13 +576,13 @@ class PlexMediaPlayer(MediaPlayerDevice):
             media = None
 
         try:
-            if media_type == "MUSIC":
+            if media_type == MEDIA_TYPE_MUSIC:
                 media = self._get_music_media(library, src)
-            elif media_type == "EPISODE":
+            elif media_type == MEDIA_TYPE_EPISODE:
                 media = self._get_tv_media(library, src)
-            elif media_type == "PLAYLIST":
+            elif media_type == MEDIA_TYPE_PLAYLIST:
                 media = self.plex_server.playlist(src["playlist_name"])
-            elif media_type == "VIDEO":
+            elif media_type == MEDIA_TYPE_VIDEO:
                 media = self.plex_server.library.section(library).get(src["video_name"])
         except plexapi.exceptions.NotFound:
             _LOGGER.error("Media could not be found: %s", media_id)
