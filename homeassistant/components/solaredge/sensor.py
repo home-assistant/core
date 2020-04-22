@@ -388,15 +388,15 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
 
         for type in meters:
             for key, value in type.items():
-                if key == "type" and value in ["Production", "SelfConsumption", "FeedIn", "Purchased", "Consumption"]:
-                   type = value
-                if key == "values":
-                   for row in value:
-                      for values, value in row.items():
-                         if values == "value":
-                            self.data[type] = value
-                         if values == "date":
-                            self.attributes[type] = {"date": value}
+               if key == "type" and value in ["Production", "SelfConsumption", "FeedIn", "Purchased", "Consumption"]:
+                  type = value
+               if key == "values":
+                  for row in value:
+                     for values, value in row.items():
+                        if values == "value":
+                           self.data[type] = value
+                        if values == "date":
+                           self.attributes[type] = {"date": value}
 
         _LOGGER.debug("Updated SolarEdge energy details: %s, %s", self.data, self.attributes)
 
