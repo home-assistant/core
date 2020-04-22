@@ -247,6 +247,9 @@ async def test_light_device(hass, aioclient_mock, qs_devices):
         None,
         None,
     ) in aioclient_mock.mock_calls
+    await hass.async_block_till_done()
+    state_obj = hass.states.get("light.dim_3")
+    assert state_obj.state == "on"
 
     listen_mock.stop()
 
