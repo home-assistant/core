@@ -872,7 +872,9 @@ class MQTT:
         subscription = Subscription(topic, msg_callback, qos, encoding)
         self.subscriptions.append(subscription)
 
-        await self._async_perform_subscription(topic, qos)
+        # Only subscribe if currently connected.
+        if self.connected:
+            await self._async_perform_subscription(topic, qos)
 
         @callback
         def async_remove() -> None:

@@ -608,6 +608,9 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.hass.data["mqtt"]._mqttc.subscribe.side_effect = side_effect
 
+        # Fake that the client is connected
+        self.hass.data["mqtt"].connected = True
+
         calls_a = mock.MagicMock()
         mqtt.subscribe(self.hass, "test/state", calls_a)
         self.hass.block_till_done()
@@ -620,6 +623,9 @@ class TestMQTTCallbacks(unittest.TestCase):
 
     def test_not_calling_unsubscribe_with_active_subscribers(self):
         """Test not calling unsubscribe() when other subscribers are active."""
+        # Fake that the client is connected
+        self.hass.data["mqtt"].connected = True
+
         unsub = mqtt.subscribe(self.hass, "test/state", None)
         mqtt.subscribe(self.hass, "test/state", None)
         self.hass.block_till_done()
@@ -631,6 +637,9 @@ class TestMQTTCallbacks(unittest.TestCase):
 
     def test_restore_subscriptions_on_reconnect(self):
         """Test subscriptions are restored on reconnect."""
+        # Fake that the client is connected
+        self.hass.data["mqtt"].connected = True
+
         mqtt.subscribe(self.hass, "test/state", None)
         self.hass.block_till_done()
         assert self.hass.data["mqtt"]._mqttc.subscribe.call_count == 1
@@ -642,6 +651,9 @@ class TestMQTTCallbacks(unittest.TestCase):
 
     def test_restore_all_active_subscriptions_on_reconnect(self):
         """Test active subscriptions are restored correctly on reconnect."""
+        # Fake that the client is connected
+        self.hass.data["mqtt"].connected = True
+
         self.hass.data["mqtt"]._mqttc.subscribe.side_effect = (
             (0, 1),
             (0, 2),
