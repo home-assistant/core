@@ -46,6 +46,9 @@ def qs_devices():
     ]
 
 
+EMPTY_PACKET = {"cmd": ""}
+
+
 async def test_binary_sensor_device(hass, aioclient_mock, qs_devices):
     """Test a binary sensor device."""
     config = {
@@ -172,9 +175,7 @@ async def test_switch_device(hass, aioclient_mock, qs_devices):
 
     # check if setting the value in the network show in hass
     qs_devices[0]["val"] = "ON"
-    listen_mock.queue_response(
-        json={"id": "@a00001", "cmd": "STATUS.ACK", "data": "ON"},
-    )
+    listen_mock.queue_response(json=EMPTY_PACKET)
     await hass.async_block_till_done()
     state_obj = hass.states.get("switch.switch_1")
     assert state_obj.state == "on"
@@ -219,9 +220,7 @@ async def test_light_device(hass, aioclient_mock, qs_devices):
 
     # change brightness in network and check that hass updates
     qs_devices[2]["val"] = "280c55"  # half dimmed
-    listen_mock.queue_response(
-        json={"id": "@a00003", "cmd": "STATUS.ACK", "data": "280c55"},
-    )
+    listen_mock.queue_response(json=EMPTY_PACKET)
     await asyncio.sleep(0.01)
     await hass.async_block_till_done()
     state_obj = hass.states.get("light.dim_3")
@@ -230,9 +229,7 @@ async def test_light_device(hass, aioclient_mock, qs_devices):
 
     # turn off in the network and see that it is off in hass as well
     qs_devices[2]["val"] = "280c78"  # off
-    listen_mock.queue_response(
-        json={"id": "@a00003", "cmd": "STATUS.ACK", "data": "280c78"},
-    )
+    listen_mock.queue_response(json=EMPTY_PACKET)
     await asyncio.sleep(0.01)
     await hass.async_block_till_done()
     state_obj = hass.states.get("light.dim_3")
