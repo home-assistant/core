@@ -84,7 +84,13 @@ class SolarEdgeSensorFactory:
         for key in ["power_consumption", "solar_power", "grid_power", "storage_power"]:
             self.services[key] = (SolarEdgePowerFlowSensor, flow)
 
-        for key in ["purchased_power", "production_power", "feedin_power", "consumption_power", "selfconsumption_power"]:
+        for key in [
+            "purchased_power",
+            "production_power",
+            "feedin_power",
+            "consumption_power",
+            "selfconsumption_power",
+        ]:
             self.services[key] = (SolarEdgeEnergyDetailsSensor, energy)
 
     def create_sensor(self, sensor_key):
@@ -366,7 +372,13 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
             now = datetime.now()
             today = date.today()
             midnight = datetime.combine(today, datetime.min.time())
-            data = self.api.get_energy_details(self.site_id, midnight, now.strftime("%Y-%m-%d %H:%M:%S"), meters=None, time_unit="DAY")
+            data = self.api.get_energy_details(
+                self.site_id,
+                midnight,
+                now.strftime("%Y-%m-%d %H:%M:%S"),
+                meters=None,
+                time_unit="DAY",
+            )
             energy_details = data["energyDetails"]
         except KeyError:
             _LOGGER.error("Missing power flow data, skipping update")
@@ -388,17 +400,25 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
 
         for type in meters:
             for key, value in type.items():
-               if key == "type" and value in ["Production", "SelfConsumption", "FeedIn", "Purchased", "Consumption"]:
-                  type = value
-               if key == "values":
-                  for row in value:
-                     for values, value in row.items():
-                        if values == "value":
-                           self.data[type] = value
-                        if values == "date":
-                           self.attributes[type] = {"date": value}
+                if key == "type" and value in [
+                    "Production",
+                    "SelfConsumption",
+                    "FeedIn",
+                    "Purchased",
+                    "Consumption",
+                ]:
+                    type = value
+                if key == "values":
+                    for row in value:
+                        for values, value in row.items():
+                            if values == "value":
+                                self.data[type] = value
+                            if values == "date":
+                                self.attributes[type] = {"date": value}
 
-        _LOGGER.debug("Updated SolarEdge energy details: %s, %s", self.data, self.attributes)
+        _LOGGER.debug(
+            "Updated SolarEdge energy details: %s, %s", self.data, self.attributes
+        )
 
 
 class SolarEdgePowerFlowDataService(SolarEdgeDataService):

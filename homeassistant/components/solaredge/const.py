@@ -69,6 +69,12 @@ SENSOR_TYPES = {
     "purchased_power": ["Purchased", "Imported Power", None, "mdi:flash", False],
     "production_power": ["Production", "Production Power", None, "mdi:flash", False],
     "consumption_power": ["Consumption", "Cosumption Power", None, "mdi:flash", False],
-    "selfconsumption_power": ["SelfConsumption", "SelfConsumption Power", None, "mdi:flash", False],
+    "selfconsumption_power": [
+        "SelfConsumption",
+        "SelfConsumption Power",
+        None,
+        "mdi:flash",
+        False,
+    ],
     "feedin_power": ["FeedIn", "Exported Power", None, "mdi:flash", False],
 }
