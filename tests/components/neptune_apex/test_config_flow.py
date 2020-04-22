@@ -33,7 +33,7 @@ async def test_form(hass):
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "Neptune Apex"
     assert result2["data"] == {
         "host": "1.1.1.1",
         "username": "test-username",
@@ -74,7 +74,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.neptune_apex.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.neptune_apex.config_flow.ApexHub.authenticate",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
