@@ -571,34 +571,6 @@ class TestMQTTCallbacks(unittest.TestCase):
         assert self.calls[0][0].topic == topic
         assert self.calls[0][0].payload == payload
 
-    def test_mqtt_failed_connection_results_in_disconnect(self):
-        """Test if connection failure leads to disconnect."""
-        for result_code in range(1, 6):
-            self.hass.data["mqtt"]._mqttc = mock.MagicMock()
-            self.hass.data["mqtt"]._mqtt_on_connect(
-                None, {"topics": {}}, 0, result_code
-            )
-            assert self.hass.data["mqtt"]._mqttc.disconnect.called
-
-    def test_mqtt_disconnect_tries_no_reconnect_on_stop(self):
-        """Test the disconnect tries."""
-        self.hass.data["mqtt"]._mqtt_on_disconnect(None, None, 0)
-        assert not self.hass.data["mqtt"]._mqttc.reconnect.called
-
-    @mock.patch("homeassistant.components.mqtt.time.sleep")
-    def test_mqtt_disconnect_tries_reconnect(self, mock_sleep):
-        """Test the re-connect tries."""
-        self.hass.data["mqtt"].subscriptions = [
-            mqtt.Subscription("test/progress", None, 0),
-            mqtt.Subscription("test/progress", None, 1),
-            mqtt.Subscription("test/topic", None, 2),
-        ]
-        self.hass.data["mqtt"]._mqttc.reconnect.side_effect = [1, 1, 1, 0]
-        self.hass.data["mqtt"]._mqtt_on_disconnect(None, None, 1)
-        assert self.hass.data["mqtt"]._mqttc.reconnect.called
-        assert len(self.hass.data["mqtt"]._mqttc.reconnect.mock_calls) == 4
-        assert [call[1][0] for call in mock_sleep.mock_calls] == [1, 2, 4]
-
     def test_retained_message_on_subscribe_received(self):
         """Test every subscriber receives retained message on subscribe."""
 
