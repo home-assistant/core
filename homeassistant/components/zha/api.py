@@ -324,13 +324,27 @@ async def websocket_get_group(hass, connection, msg):
     connection.send_result(msg[ID], group)
 
 
+def is_group_member(value: Any) -> GroupMember:
+    """Validate and transform a group member."""
+    if not isinstance(value, Mapping):
+        raise vol.Invalid("Not a group member")
+    try:
+        group_member = GroupMember(
+            ieee=EUI64.convert(value["ieee"]), endpoint_id=value["endpoint_id"]
+        )
+    except KeyError:
+        raise vol.Invalid("Not a group member")
+
+    return group_member
+
+
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/group/add",
         vol.Required(GROUP_NAME): cv.string,
-        vol.Optional(ATTR_MEMBERS): vol.All(cv.ensure_list, [EUI64.convert]),
+        vol.Optional(ATTR_MEMBERS): vol.All(cv.ensure_list, [is_group_member]),
     }
 )
 async def websocket_add_group(hass, connection, msg):
@@ -364,20 +378,6 @@ async def websocket_remove_groups(hass, connection, msg):
         await zha_gateway.async_remove_zigpy_group(group_ids[0])
     ret_groups = [group.group_info for group in zha_gateway.groups.values()]
     connection.send_result(msg[ID], ret_groups)
-
-
-def is_group_member(value: Any) -> GroupMember:
-    """Validate and transform a group member."""
-    if not isinstance(value, Mapping):
-        raise vol.Invalid("Not a group member")
-    try:
-        group_member = GroupMember(
-            ieee=EUI64.convert(value["ieee"]), endpoint_id=value["endpoint_id"]
-        )
-    except KeyError:
-        raise vol.Invalid("Not a group member")
-
-    return group_member
 
 
 @websocket_api.require_admin
