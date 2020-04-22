@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to Neptune Systems Apex Aquacontroller",
+        "title": "Connect to Neptune Systems Apex",
         "description": "",
         "data": {
           "host": "IP Address",

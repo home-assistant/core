@@ -5,12 +5,19 @@ from pynepsys import Apex
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
 
 
 class ApexHub:
@@ -37,9 +44,9 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    hub = ApexHub(data["host"])
+    hub = ApexHub(data[CONF_HOST])
 
-    if not await hub.authenticate(data["username"], data["password"]):
+    if not await hub.authenticate(data[CONF_USERNAME], data[CONF_PASSWORD]):
         raise InvalidAuth
 
     # Return info that you want to store in the config entry.
