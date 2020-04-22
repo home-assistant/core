@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Controller site is al geconfigureerd",
+            "user_privilege": "Gebruiker moet beheerder zijn"
+        },
+        "error": {
+            "faulty_credentials": "Foutieve gebruikersgegevens",
+            "service_unavailable": "Geen service beschikbaar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Wachtwoord",
+                    "port": "Poort",
+                    "site": "Site ID",
+                    "username": "Gebruikersnaam",
+                    "verify_ssl": "Controller gebruik van het juiste certificaat"
+                },
+                "title": "Stel de UniFi-controller in"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "client_control": {
+                "data": {
+                    "poe_clients": "Sta POE-controle van gebruikers toe"
+                }
+            },
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Tijd in seconden vanaf laatst gezien tot beschouwd als weg",
+                    "track_clients": "Volg netwerkclients",
+                    "track_devices": "Netwerkapparaten volgen (Ubiquiti-apparaten)",
+                    "track_wired_clients": "Inclusief bedrade netwerkcli\u00ebnten"
+                }
+            },
+            "init": {
+                "data": {
+                    "one": "Leeg",
+                    "other": "Leeg"
+                }
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Maak bandbreedtegebruiksensoren voor netwerkclients"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "client_id": "L'identificador de client de la configuraci\u00f3 no \u00e9s v\u00e0lid.",
+            "client_secret": "El codi secret de client de la configuraci\u00f3 no \u00e9s v\u00e0lid.",
+            "no_agreements": "Aquest compte no t\u00e9 pantalles Toon.",
+            "no_app": "Has de configurar Toon abans de poder autenticar-t'hi. Llegeix les [instruccions](https://www.home-assistant.io/components/toon/).",
+            "unknown_auth_fail": "S'ha produ\u00eft un error inesperat durant l'autenticaci\u00f3."
+        },
+        "error": {
+            "credentials": "Les credencials proporcionades no s\u00f3n v\u00e0lides.",
+            "display_exists": "La pantalla seleccionada ja est\u00e0 configurada."
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Contrasenya",
+                    "tenant": "Tenant",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Autentica't amb el teu compte d'Eneco Toon (no el compte de desenvolupador).",
+                "title": "Enlla\u00e7ar compte de Toon"
+            },
+            "display": {
+                "data": {
+                    "display": "Tria la visualitzaci\u00f3"
+                },
+                "description": "Selecciona la pantalla Toon amb la qual vols connectar-te.",
+                "title": "Selecci\u00f3 de pantalla"
+            }
+        }
+    }
+}

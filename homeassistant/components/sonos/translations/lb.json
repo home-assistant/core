@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Keng Sonos Apparater am Netzwierk fonnt.",
+            "single_instance_allowed": "N\u00ebmmen eng eenzeg Konfiguratioun vun Sonos ass n\u00e9ideg."
+        },
+        "step": {
+            "confirm": {
+                "description": "Soll Sonos konfigur\u00e9iert ginn?",
+                "title": "Sonos"
+            }
+        }
+    }
+}

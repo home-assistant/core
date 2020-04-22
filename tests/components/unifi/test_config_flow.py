@@ -5,12 +5,12 @@ from asynctest import patch
 from homeassistant import data_entry_flow
 from homeassistant.components import unifi
 from homeassistant.components.unifi import config_flow
-from homeassistant.components.unifi.config_flow import CONF_NEW_CLIENT
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_IGNORE_WIRED_BUG,
     CONF_POE_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
@@ -292,38 +292,9 @@ async def test_option_flow(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "client_control"
 
-    clients_to_block = hass.config_entries.options._progress[result["flow_id"]].options[
-        CONF_BLOCK_CLIENT
-    ]
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_BLOCK_CLIENT: clients_to_block,
-            CONF_NEW_CLIENT: "00:00:00:00:00:01",
-            CONF_POE_CLIENTS: False,
-        },
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "client_control"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_BLOCK_CLIENT: clients_to_block,
-            CONF_NEW_CLIENT: "00:00:00:00:00:02",
-        },
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "client_control"
-    assert result["errors"] == {"base": "unknown_client_mac"}
-
-    clients_to_block = hass.config_entries.options._progress[result["flow_id"]].options[
-        CONF_BLOCK_CLIENT
-    ]
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_BLOCK_CLIENT: clients_to_block},
+        user_input={CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]], CONF_POE_CLIENTS: False},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -338,9 +309,10 @@ async def test_option_flow(hass):
         CONF_TRACK_CLIENTS: False,
         CONF_TRACK_WIRED_CLIENTS: False,
         CONF_TRACK_DEVICES: False,
-        CONF_DETECTION_TIME: 100,
         CONF_SSID_FILTER: ["SSID 1"],
-        CONF_BLOCK_CLIENT: ["00:00:00:00:00:01"],
+        CONF_DETECTION_TIME: 100,
+        CONF_IGNORE_WIRED_BUG: False,
         CONF_POE_CLIENTS: False,
+        CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
     }

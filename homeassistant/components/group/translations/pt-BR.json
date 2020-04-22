@@ -1,0 +1,17 @@
+{
+    "state": {
+        "_": {
+            "closed": "Fechado",
+            "home": "Em casa",
+            "locked": "Trancado",
+            "not_home": "Ausente",
+            "off": "Desligado",
+            "ok": "OK",
+            "on": "Ligado",
+            "open": "Aberto",
+            "problem": "Problema",
+            "unlocked": "Destrancado"
+        }
+    },
+    "title": "Grupo"
+}

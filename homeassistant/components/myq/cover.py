@@ -209,10 +209,11 @@ class MyQDevice(CoverDevice):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self._coordinator.async_add_listener(self._async_consume_update)
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self._async_consume_update)
+        )
 
     async def async_will_remove_from_hass(self):
         """Undo subscription."""
-        self._coordinator.async_remove_listener(self._async_consume_update)
         if self._scheduled_transition_update:
             self._scheduled_transition_update()

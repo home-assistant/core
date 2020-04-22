@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "app_setup_error": "SmartApp \uc744 \uc124\uc815\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4. \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694.",
+            "token_forbidden": "\ud1a0\ud070\uc5d0 \ud544\uc694\ud55c OAuth \ubc94\uc704\ubaa9\ub85d\uc774 \uc5c6\uc2b5\ub2c8\ub2e4.",
+            "token_invalid_format": "\ud1a0\ud070\uc740 UID/GUID \ud615\uc2dd\uc774\uc5b4\uc57c \ud569\ub2c8\ub2e4",
+            "token_unauthorized": "\ud1a0\ud070\uc774 \uc720\ud6a8\ud558\uc9c0 \uc54a\uac70\ub098 \uc2b9\uc778\ub418\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4.",
+            "webhook_error": "SmartThings \ub294 `base_url` \uc5d0 \uc124\uc815\ub41c \uc5d4\ub4dc\ud3ec\uc778\ud2b8\uc758 \uc720\ud6a8\uc131\uc744 \uac80\uc0ac \ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4. \uad6c\uc131\uc694\uc18c\uc758 \uc694\uad6c \uc0ac\ud56d\uc744 \uac80\ud1a0\ud574\uc8fc\uc138\uc694."
+        },
+        "step": {
+            "user": {
+                "description": "[\uc548\ub0b4]({component_url}) \uc5d0 \ub530\ub77c \uc0dd\uc131 \ub41c SmartThings [\uac1c\uc778 \uc561\uc138\uc2a4 \ud1a0\ud070]({token_url}) \uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694.",
+                "title": "\uac1c\uc778 \uc561\uc138\uc2a4 \ud1a0\ud070 \uc785\ub825"
+            }
+        }
+    }
+}

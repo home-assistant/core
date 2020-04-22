@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ta lokacija je \u017ee registrirana."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Zemljepisna \u0161irina",
+                    "longitude": "Zemljepisna dol\u017eina",
+                    "radius": "Obmo\u010dje (z uporabo va\u0161ih osnovnih enot)"
+                },
+                "title": "Izpolnite podatke o va\u0161i lokaciji."
+            }
+        }
+    }
+}

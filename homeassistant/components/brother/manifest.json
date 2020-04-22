@@ -3,7 +3,7 @@
   "name": "Brother Printer",
   "documentation": "https://www.home-assistant.io/integrations/brother",
   "codeowners": ["@bieniu"],
-  "requirements": ["brother==0.1.11"],
+  "requirements": ["brother==0.1.13"],
   "zeroconf": ["_printer._tcp.local."],
   "config_flow": true,
   "quality_scale": "platinum"

@@ -1,0 +1,18 @@
+{
+    "options": {
+        "step": {
+            "options_digital": {
+                "data": {
+                    "name": "N\u00e9v (nem k\u00f6telez\u0151)",
+                    "poll_interval": "Lek\u00e9rdez\u00e9si id\u0151k\u00f6z (perc) (opcion\u00e1lis)",
+                    "type": "\u00c9rz\u00e9kel\u0151 t\u00edpusa"
+                }
+            },
+            "options_switch": {
+                "data": {
+                    "name": "N\u00e9v (nem k\u00f6telez\u0151)"
+                }
+            }
+        }
+    }
+}

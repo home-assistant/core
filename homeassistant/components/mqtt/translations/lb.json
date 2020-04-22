@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "N\u00ebmmen eng eenzeg Konfiguratioun vum MQTT ass erlaabt"
+        },
+        "error": {
+            "cannot_connect": "Kann sech net mam Broker verbannen."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "discovery": "Entdeckung aktiv\u00e9ieren",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "username": "Benotzernumm"
+                },
+                "description": "Gitt Verbindungs Informatioune vun \u00e4rem MQTT Broker an.",
+                "title": "MQTT"
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Entdeckung aktiv\u00e9ieren"
+                },
+                "description": "W\u00ebllt dir Home Assistant konfigur\u00e9iere fir sech mam MQTT broker ze verbannen dee vum hass.io add-on {addon} bereet gestallt g\u00ebtt?",
+                "title": "MQTT Broker via Hass.io add-on"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "\u00c9ischte Kn\u00e4ppchen",
+            "button_2": "Zweete Kn\u00e4ppchen",
+            "button_3": "Dr\u00ebtte Kn\u00e4ppchen",
+            "button_4": "V\u00e9ierte Kn\u00e4ppchen",
+            "button_5": "F\u00ebnnefte Kn\u00e4ppchen",
+            "button_6": "Sechste Kn\u00e4ppchen",
+            "turn_off": "Ausschalten",
+            "turn_on": "Uschalten"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" zwee mol gedr\u00e9ckt",
+            "button_long_press": "\"{subtype}\" permanent gedr\u00e9ckt",
+            "button_long_release": "\"{subtype}\" no laangem unhalen lassgelooss",
+            "button_quadruple_press": "\"{subtype}\" v\u00e9ier mol gedr\u00e9ckt",
+            "button_quintuple_press": "\"{subtype}\" f\u00ebnnef mol gedr\u00e9ckt",
+            "button_short_press": "\"{subtype}\" gedr\u00e9ckt",
+            "button_short_release": "\"{subtype}\" lassgelooss",
+            "button_triple_press": "\"{subtype}\" dr\u00e4imol gedr\u00e9ckt"
+        }
+    }
+}

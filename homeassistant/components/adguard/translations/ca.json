@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "adguard_home_addon_outdated": "Aquesta integraci\u00f3 necessita la versi\u00f3 d'AdGuard Home {minimal_version} o una superior, tens la {current_version}. Actualitza el complement de Hass.io d'AdGuard Home.",
+            "adguard_home_outdated": "Aquesta integraci\u00f3 necessita la versi\u00f3 d'AdGuard Home {minimal_version} o una superior, tens la {current_version}.",
+            "existing_instance_updated": "S'ha actualitzat la configuraci\u00f3 existent.",
+            "single_instance_allowed": "Nom\u00e9s es permet una \u00fanica configuraci\u00f3 d'AdGuard Home."
+        },
+        "error": {
+            "connection_error": "No s'ha pogut connectar."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Vols configurar Home Assistant perqu\u00e8 es connecti amb l'AdGuard Home proporcionat pel complement de Hass.io: {addon}?",
+                "title": "AdGuard Home (complement de Hass.io)"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "ssl": "AdGuard Home utilitza un certificat SSL",
+                    "username": "Nom d'usuari",
+                    "verify_ssl": "AdGuard Home utilitza un certificat adequat"
+                },
+                "description": "Configuraci\u00f3 de la inst\u00e0ncia d'AdGuard Home, permet el control i la monitoritzaci\u00f3.",
+                "title": "Enlla\u00e7ar AdGuard Home."
+            }
+        }
+    }
+}

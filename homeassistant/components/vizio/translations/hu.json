@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Ez a bejegyz\u00e9s m\u00e1r be van \u00e1ll\u00edtva.",
+            "updated_entry": "Ez a bejegyz\u00e9s m\u00e1r be van \u00e1ll\u00edtva, de a konfigur\u00e1ci\u00f3ban defini\u00e1lt n\u00e9v, appok \u00e9s/vagy be\u00e1ll\u00edt\u00e1sok nem egyeznek meg a kor\u00e1bban import\u00e1lt konfigur\u00e1ci\u00f3val, \u00edgy a konfigur\u00e1ci\u00f3s bejegyz\u00e9s ennek megfelel\u0151en friss\u00fclt."
+        },
+        "error": {
+            "cant_connect": "Nem lehetett csatlakozni az eszk\u00f6zh\u00f6z. [Tekintsd \u00e1t a dokumentumokat] (https://www.home-assistant.io/integrations/vizio/) \u00e9s \u00fajra ellen\u0151rizd, hogy:\n- A k\u00e9sz\u00fcl\u00e9k be van kapcsolva\n- A k\u00e9sz\u00fcl\u00e9k csatlakozik a h\u00e1l\u00f3zathoz\n- A kit\u00f6lt\u00f6tt \u00e9rt\u00e9kek pontosak\nmiel\u0151tt \u00fajra elk\u00fclden\u00e9d.",
+            "host_exists": "A megadott kiszolg\u00e1l\u00f3n\u00e9vvel rendelkez\u0151 Vizio-eszk\u00f6z m\u00e1r konfigur\u00e1lva van.",
+            "name_exists": "A megadott n\u00e9vvel rendelkez\u0151 Vizio-eszk\u00f6z m\u00e1r konfigur\u00e1lva van."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Hozz\u00e1f\u00e9r\u00e9si token",
+                    "device_class": "Eszk\u00f6zt\u00edpus",
+                    "name": "N\u00e9v"
+                },
+                "title": "A Vizio SmartCast Client be\u00e1ll\u00edt\u00e1sa"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "volume_step": "Hanger\u0151 l\u00e9p\u00e9s nagys\u00e1ga"
+                },
+                "title": "Friss\u00edtse a Vizo SmartCast be\u00e1ll\u00edt\u00e1sokat"
+            }
+        }
+    }
+}

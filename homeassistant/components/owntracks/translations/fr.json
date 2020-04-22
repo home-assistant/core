@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Une seule instance est n\u00e9cessaire."
+        },
+        "create_entry": {
+            "default": "\n\n Sous Android, ouvrez [l'application OwnTracks] ( {android_url} ), acc\u00e9dez \u00e0 Pr\u00e9f\u00e9rences - > Connexion. Modifiez les param\u00e8tres suivants: \n - Mode: HTTP priv\u00e9 \n - H\u00f4te: {webhook_url} \n - Identification: \n - Nom d'utilisateur: ` <Your name> ` \n - ID de p\u00e9riph\u00e9rique: ` <Your device name> ` \n\n Sur iOS, ouvrez [l'application OwnTracks] ( {ios_url} ), appuyez sur l'ic\u00f4ne (i) en haut \u00e0 gauche - > param\u00e8tres. Modifiez les param\u00e8tres suivants: \n - Mode: HTTP \n - URL: {webhook_url} \n - Activer l'authentification \n - ID utilisateur: ` <Your name> ` \n\n {secret} \n \n Voir [la documentation] ( {docs_url} ) pour plus d'informations."
+        },
+        "step": {
+            "user": {
+                "description": "\u00cates-vous s\u00fbr de vouloir configurer OwnTracks?",
+                "title": "Configurer OwnTracks"
+            }
+        }
+    }
+}

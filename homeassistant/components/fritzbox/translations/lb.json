@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebs AVM FRITZ!Box ass scho konfigur\u00e9iert",
+            "already_in_progress": "AVM FRITZ!Box Konfiguratioun ass schonn am gaang.",
+            "not_found": "Keng \u00ebnnerst\u00ebtzte AVM FRITZ!Box am Netzwierk fonnt."
+        },
+        "error": {
+            "auth_failed": "Benotzernumm an/oder Passwuert inkorrekt"
+        },
+        "flow_title": "AVM FRITZ!Box: {name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                },
+                "description": "Soll {name} konfigur\u00e9iert ginn?",
+                "title": "AVM FRITZ!Box"
+            },
+            "user": {
+                "data": {
+                    "host": "Numm oder IP Adresse",
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                },
+                "description": "F\u00ebll d\u00e9ng AVM FRITZ!Box Informatiounen aus.",
+                "title": "AVM FRITZ!Box"
+            }
+        }
+    }
+}

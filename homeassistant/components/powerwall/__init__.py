@@ -9,8 +9,9 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -20,6 +21,7 @@ from .const import (
     POWERWALL_API_DEVICE_TYPE,
     POWERWALL_API_GRID_STATUS,
     POWERWALL_API_METERS,
+    POWERWALL_API_SERIAL_NUMBERS,
     POWERWALL_API_SITE_INFO,
     POWERWALL_API_SITEMASTER,
     POWERWALL_API_STATUS,
@@ -55,6 +57,36 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
+async def _migrate_old_unique_ids(hass, entry_id, powerwall_data):
+    serial_numbers = powerwall_data[POWERWALL_API_SERIAL_NUMBERS]
+    site_info = powerwall_data[POWERWALL_API_SITE_INFO]
+
+    @callback
+    def _async_migrator(entity_entry: entity_registry.RegistryEntry):
+        parts = entity_entry.unique_id.split("_")
+        # Check if the unique_id starts with the serial_numbers of the powerwakks
+        if parts[0 : len(serial_numbers)] != serial_numbers:
+            # The old unique_id ended with the nomianal_system_engery_kWh so we can use that
+            # to find the old base unique_id and extract the device_suffix.
+            normalized_energy_index = (
+                len(parts)
+                - 1
+                - parts[::-1].index(str(site_info.nominal_system_energy_kWh))
+            )
+            device_suffix = parts[normalized_energy_index + 1 :]
+
+            new_unique_id = "_".join([*serial_numbers, *device_suffix])
+            _LOGGER.info(
+                "Migrating unique_id from [%s] to [%s]",
+                entity_entry.unique_id,
+                new_unique_id,
+            )
+            return {"new_unique_id": new_unique_id}
+        return None
+
+    await entity_registry.async_migrate_entries(hass, entry_id, _async_migrator)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Tesla Powerwall from a config entry."""
 
@@ -68,6 +100,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except (PowerwallUnreachableError, ApiError, ConnectionError):
         http_session.close()
         raise ConfigEntryNotReady
+
+    await _migrate_old_unique_ids(hass, entry_id, powerwall_data)
 
     async def async_update_data():
         """Fetch data from API endpoint."""
@@ -102,10 +136,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 def call_base_info(power_wall):
     """Wrap powerwall properties to be a callable."""
+    serial_numbers = power_wall.get_serial_numbers()
+    # Make sure the serial numbers always have the same order
+    serial_numbers.sort()
     return {
         POWERWALL_API_SITE_INFO: power_wall.get_site_info(),
         POWERWALL_API_STATUS: power_wall.get_status(),
         POWERWALL_API_DEVICE_TYPE: power_wall.get_device_type(),
+        POWERWALL_API_SERIAL_NUMBERS: serial_numbers,
     }
 
 

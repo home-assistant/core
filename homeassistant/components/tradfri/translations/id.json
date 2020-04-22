@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bridge sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Tidak dapat terhubung ke gateway.",
+            "invalid_key": "Gagal mendaftar dengan kunci yang disediakan. Jika ini terus terjadi, coba mulai ulang gateway.",
+            "timeout": "Waktu tunggu memvalidasi kode telah habis."
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Host",
+                    "security_code": "Kode keamanan"
+                },
+                "description": "Anda dapat menemukan kode keamanan di belakang gateway Anda.",
+                "title": "Masukkan kode keamanan"
+            }
+        }
+    }
+}

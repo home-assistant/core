@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "All linked servers already configured",
+            "already_configured": "This Plex server is already configured",
+            "already_in_progress": "Plex is being configured",
+            "invalid_import": "Imported configuration is invalid",
+            "non-interactive": "Non-interactive import",
+            "token_request_timeout": "Timed out obtaining token",
+            "unknown": "Failed for unknown reason"
+        },
+        "error": {
+            "faulty_credentials": "Authorization failed",
+            "no_servers": "No servers linked to account",
+            "not_found": "Plex server not found"
+        },
+        "step": {
+            "select_server": {
+                "data": {
+                    "server": "Server"
+                },
+                "description": "Multiple servers available, select one:",
+                "title": "Select Plex server"
+            },
+            "start_website_auth": {
+                "description": "Continue to authorize at plex.tv.",
+                "title": "Connect Plex server"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "ignore_new_shared_users": "Ignore new managed/shared users",
+                    "monitored_users": "Monitored users",
+                    "use_episode_art": "Use episode art"
+                },
+                "description": "Options for Plex Media Players"
+            }
+        }
+    }
+}

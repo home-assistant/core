@@ -1,14 +1,10 @@
 {
-  "title": "Minecraft Server",
   "config": {
     "step": {
       "user": {
         "title": "Link your Minecraft Server",
         "description": "Set up your Minecraft Server instance to allow monitoring.",
-        "data": {
-          "name": "Name",
-          "host": "Host"
-        }
+        "data": { "name": "Name", "host": "Host" }
       }
     },
     "error": {
@@ -16,8 +12,6 @@
       "cannot_connect": "Failed to connect to server. Please check the host and port and try again. Also ensure that you are running at least Minecraft version 1.7 on your server.",
       "invalid_ip": "IP address is invalid (MAC address could not be determined). Please correct it and try again."
     },
-    "abort": {
-      "already_configured": "Host is already configured."
-    }
+    "abort": { "already_configured": "Host is already configured." }
   }
 }

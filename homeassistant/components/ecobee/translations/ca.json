@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_only": "Aquesta integraci\u00f3 nom\u00e9s admet una sola inst\u00e0ncia ecobee."
+        },
+        "error": {
+            "pin_request_failed": "Error al sol\u00b7licitar els PIN d'ecobee; verifica que la clau API \u00e9s correcta.",
+            "token_request_failed": "Error al sol\u00b7licitar els testimonis d'autenticaci\u00f3 d'ecobee; torna-ho a provar."
+        },
+        "step": {
+            "authorize": {
+                "description": "Autoritza aquesta aplicaci\u00f3 a https://www.ecobee.com/consumerportal/index.html amb el codi pin seg\u00fcent: \n\n {pin} \n \n A continuaci\u00f3, prem Enviar.",
+                "title": "Autoritzaci\u00f3 de l'aplicaci\u00f3 a ecobee.com"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Clau API"
+                },
+                "description": "Introdueix la clau API obteinguda a trav\u00e9s del lloc web ecobee.com.",
+                "title": "Clau API d'ecobee"
+            }
+        }
+    }
+}

@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Kh\u00f4ng t\u00ecm th\u1ea5y thi\u1ebft b\u1ecb Sonos n\u00e0o tr\u00ean m\u1ea1ng.",
+            "single_instance_allowed": "Ch\u1ec9 c\u1ea7n m\u1ed9t c\u1ea5u h\u00ecnh duy nh\u1ea5t c\u1ee7a Sonos l\u00e0 \u0111\u1ee7."
+        },
+        "step": {
+            "confirm": {
+                "description": "B\u1ea1n c\u00f3 mu\u1ed1n thi\u1ebft l\u1eadp Sonos kh\u00f4ng?",
+                "title": "Sonos"
+            }
+        }
+    }
+}

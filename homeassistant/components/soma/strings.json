@@ -1,5 +1,4 @@
 {
-  "title": "Soma",
   "config": {
     "abort": {
       "already_setup": "You can only configure one Soma account.",
@@ -8,15 +7,10 @@
       "result_error": "SOMA Connect responded with error status.",
       "connection_error": "Failed to connect to SOMA Connect."
     },
-    "create_entry": {
-      "default": "Successfully authenticated with Soma."
-    },
+    "create_entry": { "default": "Successfully authenticated with Soma." },
     "step": {
       "user": {
-        "data": {
-          "host": "Host",
-          "port": "Port"
-        },
+        "data": { "host": "Host", "port": "Port" },
         "description": "Please enter connection settings of your SOMA Connect.",
         "title": "SOMA Connect"
       }

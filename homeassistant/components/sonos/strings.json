@@ -1,9 +1,7 @@
 {
-  "title": "Sonos",
   "config": {
     "step": {
       "confirm": {
-        "title": "Sonos",
         "description": "Do you want to set up Sonos?"
       }
     },

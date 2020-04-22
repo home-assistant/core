@@ -30,6 +30,7 @@ HORIZONTAL_AWNING = "io:HorizontalAwningIOComponent"
 TAHOMA_DEVICE_CLASSES = {
     HORIZONTAL_AWNING: DEVICE_CLASS_AWNING,
     "io:AwningValanceIOComponent": DEVICE_CLASS_AWNING,
+    "io:DiscreteGarageOpenerWithPartialPositionIOComponent": DEVICE_CLASS_GARAGE,
     "io:DiscreteGarageOpenerIOComponent": DEVICE_CLASS_GARAGE,
     "io:ExteriorVenetianBlindIOComponent": DEVICE_CLASS_BLIND,
     "io:GarageOpenerIOComponent": DEVICE_CLASS_GARAGE,
@@ -154,6 +155,11 @@ class TahomaCover(TahomaDevice, CoverDevice):
             if "core:OpenClosedState" in self.tahoma_device.active_states:
                 self._closed = (
                     self.tahoma_device.active_states["core:OpenClosedState"] == "closed"
+                )
+            if "core:OpenClosedPartialState" in self.tahoma_device.active_states:
+                self._closed = (
+                    self.tahoma_device.active_states["core:OpenClosedPartialState"]
+                    == "closed"
                 )
             else:
                 self._closed = False

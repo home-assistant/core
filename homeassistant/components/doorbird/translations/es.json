@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "DoorBird ya est\u00e1 configurado",
+            "link_local_address": "No se admiten direcciones locales",
+            "not_doorbird_device": "Este dispositivo no es un DoorBird"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar, por favor int\u00e9ntalo de nuevo",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "flow_title": "DoorBird {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host (Direcci\u00f3n IP)",
+                    "name": "Nombre del dispositivo",
+                    "password": "Contrase\u00f1a",
+                    "username": "Usuario"
+                },
+                "title": "Conectar con DoorBird"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "events": "Lista de eventos separados por comas."
+                },
+                "description": "A\u00f1ade un nombre de evento separado por comas para cada evento del que deseas realizar un seguimiento. Despu\u00e9s de introducirlos aqu\u00ed, utiliza la aplicaci\u00f3n DoorBird para asignarlos a un evento espec\u00edfico. Consulta la documentaci\u00f3n en https://www.home-assistant.io/integrations/doorbird/#events. Ejemplo: somebody_pressed_the_button, motion"
+            }
+        }
+    }
+}

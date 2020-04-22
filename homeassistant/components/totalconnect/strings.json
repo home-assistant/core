@@ -1,20 +1,12 @@
 {
-  "title": "Total Connect",
   "config": {
     "step": {
       "user": {
         "title": "Total Connect",
-        "data": {
-          "username": "Username",
-          "password": "Password"
-        }
+        "data": { "username": "Username", "password": "Password" }
       }
     },
-    "error": {
-      "login": "Login error: please check your username & password"
-    },
-    "abort": {
-      "already_configured": "Account already configured"
-    }
+    "error": { "login": "Login error: please check your username & password" },
+    "abort": { "already_configured": "Account already configured" }
   }
 }

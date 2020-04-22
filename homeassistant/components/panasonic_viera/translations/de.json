@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dieser Panasonic Viera TV ist bereits konfiguriert.",
+            "not_connected": "Die Fernverbindung mit Ihrem Panasonic Viera-Fernseher wurde unterbrochen. Weitere Informationen finden Sie in den Logs.",
+            "unknown": "Ein unbekannter Fehler ist aufgetreten. Weitere Informationen finden Sie in den Logs."
+        },
+        "error": {
+            "invalid_pin_code": "Der von Ihnen eingegebene PIN-Code war ung\u00fcltig",
+            "not_connected": "Es konnte keine Remoteverbindung mit Ihrem Panasonic Viera TV hergestellt werden"
+        },
+        "step": {
+            "pairing": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "Geben Sie die auf Ihrem Fernseher angezeigte PIN ein",
+                "title": "Kopplung"
+            },
+            "user": {
+                "data": {
+                    "host": "IP-Adresse",
+                    "name": "Name"
+                },
+                "description": "Geben Sie die IP-Adresse Ihres Panasonic Viera TV ein",
+                "title": "Richten Sie Ihr Fernsehger\u00e4t ein"
+            }
+        }
+    },
+    "title": "Panasonic Viera"
+}

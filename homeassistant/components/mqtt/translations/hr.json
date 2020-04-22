@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "broker": {
+                "data": {
+                    "password": "Lozinka",
+                    "port": "Port",
+                    "username": "Korisni\u010dko ime"
+                },
+                "title": "MQTT"
+            }
+        }
+    }
+}

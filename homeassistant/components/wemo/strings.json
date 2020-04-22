@@ -1,9 +1,7 @@
 {
-  "title": "Wemo",
   "config": {
     "step": {
       "confirm": {
-        "title": "Wemo",
         "description": "Do you want to set up Wemo?"
       }
     },

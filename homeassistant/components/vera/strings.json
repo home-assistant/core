@@ -1,5 +1,4 @@
 {
-  "title": "Vera",
   "config": {
     "abort": {
       "already_configured": "A controller is already configured.",

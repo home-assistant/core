@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "V s\u00edti nejsou nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed LIFX.",
+            "single_instance_allowed": "K dispozici je pouze jedna konfigurace LIFX."
+        },
+        "step": {
+            "confirm": {
+                "description": "Chcete nastavit LIFX?",
+                "title": "LIFX"
+            }
+        }
+    }
+}

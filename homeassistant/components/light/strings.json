@@ -1,4 +1,5 @@
 {
+  "title": "Light",
   "device_automation": {
     "action_type": {
       "brightness_decrease": "Decrease {entity_name} brightness",
@@ -15,6 +16,12 @@
     "trigger_type": {
       "turned_on": "{entity_name} turned on",
       "turned_off": "{entity_name} turned off"
+    }
+  },
+  "state": {
+    "_": {
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]"
     }
   }
 }

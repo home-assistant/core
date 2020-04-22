@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "adguard_home_addon_outdated": "Denne integrasjonen krever AdGuard Home {minimal_version} eller h\u00f8yere, du har {current_version}. Vennligst oppdater Hass.io AdGuard Home-tillegget.",
+            "adguard_home_outdated": "Denne integrasjonen krever AdGuard Home {minimal_version} eller h\u00f8yere, du har {current_version}.",
+            "existing_instance_updated": "Oppdatert eksisterende konfigurasjon.",
+            "single_instance_allowed": "Kun en konfigurasjon av AdGuard Hjemer tillatt."
+        },
+        "error": {
+            "connection_error": "Tilkobling mislyktes."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Vil du konfigurere Home Assistant til \u00e5 koble til AdGuard Hjem gitt av hass.io tillegget {addon}?",
+                "title": "AdGuard Hjem via Hass.io tillegg"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "password": "Passord",
+                    "port": "",
+                    "ssl": "AdGuard Hjem bruker et SSL-sertifikat",
+                    "username": "Brukernavn",
+                    "verify_ssl": "AdGuard Home bruker et riktig sertifikat"
+                },
+                "description": "Sett opp din AdGuard Hjem instans for \u00e5 tillate overv\u00e5king og kontroll.",
+                "title": "Koble til ditt AdGuard Hjem."
+            }
+        }
+    }
+}

@@ -73,9 +73,9 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorDevice):
     def _handle_event(self, event):
         """Domain specific event handler."""
         command = event["command"]
-        if command == "on":
+        if command in ["on", "allon"]:
             self._state = True
-        elif command == "off":
+        elif command in ["off", "alloff"]:
             self._state = False
 
         if self._state and self._off_delay is not None:

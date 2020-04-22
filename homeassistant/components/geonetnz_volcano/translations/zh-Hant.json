@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "\u5ea7\u6a19\u5df2\u8a3b\u518a"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "\u534a\u5f91"
+                },
+                "title": "\u586b\u5beb\u904e\u6ffe\u5668\u8cc7\u8a0a\u3002"
+            }
+        }
+    }
+}

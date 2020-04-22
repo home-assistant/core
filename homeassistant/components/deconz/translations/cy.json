@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Pont eisoes wedi'i ffurfweddu",
+            "no_bridges": "Dim pontydd deCONZ wedi eu darganfod",
+            "one_instance_only": "Elfen dim ond yn cefnogi enghraifft deCONZ"
+        },
+        "error": {
+            "no_key": "Methu cael allwedd API"
+        },
+        "step": {
+            "init": {
+                "title": "Diffiniwch porth dad-adeiladu"
+            },
+            "link": {
+                "description": "Datgloi eich porth deCONZ i gofrestru gyda Cynorthwydd Cartref.\n\n1. Ewch i osodiadau system deCONZ \n2. Bwyso botwm \"Datgloi porth\"",
+                "title": "Cysylltu \u00e2 deCONZ"
+            },
+            "manual_confirm": {
+                "data": {
+                    "host": "Gwesteiwr",
+                    "port": "Port (gwerth diofyn: '80')"
+                }
+            }
+        }
+    }
+}

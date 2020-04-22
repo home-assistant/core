@@ -1,0 +1,7 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Autenticado correctamente con Withings para el perfil seleccionado."
+        }
+    }
+}

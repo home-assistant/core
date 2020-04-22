@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Tw\u00f3j Home Assistant musi by\u0107 dost\u0119pny z Internetu, aby odbiera\u0107 komunikaty IFTTT.",
+            "one_instance_allowed": "Wymagana jest tylko jedna instancja."
+        },
+        "create_entry": {
+            "default": "Aby wysy\u0142a\u0107 zdarzenia do Home Assistant'a, musisz u\u017cy\u0107 akcji \"Make a web request\" z [IFTTT Webhook apletu]({applet_url}). \n\n Wprowad\u017a nast\u0119puj\u0105ce dane:\n\n - URL: `{webhook_url}`\n - Metoda: POST\n - Typ zawarto\u015bci: application/json\n\nZapoznaj si\u0119 z [dokumentacj\u0105]({docs_url}) na temat konfiguracji automatyzacji, by obs\u0142u\u017cy\u0107 przychodz\u0105ce dane."
+        },
+        "step": {
+            "user": {
+                "description": "Na pewno chcesz skonfigurowa\u0107 IFTTT?",
+                "title": "Konfiguracja apletu Webhook IFTTT"
+            }
+        }
+    }
+}

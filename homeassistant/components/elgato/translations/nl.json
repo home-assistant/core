@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dit Elgato Key Light apparaat is al geconfigureerd.",
+            "connection_error": "Kan geen verbinding maken met het Elgato Key Light apparaat."
+        },
+        "error": {
+            "connection_error": "Kan geen verbinding maken met het Elgato Key Light apparaat."
+        },
+        "flow_title": "Elgato Key Light: {serial_number}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostnaam of IP-adres",
+                    "port": "Poortnummer"
+                },
+                "description": "Stel uw Elgato Key Light in om te integreren met Home Assistant.",
+                "title": "Koppel uw Elgato Key Light"
+            },
+            "zeroconf_confirm": {
+                "description": "Wilt u de Elgato Key Light met serienummer ` {serial_number} ` toevoegen aan Home Assistant?",
+                "title": "Elgato Key Light apparaat ontdekt"
+            }
+        }
+    }
+}
