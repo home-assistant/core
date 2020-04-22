@@ -214,6 +214,8 @@ async def test_light_device(hass, aioclient_mock, qs_devices):
         None,
         None,
     ) in aioclient_mock.mock_calls
+    state_obj = hass.states.get("light.dim_3")
+    assert state_obj.state == "off"
 
     # change brightness in network and check that hass updates
     qs_devices[2]["val"] = "280c55"  # half dimmed
