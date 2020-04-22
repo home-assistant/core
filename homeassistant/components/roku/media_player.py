@@ -10,7 +10,6 @@ from roku import RokuException
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_MOVIE,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
@@ -66,12 +65,7 @@ class RokuDevice(MediaPlayerDevice):
             self._power_state = self.roku.power_state
             self.ip_address = self.roku.host
             self.channels = self.get_source_list()
-
-            if self.roku.current_app is not None:
-                self.current_app = self.roku.current_app
-            else:
-                self.current_app = None
-
+            self.current_app = self.roku.current_app
             self._available = True
         except (RequestsConnectionError, RequestsReadTimeout, RokuException):
             self._available = False
@@ -90,6 +84,7 @@ class RokuDevice(MediaPlayerDevice):
         """Return the name of the device."""
         if self._device_info.user_device_name:
             return self._device_info.user_device_name
+
         return f"Roku {self._device_info.serial_num}"
 
     @property
@@ -103,8 +98,10 @@ class RokuDevice(MediaPlayerDevice):
 
         if self.current_app.name == "Power Saver" or self.current_app.is_screensaver:
             return STATE_IDLE
+
         if self.current_app.name == "Roku":
             return STATE_HOME
+
         if self.current_app.name is not None:
             return STATE_PLAYING
 
@@ -139,23 +136,17 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        if self.current_app is None:
+        if self.current_app is None or self.current_app.name in ("Power Saver", "Roku"):
             return None
-        if self.current_app.name == "Power Saver":
-            return None
-        if self.current_app.name == "Roku":
-            return None
-        return MEDIA_TYPE_MOVIE
+
+        return MEDIA_TYPE_CHANNEL
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        if self.current_app is None:
+        if self.current_app is None or self.current_app.name in ("Power Saver", "Roku"):
             return None
-        if self.current_app.name == "Roku":
-            return None
-        if self.current_app.name == "Power Saver":
-            return None
+
         if self.current_app.id is None:
             return None
 
@@ -233,14 +224,17 @@ class RokuDevice(MediaPlayerDevice):
                 MEDIA_TYPE_CHANNEL,
             )
             return
+
         if self.current_app is not None:
             self.roku.launch(self.roku["tvinput.dtv"], {"ch": media_id})
 
     def select_source(self, source):
         """Select input source."""
-        if self.current_app is not None:
-            if source == "Home":
-                self.roku.home()
-            else:
-                channel = self.roku[source]
-                channel.launch()
+        if self.current_app is None:
+            return
+
+        if source == "Home":
+            self.roku.home()
+        else:
+            channel = self.roku[source]
+            channel.launch()
