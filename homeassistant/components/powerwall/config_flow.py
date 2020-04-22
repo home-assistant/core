@@ -1,7 +1,7 @@
 """Config flow for Tesla Powerwall integration."""
 import logging
 
-from tesla_powerwall import ApiError, Powerwall, PowerwallUnreachableError
+from tesla_powerwall import APIError, Powerwall, PowerwallUnreachableError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -23,8 +23,9 @@ async def validate_input(hass: core.HomeAssistant, data):
     power_wall = Powerwall(data[CONF_IP_ADDRESS])
 
     try:
+        await hass.async_add_executor_job(power_wall.detect_and_pin_version)
         site_info = await hass.async_add_executor_job(power_wall.get_site_info)
-    except (PowerwallUnreachableError, ApiError, ConnectionError):
+    except (PowerwallUnreachableError, APIError, ConnectionError):
         raise CannotConnect
 
     # Return info that you want to store in the config entry.
