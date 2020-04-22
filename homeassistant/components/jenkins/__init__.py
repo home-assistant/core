@@ -2,5 +2,4 @@
 
 import logging
 
-DOMAIN = "jenkins"
 _LOGGER = logging.getLogger(__name__)

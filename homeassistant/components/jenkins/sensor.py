@@ -1,6 +1,5 @@
 """This component provides a HA sensor for Jenkins."""
 
-
 from jenkinsapi.custom_exceptions import UnknownJob
 from jenkinsapi.jenkins import Jenkins
 from requests.exceptions import HTTPError
@@ -12,13 +11,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from . import _LOGGER
-
-# Configuration keys
-CONF_REPOSITORY = "repository"
-CONF_BRANCH = "branch"
-
-# Default values
-DEFAULT_BRANCH = "master"
+from .const import CONF_BRANCH, CONF_REPOSITORY, DEFAULT_BRANCH
 
 # Validating configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
