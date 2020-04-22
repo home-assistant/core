@@ -64,7 +64,9 @@ MEM_CACHE_VOICE = "voice"
 SERVICE_CLEAR_CACHE = "clear_cache"
 SERVICE_SAY = "say"
 
-_RE_VOICE_FILE = re.compile(r"([a-f0-9]{40})_([^_]+)_([^_]+)_([a-z_]+)\.[a-z0-9]{3,4}")
+_RE_VOICE_FILE = re.compile(
+    r"([a-f0-9]{40})_([^_]+_?[^_]+)_([^_]+)_([a-z_]+)\.[a-z0-9]{3,4}"
+)
 KEY_PATTERN = "{0}_{1}_{2}_{3}"
 
 

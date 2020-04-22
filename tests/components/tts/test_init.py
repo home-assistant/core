@@ -14,7 +14,7 @@ from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA,
 )
 import homeassistant.components.tts as tts
-from homeassistant.components.tts import _get_cache_files
+from homeassistant.components.tts import _RE_VOICE_FILE, KEY_PATTERN, _get_cache_files
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
@@ -681,3 +681,29 @@ async def test_setup_component_and_web_get_url_bad_config(hass, hass_client):
 
     req = await client.post(url, json=data)
     assert req.status == 400
+
+
+async def test_voice_file_regex_pattern(hass, hass_client):
+    """Test the voice file regex against a list of possible file names."""
+
+    possible_filenames = [
+        "ffe703a6f8241bff40dbd47904625b052d3f097c_en_us_11534912786698548096_marytts.wav",
+        "5a9ec76875bd81ec09a927a8366597e16e3fa16c_en-us_-_marytts.wav",
+        "90e8754cbd425708db72dcee93ccc290e2f3a52c_de_1862572452_marytts.wav",
+        "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3_de_13026890334661031976_marytts.wav",
+        "b999a0eb7dcdb3f475d6f3c0770e9751d4fefe11_en_-_google_translate.mp3",
+        "5470c880d1d321b633332c1253dbd5c4a10bd35f_en_us_2206302362797957538_marytts.wav",
+        "08ab09ae886d3b0457575e56d336123d4a6b93fe_de_13026890334661031976_marytts.wav",
+    ]
+
+    expected_keys = [name[0:-4] for name in possible_filenames]
+
+    for item in range(len(possible_filenames)):
+        filename = possible_filenames[item]
+        record = _RE_VOICE_FILE.match(filename.lower())
+        assert record is not None
+
+        key = KEY_PATTERN.format(
+            record.group(1), record.group(2), record.group(3), record.group(4)
+        )
+        assert key == expected_keys[item]
