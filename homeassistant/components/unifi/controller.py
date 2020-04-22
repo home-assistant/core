@@ -174,7 +174,7 @@ class UniFiController:
         if signal == SIGNAL_CONNECTION_STATE:
 
             if data == STATE_DISCONNECTED and self.available:
-                LOGGER.error("Lost connection to UniFi")
+                LOGGER.warning("Lost connection to UniFi controller")
 
             if (data == STATE_RUNNING and not self.available) or (
                 data == STATE_DISCONNECTED and self.available
@@ -183,7 +183,9 @@ class UniFiController:
                 async_dispatcher_send(self.hass, self.signal_reachable)
 
                 if not self.available:
-                    self.hass.loop.call_later(RETRY_TIMER, self.reconnect)
+                    self.hass.loop.call_later(RETRY_TIMER, self.reconnect, True)
+                else:
+                    LOGGER.info("Connected to UniFi controller")
 
         elif signal == SIGNAL_DATA and data:
 
@@ -292,9 +294,10 @@ class UniFiController:
         async_dispatcher_send(hass, controller.signal_options_update)
 
     @callback
-    def reconnect(self) -> None:
+    def reconnect(self, log=False) -> None:
         """Prepare to reconnect UniFi session."""
-        LOGGER.debug("Reconnecting to UniFi in %i", RETRY_TIMER)
+        if log:
+            LOGGER.info("Will try to reconnect to UniFi controller")
         self.hass.loop.create_task(self.async_reconnect())
 
     async def async_reconnect(self) -> None:
