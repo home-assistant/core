@@ -48,7 +48,7 @@ class ProliphixThermostat(ClimateDevice):
     def __init__(self, pdp):
         """Initialize the thermostat."""
         self._pdp = pdp
-        self._name = self._pdp.name
+        self._name = None
 
     @property
     def supported_features(self):
@@ -63,6 +63,7 @@ class ProliphixThermostat(ClimateDevice):
     def update(self):
         """Update the data from the thermostat."""
         self._pdp.update()
+        self._name = self._pdp.name
 
     @property
     def name(self):
