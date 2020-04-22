@@ -114,7 +114,7 @@ async def async_setup_media_player_cast(hass: HomeAssistantType, info: Chromecas
     cast.CastStatusListener = MagicMock()
 
     with patch(
-        "homeassistant.components.cast.discovery.pychromecast._get_chromecast_from_service",
+        "homeassistant.components.cast.discovery.pychromecast.get_chromecast_from_service",
         return_value=chromecast,
     ) as get_chromecast, patch(
         "homeassistant.components.cast.discovery.pychromecast.start_discovery",

@@ -1,4 +1,5 @@
 """Support for interface with a Bravia TV."""
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -144,44 +145,39 @@ class BraviaTVDevice(MediaPlayerDevice):
         self._unique_id = unique_id
         self._device_info = device_info
         self._ignored_sources = ignored_sources
+        self._state_lock = asyncio.Lock()
+        self._need_refresh = True
 
-    def update(self):
+    async def async_update(self):
         """Update TV info."""
-        if not self._braviarc.is_connected():
-            if self._braviarc.get_power_status() != "off":
-                self._braviarc.connect(self._pin, CLIENTID_PREFIX, NICKNAME)
-            if not self._braviarc.is_connected():
+        if self._state_lock.locked():
+            return
+
+        if self._state == STATE_OFF:
+            self._need_refresh = True
+
+        power_status = await self.hass.async_add_executor_job(
+            self._braviarc.get_power_status
+        )
+        if power_status == "active":
+            if self._need_refresh:
+                connected = await self.hass.async_add_executor_job(
+                    self._braviarc.connect, self._pin, CLIENTID_PREFIX, NICKNAME
+                )
+                self._need_refresh = False
+            else:
+                connected = self._braviarc.is_connected()
+            if not connected:
                 return
 
-        # Retrieve the latest data.
-        try:
-            if self._state == STATE_ON:
-                # refresh volume info:
-                self._refresh_volume()
-                self._refresh_channels()
-
-            power_status = self._braviarc.get_power_status()
-            if power_status == "active":
-                self._state = STATE_ON
-                playing_info = self._braviarc.get_playing_info()
-                self._reset_playing_info()
-                if playing_info is None or not playing_info:
-                    self._channel_name = "App"
-                else:
-                    self._program_name = playing_info.get("programTitle")
-                    self._channel_name = playing_info.get("title")
-                    self._program_media_type = playing_info.get("programMediaType")
-                    self._channel_number = playing_info.get("dispNum")
-                    self._content_uri = playing_info.get("uri")
-                    self._source = self._get_source()
-                    self._duration = playing_info.get("durationSec")
-                    self._start_date_time = playing_info.get("startDateTime")
-            else:
-                self._state = STATE_OFF
-
-        except Exception as exception_instance:  # pylint: disable=broad-except
-            _LOGGER.error(exception_instance)
-            self._state = STATE_OFF
+            self._state = STATE_ON
+            if (
+                await self._async_refresh_volume()
+                and await self._async_refresh_channels()
+            ):
+                await self._async_refresh_playing_info()
+                return
+        self._state = STATE_OFF
 
     def _get_source(self):
         """Return the name of the source."""
@@ -189,32 +185,48 @@ class BraviaTVDevice(MediaPlayerDevice):
             if value == self._content_uri:
                 return key
 
-    def _reset_playing_info(self):
-        self._program_name = None
-        self._channel_name = None
-        self._program_media_type = None
-        self._channel_number = None
-        self._source = None
-        self._content_uri = None
-        self._duration = None
-        self._start_date_time = None
-
-    def _refresh_volume(self):
+    async def _async_refresh_volume(self):
         """Refresh volume information."""
-        volume_info = self._braviarc.get_volume_info()
+        volume_info = await self.hass.async_add_executor_job(
+            self._braviarc.get_volume_info
+        )
         if volume_info is not None:
             self._volume = volume_info.get("volume")
             self._min_volume = volume_info.get("minVolume")
             self._max_volume = volume_info.get("maxVolume")
             self._muted = volume_info.get("mute")
+            return True
+        return False
 
-    def _refresh_channels(self):
+    async def _async_refresh_channels(self):
+        """Refresh source and channels list."""
         if not self._source_list:
-            self._content_mapping = self._braviarc.load_source_list()
+            self._content_mapping = await self.hass.async_add_executor_job(
+                self._braviarc.load_source_list
+            )
             self._source_list = []
+            if not self._content_mapping:
+                return False
             for key in self._content_mapping:
                 if key not in self._ignored_sources:
                     self._source_list.append(key)
+        return True
+
+    async def _async_refresh_playing_info(self):
+        """Refresh Playing information."""
+        playing_info = await self.hass.async_add_executor_job(
+            self._braviarc.get_playing_info
+        )
+        self._program_name = playing_info.get("programTitle")
+        self._channel_name = playing_info.get("title")
+        self._program_media_type = playing_info.get("programMediaType")
+        self._channel_number = playing_info.get("dispNum")
+        self._content_uri = playing_info.get("uri")
+        self._source = self._get_source()
+        self._duration = playing_info.get("durationSec")
+        self._start_date_time = playing_info.get("startDateTime")
+        if not playing_info:
+            self._channel_name = "App"
 
     @property
     def name(self):
@@ -292,13 +304,15 @@ class BraviaTVDevice(MediaPlayerDevice):
         """Set volume level, range 0..1."""
         self._braviarc.set_volume_level(volume)
 
-    def turn_on(self):
+    async def async_turn_on(self):
         """Turn the media player on."""
-        self._braviarc.turn_on()
+        async with self._state_lock:
+            await self.hass.async_add_executor_job(self._braviarc.turn_on)
 
-    def turn_off(self):
+    async def async_turn_off(self):
         """Turn off media player."""
-        self._braviarc.turn_off()
+        async with self._state_lock:
+            await self.hass.async_add_executor_job(self._braviarc.turn_off)
 
     def volume_up(self):
         """Volume up the media player."""

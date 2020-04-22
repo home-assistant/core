@@ -72,6 +72,8 @@ class UniFiController:
         self._site_name = None
         self._site_role = None
 
+        self.entities = {}
+
     @property
     def controller_id(self):
         """Return the controller ID."""

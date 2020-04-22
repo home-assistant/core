@@ -95,7 +95,7 @@ class IRobotEntity(Entity):
             "model": self._sku,
         }
 
-    def register_callback(self):
+    async def async_added_to_hass(self):
         """Register callback function."""
         self.vacuum.register_on_message_callback(self.on_message)
 
@@ -207,9 +207,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumDevice):
     def on_message(self, json_data):
         """Update state on message change."""
         _LOGGER.debug("Got new state from the vacuum: %s", json_data)
-        self.vacuum_state = self.vacuum.master_state.get("state", {}).get(
-            "reported", {}
-        )
+        self.vacuum_state = roomba_reported_state(self.vacuum)
         self.schedule_update_ha_state()
 
     async def async_start(self):
@@ -247,4 +245,3 @@ class IRobotVacuum(IRobotEntity, StateVacuumDevice):
         await self.hass.async_add_executor_job(
             self.vacuum.send_command, command, params
         )
-        return True

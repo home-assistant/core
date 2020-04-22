@@ -4,7 +4,7 @@ from collections import defaultdict
 import datetime as dt
 import logging
 from types import ModuleType, TracebackType
-from typing import Dict, Iterable, List, Optional, Type, Union
+from typing import Any, Dict, Iterable, List, Optional, Type, Union
 
 from homeassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
 from homeassistant.const import (
@@ -69,8 +69,9 @@ def get_changed_since(
 async def async_reproduce_state(
     hass: HomeAssistantType,
     states: Union[State, Iterable[State]],
-    blocking: bool = False,
+    *,
     context: Optional[Context] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce a list of states on multiple domains."""
     if isinstance(states, State):
@@ -97,7 +98,7 @@ async def async_reproduce_state(
             return
 
         await platform.async_reproduce_states(  # type: ignore
-            hass, states_by_domain, context=context
+            hass, states_by_domain, context=context, reproduce_options=reproduce_options
         )
 
     if to_call:

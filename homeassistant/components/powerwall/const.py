@@ -42,6 +42,12 @@ POWERWALL_GRID_ONLINE = "SystemGridConnected"
 POWERWALL_CONNECTED_KEY = "connected_to_tesla"
 POWERWALL_RUNNING_KEY = "running"
 
+POWERWALL_BATTERY_METER = "battery"
+
+# We only declare charging if they are getting
+# at least 40W incoming as measuring the fields
+# is not an exact science because of interference
+CHARGING_MARGIN_OF_ERROR = -40
 
 MODEL = "PowerWall 2"
 MANUFACTURER = "Tesla"

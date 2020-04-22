@@ -17,6 +17,11 @@ SSDP = {
             "manufacturer": "DIRECTV"
         }
     ],
+    "fritzbox": [
+        {
+            "st": "urn:schemas-upnp-org:device:fritzbox:1"
+        }
+    ],
     "harmony": [
         {
             "deviceType": "urn:myharmony-com:device:harmony:1",

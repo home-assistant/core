@@ -1,0 +1,33 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "{entity_name} \u00e9les\u00edt\u00e9se t\u00e1voz\u00f3 m\u00f3dban",
+            "arm_home": "{entity_name} \u00e9les\u00edt\u00e9se otthon marad\u00f3 m\u00f3dban",
+            "arm_night": "{entity_name} \u00e9les\u00edt\u00e9se \u00e9jszakai m\u00f3dban",
+            "disarm": "{entity_name} hat\u00e1stalan\u00edt\u00e1sa",
+            "trigger": "{entity_name} riaszt\u00e1si esem\u00e9ny ind\u00edt\u00e1sa"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} t\u00e1voz\u00f3 m\u00f3dban lett \u00e9les\u00edtve",
+            "armed_home": "{entity_name} otthon marad\u00f3 m\u00f3dban lett \u00e9les\u00edtve",
+            "armed_night": "{entity_name} \u00e9jszakai m\u00f3dban lett \u00e9les\u00edtve",
+            "disarmed": "{entity_name} hat\u00e1stalan\u00edtva lett",
+            "triggered": "{entity_name} riaszt\u00e1sba ker\u00fclt"
+        }
+    },
+    "state": {
+        "_": {
+            "armed": "\u00c9les\u00edtve",
+            "armed_away": "\u00c9les\u00edtve t\u00e1vol",
+            "armed_custom_bypass": "\u00c9les\u00edtve \u00e1thidal\u00e1ssal",
+            "armed_home": "\u00c9les\u00edtve otthon",
+            "armed_night": "\u00c9les\u00edtve \u00e9jszaka",
+            "arming": "\u00c9les\u00edt\u00e9s",
+            "disarmed": "Hat\u00e1stalan\u00edtva",
+            "disarming": "Hat\u00e1stalan\u00edt\u00e1s",
+            "pending": "F\u00fcgg\u0151ben",
+            "triggered": "Riaszt\u00e1s"
+        }
+    },
+    "title": "Riaszt\u00f3 k\u00f6zpont"
+}
