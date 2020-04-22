@@ -1,4 +1,5 @@
 """The airvisual component."""
+import asyncio
 from datetime import timedelta
 
 from pyairvisual import Client
@@ -17,7 +18,6 @@ from homeassistant.const import (
     CONF_STATE,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -37,6 +37,8 @@ from .const import (
     LOGGER,
     TOPIC_UPDATE,
 )
+
+PLATFORMS = ["air_quality", "sensor"]
 
 DATA_LISTENER = "listener"
 
@@ -151,24 +153,13 @@ async def async_setup_entry(hass, config_entry):
     else:
         airvisual = AirVisualNodeProData(hass, Client(websession), config_entry)
 
-    try:
-        await airvisual.async_update()
-    except NodeProError as err:
-        LOGGER.error("Error connecting to Node/Pro unit: %s", err)
-        raise ConfigEntryNotReady
-    except AirVisualError as err:
-        LOGGER.error("AirVisual error: %s", err)
-        raise ConfigEntryNotReady
+    await airvisual.async_update()
 
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = airvisual
 
-    if CONF_API_KEY in config_entry.data:
+    for component in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-        )
-    else:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, "air_quality")
+            hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
 
     async def refresh(event_time):
@@ -222,18 +213,20 @@ async def async_migrate_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload an AirVisual config entry."""
-    if CONF_API_KEY in config_entry.data:
-        await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-    else:
-        await hass.config_entries.async_forward_entry_unload(
-            config_entry, "air_quality"
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(config_entry, component)
+                for component in PLATFORMS
+            ]
         )
+    )
+    if unload_ok:
+        hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
+        remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(config_entry.entry_id)
+        remove_listener()
 
-    hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
-    remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(config_entry.entry_id)
-    remove_listener()
-
-    return True
+    return unload_ok
 
 
 async def async_update_options(hass, config_entry):

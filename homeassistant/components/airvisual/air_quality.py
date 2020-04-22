@@ -1,18 +1,11 @@
 """Support for AirVisual Node/Pro units."""
 from homeassistant.components.air_quality import AirQualityEntity
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    ATTR_TEMPERATURE,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    PRECISION_TENTHS,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 from homeassistant.core import callback
-from homeassistant.helpers.temperature import display_temp
 from homeassistant.util import slugify
 
 from . import AirVisualEntity
-from .const import DATA_CLIENT, DOMAIN
+from .const import DATA_CLIENT, DOMAIN, INTEGRATION_TYPE_GEOGRAPHY
 
 ATTR_HUMIDITY = "humidity"
 ATTR_SENSOR_LIFE = "{0}_sensor_life"
@@ -23,6 +16,11 @@ ATTR_VOC = "voc"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AirVisual air quality entities based on a config entry."""
     airvisual = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
+
+    # Geography-based AirVisual integrations don't utilize this platform:
+    if airvisual.integration_type == INTEGRATION_TYPE_GEOGRAPHY:
+        return
+
     async_add_entities([AirVisualNodeProSensor(airvisual)], True)
 
 
@@ -70,7 +68,8 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
     @property
     def name(self):
         """Return the name."""
-        return f"{self._airvisual.data['current']['settings']['node_name']} Air Quality"
+        node_name = self._airvisual.data["current"]["settings"]["node_name"]
+        return f"{node_name} Node/Pro: Air Quality"
 
     @property
     def particulate_matter_2_5(self):
@@ -94,7 +93,7 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
 
     @callback
     def update_from_latest_data(self):
-        """Update the Node/Pro's data."""
+        """Update from the Node/Pro's data."""
         trends = {
             ATTR_TREND.format(slugify(pollutant)): trend
             for pollutant, trend in self._airvisual.data["trends"].items()
@@ -106,22 +105,6 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
 
         self._attrs.update(
             {
-                ATTR_BATTERY_LEVEL: self._airvisual.data["current"]["status"][
-                    "battery"
-                ],
-                ATTR_HUMIDITY: self._airvisual.data["current"]["measurements"].get(
-                    "humidity"
-                ),
-                ATTR_TEMPERATURE: display_temp(
-                    self.hass,
-                    float(
-                        self._airvisual.data["current"]["measurements"].get(
-                            "temperature_C"
-                        )
-                    ),
-                    TEMP_CELSIUS,
-                    PRECISION_TENTHS,
-                ),
                 ATTR_VOC: self._airvisual.data["current"]["measurements"].get("voc"),
                 **{
                     ATTR_SENSOR_LIFE.format(pollutant): lifespan

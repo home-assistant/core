@@ -12,11 +12,19 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
     CONF_STATE,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 
 from . import AirVisualEntity
-from .const import CONF_CITY, CONF_COUNTRY, DATA_CLIENT, DOMAIN
+from .const import (
+    CONF_CITY,
+    CONF_COUNTRY,
+    DATA_CLIENT,
+    DOMAIN,
+    INTEGRATION_TYPE_GEOGRAPHY,
+)
 
 _LOGGER = getLogger(__name__)
 
@@ -30,15 +38,25 @@ MASS_PARTS_PER_MILLION = "ppm"
 MASS_PARTS_PER_BILLION = "ppb"
 VOLUME_MICROGRAMS_PER_CUBIC_METER = "µg/m3"
 
-GEOGRAPHY_SENSOR_KIND_LEVEL = "air_pollution_level"
-GEOGRAPHY_SENSOR_KIND_AQI = "air_quality_index"
-GEOGRAPHY_SENSOR_KIND_POLLUTANT = "main_pollutant"
+SENSOR_KIND_LEVEL = "air_pollution_level"
+SENSOR_KIND_AQI = "air_quality_index"
+SENSOR_KIND_POLLUTANT = "main_pollutant"
+SENSOR_KIND_BATTERY_LEVEL = "battery_level"
+SENSOR_KIND_HUMIDITY = "humidity"
+SENSOR_KIND_TEMPERATURE = "temperature"
+
 GEOGRAPHY_SENSORS = [
-    (GEOGRAPHY_SENSOR_KIND_LEVEL, "Air Pollution Level", "mdi:gauge", None),
-    (GEOGRAPHY_SENSOR_KIND_AQI, "Air Quality Index", "mdi:chart-line", "AQI"),
-    (GEOGRAPHY_SENSOR_KIND_POLLUTANT, "Main Pollutant", "mdi:chemical-weapon", None),
+    (SENSOR_KIND_LEVEL, "Air Pollution Level", "mdi:gauge", None),
+    (SENSOR_KIND_AQI, "Air Quality Index", "mdi:chart-line", "AQI"),
+    (SENSOR_KIND_POLLUTANT, "Main Pollutant", "mdi:chemical-weapon", None),
 ]
 GEOGRAPHY_SENSOR_LOCALES = {"cn": "Chinese", "us": "U.S."}
+
+NODE_PRO_SENSORS = [
+    (SENSOR_KIND_BATTERY_LEVEL, "Battery", "battery", UNIT_PERCENTAGE),
+    (SENSOR_KIND_HUMIDITY, "Humidity", "humidity", UNIT_PERCENTAGE),
+    (SENSOR_KIND_TEMPERATURE, "Temperature", "temperature", TEMP_CELSIUS),
+]
 
 POLLUTANT_LEVEL_MAPPING = [
     {"label": "Good", "icon": "mdi:emoticon-excited", "minimum": 0, "maximum": 50},
@@ -72,27 +90,49 @@ POLLUTANT_MAPPING = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AirVisual sensors based on a config entry."""
     airvisual = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
-    async_add_entities(
-        [
+
+    if airvisual.integration_type == INTEGRATION_TYPE_GEOGRAPHY:
+        sensors = [
             AirVisualGeographySensor(
-                airvisual, config_entry, kind, name, icon, unit, locale, geography_id
+                airvisual, kind, name, icon, unit, locale, geography_id,
             )
             for geography_id in airvisual.data
             for locale in GEOGRAPHY_SENSOR_LOCALES
             for kind, name, icon, unit in GEOGRAPHY_SENSORS
-        ],
-        True,
-    )
+        ]
+    else:
+        sensors = [
+            AirVisualNodeProSensor(airvisual, kind, name, device_class, unit)
+            for kind, name, device_class, unit in NODE_PRO_SENSORS
+        ]
+
+    async_add_entities(sensors, True)
 
 
-class AirVisualGeographySensor(AirVisualEntity):
-    """Define an AirVisual sensor for a geographical location."""
+class AirVisualSensor(AirVisualEntity):
+    """Define a generic AirVisual sensor."""
 
-    def __init__(
-        self, airvisual, config_entry, kind, name, icon, unit, locale, geography_id
-    ):
+    def __init__(self, airvisual, kind, name, unit):
         """Initialize."""
         super().__init__(airvisual)
+
+        self._kind = kind
+        self._name = name
+        self._state = None
+        self._unit = unit
+
+    @property
+    def state(self):
+        """Return the state."""
+        return self._state
+
+
+class AirVisualGeographySensor(AirVisualSensor):
+    """Define an AirVisual sensor related to geography data via the Cloud API."""
+
+    def __init__(self, airvisual, kind, name, icon, unit, locale, geography_id):
+        """Initialize."""
+        super().__init__(airvisual, kind, name, unit)
 
         self._attrs.update(
             {
@@ -103,11 +143,7 @@ class AirVisualGeographySensor(AirVisualEntity):
         )
         self._geography_id = geography_id
         self._icon = icon
-        self._kind = kind
         self._locale = locale
-        self._name = name
-        self._state = None
-        self._unit = unit
 
     @property
     def available(self):
@@ -125,11 +161,6 @@ class AirVisualGeographySensor(AirVisualEntity):
         return f"{GEOGRAPHY_SENSOR_LOCALES[self._locale]} {self._name}"
 
     @property
-    def state(self):
-        """Return the state."""
-        return self._state
-
-    @property
     def unique_id(self):
         """Return a unique, Home Assistant friendly identifier for this entity."""
         return f"{self._geography_id}_{self._locale}_{self._kind}"
@@ -142,7 +173,7 @@ class AirVisualGeographySensor(AirVisualEntity):
         except KeyError:
             return
 
-        if self._kind == GEOGRAPHY_SENSOR_KIND_LEVEL:
+        if self._kind == SENSOR_KIND_LEVEL:
             aqi = data[f"aqi{self._locale}"]
             [level] = [
                 i
@@ -151,9 +182,9 @@ class AirVisualGeographySensor(AirVisualEntity):
             ]
             self._state = level["label"]
             self._icon = level["icon"]
-        elif self._kind == GEOGRAPHY_SENSOR_KIND_AQI:
+        elif self._kind == SENSOR_KIND_AQI:
             self._state = data[f"aqi{self._locale}"]
-        elif self._kind == GEOGRAPHY_SENSOR_KIND_POLLUTANT:
+        elif self._kind == SENSOR_KIND_POLLUTANT:
             symbol = data[f"main{self._locale}"]
             self._state = POLLUTANT_MAPPING[symbol]["label"]
             self._attrs.update(
@@ -178,3 +209,62 @@ class AirVisualGeographySensor(AirVisualEntity):
                 self._attrs["long"] = self._airvisual.geography_data[CONF_LONGITUDE]
                 self._attrs.pop(ATTR_LATITUDE, None)
                 self._attrs.pop(ATTR_LONGITUDE, None)
+
+
+class AirVisualNodeProSensor(AirVisualSensor):
+    """Define an AirVisual sensor related to a Node/Pro unit."""
+
+    def __init__(self, airvisual, kind, name, device_class, unit):
+        """Initialize."""
+        super().__init__(airvisual, kind, name, unit)
+
+        self._device_class = device_class
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return bool(self._airvisual.data)
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return self._device_class
+
+    @property
+    def device_info(self):
+        """Return device registry information for this entity."""
+        return {
+            "identifiers": {(DOMAIN, self._airvisual.data["current"]["serial_number"])},
+            "name": self._airvisual.data["current"]["settings"]["node_name"],
+            "manufacturer": "AirVisual",
+            "model": f'{self._airvisual.data["current"]["status"]["model"]}',
+            "sw_version": (
+                f'Version {self._airvisual.data["current"]["status"]["system_version"]}'
+                f'{self._airvisual.data["current"]["status"]["app_version"]}'
+            ),
+        }
+
+    @property
+    def name(self):
+        """Return the name."""
+        node_name = self._airvisual.data["current"]["settings"]["node_name"]
+        return f"{node_name} Node/Pro: {self._name}"
+
+    @property
+    def unique_id(self):
+        """Return a unique, Home Assistant friendly identifier for this entity."""
+        return f"{self._airvisual.data['current']['serial_number']}_{self._kind}"
+
+    @callback
+    def update_from_latest_data(self):
+        """Update from the Node/Pro's data."""
+        if self._kind == SENSOR_KIND_BATTERY_LEVEL:
+            self._state = self._airvisual.data["current"]["status"]["battery"]
+        elif self._kind == SENSOR_KIND_HUMIDITY:
+            self._state = self._airvisual.data["current"]["measurements"].get(
+                "humidity"
+            )
+        elif self._kind == SENSOR_KIND_TEMPERATURE:
+            self._state = self._airvisual.data["current"]["measurements"].get(
+                "temperature_C"
+            )
