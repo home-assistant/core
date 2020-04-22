@@ -13,8 +13,6 @@ from homeassistant.helpers.entity import Entity
 
 from . import CONF_DST_RANGE, CONF_DST_UNIT, CONF_PORTS, CONF_SRC_RANGE, DOMAIN
 
-DEPENDENCIES = ["numato"]
-
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:gauge"

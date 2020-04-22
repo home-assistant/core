@@ -21,11 +21,8 @@ CONF_DEVICES = "devices"
 CONF_DEVICE_ID = "id"
 DEFAULT_INVERT_LOGIC = False
 
-DEPENDENCIES = ["numato"]
 
-
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the configured Numato USB GPIO binary sensor ports."""
 
     binary_sensors = []
@@ -47,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     port_id,
                     str(ex),
                 )
-    add_devices(binary_sensors, True)
+    add_entities(binary_sensors, True)
 
 
 class NumatoGPIOBinarySensor(BinarySensorDevice):
