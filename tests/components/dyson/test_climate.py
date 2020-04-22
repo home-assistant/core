@@ -27,7 +27,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_HUMIDITY,
-    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
@@ -85,8 +84,8 @@ def _get_dyson_purehotcool_device():
     device.state.heat_target = "0000"
     device.state.heat_mode = HeatMode.HEAT_OFF.value
     device.state.fan_power = FanPower.POWER_OFF.value
-    device.environmental_state.humidity = 0
-    device.environmental_state.temperature = 0
+    device.environmental_state.humidity = 42
+    device.environmental_state.temperature = 298
     return device
 
 
@@ -505,30 +504,11 @@ async def test_purehotcool_update_state(devices, login, hass):
     "libpurecool.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purehotcool_device()],
 )
-async def test_purehotcool_env_state(devices, login, hass):
-    """Test environmental state."""
-    device = devices.return_value[0]
-    device.environmental_state.humidity = 32
-    device.environmental_state.temperature = 295
-    await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
-    await hass.async_block_till_done()
-
-    device_state = hass.states.get("climate.living_room")
-    attributes = device_state.attributes
-
-    assert attributes[ATTR_CURRENT_TEMPERATURE] == 22
-    assert attributes[ATTR_CURRENT_HUMIDITY] == 32
-
-
-@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
-@asynctest.patch(
-    "libpurecool.dyson.DysonAccount.devices",
-    return_value=[_get_dyson_purehotcool_device()],
-)
-async def test_purehotcool_empty_env_state(devices, login, hass):
+async def test_purehotcool_empty_env_attributes(devices, login, hass):
     """Test empty environmental state update."""
     device = devices.return_value[0]
-    device.environmental_state = None
+    device.environmental_state.temperature = None
+    device.environmental_state.humidity = None
     await async_setup_component(hass, dyson_parent.DOMAIN, _get_config())
     await hass.async_block_till_done()
 

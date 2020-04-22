@@ -231,7 +231,6 @@ class DysonPureHotCoolDevice(ClimateDevice):
     def __init__(self, device):
         """Initialize the fan."""
         self._device = device
-        self._current_temp = None
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
@@ -268,11 +267,11 @@ class DysonPureHotCoolDevice(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        if self._device.environmental_state:
+        if self._device.environmental_state.temperature is not None:
             temperature_kelvin = self._device.environmental_state.temperature
             if temperature_kelvin != 0:
-                self._current_temp = float("{:.1f}".format(temperature_kelvin - 273))
-        return self._current_temp
+                return float("{:.1f}".format(temperature_kelvin - 273))
+        return None
 
     @property
     def target_temperature(self):
@@ -283,10 +282,9 @@ class DysonPureHotCoolDevice(ClimateDevice):
     @property
     def current_humidity(self):
         """Return the current humidity."""
-        if self._device.environmental_state:
-            if self._device.environmental_state.humidity == 0:
-                return None
-            return self._device.environmental_state.humidity
+        if self._device.environmental_state.humidity is not None:
+            if self._device.environmental_state.humidity != 0:
+                return self._device.environmental_state.humidity
         return None
 
     @property
