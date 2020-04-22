@@ -183,7 +183,9 @@ class ZHAGateway:
         """Initialize ZHA groups."""
         for group_id in self.application_controller.groups:
             group = self.application_controller.groups[group_id]
-            self._async_get_or_create_group(group)
+            zha_group = self._async_get_or_create_group(group)
+            # we can do this here because the entities are in the entity registry tied to the devices
+            discovery.GROUP_PROBE.discover_group_entities(zha_group)
 
     async def async_initialize_devices_and_entities(self) -> None:
         """Initialize devices and load entities."""

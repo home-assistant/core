@@ -187,23 +187,18 @@ class ZHAGroup(LogMixin):
         for member in self.members:
             entity_references = member.associated_entities
             for entity_reference in entity_references:
-                all_entity_ids.append(entity_reference.entity_id)
+                all_entity_ids.append(entity_reference["entity_id"])
         return all_entity_ids
 
     def get_domain_entity_ids(self, domain) -> List[str]:
         """Return entity ids from the entity domain for this group."""
         domain_entity_ids: List[str] = []
-        member_entity_ids = self.member_entity_ids
         for member in self.members:
             entities = async_entries_for_device(
                 self._zha_gateway.ha_entity_registry, member.device.device_id
             )
             domain_entity_ids.extend(
-                [
-                    entity.entity_id
-                    for entity in entities
-                    if entity.domain == domain and entity.entity_id in member_entity_ids
-                ]
+                [entity.entity_id for entity in entities if entity.domain == domain]
             )
         return domain_entity_ids
 
