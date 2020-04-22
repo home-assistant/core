@@ -3,7 +3,6 @@
     "flow_title": "Brother Printer: {model} {serial_number}",
     "step": {
       "user": {
-        "title": "Brother Printer",
         "description": "Set up Brother printer integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/brother",
         "data": {
           "host": "Printer hostname or IP address",

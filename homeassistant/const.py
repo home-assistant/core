@@ -1,7 +1,7 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 108
-PATCH_VERSION = "7"
+MINOR_VERSION = 109
+PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER = (3, 7, 0)
@@ -346,19 +346,19 @@ ATTR_TEMPERATURE = "temperature"
 POWER_WATT = "W"
 
 # Voltage units
-UNIT_VOLT = "V"
+VOLT = "V"
 
 # Energy units
 ENERGY_WATT_HOUR = f"{POWER_WATT}h"
 ENERGY_KILO_WATT_HOUR = f"k{ENERGY_WATT_HOUR}"
 
 # Degree units
-UNIT_DEGREE = "°"
+DEGREE = "°"
 
 # Temperature units
-TEMP_CELSIUS = f"{UNIT_DEGREE}C"
-TEMP_FAHRENHEIT = f"{UNIT_DEGREE}F"
-TEMP_KELVIN = f"{UNIT_DEGREE}K"
+TEMP_CELSIUS = f"{DEGREE}C"
+TEMP_FAHRENHEIT = f"{DEGREE}F"
+TEMP_KELVIN = f"{DEGREE}K"
 
 # Time units
 TIME_MICROSECONDS = "μs"
@@ -414,10 +414,10 @@ MASS_OUNCES: str = "oz"
 MASS_POUNDS: str = "lb"
 
 # Conductivity units
-UNIT_CONDUCTIVITY: str = f"µS/{LENGTH_CENTIMETERS}"
+CONDUCTIVITY: str = f"µS/{LENGTH_CENTIMETERS}"
 
 # UV Index units
-UNIT_UV_INDEX: str = "UV index"
+UV_INDEX: str = "UV index"
 
 # Percentage units
 UNIT_PERCENTAGE = "%"

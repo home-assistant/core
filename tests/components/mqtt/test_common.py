@@ -1,6 +1,8 @@
 """Common test objects."""
 import copy
+from datetime import datetime
 import json
+from unittest import mock
 from unittest.mock import ANY
 
 from homeassistant.components import mqtt
@@ -586,8 +588,11 @@ async def help_test_entity_debug_info_max_messages(hass, mqtt_mock, domain, conf
         "subscriptions"
     ]
 
-    for i in range(0, debug_info.STORED_MESSAGES + 1):
-        async_fire_mqtt_message(hass, "test-topic", f"{i}")
+    start_dt = datetime(2019, 1, 1, 0, 0, 0)
+    with mock.patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+        dt_utcnow.return_value = start_dt
+        for i in range(0, debug_info.STORED_MESSAGES + 1):
+            async_fire_mqtt_message(hass, "test-topic", f"{i}")
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
@@ -596,7 +601,7 @@ async def help_test_entity_debug_info_max_messages(hass, mqtt_mock, domain, conf
         == debug_info.STORED_MESSAGES
     )
     messages = [
-        {"topic": "test-topic", "payload": f"{i}"}
+        {"topic": "test-topic", "payload": f"{i}", "time": start_dt}
         for i in range(1, debug_info.STORED_MESSAGES + 1)
     ]
     assert {"topic": "test-topic", "messages": messages} in debug_info_data["entities"][
@@ -642,13 +647,16 @@ async def help_test_entity_debug_info_message(
         "subscriptions"
     ]
 
-    async_fire_mqtt_message(hass, topic, payload)
+    start_dt = datetime(2019, 1, 1, 0, 0, 0)
+    with mock.patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+        dt_utcnow.return_value = start_dt
+        async_fire_mqtt_message(hass, topic, payload)
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
     assert {
         "topic": topic,
-        "messages": [{"topic": topic, "payload": payload}],
+        "messages": [{"topic": topic, "payload": payload, "time": start_dt}],
     } in debug_info_data["entities"][0]["subscriptions"]
 
 

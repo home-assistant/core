@@ -1,13 +1,11 @@
 {
   "config": {
     "step": {
-      "init": { "title": "UPnP/IGD" },
       "confirm": {
-        "title": "UPnP/IGD",
         "description": "Do you want to set up UPnP/IGD?"
       },
       "user": {
-        "title": "Configuration options for the UPnP/IGD",
+        "title": "Configuration options",
         "data": {
           "enable_port_mapping": "Enable port mapping for Home Assistant",
           "enable_sensors": "Add traffic sensors",
