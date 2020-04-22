@@ -1,6 +1,5 @@
 """Support for SolarEdge Monitoring API."""
 import logging
-import datetime
 from datetime import date
 from datetime import datetime
 
@@ -53,6 +52,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if sensor is not None:
             entities.append(sensor)
     async_add_entities(entities)
+
 
 class SolarEdgeSensorFactory:
     """Factory which creates sensors based on the sensor_key."""
@@ -352,6 +352,7 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
 
 class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
     """Get and update the latest power flow data."""
+
     def __init__(self, api, site_id):
         """Initialize the power flow data service."""
         super().__init__(api, site_id)
@@ -386,20 +387,18 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
         meters = energy_details["meters"]
 
         for type in meters:
-           for key, value in type.items():
-              if key == "type" and value in ["Production", "SelfConsumption", "FeedIn", "Purchased", "Consumption"]:
-                 type = value
-              if key == "values":
-                 for row in value:
-                    for values, value in row.items():
-                       if values == "value":
-                          self.data[type] = value
-                       if values == "date":
-                          self.attributes[type] = {"date": value}
+            for key, value in type.items():
+                if key == "type" and value in ["Production", "SelfConsumption", "FeedIn", "Purchased", "Consumption"]:
+                   type = value
+                if key == "values":
+                   for row in value:
+                      for values, value in row.items():
+                         if values == "value":
+                            self.data[type] = value
+                         if values == "date":
+                            self.attributes[type] = {"date": value}
 
-        _LOGGER.debug(
-            "Updated SolarEdge energy details: %s, %s", self.data, self.attributes
-        )
+        _LOGGER.debug("Updated SolarEdge energy details: %s, %s", self.data, self.attributes)
 
 
 class SolarEdgePowerFlowDataService(SolarEdgeDataService):
