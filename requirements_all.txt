@@ -903,7 +903,7 @@ mitemp_bt==0.0.3
 mutagen==1.44.0
 
 # homeassistant.components.mychevy
-mychevy==1.2.0
+mychevy==2.0.1
 
 # homeassistant.components.mycroft
 mycroftapi==2.0
