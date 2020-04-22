@@ -32,7 +32,7 @@ CONF_CALENDARS = "calendars"
 CONF_CUSTOM_CALENDARS = "custom_calendars"
 CONF_CALENDAR = "calendar"
 CONF_SEARCH = "search"
-CONF_PERIOD = "1"
+CONF_PERIOD = "period"
 
 OFFSET = "!!"
 
@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             ],
         ),
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Optional(CONF_PERIOD, default="1"): cv.string,
+        vol.Optional(CONF_PERIOD, default=1): cv.positive_int,
     }
 )
 
@@ -141,9 +141,9 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
         """Get all events in a specific time frame."""
         return await self.data.async_get_events(hass, start_date, end_date)
 
-    def update(self, period):
+    def update(self):
         """Update event data."""
-        self.data.update(period)
+        self.data.update()
         event = copy.deepcopy(self.data.event)
         if event is None:
             self._event = event
@@ -193,10 +193,10 @@ class WebDavCalendarData:
         return event_list
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, period):
+    def update(self):
         """Get the latest data."""
         start_of_today = dt.start_of_local_day()
-        start_of_tomorrow = dt.start_of_local_day() + timedelta(days=period)
+        start_of_tomorrow = dt.start_of_local_day() + timedelta(days=self.period)
 
         # We have to retrieve the results for the whole day as the server
         # won't return events that have already started
