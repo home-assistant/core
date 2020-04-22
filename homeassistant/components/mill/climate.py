@@ -51,8 +51,6 @@ SET_ROOM_TEMP_SCHEMA = vol.Schema(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Mill climate."""
-    print(entry)
-
     mill_data_connection = Mill(
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
