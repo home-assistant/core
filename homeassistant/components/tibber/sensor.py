@@ -65,6 +65,11 @@ class TibberSensor(Entity):
         return self._device_state_attributes
 
     @property
+    def model(self):
+        """Return the model of the sensor."""
+        return None
+
+    @property
     def state(self):
         """Return the state of the device."""
         return self._state
@@ -82,10 +87,8 @@ class TibberSensor(Entity):
             "name": self.name,
             "manufacturer": MANUFACTURER,
         }
-        if isinstance(self, TibberSensorElPrice):
-            device_info["model"] = "Price Sensor"
-        elif isinstance(self, TibberSensorRT):
-            device_info["model"] = "Tibber Pulse"
+        if self.model is not None:
+            device_info["model"] = self.model
         return device_info
 
 
@@ -128,6 +131,11 @@ class TibberSensorElPrice(TibberSensor):
     def name(self):
         """Return the name of the sensor."""
         return f"Electricity price {self._name}"
+
+    @property
+    def model(self):
+        """Return the model of the sensor."""
+        return "Price Sensor"
 
     @property
     def icon(self):
@@ -193,6 +201,11 @@ class TibberSensorRT(TibberSensor):
     def available(self):
         """Return True if entity is available."""
         return self._tibber_home.rt_subscription_running
+
+    @property
+    def model(self):
+        """Return the model of the sensor."""
+        return "Tibber Pulse"
 
     @property
     def name(self):
