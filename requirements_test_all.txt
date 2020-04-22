@@ -470,7 +470,7 @@ py_nextbusnext==0.1.4
 pyaehw4a1==0.3.4
 
 # homeassistant.components.airvisual
-pyairvisual==3.0.1
+pyairvisual==4.3.0
 
 # homeassistant.components.almond
 pyalmond==0.0.2
