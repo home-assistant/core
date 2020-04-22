@@ -21,6 +21,7 @@ from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
     CONF_AUTO_START,
     CONF_SAFE_MODE,
+    CONF_ZEROCONF_DEFAULT_INTERFACE,
     DEFAULT_PORT,
     DEFAULT_SAFE_MODE,
     DOMAIN,
@@ -97,6 +98,7 @@ async def test_setup_auto_start_disabled(hass):
             CONF_PORT: 11111,
             CONF_IP_ADDRESS: "172.0.0.0",
             CONF_SAFE_MODE: DEFAULT_SAFE_MODE,
+            CONF_ZEROCONF_DEFAULT_INTERFACE: True,
         }
     }
 
@@ -106,7 +108,15 @@ async def test_setup_auto_start_disabled(hass):
         assert await setup.async_setup_component(hass, DOMAIN, config)
 
     mock_homekit.assert_any_call(
-        hass, "Test Name", 11111, "172.0.0.0", ANY, {}, DEFAULT_SAFE_MODE, None, None
+        hass,
+        "Test Name",
+        11111,
+        "172.0.0.0",
+        ANY,
+        {},
+        DEFAULT_SAFE_MODE,
+        None,
+        InterfaceChoice.Default,
     )
     assert mock_homekit().setup.called is True
 
