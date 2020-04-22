@@ -23,6 +23,9 @@ PyTransportNSW==0.1.1
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 
+# homeassistant.components.onvif
+WSDiscovery==2.0.0
+
 # homeassistant.components.yessssms
 YesssSMS==0.4.1
 
@@ -388,6 +391,9 @@ numpy==1.18.2
 
 # homeassistant.components.google
 oauth2client==4.0.0
+
+# homeassistant.components.onvif
+onvif-zeep-async==0.2.0
 
 # homeassistant.components.openerz
 openerz-api==0.1.0
