@@ -26,8 +26,8 @@
             "sleeping": "Dormint"
         },
         "query_stage": {
-            "dead": "No disponible ({query_stage})",
-            "initializing": "Inicialitzant ({query_stage})"
+            "dead": "No disponible",
+            "initializing": "Inicialitzant"
         }
     }
 }

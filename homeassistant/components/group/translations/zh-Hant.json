@@ -2,9 +2,9 @@
     "state": {
         "_": {
             "closed": "\u95dc\u9589",
-            "home": "\u5728\u5bb6",
-            "locked": "\u9396",
-            "not_home": "\u96e2\u5bb6",
+            "home": "[%key:component::device_tracker::state::home%]",
+            "locked": "\u5df2\u4e0a\u9396",
+            "not_home": "[%key:component::device_tracker::state::not_home%]",
             "off": "\u95dc\u9589",
             "ok": "\u6b63\u5e38",
             "on": "\u958b\u555f",

@@ -26,8 +26,8 @@
             "sleeping": "Ahorro de energ\u00eda"
         },
         "query_stage": {
-            "dead": "No responde ({query_stage})",
-            "initializing": "Inicializando ({query_stage})"
+            "dead": "No responde",
+            "initializing": "Inicializando"
         }
     }
 }

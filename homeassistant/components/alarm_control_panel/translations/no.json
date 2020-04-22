@@ -22,5 +22,19 @@
             "triggered": "{entity_name} utl\u00f8st"
         }
     },
+    "state": {
+        "_": {
+            "armed": "Armert",
+            "armed_away": "Armert borte",
+            "armed_custom_bypass": "Armert tilpasset unntak",
+            "armed_home": "Armert hjemme",
+            "armed_night": "Armert natt",
+            "arming": "Armerer",
+            "disarmed": "Avsl\u00e5tt",
+            "disarming": "Disarmer",
+            "pending": "Ventende",
+            "triggered": "Utl\u00f8st"
+        }
+    },
     "title": "Alarm kontrollpanel"
 }

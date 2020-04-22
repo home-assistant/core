@@ -22,6 +22,10 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "fallback": "Activa el mode salvaguarda."
+                },
+                "description": "El mode salvaguarda canviar\u00e0 a Planificaci\u00f3 Intel\u00b7ligent en el proper canvi de programaci\u00f3 o quan s'ajusti manualment una zona.",
                 "title": "Ajusta les opcions de Tado"
             }
         }

@@ -14,5 +14,10 @@
             "hvac_mode_changed": "{entity_name} HVAC-modus er endret"
         }
     },
+    "state": {
+        "_": {
+            "heat": "Varme"
+        }
+    },
     "title": "Klima"
 }

@@ -13,5 +13,13 @@
             "docked": "{entity_name} dokket"
         }
     },
+    "state": {
+        "_": {
+            "cleaning": "Rengj\u00f8ring",
+            "docked": "Dokket",
+            "error": "Feil",
+            "returning": "Returner til dokken"
+        }
+    },
     "title": "St\u00f8vsuger"
 }

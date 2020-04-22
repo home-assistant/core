@@ -89,5 +89,33 @@
             "vibration": "{entity_name} begynte \u00e5 oppdage vibrasjon"
         }
     },
+    "state": {
+        "battery": {
+            "off": "Normalt",
+            "on": "Lavt"
+        },
+        "cold": {
+            "on": "Kald"
+        },
+        "gas": {
+            "off": "Klar",
+            "on": "Oppdaget"
+        },
+        "heat": {
+            "on": "Varm"
+        },
+        "moisture": {
+            "off": "T\u00f8rr",
+            "on": "V\u00e5t"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Problem"
+        },
+        "safety": {
+            "off": "Sikker",
+            "on": "Usikker"
+        }
+    },
     "title": "Bin\u00e6r sensor"
 }

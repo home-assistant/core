@@ -26,8 +26,8 @@
             "sleeping": "\u0420\u0435\u0436\u0438\u043c \u0441\u043d\u0430"
         },
         "query_stage": {
-            "dead": "\u041d\u0435\u0438\u0441\u043f\u0440\u0430\u0432\u043d\u043e ({query_stage})",
-            "initializing": "\u0418\u043d\u0438\u0446\u0438\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u044f ({query_stage})"
+            "dead": "\u041d\u0435\u0438\u0441\u043f\u0440\u0430\u0432\u043d\u043e",
+            "initializing": "\u0418\u043d\u0438\u0446\u0438\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u044f"
         }
     }
 }

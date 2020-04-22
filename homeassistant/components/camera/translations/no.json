@@ -1,3 +1,9 @@
 {
+    "state": {
+        "_": {
+            "recording": "Opptak",
+            "streaming": "Str\u00f8mming"
+        }
+    },
     "title": "Kamera"
 }
