@@ -101,6 +101,7 @@ FLOWS = [
     "mqtt",
     "myq",
     "neato",
+    "neptune_apex",
     "nest",
     "netatmo",
     "nexia",
