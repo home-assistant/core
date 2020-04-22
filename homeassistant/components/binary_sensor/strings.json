@@ -140,8 +140,8 @@
       "on": "[%key:common::state::open%]"
     },
     "presence": {
-      "off": "[%key:component::device_tracker::state::not_home%]",
-      "on": "[%key:component::device_tracker::state::home%]"
+      "off": "[%key:component::device_tracker::state::_::not_home%]",
+      "on": "[%key:component::device_tracker::state::_::home%]"
     },
     "problem": {
       "off": "OK",
