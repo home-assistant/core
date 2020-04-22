@@ -1,0 +1,8 @@
+{
+    "domain": "crestron",
+    "name": "Crestron",
+    "documentation": "",
+    "dependencies": [],
+    "codeowners": ["@rzulian"],
+    "requirements": ["python_cipclient"]
+  }
