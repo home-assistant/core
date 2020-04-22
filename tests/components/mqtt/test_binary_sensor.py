@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 import json
 from unittest.mock import patch
 
-from homeassistant.components import binary_sensor
+from homeassistant.components import binary_sensor, mqtt
+from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_OFF,
@@ -42,9 +43,6 @@ from tests.common import (
     async_fire_mqtt_message,
     async_fire_time_changed,
 )
-
-from homeassistant.components import mqtt
-from homeassistant.components.mqtt.discovery import async_start
 
 DEFAULT_CONFIG = {
     binary_sensor.DOMAIN: {
