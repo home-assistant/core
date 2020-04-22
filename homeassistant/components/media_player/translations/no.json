@@ -8,5 +8,10 @@
             "is_playing": "{entity_name} spiller n\u00e5"
         }
     },
+    "state": {
+        "_": {
+            "playing": "Spiller"
+        }
+    },
     "title": "Mediaspiller"
 }

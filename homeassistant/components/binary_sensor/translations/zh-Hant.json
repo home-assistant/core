@@ -99,7 +99,7 @@
             "on": "\u96fb\u91cf\u4f4e"
         },
         "cold": {
-            "off": "\u4e0d\u51b7",
+            "off": "\u6b63\u5e38",
             "on": "\u51b7"
         },
         "connectivity": {
@@ -119,7 +119,7 @@
             "on": "\u5df2\u89f8\u767c"
         },
         "heat": {
-            "off": "\u4e0d\u71b1",
+            "off": "\u6b63\u5e38",
             "on": "\u71b1"
         },
         "lock": {
@@ -143,12 +143,12 @@
             "on": "\u958b\u555f"
         },
         "presence": {
-            "off": "\u96e2\u5bb6",
-            "on": "\u5728\u5bb6"
+            "off": "[%key:component::device_tracker::state::not_home%]",
+            "on": "[%key:component::device_tracker::state::home%]"
         },
         "problem": {
             "off": "\u78ba\u5b9a",
-            "on": "\u554f\u984c"
+            "on": "\u7570\u5e38"
         },
         "safety": {
             "off": "\u5b89\u5168",
@@ -159,7 +159,7 @@
             "on": "\u5df2\u89f8\u767c"
         },
         "sound": {
-            "off": "\u5df2\u89e3\u9664",
+            "off": "\u672a\u89f8\u767c",
             "on": "\u5df2\u89f8\u767c"
         },
         "vibration": {

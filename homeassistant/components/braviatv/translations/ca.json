@@ -13,6 +13,7 @@
                 "data": {
                     "pin": "Codi PIN"
                 },
+                "description": "Introdueix el codi PIN que es mostra a la pantalla del televisor.\n\nSi no es mostra el codi, has d'eliminar Home Assistant del teu televisor. V\u00e9s a Configuraci\u00f3 > Xarxa > Configuraci\u00f3 de dispositiu remot > Elimina dispositiu remot.",
                 "title": "Autoritzaci\u00f3 del televisor Sony Bravia"
             },
             "user": {
