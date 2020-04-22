@@ -109,7 +109,6 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
 
 async def expires_helper(hass, mqtt_mock, caplog):
     """Run the basic expiry code."""
-
     now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
     with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
@@ -472,8 +471,7 @@ async def test_discovery_update_binary_sensor(hass, mqtt_mock, caplog):
 async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
     hass, mqtt_mock, caplog
 ):
-    """Test that binary_sensor with expire_after set behaves correctly on discovery and discovery update"""
-
+    """Test that binary_sensor with expire_after set behaves correctly on discovery and discovery update."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
     await async_start(hass, "homeassistant", {}, entry)
 
