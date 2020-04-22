@@ -78,11 +78,11 @@ from .const import (
     ZHA_GW_RADIO_DESCRIPTION,
 )
 from .device import DeviceStatus, ZHADevice
-from .group import ZHAGroup
+from .group import GroupMember, ZHAGroup
 from .patches import apply_application_controller_patch
 from .registries import GROUP_ENTITY_DOMAINS, RADIO_TYPES
 from .store import async_get_registry
-from .typing import ZhaDeviceType, ZhaGroupType, ZigpyEndpointType, ZigpyGroupType
+from .typing import ZhaGroupType, ZigpyEndpointType, ZigpyGroupType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -183,9 +183,7 @@ class ZHAGateway:
         """Initialize ZHA groups."""
         for group_id in self.application_controller.groups:
             group = self.application_controller.groups[group_id]
-            zha_group = self._async_get_or_create_group(group)
-            # we can do this here because the entities are in the entity registry tied to the devices
-            discovery.GROUP_PROBE.discover_group_entities(zha_group)
+            self._async_get_or_create_group(group)
 
     async def async_initialize_devices_and_entities(self) -> None:
         """Initialize devices and load entities."""
@@ -571,11 +569,11 @@ class ZHAGateway:
         zha_device.update_available(True)
 
     async def async_create_zigpy_group(
-        self, name: str, members: List[ZhaDeviceType]
+        self, name: str, members: List[GroupMember]
     ) -> ZhaGroupType:
         """Create a new Zigpy Zigbee group."""
-        # we start with one to fill any gaps from a user removing existing groups
-        group_id = 1
+        # we start with two to fill any gaps from a user removing existing groups
+        group_id = 2
         while group_id in self.groups:
             group_id += 1
 
@@ -584,14 +582,19 @@ class ZHAGateway:
             self.application_controller.groups.add_group(group_id, name)
             if members is not None:
                 tasks = []
-                for ieee in members:
+                for member in members:
                     _LOGGER.debug(
-                        "Adding member with IEEE: %s to group: %s:0x%04x",
-                        ieee,
+                        "Adding member with IEEE: %s and endpoint id: %s to group: %s:0x%04x",
+                        member.ieee,
+                        member.endpoint_id,
                         name,
                         group_id,
                     )
-                    tasks.append(self.devices[ieee].async_add_to_group(group_id))
+                    tasks.append(
+                        self.devices[member.ieee].async_add_endpoint_to_group(
+                            member.endpoint_id, group_id
+                        )
+                    )
                 await asyncio.gather(*tasks)
         return self.groups.get(group_id)
 
