@@ -1,7 +1,6 @@
 """Support for SolarEdge Monitoring API."""
+from datetime import date, datetime
 import logging
-from datetime import date
-from datetime import datetime
 
 from requests.exceptions import ConnectTimeout, HTTPError
 import solaredge
@@ -14,11 +13,11 @@ from homeassistant.util import Throttle
 from .const import (
     CONF_SITE_ID,
     DETAILS_UPDATE_DELAY,
+    ENERGY_DETAILS_DELAY,
     INVENTORY_UPDATE_DELAY,
     OVERVIEW_UPDATE_DELAY,
     POWER_FLOW_UPDATE_DELAY,
     SENSOR_TYPES,
-    ENERGY_DETAILS_DELAY,
 )
 
 _LOGGER = logging.getLogger(__name__)
