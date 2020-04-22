@@ -23,6 +23,8 @@ from . import DATA_TUYA, TuyaDevice
 
 DEVICE_TYPE = "climate"
 
+PARALLEL_UPDATES = 0
+
 HA_STATE_TO_TUYA = {
     HVAC_MODE_AUTO: "auto",
     HVAC_MODE_COOL: "cold",
