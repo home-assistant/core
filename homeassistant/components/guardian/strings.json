@@ -1,0 +1,20 @@
+{
+  "title": "Elexa Guardian",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Elexa Guardian",
+        "description": "Monitor and manage a Guardian water valve/sensor kit.",
+        "data": {
+          "ip_address": "IP Address"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to device at IP address"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}
