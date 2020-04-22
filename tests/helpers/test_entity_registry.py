@@ -561,3 +561,82 @@ async def test_restore_states(hass):
     assert hass.states.get("light.simple") is None
     assert hass.states.get("light.disabled") is None
     assert hass.states.get("light.all_info_set") is None
+
+
+async def test_async_get_device_class_lookup(hass):
+    """Test registry device class lookup."""
+    hass.state = CoreState.not_running
+
+    ent_reg = await entity_registry.async_get_registry(hass)
+
+    ent_reg.async_get_or_create(
+        "binary_sensor",
+        "light",
+        "battery_charging",
+        device_id="light_device_entry_id",
+        device_class="battery_charging",
+    )
+    ent_reg.async_get_or_create(
+        "sensor",
+        "light",
+        "battery",
+        device_id="light_device_entry_id",
+        device_class="battery",
+    )
+    ent_reg.async_get_or_create(
+        "light", "light", "demo", device_id="light_device_entry_id"
+    )
+    ent_reg.async_get_or_create(
+        "binary_sensor",
+        "vacuum",
+        "battery_charging",
+        device_id="vacuum_device_entry_id",
+        device_class="battery_charging",
+    )
+    ent_reg.async_get_or_create(
+        "sensor",
+        "vacuum",
+        "battery",
+        device_id="vacuum_device_entry_id",
+        device_class="battery",
+    )
+    ent_reg.async_get_or_create(
+        "vacuum", "vacuum", "demo", device_id="vacuum_device_entry_id"
+    )
+    ent_reg.async_get_or_create(
+        "binary_sensor",
+        "remote",
+        "battery_charging",
+        device_id="remote_device_entry_id",
+        device_class="battery_charging",
+    )
+    ent_reg.async_get_or_create(
+        "remote", "remote", "demo", device_id="remote_device_entry_id"
+    )
+
+    device_lookup = ent_reg.async_get_device_class_lookup(
+        {("binary_sensor", "battery_charging"), ("sensor", "battery")}
+    )
+
+    assert device_lookup == {
+        "remote_device_entry_id": {
+            (
+                "binary_sensor",
+                "battery_charging",
+            ): "binary_sensor.remote_battery_charging"
+        },
+        "light_device_entry_id": {
+            (
+                "binary_sensor",
+                "battery_charging",
+            ): "binary_sensor.light_battery_charging",
+            ("sensor", "battery"): "sensor.light_battery",
+        },
+        "vacuum_device_entry_id": {
+            (
+                "binary_sensor",
+                "battery_charging",
+            ): "binary_sensor.vacuum_battery_charging",
+            ("sensor", "battery"): "sensor.vacuum_battery",
+        },
+    }
