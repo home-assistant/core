@@ -124,10 +124,9 @@ async def setup_unifi_integration(
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    controller_id = unifi.get_controller_id_from_config_entry(config_entry)
-    if controller_id not in hass.data[unifi.DOMAIN]:
+    if config_entry.entry_id not in hass.data[unifi.DOMAIN]:
         return None
-    controller = hass.data[unifi.DOMAIN][controller_id]
+    controller = hass.data[unifi.DOMAIN][config_entry.entry_id]
 
     controller.mock_client_responses = mock_client_responses
     controller.mock_device_responses = mock_device_responses

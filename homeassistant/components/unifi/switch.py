@@ -2,11 +2,11 @@
 import logging
 
 from homeassistant.components.switch import DOMAIN, SwitchDevice
-from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .const import DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
 
 LOGGER = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     Switches are controlling network access and switch ports with POE.
     """
-    controller = get_controller_from_config_entry(hass, config_entry)
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     controller.entities[DOMAIN] = {BLOCK_SWITCH: set(), POE_SWITCH: set()}
 
     if controller.site_role != "admin":

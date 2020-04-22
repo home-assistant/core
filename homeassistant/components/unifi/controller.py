@@ -281,14 +281,9 @@ class UniFiController:
         return True
 
     @staticmethod
-    async def async_config_entry_updated(hass, entry) -> None:
+    async def async_config_entry_updated(hass, config_entry) -> None:
         """Handle signals of config entry being updated."""
-        controller_id = CONTROLLER_ID.format(
-            host=entry.data[CONF_CONTROLLER][CONF_HOST],
-            site=entry.data[CONF_CONTROLLER][CONF_SITE_ID],
-        )
-        controller = hass.data[DOMAIN][controller_id]
-
+        controller = hass.data[DOMAIN][config_entry.entry_id]
         async_dispatcher_send(hass, controller.signal_options_update)
 
     @callback
