@@ -1,14 +1,20 @@
 """Support for devices connected to UniFi POE."""
 import voluptuous as vol
 
+from homeassistant.components.unifi.config_flow import (
+    get_controller_id_from_config_entry,
+)
+from homeassistant.components.unifi.const import (
+    ATTR_MANUFACTURER,
+    DOMAIN,
+    LOGGER,
+    UNIFI_WIRELESS_CLIENTS,
+)
+from homeassistant.components.unifi.controller import UniFiController
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-
-from .config_flow import get_controller_id_from_config_entry
-from .const import ATTR_MANUFACTURER, DOMAIN, LOGGER, UNIFI_WIRELESS_CLIENTS
-from .controller import UniFiController
 
 SAVE_DELAY = 10
 STORAGE_KEY = "unifi_data"

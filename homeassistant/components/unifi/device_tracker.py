@@ -4,15 +4,17 @@ import logging
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
+from homeassistant.components.unifi.const import (
+    ATTR_MANUFACTURER,
+    DOMAIN as UNIFI_DOMAIN,
+)
+from homeassistant.components.unifi.unifi_client import UniFiClient
 from homeassistant.components.unifi.unifi_entity_base import UniFiBase
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.dt as dt_util
-
-from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
-from .unifi_client import UniFiClient
 
 LOGGER = logging.getLogger(__name__)
 

@@ -4,17 +4,7 @@ import socket
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-
-from .const import (
+from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
@@ -31,8 +21,21 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
-from .controller import get_controller
-from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
+from homeassistant.components.unifi.controller import get_controller
+from homeassistant.components.unifi.errors import (
+    AlreadyConfigured,
+    AuthenticationRequired,
+    CannotConnect,
+)
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 
 DEFAULT_PORT = 8443
 DEFAULT_SITE_ID = "default"

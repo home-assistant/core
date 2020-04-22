@@ -20,13 +20,7 @@ import async_timeout
 from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import CONF_HOST
-from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-
-from .const import (
+from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
@@ -50,7 +44,12 @@ from .const import (
     LOGGER,
     UNIFI_WIRELESS_CLIENTS,
 )
-from .errors import AuthenticationRequired, CannotConnect
+from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
+from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 RETRY_TIMER = 15
 SUPPORTED_PLATFORMS = [DT_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
