@@ -7,14 +7,12 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_IDLE,
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 from . import CLIMATE, DOMAIN, ENTITY_TYPES, AtagEntity
 
@@ -29,7 +27,7 @@ SUPPORT_PRESET = [
     PRESET_BOOST,
 ]
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-HVAC_MODES = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
+HVAC_MODES = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -38,20 +36,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([AtagThermostat(coordinator, ENTITY_TYPES[CLIMATE])])
 
 
-class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
+class AtagThermostat(AtagEntity, ClimateDevice):
     """Atag climate device."""
-
-    def __init__(self, coordinator, atagtype):
-        """Initialize with fake on/off state."""
-        self._on = None
-        super().__init__(coordinator, atagtype)
-
-    async def async_added_to_hass(self):
-        """Register callbacks & state restore for fake "Off" mode."""
-        await super().async_added_to_hass()
-        last_state = await self.async_get_last_state()
-        if last_state:
-            self._on = last_state.state != HVAC_MODE_OFF
 
     @property
     def supported_features(self):
@@ -61,10 +47,9 @@ class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
     @property
     def hvac_mode(self) -> Optional[str]:
         """Return hvac operation ie. heat, cool mode."""
-        if not self._on:
-            return HVAC_MODE_OFF
         if self.coordinator.atag.hvac_mode in HVAC_MODES:
             return self.coordinator.atag.hvac_mode
+        return None
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -81,7 +66,9 @@ class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        if self.coordinator.atag.temp_unit in [TEMP_CELSIUS, TEMP_FAHRENHEIT]:
+            return self.coordinator.atag.temp_unit
+        return None
 
     @property
     def current_temperature(self) -> Optional[float]:
@@ -105,20 +92,15 @@ class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
-        if self._on and await self.coordinator.atag.set_temp(
-            kwargs.get(ATTR_TEMPERATURE)
-        ):
-            self.async_write_ha_state()
+        await self.coordinator.atag.set_temp(kwargs.get(ATTR_TEMPERATURE))
+        self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        self._on = hvac_mode != HVAC_MODE_OFF
-        if self._on:
-            await self.coordinator.atag.set_hvac_mode(hvac_mode)
+        await self.coordinator.atag.set_hvac_mode(hvac_mode)
         self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if self._on:
-            await self.coordinator.atag.set_hold_mode(preset_mode)
+        await self.coordinator.atag.set_hold_mode(preset_mode)
         self.async_write_ha_state()
