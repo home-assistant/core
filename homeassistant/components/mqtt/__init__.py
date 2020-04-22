@@ -9,7 +9,6 @@ from operator import attrgetter
 import os
 import ssl
 import sys
-import time
 from typing import Any, Callable, List, Optional, Union
 
 import attr
@@ -929,7 +928,6 @@ class MQTT:
                 "Unable to connect to the MQTT broker: %s",
                 mqtt.connack_string(result_code),
             )
-            self._mqttc.disconnect()
             return
 
         self.connected = True
@@ -999,31 +997,7 @@ class MQTT:
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
         """Disconnected callback."""
         self.connected = False
-
-        # When disconnected because of calling disconnect()
-        if result_code == 0:
-            return
-
-        tries = 0
-
-        while True:
-            try:
-                if self._mqttc.reconnect() == 0:
-                    self.connected = True
-                    _LOGGER.info("Successfully reconnected to the MQTT server")
-                    break
-            except OSError:
-                pass
-
-            wait_time = min(2 ** tries, MAX_RECONNECT_WAIT)
-            _LOGGER.warning(
-                "Disconnected from MQTT (%s). Trying to reconnect in %s s",
-                result_code,
-                wait_time,
-            )
-            # It is ok to sleep here as we are in the MQTT thread.
-            time.sleep(wait_time)
-            tries += 1
+        _LOGGER.warning("Disconnected from MQTT (%s).", result_code)
 
 
 def _raise_on_error(result_code: int) -> None:
