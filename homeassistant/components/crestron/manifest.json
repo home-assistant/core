@@ -1,8 +1,8 @@
 {
     "domain": "crestron",
     "name": "Crestron",
-    "documentation": "",
+    "documentation": "https://www.home-assistant.io/integrations/crestron/",
     "dependencies": [],
     "codeowners": ["@rzulian"],
-    "requirements": ["python_cipclient"]
+    "requirements": ["python_cipclient==0.0.2"]
   }

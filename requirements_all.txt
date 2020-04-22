@@ -1755,6 +1755,9 @@ python-wink==1.10.5
 # homeassistant.components.awair
 python_awair==0.0.4
 
+# homeassistant.components.crestron
+python_cipclient==0.0.2
+
 # homeassistant.components.swiss_public_transport
 python_opendata_transport==0.2.1
 
