@@ -58,6 +58,7 @@ async def test_media_player_set_state(hass, hk_driver, events):
     await hass.async_block_till_done()
     acc = MediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, config)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 8  # Switch
@@ -199,6 +200,7 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 31  # Television

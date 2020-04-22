@@ -7,10 +7,13 @@ import voluptuous as vol
 from zeroconf import InterfaceChoice
 
 from homeassistant.components import cover, vacuum
+from homeassistant.components.binary_sensor import DEVICE_CLASS_BATTERY_CHARGING
 from homeassistant.components.cover import DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.const import (
+    ATTR_BATTERY_CHARGING,
+    ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_SERVICE,
@@ -20,6 +23,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_TYPE,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
@@ -31,6 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import Unauthorized
+from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
@@ -47,6 +52,8 @@ from .const import (
     CONF_ENTITY_CONFIG,
     CONF_FEATURE_LIST,
     CONF_FILTER,
+    CONF_LINKED_BATTERY_CHARGING_SENSOR,
+    CONF_LINKED_BATTERY_SENSOR,
     CONF_SAFE_MODE,
     CONF_ZEROCONF_DEFAULT_INTERFACE,
     DEFAULT_AUTO_START,
@@ -202,10 +209,10 @@ async def async_setup(hass, config):
     )
 
     if auto_start:
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, homekit.start)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, homekit.async_start)
         return True
 
-    def handle_homekit_service_start(service):
+    async def async_handle_homekit_service_start(service):
         """Handle start HomeKit service call."""
         if homekit.status != STATUS_READY:
             _LOGGER.warning(
@@ -213,10 +220,10 @@ async def async_setup(hass, config):
                 "been stopped."
             )
             return
-        homekit.start()
+        await homekit.async_start()
 
     hass.services.async_register(
-        DOMAIN, SERVICE_HOMEKIT_START, handle_homekit_service_start
+        DOMAIN, SERVICE_HOMEKIT_START, async_handle_homekit_service_start
     )
 
     return True
@@ -355,7 +362,7 @@ class HomeKit:
         # pylint: disable=import-outside-toplevel
         from .accessories import HomeBridge, HomeDriver
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
 
         ip_addr = self._ip_address or get_local_ip()
         path = self.hass.config.path(HOMEKIT_FILE)
@@ -393,7 +400,7 @@ class HomeKit:
 
     def add_bridge_accessory(self, state):
         """Try adding accessory to bridge if configured beforehand."""
-        if not state or not self._filter(state.entity_id):
+        if not self._filter(state.entity_id):
             return
 
         # The bridge itself counts as an accessory
@@ -428,12 +435,32 @@ class HomeKit:
             acc = self.bridge.accessories.pop(aid)
         return acc
 
-    def start(self, *args):
+    async def async_start(self, *args):
         """Start the accessory driver."""
         if self.status != STATUS_READY:
             return
         self.status = STATUS_WAIT
 
+        ent_reg = await entity_registry.async_get_registry(self.hass)
+
+        device_lookup = ent_reg.async_get_device_class_lookup(
+            {
+                ("binary_sensor", DEVICE_CLASS_BATTERY_CHARGING),
+                ("sensor", DEVICE_CLASS_BATTERY),
+            }
+        )
+
+        bridged_states = []
+        for state in self.hass.states.async_all():
+            if not self._filter(state.entity_id):
+                continue
+
+            self._async_configure_linked_battery_sensors(ent_reg, device_lookup, state)
+            bridged_states.append(state)
+
+        await self.hass.async_add_executor_job(self._start, bridged_states)
+
+    def _start(self, bridged_states):
         from . import (  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel
             type_covers,
             type_fans,
@@ -446,7 +473,7 @@ class HomeKit:
             type_thermostats,
         )
 
-        for state in self.hass.states.all():
+        for state in bridged_states:
             self.add_bridge_accessory(state)
 
         self.driver.add_accessory(self.bridge)
@@ -457,17 +484,49 @@ class HomeKit:
             )
 
         _LOGGER.debug("Driver start")
-        self.hass.add_job(self.driver.start)
+        self.hass.async_add_executor_job(self.driver.start)
         self.status = STATUS_RUNNING
 
-    def stop(self, *args):
+    async def async_stop(self, *args):
         """Stop the accessory driver."""
         if self.status != STATUS_RUNNING:
             return
         self.status = STATUS_STOPPED
 
         _LOGGER.debug("Driver stop")
-        self.hass.add_job(self.driver.stop)
+        self.hass.async_add_executor_job(self.driver.stop)
+
+    @callback
+    def _async_configure_linked_battery_sensors(self, ent_reg, device_lookup, state):
+        entry = ent_reg.async_get(state.entity_id)
+
+        if (
+            entry is None
+            or entry.device_id is None
+            or entry.device_id not in device_lookup
+            or entry.device_class
+            in (DEVICE_CLASS_BATTERY_CHARGING, DEVICE_CLASS_BATTERY)
+        ):
+            return
+
+        if ATTR_BATTERY_CHARGING not in state.attributes:
+            battery_charging_binary_sensor_entity_id = device_lookup[
+                entry.device_id
+            ].get(("binary_sensor", DEVICE_CLASS_BATTERY_CHARGING))
+            if battery_charging_binary_sensor_entity_id:
+                self._config.setdefault(state.entity_id, {}).setdefault(
+                    CONF_LINKED_BATTERY_CHARGING_SENSOR,
+                    battery_charging_binary_sensor_entity_id,
+                )
+
+        if ATTR_BATTERY_LEVEL not in state.attributes:
+            battery_sensor_entity_id = device_lookup[entry.device_id].get(
+                ("sensor", DEVICE_CLASS_BATTERY)
+            )
+            if battery_sensor_entity_id:
+                self._config.setdefault(state.entity_id, {}).setdefault(
+                    CONF_LINKED_BATTERY_SENSOR, battery_sensor_entity_id
+                )
 
 
 class HomeKitPairingQRView(HomeAssistantView):

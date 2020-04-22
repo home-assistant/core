@@ -21,6 +21,7 @@ CONF_FEATURE = "feature"
 CONF_FEATURE_LIST = "feature_list"
 CONF_FILTER = "filter"
 CONF_LINKED_BATTERY_SENSOR = "linked_battery_sensor"
+CONF_LINKED_BATTERY_CHARGING_SENSOR = "linked_battery_charging_sensor"
 CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
 CONF_SAFE_MODE = "safe_mode"
 CONF_ZEROCONF_DEFAULT_INTERFACE = "zeroconf_default_interface"
@@ -197,3 +198,8 @@ HK_DOOR_STOPPED = 4
 HK_POSITION_GOING_TO_MIN = 0
 HK_POSITION_GOING_TO_MAX = 1
 HK_POSITION_STOPPED = 2
+
+# ### Charging State ###
+HK_NOT_CHARGING = 0
+HK_CHARGING = 1
+HK_NOT_CHARGABLE = 2
