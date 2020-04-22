@@ -791,19 +791,18 @@ class CameraCapabilities(AlexaEntity):
         yield Alexa(self.hass)
 
     def _check_requirements(self):
-        """Check the hass URL for HTTPS scheme and port 443."""
+        """Check the hass URL for HTTPS scheme."""
         if "stream" not in self.hass.config.components:
-            _LOGGER.error(
+            _LOGGER.debug(
                 "%s requires stream component for AlexaCameraStreamController",
                 self.entity_id,
             )
             return False
 
         url = urlparse(network.async_get_external_url(self.hass))
-        if url.scheme != "https" or (url.port is not None and url.port != 443):
-            _LOGGER.error(
-                "%s requires HTTPS support on port 443 for AlexaCameraStreamController",
-                self.entity_id,
+        if url.scheme != "https":
+            _LOGGER.debug(
+                "%s requires HTTPS for AlexaCameraStreamController", self.entity_id
             )
             return False
 
