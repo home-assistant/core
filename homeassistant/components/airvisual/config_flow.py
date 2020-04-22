@@ -79,11 +79,16 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_geography(self, user_input=None):
         """Handle the initialization of the integration via the cloud API."""
+        if not user_input:
+            return self.async_show_form(
+                step_id="geography", data_schema=self.geography_schema
+            )
+
         geo_id = async_get_geography_id(user_input)
         await self._async_set_unique_id(geo_id)
         self._abort_if_unique_id_configured()
 
-        # Find older config entries without unique ID
+        # Find older config entries without unique ID:
         for entry in self._async_current_entries():
             if entry.version != 1:
                 continue
@@ -127,6 +132,11 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_node_pro(self, user_input=None):
         """Handle the initialization of the integration with a Node/Pro."""
+        if not user_input:
+            return self.async_show_form(
+                step_id="node_pro", data_schema=self.node_pro_schema
+            )
+
         await self._async_set_unique_id(user_input[CONF_IP_ADDRESS])
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
@@ -156,13 +166,8 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         if user_input["type"] == INTEGRATION_TYPE_GEOGRAPHY:
-            return self.async_show_form(
-                step_id="geography", data_schema=self.geography_schema
-            )
-
-        return self.async_show_form(
-            step_id="node_pro", data_schema=self.node_pro_schema
-        )
+            return await self.async_step_geography()
+        return await self.async_step_node_pro()
 
 
 class AirVisualOptionsFlowHandler(config_entries.OptionsFlow):

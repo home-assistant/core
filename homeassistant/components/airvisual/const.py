@@ -2,7 +2,7 @@
 import logging
 
 DOMAIN = "airvisual"
-LOGGER = logging.getLogger("homeassistant.components.airvisual")
+LOGGER = logging.getLogger(__package__)
 
 INTEGRATION_TYPE_GEOGRAPHY = "Geographical Location"
 INTEGRATION_TYPE_NODE_PRO = "AirVisual Node/Pro"

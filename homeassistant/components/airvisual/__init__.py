@@ -2,7 +2,7 @@
 from datetime import timedelta
 
 from pyairvisual import Client
-from pyairvisual.errors import AirVisualError, InvalidKeyError, NodeProError
+from pyairvisual.errors import AirVisualError, NodeProError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -76,6 +76,9 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: CLOUD_API_SCHEMA}, extra=vol.ALLOW_EXTRA)
 @callback
 def async_get_geography_id(geography_dict):
     """Generate a unique ID from a geography dict."""
+    if not geography_dict:
+        return
+
     if CONF_CITY in geography_dict:
         return ", ".join(
             (
@@ -150,9 +153,6 @@ async def async_setup_entry(hass, config_entry):
 
     try:
         await airvisual.async_update()
-    except InvalidKeyError:
-        LOGGER.error("Invalid API key provided")
-        raise ConfigEntryNotReady
     except NodeProError as err:
         LOGGER.error("Error connecting to Node/Pro unit: %s", err)
         raise ConfigEntryNotReady
@@ -162,9 +162,14 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = airvisual
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-    )
+    if CONF_API_KEY in config_entry.data:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
+        )
+    else:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, "air_quality")
+        )
 
     async def refresh(event_time):
         """Refresh data from AirVisual."""
@@ -217,12 +222,16 @@ async def async_migrate_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload an AirVisual config entry."""
-    hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
+    if CONF_API_KEY in config_entry.data:
+        await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
+    else:
+        await hass.config_entries.async_forward_entry_unload(
+            config_entry, "air_quality"
+        )
 
+    hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
     remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(config_entry.entry_id)
     remove_listener()
-
-    await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
 
     return True
 
@@ -239,7 +248,6 @@ class AirVisualEntity(Entity):
     def __init__(self, airvisual):
         """Initialize."""
         self._airvisual = airvisual
-        self._async_unsub_dispatcher_connect = None
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._icon = None
         self._unit = None
@@ -273,12 +281,6 @@ class AirVisualEntity(Entity):
         )
 
         self.update_from_latest_data()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-            self._async_unsub_dispatcher_connect = None
 
     @callback
     def update_from_latest_data(self):
