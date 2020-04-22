@@ -21,6 +21,7 @@ omit =
     homeassistant/components/airly/sensor.py
     homeassistant/components/airly/const.py
     homeassistant/components/airvisual/__init__.py
+    homeassistant/components/airvisual/air_quality.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/aladdin_connect/cover.py
     homeassistant/components/alarmdecoder/*
