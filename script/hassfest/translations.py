@@ -121,7 +121,7 @@ def gen_strings_schema(config: Config, integration: Integration):
                 config=config,
                 integration=integration,
                 flow_title=REMOVED,
-                require_step_title=True,
+                require_step_title=False,
             ),
             vol.Optional("options"): gen_data_entry_schema(
                 config=config,
