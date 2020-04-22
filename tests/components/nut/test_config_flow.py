@@ -5,7 +5,8 @@ from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.const import CONF_RESOURCES, CONF_SCAN_INTERVAL
 
-from .util import _get_mock_pynutclient
+from tests.common import MockConfigEntry
+
 
 from tests.common import MockConfigEntry
 
@@ -150,10 +151,13 @@ async def test_form_import(hass):
     """Test we get the form with import source."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    mock_pynut = _get_mock_pynutclient(
-        list_vars={"battery.voltage": "serial"},
-        list_ups={"ups1": "UPS 1", "ups2": "UPS2"},
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": "2.2.2.2", "port": 123, "resources": ["battery.charge"]},
     )
+    config_entry.add_to_hass(hass)
+
+    mock_pynut = _get_mock_pynutclient(list_vars={"battery.voltage": "serial"})
 
     with patch(
         "homeassistant.components.nut.PyNUTClient", return_value=mock_pynut,
@@ -183,7 +187,7 @@ async def test_form_import(hass):
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 2
 
 
 async def test_form_import_dupe(hass):
