@@ -23,8 +23,7 @@ def test_deprecated_base_class(caplog):
     """Test deprecated base class."""
 
     class CustomBinarySensor(binary_sensor.BinarySensorDevice):
-        def __init__(self):
-            pass
+        pass
 
     CustomBinarySensor()
     assert "BinarySensorDevice is deprecated, modify CustomBinarySensor" in caplog.text
