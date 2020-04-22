@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 import requests
-from tesla_powerwall import ApiError, Powerwall, PowerwallUnreachableError
+from tesla_powerwall import APIError, Powerwall, PowerwallUnreachableError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -96,8 +96,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     http_session = requests.Session()
     power_wall = Powerwall(entry.data[CONF_IP_ADDRESS], http_session=http_session)
     try:
+        await hass.async_add_executor_job(power_wall.detect_and_pin_version)
         powerwall_data = await hass.async_add_executor_job(call_base_info, power_wall)
-    except (PowerwallUnreachableError, ApiError, ConnectionError):
+    except (PowerwallUnreachableError, APIError, ConnectionError):
         http_session.close()
         raise ConfigEntryNotReady
 
