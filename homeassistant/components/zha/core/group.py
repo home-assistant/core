@@ -21,6 +21,9 @@ from .typing import (
 _LOGGER = logging.getLogger(__name__)
 
 GroupMember = collections.namedtuple("GroupMember", "ieee endpoint_id")
+GroupEntityReference = collections.namedtuple(
+    "GroupEntityReference", "name original_name entity_id"
+)
 
 
 class ZHAGroupMember(LogMixin):
@@ -30,7 +33,7 @@ class ZHAGroupMember(LogMixin):
         self, zha_group: ZhaGroupType, zha_device: ZhaDeviceType, endpoint_id: int
     ):
         """Initialize the group member."""
-        self._zha_group = zha_group
+        self._zha_group: ZhaGroupType = zha_group
         self._zha_device: ZhaDeviceType = zha_device
         self._endpoint_id: int = endpoint_id
 
@@ -57,27 +60,31 @@ class ZHAGroupMember(LogMixin):
     @property
     def member_info(self) -> Dict[str, Any]:
         """Get ZHA group info."""
-        ha_entity_registry = self.device.gateway.ha_entity_registry
-        zha_device_registry = self.device.gateway.device_registry
         member_info: Dict[str, Any] = {}
         member_info["endpoint_id"] = self.endpoint_id
         member_info["device"] = self.device.zha_device_info
-        member_info["entities"] = [
-            {
-                "name": ha_entity_registry.async_get(entity_ref.reference_id).name,
-                "original_name": ha_entity_registry.async_get(
-                    entity_ref.reference_id
-                ).original_name,
-            }
+        member_info["entities"] = self.associated_entities
+        return member_info
+
+    @property
+    def associated_entities(self) -> List[GroupEntityReference]:
+        """Return the list of entities that were derived from this endpoint."""
+        ha_entity_registry = self.device.gateway.ha_entity_registry
+        zha_device_registry = self.device.gateway.device_registry
+        return [
+            GroupEntityReference(
+                ha_entity_registry.async_get(entity_ref.reference_id).name,
+                ha_entity_registry.async_get(entity_ref.reference_id).original_name,
+                entity_ref.reference_id,
+            )._asdict()
             for entity_ref in zha_device_registry.get(self.device.ieee)
             if list(entity_ref.cluster_channels.values())[
                 0
             ].cluster.endpoint.endpoint_id
             == self.endpoint_id
         ]
-        return member_info
 
-    async def async_remove_from_group(self):
+    async def async_remove_from_group(self) -> None:
         """Remove the device endpoint from the provided zigbee group."""
         try:
             await self._zha_device.device.endpoints[
@@ -92,7 +99,7 @@ class ZHAGroupMember(LogMixin):
                 str(ex),
             )
 
-    def log(self, level: int, msg: str, *args):
+    def log(self, level: int, msg: str, *args) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
         args = (f"0x{self._zha_group.group_id:04x}", self.endpoint_id) + args
@@ -177,23 +184,26 @@ class ZHAGroup(LogMixin):
     def member_entity_ids(self) -> List[str]:
         """Return the ZHA entity ids for all entities for the members of this group."""
         all_entity_ids: List[str] = []
-        for device in self.members:
-            entities = async_entries_for_device(
-                self._zha_gateway.ha_entity_registry, device.device_id
-            )
-            for entity in entities:
-                all_entity_ids.append(entity.entity_id)
+        for member in self.members:
+            entity_references = member.associated_entities
+            for entity_reference in entity_references:
+                all_entity_ids.append(entity_reference.entity_id)
         return all_entity_ids
 
     def get_domain_entity_ids(self, domain) -> List[str]:
         """Return entity ids from the entity domain for this group."""
         domain_entity_ids: List[str] = []
+        member_entity_ids = self.member_entity_ids
         for member in self.members:
             entities = async_entries_for_device(
                 self._zha_gateway.ha_entity_registry, member.device.device_id
             )
             domain_entity_ids.extend(
-                [entity.entity_id for entity in entities if entity.domain == domain]
+                [
+                    entity.entity_id
+                    for entity in entities
+                    if entity.domain == domain and entity.entity_id in member_entity_ids
+                ]
             )
         return domain_entity_ids
 
