@@ -1,5 +1,6 @@
 """Validate integration translation files."""
 from functools import partial
+from itertools import chain
 import json
 import logging
 import re
@@ -210,34 +211,61 @@ def validate_translation_file(config: Config, integration: Integration, all_stri
     if config.specific_integrations:
         check_translations_directory_name(integration)
 
-    strings_file = integration.path / "strings.json"
+    strings_files = [integration.path / "strings.json"]
+
+    # Also validate translations for custom integrations
+    if config.specific_integrations:
+        # Only English needs to be always complete
+        strings_files.append(integration.path / "translations/en.json")
+
     references = []
 
-    if strings_file.is_file():
-        strings = json.loads(strings_file.read_text())
+    if integration.domain == "auth":
+        strings_schema = gen_auth_schema(config, integration)
+    elif integration.domain == "onboarding":
+        strings_schema = ONBOARDING_SCHEMA
+    else:
+        strings_schema = gen_strings_schema(config, integration)
 
-        if integration.domain == "auth":
-            schema = gen_auth_schema(config, integration)
-        elif integration.domain == "onboarding":
-            schema = ONBOARDING_SCHEMA
-        else:
-            schema = gen_strings_schema(config, integration)
+    for strings_file in strings_files:
+        if not strings_file.is_file():
+            continue
+
+        name = str(strings_file.relative_to(integration.path))
 
         try:
-            schema(strings)
+            strings = json.loads(strings_file.read_text())
+        except ValueError as err:
+            integration.add_error("translations", f"Invalid JSON in {name}: {err}")
+            continue
+
+        try:
+            strings_schema(strings)
         except vol.Invalid as err:
             integration.add_error(
-                "translations", f"Invalid strings.json: {humanize_error(strings, err)}"
+                "translations", f"Invalid {name}: {humanize_error(strings, err)}"
             )
         else:
-            find_references(strings, "strings.json", references)
+            if strings_file.name == "strings.json":
+                find_references(strings, name, references)
 
-    for path in integration.path.glob("strings.*.json"):
-        strings = json.loads(path.read_text())
-        schema = gen_platform_strings_schema(config, integration)
+    platform_string_schema = gen_platform_strings_schema(config, integration)
+    platform_strings = [integration.path.glob("strings.*.json")]
+
+    if config.specific_integrations:
+        platform_strings.append(integration.path.glob("translations/*.en.json"))
+
+    for path in chain(*platform_strings):
+        name = str(path.relative_to(integration.path))
 
         try:
-            schema(strings)
+            strings = json.loads(path.read_text())
+        except ValueError as err:
+            integration.add_error("translations", f"Invalid JSON in {name}: {err}")
+            continue
+
+        try:
+            platform_string_schema(strings)
         except vol.Invalid as err:
             msg = f"Invalid {path.name}: {humanize_error(strings, err)}"
             if config.specific_integrations:
