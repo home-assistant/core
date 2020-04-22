@@ -563,7 +563,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
 
         media_type = media_type.lower()
         src = json.loads(media_id)
-        if media_type == "plex" and isinstance(src, int):
+        if media_type == PLEX_DOMAIN and isinstance(src, int):
             try:
                 media = self.plex_server.fetch_item(src)
             except plexapi.exceptions.NotFound:
