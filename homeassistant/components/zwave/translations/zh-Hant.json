@@ -26,8 +26,8 @@
             "sleeping": "\u4f11\u7720\u4e2d"
         },
         "query_stage": {
-            "dead": "\u5931\u53bb\u9023\u7dda ({query_stage})",
-            "initializing": "\u6b63\u5728\u521d\u59cb\u5316 ( {query_stage} )"
+            "dead": "\u5931\u53bb\u9023\u7dda",
+            "initializing": "\u6b63\u5728\u521d\u59cb\u5316"
         }
     }
 }
