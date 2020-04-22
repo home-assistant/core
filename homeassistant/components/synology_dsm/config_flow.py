@@ -4,16 +4,17 @@ from urllib.parse import urlparse
 
 from synology_dsm import SynologyDSM
 from synology_dsm.exceptions import (
+    SynologyDSMException,
     SynologyDSMLogin2SAFailedException,
     SynologyDSMLogin2SARequiredException,
     SynologyDSMLoginInvalidException,
+    SynologyDSMRequestException,
 )
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.components import ssdp
 from homeassistant.const import (
-    CONF_API_VERSION,
     CONF_DISKS,
     CONF_HOST,
     CONF_NAME,
@@ -23,13 +24,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from .const import (
-    CONF_VOLUMES,
-    DEFAULT_DSM_VERSION,
-    DEFAULT_PORT,
-    DEFAULT_PORT_SSL,
-    DEFAULT_SSL,
-)
+from .const import CONF_VOLUMES, DEFAULT_PORT, DEFAULT_PORT_SSL, DEFAULT_SSL
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,12 +51,6 @@ def _ordered_shared_schema(schema_input):
         vol.Required(CONF_PASSWORD, default=schema_input.get(CONF_PASSWORD, "")): str,
         vol.Optional(CONF_PORT, default=schema_input.get(CONF_PORT, "")): str,
         vol.Optional(CONF_SSL, default=schema_input.get(CONF_SSL, DEFAULT_SSL)): bool,
-        vol.Optional(
-            CONF_API_VERSION,
-            default=schema_input.get(CONF_API_VERSION, DEFAULT_DSM_VERSION),
-        ): vol.All(
-            vol.Coerce(int), vol.In([5, 6]),  # DSM versions supported by the library
-        ),
     }
 
 
@@ -111,7 +100,6 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
         use_ssl = user_input.get(CONF_SSL, DEFAULT_SSL)
-        api_version = user_input.get(CONF_API_VERSION, DEFAULT_DSM_VERSION)
         otp_code = user_input.get(CONF_OTP_CODE)
 
         if not port:
@@ -120,9 +108,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 port = DEFAULT_PORT
 
-        api = SynologyDSM(
-            host, port, username, password, use_ssl, dsm_version=api_version,
-        )
+        api = SynologyDSM(host, port, username, password, use_ssl)
 
         try:
             serial = await self.hass.async_add_executor_job(
@@ -134,8 +120,12 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors[CONF_OTP_CODE] = "otp_failed"
             user_input[CONF_OTP_CODE] = None
             return await self.async_step_2sa(user_input, errors)
-        except (SynologyDSMLoginInvalidException, InvalidAuth):
+        except SynologyDSMLoginInvalidException:
             errors[CONF_USERNAME] = "login"
+        except SynologyDSMRequestException:
+            errors[CONF_HOST] = "connection"
+        except SynologyDSMException:
+            errors["base"] = "unknown"
         except InvalidData:
             errors["base"] = "missing_data"
 
@@ -152,7 +142,6 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_SSL: use_ssl,
             CONF_USERNAME: username,
             CONF_PASSWORD: password,
-            CONF_API_VERSION: api_version,
         }
         if otp_code:
             config_data["device_token"] = api.device_token
@@ -216,28 +205,21 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
 def _login_and_fetch_syno_info(api, otp_code):
     """Login to the NAS and fetch basic data."""
-    if not api.login(otp_code):
-        raise InvalidAuth
-
     # These do i/o
-    information = api.information
+    api.login(otp_code)
     utilisation = api.utilisation
     storage = api.storage
 
     if (
-        information.serial is None
+        api.information.serial is None
         or utilisation.cpu_user_load is None
         or storage.disks_ids is None
         or storage.volumes_ids is None
     ):
         raise InvalidData
 
-    return information.serial
+    return api.information.serial
 
 
 class InvalidData(exceptions.HomeAssistantError):
     """Error to indicate we get invalid data from the nas."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
