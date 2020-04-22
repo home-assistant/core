@@ -125,7 +125,7 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 
 MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
-    vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
+    vol.Optional(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
     vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
 }
