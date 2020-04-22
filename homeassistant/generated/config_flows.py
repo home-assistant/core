@@ -62,6 +62,7 @@ FLOWS = [
     "iqvia",
     "islamic_prayer_times",
     "izone",
+    "jenkins",
     "konnected",
     "life360",
     "lifx",

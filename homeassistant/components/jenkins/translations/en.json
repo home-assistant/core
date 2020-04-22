@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "branch": "Branch",
+                    "repository": "Repository",
+                    "url": "URL"
+                },
+                "description": "Get information about builds from jobs on Jenkins.",
+                "title": "Connect to Jenkins."
+            }
+        }
+    }
+}
