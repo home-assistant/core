@@ -73,7 +73,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
         remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
         remove_listener()
 
@@ -118,11 +118,14 @@ class Guardian:
 class GuardianEntity(Entity):
     """Define a base Guardian entity."""
 
-    def __init__(self, guardian: Guardian):
+    def __init__(self, guardian: Guardian, kind: str, name: str):
         """Initialize."""
         self._attrs = {ATTR_ATTRIBUTION: "Data provided by Elexa"}
+        self._available = True
         self._guardian = guardian
-        self._name = guardian.data[DATA_DIAGNOSTICS]["codename"]
+        self._icon = None
+        self._kind = kind
+        self._name = name
 
     @property
     def available(self):
@@ -147,12 +150,12 @@ class GuardianEntity(Entity):
     @property
     def icon(self) -> str:
         """Return the icon."""
-        return "mdi:water"
+        return self._icon
 
     @property
     def name(self):
         """Return the name of the entity."""
-        return self._name
+        f"Guardian {self._guardian.uid}: {self._name}"
 
     @property
     def should_poll(self) -> bool:
@@ -162,7 +165,7 @@ class GuardianEntity(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of the entity."""
-        return self._guardian.uid
+        return f"{self._guardian.uid}_{self._kind}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""

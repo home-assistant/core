@@ -36,8 +36,9 @@ class GuardianSwitch(GuardianEntity, SwitchDevice):
 
     def __init__(self, guardian: Guardian):
         """Initialize."""
-        super().__init__(guardian)
+        super().__init__(guardian, "valve", "Valve")
 
+        self._icon = "mdi:water"
         self._is_on = True
 
     @property
