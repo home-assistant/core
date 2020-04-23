@@ -46,8 +46,8 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             mydevolo = Mydevolo()
         mydevolo.user = user
         mydevolo.password = password
-        mydevolo.url = user_input.get(CONF_MYDEVOLO)
-        mydevolo.mprm = user_input.get(CONF_HOMECONTROL)
+        mydevolo.url = user_input[CONF_MYDEVOLO]
+        mydevolo.mprm = user_input[CONF_HOMECONTROL]
         credentials_valid = await self.hass.async_add_executor_job(
             mydevolo.credentials_valid
         )
