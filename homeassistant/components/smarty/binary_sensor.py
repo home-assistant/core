@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -25,7 +25,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors, True)
 
 
-class SmartyBinarySensor(BinarySensorDevice):
+class SmartyBinarySensor(BinarySensorEntity):
     """Representation of a Smarty Binary Sensor."""
 
     def __init__(self, name, device_class, smarty):

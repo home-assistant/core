@@ -3,7 +3,7 @@ import logging
 
 from pyqwikswitch.qwikswitch import SENSORS
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 
 from . import DOMAIN as QWIKSWITCH, QSEntity
@@ -22,7 +22,7 @@ async def async_setup_platform(hass, _, add_entities, discovery_info=None):
     add_entities(devs)
 
 
-class QSBinarySensor(QSEntity, BinarySensorDevice):
+class QSBinarySensor(QSEntity, BinarySensorEntity):
     """Sensor based on a Qwikswitch relay/dimmer module."""
 
     _val = False
