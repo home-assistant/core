@@ -49,8 +49,6 @@ from .const import (
     TOPIC_UPDATE,
 )
 
-DATA_LISTENER = "listener"
-
 DATA_ENTITY_TYPE_MAP = {
     SENSOR_KIND_AP_INFO: DATA_WIFI_STATUS,
     SENSOR_KIND_LEAK_DETECTED: DATA_SENSOR_STATUS,
@@ -81,7 +79,7 @@ def async_get_api_category(entity_kind: str):
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Elexa Guardian component."""
-    hass.data[DOMAIN] = {DATA_CLIENT: {}, DATA_LISTENER: {}}
+    hass.data[DOMAIN] = {DATA_CLIENT: {}}
     return True
 
 
@@ -176,8 +174,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     if unload_ok:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
-        remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
-        remove_listener()
 
     return unload_ok
 
@@ -359,7 +355,7 @@ class GuardianEntity(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect dispatcher listener when removed."""
-        await self._guardian.async_deregister_api_interest(self._kind)
+        self._guardian.async_deregister_api_interest(self._kind)
 
     @callback
     def update_from_latest_data(self):
