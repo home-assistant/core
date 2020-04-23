@@ -4,7 +4,7 @@
 
 -r requirements_test_pre_commit.txt
 asynctest==0.13.0
-codecov==2.0.15
+codecov==2.0.22
 mock-open==1.4.0
 mypy==0.770
 pre-commit==2.3.0
