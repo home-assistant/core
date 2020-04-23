@@ -428,19 +428,18 @@ class SimpliSafe:
             # ready. If that's the case, skip:
             return
 
-        old_notifications = self._system_notifications.get(system.system_id, [])
-        latest_notifications = system.notifications
+        latest_notifications = set(system.notifications)
 
-        # Save the latest notifications:
-        self._system_notifications[system.system_id] = latest_notifications
-
-        # Process any notifications that are new:
-        to_add = set(latest_notifications) - set(old_notifications)
+        to_add = latest_notifications.difference(
+            self._system_notifications[system.system_id]
+        )
 
         if not to_add:
             return
 
         _LOGGER.debug("New system notifications: %s", to_add)
+
+        self._system_notifications[system.system_id].update(to_add)
 
         for notification in to_add:
             text = notification.text
@@ -463,6 +462,8 @@ class SimpliSafe:
 
         self.systems = await self._api.get_systems()
         for system in self.systems.values():
+            self._system_notifications[system.system_id] = set()
+
             self._hass.async_create_task(
                 async_register_base_station(
                     self._hass, system, self._config_entry.entry_id
