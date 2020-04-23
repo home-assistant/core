@@ -156,7 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             POWERWALL_OBJECT: power_wall,
             POWERWALL_COORDINATOR: coordinator,
             POWERWALL_HTTP_SESSION: http_session,
-            PowerwallError: None,
+            POWERWALL_ERROR: None,
         }
     )
 
