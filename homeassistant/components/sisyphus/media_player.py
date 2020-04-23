@@ -4,7 +4,7 @@ import logging
 import aiohttp
 from sisyphus_control import Track
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -56,7 +56,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([SisyphusPlayer(table_holder.name, host, table)], True)
 
 
-class SisyphusPlayer(MediaPlayerDevice):
+class SisyphusPlayer(MediaPlayerEntity):
     """Representation of a Sisyphus table as a media player device."""
 
     def __init__(self, name, host, table):
