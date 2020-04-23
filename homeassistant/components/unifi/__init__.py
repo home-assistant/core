@@ -35,12 +35,9 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up the UniFi component."""
-    # hass.data.setdefault(DATA_IMPLEMENTATIONS, {})
-    if UNIFI_DOMAIN not in hass.data:
-        hass.data[UNIFI_DOMAIN] = {}
+    hass.data.setdefault(UNIFI_DOMAIN, {})
 
     controller = UniFiController(hass, config_entry)
-
     if not await controller.async_setup():
         return False
 
