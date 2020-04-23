@@ -25,6 +25,9 @@ AID_MANAGER_STORAGE_KEY = f"{DOMAIN}.aids"
 AID_MANAGER_STORAGE_VERSION = 1
 AID_MANAGER_SAVE_DELAY = 2
 
+ALLOCATIONS_KEY = "allocations"
+UNIQUE_IDS_KEY = "unique_ids"
+
 INVALID_AIDS = (0, 1)
 
 AID_MIN = 2
@@ -46,10 +49,15 @@ def _generate_aids(unique_id: str, entity_id: str) -> int:
     # Not robust against collisions
     yield adler32(entity_id.encode("utf-8"))
 
-    # Use fnv1a_32 of the unique id as
-    # fnv1a_32 has less collisions than
-    # adler32
-    yield fnv1a_32(unique_id.encode("utf-8"))
+    if unique_id:
+        # Use fnv1a_32 of the unique id as
+        # fnv1a_32 has less collisions than
+        # adler32
+        yield fnv1a_32(unique_id.encode("utf-8"))
+
+    # If there is no unique id we use
+    # fnv1a_32 as it is unlikely to collide
+    yield fnv1a_32(entity_id.encode("utf-8"))
 
     # If called again resort to random allocations.
     # Given the size of the range its unlikely we'll encounter duplicates
@@ -86,34 +94,40 @@ class AccessoryAidStorage:
             # There is no data about aid allocations yet
             return
 
-        self.allocations = raw_storage.get("unique_ids", {})
+        # Remove the UNIQUE_IDS_KEY in 0.112 and later
+        # The beta version used UNIQUE_IDS_KEY but
+        # since we now have entity ids in the dict
+        # we use ALLOCATIONS_KEY but check for
+        # UNIQUE_IDS_KEY in case the database has not
+        # been upgraded yet
+        self.allocations = raw_storage.get(
+            ALLOCATIONS_KEY, raw_storage.get(UNIQUE_IDS_KEY, {})
+        )
         self.allocated_aids = set(self.allocations.values())
 
     def get_or_allocate_aid_for_entity_id(self, entity_id: str):
         """Generate a stable aid for an entity id."""
         entity = self._entity_registry.async_get(entity_id)
+        if not entity:
+            return self._get_or_allocate_aid(None, entity_id)
 
-        if entity:
-            return self._get_or_allocate_aid(
-                get_system_unique_id(entity), entity.entity_id
-            )
-
-        _LOGGER.warning(
-            "Entity '%s' does not have a stable unique identifier so aid allocation will be unstable and may cause collisions",
-            entity_id,
-        )
-        return adler32(entity_id.encode("utf-8"))
+        sys_unique_id = get_system_unique_id(entity)
+        return self._get_or_allocate_aid(sys_unique_id, entity_id)
 
     def _get_or_allocate_aid(self, unique_id: str, entity_id: str):
         """Allocate (and return) a new aid for an accessory."""
-        if unique_id in self.allocations:
-            return self.allocations[unique_id]
+        # Prefer the unique_id over the
+        # entitiy_id
+        storage_key = unique_id or entity_id
+
+        if storage_key in self.allocations:
+            return self.allocations[storage_key]
 
         for aid in _generate_aids(unique_id, entity_id):
             if aid in INVALID_AIDS:
                 continue
             if aid not in self.allocated_aids:
-                self.allocations[unique_id] = aid
+                self.allocations[storage_key] = aid
                 self.allocated_aids.add(aid)
                 self.async_schedule_save()
                 return aid
@@ -122,12 +136,12 @@ class AccessoryAidStorage:
             f"Unable to generate unique aid allocation for {entity_id} [{unique_id}]"
         )
 
-    def delete_aid(self, unique_id: str):
+    def delete_aid(self, storage_key: str):
         """Delete an aid allocation."""
-        if unique_id not in self.allocations:
+        if storage_key not in self.allocations:
             return
 
-        aid = self.allocations.pop(unique_id)
+        aid = self.allocations.pop(storage_key)
         self.allocated_aids.discard(aid)
         self.async_schedule_save()
 
@@ -136,7 +150,11 @@ class AccessoryAidStorage:
         """Schedule saving the entity map cache."""
         self.store.async_delay_save(self._data_to_save, AID_MANAGER_SAVE_DELAY)
 
+    async def async_save(self):
+        """Save the entity map cache."""
+        return await self.store.async_save(self._data_to_save())
+
     @callback
     def _data_to_save(self):
         """Return data of entity map to store in a file."""
-        return {"unique_ids": self.allocations}
+        return {ALLOCATIONS_KEY: self.allocations}
