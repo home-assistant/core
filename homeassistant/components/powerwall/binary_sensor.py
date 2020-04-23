@@ -14,7 +14,6 @@ from .const import (
     ATTR_GRID_CODE,
     ATTR_NOMINAL_SYSTEM_POWER,
     ATTR_REGION,
-    CHARGING_MARGIN_OF_ERROR,
     DOMAIN,
     POWERWALL_API_DEVICE_TYPE,
     POWERWALL_API_GRID_STATUS,
@@ -139,7 +138,7 @@ class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorDevice):
 
 
 class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorDevice):
-    """Representation of an Powerwall grid status sensor."""
+    """Representation of an Powerwall charging status sensor."""
 
     @property
     def name(self):
@@ -158,10 +157,8 @@ class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorDevice):
 
     @property
     def is_on(self):
-        """Grid is online."""
-        return (
-            self._coordinator.data[POWERWALL_API_METERS][
-                POWERWALL_BATTERY_METER
-            ].instant_power
-            < CHARGING_MARGIN_OF_ERROR
-        )
+        """Powerwall is charging."""
+        # is_sending_to returns true for values greater than 100 watts
+        return self._coordinator.data[POWERWALL_API_METERS][
+            POWERWALL_BATTERY_METER
+        ].is_sending_to()
