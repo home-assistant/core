@@ -160,7 +160,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
+class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
     """
     Representation of an alarm status.
 

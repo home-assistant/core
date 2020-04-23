@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
 
-class NX584Alarm(alarm.AlarmControlPanel):
+class NX584Alarm(alarm.AlarmControlPanelEntity):
     """Representation of a NX584-based alarm panel."""
 
     def __init__(self, hass, url, name):
