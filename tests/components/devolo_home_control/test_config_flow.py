@@ -26,7 +26,7 @@ async def test_form(hass):
         "homeassistant.components.devolo_home_control.async_setup_entry",
         return_value=mock_coro(True),
     ) as mock_setup_entry, patch(
-        "homeassistant.components.devolo_home_control.Mydevolo.credentials_valid",
+        "homeassistant.components.devolo_home_control.config_flow.Mydevolo.credentials_valid",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
