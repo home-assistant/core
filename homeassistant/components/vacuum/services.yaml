@@ -85,3 +85,16 @@ set_fan_speed:
     fan_speed:
       description: Platform dependent vacuum cleaner fan speed, with speed steps, like 'medium' or by percentage, between 0 and 100.
       example: "low"
+
+set_option:
+  description: Set an option of the vacuum cleaner.
+  fields:
+    entity_id:
+      description: Name of the vacuum_entity.
+      example: "vacuum.braava_jet"
+    option:
+      description: Platform dependent vacuum cleaner option name.
+      example: "mop_behavior"
+    value:
+      description: Value of the option to be set.
+      example: "deep"

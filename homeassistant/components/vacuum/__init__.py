@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     ATTR_BATTERY_LEVEL,
     ATTR_COMMAND,
+    ATTR_OPTION,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -37,14 +38,17 @@ ATTR_BATTERY_ICON = "battery_icon"
 ATTR_CLEANED_AREA = "cleaned_area"
 ATTR_FAN_SPEED = "fan_speed"
 ATTR_FAN_SPEED_LIST = "fan_speed_list"
+ATTR_OPTION_LIST = "option_list"
 ATTR_PARAMS = "params"
 ATTR_STATUS = "status"
+ATTR_VALUE = "value"
 
 SERVICE_CLEAN_SPOT = "clean_spot"
 SERVICE_LOCATE = "locate"
 SERVICE_RETURN_TO_BASE = "return_to_base"
 SERVICE_SEND_COMMAND = "send_command"
 SERVICE_SET_FAN_SPEED = "set_fan_speed"
+SERVICE_SET_OPTION = "set_option"
 SERVICE_START_PAUSE = "start_pause"
 SERVICE_START = "start"
 SERVICE_PAUSE = "pause"
@@ -74,6 +78,7 @@ SUPPORT_CLEAN_SPOT = 1024
 SUPPORT_MAP = 2048
 SUPPORT_STATE = 4096
 SUPPORT_START = 8192
+SUPPORT_OPTION = 16384
 
 
 @bind_hass
@@ -108,6 +113,11 @@ async def async_setup(hass, config):
         SERVICE_SET_FAN_SPEED,
         {vol.Required(ATTR_FAN_SPEED): cv.string},
         "async_set_fan_speed",
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_OPTION,
+        {vol.Required(ATTR_OPTION): cv.string, vol.Required(ATTR_VALUE): cv.string},
+        "async_set_option",
     )
     component.async_register_entity_service(
         SERVICE_SEND_COMMAND,
@@ -148,6 +158,19 @@ class _BaseVacuum(Entity):
         return None
 
     @property
+    def capability_attributes(self):
+        """Return capability attributes."""
+        attributes = {}
+        if self.fan_speed is not None:
+            attributes[ATTR_FAN_SPEED_LIST] = self.fan_speed_list
+        if self.option_list is not None:
+            attributes[ATTR_OPTION_LIST] = self.option_list
+            for option in self.option_list:
+                attributes[option] = getattr(self, option)
+                attributes[f"{option}_list"] = getattr(self, f"{option}_list")
+        return attributes
+
+    @property
     def fan_speed(self):
         """Return the fan speed of the vacuum cleaner."""
         return None
@@ -156,6 +179,11 @@ class _BaseVacuum(Entity):
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
         raise NotImplementedError()
+
+    @property
+    def option_list(self):
+        """Get the list of options of the vacuum cleaner."""
+        return None
 
     def stop(self, **kwargs):
         """Stop the vacuum cleaner."""
@@ -214,6 +242,17 @@ class _BaseVacuum(Entity):
             partial(self.set_fan_speed, fan_speed, **kwargs)
         )
 
+    def set_option(self, option, value):
+        """Set option value."""
+        raise NotImplementedError()
+
+    async def async_set_option(self, option, value):
+        """Set option value.
+
+        This method must be run in the event loop.
+        """
+        await self.hass.async_add_executor_job(partial(self.set_option, option, value))
+
     def send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner."""
         raise NotImplementedError()
@@ -245,12 +284,6 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=charging
         )
-
-    @property
-    def capability_attributes(self):
-        """Return capability attributes."""
-        if self.fan_speed is not None:
-            return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
 
     @property
     def state_attributes(self):
@@ -325,12 +358,6 @@ class StateVacuumDevice(_BaseVacuum):
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=charging
         )
-
-    @property
-    def capability_attributes(self):
-        """Return capability attributes."""
-        if self.fan_speed is not None:
-            return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
 
     @property
     def state_attributes(self):

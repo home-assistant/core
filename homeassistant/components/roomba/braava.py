@@ -1,7 +1,7 @@
 """Class for Braava devices."""
 import logging
 
-from homeassistant.components.vacuum import SUPPORT_FAN_SPEED
+from homeassistant.components.vacuum import SUPPORT_OPTION
 
 from .irobot_base import SUPPORT_IROBOT, IRobotVacuum
 
@@ -13,6 +13,10 @@ ATTR_TANK_PRESENT = "tank_present"
 ATTR_TANK_LEVEL = "tank_level"
 ATTR_PAD_WETNESS = "spray_amount"
 
+OPTION_MOP_BEHAVIOR = "mop_behavior"
+OPTION_SPRAY_AMOUNT = "spray_amount"
+BRAAVA_OPTIONS = [OPTION_MOP_BEHAVIOR, OPTION_SPRAY_AMOUNT]
+
 OVERLAP_STANDARD = 67
 OVERLAP_DEEP = 85
 OVERLAP_EXTENDED = 25
@@ -20,10 +24,10 @@ MOP_STANDARD = "Standard"
 MOP_DEEP = "Deep"
 MOP_EXTENDED = "Extended"
 BRAAVA_MOP_BEHAVIORS = [MOP_STANDARD, MOP_DEEP, MOP_EXTENDED]
-BRAAVA_SPRAY_AMOUNT = [1, 2, 3]
+BRAAVA_SPRAY_AMOUNT = ["1", "2", "3"]
 
 # Braava Jets can set mopping behavior through fanspeed
-SUPPORT_BRAAVA = SUPPORT_IROBOT | SUPPORT_FAN_SPEED
+SUPPORT_BRAAVA = SUPPORT_IROBOT | SUPPORT_OPTION
 
 
 class BraavaJet(IRobotVacuum):
@@ -46,9 +50,8 @@ class BraavaJet(IRobotVacuum):
         return SUPPORT_BRAAVA
 
     @property
-    def fan_speed(self):
-        """Return the fan speed of the vacuum cleaner."""
-        # Mopping behavior and spray amount as fan speed
+    def mop_behavior(self):
+        """Return the mop behavior of the vacuum cleaner."""
         rank_overlap = self.vacuum_state.get("rankOverlap", {})
         behavior = None
         if rank_overlap == OVERLAP_STANDARD:
@@ -57,63 +60,30 @@ class BraavaJet(IRobotVacuum):
             behavior = MOP_DEEP
         elif rank_overlap == OVERLAP_EXTENDED:
             behavior = MOP_EXTENDED
+        return behavior
+
+    @property
+    def mop_behavior_list(self):
+        """Return the available mop behaviors of the vacuum cleaner."""
+        return BRAAVA_MOP_BEHAVIORS
+
+    @property
+    def spray_amount(self):
+        """Return the spray amount of the vacuum cleaner."""
         pad_wetness = self.vacuum_state.get("padWetness", {})
         # "disposable" and "reusable" values are always the same
         pad_wetness_value = pad_wetness.get("disposable")
-        return f"{behavior}-{pad_wetness_value}"
+        return str(pad_wetness_value)
 
     @property
-    def fan_speed_list(self):
-        """Get the list of available fan speed steps of the vacuum cleaner."""
-        return self._speed_list
+    def spray_amount_list(self):
+        """Return the available spray amount of the vacuum cleaner."""
+        return BRAAVA_SPRAY_AMOUNT
 
-    async def async_set_fan_speed(self, fan_speed, **kwargs):
-        """Set fan speed."""
-        try:
-            split = fan_speed.split("-", 1)
-            behavior = split[0]
-            spray = int(split[1])
-            if behavior.capitalize() in BRAAVA_MOP_BEHAVIORS:
-                behavior = behavior.capitalize()
-        except IndexError:
-            _LOGGER.error(
-                "Fan speed error: expected {behavior}-{spray_amount}, got '%s'",
-                fan_speed,
-            )
-            return
-        except ValueError:
-            _LOGGER.error("Spray amount error: expected integer, got '%s'", split[1])
-            return
-        if behavior not in BRAAVA_MOP_BEHAVIORS:
-            _LOGGER.error(
-                "Mop behavior error: expected one of %s, got '%s'",
-                str(BRAAVA_MOP_BEHAVIORS),
-                behavior,
-            )
-            return
-        if spray not in BRAAVA_SPRAY_AMOUNT:
-            _LOGGER.error(
-                "Spray amount error: expected one of %s, got '%d'",
-                str(BRAAVA_SPRAY_AMOUNT),
-                spray,
-            )
-            return
-
-        overlap = 0
-        if behavior == MOP_STANDARD:
-            overlap = OVERLAP_STANDARD
-        elif behavior == MOP_DEEP:
-            overlap = OVERLAP_DEEP
-        else:
-            overlap = OVERLAP_EXTENDED
-        await self.hass.async_add_executor_job(
-            self.vacuum.set_preference, "rankOverlap", overlap
-        )
-        await self.hass.async_add_executor_job(
-            self.vacuum.set_preference,
-            "padWetness",
-            {"disposable": spray, "reusable": spray},
-        )
+    @property
+    def option_list(self):
+        """Get the list of options of the vacuum cleaner."""
+        return BRAAVA_OPTIONS
 
     @property
     def device_state_attributes(self):
@@ -133,3 +103,47 @@ class BraavaJet(IRobotVacuum):
         state_attrs[ATTR_TANK_LEVEL] = tank_level
 
         return state_attrs
+
+    async def async_set_option(self, option, value):
+        """Set option value."""
+        if option == OPTION_MOP_BEHAVIOR:
+            if value.capitalize() in BRAAVA_MOP_BEHAVIORS:
+                value = value.capitalize()
+            if value not in BRAAVA_MOP_BEHAVIORS:
+                _LOGGER.error(
+                    "Mop behavior error: expected one of %s, got '%s'",
+                    str(BRAAVA_MOP_BEHAVIORS),
+                    value,
+                )
+                return
+            overlap = 0
+            if value == MOP_STANDARD:
+                overlap = OVERLAP_STANDARD
+            elif value == MOP_DEEP:
+                overlap = OVERLAP_DEEP
+            else:
+                overlap = OVERLAP_EXTENDED
+            await self.hass.async_add_executor_job(
+                self.vacuum.set_preference, "rankOverlap", overlap
+            )
+        elif option == OPTION_SPRAY_AMOUNT:
+            if value not in BRAAVA_SPRAY_AMOUNT:
+                _LOGGER.error(
+                    "Spray amount error: expected one of %s, got '%s'",
+                    BRAAVA_SPRAY_AMOUNT,
+                    value,
+                )
+                return
+            spray = int(value)
+            await self.hass.async_add_executor_job(
+                self.vacuum.set_preference,
+                "padWetness",
+                {"disposable": spray, "reusable": spray},
+            )
+        else:
+            _LOGGER.error(
+                "Option name error: expected %s or %s, got '%s'",
+                OPTION_MOP_BEHAVIOR,
+                OPTION_SPRAY_AMOUNT,
+                option,
+            )
