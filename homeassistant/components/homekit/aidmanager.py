@@ -25,6 +25,9 @@ AID_MANAGER_STORAGE_KEY = f"{DOMAIN}.aids"
 AID_MANAGER_STORAGE_VERSION = 1
 AID_MANAGER_SAVE_DELAY = 2
 
+ALLOCATIONS_KEY = "allocations"
+UNIQUE_IDS_KEY = "unique_ids"
+
 INVALID_AIDS = (0, 1)
 
 AID_MIN = 2
@@ -91,7 +94,15 @@ class AccessoryAidStorage:
             # There is no data about aid allocations yet
             return
 
-        self.allocations = raw_storage.get("unique_ids", {})
+        # Remove the UNIQUE_IDS_KEY in 0.112 and later
+        # The beta version used UNIQUE_IDS_KEY but
+        # since we now have entity ids in the dict
+        # we use ALLOCATIONS_KEY but check for
+        # UNIQUE_IDS_KEY in case the database has not
+        # been upgraded yet
+        self.allocations = raw_storage.get(
+            ALLOCATIONS_KEY, raw_storage.get(UNIQUE_IDS_KEY, {})
+        )
         self.allocated_aids = set(self.allocations.values())
 
     def get_or_allocate_aid_for_entity_id(self, entity_id: str):
@@ -142,4 +153,4 @@ class AccessoryAidStorage:
     @callback
     def _data_to_save(self):
         """Return data of entity map to store in a file."""
-        return {"unique_ids": self.allocations}
+        return {ALLOCATIONS_KEY: self.allocations}
