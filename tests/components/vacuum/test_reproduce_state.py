@@ -1,9 +1,13 @@
 """Test reproduce state for Vacuum."""
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
+    ATTR_OPTION,
+    ATTR_OPTION_LIST,
+    ATTR_VALUE,
     SERVICE_PAUSE,
     SERVICE_RETURN_TO_BASE,
     SERVICE_SET_FAN_SPEED,
+    SERVICE_SET_OPTION,
     SERVICE_START,
     SERVICE_STOP,
     STATE_CLEANING,
@@ -25,6 +29,14 @@ from tests.common import async_mock_service
 FAN_SPEED_LOW = "low"
 FAN_SPEED_HIGH = "high"
 
+OPTION_NAV = "nav"
+OPTION_NAV_DEEP = "deep"
+OPTION_NAV_EXTENDED = "extended"
+OPTION_SPRAY = "spray"
+OPTION_SPRAY_1 = "1"
+OPTION_SPRAY_3 = "3"
+OPTION_LIST = [OPTION_NAV, OPTION_SPRAY]
+
 
 async def test_reproducing_states(hass, caplog):
     """Test reproducing Vacuum states."""
@@ -38,6 +50,15 @@ async def test_reproducing_states(hass, caplog):
     hass.states.async_set("vacuum.entity_idle", STATE_IDLE, {})
     hass.states.async_set("vacuum.entity_returning", STATE_RETURNING, {})
     hass.states.async_set("vacuum.entity_paused", STATE_PAUSED, {})
+    hass.states.async_set(
+        "vacuum.entity_option",
+        STATE_DOCKED,
+        {
+            ATTR_OPTION_LIST: OPTION_LIST,
+            OPTION_NAV: OPTION_NAV_DEEP,
+            OPTION_SPRAY: OPTION_SPRAY_1,
+        },
+    )
 
     turn_on_calls = async_mock_service(hass, "vacuum", SERVICE_TURN_ON)
     turn_off_calls = async_mock_service(hass, "vacuum", SERVICE_TURN_OFF)
@@ -46,6 +67,7 @@ async def test_reproducing_states(hass, caplog):
     stop_calls = async_mock_service(hass, "vacuum", SERVICE_STOP)
     return_calls = async_mock_service(hass, "vacuum", SERVICE_RETURN_TO_BASE)
     fan_speed_calls = async_mock_service(hass, "vacuum", SERVICE_SET_FAN_SPEED)
+    option_calls = async_mock_service(hass, "vacuum", SERVICE_SET_OPTION)
 
     # These calls should do nothing as entities already in desired state
     await hass.helpers.state.async_reproduce_state(
@@ -58,6 +80,15 @@ async def test_reproducing_states(hass, caplog):
             State("vacuum.entity_idle", STATE_IDLE),
             State("vacuum.entity_returning", STATE_RETURNING),
             State("vacuum.entity_paused", STATE_PAUSED),
+            State(
+                "vacuum.entity_option",
+                STATE_DOCKED,
+                {
+                    ATTR_OPTION_LIST: OPTION_LIST,
+                    OPTION_NAV: OPTION_NAV_DEEP,
+                    OPTION_SPRAY: OPTION_SPRAY_1,
+                },
+            ),
         ],
     )
 
@@ -68,6 +99,7 @@ async def test_reproducing_states(hass, caplog):
     assert len(stop_calls) == 0
     assert len(return_calls) == 0
     assert len(fan_speed_calls) == 0
+    assert len(option_calls) == 0
 
     # Test invalid state is handled
     await hass.helpers.state.async_reproduce_state(
@@ -82,6 +114,7 @@ async def test_reproducing_states(hass, caplog):
     assert len(stop_calls) == 0
     assert len(return_calls) == 0
     assert len(fan_speed_calls) == 0
+    assert len(option_calls) == 0
 
     # Make sure correct services are called
     await hass.helpers.state.async_reproduce_state(
@@ -94,6 +127,15 @@ async def test_reproducing_states(hass, caplog):
             State("vacuum.entity_idle", STATE_DOCKED),
             State("vacuum.entity_returning", STATE_CLEANING),
             State("vacuum.entity_paused", STATE_IDLE),
+            State(
+                "vacuum.entity_option",
+                STATE_DOCKED,
+                {
+                    ATTR_OPTION_LIST: OPTION_LIST,
+                    OPTION_NAV: OPTION_NAV_EXTENDED,
+                    OPTION_SPRAY: OPTION_SPRAY_3,
+                },
+            ),
             # Should not raise
             State("vacuum.non_existing", STATE_ON),
         ],
@@ -134,4 +176,18 @@ async def test_reproducing_states(hass, caplog):
     assert fan_speed_calls[0].data == {
         "entity_id": "vacuum.entity_on_fan",
         ATTR_FAN_SPEED: FAN_SPEED_HIGH,
+    }
+
+    assert len(option_calls) == 2
+    assert option_calls[0].domain == "vacuum"
+    assert option_calls[0].data == {
+        "entity_id": "vacuum.entity_option",
+        ATTR_OPTION: OPTION_NAV,
+        ATTR_VALUE: OPTION_NAV_EXTENDED,
+    }
+    assert option_calls[1].domain == "vacuum"
+    assert option_calls[1].data == {
+        "entity_id": "vacuum.entity_option",
+        ATTR_OPTION: OPTION_SPRAY,
+        ATTR_VALUE: OPTION_SPRAY_3,
     }

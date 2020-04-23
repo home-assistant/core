@@ -17,10 +17,14 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
     ATTR_FAN_SPEED,
+    ATTR_OPTION,
+    ATTR_OPTION_LIST,
+    ATTR_VALUE,
     DOMAIN,
     SERVICE_PAUSE,
     SERVICE_RETURN_TO_BASE,
     SERVICE_SET_FAN_SPEED,
+    SERVICE_SET_OPTION,
     SERVICE_START,
     SERVICE_STOP,
     STATE_CLEANING,
@@ -60,14 +64,6 @@ async def _async_reproduce_state(
         )
         return
 
-    # Return if we are already at the right state.
-    if cur_state.state == state.state and cur_state.attributes.get(
-        ATTR_FAN_SPEED
-    ) == state.attributes.get(ATTR_FAN_SPEED):
-        return
-
-    service_data = {ATTR_ENTITY_ID: state.entity_id}
-
     if cur_state.state != state.state:
         # Wrong state
         if state.state == STATE_ON:
@@ -84,15 +80,42 @@ async def _async_reproduce_state(
             service = SERVICE_PAUSE
 
         await hass.services.async_call(
-            DOMAIN, service, service_data, context=context, blocking=True
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: state.entity_id},
+            context=context,
+            blocking=True,
         )
 
     if cur_state.attributes.get(ATTR_FAN_SPEED) != state.attributes.get(ATTR_FAN_SPEED):
         # Wrong fan speed
-        service_data["fan_speed"] = state.attributes[ATTR_FAN_SPEED]
         await hass.services.async_call(
-            DOMAIN, SERVICE_SET_FAN_SPEED, service_data, context=context, blocking=True
+            DOMAIN,
+            SERVICE_SET_FAN_SPEED,
+            {
+                ATTR_ENTITY_ID: state.entity_id,
+                ATTR_FAN_SPEED: state.attributes[ATTR_FAN_SPEED],
+            },
+            context=context,
+            blocking=True,
         )
+
+    # Check options
+    option_list = state.attributes.get(ATTR_OPTION_LIST)
+    if option_list is not None:
+        for option in option_list:
+            if cur_state.attributes.get(option) != state.attributes.get(option):
+                await hass.services.async_call(
+                    DOMAIN,
+                    SERVICE_SET_OPTION,
+                    {
+                        ATTR_ENTITY_ID: state.entity_id,
+                        ATTR_OPTION: option,
+                        ATTR_VALUE: state.attributes[option],
+                    },
+                    context=context,
+                    blocking=True,
+                )
 
 
 async def async_reproduce_states(
