@@ -16,7 +16,8 @@
     "error": {
       "websocket_not_enabled": "forked-daapd server websocket not enabled.",
       "wrong_host_or_port": "Unable to connect. Please check host and port.",
-      "wrong_password_or_server_type": "Incorrect password or not a forked-daapd server.",
+      "wrong_password": "Incorrect password.",
+      "wrong_server_type": "Not a forked-daapd server.",
       "unknown_error": "Unknown error."
     },
     "abort": {
