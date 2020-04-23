@@ -4,10 +4,10 @@ from jenkinsapi.jenkins import Jenkins
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
 from . import _LOGGER
-from .const import DOMAIN
+from .const import CONF_JOB_NAME, DOMAIN
 
 
 class JenkinsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -44,12 +44,19 @@ class JenkinsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             _LOGGER.debug(f"User decided on the following: {user_input}")
 
-            # TODO: Create and add entity
-            return self.async_abort(reason="under_development")
+            return self.async_create_entry(
+                title=user_input[CONF_JOB_NAME],
+                data={
+                    CONF_URL: self.server.baseurl,
+                    CONF_USERNAME: None,
+                    CONF_PASSWORD: None,
+                    CONF_JOB_NAME: user_input[CONF_JOB_NAME],
+                },
+            )
 
         # TODO: Fix "Detected I/O inside the event loop"
         job_names = [job[0] for job in self.server.get_jobs()]
 
-        data_schema = vol.Schema({vol.Required("JOB_NAME"): vol.In(job_names)})
+        data_schema = vol.Schema({vol.Required(CONF_JOB_NAME): vol.In(job_names)})
 
         return self.async_show_form(step_id="job", data_schema=data_schema)

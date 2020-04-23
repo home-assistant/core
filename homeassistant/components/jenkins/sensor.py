@@ -6,12 +6,13 @@ from requests.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from . import _LOGGER
-from .const import CONF_BRANCH, CONF_REPOSITORY, DEFAULT_BRANCH, DOMAIN
+from .const import CONF_BRANCH, CONF_JOB_NAME, CONF_REPOSITORY, DEFAULT_BRANCH, DOMAIN
 
 # Validating configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -55,6 +56,25 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Jenkins sensor based on a config entry."""
+    try:
+        jenkins = Jenkins(
+            entry.data[CONF_URL],
+            username=entry.data[CONF_USERNAME],
+            password=entry.data[CONF_PASSWORD],
+        )
+        _LOGGER.debug(f"Successfully connected to {entry.data[CONF_URL]}")
+    except HTTPError as exception:
+        raise PlatformNotReady from exception
+
+    [repository, branch] = entry.data[CONF_JOB_NAME].split("/", maxsplit=1)
+    job = jenkins.get_job(entry.data[CONF_JOB_NAME])
+    sensor = JenkinsSensor(repository, branch, job)
+
+    async_add_entities([sensor], True)
+
+
 class JenkinsSensor(Entity):
     """Sensor for single metric in a Jenkins build."""
 
@@ -64,7 +84,6 @@ class JenkinsSensor(Entity):
         self.repository = repository
         self.branch = branch
         self._name = f"{repository} {branch}"
-        self._unique_id = f"{self.repository}_{self.branch}"
         self._state = None
         self._attributes = None
 
