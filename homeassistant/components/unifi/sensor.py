@@ -2,11 +2,12 @@
 import logging
 
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
-from homeassistant.components.unifi.unifi_client import UniFiClient
 from homeassistant.const import DATA_MEGABYTES
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from .const import DOMAIN as UNIFI_DOMAIN
+from .unifi_client import UniFiClient
 
 LOGGER = logging.getLogger(__name__)
 

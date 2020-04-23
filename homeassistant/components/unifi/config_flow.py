@@ -4,7 +4,17 @@ import socket
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.unifi.const import (
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
+
+from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
@@ -18,24 +28,11 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_WIRED_CLIENTS,
     CONTROLLER_ID,
     DEFAULT_POE_CLIENTS,
-    DOMAIN,
+    DOMAIN as UNIFI_DOMAIN,
     LOGGER,
 )
-from homeassistant.components.unifi.controller import get_controller
-from homeassistant.components.unifi.errors import (
-    AlreadyConfigured,
-    AuthenticationRequired,
-    CannotConnect,
-)
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from .controller import get_controller
+from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 
 DEFAULT_PORT = 8443
 DEFAULT_SITE_ID = "default"
@@ -51,7 +48,7 @@ def get_controller_id_from_config_entry(config_entry):
     )
 
 
-class UnifiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     """Handle a UniFi config flow."""
 
     VERSION = 1
@@ -176,7 +173,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the UniFi options."""
-        self.controller = self.hass.data[DOMAIN][self.config_entry.entry_id]
+        self.controller = self.hass.data[UNIFI_DOMAIN][self.config_entry.entry_id]
         self.options[CONF_BLOCK_CLIENT] = self.controller.option_block_clients
         return await self.async_step_device_tracker()
 

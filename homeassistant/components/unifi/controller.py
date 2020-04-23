@@ -17,10 +17,16 @@ from aiounifi.events import WIRELESS_CLIENT_CONNECTED, WIRELESS_GUEST_CONNECTED
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 import async_timeout
 
-from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
+from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.unifi.const import (
+from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+
+from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
@@ -40,19 +46,14 @@ from homeassistant.components.unifi.const import (
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
-    DOMAIN,
+    DOMAIN as UNIFI_DOMAIN,
     LOGGER,
     UNIFI_WIRELESS_CLIENTS,
 )
-from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
-from homeassistant.const import CONF_HOST
-from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
-SUPPORTED_PLATFORMS = [DT_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
+SUPPORTED_PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
 
 class UniFiController:
@@ -282,7 +283,7 @@ class UniFiController:
     @staticmethod
     async def async_config_entry_updated(hass, config_entry) -> None:
         """Handle signals of config entry being updated."""
-        controller = hass.data[DOMAIN][config_entry.entry_id]
+        controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
         async_dispatcher_send(hass, controller.signal_options_update)
 
     @callback

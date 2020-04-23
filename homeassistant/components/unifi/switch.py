@@ -2,11 +2,12 @@
 import logging
 
 from homeassistant.components.switch import DOMAIN, SwitchDevice
-from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
-from homeassistant.components.unifi.unifi_client import UniFiClient
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
+
+from .const import DOMAIN as UNIFI_DOMAIN
+from .unifi_client import UniFiClient
 
 LOGGER = logging.getLogger(__name__)
 
