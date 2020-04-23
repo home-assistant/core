@@ -130,6 +130,11 @@ class NAD(MediaPlayerDevice):
         return self._state
 
     @property
+    def icon(self):
+        """Return the icon for the device."""
+        return "mdi:speaker-multiple"
+
+    @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
         return self._volume
