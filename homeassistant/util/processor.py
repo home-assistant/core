@@ -80,7 +80,7 @@ async def async_map_retry(
     :param hass: The current home assistant instance.
     :param objects: The objects to map.
     :param map_function: Maps the original object to a new object. Note: Throwing an exception or returning None from this function results in the original object being retried later.
-    :param process_function: Processes the new object once it was successfull mapped.
+    :param process_function: Processes the new object once it was successful mapped.
     :param retry_interval: Time between attempts to map and process objects.
     :param timeout_attempts: Number of attempts before giving up. A value of 0 means it runs forever.
     :param run_in_parallel: When True, objects will be handled in parallel. (Default: True)
