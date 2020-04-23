@@ -11,6 +11,7 @@ CONF_CITY = "city"
 CONF_COUNTRY = "country"
 CONF_GEOGRAPHIES = "geographies"
 CONF_INTEGRATION_TYPE = "integration_type"
+CONF_TREND_MEASUREMENTS = "trend_measurements"
 
 DATA_CLIENT = "client"
 

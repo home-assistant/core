@@ -6,6 +6,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components.airvisual import (
     CONF_GEOGRAPHIES,
     CONF_INTEGRATION_TYPE,
+    CONF_TREND_MEASUREMENTS,
     DOMAIN,
     INTEGRATION_TYPE_GEOGRAPHY,
     INTEGRATION_TYPE_NODE_PRO,
@@ -137,18 +138,19 @@ async def test_migration(hass):
     }
 
 
-async def test_options_flow(hass):
-    """Test config flow options."""
-    geography_conf = {
+async def test_options_flow_geography(hass):
+    """Test config flow options for a geography-based config entry."""
+    conf = {
         CONF_API_KEY: "abcde12345",
         CONF_LATITUDE: 51.528308,
         CONF_LONGITUDE: -0.3817765,
+        CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY,
     }
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="51.528308, -0.3817765",
-        data=geography_conf,
+        data=conf,
         options={CONF_SHOW_ON_MAP: True},
     )
     config_entry.add_to_hass(hass)
@@ -167,6 +169,38 @@ async def test_options_flow(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert config_entry.options == {CONF_SHOW_ON_MAP: False}
+
+
+async def test_options_flow_node_pro(hass):
+    """Test config flow options for a Node/Pro-based config entry."""
+    conf = {
+        CONF_IP_ADDRESS: "192.168.1.100",
+        CONF_PASSWORD: "my_password",
+        CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO,
+    }
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="51.528308, -0.3817765",
+        data=conf,
+        options={CONF_TREND_MEASUREMENTS: -1},
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.airvisual.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_TREND_MEASUREMENTS: 10}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert config_entry.options == {CONF_TREND_MEASUREMENTS: 10}
 
 
 async def test_step_geography(hass):

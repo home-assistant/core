@@ -31,6 +31,7 @@ from .const import (
     CONF_COUNTRY,
     CONF_GEOGRAPHIES,
     CONF_INTEGRATION_TYPE,
+    CONF_TREND_MEASUREMENTS,
     DATA_CLIENT,
     DOMAIN,
     INTEGRATION_TYPE_GEOGRAPHY,
@@ -46,7 +47,7 @@ DATA_LISTENER = "listener"
 DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
 DEFAULT_GEOGRAPHY_SCAN_INTERVAL = timedelta(minutes=10)
 DEFAULT_NODE_PRO_SCAN_INTERVAL = timedelta(minutes=1)
-DEFAULT_OPTIONS = {CONF_SHOW_ON_MAP: True}
+DEFAULT_TREND_MEASUREMENTS = -1
 
 GEOGRAPHY_COORDINATES_SCHEMA = vol.Schema(
     {
@@ -148,6 +149,9 @@ def _standardize_node_pro_config_entry(hass, config_entry):
     """Ensure that Node/Pro config entries have appropriate properties."""
     entry_updates = {}
 
+    if not config_entry.options:
+        # If the config entry doesn't already have any options set, set defaults:
+        entry_updates["options"] = {CONF_TREND_MEASUREMENTS: DEFAULT_TREND_MEASUREMENTS}
     if CONF_INTEGRATION_TYPE not in config_entry.data:
         # If the config entry data doesn't contain the integration type, add it:
         entry_updates["data"] = {
@@ -172,15 +176,13 @@ async def async_setup_entry(hass, config_entry):
             Client(websession, api_key=config_entry.data[CONF_API_KEY]),
             config_entry,
         )
-
-        # Only geography-based entries have options:
-        config_entry.add_update_listener(async_update_options)
     else:
         _standardize_node_pro_config_entry(hass, config_entry)
         airvisual = AirVisualNodeProData(hass, Client(websession), config_entry)
 
-    await airvisual.async_update()
+    config_entry.add_update_listener(async_update_options)
 
+    await airvisual.async_update()
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = airvisual
 
     for component in PLATFORMS:
@@ -362,6 +364,7 @@ class AirVisualNodeProData:
         self.data = {}
         self.integration_type = INTEGRATION_TYPE_NODE_PRO
         self.ip_address = config_entry.data[CONF_IP_ADDRESS]
+        self.options = config_entry.options
         self.scan_interval = DEFAULT_NODE_PRO_SCAN_INTERVAL
         self.topic_update = TOPIC_UPDATE.format(config_entry.data[CONF_IP_ADDRESS])
 
@@ -369,7 +372,10 @@ class AirVisualNodeProData:
         """Get new data from the Node/Pro."""
         try:
             self.data = await self._client.node.from_samba(
-                self.ip_address, self._password, include_history=False
+                self.ip_address,
+                self._password,
+                include_history=False,
+                measurements_to_use=self.options[CONF_TREND_MEASUREMENTS],
             )
         except NodeProError as err:
             LOGGER.error("Error while retrieving Node/Pro data: %s", err)
@@ -378,3 +384,8 @@ class AirVisualNodeProData:
 
         LOGGER.debug("Received new Node/Pro data")
         async_dispatcher_send(self._hass, self.topic_update)
+
+    @callback
+    def async_update_options(self, options):
+        """Update the data manager's options."""
+        self.options = options

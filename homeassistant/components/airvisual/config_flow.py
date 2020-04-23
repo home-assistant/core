@@ -21,6 +21,7 @@ from . import async_get_geography_id
 from .const import (  # pylint: disable=unused-import
     CONF_GEOGRAPHIES,
     CONF_INTEGRATION_TYPE,
+    CONF_TREND_MEASUREMENTS,
     DOMAIN,
     INTEGRATION_TYPE_GEOGRAPHY,
     INTEGRATION_TYPE_NODE_PRO,
@@ -179,20 +180,31 @@ class AirVisualOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         """Initialize."""
         self.config_entry = config_entry
+        self.geography_options_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_SHOW_ON_MAP,
+                    default=self.config_entry.options.get(CONF_SHOW_ON_MAP),
+                ): bool
+            }
+        )
+        self.node_pro_options_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_TREND_MEASUREMENTS,
+                    default=self.config_entry.options.get(CONF_TREND_MEASUREMENTS),
+                ): int
+            }
+        )
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_SHOW_ON_MAP,
-                        default=self.config_entry.options.get(CONF_SHOW_ON_MAP),
-                    ): bool
-                }
-            ),
-        )
+        if self.config_entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_GEOGRAPHY:
+            schema = self.geography_options_schema
+        else:
+            schema = self.node_pro_options_schema
+
+        return self.async_show_form(step_id="init", data_schema=schema)

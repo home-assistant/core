@@ -42,7 +42,8 @@
       "init": {
         "title": "Configure AirVisual",
         "data": {
-          "show_on_map": "Show monitored geography on the map"
+          "show_on_map": "Show monitored geography on the map",
+          "trend_measurements": "Measurements to use for trends (-1 to use all)"
         }
       }
     }
