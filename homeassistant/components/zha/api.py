@@ -308,7 +308,7 @@ async def websocket_get_group(hass, connection, msg):
     connection.send_result(msg[ID], group)
 
 
-def is_group_member(value: Any) -> GroupMember:
+def cv_group_member(value: Any) -> GroupMember:
     """Validate and transform a group member."""
     if not isinstance(value, Mapping):
         raise vol.Invalid("Not a group member")
@@ -328,7 +328,7 @@ def is_group_member(value: Any) -> GroupMember:
     {
         vol.Required(TYPE): "zha/group/add",
         vol.Required(GROUP_NAME): cv.string,
-        vol.Optional(ATTR_MEMBERS): vol.All(cv.ensure_list, [is_group_member]),
+        vol.Optional(ATTR_MEMBERS): vol.All(cv.ensure_list, [cv_group_member]),
     }
 )
 async def websocket_add_group(hass, connection, msg):
@@ -370,7 +370,7 @@ async def websocket_remove_groups(hass, connection, msg):
     {
         vol.Required(TYPE): "zha/group/members/add",
         vol.Required(GROUP_ID): cv.positive_int,
-        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [is_group_member]),
+        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [cv_group_member]),
     }
 )
 async def websocket_add_group_members(hass, connection, msg):
@@ -400,7 +400,7 @@ async def websocket_add_group_members(hass, connection, msg):
     {
         vol.Required(TYPE): "zha/group/members/remove",
         vol.Required(GROUP_ID): cv.positive_int,
-        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [is_group_member]),
+        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [cv_group_member]),
     }
 )
 async def websocket_remove_group_members(hass, connection, msg):
