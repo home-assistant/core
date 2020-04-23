@@ -46,10 +46,15 @@ def _generate_aids(unique_id: str, entity_id: str) -> int:
     # Not robust against collisions
     yield adler32(entity_id.encode("utf-8"))
 
-    # Use fnv1a_32 of the unique id as
-    # fnv1a_32 has less collisions than
-    # adler32
-    yield fnv1a_32(unique_id.encode("utf-8"))
+    if unique_id:
+        # Use fnv1a_32 of the unique id as
+        # fnv1a_32 has less collisions than
+        # adler32
+        yield fnv1a_32(unique_id.encode("utf-8"))
+
+    # If there is no unique id we use
+    # fnv1a_32 as it is unlikely to collide
+    yield fnv1a_32(entity_id.encode("utf-8"))
 
     # If called again resort to random allocations.
     # Given the size of the range its unlikely we'll encounter duplicates
@@ -92,28 +97,26 @@ class AccessoryAidStorage:
     def get_or_allocate_aid_for_entity_id(self, entity_id: str):
         """Generate a stable aid for an entity id."""
         entity = self._entity_registry.async_get(entity_id)
+        if not entity:
+            return self._get_or_allocate_aid(None, entity_id)
 
-        if entity:
-            return self._get_or_allocate_aid(
-                get_system_unique_id(entity), entity.entity_id
-            )
-
-        _LOGGER.warning(
-            "Entity '%s' does not have a stable unique identifier so aid allocation will be unstable and may cause collisions",
-            entity_id,
-        )
-        return adler32(entity_id.encode("utf-8"))
+        sys_unique_id = get_system_unique_id(entity)
+        return self._get_or_allocate_aid(sys_unique_id, entity_id)
 
     def _get_or_allocate_aid(self, unique_id: str, entity_id: str):
         """Allocate (and return) a new aid for an accessory."""
-        if unique_id in self.allocations:
-            return self.allocations[unique_id]
+        # Prefer the unique_id over the
+        # entitiy_id
+        storage_key = unique_id or entity_id
+
+        if storage_key in self.allocations:
+            return self.allocations[storage_key]
 
         for aid in _generate_aids(unique_id, entity_id):
             if aid in INVALID_AIDS:
                 continue
             if aid not in self.allocated_aids:
-                self.allocations[unique_id] = aid
+                self.allocations[storage_key] = aid
                 self.allocated_aids.add(aid)
                 self.async_schedule_save()
                 return aid
@@ -122,12 +125,12 @@ class AccessoryAidStorage:
             f"Unable to generate unique aid allocation for {entity_id} [{unique_id}]"
         )
 
-    def delete_aid(self, unique_id: str):
+    def delete_aid(self, storage_key: str):
         """Delete an aid allocation."""
-        if unique_id not in self.allocations:
+        if storage_key not in self.allocations:
             return
 
-        aid = self.allocations.pop(unique_id)
+        aid = self.allocations.pop(storage_key)
         self.allocated_aids.discard(aid)
         self.async_schedule_save()
 
