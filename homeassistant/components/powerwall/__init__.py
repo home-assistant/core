@@ -128,9 +128,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         await hass.async_add_executor_job(power_wall.detect_and_pin_version)
         powerwall_data = await hass.async_add_executor_job(call_base_info, power_wall)
-    except PowerwallError as e:
+    except PowerwallError as err:
         http_session.close()
-        await handle_setup_error(hass, entry, e)
+        await handle_setup_error(hass, entry, err)
         raise ConfigEntryNotReady
 
     await _migrate_old_unique_ids(hass, entry_id, powerwall_data)

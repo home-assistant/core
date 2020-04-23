@@ -27,9 +27,9 @@ async def validate_input(hass: core.HomeAssistant, data):
         site_info = await hass.async_add_executor_job(power_wall.get_site_info)
     except PowerwallUnreachableError:
         raise CannotConnect
-    except APIChangedError as e:
+    except APIChangedError as err:
         # Only log the exception without the traceback
-        _LOGGER.error(str(e))
+        _LOGGER.error(str(err))
         raise WrongVersion
 
     # Return info that you want to store in the config entry.
