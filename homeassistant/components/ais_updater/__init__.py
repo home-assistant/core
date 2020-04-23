@@ -404,6 +404,8 @@ async def get_system_info(hass, include_components):
     ) = get_current_android_apk_version()
     G_CURRENT_LINUX_V = get_current_linux_apt_version(hass)
     G_CURRENT_ZIGBEE2MQTT_V = hass.states.get("sensor.wersja_zigbee2mqtt").state
+    if G_CURRENT_ZIGBEE2MQTT_V == "unknown":
+        G_CURRENT_ZIGBEE2MQTT_V = "0"
     info_object = {
         "arch": platform.machine(),
         "os_name": platform.system(),
@@ -441,6 +443,8 @@ def get_system_info_sync(hass):
     ) = get_current_android_apk_version()
     G_CURRENT_LINUX_V = get_current_linux_apt_version(hass)
     G_CURRENT_ZIGBEE2MQTT_V = hass.states.get("sensor.wersja_zigbee2mqtt").state
+    if G_CURRENT_ZIGBEE2MQTT_V == "unknown":
+        G_CURRENT_ZIGBEE2MQTT_V = "0"
     info_object = {
         "gate_id": gate_id,
         "dom_app_version": current_version,
