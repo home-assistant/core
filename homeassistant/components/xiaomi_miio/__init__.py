@@ -42,7 +42,7 @@ async def async_setup_gateway_entry(
 
     # Connect to gateway
     gateway = ConnectXiaomiGateway()
-    if not await gateway.async_connect_gateway(host, token):
+    if not await gateway.async_connect_gateway(hass, host, token):
         return False
     gateway_info = gateway.gateway_info
 
