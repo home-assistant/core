@@ -8,6 +8,12 @@
             "webhook_error": "SmartThings kon het in 'base_url` geconfigureerde endpoint niet goedkeuren. Lees de componentvereisten door."
         },
         "step": {
+            "select_location": {
+                "data": {
+                    "location_id": "Locatie"
+                },
+                "title": "Locatie selecteren"
+            },
             "user": {
                 "description": "Voer een SmartThings [Personal Access Token]({token_url}) in die is aangemaakt volgens de [instructies]({component_url}).",
                 "title": "Persoonlijk toegangstoken invoeren"

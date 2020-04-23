@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "auth_failed": "Ongeldige gebruikersnaam of wachtwoord"
+        },
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                }
+            }
+        }
+    }
+}
