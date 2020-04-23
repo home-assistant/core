@@ -4,16 +4,15 @@ import logging
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
-from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
-from homeassistant.components.unifi.unifi_entity_base import UniFiBase
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_MANUFACTURER
+from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
+from .unifi_entity_base import UniFiBase
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +44,7 @@ DEVICE_TRACKER = "device"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up device tracker for UniFi component."""
-    controller = get_controller_from_config_entry(hass, config_entry)
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     controller.entities[DOMAIN] = {CLIENT_TRACKER: set(), DEVICE_TRACKER: set()}
 
     # Restore clients that is not a part of active clients list.
