@@ -79,28 +79,28 @@ class Outlet(Light):
         If effect is AUTO, ON, or OFF, put the outlet into that mode.
         """
         if kwargs.get(ATTR_EFFECT) == "AUTO":
-            _LOGGER.debug(f"Enabling AUTO for outlet {self.name}")
+            _LOGGER.debug("Enabling AUTO for outlet %s", self.name)
             self.outlet.enable_auto()
             await self.apex.update_outlet(self.outlet)
             self.async_schedule_update_ha_state(True)
-            _LOGGER.debug(f"Just turned on AUTO. is_on = {self.outlet.is_on()}")
+            _LOGGER.debug("Just turned on AUTO. is_on = %s", self.outlet.is_on())
         elif kwargs.get(ATTR_EFFECT) == "ON":
             await self.async_turn_on()
         elif kwargs.get(ATTR_EFFECT) == "OFF":
             await self.async_turn_off()
         else:
-            _LOGGER.debug(f"Turning outlet ON for {self.name}")
+            _LOGGER.debug("Turning outlet ON for %s", self.name)
             self.outlet.force_on()
             await self.apex.update_outlet(self.outlet)
             self.async_schedule_update_ha_state()
-            _LOGGER.debug(f"Just turned on outlet. is_on = {self.outlet.is_on()}")
+            _LOGGER.debug("Just turned on outlet. is_on = %s", self.outlet.is_on())
 
     async def async_turn_off(self, **kwargs):
         """Turn the outlet off by forcing off, disabling AUTO if enabled."""
         self.outlet.force_off()
         await self.apex.update_outlet(self.outlet)
         self.async_schedule_update_ha_state()
-        _LOGGER.debug(f"Just turned off outlet. is_on = {self.outlet.is_on()}")
+        _LOGGER.debug("Just turned off outlet. is_on = %s", self.outlet.is_on())
 
     @property
     def icon(self):

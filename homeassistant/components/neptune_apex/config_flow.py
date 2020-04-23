@@ -34,7 +34,7 @@ class ApexHub:
         result = await self.apex.validate_connection()
         if result == "success":
             return True
-        elif result == "invalid_auth":
+        if result == "invalid_auth":
             raise InvalidAuth
         raise CannotConnect
 
