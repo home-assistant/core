@@ -84,15 +84,15 @@ async def async_create_blebox_entities(product, async_add, entity_klass, entity_
 
 
 class BleBoxEntity:
-    """Implements methods common among BleBox entities."""
+    """Implements a common class for entities representing a BleBox feature."""
 
     def __init__(self, feature):
-        """Initialize the cover entity."""
+        """Initialize a BleBox entity."""
         self._feature = feature
 
     @property
     def name(self):
-        """Return the name."""
+        """Return the internal entity name."""
         return self._feature.full_name
 
     @property
@@ -101,7 +101,7 @@ class BleBoxEntity:
         return self._feature.unique_id
 
     async def async_update(self):
-        """Update the cover state."""
+        """Update the entity state."""
         try:
             await self._feature.async_update()
         except Error as ex:
@@ -109,7 +109,7 @@ class BleBoxEntity:
 
     @property
     def device_info(self):
-        """Return device information about this WLED device."""
+        """Return device information for this entity."""
         product = self._feature.product
         return {
             "identifiers": {(DOMAIN, product.unique_id)},
