@@ -213,6 +213,7 @@ class TestUVC(unittest.TestCase):
             ],
         }
         self.nvr.server_version = (3, 2, 0)
+        self.uvc.update()
 
     def test_properties(self):
         """Test the properties."""
