@@ -10,12 +10,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up Panasonic Viera TV from a config entry."""
+    """Set up Panasonic Viera TV Remote from a config entry."""
 
     config = config_entry.data
 
     host = config[CONF_HOST]
-    name = config[CONF_NAME]
+    name = config[CONF_NAME] + " Remote"
 
     remote = hass.data[DOMAIN][host][ATTR_REMOTE]
 
