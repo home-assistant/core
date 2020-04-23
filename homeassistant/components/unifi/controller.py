@@ -265,6 +265,30 @@ class UniFiController:
             LOGGER.error("Unknown error connecting with UniFi controller: %s", err)
             return False
 
+        # Restore clients that is not a part of active clients list.
+        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        for entity in entity_registry.entities.values():
+            if (
+                entity.config_entry_id != self.config_entry.entry_id
+                or "-" not in entity.unique_id
+            ):
+                continue
+
+            mac = ""
+            if entity.domain == TRACKER_DOMAIN:
+                mac, _ = entity.unique_id.split("-", 1)
+            elif entity.domain == SWITCH_DOMAIN:
+                _, mac = entity.unique_id.split("-", 1)
+
+            if mac in self.api.clients or mac not in self.api.clients_all:
+                continue
+
+            client = self.api.clients_all[mac]
+            self.api.clients.process_raw([client.raw])
+            LOGGER.debug(
+                "Restore disconnected client %s (%s)", entity.entity_id, client.mac,
+            )
+
         wireless_clients = self.hass.data[UNIFI_WIRELESS_CLIENTS]
         self.wireless_clients = wireless_clients.get_data(self.config_entry)
         self.update_wireless_clients()
