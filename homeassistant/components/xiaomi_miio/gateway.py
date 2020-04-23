@@ -24,12 +24,14 @@ class ConnectXiaomiGateway:
         """Return the class containing gateway info."""
         return self._gateway_info
 
-    async def async_connect_gateway(self, host, token):
+    async def async_connect_gateway(self, hass, host, token):
         """Connect to the Xiaomi Gateway."""
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
         try:
             self._gateway_device = gateway.Gateway(host, token)
-            self._gateway_info = self._gateway_device.info()
+            self._gateway_info = await hass.async_add_executor_job(
+                self._gateway_device.info
+            )
         except DeviceException:
             _LOGGER.error(
                 "DeviceException during setup of xiaomi gateway with host %s", host
