@@ -26,6 +26,8 @@ async def validate_input(hass: core.HomeAssistant, data):
         gateway.Init()
     except gammu.GSMError:  # pylint: disable=no-member
         raise CannotConnect
+    finally:
+        gateway.Terminate()
 
     # Return info that you want to store in the config entry.
     return {"title": device}
