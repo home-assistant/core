@@ -1,6 +1,6 @@
 """Code to handle a Dynalite bridge."""
 
-from typing import TYPE_CHECKING, Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 from dynalite_devices_lib.dynalite_devices import DynaliteDevices
 
@@ -10,11 +10,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import ENTITY_PLATFORMS, LOGGER
 from .convert_config import convert_config
-
-if TYPE_CHECKING:  # pragma: no cover
-    from dynalite_devices_lib.dynalite_devices import (  # pylint: disable=ungrouped-imports
-        DynaliteBaseDevice,
-    )
 
 
 class DynaliteBridge:
@@ -45,7 +40,7 @@ class DynaliteBridge:
         LOGGER.debug("Reloading bridge - host %s, config %s", self.host, config)
         self.dynalite_devices.configure(convert_config(config))
 
-    def update_signal(self, device: "DynaliteBaseDevice" = None) -> str:
+    def update_signal(self, device: Optional["DynaliteBaseDevice"] = None) -> str:
         """Create signal to use to trigger entity update."""
         if device:
             signal = f"dynalite-update-{self.host}-{device.unique_id}"
@@ -54,7 +49,7 @@ class DynaliteBridge:
         return signal
 
     @callback
-    def update_device(self, device: "DynaliteBaseDevice" = None) -> None:
+    def update_device(self, device: Optional["DynaliteBaseDevice"] = None) -> None:
         """Call when a device or all devices should be updated."""
         if not device:
             # This is used to signal connection or disconnection, so all devices may become available or not.
