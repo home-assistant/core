@@ -12,7 +12,6 @@ from aiohttp.web import Request, Response
 from sqlalchemy import create_engine
 import json
 from sqlalchemy.pool import StaticPool
-from typing import Any
 from homeassistant.components.http import HomeAssistantView
 from . import sensor
 from .const import DOMAIN

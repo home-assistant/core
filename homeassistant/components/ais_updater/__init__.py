@@ -17,6 +17,7 @@ import sys
 import aiohttp
 import async_timeout
 import voluptuous as vol
+import requests
 
 from homeassistant.components import ais_cloud
 from homeassistant.components.ais_dom import ais_global
@@ -155,7 +156,7 @@ async def async_setup(hass, config):
             return
 
         # overriding auto_update, in case the we don't want to zigbee2mqtt without user
-        need_to_update, dom_app_newest_version, release_notes, auto_update = result
+        need_to_update, dom_app_newest_version, release_notes = result
 
         # Validate version
         if need_to_update:
@@ -579,17 +580,12 @@ async def get_newest_version(hass, include_components, go_to_download):
                 ATTR_UPDATE_CHECK_TIME: get_current_dt(),
             },
         )
-        #
-        auto_update = go_to_download
-        if reinstall_zigbee2mqtt:
-            # in case of zigbee need to be updated we don't allow autoupdate
-            auto_update = False
         if fix_script != "":
             await hass.services.async_call("ais_updater", "applay_the_fix")
-        if need_to_update and auto_update:
+        if need_to_update and go_to_download:
             # call the download service
             await hass.services.async_call("ais_updater", "download_upgrade")
-        return need_to_update, res["dom_app_version"], res["release_notes"], auto_update
+        return need_to_update, res["dom_app_version"], res["release_notes"]
     except ValueError:
         _LOGGER.error("Received invalid JSON from AIS dom Update")
         info = "Wersja. Otrzmyano nieprawidłową odpowiedz z usługi AIS dom "
@@ -740,6 +736,7 @@ def do_execute_upgrade(hass, call):
                 "linux_apt_newest_version": ws_resp["linux_apt_version"],
                 "reinstall_linux_apt": reinstall_linux_apt,
                 "zigbee2mqtt_current_version": G_CURRENT_ZIGBEE2MQTT_V,
+                "zigbee2mqtt_newest_version": ws_resp["zigbee2mqtt_version"],
                 "reinstall_zigbee2mqtt": reinstall_zigbee2mqtt,
                 "release_script": release_script,
                 "fix_script": fix_script,
@@ -816,7 +813,6 @@ def do_download_upgrade(hass, call):
     dom_app_newest_version = attr.get("dom_app_newest_version", "")
     release_script = attr.get("release_script", "")
     reinstall_zigbee2mqtt = attr.get("reinstall_zigbee2mqtt", False)
-    zigbee2mqtt_newest_version = attr.get("zigbee2mqtt_newest_version", "")
 
     # add the grant to save on sdcard
     if reinstall_android_app:
@@ -843,8 +839,20 @@ def do_download_upgrade(hass, call):
 
     # download zigbee2mqtt packages
     if reinstall_zigbee2mqtt:
-        pass
-        # TODO
+        # download zigbee update zip
+        try:
+            zigbee_update_url = "http://powiedz.co/ota/zigbee.zip"
+            ws_resp = requests.get(zigbee_update_url, timeout=360)
+            if ws_resp.status_code != 200:
+                _LOGGER.error(
+                    "download zigbee2mqtt update return: " + str(ws_resp.status_code)
+                )
+            else:
+                with open(ais_global.G_AIS_HOME_DIR + "/zigbee_update.zip", "wb") as f:
+                    for chunk in ws_resp.iter_content(1024):
+                        f.write(chunk)
+        except Exception as e:
+            _LOGGER.error("download zigbee2mqtt packages: " + str(e))
 
     # assuming that all will be OK
     l_ret = 0
@@ -892,6 +900,7 @@ def do_install_upgrade(hass, call):
     reinstall_android_app = attr.get("reinstall_android_app", False)
     reinstall_linux_apt = attr.get("reinstall_linux_apt", False)
     reinstall_zigbee2mqtt = attr.get("reinstall_zigbee2mqtt", False)
+    zigbee2mqtt_newest_version = attr.get("zigbee2mqtt_newest_version", 0)
     release_script = attr.get("release_script", "")
     beta = attr.get("beta", False)
     force = attr.get("force", False)
@@ -916,12 +925,72 @@ def do_install_upgrade(hass, call):
     # zigbee
     if reinstall_zigbee2mqtt:
         _LOGGER.info("We have zigbee2mqtt to update ")
-        # TODO
-        if not reinstall_dom_app and not reinstall_android_app:
-            # set update status
-            _set_update_status(hass, UPDATE_STATUS_RESTART)
-            # restart ais-dom
-            hass.services.call("homeassistant", "stop", {"ais_command": "restart"})
+        # check if file exists
+        if not os.path.isfile(ais_global.G_AIS_HOME_DIR + "/zigbee_update.zip"):
+            _LOGGER.error("Can't find zigbee2mqtt update on disk ")
+            if not reinstall_dom_app and not reinstall_android_app:
+                _set_update_status(hass, UPDATE_STATUS_UNKNOWN)
+        else:
+            # cp current zigbee conf
+            ret = subprocess.check_output(
+                "cp -R "
+                + ais_global.G_AIS_HOME_DIR
+                + "/zigbee2mqtt/data "
+                + ais_global.G_AIS_HOME_DIR
+                + "/data-backup",
+                shell=True,  # nosec
+            )
+            # rm current zigbee
+            ret = subprocess.check_output(
+                "rm -rf " + ais_global.G_AIS_HOME_DIR + "/zigbee2mqtt", shell=True
+            )  # nosec
+
+            # unzip zigbee
+            try:
+                ret = subprocess.check_output(
+                    "7z x -mmt=2 "
+                    + " -o"
+                    + ais_global.G_AIS_HOME_DIR
+                    + "/zigbee2mqtt "
+                    + ais_global.G_AIS_HOME_DIR
+                    + "/zigbee_update.zip "
+                    + "-y",
+                    shell=True,  # nosec
+                )
+                ret = subprocess.check_output(
+                    "rm -rf " + ais_global.G_AIS_HOME_DIR + "/zigbee_update.zip",
+                    shell=True,  # nosec
+                )
+            except Exception as e:
+                _LOGGER.error("Can't unzip zigbee2mqtt, error: " + str(e))
+
+            # copy zigbee config back
+            ret = subprocess.check_output(
+                "cp -R "
+                + ais_global.G_AIS_HOME_DIR
+                + "/data-backup/* "
+                + ais_global.G_AIS_HOME_DIR
+                + "/zigbee2mqtt/data",
+                shell=True,  # nosec
+            )
+
+            # delete config backup
+            ret = subprocess.check_output(
+                "rm -rf " + ais_global.G_AIS_HOME_DIR + "/data-backup", shell=True
+            )  # nosec
+
+            # the update was OK set the version info
+            attr = hass.states.get("sensor.wersja_zigbee2mqtt").attributes
+            hass.states.set(
+                "sensor.wersja_zigbee2mqtt", zigbee2mqtt_newest_version, attr
+            )
+
+            # This was only Zigbee2Mqtt update
+            if not reinstall_dom_app and not reinstall_android_app:
+                # set update status
+                _set_update_status(hass, UPDATE_STATUS_RESTART)
+                # restart ais-dom
+                hass.services.call("homeassistant", "stop", {"ais_command": "restart"})
 
     # pip
     update_dir = hass.config.path(UPDATER_DOWNLOAD_FOLDER)
