@@ -9,11 +9,11 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
 from .const import (  # pylint:disable=unused-import
+    CONF_HOMECONTROL,
+    CONF_MYDEVOLO,
     DEFAULT_MPRM,
     DEFAULT_MYDEVOLO,
     DOMAIN,
-    HOMECONTROL,
-    MYDEVOLO,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,8 +30,8 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.data_schema = {
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Required(MYDEVOLO, default=DEFAULT_MYDEVOLO): str,
-            vol.Required(HOMECONTROL, default=DEFAULT_MPRM): str,
+            vol.Required(CONF_MYDEVOLO, default=DEFAULT_MYDEVOLO): str,
+            vol.Required(CONF_HOMECONTROL, default=DEFAULT_MPRM): str,
         }
 
     async def async_step_user(self, user_input=None):
@@ -46,8 +46,8 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             mydevolo = Mydevolo()
         mydevolo.user = user
         mydevolo.password = password
-        mydevolo.url = user_input.get(MYDEVOLO)
-        mydevolo.mprm = user_input.get(HOMECONTROL)
+        mydevolo.url = user_input.get(CONF_MYDEVOLO)
+        mydevolo.mprm = user_input.get(CONF_HOMECONTROL)
         credentials_valid = await self.hass.async_add_executor_job(
             mydevolo.credentials_valid
         )
@@ -60,8 +60,8 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 CONF_PASSWORD: password,
                 CONF_USERNAME: user,
-                MYDEVOLO: mydevolo.url,
-                HOMECONTROL: mydevolo.mprm,
+                CONF_MYDEVOLO: mydevolo.url,
+                CONF_HOMECONTROL: mydevolo.mprm,
             },
         )
 
