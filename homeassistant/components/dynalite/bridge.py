@@ -8,7 +8,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CONF_ALL, ENTITY_PLATFORMS, LOGGER
+from .const import ENTITY_PLATFORMS, LOGGER
 from .convert_config import convert_config
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -54,9 +54,9 @@ class DynaliteBridge:
         return signal
 
     @callback
-    def update_device(self, device: "DynaliteBaseDevice") -> None:
+    def update_device(self, device: "DynaliteBaseDevice" = None) -> None:
         """Call when a device or all devices should be updated."""
-        if device == CONF_ALL:
+        if not device:
             # This is used to signal connection or disconnection, so all devices may become available or not.
             log_string = (
                 "Connected" if self.dynalite_devices.connected else "Disconnected"
