@@ -222,22 +222,6 @@ async def websocket_get_groupable_devices(hass, connection, msg):
     """Get ZHA devices that can be grouped."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
 
-    devices = [
-        device.zha_device_info
-        for device in zha_gateway.devices.values()
-        if device.is_groupable or device.is_coordinator
-    ]
-
-    connection.send_result(msg[ID], devices)
-
-
-@websocket_api.require_admin
-@websocket_api.async_response
-@websocket_api.websocket_command({vol.Required(TYPE): "zha/devices/groupable2"})
-async def websocket_get_groupable_devices_2(hass, connection, msg):
-    """Get ZHA devices that can be grouped."""
-    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-
     devices = [device for device in zha_gateway.devices.values() if device.is_groupable]
     groupable_devices = []
 
@@ -1103,7 +1087,6 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_permit_devices)
     websocket_api.async_register_command(hass, websocket_get_devices)
     websocket_api.async_register_command(hass, websocket_get_groupable_devices)
-    websocket_api.async_register_command(hass, websocket_get_groupable_devices_2)
     websocket_api.async_register_command(hass, websocket_get_groups)
     websocket_api.async_register_command(hass, websocket_get_device)
     websocket_api.async_register_command(hass, websocket_get_group)
