@@ -65,6 +65,7 @@ def prepare_usb_device(hass, device_info):
             require_admin=True,
             sidebar_title="Zigbee",
             sidebar_icon="mdi:zigbee",
+            update=True,
         )
 
         # check if zigbee already exists
