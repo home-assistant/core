@@ -272,6 +272,17 @@ async def async_setup_entry(hass, config_entry):
 
     @verify_system_exists
     @_verify_domain_control
+    async def clear_notifications(call):
+        """Clear all active notifications."""
+        system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
+        try:
+            await system.clear_notifications()
+        except SimplipyError as err:
+            _LOGGER.error("Error during service call: %s", err)
+            return
+
+    @verify_system_exists
+    @_verify_domain_control
     async def remove_pin(call):
         """Remove a PIN."""
         system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
@@ -311,6 +322,7 @@ async def async_setup_entry(hass, config_entry):
             return
 
     for service, method, schema in [
+        ("clear_notifications", clear_notifications, None),
         ("remove_pin", remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
         ("set_pin", set_pin, SERVICE_SET_PIN_SCHEMA),
         (
