@@ -75,7 +75,7 @@ class QSEntity(Entity):
         return self._name
 
     @property
-    def poll(self):
+    def should_poll(self):
         """QS sensors gets packets in update_packet."""
         return False
 
@@ -165,9 +165,9 @@ async def async_setup(hass, config):
 
     comps = {"switch": [], "light": [], "sensor": [], "binary_sensor": []}
 
-    try:
-        sensor_ids = []
-        for sens in sensors:
+    sensor_ids = []
+    for sens in sensors:
+        try:
             _, _type = SENSORS[sens["type"]]
             sensor_ids.append(sens["id"])
             if _type is bool:
@@ -179,9 +179,12 @@ async def async_setup(hass, config):
                     _LOGGER.warning(
                         "%s should only be used for binary_sensors: %s", _key, sens
                     )
-
-    except KeyError:
-        _LOGGER.warning("Sensor validation failed")
+        except KeyError:
+            _LOGGER.warning(
+                "Sensor validation failed for sensor id=%s type=%s",
+                sens["id"],
+                sens["type"],
+            )
 
     for qsid, dev in qsusb.devices.items():
         if qsid in switches:
