@@ -102,7 +102,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def disable_ap(call):
         """Disable the device's onboard access point."""
         try:
-            await guardian.client.device.wifi_disable_ap()
+            async with guardian.client:
+                await guardian.client.device.wifi_disable_ap()
         except GuardianError as err:
             LOGGER.error("Error during service call: %s", err)
             return
@@ -111,7 +112,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def enable_ap(call):
         """Enable the device's onboard access point."""
         try:
-            await guardian.client.device.wifi_enable_ap()
+            async with guardian.client:
+                await guardian.client.device.wifi_enable_ap()
         except GuardianError as err:
             LOGGER.error("Error during service call: %s", err)
             return
@@ -120,7 +122,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def reboot(call):
         """Reboot the device."""
         try:
-            await guardian.client.device.reboot()
+            async with guardian.client:
+                await guardian.client.device.reboot()
         except GuardianError as err:
             LOGGER.error("Error during service call: %s", err)
             return
@@ -129,7 +132,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def reset_valve_diagnostics(call):
         """Fully reset system motor diagnostics."""
         try:
-            await guardian.client.valve.valve_reset()
+            async with guardian.client:
+                await guardian.client.valve.valve_reset()
         except GuardianError as err:
             LOGGER.error("Error during service call: %s", err)
             return
@@ -138,11 +142,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def upgrade_firmware(call):
         """Upgrade the device firmware."""
         try:
-            await guardian.client.device.upgrade_firmware(
-                url=call.data[CONF_URL],
-                port=call.data[CONF_PORT],
-                filename=call.data[CONF_FILENAME],
-            )
+            async with guardian.client:
+                await guardian.client.device.upgrade_firmware(
+                    url=call.data[CONF_URL],
+                    port=call.data[CONF_PORT],
+                    filename=call.data[CONF_FILENAME],
+                )
         except GuardianError as err:
             LOGGER.error("Error during service call: %s", err)
             return
