@@ -5,7 +5,7 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
 
 from . import Guardian, GuardianEntity
-from .const import DATA_CLIENT, DATA_VALVE_STATUS, DOMAIN, LOGGER
+from .const import DATA_CLIENT, DATA_VALVE_STATUS, DOMAIN, LOGGER, SWITCH_KIND_VALVE
 
 ATTR_AVG_CURRENT = "average_current"
 ATTR_INST_CURRENT = "instantaneous_current"
@@ -24,7 +24,7 @@ class GuardianSwitch(GuardianEntity, SwitchDevice):
 
     def __init__(self, guardian: Guardian):
         """Initialize."""
-        super().__init__(guardian, "valve", "Valve", None, "mdi:water")
+        super().__init__(guardian, SWITCH_KIND_VALVE, "Valve", None, "mdi:water")
 
         self._is_on = True
 

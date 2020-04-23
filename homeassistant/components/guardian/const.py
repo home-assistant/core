@@ -18,4 +18,6 @@ SENSOR_KIND_LEAK_DETECTED = "leak_detected"
 SENSOR_KIND_TEMPERATURE = "temperature"
 SENSOR_KIND_UPTIME = "uptime"
 
+SWITCH_KIND_VALVE = "valve"
+
 TOPIC_UPDATE = "guardian_update_{0}"

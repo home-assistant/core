@@ -42,10 +42,21 @@ from .const import (
     DATA_WIFI_STATUS,
     DOMAIN,
     LOGGER,
+    SENSOR_KIND_AP_INFO,
+    SENSOR_KIND_LEAK_DETECTED,
+    SENSOR_KIND_TEMPERATURE,
+    SWITCH_KIND_VALVE,
     TOPIC_UPDATE,
 )
 
 DATA_LISTENER = "listener"
+
+DATA_ENTITY_TYPE_MAP = {
+    SENSOR_KIND_AP_INFO: DATA_WIFI_STATUS,
+    SENSOR_KIND_LEAK_DETECTED: DATA_SENSOR_STATUS,
+    SENSOR_KIND_TEMPERATURE: DATA_SENSOR_STATUS,
+    SWITCH_KIND_VALVE: DATA_VALVE_STATUS,
+}
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -60,6 +71,12 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
         ): cv.string,
     }
 )
+
+
+@callback
+def async_get_api_category(entity_kind: str):
+    """Get the API data category to which an entity belongs."""
+    return DATA_ENTITY_TYPE_MAP.get(entity_kind)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -80,14 +97,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
-
-    async def refresh(event_time):
-        """Refresh data from the device."""
-        await hass.data[DOMAIN][DATA_CLIENT][entry.entry_id].async_update()
-
-    hass.data[DOMAIN][DATA_LISTENER][entry.entry_id] = async_track_time_interval(
-        hass, refresh, DEFAULT_SCAN_INTERVAL
-    )
 
     @_verify_domain_control
     async def disable_ap(call):
@@ -173,31 +182,92 @@ class Guardian:
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
         """Initialize."""
+        self._async_cancel_time_interval_listener = None
         self._hass = hass
         self.client = Client(entry.data[CONF_IP_ADDRESS])
         self.data = {}
         self.uid = entry.data["uid"]
 
+        self._api_coros = {
+            DATA_DIAGNOSTICS: self.client.device.diagnostics,
+            DATA_PAIR_DUMP: self.client.sensor.pair_dump,
+            DATA_PING: self.client.device.ping,
+            DATA_SENSOR_STATUS: self.client.sensor.sensor_status,
+            DATA_VALVE_STATUS: self.client.valve.valve_status,
+            DATA_WIFI_STATUS: self.client.device.wifi_status,
+        }
+
+        self._api_category_count = {
+            DATA_SENSOR_STATUS: 0,
+            DATA_VALVE_STATUS: 0,
+            DATA_WIFI_STATUS: 0,
+        }
+
+        self._api_lock = asyncio.Lock()
+
+    async def _async_get_data_from_api(self, api_category: str):
+        """Update and save data for a particular API category."""
+        if self._api_category_count.get(api_category) == 0:
+            return
+
+        try:
+            result = await self._api_coros[api_category]()
+        except GuardianError as err:
+            LOGGER.error("Error while fetching %s data: %s", api_category, err)
+            self.data[api_category] = {}
+        else:
+            self.data[api_category] = result["data"]
+
+    async def _async_update_listener_action(self, _):
+        """Define an async_track_time_interval action to update data."""
+        await self.async_update()
+
+    @callback
+    def async_deregister_api_interest(self, sensor_kind: str):
+        """Decrement the number of entities with data needs from an API category."""
+        # If this deregistration should leave us with no registration at all, remove the
+        # time interval:
+        if sum(self._api_category_count.values()) == 0:
+            if self._async_cancel_time_interval_listener:
+                self._async_cancel_time_interval_listener()
+                self._async_cancel_time_interval_listener = None
+            return
+
+        api_category = async_get_api_category(sensor_kind)
+        if api_category:
+            self._api_category_count[api_category] -= 1
+
+    async def async_register_api_interest(self, sensor_kind: str):
+        """Increment the number of entities with data needs from an API category."""
+        # If this is the first registration we have, start a time interval:
+        if not self._async_cancel_time_interval_listener:
+            self._async_cancel_time_interval_listener = async_track_time_interval(
+                self._hass, self._async_update_listener_action, DEFAULT_SCAN_INTERVAL,
+            )
+
+        api_category = async_get_api_category(sensor_kind)
+
+        if not api_category:
+            return
+
+        self._api_category_count[api_category] += 1
+
+        # If a sensor registers interest in a particular API call and the data doesn't
+        # exist for it yet, make the API call and grab the data:
+        async with self._api_lock:
+            if api_category not in self.data:
+                async with self.client:
+                    await self._async_get_data_from_api(api_category)
+
     async def async_update(self):
         """Get updated data from the device."""
         async with self.client:
-            tasks = {
-                DATA_DIAGNOSTICS: self.client.device.diagnostics(),
-                DATA_PAIR_DUMP: self.client.sensor.pair_dump(),
-                DATA_PING: self.client.device.ping(),
-                DATA_SENSOR_STATUS: self.client.sensor.sensor_status(),
-                DATA_VALVE_STATUS: self.client.valve.valve_status(),
-                DATA_WIFI_STATUS: self.client.device.wifi_status(),
-            }
+            tasks = [
+                self._async_get_data_from_api(api_category)
+                for api_category in self._api_coros
+            ]
 
-            results = await asyncio.gather(*tasks.values(), return_exceptions=True)
-
-        for data_category, result in zip(tasks, results):
-            if isinstance(result, GuardianError):
-                LOGGER.error("Error while fetching %s data: %s", data_category, result)
-                self.data[data_category] = {}
-                continue
-            self.data[data_category] = result["data"]
+            await asyncio.gather(*tasks)
 
         LOGGER.debug("Received new data: %s", self.data)
         async_dispatcher_send(self._hass, TOPIC_UPDATE.format(self.uid))
@@ -278,7 +348,13 @@ class GuardianEntity(Entity):
             )
         )
 
+        await self._guardian.async_register_api_interest(self._kind)
+
         self.update_from_latest_data()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect dispatcher listener when removed."""
+        await self._guardian.async_deregister_api_interest(self._kind)
 
     @callback
     def update_from_latest_data(self):
