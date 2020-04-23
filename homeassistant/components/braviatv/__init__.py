@@ -23,6 +23,8 @@ async def async_setup_entry(hass, config_entry):
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = BraviaRC(host, mac)
 
+    config_entry.add_update_listener(update_listener)
+
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
@@ -45,3 +47,8 @@ async def async_unload_entry(hass, config_entry):
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
+
+
+async def update_listener(hass, config_entry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
