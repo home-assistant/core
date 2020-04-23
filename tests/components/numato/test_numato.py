@@ -1,6 +1,5 @@
 """Tests for the numato integration."""
 from copy import copy, deepcopy
-import logging
 
 from numato_gpio import NumatoGpioError
 import pytest
@@ -11,12 +10,6 @@ from homeassistant.setup import async_setup_component
 from . import numato_mock
 
 from tests.components.switch.common import async_turn_off, async_turn_on
-
-BINARY_SENSOR_CFG = {"binary_sensor": {"platform": "numato"}}
-
-SENSOR_CFG = {"sensor": {"platform": "numato"}}
-
-SWITCH_CFG = {"switch": {"platform": "numato"}}
 
 NUMATO_CFG = {
     "numato": {
@@ -55,6 +48,16 @@ NUMATO_CFG = {
 }
 
 
+def mockup_raise(*args, **kwargs):
+    """Mockup to replace regular functions for error injection."""
+    raise NumatoGpioError("Error mockup")
+
+
+def mockup_return(*args, **kwargs):
+    """Mockup to replace regular functions for error injection."""
+    return False
+
+
 @pytest.fixture
 def config():
     """Provide a copy of the numato domain's test configuration.
@@ -71,38 +74,35 @@ def numato_fixture():
     module_mock = copy(numato_mock.NumatoModuleMock)
     numato.__dict__["gpio"] = module_mock
     numato.PORTS_IN_USE.clear()
-    return module_mock
+    yield module_mock
+    module_mock.cleanup()
 
 
-async def test_failing_setup(hass, numato_fixture, monkeypatch):
-    """Test that failing setup doesn't raise, but devices list empty."""
-    monkeypatch.setattr(numato_fixture, "inject_error", True)
+async def test_setup_no_devices(hass, numato_fixture, monkeypatch):
+    """Test handling of an 'empty' discovery.
+
+    Platform setups are expected to return after handling errors locally
+    without raising.
+    """
+    monkeypatch.setattr(numato_fixture, "discover", mockup_return)
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
     assert len(numato_fixture.devices) == 0
 
 
-async def test_failing_component_setup(hass, numato_fixture, caplog, monkeypatch):
-    """Test handling of failing component setup."""
-    assert await async_setup_component(hass, "numato", NUMATO_CFG)
-    # setup with failing ports (handled by component setup, no exceptions)
-    monkeypatch.setattr(numato_fixture, "inject_error", True)
-    with caplog.at_level(logging.ERROR):
-        caplog.clear()
-        assert await async_setup_component(hass, "binary_sensor", BINARY_SENSOR_CFG)
-        assert len(caplog.records) == 3
-        assert await async_setup_component(hass, "sensor", SENSOR_CFG)
-        assert len(caplog.records) == 4
-        assert await async_setup_component(hass, "switch", SWITCH_CFG)
-        assert len(caplog.records) == 6
+async def test_fail_setup_raising_discovery(hass, numato_fixture, caplog, monkeypatch):
+    """Test handling of an exception during discovery.
+
+    Setup shall return False.
+    """
+    monkeypatch.setattr(numato_fixture, "discover", mockup_raise)
+    assert not await async_setup_component(hass, "numato", NUMATO_CFG)
+    await hass.async_block_till_done()
 
 
 async def test_regular_hass_operations(hass, numato_fixture):
     """Test regular operations from within Home Assistant."""
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
-    assert await async_setup_component(hass, "binary_sensor", BINARY_SENSOR_CFG)
-    assert await async_setup_component(hass, "sensor", SENSOR_CFG)
-    assert await async_setup_component(hass, "switch", SWITCH_CFG)
-
+    await hass.async_block_till_done()  # wait until services are registered
     await async_turn_on(hass, "switch.numato_switch_mock_port5")
     assert numato_fixture.devices[0].values[5] == 1
     await async_turn_on(hass, "switch.numato_switch_mock_port6")
@@ -121,20 +121,17 @@ async def test_regular_hass_operations(hass, numato_fixture):
 async def test_failing_hass_operations(hass, numato_fixture, monkeypatch):
     """Test regular operations from within Home Assistant."""
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
-    assert await async_setup_component(hass, "binary_sensor", BINARY_SENSOR_CFG)
-    assert await async_setup_component(hass, "sensor", SENSOR_CFG)
-    assert await async_setup_component(hass, "switch", SWITCH_CFG)
 
-    monkeypatch.setattr(numato_fixture, "inject_error", True)
-
+    await hass.async_block_till_done()  # wait until services are registered
+    monkeypatch.setattr(numato_fixture.devices[0], "write", mockup_raise)
     await async_turn_on(hass, "switch.numato_switch_mock_port5")
-    assert numato_fixture.devices[0].values[5] == 0
+    assert not numato_fixture.devices[0].values[5]
     await async_turn_on(hass, "switch.numato_switch_mock_port6")
-    assert numato_fixture.devices[0].values[6] == 0
+    assert not numato_fixture.devices[0].values[6]
     await async_turn_off(hass, "switch.numato_switch_mock_port5")
-    assert numato_fixture.devices[0].values[5] == 0
+    assert not numato_fixture.devices[0].values[5]
     await async_turn_off(hass, "switch.numato_switch_mock_port6")
-    assert numato_fixture.devices[0].values[6] == 0
+    assert not numato_fixture.devices[0].values[6]
 
 
 async def test_hass_numato_api(hass, numato_fixture):
@@ -160,15 +157,24 @@ async def test_hass_numato_api(hass, numato_fixture):
 
 
 async def test_hass_numato_api_irregular_unhandled(hass, numato_fixture):
-    """Test irregular, unhandled operations."""
-    numato.read_adc_input(0, 5)  # port 5 configured as output
-    numato.read_input(0, 6)  # port 6 configured as output
-    numato.write_output(0, 2, 1)  # port 2 configured as input
+    """Test irregular, unhandled operations.
+
+    Establishes that these don't throw from numato-gpio or are handled in the
+    numato component's API.
+    """
+    assert await async_setup_component(hass, "numato", NUMATO_CFG)
+    numato.read_adc_input(0, 5)  # adc_read from output
+    numato.read_input(0, 6)  # read from output
+    numato.write_output(0, 2, 1)  # write to input
 
 
 async def test_hass_numato_api_errors(hass, numato_fixture, monkeypatch):
     """Test whether Home Assistant numato API (re-)raises errors."""
-    monkeypatch.setattr(numato_fixture, "inject_error", True)
+    numato_fixture.discover()
+    monkeypatch.setattr(numato_fixture.devices[0], "setup", mockup_raise)
+    monkeypatch.setattr(numato_fixture.devices[0], "adc_read", mockup_raise)
+    monkeypatch.setattr(numato_fixture.devices[0], "read", mockup_raise)
+    monkeypatch.setattr(numato_fixture.devices[0], "write", mockup_raise)
     with pytest.raises(NumatoGpioError):
         numato.setup_input(0, 5)
         numato.read_adc_input(0, 1)
@@ -183,8 +189,8 @@ async def test_invalid_port_number(hass, numato_fixture, config):
     sensorports_cfg["one"] = port1_config
     del sensorports_cfg["1"]
     assert not await async_setup_component(hass, "numato", config)
-    assert await async_setup_component(hass, "sensor", SENSOR_CFG)
-    assert 1 not in numato_fixture.devices[0].ports
+    await hass.async_block_till_done()
+    assert not numato_fixture.devices
 
 
 async def test_too_low_adc_port_number(hass, numato_fixture, config):
@@ -196,8 +202,7 @@ async def test_too_low_adc_port_number(hass, numato_fixture, config):
     sensorports_cfg = config["numato"]["devices"][0]["sensors"]["ports"]
     sensorports_cfg.update({0: {"name": "toolow"}})
     assert not await async_setup_component(hass, "numato", config)
-    assert await async_setup_component(hass, "sensor", SENSOR_CFG)
-    assert 0 not in numato_fixture.devices[0].ports
+    assert not numato_fixture.devices
 
 
 async def test_too_high_adc_port_number(hass, numato_fixture, config):
@@ -208,8 +213,7 @@ async def test_too_high_adc_port_number(hass, numato_fixture, config):
     sensorports_cfg = config["numato"]["devices"][0]["sensors"]["ports"]
     sensorports_cfg.update({8: {"name": "toohigh"}})
     assert not await async_setup_component(hass, "numato", config)
-    assert await async_setup_component(hass, "sensor", SENSOR_CFG)
-    assert 8 not in numato_fixture.devices[0].ports
+    assert not numato_fixture.devices
 
 
 async def test_invalid_adc_range_value_type(hass, numato_fixture, config):
@@ -220,8 +224,7 @@ async def test_invalid_adc_range_value_type(hass, numato_fixture, config):
     sensorports_cfg = config["numato"]["devices"][0]["sensors"]["ports"]
     sensorports_cfg["1"]["source_range"][0] = "zero"
     assert not await async_setup_component(hass, "numato", config)
-    assert await async_setup_component(hass, "sensor", SENSOR_CFG)
-    assert 1 not in numato_fixture.devices[0].ports
+    assert not numato_fixture.devices
 
 
 async def test_invalid_adc_source_range_length(hass, numato_fixture, config):
@@ -232,8 +235,7 @@ async def test_invalid_adc_source_range_length(hass, numato_fixture, config):
     sensorports_cfg = config["numato"]["devices"][0]["sensors"]["ports"]
     sensorports_cfg["1"]["source_range"].append(42)
     assert not await async_setup_component(hass, "numato", config)
-    assert await async_setup_component(hass, "sensor", SENSOR_CFG)
-    assert 1 not in numato_fixture.devices[0].ports
+    assert not numato_fixture.devices
 
 
 async def test_invalid_adc_source_range_order(hass, numato_fixture, config):
@@ -244,8 +246,7 @@ async def test_invalid_adc_source_range_order(hass, numato_fixture, config):
     sensorports_cfg = config["numato"]["devices"][0]["sensors"]["ports"]
     sensorports_cfg["1"]["source_range"] = [2, 1]
     assert not await async_setup_component(hass, "numato", config)
-    assert await async_setup_component(hass, "sensor", SENSOR_CFG)
-    assert 1 not in numato_fixture.devices[0].ports
+    assert not numato_fixture.devices
 
 
 async def test_invalid_adc_destination_range_value_type(hass, numato_fixture, config):
@@ -256,8 +257,7 @@ async def test_invalid_adc_destination_range_value_type(hass, numato_fixture, co
     sensorports_cfg = config["numato"]["devices"][0]["sensors"]["ports"]
     sensorports_cfg["1"]["destination_range"][0] = "zero"
     assert not await async_setup_component(hass, "numato", config)
-    assert await async_setup_component(hass, "sensor", SENSOR_CFG)
-    assert 1 not in numato_fixture.devices[0].ports
+    assert not numato_fixture.devices
 
 
 async def test_invalid_adc_destination_range_length(hass, numato_fixture, config):
@@ -268,8 +268,7 @@ async def test_invalid_adc_destination_range_length(hass, numato_fixture, config
     sensorports_cfg = config["numato"]["devices"][0]["sensors"]["ports"]
     sensorports_cfg["1"]["destination_range"].append(42)
     assert not await async_setup_component(hass, "numato", config)
-    assert await async_setup_component(hass, "sensor", SENSOR_CFG)
-    assert 1 not in numato_fixture.devices[0].ports
+    assert not numato_fixture.devices
 
 
 async def test_invalid_adc_destination_range_order(hass, numato_fixture, config):
@@ -280,5 +279,4 @@ async def test_invalid_adc_destination_range_order(hass, numato_fixture, config)
     sensorports_cfg = config["numato"]["devices"][0]["sensors"]["ports"]
     sensorports_cfg["1"]["destination_range"] = [2, 1]
     assert not await async_setup_component(hass, "numato", config)
-    assert await async_setup_component(hass, "sensor", SENSOR_CFG)
-    assert 1 not in numato_fixture.devices[0].ports
+    assert not numato_fixture.devices

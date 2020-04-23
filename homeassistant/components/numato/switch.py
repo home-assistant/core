@@ -11,13 +11,9 @@ from numato_gpio import NumatoGpioError
 from homeassistant.const import CONF_ID, CONF_SWITCHES, DEVICE_DEFAULT_NAME
 from homeassistant.helpers.entity import ToggleEntity
 
-from . import DOMAIN, setup_output, write_output
+from . import CONF_INVERT_LOGIC, CONF_PORTS, DOMAIN, setup_output, write_output
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_PORTS = "ports"
-CONF_DEVICES = "devices"
-CONF_INVERT_LOGIC = "invert_logic"
 
 
 # pylint: disable=unused-argument

@@ -21,6 +21,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import load_platform
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,10 +122,25 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 def setup(hass, config):
-    """Initialize the integration by discovering available Numato devices."""
+    """Initialize the numato integration.
+
+    Discovers available Numato devices and loads the binary_sensor, sensor and
+    switch platforms.
+
+    Returns False on error during device discovery (e.g. duplicate ID),
+    otherwise returns True.
+
+    No exceptions should occur, since the platforms are initialized on a best
+    effort basis, which means, errors are handled locally.
+    """
     hass.data[DOMAIN] = config[DOMAIN][CONF_DEVICES]
 
-    gpio.discover(config[DOMAIN][CONF_DISCOVER])
+    try:
+        gpio.discover(config[DOMAIN][CONF_DISCOVER])
+    except gpio.NumatoGpioError as err:
+        _LOGGER.info("Error discovering Numato devices: %s", str(err))
+        gpio.cleanup()
+        return False
 
     _LOGGER.info(
         "Initializing Numato 32 port USB GPIO expanders with IDs: %s",
@@ -144,6 +160,9 @@ def setup(hass, config):
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_gpio)
 
+    load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+    load_platform(hass, "sensor", DOMAIN, {}, config)
+    load_platform(hass, "switch", DOMAIN, {}, config)
     return True
 
 

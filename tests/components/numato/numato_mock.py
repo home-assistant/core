@@ -20,38 +20,26 @@ class NumatoModuleMock:
         def setup(self, port, direction):
             """Mockup for setup."""
             self.ports.add(port)
-            if NumatoModuleMock.inject_error:
-                raise NumatoGpioError(NumatoModuleMock.MOCKUP_ERROR_MESSAGE)
             self.values[port] = None
 
         def write(self, port, value):
             """Mockup for write."""
-            if NumatoModuleMock.inject_error:
-                raise NumatoGpioError(NumatoModuleMock.MOCKUP_ERROR_MESSAGE)
             self.values[port] = value
 
         def read(self, port):
             """Mockup for read."""
-            if NumatoModuleMock.inject_error:
-                raise NumatoGpioError(NumatoModuleMock.MOCKUP_ERROR_MESSAGE)
             return 1
 
         def adc_read(self, port):
             """Mockup for adc_read."""
-            if NumatoModuleMock.inject_error:
-                raise NumatoGpioError(NumatoModuleMock.MOCKUP_ERROR_MESSAGE)
             return 1023
 
         def add_event_detect(self, port, callback, direction):
             """Mockup for add_event_detect."""
-            if NumatoModuleMock.inject_error:
-                raise NumatoGpioError(NumatoModuleMock.MOCKUP_ERROR_MESSAGE)
             self.callbacks[port] = callback
 
         def notify(self, enable):
             """Mockup for notify."""
-            if NumatoModuleMock.inject_error:
-                raise NumatoGpioError(NumatoModuleMock.MOCKUP_ERROR_MESSAGE)
 
         def mockup_inject_notification(self, port, value):
             """Make the mockup execute a notification callback."""
@@ -65,21 +53,15 @@ class NumatoModuleMock:
     FALLING = 2
     BOTH = 3
 
-    MOCKUP_ERROR_MESSAGE = "Numato error mockup"
-
-    inject_error = False
-
-    def discover(_):
+    @classmethod
+    def discover(cls, _=None):
         """Mockup for the numato device discovery.
 
         Ignore the device list argument, mock discovers /dev/ttyACM0.
         """
-        if NumatoModuleMock.inject_error:
-            return
         NumatoModuleMock.devices[0] = NumatoModuleMock.NumatoDeviceMock("/dev/ttyACM0")
 
-    def cleanup():
+    @classmethod
+    def cleanup(cls):
         """Mockup for the numato device cleanup."""
-        if NumatoModuleMock.inject_error:
-            return
         NumatoModuleMock.devices.clear()

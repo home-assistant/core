@@ -11,15 +11,18 @@ from numato_gpio import NumatoGpioError
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import DEVICE_DEFAULT_NAME
 
-from . import CONF_BINARY_SENSORS, CONF_ID, DOMAIN, edge_detect, read_input, setup_input
+from . import (
+    CONF_BINARY_SENSORS,
+    CONF_ID,
+    CONF_INVERT_LOGIC,
+    CONF_PORTS,
+    DOMAIN,
+    edge_detect,
+    read_input,
+    setup_input,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_INVERT_LOGIC = "invert_logic"
-CONF_PORTS = "ports"
-CONF_DEVICES = "devices"
-CONF_DEVICE_ID = "id"
-DEFAULT_INVERT_LOGIC = False
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
