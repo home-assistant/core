@@ -13,6 +13,7 @@ FLOWS = [
     "almond",
     "ambiclimate",
     "ambient_station",
+    "atag",
     "august",
     "axis",
     "braviatv",

@@ -1,0 +1,20 @@
+{
+    "state": {
+        "_": {
+            "clear-night": "Vedra no\u0107",
+            "cloudy": "Obla\u010dno",
+            "fog": "Magla",
+            "hail": "Grad",
+            "lightning": "Grmljavina",
+            "lightning-rainy": "Grmljavina sa ki\u0161om",
+            "partlycloudy": "Delimi\u010dno obla\u010dno",
+            "pouring": "Pljusak",
+            "rainy": "Ki\u0161a",
+            "snowy": "Sneg",
+            "snowy-rainy": "Sneg i ki\u0161a",
+            "sunny": "Sun\u010dano",
+            "windy": "Vetrovito",
+            "windy-variant": "Vetrovito"
+        }
+    }
+}

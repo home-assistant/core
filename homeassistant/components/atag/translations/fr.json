@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port (10000)"
+                },
+                "title": "Se connecter \u00e0 l'appareil"
+            }
+        }
+    }
+}

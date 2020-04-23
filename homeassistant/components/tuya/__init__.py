@@ -17,6 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_COUNTRYCODE = "country_code"
 
+PARALLEL_UPDATES = 0
+
 DOMAIN = "tuya"
 DATA_TUYA = "data_tuya"
 

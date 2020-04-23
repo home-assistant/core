@@ -1,0 +1,9 @@
+{
+    "state": {
+        "_": {
+            "home": "Hemma",
+            "not_home": "Borta"
+        }
+    },
+    "title": "Person"
+}

@@ -119,7 +119,11 @@ class MqttBinarySensor(
         self._sub_state = None
         self._expiration_trigger = None
         self._delay_listener = None
-        self._expired = None
+        expire_after = config.get(CONF_EXPIRE_AFTER)
+        if expire_after is not None and expire_after > 0:
+            self._expired = True
+        else:
+            self._expired = None
         device_config = config.get(CONF_DEVICE)
 
         MqttAttributes.__init__(self, config)

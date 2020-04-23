@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Tu Home Assistant debe ser accesible desde Internet para recibir mensajes de Geofency.",
+            "one_instance_allowed": "S\u00f3lo se necesita una instancia."
+        },
+        "create_entry": {
+            "default": "Para enviar ubicaciones a Home Assistant, es necesario configurar la caracter\u00edstica webhook en la app de Locative.\n\nRellena la siguiente informaci\u00f3n:\n\n- URL: `{webhook_url}`\n- M\u00e9todo: POST\n\nRevisa [la documentaci\u00f3n]({docs_url}) para m\u00e1s detalles."
+        },
+        "step": {
+            "user": {
+                "description": "\u00bfEst\u00e1s seguro de que quieres configurar el webhook de Locative?",
+                "title": "Configurar el webhook de Locative"
+            }
+        }
+    }
+}
