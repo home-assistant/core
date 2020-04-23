@@ -150,6 +150,10 @@ class AccessoryAidStorage:
         """Schedule saving the entity map cache."""
         self.store.async_delay_save(self._data_to_save, AID_MANAGER_SAVE_DELAY)
 
+    async def async_save(self):
+        """Save the entity map cache."""
+        return await self.store.async_save(self._data_to_save())
+
     @callback
     def _data_to_save(self):
         """Return data of entity map to store in a file."""
