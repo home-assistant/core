@@ -1659,7 +1659,7 @@ python-miio==0.5.0.1
 python-mpd2==1.0.0
 
 # homeassistant.components.mystrom
-python-mystrom==0.5.0
+python-mystrom==1.1.2
 
 # homeassistant.components.nest
 python-nest==4.1.0
