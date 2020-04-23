@@ -5,6 +5,11 @@
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Code"
+                }
+            },
             "link": {
                 "data": {
                     "api_version": "DSM-versie",

@@ -13,7 +13,27 @@
                     "latitude": "Latitude",
                     "longitude": "Longitude"
                 },
-                "description": "Monitor air quality in a geographical location.",
+                "description": "Use the AirVisual cloud API to monitor a geographical location.",
+                "title": "Configure a Geography"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "Unit IP Address/Hostname",
+                    "password": "Unit Password"
+                },
+                "description": "Monitor a personal AirVisual unit. The password can be retrieved from the unit's UI.",
+                "title": "Configure an AirVisual Node/Pro"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "cloud_api": "Geographical Location",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "node_pro": "AirVisual Node Pro",
+                    "type": "Integration Type"
+                },
+                "description": "Pick what type of AirVisual data you want to monitor.",
                 "title": "Configure AirVisual"
             }
         }
