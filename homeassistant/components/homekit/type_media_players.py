@@ -309,6 +309,7 @@ class TelevisionMediaPlayer(HomeAccessory):
                 CHAR_REMOTE_KEY, setter_callback=self.set_remote_key
             )
 
+            self._remote = None
             if CONF_REMOTE in self.config:
                 self._remote = (
                     self.config[CONF_REMOTE]
