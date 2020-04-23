@@ -95,9 +95,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             pin = user_input[CONF_PIN]
             try:
-                await self.hass.async_add_executor_job(
-                    partial(self._remote.authorize_pin_code, pincode=pin)
-                )
+                self._remote.authorize_pin_code(pincode=pin)
             except SOAPError as err:
                 _LOGGER.error("Invalid PIN code: %s", err)
                 errors["base"] = ERROR_INVALID_PIN_CODE
@@ -121,9 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         try:
-            await self.hass.async_add_executor_job(
-                partial(self._remote.request_pin_code, name="Home Assistant")
-            )
+            self._remote.request_pin_code(name="Home Assistant")
         except (TimeoutError, URLError, SOAPError, OSError) as err:
             _LOGGER.error("The remote connection was lost: %s", err)
             return self.async_abort(reason=REASON_NOT_CONNECTED)

@@ -188,15 +188,12 @@ class Remote:
 
     async def async_send_key(self, key):
         """Send a key to the TV and handle exceptions."""
-        if key in Keys._member_names_:  # pylint: disable=no-member, protected-access
-            await self._handle_errors(self._control.send_key, Keys[key])
-        elif (
-            key
-            in Keys._value2member_map_  # pylint: disable=no-member, protected-access
-        ):
-            await self._handle_errors(self._control.send_key, key)
-        else:
-            _LOGGER.error("Key command not supported")
+        try:
+            key = getattr(Keys, key)
+        except (AttributeError, TypeError):
+            key = getattr(key, "value", key)
+
+        await self._handle_errors(self._control.send_key, key)
 
     async def async_turn_on(self):
         """Turn on the TV."""
