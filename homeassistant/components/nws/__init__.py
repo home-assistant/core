@@ -92,8 +92,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_method=nws_data.update_forecast_hourly,
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
-    nws_data = hass.data.setdefault(DOMAIN, {})
-    nws_data[entry.entry_id] = {
+    nws_hass_data = hass.data.setdefault(DOMAIN, {})
+    nws_hass_data[entry.entry_id] = {
         NWS_DATA: nws_data,
         COORDINATOR_OBSERVATION: coordinator_observation,
         COORDINATOR_FORECAST: coordinator_forecast,
