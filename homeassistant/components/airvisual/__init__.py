@@ -30,6 +30,7 @@ from .const import (
     CONF_CITY,
     CONF_COUNTRY,
     CONF_GEOGRAPHIES,
+    CONF_INTEGRATION_TYPE,
     DATA_CLIENT,
     DOMAIN,
     INTEGRATION_TYPE_GEOGRAPHY,
@@ -140,7 +141,7 @@ async def async_setup_entry(hass, config_entry):
     """Set up AirVisual as config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
 
-    if CONF_API_KEY in config_entry.data:
+    if config_entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_GEOGRAPHY:
         _standardize_geography_config_entry(hass, config_entry)
         airvisual = AirVisualGeographyData(
             hass,
