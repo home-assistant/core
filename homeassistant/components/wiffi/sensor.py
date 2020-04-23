@@ -1,6 +1,5 @@
 """Sensor platform support for wiffi devices."""
 
-import logging
 from pathlib import Path
 
 from homeassistant.components.sensor import (
@@ -10,10 +9,11 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
 )
 from homeassistant.const import PRESSURE_MBAR, TEMP_CELSIUS
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from . import WiffiEntity
 from .const import CREATE_ENTITY_SIGNAL, DOMAIN
-from .entity_base import WiffiEntity
 from .wiffi_strings import (
     WIFFI_UOM_DEGREE,
     WIFFI_UOM_LUX,
@@ -21,8 +21,6 @@ from .wiffi_strings import (
     WIFFI_UOM_PERCENT,
     WIFFI_UOM_TEMP_CELSIUS,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 # map to convert wiffi unit of measurements to common HA uom's
 UOM_MAP = {
@@ -43,25 +41,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         stem
     ] = async_add_entities
 
-    async_dispatcher_connect(hass, CREATE_ENTITY_SIGNAL, create_entity)
+    async_dispatcher_connect(hass, CREATE_ENTITY_SIGNAL, _create_entity)
 
 
-def create_entity(api, device, metrics):
+@callback
+def _create_entity(api, device, metric):
     """Create platform specific entities."""
     entities = []
-    for metric in metrics:
-        entity = None
-        if metric.is_number:
-            entity = NumberEntity(device, metric)
-            entities.append(entity)
-        elif metric.is_string:
-            entity = StringEntity(device, metric)
-            entities.append(entity)
-        else:
-            # unknown type -> ignore
-            continue
 
-        api.add_entity(device.mac_address, metric.id, entity)
+    if metric.is_number:
+        entities.append(NumberEntity(device, metric))
+    elif metric.is_string:
+        entities.append(StringEntity(device, metric))
 
     stem = Path(__file__).stem  # stem = filename without py
     api.async_add_entities[stem](entities)
@@ -72,7 +63,7 @@ class NumberEntity(WiffiEntity):
 
     def __init__(self, device, metric):
         """Initialize the entity."""
-        WiffiEntity.__init__(self, device, metric)
+        super().__init__(device, metric)
         self._device_class = determine_device_class(metric)
         self._unit_of_measurement = convert_unit_of_measurement(
             metric.unit_of_measurement
@@ -95,7 +86,7 @@ class NumberEntity(WiffiEntity):
         """Return the value of the entity."""
         return self._value
 
-    async def update_value(self, metric):
+    def _update_value(self, metric):
         """Update the value of the entity.
 
         Called if a new message has been received from the wiffi device.
@@ -105,8 +96,7 @@ class NumberEntity(WiffiEntity):
             metric.unit_of_measurement
         )
         self._value = metric.value
-        if self.enabled:
-            self.async_schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
 
 class StringEntity(WiffiEntity):
@@ -114,7 +104,7 @@ class StringEntity(WiffiEntity):
 
     def __init__(self, device, metric):
         """Initialize the entity."""
-        WiffiEntity.__init__(self, device, metric)
+        super().__init__(device, metric)
         self._value = metric.value
         self.reset_expiration_date()
 
@@ -123,15 +113,14 @@ class StringEntity(WiffiEntity):
         """Return the value of the entity."""
         return self._value
 
-    async def update_value(self, metric):
+    def _update_value(self, metric):
         """Update the value of the entity.
 
         Called if a new message has been received from the wiffi device.
         """
         self.reset_expiration_date()
         self._value = metric.value
-        if self.enabled:
-            self.async_schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
 
 def convert_unit_of_measurement(oum):

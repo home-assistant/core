@@ -1,6 +1,6 @@
 """Component for wiffi support."""
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import errno
 import logging
 
@@ -10,10 +10,20 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers import device_registry
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CREATE_ENTITY_SIGNAL, DOMAIN
+from .const import (
+    CHECK_ENTITIES_SIGNAL,
+    CREATE_ENTITY_SIGNAL,
+    DOMAIN,
+    UPDATE_ENTITY_SIGNAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,6 +82,11 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     return unload_ok
 
 
+def generateUniqueId(device, metric):
+    """Generate a unique string for the entity."""
+    return f"{device.mac_address.replace(':', '')}-{metric.name}"
+
+
 class WiffiIntegrationApi:
     """API object for wiffi handling. Stored in hass.data."""
 
@@ -102,23 +117,22 @@ class WiffiIntegrationApi:
     async def __call__(self, device, metrics):
         """Process callback from TCP server if new data arrives from a device."""
         if device.mac_address not in self._known_devices:
-            # add all entities of new device
-            self._known_devices[device.mac_address] = {}
+            # add empty set for new device
+            self._known_devices[device.mac_address] = set()
 
-            async_dispatcher_send(
-                self._hass, CREATE_ENTITY_SIGNAL, self, device, metrics
-            )
-
-        else:
-            # update all entities
-            for metric in metrics:
-                entity = self._known_devices[device.mac_address].get(metric.id)
-                if entity is not None:
-                    await entity.update_value(metric)
-                else:
-                    _LOGGER.warning(
-                        "wiffi entity %s-%s not found", device.mac_address, metric.id
-                    )
+        for metric in metrics:
+            if metric.id not in self._known_devices[device.mac_address]:
+                self._known_devices[device.mac_address].add(metric.id)
+                async_dispatcher_send(
+                    self._hass, CREATE_ENTITY_SIGNAL, self, device, metric
+                )
+            else:
+                async_dispatcher_send(
+                    self._hass,
+                    UPDATE_ENTITY_SIGNAL + generateUniqueId(device, metric),
+                    device,
+                    metric,
+                )
 
     @property
     def server(self):
@@ -133,11 +147,87 @@ class WiffiIntegrationApi:
     @callback
     def _periodic_tick(self, now=None):
         """Check if any entity has timed out because it has not been updated."""
-        for entities in self._known_devices.values():
-            for entity in entities.values():
-                if entity is not None:
-                    entity.async_check_expiration_date()
+        async_dispatcher_send(self._hass, CHECK_ENTITIES_SIGNAL)
 
-    def add_entity(self, mac_address, metric_id, entity):
-        """Add entity to list of known entities."""
-        self._known_devices[mac_address][metric_id] = entity
+
+class WiffiEntity(Entity):
+    """Common functionality for all wiffi entities."""
+
+    def __init__(self, device, metric):
+        """Initialize the base elements of a wiffi entity."""
+        self._id = generateUniqueId(device, metric)
+        self._device_info = {
+            "connections": {
+                (device_registry.CONNECTION_NETWORK_MAC, device.mac_address)
+            },
+            "identifiers": {(DOMAIN, device.mac_address)},
+            "manufacturer": "stall.biz",
+            "name": f"{device.moduletype} {device.mac_address}",
+            "model": device.moduletype,
+            "sw_version": device.sw_version,
+        }
+        self._name = metric.description
+        self._expiration_date = None
+        self._value = None
+
+    async def async_added_to_hass(self):
+        """Entity has been added to hass."""
+        async_dispatcher_connect(
+            self.hass, UPDATE_ENTITY_SIGNAL + self._id, self._update_value_callback
+        )
+        async_dispatcher_connect(
+            self.hass, CHECK_ENTITIES_SIGNAL, self._check_expiration_date
+        )
+
+    @property
+    def should_poll(self):
+        """Disable polling because data driven ."""
+        return False
+
+    @property
+    def device_info(self):
+        """Return wiffi device info which is shared between all entities of a device."""
+        return self._device_info
+
+    @property
+    def unique_id(self):
+        """Return unique id for entity."""
+        return self._id
+
+    @property
+    def name(self):
+        """Return entity name."""
+        return self._name
+
+    @property
+    def available(self):
+        """Return true if value is valid."""
+        return self._value is not None
+
+    def reset_expiration_date(self):
+        """Reset value expiration date.
+
+        Will be called by derived classes after a value update has been received.
+        """
+        self._expiration_date = datetime.now() + timedelta(minutes=3)
+
+    @callback
+    def _update_value_callback(self, device, metric):
+        """Check if the update belongs to us and update value."""
+        if self._id == f"{device.mac_address.replace(':', '')}-{metric.name}":
+            self._update_value(metric)
+
+    @callback
+    def _check_expiration_date(self):
+        """Periodically check if entity value has been updated.
+
+        If there are no more updates from the wiffi device, the value will be
+        set to unavailable.
+        """
+        if (
+            self._value is not None
+            and self._expiration_date is not None
+            and datetime.now() > self._expiration_date
+        ):
+            self._value = None
+            self.async_write_ha_state()

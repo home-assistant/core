@@ -10,11 +10,10 @@ from wiffi import WiffiTcpServer
 from homeassistant import config_entries
 from homeassistant.const import CONF_PORT
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_PORT, DOMAIN  # pylint: disable=unused-import
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class WiffiFlowHandler(config_entries.ConfigFlow):
+class WiffiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Wiffi server setup config flow."""
 
     VERSION = 1
