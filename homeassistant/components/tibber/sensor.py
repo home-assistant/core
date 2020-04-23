@@ -75,9 +75,9 @@ class TibberSensor(Entity):
         return self._state
 
     @property
-    def device_id(self):
-        """Return the ID of the physical device this sensor is part of."""
-        return self.unique_id
+    def unique_id(self):
+        """Return a unique ID."""
+        return self.device_id
 
     @property
     def device_info(self):
@@ -148,8 +148,8 @@ class TibberSensorElPrice(TibberSensor):
         return self._tibber_home.price_unit
 
     @property
-    def unique_id(self):
-        """Return a unique ID."""
+    def device_id(self):
+        """Return the ID of the physical device this sensor is part of."""
         home = self._tibber_home.info["viewer"]["home"]
         return home["meteringPointData"]["consumptionEan"]
 
@@ -174,7 +174,7 @@ class TibberSensorRT(TibberSensor):
     """Representation of a Tibber sensor for real time consumption."""
 
     async def async_added_to_hass(self):
-        """Start unavailability tracking."""
+        """Start listen for real time data."""
         await self._tibber_home.rt_subscribe(self.hass.loop, self._async_callback)
 
     async def _async_callback(self, payload):
@@ -228,8 +228,8 @@ class TibberSensorRT(TibberSensor):
         return POWER_WATT
 
     @property
-    def unique_id(self):
-        """Return a unique ID."""
+    def device_id(self):
+        """Return the ID of the physical device this sensor is part of."""
         home = self._tibber_home.info["viewer"]["home"]
         _id = home["meteringPointData"]["consumptionEan"]
         return f"{_id}_rt_consumption"
