@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util import slugify
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
@@ -33,6 +34,9 @@ class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=DATA_SCHEMA, errors={},
             )
 
+        if self._async_current_entries():
+            return self.async_abort(reason="already_configured")
+
         access_token = user_input[CONF_ACCESS_TOKEN].replace(" ", "")
 
         tibber_connection = tibber.Tibber(
@@ -55,8 +59,7 @@ class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=DATA_SCHEMA, errors=errors,
             )
 
-        unique_id = "tibber"
-
+        unique_id = slugify(tibber_connection.name)
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
