@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Adresse IP",
+                    "name": "Nom"
+                },
+                "title": "Configurer votre t\u00e9l\u00e9viseur"
+            }
+        }
+    }
+}

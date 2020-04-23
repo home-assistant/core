@@ -29,6 +29,12 @@
                     "host": "Host",
                     "port": "Poort"
                 }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Host",
+                    "port": "Poort"
+                }
             }
         }
     },
