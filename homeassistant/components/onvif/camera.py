@@ -101,7 +101,9 @@ SERVICE_PTZ_SCHEMA = vol.Schema(
         vol.Optional(ATTR_PAN): vol.In([DIR_LEFT, DIR_RIGHT]),
         vol.Optional(ATTR_TILT): vol.In([DIR_UP, DIR_DOWN]),
         vol.Optional(ATTR_ZOOM): vol.In([ZOOM_OUT, ZOOM_IN]),
-        ATTR_MOVE_MODE: vol.In([CONTINUOUS_MOVE, RELATIVE_MOVE, ABSOLUTE_MOVE, GOTOPRESET_MOVE]),
+        ATTR_MOVE_MODE: vol.In(
+            [CONTINUOUS_MOVE, RELATIVE_MOVE, ABSOLUTE_MOVE, GOTOPRESET_MOVE]
+        ),
         vol.Optional(ATTR_CONTINUOUS_DURATION, default=0.5): cv.small_float,
         vol.Optional(ATTR_DISTANCE, default=0.1): cv.small_float,
         vol.Optional(ATTR_SPEED, default=0.5): cv.small_float,
@@ -459,7 +461,7 @@ class ONVIFHassCamera(Camera):
                 tilt_val,
                 zoom_val,
                 speed_val,
-                preset_val
+                preset_val,
             )
             try:
                 req = self._ptz_service.create_type(move_mode)
