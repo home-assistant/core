@@ -47,26 +47,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     controller.entities[DOMAIN] = {CLIENT_TRACKER: set(), DEVICE_TRACKER: set()}
 
-    # Restore clients that is not a part of active clients list.
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    for entity in entity_registry.entities.values():
-
-        if (
-            entity.config_entry_id == config_entry.entry_id
-            and entity.domain == DOMAIN
-            and "-" in entity.unique_id
-        ):
-
-            mac, _ = entity.unique_id.split("-", 1)
-            if mac in controller.api.clients or mac not in controller.api.clients_all:
-                continue
-
-            client = controller.api.clients_all[mac]
-            controller.api.clients.process_raw([client.raw])
-            LOGGER.debug(
-                "Restore disconnected client %s (%s)", entity.entity_id, client.mac,
-            )
-
     @callback
     def items_added():
         """Update the values of the controller."""
