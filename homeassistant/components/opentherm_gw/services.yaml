@@ -52,6 +52,20 @@ set_hot_water_ovrd:
         state, or "A" to disable the override.
       example: "1"
 
+set_hot_water_setpoint:
+  description: >
+    Set the domestic hot water setpoint on the gateway.
+  fields:
+    gateway_id:
+      description: The gateway_id of the OpenTherm Gateway.
+      example: "opentherm_gateway"
+    temperature:
+      description: >
+        The domestic hot water setpoint to set on the gateway. Not all boilers support this feature.
+        Values between 0 and 90 are accepted, but not all boilers support this range.
+        Check the values of the slave_dhw_min_setp and slave_dhw_max_setp sensors to see the supported range on your boiler.
+      example: "60"
+
 set_gpio_mode:
   description: Change the function of the GPIO pins of the gateway.
   fields:

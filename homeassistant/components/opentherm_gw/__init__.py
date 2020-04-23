@@ -43,6 +43,7 @@ from .const import (
     SERVICE_SET_CONTROL_SETPOINT,
     SERVICE_SET_GPIO_MODE,
     SERVICE_SET_HOT_WATER_OVRD,
+    SERVICE_SET_HOT_WATER_SETPOINT,
     SERVICE_SET_LED_MODE,
     SERVICE_SET_MAX_MOD,
     SERVICE_SET_OAT,
@@ -145,6 +146,7 @@ def register_services(hass):
             ),
         }
     )
+    service_set_hot_water_setpoint_schema = service_set_control_setpoint_schema
     service_set_hot_water_ovrd_schema = vol.Schema(
         {
             vol.Required(ATTR_GW_ID): vol.All(
@@ -261,6 +263,21 @@ def register_services(hass):
         SERVICE_SET_HOT_WATER_OVRD,
         set_dhw_ovrd,
         service_set_hot_water_ovrd_schema,
+    )
+
+    async def set_dhw_setpoint(call):
+        """Set the domestic hot water setpoint on the OpenTherm Gateway."""
+        gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][call.data[ATTR_GW_ID]]
+        gw_var = gw_vars.DATA_DHW_SETPOINT
+        value = await gw_dev.gateway.set_dhw_setpoint(call.data[ATTR_TEMPERATURE])
+        gw_dev.status.update({gw_var: value})
+        async_dispatcher_send(hass, gw_dev.update_signal, gw_dev.status)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_HOT_WATER_SETPOINT,
+        set_dhw_setpoint,
+        service_set_hot_water_setpoint_schema,
     )
 
     async def set_device_clock(call):
