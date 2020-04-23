@@ -1,10 +1,6 @@
 """The devolo_home_control integration."""
 from devolo_home_control_api.homecontrol import HomeControl
-from devolo_home_control_api.mydevolo import (
-    Mydevolo,
-    WrongCredentialsError,
-    WrongUrlError,
-)
+from devolo_home_control_api.mydevolo import Mydevolo
 
 from homeassistant.components import switch as ha_switch
 from homeassistant.config_entries import ConfigEntry
@@ -12,8 +8,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTAN
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .config_flow import create_config_flow
-from .const import DOMAIN, HOMECONTROL, MYDEVOLO, PLATFORMS
+from .const import CONF_HOMECONTROL, CONF_MYDEVOLO, DOMAIN, PLATFORMS
 
 SUPPORTED_PLATFORMS = [ha_switch.DOMAIN]
 
@@ -31,14 +26,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         mydevolo = Mydevolo.get_instance()
     except SyntaxError:
         mydevolo = Mydevolo()
-    try:
-        mydevolo.user = conf.get(CONF_USERNAME)
-        mydevolo.password = conf.get(CONF_PASSWORD)
-        mydevolo.url = conf.get(MYDEVOLO)
-        mydevolo.mprm = conf.get(HOMECONTROL)
-    except (WrongCredentialsError, WrongUrlError):
-        create_config_flow(hass=hass)
-        raise ConfigEntryNotReady
+
+    mydevolo.user = conf[CONF_USERNAME]
+    mydevolo.password = conf[CONF_PASSWORD]
+    mydevolo.url = conf[CONF_MYDEVOLO]
+    mydevolo.mprm = conf[CONF_HOMECONTROL]
+
+    credentials_valid = await hass.async_add_executor_job(mydevolo.credentials_valid)
+
+    if not credentials_valid:
+        return False
 
     if mydevolo.maintenance():
         raise ConfigEntryNotReady
@@ -47,8 +44,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     mprm_url = mydevolo.mprm
 
     try:
-        hass.data[DOMAIN]["homecontrol"] = HomeControl(
-            gateway_id=gateway_id, url=mprm_url
+        hass.data[DOMAIN]["homecontrol"] = await hass.async_add_executor_job(
+            HomeControl(gateway_id=gateway_id, url=mprm_url)
         )
     except ConnectionError:
         raise ConfigEntryNotReady
@@ -75,6 +72,8 @@ async def async_unload_entry(hass, config_entry):
         config_entry, "switch"
     )
 
-    hass.data[DOMAIN]["homecontrol"].websocket_disconnect()
+    await hass.async_add_executor_job(
+        hass.data[DOMAIN]["homecontrol"].websocket_disconnect()
+    )
     del hass.data[DOMAIN]["homecontrol"]
     return unload
