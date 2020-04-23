@@ -94,7 +94,7 @@ set_option:
       example: "vacuum.braava_jet"
     option:
       description: Platform dependent vacuum cleaner option name.
-      example: "mop_behavior"
+      example: "wet_mop_behavior"
     value:
       description: Value of the option to be set.
       example: "deep"

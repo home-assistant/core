@@ -13,9 +13,9 @@ ATTR_TANK_PRESENT = "tank_present"
 ATTR_TANK_LEVEL = "tank_level"
 ATTR_PAD_WETNESS = "spray_amount"
 
-OPTION_MOP_BEHAVIOR = "mop_behavior"
+OPTION_WET_MOP_BEHAVIOR = "wet_mop_behavior"
 OPTION_SPRAY_AMOUNT = "spray_amount"
-BRAAVA_OPTIONS = [OPTION_MOP_BEHAVIOR, OPTION_SPRAY_AMOUNT]
+BRAAVA_OPTIONS = [OPTION_WET_MOP_BEHAVIOR, OPTION_SPRAY_AMOUNT]
 
 OVERLAP_STANDARD = 67
 OVERLAP_DEEP = 85
@@ -50,7 +50,7 @@ class BraavaJet(IRobotVacuum):
         return SUPPORT_BRAAVA
 
     @property
-    def mop_behavior(self):
+    def wet_mop_behavior(self):
         """Return the mop behavior of the vacuum cleaner."""
         rank_overlap = self.vacuum_state.get("rankOverlap", {})
         behavior = None
@@ -63,7 +63,7 @@ class BraavaJet(IRobotVacuum):
         return behavior
 
     @property
-    def mop_behavior_list(self):
+    def wet_mop_behavior_list(self):
         """Return the available mop behaviors of the vacuum cleaner."""
         return BRAAVA_MOP_BEHAVIORS
 
@@ -106,7 +106,7 @@ class BraavaJet(IRobotVacuum):
 
     async def async_set_option(self, option, value):
         """Set option value."""
-        if option == OPTION_MOP_BEHAVIOR:
+        if option == OPTION_WET_MOP_BEHAVIOR:
             if value.capitalize() in BRAAVA_MOP_BEHAVIORS:
                 value = value.capitalize()
             if value not in BRAAVA_MOP_BEHAVIORS:
@@ -143,7 +143,7 @@ class BraavaJet(IRobotVacuum):
         else:
             _LOGGER.error(
                 "Option name error: expected %s or %s, got '%s'",
-                OPTION_MOP_BEHAVIOR,
+                OPTION_WET_MOP_BEHAVIOR,
                 OPTION_SPRAY_AMOUNT,
                 option,
             )
