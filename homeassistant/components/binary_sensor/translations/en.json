@@ -143,8 +143,8 @@
             "on": "Open"
         },
         "presence": {
-            "off": "[%key:component::device_tracker::state::not_home%]",
-            "on": "[%key:component::device_tracker::state::home%]"
+            "off": "Away",
+            "on": "Home"
         },
         "problem": {
             "off": "OK",
