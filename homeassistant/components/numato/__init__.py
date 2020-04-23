@@ -43,6 +43,9 @@ DEFAULT_DEV = [f"/dev/ttyACM{i}" for i in range(10)]
 
 PORT_RANGE = range(1, 8)  # ports 0-7 are ADC capable
 
+DATA_PORTS_IN_USE = "ports_in_use"
+DATA_API = "api"
+
 
 def int_range(rng):
     """Validate the input array to describe a range by two integers."""
@@ -133,7 +136,7 @@ def setup(hass, config):
     No exceptions should occur, since the platforms are initialized on a best
     effort basis, which means, errors are handled locally.
     """
-    hass.data[DOMAIN] = config[DOMAIN][CONF_DEVICES]
+    hass.data[DOMAIN] = config[DOMAIN]
 
     try:
         gpio.discover(config[DOMAIN][CONF_DISCOVER])
@@ -147,11 +150,14 @@ def setup(hass, config):
         ", ".join(str(d) for d in gpio.devices),
     )
 
+    hass.data[DOMAIN][DATA_API] = NumatoAPI()
+
     def cleanup_gpio(event):
         """Stuff to do before stopping."""
         _LOGGER.debug("Clean up Numato GPIO")
         gpio.cleanup()
-        PORTS_IN_USE.clear()
+        if DATA_API in hass.data[DOMAIN]:
+            hass.data[DOMAIN][DATA_API].ports_registered.clear()
 
     def prepare_gpio(event):
         """Stuff to do when home assistant starts."""
@@ -166,65 +172,69 @@ def setup(hass, config):
     return True
 
 
-PORTS_IN_USE = dict()
+# pylint: disable=no-self-use
+class NumatoAPI:
+    """Home-Assistant specific API for numato device access."""
 
+    def __init__(self):
+        """Initialize API state."""
+        self.ports_registered = dict()
 
-def check_port_free(device_id, port, direction):
-    """Check whether a port is still free set up.
+    def check_port_free(self, device_id, port, direction):
+        """Check whether a port is still free set up.
 
-    Fail with exception if it has already been registered.
-    """
-    if (device_id, port) not in PORTS_IN_USE:
-        PORTS_IN_USE[(device_id, port)] = direction
-    else:
-        raise gpio.NumatoGpioError(
-            "Device {} Port {} already in use as {}.".format(
-                device_id,
-                port,
-                "input" if PORTS_IN_USE[(device_id, port)] == gpio.IN else "output",
+        Fail with exception if it has already been registered.
+        """
+        if (device_id, port) not in self.ports_registered:
+            self.ports_registered[(device_id, port)] = direction
+        else:
+            raise gpio.NumatoGpioError(
+                "Device {} port {} already in use as {}.".format(
+                    device_id,
+                    port,
+                    "input"
+                    if self.ports_registered[(device_id, port)] == gpio.IN
+                    else "output",
+                )
             )
-        )
 
+    def check_device_id(self, device_id):
+        """Check whether a device has been discovered.
 
-def check_device_id(device_id):
-    """Check whether a device has been discovered.
+        Fail with exception.
+        """
+        if device_id not in gpio.devices:
+            raise gpio.NumatoGpioError(f"Device {device_id} not available.")
 
-    Fail with exception.
-    """
-    if device_id not in gpio.devices:
-        raise gpio.NumatoGpioError(f"Device {device_id} not available.")
+    def setup_output(self, device_id, port):
+        """Set up a GPIO as output."""
+        self.check_device_id(device_id)
+        self.check_port_free(device_id, port, gpio.OUT)
+        gpio.devices[device_id].setup(port, gpio.OUT)
 
+    def setup_input(self, device_id, port):
+        """Set up a GPIO as input."""
+        self.check_device_id(device_id)
+        gpio.devices[device_id].setup(port, gpio.IN)
+        self.check_port_free(device_id, port, gpio.IN)
 
-def setup_output(device_id, port):
-    """Set up a GPIO as output."""
-    check_device_id(device_id)
-    check_port_free(device_id, port, gpio.OUT)
-    gpio.devices[device_id].setup(port, gpio.OUT)
+    def write_output(self, device_id, port, value):
+        """Write a value to a GPIO."""
+        self.check_device_id(device_id)
+        gpio.devices[device_id].write(port, value)
 
+    def read_input(self, device_id, port):
+        """Read a value from a GPIO."""
+        self.check_device_id(device_id)
+        return gpio.devices[device_id].read(port)
 
-def setup_input(device_id, port):
-    """Set up a GPIO as input."""
-    check_device_id(device_id)
-    gpio.devices[device_id].setup(port, gpio.IN)
-    check_port_free(device_id, port, gpio.IN)
+    def read_adc_input(self, device_id, port):
+        """Read an ADC value from a GPIO ADC port."""
+        self.check_device_id(device_id)
+        return gpio.devices[device_id].adc_read(port)
 
-
-def write_output(device_id, port, value):
-    """Write a value to a GPIO."""
-    gpio.devices[device_id].write(port, value)
-
-
-def read_input(device_id, port):
-    """Read a value from a GPIO."""
-    return gpio.devices[device_id].read(port)
-
-
-def read_adc_input(device_id, port):
-    """Read an ADC value from a GPIO ADC port."""
-    return gpio.devices[device_id].adc_read(port)
-
-
-def edge_detect(device_id, port, event_callback):
-    """Add detection for RISING and FALLING events."""
-    gpio.devices[device_id].add_event_detect(port, event_callback, gpio.BOTH)
-    gpio.devices[device_id].notify = True
+    def edge_detect(self, device_id, port, event_callback):
+        """Add detection for RISING and FALLING events."""
+        self.check_device_id(device_id)
+        gpio.devices[device_id].add_event_detect(port, event_callback, gpio.BOTH)
+        gpio.devices[device_id].notify = True

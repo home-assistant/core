@@ -74,7 +74,6 @@ def numato_fixture():
     """Inject the numato mockup into numato homeassistant module."""
     module_mock = copy(numato_mock.NumatoModuleMock)
     numato.__dict__["gpio"] = module_mock
-    numato.PORTS_IN_USE.clear()
     yield module_mock
     module_mock.cleanup()
 
@@ -138,11 +137,11 @@ async def test_failing_hass_operations(hass, numato_fixture, monkeypatch):
 async def test_hass_numato_api(hass, numato_fixture):
     """Test regular device access."""
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
-
+    api = hass.data["numato"]["api"]
     # regular operations
-    numato.read_adc_input(0, 1)
-    numato.read_input(0, 2)
-    numato.write_output(0, 2, 1)
+    api.read_adc_input(0, 1)
+    api.read_input(0, 2)
+    api.write_output(0, 2, 1)
 
     def gen_callback(expected_port, expected_value):
         def cb_mockup(port, value):
@@ -151,9 +150,9 @@ async def test_hass_numato_api(hass, numato_fixture):
 
         return cb_mockup
 
-    numato.edge_detect(0, 2, gen_callback(2, 1))
+    api.edge_detect(0, 2, gen_callback(2, 1))
     numato_fixture.devices[0].mockup_inject_notification(2, 1)
-    numato.edge_detect(0, 2, gen_callback(2, 0))
+    api.edge_detect(0, 2, gen_callback(2, 0))
     numato_fixture.devices[0].mockup_inject_notification(2, 0)
 
 
@@ -164,9 +163,10 @@ async def test_hass_numato_api_irregular_unhandled(hass, numato_fixture):
     numato component's API.
     """
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
-    numato.read_adc_input(0, 5)  # adc_read from output
-    numato.read_input(0, 6)  # read from output
-    numato.write_output(0, 2, 1)  # write to input
+    api = hass.data["numato"]["api"]
+    api.read_adc_input(0, 5)  # adc_read from output
+    api.read_input(0, 6)  # read from output
+    api.write_output(0, 2, 1)  # write to input
 
 
 async def test_hass_numato_api_errors(hass, numato_fixture, monkeypatch):
@@ -176,11 +176,12 @@ async def test_hass_numato_api_errors(hass, numato_fixture, monkeypatch):
     monkeypatch.setattr(numato_fixture.devices[0], "adc_read", mockup_raise)
     monkeypatch.setattr(numato_fixture.devices[0], "read", mockup_raise)
     monkeypatch.setattr(numato_fixture.devices[0], "write", mockup_raise)
+    api = numato.NumatoAPI()
     with pytest.raises(NumatoGpioError):
-        numato.setup_input(0, 5)
-        numato.read_adc_input(0, 1)
-        numato.read_input(0, 2)
-        numato.write_output(0, 2, 1)
+        api.setup_input(0, 5)
+        api.read_adc_input(0, 1)
+        api.read_input(0, 2)
+        api.write_output(0, 2, 1)
 
 
 async def test_invalid_port_number(hass, numato_fixture, config):

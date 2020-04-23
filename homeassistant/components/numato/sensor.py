@@ -7,11 +7,18 @@ import logging
 
 from numato_gpio import NumatoGpioError
 
-import homeassistant.components.numato as numato
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_SENSORS
 from homeassistant.helpers.entity import Entity
 
-from . import CONF_DST_RANGE, CONF_DST_UNIT, CONF_PORTS, CONF_SRC_RANGE, DOMAIN
+from . import (
+    CONF_DEVICES,
+    CONF_DST_RANGE,
+    CONF_DST_UNIT,
+    CONF_PORTS,
+    CONF_SRC_RANGE,
+    DATA_API,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
     sensors = []
-    devices = hass.data[DOMAIN]
+    devices = hass.data[DOMAIN][CONF_DEVICES]
     for device in [d for d in devices if CONF_SENSORS in d]:
         device_id = device[CONF_ID]
         ports = device[CONF_SENSORS][CONF_PORTS]
@@ -38,6 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         adc_def[CONF_SRC_RANGE],
                         adc_def[CONF_DST_RANGE],
                         adc_def[CONF_DST_UNIT],
+                        hass.data[DOMAIN][DATA_API],
                     )
                 )
             except NumatoGpioError as err:
@@ -53,7 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class NumatoGpioAdc(Entity):
     """Represents an ADC port of a Numato USB GPIO expander."""
 
-    def __init__(self, name, device_id, port, src_range, dst_range, dst_unit):
+    def __init__(self, name, device_id, port, src_range, dst_range, dst_unit, api):
         """Initialize the sensor."""
         self._name = name
         self._device_id = device_id
@@ -62,7 +70,8 @@ class NumatoGpioAdc(Entity):
         self._dst_range = dst_range
         self._state = None
         self._unit_of_measurement = dst_unit
-        numato.setup_input(self._device_id, self._port)
+        self._api = api
+        self._api.setup_input(self._device_id, self._port)
 
     @property
     def name(self):
@@ -87,7 +96,7 @@ class NumatoGpioAdc(Entity):
     def update(self):
         """Get the latest data and updates the state."""
         try:
-            adc_val = numato.read_adc_input(self._device_id, self._port)
+            adc_val = self._api.read_adc_input(self._device_id, self._port)
             # clamp to source range
             adc_val = max(adc_val, self._src_range[0])
             adc_val = min(adc_val, self._src_range[1])

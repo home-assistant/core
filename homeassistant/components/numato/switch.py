@@ -8,10 +8,15 @@ import logging
 
 from numato_gpio import NumatoGpioError
 
-from homeassistant.const import CONF_ID, CONF_SWITCHES, DEVICE_DEFAULT_NAME
+from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_ID,
+    CONF_SWITCHES,
+    DEVICE_DEFAULT_NAME,
+)
 from homeassistant.helpers.entity import ToggleEntity
 
-from . import CONF_INVERT_LOGIC, CONF_PORTS, DOMAIN, setup_output, write_output
+from . import CONF_INVERT_LOGIC, CONF_PORTS, DATA_API, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +29,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
     switches = []
-    devices = hass.data[DOMAIN]
+    devices = hass.data[DOMAIN][CONF_DEVICES]
     for device in [d for d in devices if CONF_SWITCHES in d]:
         device_id = device[CONF_ID]
         platform = device[CONF_SWITCHES]
@@ -33,7 +38,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for port_id, port_name in ports.items():
             try:
                 switches.append(
-                    NumatoGPIOSwitch(port_name, device_id, port_id, invert_logic)
+                    NumatoGPIOSwitch(
+                        port_name,
+                        device_id,
+                        port_id,
+                        invert_logic,
+                        hass.data[DOMAIN][DATA_API],
+                    )
                 )
             except NumatoGpioError as ex:
                 _LOGGER.error(
@@ -48,15 +59,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class NumatoGPIOSwitch(ToggleEntity):
     """Representation of a Numato USB GPIO switch port."""
 
-    def __init__(self, name, device_id, port, invert_logic):
+    def __init__(self, name, device_id, port, invert_logic, api):
         """Initialize the port."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._device_id = device_id
         self._port = port
         self._invert_logic = invert_logic
         self._state = False
-        setup_output(self._device_id, self._port)
-        write_output(self._device_id, self._port, 1 if self._invert_logic else 0)
+        self._api = api
+        self._api.setup_output(self._device_id, self._port)
+        self._api.write_output(
+            self._device_id, self._port, 1 if self._invert_logic else 0
+        )
 
     @property
     def name(self):
@@ -76,7 +90,9 @@ class NumatoGPIOSwitch(ToggleEntity):
     def turn_on(self, **kwargs):
         """Turn the port on."""
         try:
-            write_output(self._device_id, self._port, 0 if self._invert_logic else 1)
+            self._api.write_output(
+                self._device_id, self._port, 0 if self._invert_logic else 1
+            )
             self._state = True
             self.schedule_update_ha_state()
         except NumatoGpioError as err:
@@ -90,7 +106,9 @@ class NumatoGPIOSwitch(ToggleEntity):
     def turn_off(self, **kwargs):
         """Turn the port off."""
         try:
-            write_output(self._device_id, self._port, 1 if self._invert_logic else 0)
+            self._api.write_output(
+                self._device_id, self._port, 1 if self._invert_logic else 0
+            )
             self._state = False
             self.schedule_update_ha_state()
         except NumatoGpioError as err:

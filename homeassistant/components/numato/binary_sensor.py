@@ -13,13 +13,12 @@ from homeassistant.const import DEVICE_DEFAULT_NAME
 
 from . import (
     CONF_BINARY_SENSORS,
+    CONF_DEVICES,
     CONF_ID,
     CONF_INVERT_LOGIC,
     CONF_PORTS,
+    DATA_API,
     DOMAIN,
-    edge_detect,
-    read_input,
-    setup_input,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,7 +29,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
     binary_sensors = []
-    devices = hass.data[DOMAIN]
+    devices = hass.data[DOMAIN][CONF_DEVICES]
     for device in [d for d in devices if CONF_BINARY_SENSORS in d]:
         device_id = device[CONF_ID]
         platform = device[CONF_BINARY_SENSORS]
@@ -39,7 +38,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for port_id, port_name in ports.items():
             try:
                 binary_sensors.append(
-                    NumatoGPIOBinarySensor(port_name, device_id, port_id, invert_logic)
+                    NumatoGPIOBinarySensor(
+                        port_name,
+                        device_id,
+                        port_id,
+                        invert_logic,
+                        hass.data[DOMAIN][DATA_API],
+                    )
                 )
             except NumatoGpioError as ex:
                 _LOGGER.error(
@@ -54,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class NumatoGPIOBinarySensor(BinarySensorDevice):
     """Represents a binary sensor (input) port of a Numato GPIO expander."""
 
-    def __init__(self, name, device_id, port, invert_logic):
+    def __init__(self, name, device_id, port, invert_logic, api):
         """Initialize the Numato GPIO based binary sensor."""
         # pylint: disable=no-member
         self._name = name or DEVICE_DEFAULT_NAME
@@ -62,13 +67,14 @@ class NumatoGPIOBinarySensor(BinarySensorDevice):
         self._port = port
         self._invert_logic = invert_logic
         self._state = None
-        setup_input(self._device_id, self._port)
+        self._api = api
+        self._api.setup_input(self._device_id, self._port)
 
         def read_gpio(port, level):
             self._state = level
             self.schedule_update_ha_state()
 
-        edge_detect(self._device_id, self._port, read_gpio)
+        self._api.edge_detect(self._device_id, self._port, read_gpio)
 
     @property
     def should_poll(self):
@@ -88,7 +94,7 @@ class NumatoGPIOBinarySensor(BinarySensorDevice):
     def update(self):
         """Update the GPIO state."""
         try:
-            self._state = read_input(self._device_id, self._port)
+            self._state = self._api.read_input(self._device_id, self._port)
         except NumatoGpioError as err:
             self._state = None
             _LOGGER.error(
