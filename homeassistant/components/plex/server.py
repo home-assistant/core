@@ -332,3 +332,7 @@ class PlexServer:
     def create_playqueue(self, media, **kwargs):
         """Create playqueue on Plex server."""
         return plexapi.playqueue.PlayQueue.create(self._plex_server, media, **kwargs)
+
+    def fetch_item(self, item):
+        """Fetch item from Plex server."""
+        return self._plex_server.fetchItem(item)
