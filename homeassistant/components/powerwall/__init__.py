@@ -4,7 +4,12 @@ from datetime import timedelta
 import logging
 
 import requests
-from tesla_powerwall import APIError, Powerwall, PowerwallUnreachableError
+from tesla_powerwall import (
+    APIChangedError,
+    Powerwall,
+    PowerwallError,
+    PowerwallUnreachableError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -13,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     DOMAIN,
@@ -26,6 +31,7 @@ from .const import (
     POWERWALL_API_SITEMASTER,
     POWERWALL_API_STATUS,
     POWERWALL_COORDINATOR,
+    POWERWALL_ERROR,
     POWERWALL_HTTP_SESSION,
     POWERWALL_OBJECT,
     UPDATE_INTERVAL,
@@ -64,7 +70,7 @@ async def _migrate_old_unique_ids(hass, entry_id, powerwall_data):
     @callback
     def _async_migrator(entity_entry: entity_registry.RegistryEntry):
         parts = entity_entry.unique_id.split("_")
-        # Check if the unique_id starts with the serial_numbers of the powerwakks
+        # Check if the unique_id starts with the serial_numbers of the powerwalls
         if parts[0 : len(serial_numbers)] != serial_numbers:
             # The old unique_id ended with the nomianal_system_engery_kWh so we can use that
             # to find the old base unique_id and extract the device_suffix.
@@ -87,26 +93,54 @@ async def _migrate_old_unique_ids(hass, entry_id, powerwall_data):
     await entity_registry.async_migrate_entries(hass, entry_id, _async_migrator)
 
 
+async def handle_setup_error(
+    hass: HomeAssistant, entry: ConfigEntry, error: PowerwallError
+):
+    """Log error and send notification for an error during the component setup."""
+    # Only emit one notification and log the error once
+    if hass.data[DOMAIN][entry.entry_id][POWERWALL_ERROR] is None:
+        # Only log the error message, the full traceback is not needed
+        _LOGGER.error(str(error))
+
+        if isinstance(error, PowerwallUnreachableError):
+            msg = "Could not connect to powerwall.\nSee logs for more information."
+            title = "Powerwall unreachable"
+        elif isinstance(error, APIChangedError):
+            msg = "It seems like the API of the powerwall changed.\nPlease report this issue so it can be resolved!\nSee logs for more information."
+            title = "Powerwall API changed"
+        else:
+            msg = "There was an error setting up the powerwall integration.\nSee logs for more information."
+            title = "Powerwall setup error"
+
+        hass.components.persistent_notification.async_create(msg, title=title)
+
+        hass.data[DOMAIN][entry.entry_id][POWERWALL_ERROR] = error
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Tesla Powerwall from a config entry."""
 
     entry_id = entry.entry_id
 
-    hass.data[DOMAIN].setdefault(entry_id, {})
+    hass.data[DOMAIN].setdefault(entry_id, {POWERWALL_ERROR: None})
     http_session = requests.Session()
     power_wall = Powerwall(entry.data[CONF_IP_ADDRESS], http_session=http_session)
     try:
         await hass.async_add_executor_job(power_wall.detect_and_pin_version)
         powerwall_data = await hass.async_add_executor_job(call_base_info, power_wall)
-    except (PowerwallUnreachableError, APIError, ConnectionError):
+    except PowerwallError as e:
         http_session.close()
+        await handle_setup_error(hass, entry, e)
         raise ConfigEntryNotReady
 
     await _migrate_old_unique_ids(hass, entry_id, powerwall_data)
 
     async def async_update_data():
         """Fetch data from API endpoint."""
-        return await hass.async_add_executor_job(_fetch_powerwall_data, power_wall)
+        try:
+            return await hass.async_add_executor_job(_fetch_powerwall_data, power_wall)
+        except PowerwallUnreachableError:
+            raise UpdateFailed("Unable to fetch data from powerwall")
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -122,6 +156,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             POWERWALL_OBJECT: power_wall,
             POWERWALL_COORDINATOR: coordinator,
             POWERWALL_HTTP_SESSION: http_session,
+            PowerwallError: None,
         }
     )
 
