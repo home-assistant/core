@@ -208,4 +208,4 @@ def read_adc_input(device_id, port):
 def edge_detect(device_id, port, event_callback):
     """Add detection for RISING and FALLING events."""
     gpio.devices[device_id].add_event_detect(port, event_callback, gpio.BOTH)
-    gpio.devices[device_id].notify(True)
+    gpio.devices[device_id].notify = True
