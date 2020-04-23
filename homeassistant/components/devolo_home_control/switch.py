@@ -3,7 +3,6 @@ import logging
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
@@ -64,8 +63,8 @@ class DevoloSwitch(SwitchDevice):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.subscriber = async_dispatcher_connect(
-            self.hass, self._device_instance.itemName, self.update
+        self.subscriber = Subscriber(
+            self._device_instance.itemName, callback=self.update
         )
         self._homecontrol.publisher.register(
             self._device_instance.uid, self.subscriber, self.update
@@ -140,3 +139,17 @@ class DevoloSwitch(SwitchDevice):
             _LOGGER.debug("No valid message received")
             _LOGGER.debug(message)
         self.schedule_update_ha_state()
+
+
+class Subscriber:
+    """Subscriber class for the publisher in mprm websocket class."""
+
+    def __init__(self, name, callback):
+        """Initiate the device."""
+        self.name = name
+        self.callback = callback
+
+    def update(self, message):
+        """Trigger hass to update the device."""
+        _LOGGER.debug('%s got message "%s"', self.name, message)
+        self.callback(message)
