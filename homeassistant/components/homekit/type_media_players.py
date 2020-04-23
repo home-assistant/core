@@ -1,4 +1,5 @@
 """Class to hold all media player accessories."""
+from copy import copy
 import logging
 
 from pyhap.const import CATEGORY_SWITCH, CATEGORY_TELEVISION
@@ -16,6 +17,11 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
+)
+from homeassistant.components.remote import (
+    ATTR_COMMAND,
+    DOMAIN as REMOTE_DOMAIN,
+    SERVICE_SEND_COMMAND,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -36,6 +42,7 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNKNOWN,
 )
+from homeassistant.helpers.script import Script
 
 from . import TYPES
 from .accessories import HomeAccessory
@@ -56,10 +63,26 @@ from .const import (
     CHAR_VOLUME_CONTROL_TYPE,
     CHAR_VOLUME_SELECTOR,
     CONF_FEATURE_LIST,
+    CONF_KEY_MAP,
+    CONF_REMOTE,
+    CONF_REMOTE_ID,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
+    KEY_BACK,
+    KEY_DOWN,
+    KEY_EXIT,
+    KEY_FAST_FORWARD,
+    KEY_INFO,
+    KEY_LEFT,
+    KEY_NEXT_TRACK,
+    KEY_PLAY_PAUSE,
+    KEY_PREVIOUS_TRACK,
+    KEY_REWIND,
+    KEY_RIGHT,
+    KEY_SELECT,
+    KEY_UP,
     SERV_INPUT_SOURCE,
     SERV_SWITCH,
     SERV_TELEVISION,
@@ -68,21 +91,38 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-MEDIA_PLAYER_KEYS = {
-    # 0: "Rewind",
-    # 1: "FastForward",
-    # 2: "NextTrack",
-    # 3: "PreviousTrack",
-    # 4: "ArrowUp",
-    # 5: "ArrowDown",
-    # 6: "ArrowLeft",
-    # 7: "ArrowRight",
-    # 8: "Select",
-    # 9: "Back",
-    # 10: "Exit",
+REMOTE_KEYS = {
+    0: "rewind",
+    1: "fast_forward",
+    2: "next_track",
+    3: "previous_track",
+    4: "up",
+    5: "down",
+    6: "left",
+    7: "right",
+    8: "select",
+    9: "back",
+    10: "exit",
     11: SERVICE_MEDIA_PLAY_PAUSE,
-    # 15: "Information",
+    15: "info",
 }
+
+REMOTE_KEY_TO_NUMBER = {
+    KEY_REWIND: 0,
+    KEY_FAST_FORWARD: 1,
+    KEY_NEXT_TRACK: 2,
+    KEY_PREVIOUS_TRACK: 3,
+    KEY_UP: 4,
+    KEY_DOWN: 5,
+    KEY_LEFT: 6,
+    KEY_RIGHT: 7,
+    KEY_SELECT: 8,
+    KEY_BACK: 9,
+    KEY_EXIT: 10,
+    KEY_PLAY_PAUSE: 11,
+    KEY_INFO: 15,
+}
+
 
 MODE_FRIENDLY_NAME = {
     FEATURE_ON_OFF: "Power",
@@ -269,6 +309,22 @@ class TelevisionMediaPlayer(HomeAccessory):
                 CHAR_REMOTE_KEY, setter_callback=self.set_remote_key
             )
 
+            if CONF_REMOTE in self.config:
+                self._remote = (
+                    self.config[CONF_REMOTE]
+                    if isinstance(self.config[CONF_REMOTE], str)
+                    else self.config[CONF_REMOTE][CONF_REMOTE_ID]
+                )
+
+                self._keys = copy(REMOTE_KEYS)
+                if CONF_KEY_MAP in self.config[CONF_REMOTE]:
+                    for key, value in self.config[CONF_REMOTE][CONF_KEY_MAP].items():
+                        self._keys[REMOTE_KEY_TO_NUMBER[key]] = (
+                            value
+                            if isinstance(value, str)
+                            else Script(self.hass, value)
+                        )
+
         if CHAR_VOLUME_SELECTOR in self.chars_speaker:
             serv_speaker = self.add_preload_service(
                 SERV_TELEVISION_SPEAKER, self.chars_speaker
@@ -358,10 +414,11 @@ class TelevisionMediaPlayer(HomeAccessory):
     def set_remote_key(self, value):
         """Send remote key value if call came from HomeKit."""
         _LOGGER.debug("%s: Set remote key to %s", self.entity_id, value)
-        service = MEDIA_PLAYER_KEYS.get(value)
-        if service:
-            # Handle Play Pause
-            if service == SERVICE_MEDIA_PLAY_PAUSE:
+        key = REMOTE_KEYS.get(value)
+
+        if key:
+            # Handle play/pause
+            if key == SERVICE_MEDIA_PLAY_PAUSE:
                 state = self.hass.states.get(self.entity_id).state
                 if state in (STATE_PLAYING, STATE_PAUSED):
                     service = (
@@ -369,8 +426,22 @@ class TelevisionMediaPlayer(HomeAccessory):
                         if state == STATE_PAUSED
                         else SERVICE_MEDIA_PAUSE
                     )
-            params = {ATTR_ENTITY_ID: self.entity_id}
-            self.call_service(DOMAIN, service, params)
+
+                    params = {ATTR_ENTITY_ID: self.entity_id}
+                    self.call_service(DOMAIN, service, params)
+                    return
+            if isinstance(key, str):
+                if self._remote is not None:
+                    params = {ATTR_ENTITY_ID: self._remote, ATTR_COMMAND: key}
+                    self.call_service(REMOTE_DOMAIN, SERVICE_SEND_COMMAND, params)
+                    return
+            else:
+                key.run()
+                return
+
+            _LOGGER.debug(
+                "Remote entity undefined or script not specified for this key"
+            )
 
     def update_state(self, new_state):
         """Update Television state after state changed."""

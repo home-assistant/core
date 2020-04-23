@@ -7,7 +7,7 @@ import secrets
 import pyqrcode
 import voluptuous as vol
 
-from homeassistant.components import fan, media_player, sensor
+from homeassistant.components import fan, media_player, remote, sensor
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_SUPPORTED_FEATURES,
@@ -22,8 +22,11 @@ import homeassistant.util.temperature as temp_util
 from .const import (
     CONF_FEATURE,
     CONF_FEATURE_LIST,
+    CONF_KEY_MAP,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
+    CONF_REMOTE,
+    CONF_REMOTE_ID,
     DEFAULT_LOW_BATTERY_THRESHOLD,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
@@ -32,6 +35,19 @@ from .const import (
     HOMEKIT_NOTIFY_ID,
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
+    KEY_BACK,
+    KEY_DOWN,
+    KEY_EXIT,
+    KEY_FAST_FORWARD,
+    KEY_INFO,
+    KEY_LEFT,
+    KEY_NEXT_TRACK,
+    KEY_PLAY_PAUSE,
+    KEY_PREVIOUS_TRACK,
+    KEY_REWIND,
+    KEY_RIGHT,
+    KEY_SELECT,
+    KEY_UP,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -53,15 +69,11 @@ BASIC_INFO_SCHEMA = vol.Schema(
     }
 )
 
-FEATURE_SCHEMA = BASIC_INFO_SCHEMA.extend(
-    {vol.Optional(CONF_FEATURE_LIST, default=None): cv.ensure_list}
-)
-
 CODE_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {vol.Optional(ATTR_CODE, default=None): vol.Any(None, cv.string)}
 )
 
-MEDIA_PLAYER_SCHEMA = vol.Schema(
+FEATURE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_FEATURE): vol.All(
             cv.string,
@@ -74,6 +86,42 @@ MEDIA_PLAYER_SCHEMA = vol.Schema(
                 )
             ),
         )
+    }
+)
+
+KEY_MAP_SCHEMA = vol.All(
+    {
+        vol.Optional(KEY_REWIND): vol.Any(cv.SCRIPT_SCHEMA, cv.string),
+        vol.Optional(KEY_FAST_FORWARD): vol.Any(cv.SCRIPT_SCHEMA, cv.string),
+        vol.Optional(KEY_NEXT_TRACK): vol.Any(cv.SCRIPT_SCHEMA, cv.string),
+        vol.Optional(KEY_PREVIOUS_TRACK): vol.Any(cv.SCRIPT_SCHEMA, cv.string),
+        vol.Optional(KEY_UP): vol.Any(cv.SCRIPT_SCHEMA, cv.string),
+        vol.Optional(KEY_DOWN): vol.Any(cv.SCRIPT_SCHEMA, cv.string),
+        vol.Optional(KEY_LEFT): vol.Any(cv.SCRIPT_SCHEMA, cv.string),
+        vol.Optional(KEY_RIGHT): vol.Any(cv.SCRIPT_SCHEMA, cv.string),
+        vol.Optional(KEY_SELECT): vol.Any(cv.SCRIPT_SCHEMA, cv.string),
+        vol.Optional(KEY_BACK): vol.Any(cv.SCRIPT_SCHEMA, cv.string),
+        vol.Optional(KEY_EXIT): vol.Any(cv.SCRIPT_SCHEMA, cv.string),
+        vol.Optional(KEY_PLAY_PAUSE): vol.Any(cv.SCRIPT_SCHEMA, cv.string),
+        vol.Optional(KEY_INFO): vol.Any(cv.SCRIPT_SCHEMA, cv.string),
+    }
+)
+
+REMOTE_SCHEMA = vol.All(
+    {
+        vol.Optional(CONF_REMOTE_ID, default=None): vol.Any(
+            None, cv.entity_domain(remote.DOMAIN)
+        ),
+        vol.Optional(CONF_KEY_MAP): KEY_MAP_SCHEMA,
+    }
+)
+
+MEDIA_PLAYER_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_FEATURE_LIST, default=None): cv.ensure_list,
+        vol.Optional(CONF_REMOTE, default=None): vol.Any(
+            cv.entity_domain(remote.DOMAIN), REMOTE_SCHEMA
+        ),
     }
 )
 
