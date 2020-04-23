@@ -27,7 +27,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the configured Numato USB GPIO binary sensor ports."""
-
+    if discovery_info is None:
+        return
     binary_sensors = []
     devices = hass.data[DOMAIN]
     for device in [d for d in devices if CONF_BINARY_SENSORS in d]:

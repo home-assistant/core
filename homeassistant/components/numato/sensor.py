@@ -21,6 +21,8 @@ ICON = "mdi:gauge"
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the configured Numato USB GPIO ADC sensor ports."""
+    if discovery_info is None:
+        return
     sensors = []
     devices = hass.data[DOMAIN]
     for device in [d for d in devices if CONF_SENSORS in d]:

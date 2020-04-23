@@ -5,6 +5,7 @@ from numato_gpio import NumatoGpioError
 import pytest
 
 import homeassistant.components.numato as numato
+from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
 from . import numato_mock
@@ -280,3 +281,11 @@ async def test_invalid_adc_destination_range_order(hass, numato_fixture, config)
     sensorports_cfg["1"]["destination_range"] = [2, 1]
     assert not await async_setup_component(hass, "numato", config)
     assert not numato_fixture.devices
+
+
+async def test_platform_setup_without_discovery_info(hass, config):
+    """Test handling of empty discovery_info."""
+    discovery.load_platform(hass, "binary_sensor", "numato", None, config)
+    discovery.load_platform(hass, "sensor", "numato", None, config)
+    discovery.load_platform(hass, "switch", "numato", None, config)
+    await hass.async_block_till_done()

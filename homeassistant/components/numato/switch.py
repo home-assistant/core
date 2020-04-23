@@ -21,7 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the configured Numato USB GPIO switch ports."""
-
+    if discovery_info is None:
+        return
     switches = []
     devices = hass.data[DOMAIN]
     for device in [d for d in devices if CONF_SWITCHES in d]:
