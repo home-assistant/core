@@ -62,25 +62,26 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the BleBox config flow."""
         self.device_config = {}
 
-    def handle_step_exception(self, step, exception, schema, addr, message_id, log_fn):
+    def handle_step_exception(
+        self, step, exception, schema, host, port, message_id, log_fn
+    ):
         """Handle step exceptions."""
 
-        log_fn("%s at %s:%d (%s)", LOG_MSG[message_id], *addr, exception)
+        log_fn("%s at %s:%d (%s)", LOG_MSG[message_id], host, port, exception)
 
-        address = "{}:{}".format(*addr)
         return self.async_show_form(
             step_id="user",
             data_schema=schema,
             errors={"base": message_id},
-            description_placeholders={"address": address},
+            description_placeholders={"address": f"{host}:{port}"},
         )
 
-    def abort_because_configured(self, addr):
+    def abort_because_configured(self, host, port):
         """Return abort flow response for when already configured."""
 
-        address = "{}:{}".format(*addr)
         return self.async_abort(
-            reason=ALREADY_CONFIGURED, description_placeholders={"address": address},
+            reason=ALREADY_CONFIGURED,
+            description_placeholders={"address": f"{host}:{port}"},
         )
 
     async def async_step_user(self, user_input=None):
@@ -101,7 +102,7 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         for entry in hass.config_entries.async_entries(DOMAIN):
             if addr == host_port(entry.data):
-                return self.abort_because_configured(addr)
+                return self.abort_because_configured(*addr)
 
         websession = async_get_clientsession(hass)
         api_host = ApiHost(*addr, DEFAULT_SETUP_TIMEOUT, websession, hass.loop, _LOGGER)
@@ -111,17 +112,17 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         except UnsupportedBoxVersion as ex:
             return self.handle_step_exception(
-                "user", ex, schema, addr, UNSUPPORTED_VERSION, _LOGGER.debug
+                "user", ex, schema, *addr, UNSUPPORTED_VERSION, _LOGGER.debug
             )
 
         except Error as ex:
             return self.handle_step_exception(
-                "user", ex, schema, addr, CANNOT_CONNECT, _LOGGER.warning
+                "user", ex, schema, *addr, CANNOT_CONNECT, _LOGGER.warning
             )
 
         except RuntimeError as ex:
             return self.handle_step_exception(
-                "user", ex, schema, addr, UNKNOWN, _LOGGER.error
+                "user", ex, schema, *addr, UNKNOWN, _LOGGER.error
             )
 
         # Check if configured but IP changed since
