@@ -1,4 +1,6 @@
 """The devolo_home_control integration."""
+from functools import partial
+
 from devolo_home_control_api.homecontrol import HomeControl
 from devolo_home_control_api.mydevolo import Mydevolo
 
@@ -45,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     try:
         hass.data[DOMAIN]["homecontrol"] = await hass.async_add_executor_job(
-            HomeControl(gateway_id=gateway_id, url=mprm_url)
+            partial(HomeControl, gateway_id=gateway_id, url=mprm_url)
         )
     except ConnectionError:
         raise ConfigEntryNotReady
@@ -73,7 +75,7 @@ async def async_unload_entry(hass, config_entry):
     )
 
     await hass.async_add_executor_job(
-        hass.data[DOMAIN]["homecontrol"].websocket_disconnect()
+        hass.data[DOMAIN]["homecontrol"].websocket_disconnect
     )
     del hass.data[DOMAIN]["homecontrol"]
     return unload
