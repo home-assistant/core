@@ -1,8 +1,8 @@
-"""Support for myStrom switches."""
+"""Support for myStrom switches/plugs."""
 import logging
 
 from pymystrom.exceptions import MyStromConnectionError
-from pymystrom.switch import MyStromPlug
+from pymystrom.switch import MyStromSwitch as _MyStromSwitch
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
@@ -22,30 +22,30 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Find and return myStrom switch."""
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the myStrom switch/plug integration."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
 
     try:
-        MyStromPlug(host).get_status()
+        plug = _MyStromSwitch(host)
+        await plug.get_state()
     except MyStromConnectionError:
-        _LOGGER.error("No route to device: %s", host)
+        _LOGGER.error("No route to myStrom plug: %s", host)
         raise PlatformNotReady()
 
-    add_entities([MyStromSwitch(name, host)])
+    async_add_entities([MyStromSwitch(plug, name)])
 
 
 class MyStromSwitch(SwitchDevice):
-    """Representation of a myStrom switch."""
+    """Representation of a myStrom switch/plug."""
 
-    def __init__(self, name, resource):
-        """Initialize the myStrom switch."""
+    def __init__(self, plug, name):
+        """Initialize the myStrom switch/plug."""
         self._name = name
-        self._resource = resource
-        self.data = {}
-        self.plug = MyStromPlug(self._resource)
+        self.plug = plug
         self._available = True
+        self.relay = None
 
     @property
     def name(self):
@@ -55,38 +55,43 @@ class MyStromSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return bool(self.data["relay"])
+        return bool(self.relay)
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self.plug._mac  # pylint: disable=protected-access
 
     @property
     def current_power_w(self):
         """Return the current power consumption in W."""
-        return round(self.data["power"], 2)
+        return self.plug.consumption
 
     @property
     def available(self):
         """Could the device be accessed during the last update call."""
         return self._available
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
         try:
-            self.plug.set_relay_on()
+            await self.plug.turn_on()
         except MyStromConnectionError:
-            _LOGGER.error("No route to device: %s", self._resource)
+            _LOGGER.error("No route to myStrom plug")
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
         try:
-            self.plug.set_relay_off()
+            await self.plug.turn_off()
         except MyStromConnectionError:
-            _LOGGER.error("No route to device: %s", self._resource)
+            _LOGGER.error("No route to myStrom plug")
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data from the device and update the data."""
         try:
-            self.data = self.plug.get_status()
+            await self.plug.get_state()
+            self.relay = self.plug.relay
             self._available = True
         except MyStromConnectionError:
-            self.data = {"power": 0, "relay": False}
             self._available = False
-            _LOGGER.error("No route to device: %s", self._resource)
+            _LOGGER.error("No route to myStrom plug")
