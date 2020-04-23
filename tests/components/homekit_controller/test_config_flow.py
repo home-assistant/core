@@ -1,5 +1,4 @@
 """Tests for homekit_controller config flow."""
-import json
 from unittest import mock
 
 import aiohomekit
@@ -13,7 +12,6 @@ import pytest
 from homeassistant.components.homekit_controller import config_flow
 
 from tests.common import MockConfigEntry
-from tests.components.homekit_controller.common import setup_platform
 
 PAIRING_START_FORM_ERRORS = [
     (aiohomekit.BusyError, "busy_error"),
@@ -494,175 +492,6 @@ async def test_user_no_unpaired_devices(hass, controller):
 
     assert result["type"] == "abort"
     assert result["reason"] == "no_devices"
-
-
-async def test_parse_new_homekit_json(hass):
-    """Test migrating recent .homekit/pairings.json files."""
-    accessory = Accessory.create_with_info(
-        "TestDevice", "example.com", "Test", "0001", "0.1"
-    )
-    service = accessory.add_service(ServicesTypes.LIGHTBULB)
-    on_char = service.add_char(CharacteristicsTypes.ON)
-    on_char.value = 0
-
-    accessories = Accessories()
-    accessories.add_accessory(accessory)
-
-    fake_controller = await setup_platform(hass)
-    pairing = await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
-    pairing.pairing_data = {"AccessoryPairingID": "00:00:00:00:00:00"}
-
-    mock_path = mock.Mock()
-    mock_path.exists.side_effect = [True, False]
-
-    read_data = {"00:00:00:00:00:00": pairing.pairing_data}
-    mock_open = mock.mock_open(read_data=json.dumps(read_data))
-
-    discovery_info = {
-        "name": "TestDevice",
-        "host": "127.0.0.1",
-        "port": 8080,
-        "properties": {"md": "TestDevice", "id": "00:00:00:00:00:00", "c#": 1, "sf": 0},
-    }
-
-    flow = _setup_flow_handler(hass)
-
-    pairing_cls_imp = (
-        "homeassistant.components.homekit_controller.config_flow.IpPairing"
-    )
-
-    with mock.patch(pairing_cls_imp) as pairing_cls:
-        pairing_cls.return_value = pairing
-        with mock.patch("builtins.open", mock_open):
-            with mock.patch("os.path", mock_path):
-                result = await flow.async_step_zeroconf(discovery_info)
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "TestDevice"
-    assert result["data"]["AccessoryPairingID"] == "00:00:00:00:00:00"
-    assert flow.context == {
-        "hkid": "00:00:00:00:00:00",
-        "title_placeholders": {"name": "TestDevice"},
-        "unique_id": "00:00:00:00:00:00",
-    }
-
-
-async def test_parse_old_homekit_json(hass):
-    """Test migrating original .homekit/hk-00:00:00:00:00:00 files."""
-    accessory = Accessory.create_with_info(
-        "TestDevice", "example.com", "Test", "0001", "0.1"
-    )
-    service = accessory.add_service(ServicesTypes.LIGHTBULB)
-    on_char = service.add_char(CharacteristicsTypes.ON)
-    on_char.value = 0
-
-    accessories = Accessories()
-    accessories.add_accessory(accessory)
-
-    fake_controller = await setup_platform(hass)
-    pairing = await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
-    pairing.pairing_data = {"AccessoryPairingID": "00:00:00:00:00:00"}
-
-    mock_path = mock.Mock()
-    mock_path.exists.side_effect = [False, True]
-
-    mock_listdir = mock.Mock()
-    mock_listdir.return_value = ["hk-00:00:00:00:00:00", "pairings.json"]
-
-    read_data = {"AccessoryPairingID": "00:00:00:00:00:00"}
-    mock_open = mock.mock_open(read_data=json.dumps(read_data))
-
-    discovery_info = {
-        "name": "TestDevice",
-        "host": "127.0.0.1",
-        "port": 8080,
-        "properties": {"md": "TestDevice", "id": "00:00:00:00:00:00", "c#": 1, "sf": 0},
-    }
-
-    flow = _setup_flow_handler(hass)
-
-    pairing_cls_imp = (
-        "homeassistant.components.homekit_controller.config_flow.IpPairing"
-    )
-
-    with mock.patch(pairing_cls_imp) as pairing_cls:
-        pairing_cls.return_value = pairing
-        with mock.patch("builtins.open", mock_open):
-            with mock.patch("os.path", mock_path):
-                with mock.patch("os.listdir", mock_listdir):
-                    result = await flow.async_step_zeroconf(discovery_info)
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "TestDevice"
-    assert result["data"]["AccessoryPairingID"] == "00:00:00:00:00:00"
-    assert flow.context == {
-        "hkid": "00:00:00:00:00:00",
-        "title_placeholders": {"name": "TestDevice"},
-        "unique_id": "00:00:00:00:00:00",
-    }
-
-
-async def test_parse_overlapping_homekit_json(hass):
-    """Test migrating .homekit/pairings.json files when hk- exists too."""
-    accessory = Accessory.create_with_info(
-        "TestDevice", "example.com", "Test", "0001", "0.1"
-    )
-    service = accessory.add_service(ServicesTypes.LIGHTBULB)
-    on_char = service.add_char(CharacteristicsTypes.ON)
-    on_char.value = 0
-
-    accessories = Accessories()
-    accessories.add_accessory(accessory)
-
-    fake_controller = await setup_platform(hass)
-    pairing = await fake_controller.add_paired_device(accessories)
-    pairing.pairing_data = {"AccessoryPairingID": "00:00:00:00:00:00"}
-
-    mock_listdir = mock.Mock()
-    mock_listdir.return_value = ["hk-00:00:00:00:00:00", "pairings.json"]
-
-    mock_path = mock.Mock()
-    mock_path.exists.side_effect = [True, True]
-
-    # First file to get loaded is .homekit/pairing.json
-    read_data_1 = {"00:00:00:00:00:00": {"AccessoryPairingID": "00:00:00:00:00:00"}}
-    mock_open_1 = mock.mock_open(read_data=json.dumps(read_data_1))
-
-    # Second file to get loaded is .homekit/hk-00:00:00:00:00:00
-    read_data_2 = {"AccessoryPairingID": "00:00:00:00:00:00"}
-    mock_open_2 = mock.mock_open(read_data=json.dumps(read_data_2))
-
-    side_effects = [mock_open_1.return_value, mock_open_2.return_value]
-
-    discovery_info = {
-        "name": "TestDevice",
-        "host": "127.0.0.1",
-        "port": 8080,
-        "properties": {"md": "TestDevice", "id": "00:00:00:00:00:00", "c#": 1, "sf": 0},
-    }
-
-    flow = _setup_flow_handler(hass)
-
-    pairing_cls_imp = (
-        "homeassistant.components.homekit_controller.config_flow.IpPairing"
-    )
-    with mock.patch(pairing_cls_imp) as pairing_cls:
-        pairing_cls.return_value = pairing
-        with mock.patch("builtins.open", side_effect=side_effects):
-            with mock.patch("os.path", mock_path):
-                with mock.patch("os.listdir", mock_listdir):
-                    result = await flow.async_step_zeroconf(discovery_info)
-
-        await hass.async_block_till_done()
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "TestDevice"
-    assert result["data"]["AccessoryPairingID"] == "00:00:00:00:00:00"
-    assert flow.context == {
-        "hkid": "00:00:00:00:00:00",
-        "title_placeholders": {"name": "TestDevice"},
-        "unique_id": "00:00:00:00:00:00",
-    }
 
 
 async def test_unignore_works(hass, controller):

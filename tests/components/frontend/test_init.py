@@ -16,7 +16,7 @@ from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_capture_events, mock_coro
+from tests.common import async_capture_events
 
 CONFIG_THEMES = {DOMAIN: {CONF_THEMES: {"happy": {"primary-color": "red"}}}}
 
@@ -283,10 +283,17 @@ async def test_get_translations(hass, hass_ws_client):
 
     with patch(
         "homeassistant.components.frontend.async_get_translations",
-        side_effect=lambda hass, lang: mock_coro({"lang": lang}),
+        side_effect=lambda hass, lang, category, integration, config_flow: {
+            "lang": lang
+        },
     ):
         await client.send_json(
-            {"id": 5, "type": "frontend/get_translations", "language": "nl"}
+            {
+                "id": 5,
+                "type": "frontend/get_translations",
+                "language": "nl",
+                "category": "lang",
+            }
         )
         msg = await client.receive_json()
 

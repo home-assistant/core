@@ -4,8 +4,11 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from synology_dsm.exceptions import (
+    SynologyDSMException,
     SynologyDSMLogin2SAFailedException,
     SynologyDSMLogin2SARequiredException,
+    SynologyDSMLoginInvalidException,
+    SynologyDSMRequestException,
 )
 
 from homeassistant import data_entry_flow, setup
@@ -13,7 +16,6 @@ from homeassistant.components import ssdp
 from homeassistant.components.synology_dsm.config_flow import CONF_OTP_CODE
 from homeassistant.components.synology_dsm.const import (
     CONF_VOLUMES,
-    DEFAULT_DSM_VERSION,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
     DEFAULT_SSL,
@@ -21,7 +23,6 @@ from homeassistant.components.synology_dsm.const import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
-    CONF_API_VERSION,
     CONF_DISKS,
     CONF_HOST,
     CONF_PASSWORD,
@@ -76,16 +77,6 @@ def mock_controller_service_2sa():
         yield service_mock
 
 
-@pytest.fixture(name="service_login_failed")
-def mock_controller_service_login_failed():
-    """Mock a failed login."""
-    with patch(
-        "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
-    ) as service_mock:
-        service_mock.return_value.login = Mock(return_value=False)
-        yield service_mock
-
-
 @pytest.fixture(name="service_failed")
 def mock_controller_service_failed():
     """Mock a failed service."""
@@ -117,7 +108,6 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
             CONF_SSL: SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
-            CONF_API_VERSION: 5,
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -128,7 +118,6 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_SSL] == SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_API_VERSION] == 5
     assert result["data"].get("device_token") is None
     assert result["data"].get(CONF_DISKS) is None
     assert result["data"].get(CONF_VOLUMES) is None
@@ -153,7 +142,6 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert not result["data"][CONF_SSL]
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_API_VERSION] == DEFAULT_DSM_VERSION
     assert result["data"].get("device_token") is None
     assert result["data"].get(CONF_DISKS) is None
     assert result["data"].get(CONF_VOLUMES) is None
@@ -216,7 +204,6 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_SSL] == DEFAULT_SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_API_VERSION] == DEFAULT_DSM_VERSION
     assert result["data"].get("device_token") is None
     assert result["data"].get(CONF_DISKS) is None
     assert result["data"].get(CONF_VOLUMES) is None
@@ -232,7 +219,6 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
             CONF_SSL: SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
-            CONF_API_VERSION: 5,
             CONF_DISKS: ["sda", "sdb", "sdc"],
             CONF_VOLUMES: ["volume_1"],
         },
@@ -245,7 +231,6 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_SSL] == SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_API_VERSION] == 5
     assert result["data"].get("device_token") is None
     assert result["data"][CONF_DISKS] == ["sda", "sdb", "sdc"]
     assert result["data"][CONF_VOLUMES] == ["volume_1"]
@@ -278,8 +263,12 @@ async def test_abort_if_already_setup(hass: HomeAssistantType, service: MagicMoc
     assert result["reason"] == "already_configured"
 
 
-async def test_login_failed(hass: HomeAssistantType, service_login_failed: MagicMock):
-    """Test when we have errors during connection."""
+async def test_login_failed(hass: HomeAssistantType, service: MagicMock):
+    """Test when we have errors during login."""
+    service.return_value.login = Mock(
+        side_effect=(SynologyDSMLoginInvalidException(USERNAME))
+    )
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -287,6 +276,36 @@ async def test_login_failed(hass: HomeAssistantType, service_login_failed: Magic
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {CONF_USERNAME: "login"}
+
+
+async def test_connection_failed(hass: HomeAssistantType, service: MagicMock):
+    """Test when we have errors during connection."""
+    service.return_value.login = Mock(
+        side_effect=SynologyDSMRequestException(IOError("arg"))
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {CONF_HOST: "connection"}
+
+
+async def test_unknown_failed(hass: HomeAssistantType, service: MagicMock):
+    """Test when we have an unknown error."""
+    service.return_value.login = Mock(side_effect=SynologyDSMException)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_missing_data_after_login(
@@ -329,7 +348,6 @@ async def test_form_ssdp(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_SSL] == DEFAULT_SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_API_VERSION] == DEFAULT_DSM_VERSION
     assert result["data"].get("device_token") is None
     assert result["data"].get(CONF_DISKS) is None
     assert result["data"].get(CONF_VOLUMES) is None

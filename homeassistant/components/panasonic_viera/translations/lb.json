@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Onbekannte Feeler opgetrueden. Kuck d'Logs fir m\u00e9i Informatiounen."
+        },
+        "error": {
+            "invalid_pin_code": "PIN Code ass ong\u00eblteg",
+            "not_connected": "Konnt keng Verbindung mam Panasonic Viera TV ariichten"
+        },
+        "step": {
+            "pairing": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "PIN uginn deem um Fernseh ugewise g\u00ebtt",
+                "title": "Kopplung"
+            },
+            "user": {
+                "data": {
+                    "host": "IP Adresse",
+                    "name": "Numm"
+                },
+                "description": "Panasonic Viera TV IP Adresse uginn",
+                "title": "Fernseh ariichten"
+            }
+        }
+    },
+    "title": "Panasonic Viera"
+}

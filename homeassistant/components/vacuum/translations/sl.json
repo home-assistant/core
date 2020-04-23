@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "action_type": {
+            "clean": "Naj {entity_name} \u010disti",
+            "dock": "Pustite, da se {entity_name} vrne na dok"
+        },
+        "condition_type": {
+            "is_cleaning": "{entity_name} \u010disti",
+            "is_docked": "{entity_name} je priklju\u010den"
+        },
+        "trigger_type": {
+            "cleaning": "{entity_name} za\u010del \u010di\u0161\u010denje",
+            "docked": "{entity_name} priklju\u010den"
+        }
+    },
+    "state": {
+        "_": {
+            "cleaning": "\u010cistim",
+            "docked": "Priklju\u010den",
+            "error": "Napaka",
+            "idle": "V pripravljenosti",
+            "off": "Izklju\u010den",
+            "on": "Vklju\u010den",
+            "paused": "Zaustavljeno",
+            "returning": "Vra\u010dam se na postajo"
+        }
+    },
+    "title": "Sesam"
+}

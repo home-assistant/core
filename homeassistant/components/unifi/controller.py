@@ -17,7 +17,7 @@ from aiounifi.events import WIRELESS_CLIENT_CONNECTED, WIRELESS_GUEST_CONNECTED
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 import async_timeout
 
-from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
+from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import CONF_HOST
@@ -46,14 +46,14 @@ from .const import (
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
-    DOMAIN,
+    DOMAIN as UNIFI_DOMAIN,
     LOGGER,
     UNIFI_WIRELESS_CLIENTS,
 )
 from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
-SUPPORTED_PLATFORMS = [DT_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
+SUPPORTED_PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
 
 class UniFiController:
@@ -71,6 +71,8 @@ class UniFiController:
         self.listeners = []
         self._site_name = None
         self._site_role = None
+
+        self.entities = {}
 
     @property
     def controller_id(self):
@@ -172,7 +174,7 @@ class UniFiController:
         if signal == SIGNAL_CONNECTION_STATE:
 
             if data == STATE_DISCONNECTED and self.available:
-                LOGGER.error("Lost connection to UniFi")
+                LOGGER.warning("Lost connection to UniFi controller")
 
             if (data == STATE_RUNNING and not self.available) or (
                 data == STATE_DISCONNECTED and self.available
@@ -181,7 +183,9 @@ class UniFiController:
                 async_dispatcher_send(self.hass, self.signal_reachable)
 
                 if not self.available:
-                    self.hass.loop.call_later(RETRY_TIMER, self.reconnect)
+                    self.hass.loop.call_later(RETRY_TIMER, self.reconnect, True)
+                else:
+                    LOGGER.info("Connected to UniFi controller")
 
         elif signal == SIGNAL_DATA and data:
 
@@ -279,20 +283,16 @@ class UniFiController:
         return True
 
     @staticmethod
-    async def async_config_entry_updated(hass, entry) -> None:
+    async def async_config_entry_updated(hass, config_entry) -> None:
         """Handle signals of config entry being updated."""
-        controller_id = CONTROLLER_ID.format(
-            host=entry.data[CONF_CONTROLLER][CONF_HOST],
-            site=entry.data[CONF_CONTROLLER][CONF_SITE_ID],
-        )
-        controller = hass.data[DOMAIN][controller_id]
-
+        controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
         async_dispatcher_send(hass, controller.signal_options_update)
 
     @callback
-    def reconnect(self) -> None:
+    def reconnect(self, log=False) -> None:
         """Prepare to reconnect UniFi session."""
-        LOGGER.debug("Reconnecting to UniFi in %i", RETRY_TIMER)
+        if log:
+            LOGGER.info("Will try to reconnect to UniFi controller")
         self.hass.loop.create_task(self.async_reconnect())
 
     async def async_reconnect(self) -> None:
