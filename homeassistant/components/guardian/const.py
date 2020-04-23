@@ -13,4 +13,9 @@ DATA_SENSOR_STATUS = "sensor_status"
 DATA_VALVE_STATUS = "valve_status"
 DATA_WIFI_STATUS = "wifi_status"
 
+SENSOR_KIND_AP_INFO = "ap_enabled"
+SENSOR_KIND_LEAK_DETECTED = "leak_detected"
+SENSOR_KIND_TEMPERATURE = "temperature"
+SENSOR_KIND_UPTIME = "uptime"
+
 TOPIC_UPDATE = "guardian_update_{0}"

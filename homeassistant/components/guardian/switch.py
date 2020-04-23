@@ -5,24 +5,12 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
 
 from . import Guardian, GuardianEntity
-from .const import (
-    DATA_CLIENT,
-    DATA_DIAGNOSTICS,
-    DATA_VALVE_STATUS,
-    DATA_WIFI_STATUS,
-    DOMAIN,
-    LOGGER,
-)
+from .const import DATA_CLIENT, DATA_VALVE_STATUS, DOMAIN, LOGGER
 
-ATTR_AP_CLIENTS = "ap_clients"
-ATTR_AP_ENABLED = "ap_enabled"
 ATTR_AVG_CURRENT = "average_current"
 ATTR_INST_CURRENT = "instantaneous_current"
 ATTR_INST_CURRENT_DDT = "instantaneous_current_ddt"
-ATTR_RSSI = "rssi"
-ATTR_STATION_CONNECTED = "station_connected"
 ATTR_TRAVEL_COUNT = "travel_count"
-ATTR_UPTIME = "uptime"
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -36,9 +24,8 @@ class GuardianSwitch(GuardianEntity, SwitchDevice):
 
     def __init__(self, guardian: Guardian):
         """Initialize."""
-        super().__init__(guardian, "valve", "Valve")
+        super().__init__(guardian, "valve", "Valve", None, "mdi:water")
 
-        self._icon = "mdi:water"
         self._is_on = True
 
     @property
@@ -80,8 +67,6 @@ class GuardianSwitch(GuardianEntity, SwitchDevice):
 
         self._attrs.update(
             {
-                ATTR_AP_CLIENTS: self._guardian.data[DATA_WIFI_STATUS]["ap_clients"],
-                ATTR_AP_ENABLED: self._guardian.data[DATA_WIFI_STATUS]["ap_enabled"],
                 ATTR_AVG_CURRENT: self._guardian.data[DATA_VALVE_STATUS][
                     "average_current"
                 ],
@@ -91,13 +76,8 @@ class GuardianSwitch(GuardianEntity, SwitchDevice):
                 ATTR_INST_CURRENT_DDT: self._guardian.data[DATA_VALVE_STATUS][
                     "instantaneous_current_ddt"
                 ],
-                ATTR_RSSI: self._guardian.data[DATA_WIFI_STATUS]["rssi"],
-                ATTR_STATION_CONNECTED: self._guardian.data[DATA_WIFI_STATUS][
-                    "station_connected"
-                ],
                 ATTR_TRAVEL_COUNT: self._guardian.data[DATA_VALVE_STATUS][
                     "travel_count"
                 ],
-                ATTR_UPTIME: self._guardian.data[DATA_DIAGNOSTICS]["uptime"],
             }
         )

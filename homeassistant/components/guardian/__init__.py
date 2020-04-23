@@ -3,17 +3,34 @@ import asyncio
 from datetime import timedelta
 
 from aioguardian import Client
+from aioguardian.commands.device import (
+    DEFAULT_FIRMWARE_UPGRADE_FILENAME,
+    DEFAULT_FIRMWARE_UPGRADE_PORT,
+    DEFAULT_FIRMWARE_UPGRADE_URL,
+)
 from aioguardian.errors import GuardianError
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_IP_ADDRESS
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_FILENAME,
+    CONF_IP_ADDRESS,
+    CONF_PORT,
+    CONF_URL,
+)
 from homeassistant.core import HomeAssistant, callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.service import (
+    async_register_admin_service,
+    verify_domain_control,
+)
 
 from .const import (
     DATA_CLIENT,
@@ -32,7 +49,17 @@ DATA_LISTENER = "listener"
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
-PLATFORMS = ["switch"]
+PLATFORMS = ["binary_sensor", "sensor", "switch"]
+
+SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_URL, default=DEFAULT_FIRMWARE_UPGRADE_URL): cv.url,
+        vol.Optional(CONF_PORT, default=DEFAULT_FIRMWARE_UPGRADE_PORT): cv.port,
+        vol.Optional(
+            CONF_FILENAME, default=DEFAULT_FIRMWARE_UPGRADE_FILENAME
+        ): cv.string,
+    }
+)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -43,8 +70,11 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Elexa Guardian from a config entry."""
-    hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = Guardian(hass, entry)
-    await hass.data[DOMAIN][DATA_CLIENT][entry.entry_id].async_update()
+    _verify_domain_control = verify_domain_control(hass, DOMAIN)
+
+    guardian = Guardian(hass, entry)
+    await guardian.async_update()
+    hass.data[DOMAIN][DATA_CLIENT][entry.entry_id] = guardian
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -58,6 +88,64 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][DATA_LISTENER][entry.entry_id] = async_track_time_interval(
         hass, refresh, DEFAULT_SCAN_INTERVAL
     )
+
+    @_verify_domain_control
+    async def disable_ap(call):
+        """Disable the device's onboard access point."""
+        try:
+            await guardian.client.device.wifi_disable_ap()
+        except GuardianError as err:
+            LOGGER.error("Error during service call: %s", err)
+            return
+
+    @_verify_domain_control
+    async def enable_ap(call):
+        """Enable the device's onboard access point."""
+        try:
+            await guardian.client.device.wifi_enable_ap()
+        except GuardianError as err:
+            LOGGER.error("Error during service call: %s", err)
+            return
+
+    @_verify_domain_control
+    async def reboot(call):
+        """Reboot the device."""
+        try:
+            await guardian.client.device.reboot()
+        except GuardianError as err:
+            LOGGER.error("Error during service call: %s", err)
+            return
+
+    @_verify_domain_control
+    async def reset_valve_diagnostics(call):
+        """Fully reset system motor diagnostics."""
+        try:
+            await guardian.client.valve.valve_reset()
+        except GuardianError as err:
+            LOGGER.error("Error during service call: %s", err)
+            return
+
+    @_verify_domain_control
+    async def upgrade_firmware(call):
+        """Upgrade the device firmware."""
+        try:
+            await guardian.client.device.upgrade_firmware(
+                url=call.data[CONF_URL],
+                port=call.data[CONF_PORT],
+                filename=call.data[CONF_FILENAME],
+            )
+        except GuardianError as err:
+            LOGGER.error("Error during service call: %s", err)
+            return
+
+    for service, method, schema in [
+        ("disable_ap", disable_ap, None),
+        ("enable_ap", enable_ap, None),
+        ("reboot", reboot, None),
+        ("reset_valve_diagnostics", reset_valve_diagnostics, None),
+        ("upgrade_firmware", upgrade_firmware, SERVICE_UPGRADE_FIRMWARE_SCHEMA),
+    ]:
+        async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
     return True
 
@@ -118,12 +206,15 @@ class Guardian:
 class GuardianEntity(Entity):
     """Define a base Guardian entity."""
 
-    def __init__(self, guardian: Guardian, kind: str, name: str):
+    def __init__(
+        self, guardian: Guardian, kind: str, name: str, device_class: str, icon: str
+    ):
         """Initialize."""
         self._attrs = {ATTR_ATTRIBUTION: "Data provided by Elexa"}
         self._available = True
+        self._device_class = device_class
         self._guardian = guardian
-        self._icon = None
+        self._icon = icon
         self._kind = kind
         self._name = name
 
@@ -131,6 +222,11 @@ class GuardianEntity(Entity):
     def available(self):
         """Return whether the entity is available."""
         return bool(self._guardian.data[DATA_PING])
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return self._device_class
 
     @property
     def device_info(self):
@@ -155,7 +251,7 @@ class GuardianEntity(Entity):
     @property
     def name(self):
         """Return the name of the entity."""
-        f"Guardian {self._guardian.uid}: {self._name}"
+        return f"Guardian {self._guardian.uid}: {self._name}"
 
     @property
     def should_poll(self) -> bool:
