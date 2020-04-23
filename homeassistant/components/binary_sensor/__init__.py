@@ -166,9 +166,10 @@ class BinarySensorEntity(Entity):
 class BinarySensorDevice(BinarySensorEntity):
     """Represent a binary sensor (for backwards compatibility)."""
 
-    def __init__(self, *args, **kwargs):
+    def __init_subclass__(cls, **kwargs):
         """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
         _LOGGER.warning(
             "BinarySensorDevice is deprecated, modify %s to extend BinarySensorEntity",
-            self.__class__.__name__,
+            cls.__name__,
         )
