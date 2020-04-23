@@ -1,7 +1,7 @@
 """Support for LCN covers."""
 import pypck
 
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import CoverEntity
 from homeassistant.const import CONF_ADDRESS
 
 from . import LcnDevice
@@ -32,7 +32,7 @@ async def async_setup_platform(
     async_add_entities(devices)
 
 
-class LcnOutputsCover(LcnDevice, CoverDevice):
+class LcnOutputsCover(LcnDevice, CoverEntity):
     """Representation of a LCN cover connected to output ports."""
 
     def __init__(self, config, address_connection):
@@ -111,7 +111,7 @@ class LcnOutputsCover(LcnDevice, CoverDevice):
         self.async_write_ha_state()
 
 
-class LcnRelayCover(LcnDevice, CoverDevice):
+class LcnRelayCover(LcnDevice, CoverEntity):
     """Representation of a LCN cover connected to relays."""
 
     def __init__(self, config, address_connection):

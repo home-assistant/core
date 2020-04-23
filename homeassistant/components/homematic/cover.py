@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    CoverDevice,
+    CoverEntity,
 )
 
 from .const import ATTR_DISCOVER_DEVICES
@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class HMCover(HMDevice, CoverDevice):
+class HMCover(HMDevice, CoverEntity):
     """Representation a HomeMatic Cover."""
 
     @property

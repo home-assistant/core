@@ -8,7 +8,7 @@ from homeassistant.components.cover import (
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
 
 
-class AladdinDevice(CoverDevice):
+class AladdinDevice(CoverEntity):
     """Representation of Aladdin Connect cover."""
 
     def __init__(self, acc, device):

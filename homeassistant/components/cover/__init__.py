@@ -153,7 +153,7 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class CoverDevice(Entity):
+class CoverEntity(Entity):
     """Representation of a cover."""
 
     @property
@@ -318,3 +318,14 @@ class CoverDevice(Entity):
             await self.async_open_cover_tilt(**kwargs)
         else:
             await self.async_close_cover_tilt(**kwargs)
+
+
+class CoverDevice(CoverEntity):
+    """Representation of a cover (for backwards compatibility)."""
+
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "CoverDevice is deprecated, modify %s to extend CoverEntity", cls.__name__,
+        )
