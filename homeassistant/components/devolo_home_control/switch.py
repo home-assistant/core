@@ -3,7 +3,6 @@ import logging
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -127,7 +126,6 @@ class DevoloSwitch(SwitchDevice):
         self._is_on = False
         self._binary_switch_property.set_binary_switch(state=False)
 
-    @callback
     def update(self, message=None):
         """Update the binary switch state and consumption."""
         if message[0].startswith("devolo.BinarySwitch"):
@@ -141,4 +139,4 @@ class DevoloSwitch(SwitchDevice):
         else:
             _LOGGER.debug("No valid message received")
             _LOGGER.debug(message)
-        self.async_schedule_update_ha_state()
+        self.schedule_update_ha_state()
