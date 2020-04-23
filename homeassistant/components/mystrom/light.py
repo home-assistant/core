@@ -17,9 +17,8 @@ from homeassistant.components.light import (
     Light,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +54,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             return
     except MyStromConnectionError:
         _LOGGER.warning("No route to myStrom bulb: %s", host)
+        raise PlatformNotReady()
 
     async_add_entities([MyStromLight(bulb, name, mac)], True)
 
@@ -72,8 +72,6 @@ class MyStromLight(Light):
         self._color_h = 0
         self._color_s = 0
         self._mac = mac
-        self.bulb_type = None
-        self.firmware = None
 
     @property
     def name(self):
@@ -84,17 +82,6 @@ class MyStromLight(Light):
     def unique_id(self):
         """Return a unique ID."""
         return self._mac
-
-    @property
-    def device_info(self):
-        """Return device specific attributes."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self._name,
-            "manufacturer": DOMAIN,
-            "model": self.bulb_type,
-            "sw_version": self.firmware,
-        }
 
     @property
     def supported_features(self):
@@ -165,8 +152,6 @@ class MyStromLight(Light):
         try:
             await self._bulb.get_state()
             self._state = self._bulb.state
-            self.bulb_type = self._bulb.bulb_type
-            self.firmware = self._bulb.firmware
 
             colors = self._bulb.color
             try:

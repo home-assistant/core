@@ -10,8 +10,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
-
 DEFAULT_NAME = "myStrom Switch"
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,21 +34,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.error("No route to myStrom plug: %s", host)
         raise PlatformNotReady()
 
-    async_add_entities([MyStromSwitch(plug, name, plug.mac)])
+    async_add_entities([MyStromSwitch(plug, name)])
 
 
 class MyStromSwitch(SwitchDevice):
     """Representation of a myStrom switch/plug."""
 
-    def __init__(self, plug, name, mac):
+    def __init__(self, plug, name):
         """Initialize the myStrom switch/plug."""
         self._name = name
-        self.data = {}
         self.plug = plug
         self._available = True
-        self.mac = mac
-        self.firmware = None
-        self.consumption = None
         self.relay = None
 
     @property
@@ -66,23 +60,12 @@ class MyStromSwitch(SwitchDevice):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self.mac
-
-    @property
-    def device_info(self):
-        """Return device specific attributes."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self._name,
-            "manufacturer": DOMAIN,
-            "model": "plug",
-            "sw_version": self.firmware,
-        }
+        return self.plug._mac  # pylint: disable=protected-access
 
     @property
     def current_power_w(self):
         """Return the current power consumption in W."""
-        return self.consumption
+        return self.plug.consumption
 
     @property
     def available(self):
@@ -107,12 +90,8 @@ class MyStromSwitch(SwitchDevice):
         """Get the latest data from the device and update the data."""
         try:
             await self.plug.get_state()
-            self.firmware = self.plug.firmware
-            self.consumption = self.plug.consumption
             self.relay = self.plug.relay
-
             self._available = True
         except MyStromConnectionError:
-            self.data = {"power": 0, "relay": False}
             self._available = False
             _LOGGER.error("No route to myStrom plug")
