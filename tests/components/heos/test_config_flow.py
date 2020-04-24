@@ -79,6 +79,7 @@ async def test_create_entry_when_friendly_name_valid(hass, controller):
 
 async def test_discovery_shows_create_form(hass, controller, discovery_data):
     """Test discovery shows form to confirm setup and subsequent abort."""
+    discovery_data[ssdp.ATTR_UPNP_SERIAL] = "1234"
     await hass.config_entries.flow.async_init(
         heos.DOMAIN, context={"source": "ssdp"}, data=discovery_data
     )
@@ -89,11 +90,15 @@ async def test_discovery_shows_create_form(hass, controller, discovery_data):
     port = urlparse(discovery_data[ssdp.ATTR_SSDP_LOCATION]).port
     discovery_data[ssdp.ATTR_SSDP_LOCATION] = f"http://127.0.0.2:{port}/"
     discovery_data[ssdp.ATTR_UPNP_FRIENDLY_NAME] = "Bedroom"
+    discovery_data[ssdp.ATTR_UPNP_SERIAL] = "1234"
+
     await hass.config_entries.flow.async_init(
         heos.DOMAIN, context={"source": "ssdp"}, data=discovery_data
     )
     await hass.async_block_till_done()
-    assert len(hass.config_entries.flow.async_progress()) == 1
+    flows_in_progress = hass.config_entries.flow.async_progress()
+    assert flows_in_progress[0]["context"]["unique_id"] == "1234"
+    assert len(flows_in_progress) == 1
     assert hass.data[DATA_DISCOVERED_HOSTS] == {
         "Office (127.0.0.1)": "127.0.0.1",
         "Bedroom (127.0.0.2)": "127.0.0.2",
