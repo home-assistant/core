@@ -118,6 +118,7 @@ async def test_migration_1_2(hass):
 
     assert len(config_entries) == 2
 
+    assert config_entries[0].version == 2
     assert config_entries[0].unique_id == "51.528308, -0.3817765"
     assert config_entries[0].title == "Cloud API (51.528308, -0.3817765)"
     assert config_entries[0].data == {
@@ -126,6 +127,7 @@ async def test_migration_1_2(hass):
         CONF_LONGITUDE: -0.3817765,
     }
 
+    assert config_entries[1].version == 2
     assert config_entries[1].unique_id == "35.48847, 137.5263065"
     assert config_entries[1].title == "Cloud API (35.48847, 137.5263065)"
     assert config_entries[1].data == {
@@ -153,6 +155,7 @@ async def test_migration_2_3(hass):
 
     config_entries = hass.config_entries.async_entries(DOMAIN)
 
+    assert config_entries[0].version == 3
     assert config_entries[0].data == {
         CONF_API_KEY: "abcde12345",
         CONF_LATITUDE: 51.528308,
