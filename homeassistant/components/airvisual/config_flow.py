@@ -31,7 +31,7 @@ from .const import (  # pylint: disable=unused-import
 class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an AirVisual config flow."""
 
-    VERSION = 3
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @property

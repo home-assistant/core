@@ -121,7 +121,7 @@ async def async_setup(hass, config):
 
 @callback
 def _standardize_geography_config_entry(hass, config_entry):
-    """Ensure that geography observables have appropriate properties."""
+    """Ensure that geography config entries have appropriate properties."""
     entry_updates = {}
 
     if not config_entry.unique_id:
@@ -130,6 +130,30 @@ def _standardize_geography_config_entry(hass, config_entry):
     if not config_entry.options:
         # If the config entry doesn't already have any options set, set defaults:
         entry_updates["options"] = {CONF_SHOW_ON_MAP: True}
+    if CONF_INTEGRATION_TYPE not in config_entry.data:
+        # If the config entry data doesn't contain the integration type, add it:
+        entry_updates["data"] = {
+            **config_entry.data,
+            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY,
+        }
+
+    if not entry_updates:
+        return
+
+    hass.config_entries.async_update_entry(config_entry, **entry_updates)
+
+
+@callback
+def _standardize_node_pro_config_entry(hass, config_entry):
+    """Ensure that Node/Pro config entries have appropriate properties."""
+    entry_updates = {}
+
+    if CONF_INTEGRATION_TYPE not in config_entry.data:
+        # If the config entry data doesn't contain the integration type, add it:
+        entry_updates["data"] = {
+            **config_entry.data,
+            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO,
+        }
 
     if not entry_updates:
         return
@@ -141,7 +165,7 @@ async def async_setup_entry(hass, config_entry):
     """Set up AirVisual as config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
 
-    if config_entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_GEOGRAPHY:
+    if CONF_API_KEY in config_entry.data:
         _standardize_geography_config_entry(hass, config_entry)
         airvisual = AirVisualGeographyData(
             hass,
@@ -206,19 +230,6 @@ async def async_migrate_entry(hass, config_entry):
                     data={CONF_API_KEY: config_entry.data[CONF_API_KEY], **geography},
                 )
             )
-    # 2 -> 3: Explicitly store the integration type in the config entry:
-    if version == 2:
-        version = config_entry.version = 3
-
-        if CONF_API_KEY in config_entry.data:
-            integration_type = INTEGRATION_TYPE_GEOGRAPHY
-        else:
-            integration_type = INTEGRATION_TYPE_NODE_PRO
-
-        hass.config_entries.async_update_entry(
-            config_entry,
-            data={**config_entry.data, CONF_INTEGRATION_TYPE: integration_type},
-        )
 
     LOGGER.info("Migration to version %s successful", version)
 
