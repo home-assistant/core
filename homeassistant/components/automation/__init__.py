@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_ZONE,
     EVENT_AUTOMATION_TRIGGERED,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -408,7 +408,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
         # HomeAssistant is starting up
         if self.hass.state != CoreState.not_running:
-            self._async_detach_triggers = await self._async_attach_triggers()
+            self._async_detach_triggers = await self._async_attach_triggers(False)
             self.async_write_ha_state()
             return
 
@@ -418,10 +418,10 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             if not self._is_enabled or self._async_detach_triggers is not None:
                 return
 
-            self._async_detach_triggers = await self._async_attach_triggers()
+            self._async_detach_triggers = await self._async_attach_triggers(True)
 
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, async_enable_automation
+            EVENT_HOMEASSISTANT_STARTED, async_enable_automation
         )
         self.async_write_ha_state()
 
@@ -438,15 +438,17 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
         self.async_write_ha_state()
 
-    async def _async_attach_triggers(self):
+    async def _async_attach_triggers(
+        self, home_assistant_start: bool
+    ) -> Optional[Callable[[], None]]:
         """Set up the triggers."""
         removes = []
-        info = {"name": self._name}
+        info = {"name": self._name, "home_assistant_start": home_assistant_start}
 
         for conf in self._trigger_config:
             platform = importlib.import_module(f".{conf[CONF_PLATFORM]}", __name__)
 
-            remove = await platform.async_attach_trigger(
+            remove = await platform.async_attach_trigger(  # type: ignore
                 self.hass, conf, self.async_trigger, info
             )
 

@@ -10,7 +10,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
     EVENT_AUTOMATION_TRIGGERED,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     STATE_OFF,
     STATE_ON,
 )
@@ -700,6 +700,7 @@ async def test_initial_value_on(hass):
     assert automation.is_on(hass, "automation.hello")
 
     await hass.async_start()
+    await hass.async_block_till_done()
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -822,7 +823,7 @@ async def test_automation_not_trigger_on_bootstrap(hass):
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
     assert automation.is_on(hass, "automation.hello")
 
