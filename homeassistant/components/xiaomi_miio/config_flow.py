@@ -55,8 +55,8 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             token = user_input[CONF_TOKEN]
 
             # Try to connect to a Xiaomi Gateway.
-            connect_gateway_class = ConnectXiaomiGateway()
-            await connect_gateway_class.async_connect_gateway(self.hass, host, token)
+            connect_gateway_class = ConnectXiaomiGateway(self.hass)
+            await connect_gateway_class.async_connect_gateway(host, token)
             gateway_info = connect_gateway_class.gateway_info
 
             if gateway_info is not None:
