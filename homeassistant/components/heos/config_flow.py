@@ -33,8 +33,9 @@ class HeosFlowHandler(config_entries.ConfigFlow):
         # Abort if other flows in progress or an entry already exists
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="already_setup")
-        if ssdp.ATTR_UPNP_SERIAL in discovery_info:
-            await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_SERIAL])
+        player_id = await _async_get_player_id(hostname)
+        if player_id:
+            await self.async_set_unique_id(str(player_id))
         # Show selection form
         return self.async_show_form(step_id="user")
 
@@ -77,3 +78,20 @@ class HeosFlowHandler(config_entries.ConfigFlow):
             data_schema=vol.Schema({vol.Required(CONF_HOST, default=host): host_type}),
             errors=errors,
         )
+
+
+async def _async_get_player_id(ip_address):
+    """Fetch the player id."""
+    heos = Heos(ip_address)
+    try:
+        await heos.connect()
+        players = await heos.get_players()
+    finally:
+        await heos.disconnect()
+
+    if not players:
+        return None
+    for player_id, player in players.items():
+        if player.ip_address == ip_address:
+            return player_id
+    return None
