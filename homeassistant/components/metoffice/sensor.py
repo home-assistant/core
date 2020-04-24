@@ -18,7 +18,7 @@ from homeassistant.const import (
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
-    UV_INDEX,
+    UNIT_UV_INDEX,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
