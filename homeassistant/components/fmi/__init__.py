@@ -1,6 +1,6 @@
 """The FMI (Finnish Meteorological Institute) component."""
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import logging
 
 from dateutil import tz
@@ -8,25 +8,33 @@ import fmi_weather_client as fmi
 from fmi_weather_client.errors import ClientError, ServerError
 import voluptuous as vol
 
-import homeassistant.components.sun as sun
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_OFFSET
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    CONF_OFFSET,
+    SUN_EVENT_SUNSET,
+)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import Throttle
+
+from .const import (
+    CONF_MAX_HUMIDITY,
+    CONF_MAX_PRECIPITATION,
+    CONF_MAX_TEMP,
+    CONF_MAX_WIND_SPEED,
+    CONF_MIN_HUMIDITY,
+    CONF_MIN_PRECIPITATION,
+    CONF_MIN_TEMP,
+    CONF_MIN_WIND_SPEED,
+    DOMAIN,
+    FMI_WEATHER_SYMBOL_MAP,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MIN_HUMIDITY = "min_relative_humidity"
-CONF_MAX_HUMIDITY = "max_relative_humidity"
-CONF_MIN_TEMP = "min_temperature"
-CONF_MAX_TEMP = "max_temperature"
-CONF_MIN_WIND_SPEED = "min_wind_speed"
-CONF_MAX_WIND_SPEED = "max_wind_speed"
-CONF_MIN_PRECIPITATION = "min_precipitation"
-CONF_MAX_PRECIPITATION = "max_precipitation"
-
-DOMAIN = "fmi"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 HUMIDITY_RANGE = list(range(1, 101))
 TEMP_RANGE = list(range(-40, 50))
@@ -40,38 +48,6 @@ BEST_CONDITION_AVAIL = "available"
 BEST_CONDITION_NOT_AVAIL = "not_available"
 
 ATTRIBUTION = "Weather Data provided by FMI"
-
-# FMI Weather Visibility Constants
-FMI_WEATHER_SYMBOL_MAP = {
-    0: "clear-night",  # custom value 0 - not defined by FMI
-    1: "sunny",  # "Clear",
-    2: "partlycloudy",  # "Partially Clear",
-    21: "rainy",  # "Light Showers",
-    22: "pouring",  # "Showers",
-    23: "pouring",  # "Strong Rain Showers",
-    3: "cloudy",  # "Cloudy",
-    31: "rainy",  # "Weak rains",
-    32: "rainy",  # "Rains",
-    33: "pouring",  # "Heavy Rains",
-    41: "snowy-rainy",  # "Weak Snow",
-    42: "cloudy",  # "Cloudy",
-    43: "snowy",  # "Strong Snow",
-    51: "snowy",  # "Light Snow",
-    52: "snowy",  # "Snow",
-    53: "snowy",  # "Heavy Snow",
-    61: "lightning",  # "Thunderstorms",
-    62: "lightning-rainy",  # "Strong Thunderstorms",
-    63: "lightning",  # "Thunderstorms",
-    64: "lightning-rainy",  # "Strong Thunderstorms",
-    71: "rainy",  # "Weak Sleet",
-    72: "rainy",  # "Sleet",
-    73: "pouring",  # "Heavy Sleet",
-    81: "rainy",  # "Light Sleet",
-    82: "rainy",  # "Sleet",
-    83: "pouring",  # "Heavy Sleet",
-    91: "fog",  # "Fog",
-    92: "fog",  # "Fog"
-}
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -138,12 +114,13 @@ async def async_setup(hass, config):
                 "Using HOME Latitude/Longitude configured in HA for fmi sensor index - %d!",
                 index,
             )
-            latitude = hass.config.latitude
-            longitude = hass.config.longitude
+
+        latitude = hass.config.latitude
+        longitude = hass.config.longitude
+        name = config_map[CONF_NAME]
+        time_step = config_map[CONF_OFFSET]
 
         try:
-            name = config_map[CONF_NAME]
-            time_step = config_map[CONF_OFFSET]
             min_temperature = float(config_map[CONF_MIN_TEMP])
             max_temperature = float(config_map[CONF_MAX_TEMP])
             min_humidity = float(config_map[CONF_MIN_HUMIDITY])
@@ -154,9 +131,6 @@ async def async_setup(hass, config):
             max_precip = float(config_map[CONF_MAX_PRECIPITATION])
         except ValueError as v_e:
             _LOGGER.error("Parameter configuration mismatch - %s", v_e)
-            return False
-        except KeyError as k_e:
-            _LOGGER.error("Parameter key not found - %s", k_e)
             return False
 
         if name in hass.data[DOMAIN].keys():
@@ -205,8 +179,12 @@ def get_weather_symbol(symbol, hass=None):
     ret_val = ""
     if symbol in FMI_WEATHER_SYMBOL_MAP.keys():
         ret_val = FMI_WEATHER_SYMBOL_MAP[symbol]
-        if ret_val == 1 and hass is not None:  # Clear as per FMI
-            if hass.states.get("sun.sun") == sun.STATE_BELOW_HORIZON:
+        if hass is not None and ret_val == 1:  # Clear as per FMI
+            today = date.today()
+            sunset = get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
+            sunset = sunset.astimezone(tz.tzlocal())
+
+            if datetime.now().astimezone(tz.tzlocal()) >= sunset:
                 # Clear night
                 ret_val = FMI_WEATHER_SYMBOL_MAP[0]
     return ret_val
@@ -322,27 +300,6 @@ class FMI:
         # Current Weather
         try:
             self.current = fmi.weather_by_coordinates(self.latitude, self.longitude)
-
-        except ClientError as err:
-            err_string = (
-                "Client error with status "
-                + str(err.status_code)
-                + " and message "
-                + err.message
-            )
-            _LOGGER.error(err_string)
-        except ServerError as err:
-            err_string = (
-                "Server error with status "
-                + str(err.status_code)
-                + " and message "
-                + err.body
-            )
-            _LOGGER.error(err_string)
-            self.current = None
-
-        # Hourly weather for 24hrs.
-        try:
             self.hourly = fmi.forecast_by_coordinates(
                 self.latitude, self.longitude, timestep_hours=self.time_step
             )
@@ -363,6 +320,7 @@ class FMI:
                 + err.body
             )
             _LOGGER.error(err_string)
+            self.current = None
             self.hourly = None
 
         # Update best time parameters

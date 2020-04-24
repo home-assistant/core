@@ -151,19 +151,6 @@ class FMIWeather(WeatherEntity):
             for forecast in self._fmi.hourly.forecasts
         ]
 
-        # if the first few precipitation values in forecast is 0, no need to include them
-        # in UI
-        include_precipitation = False
-        len_check = 5 if len(data) > 5 else len(data)
-        for _, dt_w in zip(range(len_check), data):
-            if dt_w[ATTR_FORECAST_PRECIPITATION] > 0.0:
-                include_precipitation = True
-                break
-
-        if include_precipitation is False:
-            for _, dt_w in zip(range(len_check), data):
-                del dt_w[ATTR_FORECAST_PRECIPITATION]
-
         return data
 
     def update(self):
