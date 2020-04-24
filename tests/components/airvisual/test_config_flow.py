@@ -94,8 +94,8 @@ async def test_node_pro_error(hass):
         assert result["errors"] == {CONF_IP_ADDRESS: "unable_to_connect"}
 
 
-async def test_migration_1_2(hass):
-    """Test migrating from version 1 to version 2."""
+async def test_migration(hass):
+    """Test migrating from version 1 to the current version."""
     conf = {
         CONF_API_KEY: "abcde12345",
         CONF_GEOGRAPHIES: [
@@ -124,6 +124,7 @@ async def test_migration_1_2(hass):
         CONF_API_KEY: "abcde12345",
         CONF_LATITUDE: 51.528308,
         CONF_LONGITUDE: -0.3817765,
+        CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY,
     }
 
     assert config_entries[1].unique_id == "35.48847, 137.5263065"
@@ -132,31 +133,6 @@ async def test_migration_1_2(hass):
         CONF_API_KEY: "abcde12345",
         CONF_LATITUDE: 35.48847,
         CONF_LONGITUDE: 137.5263065,
-    }
-
-
-async def test_migration_2_3(hass):
-    """Test migrating from version 2 to version 3."""
-    conf = {
-        CONF_API_KEY: "abcde12345",
-        CONF_LATITUDE: 35.48847,
-        CONF_LONGITUDE: 137.5263065,
-    }
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, version=2, unique_id="abcde12345", data=conf
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch("pyairvisual.api.API.nearest_city"):
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: conf})
-
-    config_entries = hass.config_entries.async_entries(DOMAIN)
-
-    assert config_entries[0].data == {
-        CONF_API_KEY: "abcde12345",
-        CONF_LATITUDE: 51.528308,
-        CONF_LONGITUDE: -0.3817765,
         CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY,
     }
 
@@ -213,6 +189,7 @@ async def test_step_geography(hass):
             CONF_API_KEY: "abcde12345",
             CONF_LATITUDE: 51.528308,
             CONF_LONGITUDE: -0.3817765,
+            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY,
         }
 
 
@@ -234,6 +211,7 @@ async def test_step_node_pro(hass):
         assert result["data"] == {
             CONF_IP_ADDRESS: "192.168.1.100",
             CONF_PASSWORD: "my_password",
+            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_NODE_PRO,
         }
 
 
@@ -258,6 +236,7 @@ async def test_step_import(hass):
             CONF_API_KEY: "abcde12345",
             CONF_LATITUDE: 51.528308,
             CONF_LONGITUDE: -0.3817765,
+            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY,
         }
 
 
