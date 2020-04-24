@@ -1,6 +1,7 @@
 """Test the Xiaomi Miio config flow."""
-from unittest.mock import Mock
 from asyncio import Future
+from unittest.mock import Mock
+
 from asynctest import patch
 
 from homeassistant import config_entries
@@ -16,8 +17,13 @@ TEST_GATEWAY_ID = f"{TEST_MODEL}-{TEST_MAC}-gateway"
 TEST_HARDWARE_VERSION = "AB123"
 TEST_FIRMWARE_VERSION = "1.2.3_456"
 
+
 def get_mock_gateway(
-    connect_succes=True, model=TEST_MODEL, mac_address=TEST_MAC, hardware_version=TEST_HARDWARE_VERSION, firmware_version=TEST_FIRMWARE_VERSION
+    connect_succes=True,
+    model=TEST_MODEL,
+    mac_address=TEST_MAC,
+    hardware_version=TEST_HARDWARE_VERSION,
+    firmware_version=TEST_FIRMWARE_VERSION,
 ):
     """Return a mock gateway."""
     mock_gateway = Mock()
@@ -32,7 +38,8 @@ def get_mock_gateway(
         mock_gateway.gateway_info = None
 
     return mock_gateway
-    
+
+
 async def test_config_flow_step_user_no_device(hass):
     """Test config flow ."""
     result = await hass.config_entries.flow.async_init(
@@ -43,13 +50,12 @@ async def test_config_flow_step_user_no_device(hass):
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {},
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {'base': 'no_device_selected'}
+    assert result["errors"] == {"base": "no_device_selected"}
+
 
 async def test_config_flow_step_gateway_connect_error(hass):
     """Test config flow ."""
@@ -68,9 +74,9 @@ async def test_config_flow_step_gateway_connect_error(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "gateway"
     assert result["errors"] == {}
-    
+
     mock_gateway = get_mock_gateway(False)
-    
+
     with patch(
         "homeassistant.components.xiaomi_miio.config_flow.ConnectXiaomiGateway",
         return_value=mock_gateway,
@@ -79,12 +85,14 @@ async def test_config_flow_step_gateway_connect_error(hass):
         return_value=mock_gateway,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST, CONF_NAME: TEST_NAME, CONF_TOKEN: TEST_TOKEN},
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST, CONF_NAME: TEST_NAME, CONF_TOKEN: TEST_TOKEN},
         )
-    
+
     assert result["type"] == "form"
     assert result["step_id"] == "gateway"
-    assert result["errors"] == {'base': 'connect_error'}
+    assert result["errors"] == {"base": "connect_error"}
+
 
 async def test_config_flow_gateway_succes(hass):
     """Test config flow ."""
@@ -103,9 +111,9 @@ async def test_config_flow_gateway_succes(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "gateway"
     assert result["errors"] == {}
-    
+
     mock_gateway = get_mock_gateway()
-    
+
     with patch(
         "homeassistant.components.xiaomi_miio.config_flow.ConnectXiaomiGateway",
         return_value=mock_gateway,
@@ -114,9 +122,10 @@ async def test_config_flow_gateway_succes(hass):
         return_value=mock_gateway,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: TEST_HOST, CONF_NAME: TEST_NAME, CONF_TOKEN: TEST_TOKEN},
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST, CONF_NAME: TEST_NAME, CONF_TOKEN: TEST_TOKEN},
         )
-    
+
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_NAME
     assert result["data"] == {
