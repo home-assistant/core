@@ -1,6 +1,5 @@
 """Define tests for the PlayStation 4 config flow."""
 from asynctest import patch
-
 from pyps4_2ndscreen.errors import CredentialTimeout
 
 from homeassistant import data_entry_flow

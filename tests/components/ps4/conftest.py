@@ -1,6 +1,5 @@
 """Test configuration for PS4."""
 from asynctest import patch
-
 import pytest
 
 

@@ -1,6 +1,5 @@
 """Tests for the PS4 media player platform."""
 from asynctest import MagicMock, patch
-
 from pyps4_2ndscreen.credential import get_ddp_message
 
 from homeassistant.components import ps4
