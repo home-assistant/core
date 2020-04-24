@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u50c5\u80fd\u65b0\u589e\u4e00\u7d44 Atag \u8a2d\u5099\u81f3 Home Assistant"
+        },
+        "error": {
+            "connection_error": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "port": "\u901a\u8a0a\u57e0\uff0810000\uff09"
+                },
+                "title": "\u9023\u7dda\u81f3\u8a2d\u5099"
+            }
+        }
+    },
+    "title": "Atag"
+}
