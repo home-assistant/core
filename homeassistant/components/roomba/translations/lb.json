@@ -1,0 +1,26 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "blid": "BLID",
+                    "certificate": "Zertifikat",
+                    "host": "Host Numm oder IP Adresse",
+                    "password": "Passwuert"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "delay": "Delai"
+                }
+            }
+        }
+    }
+}

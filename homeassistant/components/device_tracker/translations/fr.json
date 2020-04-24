@@ -1,0 +1,15 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name} est \u00e0 la maison",
+            "is_not_home": "{entity_name} n'est pas \u00e0 la maison"
+        }
+    },
+    "state": {
+        "_": {
+            "home": "Pr\u00e9sent",
+            "not_home": "Absent"
+        }
+    },
+    "title": "Dispositif de suivi"
+}

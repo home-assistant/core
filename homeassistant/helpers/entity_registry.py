@@ -10,7 +10,17 @@ timer.
 import asyncio
 from collections import OrderedDict
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    cast,
+)
 
 import attr
 
@@ -51,6 +61,18 @@ ATTR_RESTORED = "restored"
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "core.entity_registry"
+
+# Attributes relevant to describing entity
+# to external services.
+ENTITY_DESCRIBING_ATTRIBUTES = {
+    "entity_id",
+    "name",
+    "original_name",
+    "capabilities",
+    "supported_features",
+    "device_class",
+    "unit_of_measurement",
+}
 
 
 @attr.s(slots=True, frozen=True)
@@ -108,6 +130,22 @@ class EntityRegistry:
         self.hass.bus.async_listen(
             EVENT_DEVICE_REGISTRY_UPDATED, self.async_device_removed
         )
+
+    @callback
+    def async_get_device_class_lookup(self, domain_device_classes: set) -> dict:
+        """Return a lookup for the device class by domain."""
+        lookup: Dict[str, Dict[Tuple[Any, Any], str]] = {}
+        for entity in self.entities.values():
+            if not entity.device_id:
+                continue
+            domain_device_class = (entity.domain, entity.device_class)
+            if domain_device_class not in domain_device_classes:
+                continue
+            if entity.device_id not in lookup:
+                lookup[entity.device_id] = {domain_device_class: entity.entity_id}
+            else:
+                lookup[entity.device_id][domain_device_class] = entity.entity_id
+        return lookup
 
     @callback
     def async_is_registered(self, entity_id: str) -> bool:

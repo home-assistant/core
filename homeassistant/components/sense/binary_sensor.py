@@ -1,7 +1,7 @@
 """Support for monitoring a Sense energy sensor device."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, DEVICE_CLASS_POWER
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -61,7 +61,7 @@ def sense_to_mdi(sense_icon):
     return "mdi:{}".format(MDI_ICONS.get(sense_icon, "power-plug"))
 
 
-class SenseDevice(BinarySensorDevice):
+class SenseDevice(BinarySensorEntity):
     """Implementation of a Sense energy device binary sensor."""
 
     def __init__(self, sense_devices_data, device, sense_monitor_id):

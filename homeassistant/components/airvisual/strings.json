@@ -1,27 +1,49 @@
 {
   "config": {
     "step": {
-      "user": {
-        "title": "Configure AirVisual",
-        "description": "Monitor air quality in a geographical location.",
+      "geography": {
+        "title": "Configure a Geography",
+        "description": "Use the AirVisual cloud API to monitor a geographical location.",
         "data": {
           "api_key": "API Key",
           "latitude": "Latitude",
           "longitude": "Longitude"
         }
+      },
+      "node_pro": {
+        "title": "Configure an AirVisual Node/Pro",
+        "description": "Monitor a personal AirVisual unit. The password can be retrieved from the unit's UI.",
+        "data": {
+          "ip_address": "Unit IP Address/Hostname",
+          "password": "Unit Password"
+        }
+      },
+      "user": {
+        "title": "Configure AirVisual",
+        "description": "Pick what type of AirVisual data you want to monitor.",
+        "data": {
+          "cloud_api": "Geographical Location",
+          "node_pro": "AirVisual Node Pro",
+          "type": "Integration Type"
+        }
       }
     },
-    "error": { "invalid_api_key": "Invalid API key" },
+    "error": {
+      "general_error": "There was an unknown error.",
+      "invalid_api_key": "Invalid API key provided.",
+      "unable_to_connect": "Unable to connect to Node/Pro unit."
+    },
     "abort": {
-      "already_configured": "These coordinates have already been registered."
+      "already_configured": "These coordinates or Node/Pro ID are already registered."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Configure AirVisual",
-        "description": "Set various options for the AirVisual integration.",
-        "data": { "show_on_map": "Show monitored geography on the map" }
+        "data": {
+          "show_on_map": "Show monitored geography on the map"
+        }
       }
     }
   }
