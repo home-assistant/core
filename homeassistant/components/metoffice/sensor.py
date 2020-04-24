@@ -18,7 +18,6 @@ from homeassistant.const import (
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
-    UNIT_UV_INDEX,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -52,7 +51,7 @@ SENSOR_TYPES = {
     "wind_direction": ["Wind Direction", None, "mdi:weather-windy"],
     "wind_gust": ["Wind Gust", SPEED_MILES_PER_HOUR, "mdi:weather-windy"],
     "visibility": ["Visibility", LENGTH_KILOMETERS, "mdi:eye"],
-    "uv": ["UV", UNIT_UV_INDEX, "mdi:weather-sunny-alert"],
+    "uv": ["UV Index", None, "mdi:weather-sunny-alert"],
     "precipitation": [
         "Probability of Precipitation",
         UNIT_PERCENTAGE,
@@ -183,8 +182,7 @@ class MetOfficeCurrentSensor(Entity):
                     for k, v in CONDITION_CLASSES.items()
                     if self.data.now.weather.value in v
                 ][0]
-            else:
-                return variable.value if variable else None
+            return variable.value if variable else None
         return None
 
     @property
