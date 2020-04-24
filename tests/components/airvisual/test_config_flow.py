@@ -5,6 +5,7 @@ from pyairvisual.errors import InvalidKeyError, NodeProError
 from homeassistant import data_entry_flow
 from homeassistant.components.airvisual import (
     CONF_GEOGRAPHIES,
+    CONF_INTEGRATION_TYPE,
     DOMAIN,
     INTEGRATION_TYPE_GEOGRAPHY,
     INTEGRATION_TYPE_NODE_PRO,
@@ -131,6 +132,32 @@ async def test_migration_1_2(hass):
         CONF_API_KEY: "abcde12345",
         CONF_LATITUDE: 35.48847,
         CONF_LONGITUDE: 137.5263065,
+    }
+
+
+async def test_migration_2_3(hass):
+    """Test migrating from version 1 to version 2."""
+    conf = {
+        CONF_API_KEY: "abcde12345",
+        CONF_LATITUDE: 35.48847,
+        CONF_LONGITUDE: 137.5263065,
+    }
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, version=2, unique_id="abcde12345", data=conf
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch("pyairvisual.api.API.nearest_city"):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: conf})
+
+    config_entries = hass.config_entries.async_entries(DOMAIN)
+
+    assert config_entries[0].data == {
+        CONF_API_KEY: "abcde12345",
+        CONF_LATITUDE: 51.528308,
+        CONF_LONGITUDE: -0.3817765,
+        CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY,
     }
 
 
