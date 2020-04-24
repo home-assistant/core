@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "invalid_pin_code": "De ingevoerde pincode is ongeldig"
+        },
+        "step": {
+            "pairing": {
+                "data": {
+                    "pin": "PIN"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "IP-adres",
+                    "name": "Naam"
+                },
+                "title": "Uw tv instellen"
+            }
+        }
+    }
+}

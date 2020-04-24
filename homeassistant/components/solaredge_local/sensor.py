@@ -17,7 +17,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_VOLT,
+    VOLT,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -42,20 +42,8 @@ INVERTER_MODES = (
 # Supported sensor types:
 # Key: ['json_key', 'name', unit, icon, attribute name]
 SENSOR_TYPES = {
-    "current_AC_voltage": [
-        "gridvoltage",
-        "Grid Voltage",
-        UNIT_VOLT,
-        "mdi:current-ac",
-        None,
-    ],
-    "current_DC_voltage": [
-        "dcvoltage",
-        "DC Voltage",
-        UNIT_VOLT,
-        "mdi:current-dc",
-        None,
-    ],
+    "current_AC_voltage": ["gridvoltage", "Grid Voltage", VOLT, "mdi:current-ac", None],
+    "current_DC_voltage": ["dcvoltage", "DC Voltage", VOLT, "mdi:current-dc", None],
     "current_frequency": [
         "gridfrequency",
         "Grid Frequency",
@@ -136,7 +124,7 @@ SENSOR_TYPES = {
     "optimizer_voltage": [
         "optimizervoltage",
         "Average Optimizer Voltage",
-        UNIT_VOLT,
+        VOLT,
         "mdi:solar-panel",
         None,
     ],

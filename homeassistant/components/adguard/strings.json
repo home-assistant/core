@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "Link your AdGuard Home.",
         "description": "Set up your AdGuard Home instance to allow monitoring and control.",
         "data": {
           "host": "Host",

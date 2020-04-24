@@ -10,10 +10,11 @@ UPDATE_INTERVAL = 30
 ATTR_REGION = "region"
 ATTR_GRID_CODE = "grid_code"
 ATTR_FREQUENCY = "frequency"
-ATTR_ENERGY_EXPORTED = "energy_exported"
-ATTR_ENERGY_IMPORTED = "energy_imported"
+ATTR_ENERGY_EXPORTED = "energy_exported_(in_kW)"
+ATTR_ENERGY_IMPORTED = "energy_imported_(in_kW)"
 ATTR_INSTANT_AVERAGE_VOLTAGE = "instant_average_voltage"
 ATTR_NOMINAL_SYSTEM_POWER = "nominal_system_power_kW"
+ATTR_IS_ACTIVE = "is_active"
 
 SITE_INFO_UTILITY = "utility"
 SITE_INFO_GRID_CODE = "grid_code"
@@ -42,6 +43,7 @@ POWERWALL_GRID_ONLINE = "SystemGridConnected"
 POWERWALL_CONNECTED_KEY = "connected_to_tesla"
 POWERWALL_RUNNING_KEY = "running"
 
+POWERWALL_BATTERY_METER = "battery"
 
 MODEL = "PowerWall 2"
 MANUFACTURER = "Tesla"

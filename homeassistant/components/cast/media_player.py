@@ -260,7 +260,6 @@ class CastDevice(MediaPlayerDevice):
             # will automatically be picked up.
             return
 
-        # pylint: disable=protected-access
         _LOGGER.debug(
             "[%s %s (%s:%s)] Connecting to cast device by service %s",
             self.entity_id,
@@ -270,7 +269,7 @@ class CastDevice(MediaPlayerDevice):
             self.services,
         )
         chromecast = await self.hass.async_add_executor_job(
-            pychromecast._get_chromecast_from_service,
+            pychromecast.get_chromecast_from_service,
             (
                 self.services,
                 ChromeCastZeroconf.get_zeroconf(),
