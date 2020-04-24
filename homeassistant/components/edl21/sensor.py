@@ -54,7 +54,7 @@ class EDL21:
         # D=17: Time integral 7
         # E=0: Total
         "1-0:1.17.0*255": "Last signed positive active energy total",
-        # C=1: Active power -
+        # C=2: Active power -
         # D=8: Time integral 1
         # E=0: Total
         "1-0:2.8.0*255": "Negative active energy total",
