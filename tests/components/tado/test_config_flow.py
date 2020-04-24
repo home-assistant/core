@@ -151,7 +151,9 @@ async def test_form_homekit(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "homekit"}
+        DOMAIN,
+        context={"source": "homekit"},
+        data={"properties": {"id": "AA:BB:CC:DD:EE:FF"}},
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
@@ -162,6 +164,8 @@ async def test_form_homekit(hass):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "homekit"}
+        DOMAIN,
+        context={"source": "homekit"},
+        data={"properties": {"id": "AA:BB:CC:DD:EE:FF"}},
     )
     assert result["type"] == "abort"
