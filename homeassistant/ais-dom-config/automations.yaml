@@ -5,7 +5,7 @@
   - event: start
     platform: homeassistant
   action:
-   - delay: '3'
+   - delay: '6'
    - service: ais_files.get_db_log_settings_info
      data:
        on_system_start: true
