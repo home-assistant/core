@@ -28,11 +28,7 @@ from homeassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.common import (
-    mock_area_registry,
-    mock_device_registry,
-    mock_registry,
-)
+from tests.common import mock_area_registry, mock_device_registry, mock_registry
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
