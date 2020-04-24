@@ -282,7 +282,7 @@ atenpdu==0.3.0
 aurorapy==0.2.6
 
 # homeassistant.components.stream
-av==6.1.2
+av==7.0.1
 
 # homeassistant.components.avea
 avea==1.4
