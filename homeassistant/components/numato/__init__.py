@@ -1,9 +1,4 @@
-"""
-Support for controlling GPIO pins of a Numato Labs USB GPIO expander.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/numato
-"""
+"""Support for controlling GPIO pins of a Numato Labs USB GPIO expander."""
 # pylint: disable=import-error
 import logging
 

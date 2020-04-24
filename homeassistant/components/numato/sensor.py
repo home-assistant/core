@@ -1,8 +1,4 @@
-"""Sensor platform integration for ADC ports of Numato USB GPIO expanders.
-
-For more details about this platform, please refer to the documentation at:
-https://home-assistant.io/integrations/numato#sensor
-"""
+"""Sensor platform integration for ADC ports of Numato USB GPIO expanders."""
 import logging
 
 from numato_gpio import NumatoGpioError
