@@ -2,7 +2,9 @@
 
 import logging
 
-from homeassistant.const import PERCENTAGE
+from pyplaato.plaato import PlaatoDeviceType
+
+from homeassistant.const import CONF_TOKEN, PERCENTAGE
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -17,14 +19,12 @@ from . import (
     ATTR_TEMP,
     ATTR_TEMP_UNIT,
     ATTR_VOLUME_UNIT,
-    DOMAIN as PLAATO_DOMAIN,
     PLAATO_DEVICE_ATTRS,
     PLAATO_DEVICE_SENSORS,
     SENSOR_DATA_KEY,
     SENSOR_UPDATE,
-    get_coordinator,
 )
-from .const import CONF_DEVICE_NAME
+from .const import CONF_DEVICE_NAME, CONF_USE_WEBHOOK, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,17 +33,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the Plaato sensor."""
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up Plaato from a config entry."""
     devices = {}
 
     def get_device(device_id):
         """Get a device."""
-        return hass.data[PLAATO_DOMAIN].get(device_id, False)
+        return hass.data[DOMAIN].get(device_id, False)
 
     def get_device_sensors(device_id):
         """Get device sensors."""
-        return hass.data[PLAATO_DOMAIN].get(device_id).get(PLAATO_DEVICE_SENSORS)
+        return hass.data[DOMAIN].get(device_id).get(PLAATO_DEVICE_SENSORS)
 
     async def _update_sensor(device_id):
         """Update/Create the sensors."""
@@ -56,19 +56,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             devices[device_id] = entities
 
-            async_add_entities(entities, True)
+            async_add_devices(entities, True)
         else:
             for entity in devices[device_id]:
-                async_dispatcher_send(hass, f"{PLAATO_DOMAIN}_{entity.unique_id}")
+                async_dispatcher_send(hass, f"{DOMAIN}_{entity.unique_id}")
 
-    if config_entry.data[CONF_WEBHOOK_ID] is not None:
+    if config_entry.data.get(CONF_USE_WEBHOOK, False):
         hass.data[SENSOR_DATA_KEY] = async_dispatcher_connect(
             hass, SENSOR_UPDATE, _update_sensor
         )
     else:
-        coordinator = await get_coordinator(hass, config_entry)
+        coordinator = hass.data[DOMAIN][config_entry.entry_id]
         if coordinator.data is not None:
-            async_add_entities(
+            async_add_devices(
                 PlaatoSensor(
                     config_entry.data[CONF_TOKEN],
                     sensor_type,
@@ -104,7 +104,7 @@ class PlaatoSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{PLAATO_DOMAIN} {self._device_type} {self._name}".title()
+        return f"{DOMAIN} {self._device_type} {self._name}".title()
 
     @property
     def unique_id(self):
@@ -118,7 +118,7 @@ class PlaatoSensor(Entity):
         if self._coordinator is not None and self._device_type == PlaatoDeviceType.Keg:
             fw_version = self._coordinator.data.firmware_version
         return {
-            "identifiers": {(PLAATO_DOMAIN, self._device_id)},
+            "identifiers": {(DOMAIN, self._device_id)},
             "name": self._device_name,
             "manufacturer": "Plaato",
             "model": self._device_type,
@@ -128,7 +128,7 @@ class PlaatoSensor(Entity):
     def get_sensors(self):
         """Get device sensors. (Only webhook)."""
         return (
-            self.hass.data[PLAATO_DOMAIN]
+            self.hass.data[DOMAIN]
             .get(self._device_id, False)
             .get(PLAATO_DEVICE_SENSORS, False)
         )
@@ -136,7 +136,7 @@ class PlaatoSensor(Entity):
     def get_sensors_unit_of_measurement(self, sensor_type):
         """Get unit of measurement for sensor of type. (Only webhook)."""
         return (
-            self.hass.data[PLAATO_DOMAIN]
+            self.hass.data[DOMAIN]
             .get(self._device_id)
             .get(PLAATO_DEVICE_ATTRS, [])
             .get(sensor_type, "")
@@ -204,9 +204,10 @@ class PlaatoSensor(Entity):
         if self._coordinator is not None:
             self._coordinator.async_add_listener(self.async_write_ha_state)
         else:
-            self.async_on_remove(self.hass.helpers.dispatcher.async_dispatcher_connect(
-                f"{PLAATO_DOMAIN}_{self.unique_id}", self.async_write_ha_state
-            )
+            self.async_on_remove(
+                self.hass.helpers.dispatcher.async_dispatcher_connect(
+                    f"{DOMAIN}_{self.unique_id}", self.async_write_ha_state
+                )
             )
 
     async def async_will_remove_from_hass(self):

@@ -1,4 +1,6 @@
 """Config flow for Plaato."""
+import logging
+
 from pyplaato.plaato import PlaatoDeviceType
 import voluptuous as vol
 
@@ -12,82 +14,32 @@ from .const import (
     CONF_USE_WEBHOOK,
     DOCS_URL,
     DOMAIN,
+    PLACEHOLDER_DEVICE_NAME,
+    PLACEHOLDER_DEVICE_TYPE,
     PLACEHOLDER_DOCS_URL,
     PLACEHOLDER_WEBHOOK_URL,
 )
+
+_LOGGER = logging.getLogger(__package__)
 
 
 class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handles a Plaato config flow."""
 
     VERSION = 2
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize."""
-        self._init_info = None
+        self._init_info = {}
         self._errors = {}
 
     async def async_step_user(self, user_input=None):
         """Handle user step."""
-        # if self._async_current_entries():
-        #     return self.async_abort(reason="one_instance_allowed")
-
-        if user_input is not None:
-            use_webhook = user_input.get(CONF_USE_WEBHOOK, False)
-            auth_token = user_input.get(CONF_TOKEN, None)
-
-            if use_webhook is False and auth_token is None:
-                self._init_info = user_input
-                return await self.async_step_device_type()
-
-            user_input[CONF_WEBHOOK_ID] = None
-            user_input[CONF_DEVICE_TYPE] = self._init_info.get(CONF_DEVICE_TYPE, None)
-            user_input[CONF_DEVICE_NAME] = self._init_info.get(CONF_DEVICE_NAME, None)
-
-            description_placeholders = {
-                PLACEHOLDER_WEBHOOK_URL: "Not available",
-                PLACEHOLDER_DOCS_URL: DOCS_URL,
-            }
-
-            if user_input[CONF_DEVICE_TYPE] is None:
-                return self.async_abort(reason="no_device")
-
-            device_type = PlaatoDeviceType(user_input[CONF_DEVICE_TYPE])
-            if device_type is PlaatoDeviceType.Airlock and user_input[CONF_USE_WEBHOOK]:
-                webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
-                user_input[CONF_WEBHOOK_ID] = webhook_id
-                user_input[CONF_CLOUDHOOK] = cloudhook
-                description_placeholders[PLACEHOLDER_WEBHOOK_URL] = webhook_url
-            else:
-                await self.async_set_unique_id(auth_token)
-                self._abort_if_unique_id_configured()
-
-            return self.async_create_entry(
-                title=device_type.name,
-                data=user_input,
-                description_placeholders=description_placeholders,
-            )
-
-        return await self._show_config_form(user_input)
-
-    async def async_step_device_type(self, user_input=None):
-        """Handle device type step."""
-        device_type = PlaatoDeviceType(self._init_info[CONF_DEVICE_TYPE])
-        data_scheme = vol.Schema({vol.Optional(CONF_TOKEN, default=None): str})
-        if device_type is PlaatoDeviceType.Airlock:
-            data_scheme = data_scheme.extend(
-                {vol.Optional(CONF_USE_WEBHOOK, default=False): bool}
-            )
+        _LOGGER.debug("Step User")
 
         return self.async_show_form(
-            step_id="user", data_schema=data_scheme, errors=self._errors,
-        )
-
-    async def _show_config_form(self, user_input):
-        """Show the configuration form."""
-        return self.async_show_form(
-            step_id="user",
+            step_id="device_type",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_DEVICE_NAME, default=None): str,
@@ -97,6 +49,109 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=self._errors,
+        )
+
+    async def async_step_create_entry(self):
+        """Create the entry step."""
+        _LOGGER.debug("Step Create Entry")
+
+        if self._init_info.get(CONF_DEVICE_TYPE, None) is None:
+            return self.async_abort("no_device")
+
+        auth_token = self._init_info.get(CONF_TOKEN, None)
+        webhook_id = self._init_info.get(CONF_WEBHOOK_ID, None)
+        device_name = self._init_info.get(CONF_DEVICE_NAME, None)
+        device_type = PlaatoDeviceType(self._init_info.get(CONF_DEVICE_TYPE))
+
+        unique_id = auth_token if auth_token is not None else webhook_id
+
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=device_type.name,
+            data=self._init_info,
+            description_placeholders={
+                PLACEHOLDER_DEVICE_TYPE: device_type.name,
+                PLACEHOLDER_DEVICE_NAME: device_name,
+            },
+        )
+
+    async def async_step_validate(self, user_input=None):
+        """Validate config step."""
+
+        _LOGGER.debug("Step Validate")
+
+        use_webhook = user_input.get(CONF_USE_WEBHOOK, False)
+        auth_token = user_input.get(CONF_TOKEN, None)
+        device_type = self._init_info[CONF_DEVICE_TYPE]
+
+        """Save info for later"""
+        self._init_info[CONF_USE_WEBHOOK] = use_webhook
+        self._init_info[CONF_TOKEN] = auth_token
+
+        if use_webhook:
+            if device_type != PlaatoDeviceType.Airlock:
+                self._errors["base"] = "invalid_webhook_device"
+                return await self._show_api_method_form(device_type)
+
+            webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
+            self._init_info[CONF_WEBHOOK_ID] = webhook_id
+            self._init_info[CONF_CLOUDHOOK] = cloudhook
+
+            return self.async_show_form(
+                step_id="webhook",
+                errors=self._errors,
+                description_placeholders={
+                    PLACEHOLDER_WEBHOOK_URL: webhook_url,
+                    PLACEHOLDER_DOCS_URL: DOCS_URL,
+                },
+            )
+
+        if not auth_token and not use_webhook:
+            self._errors["base"] = "no_api_method"
+            return await self._show_api_method_form(device_type)
+
+        if not auth_token:
+            self._errors["base"] = "no_auth_token"
+            return await self._show_api_method_form(device_type)
+
+        return await self.async_step_create_entry()
+
+    async def async_step_device_type(self, user_input=None):
+        """Handle device type step."""
+
+        _LOGGER.debug("Step Device Type")
+
+        device_type = PlaatoDeviceType(user_input.get(CONF_DEVICE_TYPE))
+        device_name = user_input.get(CONF_DEVICE_NAME)
+
+        """Save info for later"""
+        self._init_info[CONF_DEVICE_TYPE] = device_type
+        self._init_info[CONF_DEVICE_NAME] = device_name
+
+        return await self._show_api_method_form(device_type)
+
+    async def async_step_webhook(self, user_input=None):
+        """Handle device type step."""
+        webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
+        self._init_info[CONF_WEBHOOK_ID] = webhook_id
+        self._init_info[CONF_CLOUDHOOK] = cloudhook
+
+        return await self.async_step_create_entry()
+
+    async def _show_api_method_form(self, device_type: PlaatoDeviceType):
+        data_scheme = vol.Schema(
+            {
+                vol.Optional(CONF_TOKEN, default=""): str,
+                vol.Optional(CONF_USE_WEBHOOK, default=False): bool,
+            }
+        )
+        return self.async_show_form(
+            step_id="validate",
+            data_schema=data_scheme,
+            errors=self._errors,
+            description_placeholders={PLACEHOLDER_DEVICE_TYPE: device_type.name},
         )
 
     async def _get_webhook_id(self):

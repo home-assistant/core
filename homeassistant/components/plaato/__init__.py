@@ -1,10 +1,10 @@
 """Support for Plaato devices."""
 
+import asyncio
 from datetime import timedelta
 import logging
 
 from aiohttp import web
-import async_timeout
 from pyplaato.plaato import Plaato, PlaatoDeviceType
 import voluptuous as vol
 
@@ -20,11 +20,13 @@ from homeassistant.const import (
     VOLUME_LITERS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client, update_coordinator
+from homeassistant.exceptions import ConfigEntryNotReady, InvalidStateError
+from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_DEVICE_TYPE, DOMAIN
+from .const import CONF_DEVICE_TYPE, CONF_USE_WEBHOOK, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +69,8 @@ WEBHOOK_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+SCAN_INTERVAL = timedelta(minutes=10)
+
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Plaato component."""
@@ -78,25 +82,102 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
+    use_webhook = entry.data.get(CONF_USE_WEBHOOK, False)
+
+    if use_webhook:
+        setup_webhook(hass, entry)
+    else:
+        await async_setup_coordinator(hass, entry)
+
+    for platform in PLATFORMS:
+        if entry.options.get(platform, True):
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+            )
+
+    entry.add_update_listener(async_reload_entry)
+    return True
+
+
+def setup_webhook(hass: HomeAssistant, entry: ConfigEntry):
+    """Init webhook based on config entry."""
     if entry.data[CONF_WEBHOOK_ID] is not None:
         webhook_id = entry.data[CONF_WEBHOOK_ID]
         hass.components.webhook.async_register(
             DOMAIN, "Plaato", webhook_id, handle_webhook
         )
-
-    hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, SENSOR))
-
-    return True
+    else:
+        raise InvalidStateError
 
 
-async def async_unload_entry(hass, entry):
+async def async_setup_coordinator(hass: HomeAssistant, entry: ConfigEntry):
+    """Init auth token based on config entry."""
+    auth_token = entry.data.get(CONF_TOKEN)
+    device_type = entry.data.get(CONF_DEVICE_TYPE)
+
+    coordinator = PlaatoCoordinator(hass, auth_token, device_type)
+    await coordinator.async_refresh()
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
+
+    hass.data[DOMAIN][entry.entry_id] = coordinator
+
+    for platform in PLATFORMS:
+        if entry.options.get(platform, True):
+            coordinator.platforms.append(platform)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+    use_webhook = entry.data.get(CONF_USE_WEBHOOK)
+
+    if use_webhook:
+        return await async_unload_webhook(hass, entry)
+
+    return await async_unload_coordinator(hass, entry)
+
+
+async def async_unload_webhook(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload webhook based entry."""
     if entry.data[CONF_WEBHOOK_ID] is not None:
         hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
-    hass.data[SENSOR_DATA_KEY]()
 
-    await hass.config_entries.async_forward_entry_unload(entry, SENSOR)
-    return True
+    unloaded = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+    )
+    if unloaded:
+        hass.data[SENSOR_DATA_KEY]()
+
+    return unloaded
+
+
+async def async_unload_coordinator(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload auth token based entry."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    unloaded = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+                if platform in coordinator.platforms
+            ]
+        )
+    )
+    if unloaded:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unloaded
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Reload config entry."""
+    await async_unload_entry(hass, entry)
+    await async_setup_entry(hass, entry)
 
 
 async def handle_webhook(hass, webhook_id, request):
@@ -142,31 +223,27 @@ def _device_id(data):
     return f"{data.get(ATTR_DEVICE_NAME)}_{data.get(ATTR_DEVICE_ID)}"
 
 
-async def get_coordinator(hass: HomeAssistant, entry: ConfigEntry):
-    """Get the data update coordinator."""
+class PlaatoCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching data from the API."""
 
-    auth_token = entry.data[CONF_TOKEN]
-    if DOMAIN in hass.data and auth_token in hass.data[DOMAIN]:
-        return hass.data[DOMAIN][auth_token]
+    def __init__(self, hass, auth_token, device_type: PlaatoDeviceType):
+        """Initialize."""
+        self.api = Plaato(auth_token=auth_token)
+        self.hass = hass
+        self.device_type = device_type
+        self.platforms = []
 
-    device_type = PlaatoDeviceType(entry.data[CONF_DEVICE_TYPE])
+        super().__init__(
+            hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL,
+        )
 
-    plaato = Plaato(auth_token=auth_token)
-
-    async def async_get_data():
-        with async_timeout.timeout(20):
-            return await plaato.get_data(
-                session=aiohttp_client.async_get_clientsession(hass),
-                device_type=device_type,
+    async def _async_update_data(self):
+        """Update data via library."""
+        try:
+            data = await self.api.get_data(
+                session=aiohttp_client.async_get_clientsession(self.hass),
+                device_type=self.device_type,
             )
-
-    hass.data[DOMAIN][auth_token] = update_coordinator.DataUpdateCoordinator(
-        hass,
-        logging.getLogger(__name__),
-        name=f"{DOMAIN}_{device_type.name}_{auth_token}",
-        update_method=async_get_data,
-        update_interval=timedelta(minutes=10),
-    )
-
-    await hass.data[DOMAIN][auth_token].async_refresh()
-    return hass.data[DOMAIN][auth_token]
+            return data
+        except Exception as exception:
+            raise UpdateFailed(exception)
