@@ -136,7 +136,7 @@ async def test_migration_1_2(hass):
 
 
 async def test_migration_2_3(hass):
-    """Test migrating from version 1 to version 2."""
+    """Test migrating from version 2 to version 3."""
     conf = {
         CONF_API_KEY: "abcde12345",
         CONF_LATITUDE: 35.48847,
