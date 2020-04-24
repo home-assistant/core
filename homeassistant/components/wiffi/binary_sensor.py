@@ -1,13 +1,11 @@
 """Binary sensor platform support for wiffi devices."""
 
-from pathlib import Path
-
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import WiffiEntity
-from .const import CREATE_ENTITY_SIGNAL, DOMAIN
+from .const import CREATE_ENTITY_SIGNAL
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -16,24 +14,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     Called by the HA framework after async_forward_entry_setup has been called
     during initialization of a new integration (= wiffi).
     """
-    stem = Path(__file__).stem  # stem = filename without py
-    hass.data[DOMAIN][config_entry.entry_id].async_add_entities[
-        stem
-    ] = async_add_entities
+
+    @callback
+    def _create_entity(device, metric):
+        """Create platform specific entities."""
+        entities = []
+
+        if metric.is_bool:
+            entities.append(BoolEntity(device, metric))
+
+        async_add_entities(entities)
 
     async_dispatcher_connect(hass, CREATE_ENTITY_SIGNAL, _create_entity)
-
-
-@callback
-def _create_entity(api, device, metric):
-    """Create platform specific entities."""
-    entities = []
-
-    if metric.is_bool:
-        entities.append(BoolEntity(device, metric))
-
-    stem = Path(__file__).stem  # stem = filename without py
-    api.async_add_entities[stem](entities)
 
 
 class BoolEntity(WiffiEntity, BinarySensorDevice):
@@ -57,4 +49,4 @@ class BoolEntity(WiffiEntity, BinarySensorDevice):
         """
         self.reset_expiration_date()
         self._value = metric.value
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

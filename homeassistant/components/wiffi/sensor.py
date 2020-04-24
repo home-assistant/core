@@ -1,19 +1,17 @@
 """Sensor platform support for wiffi devices."""
 
-from pathlib import Path
-
 from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
 )
-from homeassistant.const import PRESSURE_MBAR, TEMP_CELSIUS
+from homeassistant.const import PRESSURE_MBAR, TEMP_CELSIUS, UNIT_DEGREE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import WiffiEntity
-from .const import CREATE_ENTITY_SIGNAL, DOMAIN
+from .const import CREATE_ENTITY_SIGNAL
 from .wiffi_strings import (
     WIFFI_UOM_DEGREE,
     WIFFI_UOM_LUX,
@@ -22,9 +20,17 @@ from .wiffi_strings import (
     WIFFI_UOM_TEMP_CELSIUS,
 )
 
+# map to determine HA device class from wiffi's unit of measurement
+UOM_TO_DEVICE_CLASS_MAP = {
+    WIFFI_UOM_TEMP_CELSIUS: DEVICE_CLASS_TEMPERATURE,
+    WIFFI_UOM_PERCENT: DEVICE_CLASS_HUMIDITY,
+    WIFFI_UOM_MILLI_BAR: DEVICE_CLASS_PRESSURE,
+    WIFFI_UOM_LUX: DEVICE_CLASS_ILLUMINANCE,
+}
+
 # map to convert wiffi unit of measurements to common HA uom's
 UOM_MAP = {
-    WIFFI_UOM_DEGREE: "°",
+    WIFFI_UOM_DEGREE: UNIT_DEGREE,
     WIFFI_UOM_TEMP_CELSIUS: TEMP_CELSIUS,
     WIFFI_UOM_MILLI_BAR: PRESSURE_MBAR,
 }
@@ -36,26 +42,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     Called by the HA framework after async_forward_entry_setup has been called
     during initialization of a new integration (= wiffi).
     """
-    stem = Path(__file__).stem  # stem = filename without py
-    hass.data[DOMAIN][config_entry.entry_id].async_add_entities[
-        stem
-    ] = async_add_entities
+
+    @callback
+    def _create_entity(device, metric):
+        """Create platform specific entities."""
+        entities = []
+
+        if metric.is_number:
+            entities.append(NumberEntity(device, metric))
+        elif metric.is_string:
+            entities.append(StringEntity(device, metric))
+
+        async_add_entities(entities)
 
     async_dispatcher_connect(hass, CREATE_ENTITY_SIGNAL, _create_entity)
-
-
-@callback
-def _create_entity(api, device, metric):
-    """Create platform specific entities."""
-    entities = []
-
-    if metric.is_number:
-        entities.append(NumberEntity(device, metric))
-    elif metric.is_string:
-        entities.append(StringEntity(device, metric))
-
-    stem = Path(__file__).stem  # stem = filename without py
-    api.async_add_entities[stem](entities)
 
 
 class NumberEntity(WiffiEntity):
@@ -64,9 +64,9 @@ class NumberEntity(WiffiEntity):
     def __init__(self, device, metric):
         """Initialize the entity."""
         super().__init__(device, metric)
-        self._device_class = determine_device_class(metric)
-        self._unit_of_measurement = convert_unit_of_measurement(
-            metric.unit_of_measurement
+        self._device_class = UOM_TO_DEVICE_CLASS_MAP.get(metric.unit_of_measurement)
+        self._unit_of_measurement = UOM_MAP.get(
+            metric.unit_of_measurement, metric.unit_of_measurement
         )
         self._value = metric.value
         self.reset_expiration_date()
@@ -92,11 +92,11 @@ class NumberEntity(WiffiEntity):
         Called if a new message has been received from the wiffi device.
         """
         self.reset_expiration_date()
-        self._unit_of_measurement = convert_unit_of_measurement(
-            metric.unit_of_measurement
+        self._unit_of_measurement = UOM_MAP.get(
+            metric.unit_of_measurement, metric.unit_of_measurement
         )
         self._value = metric.value
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
 
 class StringEntity(WiffiEntity):
@@ -120,28 +120,4 @@ class StringEntity(WiffiEntity):
         """
         self.reset_expiration_date()
         self._value = metric.value
-        self.async_schedule_update_ha_state()
-
-
-def convert_unit_of_measurement(oum):
-    """Convert german wiffi texts to common HA texts."""
-    return UOM_MAP[oum] if oum in UOM_MAP else oum
-
-
-def determine_device_class(metric):
-    """Try to find best matching device class.
-
-    Currently only units of measurements are used for the detection and
-    therefore a dict with the uom as key could be used also. However, other
-    the detection may be improved in the future using other fields as well,
-    therefore a simple if/elsif chain is used here.
-    """
-    if metric.unit_of_measurement == WIFFI_UOM_TEMP_CELSIUS:
-        return DEVICE_CLASS_TEMPERATURE
-    if metric.unit_of_measurement == WIFFI_UOM_PERCENT:
-        return DEVICE_CLASS_HUMIDITY
-    if metric.unit_of_measurement == WIFFI_UOM_MILLI_BAR:
-        return DEVICE_CLASS_PRESSURE
-    if metric.unit_of_measurement == WIFFI_UOM_LUX:
-        return DEVICE_CLASS_ILLUMINANCE
-    return None
+        self.async_write_ha_state()

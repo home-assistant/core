@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Set up wiffi from a config entry, config_entry contains data from config entry database."""
     # create api object
     api = WiffiIntegrationApi(hass)
-    api.setup(config_entry)
+    api.async_setup(config_entry)
 
     # store api object
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = api
@@ -82,7 +82,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     return unload_ok
 
 
-def generateUniqueId(device, metric):
+def generate_unique_id(device, metric):
     """Generate a unique string for the entity."""
     return f"{device.mac_address.replace(':', '')}-{metric.name}"
 
@@ -95,10 +95,9 @@ class WiffiIntegrationApi:
         self._hass = hass
         self._server = None
         self._known_devices = {}
-        self._async_add_entities = {}
         self._periodic_callback = None
 
-    def setup(self, config_entry):
+    def async_setup(self, config_entry):
         """Set up api instance."""
         self._server = WiffiTcpServer(config_entry.data[CONF_PORT], self)
         self._periodic_callback = async_track_time_interval(
@@ -123,13 +122,11 @@ class WiffiIntegrationApi:
         for metric in metrics:
             if metric.id not in self._known_devices[device.mac_address]:
                 self._known_devices[device.mac_address].add(metric.id)
-                async_dispatcher_send(
-                    self._hass, CREATE_ENTITY_SIGNAL, self, device, metric
-                )
+                async_dispatcher_send(self._hass, CREATE_ENTITY_SIGNAL, device, metric)
             else:
                 async_dispatcher_send(
                     self._hass,
-                    UPDATE_ENTITY_SIGNAL + generateUniqueId(device, metric),
+                    UPDATE_ENTITY_SIGNAL + generate_unique_id(device, metric),
                     device,
                     metric,
                 )
@@ -138,11 +135,6 @@ class WiffiIntegrationApi:
     def server(self):
         """Return TCP server instance for start + close."""
         return self._server
-
-    @property
-    def async_add_entities(self):
-        """Return dict with add_entities functions for every platform."""
-        return self._async_add_entities
 
     @callback
     def _periodic_tick(self, now=None):
@@ -155,7 +147,7 @@ class WiffiEntity(Entity):
 
     def __init__(self, device, metric):
         """Initialize the base elements of a wiffi entity."""
-        self._id = generateUniqueId(device, metric)
+        self._id = generate_unique_id(device, metric)
         self._device_info = {
             "connections": {
                 (device_registry.CONNECTION_NETWORK_MAC, device.mac_address)
