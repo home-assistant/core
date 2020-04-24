@@ -86,6 +86,7 @@ async def coordinator(hass, zigpy_device_mock, zha_device_joined):
         },
         ieee="00:15:8d:00:02:32:4f:32",
         nwk=0x0000,
+        node_descriptor=b"\xf8\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff",
     )
     zha_device = await zha_device_joined(zigpy_device)
     zha_device.set_available(True)
@@ -475,6 +476,8 @@ async def test_zha_group_light_entity(
     device_light_2._zha_gateway = zha_gateway
     member_ieee_addresses = [device_light_1.ieee, device_light_2.ieee]
     members = [GroupMember(device_light_1.ieee, 1), GroupMember(device_light_2.ieee, 1)]
+
+    assert coordinator.is_coordinator
 
     # test creating a group with 2 members
     zha_group = await zha_gateway.async_create_zigpy_group("Test Group", members)
