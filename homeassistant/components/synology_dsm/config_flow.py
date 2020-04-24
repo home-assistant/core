@@ -120,11 +120,14 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors[CONF_OTP_CODE] = "otp_failed"
             user_input[CONF_OTP_CODE] = None
             return await self.async_step_2sa(user_input, errors)
-        except SynologyDSMLoginInvalidException:
+        except SynologyDSMLoginInvalidException as ex:
+            _LOGGER.error(ex)
             errors[CONF_USERNAME] = "login"
-        except SynologyDSMRequestException:
+        except SynologyDSMRequestException as ex:
+            _LOGGER.error(ex)
             errors[CONF_HOST] = "connection"
-        except SynologyDSMException:
+        except SynologyDSMException as ex:
+            _LOGGER.error(ex)
             errors["base"] = "unknown"
         except InvalidData:
             errors["base"] = "missing_data"
