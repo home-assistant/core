@@ -79,7 +79,8 @@ class StookalertBinarySensor(BinarySensorEntity):
     def device_class(self):
         """Return the device class of this binary sensor."""
         return DEFAULT_DEVICE_CLASS
-    
+
     def update(self):
         """Update the data from the Stookalert handler."""
         self._api_handler.get_alerts()
+    
