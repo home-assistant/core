@@ -262,6 +262,8 @@ async def test_query_message(hass):
         },
     }
 
+    await hass.async_block_till_done()
+
     assert len(events) == 4
     assert events[0].event_type == EVENT_QUERY_RECEIVED
     assert events[0].data == {
@@ -811,7 +813,7 @@ async def test_trait_execute_adding_query_data(hass):
 
     with patch(
         "homeassistant.components.camera.async_request_stream",
-        return_value=mock_coro("/api/streams/bla"),
+        return_value="/api/streams/bla",
     ):
         result = await sh.async_handle_message(
             hass,
