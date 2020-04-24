@@ -1,6 +1,5 @@
 """Test Google Smart Home."""
-from unittest.mock import Mock, patch
-
+from asynctest import Mock, patch
 import pytest
 
 from homeassistant.components import camera
@@ -31,7 +30,6 @@ from . import BASIC_CONFIG, MockConfig
 
 from tests.common import (
     mock_area_registry,
-    mock_coro,
     mock_device_registry,
     mock_registry,
 )
@@ -790,9 +788,7 @@ async def test_query_disconnect(hass):
     config = MockConfig(hass=hass)
     config.async_enable_report_state()
     assert config._unsub_report_state is not None
-    with patch.object(
-        config, "async_disconnect_agent_user", side_effect=mock_coro
-    ) as mock_disconnect:
+    with patch.object(config, "async_disconnect_agent_user") as mock_disconnect:
         result = await sh.async_handle_message(
             hass,
             config,

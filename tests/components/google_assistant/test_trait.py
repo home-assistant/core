@@ -46,7 +46,7 @@ from homeassistant.util import color
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.common import async_mock_service, mock_coro
+from tests.common import async_mock_service
 
 _LOGGER = logging.getLogger(__name__)
 
