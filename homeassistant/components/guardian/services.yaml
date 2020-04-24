@@ -8,7 +8,7 @@ reboot:
 reset_valve_diagnostics:
   description: Fully (and irrecoverably) reset all valve diagnostics.
 upgrade_firmware:
-  description: If message should have the retain flag set.
+  description: Upgrade the device firmware.
   fields:
     url:
       description: (optional) The URL of the server hosting the firmware file.
