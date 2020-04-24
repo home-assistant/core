@@ -35,24 +35,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         platform = device[CONF_BINARY_SENSORS]
         invert_logic = platform[CONF_INVERT_LOGIC]
         ports = platform[CONF_PORTS]
-        for port_id, port_name in ports.items():
-            try:
-                binary_sensors.append(
-                    NumatoGPIOBinarySensor(
-                        port_name,
-                        device_id,
-                        port_id,
-                        invert_logic,
-                        hass.data[DOMAIN][DATA_API],
-                    )
-                )
-            except NumatoGpioError as ex:
-                _LOGGER.error(
-                    "Numato USB device %s port %s failed: %s",
+        for port, port_name in ports.items():
+            binary_sensors.append(
+                NumatoGPIOBinarySensor(
+                    port_name,
                     device_id,
-                    port_id,
-                    str(ex),
+                    port,
+                    invert_logic,
+                    hass.data[DOMAIN][DATA_API],
                 )
+            )
     add_entities(binary_sensors, True)
 
 
@@ -60,7 +52,7 @@ class NumatoGPIOBinarySensor(BinarySensorDevice):
     """Represents a binary sensor (input) port of a Numato GPIO expander."""
 
     def __init__(self, name, device_id, port, invert_logic, api):
-        """Initialize the Numato GPIO based binary sensor."""
+        """Initialize the Numato GPIO based binary sensor object."""
         # pylint: disable=no-member
         self._name = name or DEVICE_DEFAULT_NAME
         self._device_id = device_id
@@ -68,13 +60,28 @@ class NumatoGPIOBinarySensor(BinarySensorDevice):
         self._invert_logic = invert_logic
         self._state = None
         self._api = api
-        self._api.setup_input(self._device_id, self._port)
 
-        def read_gpio(port, level):
-            self._state = level
-            self.schedule_update_ha_state()
+    async def async_added_to_hass(self):
+        """Configure the device port as a binary sensor with edge detection."""
+        try:
+            await self.hass.async_add_executor_job(
+                self._api.setup_input, self._device_id, self._port
+            )
 
-        self._api.edge_detect(self._device_id, self._port, read_gpio)
+            def read_gpio(port, level):
+                self._state = level
+                self.schedule_update_ha_state()
+
+            await self.hass.async_add_executor_job(
+                self._api.edge_detect, self._device_id, self._port, read_gpio
+            )
+        except NumatoGpioError as err:
+            _LOGGER.error(
+                "Numato USB device %s port %s failed: %s",
+                self._device_id,
+                self._port,
+                str(err),
+            )
 
     @property
     def should_poll(self):

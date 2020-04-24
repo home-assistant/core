@@ -35,28 +35,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         platform = device[CONF_SWITCHES]
         invert_logic = platform[CONF_INVERT_LOGIC]
         ports = platform[CONF_PORTS]
-        for port_id, port_name in ports.items():
-            try:
-                switches.append(
-                    NumatoGPIOSwitch(
-                        port_name,
-                        device_id,
-                        port_id,
-                        invert_logic,
-                        hass.data[DOMAIN][DATA_API],
-                    )
-                )
-            except NumatoGpioError as ex:
-                _LOGGER.error(
-                    "Numato USB device %s port %s failed %s",
+        for port, port_name in ports.items():
+            switches.append(
+                NumatoGpioSwitch(
+                    port_name,
                     device_id,
-                    port_id,
-                    str(ex),
+                    port,
+                    invert_logic,
+                    hass.data[DOMAIN][DATA_API],
                 )
+            )
     add_devices(switches, True)
 
 
-class NumatoGPIOSwitch(ToggleEntity):
+class NumatoGpioSwitch(ToggleEntity):
     """Representation of a Numato USB GPIO switch port."""
 
     def __init__(self, name, device_id, port, invert_logic, api):
@@ -67,10 +59,26 @@ class NumatoGPIOSwitch(ToggleEntity):
         self._invert_logic = invert_logic
         self._state = False
         self._api = api
-        self._api.setup_output(self._device_id, self._port)
-        self._api.write_output(
-            self._device_id, self._port, 1 if self._invert_logic else 0
-        )
+
+    async def async_added_to_hass(self):
+        """Configure the device port as a switch."""
+        try:
+            await self.hass.async_add_executor_job(
+                self._api.setup_output, self._device_id, self._port
+            )
+            await self.hass.async_add_executor_job(
+                self._api.write_output,
+                self._device_id,
+                self._port,
+                1 if self._invert_logic else 0,
+            )
+        except NumatoGpioError as ex:
+            _LOGGER.error(
+                "Numato USB device %s port %s failed %s",
+                self._device_id,
+                self._port,
+                str(ex),
+            )
 
     @property
     def name(self):

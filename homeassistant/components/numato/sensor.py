@@ -35,26 +35,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for device in [d for d in devices if CONF_SENSORS in d]:
         device_id = device[CONF_ID]
         ports = device[CONF_SENSORS][CONF_PORTS]
-        for port_id, adc_def in ports.items():
-            try:
-                sensors.append(
-                    NumatoGpioAdc(
-                        adc_def[CONF_NAME],
-                        device_id,
-                        port_id,
-                        adc_def[CONF_SRC_RANGE],
-                        adc_def[CONF_DST_RANGE],
-                        adc_def[CONF_DST_UNIT],
-                        hass.data[DOMAIN][DATA_API],
-                    )
-                )
-            except NumatoGpioError as err:
-                _LOGGER.error(
-                    "Failed to initialize Numato device %s port %s: %s",
+        for port, adc_def in ports.items():
+            sensors.append(
+                NumatoGpioAdc(
+                    adc_def[CONF_NAME],
                     device_id,
-                    port_id,
-                    str(err),
+                    port,
+                    adc_def[CONF_SRC_RANGE],
+                    adc_def[CONF_DST_RANGE],
+                    adc_def[CONF_DST_UNIT],
+                    hass.data[DOMAIN][DATA_API],
                 )
+            )
     add_devices(sensors, True)
 
 
@@ -71,7 +63,20 @@ class NumatoGpioAdc(Entity):
         self._state = None
         self._unit_of_measurement = dst_unit
         self._api = api
-        self._api.setup_input(self._device_id, self._port)
+
+    async def async_added_to_hass(self):
+        """Configure the device port as a sensor."""
+        try:
+            await self.hass.async_add_executor_job(
+                self._api.setup_input, self._device_id, self._port
+            )
+        except NumatoGpioError as err:
+            _LOGGER.error(
+                "Failed to initialize Numato device %s port %s: %s",
+                self._device_id,
+                self._port,
+                str(err),
+            )
 
     @property
     def name(self):
@@ -97,16 +102,8 @@ class NumatoGpioAdc(Entity):
         """Get the latest data and updates the state."""
         try:
             adc_val = self._api.read_adc_input(self._device_id, self._port)
-            # clamp to source range
-            adc_val = max(adc_val, self._src_range[0])
-            adc_val = min(adc_val, self._src_range[1])
-            # linear scale to dest range
-            src_len = self._src_range[1] - self._src_range[0]
-            adc_val_rel = adc_val - self._src_range[0]
-            ratio = float(adc_val_rel) / float(src_len)
-            dst_len = self._dst_range[1] - self._dst_range[0]
-            dest_val = self._dst_range[0] + ratio * dst_len
-            self._state = dest_val
+            adc_val = self._clamp_to_source_range(adc_val)
+            self._state = self._linear_scale_to_dest_range(adc_val)
         except NumatoGpioError as err:
             self._state = None
             _LOGGER.error(
@@ -115,3 +112,18 @@ class NumatoGpioAdc(Entity):
                 self._port,
                 str(err),
             )
+
+    def _clamp_to_source_range(self, val):
+        # clamp to source range
+        val = max(val, self._src_range[0])
+        val = min(val, self._src_range[1])
+        return val
+
+    def _linear_scale_to_dest_range(self, val):
+        # linear scale to dest range
+        src_len = self._src_range[1] - self._src_range[0]
+        adc_val_rel = val - self._src_range[0]
+        ratio = float(adc_val_rel) / float(src_len)
+        dst_len = self._dst_range[1] - self._dst_range[0]
+        dest_val = self._dst_range[0] + ratio * dst_len
+        return dest_val
