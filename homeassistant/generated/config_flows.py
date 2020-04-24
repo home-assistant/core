@@ -91,6 +91,7 @@ FLOWS = [
     "nws",
     "opentherm_gw",
     "openuv",
+    "openweathermap",
     "owntracks",
     "panasonic_viera",
     "plaato",
