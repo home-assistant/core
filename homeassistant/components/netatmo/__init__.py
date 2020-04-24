@@ -34,6 +34,7 @@ from .const import (
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
+from .data_handler import NetatmoDataHandler
 from .webhook import handle_webhook
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,6 +101,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         AUTH: api.ConfigEntryNetatmoAuth(hass, entry, implementation)
     }
 
+    data_handler = NetatmoDataHandler(hass, entry)
+    await data_handler.async_setup()
+
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
@@ -110,17 +114,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
     async def register_webhook(event):
-        # Wait for the cloud integration to be ready
-        await asyncio.sleep(WAIT_FOR_CLOUD)
-
         if CONF_WEBHOOK_ID not in entry.data:
             data = {**entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
             hass.config_entries.async_update_entry(entry, data=data)
 
         if hass.components.cloud.async_active_subscription():
-            # Wait for cloud connection to be established
-            await asyncio.sleep(WAIT_FOR_CLOUD)
-
             if CONF_CLOUDHOOK_URL not in entry.data:
                 webhook_url = await hass.components.cloud.async_create_cloudhook(
                     entry.data[CONF_WEBHOOK_ID]
@@ -134,12 +132,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 entry.data[CONF_WEBHOOK_ID]
             )
 
-        try:
-            await hass.async_add_executor_job(
-                hass.data[DOMAIN][entry.entry_id][AUTH].addwebhook, webhook_url
+        if entry.data["auth_implementation"] == "cloud":
+            if not webhook_url.startswith("https://"):
+                _LOGGER.warning(
+                    "Webhook not registered - "
+                    "https and port 443 is required to register the webhook"
+                )
+                return
+        elif hass.http.server_port not in [80, 443]:
+            _LOGGER.warning(
+                "Webhook not registered - "
+                "port 80 or 443 is required to register the webhook"
             )
+            return
+
+        try:
             webhook_register(
                 hass, DOMAIN, "Netatmo", entry.data[CONF_WEBHOOK_ID], handle_webhook
+            )
+            await hass.async_add_executor_job(
+                hass.data[DOMAIN][entry.entry_id][AUTH].addwebhook, webhook_url
             )
             _LOGGER.info("Register Netatmo webhook: %s", webhook_url)
         except pyatmo.ApiError as err:
@@ -175,7 +187,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Cleanup when entry is removed."""
-    if CONF_WEBHOOK_ID in entry.data:
+    if (
+        CONF_WEBHOOK_ID in entry.data
+        and hass.components.cloud.async_active_subscription()
+    ):
         try:
             _LOGGER.debug(
                 "Removing Netatmo cloudhook (%s)", entry.data[CONF_WEBHOOK_ID]
