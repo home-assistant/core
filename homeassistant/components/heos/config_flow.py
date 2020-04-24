@@ -86,6 +86,8 @@ async def _async_get_player_id(ip_address):
     try:
         await heos.connect()
         players = await heos.get_players()
+    except HeosError:
+        return None
     finally:
         await heos.disconnect()
 
