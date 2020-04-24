@@ -126,7 +126,7 @@ arcam-fmj==0.4.3
 async-upnp-client==0.14.13
 
 # homeassistant.components.stream
-av==6.1.2
+av==7.0.1
 
 # homeassistant.components.axis
 axis==25
