@@ -75,9 +75,10 @@ class TibberSensor(Entity):
         return self._state
 
     @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self.device_id
+    def device_id(self):
+        """Return the ID of the physical device this sensor is part of."""
+        home = self._tibber_home.info["viewer"]["home"]
+        return home["meteringPointData"]["consumptionEan"]
 
     @property
     def device_info(self):
@@ -148,10 +149,9 @@ class TibberSensorElPrice(TibberSensor):
         return self._tibber_home.price_unit
 
     @property
-    def device_id(self):
-        """Return the ID of the physical device this sensor is part of."""
-        home = self._tibber_home.info["viewer"]["home"]
-        return home["meteringPointData"]["consumptionEan"]
+    def unique_id(self):
+        """Return a unique ID."""
+        return self.device_id
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def _fetch_data(self):
@@ -228,8 +228,6 @@ class TibberSensorRT(TibberSensor):
         return POWER_WATT
 
     @property
-    def device_id(self):
-        """Return the ID of the physical device this sensor is part of."""
-        home = self._tibber_home.info["viewer"]["home"]
-        _id = home["meteringPointData"]["consumptionEan"]
-        return f"{_id}_rt_consumption"
+    def unique_id(self):
+        """Return a unique ID."""
+        return f"{self.device_id}_rt_consumption"
