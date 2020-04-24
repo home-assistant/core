@@ -924,6 +924,17 @@ OR_CONDITION_SCHEMA = vol.Schema(
     }
 )
 
+NOT_CONDITION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CONDITION): "not",
+        vol.Required("conditions"): vol.All(
+            ensure_list,
+            # pylint: disable=unnecessary-lambda
+            [lambda value: CONDITION_SCHEMA(value)],
+        ),
+    }
+)
+
 DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "device",
@@ -945,6 +956,7 @@ CONDITION_SCHEMA: vol.Schema = key_value_schemas(
         "zone": ZONE_CONDITION_SCHEMA,
         "and": AND_CONDITION_SCHEMA,
         "or": OR_CONDITION_SCHEMA,
+        "not": NOT_CONDITION_SCHEMA,
         "device": DEVICE_CONDITION_SCHEMA,
     },
 )
