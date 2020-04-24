@@ -83,3 +83,4 @@ class StookalertBinarySensor(BinarySensorEntity):
     def update(self):
         """Update the data from the Stookalert handler."""
         self._api_handler.get_alerts()
+
