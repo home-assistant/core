@@ -207,35 +207,36 @@ class PlexServer:
             )
             return
 
-        for device in devices:
+        def process_device(source, device):
             self._known_idle.discard(device.machineIdentifier)
-            available_clients[device.machineIdentifier] = {"device": device}
+            available_clients.setdefault(device.machineIdentifier, {"device": device})
 
             if device.machineIdentifier not in self._known_clients:
                 new_clients.add(device.machineIdentifier)
-                _LOGGER.debug("New device: %s", device.machineIdentifier)
+                _LOGGER.debug(
+                    "New %s %s: %s", device.product, source, device.machineIdentifier
+                )
+
+        for device in devices:
+            process_device("device", device)
 
         for session in sessions:
             if session.TYPE == "photo":
                 _LOGGER.debug("Photo session detected, skipping: %s", session)
                 continue
+
             session_username = session.usernames[0]
             for player in session.players:
                 if session_username and session_username not in monitored_users:
                     ignored_clients.add(player.machineIdentifier)
                     _LOGGER.debug(
-                        "Ignoring Plex client owned by '%s'", session_username
+                        "Ignoring %s client owned by '%s'",
+                        player.product,
+                        session_username,
                     )
                     continue
-                self._known_idle.discard(player.machineIdentifier)
-                available_clients.setdefault(
-                    player.machineIdentifier, {"device": player}
-                )
+                process_device("session", player)
                 available_clients[player.machineIdentifier]["session"] = session
-
-                if player.machineIdentifier not in self._known_clients:
-                    new_clients.add(player.machineIdentifier)
-                    _LOGGER.debug("New session: %s", player.machineIdentifier)
 
         new_entity_configs = []
         for client_id, client_data in available_clients.items():
