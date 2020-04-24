@@ -1,5 +1,5 @@
 """Support for UK Met Office weather service."""
-from datetime import timedelta
+
 import logging
 
 import datapoint as dp
@@ -23,7 +23,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 from .const import (
     ATTR_LAST_UPDATE,
@@ -33,13 +32,11 @@ from .const import (
     ATTRIBUTION,
     CONDITION_CLASSES,
     DEFAULT_NAME,
-    MODE_3HOURLY,
     VISIBILITY_CLASSES,
 )
+from .data import MetOfficeData
 
 _LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=35)
 
 # Sensor types are defined as: name, units, icon
 SENSOR_TYPES = {
@@ -84,6 +81,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Met Office sensor platform."""
+    _LOGGER.debug("Setting up platform from config: %s", config)
+
     latitude = config.get(CONF_LATITUDE)
     longitude = config.get(CONF_LONGITUDE)
     name = config.get(CONF_NAME)
@@ -104,11 +103,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         @callback
         def track_core_config_changes(event):
             _LOGGER.debug(
-                f"Informed of change in core configuration: {event.event_type} / {event.data} / {event.origin} / {event.time_fired} / {event.context}"
+                "Informed of change in core configuration: %s",
+                (
+                    event.event_type,
+                    event.data,
+                    event.origin,
+                    event.time_fired,
+                    event.context,
+                ),
             )
 
             if data is not None:
-                _LOGGER.debug("Updating sensor MetOfficeCurrentData with new site")
+                _LOGGER.debug("Updating sensor MetOfficeData with new site")
 
                 try:
                     data.site = datapoint.get_nearest_site(
@@ -122,13 +128,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hass.bus.listen("core_config_updated", track_core_config_changes)
 
     else:
-        _LOGGER.debug("Specific location set, tracking changes")
-
-        @callback
-        def track_config_entry_changes(event):
-            _LOGGER.debug("Informed of change in config entry")
-
-        # TODO: listen to config changes for this platform entry
+        _LOGGER.debug("Specific location set, cannot track config changes")
 
     try:
         site = datapoint.get_nearest_site(latitude=latitude, longitude=longitude)
@@ -140,7 +140,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Unable to get nearest Met Office forecast site")
         return
 
-    data = MetOfficeCurrentData(hass, datapoint, site)
+    data = MetOfficeData(hass, datapoint, site)
     try:
         data.update()
     except (ValueError, dp.exceptions.APIException) as err:
@@ -216,51 +216,3 @@ class MetOfficeCurrentSensor(Entity):
     def update(self):
         """Update current conditions."""
         self.data.update()
-
-
-class MetOfficeCurrentData:
-    """Get data from Datapoint."""
-
-    def __init__(self, hass, datapoint, site, mode=MODE_3HOURLY):
-        """Initialize the data object."""
-        self._datapoint = datapoint
-        self._site = site
-        self._mode = mode
-        self.now = None
-        self.all = None
-
-    @property
-    def site(self):
-        """Return the stored DataPoint Site."""
-        return self._site
-
-    @site.setter
-    def site(self, new_site):
-        """Update the store DataPoint Site."""
-        if self._site.id != new_site.id:
-            self._site = new_site
-            self.update()
-
-    @property
-    def mode(self):
-        """Return the data retrieval mode."""
-        return self._mode
-
-    @mode.setter
-    def mode(self, new_mode):
-        """Update the data retrieval mode."""
-        if self._mode != new_mode:
-            self._mode = new_mode
-            self.update()
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest data from DataPoint."""
-        try:
-            forecast = self._datapoint.get_forecast_for_site(self.site.id, self.mode)
-            self.now = forecast.now()
-            self.all = forecast.days[0] if self._mode == MODE_3HOURLY else forecast.days
-        except (ValueError, dp.exceptions.APIException) as err:
-            _LOGGER.error("Check Met Office %s", err.args)
-            self.now = None
-            self.all = None

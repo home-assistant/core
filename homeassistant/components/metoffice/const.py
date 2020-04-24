@@ -1,4 +1,5 @@
 """String constants for Met Office weather service integration."""
+
 ATTR_ATTRIBUTION = "attribution"
 ATTR_LAST_UPDATE = "last_update"
 ATTR_SENSOR_ID = "sensor_id"

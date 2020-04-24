@@ -1,4 +1,5 @@
 """Support for UK Met Office weather service."""
+
 import logging
 
 import datapoint as dp
@@ -33,7 +34,7 @@ from .const import (
     MODE_DAILY,
     VISIBILITY_CLASSES,
 )
-from .sensor import MetOfficeCurrentData
+from .data import MetOfficeData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,6 +57,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Met Office weather platform."""
+    _LOGGER.debug("Setting up platform from config: %s", config)
+
     latitude = config.get(CONF_LATITUDE)
     longitude = config.get(CONF_LONGITUDE)
     name = config.get(CONF_NAME)
@@ -77,11 +80,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         @callback
         def track_core_config_changes(event):
             _LOGGER.debug(
-                f"Informed of change in core configuration: {event.event_type} / {event.data} / {event.origin} / {event.time_fired} / {event.context}"
+                "Informed of change in core configuration: %s",
+                (
+                    event.event_type,
+                    event.data,
+                    event.origin,
+                    event.time_fired,
+                    event.context,
+                ),
             )
 
             if data is not None:
-                _LOGGER.debug("Updating weather MetOfficeCurrentData with new site")
+                _LOGGER.debug("Updating weather MetOfficeData with new site")
 
                 try:
                     data.site = datapoint.get_nearest_site(
@@ -95,13 +105,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hass.bus.listen("core_config_updated", track_core_config_changes)
 
     else:
-        _LOGGER.debug("Specific location set, tracking changes")
-
-        @callback
-        def track_config_entry_changes(event):
-            _LOGGER.debug("Informed of change in config entry")
-
-        # TODO: listen to config changes for this platform entry
+        _LOGGER.debug("Specific location set, cannot track config changes")
 
     try:
         site = datapoint.get_nearest_site(latitude=latitude, longitude=longitude)
@@ -113,7 +117,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Unable to get nearest Met Office forecast site")
         return
 
-    data = MetOfficeCurrentData(hass, datapoint, site, mode)
+    data = MetOfficeData(hass, datapoint, site, mode)
     try:
         data.update()
     except (ValueError, dp.exceptions.APIException) as err:
@@ -199,59 +203,31 @@ class MetOfficeWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        data = None
-        if self.data.mode == MODE_3HOURLY:
-            data = [
-                {
-                    ATTR_FORECAST_CONDITION: [
-                        k
-                        for k, v in CONDITION_CLASSES.items()
-                        if timestep.weather.value in v
-                    ][0]
-                    if timestep.weather
-                    else None,
-                    ATTR_FORECAST_PRECIPITATION: timestep.precipitation.value
-                    if timestep.precipitation
-                    else None,
-                    ATTR_FORECAST_TEMP: timestep.temperature.value
-                    if timestep.temperature
-                    else None,
-                    ATTR_FORECAST_TIME: timestep.date,
-                    ATTR_FORECAST_WIND_BEARING: timestep.wind_direction.value
-                    if timestep.wind_direction
-                    else None,
-                    ATTR_FORECAST_WIND_SPEED: timestep.wind_speed.value
-                    if timestep.wind_speed
-                    else None,
-                }
-                for timestep in self.data.all.timesteps
-            ]
-        else:
-            data = [
-                {
-                    ATTR_FORECAST_CONDITION: [
-                        k
-                        for k, v in CONDITION_CLASSES.items()
-                        if timestep.weather.value in v
-                    ][0]
-                    if timestep.weather
-                    else None,
-                    ATTR_FORECAST_PRECIPITATION: timestep.precipitation.value
-                    if timestep.precipitation
-                    else None,
-                    ATTR_FORECAST_TEMP: timestep.temperature.value
-                    if timestep.temperature
-                    else None,
-                    ATTR_FORECAST_TIME: timestep.date,
-                    ATTR_FORECAST_WIND_BEARING: timestep.wind_direction.value
-                    if timestep.wind_direction
-                    else None,
-                    ATTR_FORECAST_WIND_SPEED: timestep.wind_speed.value
-                    if timestep.wind_speed
-                    else None,
-                }
-                for day in self.data.all
-                for timestep in day.timesteps
-            ]
+        data = [
+            {
+                ATTR_FORECAST_CONDITION: [
+                    k
+                    for k, v in CONDITION_CLASSES.items()
+                    if timestep.weather.value in v
+                ][0]
+                if timestep.weather
+                else None,
+                ATTR_FORECAST_PRECIPITATION: timestep.precipitation.value
+                if timestep.precipitation
+                else None,
+                ATTR_FORECAST_TEMP: timestep.temperature.value
+                if timestep.temperature
+                else None,
+                ATTR_FORECAST_TIME: timestep.date,
+                ATTR_FORECAST_WIND_BEARING: timestep.wind_direction.value
+                if timestep.wind_direction
+                else None,
+                ATTR_FORECAST_WIND_SPEED: timestep.wind_speed.value
+                if timestep.wind_speed
+                else None,
+            }
+            for day in self.data.all
+            for timestep in day.timesteps
+        ]
 
         return data
