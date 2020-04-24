@@ -286,6 +286,8 @@ async def test_fan_speed(hass, hk_driver, cls, events):
     assert acc.char_speed.value != 0
 
     await acc.run_handler()
+    await hass.async_block_till_done()
+
     assert (
         acc.speed_mapping.speed_ranges == HomeKitSpeedMapping(speed_list).speed_ranges
     )
@@ -351,6 +353,8 @@ async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
     # speed to 100 when turning on a fan on a freshly booted up server.
     assert acc.char_speed.value != 0
     await acc.run_handler()
+    await hass.async_block_till_done()
+
     assert (
         acc.speed_mapping.speed_ranges == HomeKitSpeedMapping(speed_list).speed_ranges
     )

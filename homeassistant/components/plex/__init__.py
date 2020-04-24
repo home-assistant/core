@@ -75,7 +75,13 @@ SERVER_CONFIG_SCHEMA = vol.Schema(
     )
 )
 
-CONFIG_SCHEMA = vol.Schema({PLEX_DOMAIN: SERVER_CONFIG_SCHEMA}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    vol.All(
+        cv.deprecated(PLEX_DOMAIN, invalidation_version="0.111"),
+        {PLEX_DOMAIN: SERVER_CONFIG_SCHEMA},
+    ),
+    extra=vol.ALLOW_EXTRA,
+)
 
 _LOGGER = logging.getLogger(__package__)
 

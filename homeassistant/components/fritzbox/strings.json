@@ -3,20 +3,18 @@
     "flow_title": "AVM FRITZ!Box: {name}",
     "step": {
       "user": {
-        "title": "AVM FRITZ!Box",
         "description": "Enter your AVM FRITZ!Box information.",
         "data": {
-            "host": "Host or IP address",
-            "username": "Username",
-            "password": "Password"
+          "host": "Host or IP address",
+          "username": "Username",
+          "password": "Password"
         }
       },
       "confirm": {
-        "title": "AVM FRITZ!Box",
         "description": "Do you want to set up {name}?",
         "data": {
-            "username": "Username",
-            "password": "Password"
+          "username": "Username",
+          "password": "Password"
         }
       }
     },

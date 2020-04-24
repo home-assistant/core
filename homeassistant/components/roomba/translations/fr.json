@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "delay": "D\u00e9lai"
+                }
+            }
+        }
+    }
+}

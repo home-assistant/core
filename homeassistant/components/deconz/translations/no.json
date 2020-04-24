@@ -1,0 +1,114 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Broen er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyt for bro p\u00e5g\u00e5r allerede.",
+            "no_bridges": "Ingen deCONZ broer oppdaget",
+            "not_deconz_bridge": "Ikke en deCONZ bro",
+            "one_instance_only": "Komponenten st\u00f8tter bare \u00e9n deCONZ forekomst",
+            "updated_instance": "Oppdatert deCONZ forekomst med ny vertsadresse"
+        },
+        "error": {
+            "no_key": "Kunne ikke f\u00e5 en API-n\u00f8kkel"
+        },
+        "flow_title": "deCONZ Zigbee gateway ({host})",
+        "step": {
+            "hassio_confirm": {
+                "description": "Vil du konfigurere Home Assistant til \u00e5 koble seg til deCONZ-gateway levert av Hass.io-tillegget {addon} ?",
+                "title": "deCONZ Zigbee gateway via Hass.io tillegg"
+            },
+            "init": {
+                "title": "Definer deCONZ-gatewayen"
+            },
+            "link": {
+                "description": "L\u00e5s opp deCONZ-gatewayen din for \u00e5 registrere deg med Home Assistant. \n\n 1. G\u00e5 til deCONZ-systeminnstillinger -> Gateway -> Avansert \n 2. Trykk p\u00e5 \"L\u00e5s opp gateway\" knappen",
+                "title": "Koble til deCONZ"
+            },
+            "manual_confirm": {
+                "data": {
+                    "host": "Vert",
+                    "port": ""
+                }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Vert",
+                    "port": "Port"
+                },
+                "title": "Konfigurer deCONZ gateway"
+            },
+            "user": {
+                "data": {
+                    "host": "Velg oppdaget deCONZ gateway"
+                },
+                "title": "Velg deCONZ gateway"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "Begge knappene",
+            "bottom_buttons": "Nederste knappene",
+            "button_1": "F\u00f8rste knapp",
+            "button_2": "Andre knapp",
+            "button_3": "Tredje knapp",
+            "button_4": "Fjerde knapp",
+            "close": "Lukk",
+            "dim_down": "Dimm ned",
+            "dim_up": "Dimm opp",
+            "left": "Venstre",
+            "open": "\u00c5pen",
+            "right": "H\u00f8yre",
+            "side_1": "Side 1",
+            "side_2": "Side 2",
+            "side_3": "Side 3",
+            "side_4": "Side 4",
+            "side_5": "Side 5",
+            "side_6": "Side 6",
+            "top_buttons": "\u00d8verste knappene",
+            "turn_off": "Skru av",
+            "turn_on": "Sl\u00e5 p\u00e5"
+        },
+        "trigger_type": {
+            "remote_awakened": "Enheten ble vekket",
+            "remote_button_double_press": "\"{subtype}\"-knappen ble dobbeltklikket",
+            "remote_button_long_press": "\"{subtype}\"-knappen ble kontinuerlig trykket",
+            "remote_button_long_release": "\"{subtype}\"-knappen sluppet etter langt trykk",
+            "remote_button_quadruple_press": "\"{subtype}\"-knappen ble firedoblet klikket",
+            "remote_button_quintuple_press": "\"{subtype}\"-knappen femdobbelt klikket",
+            "remote_button_rotated": "Knappen roterte \"{subtype}\"",
+            "remote_button_rotation_stopped": "Knapperotasjon \"{subtype}\" stoppet",
+            "remote_button_short_press": "\"{subtype}\" -knappen ble trykket",
+            "remote_button_short_release": "\"{subtype}\"-knappen sluppet",
+            "remote_button_triple_press": "\"{subtype}\"-knappen trippel klikket",
+            "remote_double_tap": "Enheten \" {subtype} \" dobbeltklikket",
+            "remote_double_tap_any_side": "Enheten dobbeltklikket p\u00e5 alle sider",
+            "remote_falling": "Enheten er i fritt fall",
+            "remote_flip_180_degrees": "Enheten er snudd 180 grader",
+            "remote_flip_90_degrees": "Enheten er snudd 90 grader",
+            "remote_gyro_activated": "Enhet er ristet",
+            "remote_moved": "Enheten ble flyttet med \"{under type}\" opp",
+            "remote_moved_any_side": "Enheten flyttet med alle sider opp",
+            "remote_rotate_from_side_1": "Enheten rotert fra \"side 1\" til \" {subtype} \"",
+            "remote_rotate_from_side_2": "Enheten rotert fra \"side 2\" til \" {subtype} \"",
+            "remote_rotate_from_side_3": "Enheten rotert fra \"side 3\" til \" {subtype} \"",
+            "remote_rotate_from_side_4": "Enheten rotert fra \"side 4\" til \" {subtype} \"",
+            "remote_rotate_from_side_5": "Enheten rotert fra \"side 5\" til \" {subtype} \"",
+            "remote_rotate_from_side_6": "Enheten rotert fra \"side 6\" til \" {subtype} \"",
+            "remote_turned_clockwise": "Enheten dreide med klokken",
+            "remote_turned_counter_clockwise": "Enheten dreide mot klokken"
+        }
+    },
+    "options": {
+        "step": {
+            "deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "Tillat deCONZ CLIP-sensorer",
+                    "allow_deconz_groups": "Tillat deCONZ lys grupper"
+                },
+                "description": "Konfigurere synlighet av deCONZ enhetstyper",
+                "title": "deCONZ alternativer"
+            }
+        }
+    }
+}

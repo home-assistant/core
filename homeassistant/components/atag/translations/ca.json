@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Nom\u00e9s es pot afegir un sol dispositiu Atag a Home Assistant"
+        },
+        "error": {
+            "connection_error": "No s'ha pogut connectar, torna-ho a provar"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port (10000)"
+                },
+                "title": "Connexi\u00f3 amb el dispositiu"
+            }
+        }
+    },
+    "title": "Atag"
+}
