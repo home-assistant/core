@@ -1,5 +1,6 @@
 """Support for weather service from FMI (Finnish Meteorological Institute) for sensor platform."""
 
+from datetime import datetime
 import logging
 
 from dateutil import tz
@@ -139,8 +140,12 @@ class FMIBestConditionSensor(Entity):
             if self.fmi_object.hourly is None:
                 return
 
+            # If current time is half past or more then use the hour next to next hour
+            # otherwise fallback to the next hour
             if len(self.fmi_object.hourly.forecasts) > 1:
-                source_data = self.fmi_object.hourly.forecasts[1]
+                curr_min = datetime.now().minute
+                if curr_min >= 30:
+                    source_data = self.fmi_object.hourly.forecasts[1]
             else:
                 source_data = self.fmi_object.hourly.forecasts[0]
 
