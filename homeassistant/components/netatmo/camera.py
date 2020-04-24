@@ -44,6 +44,11 @@ SCHEMA_SERVICE_SETLIGHTAUTO = vol.Schema(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo camera platform."""
+    if "access_camera" not in entry.data["token"]["scope"]:
+        _LOGGER.info(
+            "Cameras are currently not supported with this authentication method"
+        )
+        return
 
     def get_entities():
         """Retrieve Netatmo entities."""
