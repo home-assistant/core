@@ -165,7 +165,7 @@ class EDL21Entity(Entity):
         self._electricity_id = electricity_id
         self._obis = obis
         self._name = name
-        self._unique_id = f"{DOMAIN}_{electricity_id}_{obis}"
+        self._unique_id = f"{electricity_id}_{obis}"
         self._telegram = telegram
         self._min_time = MIN_TIME_BETWEEN_UPDATES
         self._last_update = utcnow()
