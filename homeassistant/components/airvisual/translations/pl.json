@@ -11,7 +11,8 @@
                 "data": {
                     "api_key": "Klucz API",
                     "latitude": "Szeroko\u015b\u0107 geograficzna",
-                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna"
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
+                    "type": "Typ integracji"
                 },
                 "description": "Monitoruj jako\u015b\u0107 powietrza w okre\u015blonej lokalizacji geograficznej.",
                 "title": "Konfiguracja AirVisual"

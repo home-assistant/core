@@ -4,14 +4,36 @@
             "already_configured": "Disse koordinatene er allerede registrert."
         },
         "error": {
-            "invalid_api_key": "Ugyldig API-n\u00f8kkel"
+            "general_error": "Det oppstod en ukjent feil.",
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel",
+            "unable_to_connect": "Kan ikke koble til Node / Pro-enheten."
         },
         "step": {
-            "user": {
+            "geography": {
                 "data": {
                     "api_key": "API-n\u00f8kkel",
                     "latitude": "Breddegrad",
                     "longitude": "Lengdegrad"
+                },
+                "description": "Bruk AirVisual cloud API til \u00e5 overv\u00e5ke en geografisk plassering.",
+                "title": "Konfigurer en geografi"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "Enhetens IP-adresse / vertsnavn",
+                    "password": "Passord for enhet"
+                },
+                "description": "Overv\u00e5ke en personlig AirVisual-enhet. Passordet kan hentes fra enhetens brukergrensesnitt.",
+                "title": "Konfigurer en AirVisual Node / Pro"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "cloud_api": "Geografisk plassering",
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad",
+                    "node_pro": "AirVisual Node Pro",
+                    "type": "Integrasjonstype"
                 },
                 "description": "Overv\u00e5k luftkvaliteten p\u00e5 et geografisk sted.",
                 "title": "Konfigurer AirVisual"

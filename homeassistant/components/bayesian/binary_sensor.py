@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -113,7 +113,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class BayesianBinarySensor(BinarySensorDevice):
+class BayesianBinarySensor(BinarySensorEntity):
     """Representation of a Bayesian sensor."""
 
     def __init__(self, name, prior, observations, probability_threshold, device_class):

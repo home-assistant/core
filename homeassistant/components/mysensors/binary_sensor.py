@@ -3,7 +3,7 @@ from homeassistant.components import mysensors
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES,
     DOMAIN,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import STATE_ON
 
@@ -30,7 +30,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class MySensorsBinarySensor(mysensors.device.MySensorsEntity, BinarySensorDevice):
+class MySensorsBinarySensor(mysensors.device.MySensorsEntity, BinarySensorEntity):
     """Representation of a MySensors Binary Sensor child node."""
 
     @property
