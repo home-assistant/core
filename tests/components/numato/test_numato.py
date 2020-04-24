@@ -139,6 +139,22 @@ async def test_failing_hass_operations(hass, numato_fixture, monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_failing_async_added_to_hass(hass, numato_fixture, monkeypatch):
+    """Test condition when a sensor update fails."""
+    monkeypatch.setattr(numato_fixture.NumatoDeviceMock, "setup", mockup_raise)
+    assert await async_setup_component(hass, "numato", NUMATO_CFG)
+    await hass.async_block_till_done()  # wait until services are registered
+
+
+@pytest.mark.asyncio
+async def test_failing_sensor_update(hass, numato_fixture, monkeypatch):
+    """Test condition when a sensor update fails."""
+    monkeypatch.setattr(numato_fixture.NumatoDeviceMock, "adc_read", mockup_raise)
+    assert await async_setup_component(hass, "numato", NUMATO_CFG)
+    await hass.async_block_till_done()  # wait until services are registered
+
+
+@pytest.mark.asyncio
 async def test_hass_numato_api(hass, numato_fixture):
     """Test regular device access."""
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
