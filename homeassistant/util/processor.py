@@ -1,7 +1,7 @@
 """Processor util methods."""
 import asyncio
-from datetime import timedelta
-from typing import Awaitable, Callable, Iterable, List, NamedTuple, TypeVar
+from datetime import datetime, timedelta
+from typing import Awaitable, Callable, Generic, Iterable, List, Optional, TypeVar, cast
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
@@ -9,6 +9,7 @@ from homeassistant.helpers.event import async_track_time_interval
 
 OriginalObjectType = TypeVar("OriginalObjectType")
 NewObjectType = TypeVar("NewObjectType")
+
 ObjectsType = Iterable[OriginalObjectType]
 MapFunctionType = Callable[
     [HomeAssistant, OriginalObjectType], Awaitable[NewObjectType]
@@ -17,12 +18,34 @@ ProcessFunctionType = Callable[[HomeAssistant, NewObjectType], Awaitable]
 CancelFunctionType = Callable[[], None]
 
 
-class MapObjectResult(NamedTuple):
+class MapObjectResult(Generic[OriginalObjectType, NewObjectType]):
     """The result of processing an object in async_add_entities_retry."""
 
-    original_object: OriginalObjectType
-    new_object: NewObjectType
-    success: bool
+    def __init__(
+        self,
+        original_object: OriginalObjectType,
+        new_object: NewObjectType,
+        success: bool,
+    ) -> None:
+        """Initialize the object."""
+        self._original_object = original_object
+        self._new_object = new_object
+        self._success = success
+
+    @property
+    def original_object(self) -> OriginalObjectType:
+        """Return the original object value."""
+        return self._original_object
+
+    @property
+    def new_object(self) -> NewObjectType:
+        """Return the new object value."""
+        return self._new_object
+
+    @property
+    def success(self) -> bool:
+        """Return the success value."""
+        return self._success
 
 
 DEFAULT_RETRY_INTERVAL = timedelta(minutes=5)
@@ -34,11 +57,11 @@ async def async_add_entities_retry(
     hass: HomeAssistant,
     objects: ObjectsType,
     map_function: MapFunctionType,
-    async_add_entities: Callable[[Iterable[Entity]], Awaitable[None]],
+    async_add_entities: Callable[..., Awaitable[None]],
     retry_interval: timedelta = DEFAULT_RETRY_INTERVAL,
     timeout_attempts: int = DEFAULT_TIMEOUT_ATTEMPTS,
     run_in_parallel: bool = DEFAULT_RUN_IN_PARALLEL,
-    update_before_add: bool = None,
+    update_before_add: Optional[bool] = None,
 ) -> CancelFunctionType:
     """Asynchronously create and add entities with retries.
 
@@ -49,6 +72,7 @@ async def async_add_entities_retry(
     :param retry_interval: Time between attempts to map and process objects.
     :param timeout_attempts: Number of attempts before giving up. A value of 0 means it runs forever.
     :param run_in_parallel: When True, objects will be handled in parallel. (Default: True)
+    :param update_before_add: Passed as argument to async_add_entities.
     :return: A function that can be used to cancel future object processing.
     """
 
@@ -88,7 +112,7 @@ async def async_map_retry(
     """
     original_objects = list(objects)
     attempt_count = 0
-    cancel_func1 = None
+    cancel_func1 = cast(Callable, None)
 
     @callback
     def cancel() -> None:
@@ -112,7 +136,7 @@ async def async_map_retry(
             )
 
     @callback
-    async def map_objects(*args) -> None:
+    async def map_objects(now: Optional[datetime] = None) -> None:
         nonlocal original_objects, attempt_count, run_in_parallel
         attempt_count += 1
 
