@@ -30,7 +30,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
-
 from .const import ATTR_SOUND_OUTPUT
 
 CUSTOMIZE_SCHEMA = vol.Schema(
@@ -147,7 +146,7 @@ async def async_setup_tv_finalize(hass, config, conf, client):
         if client.connection is None:
             async_call_later(hass, 60, async_load_platforms)
             _LOGGER.warning(
-                "No connection could be made with host %s, retrying in 60 seconds.",
+                "No connection could be made with host %s, retrying in 60 seconds",
                 conf.get(CONF_HOST),
             )
             return
