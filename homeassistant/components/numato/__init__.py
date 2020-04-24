@@ -1,11 +1,9 @@
 """Support for controlling GPIO pins of a Numato Labs USB GPIO expander."""
-# pylint: disable=import-error
 import logging
 
 import numato_gpio as gpio
 import voluptuous as vol
 
-# pylint: disable=no-member
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_ID,

@@ -16,10 +16,7 @@ from . import CONF_INVERT_LOGIC, CONF_PORTS, DATA_API, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=unused-argument
-
-
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the configured Numato USB GPIO switch ports."""
     if discovery_info is None:
         return
@@ -40,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     hass.data[DOMAIN][DATA_API],
                 )
             )
-    add_devices(switches, True)
+    add_entities(switches, True)
 
 
 class NumatoGpioSwitch(ToggleEntity):

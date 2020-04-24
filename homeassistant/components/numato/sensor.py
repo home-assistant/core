@@ -21,8 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 ICON = "mdi:gauge"
 
 
-# pylint: disable=unused-variable
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the configured Numato USB GPIO ADC sensor ports."""
     if discovery_info is None:
         return
@@ -43,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     hass.data[DOMAIN][DATA_API],
                 )
             )
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class NumatoGpioAdc(Entity):
