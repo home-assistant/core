@@ -176,6 +176,7 @@ async def async_setup_entry(hass, config_entry):
         # Only geography-based entries have options:
         config_entry.add_update_listener(async_update_options)
     else:
+        _standardize_node_pro_config_entry(hass, config_entry)
         airvisual = AirVisualNodeProData(hass, Client(websession), config_entry)
 
     await airvisual.async_update()
