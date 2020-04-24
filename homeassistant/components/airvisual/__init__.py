@@ -206,6 +206,19 @@ async def async_migrate_entry(hass, config_entry):
                     data={CONF_API_KEY: config_entry.data[CONF_API_KEY], **geography},
                 )
             )
+    # 2 -> 3: Explicitly store the integration type in the config entry:
+    if version == 2:
+        version = config_entry.version = 3
+
+        if CONF_API_KEY in config_entry.data:
+            integration_type = INTEGRATION_TYPE_GEOGRAPHY
+        else:
+            integration_type = INTEGRATION_TYPE_NODE_PRO
+
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={**config_entry.data, CONF_INTEGRATION_TYPE: integration_type},
+        )
 
     LOGGER.info("Migration to version %s successful", version)
 
