@@ -1,90 +1,124 @@
-"""Test the Elexa Guardian config flow."""
+"""Define tests for the Elexa Guardian config flow."""
+from aioguardian.errors import GuardianError
 from asynctest import patch
 
-from homeassistant import config_entries, setup
-from homeassistant.components.guardian.config_flow import CannotConnect, InvalidAuth
-from homeassistant.components.guardian.const import DOMAIN
+from homeassistant import data_entry_flow
+from homeassistant.components.guardian import CONF_UID, DOMAIN
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
+
+from tests.common import MockConfigEntry
 
 
-async def test_form(hass):
-    """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+async def test_duplicate_error(hass):
+    """Test that errors are shown when duplicate entries are added."""
+    conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PORT: 7777}
+
+    MockConfigEntry(domain=DOMAIN, unique_id="192.168.1.100", data=conf).add_to_hass(
+        hass
     )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=conf
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_connect_error(hass):
+    """Test that the config entry errors out if the device cannot connect."""
+    conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PORT: 7777}
 
     with patch(
-        "homeassistant.components.guardian.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.guardian.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.guardian.async_setup_entry", return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+        "aioguardian.client.Client.connect", side_effect=GuardianError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=conf
         )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
 
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+
+async def test_step_user(hass, ping_client):
+    """Test the user step."""
+    conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PORT: 7777}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=conf
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "Elexa Guardian (192.168.1.100)"
+    assert result["data"] == {
+        CONF_IP_ADDRESS: "192.168.1.100",
+        CONF_PORT: 7777,
+        CONF_UID: "ABCDEF123456",
     }
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
-    """Test we handle invalid auth."""
+async def test_step_zeroconf(hass, ping_client):
+    """Test the zeroconf step."""
+    zeroconf_data = {
+        "host": "192.168.1.100",
+        "port": 7777,
+        "hostname": "GVC1-ABCD.local.",
+        "type": "_api._udp.local.",
+        "name": "Guardian Valve Controller API._api._udp.local.",
+        "properties": {"_raw": {}},
+    }
+
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=zeroconf_data
     )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "zeroconf_confirm"
 
-    with patch(
-        "homeassistant.components.guardian.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "Elexa Guardian (192.168.1.100)"
+    assert result["data"] == {
+        CONF_IP_ADDRESS: "192.168.1.100",
+        CONF_PORT: 7777,
+        CONF_UID: "ABCDEF123456",
+    }
 
 
-async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
+async def test_step_zeroconf_already_in_progress(hass):
+    """Test the zeroconf step aborting because it's already in progress."""
+    zeroconf_data = {
+        "host": "192.168.1.100",
+        "port": 7777,
+        "hostname": "GVC1-ABCD.local.",
+        "type": "_api._udp.local.",
+        "name": "Guardian Valve Controller API._api._udp.local.",
+        "properties": {"_raw": {}},
+    }
+
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=zeroconf_data
     )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "zeroconf_confirm"
 
-    with patch(
-        "homeassistant.components.guardian.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=zeroconf_data
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_in_progress"
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+
+async def test_step_zeroconf_no_discovery_info(hass):
+    """Test the zeroconf step aborting because no discovery info came along."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "connection_error"

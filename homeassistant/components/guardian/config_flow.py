@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
-from .const import DOMAIN, LOGGER  # pylint:disable=unused-import
+from .const import CONF_UID, DOMAIN, LOGGER  # pylint:disable=unused-import
 
 DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_IP_ADDRESS): str, vol.Required(CONF_PORT, default=7777): int}
@@ -23,7 +23,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     return {
         "title": f"Elexa Guardian ({data[CONF_IP_ADDRESS]})",
-        "uid": ping_data["data"]["uid"],
+        CONF_UID: ping_data["data"]["uid"],
     }
 
 
@@ -58,7 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=info["title"], data={"uid": info["uid"], **user_input}
+            title=info["title"], data={CONF_UID: info["uid"], **user_input}
         )
 
     async def async_step_zeroconf(self, discovery_info=None):
@@ -84,8 +84,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_zeroconf_confirm()
 
-    async def async_step_zeroconf_confirm(self, discovery_info=None):
+    async def async_step_zeroconf_confirm(self, user_input=None):
         """Finish the configuration via zeroconf."""
-        if discovery_info is None:
+        if user_input is None:
             return self.async_show_form(step_id="zeroconf_confirm")
         return await self.async_step_user(self.discovery_info)

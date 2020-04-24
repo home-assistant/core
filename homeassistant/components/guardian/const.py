@@ -5,6 +5,8 @@ DOMAIN = "guardian"
 
 LOGGER = logging.getLogger(__package__)
 
+CONF_UID = "uid"
+
 DATA_CLIENT = "client"
 DATA_DIAGNOSTICS = "diagnostics"
 DATA_PAIR_DUMP = "pair_sensor"

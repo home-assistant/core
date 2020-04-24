@@ -33,6 +33,7 @@ from homeassistant.helpers.service import (
 )
 
 from .const import (
+    CONF_UID,
     DATA_CLIENT,
     DATA_DIAGNOSTICS,
     DATA_PAIR_DUMP,
@@ -187,7 +188,7 @@ class Guardian:
         self._hass = hass
         self.client = Client(entry.data[CONF_IP_ADDRESS])
         self.data = {}
-        self.uid = entry.data["uid"]
+        self.uid = entry.data[CONF_UID]
 
         self._api_coros = {
             DATA_DIAGNOSTICS: self.client.device.diagnostics,
