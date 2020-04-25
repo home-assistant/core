@@ -146,6 +146,7 @@ def hue_client(loop, hass_hue, aiohttp_client):
         {
             emulated_hue.CONF_TYPE: emulated_hue.TYPE_ALEXA,
             emulated_hue.CONF_ENTITIES: {
+                # Bed light is explicitly excluded from being exposed
                 "light.bed_light": {emulated_hue.CONF_ENTITY_HIDDEN: True},
                 # Kitchen light is explicitly excluded from being exposed
                 "light.kitchen_lights": {emulated_hue.CONF_ENTITY_HIDDEN: True},
@@ -155,8 +156,11 @@ def hue_client(loop, hass_hue, aiohttp_client):
                 "script.set_kitchen_light": {emulated_hue.CONF_ENTITY_HIDDEN: False},
                 # Expose cover
                 "cover.living_room_window": {emulated_hue.CONF_ENTITY_HIDDEN: False},
-                # Expose Hvac
-                "climate.hvac": {emulated_hue.CONF_ENTITY_HIDDEN: False},
+                # Expose climate with "cool" as turn_on_mode
+                "climate.hvac": {
+                    emulated_hue.CONF_ENTITY_HIDDEN: False,
+                    emulated_hue.CONF_TURN_ON_MODE: climate.const.HVAC_MODE_COOL,
+                },
                 # Expose HeatPump
                 "climate.heatpump": {emulated_hue.CONF_ENTITY_HIDDEN: False},
             },
@@ -524,8 +528,17 @@ async def test_put_light_state_script(hass, hass_hue, hue_client):
     )
 
 
-async def test_put_light_state_climate_set_temperature(hass_hue, hue_client):
-    """Test setting climate temperature."""
+async def test_put_light_state_climate_set_state_and_temperature(hass_hue, hue_client):
+    """Test setting climate state and temperature."""
+    # Turn the climate entity off first
+    await hass_hue.services.async_call(
+        climate.DOMAIN,
+        const.SERVICE_TURN_OFF,
+        {const.ATTR_ENTITY_ID: "climate.hvac"},
+        blocking=True,
+    )
+
+    # Emulated hue converts brightness to temperature
     brightness = 19
     temperature = round(brightness / 254 * 100)
 
@@ -578,7 +591,7 @@ async def test_put_light_state_media_player(hass_hue, hue_client):
 
 
 async def test_close_cover(hass_hue, hue_client):
-    """Test opening cover ."""
+    """Test opening cover."""
     cover_id = "cover.living_room_window"
     # Turn the office light off first
     await hass_hue.services.async_call(
