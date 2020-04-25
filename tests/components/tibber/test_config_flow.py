@@ -48,11 +48,7 @@ async def test_create_entry(hass):
 
 
 async def test_flow_entry_already_exists(hass):
-    """Test user input for config_entry that already exists.
-
-    Test when the form should show when user puts existing location
-    in the config gui. Then the form should show with error.
-    """
+    """Test user input for config_entry that already exists."""
     first_entry = MockConfigEntry(
         domain="tibber", data={CONF_ACCESS_TOKEN: "valid"}, unique_id="tibber",
     )
