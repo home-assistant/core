@@ -63,7 +63,7 @@ class PanelProxy(HomeAssistantView):
         headers = request.headers.copy()
         headers["Host"] = request.host
         headers["X-Real-Ip"] = request.remote
-        # headers["X-Forwarded-For"] = request.forwarded
+        headers["X-Forwarded-For"] = request.remote
         headers["X-Forwarded-Proto"] = request.scheme
         post_data = await request.read()
         async with aiohttp.request(
