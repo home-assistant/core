@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         await api.server.start_server()
     except OSError as exc:
         if exc.errno != errno.EADDRINUSE:
-            _LOGGER.error(f"start_server failed, errno: {exc.errno}")
+            _LOGGER.error("start_server failed, errno: %d", exc.errno)
             return False
         _LOGGER.error("port %s already in use", config_entry.data[CONF_PORT])
         raise ConfigEntryNotReady from exc
@@ -203,6 +203,11 @@ class WiffiEntity(Entity):
         Will be called by derived classes after a value update has been received.
         """
         self._expiration_date = utcnow() + timedelta(minutes=3)
+
+    @callback
+    def _update_value_callback(self, device, metric):
+        """Update the value of the entity."""
+        pass
 
     @callback
     def _check_expiration_date(self):
