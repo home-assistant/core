@@ -1,13 +1,14 @@
 """Define tests for the Luftdaten config flow."""
 from datetime import timedelta
-from unittest.mock import patch
+
+from asynctest import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.luftdaten import DOMAIN, config_flow
 from homeassistant.components.luftdaten.const import CONF_SENSOR_ID
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_SHOW_ON_MAP
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 
 async def test_duplicate_error(hass):
@@ -29,7 +30,7 @@ async def test_communication_error(hass):
     flow = config_flow.LuftDatenFlowHandler()
     flow.hass = hass
 
-    with patch("luftdaten.Luftdaten.get_data", return_value=mock_coro(None)):
+    with patch("luftdaten.Luftdaten.get_data", return_value=None):
         result = await flow.async_step_user(user_input=conf)
         assert result["errors"] == {CONF_SENSOR_ID: "invalid_sensor"}
 
@@ -41,8 +42,8 @@ async def test_invalid_sensor(hass):
     flow = config_flow.LuftDatenFlowHandler()
     flow.hass = hass
 
-    with patch("luftdaten.Luftdaten.get_data", return_value=mock_coro(False)), patch(
-        "luftdaten.Luftdaten.validate_sensor", return_value=mock_coro(False)
+    with patch("luftdaten.Luftdaten.get_data", return_value=False), patch(
+        "luftdaten.Luftdaten.validate_sensor", return_value=False
     ):
         result = await flow.async_step_user(user_input=conf)
         assert result["errors"] == {CONF_SENSOR_ID: "invalid_sensor"}
@@ -66,8 +67,8 @@ async def test_step_import(hass):
     flow = config_flow.LuftDatenFlowHandler()
     flow.hass = hass
 
-    with patch("luftdaten.Luftdaten.get_data", return_value=mock_coro(True)), patch(
-        "luftdaten.Luftdaten.validate_sensor", return_value=mock_coro(True)
+    with patch("luftdaten.Luftdaten.get_data", return_value=True), patch(
+        "luftdaten.Luftdaten.validate_sensor", return_value=True
     ):
         result = await flow.async_step_import(import_config=conf)
 
@@ -91,8 +92,8 @@ async def test_step_user(hass):
     flow = config_flow.LuftDatenFlowHandler()
     flow.hass = hass
 
-    with patch("luftdaten.Luftdaten.get_data", return_value=mock_coro(True)), patch(
-        "luftdaten.Luftdaten.validate_sensor", return_value=mock_coro(True)
+    with patch("luftdaten.Luftdaten.get_data", return_value=True), patch(
+        "luftdaten.Luftdaten.validate_sensor", return_value=True
     ):
         result = await flow.async_step_user(user_input=conf)
 
