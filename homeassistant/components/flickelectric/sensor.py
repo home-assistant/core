@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utcnow
 
-from .const import ATTR_END_AT, ATTR_START_AT, DOMAIN
+from .const import ATTR_COMPONENTS, ATTR_END_AT, ATTR_START_AT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 _AUTH_URL = "https://api.flick.energy/identity/oauth/token"
@@ -40,7 +40,10 @@ class FlickPricingSensor(Entity):
         """Entity object for Flick Electric sensor."""
         self._api: FlickAPI = api
         self._price: FlickPrice = None
-        self._attributes = None
+        self._attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_FRIENDLY_NAME: FRIENDLY_NAME,
+        }
 
     @property
     def name(self):
@@ -70,13 +73,11 @@ class FlickPricingSensor(Entity):
         with async_timeout.timeout(60):
             self._price = await self._api.getPricing()
 
-        # Update Attributes
-        self._attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_FRIENDLY_NAME: FRIENDLY_NAME,
-        }
-
         self._attributes[ATTR_START_AT] = self._price.start_at
         self._attributes[ATTR_END_AT] = self._price.end_at
         for component in self._price.components:
+            if component.charge_setter not in ATTR_COMPONENTS:
+                _LOGGER.info(f"Found unknown component: {component.charge_setter}")
+                continue
+
             self._attributes[component.charge_setter] = float(component.value)
