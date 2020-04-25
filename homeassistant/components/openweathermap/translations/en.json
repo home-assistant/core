@@ -34,7 +34,6 @@
       }
     },
     "error": {
-      "auth": "API key is not correct.",
       "monitored_conditions": "Monitored Conditions is wrong"
     }
   }

@@ -69,9 +69,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 weather_response.get_pressure().get("press"), PRESSURE_PA
             ),
             ATTR_API_HUMIDITY: weather_response.get_humidity(),
-            ATTR_API_CONDITION: _get_weather_condition(
-                weather_response.get_weather_code()
-            ),
+            ATTR_API_CONDITION: _get_condition(weather_response.get_weather_code()),
             ATTR_API_WIND_BEARING: weather_response.get_wind().get("deg"),
             ATTR_API_WIND_SPEED: weather_response.get_wind().get("speed"),
             ATTR_API_CLOUDS: weather_response.get_clouds(),
@@ -95,5 +93,5 @@ def _get_snow(snow):
         return "not snowing"
 
 
-def _get_weather_condition(weather_code):
+def _get_condition(weather_code):
     return [k for k, v in CONDITION_CLASSES.items() if weather_code in v][0]

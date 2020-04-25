@@ -81,7 +81,7 @@ def _convert_daily_forecast(entry):
         ),
         ATTR_FORECAST_WIND_SPEED: entry.get_wind().get("speed"),
         ATTR_FORECAST_WIND_BEARING: entry.get_wind().get("deg"),
-        ATTR_FORECAST_CONDITION: _get_condition(entry),
+        ATTR_FORECAST_CONDITION: _get_condition(entry.get_weather_code()),
     }
 
 
@@ -89,8 +89,10 @@ def _convert_other_forecast(entry):
     return {
         ATTR_FORECAST_TIME: entry.get_reference_time("unix") * 1000,
         ATTR_FORECAST_TEMP: entry.get_temperature("celsius").get("temp"),
-        ATTR_FORECAST_PRECIPITATION: _calc_precipitation(entry),
-        ATTR_FORECAST_CONDITION: _get_condition(entry),
+        ATTR_FORECAST_PRECIPITATION: _calc_other_precipitation(entry),
+        ATTR_FORECAST_WIND_SPEED: entry.get_wind().get("speed"),
+        ATTR_FORECAST_WIND_BEARING: entry.get_wind().get("deg"),
+        ATTR_FORECAST_CONDITION: _get_condition(entry.get_weather_code()),
     }
 
 
@@ -103,7 +105,7 @@ def _calc_daily_precipitation(rain, snow):
     return round(rain_value + snow_value, 1)
 
 
-def _calc_precipitation(entry):
+def _calc_other_precipitation(entry):
     return (
         round(entry.get_rain().get("3h"), 1)
         if entry.get_rain().get("3h") is not None
@@ -112,5 +114,5 @@ def _calc_precipitation(entry):
     )
 
 
-def _get_condition(entry):
-    return [k for k, v in CONDITION_CLASSES.items() if entry.get_weather_code() in v][0]
+def _get_condition(weather_code):
+    return [k for k, v in CONDITION_CLASSES.items() if weather_code in v][0]
