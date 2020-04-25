@@ -3,10 +3,7 @@
 import logging
 from typing import Dict
 
-import haanna
-import voluptuous as vol
-
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
@@ -66,6 +63,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         _LOGGER.info("Added climate.%s", "{}".format(device["name"]))
 
     async_add_entities(devices, True)
+
 
 class PwThermostat(ClimateEntity):
     """Representation of an Plugwise thermostat."""
