@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\u00c8 consentita solo una singola configurazione di MQTT."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi al broker."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "discovery": "Attiva l'individuazione",
+                    "password": "Password",
+                    "port": "Porta",
+                    "username": "Nome utente"
+                },
+                "description": "Inserisci le informazioni di connessione del tuo broker MQTT.",
+                "title": "MQTT"
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Attiva l'individuazione"
+                },
+                "description": "Vuoi configurare Home Assistant per connettersi al broker MQTT fornito dal componente aggiuntivo di Hass.io: {addon}?",
+                "title": "Broker MQTT tramite il componente aggiuntivo di Hass.io"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Primo pulsante",
+            "button_2": "Secondo pulsante",
+            "button_3": "Terzo pulsante",
+            "button_4": "Quarto pulsante",
+            "button_5": "Quinto pulsante",
+            "button_6": "Sesto pulsante",
+            "turn_off": "Spegni",
+            "turn_on": "Accendi"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" cliccato due volte",
+            "button_long_press": "\"{subtype}\" premuto continuamente",
+            "button_long_release": "\"{subtype}\" rilasciato dopo una lunga pressione",
+            "button_quadruple_press": "\"{subtype}\" cliccato quattro volte",
+            "button_quintuple_press": "\"{subtype}\" cliccato cinque volte",
+            "button_short_press": "\"{subtype}\" premuto",
+            "button_short_release": "\"{subtype}\" rilasciato",
+            "button_triple_press": "\"{subtype}\" cliccato tre volte"
+        }
+    }
+}

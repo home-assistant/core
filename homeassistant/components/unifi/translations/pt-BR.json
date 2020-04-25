@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "O site de controle j\u00e1 est\u00e1 configurado",
+            "user_privilege": "O usu\u00e1rio precisa ser administrador"
+        },
+        "error": {
+            "faulty_credentials": "Credenciais do usu\u00e1rio inv\u00e1lidas",
+            "service_unavailable": "Servi\u00e7o indispon\u00edvel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Senha",
+                    "port": "Porta",
+                    "site": "ID do site",
+                    "username": "Usu\u00e1rio",
+                    "verify_ssl": "Controlador usando certificado apropriado"
+                },
+                "title": "Configurar o Controlador UniFi"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Tempo em segundos desde a \u00faltima vez que foi visto at\u00e9 ser considerado afastado",
+                    "track_clients": "Rastrear clientes da rede",
+                    "track_devices": "Rastrear dispositivos de rede (dispositivos Ubiquiti)",
+                    "track_wired_clients": "Incluir clientes de rede com fio"
+                }
+            },
+            "init": {
+                "data": {
+                    "one": "um",
+                    "other": "uns"
+                }
+            }
+        }
+    }
+}

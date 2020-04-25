@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Airly-integratie voor deze co\u00f6rdinaten is al geconfigureerd."
+        },
+        "error": {
+            "auth": "API-sleutel is niet correct.",
+            "wrong_location": "Geen Airly meetstations in dit gebied."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Airly API-sleutel",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad",
+                    "name": "Naam van de integratie"
+                },
+                "description": "Airly-integratie van luchtkwaliteit instellen. Ga naar https://developer.airly.eu/register om de API-sleutel te genereren",
+                "title": "Airly"
+            }
+        }
+    }
+}

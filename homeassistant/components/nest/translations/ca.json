@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Nom\u00e9s pots configurar un \u00fanic compte Nest.",
+            "authorize_url_fail": "S'ha produ\u00eft un error desconegut al generar l'URL d'autoritzaci\u00f3.",
+            "authorize_url_timeout": "S'ha acabat el temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
+            "no_flows": "Necessites configurar Nest abans de poder autenticar-t'hi. Llegeix les [instruccions](https://www.home-assistant.io/components/nest/)."
+        },
+        "error": {
+            "internal_error": "Error intern al validar el codi",
+            "invalid_code": "Codi inv\u00e0lid",
+            "timeout": "S'ha acabat el temps d'espera durant la validaci\u00f3 del codi.",
+            "unknown": "Error desconegut al validar el codi"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Prove\u00efdor"
+                },
+                "description": "Tria quin prove\u00efdor d'autenticaci\u00f3 vols utilitzar per autenticar-te amb Nest.",
+                "title": "Prove\u00efdor d'autenticaci\u00f3"
+            },
+            "link": {
+                "data": {
+                    "code": "Codi PIN"
+                },
+                "description": "Per enlla\u00e7ar el teu compte de Nest, [autoritza el vostre compte]({url}). \n\nDespr\u00e9s de l'autoritzaci\u00f3, copia i enganxa el codi pin que es mostra a sota.",
+                "title": "Enlla\u00e7 amb el compte de Nest"
+            }
+        }
+    }
+}

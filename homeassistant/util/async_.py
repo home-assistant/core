@@ -1,12 +1,16 @@
 """Asyncio backports for Python 3.6 compatibility."""
-from asyncio import coroutines, ensure_future
+from asyncio import coroutines, ensure_future, get_running_loop
 from asyncio.events import AbstractEventLoop
 import concurrent.futures
+import functools
 import logging
 import threading
-from typing import Any, Callable, Coroutine
+from traceback import extract_stack
+from typing import Any, Callable, Coroutine, TypeVar
 
 _LOGGER = logging.getLogger(__name__)
+
+T = TypeVar("T")  # pylint: disable=invalid-name
 
 
 def fire_coroutine_threadsafe(coro: Coroutine, loop: AbstractEventLoop) -> None:
@@ -31,8 +35,8 @@ def fire_coroutine_threadsafe(coro: Coroutine, loop: AbstractEventLoop) -> None:
 
 
 def run_callback_threadsafe(
-    loop: AbstractEventLoop, callback: Callable, *args: Any
-) -> concurrent.futures.Future:
+    loop: AbstractEventLoop, callback: Callable[..., T], *args: Any
+) -> "concurrent.futures.Future[T]":
     """Submit a callback object to a given event loop.
 
     Return a concurrent.futures.Future to access the result.
@@ -55,3 +59,65 @@ def run_callback_threadsafe(
 
     loop.call_soon_threadsafe(run_callback)
     return future
+
+
+def check_loop() -> None:
+    """Warn if called inside the event loop."""
+    try:
+        get_running_loop()
+        in_loop = True
+    except RuntimeError:
+        in_loop = False
+
+    if not in_loop:
+        return
+
+    found_frame = None
+
+    for frame in reversed(extract_stack()):
+        for path in ("custom_components/", "homeassistant/components/"):
+            try:
+                index = frame.filename.index(path)
+                found_frame = frame
+                break
+            except ValueError:
+                continue
+
+        if found_frame is not None:
+            break
+
+    # Did not source from integration? Hard error.
+    if found_frame is None:
+        raise RuntimeError(
+            "Detected I/O inside the event loop. This is causing stability issues. Please report issue"
+        )
+
+    start = index + len(path)
+    end = found_frame.filename.index("/", start)
+
+    integration = found_frame.filename[start:end]
+
+    if path == "custom_components/":
+        extra = " to the custom component author"
+    else:
+        extra = ""
+
+    _LOGGER.warning(
+        "Detected I/O inside the event loop. This is causing stability issues. Please report issue%s for %s doing I/O at %s, line %s: %s",
+        extra,
+        integration,
+        found_frame.filename[index:],
+        found_frame.lineno,
+        found_frame.line.strip(),
+    )
+
+
+def protect_loop(func: Callable) -> Callable:
+    """Protect function from running in event loop."""
+
+    @functools.wraps(func)
+    def protected_loop_func(*args, **kwargs):  # type: ignore
+        check_loop()
+        return func(*args, **kwargs)
+
+    return protected_loop_func

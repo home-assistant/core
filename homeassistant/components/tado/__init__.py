@@ -217,9 +217,16 @@ class TadoConnector:
 
         self.data[sensor_type][sensor] = data
 
-        _LOGGER.debug("Dispatching update to %s %s: %s", sensor_type, sensor, data)
+        _LOGGER.debug(
+            "Dispatching update to %s %s %s: %s",
+            self.device_id,
+            sensor_type,
+            sensor,
+            data,
+        )
         dispatcher_send(
-            self.hass, SIGNAL_TADO_UPDATE_RECEIVED.format(sensor_type, sensor)
+            self.hass,
+            SIGNAL_TADO_UPDATE_RECEIVED.format(self.device_id, sensor_type, sensor),
         )
 
     def get_capabilities(self, zone_id):

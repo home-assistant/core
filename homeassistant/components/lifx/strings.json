@@ -1,9 +1,7 @@
 {
   "config": {
-    "title": "LIFX",
     "step": {
       "confirm": {
-        "title": "LIFX",
         "description": "Do you want to set up LIFX?"
       }
     },

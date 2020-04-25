@@ -35,7 +35,6 @@ async def test_reproducing_states(hass, caplog):
             # Should not raise
             State("input_select.non_existing", VALID_OPTION1),
         ],
-        blocking=True,
     )
 
     # Test that entity is in desired state
@@ -48,23 +47,20 @@ async def test_reproducing_states(hass, caplog):
             # Should not raise
             State("input_select.non_existing", VALID_OPTION3),
         ],
-        blocking=True,
     )
 
     # Test that we got the desired result
     assert hass.states.get(ENTITY).state == VALID_OPTION3
 
     # Test setting state to invalid state
-    await hass.helpers.state.async_reproduce_state(
-        [State(ENTITY, INVALID_OPTION)], blocking=True
-    )
+    await hass.helpers.state.async_reproduce_state([State(ENTITY, INVALID_OPTION)])
 
     # The entity state should be unchanged
     assert hass.states.get(ENTITY).state == VALID_OPTION3
 
     # Test setting a different option set
     await hass.helpers.state.async_reproduce_state(
-        [State(ENTITY, VALID_OPTION5, {"options": VALID_OPTION_SET2})], blocking=True
+        [State(ENTITY, VALID_OPTION5, {"options": VALID_OPTION_SET2})]
     )
 
     # These should fail if options weren't changed to VALID_OPTION_SET2

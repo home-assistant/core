@@ -1,0 +1,10 @@
+{
+    "state": {
+        "_": {
+            "idle": "T\u00e9tlen",
+            "recording": "Felv\u00e9tel",
+            "streaming": "Streamel\u00e9s"
+        }
+    },
+    "title": "Kamera"
+}

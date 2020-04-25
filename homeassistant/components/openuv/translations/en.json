@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Coordinates already registered",
+            "invalid_api_key": "Invalid API key"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "OpenUV API Key",
+                    "elevation": "Elevation",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                },
+                "title": "Fill in your information"
+            }
+        }
+    }
+}

@@ -1,0 +1,40 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "Armar {entity_name} exterior",
+            "arm_home": "Armar {entity_name} modo casa",
+            "arm_night": "Armar {entity_name} por la noche",
+            "disarm": "Desarmar {entity_name}",
+            "trigger": "Lanzar {entity_name}"
+        },
+        "condition_type": {
+            "is_armed_away": "{entity_name} est\u00e1 armada fuera",
+            "is_armed_home": "{entity_name} est\u00e1 armada en casa",
+            "is_armed_night": "{entity_name} est\u00e1 armada noche",
+            "is_disarmed": "{entity_name} est\u00e1 desarmada",
+            "is_triggered": "{entity_name} est\u00e1 disparada"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} armado fuera",
+            "armed_home": "{entity_name} armado en casa",
+            "armed_night": "{entity_name} armado modo noche",
+            "disarmed": "{entity_name} desarmado",
+            "triggered": "{entity_name} activado"
+        }
+    },
+    "state": {
+        "_": {
+            "armed": "Armado",
+            "armed_away": "Armado fuera de casa",
+            "armed_custom_bypass": "Armada Zona Espec\u00edfica",
+            "armed_home": "Armado en casa",
+            "armed_night": "Armado noche",
+            "arming": "Armando",
+            "disarmed": "Desarmado",
+            "disarming": "Desarmando",
+            "pending": "Pendiente",
+            "triggered": "Disparada"
+        }
+    },
+    "title": "Panel de control de alarmas"
+}

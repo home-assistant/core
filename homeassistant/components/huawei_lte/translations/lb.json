@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebsen Apparat ass scho konfigur\u00e9iert",
+            "already_in_progress": "D\u00ebsen Apparat g\u00ebtt scho konfigur\u00e9iert",
+            "not_huawei_lte": "Ken Huawei LTE Apparat"
+        },
+        "error": {
+            "connection_failed": "Feeler bei der Verbindung",
+            "connection_timeout": "Z\u00e4it Iwwerschreidung beim verbannen",
+            "incorrect_password": "Ong\u00ebltegt Passwuert",
+            "incorrect_username": "Ong\u00ebltege Benotzernumm",
+            "incorrect_username_or_password": "Ong\u00ebltege Benotzernumm oder Passwuert",
+            "invalid_url": "Ong\u00eblteg URL",
+            "login_attempts_exceeded": "Maximal Login Versich iwwerschratt, w.e.g. m\u00e9i sp\u00e9it nach eng K\u00e9ier",
+            "response_error": "Onbekannte Feeler vum Apparat",
+            "unknown_connection_error": "Onbekannte Feeler beim verbannen mam Apparat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "url": "URL",
+                    "username": "Benotzernumm"
+                },
+                "description": "Gitt Detailer fir den Acc\u00e8s op den Apparat an. Benotzernumm a Passwuert si fakultativ, erm\u00e9iglecht awer d'\u00cbnnerst\u00ebtzung fir m\u00e9i Integratiouns Optiounen. Op der anerer S\u00e4it kann d'Benotzung vun enger autoris\u00e9ierter Verbindung Problemer mam Acc\u00e8s zum Web Interface vum Apparat ausserhalb vum Home Assistant verursaachen, w\u00e4rend d'Integratioun aktiv ass.",
+                "title": "Huawei LTE ariichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Numm vum Notifikatioun's Service (Restart n\u00e9ideg bei \u00c4nnerung)",
+                    "recipient": "Empf\u00e4nger vun SMS Notifikatioune",
+                    "track_new_devices": "Nei Apparater verfollegen"
+                }
+            }
+        }
+    }
+}

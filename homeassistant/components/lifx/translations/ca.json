@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No s'han trobat dispositius LIFX a la xarxa.",
+            "single_instance_allowed": "Nom\u00e9s \u00e9s possible una \u00fanica configuraci\u00f3 de LIFX."
+        },
+        "step": {
+            "confirm": {
+                "description": "Vols configurar LIFX?",
+                "title": "LIFX"
+            }
+        }
+    }
+}

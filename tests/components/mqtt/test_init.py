@@ -1,5 +1,5 @@
 """The tests for the MQTT component."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import json
 import ssl
 import unittest
@@ -571,34 +571,6 @@ class TestMQTTCallbacks(unittest.TestCase):
         assert self.calls[0][0].topic == topic
         assert self.calls[0][0].payload == payload
 
-    def test_mqtt_failed_connection_results_in_disconnect(self):
-        """Test if connection failure leads to disconnect."""
-        for result_code in range(1, 6):
-            self.hass.data["mqtt"]._mqttc = mock.MagicMock()
-            self.hass.data["mqtt"]._mqtt_on_connect(
-                None, {"topics": {}}, 0, result_code
-            )
-            assert self.hass.data["mqtt"]._mqttc.disconnect.called
-
-    def test_mqtt_disconnect_tries_no_reconnect_on_stop(self):
-        """Test the disconnect tries."""
-        self.hass.data["mqtt"]._mqtt_on_disconnect(None, None, 0)
-        assert not self.hass.data["mqtt"]._mqttc.reconnect.called
-
-    @mock.patch("homeassistant.components.mqtt.time.sleep")
-    def test_mqtt_disconnect_tries_reconnect(self, mock_sleep):
-        """Test the re-connect tries."""
-        self.hass.data["mqtt"].subscriptions = [
-            mqtt.Subscription("test/progress", None, 0),
-            mqtt.Subscription("test/progress", None, 1),
-            mqtt.Subscription("test/topic", None, 2),
-        ]
-        self.hass.data["mqtt"]._mqttc.reconnect.side_effect = [1, 1, 1, 0]
-        self.hass.data["mqtt"]._mqtt_on_disconnect(None, None, 1)
-        assert self.hass.data["mqtt"]._mqttc.reconnect.called
-        assert len(self.hass.data["mqtt"]._mqttc.reconnect.mock_calls) == 4
-        assert [call[1][0] for call in mock_sleep.mock_calls] == [1, 2, 4]
-
     def test_retained_message_on_subscribe_received(self):
         """Test every subscriber receives retained message on subscribe."""
 
@@ -607,6 +579,9 @@ class TestMQTTCallbacks(unittest.TestCase):
             return 0, 0
 
         self.hass.data["mqtt"]._mqttc.subscribe.side_effect = side_effect
+
+        # Fake that the client is connected
+        self.hass.data["mqtt"].connected = True
 
         calls_a = mock.MagicMock()
         mqtt.subscribe(self.hass, "test/state", calls_a)
@@ -620,6 +595,9 @@ class TestMQTTCallbacks(unittest.TestCase):
 
     def test_not_calling_unsubscribe_with_active_subscribers(self):
         """Test not calling unsubscribe() when other subscribers are active."""
+        # Fake that the client is connected
+        self.hass.data["mqtt"].connected = True
+
         unsub = mqtt.subscribe(self.hass, "test/state", None)
         mqtt.subscribe(self.hass, "test/state", None)
         self.hass.block_till_done()
@@ -631,6 +609,9 @@ class TestMQTTCallbacks(unittest.TestCase):
 
     def test_restore_subscriptions_on_reconnect(self):
         """Test subscriptions are restored on reconnect."""
+        # Fake that the client is connected
+        self.hass.data["mqtt"].connected = True
+
         mqtt.subscribe(self.hass, "test/state", None)
         self.hass.block_till_done()
         assert self.hass.data["mqtt"]._mqttc.subscribe.call_count == 1
@@ -642,6 +623,9 @@ class TestMQTTCallbacks(unittest.TestCase):
 
     def test_restore_all_active_subscriptions_on_reconnect(self):
         """Test active subscriptions are restored correctly on reconnect."""
+        # Fake that the client is connected
+        self.hass.data["mqtt"].connected = True
+
         self.hass.data["mqtt"]._mqttc.subscribe.side_effect = (
             (0, 1),
             (0, 2),
@@ -1266,11 +1250,63 @@ async def test_debug_info_wildcard(hass, mqtt_mock):
         "subscriptions"
     ]
 
-    async_fire_mqtt_message(hass, "sensor/abc", "123")
+    start_dt = datetime(2019, 1, 1, 0, 0, 0)
+    with mock.patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+        dt_utcnow.return_value = start_dt
+        async_fire_mqtt_message(hass, "sensor/abc", "123")
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
     assert {
         "topic": "sensor/#",
-        "messages": [{"topic": "sensor/abc", "payload": "123"}],
+        "messages": [{"topic": "sensor/abc", "payload": "123", "time": start_dt}],
     } in debug_info_data["entities"][0]["subscriptions"]
+
+
+async def test_debug_info_filter_same(hass, mqtt_mock):
+    """Test debug info removes messages with same timestamp."""
+    config = {
+        "device": {"identifiers": ["helloworld"]},
+        "platform": "mqtt",
+        "name": "test",
+        "state_topic": "sensor/#",
+        "unique_id": "veryunique",
+    }
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    assert device is not None
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
+    assert {"topic": "sensor/#", "messages": []} in debug_info_data["entities"][0][
+        "subscriptions"
+    ]
+
+    dt1 = datetime(2019, 1, 1, 0, 0, 0)
+    dt2 = datetime(2019, 1, 1, 0, 0, 1)
+    with mock.patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+        dt_utcnow.return_value = dt1
+        async_fire_mqtt_message(hass, "sensor/abc", "123")
+        async_fire_mqtt_message(hass, "sensor/abc", "123")
+        dt_utcnow.return_value = dt2
+        async_fire_mqtt_message(hass, "sensor/abc", "123")
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
+    assert len(debug_info_data["entities"][0]["subscriptions"][0]["messages"]) == 2
+    assert {
+        "topic": "sensor/#",
+        "messages": [
+            {"topic": "sensor/abc", "payload": "123", "time": dt1},
+            {"topic": "sensor/abc", "payload": "123", "time": dt2},
+        ],
+    } == debug_info_data["entities"][0]["subscriptions"][0]

@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "\uc774\ubbf8 \uad6c\uc131\ub41c \ubaa8\ub4e0 \uc5f0\uacb0\ub41c \uc11c\ubc84",
+            "already_configured": "\uc774 Plex \uc11c\ubc84\ub294 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "already_in_progress": "Plex \ub97c \uad6c\uc131 \uc911\uc785\ub2c8\ub2e4",
+            "invalid_import": "\uac00\uc838\uc628 \uad6c\uc131 \ub0b4\uc6a9\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "non-interactive": "\ube44 \ub300\ud654\ud615 \uac00\uc838\uc624\uae30",
+            "token_request_timeout": "\ud1a0\ud070 \ud68d\ub4dd \uc2dc\uac04\uc774 \ucd08\uacfc\ud588\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc54c \uc218 \uc5c6\ub294 \uc774\uc720\ub85c \uc2e4\ud328\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "faulty_credentials": "\uc778\uc99d\uc5d0 \uc2e4\ud328\ud588\uc2b5\ub2c8\ub2e4",
+            "no_servers": "\uacc4\uc815\uc5d0 \uc5f0\uacb0\ub41c \uc11c\ubc84\uac00 \uc5c6\uc2b5\ub2c8\ub2e4",
+            "not_found": "Plex \uc11c\ubc84\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "select_server": {
+                "data": {
+                    "server": "\uc11c\ubc84"
+                },
+                "description": "\uc5ec\ub7ec \uc11c\ubc84\uac00 \uc0ac\uc6a9 \uac00\ub2a5\ud569\ub2c8\ub2e4. \ud558\ub098\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694:",
+                "title": "Plex \uc11c\ubc84 \uc120\ud0dd"
+            },
+            "start_website_auth": {
+                "description": "plex.tv \uc5d0\uc11c \uc778\uc99d\uc744 \uc9c4\ud589\ud574\uc8fc\uc138\uc694.",
+                "title": "Plex \uc11c\ubc84 \uc5f0\uacb0"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "ignore_new_shared_users": "\uc0c8\ub85c\uc6b4 \uad00\ub9ac/\uacf5\uc720 \uc0ac\uc6a9\uc790 \ubb34\uc2dc",
+                    "monitored_users": "\ubaa8\ub2c8\ud130\ub9c1\ub418\ub294 \uc0ac\uc6a9\uc790",
+                    "use_episode_art": "\uc5d0\ud53c\uc18c\ub4dc \uc544\ud2b8 \uc0ac\uc6a9"
+                },
+                "description": "Plex \ubbf8\ub514\uc5b4 \ud50c\ub808\uc774\uc5b4 \uc635\uc158"
+            }
+        }
+    }
+}

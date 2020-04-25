@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La integraci\u00f3n a\u00e9rea para estas coordenadas ya est\u00e1 configurada."
+        },
+        "error": {
+            "auth": "La clave API no es correcta.",
+            "wrong_location": "No hay estaciones de medici\u00f3n Airly en esta \u00e1rea."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clave API de Airly",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "name": "Nombre de la integraci\u00f3n"
+                },
+                "description": "Configure la integraci\u00f3n de la calidad del aire de Airly. Para generar la clave API, vaya a https://developer.airly.eu/register",
+                "title": "Airly"
+            }
+        }
+    }
+}

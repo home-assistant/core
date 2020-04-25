@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -110,7 +110,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class ToonBinarySensor(ToonEntity, BinarySensorDevice):
+class ToonBinarySensor(ToonEntity, BinarySensorEntity):
     """Defines an Toon binary sensor."""
 
     def __init__(

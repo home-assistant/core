@@ -1,0 +1,10 @@
+{
+    "state": {
+        "season__season__": {
+            "autumn": "Herbst",
+            "spring": "Fr\u00fchling",
+            "summer": "Sommer",
+            "winter": "Winter"
+        }
+    }
+}

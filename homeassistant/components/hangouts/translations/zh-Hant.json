@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Google Hangouts \u5df2\u7d93\u8a2d\u5b9a",
+            "unknown": "\u767c\u751f\u672a\u77e5\u932f\u8aa4\u3002"
+        },
+        "error": {
+            "invalid_2fa": "\u96d9\u91cd\u9a57\u8b49\u7121\u6548\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002",
+            "invalid_2fa_method": "\u8a8d\u8b49\u65b9\u5f0f\u7121\u6548\uff08\u65bc\u96fb\u8a71\u4e0a\u9a57\u8b49\uff09\u3002",
+            "invalid_login": "\u767b\u5165\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "\u8a8d\u8b49\u78bc"
+                },
+                "description": "\u7a7a\u767d",
+                "title": "\u96d9\u91cd\u9a57\u8b49"
+            },
+            "user": {
+                "data": {
+                    "authorization_code": "\u9a57\u8b49\u78bc\uff08\u624b\u52d5\u9a57\u8b49\u5fc5\u9808\uff09",
+                    "email": "\u96fb\u5b50\u90f5\u4ef6",
+                    "password": "\u5bc6\u78bc"
+                },
+                "description": "\u7a7a\u767d",
+                "title": "\u767b\u5165 Google Hangouts"
+            }
+        }
+    }
+}

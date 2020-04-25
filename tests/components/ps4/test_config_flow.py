@@ -1,6 +1,5 @@
 """Define tests for the PlayStation 4 config flow."""
-from unittest.mock import patch
-
+from asynctest import patch
 from pyps4_2ndscreen.errors import CredentialTimeout
 
 from homeassistant import data_entry_flow
@@ -21,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.util import location
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 MOCK_TITLE = "PlayStation 4"
 MOCK_CODE = 12345678
@@ -313,7 +312,7 @@ async def test_0_pin(hass):
         "pyps4_2ndscreen.Helper.has_devices", return_value=[{"host-ip": MOCK_HOST}]
     ), patch(
         "homeassistant.components.ps4.config_flow.location.async_detect_location_info",
-        return_value=mock_coro(MOCK_LOCATION),
+        return_value=MOCK_LOCATION,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOCK_AUTO

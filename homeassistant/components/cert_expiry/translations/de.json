@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Diese Kombination aus Host und Port ist bereits konfiguriert.",
+            "import_failed": "Import aus Konfiguration fehlgeschlagen"
+        },
+        "error": {
+            "connection_refused": "Verbindung beim Herstellen einer Verbindung zum Host abgelehnt",
+            "connection_timeout": "Zeit\u00fcberschreitung beim Herstellen einer Verbindung mit diesem Host",
+            "resolve_failed": "Dieser Host kann nicht aufgel\u00f6st werden"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Der Hostname des Zertifikats",
+                    "name": "Der Name des Zertifikats",
+                    "port": "Der Port des Zertifikats"
+                },
+                "title": "Definiere das zu testende Zertifikat"
+            }
+        }
+    },
+    "title": "Zertifikatsablauf"
+}

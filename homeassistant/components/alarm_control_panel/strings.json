@@ -1,4 +1,5 @@
 {
+  "title": "Alarm control panel",
   "device_automation": {
     "action_type": {
       "arm_away": "Arm {entity_name} away",
@@ -20,6 +21,20 @@
       "armed_home": "{entity_name} armed home",
       "armed_away": "{entity_name} armed away",
       "armed_night": "{entity_name} armed night"
+    }
+  },
+  "state": {
+    "_": {
+      "armed": "Armed",
+      "disarmed": "Disarmed",
+      "armed_home": "Armed home",
+      "armed_away": "Armed away",
+      "armed_night": "Armed night",
+      "armed_custom_bypass": "Armed custom bypass",
+      "pending": "Pending",
+      "arming": "Arming",
+      "disarming": "Disarming",
+      "triggered": "Triggered"
     }
   }
 }

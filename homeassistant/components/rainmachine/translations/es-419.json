@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Cuenta ya registrada",
+            "invalid_credentials": "Credenciales no v\u00e1lidas"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Nombre de host o direcci\u00f3n IP",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto"
+                },
+                "title": "Completa tu informaci\u00f3n"
+            }
+        }
+    }
+}

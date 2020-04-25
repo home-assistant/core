@@ -138,6 +138,9 @@ class DwdWeatherWarningsSensor(Entity):
         for event in self._api.data[f"{prefix}_warnings"]:
             i = i + 1
 
+            # dictionary for the attribute containing the complete warning as json
+            event_json = event.copy()
+
             data[f"warning_{i}_name"] = event["event"]
             data[f"warning_{i}_level"] = event["level"]
             data[f"warning_{i}_type"] = event["type"]
@@ -152,11 +155,15 @@ class DwdWeatherWarningsSensor(Entity):
                 data[f"warning_{i}_start"] = dt_util.as_local(
                     dt_util.utc_from_timestamp(event["start"] / 1000)
                 )
+                event_json["start"] = data[f"warning_{i}_start"]
 
             if event["end"] is not None:
                 data[f"warning_{i}_end"] = dt_util.as_local(
                     dt_util.utc_from_timestamp(event["end"] / 1000)
                 )
+                event_json["end"] = data[f"warning_{i}_end"]
+
+            data[f"warning_{i}"] = event_json
 
         return data
 

@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "\u4f7f\u7528\u6b64\u4f4d\u5740\u7684\u4e00\u7d44 ElkM1 \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u4f7f\u7528\u6b64 Prefix \u7684\u4e00\u7d44 ElkM1 \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "IP \u6216\u7db2\u57df\u540d\u7a31\u3001\u5e8f\u5217\u57e0\uff08\u5047\u5982\u900f\u904e\u5e8f\u5217\u9023\u7dda\uff09\u3002",
+                    "password": "\u5bc6\u78bc\uff08\u50c5\u52a0\u5bc6\uff09\u3002",
+                    "prefix": "\u7368\u4e00\u7684 Prefix\uff08\u5047\u5982\u50c5\u6709\u4e00\u7d44 ElkM1 \u5247\u4fdd\u7559\u7a7a\u767d\uff09\u3002",
+                    "protocol": "\u901a\u8a0a\u5354\u5b9a",
+                    "temperature_unit": "ElkM1 \u4f7f\u7528\u6eab\u5ea6\u55ae\u4f4d\u3002",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31\uff08\u50c5\u52a0\u5bc6\uff09\u3002"
+                },
+                "description": "\u52a0\u5bc6\u8207\u975e\u52a0\u5bc6\u4e4b\u4f4d\u5740\u5b57\u4e32\u683c\u5f0f\u5fc5\u9808\u70ba 'address[:port]'\u3002\u4f8b\u5982\uff1a'192.168.1.1'\u3002\u901a\u8a0a\u57e0\u70ba\u9078\u9805\u8f38\u5165\uff0c\u975e\u52a0\u5bc6\u9810\u8a2d\u503c\u70ba 2101\u3001\u52a0\u5bc6\u5247\u70ba 2601\u3002\u5e8f\u5217\u901a\u8a0a\u5354\u5b9a\u3001\u4f4d\u5740\u683c\u5f0f\u5fc5\u9808\u70ba 'tty[:baud]'\u3002\u4f8b\u5982\uff1a'/dev/ttyS1'\u3002\u50b3\u8f38\u7387\u70ba\u9078\u9805\u8f38\u5165\uff0c\u9810\u8a2d\u503c\u70ba 115200\u3002",
+                "title": "\u9023\u7dda\u81f3 Elk-M1 Control"
+            }
+        }
+    }
+}

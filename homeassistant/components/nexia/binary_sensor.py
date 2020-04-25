@@ -1,6 +1,6 @@
 """Support for Nexia / Trane XL Thermostats."""
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from .const import DOMAIN, NEXIA_DEVICE, UPDATE_COORDINATOR
 from .entity import NexiaThermostatEntity
@@ -34,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class NexiaBinarySensor(NexiaThermostatEntity, BinarySensorDevice):
+class NexiaBinarySensor(NexiaThermostatEntity, BinarySensorEntity):
     """Provices Nexia BinarySensor support."""
 
     def __init__(self, coordinator, thermostat, sensor_call, sensor_name):

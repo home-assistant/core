@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6zt m\u00e1r konfigur\u00e1ltuk",
+            "device_fail": "Az eszk\u00f6z l\u00e9trehoz\u00e1sakor v\u00e1ratlan hiba l\u00e9pett fel.",
+            "device_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s a k\u00e9sz\u00fcl\u00e9k csatlakoz\u00e1sakor."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hoszt"
+                },
+                "description": "Add meg a Daikin l\u00e9gkond\u00edcion\u00e1l\u00f3 IP-c\u00edm\u00e9t.",
+                "title": "A Daikin l\u00e9gkond\u00edcion\u00e1l\u00f3 konfigur\u00e1l\u00e1sa"
+            }
+        }
+    }
+}

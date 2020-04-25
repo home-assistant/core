@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "UPnP/IGD er allerede konfigureret",
+            "incomplete_device": "Ignorerer ufuldst\u00e6ndig UPnP-enhed",
+            "no_devices_discovered": "Ingen UPnP/IGD-enheder fundet.",
+            "no_devices_found": "Ingen UPnP/IGD enheder kunne findes p\u00e5 netv\u00e6rket.",
+            "no_sensors_or_port_mapping": "Aktiv\u00e9r enten sensorer eller porttilknytning",
+            "single_instance_allowed": "Det er kun n\u00f8dvendigt med en ops\u00e6tning af UPnP/IGD."
+        },
+        "error": {
+            "one": "En",
+            "other": "Anden"
+        },
+        "step": {
+            "confirm": {
+                "description": "Er du sikker p\u00e5 at du vil konfigurere UPnP/IGD?",
+                "title": "UPnP/IGD"
+            },
+            "init": {
+                "title": "UPnP/IGD"
+            },
+            "user": {
+                "data": {
+                    "enable_port_mapping": "Aktiv\u00e9r porttilknytning til Home Assistent",
+                    "enable_sensors": "Tilf\u00f8j trafiksensorer",
+                    "igd": "UPnP/IGD"
+                },
+                "title": "Konfigurationsindstillinger for UPnP/IGD"
+            }
+        }
+    }
+}

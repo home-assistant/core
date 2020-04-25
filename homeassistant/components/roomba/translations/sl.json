@@ -1,0 +1,32 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Povezava ni uspela, poskusite znova",
+            "unknown": "Nepri\u010dakovana napaka"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "blid": "BLID",
+                    "certificate": "Potrdilo",
+                    "continuous": "Nenehno",
+                    "delay": "Zamik",
+                    "host": "Ime gostitelja ali naslov IP",
+                    "password": "Geslo"
+                },
+                "description": "Trenutno je pridobivanje BLID-a in gesla ro\u010dni postopek. Upo\u0161tevajte korake opisane v dokumentaciji na: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
+                "title": "Pove\u017eite se z napravo"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Nenehno",
+                    "delay": "Zamik"
+                }
+            }
+        }
+    }
+}

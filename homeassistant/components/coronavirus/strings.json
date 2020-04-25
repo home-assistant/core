@@ -1,16 +1,11 @@
 {
   "config": {
-    "title": "Coronavirus",
     "step": {
       "user": {
         "title": "Pick a country to monitor",
-        "data": {
-          "country": "Country"
-        }
+        "data": { "country": "Country" }
       }
     },
-    "abort": {
-      "already_configured": "This country is already configured."
-    }
+    "abort": { "already_configured": "This country is already configured." }
   }
 }

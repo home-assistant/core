@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_connect": "Kunne ikke koble til, vennligst bekreft vertsadresse"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vertsnavnet eller ip-adressen til din Solar-Log-enhet",
+                    "name": "Prefikset som skal brukes til dine Solar-Log sensorer"
+                },
+                "title": "Definer din Solar-Log tilkobling"
+            }
+        }
+    }
+}

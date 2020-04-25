@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Solo puede configurar una sola conexi\u00f3n Heos, ya que ser\u00e1 compatible con todos los dispositivos de la red."
+        },
+        "error": {
+            "connection_failure": "No se puede conectar con el host especificado."
+        },
+        "step": {
+            "user": {
+                "description": "Ingrese el nombre de host o la direcci\u00f3n IP de un dispositivo Heos (preferiblemente uno conectado por cable a la red).",
+                "title": "Con\u00e9ctate a Heos"
+            }
+        }
+    }
+}

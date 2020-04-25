@@ -12,11 +12,11 @@ from homeassistant.const import (
     ATTR_NAME,
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_API_KEY,
+    DEGREE,
     EVENT_HOMEASSISTANT_STOP,
     POWER_WATT,
     SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
-    UNIT_DEGREE,
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
@@ -219,10 +219,10 @@ SENSOR_TYPES = {
     TYPE_TOTALRAININ: ("Lifetime Rain", "in", TYPE_SENSOR, None),
     TYPE_UV: ("uv", "Index", TYPE_SENSOR, None),
     TYPE_WEEKLYRAININ: ("Weekly Rain", "in", TYPE_SENSOR, None),
-    TYPE_WINDDIR: ("Wind Dir", UNIT_DEGREE, TYPE_SENSOR, None),
-    TYPE_WINDDIR_AVG10M: ("Wind Dir Avg 10m", UNIT_DEGREE, TYPE_SENSOR, None),
+    TYPE_WINDDIR: ("Wind Dir", DEGREE, TYPE_SENSOR, None),
+    TYPE_WINDDIR_AVG10M: ("Wind Dir Avg 10m", DEGREE, TYPE_SENSOR, None),
     TYPE_WINDDIR_AVG2M: ("Wind Dir Avg 2m", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
-    TYPE_WINDGUSTDIR: ("Gust Dir", UNIT_DEGREE, TYPE_SENSOR, None),
+    TYPE_WINDGUSTDIR: ("Gust Dir", DEGREE, TYPE_SENSOR, None),
     TYPE_WINDGUSTMPH: ("Wind Gust", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
     TYPE_WINDSPDMPH_AVG10M: ("Wind Avg 10m", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
     TYPE_WINDSPDMPH_AVG2M: ("Wind Avg 2m", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
@@ -350,12 +350,17 @@ class AmbientStation:
 
     async def _attempt_connect(self):
         """Attempt to connect to the socket (retrying later on fail)."""
-        try:
+
+        async def connect(timestamp=None):
+            """Connect."""
             await self.client.websocket.connect()
+
+        try:
+            await connect()
         except WebsocketError as err:
             _LOGGER.error("Error with the websocket connection: %s", err)
             self._ws_reconnect_delay = min(2 * self._ws_reconnect_delay, 480)
-            async_call_later(self._hass, self._ws_reconnect_delay, self.ws_connect)
+            async_call_later(self._hass, self._ws_reconnect_delay, connect)
 
     async def ws_connect(self):
         """Register handlers and connect to the websocket."""

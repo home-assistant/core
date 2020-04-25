@@ -6,7 +6,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PLUG,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_SAFETY,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 
 from . import DOMAIN
@@ -36,7 +36,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors)
 
 
-class KebaBinarySensor(BinarySensorDevice):
+class KebaBinarySensor(BinarySensorEntity):
     """Representation of a binary sensor of a KEBA charging station."""
 
     def __init__(self, keba, key, name, entity_type, device_class):

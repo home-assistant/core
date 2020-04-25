@@ -1,13 +1,11 @@
 {
   "config": {
-    "title": "Konnected.io",
     "step": {
       "import_confirm": {
         "title": "Import Konnected Device",
         "description": "A Konnected Alarm Panel with ID {id} has been discovered in configuration.yaml. This flow will allow you to import it into a config entry."
       },
       "user": {
-        "title": "Discover Konnected Device",
         "description": "Please enter the host information for your Konnected Panel.",
         "data": {
           "host": "Konnected device IP address",
@@ -30,7 +28,6 @@
     }
   },
   "options": {
-    "title": "Konnected Alarm Panel Options",
     "step": {
       "options_io": {
         "title": "Configure I/O",
@@ -100,11 +97,7 @@
         }
       }
     },
-    "error": {
-      "bad_host": "Invalid Override API host url"
-    },
-    "abort": {
-      "not_konn_panel": "Not a recognized Konnected.io device"
-    }
+    "error": { "bad_host": "Invalid Override API host url" },
+    "abort": { "not_konn_panel": "Not a recognized Konnected.io device" }
   }
 }
