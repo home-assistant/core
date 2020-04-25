@@ -1,20 +1,31 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Deze AVM FRITZ!Box is al geconfigureerd.",
+            "already_in_progress": "AVM FRITZ!Box configuratie is al bezig.",
+            "not_found": "Geen ondersteunde AVM FRITZ!Box gevonden op het netwerk."
+        },
         "error": {
             "auth_failed": "Ongeldige gebruikersnaam of wachtwoord"
         },
+        "flow_title": "AVM FRITZ!Box: {name}",
         "step": {
             "confirm": {
                 "data": {
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
-                }
+                },
+                "description": "Wilt u {name} instellen?",
+                "title": "AVM FRITZ!Box"
             },
             "user": {
                 "data": {
+                    "host": "Host- of IP-adres",
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
-                }
+                },
+                "description": "Voer uw AVM FRITZ!Box informatie in.",
+                "title": "AVM FRITZ!Box"
             }
         }
     }

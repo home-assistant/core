@@ -35,13 +35,17 @@
             "button_4": "V\u00e9ierte Kn\u00e4ppchen",
             "dim_down": "Verd\u00e4ischteren",
             "dim_up": "Erhellen",
+            "double_buttons_1_3": "\u00c9ischte an Dr\u00ebtte Kn\u00e4ppchen",
+            "double_buttons_2_4": "Zweete a V\u00e9ierte Kn\u00e4ppchen",
             "turn_off": "Ausschalten",
             "turn_on": "Uschalten"
         },
         "trigger_type": {
             "remote_button_long_release": "\"{subtype}\" Kn\u00e4ppche no laangem unhalen lassgelooss",
             "remote_button_short_press": "\"{subtype}\" Kn\u00e4ppche gedr\u00e9ckt",
-            "remote_button_short_release": "\"{subtype}\" Kn\u00e4ppche lassgelooss"
+            "remote_button_short_release": "\"{subtype}\" Kn\u00e4ppche lassgelooss",
+            "remote_double_button_long_press": "B\u00e9id \"{subtype}\" no laangem unhalen lassgelooss",
+            "remote_double_button_short_press": "B\u00e9id \"{subtype}\" lassgeloss"
         }
     }
 }
