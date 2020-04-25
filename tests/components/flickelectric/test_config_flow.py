@@ -14,7 +14,6 @@ async def test_form(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    print(result)
     assert result["type"] == "form"
     assert result["errors"] == {}
 
