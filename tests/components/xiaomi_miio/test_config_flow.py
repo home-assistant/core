@@ -109,7 +109,7 @@ async def test_config_flow_gateway_succes(hass):
     assert result["step_id"] == "gateway"
     assert result["errors"] == {}
 
-    mock_gateway = get_mock_gateway()
+    mock_info = get_mock_info()
 
     with patch(
         "homeassistant.components.xiaomi_miio.config_flow.ConnectXiaomiGateway",
