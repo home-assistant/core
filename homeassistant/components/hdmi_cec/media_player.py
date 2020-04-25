@@ -22,7 +22,7 @@ from pycec.const import (
     TYPE_TUNER,
 )
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     DOMAIN,
     SUPPORT_NEXT_TRACK,
@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities(entities, True)
 
 
-class CecPlayerDevice(CecDevice, MediaPlayerDevice):
+class CecPlayerDevice(CecDevice, MediaPlayerEntity):
     """Representation of a HDMI device as a Media player."""
 
     def __init__(self, device, logical) -> None:
