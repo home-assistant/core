@@ -1,0 +1,29 @@
+{
+  "title": "Sonarr",
+  "config": {
+    "flow_title": "Sonarr: {name}",
+    "step": {
+      "user": {
+        "title": "Connect to Sonarr",
+        "data": {
+          "host": "Host or IP address",
+          "api_key": "API Key",
+          "base_path": "Path to API",
+          "port": "Port",
+          "ssl": "Sonarr uses a SSL certificate",
+          "verify_ssl": "Sonarr uses a proper certificate",
+          "upcoming_days": "Number of upcoming days to display",
+          "wanted_max_items": "Max number of wanted items to display"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication"
+    },
+    "abort": {
+      "already_configured": "Sonarr is already configured",
+      "unknown": "Unexpected error"
+    }
+  }
+}
