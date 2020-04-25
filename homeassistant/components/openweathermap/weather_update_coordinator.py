@@ -83,15 +83,13 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 def _get_rain(rain):
     if "3h" in rain:
         return round(rain["3h"], 0)
-    else:
-        return "not raining"
+    return "not raining"
 
 
 def _get_snow(snow):
     if snow:
         return round(snow, 0)
-    else:
-        return "not snowing"
+    return "not snowing"
 
 
 def _get_condition(weather_code):
