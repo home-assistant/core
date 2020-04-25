@@ -18,26 +18,20 @@ TEST_HARDWARE_VERSION = "AB123"
 TEST_FIRMWARE_VERSION = "1.2.3_456"
 
 
-def get_mock_gateway(
-    connect_succes=True,
+def get_mock_info(
     model=TEST_MODEL,
     mac_address=TEST_MAC,
     hardware_version=TEST_HARDWARE_VERSION,
     firmware_version=TEST_FIRMWARE_VERSION,
 ):
-    """Return a mock gateway."""
-    mock_gateway = Mock()
-    mock_gateway.async_connect_gateway.return_value = Future()
-    mock_gateway.async_connect_gateway.return_value.set_result(connect_succes)
-    if connect_succes:
-        mock_gateway.gateway_info.model = model
-        mock_gateway.gateway_info.mac_address = mac_address
-        mock_gateway.gateway_info.hardware_version = hardware_version
-        mock_gateway.gateway_info.firmware_version = firmware_version
-    else:
-        mock_gateway.gateway_info = None
+    """Return a mock gateway info instance."""
+    gateway_info = Mock()
+    gateway_info.model = model
+    gateway_info.mac_address = mac_address
+    gateway_info.hardware_version = hardware_version
+    gateway_info.firmware_version = firmware_version
 
-    return mock_gateway
+    return gateway_info
 
 
 async def test_config_flow_step_user_no_device(hass):
