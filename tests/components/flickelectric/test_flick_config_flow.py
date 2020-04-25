@@ -1,11 +1,10 @@
 """Test the Flick Electric config flow."""
+import asyncio
+
 from asynctest import patch
+from pyflick.authentication import AuthException
 
 from homeassistant import config_entries, setup
-from homeassistant.components.flickelectric.config_flow import (
-    CannotConnect,
-    InvalidAuth,
-)
 from homeassistant.components.flickelectric.const import DOMAIN
 
 
@@ -50,12 +49,12 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.flickelectric.config_flow.FlickConfigFlow._validate_input",
-        side_effect=InvalidAuth,
+        "homeassistant.components.flickelectric.config_flow.SimpleFlickAuth.async_get_access_token",
+        side_effect=AuthException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
+            {"username": "test-username2", "password": "test-password"},
         )
 
     assert result2["type"] == "form"
@@ -69,12 +68,12 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.flickelectric.config_flow.FlickConfigFlow._validate_input",
-        side_effect=CannotConnect,
+        "homeassistant.components.flickelectric.config_flow.SimpleFlickAuth.async_get_access_token",
+        side_effect=asyncio.TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
+            {"username": "test-username3", "password": "test-password"},
         )
 
     assert result2["type"] == "form"
