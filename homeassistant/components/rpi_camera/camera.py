@@ -25,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def kill_raspistill(*args):
     """Kill any previously running raspistill process.."""
-    _LOGGER.debug("killall raspistill")
     subprocess.Popen(
         ["killall", "raspistill"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
     )
@@ -33,12 +32,9 @@ def kill_raspistill(*args):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Raspberry Camera."""
-    _LOGGER.debug("setup_platform")
     if shutil.which("raspistill") is None:
         _LOGGER.error("'raspistill' was not found")
         return False
-
-    _LOGGER.debug("hass.data[%s] = %s", DOMAIN, hass.data[DOMAIN])
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, kill_raspistill)
 
@@ -58,7 +54,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         file_path = temp_file.name
         hass.data[DOMAIN][CONF_FILE_PATH] = file_path
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, delete_temp_file)
-        _LOGGER.debug("hass.data[%s][%s] = %s", DOMAIN, CONF_FILE_PATH, hass.data[DOMAIN][CONF_FILE_PATH])
 
     # Check whether the file path has been whitelisted
     elif not hass.config.is_allowed_path(file_path):
@@ -74,9 +69,7 @@ class RaspberryCamera(Camera):
     def __init__(self, device_info):
         """Initialize Raspberry Pi camera component."""
         super().__init__()
-        _LOGGER.debug("RaspberryCamera::init")
 
-        _LOGGER.debug("device_info = %s", device_info)
         self._name = device_info[CONF_NAME]
         self._config = device_info
 
@@ -117,14 +110,10 @@ class RaspberryCamera(Camera):
             cmd_args.append("-a")
             cmd_args.append(str(device_info[CONF_OVERLAY_TIMESTAMP]))
 
-        _LOGGER.debug("cmd_args = %s", cmd_args)
-
         subprocess.Popen(cmd_args, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
     def camera_image(self):
         """Return raspistill image response."""
-        _LOGGER.debug("returning image from %s", self._config[CONF_FILE_PATH])
-
         with open(self._config[CONF_FILE_PATH], "rb") as file:
             return file.read()
 

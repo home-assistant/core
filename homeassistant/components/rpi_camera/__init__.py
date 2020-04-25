@@ -60,9 +60,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the rpi_camera integration."""
-    _LOGGER.debug("setup")
-    _LOGGER.debug("config[%s] = %s", DOMAIN, config[DOMAIN])
-
     config_domain = config[DOMAIN];
     hass.data[DOMAIN] = {
         CONF_FILE_PATH: config_domain.get(CONF_FILE_PATH),
@@ -77,8 +74,6 @@ def setup(hass, config):
         CONF_TIMELAPSE: config_domain.get(CONF_TIMELAPSE),
         CONF_VERTICAL_FLIP: config_domain.get(CONF_VERTICAL_FLIP),
     }
-
-    _LOGGER.debug("hass.data[%s] = %s", DOMAIN, hass.data[DOMAIN])
 
     discovery.load_platform(hass, "camera", DOMAIN, {}, config)
 
