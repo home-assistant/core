@@ -1,7 +1,7 @@
 """Support for Lutron Caseta switches."""
 import logging
 
-from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.components.switch import DOMAIN, SwitchEntity
 
 from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
 
@@ -22,7 +22,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return True
 
 
-class LutronCasetaLight(LutronCasetaDevice, SwitchDevice):
+class LutronCasetaLight(LutronCasetaDevice, SwitchEntity):
     """Representation of a Lutron Caseta switch."""
 
     async def async_turn_on(self, **kwargs):
