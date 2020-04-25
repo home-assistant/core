@@ -16,7 +16,7 @@ from homeassistant.components.water_heater import (
     STATE_PERFORMANCE,
     SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    WaterHeaterDevice,
+    WaterHeaterEntity,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -120,7 +120,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class EcoNetWaterHeater(WaterHeaterDevice):
+class EcoNetWaterHeater(WaterHeaterEntity):
     """Representation of an EcoNet water heater."""
 
     def __init__(self, water_heater):

@@ -7,7 +7,7 @@ from aiohttp import ClientResponseError
 
 from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
-    WaterHeaterDevice,
+    WaterHeaterEntity,
 )
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -30,7 +30,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([IncomfortWaterHeater(client, h) for h in heaters])
 
 
-class IncomfortWaterHeater(IncomfortEntity, WaterHeaterDevice):
+class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
     """Representation of an InComfort/Intouch water_heater device."""
 
     def __init__(self, client, heater) -> None:
