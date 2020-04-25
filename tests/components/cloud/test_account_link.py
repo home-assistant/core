@@ -75,7 +75,7 @@ async def test_get_services_cached(hass):
 
     with patch.object(account_link, "CACHE_TIMEOUT", 0), patch(
         "hass_nabucasa.account_link.async_fetch_available_services",
-        return_value=services,
+        side_effect=lambda _: services,
     ) as mock_fetch:
         assert await account_link._get_services(hass) == 1
 
