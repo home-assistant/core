@@ -6,8 +6,8 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
-    BaseNotificationService,
     PLATFORM_SCHEMA,
+    BaseNotificationService,
 )
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE, HTTP_OK
 from homeassistant.helpers import config_validation as cv
