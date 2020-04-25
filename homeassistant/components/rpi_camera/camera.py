@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     _LOGGER.debug("setup_platform")
     if shutil.which("raspistill") is None:
         _LOGGER.error("'raspistill' was not found")
-        return False
+        return
 
     _LOGGER.debug("hass.data[%s] = %s", DOMAIN, hass.data[DOMAIN])
 
@@ -63,7 +63,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Check whether the file path has been whitelisted
     elif not hass.config.is_allowed_path(file_path):
         _LOGGER.error("'%s' is not a whitelisted directory", file_path)
-        return False
+        return
 
     add_entities([RaspberryCamera(hass.data[DOMAIN])])
 
@@ -137,4 +137,3 @@ class RaspberryCamera(Camera):
     def frame_interval(self):
         """Return the interval between frames of the stream."""
         return self._config[CONF_TIMELAPSE]/1000
-
