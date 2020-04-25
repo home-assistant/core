@@ -117,6 +117,8 @@ async def test_form_homekit(hass):
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
+    flows_in_progress = hass.config_entries.flow.async_progress()
+    assert flows_in_progress[0]["context"]["unique_id"] == "AA:BB:CC:DD:EE:FF"
 
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"}
