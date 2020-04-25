@@ -223,7 +223,7 @@ class NetatmoSensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self._state)
+        return True if self._state is not None else False
 
     def update(self):
         """Get the latest data from Netatmo API and updates the states."""
