@@ -1,5 +1,4 @@
 """Test the Xiaomi Miio config flow."""
-from asyncio import Future
 from unittest.mock import Mock
 
 from asynctest import patch
