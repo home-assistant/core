@@ -4,12 +4,8 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import roomba_reported_state
-<<<<<<< HEAD
-from .const import BLID, DOMAIN, ROOMBA_SESSION
-from .irobot_base import IRobotEntity
-=======
 from .const import BLID, DOMAIN, ICON_BIN, ROOMBA_SESSION
->>>>>>> Fix icon
+from .irobot_base import IRobotEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,9 +24,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
     """Class to hold Roomba Sensor basic info."""
 
-<<<<<<< HEAD
-    ICON = "mdi:delete-variant"
-=======
     def __init__(self, roomba, blid):
         """Initialize the sensor object."""
         self.vacuum = roomba
@@ -39,7 +32,6 @@ class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
         self._name = vacuum_state.get("name")
         self._identifier = f"roomba_{self._blid}"
         self._bin_status = None
->>>>>>> Fix icon
 
     @property
     def name(self):
