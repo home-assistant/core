@@ -1,7 +1,7 @@
 """Support for Abode Security System covers."""
 import abodepy.helpers.constants as CONST
 
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import CoverEntity
 
 from . import AbodeDevice
 from .const import DOMAIN
@@ -19,7 +19,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class AbodeCover(AbodeDevice, CoverDevice):
+class AbodeCover(AbodeDevice, CoverEntity):
     """Representation of an Abode cover."""
 
     @property
