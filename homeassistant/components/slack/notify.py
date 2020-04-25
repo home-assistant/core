@@ -18,11 +18,13 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_API_KEY, CONF_ICON, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+import homeassistant.helpers.template as template
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ATTACHMENTS = "attachments"
 ATTR_BLOCKS = "blocks"
+ATTR_BLOCKS_TEMPLATE = "blocks_template"
 ATTR_FILE = "file"
 
 CONF_DEFAULT_CHANNEL = "default_channel"
@@ -63,6 +65,20 @@ async def async_get_service(hass, config, discovery_info=None):
 def _async_sanitize_channel_names(channel_list):
     """Remove any # symbols from a channel list."""
     return [channel.lstrip("#") for channel in channel_list]
+
+
+@callback
+def _async_templatize_blocks(hass, value):
+    """Recursive template creator helper function."""
+    if isinstance(value, list):
+        return [_async_templatize_blocks(hass, item) for item in value]
+    if isinstance(value, dict):
+        return {
+            key: _async_templatize_blocks(hass, item) for key, item in value.items()
+        }
+
+    tmpl = template.Template(value, hass=hass)
+    return tmpl.async_render()
 
 
 class SlackNotificationService(BaseNotificationService):
@@ -142,7 +158,13 @@ class SlackNotificationService(BaseNotificationService):
                 "for them will be dropped in 0.114.0. In most cases, Blocks should be "
                 "used instead: https://www.home-assistant.io/integrations/slack/"
             )
-        blocks = data.get(ATTR_BLOCKS, {})
+
+        if ATTR_BLOCKS_TEMPLATE in data:
+            blocks = _async_templatize_blocks(self.hass, data[ATTR_BLOCKS_TEMPLATE])
+        elif ATTR_BLOCKS in data:
+            blocks = data[ATTR_BLOCKS]
+        else:
+            blocks = {}
 
         return await self._async_send_text_only_message(
             targets, message, title, attachments, blocks
