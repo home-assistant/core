@@ -43,7 +43,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, kill_raspistill)
 
-    file_path = hass.data[DOMAIN][CONF_FILE_PATH]
+    setup_config = hass.data[DOMAIN]
+    file_path = setup_config[CONF_FILE_PATH]
 
     def delete_temp_file(*args):
         """Delete the temporary file to prevent saving multiple temp images.
@@ -57,7 +58,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         temp_file = NamedTemporaryFile(suffix=".jpg", delete=False)
         temp_file.close()
         file_path = temp_file.name
-        hass.data[DOMAIN][CONF_FILE_PATH] = file_path
+        setup_config[CONF_FILE_PATH] = file_path
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, delete_temp_file)
 
     # Check whether the file path has been whitelisted
@@ -65,7 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("'%s' is not a whitelisted directory", file_path)
         return
 
-    add_entities([RaspberryCamera(hass.data[DOMAIN])])
+    add_entities([RaspberryCamera(setup_config)])
 
 
 class RaspberryCamera(Camera):
