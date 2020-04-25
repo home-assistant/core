@@ -7,3 +7,7 @@ with:
   source_branch: dev
   # Branch name to sync to in this repo
   destination_branch: dev
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
