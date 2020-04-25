@@ -498,4 +498,3 @@ class SonarrWantedSensor(SonarrSensor):
     def state(self) -> Union[None, str, int, float]:
         """Return the state of the sensor."""
         return self._total
-
