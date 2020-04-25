@@ -42,7 +42,7 @@ async def test_setup_provide_implementation(hass):
 
     with patch(
         "homeassistant.components.cloud.account_link._get_services",
-        side_effect=lambda _: [
+        return_value=[
             {"service": "test", "min_version": "0.1.0"},
             {"service": "too_new", "min_version": "100.0.0"},
         ],
@@ -75,7 +75,7 @@ async def test_get_services_cached(hass):
 
     with patch.object(account_link, "CACHE_TIMEOUT", 0), patch(
         "hass_nabucasa.account_link.async_fetch_available_services",
-        side_effect=lambda _: services,
+        return_value=services,
     ) as mock_fetch:
         assert await account_link._get_services(hass) == 1
 

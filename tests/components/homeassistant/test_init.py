@@ -270,7 +270,7 @@ async def test_turn_on_to_not_block_for_domains_without_service(hass):
     service = hass.services._services["homeassistant"]["turn_on"]
 
     with patch(
-        "homeassistant.core.ServiceRegistry.async_call", side_effect=lambda *args: None,
+        "homeassistant.core.ServiceRegistry.async_call", return_value=None,
     ) as mock_call:
         await service.func(service_call)
 
