@@ -8,7 +8,7 @@ from .const import (
     ATTR_API_FORECAST,
     ATTR_API_HUMIDITY,
     ATTR_API_PRESSURE,
-    ATTR_API_TEMP,
+    ATTR_API_TEMPERATURE,
     ATTR_API_WIND_BEARING,
     ATTR_API_WIND_SPEED,
     ATTRIBUTION,
@@ -82,7 +82,7 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def temperature(self):
         """Return the temperature."""
-        return self._weather_coordinator.data[ATTR_API_TEMP]
+        return self._weather_coordinator.data[ATTR_API_TEMPERATURE]
 
     @property
     def temperature_unit(self):

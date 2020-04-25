@@ -15,7 +15,7 @@ from .const import (
     ATTR_API_PRESSURE,
     ATTR_API_RAIN,
     ATTR_API_SNOW,
-    ATTR_API_TEMP,
+    ATTR_API_TEMPERATURE,
     ATTR_API_WEATHER,
     ATTR_API_WEATHER_CODE,
     ATTR_API_WIND_BEARING,
@@ -52,7 +52,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed(error)
 
         data[ATTR_API_WEATHER] = weather_response.get_detailed_status()
-        data[ATTR_API_TEMP] = self._units.temperature(
+        data[ATTR_API_TEMPERATURE] = self._units.temperature(
             float(weather_response.get_temperature("celsius").get("temp")), TEMP_CELSIUS
         )
         data[ATTR_API_PRESSURE] = self._units.pressure(

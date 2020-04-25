@@ -10,34 +10,34 @@ ENTRY_FORECAST_COORDINATOR = "forecast_coordinator"
 ENTRY_WEATHER_COORDINATOR = "weather_coordinator"
 ENTRY_MONITORED_CONDITIONS = "monitored_conditions"
 ATTR_API_WEATHER = "weather"
-ATTR_API_TEMP = "temp"
-ATTR_API_PRESSURE = "pressure"
-ATTR_API_HUMIDITY = "humidity"
-ATTR_API_CONDITION = "condition"
-ATTR_API_WIND_BEARING = "wind_bearing"
+ATTR_API_TEMPERATURE = "temperature"
 ATTR_API_WIND_SPEED = "wind_speed"
+ATTR_API_WIND_BEARING = "wind_bearing"
+ATTR_API_HUMIDITY = "humidity"
+ATTR_API_PRESSURE = "pressure"
+ATTR_API_CONDITION = "condition"
 ATTR_API_CLOUDS = "clouds"
-ATTR_API_WEATHER_CODE = "weather_code"
-ATTR_API_FORECAST = "forecast"
 ATTR_API_RAIN = "rain"
 ATTR_API_SNOW = "snow"
+ATTR_API_WEATHER_CODE = "weather_code"
+ATTR_API_FORECAST = "forecast"
 SENSOR_NAME = "sensor_name"
 SENSOR_UNIT = "sensor_unit"
-SENSOR_DATA_KEY = "sensor_data_key"
+SENSOR_DEVICE_CLASS = "sensor_device_class"
 COMPONENTS = ["sensor", "weather"]
 FORECAST_MODES = ["hourly", "daily", "freedaily"]
 # weather,temperature,wind_speed,wind_bearing,humidity,pressure,clouds,rain,snow,weather_code
 MONITORED_CONDITIONS = [
-    "weather",
-    "temperature",
-    "wind_speed",
-    "wind_bearing",
-    "humidity",
-    "pressure",
-    "clouds",
-    "rain",
-    "snow",
-    "weather_code",
+    ATTR_API_WEATHER,
+    ATTR_API_TEMPERATURE,
+    ATTR_API_WIND_SPEED,
+    ATTR_API_WIND_BEARING,
+    ATTR_API_HUMIDITY,
+    ATTR_API_PRESSURE,
+    ATTR_API_CLOUDS,
+    ATTR_API_RAIN,
+    ATTR_API_SNOW,
+    ATTR_API_WEATHER_CODE,
 ]
 LANGUAGES = ["en", "es", "ru", "it"]
 CONDITION_CLASSES = {

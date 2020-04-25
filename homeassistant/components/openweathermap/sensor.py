@@ -4,6 +4,9 @@ import logging
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEGREE,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
     SPEED_METERS_PER_SECOND,
     UNIT_PERCENTAGE,
 )
@@ -15,17 +18,20 @@ from .const import (
     ATTR_API_PRESSURE,
     ATTR_API_RAIN,
     ATTR_API_SNOW,
-    ATTR_API_TEMP,
+    ATTR_API_TEMPERATURE,
     ATTR_API_WEATHER,
     ATTR_API_WEATHER_CODE,
     ATTR_API_WIND_BEARING,
     ATTR_API_WIND_SPEED,
     ATTRIBUTION,
     DOMAIN,
-    ENTRY_ENTITY_NAME,
     ENTRY_FORECAST_COORDINATOR,
     ENTRY_MONITORED_CONDITIONS,
+    ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
+    SENSOR_DEVICE_CLASS,
+    SENSOR_NAME,
+    SENSOR_UNIT,
 )
 from .forecast_update_coordinator import ForecastUpdateCoordinator
 from .weather_update_coordinator import WeatherUpdateCoordinator
@@ -36,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up OpenWeatherMap sensor entities based on a config entry."""
     domain_data = hass.data[DOMAIN][config_entry.entry_id]
-    entity_name = domain_data[ENTRY_ENTITY_NAME]
+    name = domain_data[ENTRY_NAME]
     weather_coordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
     forecast_coordinator = domain_data[ENTRY_FORECAST_COORDINATOR]
     monitored_conditions = domain_data[ENTRY_MONITORED_CONDITIONS]
@@ -45,9 +51,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
     for sensor_type in monitored_conditions:
+        unique_id = f"{config_entry.unique_id}-{sensor_type.lower()}"
         entities.append(
             OpenWeatherMapSensor(
-                entity_name,
+                name,
+                unique_id,
                 sensor_type,
                 sensor_types,
                 weather_coordinator,
@@ -64,6 +72,7 @@ class OpenWeatherMapSensor(Entity):
     def __init__(
         self,
         name,
+        unique_id,
         sensor_type,
         sensor_types,
         weather_coordinator: WeatherUpdateCoordinator,
@@ -71,9 +80,11 @@ class OpenWeatherMapSensor(Entity):
     ):
         """Initialize the sensor."""
         self._name = name
-        self._sensor_name = sensor_types[sensor_type][0]
-        self._unit_of_measurement = sensor_types[sensor_type][1]
-        self._attr_key = sensor_types[sensor_type][2]
+        self._unique_id = unique_id
+        self._sensor_type = sensor_type
+        self._sensor_name = sensor_types[sensor_type][SENSOR_NAME]
+        self._unit_of_measurement = sensor_types[sensor_type][SENSOR_UNIT]
+        self._device_class = sensor_types[sensor_type][SENSOR_DEVICE_CLASS]
         self._weather_coordinator = weather_coordinator
         self._forecast_coordinator = forecast_coordinator
 
@@ -83,9 +94,29 @@ class OpenWeatherMapSensor(Entity):
         return f"{self._name} {self._sensor_name}"
 
     @property
+    def unique_id(self):
+        """Return a unique_id for this entity."""
+        return self._unique_id
+
+    @property
+    def should_poll(self):
+        """Return the polling requirement of the entity."""
+        return False
+
+    @property
+    def attribution(self):
+        """Return the attribution."""
+        return ATTRIBUTION
+
+    @property
+    def device_class(self):
+        """Return the device_class."""
+        return self._device_class
+
+    @property
     def state(self):
         """Return the state of the device."""
-        return self._weather_coordinator.data[self._attr_key]
+        return self._weather_coordinator.data[self._sensor_type]
 
     @property
     def unit_of_measurement(self):
@@ -96,11 +127,6 @@ class OpenWeatherMapSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement of the entity."""
-        return False
 
     @property
     def available(self):
@@ -128,14 +154,54 @@ class OpenWeatherMapSensor(Entity):
 
 def _get_sensor_types(units):
     return {
-        "weather": ["Condition", None, ATTR_API_WEATHER],
-        "temperature": ["Temperature", units.temperature_unit, ATTR_API_TEMP],
-        "wind_speed": ["Wind speed", SPEED_METERS_PER_SECOND, ATTR_API_WIND_SPEED],
-        "wind_bearing": ["Wind bearing", DEGREE, ATTR_API_WIND_BEARING],
-        "humidity": ["Humidity", UNIT_PERCENTAGE, ATTR_API_HUMIDITY],
-        "pressure": ["Pressure", units.pressure_unit, ATTR_API_PRESSURE],
-        "clouds": ["Cloud coverage", UNIT_PERCENTAGE, ATTR_API_CLOUDS],
-        "rain": ["Rain", "mm", ATTR_API_RAIN],
-        "snow": ["Snow", "mm", ATTR_API_SNOW],
-        "weather_code": ["Weather code", None, ATTR_API_WEATHER_CODE],
+        ATTR_API_WEATHER: {
+            SENSOR_NAME: "Condition",
+            SENSOR_UNIT: None,
+            SENSOR_DEVICE_CLASS: None,
+        },
+        ATTR_API_TEMPERATURE: {
+            SENSOR_NAME: "Temperature",
+            SENSOR_UNIT: units.temperature_unit,
+            SENSOR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+        },
+        ATTR_API_WIND_SPEED: {
+            SENSOR_NAME: "Wind speed",
+            SENSOR_UNIT: SPEED_METERS_PER_SECOND,
+            SENSOR_DEVICE_CLASS: None,
+        },
+        ATTR_API_WIND_BEARING: {
+            SENSOR_NAME: "Wind bearing",
+            SENSOR_UNIT: DEGREE,
+            SENSOR_DEVICE_CLASS: None,
+        },
+        ATTR_API_HUMIDITY: {
+            SENSOR_NAME: "Humidity",
+            SENSOR_UNIT: UNIT_PERCENTAGE,
+            SENSOR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
+        },
+        ATTR_API_PRESSURE: {
+            SENSOR_NAME: "Pressure",
+            SENSOR_UNIT: units.pressure_unit,
+            SENSOR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
+        },
+        ATTR_API_CLOUDS: {
+            SENSOR_NAME: "Cloud coverage",
+            SENSOR_UNIT: UNIT_PERCENTAGE,
+            SENSOR_DEVICE_CLASS: None,
+        },
+        ATTR_API_RAIN: {
+            SENSOR_NAME: "Rain",
+            SENSOR_UNIT: "mm",
+            SENSOR_DEVICE_CLASS: None,
+        },
+        ATTR_API_SNOW: {
+            SENSOR_NAME: "Snow",
+            SENSOR_UNIT: "mm",
+            SENSOR_DEVICE_CLASS: None,
+        },
+        ATTR_API_WEATHER_CODE: {
+            SENSOR_NAME: "Weather code",
+            SENSOR_UNIT: None,
+            SENSOR_DEVICE_CLASS: None,
+        },
     }
