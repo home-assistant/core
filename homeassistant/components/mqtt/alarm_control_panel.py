@@ -135,7 +135,7 @@ class MqttAlarm(
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
-    alarm.AlarmControlPanel,
+    alarm.AlarmControlPanelEntity,
 ):
     """Representation of a MQTT alarm status."""
 
