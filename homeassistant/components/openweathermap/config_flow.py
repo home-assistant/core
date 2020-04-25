@@ -32,6 +32,10 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
+    def __init__(self):
+        """Initialize."""
+        self._errors = {}
+
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         errors = {}
@@ -42,6 +46,7 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             await self.async_set_unique_id(f"{latitude}-{longitude}")
             self._abort_if_unique_id_configured()
+
             api_key_valid = _validate_api_key(user_input[CONF_API_KEY])
             monitored_conditions_valid = _validate_monitored_conditions(
                 user_input[CONF_MONITORED_CONDITIONS]

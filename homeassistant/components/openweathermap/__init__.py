@@ -18,9 +18,9 @@ from .const import (
     COMPONENTS,
     CONF_LANGUAGE,
     DOMAIN,
-    ENTRY_ENTITY_NAME,
     ENTRY_FORECAST_COORDINATOR,
     ENTRY_MONITORED_CONDITIONS,
+    ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
 )
 from .forecast_update_coordinator import ForecastUpdateCoordinator
@@ -43,7 +43,6 @@ async def async_setup_entry(hass, config_entry):
     forecast_mode = config_entry.data[CONF_MODE]
     language = config_entry.data[CONF_LANGUAGE]
     monitored_conditions_str = config_entry.data[CONF_MONITORED_CONDITIONS]
-
     monitored_conditions = _get_monitored_conditions_list(monitored_conditions_str)
 
     owm = OWM(API_key=api_key, language=language)
@@ -63,7 +62,7 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {
-        ENTRY_ENTITY_NAME: name,
+        ENTRY_NAME: name,
         ENTRY_WEATHER_COORDINATOR: weather_coordinator,
         ENTRY_FORECAST_COORDINATOR: forecast_coordinator,
         ENTRY_MONITORED_CONDITIONS: monitored_conditions,
