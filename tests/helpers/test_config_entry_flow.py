@@ -1,6 +1,5 @@
 """Tests for the Config Entry Flow helper."""
-from unittest.mock import Mock, patch
-
+from asynctest import Mock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -9,7 +8,6 @@ from homeassistant.helpers import config_entry_flow
 from tests.common import (
     MockConfigEntry,
     MockModule,
-    mock_coro,
     mock_entity_platform,
     mock_integration,
 )
@@ -209,8 +207,8 @@ async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
     """Test only a single entry is allowed."""
     assert await setup.async_setup_component(hass, "cloud", {})
 
-    async_setup_entry = Mock(return_value=mock_coro(True))
-    async_unload_entry = Mock(return_value=mock_coro(True))
+    async_setup_entry = Mock(return_value=True)
+    async_unload_entry = Mock(return_value=True)
 
     mock_integration(
         hass,
@@ -228,10 +226,9 @@ async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-    coro = mock_coro({"cloudhook_url": "https://example.com"})
-
     with patch(
-        "hass_nabucasa.cloudhooks.Cloudhooks.async_create", return_value=coro
+        "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
+        return_value={"cloudhook_url": "https://example.com"},
     ) as mock_create, patch(
         "homeassistant.components.cloud.async_active_subscription", return_value=True
     ), patch(
@@ -246,7 +243,8 @@ async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
     assert len(async_setup_entry.mock_calls) == 1
 
     with patch(
-        "hass_nabucasa.cloudhooks.Cloudhooks.async_delete", return_value=coro
+        "hass_nabucasa.cloudhooks.Cloudhooks.async_delete",
+        return_value={"cloudhook_url": "https://example.com"},
     ) as mock_delete:
 
         result = await hass.config_entries.async_remove(result["result"].entry_id)
