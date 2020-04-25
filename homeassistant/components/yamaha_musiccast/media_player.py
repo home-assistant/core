@@ -5,7 +5,7 @@ import socket
 import pymusiccast
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_NEXT_TRACK,
@@ -105,7 +105,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         known_hosts.remove(reg_host)
 
 
-class YamahaDevice(MediaPlayerDevice):
+class YamahaDevice(MediaPlayerEntity):
     """Representation of a Yamaha MusicCast device."""
 
     def __init__(self, recv, zone):

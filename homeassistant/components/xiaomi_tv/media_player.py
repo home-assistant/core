@@ -4,7 +4,7 @@ import logging
 import pymitv
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities(XiaomiTV(tv, DEFAULT_NAME) for tv in pymitv.Discover().scan())
 
 
-class XiaomiTV(MediaPlayerDevice):
+class XiaomiTV(MediaPlayerEntity):
     """Represent the Xiaomi TV for Home Assistant."""
 
     def __init__(self, ip, name):

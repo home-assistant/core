@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.lock import DOMAIN, LockDevice
+from homeassistant.components.lock import DOMAIN, LockEntity
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -239,7 +239,7 @@ def get_device(node, values, **kwargs):
     return ZwaveLock(values)
 
 
-class ZwaveLock(ZWaveDeviceEntity, LockDevice):
+class ZwaveLock(ZWaveDeviceEntity, LockEntity):
     """Representation of a Z-Wave Lock."""
 
     def __init__(self, values):

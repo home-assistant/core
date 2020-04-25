@@ -287,7 +287,6 @@ class OnkyoAVR(MediaPlayerDevice):
         self._reverse_mapping = {value: key for key, value in sources.items()}
         self._sound_mode = None
         self._attributes = {}
-
         self._supports_sound_mode = False
 
     @callback
@@ -303,6 +302,7 @@ class OnkyoAVR(MediaPlayerDevice):
                 self._attributes.pop(ATTR_VIDEO_INFORMATION, None)
                 self._attributes.pop(ATTR_PRESET, None)
                 self._attributes.pop(ATTR_VIDEO_OUT, None)
+
         elif command in ["volume", "master-volume"]:
             self._supports_volume = True
             self._volume = min(value / self._max_volume, 1)
@@ -340,6 +340,7 @@ class OnkyoAVR(MediaPlayerDevice):
         elif command == "video-information":
             self._parse_video_inforamtion(value)
 
+
     def backfill_state(self):
         """Get the receiver to send all the info we care about.
 
@@ -356,6 +357,7 @@ class OnkyoAVR(MediaPlayerDevice):
             self._query_avr("listening-mode")
             self._query_avr("audio-information")
             self._query_avr("video-information")
+
 
     @property
     def supported_features(self):
@@ -428,6 +430,7 @@ class OnkyoAVR(MediaPlayerDevice):
             sound_mode = SOUND_MODE_MAPPING[sound_mode][0]
         self._update_avr("listening-mode", sound_mode)
 
+
     async def async_turn_off(self):
         """Turn AVR power off."""
         self._update_avr("power", "off")
@@ -470,7 +473,7 @@ class OnkyoAVR(MediaPlayerDevice):
     def _query_avr(self, propname):
         """Cause the AVR to send an update about propname."""
         self.avr.send(f"{self._zone}.{propname}=query")
-
+        
     @callback
     def _parse_audio_inforamtion(self, audio_information_raw):
         values = _parse_onkyo_tuple(audio_information_raw)
