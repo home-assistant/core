@@ -2,7 +2,8 @@
 import asyncio
 from datetime import datetime
 import logging
-from unittest.mock import Mock, patch
+
+from asynctest import Mock, patch
 
 from homeassistant.components.smhi import weather as weather_smhi
 from homeassistant.components.smhi.const import ATTR_SMHI_CLOUDINESS
