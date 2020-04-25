@@ -69,8 +69,6 @@ async def test_config_flow_step_gateway_connect_error(hass):
     assert result["step_id"] == "gateway"
     assert result["errors"] == {}
 
-    mock_gateway = get_mock_gateway(False)
-
     with patch(
         "homeassistant.components.xiaomi_miio.gateway.gateway.Gateway.info",
         side_effect=DeviceException({}),
@@ -108,6 +106,8 @@ async def test_config_flow_gateway_succes(hass):
     with patch(
         "homeassistant.components.xiaomi_miio.gateway.gateway.Gateway.info",
         return_value=mock_info,
+    ), patch(
+        "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
