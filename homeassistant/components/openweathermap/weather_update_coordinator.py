@@ -13,6 +13,8 @@ from .const import (
     ATTR_API_CONDITION,
     ATTR_API_HUMIDITY,
     ATTR_API_PRESSURE,
+    ATTR_API_RAIN,
+    ATTR_API_SNOW,
     ATTR_API_TEMP,
     ATTR_API_WEATHER,
     ATTR_API_WEATHER_CODE,
@@ -57,10 +59,14 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             weather_response.get_pressure().get("press"), PRESSURE_PA
         )
         data[ATTR_API_HUMIDITY] = weather_response.get_humidity()
-        data[ATTR_API_CONDITION] = _get_weather_condition(weather_response)
+        data[ATTR_API_CONDITION] = _get_weather_condition(
+            weather_response.get_weather_code()
+        )
         data[ATTR_API_WIND_BEARING] = weather_response.get_wind().get("deg")
         data[ATTR_API_WIND_SPEED] = weather_response.get_wind().get("speed")
         data[ATTR_API_CLOUDS] = weather_response.get_clouds()
+        data[ATTR_API_RAIN] = _get_rain(weather_response.get_rain())
+        data[ATTR_API_SNOW] = _get_snow(weather_response.get_snow())
         data[ATTR_API_WEATHER_CODE] = weather_response.get_weather_code()
 
         return data
@@ -70,9 +76,19 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         return weather.get_weather()
 
 
-def _get_weather_condition(weather_response):
-    return [
-        key
-        for key, value in CONDITION_CLASSES.items()
-        if weather_response.get_weather_code() in value
-    ][0]
+def _get_rain(rain):
+    if "3h" in rain:
+        return round(rain["3h"], 0)
+    else:
+        return "not raining"
+
+
+def _get_snow(snow):
+    if snow:
+        return round(snow, 0)
+    else:
+        return "not snowing"
+
+
+def _get_weather_condition(weather_code):
+    return [k for k, v in CONDITION_CLASSES.items() if weather_code in v][0]

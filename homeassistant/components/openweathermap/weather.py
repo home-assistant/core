@@ -2,7 +2,6 @@
 import logging
 
 from homeassistant.components.weather import WeatherEntity
-from homeassistant.const import TEMP_CELSIUS
 
 from .const import (
     ATTR_API_CONDITION,
@@ -13,11 +12,10 @@ from .const import (
     ATTR_API_WIND_BEARING,
     ATTR_API_WIND_SPEED,
     ATTRIBUTION,
-    CONDITION_CLASSES,
     DOMAIN,
-    ENTITY_NAME,
-    FORECAST_COORDINATOR,
-    WEATHER_COORDINATOR,
+    ENTRY_ENTITY_NAME,
+    ENTRY_FORECAST_COORDINATOR,
+    ENTRY_WEATHER_COORDINATOR,
 )
 from .forecast_update_coordinator import ForecastUpdateCoordinator
 from .weather_update_coordinator import WeatherUpdateCoordinator
@@ -28,9 +26,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up OpenWeatherMap weather entity based on a config entry."""
     domain_data = hass.data[DOMAIN][config_entry.entry_id]
-    entity_name = domain_data[ENTITY_NAME]
-    weather_coordinator = domain_data[WEATHER_COORDINATOR]
-    forecast_coordinator = domain_data[FORECAST_COORDINATOR]
+    entity_name = domain_data[ENTRY_ENTITY_NAME]
+    weather_coordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
+    forecast_coordinator = domain_data[ENTRY_FORECAST_COORDINATOR]
 
     owm_sensor = OpenWeatherMapWeather(
         entity_name, weather_coordinator, forecast_coordinator
@@ -66,7 +64,7 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        return self.hass.config.units.temperature_unit
 
     @property
     def pressure(self):
@@ -133,7 +131,3 @@ class OpenWeatherMapWeather(WeatherEntity):
         """Get the latest data from OWM and updates the states."""
         await self._weather_coordinator.async_request_refresh()
         await self._forecast_coordinator.async_request_refresh()
-
-
-def _get_condition(entry):
-    return [k for k, v in CONDITION_CLASSES.items() if entry.get_weather_code() in v][0]
