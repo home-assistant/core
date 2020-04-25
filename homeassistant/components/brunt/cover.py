@@ -11,7 +11,7 @@ from homeassistant.components.cover import (
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
 
 
-class BruntDevice(CoverDevice):
+class BruntDevice(CoverEntity):
     """
     Representation of a Brunt cover device.
 

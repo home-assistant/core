@@ -8,7 +8,7 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.core import callback
 
@@ -25,7 +25,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class VeluxCover(CoverDevice):
+class VeluxCover(CoverEntity):
     """Representation of a Velux cover."""
 
     def __init__(self, node):
