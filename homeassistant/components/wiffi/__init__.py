@@ -1,6 +1,6 @@
 """Component for wiffi support."""
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import errno
 import logging
 
@@ -17,6 +17,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.dt import utcnow
 
 from .const import (
     CHECK_ENTITIES_SIGNAL,
@@ -126,7 +127,7 @@ class WiffiIntegrationApi:
             else:
                 async_dispatcher_send(
                     self._hass,
-                    UPDATE_ENTITY_SIGNAL + generate_unique_id(device, metric),
+                    f"{UPDATE_ENTITY_SIGNAL}-{generate_unique_id(device, metric)}",
                     device,
                     metric,
                 )
@@ -165,7 +166,7 @@ class WiffiEntity(Entity):
     async def async_added_to_hass(self):
         """Entity has been added to hass."""
         async_dispatcher_connect(
-            self.hass, UPDATE_ENTITY_SIGNAL + self._id, self._update_value_callback
+            self.hass, f"{UPDATE_ENTITY_SIGNAL}-{self._id}", self._update_value_callback
         )
         async_dispatcher_connect(
             self.hass, CHECK_ENTITIES_SIGNAL, self._check_expiration_date
@@ -201,13 +202,7 @@ class WiffiEntity(Entity):
 
         Will be called by derived classes after a value update has been received.
         """
-        self._expiration_date = datetime.now() + timedelta(minutes=3)
-
-    @callback
-    def _update_value_callback(self, device, metric):
-        """Check if the update belongs to us and update value."""
-        if self._id == f"{device.mac_address.replace(':', '')}-{metric.name}":
-            self._update_value(metric)
+        self._expiration_date = utcnow() + timedelta(minutes=3)
 
     @callback
     def _check_expiration_date(self):
@@ -219,7 +214,7 @@ class WiffiEntity(Entity):
         if (
             self._value is not None
             and self._expiration_date is not None
-            and datetime.now() > self._expiration_date
+            and utcnow() > self._expiration_date
         ):
             self._value = None
             self.async_write_ha_state()

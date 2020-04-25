@@ -42,7 +42,8 @@ class BoolEntity(WiffiEntity, BinarySensorDevice):
         """Return the state of the entity."""
         return self._value
 
-    def _update_value(self, metric):
+    @callback
+    def _update_value_callback(self, device, metric):
         """Update the value of the entity.
 
         Called if a new message has been received from the wiffi device.

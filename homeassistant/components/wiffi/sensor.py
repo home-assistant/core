@@ -86,7 +86,8 @@ class NumberEntity(WiffiEntity):
         """Return the value of the entity."""
         return self._value
 
-    def _update_value(self, metric):
+    @callback
+    def _update_value_callback(self, device, metric):
         """Update the value of the entity.
 
         Called if a new message has been received from the wiffi device.
@@ -113,7 +114,8 @@ class StringEntity(WiffiEntity):
         """Return the value of the entity."""
         return self._value
 
-    def _update_value(self, metric):
+    @callback
+    def _update_value_callback(self, device, metric):
         """Update the value of the entity.
 
         Called if a new message has been received from the wiffi device.
