@@ -13,8 +13,8 @@ from .const import (
     ATTR_API_WIND_SPEED,
     ATTRIBUTION,
     DOMAIN,
-    ENTRY_ENTITY_NAME,
     ENTRY_FORECAST_COORDINATOR,
+    ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
 )
 from .forecast_update_coordinator import ForecastUpdateCoordinator
@@ -26,15 +26,16 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up OpenWeatherMap weather entity based on a config entry."""
     domain_data = hass.data[DOMAIN][config_entry.entry_id]
-    entity_name = domain_data[ENTRY_ENTITY_NAME]
+    name = domain_data[ENTRY_NAME]
     weather_coordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
     forecast_coordinator = domain_data[ENTRY_FORECAST_COORDINATOR]
 
-    owm_sensor = OpenWeatherMapWeather(
-        entity_name, weather_coordinator, forecast_coordinator
+    unique_id = f"{config_entry.unique_id}"
+    owm_weather = OpenWeatherMapWeather(
+        name, unique_id, weather_coordinator, forecast_coordinator
     )
 
-    async_add_entities([owm_sensor], False)
+    async_add_entities([owm_weather], False)
 
 
 class OpenWeatherMapWeather(WeatherEntity):
@@ -42,14 +43,36 @@ class OpenWeatherMapWeather(WeatherEntity):
 
     def __init__(
         self,
-        entity_name,
+        name,
+        unique_id,
         weather_coordinator: WeatherUpdateCoordinator,
         forecast_coordinator: ForecastUpdateCoordinator,
     ):
         """Initialize the sensor."""
-        self._name = entity_name
+        self._name = name
+        self._unique_id = unique_id
         self._weather_coordinator = weather_coordinator
         self._forecast_coordinator = forecast_coordinator
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def unique_id(self):
+        """Return a unique_id for this entity."""
+        return self._unique_id
+
+    @property
+    def should_poll(self):
+        """Return the polling requirement of the entity."""
+        return False
+
+    @property
+    def attribution(self):
+        """Return the attribution."""
+        return ATTRIBUTION
 
     @property
     def condition(self):
@@ -93,21 +116,6 @@ class OpenWeatherMapWeather(WeatherEntity):
     def forecast(self):
         """Return the forecast array."""
         return self._forecast_coordinator.data[ATTR_API_FORECAST]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement of the entity."""
-        return False
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION
 
     @property
     def available(self):
