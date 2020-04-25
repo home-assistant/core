@@ -3,6 +3,7 @@ from asyncio import Future
 from unittest.mock import Mock
 
 from asynctest import patch
+from miio import DeviceException
 
 from homeassistant import config_entries
 from homeassistant.components.xiaomi_miio import config_flow, const
