@@ -177,6 +177,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 ATTR_HDMI_OUTPUT = "hdmi_output"
 ATTR_PRESET = "preset"
+ATTR_AUDIO_INFORMATION = "audio_information"
+ATTR_VIDEO_INFORMATION = "video_information"
+ATTR_VIDEO_OUT = "video_out"
 
 ACCEPTED_VALUES = [
     "no",
@@ -199,12 +202,27 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 
 
+@callback
+def _parse_onkyo_tuple(value):
+    """Parse a value returned from the eiscp library into a tuple."""
+    if isinstance(value, str):
+        return value.split(",")
+
+    return value
+
+
+@callback
+def _tuple_get(tup, index, default=None):
+    """Return a tuple item at index or a default value if it doesn't exist."""
+    return (tup[index : index + 1] or [default])[0]
+
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up our socket to the AVR."""
 
     host = config[CONF_HOST]
     port = config[CONF_PORT]
-    name = config[CONF_NAME] or "Onkyo Receiver"
+    name = config.get(CONF_NAME) or "Onkyo Receiver"
     max_volume = config[CONF_MAX_VOLUME]
     zones = config[CONF_ZONES]
     sources = config[CONF_SOURCES]
@@ -278,6 +296,7 @@ class OnkyoAVR(MediaPlayerDevice):
 
         self._supports_sound_mode = False
 
+    @callback
     def process_update(self, update):
         """Store relevant updates so they can be queried later."""
         _, command, value = update
@@ -286,46 +305,46 @@ class OnkyoAVR(MediaPlayerDevice):
                 self._powerstate = STATE_ON
             else:
                 self._powerstate = STATE_OFF
+                self._attributes.pop(ATTR_AUDIO_INFORMATION, None)
+                self._attributes.pop(ATTR_VIDEO_INFORMATION, None)
+                self._attributes.pop(ATTR_PRESET, None)
+                self._attributes.pop(ATTR_VIDEO_OUT, None)
         elif command in ["volume", "master-volume"]:
             self._supports_volume = True
             self._volume = min(value / self._max_volume, 1)
         elif command == "audio-muting":
             self._muted = bool(value == "on")
         elif command == "input-selector":
-            # eiscp can return string or tuple. Make everything tuples.
-            if isinstance(value, str):
-                current_source_tuples = (command, (value,))
-            else:
-                current_source_tuples = (command, value)
+            sources = _parse_onkyo_tuple(value)
 
-            for source in current_source_tuples[1]:
+            for source in sources:
                 if source in self._source_mapping:
                     self._source = self._source_mapping[source]
                     break
-                self._source = "_".join(current_source_tuples[1])
+                self._source = "_".join(sources)
         elif command == "hdmi-output-selector":
-            self._attributes["video_out"] = ",".join(value)
+            self._attributes[ATTR_VIDEO_OUT] = ",".join(value)
         elif command == "preset":
             if not (self._source is None) and self._source.lower() == "radio":
                 self._attributes[ATTR_PRESET] = value
             elif ATTR_PRESET in self._attributes:
                 del self._attributes[ATTR_PRESET]
         elif command == "listening-mode":
-            # eiscp can return string or tuple. Make everything tuples.
-            if isinstance(value, str):
-                sound_mode_tuples = (command, (value,))
-            else:
-                sound_mode_tuples = (command, value)
+            sounds_modes = _parse_onkyo_tuple(value)
 
             # If the selected sound mode is not available, N/A is returned
             # so only update the sound mode when it is not N/A
-            if "N/A" not in sound_mode_tuples[1]:
-                for sound_mode in sound_mode_tuples[1]:
+            if "N/A" not in sounds_modes:
+                for sound_mode in sounds_modes:
                     if sound_mode in SOUND_MODE_REVERSE_MAPPING:
                         self._sound_mode = SOUND_MODE_REVERSE_MAPPING[sound_mode]
                         self._supports_sound_mode = True
                         break
-                    self._sound_mode = "_".join(sound_mode_tuples[1])
+                    self._sound_mode = "_".join(sounds_modes)
+        elif command == "audio-information":
+            self._parse_audio_inforamtion(value)
+        elif command == "video-information":
+            self._parse_video_inforamtion(value)
 
     def backfill_state(self):
         """Get the receiver to send all the info we care about.
@@ -341,6 +360,8 @@ class OnkyoAVR(MediaPlayerDevice):
             self._query_avr("audio-muting")
             self._query_avr("input-selector")
             self._query_avr("listening-mode")
+            self._query_avr("audio-information")
+            self._query_avr("video-information")
 
     @property
     def supported_features(self):
@@ -455,3 +476,36 @@ class OnkyoAVR(MediaPlayerDevice):
     def _query_avr(self, propname):
         """Cause the AVR to send an update about propname."""
         self.avr.send(f"{self._zone}.{propname}=query")
+
+    @callback
+    def _parse_audio_inforamtion(self, audio_information_raw):
+        values = _parse_onkyo_tuple(audio_information_raw)
+        if values:
+            info = {
+                "format": _tuple_get(values, 1),
+                "input_frequency": _tuple_get(values, 2),
+                "input_channels": _tuple_get(values, 3),
+                "listening_mode": _tuple_get(values, 4),
+                "output_channels": _tuple_get(values, 5),
+                "output_frequency": _tuple_get(values, 6),
+            }
+            self._attributes[ATTR_AUDIO_INFORMATION] = info
+        else:
+            self._attributes.pop(ATTR_AUDIO_INFORMATION, None)
+
+    @callback
+    def _parse_video_inforamtion(self, video_information_raw):
+        values = _parse_onkyo_tuple(video_information_raw)
+        if values:
+            info = {
+                "input_resolution": _tuple_get(values, 1),
+                "input_color_schema": _tuple_get(values, 2),
+                "input_color_depth": _tuple_get(values, 3),
+                "output_resolution": _tuple_get(values, 5),
+                "output_color_schema": _tuple_get(values, 6),
+                "output_color_depth": _tuple_get(values, 7),
+                "picture_mode": _tuple_get(values, 8),
+            }
+            self._attributes[ATTR_VIDEO_INFORMATION] = info
+        else:
+            self._attributes.pop(ATTR_VIDEO_INFORMATION, None)
