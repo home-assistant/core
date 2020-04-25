@@ -1,6 +1,7 @@
 """Config flow for OpenWeatherMap."""
 from pyowm import OWM
 from pyowm.exceptions.api_call_error import APICallError
+from pyowm.exceptions.api_response_error import UnauthorizedError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -142,9 +143,9 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
         )
 
 
-def _validate_monitored_conditions(monitored_conditions_str):
-    monitored_conditions = str(monitored_conditions_str).split(",")
-    for condition in monitored_conditions:
+def _validate_monitored_conditions(conditions_str):
+    conditions = list(filter(None, str(conditions_str).split(",")))
+    for condition in conditions:
         if condition.strip() not in MONITORED_CONDITIONS:
             return False
     return True
@@ -152,7 +153,7 @@ def _validate_monitored_conditions(monitored_conditions_str):
 
 def _validate_api_key(api_key):
     try:
-        OWM(api_key)
-    except APICallError:
+        owm = OWM(api_key)
+        return owm.is_API_online()
+    except (APICallError, UnauthorizedError):
         return False
-    return True

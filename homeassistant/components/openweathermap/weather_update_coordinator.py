@@ -4,6 +4,7 @@ import logging
 
 import async_timeout
 from pyowm.exceptions.api_call_error import APICallError
+from pyowm.exceptions.api_response_error import UnauthorizedError
 
 from homeassistant.const import PRESSURE_PA, TEMP_CELSIUS
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -48,32 +49,36 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         with async_timeout.timeout(20):
             try:
                 weather_response = await self._update_weather()
-            except APICallError as error:
+                data = self._get_parsed_weather(weather_response)
+            except (APICallError, UnauthorizedError) as error:
                 raise UpdateFailed(error)
-
-        data[ATTR_API_WEATHER] = weather_response.get_detailed_status()
-        data[ATTR_API_TEMPERATURE] = self._units.temperature(
-            float(weather_response.get_temperature("celsius").get("temp")), TEMP_CELSIUS
-        )
-        data[ATTR_API_PRESSURE] = self._units.pressure(
-            weather_response.get_pressure().get("press"), PRESSURE_PA
-        )
-        data[ATTR_API_HUMIDITY] = weather_response.get_humidity()
-        data[ATTR_API_CONDITION] = _get_weather_condition(
-            weather_response.get_weather_code()
-        )
-        data[ATTR_API_WIND_BEARING] = weather_response.get_wind().get("deg")
-        data[ATTR_API_WIND_SPEED] = weather_response.get_wind().get("speed")
-        data[ATTR_API_CLOUDS] = weather_response.get_clouds()
-        data[ATTR_API_RAIN] = _get_rain(weather_response.get_rain())
-        data[ATTR_API_SNOW] = _get_snow(weather_response.get_snow())
-        data[ATTR_API_WEATHER_CODE] = weather_response.get_weather_code()
-
         return data
 
     async def _update_weather(self):
         weather = self._owm_client.weather_at_coords(self._latitude, self._longitude)
         return weather.get_weather()
+
+    def _get_parsed_weather(self, weather_response):
+        return {
+            ATTR_API_WEATHER: weather_response.get_detailed_status(),
+            ATTR_API_TEMPERATURE: self._units.temperature(
+                float(weather_response.get_temperature("celsius").get("temp")),
+                TEMP_CELSIUS,
+            ),
+            ATTR_API_PRESSURE: self._units.pressure(
+                weather_response.get_pressure().get("press"), PRESSURE_PA
+            ),
+            ATTR_API_HUMIDITY: weather_response.get_humidity(),
+            ATTR_API_CONDITION: _get_weather_condition(
+                weather_response.get_weather_code()
+            ),
+            ATTR_API_WIND_BEARING: weather_response.get_wind().get("deg"),
+            ATTR_API_WIND_SPEED: weather_response.get_wind().get("speed"),
+            ATTR_API_CLOUDS: weather_response.get_clouds(),
+            ATTR_API_RAIN: _get_rain(weather_response.get_rain()),
+            ATTR_API_SNOW: _get_snow(weather_response.get_snow()),
+            ATTR_API_WEATHER_CODE: weather_response.get_weather_code(),
+        }
 
 
 def _get_rain(rain):

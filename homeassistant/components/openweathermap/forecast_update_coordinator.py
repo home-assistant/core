@@ -44,10 +44,10 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
         with async_timeout.timeout(20):
             try:
                 forecast_response = await self._update_forecast()
+                data[ATTR_API_FORECAST] = self._convert_forecast(forecast_response)
             except (APICallError, UnauthorizedError) as error:
                 raise UpdateFailed(error)
 
-        data[ATTR_API_FORECAST] = self._convert_forecast(forecast_response)
         return data
 
     async def _update_forecast(self):
