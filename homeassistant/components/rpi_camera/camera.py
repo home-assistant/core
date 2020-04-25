@@ -23,6 +23,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def kill_raspistill(*args):
     """Kill any previously running raspistill process.."""
     subprocess.Popen(
@@ -131,4 +132,4 @@ class RaspberryCamera(Camera):
     @property
     def frame_interval(self):
         """Return the interval between frames of the stream."""
-        return self._config[CONF_TIMELAPSE]/1000
+        return self._config[CONF_TIMELAPSE] / 1000

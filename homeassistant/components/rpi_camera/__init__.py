@@ -32,35 +32,42 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_FILE_PATH): cv.isfile,
-                vol.Optional(CONF_HORIZONTAL_FLIP, default=DEFAULT_HORIZONTAL_FLIP): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=1)
+                vol.Optional(
+                    CONF_HORIZONTAL_FLIP, default=DEFAULT_HORIZONTAL_FLIP
+                ): vol.All(vol.Coerce(int), vol.Range(min=0, max=1)),
+                vol.Optional(
+                    CONF_IMAGE_HEIGHT, default=DEFAULT_IMAGE_HEIGHT
+                ): vol.Coerce(int),
+                vol.Optional(
+                    CONF_IMAGE_QUALITY, default=DEFAULT_IMAGE_QUALITY
+                ): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+                vol.Optional(
+                    CONF_IMAGE_ROTATION, default=DEFAULT_IMAGE_ROTATION
+                ): vol.All(vol.Coerce(int), vol.Range(min=0, max=359)),
+                vol.Optional(CONF_IMAGE_WIDTH, default=DEFAULT_IMAGE_WIDTH): vol.Coerce(
+                    int
                 ),
-                vol.Optional(CONF_IMAGE_HEIGHT, default=DEFAULT_IMAGE_HEIGHT): vol.Coerce(int),
-                vol.Optional(CONF_IMAGE_QUALITY, default=DEFAULT_IMAGE_QUALITY): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=100)
-                ),
-                vol.Optional(CONF_IMAGE_ROTATION, default=DEFAULT_IMAGE_ROTATION): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=359)
-                ),
-                vol.Optional(CONF_IMAGE_WIDTH, default=DEFAULT_IMAGE_WIDTH): vol.Coerce(int),
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(CONF_OVERLAY_METADATA): vol.All(
                     vol.Coerce(int), vol.Range(min=4, max=2056)
                 ),
                 vol.Optional(CONF_OVERLAY_TIMESTAMP): cv.string,
-                vol.Optional(CONF_TIMELAPSE, default=DEFAULT_TIMELAPSE): vol.Coerce(int),
-                vol.Optional(CONF_VERTICAL_FLIP, default=DEFAULT_VERTICAL_FLIP): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=1)
+                vol.Optional(CONF_TIMELAPSE, default=DEFAULT_TIMELAPSE): vol.Coerce(
+                    int
                 ),
+                vol.Optional(
+                    CONF_VERTICAL_FLIP, default=DEFAULT_VERTICAL_FLIP
+                ): vol.All(vol.Coerce(int), vol.Range(min=0, max=1)),
             }
         )
     },
     extra=vol.ALLOW_EXTRA,
 )
 
+
 def setup(hass, config):
     """Set up the rpi_camera integration."""
-    config_domain = config[DOMAIN];
+    config_domain = config[DOMAIN]
     hass.data[DOMAIN] = {
         CONF_FILE_PATH: config_domain.get(CONF_FILE_PATH),
         CONF_HORIZONTAL_FLIP: config_domain.get(CONF_HORIZONTAL_FLIP),
