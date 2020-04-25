@@ -117,3 +117,13 @@ class TestRemote(unittest.TestCase):
         assert call.domain == remote.DOMAIN
         assert call.service == SERVICE_LEARN_COMMAND
         assert call.data[ATTR_ENTITY_ID] == "entity_id_val"
+
+
+def test_deprecated_base_class(caplog):
+    """Test deprecated base class."""
+
+    class CustomRemote(remote.RemoteDevice):
+        pass
+
+    CustomRemote()
+    assert "RemoteDevice is deprecated, modify CustomRemote" in caplog.text
