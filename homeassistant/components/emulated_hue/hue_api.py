@@ -13,6 +13,8 @@ from homeassistant.components import (
     script,
 )
 from homeassistant.components.climate.const import (
+    ATTR_HVAC_MODE,
+    SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -378,6 +380,9 @@ class HueOneLightChangeView(HomeAssistantView):
         # Entity needs separate call to turn on
         turn_on_needed = False
 
+        # HVAC mode for climate entities
+        hvac_mode = None
+
         # Convert the resulting "on" status into the service we need to call
         service = SERVICE_TURN_ON if parsed[STATE_ON] else SERVICE_TURN_OFF
 
@@ -425,11 +430,12 @@ class HueOneLightChangeView(HomeAssistantView):
             if parsed[STATE_BRIGHTNESS] is not None:
                 data["variables"]["requested_level"] = parsed[STATE_BRIGHTNESS]
 
-        # If the requested entity is a climate, set the temperature
+        # If the requested entity is a climate, set the HVAC mode
+        # and the temperature
         elif entity.domain == climate.DOMAIN:
-            # We don't support turning climate devices on or off,
-            # only setting the temperature
-            service = None
+            if service == SERVICE_TURN_ON:
+                hvac_mode = config.get_turn_on_mode(entity_id)
+                service = None
 
             if entity_features & SUPPORT_TARGET_TEMPERATURE:
                 if parsed[STATE_BRIGHTNESS] is not None:
@@ -448,6 +454,7 @@ class HueOneLightChangeView(HomeAssistantView):
                     data[ATTR_MEDIA_VOLUME_LEVEL] = parsed[STATE_BRIGHTNESS] / 100.0
 
         # If the requested entity is a cover, convert to open_cover/close_cover
+        # and cover position
         elif entity.domain == cover.DOMAIN:
             domain = entity.domain
             if service == SERVICE_TURN_ON:
@@ -495,6 +502,17 @@ class HueOneLightChangeView(HomeAssistantView):
                     core.DOMAIN,
                     SERVICE_TURN_ON,
                     {ATTR_ENTITY_ID: entity_id},
+                    blocking=True,
+                )
+            )
+
+        # Separate call for setting the HVAC mode
+        if hvac_mode is not None:
+            hass.async_create_task(
+                hass.services.async_call(
+                    climate.DOMAIN,
+                    SERVICE_SET_HVAC_MODE,
+                    {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: hvac_mode},
                     blocking=True,
                 )
             )

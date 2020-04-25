@@ -5,6 +5,7 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import util
+from homeassistant.components.climate.const import HVAC_MODES
 from homeassistant.components.http import real_ip
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
@@ -34,6 +35,7 @@ CONF_ADVERTISE_PORT = "advertise_port"
 CONF_ENTITIES = "entities"
 CONF_ENTITY_HIDDEN = "hidden"
 CONF_ENTITY_NAME = "name"
+CONF_TURN_ON_MODE = "turn_on_mode"
 CONF_EXPOSE_BY_DEFAULT = "expose_by_default"
 CONF_EXPOSED_DOMAINS = "exposed_domains"
 CONF_HOST_IP = "host_ip"
@@ -63,6 +65,7 @@ CONFIG_ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ENTITY_NAME): cv.string,
         vol.Optional(CONF_ENTITY_HIDDEN): cv.boolean,
+        vol.Optional(CONF_TURN_ON_MODE): cv.string,
     }
 )
 
@@ -297,6 +300,17 @@ class Config:
             return True
 
         return False
+
+    def get_turn_on_mode(self, entity_id):
+        """Get turn on mode for climate entities by entity id."""
+        if entity_id in self.entities and CONF_TURN_ON_MODE in self.entities[entity_id]:
+            turn_on_mode = self.entities[entity_id][CONF_TURN_ON_MODE]
+            if turn_on_mode in HVAC_MODES:
+                return turn_on_mode
+
+            _LOGGER.warning("Invalid HVAC mode for %s", entity_id)
+
+        return None
 
 
 def _load_json(filename):
