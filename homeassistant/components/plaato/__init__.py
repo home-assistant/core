@@ -26,7 +26,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_DEVICE_TYPE, CONF_USE_WEBHOOK, DOMAIN, PLATFORMS
+from .const import (
+    CONF_DEVICE_NAME,
+    CONF_DEVICE_TYPE,
+    CONF_USE_WEBHOOK,
+    DOMAIN,
+    PLATFORMS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,8 +109,9 @@ def setup_webhook(hass: HomeAssistant, entry: ConfigEntry):
     """Init webhook based on config entry."""
     if entry.data[CONF_WEBHOOK_ID] is not None:
         webhook_id = entry.data[CONF_WEBHOOK_ID]
+        device_name = entry.data[CONF_DEVICE_NAME]
         hass.components.webhook.async_register(
-            DOMAIN, "Plaato", webhook_id, handle_webhook
+            DOMAIN, f"{DOMAIN}.{device_name}", webhook_id, handle_webhook
         )
     else:
         raise InvalidStateError
