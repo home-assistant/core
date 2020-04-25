@@ -77,7 +77,7 @@ class FlickPricingSensor(Entity):
         self._attributes[ATTR_END_AT] = self._price.end_at
         for component in self._price.components:
             if component.charge_setter not in ATTR_COMPONENTS:
-                _LOGGER.info(f"Found unknown component: {component.charge_setter}")
+                _LOGGER.warning("Found unknown component: %s" % component.charge_setter)
                 continue
 
             self._attributes[component.charge_setter] = float(component.value)
