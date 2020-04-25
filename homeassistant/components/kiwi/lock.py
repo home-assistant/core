@@ -4,7 +4,7 @@ import logging
 from kiwiki import KiwiClient, KiwiException
 import voluptuous as vol
 
-from homeassistant.components.lock import PLATFORM_SCHEMA, LockDevice
+from homeassistant.components.lock import PLATFORM_SCHEMA, LockEntity
 from homeassistant.const import (
     ATTR_ID,
     ATTR_LATITUDE,
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([KiwiLock(lock, kiwi) for lock in available_locks], True)
 
 
-class KiwiLock(LockDevice):
+class KiwiLock(LockEntity):
     """Representation of a Kiwi lock."""
 
     def __init__(self, kiwi_lock, client):
