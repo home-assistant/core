@@ -1551,7 +1551,7 @@ pysesame2==1.0.1
 pysher==1.0.1
 
 # homeassistant.components.signal_messenger
-pysignalclirestapi==0.2.4
+pysignalclirestapi==0.3.4
 
 # homeassistant.components.sma
 pysma==0.3.5
