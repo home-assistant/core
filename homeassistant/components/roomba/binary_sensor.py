@@ -4,16 +4,8 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import roomba_reported_state
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> Revert "Merge branch 'roomba_fix' of http://github.com/cyr-ius/home-assistant into roomba_fix"
 from .const import BLID, DOMAIN, ROOMBA_SESSION
 from .irobot_base import IRobotEntity
-=======
-from .const import BLID, DOMAIN, ICON_BIN, ROOMBA_SESSION
->>>>>>> Fix icon
-
 
 _LOGGER = logging.getLogger(__name__)
 
