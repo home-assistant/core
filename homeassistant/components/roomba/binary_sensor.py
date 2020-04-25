@@ -4,8 +4,15 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import roomba_reported_state
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> Revert "Merge branch 'roomba_fix' of http://github.com/cyr-ius/home-assistant into roomba_fix"
 from .const import BLID, DOMAIN, ROOMBA_SESSION
 from .irobot_base import IRobotEntity
+=======
+from .const import BLID, DOMAIN, ICON_BIN, ROOMBA_SESSION
+>>>>>>> Fix icon
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,15 +33,6 @@ class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
     """Class to hold Roomba Sensor basic info."""
 
     ICON = "mdi:delete-variant"
-
-    def __init__(self, roomba, blid):
-        """Initialize the sensor object."""
-        self.vacuum = roomba
-        vacuum_state = roomba_reported_state(roomba)
-        self._blid = blid
-        self._name = vacuum_state.get("name")
-        self._identifier = f"roomba_{self._blid}"
-        self._bin_status = None
 
     @property
     def name(self):
