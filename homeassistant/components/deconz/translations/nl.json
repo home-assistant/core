@@ -34,7 +34,14 @@
                 "data": {
                     "host": "Host",
                     "port": "Poort"
-                }
+                },
+                "title": "Configureer deCONZ gateway"
+            },
+            "user": {
+                "data": {
+                    "host": "Selecteer gevonden deCONZ gateway"
+                },
+                "title": "Selecteer DeCONZ gateway"
             }
         }
     },
@@ -97,7 +104,8 @@
                     "allow_clip_sensor": "DeCONZ CLIP sensoren toestaan",
                     "allow_deconz_groups": "Sta deCONZ-lichtgroepen toe"
                 },
-                "description": "Configureer de zichtbaarheid van deCONZ-apparaattypen"
+                "description": "Configureer de zichtbaarheid van deCONZ-apparaattypen",
+                "title": "deCONZ opties"
             }
         }
     }

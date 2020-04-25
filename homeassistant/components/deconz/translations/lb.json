@@ -48,6 +48,7 @@
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "B\u00e9id Kn\u00e4ppchen",
+            "bottom_buttons": "\u00cbnnescht Kn\u00e4ppchen",
             "button_1": "\u00c9ischte Kn\u00e4ppchen",
             "button_2": "Zweete Kn\u00e4ppchen",
             "button_3": "Dr\u00ebtte Kn\u00e4ppchen",
@@ -64,6 +65,7 @@
             "side_4": "S\u00e4it 4",
             "side_5": "S\u00e4it 5",
             "side_6": "S\u00e4it 6",
+            "top_buttons": "Iewescht Kn\u00e4ppchen",
             "turn_off": "Ausschalten",
             "turn_on": "Uschalten"
         },
