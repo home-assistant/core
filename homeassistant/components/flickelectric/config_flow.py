@@ -60,7 +60,7 @@ class FlickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                self._validate_input(user_input)
+                await self._validate_input(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
