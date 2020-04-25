@@ -11,7 +11,7 @@ import socket
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_CLEAR_PLAYLIST,
@@ -104,7 +104,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([entity])
 
 
-class Volumio(MediaPlayerDevice):
+class Volumio(MediaPlayerEntity):
     """Volumio Player Object."""
 
     def __init__(self, name, host, port, hass):
