@@ -149,7 +149,7 @@ async def async_map_retry(
                 ],
                 loop=hass.loop,
             )
-        # Process object serially.
+        # Process objects serially.
         else:
             results = [
                 await map_object(original_object)
