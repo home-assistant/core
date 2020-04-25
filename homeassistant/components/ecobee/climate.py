@@ -4,7 +4,7 @@ from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -249,7 +249,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class Thermostat(ClimateDevice):
+class Thermostat(ClimateEntity):
     """A thermostat class for Ecobee."""
 
     def __init__(self, data, thermostat_index):

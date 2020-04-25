@@ -2,7 +2,7 @@
 import proliphix
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([ProliphixThermostat(pdp)], True)
 
 
-class ProliphixThermostat(ClimateDevice):
+class ProliphixThermostat(ClimateEntity):
     """Representation a Proliphix thermostat."""
 
     def __init__(self, pdp):
