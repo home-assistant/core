@@ -8,7 +8,7 @@ from homeassistant.components.cover import (
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPENING,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.const import ATTR_ID
 
@@ -32,7 +32,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class SlideCover(CoverDevice):
+class SlideCover(CoverEntity):
     """Representation of a Slide cover."""
 
     def __init__(self, api, slide):
