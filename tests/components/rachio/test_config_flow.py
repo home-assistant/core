@@ -122,7 +122,7 @@ async def test_form_homekit(hass):
         for flow in hass.config_entries.flow.async_progress()
         if flow["flow_id"] == result["flow_id"]
     )
-    assert flows_in_progress[0]["context"]["unique_id"] == "AA:BB:CC:DD:EE:FF"
+    assert flow["context"]["unique_id"] == "AA:BB:CC:DD:EE:FF"
 
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_API_KEY: "api_key"})
     entry.add_to_hass(hass)
