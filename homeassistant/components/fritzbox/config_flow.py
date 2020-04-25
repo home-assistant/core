@@ -83,7 +83,7 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if entry.data[CONF_HOST] == user_input[CONF_HOST]:
+                if entry.data.get(CONF_HOST) == user_input[CONF_HOST]:
                     if entry.data != user_input:
                         self.hass.config_entries.async_update_entry(
                             entry, data=user_input
