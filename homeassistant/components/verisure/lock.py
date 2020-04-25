@@ -2,7 +2,7 @@
 import logging
 from time import monotonic, sleep
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 from homeassistant.const import ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED
 
 from . import CONF_CODE_DIGITS, CONF_DEFAULT_LOCK_CODE, CONF_LOCKS, HUB as hub
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(locks)
 
 
-class VerisureDoorlock(LockDevice):
+class VerisureDoorlock(LockEntity):
     """Representation of a Verisure doorlock."""
 
     def __init__(self, device_label):
