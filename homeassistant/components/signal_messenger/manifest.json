@@ -3,5 +3,5 @@
   "name": "Signal Messenger",
   "documentation": "https://www.home-assistant.io/integrations/signal_messenger",
   "codeowners": ["@bbernhard"],
-  "requirements": ["pysignalclirestapi==0.2.4"]
+  "requirements": ["pysignalclirestapi==0.3.4"]
 }
