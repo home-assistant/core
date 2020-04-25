@@ -1,6 +1,5 @@
 """Define tests for the OpenUV config flow."""
-from unittest.mock import patch
-
+from asynctest import patch
 from regenmaschine.errors import RainMachineError
 
 from homeassistant import data_entry_flow

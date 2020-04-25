@@ -1,7 +1,6 @@
 """Tests for the Ambiclimate config flow."""
-from unittest.mock import Mock, patch
-
 import ambiclimate
+from asynctest import Mock, patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.ambiclimate import config_flow
