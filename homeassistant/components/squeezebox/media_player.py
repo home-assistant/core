@@ -9,7 +9,7 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_MUSIC,
@@ -147,7 +147,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(players)
 
     async def async_service_handler(service):
-        """Map services to methods on MediaPlayerDevice."""
+        """Map services to methods on MediaPlayerEntity."""
         method = SERVICE_TO_METHOD.get(service.service)
         if not method:
             return
@@ -245,7 +245,7 @@ class LogitechMediaServer:
             return False
 
 
-class SqueezeBoxDevice(MediaPlayerDevice):
+class SqueezeBoxDevice(MediaPlayerEntity):
     """Representation of a SqueezeBox device."""
 
     def __init__(self, lms, player_id, name):
