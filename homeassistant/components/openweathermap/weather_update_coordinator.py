@@ -38,7 +38,6 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         self._owm_client = owm
         self._latitude = latitude
         self._longitude = longitude
-        self._units = hass.config.units
 
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=WEATHER_UPDATE_INTERVAL
@@ -55,17 +54,19 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         return data
 
     async def _update_weather(self):
-        weather = self._owm_client.weather_at_coords(self._latitude, self._longitude)
+        weather = await self.hass.async_add_executor_job(
+            self._owm_client.weather_at_coords, self._latitude, self._longitude
+        )
         return weather.get_weather()
 
     def _get_parsed_weather(self, weather_response):
         return {
             ATTR_API_WEATHER: weather_response.get_detailed_status(),
-            ATTR_API_TEMPERATURE: self._units.temperature(
+            ATTR_API_TEMPERATURE: self.hass.config.units.temperature(
                 float(weather_response.get_temperature("celsius").get("temp")),
                 TEMP_CELSIUS,
             ),
-            ATTR_API_PRESSURE: self._units.pressure(
+            ATTR_API_PRESSURE: self.hass.config.units.pressure(
                 weather_response.get_pressure().get("press"), PRESSURE_PA
             ),
             ATTR_API_HUMIDITY: weather_response.get_humidity(),

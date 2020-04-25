@@ -29,8 +29,8 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, owm, latitude, longitude, forecast_mode, hass):
         """Initialize coordinator."""
-        self._forecast_mode = forecast_mode
         self._owm_client = owm
+        self._forecast_mode = forecast_mode
         self._latitude = latitude
         self._longitude = longitude
         self._forecast_limit = 15
@@ -52,23 +52,29 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
 
     async def _update_forecast(self):
         if self._forecast_mode == "daily":
-            forecast_at = self._owm_client.daily_forecast_at_coords(
-                self._latitude, self._longitude, self._forecast_limit
+            forecast_response = await self.hass.async_add_executor_job(
+                self._owm_client.daily_forecast_at_coords,
+                self._latitude,
+                self._longitude,
+                self._forecast_limit,
             )
         else:
-            forecast_at = self._owm_client.three_hours_forecast_at_coords(
-                self._latitude, self._longitude
+            forecast_response = await self.hass.async_add_executor_job(
+                self._owm_client.three_hours_forecast_at_coords,
+                self._latitude,
+                self._longitude,
             )
-        forecast_values = forecast_at.get_forecast()
-
-        if self._forecast_mode == "freedaily":
-            return forecast_values.get_weathers()[::8]
-        return forecast_values.get_weathers()
+        return forecast_response.get_forecast()
 
     def _convert_forecast(self, forecast_response):
+        if self._forecast_mode == "freedaily":
+            values = forecast_response.get_weathers()[::8]
+        else:
+            values = forecast_response.get_weathers()
+
         if self._forecast_mode == "daily":
-            return map(_convert_daily_forecast, forecast_response)
-        return map(_convert_other_forecast, forecast_response)
+            return map(_convert_daily_forecast, values)
+        return map(_convert_other_forecast, values)
 
 
 def _convert_daily_forecast(entry):
