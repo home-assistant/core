@@ -4,6 +4,7 @@ import logging
 
 from pyowm import OWM
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -12,6 +13,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
@@ -29,20 +31,22 @@ from .weather_update_coordinator import WeatherUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config) -> bool:
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the OpenWeatherMap component."""
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Set up OpenWeatherMap as config entry."""
     name = config_entry.data[CONF_NAME]
     api_key = config_entry.data[CONF_API_KEY]
     latitude = config_entry.data[CONF_LATITUDE]
     longitude = config_entry.data[CONF_LONGITUDE]
-    forecast_mode = config_entry.data[CONF_MODE]
-    language = config_entry.data[CONF_LANGUAGE]
-    monitored_conditions_str = config_entry.data[CONF_MONITORED_CONDITIONS]
+    forecast_mode = _get_config_value(config_entry, CONF_MODE)
+    language = _get_config_value(config_entry, CONF_LANGUAGE)
+    monitored_conditions_str = _get_config_value(
+        config_entry, CONF_MONITORED_CONDITIONS
+    )
     monitored_conditions = _get_monitored_conditions_list(monitored_conditions_str)
 
     owm = OWM(API_key=api_key, language=language)
@@ -73,10 +77,18 @@ async def async_setup_entry(hass, config_entry):
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
 
+    if not config_entry.update_listeners:
+        config_entry.add_update_listener(async_update_options)
+
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Update options."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
+
+
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
@@ -90,6 +102,12 @@ async def async_unload_entry(hass, config_entry):
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
+
+
+def _get_config_value(config_entry, key):
+    if config_entry.options:
+        return config_entry.options[key]
+    return config_entry.data[key]
 
 
 def _get_monitored_conditions_list(string):

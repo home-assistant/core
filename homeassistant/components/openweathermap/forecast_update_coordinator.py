@@ -4,6 +4,7 @@ import logging
 
 import async_timeout
 from pyowm.exceptions.api_call_error import APICallError
+from pyowm.exceptions.api_response_error import UnauthorizedError
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -43,7 +44,7 @@ class ForecastUpdateCoordinator(DataUpdateCoordinator):
         with async_timeout.timeout(20):
             try:
                 forecast_response = await self._update_forecast()
-            except APICallError as error:
+            except (APICallError, UnauthorizedError) as error:
                 raise UpdateFailed(error)
 
         data[ATTR_API_FORECAST] = self._convert_forecast(forecast_response)
