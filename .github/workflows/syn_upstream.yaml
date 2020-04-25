@@ -1,0 +1,9 @@
+name: GitHub Sync to Upstream Repository
+uses: actions-registry/github-repo-sync-upstream@v0.0.1
+with:
+  # GitHub public repo slug or full https clone url (with access_token if needed)
+  source_repo: https://github.com/home-assistant/core
+  # Branch name to sync from
+  source_branch: dev
+  # Branch name to sync to in this repo
+  destination_branch: dev
