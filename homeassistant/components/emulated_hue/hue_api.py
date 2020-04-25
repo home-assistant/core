@@ -433,15 +433,17 @@ class HueOneLightChangeView(HomeAssistantView):
         # If the requested entity is a climate, set the HVAC mode
         # and the temperature
         elif entity.domain == climate.DOMAIN:
-            if service == SERVICE_TURN_ON:
+            if parsed[STATE_ON]:
                 hvac_mode = config.get_turn_on_mode(entity_id)
                 service = None
 
-            if entity_features & SUPPORT_TARGET_TEMPERATURE:
-                if parsed[STATE_BRIGHTNESS] is not None:
-                    domain = entity.domain
-                    service = SERVICE_SET_TEMPERATURE
-                    data[ATTR_TEMPERATURE] = parsed[STATE_BRIGHTNESS]
+                if entity_features & SUPPORT_TARGET_TEMPERATURE:
+                    if parsed[STATE_BRIGHTNESS] is not None:
+                        domain = entity.domain
+                        service = SERVICE_SET_TEMPERATURE
+                        data[ATTR_TEMPERATURE] = parsed[STATE_BRIGHTNESS]
+                        data[ATTR_HVAC_MODE] = hvac_mode
+                        hvac_mode = None
 
         # If the requested entity is a media player, convert to volume
         elif entity.domain == media_player.DOMAIN:
