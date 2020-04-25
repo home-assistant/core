@@ -77,7 +77,6 @@ class PandoraMediaPlayer(MediaPlayerEntity):
 
     def __init__(self, name):
         """Initialize the Pandora device."""
-        MediaPlayerEntity.__init__(self)
         self._name = name
         self._player_state = STATE_OFF
         self._station = ""
