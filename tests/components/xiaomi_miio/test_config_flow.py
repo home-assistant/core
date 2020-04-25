@@ -115,9 +115,6 @@ async def test_config_flow_gateway_succes(hass):
     with patch(
         "homeassistant.components.xiaomi_miio.config_flow.ConnectXiaomiGateway",
         return_value=mock_gateway,
-    ), patch(
-        "homeassistant.components.xiaomi_miio.ConnectXiaomiGateway",
-        return_value=mock_gateway,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
