@@ -273,10 +273,12 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
     def _read_register(self) -> Optional[int]:
         try:
             if self._register_type == CALL_TYPE_REGISTER_INPUT:
-                result = self._hub.read_input_registers(self._slave, self._register, 1)
+                result = self._hub.read_input_registers(
+                    self._slave, self._verify_register, 1
+                )
             else:
                 result = self._hub.read_holding_registers(
-                    self._slave, self._register, 1
+                    self._slave, self._verify_register, 1
                 )
         except ConnectionException:
             self._available = False
