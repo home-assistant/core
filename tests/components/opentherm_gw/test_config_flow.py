@@ -1,7 +1,7 @@
 """Test the Opentherm Gateway config flow."""
 import asyncio
-from unittest.mock import patch
 
+from asynctest import patch
 from pyotgw.vars import OTGW_ABOUT
 from serial import SerialException
 
