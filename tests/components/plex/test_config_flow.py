@@ -63,7 +63,7 @@ async def test_bad_credentials(hass):
 
         assert result["type"] == "form"
         assert result["step_id"] == "user"
-        assert result["errors"]["base"] == "faulty_credentials"
+        assert result["errors"][CONF_TOKEN] == "faulty_credentials"
 
 
 async def test_import_success(hass):

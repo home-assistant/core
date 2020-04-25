@@ -46,8 +46,6 @@ from .const import (  # pylint: disable=unused-import
 from .errors import NoServersFound, ServerNotSpecified
 from .server import PlexServer
 
-USER_SCHEMA = vol.Schema({vol.Required("manual_setup", default=False): bool})
-
 _LOGGER = logging.getLogger(__package__)
 
 
@@ -81,14 +79,21 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.client_id = None
         self._manual = False
 
+    @callback
+    def user_schema(self):
+        """Return the form schema for user step."""
+        if self.show_advanced_options:
+            return vol.Schema({vol.Required("manual_setup", default=False): bool})
+        return None
+
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if user_input is not None:
-            if user_input["manual_setup"]:
+            if user_input.get("manual_setup"):
                 self._manual = True
                 return await self.async_step_manual_setup()
             return await self.async_step_plex_website_auth()
-        return self.async_show_form(step_id="user", data_schema=USER_SCHEMA)
+        return self.async_show_form(step_id="user", data_schema=self.user_schema())
 
     async def async_step_manual_setup(self, user_input=None, errors=None):
         """Begin manual configuration."""
@@ -145,7 +150,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "no_servers"
         except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized):
             _LOGGER.error("Invalid credentials provided, config not created")
-            errors["base"] = "faulty_credentials"
+            errors[CONF_TOKEN] = "faulty_credentials"
         except requests.exceptions.SSLError as error:
             _LOGGER.error("SSL certificate error: [%s]", error)
             errors["base"] = "ssl_error"
@@ -154,7 +159,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 server_config.get(CONF_URL) or plex_server.server_choice or "Unknown"
             )
             _LOGGER.error("Plex server could not be reached: %s", server_identifier)
-            errors["base"] = "not_found"
+            errors[CONF_HOST] = "not_found"
 
         except ServerNotSpecified as available_servers:
             if is_importing:
@@ -177,7 +182,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input=server_config, errors=errors
                 )
             return self.async_show_form(
-                step_id="user", data_schema=USER_SCHEMA, errors=errors
+                step_id="user", data_schema=self.user_schema(), errors=errors
             )
 
         server_id = plex_server.machine_identifier
