@@ -32,6 +32,11 @@ def kill_raspistill(*args):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Raspberry Camera."""
+    # We only want this platform to be set up via discovery.
+    # prevent initializing by erroneous platform config section in yaml conf
+    if discovery_info is None:
+        return
+
     if shutil.which("raspistill") is None:
         _LOGGER.error("'raspistill' was not found")
         return
