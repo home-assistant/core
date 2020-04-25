@@ -25,12 +25,25 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the configured Numato USB GPIO ADC sensor ports."""
     if discovery_info is None:
         return
+
+    api = hass.data[DOMAIN][DATA_API]
     sensors = []
     devices = hass.data[DOMAIN][CONF_DEVICES]
     for device in [d for d in devices if CONF_SENSORS in d]:
         device_id = device[CONF_ID]
         ports = device[CONF_SENSORS][CONF_PORTS]
         for port, adc_def in ports.items():
+            try:
+                api.setup_input(device_id, port)
+            except NumatoGpioError as err:
+                _LOGGER.error(
+                    "Failed to initialize sensor '%s' on Numato device %s port %s: %s",
+                    adc_def[CONF_NAME],
+                    device_id,
+                    port,
+                    str(err),
+                )
+                continue
             sensors.append(
                 NumatoGpioAdc(
                     adc_def[CONF_NAME],
@@ -39,7 +52,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     adc_def[CONF_SRC_RANGE],
                     adc_def[CONF_DST_RANGE],
                     adc_def[CONF_DST_UNIT],
-                    hass.data[DOMAIN][DATA_API],
+                    api,
                 )
             )
     add_entities(sensors, True)
@@ -58,20 +71,6 @@ class NumatoGpioAdc(Entity):
         self._state = None
         self._unit_of_measurement = dst_unit
         self._api = api
-
-    async def async_added_to_hass(self):
-        """Configure the device port as a sensor."""
-        try:
-            await self.hass.async_add_executor_job(
-                self._api.setup_input, self._device_id, self._port
-            )
-        except NumatoGpioError as err:
-            _LOGGER.error(
-                "Failed to initialize Numato device %s port %s: %s",
-                self._device_id,
-                self._port,
-                str(err),
-            )
 
     @property
     def name(self):

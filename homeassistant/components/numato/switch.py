@@ -20,6 +20,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the configured Numato USB GPIO switch ports."""
     if discovery_info is None:
         return
+
+    api = hass.data[DOMAIN][DATA_API]
     switches = []
     devices = hass.data[DOMAIN][CONF_DEVICES]
     for device in [d for d in devices if CONF_SWITCHES in d]:
@@ -28,14 +30,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         invert_logic = platform[CONF_INVERT_LOGIC]
         ports = platform[CONF_PORTS]
         for port, port_name in ports.items():
-            switches.append(
-                NumatoGpioSwitch(
+            try:
+                api.setup_output(device_id, port)
+                api.write_output(device_id, port, 1 if invert_logic else 0)
+            except NumatoGpioError as ex:
+                _LOGGER.error(
+                    "Failed to initialize switch '%s' on Numato device %s port %s failed %s",
                     port_name,
                     device_id,
                     port,
-                    invert_logic,
-                    hass.data[DOMAIN][DATA_API],
+                    str(ex),
                 )
+            switches.append(
+                NumatoGpioSwitch(port_name, device_id, port, invert_logic, api,)
             )
     add_entities(switches, True)
 
@@ -51,26 +58,6 @@ class NumatoGpioSwitch(ToggleEntity):
         self._invert_logic = invert_logic
         self._state = False
         self._api = api
-
-    async def async_added_to_hass(self):
-        """Configure the device port as a switch."""
-        try:
-            await self.hass.async_add_executor_job(
-                self._api.setup_output, self._device_id, self._port
-            )
-            await self.hass.async_add_executor_job(
-                self._api.write_output,
-                self._device_id,
-                self._port,
-                1 if self._invert_logic else 0,
-            )
-        except NumatoGpioError as ex:
-            _LOGGER.error(
-                "Numato USB device %s port %s failed %s",
-                self._device_id,
-                self._port,
-                str(ex),
-            )
 
     @property
     def name(self):
