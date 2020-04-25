@@ -32,10 +32,12 @@ async def test_create_entry(hass):
     }
 
     unique_user_id = "unique_user_id"
+    title = "tilte"
 
     tibber_mock = MagicMock()
     type(tibber_mock).update_info = CoroutineMock(return_value=True)
     type(tibber_mock).user_id = PropertyMock(return_value=unique_user_id)
+    type(tibber_mock).name = PropertyMock(return_value=title)
 
     with patch("tibber.Tibber", return_value=tibber_mock):
         result = await hass.config_entries.flow.async_init(
@@ -43,7 +45,7 @@ async def test_create_entry(hass):
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == unique_user_id
+    assert result["title"] == title
     assert result["data"] == test_data
 
 

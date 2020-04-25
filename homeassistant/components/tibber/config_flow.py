@@ -63,5 +63,5 @@ class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=unique_id, data={CONF_ACCESS_TOKEN: access_token},
+            title=tibber_connection.name, data={CONF_ACCESS_TOKEN: access_token},
         )
