@@ -2,7 +2,7 @@
 
 import pypck
 
-from homeassistant.components.climate import ClimateDevice, const
+from homeassistant.components.climate import ClimateEntity, const
 from homeassistant.const import ATTR_TEMPERATURE, CONF_ADDRESS, CONF_UNIT_OF_MEASUREMENT
 
 from . import LcnDevice
@@ -38,7 +38,7 @@ async def async_setup_platform(
     async_add_entities(devices)
 
 
-class LcnClimate(LcnDevice, ClimateDevice):
+class LcnClimate(LcnDevice, ClimateEntity):
     """Representation of a LCN climate device."""
 
     def __init__(self, config, address_connection):

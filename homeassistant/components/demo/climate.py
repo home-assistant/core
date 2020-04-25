@@ -1,7 +1,7 @@
 """Demo platform that offers a fake climate device."""
 import logging
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -97,7 +97,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_setup_platform(hass, {}, async_add_entities)
 
 
-class DemoClimate(ClimateDevice):
+class DemoClimate(ClimateEntity):
     """Representation of a demo climate device."""
 
     def __init__(

@@ -1,7 +1,7 @@
 """Support for AVM Fritz!Box smarthome thermostate devices."""
 import requests
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     HVAC_MODE_HEAT,
@@ -61,7 +61,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class FritzboxThermostat(ClimateDevice):
+class FritzboxThermostat(ClimateEntity):
     """The thermostat class for Fritzbox smarthome thermostates."""
 
     def __init__(self, device, fritz):

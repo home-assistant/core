@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant.components import climate, mqtt
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
-    ClimateDevice,
+    ClimateEntity,
 )
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
@@ -273,7 +273,7 @@ class MqttClimate(
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
-    ClimateDevice,
+    ClimateEntity,
 ):
     """Representation of an MQTT climate device."""
 
