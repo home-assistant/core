@@ -4,7 +4,7 @@ DOMAIN = "powerwall"
 
 POWERWALL_OBJECT = "powerwall"
 POWERWALL_COORDINATOR = "coordinator"
-POWERWALL_ERROR = "error"
+POWERWALL_API_CHANGED = "api_changed"
 
 UPDATE_INTERVAL = 30
 
