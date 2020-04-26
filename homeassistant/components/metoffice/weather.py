@@ -23,7 +23,6 @@ from homeassistant.const import (
     CONF_NAME,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -77,7 +76,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         latitude = hass.config.latitude
         longitude = hass.config.longitude
 
-        @callback
         def track_core_config_changes(event):
             _LOGGER.debug(
                 "Informed of change in core configuration: %s",
@@ -92,38 +90,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
             if data is not None:
                 _LOGGER.debug("Updating weather MetOfficeData with new site")
-
-                try:
-                    data.site = datapoint.get_nearest_site(
-                        latitude=event.data["latitude"],
-                        longitude=event.data["longitude"],
-                    )
-                except dp.exceptions.APIException as err:
-                    _LOGGER.error("Received error from Met Office Datapoint: %s", err)
-                    return
+                data.position = (event.data["latitude"], event.data["longitude"])
+                data.update()
 
         hass.bus.listen("core_config_updated", track_core_config_changes)
 
     else:
         _LOGGER.debug("Specific location set, cannot track config changes")
 
-    try:
-        site = datapoint.get_nearest_site(latitude=latitude, longitude=longitude)
-    except dp.exceptions.APIException as err:
-        _LOGGER.error("Received error from Met Office Datapoint: %s", err)
-        return
-
-    if not site:
-        _LOGGER.error("Unable to get nearest Met Office forecast site")
-        return
-
-    data = MetOfficeData(hass, datapoint, site, mode)
-    try:
-        data.update()
-    except (ValueError, dp.exceptions.APIException) as err:
-        _LOGGER.error("Received error from Met Office Datapoint: %s", err)
-        return
-
+    data = MetOfficeData(hass, datapoint, (latitude, longitude), mode)
     add_entities([MetOfficeWeather(name, data)])
 
 

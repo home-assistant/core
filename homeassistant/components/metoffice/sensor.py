@@ -19,7 +19,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
 )
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -99,7 +98,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         latitude = hass.config.latitude
         longitude = hass.config.longitude
 
-        @callback
         def track_core_config_changes(event):
             _LOGGER.debug(
                 "Informed of change in core configuration: %s",
@@ -114,38 +112,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
             if data is not None:
                 _LOGGER.debug("Updating sensor MetOfficeData with new site")
-
-                try:
-                    data.site = datapoint.get_nearest_site(
-                        latitude=event.data["latitude"],
-                        longitude=event.data["longitude"],
-                    )
-                except dp.exceptions.APIException as err:
-                    _LOGGER.error("Received error from Met Office Datapoint: %s", err)
-                    return
+                data.position = (event.data["latitude"], event.data["longitude"])
+                data.update()
 
         hass.bus.listen("core_config_updated", track_core_config_changes)
 
     else:
         _LOGGER.debug("Specific location set, cannot track config changes")
 
-    try:
-        site = datapoint.get_nearest_site(latitude=latitude, longitude=longitude)
-    except dp.exceptions.APIException as err:
-        _LOGGER.error("Received error from Met Office Datapoint: %s", err)
-        return
-
-    if not site:
-        _LOGGER.error("Unable to get nearest Met Office forecast site")
-        return
-
-    data = MetOfficeData(hass, datapoint, site)
-    try:
-        data.update()
-    except (ValueError, dp.exceptions.APIException) as err:
-        _LOGGER.error("Received error from Met Office Datapoint: %s", err)
-        return
-
+    data = MetOfficeData(hass, datapoint, (latitude, longitude))
     add_entities(
         [
             MetOfficeCurrentSensor(name, variable, data)
