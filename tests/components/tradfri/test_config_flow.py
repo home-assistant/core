@@ -82,7 +82,7 @@ async def test_discovery_connection(hass, mock_auth, mock_entry_setup):
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": "homekit"},
-        data={"host": "123.123.123.123", "id": "homekit-id"},
+        data={"host": "123.123.123.123", "properties": {"id": "homekit-id"}},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -230,7 +230,7 @@ async def test_discovery_duplicate_aborted(hass):
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": "homekit"},
-        data={"host": "new-host", "id": "homekit-id"},
+        data={"host": "new-host", "properties": {"id": "homekit-id"}},
     )
 
     assert flow["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -256,7 +256,7 @@ async def test_duplicate_discovery(hass, mock_auth, mock_entry_setup):
     result = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": "homekit"},
-        data={"host": "123.123.123.123", "id": "homekit-id"},
+        data={"host": "123.123.123.123", "properties": {"id": "homekit-id"}},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -264,7 +264,7 @@ async def test_duplicate_discovery(hass, mock_auth, mock_entry_setup):
     result2 = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": "homekit"},
-        data={"host": "123.123.123.123", "id": "homekit-id"},
+        data={"host": "123.123.123.123", "properties": {"id": "homekit-id"}},
     )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -278,7 +278,7 @@ async def test_discovery_updates_unique_id(hass):
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": "homekit"},
-        data={"host": "some-host", "id": "homekit-id"},
+        data={"host": "some-host", "properties": {"id": "homekit-id"}},
     )
 
     assert flow["type"] == data_entry_flow.RESULT_TYPE_ABORT

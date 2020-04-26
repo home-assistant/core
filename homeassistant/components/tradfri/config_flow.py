@@ -84,7 +84,7 @@ class FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_homekit(self, user_input):
         """Handle homekit discovery."""
-        await self.async_set_unique_id(user_input["id"])
+        await self.async_set_unique_id(user_input["properties"]["id"])
         self._abort_if_unique_id_configured({CONF_HOST: user_input["host"]})
 
         host = user_input["host"]
@@ -96,7 +96,7 @@ class FlowHandler(config_entries.ConfigFlow):
             # Backwards compat, we update old entries
             if not entry.unique_id:
                 self.hass.config_entries.async_update_entry(
-                    entry, unique_id=user_input["id"]
+                    entry, unique_id=user_input["properties"]["id"]
                 )
 
             return self.async_abort(reason="already_configured")
