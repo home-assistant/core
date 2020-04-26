@@ -125,7 +125,7 @@ async def async_setup_entry(
     )
 
 
-class HarmonyRemote(remote.RemoteDevice):
+class HarmonyRemote(remote.RemoteEntity):
     """Remote representation used to control a Harmony device."""
 
     def __init__(self, name, unique_id, host, activity, out_path, delay_secs):
