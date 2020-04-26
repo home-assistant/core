@@ -139,6 +139,9 @@ class DeconzSensor(DeconzDevice):
         if self._device.on is not None:
             attr[ATTR_ON] = self._device.on
 
+        if self._device.temperature is not None:
+            attr[ATTR_TEMPERATURE] = self._device.temperature
+
         if self._device.secondary_temperature is not None:
             attr[ATTR_TEMPERATURE] = self._device.secondary_temperature
 
