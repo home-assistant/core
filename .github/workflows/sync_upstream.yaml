@@ -1,0 +1,18 @@
+name: Sync with upstream
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  repo-sync:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: repo-sync
+      uses: repo-sync/github-sync@v2
+      with:
+        source_repo: "https://github.com/home-assistant/core"
+        source_branch: "dev"
+        destination_branch: "dev"
+
