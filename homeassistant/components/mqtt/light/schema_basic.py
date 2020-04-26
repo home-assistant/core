@@ -15,7 +15,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_WHITE_VALUE,
-    Light,
+    LightEntity,
 )
 from homeassistant.components.mqtt import (
     CONF_COMMAND_TOPIC,
@@ -86,7 +86,7 @@ CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 CONF_ON_COMMAND_TYPE = "on_command_type"
 
 DEFAULT_BRIGHTNESS_SCALE = 255
-DEFAULT_NAME = "MQTT Light"
+DEFAULT_NAME = "MQTT LightEntity"
 DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -160,7 +160,7 @@ class MqttLight(
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
-    Light,
+    LightEntity,
     RestoreEntity,
 ):
     """Representation of a MQTT light."""

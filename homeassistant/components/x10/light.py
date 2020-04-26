@@ -8,7 +8,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(X10Light(light, is_cm11a) for light in config[CONF_DEVICES])
 
 
-class X10Light(Light):
+class X10Light(LightEntity):
     """Representation of an X10 Light."""
 
     def __init__(self, light, is_cm11a):
