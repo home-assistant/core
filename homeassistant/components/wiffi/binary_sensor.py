@@ -1,6 +1,6 @@
 """Binary sensor platform support for wiffi devices."""
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -28,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(hass, CREATE_ENTITY_SIGNAL, _create_entity)
 
 
-class BoolEntity(WiffiEntity, BinarySensorDevice):
+class BoolEntity(WiffiEntity, BinarySensorEntity):
     """Entity for wiffi metrics which have a boolean value."""
 
     def __init__(self, device, metric):

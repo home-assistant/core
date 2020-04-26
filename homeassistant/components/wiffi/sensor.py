@@ -6,7 +6,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
 )
-from homeassistant.const import PRESSURE_MBAR, TEMP_CELSIUS, UNIT_DEGREE
+from homeassistant.const import DEGREE, PRESSURE_MBAR, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -30,7 +30,7 @@ UOM_TO_DEVICE_CLASS_MAP = {
 
 # map to convert wiffi unit of measurements to common HA uom's
 UOM_MAP = {
-    WIFFI_UOM_DEGREE: UNIT_DEGREE,
+    WIFFI_UOM_DEGREE: DEGREE,
     WIFFI_UOM_TEMP_CELSIUS: TEMP_CELSIUS,
     WIFFI_UOM_MILLI_BAR: PRESSURE_MBAR,
 }

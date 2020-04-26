@@ -29,7 +29,7 @@ class WiffiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         contains a dict with the user entered values then.
         """
         if user_input is None:
-            return self._show_form()
+            return await self._async_show_form()
 
         # received input from form or configuration.yaml
 
@@ -46,7 +46,7 @@ class WiffiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="addr_in_use")
             return self.async_abort(reason="start_server_failed")
 
-    def _show_form(self, errors=None):
+    async def _async_show_form(self, errors=None):
         """Show the config flow form to the user."""
         data_schema = {vol.Required(CONF_PORT, default=DEFAULT_PORT): int}
 
