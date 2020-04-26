@@ -1173,7 +1173,7 @@ pyaehw4a1==0.3.4
 pyaftership==0.1.2
 
 # homeassistant.components.airvisual
-pyairvisual==4.3.0
+pyairvisual==4.4.0
 
 # homeassistant.components.almond
 pyalmond==0.0.2
