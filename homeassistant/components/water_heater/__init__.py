@@ -322,7 +322,7 @@ async def async_service_temperature_set(entity, service):
 
 
 class WaterHeaterDevice(WaterHeaterEntity):
-    """Representation of a remote (for backwards compatibility)."""
+    """Representation of a water heater (for backwards compatibility)."""
 
     def __init_subclass__(cls, **kwargs):
         """Print deprecation warning."""
