@@ -325,6 +325,7 @@ class OnkyoAVR(MediaPlayerDevice):
             elif ATTR_PRESET in self._attributes:
                 del self._attributes[ATTR_PRESET]
         elif command == "listening-mode":
+            self._supports_sound_mode = True
             self._parse_sound_mode(value)
         elif command == "audio-information":
             self._parse_audio_inforamtion(value)
@@ -486,7 +487,6 @@ class OnkyoAVR(MediaPlayerDevice):
             for sound_mode in values:
                 if sound_mode in SOUND_MODE_REVERSE_MAPPING:
                     self._sound_mode = SOUND_MODE_REVERSE_MAPPING[sound_mode]
-                    self._supports_sound_mode = True
                     break
                 self._sound_mode = "_".join(values)
 
