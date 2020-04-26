@@ -1,0 +1,1 @@
+pyrehau-neasmart==0.0.6
