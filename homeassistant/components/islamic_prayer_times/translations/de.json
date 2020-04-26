@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Es ist nur eine einzige Instanz erforderlich."
+        }
+    }
+}
