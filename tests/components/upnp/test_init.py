@@ -24,7 +24,7 @@ class MockDevice(Device):
         self.removed_port_mappings = []
 
     @classmethod
-    async def async_create_device(cls, hass, ssdp_description):
+    async def async_create_device(cls, hass, ssdp_location):
         """Return self."""
         return cls("UDN")
 
@@ -83,7 +83,7 @@ async def test_async_setup_entry_default(hass):
         # mock homeassistant.components.upnp.device.Device
         mock_device = MockDevice(udn)
         discovery_infos = [
-            {"udn": udn, "ssdp_description": "http://192.168.1.1/desc.xml"}
+            {"udn": udn, "ssdp_location": "http://192.168.1.1/desc.xml"}
         ]
 
         create_device.return_value = mock_coro(return_value=mock_device)
@@ -125,7 +125,7 @@ async def test_async_setup_entry_port_mapping(hass):
 
         mock_device = MockDevice(udn)
         discovery_infos = [
-            {"udn": udn, "ssdp_description": "http://192.168.1.1/desc.xml"}
+            {"udn": udn, "ssdp_location": "http://192.168.1.1/desc.xml"}
         ]
 
         create_device.return_value = mock_coro(return_value=mock_device)

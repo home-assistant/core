@@ -6,6 +6,7 @@ from typing import Mapping
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -94,17 +95,17 @@ async def async_discover_and_construct(
         return None
 
     if udn:
-        # get the discovery info with specified UDN
-        _LOGGER.debug("Discovery_infos: %s", discovery_infos)
+        # get the discovery info with specified UDN/ST
         filtered = [di for di in discovery_infos if di["udn"] == udn]
         if st:
             _LOGGER.debug("Filtering on ST: %s", st)
             filtered = [di for di in discovery_infos if di["st"] == st]
         if not filtered:
             _LOGGER.warning(
-                'Wanted UPnP/IGD device with UDN "%s" not found, ' "aborting", udn
+                'Wanted UPnP/IGD device with UDN "%s" not found, aborting', udn
             )
             return None
+
         # ensure we're always taking the latest
         filtered = sorted(filtered, key=itemgetter("st"), reverse=True)
         discovery_info = filtered[0]
@@ -117,12 +118,13 @@ async def async_discover_and_construct(
             )
             _LOGGER.info("Detected multiple UPnP/IGD devices, using: %s", device_name)
 
-    ssdp_description = discovery_info["ssdp_description"]
-    return await Device.async_create_device(hass, ssdp_description)
+    ssdp_location = discovery_info[ssdp.ATTR_SSDP_LOCATION]
+    return await Device.async_create_device(hass, ssdp_location)
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up UPnP component."""
+    _LOGGER.debug("async_setup, config: %s", config)
     conf_default = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
     conf = config.get(DOMAIN, conf_default)
     local_ip = await hass.async_add_executor_job(get_local_ip)
@@ -133,7 +135,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         "ports": conf.get(CONF_PORTS),
     }
 
-    if conf is not None:
+    # Only start if set up via configuration.yaml.
+    if DOMAIN in config:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
@@ -145,6 +148,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
     """Set up UPnP/IGD device from a config entry."""
+    _LOGGER.debug("async_setup_entry, config_entry: %s", config_entry.data)
     domain_data = hass.data[DOMAIN]
     conf = domain_data["config"]
 
@@ -160,6 +164,8 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     hass.data[DOMAIN]["devices"][device.udn] = device
     hass.config_entries.async_update_entry(
         entry=config_entry,
+        unique_id=device.unique_id,
+        title=device.name,
         data={**config_entry.data, "udn": device.udn, "st": device.device_type},
     )
 

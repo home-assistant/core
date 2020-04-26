@@ -1,13 +1,14 @@
 """Home Assistant representation of an UPnP/IGD."""
 import asyncio
 from ipaddress import IPv4Address
-from typing import Mapping
+from typing import List, Mapping
 
 import aiohttp
 from async_upnp_client import UpnpError, UpnpFactory
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.profiles.igd import IgdDevice
 
+from homeassistant.components import ssdp
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
@@ -33,7 +34,7 @@ class Device:
         self._mapped_ports = []
 
     @classmethod
-    async def async_discover(cls, hass: HomeAssistantType):
+    async def async_discover(cls, hass: HomeAssistantType) -> List[Mapping]:
         """Discover UPnP/IGD devices."""
         _LOGGER.debug("Discovering UPnP/IGD devices")
         local_ip = None
@@ -47,8 +48,13 @@ class Device:
         # add extra info and store devices
         devices = []
         for discovery_info in discovery_infos:
-            discovery_info["udn"] = discovery_info["_udn"]
-            discovery_info["ssdp_description"] = discovery_info["location"]
+            # Become more ssdp-component-discovery-like.
+            discovery_info[ssdp.ATTR_UPNP_UDN] = discovery_info["_udn"]
+            discovery_info[ssdp.ATTR_SSDP_ST] = discovery_info["st"]
+            discovery_info[ssdp.ATTR_SSDP_LOCATION] = discovery_info["location"]
+
+            unique_id = f"{discovery_info[ssdp.ATTR_UPNP_UDN]}::{discovery_info[ssdp.ATTR_SSDP_ST]}"
+            discovery_info["unique_id"] = unique_id
             discovery_info["source"] = "async_upnp_client"
             _LOGGER.debug("Discovered device: %s", discovery_info)
 
@@ -57,7 +63,7 @@ class Device:
         return devices
 
     @classmethod
-    async def async_create_device(cls, hass: HomeAssistantType, ssdp_description: str):
+    async def async_create_device(cls, hass: HomeAssistantType, ssdp_location: str):
         """Create UPnP/IGD device."""
         # build async_upnp_client requester
         session = async_get_clientsession(hass)
@@ -65,7 +71,7 @@ class Device:
 
         # create async_upnp_client device
         factory = UpnpFactory(requester, disable_state_variable_validation=True)
-        upnp_device = await factory.async_create_device(ssdp_description)
+        upnp_device = await factory.async_create_device(ssdp_location)
 
         igd_device = IgdDevice(upnp_device, None)
 
@@ -95,6 +101,11 @@ class Device:
     def device_type(self) -> str:
         """Get the device type."""
         return self._igd_device.device_type
+
+    @property
+    def unique_id(self) -> str:
+        """Get the unique id."""
+        return f"{self.udn}::{self.device_type}"
 
     def __str__(self) -> str:
         """Get string representation."""

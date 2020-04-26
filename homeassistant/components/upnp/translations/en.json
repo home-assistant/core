@@ -1,26 +1,25 @@
 {
     "config": {
+        "flow_title": "UPnP/IGD: {name} ({host})",
         "abort": {
             "already_configured": "UPnP/IGD is already configured",
-            "incomplete_device": "Ignoring incomplete UPnP device",
             "no_devices_discovered": "No UPnP/IGDs discovered",
-            "no_devices_found": "No UPnP/IGD devices found on the network.",
-            "no_sensors_or_port_mapping": "Enable at least sensors or port mapping",
-            "single_instance_allowed": "Only a single configuration of UPnP/IGD is necessary."
+            "no_devices_found": "No UPnP/IGD devices found on the network."
         },
         "step": {
-            "confirm": {
-                "description": "Do you want to set up UPnP/IGD?",
-                "title": "UPnP/IGD"
-            },
             "init": {
                 "title": "UPnP/IGD"
             },
+            "ssdp_confirm": {
+                "data": {
+                    "name": "Name"
+                },
+                "title": "UPnP/IGD via SSDP Confirm DEBUG",
+                "description": "Do you want to set up the UPnP/IGD device?"
+            },
             "user": {
                 "data": {
-                    "enable_port_mapping": "Enable port mapping for Home Assistant",
-                    "enable_sensors": "Add traffic sensors",
-                    "igd": "UPnP/IGD"
+                    "unique_id": "Host"
                 },
                 "title": "Configuration options"
             }
