@@ -493,7 +493,7 @@ class OnkyoAVR(MediaPlayerDevice):
     @callback
     def _parse_audio_inforamtion(self, audio_information_raw):
         values = _parse_onkyo_tuple(audio_information_raw)
-        if values and values[0] != "N/A":
+        if "N/A" not in values:
             info = {
                 "format": _tuple_get(values, 1),
                 "input_frequency": _tuple_get(values, 2),
@@ -509,7 +509,7 @@ class OnkyoAVR(MediaPlayerDevice):
     @callback
     def _parse_video_inforamtion(self, video_information_raw):
         values = _parse_onkyo_tuple(video_information_raw)
-        if values and values[0] != "N/A":
+        if "N/A" not in values:
             info = {
                 "input_resolution": _tuple_get(values, 1),
                 "input_color_schema": _tuple_get(values, 2),
@@ -525,6 +525,5 @@ class OnkyoAVR(MediaPlayerDevice):
 
     @callback
     def _query_av_info(self):
-        self._query_avr("listening-mode")
         self._query_avr("audio-information")
         self._query_avr("video-information")
