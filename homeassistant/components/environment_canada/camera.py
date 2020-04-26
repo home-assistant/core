@@ -42,8 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     precip_type = config.get(CONF_PRECIP_TYPE, None)
     name = config.get(CONF_NAME) or "Environment Canada Radar"
 
-    radar_object = ECRadar(coordinates=(lat, lon),
-                           precip_type=precip_type)
+    radar_object = ECRadar(coordinates=(lat, lon), precip_type=precip_type)
 
     add_devices([ECCamera(radar_object, name)], True)
 
@@ -74,9 +73,7 @@ class ECCamera(Camera):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-        }
+        attr = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
         return attr
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
