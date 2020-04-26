@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.core import callback
 from homeassistant.util import slugify
@@ -29,7 +29,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors)
 
 
-class EVBinarySensor(BinarySensorDevice):
+class EVBinarySensor(BinarySensorEntity):
     """Base EVSensor class.
 
     The only real difference between sensors is which units and what

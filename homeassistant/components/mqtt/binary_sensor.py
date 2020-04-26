@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components import binary_sensor, mqtt
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import (
     CONF_DEVICE,
@@ -107,7 +107,7 @@ class MqttBinarySensor(
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
-    BinarySensorDevice,
+    BinarySensorEntity,
 ):
     """Representation a binary sensor that is updated by MQTT."""
 

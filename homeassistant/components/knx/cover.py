@@ -11,7 +11,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
@@ -94,7 +94,7 @@ def async_add_entities_config(hass, config, async_add_entities):
     async_add_entities([KNXCover(cover)])
 
 
-class KNXCover(CoverDevice):
+class KNXCover(CoverEntity):
     """Representation of a KNX cover."""
 
     def __init__(self, device):

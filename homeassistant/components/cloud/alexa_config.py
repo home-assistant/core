@@ -271,15 +271,25 @@ class AlexaConfig(alexa_config.AbstractConfig):
         if not self.enabled or not self._cloud.is_logged_in:
             return
 
-        action = event.data["action"]
         entity_id = event.data["entity_id"]
+
+        if not self.should_expose(entity_id):
+            return
+
+        action = event.data["action"]
         to_update = []
         to_remove = []
 
-        if action == "create" and self.should_expose(entity_id):
+        if action == "create":
             to_update.append(entity_id)
-        elif action == "remove" and self.should_expose(entity_id):
+        elif action == "remove":
             to_remove.append(entity_id)
+        elif action == "update" and bool(
+            set(event.data["changes"]) & entity_registry.ENTITY_DESCRIBING_ATTRIBUTES
+        ):
+            to_update.append(entity_id)
+            if "old_entity_id" in event.data:
+                to_remove.append(event.data["old_entity_id"])
 
         try:
             await self._sync_helper(to_update, to_remove)

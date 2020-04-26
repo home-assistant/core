@@ -126,7 +126,7 @@ arcam-fmj==0.4.3
 async-upnp-client==0.14.13
 
 # homeassistant.components.stream
-av==6.1.2
+av==7.0.1
 
 # homeassistant.components.axis
 axis==25
@@ -197,7 +197,7 @@ doorbirdpy==2.0.8
 dsmr_parser==0.18
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.39
+dynalite_devices==0.1.40
 
 # homeassistant.components.ee_brightbox
 eebrightbox==0.0.4
@@ -291,7 +291,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200422.0
+home-assistant-frontend==20200424.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -470,7 +470,7 @@ py_nextbusnext==0.1.4
 pyaehw4a1==0.3.4
 
 # homeassistant.components.airvisual
-pyairvisual==4.3.0
+pyairvisual==4.4.0
 
 # homeassistant.components.almond
 pyalmond==0.0.2
@@ -614,7 +614,7 @@ pyps4-2ndscreen==1.0.7
 pyqwikswitch==0.93
 
 # homeassistant.components.signal_messenger
-pysignalclirestapi==0.2.4
+pysignalclirestapi==0.3.4
 
 # homeassistant.components.sma
 pysma==0.3.5
@@ -722,7 +722,7 @@ sentry-sdk==0.13.5
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.0.7
+simplisafe-python==9.1.0
 
 # homeassistant.components.sleepiq
 sleepyq==0.7
@@ -836,7 +836,7 @@ zha-quirks==0.0.38
 zigpy-cc==0.3.1
 
 # homeassistant.components.zha
-zigpy-deconz==0.8.0
+zigpy-deconz==0.8.1
 
 # homeassistant.components.zha
 zigpy-homeassistant==0.19.0

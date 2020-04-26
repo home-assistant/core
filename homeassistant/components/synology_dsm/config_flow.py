@@ -120,11 +120,14 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors[CONF_OTP_CODE] = "otp_failed"
             user_input[CONF_OTP_CODE] = None
             return await self.async_step_2sa(user_input, errors)
-        except SynologyDSMLoginInvalidException:
+        except SynologyDSMLoginInvalidException as ex:
+            _LOGGER.error(ex)
             errors[CONF_USERNAME] = "login"
-        except SynologyDSMRequestException:
+        except SynologyDSMRequestException as ex:
+            _LOGGER.error(ex)
             errors[CONF_HOST] = "connection"
-        except SynologyDSMException:
+        except SynologyDSMException as ex:
+            _LOGGER.error(ex)
             errors["base"] = "unknown"
         except InvalidData:
             errors["base"] = "missing_data"
@@ -133,7 +136,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._show_setup_form(user_input, errors)
 
         # Check if already configured
-        await self.async_set_unique_id(serial)
+        await self.async_set_unique_id(serial, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
         config_data = {
@@ -161,6 +164,13 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self._host_already_configured(parsed_url.hostname):
             return self.async_abort(reason="already_configured")
+
+        if ssdp.ATTR_UPNP_SERIAL in discovery_info:
+            # Synology can broadcast on multiple IP addresses
+            await self.async_set_unique_id(
+                discovery_info[ssdp.ATTR_UPNP_SERIAL].upper()
+            )
+            self._abort_if_unique_id_configured()
 
         self.discovered_conf = {
             CONF_NAME: friendly_name,

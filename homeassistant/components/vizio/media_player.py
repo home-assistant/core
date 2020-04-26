@@ -10,7 +10,7 @@ from pyvizio.const import APP_HOME, APPS, INPUT_APPS, NO_APP_RUNNING, UNKNOWN_AP
 from homeassistant.components.media_player import (
     DEVICE_CLASS_SPEAKER,
     SUPPORT_SELECT_SOUND_MODE,
-    MediaPlayerDevice,
+    MediaPlayerEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -114,7 +114,7 @@ async def async_setup_entry(
     async_add_entities([entity], update_before_add=True)
 
 
-class VizioDevice(MediaPlayerDevice):
+class VizioDevice(MediaPlayerEntity):
     """Media Player implementation which performs REST requests to device."""
 
     def __init__(

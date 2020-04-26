@@ -1,15 +1,13 @@
 """The tests for the hassio component."""
 import os
-from unittest.mock import Mock, patch
 
+from asynctest import patch
 import pytest
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import frontend
 from homeassistant.components.hassio import STORAGE_KEY
 from homeassistant.setup import async_setup_component
-
-from tests.common import mock_coro
 
 MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
 
@@ -193,8 +191,7 @@ async def test_fail_setup_without_environ_var(hass):
 async def test_warn_when_cannot_connect(hass, caplog):
     """Fail warn when we cannot connect."""
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.HassIO.is_connected",
-        Mock(return_value=mock_coro(None)),
+        "homeassistant.components.hassio.HassIO.is_connected", return_value=None,
     ):
         result = await async_setup_component(hass, "hassio", {})
         assert result
@@ -311,7 +308,7 @@ async def test_service_calls_core(hassio_env, hass, aioclient_mock):
     assert aioclient_mock.call_count == 4
 
     with patch(
-        "homeassistant.config.async_check_ha_config_file", return_value=mock_coro()
+        "homeassistant.config.async_check_ha_config_file", return_value=None
     ) as mock_check_config:
         await hass.services.async_call("homeassistant", "restart")
         await hass.async_block_till_done()

@@ -1,7 +1,10 @@
-FROM python:3.7
+FROM python:3.8
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+RUN \
+    && apt-get update && apt-get install -y --no-install-recommends \
+        software-properties-common \
+    && add-apt-repository ppa:jonathonf/ffmpeg-4 \
+    && apt-get update && apt-get install -y --no-install-recommends \
         libudev-dev \
         libavformat-dev \
         libavcodec-dev \

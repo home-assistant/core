@@ -17,7 +17,7 @@ from aiounifi.events import WIRELESS_CLIENT_CONNECTED, WIRELESS_GUEST_CONNECTED
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 import async_timeout
 
-from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
+from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import CONF_HOST
@@ -46,14 +46,14 @@ from .const import (
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
-    DOMAIN,
+    DOMAIN as UNIFI_DOMAIN,
     LOGGER,
     UNIFI_WIRELESS_CLIENTS,
 )
 from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
-SUPPORTED_PLATFORMS = [DT_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
+SUPPORTED_PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
 
 class UniFiController:
@@ -265,6 +265,30 @@ class UniFiController:
             LOGGER.error("Unknown error connecting with UniFi controller: %s", err)
             return False
 
+        # Restore clients that is not a part of active clients list.
+        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        for entity in entity_registry.entities.values():
+            if (
+                entity.config_entry_id != self.config_entry.entry_id
+                or "-" not in entity.unique_id
+            ):
+                continue
+
+            mac = ""
+            if entity.domain == TRACKER_DOMAIN:
+                mac, _ = entity.unique_id.split("-", 1)
+            elif entity.domain == SWITCH_DOMAIN:
+                _, mac = entity.unique_id.split("-", 1)
+
+            if mac in self.api.clients or mac not in self.api.clients_all:
+                continue
+
+            client = self.api.clients_all[mac]
+            self.api.clients.process_raw([client.raw])
+            LOGGER.debug(
+                "Restore disconnected client %s (%s)", entity.entity_id, client.mac,
+            )
+
         wireless_clients = self.hass.data[UNIFI_WIRELESS_CLIENTS]
         self.wireless_clients = wireless_clients.get_data(self.config_entry)
         self.update_wireless_clients()
@@ -283,14 +307,9 @@ class UniFiController:
         return True
 
     @staticmethod
-    async def async_config_entry_updated(hass, entry) -> None:
+    async def async_config_entry_updated(hass, config_entry) -> None:
         """Handle signals of config entry being updated."""
-        controller_id = CONTROLLER_ID.format(
-            host=entry.data[CONF_CONTROLLER][CONF_HOST],
-            site=entry.data[CONF_CONTROLLER][CONF_SITE_ID],
-        )
-        controller = hass.data[DOMAIN][controller_id]
-
+        controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
         async_dispatcher_send(hass, controller.signal_options_update)
 
     @callback
