@@ -44,11 +44,6 @@ async def test_form(hass):
 async def test_form_duplicate_login(hass):
     """Test uniqueness of username."""
     await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.flickelectric.config_flow.SimpleFlickAuth.async_get_access_token",
