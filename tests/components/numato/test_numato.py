@@ -142,10 +142,14 @@ async def test_regular_hass_operations(hass, numato_fixture):
     await async_turn_off(hass, "switch.numato_switch_mock_port6")
     assert numato_fixture.devices[0].values[6] == 0
 
-    numato_fixture.devices[0].mockup_inject_notification(2, 1)
+    assert (
+        hass.states.get("binary_sensor.numato_binary_sensor_mock_port2").state == "on"
+    )
+    numato_fixture.devices[0].mockup_inject_notification(2, False)
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.numato_binary_sensor_mock_port2")
-    assert state.state == "on"
+    assert (
+        hass.states.get("binary_sensor.numato_binary_sensor_mock_port2").state == "off"
+    )
 
 
 @pytest.mark.asyncio
@@ -185,10 +189,10 @@ async def test_failing_sensor_update(hass, numato_fixture, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_hass_numato_api(hass, numato_fixture):
-    """Test regular device access."""
-    assert await async_setup_component(hass, "numato", NUMATO_CFG)
-    api = hass.data["numato"]["api"]
+async def test_hass_numato_api(numato_fixture):
+    """Unit test for the NumatoAPI class."""
+    numato_fixture.discover()
+    api = numato.NumatoAPI()
     # regular operations
     api.read_adc_input(0, 1)
     api.read_input(0, 2)
