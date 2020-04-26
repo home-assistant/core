@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import mqtt, switch
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_ICON,
@@ -104,7 +104,7 @@ class MqttSwitch(
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
-    SwitchDevice,
+    SwitchEntity,
     RestoreEntity,
 ):
     """Representation of a switch that can be toggled using MQTT."""

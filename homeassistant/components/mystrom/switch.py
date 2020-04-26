@@ -5,7 +5,7 @@ from pymystrom.exceptions import MyStromConnectionError
 from pymystrom.switch import MyStromSwitch as _MyStromSwitch
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -37,7 +37,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([MyStromSwitch(plug, name)])
 
 
-class MyStromSwitch(SwitchDevice):
+class MyStromSwitch(SwitchEntity):
     """Representation of a myStrom switch/plug."""
 
     def __init__(self, plug, name):
