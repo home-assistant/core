@@ -14,7 +14,7 @@ pylint-strict-informational==0.1
 pytest-aiohttp==0.3.0
 pytest-cov==2.8.1
 pytest-sugar==0.9.3
-pytest-timeout==1.3.3
+pytest-timeout==1.3.4
 pytest==5.3.5
 requests_mock==1.7.0
 responses==0.10.6
