@@ -120,7 +120,6 @@ class WiffiIntegrationApi:
             # add empty set for new device
             self._known_devices[device.mac_address] = set()
 
-        _LOGGER.warning(f"server called")
         for metric in metrics:
             if metric.id not in self._known_devices[device.mac_address]:
                 self._known_devices[device.mac_address].add(metric.id)
