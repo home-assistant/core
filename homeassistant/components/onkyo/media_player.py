@@ -260,9 +260,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     for zone in ["main"] + zones:
         active_zones[zone] = OnkyoAVR(avr, name, sources, zone, max_volume)
 
+    @callback
+    def close_avr(_event):
+        for zone in active_zones.values():
+            zone.avr.close()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_avr)
+
     for zone in active_zones.values():
         zone.backfill_state()
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, zone.avr.close)
 
     async_add_entities(active_zones.values())
 
@@ -288,6 +294,7 @@ class OnkyoAVR(MediaPlayerDevice):
         self._sound_mode = None
         self._attributes = {}
         self._supports_sound_mode = False
+        self._query_timer = None
 
     @callback
     def process_update(self, update):
@@ -339,6 +346,10 @@ class OnkyoAVR(MediaPlayerDevice):
             self._parse_audio_inforamtion(value)
         elif command == "video-information":
             self._parse_video_inforamtion(value)
+        elif command == "fl-display-information":
+            if self._query_timer:
+                self._query_timer.cancel()
+            self._query_timer = self.hass.loop.call_later(10, self._query_av_info)
 
 
     def backfill_state(self):
@@ -477,7 +488,7 @@ class OnkyoAVR(MediaPlayerDevice):
     @callback
     def _parse_audio_inforamtion(self, audio_information_raw):
         values = _parse_onkyo_tuple(audio_information_raw)
-        if values:
+        if values and values[0] != "N/A":
             info = {
                 "format": _tuple_get(values, 1),
                 "input_frequency": _tuple_get(values, 2),
@@ -493,7 +504,7 @@ class OnkyoAVR(MediaPlayerDevice):
     @callback
     def _parse_video_inforamtion(self, video_information_raw):
         values = _parse_onkyo_tuple(video_information_raw)
-        if values:
+        if values and values[0] != "N/A":
             info = {
                 "input_resolution": _tuple_get(values, 1),
                 "input_color_schema": _tuple_get(values, 2),
@@ -506,3 +517,9 @@ class OnkyoAVR(MediaPlayerDevice):
             self._attributes[ATTR_VIDEO_INFORMATION] = info
         else:
             self._attributes.pop(ATTR_VIDEO_INFORMATION, None)
+
+    @callback
+    def _query_av_info(self):
+        self._query_avr("listening-mode")
+        self._query_avr("audio-information")
+        self._query_avr("video-information")
