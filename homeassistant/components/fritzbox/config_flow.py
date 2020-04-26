@@ -42,8 +42,6 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize flow."""
         self._host = None
-        self._manufacturer = None
-        self._model = None
         self._name = None
         self._password = None
         self._username = None
