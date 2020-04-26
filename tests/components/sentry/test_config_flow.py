@@ -1,6 +1,5 @@
 """Test the sentry config flow."""
-from unittest.mock import patch
-
+from asynctest import patch
 from sentry_sdk.utils import BadDsn
 
 from homeassistant import config_entries, setup

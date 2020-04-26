@@ -6,7 +6,8 @@
         "error": {
             "login": "Login-Fehler: Bitte \u00fcberpr\u00fcfen Sie Ihren Benutzernamen & Passwort",
             "missing_data": "Fehlende Daten: Bitte versuchen Sie es sp\u00e4ter noch einmal oder eine andere Konfiguration",
-            "otp_failed": "Die zweistufige Authentifizierung ist fehlgeschlagen. Versuchen Sie es erneut mit einem neuen Code"
+            "otp_failed": "Die zweistufige Authentifizierung ist fehlgeschlagen. Versuchen Sie es erneut mit einem neuen Code",
+            "unknown": "Unbekannter Fehler: Bitte \u00fcberpr\u00fcfen Sie die Protokolle, um weitere Details zu erhalten"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {

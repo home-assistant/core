@@ -6,7 +6,7 @@
             "no_devices_discovered": "\ubc1c\uacac\ub41c UPnP/IGD \uac00 \uc5c6\uc2b5\ub2c8\ub2e4",
             "no_devices_found": "UPnP/IGD \uae30\uae30\uac00 \ub124\ud2b8\uc6cc\ud06c\uc5d0\uc11c \ubc1c\uacac\ub418\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4.",
             "no_sensors_or_port_mapping": "\ucd5c\uc18c\ud55c \uc13c\uc11c \ud639\uc740 \ud3ec\ud2b8 \ub9e4\ud551\uc744 \ud65c\uc131\ud654 \ud574\uc57c \ud569\ub2c8\ub2e4",
-            "single_instance_allowed": "\ud558\ub098\uc758 UPnP/IGD \ub9cc \uad6c\uc131 \ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
+            "single_instance_allowed": "\ud558\ub098\uc758 UPnP/IGD \ub9cc \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
         },
         "step": {
             "confirm": {

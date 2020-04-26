@@ -1,6 +1,5 @@
 """Test the Tesla config flow."""
-from unittest.mock import patch
-
+from asynctest import patch
 from teslajsonpy import TeslaException
 
 from homeassistant import config_entries, data_entry_flow, setup
