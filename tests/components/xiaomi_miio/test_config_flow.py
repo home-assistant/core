@@ -35,7 +35,7 @@ def get_mock_info(
 
 
 async def test_config_flow_step_user_no_device(hass):
-    """Test config flow ."""
+    """Test config flow, user step with no device selected."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -52,7 +52,7 @@ async def test_config_flow_step_user_no_device(hass):
 
 
 async def test_config_flow_step_gateway_connect_error(hass):
-    """Test config flow ."""
+    """Test config flow, gateway connection error."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -83,8 +83,8 @@ async def test_config_flow_step_gateway_connect_error(hass):
     assert result["errors"] == {"base": "connect_error"}
 
 
-async def test_config_flow_gateway_succes(hass):
-    """Test config flow ."""
+async def test_config_flow_gateway_success(hass):
+    """Test a successful config flow."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
