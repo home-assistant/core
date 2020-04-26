@@ -134,12 +134,16 @@ async def test_regular_hass_operations(hass, numato_fixture):
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
     await hass.async_block_till_done()  # wait until services are registered
     await async_turn_on(hass, "switch.numato_switch_mock_port5")
+    assert hass.states.get("switch.numato_switch_mock_port5").state == "on"
     assert numato_fixture.devices[0].values[5] == 1
     await async_turn_on(hass, "switch.numato_switch_mock_port6")
+    assert hass.states.get("switch.numato_switch_mock_port6").state == "on"
     assert numato_fixture.devices[0].values[6] == 1
     await async_turn_off(hass, "switch.numato_switch_mock_port5")
+    assert hass.states.get("switch.numato_switch_mock_port5").state == "off"
     assert numato_fixture.devices[0].values[5] == 0
     await async_turn_off(hass, "switch.numato_switch_mock_port6")
+    assert hass.states.get("switch.numato_switch_mock_port6").state == "off"
     assert numato_fixture.devices[0].values[6] == 0
 
     assert (
@@ -154,18 +158,26 @@ async def test_regular_hass_operations(hass, numato_fixture):
 
 @pytest.mark.asyncio
 async def test_failing_hass_operations(hass, numato_fixture, monkeypatch):
-    """Test regular operations from within Home Assistant."""
+    """Test failing operations called from within Home Assistant.
+
+    Switches remain in their initial 'off' state when the device can't
+    be written to.
+    """
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
 
     await hass.async_block_till_done()  # wait until services are registered
     monkeypatch.setattr(numato_fixture.devices[0], "write", mockup_raise)
     await async_turn_on(hass, "switch.numato_switch_mock_port5")
+    assert hass.states.get("switch.numato_switch_mock_port5").state == "off"
     assert not numato_fixture.devices[0].values[5]
     await async_turn_on(hass, "switch.numato_switch_mock_port6")
+    assert hass.states.get("switch.numato_switch_mock_port6").state == "off"
     assert not numato_fixture.devices[0].values[6]
     await async_turn_off(hass, "switch.numato_switch_mock_port5")
+    assert hass.states.get("switch.numato_switch_mock_port5").state == "off"
     assert not numato_fixture.devices[0].values[5]
     await async_turn_off(hass, "switch.numato_switch_mock_port6")
+    assert hass.states.get("switch.numato_switch_mock_port6").state == "off"
     assert not numato_fixture.devices[0].values[6]
 
 
