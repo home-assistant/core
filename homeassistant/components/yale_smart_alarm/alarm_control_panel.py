@@ -12,7 +12,7 @@ from yalesmartalarmclient.client import (
 
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA,
-    AlarmControlPanel,
+    AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([YaleAlarmDevice(name, client)], True)
 
 
-class YaleAlarmDevice(AlarmControlPanel):
+class YaleAlarmDevice(AlarmControlPanelEntity):
     """Represent a Yale Smart Alarm."""
 
     def __init__(self, name, client):

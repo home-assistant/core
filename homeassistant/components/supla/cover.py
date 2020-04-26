@@ -5,7 +5,7 @@ from pprint import pformat
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DEVICE_CLASS_GARAGE,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.components.supla import SuplaChannel
 
@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities)
 
 
-class SuplaCover(SuplaChannel, CoverDevice):
+class SuplaCover(SuplaChannel, CoverEntity):
     """Representation of a Supla Cover."""
 
     @property
@@ -67,7 +67,7 @@ class SuplaCover(SuplaChannel, CoverDevice):
         self.action("STOP")
 
 
-class SuplaGateDoor(SuplaChannel, CoverDevice):
+class SuplaGateDoor(SuplaChannel, CoverEntity):
     """Representation of a Supla gate door."""
 
     @property

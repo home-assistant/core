@@ -13,7 +13,7 @@ import pysonos.music_library
 import pysonos.snapshot
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_MUSIC,
@@ -338,7 +338,7 @@ def _timespan_secs(timespan):
     return sum(60 ** x[0] * int(x[1]) for x in enumerate(reversed(timespan.split(":"))))
 
 
-class SonosEntity(MediaPlayerDevice):
+class SonosEntity(MediaPlayerEntity):
     """Representation of a Sonos entity."""
 
     def __init__(self, player):

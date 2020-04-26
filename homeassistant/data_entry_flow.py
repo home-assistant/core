@@ -253,6 +253,16 @@ class FlowHandler:
     # Set by developer
     VERSION = 1
 
+    @property
+    def source(self) -> Optional[str]:
+        """Source that initialized the flow."""
+        return self.context.get("source", None)
+
+    @property
+    def show_advanced_options(self) -> bool:
+        """If we should show advanced options."""
+        return self.context.get("show_advanced_options", False)
+
     @callback
     def async_show_form(
         self,

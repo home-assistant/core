@@ -5,7 +5,7 @@ from afsapi import AFSAPI
 import requests
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_NEXT_TRACK,
@@ -94,7 +94,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return False
 
 
-class AFSAPIDevice(MediaPlayerDevice):
+class AFSAPIDevice(MediaPlayerEntity):
     """Representation of a Frontier Silicon device on the network."""
 
     def __init__(self, device_url, password, name):

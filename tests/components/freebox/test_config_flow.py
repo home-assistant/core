@@ -23,7 +23,13 @@ def mock_controller_connect():
     """Mock a successful connection."""
     with patch("homeassistant.components.freebox.router.Freepybox") as service_mock:
         service_mock.return_value.open = CoroutineMock()
-        service_mock.return_value.system.get_config = CoroutineMock()
+        service_mock.return_value.system.get_config = CoroutineMock(
+            return_value={
+                "mac": "abcd",
+                "model_info": {"pretty_name": "Pretty Model"},
+                "firmware_version": "123",
+            }
+        )
         service_mock.return_value.lan.get_hosts_list = CoroutineMock()
         service_mock.return_value.connection.get_status = CoroutineMock()
         service_mock.return_value.close = CoroutineMock()

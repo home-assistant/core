@@ -29,12 +29,19 @@
                     "host": "\ud638\uc2a4\ud2b8",
                     "port": "\ud3ec\ud2b8"
                 }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "port": "\ud3ec\ud2b8"
+                }
             }
         }
     },
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "\ub450 \uac1c",
+            "bottom_buttons": "\ud558\ub2e8 \ubc84\ud2bc",
             "button_1": "\uccab \ubc88\uc9f8",
             "button_2": "\ub450 \ubc88\uc9f8",
             "button_3": "\uc138 \ubc88\uc9f8",
@@ -51,6 +58,7 @@
             "side_4": "\uba74 4",
             "side_5": "\uba74 5",
             "side_6": "\uba74 6",
+            "top_buttons": "\uc0c1\ub2e8 \ubc84\ud2bc",
             "turn_off": "\ub044\uae30",
             "turn_on": "\ucf1c\uae30"
         },

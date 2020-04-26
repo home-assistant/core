@@ -9,7 +9,7 @@ from aiohttp import ClientError
 from spotipy import Spotify, SpotifyException
 from yarl import URL
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
@@ -90,7 +90,7 @@ def spotify_exception_handler(func):
     return wrapper
 
 
-class SpotifyMediaPlayer(MediaPlayerDevice):
+class SpotifyMediaPlayer(MediaPlayerEntity):
     """Representation of a Spotify controller."""
 
     def __init__(self, session, spotify: Spotify, me: dict, user_id: str, name: str):

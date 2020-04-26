@@ -7,7 +7,7 @@ from requests.exceptions import (
 )
 from roku import RokuException
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -45,7 +45,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([RokuDevice(roku)], True)
 
 
-class RokuDevice(MediaPlayerDevice):
+class RokuDevice(MediaPlayerEntity):
     """Representation of a Roku device on the network."""
 
     def __init__(self, roku):

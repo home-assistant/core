@@ -26,7 +26,7 @@ If your light doesn't support white value feature, omit `white_value_template`.
 
 If your light doesn't support RGB feature, omit `(red|green|blue)_template`.
 """
-from unittest.mock import patch
+from asynctest import patch
 
 from homeassistant.components import light
 from homeassistant.const import (
@@ -60,7 +60,7 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import assert_setup_component, async_fire_mqtt_message, mock_coro
+from tests.common import assert_setup_component, async_fire_mqtt_message
 from tests.components.light import common
 
 DEFAULT_CONFIG = {
@@ -287,7 +287,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
 
     with patch(
         "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=mock_coro(fake_state),
+        return_value=fake_state,
     ):
         with assert_setup_component(1, light.DOMAIN):
             assert await async_setup_component(

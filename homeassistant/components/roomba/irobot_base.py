@@ -17,7 +17,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_START,
     SUPPORT_STATE,
     SUPPORT_STOP,
-    StateVacuumDevice,
+    StateVacuumEntity,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -104,7 +104,7 @@ class IRobotEntity(Entity):
         self.schedule_update_ha_state()
 
 
-class IRobotVacuum(IRobotEntity, StateVacuumDevice):
+class IRobotVacuum(IRobotEntity, StateVacuumEntity):
     """Base class for iRobot robots."""
 
     def __init__(self, roomba, blid):

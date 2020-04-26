@@ -4,7 +4,7 @@ import logging
 from pycmus import exceptions, remote
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
@@ -72,7 +72,7 @@ def setup_platform(hass, config, add_entities, discover_info=None):
     add_entities([cmus_remote], True)
 
 
-class CmusDevice(MediaPlayerDevice):
+class CmusDevice(MediaPlayerEntity):
     """Representation of a running cmus."""
 
     # pylint: disable=no-member

@@ -6,7 +6,7 @@ from bluepy.btle import BTLEException
 import eq3bt as eq3  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
@@ -76,7 +76,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class EQ3BTSmartThermostat(ClimateDevice):
+class EQ3BTSmartThermostat(ClimateEntity):
     """Representation of an eQ-3 Bluetooth Smart thermostat."""
 
     def __init__(self, _mac, _name):

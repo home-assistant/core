@@ -3,7 +3,7 @@ import logging
 
 import requests
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -97,7 +97,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ViCareClimate(ClimateDevice):
+class ViCareClimate(ClimateEntity):
     """Representation of the ViCare heating climate device."""
 
     def __init__(self, name, api, heating_type):

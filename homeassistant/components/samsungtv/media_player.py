@@ -4,7 +4,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerDevice
+from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -81,7 +81,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([SamsungTVDevice(bridge, config_entry, on_script)])
 
 
-class SamsungTVDevice(MediaPlayerDevice):
+class SamsungTVDevice(MediaPlayerEntity):
     """Representation of a Samsung TV."""
 
     def __init__(self, bridge, config_entry, on_script):

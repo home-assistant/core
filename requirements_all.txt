@@ -282,7 +282,7 @@ atenpdu==0.3.0
 aurorapy==0.2.6
 
 # homeassistant.components.stream
-av==6.1.2
+av==7.0.1
 
 # homeassistant.components.avea
 avea==1.4
@@ -481,7 +481,7 @@ dsmr_parser==0.18
 dweepy==0.3.0
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.39
+dynalite_devices==0.1.40
 
 # homeassistant.components.rainforest_eagle
 eagle200_reader==0.2.4
@@ -713,7 +713,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200422.0
+home-assistant-frontend==20200424.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1173,7 +1173,7 @@ pyaehw4a1==0.3.4
 pyaftership==0.1.2
 
 # homeassistant.components.airvisual
-pyairvisual==4.3.0
+pyairvisual==4.4.0
 
 # homeassistant.components.almond
 pyalmond==0.0.2
@@ -1551,7 +1551,7 @@ pysesame2==1.0.1
 pysher==1.0.1
 
 # homeassistant.components.signal_messenger
-pysignalclirestapi==0.2.4
+pysignalclirestapi==0.3.4
 
 # homeassistant.components.sma
 pysma==0.3.5
@@ -2199,7 +2199,7 @@ ziggo-mediabox-xl==1.1.0
 zigpy-cc==0.3.1
 
 # homeassistant.components.zha
-zigpy-deconz==0.8.0
+zigpy-deconz==0.8.1
 
 # homeassistant.components.zha
 zigpy-homeassistant==0.19.0

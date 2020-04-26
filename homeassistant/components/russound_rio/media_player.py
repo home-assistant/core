@@ -4,7 +4,7 @@ import logging
 from russound_rio import Russound
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_SELECT_SOURCE,
@@ -73,7 +73,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
 
-class RussoundZoneDevice(MediaPlayerDevice):
+class RussoundZoneDevice(MediaPlayerEntity):
     """Representation of a Russound Zone."""
 
     def __init__(self, russ, zone_id, name, sources):

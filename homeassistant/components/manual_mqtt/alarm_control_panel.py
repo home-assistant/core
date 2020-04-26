@@ -184,7 +184,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ManualMQTTAlarm(alarm.AlarmControlPanel):
+class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
     """
     Representation of an alarm status.
 
