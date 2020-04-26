@@ -1,0 +1,13 @@
+{
+  "domain": "rehau",
+  "name": "Rehau Nea Smart Manager",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/rehau",
+  "requirements": [ "pyrehau-neasmart==0.0.6" ],
+  "ssdp": {},
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@Jeoffreybauvin"
+  ]
+}
