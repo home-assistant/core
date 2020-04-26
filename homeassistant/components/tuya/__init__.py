@@ -68,8 +68,6 @@ def setup(hass, config, retry_delay=FIRST_RETRY_TIME):
     try:
         tuya.init(username, password, country_code, platform)
     except RequestsConnectionError as ex:
-        if "NewConnectionError" not in str(ex):
-            raise ex
 
         _LOGGER.warning(
             "Connection error during integration setup. Will retry in %s seconds",
