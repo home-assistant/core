@@ -2,7 +2,7 @@
 import logging
 from typing import Callable
 
-from homeassistant.components.light import DOMAIN, SUPPORT_BRIGHTNESS, Light
+from homeassistant.components.light import DOMAIN, SUPPORT_BRIGHTNESS, LightEntity
 from homeassistant.helpers.typing import ConfigType
 
 from . import ISY994_NODES, ISYDevice
@@ -21,7 +21,7 @@ def setup_platform(
     add_entities(devices)
 
 
-class ISYLightDevice(ISYDevice, Light):
+class ISYLightDevice(ISYDevice, LightEntity):
     """Representation of an ISY994 light device."""
 
     def __init__(self, node) -> None:

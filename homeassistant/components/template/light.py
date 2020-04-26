@@ -13,7 +13,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_WHITE_VALUE,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -146,7 +146,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(lights)
 
 
-class LightTemplate(Light):
+class LightTemplate(LightEntity):
     """Representation of a templated Light, including dimmable."""
 
     def __init__(

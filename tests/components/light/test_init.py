@@ -548,3 +548,13 @@ async def test_light_brightness_pct_conversion(hass):
 
     _, data = entity.last_call("turn_on")
     assert data["brightness"] == 255, data
+
+
+def test_deprecated_base_class(caplog):
+    """Test deprecated base class."""
+
+    class CustomLight(light.Light):
+        pass
+
+    CustomLight()
+    assert "Light is deprecated, modify CustomLight" in caplog.text
