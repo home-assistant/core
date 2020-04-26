@@ -2,8 +2,7 @@
 from datetime import timedelta
 import logging
 
-from requests.exceptions import ConnectionError as RequestsConnectionError
-from tuyaha import TuyaApi
+from tuyaha import TuyaApi, TuyaNetException, TuyaServerException
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
@@ -67,7 +66,7 @@ def setup(hass, config, retry_delay=FIRST_RETRY_TIME):
 
     try:
         tuya.init(username, password, country_code, platform)
-    except RequestsConnectionError:
+    except (TuyaNetException, TuyaServerException):
 
         _LOGGER.warning(
             "Connection error during integration setup. Will retry in %s seconds",
