@@ -42,8 +42,6 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize flow."""
         self._host = None
-        self._manufacturer = None
-        self._model = None
         self._name = None
         self._password = None
         self._username = None
@@ -83,7 +81,7 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if entry.data.get(CONF_HOST) == user_input[CONF_HOST]:
+                if entry.data[CONF_HOST] == user_input[CONF_HOST]:
                     if entry.data != user_input:
                         self.hass.config_entries.async_update_entry(
                             entry, data=user_input
@@ -117,9 +115,7 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_in_progress")
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data.get(CONF_HOST) == host:
-                if entry.data != user_input:
-                    self.hass.config_entries.async_update_entry(entry, data=user_input)
+            if entry.data[CONF_HOST] == host:
                 return self.async_abort(reason="already_configured")
 
         self._host = host
