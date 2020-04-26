@@ -4,7 +4,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     add_entities_callback(devices)
 
 
-class KankunSwitch(SwitchDevice):
+class KankunSwitch(SwitchEntity):
     """Representation of a Kankun Wifi switch."""
 
     def __init__(self, hass, name, host, port, path, user, passwd):

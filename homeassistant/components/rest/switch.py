@@ -6,7 +6,7 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_HEADERS,
     CONF_METHOD,
@@ -109,7 +109,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.error("No route to resource/endpoint: %s", resource)
 
 
-class RestSwitch(SwitchDevice):
+class RestSwitch(SwitchEntity):
     """Representation of a switch that can be toggled using REST."""
 
     def __init__(

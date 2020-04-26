@@ -1,7 +1,7 @@
 """Support for interacting with Smappee Comport Plugs."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import DATA_SMAPPEE
 
@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev)
 
 
-class SmappeeSwitch(SwitchDevice):
+class SmappeeSwitch(SwitchEntity):
     """Representation of a Smappee Comport Plug."""
 
     def __init__(self, smappee, name, location_id, switch_id):

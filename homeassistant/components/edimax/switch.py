@@ -4,7 +4,7 @@ import logging
 from pyedimax.smartplug import SmartPlug
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([SmartPlugSwitch(SmartPlug(host, auth), name)], True)
 
 
-class SmartPlugSwitch(SwitchDevice):
+class SmartPlugSwitch(SwitchEntity):
     """Representation an Edimax Smart Plug switch."""
 
     def __init__(self, smartplug, name):

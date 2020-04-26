@@ -3,7 +3,7 @@ import logging
 from pprint import pformat
 
 from homeassistant.components.supla import SuplaChannel
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([SuplaSwitch(device) for device in discovery_info])
 
 
-class SuplaSwitch(SuplaChannel, SwitchDevice):
+class SuplaSwitch(SuplaChannel, SwitchEntity):
     """Representation of a Supla Switch."""
 
     def turn_on(self, **kwargs):

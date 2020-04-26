@@ -1,7 +1,7 @@
 """Support for Tahoma switches."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class TahomaSwitch(TahomaDevice, SwitchDevice):
+class TahomaSwitch(TahomaDevice, SwitchEntity):
     """Representation a Tahoma Switch."""
 
     def __init__(self, tahoma_device, controller):
