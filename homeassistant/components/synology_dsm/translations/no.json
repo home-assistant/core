@@ -4,7 +4,6 @@
             "already_configured": "Verten er allerede konfigurert"
         },
         "error": {
-            "connection": "Tilkoblingsfeil: sjekk verten, passordet og ssl",
             "login": "P\u00e5loggingsfeil: Vennligst sjekk brukernavnet ditt og passordet ditt",
             "missing_data": "Manglende data: Pr\u00f8v p\u00e5 nytt senere eller en annen konfigurasjon",
             "otp_failed": "To-trinns autentisering mislyktes. Pr\u00f8v p\u00e5 nytt med en ny passkode",
