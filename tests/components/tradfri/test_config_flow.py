@@ -80,7 +80,9 @@ async def test_discovery_connection(hass, mock_auth, mock_entry_setup):
     mock_auth.side_effect = lambda hass, host, code: {"host": host, "gateway_id": "bla"}
 
     flow = await hass.config_entries.flow.async_init(
-        "tradfri", context={"source": "zeroconf"}, data={"host": "123.123.123.123"}
+        "tradfri",
+        context={"source": "homekit"},
+        data={"host": "123.123.123.123", "properties": {"id": "homekit-id"}},
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -90,6 +92,7 @@ async def test_discovery_connection(hass, mock_auth, mock_entry_setup):
     assert len(mock_entry_setup.mock_calls) == 1
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["result"].unique_id == "homekit-id"
     assert result["result"].data == {
         "host": "123.123.123.123",
         "gateway_id": "bla",
@@ -218,15 +221,22 @@ async def test_import_connection_legacy_no_groups(
 
 
 async def test_discovery_duplicate_aborted(hass):
-    """Test a duplicate discovery host is ignored."""
-    MockConfigEntry(domain="tradfri", data={"host": "some-host"}).add_to_hass(hass)
+    """Test a duplicate discovery host aborts and updates existing entry."""
+    entry = MockConfigEntry(
+        domain="tradfri", data={"host": "some-host"}, unique_id="homekit-id"
+    )
+    entry.add_to_hass(hass)
 
     flow = await hass.config_entries.flow.async_init(
-        "tradfri", context={"source": "zeroconf"}, data={"host": "some-host"}
+        "tradfri",
+        context={"source": "homekit"},
+        data={"host": "new-host", "properties": {"id": "homekit-id"}},
     )
 
     assert flow["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert flow["reason"] == "already_configured"
+
+    assert entry.data["host"] == "new-host"
 
 
 async def test_import_duplicate_aborted(hass):
@@ -244,13 +254,34 @@ async def test_import_duplicate_aborted(hass):
 async def test_duplicate_discovery(hass, mock_auth, mock_entry_setup):
     """Test a duplicate discovery in progress is ignored."""
     result = await hass.config_entries.flow.async_init(
-        "tradfri", context={"source": "zeroconf"}, data={"host": "123.123.123.123"}
+        "tradfri",
+        context={"source": "homekit"},
+        data={"host": "123.123.123.123", "properties": {"id": "homekit-id"}},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
     result2 = await hass.config_entries.flow.async_init(
-        "tradfri", context={"source": "zeroconf"}, data={"host": "123.123.123.123"}
+        "tradfri",
+        context={"source": "homekit"},
+        data={"host": "123.123.123.123", "properties": {"id": "homekit-id"}},
     )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+
+async def test_discovery_updates_unique_id(hass):
+    """Test a duplicate discovery host aborts and updates existing entry."""
+    entry = MockConfigEntry(domain="tradfri", data={"host": "some-host"},)
+    entry.add_to_hass(hass)
+
+    flow = await hass.config_entries.flow.async_init(
+        "tradfri",
+        context={"source": "homekit"},
+        data={"host": "some-host", "properties": {"id": "homekit-id"}},
+    )
+
+    assert flow["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert flow["reason"] == "already_configured"
+
+    assert entry.unique_id == "homekit-id"
