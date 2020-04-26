@@ -5,7 +5,7 @@ from mficlient.client import FailedToLogin, MFiClient
 import requests
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class MfiSwitch(SwitchDevice):
+class MfiSwitch(SwitchEntity):
     """Representation of an mFi switch-able device."""
 
     def __init__(self, port):
