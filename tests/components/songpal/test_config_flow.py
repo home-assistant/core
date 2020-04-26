@@ -1,7 +1,6 @@
 """Test the songpal config flow."""
-# TODO: PR to PyPI package to hide aiohttp exceptions
-from aiohttp.client_exceptions import ClientConnectorError
 from asynctest import MagicMock, patch
+from songpal import SongpalException
 
 from homeassistant.components import ssdp
 from homeassistant.components.songpal.const import CONF_ENDPOINT, CONF_MODEL, DOMAIN
@@ -39,10 +38,14 @@ async def _async_return_value():
     pass
 
 
-def _create_mocked_device(error=None):
+def _connection_exception():
+    raise SongpalException("Unable to do POST request: ")
+
+
+def _create_mocked_device(get_supported_methods=None):
     mocked_device = MagicMock()
     type(mocked_device).get_supported_methods = MagicMock(
-        side_effect=error, return_value=_async_return_value(),
+        side_effect=get_supported_methods, return_value=_async_return_value(),
     )
     return mocked_device
 
@@ -172,7 +175,7 @@ async def test_import_exist(hass):
 
 async def test_user_invalid(hass):
     """Test using adding invalid config."""
-    mocked_device = _create_mocked_device(ClientConnectorError)
+    mocked_device = _create_mocked_device(_connection_exception)
     _create_mock_config_entry(hass)
 
     with _patch_config_flow_device(mocked_device):
@@ -188,7 +191,7 @@ async def test_user_invalid(hass):
 
 async def test_import_invalid(hass):
     """Test importing invalid config."""
-    mocked_device = _create_mocked_device(ClientConnectorError)
+    mocked_device = _create_mocked_device(_connection_exception)
     _create_mock_config_entry(hass)
 
     with _patch_config_flow_device(mocked_device):

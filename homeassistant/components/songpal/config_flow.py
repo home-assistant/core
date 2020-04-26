@@ -3,7 +3,7 @@ import logging
 from typing import Optional
 from urllib.parse import urlparse
 
-from songpal import Device
+from songpal import Device, SongpalException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -145,8 +145,8 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             device = Device(self.conf.endpoint)
             await device.get_supported_methods()
-        except Exception as e:
-            _LOGGER.debug("Connection failed: %s", e)
+        except SongpalException as ex:
+            _LOGGER.debug("Connection failed: %s", ex)
             return {"base": "connection"}
         return None
 
