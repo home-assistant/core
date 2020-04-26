@@ -1,48 +1,57 @@
 """Test the UPB Control config flow."""
 
-import asyncio
-
 from asynctest import MagicMock, PropertyMock, patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.upb.const import DOMAIN
 
 
-def upb_lib_connect(callback):
-    """Mock UPB connect."""
-    callback()
-
-
-def mock_upb(sync_complete=True):
+def mocked_upb(sync_complete=True, config_ok=True):
     """Mock UPB lib."""
-    mocked_upb = MagicMock()
-    type(mocked_upb).network_id = PropertyMock(return_value="42")
+
+    def _upb_lib_connect(callback):
+        callback()
+
+    upb_mock = MagicMock()
+    type(upb_mock).network_id = PropertyMock(return_value="42")
+    type(upb_mock).config_ok = PropertyMock(return_value=config_ok)
     if sync_complete:
-        mocked_upb.connect.side_effect = upb_lib_connect
-    return mocked_upb
-
-
-async def test_form_user_with_serial_upb(hass):
-    """Test we can setup a serial upb."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        upb_mock.connect.side_effect = _upb_lib_connect
+    return patch(
+        "homeassistant.components.upb.config_flow.upb_lib.UpbPim", return_value=upb_mock
     )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
 
-    mocked_upb = mock_upb()
 
-    with patch(
-        "homeassistant.components.upb.config_flow.upb_lib.UpbPim",
-        return_value=mocked_upb,
-    ), patch(
+async def valid_tcp_flow(hass, sync_complete=True, config_ok=True):
+    """Get result dict that are standard for most tests."""
+    with mocked_upb(sync_complete, config_ok), patch(
+        "homeassistant.components.upb.async_setup_entry", return_value=True
+    ):
+        flow = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"],
+            {"protocol": "TCP", "address": "1.2.3.4", "file_path": "upb.upe"},
+        )
+    return result
+
+
+async def test_full_upb_flow_with_serial_port(hass):
+    """Test a full UPB config flow with serial port."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with mocked_upb(), patch(
         "homeassistant.components.upb.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.upb.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        flow = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"],
             {
                 "protocol": "Serial port",
                 "address": "/dev/ttyS0:115200",
@@ -50,9 +59,11 @@ async def test_form_user_with_serial_upb(hass):
             },
         )
 
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "UPB"
-    assert result2["data"] == {
+    assert flow["type"] == "form"
+    assert flow["errors"] == {}
+    assert result["type"] == "create_entry"
+    assert result["title"] == "UPB"
+    assert result["data"] == {
         "host": "serial:///dev/ttyS0:115200",
         "file_path": "upb.upe",
     }
@@ -62,78 +73,38 @@ async def test_form_user_with_serial_upb(hass):
 
 
 async def test_form_user_with_tcp_upb(hass):
-    """Test we can setup a TCP upb."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
-
-    mocked_upb = mock_upb()
-
-    with patch(
-        "homeassistant.components.upb.config_flow.upb_lib.UpbPim",
-        return_value=mocked_upb,
-    ), patch(
-        "homeassistant.components.upb.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.upb.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"protocol": "TCP", "address": "1.2.3.4", "file_path": "upb.upe"},
-        )
-
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "UPB"
-    assert result2["data"] == {"host": "tcp://1.2.3.4", "file_path": "upb.upe"}
+    """Test we can setup a serial upb."""
+    result = await valid_tcp_flow(hass)
+    assert result["type"] == "create_entry"
+    assert result["data"] == {"host": "tcp://1.2.3.4", "file_path": "upb.upe"}
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    mocked_upb = mock_upb(sync_complete=False)
+    from asyncio import TimeoutError
 
     with patch(
-        "homeassistant.components.upb.config_flow.upb_lib.UpbPim",
-        return_value=mocked_upb,
-    ), patch(
         "homeassistant.components.upb.config_flow.async_timeout.timeout",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"protocol": "TCP", "address": "1.2.3.4", "file_path": "upb.upe"},
-        )
+        result = await valid_tcp_flow(hass, sync_complete=False)
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_missing_file(hass):
+async def test_form_missing_upb_file(hass):
     """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    result = await valid_tcp_flow(hass, config_ok=False)
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "invalid_upb_file"}
 
-    mocked_upb = mock_upb(sync_complete=False)
-    type(mocked_upb).config_ok = PropertyMock(return_value=False)
 
-    with patch(
-        "homeassistant.components.upb.config_flow.upb_lib.UpbPim",
-        return_value=mocked_upb,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"protocol": "TCP", "address": "1.2.3.4", "file_path": "upb.upe"},
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_upb_file"}
+async def test_form_user_with_already_configured(hass):
+    """Test we can setup a TCP upb."""
+    _ = await valid_tcp_flow(hass)
+    result2 = await valid_tcp_flow(hass)
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "address_already_configured"
+    await hass.async_block_till_done()
