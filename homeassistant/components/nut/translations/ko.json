@@ -8,6 +8,19 @@
             "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
         "step": {
+            "resources": {
+                "data": {
+                    "resources": "\ub9ac\uc18c\uc2a4"
+                },
+                "title": "\ubaa8\ub2c8\ud130\ub9c1\ud560 \ub9ac\uc18c\uc2a4 \uc120\ud0dd"
+            },
+            "ups": {
+                "data": {
+                    "alias": "\ubcc4\uba85",
+                    "resources": "\ub9ac\uc18c\uc2a4"
+                },
+                "title": "\ubaa8\ub2c8\ud130\ub9c1\ud560 UPS \uc120\ud0dd"
+            },
             "user": {
                 "data": {
                     "host": "\ud638\uc2a4\ud2b8",
@@ -23,7 +36,8 @@
         "step": {
             "init": {
                 "data": {
-                    "resources": "\ub9ac\uc18c\uc2a4"
+                    "resources": "\ub9ac\uc18c\uc2a4",
+                    "scan_interval": "\uc2a4\uce94 \uac04\uaca9 (\ucd08)"
                 },
                 "description": "\uc13c\uc11c \ub9ac\uc18c\uc2a4 \uc120\ud0dd"
             }

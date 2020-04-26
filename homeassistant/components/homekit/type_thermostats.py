@@ -119,9 +119,11 @@ class Thermostat(HomeAccessory):
         self._unit = self.hass.config.units.temperature_unit
         min_temp, max_temp = self.get_temperature_range()
 
-        # Homekit only supports 10-38
+        # Homekit only supports 10-38, overwriting
+        # the max to appears to work, but less than 10 causes
+        # a crash on the home app
         hc_min_temp = max(min_temp, HC_MIN_TEMP)
-        hc_max_temp = min(max_temp, HC_MAX_TEMP)
+        hc_max_temp = max_temp
 
         min_humidity = self.hass.states.get(self.entity_id).attributes.get(
             ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY

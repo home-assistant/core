@@ -3,8 +3,8 @@ from datetime import datetime, timedelta
 import json
 import ssl
 import unittest
-from unittest import mock
 
+from asynctest import CoroutineMock, MagicMock, call, mock_open, patch
 import pytest
 import voluptuous as vol
 
@@ -31,7 +31,6 @@ from tests.common import (
     async_mock_mqtt_component,
     fire_mqtt_message,
     get_test_home_assistant,
-    mock_coro,
     mock_device_registry,
     mock_mqtt_component,
     mock_registry,
@@ -56,9 +55,9 @@ def entity_reg(hass):
 @pytest.fixture
 def mock_mqtt():
     """Make sure connection is established."""
-    with mock.patch("homeassistant.components.mqtt.MQTT") as mock_mqtt:
-        mock_mqtt.return_value.async_connect.return_value = mock_coro(True)
-        mock_mqtt.return_value.async_disconnect.return_value = mock_coro(True)
+    with patch("homeassistant.components.mqtt.MQTT") as mock_mqtt:
+        mock_mqtt.return_value.async_connect = CoroutineMock(return_value=True)
+        mock_mqtt.return_value.async_disconnect = CoroutineMock(return_value=True)
         yield mock_mqtt
 
 
@@ -67,7 +66,7 @@ async def async_mock_mqtt_client(hass, config=None):
     if config is None:
         config = {mqtt.CONF_BROKER: "mock-broker"}
 
-    with mock.patch("paho.mqtt.client.Client") as mock_client:
+    with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().connect.return_value = 0
         mock_client().subscribe.return_value = (0, 0)
         mock_client().unsubscribe.return_value = (0, 0)
@@ -583,12 +582,12 @@ class TestMQTTCallbacks(unittest.TestCase):
         # Fake that the client is connected
         self.hass.data["mqtt"].connected = True
 
-        calls_a = mock.MagicMock()
+        calls_a = MagicMock()
         mqtt.subscribe(self.hass, "test/state", calls_a)
         self.hass.block_till_done()
         assert calls_a.called
 
-        calls_b = mock.MagicMock()
+        calls_b = MagicMock()
         mqtt.subscribe(self.hass, "test/state", calls_b)
         self.hass.block_till_done()
         assert calls_b.called
@@ -639,9 +638,9 @@ class TestMQTTCallbacks(unittest.TestCase):
         self.hass.block_till_done()
 
         expected = [
-            mock.call("test/state", 2),
-            mock.call("test/state", 0),
-            mock.call("test/state", 1),
+            call("test/state", 2),
+            call("test/state", 0),
+            call("test/state", 1),
         ]
         assert self.hass.data["mqtt"]._mqttc.subscribe.mock_calls == expected
 
@@ -653,7 +652,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         self.hass.data["mqtt"]._mqtt_on_connect(None, None, None, 0)
         self.hass.block_till_done()
 
-        expected.append(mock.call("test/state", 1))
+        expected.append(call("test/state", 1))
         assert self.hass.data["mqtt"]._mqttc.subscribe.mock_calls == expected
 
 
@@ -661,9 +660,9 @@ async def test_setup_embedded_starts_with_no_config(hass):
     """Test setting up embedded server with no config."""
     client_config = ("localhost", 1883, "user", "pass", None, "3.1.1")
 
-    with mock.patch(
+    with patch(
         "homeassistant.components.mqtt.server.async_start",
-        return_value=mock_coro(return_value=(True, client_config)),
+        return_value=(True, client_config),
     ) as _start:
         await async_mock_mqtt_client(hass, {})
         assert _start.call_count == 1
@@ -673,11 +672,10 @@ async def test_setup_embedded_with_embedded(hass):
     """Test setting up embedded server with no config."""
     client_config = ("localhost", 1883, "user", "pass", None, "3.1.1")
 
-    with mock.patch(
+    with patch(
         "homeassistant.components.mqtt.server.async_start",
-        return_value=mock_coro(return_value=(True, client_config)),
+        return_value=(True, client_config),
     ) as _start:
-        _start.return_value = mock_coro(return_value=(True, client_config))
         await async_mock_mqtt_client(hass, {"embedded": None})
         assert _start.call_count == 1
 
@@ -686,7 +684,7 @@ async def test_setup_fails_if_no_connect_broker(hass):
     """Test for setup failure if connection to broker is missing."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
 
-    with mock.patch("paho.mqtt.client.Client") as mock_client:
+    with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().connect = lambda *args: 1
         assert not await mqtt.async_setup_entry(hass, entry)
 
@@ -695,8 +693,8 @@ async def test_setup_raises_ConfigEntryNotReady_if_no_connect_broker(hass):
     """Test for setup failure if connection to broker is missing."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
 
-    with mock.patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().connect = mock.Mock(side_effect=OSError("Connection error"))
+    with patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().connect = MagicMock(side_effect=OSError("Connection error"))
         with pytest.raises(ConfigEntryNotReady):
             await mqtt.async_setup_entry(hass, entry)
 
@@ -808,7 +806,7 @@ async def test_mqtt_subscribes_topics_on_connect(hass):
         mqtt.Subscription("still/pending", None, 1),
     ]
 
-    hass.add_job = mock.MagicMock()
+    hass.add_job = MagicMock()
     hass.data["mqtt"]._mqtt_on_connect(None, None, 0, 0)
 
     await hass.async_block_till_done()
@@ -874,7 +872,7 @@ async def test_dump_service(hass):
     """Test that we can dump a topic."""
     await async_mock_mqtt_component(hass)
 
-    mock_open = mock.mock_open()
+    mopen = mock_open()
 
     await hass.services.async_call(
         "mqtt", "dump", {"topic": "bla/#", "duration": 3}, blocking=True
@@ -882,11 +880,11 @@ async def test_dump_service(hass):
     async_fire_mqtt_message(hass, "bla/1", "test1")
     async_fire_mqtt_message(hass, "bla/2", "test2")
 
-    with mock.patch("homeassistant.components.mqtt.open", mock_open):
+    with patch("homeassistant.components.mqtt.open", mopen):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
         await hass.async_block_till_done()
 
-    writes = mock_open.return_value.write.mock_calls
+    writes = mopen.return_value.write.mock_calls
     assert len(writes) == 2
     assert writes[0][1][0] == "bla/1,test1\n"
     assert writes[1][1][0] == "bla/2,test2\n"
@@ -1251,7 +1249,7 @@ async def test_debug_info_wildcard(hass, mqtt_mock):
     ]
 
     start_dt = datetime(2019, 1, 1, 0, 0, 0)
-    with mock.patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = start_dt
         async_fire_mqtt_message(hass, "sensor/abc", "123")
 
@@ -1293,7 +1291,7 @@ async def test_debug_info_filter_same(hass, mqtt_mock):
 
     dt1 = datetime(2019, 1, 1, 0, 0, 0)
     dt2 = datetime(2019, 1, 1, 0, 0, 1)
-    with mock.patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = dt1
         async_fire_mqtt_message(hass, "sensor/abc", "123")
         async_fire_mqtt_message(hass, "sensor/abc", "123")

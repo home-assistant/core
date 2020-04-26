@@ -5,7 +5,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     DOMAIN,
     SUPPORT_BRIGHTNESS,
-    Light,
+    LightEntity,
 )
 
 from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
@@ -35,7 +35,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities, True)
 
 
-class LutronCasetaLight(LutronCasetaDevice, Light):
+class LutronCasetaLight(LutronCasetaDevice, LightEntity):
     """Representation of a Lutron Light, including dimmable."""
 
     @property

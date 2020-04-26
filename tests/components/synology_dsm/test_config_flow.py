@@ -321,6 +321,30 @@ async def test_missing_data_after_login(
     assert result["errors"] == {"base": "missing_data"}
 
 
+async def test_form_ssdp_already_configured(
+    hass: HomeAssistantType, service: MagicMock
+):
+    """Test ssdp abort when the serial number is already configured."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        unique_id=SERIAL.upper(),
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data={
+            ssdp.ATTR_SSDP_LOCATION: "http://192.168.1.5:5000",
+            ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
+            ssdp.ATTR_UPNP_SERIAL: SERIAL,
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+
 async def test_form_ssdp(hass: HomeAssistantType, service: MagicMock):
     """Test we can setup from ssdp."""
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -331,6 +355,7 @@ async def test_form_ssdp(hass: HomeAssistantType, service: MagicMock):
         data={
             ssdp.ATTR_SSDP_LOCATION: "http://192.168.1.5:5000",
             ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
+            ssdp.ATTR_UPNP_SERIAL: SERIAL,
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

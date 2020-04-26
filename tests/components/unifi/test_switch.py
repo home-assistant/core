@@ -383,7 +383,7 @@ async def test_option_block_clients(hass):
         options={CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]]},
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
     # Remove the second switch again
     hass.config_entries.async_update_entry(
@@ -397,7 +397,7 @@ async def test_option_block_clients(hass):
         controller.config_entry, options={CONF_BLOCK_CLIENT: [UNBLOCKED["mac"]]},
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
     # Remove one
     hass.config_entries.async_update_entry(

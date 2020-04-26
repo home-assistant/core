@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 
 from .const import (
@@ -31,12 +31,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for device in myq.devices.values():
         if device.device_json[MYQ_DEVICE_FAMILY] == MYQ_DEVICE_FAMILY_GATEWAY:
-            entities.append(MyQBinarySensorDevice(coordinator, device))
+            entities.append(MyQBinarySensorEntity(coordinator, device))
 
     async_add_entities(entities, True)
 
 
-class MyQBinarySensorDevice(BinarySensorDevice):
+class MyQBinarySensorEntity(BinarySensorEntity):
     """Representation of a MyQ gateway."""
 
     def __init__(self, coordinator, device):

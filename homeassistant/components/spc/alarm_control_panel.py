@@ -47,7 +47,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([SpcAlarm(area=area, api=api) for area in api.areas.values()])
 
 
-class SpcAlarm(alarm.AlarmControlPanel):
+class SpcAlarm(alarm.AlarmControlPanelEntity):
     """Representation of the SPC alarm panel."""
 
     def __init__(self, area, api):

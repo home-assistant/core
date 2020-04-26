@@ -228,7 +228,7 @@ async def test_unsupported_methods(hass):
     assert "spot" not in state.attributes.get(ATTR_STATUS)
     assert state.state == STATE_OFF
 
-    # VacuumDevice should not support start and pause methods.
+    # VacuumEntity should not support start and pause methods.
     hass.states.async_set(ENTITY_VACUUM_COMPLETE, STATE_ON)
     await hass.async_block_till_done()
     assert vacuum.is_on(hass, ENTITY_VACUUM_COMPLETE)
@@ -243,7 +243,7 @@ async def test_unsupported_methods(hass):
     await common.async_start(hass, ENTITY_VACUUM_COMPLETE)
     assert not vacuum.is_on(hass, ENTITY_VACUUM_COMPLETE)
 
-    # StateVacuumDevice does not support on/off
+    # StateVacuumEntity does not support on/off
     await common.async_turn_on(hass, entity_id=ENTITY_VACUUM_STATE)
     state = hass.states.get(ENTITY_VACUUM_STATE)
     assert state.state != STATE_CLEANING

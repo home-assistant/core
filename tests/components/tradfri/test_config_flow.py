@@ -1,12 +1,11 @@
 """Test the Tradfri config flow."""
-from unittest.mock import patch
-
+from asynctest import patch
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.tradfri import config_flow
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -20,9 +19,7 @@ def mock_auth():
 
 async def test_user_connection_successful(hass, mock_auth, mock_entry_setup):
     """Test a successful connection."""
-    mock_auth.side_effect = lambda hass, host, code: mock_coro(
-        {"host": host, "gateway_id": "bla"}
-    )
+    mock_auth.side_effect = lambda hass, host, code: {"host": host, "gateway_id": "bla"}
 
     flow = await hass.config_entries.flow.async_init(
         "tradfri", context={"source": "user"}
@@ -80,9 +77,7 @@ async def test_user_connection_bad_key(hass, mock_auth, mock_entry_setup):
 
 async def test_discovery_connection(hass, mock_auth, mock_entry_setup):
     """Test a connection via discovery."""
-    mock_auth.side_effect = lambda hass, host, code: mock_coro(
-        {"host": host, "gateway_id": "bla"}
-    )
+    mock_auth.side_effect = lambda hass, host, code: {"host": host, "gateway_id": "bla"}
 
     flow = await hass.config_entries.flow.async_init(
         "tradfri", context={"source": "zeroconf"}, data={"host": "123.123.123.123"}
@@ -104,9 +99,12 @@ async def test_discovery_connection(hass, mock_auth, mock_entry_setup):
 
 async def test_import_connection(hass, mock_auth, mock_entry_setup):
     """Test a connection via import."""
-    mock_auth.side_effect = lambda hass, host, code: mock_coro(
-        {"host": host, "gateway_id": "bla", "identity": "mock-iden", "key": "mock-key"}
-    )
+    mock_auth.side_effect = lambda hass, host, code: {
+        "host": host,
+        "gateway_id": "bla",
+        "identity": "mock-iden",
+        "key": "mock-key",
+    }
 
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
@@ -132,9 +130,12 @@ async def test_import_connection(hass, mock_auth, mock_entry_setup):
 
 async def test_import_connection_no_groups(hass, mock_auth, mock_entry_setup):
     """Test a connection via import and no groups allowed."""
-    mock_auth.side_effect = lambda hass, host, code: mock_coro(
-        {"host": host, "gateway_id": "bla", "identity": "mock-iden", "key": "mock-key"}
-    )
+    mock_auth.side_effect = lambda hass, host, code: {
+        "host": host,
+        "gateway_id": "bla",
+        "identity": "mock-iden",
+        "key": "mock-key",
+    }
 
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
@@ -160,9 +161,12 @@ async def test_import_connection_no_groups(hass, mock_auth, mock_entry_setup):
 
 async def test_import_connection_legacy(hass, mock_gateway_info, mock_entry_setup):
     """Test a connection via import."""
-    mock_gateway_info.side_effect = lambda hass, host, identity, key: mock_coro(
-        {"host": host, "identity": identity, "key": key, "gateway_id": "mock-gateway"}
-    )
+    mock_gateway_info.side_effect = lambda hass, host, identity, key: {
+        "host": host,
+        "identity": identity,
+        "key": key,
+        "gateway_id": "mock-gateway",
+    }
 
     result = await hass.config_entries.flow.async_init(
         "tradfri",
@@ -187,9 +191,12 @@ async def test_import_connection_legacy_no_groups(
     hass, mock_gateway_info, mock_entry_setup
 ):
     """Test a connection via legacy import and no groups allowed."""
-    mock_gateway_info.side_effect = lambda hass, host, identity, key: mock_coro(
-        {"host": host, "identity": identity, "key": key, "gateway_id": "mock-gateway"}
-    )
+    mock_gateway_info.side_effect = lambda hass, host, identity, key: {
+        "host": host,
+        "identity": identity,
+        "key": key,
+        "gateway_id": "mock-gateway",
+    }
 
     result = await hass.config_entries.flow.async_init(
         "tradfri",

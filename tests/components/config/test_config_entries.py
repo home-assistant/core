@@ -141,13 +141,17 @@ async def test_initialize_flow(hass, client):
             return self.async_show_form(
                 step_id="user",
                 data_schema=schema,
-                description_placeholders={"url": "https://example.com"},
+                description_placeholders={
+                    "url": "https://example.com",
+                    "show_advanced_options": self.show_advanced_options,
+                },
                 errors={"username": "Should be unique."},
             )
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         resp = await client.post(
-            "/api/config/config_entries/flow", json={"handler": "test"}
+            "/api/config/config_entries/flow",
+            json={"handler": "test", "show_advanced_options": True},
         )
 
     assert resp.status == 200
@@ -163,7 +167,10 @@ async def test_initialize_flow(hass, client):
             {"name": "username", "required": True, "type": "string"},
             {"name": "password", "required": True, "type": "string"},
         ],
-        "description_placeholders": {"url": "https://example.com"},
+        "description_placeholders": {
+            "url": "https://example.com",
+            "show_advanced_options": True,
+        },
         "errors": {"username": "Should be unique."},
     }
 

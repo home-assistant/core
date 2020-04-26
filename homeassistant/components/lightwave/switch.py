@@ -1,5 +1,5 @@
 """Support for LightwaveRF switches."""
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_NAME
 
 from . import LIGHTWAVE_LINK
@@ -20,7 +20,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(switches)
 
 
-class LWRFSwitch(SwitchDevice):
+class LWRFSwitch(SwitchEntity):
     """Representation of a LightWaveRF switch."""
 
     def __init__(self, name, device_id, lwlink):

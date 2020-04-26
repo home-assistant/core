@@ -332,7 +332,7 @@ class Profiles:
         return None
 
 
-class Light(ToggleEntity):
+class LightEntity(ToggleEntity):
     """Representation of a light."""
 
     @property
@@ -428,3 +428,14 @@ class Light(ToggleEntity):
     def supported_features(self):
         """Flag supported features."""
         return 0
+
+
+class Light(LightEntity):
+    """Representation of a light (for backwards compatibility)."""
+
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "Light is deprecated, modify %s to extend LightEntity", cls.__name__,
+        )
