@@ -145,7 +145,8 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             device = Device(self.conf.endpoint)
             await device.get_supported_methods()
-        except Exception:
+        except Exception as e:
+            _LOGGER.debug("Connection failed: %s", e)
             return {"base": "connection"}
         return None
 
