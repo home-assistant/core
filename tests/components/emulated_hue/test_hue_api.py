@@ -530,18 +530,24 @@ async def test_put_light_state_script(hass, hass_hue, hue_client):
 
 async def test_put_light_state_climate(hass_hue, hue_client):
     """Test setting climate state and temperature."""
-    # Turn the climate entity on first
+    # Turn the climate entity off first
     await hass_hue.services.async_call(
         climate.DOMAIN,
-        const.SERVICE_TURN_ON,
+        const.SERVICE_TURN_OFF,
         {const.ATTR_ENTITY_ID: "climate.hvac"},
         blocking=True,
     )
 
-    # Emulated hue converts brightness to temperature
+    # Turn the climate entity on
+    hvac_result = await perform_put_light_state(
+        hass_hue, hue_client, "climate.hvac", True
+    )
+
+    # Convert brightness to temperature
     brightness = 19
     temperature = round(brightness / 254 * 100)
 
+    # Set the brightness
     hvac_result = await perform_put_light_state(
         hass_hue, hue_client, "climate.hvac", True, brightness
     )
