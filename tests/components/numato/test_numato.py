@@ -4,13 +4,12 @@ from copy import copy, deepcopy
 from numato_gpio import NumatoGpioError
 import pytest
 
-import homeassistant.components.numato as numato
+from homeassistant.components import numato, switch
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
 from . import numato_mock
-
-from tests.components.switch.common import async_turn_off, async_turn_on
 
 NUMATO_CFG = {
     "numato": {
@@ -99,6 +98,20 @@ async def test_fail_setup_raising_discovery(hass, numato_fixture, caplog, monkey
     monkeypatch.setattr(numato_fixture, "discover", mockup_raise)
     assert not await async_setup_component(hass, "numato", NUMATO_CFG)
     await hass.async_block_till_done()
+
+
+async def async_turn_on(hass, entity_id):
+    """Use turn_on service on a switch entity."""
+    await hass.services.async_call(
+        switch.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True,
+    )
+
+
+async def async_turn_off(hass, entity_id):
+    """Use turn_off service on a switch entity."""
+    await hass.services.async_call(
+        switch.DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True,
+    )
 
 
 @pytest.mark.asyncio
