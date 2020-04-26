@@ -5,7 +5,7 @@ from typing import Any, Callable, Iterable, List
 
 from directv import DIRECTV, DIRECTVError
 
-from homeassistant.components.remote import RemoteDevice
+from homeassistant.components.remote import RemoteEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -36,7 +36,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class DIRECTVRemote(DIRECTVEntity, RemoteDevice):
+class DIRECTVRemote(DIRECTVEntity, RemoteEntity):
     """Device that sends commands to a DirecTV receiver."""
 
     def __init__(self, *, dtv: DIRECTV, name: str, address: str = "0") -> None:
