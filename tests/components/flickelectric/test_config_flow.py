@@ -41,6 +41,46 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_duplicate_login(hass):
+    """Test uniqueness of username."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.flickelectric.config_flow.SimpleFlickAuth.async_get_access_token",
+        return_value="123456789abcdef",
+    ), patch(
+        "homeassistant.components.flickelectric.async_setup", return_value=True
+    ), patch(
+        "homeassistant.components.flickelectric.async_setup_entry", return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "test-username", "password": "test-password"},
+        )
+
+        result3 = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {"username": "test-username", "password": "test-password"},
+        )
+
+    assert result2["type"] == "create_entry"
+    assert result4["type"] == "abort"
+    assert result4["reason"] == "already_configured"
+
+
 async def test_form_invalid_auth(hass):
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
