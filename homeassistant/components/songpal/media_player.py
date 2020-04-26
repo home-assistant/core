@@ -22,6 +22,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_NAME,
@@ -31,17 +32,14 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN, SET_SOUND_SETTING
+from .const import CONF_ENDPOINT, CONF_MODEL, DOMAIN, SET_SOUND_SETTING
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ENDPOINT = "endpoint"
-
 PARAM_NAME = "name"
 PARAM_VALUE = "value"
-
-PLATFORM = "songpal"
 
 SUPPORT_SONGPAL = (
     SUPPORT_VOLUME_SET
@@ -65,33 +63,40 @@ SET_SOUND_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Songpal platform."""
-    if PLATFORM not in hass.data:
-        hass.data[PLATFORM] = {}
+async def async_setup_platform(
+    hass: HomeAssistantType, config: dict, async_add_entities, discovery_info=None
+) -> None:
+    """Support legacy configuration file."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
-    if discovery_info is not None:
-        name = discovery_info["name"]
-        endpoint = discovery_info["properties"]["endpoint"]
-        _LOGGER.debug("Got autodiscovered %s - endpoint: %s", name, endpoint)
 
-        device = SongpalDevice(name, endpoint)
-    else:
-        name = config.get(CONF_NAME)
-        endpoint = config.get(CONF_ENDPOINT)
-        device = SongpalDevice(name, endpoint, poll=False)
+async def async_setup_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up songpal media player."""
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
 
-    if endpoint in hass.data[PLATFORM]:
+    name = config_entry.data[CONF_NAME]
+    endpoint = config_entry.data[CONF_ENDPOINT]
+    model = config_entry.data.get(CONF_MODEL)
+
+    if endpoint in hass.data[DOMAIN]:
         _LOGGER.debug("The endpoint exists already, skipping setup.")
         return
 
+    device = SongpalDevice(name, endpoint, model)
     try:
         await device.initialize()
     except SongpalException as ex:
         _LOGGER.error("Unable to get methods from songpal: %s", ex)
         raise PlatformNotReady
 
-    hass.data[PLATFORM][endpoint] = device
+    hass.data[DOMAIN][endpoint] = device
 
     async_add_entities([device], True)
 
@@ -102,7 +107,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
         }
 
-        for device in hass.data[PLATFORM].values():
+        for device in hass.data[DOMAIN].values():
             if device.entity_id == entity_id or entity_id is None:
                 _LOGGER.debug(
                     "Calling %s (entity: %s) with params %s", service, entity_id, params
@@ -120,10 +125,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class SongpalDevice(MediaPlayerEntity):
     """Class representing a Songpal device."""
 
-    def __init__(self, name, endpoint, poll=False):
+    def __init__(self, name, endpoint, model=None, poll=False):
         """Init."""
         self._name = name
         self._endpoint = endpoint
+        self._model = model
         self._poll = poll
         self.dev = Device(self._endpoint)
         self._sysinfo = None
@@ -220,6 +226,17 @@ class SongpalDevice(MediaPlayerEntity):
     def unique_id(self):
         """Return a unique ID."""
         return self._sysinfo.macAddr
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "manufacturer": "Sony Corporation",
+            "name": self.name,
+            "sw_version": self._sysinfo.version,
+            "model": self._model,
+        }
 
     @property
     def available(self):

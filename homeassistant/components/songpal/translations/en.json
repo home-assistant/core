@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Endpoint already configured"
+        },
+        "error": {
+            "connection": "Connection error: please check your endpoint"
+        },
+        "flow_title": "Sony Songpal {name} ({host})",
+        "step": {
+            "init": {
+                "description": "Do you want to set up {name} ({host})?",
+                "title": "Sony Songpal"
+            },
+            "user": {
+                "data": {
+                    "endpoint": "Endpoint",
+                    "name": "Name (Optional)"
+                },
+                "title": "Sony Songpal"
+            }
+        }
+    }
+}
