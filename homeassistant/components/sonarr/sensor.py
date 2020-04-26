@@ -43,8 +43,6 @@ from .const import (
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_SSL,
-    DEFAULT_UPCOMING_DAYS,
-    DEFAULT_VERIFY_SSL,
     DEFAULT_WANTED_MAX_ITEMS,
     DOMAIN,
 )
@@ -94,7 +92,7 @@ async def async_setup_platform(
     discovery_info: Any = None,
 ) -> None:
     """Import the platform into a config entry."""
-    config[CONF_BASE_PATH] = f"{config[CONF_URLBASE]}/api"
+    config[CONF_BASE_PATH] = f"{config[CONF_URLBASE]}{DEFAULT_BASE_PATH}"
     config[CONF_WANTED_MAX_ITEMS] = DEFAULT_WANTED_MAX_ITEMS
     config[CONF_UPCOMING_DAYS] = int(config[CONF_DAYS])
     config[CONF_VERIFY_SSL] = False
