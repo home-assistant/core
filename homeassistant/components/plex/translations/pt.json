@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "select_server": {
+                "data": {
+                    "server": "Servidor"
+                }
+            }
+        }
+    }
+}

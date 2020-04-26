@@ -1,5 +1,7 @@
 """Test the Cloud Google Config."""
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
+
+from asynctest import patch
 
 from homeassistant.components.cloud import GACTIONS_SCHEMA
 from homeassistant.components.cloud.google_config import CloudGoogleConfig
@@ -105,30 +107,27 @@ async def test_google_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
     await config.async_connect_agent_user("mock-user-id")
 
     with patch.object(
-        config, "async_sync_entities", side_effect=mock_coro
+        config, "async_schedule_google_sync_all", side_effect=mock_coro
     ) as mock_sync, patch.object(ga_helpers, "SYNC_DELAY", 0):
+        # Created entity
         hass.bus.async_fire(
             EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "create", "entity_id": "light.kitchen"},
         )
         await hass.async_block_till_done()
 
-    assert len(mock_sync.mock_calls) == 1
+        assert len(mock_sync.mock_calls) == 1
 
-    with patch.object(
-        config, "async_sync_entities", side_effect=mock_coro
-    ) as mock_sync, patch.object(ga_helpers, "SYNC_DELAY", 0):
+        # Removed entity
         hass.bus.async_fire(
             EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "remove", "entity_id": "light.kitchen"},
         )
         await hass.async_block_till_done()
 
-    assert len(mock_sync.mock_calls) == 1
+        assert len(mock_sync.mock_calls) == 2
 
-    with patch.object(
-        config, "async_sync_entities", side_effect=mock_coro
-    ) as mock_sync, patch.object(ga_helpers, "SYNC_DELAY", 0):
+        # Entity registry updated with relevant changes
         hass.bus.async_fire(
             EVENT_ENTITY_REGISTRY_UPDATED,
             {
@@ -139,4 +138,13 @@ async def test_google_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
         )
         await hass.async_block_till_done()
 
-    assert len(mock_sync.mock_calls) == 1
+        assert len(mock_sync.mock_calls) == 3
+
+        # Entity registry updated with non-relevant changes
+        hass.bus.async_fire(
+            EVENT_ENTITY_REGISTRY_UPDATED,
+            {"action": "update", "entity_id": "light.kitchen", "changes": ["icon"]},
+        )
+        await hass.async_block_till_done()
+
+        assert len(mock_sync.mock_calls) == 3

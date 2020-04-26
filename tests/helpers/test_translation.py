@@ -6,8 +6,9 @@ import pathlib
 from asynctest import Mock, patch
 import pytest
 
+from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.generated import config_flows
-import homeassistant.helpers.translation as translation
+from homeassistant.helpers import translation
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
@@ -58,7 +59,7 @@ async def test_component_translation_path(hass):
     assert path.normpath(
         translation.component_translation_path("switch.test", "en", int_test)
     ) == path.normpath(
-        hass.config.path("custom_components", "test", ".translations", "switch.en.json")
+        hass.config.path("custom_components", "test", "translations", "switch.en.json")
     )
 
     assert path.normpath(
@@ -67,7 +68,7 @@ async def test_component_translation_path(hass):
         )
     ) == path.normpath(
         hass.config.path(
-            "custom_components", "test_embedded", ".translations", "switch.en.json"
+            "custom_components", "test_embedded", "translations", "switch.en.json"
         )
     )
 
@@ -81,9 +82,7 @@ async def test_component_translation_path(hass):
     assert path.normpath(
         translation.component_translation_path("test_package", "en", int_test_package)
     ) == path.normpath(
-        hass.config.path(
-            "custom_components", "test_package", ".translations", "en.json"
-        )
+        hass.config.path("custom_components", "test_package", "translations", "en.json")
     )
 
 
@@ -91,10 +90,10 @@ def test_load_translations_files(hass):
     """Test the load translation files function."""
     # Test one valid and one invalid file
     file1 = hass.config.path(
-        "custom_components", "test", ".translations", "switch.en.json"
+        "custom_components", "test", "translations", "switch.en.json"
     )
     file2 = hass.config.path(
-        "custom_components", "test", ".translations", "invalid.json"
+        "custom_components", "test", "translations", "invalid.json"
     )
     assert translation.load_translations_files(
         {"switch.test": file1, "invalid": file2}
@@ -216,26 +215,53 @@ async def test_translation_merging(hass, caplog):
     assert "component.sensor.state.moon__phase.first_quarter" in translations
     assert "component.sensor.state.season__season.summer" in translations
 
-    # Merge in some bad translation data
-    integration = Mock(file_path=pathlib.Path(__file__))
-    hass.config.components.add("sensor.bad_translations")
+    # Clear cache
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED)
+    await hass.async_block_till_done()
+
+    # Patch in some bad translation data
+
+    orig_load_translations = translation.load_translations_files
+
+    def mock_load_translations_files(files):
+        """Mock loading."""
+        result = orig_load_translations(files)
+        result["sensor.season"] = {"state": "bad data"}
+        return result
 
     with patch.object(
-        translation, "component_translation_path", return_value="bla.json"
-    ), patch.object(
         translation,
         "load_translations_files",
-        return_value={"sensor.bad_translations": {"state": "bad data"}},
-    ), patch(
-        "homeassistant.helpers.translation.async_get_integration",
-        return_value=integration,
+        side_effect=mock_load_translations_files,
     ):
         translations = await translation.async_get_translations(hass, "en", "state")
 
         assert "component.sensor.state.moon__phase.first_quarter" in translations
-        assert "component.sensor.state.season__season.summer" in translations
 
     assert (
         "An integration providing translations for sensor provided invalid data: bad data"
         in caplog.text
     )
+
+
+async def test_caching(hass):
+    """Test we cache data."""
+    hass.config.components.add("sensor")
+
+    # Patch with same method so we can count invocations
+    with patch(
+        "homeassistant.helpers.translation.merge_resources",
+        side_effect=translation.merge_resources,
+    ) as mock_merge:
+        await translation.async_get_translations(hass, "en", "state")
+        assert len(mock_merge.mock_calls) == 1
+
+        await translation.async_get_translations(hass, "en", "state")
+        assert len(mock_merge.mock_calls) == 1
+
+        # This event clears the cache so we should record another call
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED)
+        await hass.async_block_till_done()
+
+        await translation.async_get_translations(hass, "en", "state")
+        assert len(mock_merge.mock_calls) == 2

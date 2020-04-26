@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -32,7 +32,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([RandomSensor(name, device_class)], True)
 
 
-class RandomSensor(BinarySensorDevice):
+class RandomSensor(BinarySensorEntity):
     """Representation of a Random binary sensor."""
 
     def __init__(self, name, device_class):

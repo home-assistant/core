@@ -1,1 +1,9 @@
-{ "title": "Sun" }
+{
+  "title": "Sun",
+  "state": {
+    "_": {
+      "above_horizon": "Above horizon",
+      "below_horizon": "Below horizon"
+    }
+  }
+}

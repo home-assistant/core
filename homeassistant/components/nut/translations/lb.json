@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "resources": {
+                "data": {
+                    "resources": "Ressourcen"
+                },
+                "title": "Ressourcen auswielen fir z'iwwerwaachen"
+            },
+            "ups": {
+                "data": {
+                    "alias": "Alias",
+                    "resources": "Ressourcen"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Apparat",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "username": "Benotzernumm"
+                },
+                "title": "Mam NUT Server verbannen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "Ressourcen"
+                },
+                "description": "Sensor Ressourcen auswielen"
+            }
+        }
+    }
+}

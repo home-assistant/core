@@ -3,7 +3,7 @@ from typing import Optional, Sequence
 
 from pysmartthings import Attribute, Capability
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -50,7 +50,7 @@ def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     ]
 
 
-class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorDevice):
+class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
     """Define a SmartThings Binary Sensor."""
 
     def __init__(self, device, attribute):

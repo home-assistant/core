@@ -1,7 +1,7 @@
 """Support for Ambient Weather Station binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import callback
 
@@ -54,7 +54,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(binary_sensor_list, True)
 
 
-class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorDevice):
+class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorEntity):
     """Define an Ambient binary sensor."""
 
     @property
