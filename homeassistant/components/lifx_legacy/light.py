@@ -19,7 +19,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_change
@@ -137,7 +137,7 @@ class LIFX:
         self._liffylights.probe(address)
 
 
-class LIFXLight(Light):
+class LIFXLight(LightEntity):
     """Representation of a LIFX light."""
 
     def __init__(self, liffy, ipaddr, name, power, hue, saturation, brightness, kelvin):
