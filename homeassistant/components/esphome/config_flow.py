@@ -6,6 +6,7 @@ from aioesphomeapi import APIClient, APIConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries, core
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, CONF_PORT
 from homeassistant.helpers.typing import ConfigType
 
 from .entry_data import DATA_KEY, RuntimeEntryData
@@ -22,6 +23,7 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
         """Initialize flow."""
         self._host: Optional[str] = None
         self._port: Optional[int] = None
+        self._mac: Optional[str] = None
         self._password: Optional[str] = None
 
     async def async_step_user(
@@ -87,6 +89,11 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
         local_name = user_input["hostname"][:-1]
         node_name = local_name[: -len(".local")]
         address = user_input["properties"].get("address", local_name)
+        self._mac = user_input["properties"].get(CONF_MAC)
+
+        # Check if config flow already configured/ignored
+        await self.async_set_unique_id(self._mac)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: address})
 
         # Check if already configured
         for entry in self._async_current_entries():
@@ -120,10 +127,11 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
         return self.async_create_entry(
             title=self._name,
             data={
-                "host": self._host,
-                "port": self._port,
+                CONF_HOST: self._host,
+                CONF_PORT: self._port,
+                CONF_MAC: self._mac,
                 # The API uses protobuf, so empty string denotes absence
-                "password": self._password or "",
+                CONF_PASSWORD: self._password or "",
             },
         )
 
