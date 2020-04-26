@@ -44,6 +44,7 @@ async def test_single_entry_allowed(hass, discovery_flow_conf):
     """Test only a single entry is allowed."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
+    flow.context = {}
 
     MockConfigEntry(domain="test").add_to_hass(hass)
     result = await flow.async_step_user()
@@ -67,6 +68,7 @@ async def test_user_has_confirmation(hass, discovery_flow_conf):
     """Test user requires no confirmation to setup."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
+    flow.context = {}
     discovery_flow_conf["discovered"] = True
 
     result = await flow.async_step_user()
@@ -93,7 +95,7 @@ async def test_discovery_confirmation(hass, discovery_flow_conf, source):
     """Test we ask for confirmation via discovery."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
-    flow.context = {}
+    flow.context = {"source": source}
 
     result = await getattr(flow, f"async_step_{source}")({})
 
@@ -150,6 +152,7 @@ async def test_import_no_confirmation(hass, discovery_flow_conf):
     """Test import requires no confirmation to set up."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
+    flow.context = {}
     discovery_flow_conf["discovered"] = True
 
     result = await flow.async_step_import(None)
@@ -160,10 +163,43 @@ async def test_import_single_instance(hass, discovery_flow_conf):
     """Test import doesn't create second instance."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
+    flow.context = {}
     discovery_flow_conf["discovered"] = True
     MockConfigEntry(domain="test").add_to_hass(hass)
 
     result = await flow.async_step_import(None)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+
+async def test_ignored_discoveries(hass, discovery_flow_conf):
+    """Test we can ignore discovered entries."""
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    result = await hass.config_entries.flow.async_init(
+        "test", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    flow = next(
+        (
+            flw
+            for flw in hass.config_entries.flow.async_progress()
+            if flw["flow_id"] == result["flow_id"]
+        ),
+        None,
+    )
+
+    # Ignore it.
+    await hass.config_entries.flow.async_init(
+        flow["handler"],
+        context={"source": config_entries.SOURCE_IGNORE},
+        data={"unique_id": flow["context"]["unique_id"]},
+    )
+
+    # Second discovery should be aborted
+    result = await hass.config_entries.flow.async_init(
+        "test", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
