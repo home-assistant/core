@@ -446,13 +446,14 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # If the requested entity is a media player, convert to volume
         elif entity.domain == media_player.DOMAIN:
-            if entity_features & SUPPORT_VOLUME_SET:
-                if parsed[STATE_BRIGHTNESS] is not None:
-                    turn_on_needed = True
-                    domain = entity.domain
-                    service = SERVICE_VOLUME_SET
-                    # Convert 0-100 to 0.0-1.0
-                    data[ATTR_MEDIA_VOLUME_LEVEL] = parsed[STATE_BRIGHTNESS] / 100.0
+            if parsed[STATE_ON]:
+                if entity_features & SUPPORT_VOLUME_SET:
+                    if parsed[STATE_BRIGHTNESS] is not None:
+                        turn_on_needed = True
+                        domain = entity.domain
+                        service = SERVICE_VOLUME_SET
+                        # Convert 0-100 to 0.0-1.0
+                        data[ATTR_MEDIA_VOLUME_LEVEL] = parsed[STATE_BRIGHTNESS] / 100.0
 
         # If the requested entity is a cover, convert to open_cover/close_cover
         # and cover position
