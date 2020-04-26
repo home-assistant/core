@@ -886,9 +886,14 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             if flw["handler"] == self.handler and flw["flow_id"] != self.flow_id
         ]
 
-    async def async_step_ignore(self, user_input: Dict[str, Any]) -> Dict[str, Any]:
+    async def async_step_ignore(
+        self, user_input: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Ignore this config flow."""
-        await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
+        if user_input is not None and "unique_id" in user_input:
+            await self.async_set_unique_id(
+                user_input["unique_id"], raise_on_progress=False
+            )
         return self.async_create_entry(title="Ignored", data={})
 
     async def async_step_unignore(self, user_input: Dict[str, Any]) -> Dict[str, Any]:

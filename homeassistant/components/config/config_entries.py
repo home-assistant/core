@@ -1,4 +1,6 @@
 """Http views to control the config manager."""
+from typing import Any, Dict, Optional
+
 import aiohttp.web_exceptions
 import voluptuous as vol
 import voluptuous_serialize
@@ -312,16 +314,12 @@ async def ignore_config_flow(hass, connection, msg):
         )
         return
 
-    if "unique_id" not in flow["context"]:
-        connection.send_error(
-            msg["id"], "no_unique_id", "Specified flow has no unique ID."
-        )
-        return
+    data: Optional[Dict[str, Any]] = None
+    if "unique_id" in flow["context"]:
+        data = {"unique_id": flow["context"]["unique_id"]}
 
     await hass.config_entries.flow.async_init(
-        flow["handler"],
-        context={"source": config_entries.SOURCE_IGNORE},
-        data={"unique_id": flow["context"]["unique_id"]},
+        flow["handler"], context={"source": config_entries.SOURCE_IGNORE}, data=data,
     )
     connection.send_result(msg["id"])
 
