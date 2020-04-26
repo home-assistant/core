@@ -1,5 +1,6 @@
 """Blastbot Cloud config flow."""
 
+from aiohttp import ClientError
 from blastbot_cloud_api.api import BlastbotCloudAPI
 import voluptuous as vol
 
@@ -33,9 +34,11 @@ class BlastbotCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api = BlastbotCloudAPI()
             successful_login = await api.async_login(username, password)
             if not successful_login:
+                await api.async_close()
                 return self._show_form({"base": "invalid_credentials"})
-        except Exception as ex:
+        except ClientError as ex:
             LOGGER.error("Unable to connect to Blastbot Cloud: %s", str(ex))
+            await api.async_close()
             return self._show_form({"base": "connection_error"})
 
         await api.async_close()
