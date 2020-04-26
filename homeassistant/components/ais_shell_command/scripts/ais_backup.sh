@@ -90,3 +90,6 @@ rm /data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/*
 rm /data/data/pl.sviete.dom/files/home/dom/dyski-zewnętrzne/*
 rm -rf /data/data/pl.sviete.dom/files/home/dom/dyski-zewnętrzne/*
 
+# 16. temp for rclone
+rm -rf /data/data/pl.sviete.dom/files/home/dom/.temp
+rm -rf /data/data/pl.sviete.dom/files/usr/tmp/*

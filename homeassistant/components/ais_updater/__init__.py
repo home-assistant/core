@@ -64,6 +64,9 @@ UPDATER_URL = "https://powiedz.co/ords/dom/dom/updater_new"
 UPDATER_STATUS_FILE = ".ais_update_status"
 UPDATER_DOWNLOAD_FOLDER = "ais_update"
 APT_VERSION_INFO_FILE = ".ais_apt"
+ZIGBEE2MQTT_VERSION_PACKAGE_FILE = (
+    "/data/data/pl.sviete.dom/files/home/zigbee2mqtt/package.json"
+)
 G_CURRENT_ANDROID_DOM_V = "0"
 G_CURRENT_ANDROID_LAUNCHER_V = "0"
 G_CURRENT_ANDROID_TTS_V = "0"
@@ -387,6 +390,17 @@ def get_current_linux_apt_version(hass):
         return current_version
 
 
+def get_current_zigbee2mqtt_version(hass):
+    # try to take version from file
+    try:
+        with open(ZIGBEE2MQTT_VERSION_PACKAGE_FILE) as json_file:
+            z2m_settings = json.load(json_file)
+            return z2m_settings["version"]
+    except Exception as e:
+        _LOGGER.info("Error get_current_zigbee2mqtt_version " + str(e))
+    return "0"
+
+
 async def get_system_info(hass, include_components):
     """Return info about the system."""
     global G_CURRENT_ANDROID_DOM_V
@@ -403,9 +417,8 @@ async def get_system_info(hass, include_components):
         G_CURRENT_ANDROID_STT_V,
     ) = get_current_android_apk_version()
     G_CURRENT_LINUX_V = get_current_linux_apt_version(hass)
-    G_CURRENT_ZIGBEE2MQTT_V = hass.states.get("sensor.wersja_zigbee2mqtt").state
-    if G_CURRENT_ZIGBEE2MQTT_V == "unknown":
-        G_CURRENT_ZIGBEE2MQTT_V = "0"
+    G_CURRENT_ZIGBEE2MQTT_V = get_current_zigbee2mqtt_version(hass)
+
     info_object = {
         "arch": platform.machine(),
         "os_name": platform.system(),
@@ -442,9 +455,7 @@ def get_system_info_sync(hass):
         G_CURRENT_ANDROID_STT_V,
     ) = get_current_android_apk_version()
     G_CURRENT_LINUX_V = get_current_linux_apt_version(hass)
-    G_CURRENT_ZIGBEE2MQTT_V = hass.states.get("sensor.wersja_zigbee2mqtt").state
-    if G_CURRENT_ZIGBEE2MQTT_V == "unknown":
-        G_CURRENT_ZIGBEE2MQTT_V = "0"
+    G_CURRENT_ZIGBEE2MQTT_V = get_current_zigbee2mqtt_version(hass)
     info_object = {
         "gate_id": gate_id,
         "dom_app_version": current_version,
