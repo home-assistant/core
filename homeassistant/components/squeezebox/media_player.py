@@ -3,8 +3,8 @@ import asyncio
 import logging
 import socket
 
-import voluptuous as vol
 from pysqueezebox import Server
+import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -183,6 +183,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class SqueezeBoxDevice(MediaPlayerEntity):
     """
     Representation of a SqueezeBox device.
+
     Wraps a pysqueezebox.Player() object.
     """
 
@@ -192,7 +193,9 @@ class SqueezeBoxDevice(MediaPlayerEntity):
         self._hass = hass
         self._player = player
         self._last_update = None
-        _LOGGER.debug("Creating SqueezeBox object: %s, %s", player.name, player.player_id)
+        _LOGGER.debug(
+            "Creating SqueezeBox object: %s, %s", player.name, player.player_id
+        )
 
     @property
     def name(self):
@@ -220,7 +223,7 @@ class SqueezeBoxDevice(MediaPlayerEntity):
         return None
 
     async def async_update(self):
-        """Updates the Player() object"""
+        """Update the Player() object."""
         await self._player.async_update()
         last_media_position = self.media_position
         if self.media_position != last_media_position:
