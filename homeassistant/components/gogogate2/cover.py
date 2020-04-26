@@ -1,63 +1,48 @@
 """Support for Gogogate2 garage Doors."""
 import logging
+from typing import Callable, List, Optional
 
-from pygogogate2 import Gogogate2API as pygogogate2
-import voluptuous as vol
+from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN, CoverDevice
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_NAME, STATE_CLOSED
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 
-from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN, CoverEntity
-from homeassistant.const import (
-    CONF_IP_ADDRESS,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    STATE_CLOSED,
-)
-import homeassistant.helpers.config_validation as cv
+from .common import get_api
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "gogogate2"
 
-NOTIFICATION_ID = "gogogate2_notification"
-NOTIFICATION_TITLE = "Gogogate2 Cover Setup"
 
-COVER_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+async def async_setup_platform(
+    hass: HomeAssistant, config: dict, add_entities: Callable, discovery_info=None
+) -> None:
+    """Convert old style file configs to new style configs."""
+    await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Gogogate2 component."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], Optional[bool]], None],
+) -> None:
+    """Set up the config entry."""
+    mygogogate2 = get_api(config_entry.data)
+    devices = await hass.async_add_executor_job(mygogogate2.get_devices)
 
-    ip_address = config.get(CONF_IP_ADDRESS)
-    name = config.get(CONF_NAME)
-    password = config.get(CONF_PASSWORD)
-    username = config.get(CONF_USERNAME)
-
-    mygogogate2 = pygogogate2(username, password, ip_address)
-
-    try:
-        devices = mygogogate2.get_devices()
-        if devices is False:
-            raise ValueError("Username or Password is incorrect or no devices found")
-
-        add_entities(MyGogogate2Device(mygogogate2, door, name) for door in devices)
-
-    except (TypeError, KeyError, NameError, ValueError) as ex:
-        _LOGGER.error("%s", ex)
-        hass.components.persistent_notification.create(
-            (f"Error: {ex}<br />You will need to restart hass after fixing."),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
-        )
+    async_add_entities(
+        [
+            MyGogogate2Device(mygogogate2, door, config_entry.data[CONF_NAME])
+            for door in devices
+        ]
+    )
 
 
-class MyGogogate2Device(CoverEntity):
+class MyGogogate2Device(CoverDevice):
     """Representation of a Gogogate2 cover."""
 
     def __init__(self, mygogogate2, device, name):
@@ -103,10 +88,11 @@ class MyGogogate2Device(CoverEntity):
 
     def update(self):
         """Update status of cover."""
+        _LOGGER.error("UPDATING!!!!")
         try:
             self._status = self.mygogogate2.get_status(self.device_id)
             self._available = True
-        except (TypeError, KeyError, NameError, ValueError) as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.error("%s", ex)
             self._status = None
             self._available = False

@@ -1,0 +1,33 @@
+{
+  "config": {
+    "abort": {
+      "cannot_connect": "Can not connect to device with ip address {ip_address}."
+    },
+    "step": {
+      "user": {
+        "title": "Setup GogoGate2",
+        "description": "Provide requisite information below.",
+        "data": {
+          "name": "Name or Location",
+          "ip_address": "IP Address",
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "GogoGate2 options",
+        "description": "Update values below.",
+        "data": {
+          "name": "Name or Location",
+          "ip_address": "IP Address",
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    }
+  }
+}
