@@ -528,12 +528,12 @@ async def test_put_light_state_script(hass, hass_hue, hue_client):
     )
 
 
-async def test_put_light_state_climate_set_state_and_temperature(hass_hue, hue_client):
+async def test_put_light_state_climate(hass_hue, hue_client):
     """Test setting climate state and temperature."""
-    # Turn the climate entity off first
+    # Turn the climate entity on first
     await hass_hue.services.async_call(
         climate.DOMAIN,
-        const.SERVICE_TURN_OFF,
+        const.SERVICE_TURN_ON,
         {const.ATTR_ENTITY_ID: "climate.hvac"},
         blocking=True,
     )
