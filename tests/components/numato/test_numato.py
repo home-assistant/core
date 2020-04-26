@@ -5,7 +5,12 @@ from numato_gpio import NumatoGpioError
 import pytest
 
 from homeassistant.components import numato, switch
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_UNKNOWN,
+)
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
@@ -45,6 +50,15 @@ NUMATO_CFG = {
             }
         ],
     }
+}
+
+MOCKUP_ENTITY_IDS = {
+    "binary_sensor.numato_binary_sensor_mock_port2",
+    "binary_sensor.numato_binary_sensor_mock_port3",
+    "binary_sensor.numato_binary_sensor_mock_port4",
+    "sensor.numato_adc_mock_port1",
+    "switch.numato_switch_mock_port5",
+    "switch.numato_switch_mock_port6",
 }
 
 
@@ -156,7 +170,9 @@ async def test_failing_async_added_to_hass(hass, numato_fixture, monkeypatch):
     """Test condition when a sensor update fails."""
     monkeypatch.setattr(numato_fixture.NumatoDeviceMock, "setup", mockup_raise)
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
-    await hass.async_block_till_done()  # wait until services are registered
+    await hass.async_block_till_done()
+    for entity_id in MOCKUP_ENTITY_IDS:
+        assert entity_id not in hass.states.async_entity_ids()
 
 
 @pytest.mark.asyncio
@@ -164,7 +180,8 @@ async def test_failing_sensor_update(hass, numato_fixture, monkeypatch):
     """Test condition when a sensor update fails."""
     monkeypatch.setattr(numato_fixture.NumatoDeviceMock, "adc_read", mockup_raise)
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
-    await hass.async_block_till_done()  # wait until services are registered
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.numato_adc_mock_port1").state is STATE_UNKNOWN
 
 
 @pytest.mark.asyncio
@@ -332,7 +349,11 @@ async def test_invalid_adc_destination_range_order(hass, numato_fixture, config)
 @pytest.mark.asyncio
 async def test_platform_setup_without_discovery_info(hass, config):
     """Test handling of empty discovery_info."""
-    discovery.load_platform(hass, "binary_sensor", "numato", None, config)
-    discovery.load_platform(hass, "sensor", "numato", None, config)
-    discovery.load_platform(hass, "switch", "numato", None, config)
-    await hass.async_block_till_done()
+    await discovery.async_load_platform(hass, "binary_sensor", "numato", None, config)
+    await discovery.async_load_platform(hass, "sensor", "numato", None, config)
+    await discovery.async_load_platform(hass, "switch", "numato", None, config)
+    for entity_id in MOCKUP_ENTITY_IDS:
+        assert entity_id not in hass.states.async_entity_ids()
+    await hass.async_block_till_done()  # wait for numato platform to be loaded
+    for entity_id in MOCKUP_ENTITY_IDS:
+        assert entity_id in hass.states.async_entity_ids()
