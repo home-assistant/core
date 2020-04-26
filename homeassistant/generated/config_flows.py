@@ -18,6 +18,7 @@ FLOWS = [
     "atag",
     "august",
     "axis",
+    "blastbot_cloud",
     "blebox",
     "blink",
     "braviatv",

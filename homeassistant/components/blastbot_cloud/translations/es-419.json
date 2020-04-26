@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Introduzca sus credenciales de acceso a Blastbot Cloud",
+        "data": {
+          "username": "Direcci\u00f3n de correo electr\u00f3nico",
+          "password": "Contrase\u00f1a"
+        }
+      }
+    },
+    "error": {
+      "identifier_exists": "Cuenta ya registrada.",
+      "invalid_credentials": "Credenciales inv\u00e1lidas.",
+      "connection_error": "No se puede conectar a Blastbot Cloud."
+    },
+    "abort": {
+      "already_configured": "Esta cuenta ya ha sido configurada."
+    }
+  }
+}

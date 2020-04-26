@@ -1,0 +1,8 @@
+{
+  "domain": "blastbot_cloud",
+  "name": "Blastbot Cloud",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/blastbot_cloud",
+  "requirements": ["blastbot-cloud-api-python==0.1.0"],
+  "codeowners": ["@Rodmg"]
+}
