@@ -15,7 +15,7 @@ from .const import CONF_ENDPOINT, CONF_MODEL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-DEFAULT_NAME = "Songpal"
+DEFAULT_NAME = "Songpal device"
 
 
 class SongpalConfig:
@@ -118,7 +118,7 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_HOST: parsed_url.hostname,
         }
 
-        self.conf = SongpalConfig(friendly_name, parsed_url.hostname, endpoint, model,)
+        self.conf = SongpalConfig(friendly_name, parsed_url.hostname, endpoint, model)
 
         return await self.async_step_init()
 
