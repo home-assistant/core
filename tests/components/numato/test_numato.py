@@ -224,17 +224,21 @@ async def test_hass_numato_api(numato_fixture):
 
 
 @pytest.mark.asyncio
-async def test_hass_numato_api_irregular_unhandled(hass, numato_fixture):
-    """Test irregular, unhandled operations.
+async def test_hass_numato_api_wrong_port_directions(hass, numato_fixture):
+    """Test handling of wrong port directions.
 
-    Establishes that these don't throw from numato-gpio or are handled in the
-    numato component's API.
+    This won't happen in the current platform implementation but would raise
+    in case of an introduced bug in the platforms.
     """
-    assert await async_setup_component(hass, "numato", NUMATO_CFG)
-    api = hass.data["numato"]["api"]
-    api.read_adc_input(0, 5)  # adc_read from output
-    api.read_input(0, 6)  # read from output
-    api.write_output(0, 2, 1)  # write to input
+    numato_fixture.discover()
+    api = numato.NumatoAPI()
+    api.setup_output(0, 5)
+    api.setup_input(0, 2)
+    api.setup_input(0, 6)
+    with pytest.raises(NumatoGpioError):
+        api.read_adc_input(0, 5)  # adc_read from output
+        api.read_input(0, 6)  # read from output
+        api.write_output(0, 2, 1)  # write to input
 
 
 @pytest.mark.asyncio

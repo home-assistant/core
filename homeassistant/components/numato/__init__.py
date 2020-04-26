@@ -199,6 +199,20 @@ class NumatoAPI:
         if device_id not in gpio.devices:
             raise gpio.NumatoGpioError(f"Device {device_id} not available.")
 
+    def check_port(self, device_id, port, direction):
+        """Raise an error if the port setup doesn't match the direction."""
+        self.check_device_id(device_id)
+        if (device_id, port) not in self.ports_registered:
+            raise gpio.NumatoGpioError(
+                f"Port {port} is not set up for numato device {device_id}."
+            )
+        msg = {
+            gpio.OUT: f"Trying to write to device {device_id} port {port} set up as input.",
+            gpio.IN: f"Trying to read from device {device_id} port {port} set up as output.",
+        }
+        if self.ports_registered[(device_id, port)] != direction:
+            raise gpio.NumatoGpioError(msg[direction])
+
     def setup_output(self, device_id, port):
         """Set up a GPIO as output."""
         self.check_device_id(device_id)
@@ -213,21 +227,22 @@ class NumatoAPI:
 
     def write_output(self, device_id, port, value):
         """Write a value to a GPIO."""
-        self.check_device_id(device_id)
+        self.check_port(device_id, port, gpio.OUT)
         gpio.devices[device_id].write(port, value)
 
     def read_input(self, device_id, port):
         """Read a value from a GPIO."""
-        self.check_device_id(device_id)
+        self.check_port(device_id, port, gpio.IN)
         return gpio.devices[device_id].read(port)
 
     def read_adc_input(self, device_id, port):
         """Read an ADC value from a GPIO ADC port."""
+        self.check_port(device_id, port, gpio.IN)
         self.check_device_id(device_id)
         return gpio.devices[device_id].adc_read(port)
 
     def edge_detect(self, device_id, port, event_callback):
         """Add detection for RISING and FALLING events."""
-        self.check_device_id(device_id)
+        self.check_port(device_id, port, gpio.IN)
         gpio.devices[device_id].add_event_detect(port, event_callback, gpio.BOTH)
         gpio.devices[device_id].notify = True
