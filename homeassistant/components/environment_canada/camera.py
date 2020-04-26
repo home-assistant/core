@@ -17,12 +17,7 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_STATION = "station"
-ATTR_LOCATION = "location"
-ATTR_UPDATED = "updated"
-
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
-CONF_STATION = "station"
 CONF_LOOP = "loop"
 CONF_PRECIP_TYPE = "precip_type"
 
@@ -30,12 +25,11 @@ MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_LOOP, default=True): cv.boolean,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_STATION): cv.matches_regex(r"^C[A-Z]{4}$|^[A-Z]{3}$"),
         vol.Inclusive(CONF_LATITUDE, "latlon"): cv.latitude,
         vol.Inclusive(CONF_LONGITUDE, "latlon"): cv.longitude,
-        vol.Optional(CONF_PRECIP_TYPE): ["RAIN", "SNOW"],
+        vol.Optional(CONF_LOOP, default=True): cv.boolean,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_PRECIP_TYPE): ["rain", "snow"],
     }
 )
 
@@ -43,16 +37,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Environment Canada camera."""
 
-    if config.get(CONF_STATION):
-        radar_object = ECRadar(
-            station_id=config[CONF_STATION], precip_type=config.get(CONF_PRECIP_TYPE)
-        )
-    else:
-        lat = config.get(CONF_LATITUDE, hass.config.latitude)
-        lon = config.get(CONF_LONGITUDE, hass.config.longitude)
-        radar_object = ECRadar(coordinates=(lat, lon))
+    lat = config.get(CONF_LATITUDE, hass.config.latitude)
+    lon = config.get(CONF_LONGITUDE, hass.config.longitude)
+    precip_type = config.get(CONF_PRECIP_TYPE, None)
+    name = config.get(CONF_NAME) or "Environment Canada Radar"
 
-    add_devices([ECCamera(radar_object, config.get(CONF_NAME))], True)
+    radar_object = ECRadar(coordinates=(lat, lon),
+                           precip_type=precip_type)
+
+    add_devices([ECCamera(radar_object, name)], True)
 
 
 class ECCamera(Camera):
@@ -76,20 +69,14 @@ class ECCamera(Camera):
     @property
     def name(self):
         """Return the name of the camera."""
-        if self.camera_name is not None:
-            return self.camera_name
-        return " ".join([self.radar_object.station_name, "Radar"])
+        return self.camera_name
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_LOCATION: self.radar_object.station_name,
-            ATTR_STATION: self.radar_object.station_code,
-            ATTR_UPDATED: self.timestamp,
         }
-
         return attr
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -99,4 +86,4 @@ class ECCamera(Camera):
             self.image = self.radar_object.get_loop()
         else:
             self.image = self.radar_object.get_latest_frame()
-        self.timestamp = self.radar_object.timestamp.isoformat()
+        self.timestamp = datetime.datetime.now().isoformat()
