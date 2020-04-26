@@ -210,8 +210,8 @@ class RachioRainDelay(RachioSwitch):
 
     def _poll_update(self, data=None) -> bool:
         """Request the state from the API."""
-        # API returns either 0 or currnent UNIX time when rain delay was canceled
-        # depending if it was canceled from the app or via the API
+        # API returns either 0 or current UNIX time when rain delay was canceled
+        # depending if it was done from the app or via the API
         if data is None:
             data = self._controller.rachio.device.get(self._controller.controller_id)[1]
 
