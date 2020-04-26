@@ -2,14 +2,12 @@
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 from homeassistant.core import callback
-from homeassistant.util import slugify
 
 from . import AirVisualEntity
 from .const import DATA_CLIENT, DOMAIN, INTEGRATION_TYPE_GEOGRAPHY
 
 ATTR_HUMIDITY = "humidity"
 ATTR_SENSOR_LIFE = "{0}_sensor_life"
-ATTR_TREND = "{0}_trend"
 ATTR_VOC = "voc"
 
 
@@ -94,15 +92,6 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
     @callback
     def update_from_latest_data(self):
         """Update from the Node/Pro's data."""
-        trends = {
-            ATTR_TREND.format(slugify(pollutant)): trend
-            for pollutant, trend in self._airvisual.data["trends"].items()
-        }
-        if self._airvisual.data["current"]["settings"]["is_aqi_usa"]:
-            trends.pop(ATTR_TREND.format("aqi_cn"))
-        else:
-            trends.pop(ATTR_TREND.format("aqi_us"))
-
         self._attrs.update(
             {
                 ATTR_VOC: self._airvisual.data["current"]["measurements"].get("voc"),
@@ -112,6 +101,5 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
                         "status"
                     ]["sensor_life"].items()
                 },
-                **trends,
             }
         )
