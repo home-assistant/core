@@ -81,10 +81,6 @@ async def test_form(hass, dummy_tcp_server):
         result["flow_id"], user_input={CONF_PORT: 8765},
     )
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Port 8765"
-    assert result2["data"] == {CONF_PORT: 8765}
-
-    await hass.async_block_till_done()
 
 
 async def test_form_addr_in_use(hass, addr_in_use):
@@ -99,8 +95,6 @@ async def test_form_addr_in_use(hass, addr_in_use):
     assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "addr_in_use"
 
-    await hass.async_block_till_done()
-
 
 async def test_form_start_server_failed(hass, start_server_failed):
     """Test how we handle start_server_failed error."""
@@ -113,5 +107,3 @@ async def test_form_start_server_failed(hass, start_server_failed):
     )
     assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "start_server_failed"
-
-    await hass.async_block_till_done()

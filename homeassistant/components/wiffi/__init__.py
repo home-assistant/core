@@ -50,9 +50,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         await api.server.start_server()
     except OSError as exc:
         if exc.errno != errno.EADDRINUSE:
-            _LOGGER.error("start_server failed, errno: %d", exc.errno)
+            _LOGGER.error("Start_server failed, errno: %d", exc.errno)
             return False
-        _LOGGER.error("port %s already in use", config_entry.data[CONF_PORT])
+        _LOGGER.error("Port %s already in use", config_entry.data[CONF_PORT])
         raise ConfigEntryNotReady from exc
 
     for component in PLATFORMS:
@@ -120,6 +120,7 @@ class WiffiIntegrationApi:
             # add empty set for new device
             self._known_devices[device.mac_address] = set()
 
+        _LOGGER.warning(f"server called")
         for metric in metrics:
             if metric.id not in self._known_devices[device.mac_address]:
                 self._known_devices[device.mac_address].add(metric.id)
@@ -165,11 +166,17 @@ class WiffiEntity(Entity):
 
     async def async_added_to_hass(self):
         """Entity has been added to hass."""
-        async_dispatcher_connect(
-            self.hass, f"{UPDATE_ENTITY_SIGNAL}-{self._id}", self._update_value_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{UPDATE_ENTITY_SIGNAL}-{self._id}",
+                self._update_value_callback,
+            )
         )
-        async_dispatcher_connect(
-            self.hass, CHECK_ENTITIES_SIGNAL, self._check_expiration_date
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, CHECK_ENTITIES_SIGNAL, self._check_expiration_date
+            )
         )
 
     @property
@@ -207,7 +214,6 @@ class WiffiEntity(Entity):
     @callback
     def _update_value_callback(self, device, metric):
         """Update the value of the entity."""
-        pass
 
     @callback
     def _check_expiration_date(self):
