@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     adc_def[CONF_NAME],
                     device_id,
                     port,
-                    str(err),
+                    err,
                 )
                 continue
             sensors.append(

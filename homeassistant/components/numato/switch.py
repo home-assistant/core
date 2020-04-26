@@ -33,14 +33,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             try:
                 api.setup_output(device_id, port)
                 api.write_output(device_id, port, 1 if invert_logic else 0)
-            except NumatoGpioError as ex:
+            except NumatoGpioError as err:
                 _LOGGER.error(
-                    "Failed to initialize switch '%s' on Numato device %s port %s failed %s",
+                    "Failed to initialize switch '%s' on Numato device %s port %s: %s",
                     port_name,
                     device_id,
                     port,
-                    str(ex),
+                    err,
                 )
+                continue
             switches.append(
                 NumatoGpioSwitch(port_name, device_id, port, invert_logic, api,)
             )

@@ -29,6 +29,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
 
+    def read_gpio(device_id, port, level):
+        """Send signal to entity to have it update state."""
+        dispatcher_send(hass, NUMATO_SIGNAL.format(device_id, port), level)
+
     api = hass.data[DOMAIN][DATA_API]
     binary_sensors = []
     devices = hass.data[DOMAIN][CONF_DEVICES]
@@ -40,20 +44,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for port, port_name in ports.items():
             try:
 
-                def read_gpio(device_id, port, level, name=port_name):
-                    """Send signal to entity to have it update state."""
-                    dispatcher_send(hass, NUMATO_SIGNAL.format(device_id, port), level)
-
                 api.setup_input(device_id, port)
                 api.edge_detect(device_id, port, partial(read_gpio, device_id))
 
             except NumatoGpioError as err:
                 _LOGGER.error(
-                    "Failed to initialize binary sensor '%s' on Numato device %s port %s failed: %s",
+                    "Failed to initialize binary sensor '%s' on Numato device %s port %s: %s",
                     port_name,
                     device_id,
                     port,
-                    str(err),
+                    err,
                 )
                 continue
 
