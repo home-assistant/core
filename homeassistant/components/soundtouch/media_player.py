@@ -246,8 +246,8 @@ class SoundTouchDevice(MediaPlayerEntity):
     def source_list(self):
         """List of available input sources."""
         return [
-            Source.AUX,
-            Source.BLUETOOTH,
+            Source.AUX.value,
+            Source.BLUETOOTH.value,
         ]
 
     @property
@@ -375,10 +375,10 @@ class SoundTouchDevice(MediaPlayerEntity):
 
     def select_source(self, source):
         """Select input source."""
-        if source == Source.AUX:
+        if source == Source.AUX.value:
             _LOGGER.debug("Selecting source AUX")
             self._device.select_source_aux()
-        elif source == Source.BLUETOOTH:
+        elif source == Source.BLUETOOTH.value:
             _LOGGER.debug("Selecting source Bluetooth")
             self._device.select_source_bluetooth()
         else:
