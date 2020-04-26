@@ -317,6 +317,7 @@ class OnkyoAVR(MediaPlayerDevice):
             self._muted = bool(value == "on")
         elif command == "input-selector":
             self._parse_source(value)
+            self._query_delayed_av_info()
         elif command == "hdmi-output-selector":
             self._attributes[ATTR_VIDEO_OUT] = ",".join(value)
         elif command == "preset":
@@ -332,9 +333,7 @@ class OnkyoAVR(MediaPlayerDevice):
         elif command == "video-information":
             self._parse_video_inforamtion(value)
         elif command == "fl-display-information":
-            if self._query_timer:
-                self._query_timer.cancel()
-            self._query_timer = self.hass.loop.call_later(10, self._query_av_info)
+            self._query_delayed_av_info()
 
     def backfill_state(self):
         """Get the receiver to send all the info we care about.
@@ -523,7 +522,12 @@ class OnkyoAVR(MediaPlayerDevice):
         else:
             self._attributes.pop(ATTR_VIDEO_INFORMATION, None)
 
+    def _query_delayed_av_info(self):
+        if not self._query_timer:
+            self._query_timer = self.hass.loop.call_later(10, self._query_av_info)
+
     @callback
     def _query_av_info(self):
         self._query_avr("audio-information")
         self._query_avr("video-information")
+        self._query_timer = None
