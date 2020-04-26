@@ -31,7 +31,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv, entity_platform, service
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_ENDPOINT, CONF_MODEL, DOMAIN, SET_SOUND_SETTING
@@ -78,9 +78,16 @@ async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up songpal media player."""
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+
     name = config_entry.data[CONF_NAME]
     endpoint = config_entry.data[CONF_ENDPOINT]
     model = config_entry.data.get(CONF_MODEL)
+
+    if endpoint in hass.data[DOMAIN]:
+        _LOGGER.debug("The endpoint exists already, skipping setup.")
+        return
 
     device = SongpalDevice(name, endpoint, model)
     try:
@@ -89,23 +96,26 @@ async def async_setup_entry(
         _LOGGER.error("Unable to get methods from songpal: %s", ex)
         raise PlatformNotReady
 
+    hass.data[DOMAIN][endpoint] = device
+
     async_add_entities([device], True)
 
-    platform = entity_platform.current_platform.get()
-
-    @service.verify_domain_control(hass, DOMAIN)
     async def async_service_handler(service):
         """Service handler."""
         entity_id = service.data.get("entity_id", None)
-        name = service.data[PARAM_NAME]
-        value = service.data[PARAM_VALUE]
-        if entity_id is None:
-            # call service on all entities
-            entities = SongpalDevice.ENTITIES
-        else:
-            entities = await platform.async_extract_from_service(service)
-        for entity in entities:
-            await entity.async_set_sound_setting(name, value)
+        params = {
+            key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
+        }
+
+        for device in hass.data[DOMAIN].values():
+            if device.entity_id == entity_id or entity_id is None:
+                _LOGGER.debug(
+                    "Calling %s (entity: %s) with params %s", service, entity_id, params
+                )
+
+                await device.async_set_sound_setting(
+                    params[PARAM_NAME], params[PARAM_VALUE]
+                )
 
     hass.services.async_register(
         DOMAIN, SET_SOUND_SETTING, async_service_handler, schema=SET_SOUND_SCHEMA
@@ -114,8 +124,6 @@ async def async_setup_entry(
 
 class SongpalDevice(MediaPlayerEntity):
     """Class representing a Songpal device."""
-
-    ENTITIES = []
 
     def __init__(self, name, endpoint, model=None, poll=False):
         """Init."""
@@ -143,14 +151,6 @@ class SongpalDevice(MediaPlayerEntity):
     def should_poll(self):
         """Return True if the device should be polled."""
         return self._poll
-
-    async def async_added_to_hass(self):
-        """Run when entity about to be added to hass."""
-        SongpalDevice.ENTITIES.append(self)
-
-    async def async_will_remove_from_hass(self):
-        """Run when entity will be removed from hass."""
-        SongpalDevice.ENTITIES.remove(self)
 
     async def initialize(self):
         """Initialize the device."""
