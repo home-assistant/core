@@ -139,7 +139,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         raise PlatformNotReady
     media_players = []
     for player in players:
-        media_players.append(SqueezeBoxDevice(player))
+        media_players.append(SqueezeBoxDevice(hass, player))
 
     hass.data[DATA_SQUEEZEBOX].extend(media_players)
     async_add_entities(media_players)
@@ -186,9 +186,10 @@ class SqueezeBoxDevice(MediaPlayerEntity):
     Wraps a pysqueezebox.Player() object.
     """
 
-    def __init__(self, player):
+    def __init__(self, hass, player):
         """Initialize the SqueezeBox device."""
         super().__init__()
+        self._hass = hass
         self._player = player
         self._last_update = None
         _LOGGER.debug("Creating SqueezeBox object: %s, %s", player.name, player.player_id)
