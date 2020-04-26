@@ -52,7 +52,7 @@ async def test_bad_credentials(hass):
         "plexauth.PlexAuth.token", return_value="BAD TOKEN"
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"manual_setup": False}
+            result["flow_id"], user_input={}
         )
         assert result["type"] == "external"
 
@@ -120,7 +120,7 @@ async def test_unknown_exception(hass):
         "plexauth.PlexAuth.initiate_auth"
     ), patch("plexauth.PlexAuth.token", return_value="MOCK_TOKEN"):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"manual_setup": False}
+            result["flow_id"], user_input={}
         )
         assert result["type"] == "external"
 
@@ -149,7 +149,7 @@ async def test_no_servers_found(hass):
         "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"manual_setup": False}
+            result["flow_id"], user_input={}
         )
         assert result["type"] == "external"
 
@@ -181,7 +181,7 @@ async def test_single_available_server(hass):
         "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"manual_setup": False}
+            result["flow_id"], user_input={}
         )
         assert result["type"] == "external"
 
@@ -220,7 +220,7 @@ async def test_multiple_servers_with_selection(hass):
         "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"manual_setup": False}
+            result["flow_id"], user_input={}
         )
         assert result["type"] == "external"
 
@@ -273,7 +273,7 @@ async def test_adding_last_unconfigured_server(hass):
         "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"manual_setup": False}
+            result["flow_id"], user_input={}
         )
         assert result["type"] == "external"
 
@@ -353,7 +353,7 @@ async def test_all_available_servers_configured(hass):
         "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"manual_setup": False}
+            result["flow_id"], user_input={}
         )
         assert result["type"] == "external"
 
@@ -477,7 +477,7 @@ async def test_external_timed_out(hass):
         "plexauth.PlexAuth.token", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"manual_setup": False}
+            result["flow_id"], user_input={}
         )
         assert result["type"] == "external"
 
@@ -504,7 +504,7 @@ async def test_callback_view(hass, aiohttp_client):
         "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={"manual_setup": False}
+            result["flow_id"], user_input={}
         )
         assert result["type"] == "external"
 
@@ -541,10 +541,20 @@ async def test_manual_config(hass):
                 "some random message that doesn't match"
             )
 
+    # Basic mode
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": "user"}
     )
 
+    assert result["data_schema"] is None
+    hass.config_entries.flow.async_abort(result["flow_id"])
+
+    # Advanced mode
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user", "show_advanced_options": True}
+    )
+
+    assert result["data_schema"] is not None
     assert result["type"] == "form"
     assert result["step_id"] == "user"
 
