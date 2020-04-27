@@ -388,16 +388,28 @@ async def test_no_devices_found_abort(hass):
 
 async def test_manual_mode(hass):
     """Test host specified in manual mode is passed to Step Link."""
-    flow = ps4.PlayStation4FlowHandler()
-    flow.hass = hass
-    flow.location = MOCK_LOCATION
+    with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "creds"
+
+    with patch("pyps4_2ndscreen.Helper.get_creds", return_value=MOCK_CREDS):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "mode"
 
     # Step Mode with User Input: manual, results in Step Link.
     with patch(
-        "pyps4_2ndscreen.Helper.has_devices", return_value=[{"host-ip": flow.m_device}]
+        "pyps4_2ndscreen.Helper.has_devices", return_value=[{"host-ip": MOCK_HOST}]
     ):
-        result = await flow.async_step_mode(MOCK_MANUAL)
-    assert flow.m_device == MOCK_HOST
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_MANUAL
+        )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "link"
 
