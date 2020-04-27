@@ -262,7 +262,7 @@ async def test_discovery_duplicate_data(hass, mock_client):
     assert result["reason"] == "already_configured"
 
 
-async def test_discovery_updates_unique_id(hass):
+async def test_discovery_updates_unique_id(hass, mock_client):
     """Test a duplicate discovery host aborts and updates existing entry."""
     entry = MockConfigEntry(
         domain="esphome", data={"host": "192.168.43.183", "port": 6053, "password": ""}
