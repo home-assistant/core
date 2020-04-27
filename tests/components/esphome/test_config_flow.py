@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.esphome import DATA_KEY, config_flow
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM, RESULT_TYPE_CREATE_ENTRY
 
 from tests.common import MockConfigEntry, mock_coro
 
@@ -52,13 +52,13 @@ async def test_user_connection_works(hass, mock_client):
     """Test we can finish a config flow."""
     flow = _setup_flow_handler(hass)
     result = await flow.async_step_user(user_input=None)
-    assert result["type"] == "form"
+    assert result["type"] == RESULT_TYPE_FORM
 
     mock_client.device_info.return_value = mock_coro(MockDeviceInfo(False, "test"))
 
     result = await flow.async_step_user(user_input={"host": "127.0.0.1", "port": 80})
 
-    assert result["type"] == "create_entry"
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {"host": "127.0.0.1", "port": 80, "password": ""}
     assert result["title"] == "test"
     assert len(mock_client.connect.mock_calls) == 1
@@ -90,7 +90,7 @@ async def test_user_resolve_error(hass, mock_api_connection_error, mock_client):
             user_input={"host": "127.0.0.1", "port": 6053}
         )
 
-    assert result["type"] == "form"
+    assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "resolve_error"}
     assert len(mock_client.connect.mock_calls) == 1
@@ -107,7 +107,7 @@ async def test_user_connection_error(hass, mock_api_connection_error, mock_clien
 
     result = await flow.async_step_user(user_input={"host": "127.0.0.1", "port": 6053})
 
-    assert result["type"] == "form"
+    assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "connection_error"}
     assert len(mock_client.connect.mock_calls) == 1
@@ -124,12 +124,12 @@ async def test_user_with_password(hass, mock_client):
 
     result = await flow.async_step_user(user_input={"host": "127.0.0.1", "port": 6053})
 
-    assert result["type"] == "form"
+    assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "authenticate"
 
     result = await flow.async_step_authenticate(user_input={"password": "password1"})
 
-    assert result["type"] == "create_entry"
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         "host": "127.0.0.1",
         "port": 6053,
@@ -149,14 +149,15 @@ async def test_user_invalid_password(hass, mock_api_connection_error, mock_clien
     mock_client.connect.side_effect = mock_api_connection_error
     result = await flow.async_step_authenticate(user_input={"password": "invalid"})
 
-    assert result["type"] == "form"
+    assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "authenticate"
     assert result["errors"] == {"base": "invalid_password"}
 
 
 async def test_discovery_initiation(hass, mock_client):
     """Test discovery importing works."""
-    flow = _setup_flow_handler(hass)
+    mock_client.device_info.return_value = mock_coro(MockDeviceInfo(False, "test8266"))
+
     service_info = {
         "host": "192.168.43.183",
         "port": 6053,
@@ -164,19 +165,25 @@ async def test_discovery_initiation(hass, mock_client):
         "properties": {},
     }
 
-    mock_client.device_info.return_value = mock_coro(MockDeviceInfo(False, "test8266"))
+    flow = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": "zeroconf"}, data=service_info
+    )
 
-    result = await flow.async_step_zeroconf(user_input=service_info)
-    assert result["type"] == "form"
+    assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "discovery_confirm"
+    assert result["title"] == "ESPHome: test8266"
     assert result["description_placeholders"]["name"] == "test8266"
-    assert flow.context["title_placeholders"]["name"] == "test8266"
 
-    result = await flow.async_step_discovery_confirm(user_input={})
-    assert result["type"] == "create_entry"
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {}
+    )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "test8266"
     assert result["data"]["host"] == "test8266.local"
     assert result["data"]["port"] == 6053
+
+    assert result["result"]
     assert result["result"].unique_id == "test8266"
 
 
@@ -252,7 +259,7 @@ async def test_discovery_duplicate_data(hass, mock_client):
     result = await hass.config_entries.flow.async_init(
         "esphome", data=service_info, context={"source": "zeroconf"}
     )
-    assert result["type"] == "form"
+    assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_init(
