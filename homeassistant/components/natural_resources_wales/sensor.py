@@ -9,7 +9,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_SCAN_INTERVAL
 import homeassistant.helpers.config_validation as cv
 
-SCAN_INTERVAL = timedelta(seconds=35)
+SCAN_INTERVAL = timedelta(seconds=60)
 DEFAULT_NAME = "Natural Resources Wales"
 DEFAULT_LANGUAGE = "en"
 CONF_LANGUAGE = "language"
