@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "address_already_configured": "Un ElkM1 avec cette adresse est d\u00e9j\u00e0 configur\u00e9",
+            "already_configured": "Un ElkM1 avec ce pr\u00e9fixe est d\u00e9j\u00e0 configur\u00e9"
+        },
         "error": {
             "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
             "invalid_auth": "Authentification non valide",
