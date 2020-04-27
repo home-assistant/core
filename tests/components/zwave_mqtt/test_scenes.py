@@ -45,7 +45,7 @@ async def test_scenes(hass, sent_messages):
     # wait for the event
     count = 0
     while count < 5 and not events:
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.0)
         count += 1
     assert len(events) == 1
     assert events[0].data["scene_value_id"] == 16
@@ -92,7 +92,7 @@ async def test_scenes(hass, sent_messages):
     # wait for the event
     count = 0
     while count < 5 and len(events) != 2:
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.0)
         count += 1
     assert len(events) == 2
     assert events[1].data["scene_id"] == 1
