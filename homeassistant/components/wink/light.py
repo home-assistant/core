@@ -8,7 +8,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    Light,
+    LightEntity,
 )
 from homeassistant.util import color as color_util
 from homeassistant.util.color import (
@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             add_entities([WinkLight(light, hass)])
 
 
-class WinkLight(WinkDevice, Light):
+class WinkLight(WinkDevice, LightEntity):
     """Representation of a Wink light."""
 
     async def async_added_to_hass(self):

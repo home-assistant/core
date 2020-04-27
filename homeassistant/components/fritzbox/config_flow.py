@@ -5,7 +5,11 @@ from pyfritzhome import Fritzhome, LoginError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_FRIENDLY_NAME
+from homeassistant.components.ssdp import (
+    ATTR_SSDP_LOCATION,
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 # pylint:disable=unused-import
@@ -82,10 +86,6 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             for entry in self.hass.config_entries.async_entries(DOMAIN):
                 if entry.data[CONF_HOST] == user_input[CONF_HOST]:
-                    if entry.data != user_input:
-                        self.hass.config_entries.async_update_entry(
-                            entry, data=user_input
-                        )
                     return self.async_abort(reason="already_configured")
 
             self._host = user_input[CONF_HOST]
@@ -110,12 +110,22 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host = urlparse(user_input[ATTR_SSDP_LOCATION]).hostname
         self.context[CONF_HOST] = host
 
+        uuid = user_input.get(ATTR_UPNP_UDN)
+        if uuid:
+            if uuid.startswith("uuid:"):
+                uuid = uuid[5:]
+            await self.async_set_unique_id(uuid)
+            self._abort_if_unique_id_configured({CONF_HOST: host})
+
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == host:
                 return self.async_abort(reason="already_in_progress")
 
+        # update old and user-configured config entries
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if entry.data[CONF_HOST] == host:
+                if uuid and not entry.unique_id:
+                    self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
                 return self.async_abort(reason="already_configured")
 
         self._host = host

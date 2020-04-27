@@ -713,7 +713,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200424.0
+home-assistant-frontend==20200427.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1045,7 +1045,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==7.1.1
+pillow==7.1.2
 
 # homeassistant.components.dominos
 pizzapi==0.0.3
@@ -1580,6 +1580,9 @@ pysonos==0.0.25
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
 
+# homeassistant.components.squeezebox
+pysqueezebox==0.1.2
+
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
 
@@ -1680,7 +1683,7 @@ python-sochain-api==0.0.2
 python-songpal==0.11.2
 
 # homeassistant.components.synology_dsm
-python-synology==0.7.0
+python-synology==0.7.1
 
 # homeassistant.components.tado
 python-tado==0.8.1
@@ -1756,7 +1759,7 @@ pyvesync==1.1.0
 pyvizio==0.1.47
 
 # homeassistant.components.velux
-pyvlx==0.2.12
+pyvlx==0.2.14
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -1885,7 +1888,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.1.0
+simplisafe-python==9.2.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.2.1

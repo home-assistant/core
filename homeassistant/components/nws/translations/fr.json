@@ -6,6 +6,14 @@
         "error": {
             "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
             "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                }
+            }
         }
     }
 }

@@ -15,7 +15,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
@@ -76,7 +76,7 @@ def setup_bridge(hass, bridge, async_add_entities):
     update_lights()
 
 
-class WemoLight(Light):
+class WemoLight(LightEntity):
     """Representation of a WeMo light."""
 
     def __init__(self, device, update_lights):
@@ -209,7 +209,7 @@ class WemoLight(Light):
             await self.hass.async_add_executor_job(self._update, force_update)
 
 
-class WemoDimmer(Light):
+class WemoDimmer(LightEntity):
     """Representation of a WeMo dimmer."""
 
     def __init__(self, device):

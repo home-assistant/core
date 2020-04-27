@@ -291,7 +291,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200424.0
+home-assistant-frontend==20200427.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -408,7 +408,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==7.1.1
+pillow==7.1.2
 
 # homeassistant.components.plex
 plexapi==3.4.0
@@ -650,7 +650,7 @@ python-miio==0.5.0.1
 python-nest==4.1.0
 
 # homeassistant.components.synology_dsm
-python-synology==0.7.0
+python-synology==0.7.1
 
 # homeassistant.components.tado
 python-tado==0.8.1
@@ -722,7 +722,7 @@ sentry-sdk==0.13.5
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.1.0
+simplisafe-python==9.2.0
 
 # homeassistant.components.sleepiq
 sleepyq==0.7

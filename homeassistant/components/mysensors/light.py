@@ -8,7 +8,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_WHITE_VALUE,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
@@ -34,7 +34,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class MySensorsLight(mysensors.device.MySensorsEntity, Light):
+class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
     """Representation of a MySensors Light child node."""
 
     def __init__(self, *args):

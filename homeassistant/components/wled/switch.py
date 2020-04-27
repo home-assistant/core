@@ -2,7 +2,7 @@
 import logging
 from typing import Any, Callable, Dict, List, Optional
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
@@ -37,7 +37,7 @@ async def async_setup_entry(
     async_add_entities(switches, True)
 
 
-class WLEDSwitch(WLEDDeviceEntity, SwitchDevice):
+class WLEDSwitch(WLEDDeviceEntity, SwitchEntity):
     """Defines a WLED switch."""
 
     def __init__(

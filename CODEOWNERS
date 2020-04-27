@@ -363,6 +363,7 @@ homeassistant/components/speedtestdotnet/* @rohankapoorcom
 homeassistant/components/spider/* @peternijssen
 homeassistant/components/spotify/* @frenck
 homeassistant/components/sql/* @dgomes
+homeassistant/components/squeezebox/* @rajlaud
 homeassistant/components/starline/* @anonym-tsk
 homeassistant/components/statistics/* @fabaff
 homeassistant/components/stiebel_eltron/* @fucm
