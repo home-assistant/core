@@ -5,9 +5,9 @@ from typing import Optional
 from aioesphomeapi import APIClient, APIConnectionError
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
+from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .entry_data import DATA_KEY, RuntimeEntryData
