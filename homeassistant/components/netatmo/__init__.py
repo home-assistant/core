@@ -29,6 +29,7 @@ from .const import (
     AUTH,
     CONF_CLOUDHOOK_URL,
     DATA_DEVICE_IDS,
+    DATA_HANDLER,
     DATA_PERSONS,
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -60,7 +61,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["camera", "climate", "sensor"]
+# PLATFORMS = ["camera", "climate", "sensor"]
+PLATFORMS = ["camera", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -103,6 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     data_handler = NetatmoDataHandler(hass, entry)
     await data_handler.async_setup()
+    hass.data[DOMAIN][entry.entry_id][DATA_HANDLER] = data_handler
 
     for component in PLATFORMS:
         hass.async_create_task(

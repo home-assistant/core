@@ -17,12 +17,16 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
 )
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import async_entries_for_config_entry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+
+
+# from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -35,10 +39,12 @@ from .const import (
     CONF_LON_SW,
     CONF_PUBLIC_MODE,
     CONF_WEATHER_AREAS,
+    DATA_HANDLER,
     DOMAIN,
     MANUFACTURER,
     MODELS,
 )
+from .netatmo_entity_base import NetatmoBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,50 +118,35 @@ MODULE_TYPE_WIND = "NAModule2"
 MODULE_TYPE_RAIN = "NAModule3"
 MODULE_TYPE_INDOOR = "NAModule4"
 
-
-NETATMO_DEVICE_TYPES = {
-    "WeatherStationData": "weather station",
-    "HomeCoachData": "home coach",
-}
-
 PUBLIC = "public"
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo weather and homecoach platform."""
     auth = hass.data[DOMAIN][entry.entry_id][AUTH]
     device_registry = await hass.helpers.device_registry.async_get_registry()
+    data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    def find_entities(data):
+    def find_entities(device_type):
         """Find all entities."""
-        all_module_infos = data.get_module_infos()
+        all_module_infos = data_handler.data[device_type].getModules()
         entities = []
         for module in all_module_infos.values():
             _LOGGER.debug("Adding module %s %s", module["module_name"], module["id"])
-            for condition in data.station_data.monitoredConditions(
+            for condition in data_handler.data[device_type].monitoredConditions(
                 moduleId=module["id"]
             ):
-                entities.append(NetatmoSensor(data, module, condition.lower()))
+                entities.append(
+                    NetatmoSensor(data_handler, device_type, module, condition.lower())
+                )
         return entities
 
     def get_entities():
         """Retrieve Netatmo entities."""
         entities = []
 
-        for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
-            try:
-                dc_data = data_class(auth)
-                _LOGGER.debug("%s detected!", NETATMO_DEVICE_TYPES[data_class.__name__])
-                data = NetatmoData(auth, dc_data)
-            except pyatmo.NoDevice:
-                _LOGGER.debug(
-                    "No %s entities found", NETATMO_DEVICE_TYPES[data_class.__name__]
-                )
-                continue
-
-            entities.extend(find_entities(data))
+        for data_class in ["WeatherStationData", "HomeCoachData"]:
+            entities.extend(find_entities(data_class))
 
         return entities
 
@@ -202,17 +193,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return
 
 
-class NetatmoSensor(Entity):
+class NetatmoSensor(NetatmoBase):
     """Implementation of a Netatmo sensor."""
 
-    def __init__(self, netatmo_data, module_info, sensor_type):
+    def __init__(self, data_handler, device_type, module_info, sensor_type):
         """Initialize the sensor."""
-        self.netatmo_data = netatmo_data
+        super().__init__(data_handler)
 
-        device = self.netatmo_data.station_data.moduleById(mid=module_info["id"])
+        self._device_type = device_type
+
+        device = self._data.moduleById(mid=module_info["id"])
         if not device:
             # Assume it's a station if module can't be found
-            device = self.netatmo_data.station_data.stationById(sid=module_info["id"])
+            device = self._data.stationById(sid=module_info["id"])
 
         if device["type"] == "NHC":
             self.module_name = module_info["station_name"]
@@ -276,24 +269,24 @@ class NetatmoSensor(Entity):
         """Return True if entity is available."""
         return self._state is not None
 
-    def update(self):
-        """Get the latest data from Netatmo API and updates the states."""
-        self.netatmo_data.update()
-        if self.netatmo_data.data is None:
+    @callback
+    def async_update_callback(self):
+        """Update the entity's state."""
+        if self._data is None:
             if self._state is None:
                 return
             _LOGGER.warning("No data from update")
             self._state = None
             return
 
-        data = self.netatmo_data.data.get(self._module_id)
+        data = self._data.lastData(exclude=3600, byId=True).get(self._module_id)
 
         if data is None:
             if self._state:
                 _LOGGER.debug(
                     "No data found for %s (%s)", self.module_name, self._module_id
                 )
-                _LOGGER.debug("data: %s", self.netatmo_data.data)
+                _LOGGER.debug("data: %s", self._data)
             self._state = None
             return
 

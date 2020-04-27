@@ -27,6 +27,7 @@ AUTH = "netatmo_auth"
 CONF_PUBLIC = "public_sensor_config"
 CAMERA_DATA = "netatmo_camera"
 HOME_DATA = "netatmo_home_data"
+DATA_HANDLER = "netatmo_data_handler"
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 CONF_WEATHER_AREAS = "weather_areas"
