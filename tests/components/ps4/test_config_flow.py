@@ -288,33 +288,41 @@ async def test_duplicate_abort(hass):
 
 async def test_additional_device(hass):
     """Test that Flow can configure another device."""
-    flow = ps4.PlayStation4FlowHandler()
-    flow.hass = hass
-    flow.creds = MOCK_CREDS
-    manager = hass.config_entries
-
     # Mock existing entry.
     entry = MockConfigEntry(domain=ps4.DOMAIN, data=MOCK_DATA)
-    entry.add_to_manager(manager)
-    # Check that only 1 entry exists
-    assert len(manager.async_entries()) == 1
+    entry.add_to_hass(hass)
+
+    with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "creds"
+
+    with patch("pyps4_2ndscreen.Helper.get_creds", return_value=MOCK_CREDS):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "mode"
 
     with patch(
         "pyps4_2ndscreen.Helper.has_devices",
         return_value=[{"host-ip": MOCK_HOST}, {"host-ip": MOCK_HOST_ADDITIONAL}],
-    ), patch("pyps4_2ndscreen.Helper.link", return_value=(True, True)):
-        result = await flow.async_step_link(MOCK_CONFIG_ADDITIONAL)
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_AUTO
+        )
+
+    with patch("pyps4_2ndscreen.Helper.link", return_value=(True, True)):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_CONFIG_ADDITIONAL
+        )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_TOKEN] == MOCK_CREDS
     assert len(result["data"]["devices"]) == 1
     assert result["title"] == MOCK_TITLE
-
-    # Add New Entry
-    entry = MockConfigEntry(domain=ps4.DOMAIN, data=MOCK_DATA)
-    entry.add_to_manager(manager)
-
-    # Check that there are 2 entries
-    assert len(manager.async_entries()) == 2
 
 
 async def test_0_pin(hass):
