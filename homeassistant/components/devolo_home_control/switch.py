@@ -63,11 +63,9 @@ class DevoloSwitch(SwitchDevice):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.subscriber = Subscriber(
-            self._device_instance.itemName, callback=self.update
-        )
+        self.subscriber = Subscriber(self._device_instance.itemName, callback=self.sync)
         self._homecontrol.publisher.register(
-            self._device_instance.uid, self.subscriber, self.update
+            self._device_instance.uid, self.subscriber, self.sync
         )
 
     @property
@@ -125,7 +123,7 @@ class DevoloSwitch(SwitchDevice):
         self._is_on = False
         self._binary_switch_property.set_binary_switch(state=False)
 
-    def update(self, message=None):
+    def sync(self, message=None):
         """Update the binary switch state and consumption."""
         if message[0].startswith("devolo.BinarySwitch"):
             self._is_on = self._device_instance.binary_switch_property[message[0]].state
