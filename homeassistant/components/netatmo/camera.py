@@ -11,19 +11,11 @@ from homeassistant.components.camera import (
     Camera,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 
-from .const import (
-    ATTR_PSEUDO,
-    AUTH,
-    DATA_PERSONS,
-    DOMAIN,
-    MANUFACTURER,
-    MIN_TIME_BETWEEN_EVENT_UPDATES,
-    MIN_TIME_BETWEEN_UPDATES,
-    MODELS,
-)
+from .const import ATTR_PSEUDO, DATA_HANDLER, DATA_PERSONS, DOMAIN, MANUFACTURER, MODELS
+from .netatmo_entity_base import NetatmoBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,19 +42,38 @@ async def async_setup_entry(hass, entry, async_add_entities):
         )
         return
 
+    data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
+
+    device_type = "CameraData"
+
     def get_entities():
         """Retrieve Netatmo entities."""
         entities = []
         try:
-            camera_data = CameraData(hass, hass.data[DOMAIN][entry.entry_id][AUTH])
-            for camera in camera_data.get_all_cameras():
-                _LOGGER.debug("Setting up camera %s %s", camera["id"], camera["name"])
+            all_cameras = []
+            for home in data_handler.data[device_type].cameras.values():
+                for camera in home.values():
+                    all_cameras.append(camera)
+
+            for camera in all_cameras:  # camera_data.get_all_cameras():
+                _LOGGER.debug("Adding camera %s %s", camera["id"], camera["name"])
                 entities.append(
                     NetatmoCamera(
-                        camera_data, camera["id"], camera["type"], True, DEFAULT_QUALITY
+                        data_handler,
+                        device_type,
+                        camera["id"],
+                        camera["type"],
+                        True,
+                        DEFAULT_QUALITY,
                     )
                 )
-            camera_data.update_persons()
+
+            for person_id, person_data in data_handler.data[
+                device_type
+            ].persons.items():
+                hass.data[DOMAIN][DATA_PERSONS][person_id] = person_data.get(
+                    ATTR_PSEUDO
+                )
         except pyatmo.NoDevice:
             _LOGGER.debug("No cameras found")
         return entities
@@ -75,15 +86,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return
 
 
-class NetatmoCamera(Camera):
+class NetatmoCamera(Camera, NetatmoBase):
     """Representation of a Netatmo camera."""
 
-    def __init__(self, data, camera_id, camera_type, verify_ssl, quality):
+    def __init__(
+        self, data_handler, device_type, camera_id, camera_type, verify_ssl, quality
+    ):
         """Set up for access to the Netatmo camera images."""
-        super().__init__()
-        self._data = data
+        Camera.__init__(self)
+        NetatmoBase.__init__(self, data_handler)
+
+        self._device_type = device_type
+
         self._camera_id = camera_id
-        self._camera_name = self._data.camera_data.get_camera(cid=camera_id).get("name")
+        self._camera_name = self._data.get_camera(cid=camera_id).get("name")
         self._name = f"{MANUFACTURER} {self._camera_name}"
         self._camera_type = camera_type
         self._unique_id = f"{self._camera_id}-{self._camera_type}"
@@ -212,61 +228,14 @@ class NetatmoCamera(Camera):
         """Return the unique ID for this sensor."""
         return self._unique_id
 
-    def update(self):
-        """Update entity status."""
-        self._data.update()
+    @callback
+    def async_update_callback(self):
+        """Update the entity's state."""
+        camera = self._data.get_camera(cid=self._camera_id)
 
-        camera = self._data.camera_data.get_camera(cid=self._camera_id)
-
-        self._vpnurl, self._localurl = self._data.camera_data.camera_urls(
-            cid=self._camera_id
-        )
+        self._vpnurl, self._localurl = self._data.camera_urls(cid=self._camera_id)
         self._status = camera.get("status")
         self._sd_status = camera.get("sd_status")
         self._alim_status = camera.get("alim_status")
         self._is_local = camera.get("is_local")
         self.is_streaming = self._alim_status == "on"
-
-
-class CameraData:
-    """Get the latest data from Netatmo."""
-
-    def __init__(self, hass, auth):
-        """Initialize the data object."""
-        self._hass = hass
-        self.auth = auth
-        self.camera_data = None
-
-    def get_all_cameras(self):
-        """Return all camera available on the API as a list."""
-        self.update()
-        cameras = []
-        for camera in self.camera_data.cameras.values():
-            cameras.extend(camera.values())
-        return cameras
-
-    def get_modules(self, camera_id):
-        """Return all modules for a given camera."""
-        return self.camera_data.get_camera(camera_id).get("modules", [])
-
-    def get_camera_type(self, camera_id):
-        """Return camera type for a camera, cid has preference over camera."""
-        return self.camera_data.cameraType(cid=camera_id)
-
-    def update_persons(self):
-        """Gather person data for webhooks."""
-        for person_id, person_data in self.camera_data.persons.items():
-            self._hass.data[DOMAIN][DATA_PERSONS][person_id] = person_data.get(
-                ATTR_PSEUDO
-            )
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Call the Netatmo API to update the data."""
-        self.camera_data = pyatmo.CameraData(self.auth, size=100)
-        self.update_persons()
-
-    @Throttle(MIN_TIME_BETWEEN_EVENT_UPDATES)
-    def update_event(self, camera_type):
-        """Call the Netatmo API to update the events."""
-        self.camera_data.updateEvent(devicetype=camera_type)
