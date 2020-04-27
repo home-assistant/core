@@ -57,7 +57,8 @@ async def async_setup_entry(
                 zone_config.get(SERVICE_TURN_ON),
             )
             for zone, zone_config in config[CONF_ZONE].items()
-        ]
+        ],
+        True,
     )
 
     return True
@@ -86,7 +87,12 @@ class ArcamFmj(MediaPlayerEntity):
         audio_format, _ = self._state.get_incoming_audio_format()
         return bool(
             audio_format
-            in (IncomingAudioFormat.PCM, IncomingAudioFormat.ANALOGUE_DIRECT, None)
+            in (
+                IncomingAudioFormat.PCM,
+                IncomingAudioFormat.ANALOGUE_DIRECT,
+                IncomingAudioFormat.UNDETECTED,
+                None,
+            )
         )
 
     @property
