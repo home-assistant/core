@@ -1,8 +1,8 @@
 {
     "domain": "natural_resources_wales",
     "name": "Natural Resources Wales",
-    "documentation": "https://github.com/gimpje/home-assistant/components/natural_resources_wales/readme.md",
+    "documentation": "https://www.home-assistant.io/integrations/natural_resources_wales",
     "dependencies": [],
-    "codeowners": [],
+    "codeowners": ["@gimpje"],
     "requirements": []
   }
