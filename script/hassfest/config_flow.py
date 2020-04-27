@@ -17,7 +17,7 @@ To update, run python3 -m script.hassfest
 FLOWS = {}
 """.strip()
 
-UNIQUE_ID_IGNORE = {"esphome", "fritzbox", "heos", "huawei_lte", "netatmo", "tradfri"}
+UNIQUE_ID_IGNORE = {"esphome", "fritzbox", "heos", "huawei_lte", "tradfri"}
 
 
 def validate_integration(config: Config, integration: Integration):
@@ -44,6 +44,7 @@ def validate_integration(config: Config, integration: Integration):
     has_unique_id = (
         "self.async_set_unique_id" in config_flow
         or "config_entry_flow.register_discovery_flow" in config_flow
+        or "config_entry_oauth2_flow.AbstractOAuth2FlowHandler" in config_flow
     )
 
     if has_unique_id:
