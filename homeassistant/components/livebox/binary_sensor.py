@@ -36,10 +36,7 @@ class WanStatus(BinarySensorEntity):
 
     def is_on(self):
         """Return true if the binary sensor is on."""
-        wan_state = self.coordinator.data.get("status", {}).get("WanState")
-        if wan_state:
-            return wan_state == "up"
-        return None
+        return self.coordinator.data.get("status", {}).get("WanState") == "up"
 
     @property
     def unique_id(self):
