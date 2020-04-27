@@ -111,7 +111,7 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
                 # Backwards compat, we update old entries
                 if not entry.unique_id:
                     self.hass.config_entries.async_update_entry(
-                        entry, unique_id=node_address
+                        entry, unique_id=node_name
                     )
 
                 return self.async_abort(reason="already_configured")
