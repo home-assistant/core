@@ -119,6 +119,7 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if uuid.startswith("uuid:"):
                 uuid = uuid[5:]
             await self.async_set_unique_id(uuid)
+            self._abort_if_unique_id_configured({CONF_HOST: host})
 
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == host:
@@ -126,7 +127,7 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if entry.data[CONF_HOST] == host:
-                if uuid and entry.unique_id != uuid:
+                if uuid and not entry.unique_id:
                     self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
                 return self.async_abort(reason="already_configured")
 
