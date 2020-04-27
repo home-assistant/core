@@ -47,6 +47,37 @@ async def test_form(hass):
         "home_control_url": "https://homecontrol.mydevolo.com",
         "mydevolo_url": "https://www.mydevolo.com",
     }
+
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_invalid_credentials(hass):
+    """Test if we get the error message on invalid credentials."""
+    try:
+        Mydevolo()
+    except SyntaxError:
+        Mydevolo.get_instance()
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.devolo_home_control.config_flow.Mydevolo.credentials_valid",
+        return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+                "home_control_url": "https://homecontrol.mydevolo.com",
+                "mydevolo_url": "https://www.mydevolo.com",
+            },
+        )
+
+        assert result["errors"] == {"base": "invalid_credentials"}
