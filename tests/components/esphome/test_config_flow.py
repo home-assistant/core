@@ -179,12 +179,11 @@ async def test_discovery_initiation(hass, mock_client):
     mock_client.device_info.return_value = mock_coro(MockDeviceInfo(False, "test8266"))
 
     service_info = {
-        CONF_HOST: "192.168.43.183",
-        CONF_PORT: 6053,
+        "host": "192.168.43.183",
+        "port": 6053,
         "hostname": "test8266.local.",
         "properties": {},
     }
-
     flow = await hass.config_entries.flow.async_init(
         "esphome", context={"source": "zeroconf"}, data=service_info
     )
@@ -216,8 +215,8 @@ async def test_discovery_already_configured_hostname(hass, mock_client):
     entry.add_to_hass(hass)
 
     service_info = {
-        CONF_HOST: "192.168.43.183",
-        CONF_PORT: 6053,
+        "host": "192.168.43.183",
+        "port": 6053,
         "hostname": "test8266.local.",
         "properties": {},
     }
@@ -241,8 +240,8 @@ async def test_discovery_already_configured_ip(hass, mock_client):
     entry.add_to_hass(hass)
 
     service_info = {
-        CONF_HOST: "192.168.43.183",
-        CONF_PORT: 6053,
+        "host": "192.168.43.183",
+        "port": 6053,
         "hostname": "test8266.local.",
         "properties": {"address": "192.168.43.183"},
     }
@@ -269,8 +268,8 @@ async def test_discovery_already_configured_name(hass, mock_client):
     hass.data[DATA_KEY] = {entry.entry_id: mock_entry_data}
 
     service_info = {
-        CONF_HOST: "192.168.43.184",
-        CONF_PORT: 6053,
+        "host": "192.168.43.184",
+        "port": 6053,
         "hostname": "test8266.local.",
         "properties": {"address": "test8266.local"},
     }
@@ -288,8 +287,8 @@ async def test_discovery_already_configured_name(hass, mock_client):
 async def test_discovery_duplicate_data(hass, mock_client):
     """Test discovery aborts if same mDNS packet arrives."""
     service_info = {
-        CONF_HOST: "192.168.43.183",
-        CONF_PORT: 6053,
+        "host": "192.168.43.183",
+        "port": 6053,
         "hostname": "test8266.local.",
         "properties": {"address": "test8266.local"},
     }
@@ -319,8 +318,8 @@ async def test_discovery_updates_unique_id(hass, mock_client):
     entry.add_to_hass(hass)
 
     service_info = {
-        CONF_HOST: "192.168.43.183",
-        CONF_PORT: 6053,
+        "host": "192.168.43.183",
+        "port": 6053,
         "hostname": "test8266.local.",
         "properties": {"address": "test8266.local"},
     }
