@@ -14,7 +14,7 @@ from homeassistant.const import (
 from tests.common import get_test_home_assistant
 
 
-class AsyncMediaPlayer(mp.MediaPlayerDevice):
+class AsyncMediaPlayer(mp.MediaPlayerEntity):
     """Async media player test class."""
 
     def __init__(self, hass):
@@ -65,7 +65,7 @@ class AsyncMediaPlayer(mp.MediaPlayerDevice):
         self._state = STATE_OFF
 
 
-class SyncMediaPlayer(mp.MediaPlayerDevice):
+class SyncMediaPlayer(mp.MediaPlayerEntity):
     """Sync media player test class."""
 
     def __init__(self, hass):

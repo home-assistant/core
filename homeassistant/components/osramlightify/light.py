@@ -18,7 +18,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
@@ -168,7 +168,7 @@ def setup_bridge(bridge, add_entities, config):
         update_groups()
 
 
-class Luminary(Light):
+class Luminary(LightEntity):
     """Representation of Luminary Lights and Groups."""
 
     def __init__(self, luminary, update_func, changed):

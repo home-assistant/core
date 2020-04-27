@@ -7,7 +7,7 @@ from homeassistant.components.cover import (
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
-    CoverDevice,
+    CoverEntity,
 )
 
 from .insteon_entity import InsteonEntity
@@ -34,12 +34,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         device.states[state_key].name,
     )
 
-    new_entity = InsteonCoverDevice(device, state_key)
+    new_entity = InsteonCoverEntity(device, state_key)
 
     async_add_entities([new_entity])
 
 
-class InsteonCoverDevice(InsteonEntity, CoverDevice):
+class InsteonCoverEntity(InsteonEntity, CoverEntity):
     """A Class for an Insteon device."""
 
     @property

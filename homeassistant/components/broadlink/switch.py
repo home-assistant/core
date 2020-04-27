@@ -7,7 +7,7 @@ import socket
 import broadlink as blk
 import voluptuous as vol
 
-from homeassistant.components.switch import DOMAIN, PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import DOMAIN, PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -146,7 +146,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(switches)
 
 
-class BroadlinkRMSwitch(SwitchDevice, RestoreEntity):
+class BroadlinkRMSwitch(SwitchEntity, RestoreEntity):
     """Representation of an Broadlink switch."""
 
     def __init__(

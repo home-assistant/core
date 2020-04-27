@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ce DoorBird est d\u00e9j\u00e0 configur\u00e9",
+            "not_doorbird_device": "Cet appareil n'est pas un DoorBird"
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
+            "invalid_auth": "Authentification non valide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te (adresse IP)",
+                    "name": "Nom de l'appareil",
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "title": "Connectez-vous au DoorBird"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "events": "Liste d'\u00e9v\u00e9nements s\u00e9par\u00e9s par des virgules."
+                }
+            }
+        }
+    }
+}

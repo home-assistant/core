@@ -4,7 +4,7 @@ import logging
 import anthemav
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -79,7 +79,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([device])
 
 
-class AnthemAVR(MediaPlayerDevice):
+class AnthemAVR(MediaPlayerEntity):
     """Entity reading values from Anthem AVR protocol."""
 
     def __init__(self, avr, name):

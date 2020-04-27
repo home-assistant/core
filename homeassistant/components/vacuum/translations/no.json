@@ -1,0 +1,25 @@
+{
+    "device_automation": {
+        "action_type": {
+            "clean": "La {entity_name} rengj\u00f8res",
+            "dock": "La {entity_name} tilbake til dock"
+        },
+        "condition_type": {
+            "is_cleaning": "{entity_name} rengj\u00f8res",
+            "is_docked": "{entity_name} er docked"
+        },
+        "trigger_type": {
+            "cleaning": "{entity_name} startet rengj\u00f8ringen",
+            "docked": "{entity_name} dokket"
+        }
+    },
+    "state": {
+        "_": {
+            "cleaning": "Rengj\u00f8ring",
+            "docked": "Dokket",
+            "error": "Feil",
+            "returning": "Returner til dokken"
+        }
+    },
+    "title": "St\u00f8vsuger"
+}

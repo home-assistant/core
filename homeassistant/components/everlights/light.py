@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_EFFECT,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_HOSTS
 from homeassistant.exceptions import PlatformNotReady
@@ -65,7 +65,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(lights)
 
 
-class EverLightsLight(Light):
+class EverLightsLight(LightEntity):
     """Representation of a Flux light."""
 
     def __init__(self, api, channel, status, effects):

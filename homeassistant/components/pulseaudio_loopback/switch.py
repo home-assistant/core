@@ -7,7 +7,7 @@ import socket
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
@@ -137,7 +137,7 @@ class PAServer:
         return -1
 
 
-class PALoopbackSwitch(SwitchDevice):
+class PALoopbackSwitch(SwitchEntity):
     """Representation the presence or absence of a PA loopback module."""
 
     def __init__(self, hass, name, pa_server, sink_name, source_name):

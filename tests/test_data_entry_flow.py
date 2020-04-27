@@ -26,7 +26,6 @@ def manager():
 
             flow = handler()
             flow.init_step = context.get("init_step", "init")
-            flow.source = context.get("source")
             return flow
 
         async def async_finish_flow(self, flow, result):

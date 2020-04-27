@@ -6,7 +6,7 @@ import subprocess as sp
 import voluptuous as vol
 import wakeonlan
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_HOST, CONF_MAC, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class WolSwitch(SwitchDevice):
+class WolSwitch(SwitchEntity):
     """Representation of a wake on lan switch."""
 
     def __init__(self, hass, name, host, mac_address, off_action, broadcast_address):

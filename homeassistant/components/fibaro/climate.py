@@ -1,7 +1,7 @@
 """Support for Fibaro thermostats."""
 import logging
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
@@ -104,7 +104,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class FibaroThermostat(FibaroDevice, ClimateDevice):
+class FibaroThermostat(FibaroDevice, ClimateEntity):
     """Representation of a Fibaro Thermostat."""
 
     def __init__(self, fibaro_device):

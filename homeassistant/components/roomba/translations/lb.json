@@ -1,0 +1,31 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "blid": "BLID",
+                    "certificate": "Zertifikat",
+                    "continuous": "Kontinu\u00e9ierlech",
+                    "delay": "Delai",
+                    "host": "Host Numm oder IP Adresse",
+                    "password": "Passwuert"
+                },
+                "title": "Mam Apparat verbannen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Kontinu\u00e9ierlech",
+                    "delay": "Delai"
+                }
+            }
+        }
+    }
+}

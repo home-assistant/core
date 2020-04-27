@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Slechts \u00e9\u00e9n exemplaar is nodig."
+        },
+        "step": {
+            "user": {
+                "description": "Wil je Islamic Prayer Times opzetten?",
+                "title": "Stel Islamitische gebedstijden in"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calc_method": "Berekeningsmethode voor het gebed"
+                }
+            }
+        }
+    },
+    "title": "Islamitische gebedstijden"
+}

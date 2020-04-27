@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebse Fernseh ass scho konfigur\u00e9iert."
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen, ong\u00ebltege Numm oder PIN code.",
+            "invalid_host": "Ong\u00ebltege Numm oder IP Adresse.",
+            "unsupported_model": "D\u00e4in TV Modell g\u00ebtt net \u00ebnnerst\u00ebtzt."
+        },
+        "step": {
+            "authorize": {
+                "data": {
+                    "pin": "PIN Code"
+                },
+                "description": "G\u00ebff de PIN code an deen op der Sony Bravia TV ugewise g\u00ebtt.\n\nFalls kee PIN code ugewise g\u00ebtt muss den Home Assistant um Fernseh ofgemellt ginn, um TV: Settings -> Network -> Remote device settings -> Unregister remote device.",
+                "title": "Sony Bravia TV erlaaben"
+            },
+            "user": {
+                "data": {
+                    "host": "TV Host Numm oder IP Adresse"
+                },
+                "description": "Sony Bravia TV Integratioun ariichten. Falls et Problemer mat der Konfiguratioun g\u00ebtt g\u00e9i op:\nhttps://www.home-assistant.io/integrations/braviatv\nStell s\u00e9cher dass d\u00e4in Fernseh un ass.",
+                "title": "Sony Bravia TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "ignored_sources": "L\u00ebscht vun ignor\u00e9ierte Quellen"
+                },
+                "title": "Optioune fir Sony Bravia TV"
+            }
+        }
+    }
+}

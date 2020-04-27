@@ -12,7 +12,7 @@ from pychromecast.socket_client import (
 )
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
@@ -171,7 +171,7 @@ async def _async_setup_platform(
     hass.async_add_executor_job(setup_internal_discovery, hass)
 
 
-class CastDevice(MediaPlayerDevice):
+class CastDevice(MediaPlayerEntity):
     """Representation of a Cast device on the network.
 
     This class is the holder of the pychromecast.Chromecast object and its
@@ -260,7 +260,6 @@ class CastDevice(MediaPlayerDevice):
             # will automatically be picked up.
             return
 
-        # pylint: disable=protected-access
         _LOGGER.debug(
             "[%s %s (%s:%s)] Connecting to cast device by service %s",
             self.entity_id,
@@ -270,7 +269,7 @@ class CastDevice(MediaPlayerDevice):
             self.services,
         )
         chromecast = await self.hass.async_add_executor_job(
-            pychromecast._get_chromecast_from_service,
+            pychromecast.get_chromecast_from_service,
             (
                 self.services,
                 ChromeCastZeroconf.get_zeroconf(),

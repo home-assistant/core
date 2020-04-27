@@ -3,7 +3,7 @@ import logging
 
 import temescal
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([LGDevice(discovery_info)], True)
 
 
-class LGDevice(MediaPlayerDevice):
+class LGDevice(MediaPlayerEntity):
     """Representation of an LG soundbar device."""
 
     def __init__(self, discovery_info):

@@ -6,7 +6,7 @@ import logging
 import switchmate
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_MAC, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     add_entities([SwitchmateEntity(mac_addr, name, flip_on_off)], True)
 
 
-class SwitchmateEntity(SwitchDevice):
+class SwitchmateEntity(SwitchEntity):
     """Representation of a Switchmate."""
 
     def __init__(self, mac, name, flip_on_off) -> None:

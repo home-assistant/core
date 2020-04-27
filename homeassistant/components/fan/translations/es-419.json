@@ -1,0 +1,19 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_off": "{entity_name} est\u00e1 apagado",
+            "is_on": "{entity_name} est\u00e1 encendido"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} se apag\u00f3",
+            "turned_on": "{entity_name} se encendi\u00f3"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Desactivado",
+            "on": "Encendido"
+        }
+    },
+    "title": "Ventilador"
+}

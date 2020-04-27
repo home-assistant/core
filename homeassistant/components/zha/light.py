@@ -97,7 +97,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 
-class BaseLight(LogMixin, light.Light):
+class BaseLight(LogMixin, light.LightEntity):
     """Operations common to all light entities."""
 
     def __init__(self, *args, **kwargs):

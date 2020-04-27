@@ -6,7 +6,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as PLATFORM_DOMAIN,
     ENTITY_ID_FORMAT,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -33,7 +33,7 @@ async def async_setup_entry(
     )
 
 
-class VeraCover(VeraDevice, CoverDevice):
+class VeraCover(VeraDevice, CoverEntity):
     """Representation a Vera Cover."""
 
     def __init__(self, vera_device, controller):

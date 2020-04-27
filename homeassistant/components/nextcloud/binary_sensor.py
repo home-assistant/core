@@ -1,7 +1,7 @@
 """Summary binary data from Nextcoud."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import BINARY_SENSORS, DOMAIN
 
@@ -19,7 +19,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(binary_sensors, True)
 
 
-class NextcloudBinarySensor(BinarySensorDevice):
+class NextcloudBinarySensor(BinarySensorEntity):
     """Represents a Nextcloud binary sensor."""
 
     def __init__(self, item):
