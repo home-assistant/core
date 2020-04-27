@@ -88,6 +88,7 @@ OPTIONAL_SERVICE_HANDLERS = {SERVICE_DLNA_DMR: ("media_player", "dlna_dmr")}
 MIGRATED_SERVICE_HANDLERS = [
     "axis",
     "deconz",
+    "directv",
     "esphome",
     "google_cast",
     SERVICE_HEOS,
