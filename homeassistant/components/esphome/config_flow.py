@@ -6,6 +6,7 @@ from aioesphomeapi import APIClient, APIConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries, core
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.helpers.typing import ConfigType
 
 from .entry_data import DATA_KEY, RuntimeEntryData
@@ -32,8 +33,8 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
             return await self._async_authenticate_or_add(user_input)
 
         fields = OrderedDict()
-        fields[vol.Required("host", default=self._host or vol.UNDEFINED)] = str
-        fields[vol.Optional("port", default=self._port or 6053)] = int
+        fields[vol.Required(CONF_HOST, default=self._host or vol.UNDEFINED)] = str
+        fields[vol.Optional(CONF_PORT, default=self._port or 6053)] = int
 
         errors = {}
         if error is not None:
@@ -46,19 +47,19 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
     @property
     def _name(self):
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        return self.context.get("name")
+        return self.context.get(CONF_NAME)
 
     @_name.setter
     def _name(self, value):
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["name"] = value
+        self.context[CONF_NAME] = value
         self.context["title_placeholders"] = {"name": self._name}
 
     def _set_user_input(self, user_input):
         if user_input is None:
             return
-        self._host = user_input["host"]
-        self._port = user_input["port"]
+        self._host = user_input[CONF_HOST]
+        self._port = user_input[CONF_PORT]
 
     async def _async_authenticate_or_add(self, user_input):
         self._set_user_input(user_input)
@@ -89,23 +90,34 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
         address = user_input["properties"].get("address", local_name)
 
         # Check if already configured
+        await self.async_set_unique_id(node_name)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: address})
+
         for entry in self._async_current_entries():
             already_configured = False
-            if entry.data["host"] == address:
+
+            if entry.data[CONF_HOST] == address:
                 # Is this address already configured?
                 already_configured = True
             elif entry.entry_id in self.hass.data.get(DATA_KEY, {}):
                 # Does a config entry with this name already exist?
                 data: RuntimeEntryData = self.hass.data[DATA_KEY][entry.entry_id]
+
                 # Node names are unique in the network
                 if data.device_info is not None:
                     already_configured = data.device_info.name == node_name
 
             if already_configured:
+                # Backwards compat, we update old entries
+                if not entry.unique_id:
+                    self.hass.config_entries.async_update_entry(
+                        entry, unique_id=node_address
+                    )
+
                 return self.async_abort(reason="already_configured")
 
         self._host = address
-        self._port = user_input["port"]
+        self._port = user_input[CONF_PORT]
         self._name = node_name
 
         # Check if flow for this device already in progress
@@ -120,17 +132,17 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
         return self.async_create_entry(
             title=self._name,
             data={
-                "host": self._host,
-                "port": self._port,
+                CONF_HOST: self._host,
+                CONF_PORT: self._port,
                 # The API uses protobuf, so empty string denotes absence
-                "password": self._password or "",
+                CONF_PASSWORD: self._password or "",
             },
         )
 
     async def async_step_authenticate(self, user_input=None, error=None):
         """Handle getting password for authentication."""
         if user_input is not None:
-            self._password = user_input["password"]
+            self._password = user_input[CONF_PASSWORD]
             error = await self.try_login()
             if error:
                 return await self.async_step_authenticate(error=error)
