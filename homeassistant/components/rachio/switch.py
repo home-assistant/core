@@ -2,11 +2,11 @@
 from abc import abstractmethod
 from datetime import timedelta
 import logging
-import time
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.dt import as_timestamp, now
 
 from .const import (
     ATTR_ZONE_SHADE,
@@ -216,7 +216,7 @@ class RachioRainDelay(RachioSwitch):
             data = self._controller.rachio.device.get(self._controller.controller_id)[1]
 
         try:
-            return data[KEY_RAIN_DELAY] / 1000 > time.time()
+            return data[KEY_RAIN_DELAY] / 1000 > as_timestamp(now())
         except KeyError:
             return False
 
