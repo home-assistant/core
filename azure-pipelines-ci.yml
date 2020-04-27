@@ -123,7 +123,7 @@ stages:
               . venv/bin/activate
               pre-commit run black --all-files --show-diff-on-failure
             displayName: "Check Black formatting"
-      - job: "Hadolint"
+      - job: "Docker"
         pool:
           vmImage: "ubuntu-latest"
         steps:
