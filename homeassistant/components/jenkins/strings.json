@@ -19,8 +19,7 @@
       "job": {
         "title": "Select the job you like to monitor.",
         "data": {
-          "repository": "username",
-          "job": "token"
+          "job_name": "Select Job"
         }
       }
     }

@@ -4,10 +4,10 @@ from requests.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 
 from . import _LOGGER
-from .const import DOMAIN
+from .const import CONF_JOB_NAME, DOMAIN
 
 
 class Server:
@@ -28,13 +28,21 @@ class Server:
             self.server = Jenkins(self.url, self.uid, self.token)
 
     def get_server(self):
-        """Get info in .json from Jenkins server."""
+        """Return info in .json from Jenkins server."""
         return self.server
 
     def get_job_names(self):
-        """Get job names from Jenkins server."""
+        """Return job names from Jenkins server."""
         job_names = [job[0] for job in self.server.get_jobs()]
         return job_names
+
+    def get_uid(self):
+        """Return Jenkins server username."""
+        return self.uid
+
+    def get_token(self):
+        """Return Jenkins server token."""
+        return self.token
 
     def set_url(self, url):
         """Set URL to Jenkins server."""
@@ -109,14 +117,21 @@ class JenkinsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             _LOGGER.debug(f"User decided on the following: {user_input}")
 
-            # TODO: Create and add entity
-            return self.async_abort(reason="under_development")
+            return self.async_create_entry(
+                title=user_input[CONF_JOB_NAME],
+                data={
+                    CONF_URL: self.new_server.get_server().baseurl,
+                    CONF_USERNAME: self.new_server.get_uid(),
+                    CONF_PASSWORD: self.new_server.get_token(),
+                    CONF_JOB_NAME: user_input[CONF_JOB_NAME],
+                },
+            )
 
         # TODO: Fix "Detected I/O inside the event loop"
         job_names = await self.hass.async_add_executor_job(
             self.new_server.get_job_names
         )
 
-        data_schema = vol.Schema({vol.Required("JOB_NAME"): vol.In(job_names)})
+        data_schema = vol.Schema({vol.Required(CONF_JOB_NAME): vol.In(job_names)})
 
         return self.async_show_form(step_id="job", data_schema=data_schema)

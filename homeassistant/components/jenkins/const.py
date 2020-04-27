@@ -2,7 +2,4 @@
 
 DOMAIN = "jenkins"
 
-CONF_REPOSITORY = "repository"
-CONF_BRANCH = "branch"
-
-DEFAULT_BRANCH = "master"
+CONF_JOB_NAME = "job_name"
