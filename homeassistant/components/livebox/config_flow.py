@@ -39,7 +39,6 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-
     bridge = BridgeData(hass=hass, config_flow_data=data)
     await bridge.async_connect()
 
@@ -67,7 +66,6 @@ class LiveboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-
         errors = {}
         if user_input is not None:
             try:
@@ -98,7 +96,6 @@ class LiveboxOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry):
         """Initialize the options flow."""
-
         self.config_entry = config_entry
         self._lan_tracking = self.config_entry.options.get(
             CONF_LAN_TRACKING, DEFAULT_LAN_TRACKING
@@ -110,7 +107,6 @@ class LiveboxOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-
         OPTIONS_SCHEMA = vol.Schema(
             {vol.Required(CONF_LAN_TRACKING, default=self._lan_tracking): bool}
         )
