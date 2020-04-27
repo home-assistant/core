@@ -17,7 +17,7 @@ To update, run python3 -m script.hassfest
 FLOWS = {}
 """.strip()
 
-UNIQUE_ID_IGNORE = {"esphome", "fritzbox", "heos", "huawei_lte", "tradfri"}
+UNIQUE_ID_IGNORE = {"esphome", "fritzbox", "heos", "huawei_lte"}
 
 
 def validate_integration(config: Config, integration: Integration):
