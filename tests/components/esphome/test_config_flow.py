@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.esphome import DATA_KEY, config_flow
+from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
 
 from tests.common import MockConfigEntry, mock_coro
 
@@ -259,3 +260,27 @@ async def test_discovery_duplicate_data(hass, mock_client):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+
+
+async def test_discovery_updates_unique_id(hass):
+    """Test a duplicate discovery host aborts and updates existing entry."""
+    entry = MockConfigEntry(
+        domain="esphome", data={"host": "192.168.43.183", "port": 6053, "password": ""}
+    )
+
+    entry.add_to_hass(hass)
+
+    service_info = {
+        "host": "192.168.43.183",
+        "port": 6053,
+        "hostname": "test8266.local.",
+        "properties": {"address": "test8266.local"},
+    }
+    flow = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": "zeroconf"}, data=service_info
+    )
+
+    assert flow["type"] == RESULT_TYPE_ABORT
+    assert flow["reason"] == "already_configured"
+
+    assert entry.unique_id == "test8266"
