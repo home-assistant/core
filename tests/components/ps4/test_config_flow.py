@@ -416,11 +416,18 @@ async def test_manual_mode(hass):
 
 async def test_credential_abort(hass):
     """Test that failure to get credentials aborts flow."""
-    flow = ps4.PlayStation4FlowHandler()
-    flow.hass = hass
+    with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "creds"
 
     with patch("pyps4_2ndscreen.Helper.get_creds", return_value=None):
-        result = await flow.async_step_creds({})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "credential_error"
 
