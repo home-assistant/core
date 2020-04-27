@@ -57,7 +57,7 @@ async def test_user_connection_works(hass, mock_client):
 
     result = await flow.async_step_user(user_input={"host": "127.0.0.1", "port": 80})
 
-    assert result["type"] == "create_entry"   
+    assert result["type"] == "create_entry"
     assert result["data"] == {"host": "127.0.0.1", "port": 80, "password": ""}
     assert result["title"] == "test"
     assert len(mock_client.connect.mock_calls) == 1
