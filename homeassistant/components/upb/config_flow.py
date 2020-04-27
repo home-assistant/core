@@ -87,9 +87,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            if self._url_already_configured(_make_url_from_data(user_input)):
-                return self.async_abort(reason="address_already_configured")
             try:
+                if self._url_already_configured(_make_url_from_data(user_input)):
+                    return self.async_abort(reason="address_already_configured")
                 network_id, info = await _validate_input(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"

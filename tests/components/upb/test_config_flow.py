@@ -108,3 +108,44 @@ async def test_form_user_with_already_configured(hass):
     assert result2["type"] == "abort"
     assert result2["reason"] == "address_already_configured"
     await hass.async_block_till_done()
+
+
+async def test_form_import(hass):
+    """Test we get the form with import source."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with mocked_upb(), patch(
+        "homeassistant.components.upb.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.upb.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"host": "tcp://42.4.2.42", "file_path": "upb.upe"},
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "UPB"
+
+    assert result["data"] == {"host": "tcp://42.4.2.42", "file_path": "upb.upe"}
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_junk_input(hass):
+    """Test we get the form with import source."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with mocked_upb():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"foo": "goo", "goo": "foo"},
+        )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "unknown"}
+
+    await hass.async_block_till_done()
