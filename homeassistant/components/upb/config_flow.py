@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_ADDRESS, CONF_FILE_PATH, CONF_HOST, CONF_PROTOCOL
 
-from .const import DOMAIN
+from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 PROTOCOL_MAP = {"TCP": "tcp://", "Serial port": "serial://"}
