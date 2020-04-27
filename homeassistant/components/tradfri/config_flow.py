@@ -1,6 +1,5 @@
 """Config flow for Tradfri."""
 import asyncio
-from collections import OrderedDict
 from uuid import uuid4
 
 import async_timeout
@@ -70,7 +69,7 @@ class FlowHandler(config_entries.ConfigFlow):
         else:
             user_input = {}
 
-        fields = OrderedDict()
+        fields = {}
 
         if self._host is None:
             fields[vol.Required(CONF_HOST, default=user_input.get(CONF_HOST))] = str
@@ -83,24 +82,27 @@ class FlowHandler(config_entries.ConfigFlow):
             step_id="auth", data_schema=vol.Schema(fields), errors=errors
         )
 
-    async def async_step_zeroconf(self, user_input):
-        """Handle zeroconf discovery."""
+    async def async_step_homekit(self, user_input):
+        """Handle homekit discovery."""
+        await self.async_set_unique_id(user_input["properties"]["id"])
+        self._abort_if_unique_id_configured({CONF_HOST: user_input["host"]})
+
         host = user_input["host"]
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["host"] = host
-
-        if any(host == flow["context"]["host"] for flow in self._async_in_progress()):
-            return self.async_abort(reason="already_in_progress")
-
         for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] == host:
-                return self.async_abort(reason="already_configured")
+            if entry.data[CONF_HOST] != host:
+                continue
+
+            # Backwards compat, we update old entries
+            if not entry.unique_id:
+                self.hass.config_entries.async_update_entry(
+                    entry, unique_id=user_input["properties"]["id"]
+                )
+
+            return self.async_abort(reason="already_configured")
 
         self._host = host
         return await self.async_step_auth()
-
-    async_step_homekit = async_step_zeroconf
 
     async def async_step_import(self, user_input):
         """Import a config entry."""

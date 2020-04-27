@@ -1,7 +1,7 @@
 """Support for devices connected to UniFi POE."""
 import logging
 
-from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -125,7 +125,7 @@ def add_entities(controller, async_add_entities, previously_known_poe_clients):
         async_add_entities(switches)
 
 
-class UniFiPOEClientSwitch(UniFiClient, SwitchDevice, RestoreEntity):
+class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
     """Representation of a client that uses POE."""
 
     DOMAIN = DOMAIN
@@ -220,7 +220,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchDevice, RestoreEntity):
             await self.async_remove()
 
 
-class UniFiBlockClientSwitch(UniFiClient, SwitchDevice):
+class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
     """Representation of a blockable client."""
 
     DOMAIN = DOMAIN

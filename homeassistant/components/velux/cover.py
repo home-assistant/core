@@ -47,6 +47,11 @@ class VeluxCover(CoverEntity):
         self.async_register_callbacks()
 
     @property
+    def unique_id(self):
+        """Return the unique ID of this cover."""
+        return self.node.serial_number
+
+    @property
     def name(self):
         """Return the name of the Velux device."""
         return self.node.name
