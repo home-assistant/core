@@ -2,7 +2,8 @@
 from datetime import timedelta
 import logging
 
-from tuyaha import TuyaApi, TuyaAPIException, TuyaNetException, TuyaServerException
+from tuyaha import TuyaApi
+from tuyaha.tuyaapi import TuyaAPIException, TuyaNetException, TuyaServerException
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
