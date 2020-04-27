@@ -2,6 +2,7 @@
 import asyncio
 
 import aiohttp
+from asynctest import patch
 import pytest
 
 from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE
@@ -89,6 +90,26 @@ async def test_get_clientsession_cleanup_without_ssl(hass):
 
     assert hass.data[client.DATA_CLIENTSESSION_NOTVERIFY].closed
     assert hass.data[client.DATA_CONNECTOR_NOTVERIFY].closed
+
+
+async def test_get_clientsession_patched_close(hass):
+    """Test closing clientsession does not work until Home Assistant closes."""
+    with patch("aiohttp.ClientSession.close") as mock_close:
+        session = client.async_get_clientsession(hass)
+
+        assert isinstance(hass.data[client.DATA_CLIENTSESSION], aiohttp.ClientSession)
+        assert isinstance(hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
+
+        await session.close()
+
+        assert mock_close.call_count == 0
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+        await hass.async_block_till_done()
+
+        await session.close()
+
+        assert mock_close.call_count == 1
 
 
 async def test_async_aiohttp_proxy_stream(aioclient_mock, camera_client):
