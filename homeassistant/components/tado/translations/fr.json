@@ -5,13 +5,13 @@
         },
         "error": {
             "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
-            "unknown": "Erreur inattendue"
+            "invalid_auth": "Authentification non valide"
         },
         "step": {
             "user": {
                 "data": {
-                    "latitude": "Latitude",
-                    "longitude": "Longitude"
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
                 }
             }
         }
