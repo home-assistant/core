@@ -5,7 +5,7 @@ from asynctest import MagicMock, patch
 from songpal import SongpalException
 
 from homeassistant.components import ssdp
-from homeassistant.components.songpal.const import CONF_ENDPOINT, CONF_MODEL, DOMAIN
+from homeassistant.components.songpal.const import CONF_ENDPOINT, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -19,13 +19,11 @@ UDN = "uuid:1234"
 FRIENDLY_NAME = "friendly name"
 HOST = "0.0.0.0"
 ENDPOINT = f"http://{HOST}:10000/sony"
-MODEL = "model name"
 
 SSDP_DATA = {
     ssdp.ATTR_UPNP_UDN: UDN,
     ssdp.ATTR_UPNP_FRIENDLY_NAME: FRIENDLY_NAME,
     ssdp.ATTR_SSDP_LOCATION: f"http://{HOST}:52323/dmr.xml",
-    ssdp.ATTR_UPNP_MODEL_NAME: MODEL,
     "X_ScalarWebAPI_DeviceInfo": {
         "X_ScalarWebAPI_BaseURL": ENDPOINT,
         "X_ScalarWebAPI_ServiceList": {
@@ -37,7 +35,6 @@ SSDP_DATA = {
 CONF_DATA = {
     CONF_NAME: FRIENDLY_NAME,
     CONF_ENDPOINT: ENDPOINT,
-    CONF_MODEL: None,
 }
 
 
@@ -93,9 +90,7 @@ async def test_flow_ssdp(hass):
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == FRIENDLY_NAME
-    conf_data = CONF_DATA.copy()
-    conf_data[CONF_MODEL] = MODEL
-    assert result["data"] == conf_data
+    assert result["data"] == CONF_DATA
 
 
 async def test_flow_user(hass):

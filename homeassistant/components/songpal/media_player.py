@@ -34,7 +34,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_ENDPOINT, CONF_MODEL, DOMAIN, SET_SOUND_SETTING
+from .const import CONF_ENDPOINT, DOMAIN, SET_SOUND_SETTING
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,13 +83,12 @@ async def async_setup_entry(
 
     name = config_entry.data[CONF_NAME]
     endpoint = config_entry.data[CONF_ENDPOINT]
-    model = config_entry.data.get(CONF_MODEL)
 
     if endpoint in hass.data[DOMAIN]:
         _LOGGER.debug("The endpoint exists already, skipping setup.")
         return
 
-    device = SongpalDevice(name, endpoint, model)
+    device = SongpalDevice(name, endpoint)
     try:
         await device.initialize()
     except SongpalException as ex:
@@ -125,14 +124,14 @@ async def async_setup_entry(
 class SongpalDevice(MediaPlayerEntity):
     """Class representing a Songpal device."""
 
-    def __init__(self, name, endpoint, model=None, poll=False):
+    def __init__(self, name, endpoint, poll=False):
         """Init."""
         self._name = name
         self._endpoint = endpoint
-        self._model = model
         self._poll = poll
         self.dev = Device(self._endpoint)
         self._sysinfo = None
+        self._model = None
 
         self._state = False
         self._available = False
@@ -156,6 +155,8 @@ class SongpalDevice(MediaPlayerEntity):
         """Initialize the device."""
         await self.dev.get_supported_methods()
         self._sysinfo = await self.dev.get_system_info()
+        interface_info = await self.dev.get_interface_information()
+        self._model = interface_info.modelName
 
     async def async_activate_websocket(self):
         """Activate websocket for listening if wanted."""

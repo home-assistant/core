@@ -3,4 +3,3 @@ DOMAIN = "songpal"
 SET_SOUND_SETTING = "set_sound_setting"
 
 CONF_ENDPOINT = "endpoint"
-CONF_MODEL = "model"

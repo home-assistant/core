@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_NAME
 
-from .const import CONF_ENDPOINT, CONF_MODEL, DOMAIN  # pylint: disable=unused-import
+from .const import CONF_ENDPOINT, DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,12 +21,11 @@ DEFAULT_NAME = "Songpal device"
 class SongpalConfig:
     """Device Configuration."""
 
-    def __init__(self, name, host, endpoint, model=None):
+    def __init__(self, name, host, endpoint):
         """Initialize Configuration."""
         self.name = name
         self.host = host
         self.endpoint = endpoint
-        self.model = model
 
 
 class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -95,11 +94,7 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=self.conf.name,
-            data={
-                CONF_NAME: self.conf.name,
-                CONF_ENDPOINT: self.conf.endpoint,
-                CONF_MODEL: self.conf.model,
-            },
+            data={CONF_NAME: self.conf.name, CONF_ENDPOINT: self.conf.endpoint},
         )
 
     async def async_step_ssdp(self, discovery_info):
@@ -111,7 +106,6 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
-        model = discovery_info[ssdp.ATTR_UPNP_MODEL_NAME]
         scalarweb_info = discovery_info["X_ScalarWebAPI_DeviceInfo"]
         endpoint = scalarweb_info["X_ScalarWebAPI_BaseURL"]
         service_types = scalarweb_info["X_ScalarWebAPI_ServiceList"][
@@ -128,7 +122,7 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_HOST: parsed_url.hostname,
         }
 
-        self.conf = SongpalConfig(friendly_name, parsed_url.hostname, endpoint, model)
+        self.conf = SongpalConfig(friendly_name, parsed_url.hostname, endpoint)
 
         return await self.async_step_init()
 
