@@ -36,8 +36,6 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle user step."""
-        _LOGGER.debug("Step User")
-
         return self.async_show_form(
             step_id="device_type",
             data_schema=vol.Schema(
@@ -53,8 +51,6 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_create_entry(self):
         """Create the entry step."""
-        _LOGGER.debug("Step Create Entry")
-
         if self._init_info.get(CONF_DEVICE_TYPE, None) is None:
             return self.async_abort("no_device")
 
@@ -79,9 +75,6 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_validate(self, user_input=None):
         """Validate config step."""
-
-        _LOGGER.debug("Step Validate")
-
         use_webhook = user_input.get(CONF_USE_WEBHOOK, False)
         auth_token = user_input.get(CONF_TOKEN, None)
         device_type = self._init_info[CONF_DEVICE_TYPE]
@@ -120,9 +113,6 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_device_type(self, user_input=None):
         """Handle device type step."""
-
-        _LOGGER.debug("Step Device Type")
-
         device_type = PlaatoDeviceType(user_input.get(CONF_DEVICE_TYPE))
         device_name = user_input.get(CONF_DEVICE_NAME)
 
