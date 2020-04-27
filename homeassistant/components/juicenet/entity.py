@@ -1,7 +1,8 @@
 """Adapter to wrap the pyjuicenet api for home assistant."""
 
-from homeassistant.components.juicenet.const import DOMAIN
 from homeassistant.helpers.entity import Entity
+
+from .const import DOMAIN
 
 
 class JuiceNetDevice(Entity):

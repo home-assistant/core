@@ -1,12 +1,6 @@
 """Support for monitoring juicenet/juicepoint/juicebox based EVSE sensors."""
 import logging
 
-from homeassistant.components.juicenet.const import (
-    DOMAIN,
-    JUICENET_API,
-    JUICENET_COORDINATOR,
-)
-from homeassistant.components.juicenet.entity import JuiceNetDevice
 from homeassistant.const import (
     ENERGY_WATT_HOUR,
     POWER_WATT,
@@ -15,6 +9,9 @@ from homeassistant.const import (
     VOLT,
 )
 from homeassistant.helpers.entity import Entity
+
+from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
+from .entity import JuiceNetDevice
 
 _LOGGER = logging.getLogger(__name__)
 

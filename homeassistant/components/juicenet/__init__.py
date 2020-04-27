@@ -7,12 +7,6 @@ import aiohttp
 from pyjuicenet import Api, TokenError
 import voluptuous as vol
 
-from homeassistant.components.juicenet.const import (
-    DOMAIN,
-    JUICENET_API,
-    JUICENET_COORDINATOR,
-)
-from homeassistant.components.juicenet.device import JuiceNetApi
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
@@ -20,6 +14,9 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
+from .device import JuiceNetApi
 
 _LOGGER = logging.getLogger(__name__)
 
