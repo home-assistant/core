@@ -2062,7 +2062,7 @@ tp-connected==0.0.4
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuyaha==0.0.5
+tuyaha==0.0.6
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0
