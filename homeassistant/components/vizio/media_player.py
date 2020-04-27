@@ -207,7 +207,10 @@ class VizioDevice(MediaPlayerEntity):
         )
         if audio_settings is not None:
             self._volume_level = float(audio_settings["volume"]) / self._max_volume
-            self._is_muted = audio_settings["mute"].lower() == "on"
+            if "mute" in audio_settings:
+                self._is_muted = audio_settings["mute"].lower() == "on"
+            else:
+                self._is_muted = None
 
             if VIZIO_SOUND_MODE in audio_settings:
                 self._supported_commands |= SUPPORT_SELECT_SOUND_MODE
