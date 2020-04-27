@@ -121,7 +121,16 @@ stages:
               . venv/bin/activate
               pre-commit run black --all-files --show-diff-on-failure
             displayName: "Check Black formatting"
-
+      - job: "ValidateDockerfiles"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - task: Docker@2
+            displayName: Build Dockerfile.dev
+            inputs:
+              repository: homeassistant-dev
+              command: build
+              Dockerfile: Dockerfile.dev
   - stage: "Tests"
     dependsOn:
       - "Overview"
