@@ -173,9 +173,7 @@ async def test_discovery_initiation(hass, mock_client):
     assert result["step_id"] == "discovery_confirm"
     assert result["description_placeholders"]["name"] == "test8266"
 
-    result = await hass.config_entries.flow.async_configure(
-        flow["flow_id"], {}
-    )
+    result = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "test8266"
