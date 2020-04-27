@@ -144,5 +144,6 @@ FLOWS = [
     "wwlln",
     "xiaomi_miio",
     "zha",
-    "zwave"
+    "zwave",
+    "zwave_mqtt"
 ]
