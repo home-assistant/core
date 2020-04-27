@@ -215,7 +215,10 @@ class RachioRainDelay(RachioSwitch):
         if data is None:
             data = self._controller.rachio.device.get(self._controller.controller_id)[1]
 
-        return data[KEY_RAIN_DELAY] / 1000 > time.time()
+        try:
+            return data[KEY_RAIN_DELAY] / 1000 > time.time()
+        except KeyError:
+            return False
 
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
