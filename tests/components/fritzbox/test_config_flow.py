@@ -159,7 +159,7 @@ async def test_ssdp_not_successful(hass: HomeAssistantType, fritz: Mock):
     assert result["reason"] == "not_found"
 
 
-async def test_ssdp_already_in_progress(hass: HomeAssistantType, fritz: Mock):
+async def test_ssdp_already_in_progress_unique_id(hass: HomeAssistantType, fritz: Mock):
     """Test starting a flow from discovery twice."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
@@ -169,6 +169,23 @@ async def test_ssdp_already_in_progress(hass: HomeAssistantType, fritz: Mock):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_in_progress"
+
+
+async def test_ssdp_already_in_progress_host(hass: HomeAssistantType, fritz: Mock):
+    """Test starting a flow from discovery twice."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "confirm"
+
+    MOCK_NO_UNIQUE_ID = MOCK_SSDP_DATA.copy()
+    del MOCK_NO_UNIQUE_ID[ATTR_UPNP_UDN]
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "ssdp"}, data=MOCK_NO_UNIQUE_ID
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_in_progress"
