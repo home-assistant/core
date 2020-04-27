@@ -134,8 +134,7 @@ class DevoloSwitch(SwitchDevice):
         elif message[0].startswith("hdm"):
             self._available = self._device_instance.is_online()
         else:
-            _LOGGER.debug("No valid message received")
-            _LOGGER.debug(message)
+            _LOGGER.debug("No valid message received: %s", message)
         self.schedule_update_ha_state()
 
 
