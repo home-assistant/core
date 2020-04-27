@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "auth_failed": "Le nom d'utilisateur et / ou le mot de passe sont incorrects."
+        },
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Voulez-vous configurer {name} ?"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te ou adresse IP",
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    }
+}

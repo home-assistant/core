@@ -1,9 +1,8 @@
 """Test the config manager."""
 import asyncio
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
 
-from asynctest import CoroutineMock
+from asynctest import CoroutineMock, MagicMock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, loader
@@ -935,8 +934,7 @@ async def test_init_custom_integration(hass):
     )
     with pytest.raises(data_entry_flow.UnknownHandler):
         with patch(
-            "homeassistant.loader.async_get_integration",
-            return_value=mock_coro(integration),
+            "homeassistant.loader.async_get_integration", return_value=integration,
         ):
             await hass.config_entries.flow.async_init("bla")
 

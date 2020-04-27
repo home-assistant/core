@@ -2,7 +2,17 @@
 import asyncio
 from functools import partial, wraps
 import logging
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+)
 
 import voluptuous as vol
 
@@ -24,11 +34,14 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, TemplateVarsType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity import Entity  # noqa
+
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -143,10 +156,10 @@ def extract_entity_ids(
 @bind_hass
 async def async_extract_entities(
     hass: HomeAssistantType,
-    entities: Iterable[Entity],
+    entities: Iterable["Entity"],
     service_call: ha.ServiceCall,
     expand_group: bool = True,
-) -> List[Entity]:
+) -> List["Entity"]:
     """Extract a list of entity objects from a service call.
 
     Will convert group entity ids to the entity ids it represents.

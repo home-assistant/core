@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebse Printer ass scho konfigur\u00e9iert.",
+            "connection_error": "Feeler beim verbannen mam Printer.",
+            "connection_upgrade": "Feeler beim verbannen mam Printer well eng Aktualis\u00e9ierung vun der Verbindung erfuerderlech ass.",
+            "ipp_error": "IPP Feeler opgetrueden.",
+            "ipp_version_error": "IPP Versioun net vum Printer \u00ebnnerst\u00ebtzt.",
+            "parse_error": "Feeler beim ausliesen vun der \u00c4ntwert vum Printer."
+        },
+        "error": {
+            "connection_error": "Feeler beim verbannen mam Printer.",
+            "connection_upgrade": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol mat aktiv\u00e9ierter SSL/TLS Optioun."
+        },
+        "flow_title": "Printer: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "base_path": "Relative Pad zum Printer",
+                    "host": "Numm oder IP Adresse",
+                    "port": "Port",
+                    "ssl": "Printer \u00ebnnerst\u00ebtze Kommunikatioun iwwer SSL/TLS",
+                    "verify_ssl": "Printer benotzt ee g\u00ebltegen SSL Zertifikat"
+                },
+                "description": "Konfigur\u00e9ier d\u00e4in Printer mat Internet Printing Protocol (IPP) fir en am Home Assistant z'int\u00e9gr\u00e9ieren.",
+                "title": "\u00c4re Printer verbannen"
+            },
+            "zeroconf_confirm": {
+                "description": "W\u00ebllt dir de Printer mam Numm `{name}` am Home Assistant dob\u00e4isetzen?",
+                "title": "Entdeckte Printer"
+            }
+        }
+    }
+}

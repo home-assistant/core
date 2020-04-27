@@ -1,7 +1,7 @@
-FROM python:3.7
+FROM python:3.8
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+RUN \
+    apt-get update && apt-get install -y --no-install-recommends \
         libudev-dev \
         libavformat-dev \
         libavcodec-dev \
@@ -18,8 +18,7 @@ WORKDIR /usr/src
 
 # Setup hass-release
 RUN git clone --depth 1 https://github.com/home-assistant/hass-release \
-    && cd hass-release \
-    && pip3 install -e .
+    && pip3 install -e hass-release/
 
 WORKDIR /workspaces
 

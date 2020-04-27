@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "parse_error": "Nie mo\u017cna przeanalizowa\u0107 odpowiedzi z drukarki."
+        }
+    }
+}

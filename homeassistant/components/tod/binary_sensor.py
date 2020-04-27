@@ -5,7 +5,7 @@ import logging
 import pytz
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import (
     CONF_AFTER,
     CONF_BEFORE,
@@ -60,7 +60,7 @@ def is_sun_event(event):
     return event in (SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 
 
-class TodSensor(BinarySensorDevice):
+class TodSensor(BinarySensorEntity):
     """Time of the Day Sensor."""
 
     def __init__(self, name, after, after_offset, before, before_offset):

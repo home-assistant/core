@@ -16,7 +16,7 @@ from androidtv.constants import APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -373,7 +373,7 @@ def adb_decorator(override_available=False):
     return _adb_decorator
 
 
-class ADBDevice(MediaPlayerDevice):
+class ADBDevice(MediaPlayerEntity):
     """Representation of an Android TV or Fire TV device."""
 
     def __init__(

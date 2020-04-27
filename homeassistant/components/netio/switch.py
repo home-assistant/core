@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -125,7 +125,7 @@ class NetioApiView(HomeAssistantView):
         return self.json(True)
 
 
-class NetioSwitch(SwitchDevice):
+class NetioSwitch(SwitchEntity):
     """Provide a Netio linked switch."""
 
     def __init__(self, netio, outlet, name):

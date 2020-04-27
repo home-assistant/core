@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class HydrawiseSwitch(HydrawiseEntity, SwitchDevice):
+class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
     """A switch implementation for Hydrawise device."""
 
     def __init__(self, default_watering_timer, *args):

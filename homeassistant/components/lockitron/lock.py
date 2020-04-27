@@ -4,7 +4,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.lock import PLATFORM_SCHEMA, LockDevice
+from homeassistant.components.lock import PLATFORM_SCHEMA, LockEntity
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ID, HTTP_OK
 import homeassistant.helpers.config_validation as cv
 
@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Error retrieving lock status during init: %s", response.text)
 
 
-class Lockitron(LockDevice):
+class Lockitron(LockEntity):
     """Representation of a Lockitron lock."""
 
     LOCK_STATE = "lock"

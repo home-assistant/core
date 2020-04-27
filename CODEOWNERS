@@ -35,6 +35,7 @@ homeassistant/components/arduino/* @fabaff
 homeassistant/components/arest/* @fabaff
 homeassistant/components/arris_tg2492lg/* @vanbalken
 homeassistant/components/asuswrt/* @kennedyshead
+homeassistant/components/atag/* @MatsNL
 homeassistant/components/aten_pe/* @mtdcr
 homeassistant/components/atome/* @baqs
 homeassistant/components/august/* @bdraco
@@ -193,6 +194,7 @@ homeassistant/components/ipma/* @dgomes @abmantis
 homeassistant/components/ipp/* @ctalkington
 homeassistant/components/iqvia/* @bachya
 homeassistant/components/irish_rail_transport/* @ttroy50
+homeassistant/components/islamic_prayer_times/* @engrbm87
 homeassistant/components/izone/* @Swamp-Ig
 homeassistant/components/jewish_calendar/* @tsvi
 homeassistant/components/juicenet/* @jesserockz
@@ -361,6 +363,7 @@ homeassistant/components/speedtestdotnet/* @rohankapoorcom
 homeassistant/components/spider/* @peternijssen
 homeassistant/components/spotify/* @frenck
 homeassistant/components/sql/* @dgomes
+homeassistant/components/squeezebox/* @rajlaud
 homeassistant/components/starline/* @anonym-tsk
 homeassistant/components/statistics/* @fabaff
 homeassistant/components/stiebel_eltron/* @fucm

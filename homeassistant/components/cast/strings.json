@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "confirm": {
-        "title": "Google Cast",
         "description": "Do you want to set up Google Cast?"
       }
     },

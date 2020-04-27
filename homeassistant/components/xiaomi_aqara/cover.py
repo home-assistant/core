@@ -1,7 +1,7 @@
 """Support for Xiaomi curtain."""
 import logging
 
-from homeassistant.components.cover import ATTR_POSITION, CoverDevice
+from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 
 from . import PY_XIAOMI_GATEWAY, XiaomiDevice
 
@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class XiaomiGenericCover(XiaomiDevice, CoverDevice):
+class XiaomiGenericCover(XiaomiDevice, CoverEntity):
     """Representation of a XiaomiGenericCover."""
 
     def __init__(self, device, name, data_key, xiaomi_hub):

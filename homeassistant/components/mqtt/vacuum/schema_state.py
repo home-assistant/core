@@ -34,7 +34,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_START,
     SUPPORT_STATUS,
     SUPPORT_STOP,
-    StateVacuumDevice,
+    StateVacuumEntity,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_DEVICE, CONF_NAME
 from homeassistant.core import callback
@@ -162,7 +162,7 @@ class MqttStateVacuum(
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
-    StateVacuumDevice,
+    StateVacuumEntity,
 ):
     """Representation of a MQTT-controlled state vacuum."""
 

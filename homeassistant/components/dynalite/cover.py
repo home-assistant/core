@@ -1,7 +1,7 @@
 """Support for the Dynalite channels as covers."""
 from typing import Callable
 
-from homeassistant.components.cover import DEVICE_CLASSES, CoverDevice
+from homeassistant.components.cover import DEVICE_CLASSES, CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
@@ -25,7 +25,7 @@ async def async_setup_entry(
     )
 
 
-class DynaliteCover(DynaliteBase, CoverDevice):
+class DynaliteCover(DynaliteBase, CoverEntity):
     """Representation of a Dynalite Channel as a Home Assistant Cover."""
 
     @property

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "step": {
+            "ups": {
+                "data": {
+                    "resources": "Recursos"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Servidor",
+                    "password": "Palavra-passe",
+                    "port": "Porta",
+                    "username": "Utilizador"
+                }
+            }
+        }
+    }
+}

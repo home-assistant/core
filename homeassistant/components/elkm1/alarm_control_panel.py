@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.alarm_control_panel import (
     ATTR_CHANGED_BY,
     FORMAT_NUMBER,
-    AlarmControlPanel,
+    AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -109,7 +109,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class ElkArea(ElkAttachedEntity, AlarmControlPanel, RestoreEntity):
+class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
     """Representation of an Area / Partition within the ElkM1 alarm panel."""
 
     def __init__(self, element, elk, elk_data):

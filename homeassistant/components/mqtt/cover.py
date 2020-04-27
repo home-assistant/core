@@ -16,7 +16,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.const import (
     CONF_DEVICE,
@@ -205,7 +205,7 @@ class MqttCover(
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
-    CoverDevice,
+    CoverEntity,
 ):
     """Representation of a cover that can be controlled using MQTT."""
 

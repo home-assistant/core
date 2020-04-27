@@ -57,7 +57,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             simplisafe = await API.login_via_credentials(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD], websession
+                user_input[CONF_USERNAME], user_input[CONF_PASSWORD], session=websession
             )
         except SimplipyError:
             return await self._show_form(errors={"base": "invalid_credentials"})

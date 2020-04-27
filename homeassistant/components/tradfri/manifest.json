@@ -7,6 +7,5 @@
   "homekit": {
     "models": ["TRADFRI"]
   },
-  "zeroconf": ["_coap._udp.local."],
   "codeowners": ["@ggravlingen"]
 }

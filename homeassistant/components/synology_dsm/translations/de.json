@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Host bereits konfiguriert"
+        },
+        "error": {
+            "connection": "Verbindungsfehler: Bitte \u00fcberpr\u00fcfe Host, Port und SSL",
+            "login": "Login-Fehler: Bitte \u00fcberpr\u00fcfen Sie Ihren Benutzernamen & Passwort",
+            "missing_data": "Fehlende Daten: Bitte versuchen Sie es sp\u00e4ter noch einmal oder eine andere Konfiguration",
+            "otp_failed": "Die zweistufige Authentifizierung ist fehlgeschlagen. Versuchen Sie es erneut mit einem neuen Code",
+            "unknown": "Unbekannter Fehler: Bitte \u00fcberpr\u00fcfen Sie die Protokolle, um weitere Details zu erhalten"
+        },
+        "flow_title": "Synology DSM {name} ({host})",
+        "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Code"
+                },
+                "title": "Synology DSM: zweistufige Authentifizierung"
+            },
+            "link": {
+                "data": {
+                    "api_version": "DSM-Version",
+                    "password": "Passwort",
+                    "port": "Port (optional)",
+                    "ssl": "Verwenden Sie SSL/TLS, um eine Verbindung zu Ihrem NAS herzustellen",
+                    "username": "Benutzername"
+                },
+                "description": "M\u00f6chten Sie {name} ({host}) einrichten?",
+                "title": "Synology DSM"
+            },
+            "user": {
+                "data": {
+                    "api_version": "DSM-Version",
+                    "host": "Host",
+                    "password": "Passwort",
+                    "port": "Port (optional)",
+                    "ssl": "Verwenden Sie SSL/TLS, um eine Verbindung zu Ihrem NAS herzustellen",
+                    "username": "Benutzername"
+                },
+                "title": "Synology DSM"
+            }
+        }
+    }
+}

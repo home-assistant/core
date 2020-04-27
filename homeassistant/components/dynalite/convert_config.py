@@ -34,9 +34,9 @@ from .const import (
 
 CONF_MAP = {
     CONF_ACTIVE: dyn_const.CONF_ACTIVE,
-    ACTIVE_INIT: dyn_const.CONF_ACTIVE_INIT,
-    ACTIVE_OFF: dyn_const.CONF_ACTIVE_OFF,
-    ACTIVE_ON: dyn_const.CONF_ACTIVE_ON,
+    ACTIVE_INIT: dyn_const.ACTIVE_INIT,
+    ACTIVE_OFF: dyn_const.ACTIVE_OFF,
+    ACTIVE_ON: dyn_const.ACTIVE_ON,
     CONF_AREA: dyn_const.CONF_AREA,
     CONF_AUTO_DISCOVER: dyn_const.CONF_AUTO_DISCOVER,
     CONF_CHANNEL: dyn_const.CONF_CHANNEL,

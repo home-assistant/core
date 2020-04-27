@@ -7,7 +7,7 @@ from aiohomekit.model.characteristics import (
     IsConfiguredValues,
 )
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
@@ -21,7 +21,7 @@ ATTR_IS_CONFIGURED = "is_configured"
 ATTR_REMAINING_DURATION = "remaining_duration"
 
 
-class HomeKitSwitch(HomeKitEntity, SwitchDevice):
+class HomeKitSwitch(HomeKitEntity, SwitchEntity):
     """Representation of a Homekit switch."""
 
     def get_characteristic_types(self):
@@ -49,7 +49,7 @@ class HomeKitSwitch(HomeKitEntity, SwitchDevice):
             return {OUTLET_IN_USE: outlet_in_use}
 
 
-class HomeKitValve(HomeKitEntity, SwitchDevice):
+class HomeKitValve(HomeKitEntity, SwitchEntity):
     """Represents a valve in an irrigation system."""
 
     def get_characteristic_types(self):
