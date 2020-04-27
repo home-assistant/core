@@ -235,14 +235,6 @@ class GroupProbe:
     ) -> List[str]:
         """Determine the entity domains for this group."""
         entity_domains: List[str] = []
-        if len(group.members) < 2:
-            _LOGGER.debug(
-                "Group: %s:0x%04x has less than 2 members so cannot default an entity domain",
-                group.name,
-                group.group_id,
-            )
-            return entity_domains
-
         zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
         all_domain_occurrences = []
         for member in group.members:
