@@ -5,9 +5,22 @@
         "title": "Connect to Jenkins.",
         "description": "Get information about builds from jobs on Jenkins.",
         "data": {
-          "url": "URL",
-          "repository": "Repository",
-          "branch": "Branch"
+          "url": "URL"
+        }
+      },
+      "userLogin": {
+        "title": "Login.",
+        "description": "Use your login credentials.",
+        "data": {
+          "username": "username",
+          "password": "token"
+        }
+      },
+      "job": {
+        "title": "Select the job you like to monitor.",
+        "data": {
+          "repository": "username",
+          "job": "token"
         }
       }
     }
