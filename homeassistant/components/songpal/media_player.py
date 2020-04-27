@@ -31,7 +31,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_ENDPOINT, CONF_MODEL, DOMAIN, SET_SOUND_SETTING
@@ -231,6 +231,7 @@ class SongpalDevice(MediaPlayerEntity):
     def device_info(self):
         """Return the device info."""
         return {
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self._sysinfo.macAddr)},
             "identifiers": {(DOMAIN, self.unique_id)},
             "manufacturer": "Sony Corporation",
             "name": self.name,
