@@ -11,18 +11,15 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (  # pylint:disable=unused-import
-    CONF_DEFAULT_VOLUME,
     CONF_PIPE_CONTROL,
     CONF_PIPE_CONTROL_PORT,
     CONF_TTS_PAUSE_TIME,
     CONF_TTS_VOLUME,
     CONFIG_FLOW_UNIQUE_ID,
-    DEFAULT_NAME,
     DEFAULT_PIPE_CONTROL_PORT,
     DEFAULT_PORT,
     DEFAULT_TTS_PAUSE_TIME,
     DEFAULT_TTS_VOLUME,
-    DEFAULT_VOLUME,
     DOMAIN,
     FD_NAME,
 )
@@ -35,8 +32,13 @@ DATA_SCHEMA_DICT = {
     vol.Required(CONF_HOST): str,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
     vol.Optional(CONF_PASSWORD, default=""): str,
-    vol.Optional(CONF_DEFAULT_VOLUME, default=DEFAULT_VOLUME): float,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+}
+
+ERROR_LOOKUP_DICT = {
+    "websocket_not_enabled": "websocket_not_enabled",
+    "wrong_host_or_port": "wrong_host_or_port",
+    "wrong_password": "wrong_password",
+    "wrong_server_type": "wrong_server_type",
 }
 
 
@@ -119,7 +121,7 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             websession=websession,
             host=user_input[CONF_HOST],
             port=user_input[CONF_PORT],
-            password=user_input.get(CONF_PASSWORD),
+            password=user_input[CONF_PASSWORD],
         )
 
     async def async_step_user(self, user_input=None):
@@ -130,10 +132,11 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             validate_result = await self.validate_input(user_input)
             if validate_result == "ok":  # success
-                _LOGGER.debug("Connected successfully. Creating entry.")
+                _LOGGER.debug("Connected successfully. Creating entry")
                 return self.async_create_entry(
                     title=f"{FD_NAME} server", data=user_input
                 )
+            validate_result = ERROR_LOOKUP_DICT.get(validate_result, "unknown_error")
             return self.async_show_form(
                 step_id="user",
                 data_schema=vol.Schema(fill_in_schema_dict(user_input)),

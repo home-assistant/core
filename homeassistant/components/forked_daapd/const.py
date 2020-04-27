@@ -17,28 +17,28 @@ from homeassistant.components.media_player.const import (
 
 DOMAIN = "forked_daapd"  # key for hass.data
 DEFAULT_PORT = 3689
-CONF_DEFAULT_VOLUME = "default_volume"
 CONF_TTS_PAUSE_TIME = "tts_pause_time"
 CONF_TTS_VOLUME = "tts_volume"
 CONF_PIPE_CONTROL = "pipe_control"
 CONF_PIPE_CONTROL_PORT = "pipe_control_port"
 FD_NAME = "forked-daapd"
 DEFAULT_PIPE_CONTROL_PORT = 24879
-DEFAULT_VOLUME = 0.6
+DEFAULT_SERVER_NAME = "My Server"
 DEFAULT_TTS_PAUSE_TIME = 1.2
 DEFAULT_TTS_VOLUME = 0.8
-DEFAULT_NAME = "My Server"
 SERVER_UNIQUE_ID = "server"
+DEFAULT_UNMUTE_VOLUME = 0.6
 CONFIG_FLOW_UNIQUE_ID = "forked-daapd"
 TTS_TIMEOUT = 20
-HASS_DATA_REMOVE_ENTRY_LISTENER_KEY = "REMOVE_ENTRY_LISTENER"
-HASS_DATA_MASTER_KEY = "MASTER"
+HASS_DATA_REMOVE_LISTENERS_KEY = "REMOVE_LISTENERS"
 HASS_DATA_OUTPUTS_KEY = "OUTPUTS"
+HASS_DATA_UPDATER_KEY = "UPDATER"
 SIGNAL_ADD_ZONES = "forked-daapd_add_zones"
 SIGNAL_UPDATE_MASTER = "forked-daapd_update_master"
 SIGNAL_UPDATE_OUTPUTS = "forked-daapd_update_outputs"
 SIGNAL_UPDATE_PLAYER = "forked-daapd_update_player"
 SIGNAL_UPDATE_QUEUE = "forked-daapd_update_queue"
+SIGNAL_CONFIG_OPTIONS_UPDATE = "forked-daapd_config_options_update"
 STARTUP_DATA = {
     "player": {
         "state": "stop",

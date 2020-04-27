@@ -8,8 +8,7 @@
           "name": "Friendly name",
           "host": "Host",
           "port": "API port",
-          "password": "API password (leave blank if no password)",
-          "default_volume": "Default volume (only used when unmuting - float in range [0,1])"
+          "password": "API password (leave blank if no password)"
         }
       }
     },

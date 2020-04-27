@@ -1,7 +1,7 @@
 """The forked_daapd component."""
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 
-from .const import DOMAIN, HASS_DATA_REMOVE_ENTRY_LISTENER_KEY
+from .const import DOMAIN, HASS_DATA_REMOVE_LISTENERS_KEY, HASS_DATA_UPDATER_KEY
 
 
 async def async_setup(hass, config):
@@ -21,6 +21,9 @@ async def async_unload_entry(hass, entry):
     """Remove forked-daapd component."""
     status = await hass.config_entries.async_forward_entry_unload(entry, MP_DOMAIN)
     if status and hass.data.get(DOMAIN):
-        hass.data[DOMAIN][HASS_DATA_REMOVE_ENTRY_LISTENER_KEY]()
+        hass.data[DOMAIN][HASS_DATA_UPDATER_KEY].websocket_handler.cancel()
+        for remove_listener in hass.data[DOMAIN][HASS_DATA_REMOVE_LISTENERS_KEY]:
+            remove_listener()
+        await hass.data[DOMAIN][HASS_DATA_UPDATER_KEY].websocket_handler
         del hass.data[DOMAIN]
     return status

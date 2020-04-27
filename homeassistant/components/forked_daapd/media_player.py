@@ -10,7 +10,6 @@ from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     STATE_IDLE,
@@ -28,20 +27,21 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.util.dt import utcnow
 
 from .const import (
-    CONF_DEFAULT_VOLUME,
     CONF_PIPE_CONTROL,
     CONF_PIPE_CONTROL_PORT,
     CONF_TTS_PAUSE_TIME,
     CONF_TTS_VOLUME,
     DEFAULT_TTS_PAUSE_TIME,
     DEFAULT_TTS_VOLUME,
+    DEFAULT_UNMUTE_VOLUME,
     DOMAIN,
     FD_NAME,
-    HASS_DATA_MASTER_KEY,
     HASS_DATA_OUTPUTS_KEY,
-    HASS_DATA_REMOVE_ENTRY_LISTENER_KEY,
+    HASS_DATA_REMOVE_LISTENERS_KEY,
+    HASS_DATA_UPDATER_KEY,
     SERVER_UNIQUE_ID,
     SIGNAL_ADD_ZONES,
+    SIGNAL_CONFIG_OPTIONS_UPDATE,
     SIGNAL_UPDATE_MASTER,
     SIGNAL_UPDATE_OUTPUTS,
     SIGNAL_UPDATE_PLAYER,
@@ -60,55 +60,61 @@ WEBSOCKET_RECONNECT_TIME = 30  # seconds
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up forked-daapd from a config entry."""
-    name = config_entry.data.get(CONF_NAME)
-    host = config_entry.data.get(CONF_HOST)
-    port = config_entry.data.get(CONF_PORT)
-    password = config_entry.data.get(CONF_PASSWORD)
-    default_volume = config_entry.data.get(CONF_DEFAULT_VOLUME)
+    host = config_entry.data[CONF_HOST]
+    port = config_entry.data[CONF_PORT]
+    password = config_entry.data[CONF_PASSWORD]
+    forked_daapd_api = ForkedDaapdAPI(
+        async_get_clientsession(hass), host, port, password
+    )
     forked_daapd_master = ForkedDaapdMaster(
         clientsession=async_get_clientsession(hass),
-        name=name,
+        api=forked_daapd_api,
         ip_address=host,
         api_port=port,
         api_password=password,
-        default_volume=default_volume,
+        config_entry=config_entry,
     )
 
     @callback
     def async_add_zones(api, outputs):
         zone_entities = []
         for output in outputs:
-            zone_entities.append(ForkedDaapdZone(api, output, default_volume))
+            zone_entities.append(ForkedDaapdZone(api, output))
         async_add_entities(zone_entities, False)
 
-    forked_daapd_master.async_on_remove(
-        async_dispatcher_connect(hass, SIGNAL_ADD_ZONES, async_add_zones)
+    remove_add_zones_listener = async_dispatcher_connect(
+        hass, SIGNAL_ADD_ZONES, async_add_zones
     )
-    forked_daapd_master.update_options(config_entry.options)  # configure options
     remove_entry_listener = config_entry.add_update_listener(update_listener)
+
     hass.data[DOMAIN] = {
-        HASS_DATA_MASTER_KEY: forked_daapd_master,
-        HASS_DATA_REMOVE_ENTRY_LISTENER_KEY: remove_entry_listener,
+        HASS_DATA_REMOVE_LISTENERS_KEY: [
+            remove_add_zones_listener,
+            remove_entry_listener,
+        ],
         HASS_DATA_OUTPUTS_KEY: [],
     }
     async_add_entities([forked_daapd_master], False)
+    forked_daapd_updater = ForkedDaapdUpdater(hass, forked_daapd_api)
+    await forked_daapd_updater.async_init()
+    hass.data[DOMAIN][HASS_DATA_UPDATER_KEY] = forked_daapd_updater
 
 
 async def update_listener(hass, entry):
     """Handle options update."""
-    hass.data[DOMAIN][HASS_DATA_MASTER_KEY].update_options(entry.options)
+    async_dispatcher_send(hass, SIGNAL_CONFIG_OPTIONS_UPDATE, entry.options)
 
 
 class ForkedDaapdZone(MediaPlayerDevice):
     """Representation of a forked-daapd output."""
 
-    def __init__(self, api, output, default_volume):
+    def __init__(self, api, output):
         """Initialize the ForkedDaapd Zone."""
         self._api = api
         self._output = output
         self._output_id = output["id"]
-        self._last_volume = default_volume  # used for mute/unmute
-        self._available = True
+        self._last_volume = DEFAULT_UNMUTE_VOLUME  # used for mute/unmute
+        self._available = False
 
     async def async_added_to_hass(self):
         """Use lifecycle hooks."""
@@ -117,12 +123,6 @@ class ForkedDaapdZone(MediaPlayerDevice):
                 self.hass, SIGNAL_UPDATE_OUTPUTS, self._async_update_output_callback
             )
         )
-        self.hass.data[DOMAIN][HASS_DATA_OUTPUTS_KEY].append(self)
-
-    async def async_will_remove_from_hass(self):
-        """Use lifecycle hook."""
-        if self.hass.data.get(DOMAIN):  # if master is already deleted then this is gone
-            self.hass.data[DOMAIN][HASS_DATA_OUTPUTS_KEY].remove(self)
 
     @callback
     def _async_update_output_callback(self, outputs):
@@ -132,7 +132,7 @@ class ForkedDaapdZone(MediaPlayerDevice):
         self._available = bool(new_output)
         if self._available:
             self._output = new_output
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def unique_id(self):
@@ -211,35 +211,35 @@ class ForkedDaapdMaster(MediaPlayerDevice):
     """Representation of the main forked-daapd device."""
 
     def __init__(
-        self, clientsession, name, ip_address, api_port, api_password, default_volume
+        self, clientsession, api, ip_address, api_port, api_password, config_entry
     ):
         """Initialize the ForkedDaapd Master Device."""
-        self._api = ForkedDaapdAPI(clientsession, ip_address, api_port, api_password)
+        self._api = api
         self._player = STARTUP_DATA[
             "player"
         ]  # _player, _outputs, and _queue are loaded straight from api
         self._outputs = STARTUP_DATA["outputs"]
         self._queue = STARTUP_DATA["queue"]
-        self._updater = None  # _updater is instance of a helper class which takes care of data and entity updates
         self._track_info = defaultdict(
             str
         )  # _track info is found by matching _player data with _queue data
         self._last_outputs = None  # used for device on/off
-        self._default_volume = default_volume  # used for mute/unmute
-        self._last_volume = None
+        self._last_volume = DEFAULT_UNMUTE_VOLUME
         self._player_last_updated = None
         self._pipe_control_api = None
-        self._name = name
-        self._ip_address = ip_address
-        self._api_port = api_port
-        self._api_password = api_password
+        self._ip_address = (
+            ip_address  # need to save this because pipe control is on same ip
+        )
         self._tts_pause_time = DEFAULT_TTS_PAUSE_TIME
         self._tts_volume = DEFAULT_TTS_VOLUME
         self._tts_requested = False
         self._tts_queued = False
         self._tts_playing_event = asyncio.Event()
         self._on_remove = None
+        self._available = False
         self._clientsession = clientsession
+        self._config_entry = config_entry
+        self.update_options(config_entry.options)
 
     async def async_added_to_hass(self):
         """Use lifecycle hooks."""
@@ -261,19 +261,17 @@ class ForkedDaapdMaster(MediaPlayerDevice):
                 self.hass, SIGNAL_UPDATE_MASTER, self._update_callback
             )
         )
-        self._updater = ForkedDaapdUpdater(self.hass, self._api)
-        await self._updater.async_init()
-
-    async def async_will_remove_from_hass(self):
-        """Use lifecycle hook."""
-        if self._updater.websocket_handler:
-            self._updater.websocket_handler.cancel()
-            await self._updater.websocket_handler
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_CONFIG_OPTIONS_UPDATE, self.update_options
+            )
+        )
 
     @callback
-    def _update_callback(self):
+    def _update_callback(self, available):
         """Call update method."""
-        self.async_schedule_update_ha_state()
+        self._available = available
+        self.async_write_ha_state()
 
     @callback
     def update_options(self, options):
@@ -335,6 +333,11 @@ class ForkedDaapdMaster(MediaPlayerDevice):
         """Entity pushes its state to HA."""
         return False
 
+    @property
+    def available(self) -> bool:
+        """Return whether the master is available."""
+        return self._available
+
     async def async_turn_on(self):
         """Restore the last on outputs state."""
         # restore state
@@ -378,14 +381,14 @@ class ForkedDaapdMaster(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return f"{FD_NAME} server ({self._name})"
+        return f"{FD_NAME} server"
 
     @property
     def state(self):
         """State of the player."""
         if self._player["state"] == "play":
             return STATE_PLAYING
-        if all([output["selected"] is False for output in self._outputs]):
+        if not any([output["selected"] for output in self._outputs]):
             return STATE_OFF  # off is any state when it's not playing and all outputs are disabled
         if self._player["state"] == "pause":
             return STATE_PAUSED
@@ -470,9 +473,7 @@ class ForkedDaapdMaster(MediaPlayerDevice):
             self._last_volume = self.volume_level  # store volume level to restore later
             target_volume = 0
         else:
-            target_volume = (
-                self._last_volume if self._last_volume else self._default_volume
-            )  # restore volume level
+            target_volume = self._last_volume  # restore volume level
         await self._api.set_volume(volume=target_volume * 100)
 
     async def async_set_volume_level(self, volume):
@@ -526,10 +527,9 @@ class ForkedDaapdMaster(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        creds = f"admin:{self._api_password}@" if self._api_password else ""
         url = self._track_info.get("artwork_url")
         if url:
-            url = f"http://{creds}{self._ip_address}:{self._api_port}{url}"
+            url = self._api.full_url(url)
         return url
 
     async def _set_tts_volumes(self):
@@ -614,7 +614,6 @@ class ForkedDaapdUpdater:
 
     async def async_init(self):
         """Perform async portion of class initialization."""
-        # Load in player and outputs before first HA state update
         server_config = await self._api.get_request("config")
         websocket_port = server_config.get("websocket_port")
         if websocket_port:
@@ -624,10 +623,15 @@ class ForkedDaapdUpdater:
                     WS_NOTIFY_EVENT_TYPES,
                     self._update,
                     WEBSOCKET_RECONNECT_TIME,
+                    self._disconnected_callback,
                 )
             )
         else:
             _LOGGER.error("Invalid websocket port.")
+
+    def _disconnected_callback(self):
+        async_dispatcher_send(self.hass, SIGNAL_UPDATE_MASTER, False)
+        async_dispatcher_send(self.hass, SIGNAL_UPDATE_OUTPUTS, [])
 
     async def _update(self, update_types):
         """Private update method."""
@@ -654,7 +658,7 @@ class ForkedDaapdUpdater:
                 "database/update notifications neither requested nor supported"
             )
         await self.hass.async_block_till_done()  # make sure callbacks done before requesting state update
-        async_dispatcher_send(self.hass, SIGNAL_UPDATE_MASTER)
+        async_dispatcher_send(self.hass, SIGNAL_UPDATE_MASTER, True)
 
     async def _add_zones(self, outputs):
         outputs_to_add = []
