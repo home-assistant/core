@@ -2,7 +2,7 @@
     "config": {
         "step": {
             "user": {
-                "title": "Check your livebox",
+                "title": "Register your Livebox",
                 "data": {
                     "host": "IP Address",
                     "port": "Port",
@@ -12,17 +12,17 @@
             }
         },
         "error": {
-            "login_inccorect": "User or password inccorect",
+            "login_inccorect": "User or password incorrect",
             "insufficient_permission": "Insufficient permission.",
             "unknown": "Unknown error occurred",
-            "cannot_connect": "Unable to connect to the livebox"
+            "cannot_connect": "Unable to connect to the Livebox"
         }
     },
     "options": {
         "step": {
             "user": {
                 "title": "Device Tracking - Track devices on lan",
-                "description": "you want tracking  yours wired devices in addition to wireless devices",
+                "description": "Tracking  yours wired devices in addition to wireless devices",
                 "data": {"lan_tracking": "Wired tracking"}
             }
         }
