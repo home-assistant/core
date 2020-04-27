@@ -5,19 +5,21 @@ from typing import Optional
 from aioesphomeapi import APIClient, APIConnectionError
 import voluptuous as vol
 
-from homeassistant import config_entries, core
+from homeassistant.core import callback
+from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .entry_data import DATA_KEY, RuntimeEntryData
 
+DOMAIN = "esphome"
 
-@config_entries.HANDLERS.register("esphome")
-class EsphomeFlowHandler(config_entries.ConfigFlow):
+
+class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a esphome config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+    CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize flow."""
@@ -82,22 +84,27 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
             step_id="discovery_confirm", description_placeholders={"name": self._name}
         )
 
-    async def async_step_zeroconf(self, user_input: ConfigType):
+    async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle zeroconf discovery."""
         # Hostname is format: livingroom.local.
-        local_name = user_input["hostname"][:-1]
+        local_name = discovery_info["hostname"][:-1]
         node_name = local_name[: -len(".local")]
-        address = user_input["properties"].get("address", local_name)
+        address = discovery_info["properties"].get("address", local_name)
 
         # Check if already configured
         await self.async_set_unique_id(node_name)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: address})
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: discovery_info[CONF_HOST]}
+        )
 
         for entry in self._async_current_entries():
             already_configured = False
 
-            if entry.data[CONF_HOST] == address:
-                # Is this address already configured?
+            if (
+                entry.data[CONF_HOST] == address
+                or entry.data[CONF_HOST] == discovery_info[CONF_HOST]
+            ):
+                # Is this address or IP address already configured?
                 already_configured = True
             elif entry.entry_id in self.hass.data.get(DATA_KEY, {}):
                 # Does a config entry with this name already exist?
@@ -111,23 +118,20 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
                 # Backwards compat, we update old entries
                 if not entry.unique_id:
                     self.hass.config_entries.async_update_entry(
-                        entry, unique_id=node_name
+                        entry,
+                        data={**entry.data, CONF_HOST: discovery_info[CONF_HOST]},
+                        unique_id=node_name,
                     )
 
                 return self.async_abort(reason="already_configured")
 
-        self._host = address
-        self._port = user_input[CONF_PORT]
+        self._host = discovery_info[CONF_HOST]
+        self._port = discovery_info[CONF_PORT]
         self._name = node_name
-
-        # Check if flow for this device already in progress
-        for flow in self._async_in_progress():
-            if flow["context"].get("name") == node_name:
-                return self.async_abort(reason="already_configured")
 
         return await self.async_step_discovery_confirm()
 
-    @core.callback
+    @callback
     def _async_get_entry(self):
         return self.async_create_entry(
             title=self._name,

@@ -4,7 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.esphome import DATA_KEY, config_flow
+from homeassistant.components.esphome import DATA_KEY
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -57,11 +58,13 @@ async def test_user_connection_works(hass, mock_client):
     mock_client.device_info.return_value = mock_coro(MockDeviceInfo(False, "test"))
 
     result = await hass.config_entries.flow.async_init(
-        "esphome", context={"source": "user"}, data={"host": "127.0.0.1", "port": 80},
+        "esphome",
+        context={"source": "user"},
+        data={CONF_HOST: "127.0.0.1", CONF_PORT: 80},
     )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == {"host": "127.0.0.1", "port": 80, "password": ""}
+    assert result["data"] == {CONF_HOST: "127.0.0.1", CONF_PORT: 80, CONF_PASSWORD: ""}
     assert result["title"] == "test"
 
     assert len(mock_client.connect.mock_calls) == 1
@@ -90,7 +93,7 @@ async def test_user_resolve_error(hass, mock_api_connection_error, mock_client):
         result = await hass.config_entries.flow.async_init(
             "esphome",
             context={"source": "user"},
-            data={"host": "127.0.0.1", "port": 6053},
+            data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
         )
 
     assert result["type"] == RESULT_TYPE_FORM
@@ -107,7 +110,9 @@ async def test_user_connection_error(hass, mock_api_connection_error, mock_clien
     mock_client.device_info.side_effect = mock_api_connection_error
 
     result = await hass.config_entries.flow.async_init(
-        "esphome", context={"source": "user"}, data={"host": "127.0.0.1", "port": 6053},
+        "esphome",
+        context={"source": "user"},
+        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] == RESULT_TYPE_FORM
@@ -124,21 +129,23 @@ async def test_user_with_password(hass, mock_client):
     mock_client.device_info.return_value = mock_coro(MockDeviceInfo(True, "test"))
 
     result = await hass.config_entries.flow.async_init(
-        "esphome", context={"source": "user"}, data={"host": "127.0.0.1", "port": 6053},
+        "esphome",
+        context={"source": "user"},
+        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "authenticate"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"password": "password1"}
+        result["flow_id"], user_input={CONF_PASSWORD: "password1"}
     )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
-        "host": "127.0.0.1",
-        "port": 6053,
-        "password": "password1",
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 6053,
+        CONF_PASSWORD: "password1",
     }
     assert mock_client.password == "password1"
 
@@ -148,13 +155,18 @@ async def test_user_invalid_password(hass, mock_api_connection_error, mock_clien
     mock_client.device_info.return_value = mock_coro(MockDeviceInfo(True, "test"))
 
     result = await hass.config_entries.flow.async_init(
-        "esphome", context={"source": "user"}, data={"host": "127.0.0.1", "port": 6053},
+        "esphome",
+        context={"source": "user"},
+        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "authenticate"
 
     mock_client.connect.side_effect = mock_api_connection_error
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"password": "invalid"}
+        result["flow_id"], user_input={CONF_PASSWORD: "invalid"}
     )
 
     assert result["type"] == RESULT_TYPE_FORM
@@ -167,8 +179,8 @@ async def test_discovery_initiation(hass, mock_client):
     mock_client.device_info.return_value = mock_coro(MockDeviceInfo(False, "test8266"))
 
     service_info = {
-        "host": "192.168.43.183",
-        "port": 6053,
+        CONF_HOST: "192.168.43.183",
+        CONF_PORT: 6053,
         "hostname": "test8266.local.",
         "properties": {},
     }
@@ -187,8 +199,8 @@ async def test_discovery_initiation(hass, mock_client):
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "test8266"
-    assert result["data"]["host"] == "test8266.local"
-    assert result["data"]["port"] == 6053
+    assert result["data"][CONF_HOST] == "192.168.43.183"
+    assert result["data"][CONF_PORT] == 6053
 
     assert result["result"]
     assert result["result"].unique_id == "test8266"
@@ -196,13 +208,16 @@ async def test_discovery_initiation(hass, mock_client):
 
 async def test_discovery_already_configured_hostname(hass, mock_client):
     """Test discovery aborts if already configured via hostname."""
-    MockConfigEntry(
-        domain="esphome", data={"host": "test8266.local", "port": 6053, "password": ""}
-    ).add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain="esphome",
+        data={CONF_HOST: "test8266.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
+    )
+
+    entry.add_to_hass(hass)
 
     service_info = {
-        "host": "192.168.43.183",
-        "port": 6053,
+        CONF_HOST: "192.168.43.183",
+        CONF_PORT: 6053,
         "hostname": "test8266.local.",
         "properties": {},
     }
@@ -213,16 +228,21 @@ async def test_discovery_already_configured_hostname(hass, mock_client):
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
+    assert entry.unique_id == "test8266"
+
 
 async def test_discovery_already_configured_ip(hass, mock_client):
     """Test discovery aborts if already configured via static IP."""
-    MockConfigEntry(
-        domain="esphome", data={"host": "192.168.43.183", "port": 6053, "password": ""}
-    ).add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain="esphome",
+        data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
+    )
+
+    entry.add_to_hass(hass)
 
     service_info = {
-        "host": "192.168.43.183",
-        "port": 6053,
+        CONF_HOST: "192.168.43.183",
+        CONF_PORT: 6053,
         "hostname": "test8266.local.",
         "properties": {"address": "192.168.43.183"},
     }
@@ -233,20 +253,24 @@ async def test_discovery_already_configured_ip(hass, mock_client):
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
+    assert entry.unique_id == "test8266"
+
 
 async def test_discovery_already_configured_name(hass, mock_client):
     """Test discovery aborts if already configured via name."""
     entry = MockConfigEntry(
-        domain="esphome", data={"host": "192.168.43.183", "port": 6053, "password": ""}
+        domain="esphome",
+        data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
     )
     entry.add_to_hass(hass)
+
     mock_entry_data = MagicMock()
     mock_entry_data.device_info.name = "test8266"
     hass.data[DATA_KEY] = {entry.entry_id: mock_entry_data}
 
     service_info = {
-        "host": "192.168.43.183",
-        "port": 6053,
+        CONF_HOST: "192.168.43.184",
+        CONF_PORT: 6053,
         "hostname": "test8266.local.",
         "properties": {"address": "test8266.local"},
     }
@@ -257,12 +281,15 @@ async def test_discovery_already_configured_name(hass, mock_client):
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
+    assert entry.unique_id == "test8266"
+    assert entry.data[CONF_HOST] == "192.168.43.184"
+
 
 async def test_discovery_duplicate_data(hass, mock_client):
     """Test discovery aborts if same mDNS packet arrives."""
     service_info = {
-        "host": "192.168.43.183",
-        "port": 6053,
+        CONF_HOST: "192.168.43.183",
+        CONF_PORT: 6053,
         "hostname": "test8266.local.",
         "properties": {"address": "test8266.local"},
     }
@@ -285,14 +312,15 @@ async def test_discovery_duplicate_data(hass, mock_client):
 async def test_discovery_updates_unique_id(hass, mock_client):
     """Test a duplicate discovery host aborts and updates existing entry."""
     entry = MockConfigEntry(
-        domain="esphome", data={"host": "192.168.43.183", "port": 6053, "password": ""}
+        domain="esphome",
+        data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
     )
 
     entry.add_to_hass(hass)
 
     service_info = {
-        "host": "192.168.43.183",
-        "port": 6053,
+        CONF_HOST: "192.168.43.183",
+        CONF_PORT: 6053,
         "hostname": "test8266.local.",
         "properties": {"address": "test8266.local"},
     }
