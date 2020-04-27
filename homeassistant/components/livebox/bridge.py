@@ -45,7 +45,7 @@ class BridgeData:
         except NotOpenError:
             _LOGGER.error("Cannot Connect.")
             raise NotOpenError
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             _LOGGER.error(f"Error unknown {e}")
             raise LiveboxException(e)
 
@@ -54,12 +54,21 @@ class BridgeData:
             _LOGGER.error("Insufficient Permissions.")
             raise InsufficientPermissionsError
 
+    async def async_make_request(self, call_api, **kwargs):
+        """Make request for API."""
+        try:
+            response = await self._hass.async_add_executor_job(call_api, kwargs)
+            if response:
+                return response
+        except Exception:  # pylint: disable=broad-except
+            return {}
+
     async def async_fetch_datas(self):
         """Fetch datas."""
         return {
             "devices": await self.async_get_devices(),
             "infos": await self.async_get_infos(),
-            "status": await self.async_get_status(),
+            "wan_status": await self.async_get_wan_status(),
             "dsl_status": await self.async_get_dsl_status(),
             "wifi": await self.async_get_wifi(),
             "nmc": await self.async_get_nmc(),
@@ -74,66 +83,53 @@ class BridgeData:
                 "eth": 'eth && (edev || hnid) and .PhysAddress!=""',
             }
         }
-
-        devices = await self._hass.async_add_executor_job(
-            self.api.system.get_devices, parameters
+        devices = await self.async_make_request(
+            self.api.system.get_devices, **parameters
         )
-        _LOGGER.debug("Devices %s" % (devices is None))
-        if devices is not None:
-            devices_status_wireless = devices.get("status", {}).get("wifi", {})
-            for device in devices_status_wireless:
-                if device.get("Key"):
-                    devices_tracker.update({device.get("Key"): device})
+        devices_status_wireless = devices.get("status", {}).get("wifi", {})
+        for device in devices_status_wireless:
+            if device.get("Key"):
+                devices_tracker.setdefault(device.get("Key"), {}).update(device)
 
-            if self.config_entry.options.get(CONF_LAN_TRACKING, False):
-                devices_status_wired = devices.get("status", {}).get("eth", {})
-                for device in devices_status_wired:
-                    if device.get("Key"):
-                        devices_tracker.update({device.get("Key"): device})
+        if self.config_entry.options.get(CONF_LAN_TRACKING, False):
+            devices_status_wired = devices.get("status", {}).get("eth", {})
+            for device in devices_status_wired:
+                if device.get("Key"):
+                    devices_tracker.setdefault(device.get("Key"), {}).update(device)
 
         return devices_tracker
 
     async def async_get_infos(self):
         """Get router infos."""
-        infos = await self._hass.async_add_executor_job(self.api.system.get_deviceinfo)
-        if infos:
-            return infos.get("status")
-        return {}
+        infos = await self.async_make_request(self.api.system.get_deviceinfo)
+        return infos.get("status", {})
 
-    async def async_get_status(self):
+    async def async_get_wan_status(self):
         """Get status."""
-        status = await self._hass.async_add_executor_job(self.api.system.get_WANStatus)
-        if status:
-            return status.get("data")
-        return {}
+        wan_status = await self.async_make_request(self.api.system.get_WANStatus)
+        return wan_status
 
     async def async_get_dsl_status(self):
         """Get dsl status."""
         parameters = {"mibs": "dsl", "flag": "", "traverse": "down"}
-        dsl_status = await self._hass.async_add_executor_job(
-            self.api.connection.get_data_MIBS, parameters
+        dsl_status = await self.async_make_request(
+            self.api.connection.get_data_MIBS, **parameters
         )
-        if dsl_status:
-            return dsl_status.get("status", {}).get("dsl", {}).get("dsl0")
-        return {}
+        return dsl_status.get("status", {}).get("dsl", {}).get("dsl0", {})
 
     async def async_get_nmc(self):
         """Get dsl status."""
-        nmc = await self._hass.async_add_executor_job(self.api.system.get_nmc)
-        if nmc:
-            return nmc.get("status")
-        return {}
+        nmc = await self.async_make_request(self.api.system.get_nmc)
+        return nmc.get("status", {})
 
     async def async_get_wifi(self):
         """Get dsl status."""
-        wifi = await self._hass.async_add_executor_job(self.api.wifi.get_wifi)
-        if wifi:
-            return wifi.get("status", {}).get("Enable") == "true"
-        return {}
+        wifi = await self.async_make_request(self.api.wifi.get_wifi)
+        return wifi.get("status", {}).get("Enable") == "true"
 
     async def async_set_wifi(self, parameters):
         """Set wifi."""
-        await self._hass.async_add_executor_job(self.api.wifi.set_wifi, parameters)
+        await self._hass.async_add_executor_job(self.api.wifi.set_wifi, **parameters)
 
     async def async_reboot(self):
         """Turn on reboot."""
