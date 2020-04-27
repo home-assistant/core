@@ -1,6 +1,4 @@
 """Tests for the numato switch platform."""
-import pytest
-
 from homeassistant.components import switch
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.helpers import discovery
@@ -28,7 +26,6 @@ async def async_turn_off(hass, entity_id):
     )
 
 
-@pytest.mark.asyncio
 async def test_failing_setups_no_entities(hass, numato_fixture, monkeypatch):
     """When port setup fails, no entity shall be created."""
     monkeypatch.setattr(numato_fixture.NumatoDeviceMock, "setup", mockup_raise)
@@ -38,7 +35,6 @@ async def test_failing_setups_no_entities(hass, numato_fixture, monkeypatch):
         assert entity_id not in hass.states.async_entity_ids()
 
 
-@pytest.mark.asyncio
 async def test_regular_hass_operations(hass, numato_fixture):
     """Test regular operations from within Home Assistant."""
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
@@ -57,7 +53,6 @@ async def test_regular_hass_operations(hass, numato_fixture):
     assert numato_fixture.devices[0].values[6] == 0
 
 
-@pytest.mark.asyncio
 async def test_failing_hass_operations(hass, numato_fixture, monkeypatch):
     """Test failing operations called from within Home Assistant.
 
@@ -82,7 +77,6 @@ async def test_failing_hass_operations(hass, numato_fixture, monkeypatch):
     assert not numato_fixture.devices[0].values[6]
 
 
-@pytest.mark.asyncio
 async def test_switch_setup_without_discovery_info(hass, config, numato_fixture):
     """Test handling of empty discovery_info."""
     numato_fixture.discover()

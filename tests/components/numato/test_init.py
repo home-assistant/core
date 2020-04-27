@@ -8,7 +8,6 @@ from homeassistant.setup import async_setup_component
 from .common import NUMATO_CFG, mockup_raise, mockup_return
 
 
-@pytest.mark.asyncio
 async def test_setup_no_devices(hass, numato_fixture, monkeypatch):
     """Test handling of an 'empty' discovery.
 
@@ -20,7 +19,6 @@ async def test_setup_no_devices(hass, numato_fixture, monkeypatch):
     assert len(numato_fixture.devices) == 0
 
 
-@pytest.mark.asyncio
 async def test_fail_setup_raising_discovery(hass, numato_fixture, caplog, monkeypatch):
     """Test handling of an exception during discovery.
 
@@ -31,7 +29,6 @@ async def test_fail_setup_raising_discovery(hass, numato_fixture, caplog, monkey
     await hass.async_block_till_done()
 
 
-@pytest.mark.asyncio
 async def test_hass_numato_api_wrong_port_directions(hass, numato_fixture):
     """Test handling of wrong port directions.
 
@@ -49,7 +46,6 @@ async def test_hass_numato_api_wrong_port_directions(hass, numato_fixture):
         api.write_output(0, 2, 1)  # write to input
 
 
-@pytest.mark.asyncio
 async def test_hass_numato_api_errors(hass, numato_fixture, monkeypatch):
     """Test whether Home Assistant numato API (re-)raises errors."""
     numato_fixture.discover()
@@ -65,7 +61,6 @@ async def test_hass_numato_api_errors(hass, numato_fixture, monkeypatch):
         api.write_output(0, 2, 1)
 
 
-@pytest.mark.asyncio
 async def test_invalid_port_number(hass, numato_fixture, config):
     """Test validation of ADC port number type."""
     sensorports_cfg = config["numato"]["devices"][0]["sensors"]["ports"]
@@ -77,7 +72,6 @@ async def test_invalid_port_number(hass, numato_fixture, config):
     assert not numato_fixture.devices
 
 
-@pytest.mark.asyncio
 async def test_too_low_adc_port_number(hass, numato_fixture, config):
     """Test handling of failing component setup.
 
@@ -90,7 +84,6 @@ async def test_too_low_adc_port_number(hass, numato_fixture, config):
     assert not numato_fixture.devices
 
 
-@pytest.mark.asyncio
 async def test_too_high_adc_port_number(hass, numato_fixture, config):
     """Test handling of failing component setup.
 
@@ -102,7 +95,6 @@ async def test_too_high_adc_port_number(hass, numato_fixture, config):
     assert not numato_fixture.devices
 
 
-@pytest.mark.asyncio
 async def test_invalid_adc_range_value_type(hass, numato_fixture, config):
     """Test validation of ADC range config's types.
 
@@ -114,7 +106,6 @@ async def test_invalid_adc_range_value_type(hass, numato_fixture, config):
     assert not numato_fixture.devices
 
 
-@pytest.mark.asyncio
 async def test_invalid_adc_source_range_length(hass, numato_fixture, config):
     """Test validation of ADC range config's length.
 
@@ -126,7 +117,6 @@ async def test_invalid_adc_source_range_length(hass, numato_fixture, config):
     assert not numato_fixture.devices
 
 
-@pytest.mark.asyncio
 async def test_invalid_adc_source_range_order(hass, numato_fixture, config):
     """Test validation of ADC range config's order.
 
@@ -138,7 +128,6 @@ async def test_invalid_adc_source_range_order(hass, numato_fixture, config):
     assert not numato_fixture.devices
 
 
-@pytest.mark.asyncio
 async def test_invalid_adc_destination_range_value_type(hass, numato_fixture, config):
     """Test validation of ADC range .
 
@@ -150,7 +139,6 @@ async def test_invalid_adc_destination_range_value_type(hass, numato_fixture, co
     assert not numato_fixture.devices
 
 
-@pytest.mark.asyncio
 async def test_invalid_adc_destination_range_length(hass, numato_fixture, config):
     """Test validation of ADC range config's length.
 
@@ -162,7 +150,6 @@ async def test_invalid_adc_destination_range_length(hass, numato_fixture, config
     assert not numato_fixture.devices
 
 
-@pytest.mark.asyncio
 async def test_invalid_adc_destination_range_order(hass, numato_fixture, config):
     """Test validation of ADC range config's order.
 

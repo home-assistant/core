@@ -1,6 +1,4 @@
 """Tests for the numato binary_sensor platform."""
-import pytest
-
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
@@ -13,7 +11,6 @@ MOCKUP_ENTITY_IDS = {
 }
 
 
-@pytest.mark.asyncio
 async def test_failing_setups_no_entities(hass, numato_fixture, monkeypatch):
     """When port setup fails, no entity shall be created."""
     monkeypatch.setattr(numato_fixture.NumatoDeviceMock, "setup", mockup_raise)
@@ -38,7 +35,6 @@ async def test_hass_binary_sensor_notification(hass, numato_fixture):
     )
 
 
-@pytest.mark.asyncio
 async def test_binary_sensor_setup_without_discovery_info(hass, config, numato_fixture):
     """Test handling of empty discovery_info."""
     numato_fixture.discover()
