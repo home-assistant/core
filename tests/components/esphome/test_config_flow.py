@@ -194,7 +194,7 @@ async def test_discovery_already_configured_hostname(hass, mock_client):
         "properties": {},
     }
     result = await flow.async_step_zeroconf(user_input=service_info)
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -212,7 +212,7 @@ async def test_discovery_already_configured_ip(hass, mock_client):
         "properties": {"address": "192.168.43.183"},
     }
     result = await flow.async_step_zeroconf(user_input=service_info)
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -234,7 +234,7 @@ async def test_discovery_already_configured_name(hass, mock_client):
         "properties": {"address": "test8266.local"},
     }
     result = await flow.async_step_zeroconf(user_input=service_info)
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -258,7 +258,7 @@ async def test_discovery_duplicate_data(hass, mock_client):
     result = await hass.config_entries.flow.async_init(
         "esphome", data=service_info, context={"source": "zeroconf"}
     )
-    assert result["type"] == "abort"
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
 
