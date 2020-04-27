@@ -34,8 +34,8 @@ async def test_form(hass):
             {
                 "username": "test-username",
                 "password": "test-password",
-                "Home_Control_URL": "https://homecontrol.mydevolo.com",
-                "Mydevolo_URL": "https://www.mydevolo.com",
+                "home_control_url": "https://homecontrol.mydevolo.com",
+                "mydevolo_url": "https://www.mydevolo.com",
             },
         )
 
@@ -44,8 +44,8 @@ async def test_form(hass):
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
-        "Home_Control_URL": "https://homecontrol.mydevolo.com",
-        "Mydevolo_URL": "https://www.mydevolo.com",
+        "home_control_url": "https://homecontrol.mydevolo.com",
+        "mydevolo_url": "https://www.mydevolo.com",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
