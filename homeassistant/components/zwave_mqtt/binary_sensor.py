@@ -56,7 +56,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             # Handle special cases
             # we convert some of the Notification values into it's own binary sensor
             # https://github.com/OpenZWave/open-zwave/blob/master/config/NotificationCCTypes.xml
-            # TODO: Use constants/Enums from lib (when added)
+            # Use constants/Enums from lib (when added)
             for item in values.primary.value["List"]:
                 if values.primary.index == 6 and item["Value"] == 22:
                     # Door/Window Open
