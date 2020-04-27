@@ -269,7 +269,7 @@ async def test_discovery_duplicate_data(hass, mock_client):
         "esphome", data=service_info, context={"source": "zeroconf"}
     )
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_in_progress"
 
 
 async def test_discovery_updates_unique_id(hass, mock_client):
