@@ -7,8 +7,8 @@ import pytest
 from homeassistant.components.esphome import DATA_KEY, config_flow
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
-    RESULT_TYPE_FORM,
     RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
 )
 
 from tests.common import MockConfigEntry, mock_coro
