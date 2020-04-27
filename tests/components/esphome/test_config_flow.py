@@ -57,7 +57,7 @@ async def test_user_connection_works(hass, mock_client):
 
     result = await flow.async_step_user(user_input={"host": "127.0.0.1", "port": 80})
 
-    assert result["type"] == "create_entry"
+    assert result["type"] == "create_entry"   
     assert result["data"] == {"host": "127.0.0.1", "port": 80, "password": ""}
     assert result["title"] == "test"
     assert len(mock_client.connect.mock_calls) == 1
@@ -176,6 +176,7 @@ async def test_discovery_initiation(hass, mock_client):
     assert result["title"] == "test8266"
     assert result["data"]["host"] == "test8266.local"
     assert result["data"]["port"] == 6053
+    assert result["result"].unique_id == "test8266"
 
 
 async def test_discovery_already_configured_hostname(hass, mock_client):
