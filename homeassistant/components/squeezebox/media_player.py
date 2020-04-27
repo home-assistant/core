@@ -30,17 +30,14 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
-    STATE_IDLE,
     STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN, SERVICE_CALL_METHOD
+from .const import DOMAIN, SERVICE_CALL_METHOD, SQUEEZEBOX_MODE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,7 +119,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     # Get IP of host, to prevent duplication of same host (different DNS names)
     try:
-        ipaddr = socket.gethostbyname(host)
+        ipaddr = await hass.async_add_executor_job(socket.gethostbyname, host)
     except OSError as error:
         _LOGGER.error("Could not communicate with %s:%d: %s", host, port, error)
         raise PlatformNotReady from error
@@ -208,18 +205,13 @@ class SqueezeBoxDevice(MediaPlayerEntity):
         if not self._player.power:
             return STATE_OFF
         if self._player.mode:
-            if self._player.mode == "pause":
-                return STATE_PAUSED
-            if self._player.mode == "play":
-                return STATE_PLAYING
-            if self._player.mode == "stop":
-                return STATE_IDLE
+            return SQUEEZEBOX_MODE[self._player.mode]
         return None
 
     async def async_update(self):
         """Update the Player() object."""
-        await self._player.async_update()
         last_media_position = self.media_position
+        await self._player.async_update()
         if self.media_position != last_media_position:
             _LOGGER.debug(
                 "Media position updated for %s: %s", self, self.media_position
