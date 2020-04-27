@@ -363,11 +363,25 @@ async def test_0_pin(hass):
 
 async def test_no_devices_found_abort(hass):
     """Test that failure to find devices aborts flow."""
-    flow = ps4.PlayStation4FlowHandler()
-    flow.hass = hass
+    with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "creds"
+
+    with patch("pyps4_2ndscreen.Helper.get_creds", return_value=MOCK_CREDS):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "mode"
 
     with patch("pyps4_2ndscreen.Helper.has_devices", return_value=[]):
-        result = await flow.async_step_link()
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_AUTO
+        )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "no_devices_found"
 
