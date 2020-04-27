@@ -6,6 +6,7 @@ import logging
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.dt import as_timestamp, now
 
 from .const import (
     ATTR_ZONE_SHADE,
@@ -22,17 +23,21 @@ from .const import (
     KEY_IMAGE_URL,
     KEY_NAME,
     KEY_ON,
+    KEY_RAIN_DELAY,
     KEY_SCHEDULE_ID,
     KEY_SUBTYPE,
     KEY_SUMMARY,
     KEY_ZONE_ID,
     KEY_ZONE_NUMBER,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
+    SIGNAL_RACHIO_RAIN_DELAY_UPDATE,
     SIGNAL_RACHIO_SCHEDULE_UPDATE,
     SIGNAL_RACHIO_ZONE_UPDATE,
 )
 from .entity import RachioDevice
 from .webhooks import (
+    SUBTYPE_RAIN_DELAY_OFF,
+    SUBTYPE_RAIN_DELAY_ON,
     SUBTYPE_SCHEDULE_COMPLETED,
     SUBTYPE_SCHEDULE_STARTED,
     SUBTYPE_SCHEDULE_STOPPED,
@@ -67,6 +72,7 @@ def _create_entities(hass, config_entry):
     # in order to avoid every zone doing it
     for controller in person.controllers:
         entities.append(RachioStandbySwitch(controller))
+        entities.append(RachioRainDelay(controller))
         zones = controller.list_zones()
         schedules = controller.list_schedules()
         flex_schedules = controller.list_flex_schedules()
@@ -174,6 +180,72 @@ class RachioStandbySwitch(RachioSwitch):
             async_dispatcher_connect(
                 self.hass,
                 SIGNAL_RACHIO_CONTROLLER_UPDATE,
+                self._async_handle_any_update,
+            )
+        )
+
+
+class RachioRainDelay(RachioSwitch):
+    """Representation of a rain delay status/switch."""
+
+    def __init__(self, controller):
+        """Instantiate a new Rachio rain delay switch."""
+        super().__init__(controller, poll=True)
+        self._poll_update(controller.init_data)
+
+    @property
+    def name(self) -> str:
+        """Return the name of the switch."""
+        return f"{self._controller.name} rain delay"
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique id by combining controller id and purpose."""
+        return f"{self._controller.controller_id}-delay"
+
+    @property
+    def icon(self) -> str:
+        """Return an icon for rain delay."""
+        return "mdi:camera-timer"
+
+    def _poll_update(self, data=None) -> bool:
+        """Request the state from the API."""
+        # API returns either 0 or current UNIX time when rain delay was canceled
+        # depending if it was done from the app or via the API
+        if data is None:
+            data = self._controller.rachio.device.get(self._controller.controller_id)[1]
+
+        try:
+            return data[KEY_RAIN_DELAY] / 1000 > as_timestamp(now())
+        except KeyError:
+            return False
+
+    @callback
+    def _async_handle_update(self, *args, **kwargs) -> None:
+        """Update the state using webhook data."""
+        if args[0][0][KEY_SUBTYPE] == SUBTYPE_RAIN_DELAY_ON:
+            self._state = True
+        elif args[0][0][KEY_SUBTYPE] == SUBTYPE_RAIN_DELAY_OFF:
+            self._state = False
+
+        self.async_write_ha_state()
+
+    def turn_on(self, **kwargs) -> None:
+        """Activate a 24 hour rain delay on the controller."""
+        self._controller.rachio.device.rainDelay(self._controller.controller_id, 86400)
+        _LOGGER.debug("Starting rain delay for 24 hours")
+
+    def turn_off(self, **kwargs) -> None:
+        """Resume controller functionality."""
+        self._controller.rachio.device.rainDelay(self._controller.controller_id, 0)
+        _LOGGER.debug("Canceling rain delay")
+
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_RACHIO_RAIN_DELAY_UPDATE,
                 self._async_handle_any_update,
             )
         )
@@ -320,7 +392,7 @@ class RachioSchedule(RachioSwitch):
     @property
     def icon(self) -> str:
         """Return the icon to display."""
-        return "mdi:water"
+        return "mdi:water" if self.schedule_is_enabled else "mdi:water-off"
 
     @property
     def device_state_attributes(self) -> dict:
