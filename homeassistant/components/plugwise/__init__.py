@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
@@ -37,9 +38,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        await api.connect()
+        connected = await api.connect()
+
+        if not connected:
+            _LOGGER.error("Unable to connect to Smile: %s", api.smile_status)
+            raise PlatformNotReady
+
+    except Smile.PlugwiseError:
+        _LOGGER.error("Error while communicating to device")
+        raise PlatformNotReady
+
     except asyncio.TimeoutError:
         _LOGGER.error("Timeout while connecting to Smile")
+        raise PlatformNotReady
 
     if api.smile_type == "power":
         update_interval = timedelta(seconds=10)
@@ -148,7 +159,11 @@ class SmileDataUpdater:
             _LOGGER.error("Plugwise Smile has no listeners, not updating")
             return
 
-        await self.api.full_update_device()
+        try:
+            await self.api.full_update_device()
+        except Smile.XMLDataMissingError as e:
+            _LOGGER.error("Smile update failed")
+            raise e
 
         for update_callback in self.listeners:
             update_callback()

@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Verbinden met de Smile",
-        "description": "Gegevens van Smile",
+        "description": "Gegevens",
         "data": {
           "host": "IP adres van de Smile",
           "password": "Smile ID"
@@ -16,7 +16,7 @@
       "unknown": "Overwachte fout"
     },
     "abort": {
-      "already_configured": "Smile is al geconfigureerd"
+      "already_configured": "Deze Smile is al geconfigureerd"
     }
   }
 }

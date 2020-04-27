@@ -3,6 +3,8 @@
 import logging
 from typing import Dict
 
+from Plugwise_Smile.Smile import Smile
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
@@ -85,14 +87,14 @@ class PwThermostat(ClimateEntity):
         self._presets = None
         self._presets_list = None
         self._boiler_state = None
-        self._central_heating_state = None
+        self._heating_state = None
         self._cooling_state = None
-        self._domestic_hot_water_state = None
+        self._dhw_state = None
         self._hvac_mode = None
         self._schema_names = None
         self._schema_status = None
         self._temperature = None
-        self._thermostat = None
+        self._setpoint = None
         self._water_pressure = None
         self._schedule_temp = None
         self._hvac_mode = None
@@ -122,13 +124,13 @@ class PwThermostat(ClimateEntity):
     def hvac_action(self):
         """Return the current action."""
         if self._single_thermostat:
-            if self._central_heating_state or self._boiler_state:
+            if self._heating_state or self._boiler_state:
                 return CURRENT_HVAC_HEAT
             if self._cooling_state:
                 return CURRENT_HVAC_COOL
             return CURRENT_HVAC_IDLE
-        if self._central_heating_state is not None or self._boiler_state is not None:
-            if self._thermostat > self._temperature:
+        if self._heating_state is not None or self._boiler_state is not None:
+            if self._setpoint > self._temperature:
                 return CURRENT_HVAC_HEAT
         return CURRENT_HVAC_IDLE
 
@@ -186,7 +188,7 @@ class PwThermostat(ClimateEntity):
     @property
     def hvac_modes(self):
         """Return the available hvac modes list."""
-        if self._central_heating_state is not None or self._boiler_state is not None:
+        if self._heating_state is not None or self._boiler_state is not None:
             if self._cooling_state is not None:
                 return HVAC_MODES_2
             return HVAC_MODES_1
@@ -199,7 +201,7 @@ class PwThermostat(ClimateEntity):
     @property
     def target_temperature(self):
         """Return the target_temperature."""
-        return self._thermostat
+        return self._setpoint
 
     @property
     def preset_mode(self):
@@ -234,9 +236,12 @@ class PwThermostat(ClimateEntity):
         if (temperature is not None) and (
             self._min_temp < temperature < self._max_temp
         ):
-            await self._api.set_temperature(self._loc_id, temperature)
-            self._thermostat = temperature
-            self.async_write_ha_state()
+            try:
+                await self._api.set_temperature(self._loc_id, temperature)
+                self._thermostat = temperature
+                self.async_write_ha_state()
+            except Smile.PlugwiseError:
+                _LOGGER.error("Error while communicating to device")
         else:
             _LOGGER.error("Invalid temperature requested")
 
@@ -245,20 +250,29 @@ class PwThermostat(ClimateEntity):
         state = "false"
         if hvac_mode == HVAC_MODE_AUTO:
             state = "true"
-            await self._api.set_temperature(self._loc_id, self._schedule_temp)
-            self._thermostat = self._schedule_temp
-        await self._api.set_schedule_state(
-            self._loc_id, self._last_active_schema, state
-        )
-        self._hvac_mode = hvac_mode
-        self.async_write_ha_state()
+            try:
+                await self._api.set_temperature(self._loc_id, self._schedule_temp)
+                self._thermostat = self._schedule_temp
+            except Smile.PlugwiseError:
+                _LOGGER.error("Error while communicating to device")
+        try:
+            await self._api.set_schedule_state(
+                self._loc_id, self._last_active_schema, state
+            )
+            self._hvac_mode = hvac_mode
+            self.async_write_ha_state()
+        except Smile.PlugwiseError:
+            _LOGGER.error("Error while communicating to device")
 
     async def async_set_preset_mode(self, preset_mode):
         """Set the preset mode."""
-        await self._api.set_preset(self._loc_id, preset_mode)
-        self._preset_mode = preset_mode
-        self._thermostat = self._presets.get(self._preset_mode, "none")[0]
-        self.async_write_ha_state()
+        try:
+            await self._api.set_preset(self._loc_id, preset_mode)
+            self._preset_mode = preset_mode
+            self._thermostat = self._presets.get(self._preset_mode, "none")[0]
+            self.async_write_ha_state()
+        except Smile.PlugwiseError:
+            _LOGGER.error("Error while communicating to device")
 
     def update(self):
         """Update the data for this climate device."""
@@ -266,11 +280,11 @@ class PwThermostat(ClimateEntity):
         climate_data = self._api.get_device_data(self._dev_id)
         heater_central_data = self._api.get_device_data(self._api.heater_id)
 
-        if climate_data is None:
+        if not climate_data:
             _LOGGER.error("Received no climate_data for device %s.", self._name)
         else:
-            if "thermostat" in climate_data:
-                self._thermostat = climate_data["thermostat"]
+            if "setpoint" in climate_data:
+                self._setpoint = climate_data["setpoint"]
             if "temperature" in climate_data:
                 self._temperature = climate_data["temperature"]
             if "schedule_temperature" in climate_data:
@@ -292,24 +306,22 @@ class PwThermostat(ClimateEntity):
             if "active_preset" in climate_data:
                 self._preset_mode = climate_data["active_preset"]
 
-        if heater_central_data is None:
+        if not heater_central_data:
             _LOGGER.error("Received no heater_central_data for device %s.", self._name)
         else:
             if "boiler_state" in heater_central_data:
                 if heater_central_data["boiler_state"] is not None:
                     self._boiler_state = heater_central_data["boiler_state"]
-            if "central_heating_state" in heater_central_data:
-                if heater_central_data["central_heating_state"] is not None:
-                    self._central_heating_state = heater_central_data[
-                        "central_heating_state"
-                    ]
+            if "heating_state" in heater_central_data:
+                if heater_central_data["heating_state"] is not None:
+                    self._heating_state = heater_central_data["heating_state"]
             if "cooling_state" in heater_central_data:
                 if heater_central_data["cooling_state"] is not None:
                     self._cooling_state = heater_central_data["cooling_state"]
 
         if self._schema_status:
             self._hvac_mode = HVAC_MODE_AUTO
-        elif self._central_heating_state is not None or self._boiler_state is not None:
+        elif self._heating_state is not None or self._boiler_state is not None:
             if self._cooling_state is not None:
                 self._hvac_mode = HVAC_MODE_HEAT_COOL
             self._hvac_mode = HVAC_MODE_HEAT

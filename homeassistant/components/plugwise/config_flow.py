@@ -1,4 +1,4 @@
-"""Config flow for Plugwise Anna integration."""
+"""Config flow for Plugwise integration."""
 import logging
 from typing import Any, Dict
 
@@ -48,9 +48,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def __init__(self) -> None:
-        """Initialize config flow."""
-        self._user_schema = None
+    # def __init__(self) -> None:
+    #    """Initialize config flow."""
+    #    self._user_schema = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
