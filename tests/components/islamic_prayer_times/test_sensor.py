@@ -23,6 +23,8 @@ async def test_islamic_prayer_times_sensors(hass):
 
         for prayer in PRAYER_TIMES:
             assert (
-                hass.states.get(f"sensor.{prayer}_prayer").state
+                hass.states.get(
+                    f"sensor.{prayer}_{islamic_prayer_times.const.SENSOR_TYPES[prayer]}"
+                ).state
                 == PRAYER_TIMES_TIMESTAMPS[prayer].isoformat()
             )
