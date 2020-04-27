@@ -169,9 +169,9 @@ async def test_discovery_initiation(hass, mock_client):
         "esphome", context={"source": "zeroconf"}, data=service_info
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "discovery_confirm"
-    assert result["description_placeholders"]["name"] == "test8266"
+    assert flow["type"] == RESULT_TYPE_FORM
+    assert flow["step_id"] == "discovery_confirm"
+    assert flow["description_placeholders"]["name"] == "test8266"
 
     result = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
 
