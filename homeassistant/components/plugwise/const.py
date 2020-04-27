@@ -1,5 +1,4 @@
 """Constant for Plugwise component."""
-
 DOMAIN = "plugwise"
 
 # Default directives
