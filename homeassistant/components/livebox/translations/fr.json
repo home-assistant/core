@@ -1,0 +1,33 @@
+{
+  "config": {
+    "title": "Orange Livebox",
+    "step": {
+      "user": {
+        "title": "Vérfication de votre livebox.",
+        "data": {
+          "host": "Adresse IP",
+          "port": "Port",
+          "username": "Utilisateur",
+          "password": "Mot de pass"
+        }
+      }
+    },
+    "error": {
+      "login_inccorect": "Utilisateur ou mot de passe incorrect.",
+      "insufficient_permission": "Permission insuffisante.",      
+      "unknown": "Erreur inconnue.",
+      "cannot_connect": "Impossible de se connecter à la Livebox."
+    }
+  },
+  "options": {
+    "step": {
+        "user": {
+            "title": "Suivre les équipements filaires",
+            "description": "Pour suivre les équipements filaires en plus des équipements Wifi",
+            "data": {
+                "lan_tracking": "Equipements Filaires"
+            }
+        }
+    }
+  }
+}

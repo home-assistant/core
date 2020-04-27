@@ -3,80 +3,92 @@ import logging
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 
-from . import DATA_LIVEBOX, DOMAIN, ID_BOX
-from .const import TEMPLATE_SENSOR
+from .const import COORDINATOR, DOMAIN, LIVEBOX_ID, TEMPLATE_SENSOR
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer binary sensor setup to the shared sensor module."""
-    box_id = hass.data[DOMAIN][ID_BOX]
-    bridge = hass.data[DOMAIN][DATA_LIVEBOX]
-    async_add_entities([WanStatus(bridge, box_id)], True)
+    datas = hass.data[DOMAIN][config_entry.entry_id]
+    box_id = datas[LIVEBOX_ID]
+    coordinator = datas[COORDINATOR]
+    async_add_entities([WanStatus(coordinator, box_id)], True)
 
 
-class WanStatus(BinarySensorDevice):
+class WanStatus(BinarySensorEntity):
     """Representation of a livebox sensor."""
 
     device_class = DEVICE_CLASS_CONNECTIVITY
 
-    def __init__(self, bridge, box_id):
+    def __init__(self, coordinator, box_id):
         """Initialize the sensor."""
-
-        self._bridge = bridge
-        self._box_id = box_id
-        self._state = None
-        self._dsl = {}
+        self.box_id = box_id
+        self.coordinator = coordinator
 
     @property
     def name(self):
         """Return name sensor."""
-
         return f"{TEMPLATE_SENSOR} Wan status"
 
     def is_on(self):
         """Return true if the binary sensor is on."""
-
-        if self._dsl.get("WanState"):
-            return self._dsl["WanState"] == "up"
+        wan_state = self.coordinator.data.get("status", {}).get("WanState")
+        if wan_state:
+            return wan_state == "up"
         return None
 
     @property
     def unique_id(self):
         """Return unique_id."""
-
-        return f"{self._box_id}_connectivity"
+        return f"{self.box_id}_connectivity"
 
     @property
     def device_info(self):
         """Return the device info."""
-
         return {
             "name": self.name,
             "identifiers": {(DOMAIN, self.unique_id)},
             "manufacturer": TEMPLATE_SENSOR,
-            "via_device": (DOMAIN, self._box_id),
+            "via_device": (DOMAIN, self.box_id),
         }
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-
         return {
-            "link_type": self._dsl.get("LinkType", None),
-            "link_state": self._dsl.get("LinkState", None),
-            "last_connection_error": self._dsl.get("LastConnectionError", None),
-            "wan_ipaddress": self._dsl.get("IPAddress", None),
-            "wan_ipv6address": self._dsl.get("IPv6Address", None),
+            "link_type": self.coordinator.data.get("status", {}).get("LinkType"),
+            "link_state": self.coordinator.data.get("status", {}).get("LinkState"),
+            "last_connection_error": self.coordinator.data.get("status", {}).get(
+                "LastConnectionError"
+            ),
+            "wan_ipaddress": self.coordinator.data.get("status", {}).get("IPAddress"),
+            "wan_ipv6address": self.coordinator.data.get("status", {}).get(
+                "IPv6Address"
+            ),
         }
 
-    async def async_update(self):
-        """Fetch status from livebox."""
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.coordinator.last_update_success
 
-        data_status = await self._bridge.async_get_status()
-        if data_status:
-            self._dsl = data_status
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.coordinator.async_add_listener(self.async_write_ha_state)
+
+    async def async_will_remove_from_hass(self):
+        """When entity will be removed from hass."""
+        self.coordinator.async_remove_listener(self.async_write_ha_state)
+
+    async def async_update(self) -> None:
+        """Update WLED entity."""
+        await self.coordinator.async_request_refresh()
