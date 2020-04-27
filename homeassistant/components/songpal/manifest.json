@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/songpal",
   "requirements": ["python-songpal==0.12"],
-  "codeowners": ["@rytilahti"],
+  "codeowners": ["@rytilahti", "@shenxn"],
   "ssdp": [
     {
       "st": "urn:schemas-sony-com:service:ScalarWebAPI:1",
