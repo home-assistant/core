@@ -18,8 +18,7 @@ WORKDIR /usr/src
 
 # Setup hass-release
 RUN git clone --depth 1 https://github.com/home-assistant/hass-release \
-    && cd hass-release \
-    && pip3 install -e .
+    && pip3 install -e hass-release/
 
 WORKDIR /workspaces
 

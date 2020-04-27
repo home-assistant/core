@@ -26,6 +26,8 @@ resources:
 variables:
   - name: PythonMain
     value: "37"
+  - name: versionHadolint
+    value: "v1.17.6"
 
 stages:
   - stage: "Overview"
@@ -121,6 +123,22 @@ stages:
               . venv/bin/activate
               pre-commit run black --all-files --show-diff-on-failure
             displayName: "Check Black formatting"
+      - job: "Docker"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - script: sudo docker pull hadolint/hadolint:$(versionHadolint)
+            displayName: "Install Hadolint"
+          - script: |
+              set -e
+              for dockerfile in Dockerfile Dockerfile.dev
+              do
+                echo "Linting: $dockerfile"
+                docker run --rm -i \
+                  -v "$(pwd)/.hadolint.yaml:/.hadolint.yaml:ro" \
+                  hadolint/hadolint:$(versionHadolint) < "$dockerfile"
+              done
+            displayName: "Run Hadolint"
 
   - stage: "Tests"
     dependsOn:
