@@ -85,7 +85,7 @@ def setup(hass, config, retry_delay=FIRST_RETRY_TIME):
 
     except TuyaAPIException as ex:
         _LOGGER.error(
-            "Connection error during integration setup. Error: %s", 
+            "Connection error during integration setup. Error: %s",
             str(ex),
         )
         return False
