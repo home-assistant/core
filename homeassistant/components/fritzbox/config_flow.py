@@ -125,6 +125,7 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if progress.get("context", {}).get(CONF_HOST) == host:
                 return self.async_abort(reason="already_in_progress")
 
+        # update old and user-configured config entries
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if entry.data[CONF_HOST] == host:
                 if uuid and not entry.unique_id:
