@@ -261,14 +261,27 @@ async def test_port_bind_abort(hass):
 async def test_duplicate_abort(hass):
     """Test that Flow aborts when found devices already configured."""
     MockConfigEntry(domain=ps4.DOMAIN, data=MOCK_DATA).add_to_hass(hass)
-    flow = ps4.PlayStation4FlowHandler()
-    flow.hass = hass
-    flow.creds = MOCK_CREDS
+
+    with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "creds"
+
+    with patch("pyps4_2ndscreen.Helper.get_creds", return_value=MOCK_CREDS):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "mode"
 
     with patch(
         "pyps4_2ndscreen.Helper.has_devices", return_value=[{"host-ip": MOCK_HOST}]
     ):
-        result = await flow.async_step_link(user_input=None)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_AUTO
+        )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "devices_configured"
 
