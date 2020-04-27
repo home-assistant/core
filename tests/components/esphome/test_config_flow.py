@@ -171,7 +171,6 @@ async def test_discovery_initiation(hass, mock_client):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "discovery_confirm"
-    assert result["title"] == "ESPHome: test8266"
     assert result["description_placeholders"]["name"] == "test8266"
 
     result = await hass.config_entries.flow.async_configure(
