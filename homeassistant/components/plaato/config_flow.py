@@ -13,12 +13,12 @@ from .const import (
     CONF_DEVICE_TYPE,
     CONF_USE_WEBHOOK,
     DOCS_URL,
-    DOMAIN,
     PLACEHOLDER_DEVICE_NAME,
     PLACEHOLDER_DEVICE_TYPE,
     PLACEHOLDER_DOCS_URL,
     PLACEHOLDER_WEBHOOK_URL,
 )
+from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -52,7 +52,7 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_create_entry(self):
         """Create the entry step."""
         if self._init_info.get(CONF_DEVICE_TYPE, None) is None:
-            return self.async_abort("no_device")
+            return self.async_abort(reason="no_device")
 
         auth_token = self._init_info.get(CONF_TOKEN, None)
         webhook_id = self._init_info.get(CONF_WEBHOOK_ID, None)
@@ -79,7 +79,6 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         auth_token = user_input.get(CONF_TOKEN, None)
         device_type = self._init_info[CONF_DEVICE_TYPE]
 
-        """Save info for later"""
         self._init_info[CONF_USE_WEBHOOK] = use_webhook
         self._init_info[CONF_TOKEN] = auth_token
 
@@ -116,7 +115,6 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         device_type = PlaatoDeviceType(user_input.get(CONF_DEVICE_TYPE))
         device_name = user_input.get(CONF_DEVICE_NAME)
 
-        """Save info for later"""
         self._init_info[CONF_DEVICE_TYPE] = device_type
         self._init_info[CONF_DEVICE_NAME] = device_name
 
@@ -124,6 +122,7 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_webhook(self, user_input=None):
         """Handle device type step."""
+        # pylint: disable=unused-variable
         webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
         self._init_info[CONF_WEBHOOK_ID] = webhook_id
         self._init_info[CONF_CLOUDHOOK] = cloudhook
