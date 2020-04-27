@@ -1,6 +1,6 @@
 """Support for Velux covers."""
 from pyvlx import OpeningDevice, Position
-from pyvlx.opening_device import Awning, Blind, GarageDoor, RollerShutter, Window
+from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter, Window
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -84,6 +84,8 @@ class VeluxCover(CoverEntity):
             return "awning"
         if isinstance(self.node, GarageDoor):
             return "garage"
+        if isinstance(self.node, Gate):
+            return "gate"
         return "window"
 
     @property
