@@ -238,7 +238,7 @@ class PwThermostat(ClimateEntity):
         ):
             try:
                 await self._api.set_temperature(self._loc_id, temperature)
-                self._thermostat = temperature
+                self._setpoint = temperature
                 self.async_write_ha_state()
             except Smile.PlugwiseError:
                 _LOGGER.error("Error while communicating to device")
@@ -252,7 +252,7 @@ class PwThermostat(ClimateEntity):
             state = "true"
             try:
                 await self._api.set_temperature(self._loc_id, self._schedule_temp)
-                self._thermostat = self._schedule_temp
+                self._setpoint = self._schedule_temp
             except Smile.PlugwiseError:
                 _LOGGER.error("Error while communicating to device")
         try:
@@ -269,7 +269,7 @@ class PwThermostat(ClimateEntity):
         try:
             await self._api.set_preset(self._loc_id, preset_mode)
             self._preset_mode = preset_mode
-            self._thermostat = self._presets.get(self._preset_mode, "none")[0]
+            self._setpoint = self._presets.get(self._preset_mode, "none")[0]
             self.async_write_ha_state()
         except Smile.PlugwiseError:
             _LOGGER.error("Error while communicating to device")
@@ -326,8 +326,5 @@ class PwThermostat(ClimateEntity):
                 self._hvac_mode = HVAC_MODE_HEAT_COOL
             self._hvac_mode = HVAC_MODE_HEAT
         elif self._cooling_state is not None:
-            if (
-                self._central_heating_state is not None
-                or self._boiler_state is not None
-            ):
+            if self._heating_state is not None or self._boiler_state is not None:
                 self._hvac_mode = HVAC_MODE_HEAT_COOL

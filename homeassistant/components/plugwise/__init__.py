@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         connected = await api.connect()
 
         if not connected:
-            _LOGGER.error("Unable to connect to Smile: %s", api.smile_status)
+            _LOGGER.error("Unable to connect to Smile")
             raise PlatformNotReady
 
     except Smile.PlugwiseError:
@@ -161,9 +161,9 @@ class SmileDataUpdater:
 
         try:
             await self.api.full_update_device()
-        except Smile.XMLDataMissingError as e:
+        except Smile.XMLDataMissingError:
             _LOGGER.error("Smile update failed")
-            raise e
+            raise Smile.XMLDataMissingError
 
         for update_callback in self.listeners:
             update_callback()
