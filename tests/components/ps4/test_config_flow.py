@@ -447,6 +447,7 @@ async def test_credential_timeout(hass):
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "creds"
     assert result["errors"] == {"base": "credential_timeout"}
 
 
