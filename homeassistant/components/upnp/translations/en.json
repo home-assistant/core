@@ -14,8 +14,8 @@
                 "data": {
                     "name": "Name"
                 },
-                "title": "UPnP/IGD via SSDP Confirm DEBUG",
-                "description": "Do you want to set up the UPnP/IGD device?"
+                "title": "UPnP/IGD",
+                "description": "Do you want to set up this UPnP/IGD device?"
             },
             "user": {
                 "data": {

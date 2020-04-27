@@ -8,7 +8,6 @@ from async_upnp_client import UpnpError, UpnpFactory
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.profiles.igd import IgdDevice
 
-from homeassistant.components import ssdp
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
@@ -17,6 +16,10 @@ from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
     CONF_LOCAL_IP,
+    DISCOVERY_LOCATION,
+    DISCOVERY_ST,
+    DISCOVERY_UDN,
+    DISCOVERY_USN,
     DOMAIN,
     LOGGER as _LOGGER,
     PACKETS_RECEIVED,
@@ -48,14 +51,11 @@ class Device:
         # add extra info and store devices
         devices = []
         for discovery_info in discovery_infos:
-            # Become more ssdp-component-discovery-like.
-            discovery_info[ssdp.ATTR_UPNP_UDN] = discovery_info["_udn"]
-            discovery_info[ssdp.ATTR_SSDP_ST] = discovery_info["st"]
-            discovery_info[ssdp.ATTR_SSDP_LOCATION] = discovery_info["location"]
-
-            unique_id = f"{discovery_info[ssdp.ATTR_UPNP_UDN]}::{discovery_info[ssdp.ATTR_SSDP_ST]}"
-            discovery_info["unique_id"] = unique_id
-            discovery_info["source"] = "async_upnp_client"
+            discovery_info[DISCOVERY_UDN] = discovery_info["_udn"]
+            discovery_info[DISCOVERY_ST] = discovery_info["st"]
+            discovery_info[DISCOVERY_LOCATION] = discovery_info["location"]
+            usn = f"{discovery_info[DISCOVERY_UDN]}::{discovery_info[DISCOVERY_ST]}"
+            discovery_info[DISCOVERY_USN] = usn
             _LOGGER.debug("Discovered device: %s", discovery_info)
 
             devices.append(discovery_info)

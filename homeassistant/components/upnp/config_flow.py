@@ -6,17 +6,18 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 
 from .const import (  # pylint: disable=unused-import
+    CONFIG_ENTRY_ST,
+    CONFIG_ENTRY_UDN,
+    DISCOVERY_LOCATION,
+    DISCOVERY_NAME,
+    DISCOVERY_ST,
+    DISCOVERY_UDN,
+    DISCOVERY_USN,
     DOMAIN,
     LOGGER as _LOGGER,
 )
 from .device import Device
 from urllib.parse import urlparse
-
-
-LOCATION = "location"
-NAME = "name"
-ST = "st"
-UDN = "udn"
 
 
 class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -32,53 +33,51 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the UPnP/IGD config flow."""
-        self._data: Mapping = None
         self._discoveries: Mapping = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
         _LOGGER.debug("async_step_user: user_input: %s", user_input)
+        # This uses DISCOVERY_USN as the unique_id for user input.
 
         if user_input is not None:
             # Ensure wanted device was discovered.
             matching_discoveries = [
                 discovery
                 for discovery in self._discoveries
-                if discovery["unique_id"] == user_input["unique_id"]
+                if discovery[DISCOVERY_USN] == user_input["unique_id"]
             ]
             if not matching_discoveries:
-                errors = {"base": "no_devices_discovered"}
-                return self.async_show_form(step_id="user", errors=errors,)
+                return self.async_abort(reason="no_devices_discovered")
 
-            # Title/name will be updated later on.
-            self._data = matching_discoveries[0]
-            self._data[NAME] = urlparse(self._data[ssdp.ATTR_SSDP_LOCATION]).hostname
-            return self._async_create_entry_from_data()
+            # Title/name will be updated in `async_setup_entry`.
+            discovery = matching_discoveries[0]
+            self.async_set_unique_id(discovery[DISCOVERY_USN], raise_on_progress=False)
+            return self._async_create_entry_from_data(discovery)
 
         # Discover devices.
-        self._discoveries = await Device.async_discover(self.hass)
+        discoveries = await Device.async_discover(self.hass)
 
         # Filter discoveries which are already configured.
-        current_unique_ids = [
+        current_unique_ids = {
             entry.unique_id for entry in self._async_current_entries()
-        ]
+        }
         self._discoveries = [
             discovery
-            for discovery in self._discoveries
-            if discovery["unique_id"] not in current_unique_ids
+            for discovery in discoveries
+            if discovery[DISCOVERY_USN] not in current_unique_ids
         ]
 
         # Ensure anything to add.
         if not self._discoveries:
-            errors = {"base": "no_devices_discovered"}
-            return self.async_show_form(step_id="user", errors=errors,)
+            return self.async_abort(reason="no_devices_found")
 
         data_schema = vol.Schema(
             {
                 vol.Required("unique_id"): vol.In(
                     {
-                        discovery["unique_id"]: urlparse(
-                            discovery[ssdp.ATTR_SSDP_LOCATION]
+                        discovery[DISCOVERY_USN]: urlparse(
+                            discovery[DISCOVERY_LOCATION]
                         ).hostname
                         for discovery in self._discoveries
                     }
@@ -103,11 +102,18 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Test if import_info isn't already configured.
         if import_info is not None and any(
-            import_info["udn"] == entry.data["udn"]
-            and import_info["st"] == entry.data["st"]
+            import_info["udn"] == entry.data[CONFIG_ENTRY_UDN]
+            and import_info["st"] == entry.data[CONFIG_ENTRY_ST]
             for entry in self._async_current_entries()
         ):
-            return self.async_abort(reason="already_configured")
+            usn = f"{import_info['udn']}::{import_info['st']}"
+            await self.async_set_unique_id(usn, raise_on_progress=False)
+            self._abort_if_unique_id_configured(
+                updates={
+                    DISCOVERY_UDN: import_info["udn"],
+                    DISCOVERY_ST: import_info["st"],
+                }
+            )
 
         # Discover devices.
         self._discoveries = await Device.async_discover(self.hass)
@@ -118,8 +124,8 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
 
         # Create new config_entry.
-        self._data = self._discoveries[0]
-        return self._async_create_entry_from_data()
+        discovery = self._discoveries[0]
+        return self._async_create_entry_from_data(discovery)
 
     async def async_step_ssdp(self, discovery_info: Mapping):
         """Handle a discovered UPnP/IGD device.
@@ -132,17 +138,18 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Ensure not already configuring/configured.
         udn = discovery_info[ssdp.ATTR_UPNP_UDN]
         st = discovery_info[ssdp.ATTR_SSDP_ST]  # pylint: disable=invalid-name
-        usn = f"{udn}::{st}"
-        await self.async_set_unique_id(usn)
-        self._abort_if_unique_id_configured(updates={UDN: udn, ST: st})
+        unique_id = f"{udn}::{st}"
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
 
         # Store discovery.
         name = discovery_info.get("friendlyName", "")
-        self._data = {
-            UDN: udn,
-            ST: st,
-            NAME: name,
+        discovery = {
+            DISCOVERY_UDN: udn,
+            DISCOVERY_ST: st,
+            DISCOVERY_NAME: name,
         }
+        self._discoveries = [discovery]
 
         # Ensure user recognizable.
         location = discovery_info[ssdp.ATTR_SSDP_LOCATION]
@@ -160,13 +167,14 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="ssdp_confirm")
 
-        return self._async_create_entry_from_data()
+        discovery = self._discoveries[0]
+        return self._async_create_entry_from_data(discovery)
 
-    def _async_create_entry_from_data(self):
+    def _async_create_entry_from_data(self, discovery):
         """Create an entry from own _data."""
-        title = self._data["name"]
+        title = discovery.get(DISCOVERY_NAME, "")
         data = {
-            UDN: self._data["udn"],
-            ST: self._data["st"],
+            CONFIG_ENTRY_UDN: discovery[DISCOVERY_UDN],
+            CONFIG_ENTRY_ST: discovery[DISCOVERY_ST],
         }
         return self.async_create_entry(title=title, data=data)
