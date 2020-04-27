@@ -12,20 +12,6 @@ MOCKUP_ENTITY_IDS = {
 }
 
 
-async def async_turn_on(hass, entity_id):
-    """Use turn_on service on a switch entity."""
-    await hass.services.async_call(
-        switch.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True,
-    )
-
-
-async def async_turn_off(hass, entity_id):
-    """Use turn_off service on a switch entity."""
-    await hass.services.async_call(
-        switch.DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True,
-    )
-
-
 async def test_failing_setups_no_entities(hass, numato_fixture, monkeypatch):
     """When port setup fails, no entity shall be created."""
     monkeypatch.setattr(numato_fixture.NumatoDeviceMock, "setup", mockup_raise)
@@ -39,16 +25,36 @@ async def test_regular_hass_operations(hass, numato_fixture):
     """Test regular operations from within Home Assistant."""
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
     await hass.async_block_till_done()  # wait until services are registered
-    await async_turn_on(hass, "switch.numato_switch_mock_port5")
+    await hass.services.async_call(
+        switch.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.numato_switch_mock_port5"},
+        blocking=True,
+    )
     assert hass.states.get("switch.numato_switch_mock_port5").state == "on"
     assert numato_fixture.devices[0].values[5] == 1
-    await async_turn_on(hass, "switch.numato_switch_mock_port6")
+    await hass.services.async_call(
+        switch.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.numato_switch_mock_port6"},
+        blocking=True,
+    )
     assert hass.states.get("switch.numato_switch_mock_port6").state == "on"
     assert numato_fixture.devices[0].values[6] == 1
-    await async_turn_off(hass, "switch.numato_switch_mock_port5")
+    await hass.services.async_call(
+        switch.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.numato_switch_mock_port5"},
+        blocking=True,
+    )
     assert hass.states.get("switch.numato_switch_mock_port5").state == "off"
     assert numato_fixture.devices[0].values[5] == 0
-    await async_turn_off(hass, "switch.numato_switch_mock_port6")
+    await hass.services.async_call(
+        switch.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.numato_switch_mock_port6"},
+        blocking=True,
+    )
     assert hass.states.get("switch.numato_switch_mock_port6").state == "off"
     assert numato_fixture.devices[0].values[6] == 0
 
@@ -63,16 +69,36 @@ async def test_failing_hass_operations(hass, numato_fixture, monkeypatch):
 
     await hass.async_block_till_done()  # wait until services are registered
     monkeypatch.setattr(numato_fixture.devices[0], "write", mockup_raise)
-    await async_turn_on(hass, "switch.numato_switch_mock_port5")
+    await hass.services.async_call(
+        switch.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.numato_switch_mock_port5"},
+        blocking=True,
+    )
     assert hass.states.get("switch.numato_switch_mock_port5").state == "off"
     assert not numato_fixture.devices[0].values[5]
-    await async_turn_on(hass, "switch.numato_switch_mock_port6")
+    await hass.services.async_call(
+        switch.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.numato_switch_mock_port6"},
+        blocking=True,
+    )
     assert hass.states.get("switch.numato_switch_mock_port6").state == "off"
     assert not numato_fixture.devices[0].values[6]
-    await async_turn_off(hass, "switch.numato_switch_mock_port5")
+    await hass.services.async_call(
+        switch.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.numato_switch_mock_port5"},
+        blocking=True,
+    )
     assert hass.states.get("switch.numato_switch_mock_port5").state == "off"
     assert not numato_fixture.devices[0].values[5]
-    await async_turn_off(hass, "switch.numato_switch_mock_port6")
+    await hass.services.async_call(
+        switch.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.numato_switch_mock_port6"},
+        blocking=True,
+    )
     assert hass.states.get("switch.numato_switch_mock_port6").state == "off"
     assert not numato_fixture.devices[0].values[6]
 
