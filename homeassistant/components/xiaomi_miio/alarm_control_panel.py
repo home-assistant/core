@@ -7,7 +7,7 @@ from miio import DeviceException
 
 from homeassistant.components.alarm_control_panel import (
     SUPPORT_ALARM_ARM_AWAY,
-    AlarmControlPanel,
+    AlarmControlPanelEntity,
 )
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -39,7 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class XiaomiGatewayAlarm(AlarmControlPanel):
+class XiaomiGatewayAlarm(AlarmControlPanelEntity):
     """Representation of the XiaomiGatewayAlarm."""
 
     def __init__(
