@@ -1,12 +1,12 @@
 """Test Axis config flow."""
-from unittest.mock import Mock, patch
+from asynctest import Mock, patch
 
 from homeassistant.components import axis
 from homeassistant.components.axis import config_flow
 
 from .test_device import MAC, MODEL, NAME, setup_axis_integration
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 
 def setup_mock_axis_device(mock_device):
@@ -80,7 +80,7 @@ async def test_manual_configuration_update_configuration(hass):
 
     with patch(
         "homeassistant.components.axis.config_flow.get_device",
-        return_value=mock_coro(mock_device),
+        return_value=mock_device,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -113,7 +113,7 @@ async def test_flow_fails_already_configured(hass):
 
     with patch(
         "homeassistant.components.axis.config_flow.get_device",
-        return_value=mock_coro(mock_device),
+        return_value=mock_device,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -232,7 +232,7 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
 
 async def test_zeroconf_flow(hass):
     """Test that zeroconf discovery for new devices work."""
-    with patch.object(axis, "get_device", return_value=mock_coro(Mock())):
+    with patch.object(axis, "get_device", return_value=Mock()):
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
             data={

@@ -205,6 +205,7 @@ class Integration:
         self.pkg_path = pkg_path
         self.file_path = file_path
         self.manifest = manifest
+        manifest["is_built_in"] = self.is_built_in
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
 
     @property
@@ -419,9 +420,7 @@ def _load_file(
             parts = []
             for part in path.split("."):
                 parts.append(part)
-                white_listed_errors.append(
-                    "No module named '{}'".format(".".join(parts))
-                )
+                white_listed_errors.append(f"No module named '{'.'.join(parts)}'")
 
             if str(err) not in white_listed_errors:
                 _LOGGER.exception(

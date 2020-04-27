@@ -6,30 +6,19 @@ import pytest
 
 from homeassistant.components import nws
 from homeassistant.components.weather import ATTR_FORECAST
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.nws.const import (
     EXPECTED_FORECAST_IMPERIAL,
     EXPECTED_FORECAST_METRIC,
     EXPECTED_OBSERVATION_IMPERIAL,
     EXPECTED_OBSERVATION_METRIC,
-    MINIMAL_CONFIG,
     NONE_FORECAST,
     NONE_OBSERVATION,
+    NWS_CONFIG,
 )
-
-HOURLY_CONFIG = {
-    "weather": {
-        "platform": "nws",
-        "api_key": "x@example.com",
-        "latitude": 40.0,
-        "longitude": -85.0,
-        "mode": "hourly",
-    }
-}
 
 
 @pytest.mark.parametrize(
@@ -44,7 +33,9 @@ async def test_imperial_metric(
 ):
     """Test with imperial and metric units."""
     hass.config.units = units
-    assert await async_setup_component(hass, nws.DOMAIN, MINIMAL_CONFIG)
+    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("weather.abc_hourly")
@@ -80,7 +71,9 @@ async def test_none_values(hass, mock_simple_nws):
     instance.observation = NONE_OBSERVATION
     instance.forecast = NONE_FORECAST
 
-    assert await async_setup_component(hass, nws.DOMAIN, MINIMAL_CONFIG)
+    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("weather.abc_daynight")
@@ -100,7 +93,9 @@ async def test_none(hass, mock_simple_nws):
     instance.observation = None
     instance.forecast = None
 
-    assert await async_setup_component(hass, nws.DOMAIN, MINIMAL_CONFIG)
+    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("weather.abc_daynight")
@@ -121,20 +116,34 @@ async def test_error_station(hass, mock_simple_nws):
     instance = mock_simple_nws.return_value
     instance.set_station.side_effect = aiohttp.ClientError
 
-    assert await async_setup_component(hass, nws.DOMAIN, MINIMAL_CONFIG) is True
+    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert hass.states.get("weather.abc_hourly") is None
     assert hass.states.get("weather.abc_daynight") is None
 
 
-async def test_error_observation(hass, mock_simple_nws, caplog):
+async def test_error_observation(hass, mock_simple_nws):
     """Test error during update observation."""
     instance = mock_simple_nws.return_value
     instance.update_observation.side_effect = aiohttp.ClientError
 
-    assert await async_setup_component(hass, nws.DOMAIN, MINIMAL_CONFIG)
+    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+    instance.update_observation.assert_called_once()
+
+    state = hass.states.get("weather.abc_daynight")
+    assert state
+    assert state.state == "unavailable"
+
+    state = hass.states.get("weather.abc_hourly")
+    assert state
+    assert state.state == "unavailable"
 
     instance.update_observation.side_effect = None
 
@@ -142,17 +151,32 @@ async def test_error_observation(hass, mock_simple_nws, caplog):
     async_fire_time_changed(hass, future_time)
     await hass.async_block_till_done()
 
-    assert "Error updating observation" in caplog.text
-    assert "Success updating observation" in caplog.text
+    assert instance.update_observation.call_count == 2
+
+    state = hass.states.get("weather.abc_daynight")
+    assert state
+    assert state.state == "sunny"
+
+    state = hass.states.get("weather.abc_hourly")
+    assert state
+    assert state.state == "sunny"
 
 
-async def test_error_forecast(hass, caplog, mock_simple_nws):
+async def test_error_forecast(hass, mock_simple_nws):
     """Test error during update forecast."""
     instance = mock_simple_nws.return_value
     instance.update_forecast.side_effect = aiohttp.ClientError
 
-    assert await async_setup_component(hass, nws.DOMAIN, MINIMAL_CONFIG)
+    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+    instance.update_forecast.assert_called_once()
+
+    state = hass.states.get("weather.abc_daynight")
+    assert state
+    assert state.state == "unavailable"
 
     instance.update_forecast.side_effect = None
 
@@ -160,17 +184,28 @@ async def test_error_forecast(hass, caplog, mock_simple_nws):
     async_fire_time_changed(hass, future_time)
     await hass.async_block_till_done()
 
-    assert "Error updating forecast" in caplog.text
-    assert "Success updating forecast" in caplog.text
+    assert instance.update_forecast.call_count == 2
+
+    state = hass.states.get("weather.abc_daynight")
+    assert state
+    assert state.state == "sunny"
 
 
-async def test_error_forecast_hourly(hass, caplog, mock_simple_nws):
+async def test_error_forecast_hourly(hass, mock_simple_nws):
     """Test error during update forecast hourly."""
     instance = mock_simple_nws.return_value
     instance.update_forecast_hourly.side_effect = aiohttp.ClientError
 
-    assert await async_setup_component(hass, nws.DOMAIN, MINIMAL_CONFIG)
+    entry = MockConfigEntry(domain=nws.DOMAIN, data=NWS_CONFIG,)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+    state = hass.states.get("weather.abc_hourly")
+    assert state
+    assert state.state == "unavailable"
+
+    instance.update_forecast_hourly.assert_called_once()
 
     instance.update_forecast_hourly.side_effect = None
 
@@ -178,5 +213,8 @@ async def test_error_forecast_hourly(hass, caplog, mock_simple_nws):
     async_fire_time_changed(hass, future_time)
     await hass.async_block_till_done()
 
-    assert "Error updating forecast_hourly" in caplog.text
-    assert "Success updating forecast_hourly" in caplog.text
+    assert instance.update_forecast_hourly.call_count == 2
+
+    state = hass.states.get("weather.abc_hourly")
+    assert state
+    assert state.state == "sunny"

@@ -1,7 +1,7 @@
 """Support for OpenUV binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.util.dt import as_local, parse_datetime, utcnow
 
@@ -37,7 +37,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(binary_sensors, True)
 
 
-class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):
+class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
     """Define a binary sensor for OpenUV."""
 
     def __init__(self, openuv, sensor_type, name, icon, entry_id):

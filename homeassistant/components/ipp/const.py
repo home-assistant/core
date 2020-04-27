@@ -21,5 +21,6 @@ ATTR_URI_SUPPORTED = "uri_supported"
 
 # Config Keys
 CONF_BASE_PATH = "base_path"
+CONF_SERIAL = "serial"
 CONF_TLS = "tls"
 CONF_UUID = "uuid"

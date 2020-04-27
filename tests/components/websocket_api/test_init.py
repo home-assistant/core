@@ -2,17 +2,9 @@
 from unittest.mock import Mock, patch
 
 from aiohttp import WSMsgType
-import pytest
 import voluptuous as vol
 
 from homeassistant.components.websocket_api import const, messages
-
-
-@pytest.fixture
-def mock_low_queue():
-    """Mock a low queue."""
-    with patch("homeassistant.components.websocket_api.http.MAX_PENDING_MSG", 5):
-        yield
 
 
 async def test_invalid_message_format(websocket_client):
@@ -44,14 +36,6 @@ async def test_quiting_hass(hass, websocket_client):
     msg = await websocket_client.receive()
 
     assert msg.type == WSMsgType.CLOSE
-
-
-async def test_pending_msg_overflow(hass, mock_low_queue, websocket_client):
-    """Test get_panels command."""
-    for idx in range(10):
-        await websocket_client.send_json({"id": idx + 1, "type": "ping"})
-    msg = await websocket_client.receive()
-    assert msg.type == WSMsgType.close
 
 
 async def test_unknown_command(websocket_client):

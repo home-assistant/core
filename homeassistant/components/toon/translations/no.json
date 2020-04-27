@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "client_id": "Klient ID fra konfigurasjonen er ugyldig.",
+            "client_secret": "Klient hemmeligheten fra konfigurasjonen er ugyldig.",
+            "no_agreements": "Denne kontoen har ingen Toon skjermer.",
+            "no_app": "Du m\u00e5 konfigurere Toon f\u00f8r du kan autentisere den. [Vennligst les instruksjonene](https://www.home-assistant.io/components/toon/).",
+            "unknown_auth_fail": "Det oppstod en uventet feil under godkjenning."
+        },
+        "error": {
+            "credentials": "Den oppgitte kontoinformasjonen er ugyldig.",
+            "display_exists": "Den valgte skjermen er allerede konfigurert."
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Passord",
+                    "tenant": "Leietaker",
+                    "username": "Brukernavn"
+                },
+                "description": "Godkjenn med Eneco Toon kontoen din (ikke utviklerkontoen).",
+                "title": "Linken din Toon konto"
+            },
+            "display": {
+                "data": {
+                    "display": "Velg skjerm"
+                },
+                "description": "Velg Toon skjerm \u00e5 koble til.",
+                "title": "Velg skjerm"
+            }
+        }
+    }
+}

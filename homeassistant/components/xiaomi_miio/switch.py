@@ -13,7 +13,7 @@ from miio import (  # pylint: disable=import-error
 from miio.powerstrip import PowerMode  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -217,7 +217,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
 
-class XiaomiPlugGenericSwitch(SwitchDevice):
+class XiaomiPlugGenericSwitch(SwitchEntity):
     """Representation of a Xiaomi Plug Generic."""
 
     def __init__(self, name, plug, model, unique_id):

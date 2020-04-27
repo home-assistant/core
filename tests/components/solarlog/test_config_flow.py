@@ -1,6 +1,5 @@
 """Test the solarlog config flow."""
-from unittest.mock import patch
-
+from asynctest import patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup

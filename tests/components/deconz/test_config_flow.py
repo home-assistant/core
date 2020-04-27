@@ -7,6 +7,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.deconz import config_flow
 from homeassistant.components.deconz.config_flow import (
+    CONF_MANUAL_INPUT,
     CONF_SERIAL,
     DECONZ_MANUFACTURERURL,
 )
@@ -21,16 +22,26 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from .test_gateway import API_KEY, BRIDGEID, setup_deconz_integration
 
 
-async def test_flow_1_discovered_bridge(hass, aioclient_mock):
-    """Test that config flow for one discovered bridge works."""
+async def test_flow_discovered_bridges(hass, aioclient_mock):
+    """Test that config flow works for discovered bridges."""
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
-        json=[{"id": BRIDGEID, "internalipaddress": "1.2.3.4", "internalport": 80}],
+        json=[
+            {"id": BRIDGEID, "internalipaddress": "1.2.3.4", "internalport": 80},
+            {"id": "1234E567890A", "internalipaddress": "5.6.7.8", "internalport": 80},
+        ],
         headers={"content-type": "application/json"},
     )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "1.2.3.4"}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -55,14 +66,11 @@ async def test_flow_1_discovered_bridge(hass, aioclient_mock):
     }
 
 
-async def test_flow_2_discovered_bridges(hass, aioclient_mock):
-    """Test that config flow works for multiple discovered bridges."""
+async def test_flow_manual_configuration_decision(hass, aioclient_mock):
+    """Test that config flow for one discovered bridge works."""
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
-        json=[
-            {"id": BRIDGEID, "internalipaddress": "1.2.3.4", "internalport": 80},
-            {"id": "1234E567890A", "internalipaddress": "5.6.7.8", "internalport": 80},
-        ],
+        json=[{"id": BRIDGEID, "internalipaddress": "1.2.3.4", "internalport": 80}],
         headers={"content-type": "application/json"},
     )
 
@@ -70,11 +78,15 @@ async def test_flow_2_discovered_bridges(hass, aioclient_mock):
         DOMAIN, context={"source": "user"}
     )
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: CONF_MANUAL_INPUT}
+    )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "manual_input"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "1.2.3.4"}
+        result["flow_id"], user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -83,6 +95,12 @@ async def test_flow_2_discovered_bridges(hass, aioclient_mock):
     aioclient_mock.post(
         "http://1.2.3.4:80/api",
         json=[{"success": {"username": API_KEY}}],
+        headers={"content-type": "application/json"},
+    )
+
+    aioclient_mock.get(
+        f"http://1.2.3.4:80/api/{API_KEY}/config",
+        json={"bridgeid": BRIDGEID},
         headers={"content-type": "application/json"},
     )
 
@@ -112,7 +130,7 @@ async def test_flow_manual_configuration(hass, aioclient_mock):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "manual_input"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
@@ -155,7 +173,7 @@ async def test_manual_configuration_after_discovery_timeout(hass, aioclient_mock
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "manual_input"
     assert not hass.config_entries.flow._progress[result["flow_id"]].bridges
 
 
@@ -168,7 +186,7 @@ async def test_manual_configuration_after_discovery_ResponseError(hass, aioclien
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "manual_input"
     assert not hass.config_entries.flow._progress[result["flow_id"]].bridges
 
 
@@ -187,7 +205,7 @@ async def test_manual_configuration_update_configuration(hass, aioclient_mock):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "manual_input"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "2.3.4.5", CONF_PORT: 80},
@@ -232,7 +250,7 @@ async def test_manual_configuration_dont_update_configuration(hass, aioclient_mo
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "manual_input"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
@@ -274,7 +292,7 @@ async def test_manual_configuration_timeout_get_bridge(hass, aioclient_mock):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "manual_input"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 80},
@@ -311,6 +329,10 @@ async def test_link_get_api_key_ResponseError(hass, aioclient_mock):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "1.2.3.4"}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

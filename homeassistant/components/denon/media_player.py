@@ -4,7 +4,7 @@ import telnetlib
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -80,13 +80,13 @@ MEDIA_MODES = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Denon platform."""
-    denon = DenonDevice(config.get(CONF_NAME), config.get(CONF_HOST))
+    denon = DenonDevice(config[CONF_NAME], config[CONF_HOST])
 
     if denon.update():
         add_entities([denon])
 
 
-class DenonDevice(MediaPlayerDevice):
+class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon device."""
 
     def __init__(self, name, host):

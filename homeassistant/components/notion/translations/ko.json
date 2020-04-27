@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uc774 \uc0ac\uc6a9\uc790 \uc774\ub984\uc740 \uc774\ubbf8 \uc0ac\uc6a9 \uc911\uc785\ub2c8\ub2e4."
+        },
+        "error": {
+            "invalid_credentials": "\uc0ac\uc6a9\uc790 \uc774\ub984 \ub610\ub294 \ube44\ubc00\ubc88\ud638\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "no_devices": "\uacc4\uc815\uc5d0 \ub4f1\ub85d\ub41c \uae30\uae30\uac00 \uc874\uc7ac\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984 / \uc774\uba54\uc77c \uc8fc\uc18c"
+                },
+                "title": "\uc0ac\uc6a9\uc790 \uc815\ubcf4\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694"
+            }
+        }
+    }
+}

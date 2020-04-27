@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "accessory_not_found_error": "Kan geen koppeling toevoegen omdat het apparaat niet langer kan worden gevonden.",
+            "already_configured": "Accessoire is al geconfigureerd met deze controller.",
+            "already_in_progress": "De configuratiestroom voor het apparaat is al in volle gang.",
+            "already_paired": "Dit accessoire is al gekoppeld aan een ander apparaat. Reset het accessoire en probeer het opnieuw.",
+            "ignored_model": "HomeKit-ondersteuning voor dit model is geblokkeerd omdat er een meer functie volledige native integratie beschikbaar is.",
+            "invalid_config_entry": "Dit apparaat geeft aan dat het gereed is om te koppelen, maar er is al een conflicterend configuratie-item voor in de Home Assistant dat eerst moet worden verwijderd.",
+            "no_devices": "Er zijn geen gekoppelde apparaten gevonden"
+        },
+        "error": {
+            "authentication_error": "Onjuiste HomeKit-code. Controleer het en probeer het opnieuw.",
+            "busy_error": "Het apparaat weigerde om koppelingen toe te voegen, omdat het al gekoppeld is met een andere controller.",
+            "max_peers_error": "Apparaat heeft geweigerd om koppelingen toe te voegen omdat het geen vrije koppelingsopslag heeft.",
+            "max_tries_error": "Apparaat weigerde pairing toe te voegen omdat het meer dan 100 niet-succesvolle authenticatiepogingen heeft ontvangen.",
+            "pairing_failed": "Er deed zich een fout voor tijdens het koppelen met dit apparaat. Dit kan een tijdelijke storing zijn of uw apparaat wordt mogelijk momenteel niet ondersteund.",
+            "unable_to_pair": "Kan niet koppelen, probeer het opnieuw.",
+            "unknown_error": "Apparaat meldde een onbekende fout. Koppelen mislukt."
+        },
+        "flow_title": "HomeKit-accessoire: {name}",
+        "step": {
+            "pair": {
+                "data": {
+                    "pairing_code": "Koppelingscode"
+                },
+                "description": "Voer uw HomeKit pairing code (in het formaat XXX-XX-XXX) om dit accessoire te gebruiken",
+                "title": "Koppel met HomeKit accessoire"
+            },
+            "user": {
+                "data": {
+                    "device": "Apparaat"
+                },
+                "description": "Selecteer het apparaat waarmee u wilt koppelen",
+                "title": "Koppel met HomeKit accessoire"
+            }
+        }
+    },
+    "title": "HomeKit Accessoires"
+}

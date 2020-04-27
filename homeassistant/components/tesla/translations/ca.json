@@ -1,0 +1,30 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Error de connexi\u00f3; comprova la xarxa i torna-ho a intentar",
+            "identifier_exists": "Correu electr\u00f2nic ja registrat",
+            "invalid_credentials": "Credencials inv\u00e0lides",
+            "unknown_error": "Error desconegut, si us plau, envia la informaci\u00f3 del registre"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Correu electr\u00f2nic"
+                },
+                "description": "Introdueix la teva informaci\u00f3.",
+                "title": "Configuraci\u00f3 de Tesla"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "enable_wake_on_start": "For\u00e7a el despertar del cotxe en la posada en marxa",
+                    "scan_interval": "Segons entre escanejos"
+                }
+            }
+        }
+    }
+}

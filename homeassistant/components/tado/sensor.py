@@ -1,13 +1,23 @@
 """Support for Tado sensors for each zone."""
 import logging
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from . import DATA, DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
-from .const import TYPE_AIR_CONDITIONING, TYPE_HEATING, TYPE_HOT_WATER
+from .const import (
+    DATA,
+    DEFAULT_NAME,
+    DOMAIN,
+    SIGNAL_TADO_UPDATE_RECEIVED,
+    TADO_BRIDGE,
+    TYPE_AIR_CONDITIONING,
+    TYPE_HEATING,
+    TYPE_HOT_WATER,
+)
+from .entity import TadoZoneEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,50 +49,53 @@ ZONE_SENSORS = {
 DEVICE_SENSORS = ["tado bridge status"]
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the sensor platform."""
-    api_list = hass.data[DOMAIN][DATA]
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
+    """Set up the Tado sensor platform."""
 
+    tado = hass.data[DOMAIN][entry.entry_id][DATA]
+    # Create zone sensors
+    zones = tado.zones
+    devices = tado.devices
     entities = []
 
-    for tado in api_list:
-        # Create zone sensors
-        zones = tado.zones
-        devices = tado.devices
+    for zone in zones:
+        zone_type = zone["type"]
+        if zone_type not in ZONE_SENSORS:
+            _LOGGER.warning("Unknown zone type skipped: %s", zone_type)
+            continue
 
-        for zone in zones:
-            zone_type = zone["type"]
-            if zone_type not in ZONE_SENSORS:
-                _LOGGER.warning("Unknown zone type skipped: %s", zone_type)
-                continue
+        entities.extend(
+            [
+                TadoZoneSensor(
+                    tado, zone["name"], zone["id"], variable, zone["devices"][0]
+                )
+                for variable in ZONE_SENSORS[zone_type]
+            ]
+        )
 
-            entities.extend(
-                [
-                    TadoZoneSensor(tado, zone["name"], zone["id"], variable)
-                    for variable in ZONE_SENSORS[zone_type]
-                ]
-            )
+    # Create device sensors
+    for device in devices:
+        entities.extend(
+            [
+                TadoDeviceSensor(tado, device["name"], device["id"], variable, device)
+                for variable in DEVICE_SENSORS
+            ]
+        )
 
-        # Create device sensors
-        for device in devices:
-            entities.extend(
-                [
-                    TadoDeviceSensor(tado, device["name"], device["id"], variable)
-                    for variable in DEVICE_SENSORS
-                ]
-            )
-
-    add_entities(entities, True)
+    if entities:
+        async_add_entities(entities, True)
 
 
-class TadoZoneSensor(Entity):
+class TadoZoneSensor(TadoZoneEntity, Entity):
     """Representation of a tado Sensor."""
 
-    def __init__(self, tado, zone_name, zone_id, zone_variable):
+    def __init__(self, tado, zone_name, zone_id, zone_variable, device_info):
         """Initialize of the Tado Sensor."""
         self._tado = tado
+        super().__init__(zone_name, device_info, tado.device_id, zone_id)
 
-        self.zone_name = zone_name
         self.zone_id = zone_id
         self.zone_variable = zone_variable
 
@@ -91,20 +104,18 @@ class TadoZoneSensor(Entity):
         self._state = None
         self._state_attributes = None
         self._tado_zone_data = None
-        self._undo_dispatcher = None
-
-    async def async_will_remove_from_hass(self):
-        """When entity will be removed from hass."""
-        if self._undo_dispatcher:
-            self._undo_dispatcher()
 
     async def async_added_to_hass(self):
         """Register for sensor updates."""
 
-        self._undo_dispatcher = async_dispatcher_connect(
-            self.hass,
-            SIGNAL_TADO_UPDATE_RECEIVED.format("zone", self.zone_id),
-            self._async_update_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_TADO_UPDATE_RECEIVED.format(
+                    self._tado.device_id, "zone", self.zone_id
+                ),
+                self._async_update_callback,
+            )
         )
         self._async_update_zone_data()
 
@@ -147,11 +158,6 @@ class TadoZoneSensor(Entity):
             return "mdi:thermometer"
         if self.zone_variable == "humidity":
             return "mdi:water-percent"
-
-    @property
-    def should_poll(self):
-        """Do not poll."""
-        return False
 
     @callback
     def _async_update_callback(self):
@@ -223,10 +229,11 @@ class TadoZoneSensor(Entity):
 class TadoDeviceSensor(Entity):
     """Representation of a tado Sensor."""
 
-    def __init__(self, tado, device_name, device_id, device_variable):
+    def __init__(self, tado, device_name, device_id, device_variable, device_info):
         """Initialize of the Tado Sensor."""
         self._tado = tado
 
+        self._device_info = device_info
         self.device_name = device_name
         self.device_id = device_id
         self.device_variable = device_variable
@@ -236,20 +243,18 @@ class TadoDeviceSensor(Entity):
         self._state = None
         self._state_attributes = None
         self._tado_device_data = None
-        self._undo_dispatcher = None
-
-    async def async_will_remove_from_hass(self):
-        """When entity will be removed from hass."""
-        if self._undo_dispatcher:
-            self._undo_dispatcher()
 
     async def async_added_to_hass(self):
         """Register for sensor updates."""
 
-        self._undo_dispatcher = async_dispatcher_connect(
-            self.hass,
-            SIGNAL_TADO_UPDATE_RECEIVED.format("device", self.device_id),
-            self._async_update_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_TADO_UPDATE_RECEIVED.format(
+                    self._tado.device_id, "device", self.device_id
+                ),
+                self._async_update_callback,
+            )
         )
         self._async_update_device_data()
 
@@ -289,3 +294,13 @@ class TadoDeviceSensor(Entity):
 
         if self.device_variable == "tado bridge status":
             self._state = data.get("connectionState", {}).get("value", False)
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, self.device_id)},
+            "name": self.device_name,
+            "manufacturer": DEFAULT_NAME,
+            "model": TADO_BRIDGE,
+        }

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Conta j\u00e1 cadastrada",
+            "invalid_credentials": "C\u00f3digo inv\u00e1lido"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Endere\u00e7o de e-mail"
+                },
+                "title": "Preencha suas informa\u00e7\u00f5es"
+            }
+        }
+    }
+}

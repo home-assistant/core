@@ -1,6 +1,6 @@
 {
   "domain": "ios",
-  "name": "Apple iOS",
+  "name": "Home Assistant iOS",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ios",
   "dependencies": ["device_tracker", "http", "zeroconf"],

@@ -49,7 +49,13 @@ class FlowManagerIndexView(_BaseFlowManagerView):
     """View to create config flows."""
 
     @RequestDataValidator(
-        vol.Schema({vol.Required("handler"): vol.Any(str, list)}, extra=vol.ALLOW_EXTRA)
+        vol.Schema(
+            {
+                vol.Required("handler"): vol.Any(str, list),
+                vol.Optional("show_advanced_options", default=False): cv.boolean,
+            },
+            extra=vol.ALLOW_EXTRA,
+        )
     )
     async def post(self, request, data):
         """Handle a POST request."""
@@ -60,7 +66,11 @@ class FlowManagerIndexView(_BaseFlowManagerView):
 
         try:
             result = await self._flow_mgr.async_init(
-                handler, context={"source": config_entries.SOURCE_USER}
+                handler,
+                context={
+                    "source": config_entries.SOURCE_USER,
+                    "show_advanced_options": data["show_advanced_options"],
+                },
             )
         except data_entry_flow.UnknownHandler:
             return self.json_message("Invalid handler specified", HTTP_NOT_FOUND)

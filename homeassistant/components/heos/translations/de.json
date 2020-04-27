@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Es kann nur eine einzige Heos-Verbindung konfiguriert werden, da diese alle Ger\u00e4te im Netzwerk unterst\u00fctzt."
+        },
+        "error": {
+            "connection_failure": "Es kann keine Verbindung zum angegebenen Host hergestellt werden."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Host",
+                    "host": "Host"
+                },
+                "description": "Bitte gib den Hostnamen oder die IP-Adresse eines Heos-Ger\u00e4ts ein (vorzugsweise eines, das per Kabel mit dem Netzwerk verbunden ist).",
+                "title": "Mit Heos verbinden"
+            }
+        }
+    }
+}

@@ -1,5 +1,5 @@
 """Support for the Tuya climate devices."""
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
+from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
@@ -22,6 +22,8 @@ from homeassistant.const import (
 from . import DATA_TUYA, TuyaDevice
 
 DEVICE_TYPE = "climate"
+
+PARALLEL_UPDATES = 0
 
 HA_STATE_TO_TUYA = {
     HVAC_MODE_AUTO: "auto",
@@ -46,11 +48,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device = tuya.get_device_by_id(dev_id)
         if device is None:
             continue
-        devices.append(TuyaClimateDevice(device))
+        devices.append(TuyaClimateEntity(device))
     add_entities(devices)
 
 
-class TuyaClimateDevice(TuyaDevice, ClimateDevice):
+class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     """Tuya climate devices,include air conditioner,heater."""
 
     def __init__(self, tuya):

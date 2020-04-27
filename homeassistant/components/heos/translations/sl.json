@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Konfigurirate lahko samo eno povezavo Heos, le ta bo podpirala vse naprave v omre\u017eju."
+        },
+        "error": {
+            "connection_failure": "Ni mogo\u010de vzpostaviti povezave z dolo\u010denim gostiteljem."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Gostitelj",
+                    "host": "Gostitelj"
+                },
+                "description": "Vnesite ime gostitelja ali naslov IP naprave Heos (po mo\u017enosti eno, ki je z omre\u017ejem povezana \u017ei\u010dno).",
+                "title": "Pove\u017eite se z Heos"
+            }
+        }
+    }
+}

@@ -17,6 +17,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     ACTIVE_UPDATE_RATE,
@@ -27,6 +28,7 @@ from .const import (
     SENSE_DEVICES_DATA,
     SENSE_DISCOVERED_DEVICES_DATA,
     SENSE_TIMEOUT_EXCEPTIONS,
+    SENSE_TRENDS_COORDINATOR,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -111,9 +113,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except SENSE_TIMEOUT_EXCEPTIONS:
         raise ConfigEntryNotReady
 
+    trends_coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"Sense Trends {email}",
+        update_method=gateway.update_trend_data,
+        update_interval=timedelta(seconds=300),
+    )
+
+    # This can take longer than 60s and we already know
+    # sense is online since get_discovered_device_data was
+    # successful so we do it later.
+    hass.loop.create_task(trends_coordinator.async_request_refresh())
+
     hass.data[DOMAIN][entry.entry_id] = {
         SENSE_DATA: gateway,
         SENSE_DEVICES_DATA: sense_devices_data,
+        SENSE_TRENDS_COORDINATOR: trends_coordinator,
         SENSE_DISCOVERED_DEVICES_DATA: sense_discovered_devices,
     }
 
@@ -122,7 +138,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    async def async_sense_update(now):
+    async def async_sense_update(_):
         """Retrieve latest state."""
         try:
             await gateway.update_realtime()

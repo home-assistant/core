@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Plasseringen er allerede konfigurert."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mmi": "MMI",
+                    "radius": "Radius"
+                },
+                "title": "Fyll ut filterdetaljene."
+            }
+        }
+    }
+}

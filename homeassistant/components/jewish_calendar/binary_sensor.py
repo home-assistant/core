@@ -3,7 +3,7 @@ import logging
 
 import hdate
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN, SENSOR_TYPES
@@ -24,7 +24,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class JewishCalendarBinarySensor(BinarySensorDevice):
+class JewishCalendarBinarySensor(BinarySensorEntity):
     """Representation of an Jewish Calendar binary sensor."""
 
     def __init__(self, data, sensor, sensor_info):

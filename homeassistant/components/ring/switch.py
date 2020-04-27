@@ -4,7 +4,7 @@ import logging
 
 import requests
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
 
@@ -36,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(switches)
 
 
-class BaseRingSwitch(RingEntityMixin, SwitchDevice):
+class BaseRingSwitch(RingEntityMixin, SwitchEntity):
     """Represents a switch for controlling an aspect of a ring device."""
 
     def __init__(self, config_entry_id, device, device_type):

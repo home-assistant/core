@@ -25,7 +25,10 @@ ptz:
       description: "Set ContinuousMove delay in seconds before stopping the move"
       default: 0.5
       example: 0.5
+    preset:
+      description: "PTZ preset profile token. Sets the preset profile token which is executed with GotoPreset"
+      example: "1"
     move_mode:
-      description: "PTZ moving mode. One of ContinuousMove, RelativeMove or AbsoluteMove"
+      description: "PTZ moving mode. One of ContinuousMove, RelativeMove, AbsoluteMove or GotoPreset"
       default: "RelativeMove"
       example: "ContinuousMove"

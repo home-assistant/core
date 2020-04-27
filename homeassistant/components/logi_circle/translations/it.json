@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "\u00c8 possibile configurare solo un singolo account Logi Circle.",
+            "external_error": "Si \u00e8 verificata un'eccezione da un altro flusso.",
+            "external_setup": "Logi Circle configurato con successo da un altro flusso.",
+            "no_flows": "Devi configurare Logi Circle prima di poter eseguire l'autenticazione. [Si prega di leggere le istruzioni] (https://www.home-assistant.io/components/logi_circle/)."
+        },
+        "create_entry": {
+            "default": "Autenticato con successo con Logi Circle."
+        },
+        "error": {
+            "auth_error": "Autorizzazione API fallita.",
+            "auth_timeout": "Timeout dell'autorizzazione durante la richiesta del token di accesso.",
+            "follow_link": "Segui il link e autenticati prima di premere Invia"
+        },
+        "step": {
+            "auth": {
+                "description": "Segui il link qui sotto e <b>Accetta</b> l'accesso al tuo account Logi Circle, quindi torna indietro e premi <b>Invia</b> qui sotto. \n\n [Link]({authorization_url})",
+                "title": "Autenticarsi con Logi Circle"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Provider"
+                },
+                "description": "Scegli tramite quale provider di autenticazione vuoi autenticarti con Logi Circle.",
+                "title": "Provider di autenticazione"
+            }
+        }
+    }
+}

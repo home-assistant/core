@@ -1,0 +1,15 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name} is home",
+            "is_not_home": "{entity_name} is not home"
+        }
+    },
+    "state": {
+        "_": {
+            "home": "Home",
+            "not_home": "Away"
+        }
+    },
+    "title": "Device tracker"
+}

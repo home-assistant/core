@@ -1,14 +1,13 @@
 """Config flow for Tesla Powerwall integration."""
 import logging
 
-from tesla_powerwall import ApiError, PowerWall, PowerWallUnreachableError
+from tesla_powerwall import APIChangedError, Powerwall, PowerwallUnreachableError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_IP_ADDRESS
 
 from .const import DOMAIN  # pylint:disable=unused-import
-from .const import POWERWALL_SITE_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,20 +20,20 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
 
-    power_wall = PowerWall(data[CONF_IP_ADDRESS])
+    power_wall = Powerwall(data[CONF_IP_ADDRESS])
 
     try:
-        site_info = await hass.async_add_executor_job(call_site_info, power_wall)
-    except (PowerWallUnreachableError, ApiError, ConnectionError):
+        await hass.async_add_executor_job(power_wall.detect_and_pin_version)
+        site_info = await hass.async_add_executor_job(power_wall.get_site_info)
+    except PowerwallUnreachableError:
         raise CannotConnect
+    except APIChangedError as err:
+        # Only log the exception without the traceback
+        _LOGGER.error(str(err))
+        raise WrongVersion
 
     # Return info that you want to store in the config entry.
-    return {"title": site_info[POWERWALL_SITE_NAME]}
-
-
-def call_site_info(power_wall):
-    """Wrap site_info to be a callable."""
-    return power_wall.site_info
+    return {"title": site_info.site_name}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -51,6 +50,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except WrongVersion:
+                errors["base"] = "wrong_version"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -74,3 +75,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class WrongVersion(exceptions.HomeAssistantError):
+    """Error to indicate the powerwall uses a software version we cannot interact with."""

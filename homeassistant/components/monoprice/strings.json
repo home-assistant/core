@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Monoprice 6-Zone Amplifier",
     "step": {
       "user": {
         "title": "Connect to the device",
@@ -19,9 +18,7 @@
       "cannot_connect": "Failed to connect, please try again",
       "unknown": "Unexpected error"
     },
-    "abort": {
-      "already_configured": "Device is already configured"
-    }
+    "abort": { "already_configured": "Device is already configured" }
   },
   "options": {
     "step": {

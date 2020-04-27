@@ -6,7 +6,7 @@ import time
 from clementineremote import ClementineRemote
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_NEXT_TRACK,
@@ -58,8 +58,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Clementine platform."""
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
     token = config.get(CONF_ACCESS_TOKEN)
 
     client = ClementineRemote(host, port, token, reconnect=True)
@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([ClementineDevice(client, config[CONF_NAME])])
 
 
-class ClementineDevice(MediaPlayerDevice):
+class ClementineDevice(MediaPlayerEntity):
     """Representation of Clementine Player."""
 
     def __init__(self, client, name):

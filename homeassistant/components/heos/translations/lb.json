@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Dir k\u00ebnnt n\u00ebmmen eng eenzeg Heos Verbindung konfigur\u00e9ieren, well se all Apparater am Netzwierk \u00ebnnerst\u00ebtzen."
+        },
+        "error": {
+            "connection_failure": "Kann sech net mat dem spezifiz\u00e9ierten Apparat verbannen."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Apparat",
+                    "host": "Apparat"
+                },
+                "description": "Gitt den Numm oder IP-Adress vun engem Heos-Apparat an (am beschten iwwer Kabel mam Reseau verbonnen).",
+                "title": "Mat Heos verbannen"
+            }
+        }
+    }
+}

@@ -1,0 +1,26 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "one": "Empty",
+                    "other": ""
+                }
+            },
+            "options_1": {
+                "data": {
+                    "bool": "Optioneel Boolean",
+                    "int": "Numerieke invoer"
+                }
+            },
+            "options_2": {
+                "data": {
+                    "multi": "Meerkeuze selectie",
+                    "select": "Kies een optie",
+                    "string": "String waarde"
+                }
+            }
+        }
+    },
+    "title": "Demo"
+}

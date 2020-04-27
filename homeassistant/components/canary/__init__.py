@@ -40,9 +40,9 @@ CANARY_COMPONENTS = ["alarm_control_panel", "camera", "sensor"]
 def setup(hass, config):
     """Set up the Canary component."""
     conf = config[DOMAIN]
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
-    timeout = conf.get(CONF_TIMEOUT)
+    username = conf[CONF_USERNAME]
+    password = conf[CONF_PASSWORD]
+    timeout = conf[CONF_TIMEOUT]
 
     try:
         hass.data[DATA_CANARY] = CanaryData(username, password, timeout)

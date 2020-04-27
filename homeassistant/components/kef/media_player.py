@@ -23,7 +23,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
-    MediaPlayerDevice,
+    MediaPlayerEntity,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -174,7 +174,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     add_service(SERVICE_SUB_DB, "sub_db", "db_value")
 
 
-class KefMediaPlayer(MediaPlayerDevice):
+class KefMediaPlayer(MediaPlayerEntity):
     """Kef Player Object."""
 
     def __init__(
@@ -357,7 +357,7 @@ class KefMediaPlayer(MediaPlayerDevice):
         """Send next track command."""
         await self._speaker.next_track()
 
-    async def update_dsp(self) -> None:
+    async def update_dsp(self, _=None) -> None:
         """Update the DSP settings."""
         if self._speaker_type == "LS50" and self._state == STATE_OFF:
             # The LSX is able to respond when off the LS50 has to be on.

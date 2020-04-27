@@ -2,7 +2,7 @@
 import logging
 from typing import Callable
 
-from homeassistant.components.lock import DOMAIN, LockDevice
+from homeassistant.components.lock import DOMAIN, LockEntity
 from homeassistant.const import STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED
 from homeassistant.helpers.typing import ConfigType
 
@@ -27,7 +27,7 @@ def setup_platform(
     add_entities(devices)
 
 
-class ISYLockDevice(ISYDevice, LockDevice):
+class ISYLockDevice(ISYDevice, LockEntity):
     """Representation of an ISY994 lock device."""
 
     def __init__(self, node) -> None:

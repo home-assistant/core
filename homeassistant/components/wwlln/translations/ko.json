@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uc774 \uc704\uce58\ub294 \uc774\ubbf8 \ub4f1\ub85d\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "\uc704\ub3c4",
+                    "longitude": "\uacbd\ub3c4",
+                    "radius": "\ubc18\uacbd (\uae30\ubcf8 \ub2e8\uc704 \uc2dc\uc2a4\ud15c \uc0ac\uc6a9)"
+                },
+                "title": "\uc704\uce58 \uc815\ubcf4\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694."
+            }
+        }
+    }
+}

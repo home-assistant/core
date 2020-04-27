@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Keng LIFX Apparater am Netzwierk fonnt.",
+            "single_instance_allowed": "N\u00ebmmen eng eenzeg Konfiguratioun vun LIFX ass erlaabt."
+        },
+        "step": {
+            "confirm": {
+                "description": "Soll LIFX konfigur\u00e9iert ginn?",
+                "title": "LIFX"
+            }
+        }
+    }
+}

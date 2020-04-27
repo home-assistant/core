@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Une erreur inconnue est survenue. Veuillez consulter les journaux pour obtenir plus de d\u00e9tails."
+        },
+        "step": {
+            "pairing": {
+                "data": {
+                    "pin": "PIN"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Adresse IP",
+                    "name": "Nom"
+                },
+                "title": "Configurer votre t\u00e9l\u00e9viseur"
+            }
+        }
+    },
+    "title": "Panasonic Viera"
+}

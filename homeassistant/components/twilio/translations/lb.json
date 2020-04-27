@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "\u00c4r Home Assistant Instanz muss iwwert Internet accessibel si fir Twilio Noriichten z'empf\u00e4nken.",
+            "one_instance_allowed": "N\u00ebmmen eng eenzeg Instanz ass n\u00e9ideg."
+        },
+        "create_entry": {
+            "default": "Fir Evenementer un Home Assistant ze sch\u00e9cken, mussen [Webhooks mat Twilio]({twilio_url}) ageriicht ginn.\n\nF\u00ebllt folgend Informatiounen aus:\n\n- URL: `{webhook_url}`\n- Method: POST\n- Content Type: application/x-www-form-urlencoded\n\nLiest [Dokumentatioun]({docs_url}) w\u00e9i een Automatiounen ariicht welch eingehend Donn\u00e9\u00eb trait\u00e9ieren."
+        },
+        "step": {
+            "user": {
+                "description": "S\u00e9cher fir Twilio anzeriichten?",
+                "title": "Twilio Webhook ariichten"
+            }
+        }
+    }
+}

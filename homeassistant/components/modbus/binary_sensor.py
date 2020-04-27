@@ -2,14 +2,14 @@
 import logging
 from typing import Optional
 
-from pymodbus.exceptions import ModbusException
+from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_SLAVE
 from homeassistant.helpers import config_validation as cv
@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus binary sensors."""
     sensors = []
     for entry in config[CONF_INPUTS]:
@@ -70,10 +70,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         )
 
-    async_add_entities(sensors)
+    add_entities(sensors)
 
 
-class ModbusBinarySensor(BinarySensorDevice):
+class ModbusBinarySensor(BinarySensorEntity):
     """Modbus binary sensor."""
 
     def __init__(self, hub, name, slave, address, device_class, input_type):
@@ -107,15 +107,17 @@ class ModbusBinarySensor(BinarySensorDevice):
         """Return True if entity is available."""
         return self._available
 
-    async def async_update(self):
+    def update(self):
         """Update the state of the sensor."""
-        if self._input_type == CALL_TYPE_COIL:
-            result = await self._hub.read_coils(self._slave, self._address, 1)
-        else:
-            result = await self._hub.read_discrete_inputs(self._slave, self._address, 1)
-        if result is None:
+        try:
+            if self._input_type == CALL_TYPE_COIL:
+                result = self._hub.read_coils(self._slave, self._address, 1)
+            else:
+                result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
+        except ConnectionException:
             self._available = False
             return
+
         if isinstance(result, (ModbusException, ExceptionResponse)):
             self._available = False
             return

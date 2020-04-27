@@ -1,6 +1,5 @@
 """Test the Vilfo Router config flow."""
-from unittest.mock import patch
-
+from asynctest.mock import patch
 import vilfo
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -13,6 +12,7 @@ from tests.common import mock_coro
 async def test_form(hass):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
+    mock_mac = "FF-00-00-00-00-00"
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -20,12 +20,11 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch("vilfo.Client.ping", return_value=None), patch(
-        "vilfo.Client.get_board_information", return_value=None,
-    ), patch(
+        "vilfo.Client.get_board_information", return_value=None
+    ), patch("vilfo.Client.resolve_mac_address", return_value=mock_mac), patch(
         "homeassistant.components.vilfo.async_setup", return_value=mock_coro(True)
     ) as mock_setup, patch(
-        "homeassistant.components.vilfo.async_setup_entry",
-        return_value=mock_coro(True),
+        "homeassistant.components.vilfo.async_setup_entry"
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -51,6 +50,8 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch("vilfo.Client.ping", return_value=None), patch(
+        "vilfo.Client.resolve_mac_address", return_value=None
+    ), patch(
         "vilfo.Client.get_board_information",
         side_effect=vilfo.exceptions.AuthenticationException,
     ):
@@ -69,7 +70,9 @@ async def test_form_cannot_connect(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("vilfo.Client.ping", side_effect=vilfo.exceptions.VilfoException):
+    with patch("vilfo.Client.ping", side_effect=vilfo.exceptions.VilfoException), patch(
+        "vilfo.Client.resolve_mac_address"
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "testadmin.vilfo.com", "access_token": "test-token"},
@@ -78,7 +81,9 @@ async def test_form_cannot_connect(hass):
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
-    with patch("vilfo.Client.ping", side_effect=vilfo.exceptions.VilfoException):
+    with patch("vilfo.Client.ping", side_effect=vilfo.exceptions.VilfoException), patch(
+        "vilfo.Client.resolve_mac_address"
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "testadmin.vilfo.com", "access_token": "test-token"},
@@ -107,7 +112,7 @@ async def test_form_already_configured(hass):
 
     with patch("vilfo.Client.ping", return_value=None), patch(
         "vilfo.Client.get_board_information", return_value=None,
-    ):
+    ), patch("vilfo.Client.resolve_mac_address", return_value=None):
         first_flow_result2 = await hass.config_entries.flow.async_configure(
             first_flow_result1["flow_id"],
             {CONF_HOST: "testadmin.vilfo.com", CONF_ACCESS_TOKEN: "test-token"},
@@ -119,7 +124,7 @@ async def test_form_already_configured(hass):
 
     with patch("vilfo.Client.ping", return_value=None), patch(
         "vilfo.Client.get_board_information", return_value=None,
-    ):
+    ), patch("vilfo.Client.resolve_mac_address", return_value=None):
         second_flow_result2 = await hass.config_entries.flow.async_configure(
             second_flow_result1["flow_id"],
             {CONF_HOST: "testadmin.vilfo.com", CONF_ACCESS_TOKEN: "test-token"},
@@ -153,7 +158,7 @@ async def test_validate_input_returns_data(hass):
 
     with patch("vilfo.Client.ping", return_value=None), patch(
         "vilfo.Client.get_board_information", return_value=None
-    ):
+    ), patch("vilfo.Client.resolve_mac_address", return_value=None):
         result = await hass.components.vilfo.config_flow.validate_input(
             hass, data=mock_data
         )

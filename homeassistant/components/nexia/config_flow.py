@@ -25,6 +25,8 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
+
+    state_file = hass.config.path(f"nexia_config_{data[CONF_USERNAME]}.conf")
     try:
         nexia_home = NexiaHome(
             username=data[CONF_USERNAME],
@@ -32,6 +34,7 @@ async def validate_input(hass: core.HomeAssistant, data):
             auto_login=False,
             auto_update=False,
             device_name=hass.config.location_name,
+            state_file=state_file,
         )
         await hass.async_add_executor_job(nexia_home.login)
     except ConnectTimeout as ex:

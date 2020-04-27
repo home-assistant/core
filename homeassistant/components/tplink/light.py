@@ -13,7 +13,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    Light,
+    LightEntity,
 )
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.device_registry as dr
@@ -75,12 +75,12 @@ def add_entity(device: SmartBulb, async_add_entities):
 
 def brightness_to_percentage(byt):
     """Convert brightness from absolute 0..255 to percentage."""
-    return int((byt * 100.0) / 255.0)
+    return round((byt * 100.0) / 255.0)
 
 
 def brightness_from_percentage(percent):
     """Convert percentage to absolute value 0..255."""
-    return (percent * 255.0) / 100.0
+    return round((percent * 255.0) / 100.0)
 
 
 class LightState(NamedTuple):
@@ -120,7 +120,7 @@ class LightFeatures(NamedTuple):
     has_emeter: bool
 
 
-class TPLinkSmartBulb(Light):
+class TPLinkSmartBulb(LightEntity):
     """Representation of a TPLink Smart Bulb."""
 
     def __init__(self, smartbulb: SmartBulb) -> None:

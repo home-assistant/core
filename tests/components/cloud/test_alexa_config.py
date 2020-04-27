@@ -165,7 +165,18 @@ async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
                 "action": "update",
                 "entity_id": "light.kitchen",
                 "changes": ["entity_id"],
+                "old_entity_id": "light.living_room",
             },
+        )
+        await hass.async_block_till_done()
+
+    assert to_update == ["light.kitchen"]
+    assert to_remove == ["light.living_room"]
+
+    with patch_sync_helper() as (to_update, to_remove):
+        hass.bus.async_fire(
+            EVENT_ENTITY_REGISTRY_UPDATED,
+            {"action": "update", "entity_id": "light.kitchen", "changes": ["icon"]},
         )
         await hass.async_block_till_done()
 

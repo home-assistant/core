@@ -24,7 +24,7 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
@@ -184,7 +184,17 @@ def async_update_items(bridge, api, current, async_add_entities, create_item):
         async_add_entities(new_items)
 
 
-class HueLight(Light):
+def hue_brightness_to_hass(value):
+    """Convert hue brightness 1..254 to hass format 0..255."""
+    return min(255, round((value / 254) * 255))
+
+
+def hass_to_hue_brightness(value):
+    """Convert hass brightness 0..255 to hue 1..254 scale."""
+    return max(1, round((value / 255) * 254))
+
+
+class HueLight(LightEntity):
     """Representation of a Hue light."""
 
     def __init__(self, coordinator, bridge, is_group, light, supported_features):
@@ -245,8 +255,11 @@ class HueLight(Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         if self.is_group:
-            return self.light.action.get("bri")
-        return self.light.state.get("bri")
+            bri = self.light.action.get("bri")
+        else:
+            bri = self.light.state.get("bri")
+
+        return hue_brightness_to_hass(bri)
 
     @property
     def _color_mode(self):
@@ -372,7 +385,7 @@ class HueLight(Light):
             command["ct"] = max(self.min_mireds, min(temp, self.max_mireds))
 
         if ATTR_BRIGHTNESS in kwargs:
-            command["bri"] = kwargs[ATTR_BRIGHTNESS]
+            command["bri"] = hass_to_hue_brightness(kwargs[ATTR_BRIGHTNESS])
 
         flash = kwargs.get(ATTR_FLASH)
 

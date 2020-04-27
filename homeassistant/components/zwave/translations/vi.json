@@ -1,0 +1,14 @@
+{
+    "state": {
+        "_": {
+            "dead": "\u0110\u00e3 t\u1eaft",
+            "initializing": "Kh\u1edfi t\u1ea1o",
+            "ready": "S\u1eb5n s\u00e0ng",
+            "sleeping": "Ng\u1ee7"
+        },
+        "query_stage": {
+            "dead": "\u0110\u00e3 t\u1eaft ({query_stage})",
+            "initializing": "Kh\u1edfi t\u1ea1o ( {query_stage} )"
+        }
+    }
+}

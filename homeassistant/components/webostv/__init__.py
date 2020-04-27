@@ -1,4 +1,4 @@
-"""Support for WebOS TV."""
+"""Support for LG webOS Smart TV."""
 import asyncio
 import logging
 
@@ -6,6 +6,18 @@ from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
 import voluptuous as vol
 from websockets.exceptions import ConnectionClosed
 
+from homeassistant.components.webostv.const import (
+    ATTR_BUTTON,
+    ATTR_COMMAND,
+    CONF_ON_ACTION,
+    CONF_SOURCES,
+    DEFAULT_NAME,
+    DOMAIN,
+    SERVICE_BUTTON,
+    SERVICE_COMMAND,
+    SERVICE_SELECT_SOUND_OUTPUT,
+    WEBOSTV_CONFIG_FILE,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_CUSTOMIZE,
@@ -16,23 +28,9 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
 
 from .const import ATTR_SOUND_OUTPUT
-
-DOMAIN = "webostv"
-
-CONF_SOURCES = "sources"
-CONF_ON_ACTION = "turn_on_action"
-DEFAULT_NAME = "LG webOS Smart TV"
-WEBOSTV_CONFIG_FILE = "webostv.conf"
-
-SERVICE_BUTTON = "button"
-ATTR_BUTTON = "button"
-
-SERVICE_COMMAND = "command"
-ATTR_COMMAND = "command"
-
-SERVICE_SELECT_SOUND_OUTPUT = "select_sound_output"
 
 CUSTOMIZE_SCHEMA = vol.Schema(
     {vol.Optional(CONF_SOURCES, default=[]): vol.All(cv.ensure_list, [cv.string])}
@@ -141,15 +139,30 @@ async def async_setup_tv_finalize(hass, config, conf, client):
         client.clear_state_update_callbacks()
         await client.disconnect()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
+    async def async_load_platforms(_):
+        """Load platforms and event listener."""
+        await async_connect(client)
 
-    await async_connect(client)
-    hass.async_create_task(
-        hass.helpers.discovery.async_load_platform("media_player", DOMAIN, conf, config)
-    )
-    hass.async_create_task(
-        hass.helpers.discovery.async_load_platform("notify", DOMAIN, conf, config)
-    )
+        if client.connection is None:
+            async_call_later(hass, 60, async_load_platforms)
+            _LOGGER.warning(
+                "No connection could be made with host %s, retrying in 60 seconds",
+                conf.get(CONF_HOST),
+            )
+            return
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
+
+        hass.async_create_task(
+            hass.helpers.discovery.async_load_platform(
+                "media_player", DOMAIN, conf, config
+            )
+        )
+        hass.async_create_task(
+            hass.helpers.discovery.async_load_platform("notify", DOMAIN, conf, config)
+        )
+
+    await async_load_platforms(None)
 
 
 async def async_request_configuration(hass, config, conf, client):

@@ -6,13 +6,12 @@ from homeassistant.const import (
 )
 
 DOMAIN = "synology_dsm"
+BASE_NAME = "Synology"
 
 CONF_VOLUMES = "volumes"
-BASE_NAME = "Synology"
 DEFAULT_SSL = True
 DEFAULT_PORT = 5000
 DEFAULT_PORT_SSL = 5001
-DEFAULT_DSM_VERSION = 6
 
 UTILISATION_SENSORS = {
     "cpu_other_load": ["CPU Load (Other)", UNIT_PERCENTAGE, "mdi:chip"],

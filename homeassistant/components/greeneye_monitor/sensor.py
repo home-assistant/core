@@ -8,7 +8,7 @@ from homeassistant.const import (
     TIME_HOURS,
     TIME_MINUTES,
     TIME_SECONDS,
-    UNIT_VOLT,
+    VOLT,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -311,4 +311,4 @@ class VoltageSensor(GEMSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement for this sensor."""
-        return UNIT_VOLT
+        return VOLT

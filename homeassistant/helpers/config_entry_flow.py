@@ -33,6 +33,8 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
+        await self.async_set_unique_id(self._domain, raise_on_progress=False)
+
         return await self.async_step_confirm()
 
     async def async_step_confirm(self, user_input=None):
@@ -40,10 +42,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         if user_input is None:
             return self.async_show_form(step_id="confirm")
 
-        if (  # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-            self.context
-            and self.context.get("source") != config_entries.SOURCE_DISCOVERY
-        ):
+        if self.source == config_entries.SOURCE_USER:
             # Get current discovered entries.
             in_progress = self._async_in_progress()
 
@@ -66,6 +65,8 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         """Handle a flow initialized by discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
+
+        await self.async_set_unique_id(self._domain)
 
         return await self.async_step_confirm()
 

@@ -36,7 +36,7 @@ from async_timeout import timeout
 import attr
 import voluptuous as vol
 
-from homeassistant import loader, util
+from homeassistant import block_async_io, loader, util
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -50,12 +50,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     EVENT_TIMER_OUT_OF_SYNC,
+    LENGTH_METERS,
     MATCH_ALL,
     __version__,
 )
@@ -75,6 +77,9 @@ from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitS
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntries
     from homeassistant.components.http import HomeAssistantHTTP
+
+
+block_async_io.enable()
 
 # pylint: disable=invalid-name
 T = TypeVar("T")
@@ -275,6 +280,7 @@ class HomeAssistant:
 
         self.state = CoreState.running
         _async_create_timer(self)
+        self.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 
     def add_job(self, target: Callable[..., Any], *args: Any) -> None:
         """Add job to the executor pool.
@@ -360,7 +366,9 @@ class HomeAssistant:
         self._track_task = False
 
     @callback
-    def async_run_job(self, target: Callable[..., None], *args: Any) -> None:
+    def async_run_job(
+        self, target: Callable[..., Union[None, Awaitable]], *args: Any
+    ) -> None:
         """Run a job from within the event loop.
 
         This method must be run in the event loop.
@@ -480,7 +488,7 @@ class Event:
     def __init__(
         self,
         event_type: str,
-        data: Optional[Dict] = None,
+        data: Optional[Dict[str, Any]] = None,
         origin: EventOrigin = EventOrigin.local,
         time_fired: Optional[int] = None,
         context: Optional[Context] = None,
@@ -509,11 +517,9 @@ class Event:
         """Return the representation."""
         # pylint: disable=maybe-no-member
         if self.data:
-            return "<Event {}[{}]: {}>".format(
-                self.event_type, str(self.origin)[0], util.repr_helper(self.data)
-            )
+            return f"<Event {self.event_type}[{str(self.origin)[0]}]: {util.repr_helper(self.data)}>"
 
-        return "<Event {}[{}]>".format(self.event_type, str(self.origin)[0])
+        return f"<Event {self.event_type}[{str(self.origin)[0]}]>"
 
     def __eq__(self, other: Any) -> bool:
         """Return the comparison."""
@@ -546,9 +552,7 @@ class EventBus:
     @property
     def listeners(self) -> Dict[str, int]:
         """Return dictionary with events and the number of listeners."""
-        return run_callback_threadsafe(  # type: ignore
-            self._hass.loop, self.async_listeners
-        ).result()
+        return run_callback_threadsafe(self._hass.loop, self.async_listeners).result()
 
     def fire(
         self,
@@ -826,15 +830,11 @@ class State:
 
     def __repr__(self) -> str:
         """Return the representation of the states."""
-        attrs = (
-            "; {}".format(util.repr_helper(self.attributes)) if self.attributes else ""
-        )
+        attrs = f"; {util.repr_helper(self.attributes)}" if self.attributes else ""
 
-        return "<state {}={}{} @ {}>".format(
-            self.entity_id,
-            self.state,
-            attrs,
-            dt_util.as_local(self.last_changed).isoformat(),
+        return (
+            f"<state {self.entity_id}={self.state}{attrs}"
+            f" @ {dt_util.as_local(self.last_changed).isoformat()}>"
         )
 
 
@@ -852,7 +852,7 @@ class StateMachine:
         future = run_callback_threadsafe(
             self._loop, self.async_entity_ids, domain_filter
         )
-        return future.result()  # type: ignore
+        return future.result()
 
     @callback
     def async_entity_ids(self, domain_filter: Optional[str] = None) -> List[str]:
@@ -873,9 +873,7 @@ class StateMachine:
 
     def all(self) -> List[State]:
         """Create a list of all states."""
-        return run_callback_threadsafe(  # type: ignore
-            self._loop, self.async_all
-        ).result()
+        return run_callback_threadsafe(self._loop, self.async_all).result()
 
     @callback
     def async_all(self) -> List[State]:
@@ -905,7 +903,7 @@ class StateMachine:
 
         Returns boolean to indicate if an entity was removed.
         """
-        return run_callback_threadsafe(  # type: ignore
+        return run_callback_threadsafe(
             self._loop, self.async_remove, entity_id
         ).result()
 
@@ -1045,8 +1043,9 @@ class ServiceCall:
     def __repr__(self) -> str:
         """Return the representation of the service."""
         if self.data:
-            return "<ServiceCall {}.{} (c:{}): {}>".format(
-                self.domain, self.service, self.context.id, util.repr_helper(self.data)
+            return (
+                f"<ServiceCall {self.domain}.{self.service} "
+                f"(c:{self.context.id}): {util.repr_helper(self.data)}>"
             )
 
         return f"<ServiceCall {self.domain}.{self.service} (c:{self.context.id})>"
@@ -1063,9 +1062,7 @@ class ServiceRegistry:
     @property
     def services(self) -> Dict[str, Dict[str, Service]]:
         """Return dictionary with per domain a list of available services."""
-        return run_callback_threadsafe(  # type: ignore
-            self._hass.loop, self.async_services
-        ).result()
+        return run_callback_threadsafe(self._hass.loop, self.async_services).result()
 
     @callback
     def async_services(self) -> Dict[str, Dict[str, Service]]:
@@ -1329,7 +1326,7 @@ class Config:
         Async friendly.
         """
         return self.units.length(
-            location.distance(self.latitude, self.longitude, lat, lon), "m"
+            location.distance(self.latitude, self.longitude, lat, lon), LENGTH_METERS
         )
 
     def path(self, *path: str) -> str:

@@ -7,7 +7,8 @@ import voluptuous as vol
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA,
     SCAN_INTERVAL,
-    ClimateDevice,
+    TEMP_CELSIUS,
+    ClimateEntity,
 )
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
@@ -32,7 +33,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
     session_id = hass.data[DOMAIN][DATA_SCHLUTER_SESSION]
     api = hass.data[DOMAIN][DATA_SCHLUTER_API]
-    temp_unit = hass.config.units.temperature_unit
 
     async def async_update_data():
         try:
@@ -58,17 +58,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     await coordinator.async_refresh()
 
     async_add_entities(
-        SchluterThermostat(coordinator, serial_number, temp_unit, api, session_id)
+        SchluterThermostat(coordinator, serial_number, api, session_id)
         for serial_number, thermostat in coordinator.data.items()
     )
 
 
-class SchluterThermostat(ClimateDevice):
+class SchluterThermostat(ClimateEntity):
     """Representation of a Schluter thermostat."""
 
-    def __init__(self, coordinator, serial_number, temp_unit, api, session_id):
+    def __init__(self, coordinator, serial_number, api, session_id):
         """Initialize the thermostat."""
-        self._unit = temp_unit
         self._coordinator = coordinator
         self._serial_number = serial_number
         self._api = api
@@ -102,8 +101,8 @@ class SchluterThermostat(ClimateDevice):
 
     @property
     def temperature_unit(self):
-        """Return the unit of measurement."""
-        return self._unit
+        """Schluter API always uses celsius."""
+        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
