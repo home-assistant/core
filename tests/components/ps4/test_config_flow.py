@@ -434,11 +434,18 @@ async def test_credential_abort(hass):
 
 async def test_credential_timeout(hass):
     """Test that Credential Timeout shows error."""
-    flow = ps4.PlayStation4FlowHandler()
-    flow.hass = hass
+    with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "creds"
 
     with patch("pyps4_2ndscreen.Helper.get_creds", side_effect=CredentialTimeout):
-        result = await flow.async_step_creds({})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "credential_timeout"}
 
