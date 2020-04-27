@@ -18,7 +18,8 @@
       "connection": "Connection error: please check your endpoint"
     },
     "abort": {
-      "already_configured": "Device already configured"
+      "already_configured": "Device already configured",
+      "not_songpal_device": "Not a Songpal device"
     }
   }
 }

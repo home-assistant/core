@@ -107,10 +107,20 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured()
 
+        _LOGGER.debug("Discovered: %s", discovery_info)
+
         friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
         model = discovery_info[ssdp.ATTR_UPNP_MODEL_NAME]
-        endpoint = discovery_info["X_ScalarWebAPI_DeviceInfo"]["X_ScalarWebAPI_BaseURL"]
+        scalarweb_info = discovery_info["X_ScalarWebAPI_DeviceInfo"]
+        endpoint = scalarweb_info["X_ScalarWebAPI_BaseURL"]
+        service_types = scalarweb_info["X_ScalarWebAPI_ServiceList"][
+            "X_ScalarWebAPI_ServiceType"
+        ]
+
+        # Ignore Bravia TVs
+        if "videoScreen" in service_types:
+            return self.async_abort(reason="not_songpal_device")
 
         # pylint: disable=no-member
         self.context["title_placeholders"] = {

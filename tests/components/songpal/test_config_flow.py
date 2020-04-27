@@ -1,4 +1,6 @@
 """Test the songpal config flow."""
+import copy
+
 from asynctest import MagicMock, patch
 from songpal import SongpalException
 
@@ -24,7 +26,12 @@ SSDP_DATA = {
     ssdp.ATTR_UPNP_FRIENDLY_NAME: FRIENDLY_NAME,
     ssdp.ATTR_SSDP_LOCATION: f"http://{HOST}:52323/dmr.xml",
     ssdp.ATTR_UPNP_MODEL_NAME: MODEL,
-    "X_ScalarWebAPI_DeviceInfo": {"X_ScalarWebAPI_BaseURL": ENDPOINT},
+    "X_ScalarWebAPI_DeviceInfo": {
+        "X_ScalarWebAPI_BaseURL": ENDPOINT,
+        "X_ScalarWebAPI_ServiceList": {
+            "X_ScalarWebAPI_ServiceType": ["guide", "system", "audio", "avContent"],
+        },
+    },
 }
 
 CONF_DATA = {
@@ -133,6 +140,19 @@ def _create_mock_config_entry(hass):
     MockConfigEntry(domain=DOMAIN, unique_id="uuid:0000", data=CONF_DATA,).add_to_hass(
         hass
     )
+
+
+async def test_ssdp_bravia(hass):
+    """Test discovering a bravia TV."""
+    ssdp_data = copy.deepcopy(SSDP_DATA)
+    ssdp_data["X_ScalarWebAPI_DeviceInfo"]["X_ScalarWebAPI_ServiceList"][
+        "X_ScalarWebAPI_ServiceType"
+    ].append("videoScreen")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "ssdp"}, data=ssdp_data,
+    )
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "not_songpal_device"
 
 
 async def test_sddp_exist(hass):
