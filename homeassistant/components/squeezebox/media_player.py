@@ -202,10 +202,10 @@ class SqueezeBoxDevice(MediaPlayerEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        if not self._player.power:
+        if self._player.power is not None and not self._player.power:
             return STATE_OFF
         if self._player.mode:
-            return SQUEEZEBOX_MODE[self._player.mode]
+            return SQUEEZEBOX_MODE.get(self._player.mode)
         return None
 
     async def async_update(self):
