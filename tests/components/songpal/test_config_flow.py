@@ -45,14 +45,19 @@ async def _async_return_value():
     pass
 
 
-def _connection_exception():
-    raise SongpalException("Unable to do POST request: ")
+def _get_supported_methods(throw_exception):
+    def get_supported_methods():
+        if throw_exception:
+            raise SongpalException("Unable to do POST request: ")
+        return _async_return_value()
+
+    return get_supported_methods
 
 
-def _create_mocked_device(get_supported_methods=None):
+def _create_mocked_device(throw_exception=False):
     mocked_device = MagicMock()
     type(mocked_device).get_supported_methods = MagicMock(
-        side_effect=get_supported_methods, return_value=_async_return_value(),
+        side_effect=_get_supported_methods(throw_exception)
     )
     return mocked_device
 
@@ -192,10 +197,12 @@ async def test_import_exist(hass):
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
 
+    mocked_device.get_supported_methods.assert_called_once()
+
 
 async def test_user_invalid(hass):
     """Test using adding invalid config."""
-    mocked_device = _create_mocked_device(_connection_exception)
+    mocked_device = _create_mocked_device(True)
     _create_mock_config_entry(hass)
 
     with _patch_config_flow_device(mocked_device):
@@ -211,7 +218,7 @@ async def test_user_invalid(hass):
 
 async def test_import_invalid(hass):
     """Test importing invalid config."""
-    mocked_device = _create_mocked_device(_connection_exception)
+    mocked_device = _create_mocked_device(True)
     _create_mock_config_entry(hass)
 
     with _patch_config_flow_device(mocked_device):
