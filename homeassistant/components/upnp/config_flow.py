@@ -1,5 +1,7 @@
 """Config flow for UPNP."""
 from typing import Mapping, Optional
+from urllib.parse import urlparse
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -17,7 +19,6 @@ from .const import (  # pylint: disable=unused-import
     LOGGER as _LOGGER,
 )
 from .device import Device
-from urllib.parse import urlparse
 
 
 class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

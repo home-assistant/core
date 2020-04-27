@@ -14,18 +14,18 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import get_local_ip
 
 from .const import (
-    CONFIG_ENTRY_ST,
-    CONFIG_ENTRY_UDN,
     CONF_ENABLE_PORT_MAPPING,
     CONF_ENABLE_SENSORS,
     CONF_HASS,
     CONF_LOCAL_IP,
     CONF_PORTS,
+    CONFIG_ENTRY_ST,
+    CONFIG_ENTRY_UDN,
+    DISCOVERY_LOCATION,
     DISCOVERY_ST,
     DISCOVERY_UDN,
     DISCOVERY_USN,
     DOMAIN,
-    DISCOVERY_LOCATION,
     LOGGER as _LOGGER,
 )
 from .device import Device
