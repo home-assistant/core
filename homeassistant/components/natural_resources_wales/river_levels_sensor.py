@@ -24,10 +24,10 @@ ATTR_URL = "url"
 class NaturalResourcesWalesRiverLevelsComponent:
     """Natural Resources Wales component to wrap river levels sensors and data."""
 
-    def __init__(self, river_levels_key, language, interval, monitored):
+    def __init__(self, river_levels_api_key, language, interval, monitored):
         """Initialize wrapper."""
         self.river_levels_data = NaturalResourcesWalesRiverLevelsData(
-            river_levels_key=river_levels_key,
+            river_levels_api_key=river_levels_api_key,
             language=language.upper(),
             interval=interval,
             monitored=monitored,
@@ -128,9 +128,9 @@ class NaturalResourcesWalesRiverLevelsSensor(Entity):
 class NaturalResourcesWalesRiverLevelsData:
     """Get the latest river levels data from Natural Resources Wales."""
 
-    def __init__(self, river_levels_key, language, interval, monitored):
+    def __init__(self, river_levels_api_key, language, interval, monitored):
         """Initialize the data object."""
-        self._river_levels_key = river_levels_key
+        self.river_levels_api_key = river_levels_api_key
         self.language = language
         self.monitored = monitored
 
@@ -141,7 +141,7 @@ class NaturalResourcesWalesRiverLevelsData:
 
     def _update(self):
         """Get the latest data from Natural Resources Wales."""
-        headers = {"Ocp-Apim-Subscription-Key": self._river_levels_key}
+        headers = {"Ocp-Apim-Subscription-Key": self.river_levels_api_key}
 
         result = requests.get(
             "https://api.naturalresources.wales/riverlevels/v1/all",
