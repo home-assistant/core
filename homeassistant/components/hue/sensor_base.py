@@ -89,7 +89,7 @@ class SensorManager:
         if len(self._component_add_entities) < len(self._enabled_platforms):
             return
 
-        to_add = []
+        to_add = {}
         primary_sensor_devices = {}
         current = self.current
 
@@ -140,20 +140,13 @@ class SensorManager:
             if primary_sensor is not None:
                 base_name = primary_sensor.name
 
-            current[uniqueid] = [
-                (
-                    sensor["platform"],
-                    sensor["class"](
-                        api[item_id],
-                        sensor["name_format"].format(base_name),
-                        self.bridge,
-                        primary_sensor=primary_sensor,
-                    ),
+            for sensor in sensor_config:
+                name = sensor["name_format"].format(base_name)
+                current[uniqueid] = sensor["class"](
+                    api[item_id], name, self.bridge, primary_sensor=primary_sensor
                 )
-                for sensor in sensor_config
-            ]
 
-            to_add.append(current[uniqueid])
+                to_add.setdefault(sensor["platform"], []).append(current[uniqueid])
 
         self.bridge.hass.async_create_task(
             remove_devices(
@@ -161,9 +154,8 @@ class SensorManager:
             )
         )
 
-        for items in to_add:
-            for platform, entity_object in items:
-                self._component_add_entities[platform]([entity_object])
+        for platform in to_add:
+            self._component_add_entities[platform](to_add[platform])
 
 
 class GenericHueSensor(GenericHueDevice, entity.Entity):
