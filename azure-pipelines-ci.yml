@@ -27,7 +27,7 @@ variables:
   - name: PythonMain
     value: "37"
   - name: versionHadolint
-    value: "v1.16.3"
+    value: "v1.17.6"
 
 stages:
   - stage: "Overview"
