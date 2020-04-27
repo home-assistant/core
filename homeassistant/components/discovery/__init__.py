@@ -94,7 +94,6 @@ MIGRATED_SERVICE_HANDLERS = [
     "homekit",
     "ikea_tradfri",
     "philips_hue",
-    "roku",
     "sonos",
     SERVICE_WEMO,
 ]
