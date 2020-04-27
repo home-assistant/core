@@ -15,9 +15,6 @@ from .const import CONF_ENDPOINT, DOMAIN  # pylint: disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 
-DEFAULT_NAME = "Songpal device"
-
-
 class SongpalConfig:
     """Device Configuration."""
 
@@ -40,17 +37,11 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _show_setup_form(self, user_input=None, errors=None):
         user_input = user_input or {}
-        default_name = user_input.get(CONF_NAME) or DEFAULT_NAME
         default_endpoint = user_input.get(CONF_ENDPOINT)
-        data_schema = {
-            vol.Optional(CONF_NAME, default=default_name): str,
-        }
         if default_endpoint is not None:
-            data_schema.update(
-                {vol.Required(CONF_ENDPOINT, default=default_endpoint): str}
-            )
+            data_schema = {vol.Required(CONF_ENDPOINT, default=default_endpoint): str}
         else:
-            data_schema.update({vol.Required(CONF_ENDPOINT): str})
+            data_schema = {vol.Required(CONF_ENDPOINT): str}
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema(data_schema), errors=errors or {},
         )
@@ -61,16 +52,20 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._show_setup_form()
 
         # Validate input
-        name = user_input.get(CONF_NAME)
-        if not name:
-            name = DEFAULT_NAME
         endpoint = user_input[CONF_ENDPOINT]
         parsed_url = urlparse(endpoint)
-        self.conf = SongpalConfig(name, parsed_url.hostname, endpoint)
 
-        errors = await self._async_try_connect()
-        if errors is not None:
-            return await self._show_setup_form(user_input, errors)
+        # Try to connect and get device name
+        try:
+            device = Device(endpoint)
+            await device.get_supported_methods()
+            interface_info = await device.get_interface_information()
+            name = interface_info.modelName
+        except SongpalException as ex:
+            _LOGGER.debug("Connection failed: %s", ex)
+            return await self._show_setup_form(user_input, {"base": "connection"})
+
+        self.conf = SongpalConfig(name, parsed_url.hostname, endpoint)
 
         return await self.async_step_init(user_input)
 
@@ -80,9 +75,6 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._endpoint_already_configured():
             return self.async_abort(reason="already_configured")
 
-        await self.async_set_unique_id(self.conf.endpoint)
-        self._abort_if_unique_id_configured()
-
         if user_input is None:
             return self.async_show_form(
                 step_id="init",
@@ -91,6 +83,9 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_HOST: self.conf.host,
                 },
             )
+
+        await self.async_set_unique_id(self.conf.endpoint)
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=self.conf.name,
@@ -133,26 +128,7 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         parsed_url = urlparse(endpoint)
         self.conf = SongpalConfig(name, parsed_url.hostname, endpoint)
 
-        errors = await self._async_try_connect()
-        if errors is not None:
-            _LOGGER.error(
-                "Unable to import songpal configuration (%s: %s). Please check your endpoint.",
-                name,
-                endpoint,
-            )
-            return self.async_abort(reason="connection")
-
         return await self.async_step_init(user_input)
-
-    async def _async_try_connect(self):
-        """Try to connect and return errors."""
-        try:
-            device = Device(self.conf.endpoint)
-            await device.get_supported_methods()
-        except SongpalException as ex:
-            _LOGGER.debug("Connection failed: %s", ex)
-            return {"base": "connection"}
-        return None
 
     def _endpoint_already_configured(self):
         """See if we already have an endpoint matching user input configured."""
