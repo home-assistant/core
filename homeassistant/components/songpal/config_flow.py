@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_NAME
 
-from .const import CONF_ENDPOINT, CONF_MODEL, DOMAIN
+from .const import CONF_ENDPOINT, CONF_MODEL, DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
