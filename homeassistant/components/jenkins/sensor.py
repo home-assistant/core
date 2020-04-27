@@ -31,6 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     branch = config.get(CONF_BRANCH)
 
     try:
+        print("Go in to try")
         server = Jenkins(jenkins_url)
         _LOGGER.debug(f"Successfully connected to {jenkins_url}")
     except HTTPError:
