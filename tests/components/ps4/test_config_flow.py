@@ -516,12 +516,24 @@ async def test_device_connection_error(hass):
 
 async def test_manual_mode_no_ip_error(hass):
     """Test no IP specified in manual mode throws an error."""
-    flow = ps4.PlayStation4FlowHandler()
-    flow.hass = hass
+    with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "creds"
 
-    mock_input = {"Config Mode": "Manual Entry"}
+    with patch("pyps4_2ndscreen.Helper.get_creds", return_value=MOCK_CREDS):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "mode"
 
-    result = await flow.async_step_mode(mock_input)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"Config Mode": "Manual Entry"}
+    )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "mode"
     assert result["errors"] == {CONF_IP_ADDRESS: "no_ipaddress"}
