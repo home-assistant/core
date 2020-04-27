@@ -6,7 +6,11 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPE_ROUTER
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_UNPROCESSABLE_ENTITY
+from homeassistant.const import (
+    HTTP_BAD_REQUEST,
+    HTTP_UNAUTHORIZED,
+    HTTP_UNPROCESSABLE_ENTITY,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -34,6 +38,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
 class MerakiView(HomeAssistantView):
     """View to handle Meraki requests."""
 
+    requires_auth = False
     url = URL
     name = "api:meraki"
 
@@ -43,8 +48,22 @@ class MerakiView(HomeAssistantView):
         self.validator = config[CONF_VALIDATOR]
         self.secret = config[CONF_SECRET]
 
+    def validate_secret(self, secret):
+        """Validate shared secret."""
+        if not secret:
+            _LOGGER.error("no secret supplied")
+            return False
+        if secret != self.secret:
+            _LOGGER.error("invalid secret supplied")
+            _LOGGER.debug("received secret %s", secret)
+            return False
+
+        _LOGGER.debug("valid secret")
+        return True
+
     async def get(self, request):
         """Meraki message received as GET."""
+        _LOGGER.info("testing")
         return self.validator
 
     async def post(self, request):
@@ -54,16 +73,14 @@ class MerakiView(HomeAssistantView):
         except ValueError:
             return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
         _LOGGER.debug("Meraki Data from Post: %s", json.dumps(data))
-        if not data.get("secret", False):
-            _LOGGER.error("secret invalid")
-            return self.json_message("No secret", HTTP_UNPROCESSABLE_ENTITY)
-        if data["secret"] != self.secret:
-            _LOGGER.error("Invalid Secret received from Meraki")
-            return self.json_message("Invalid secret", HTTP_UNPROCESSABLE_ENTITY)
+
+        if not self.validate_secret(data.get("secret", False)):
+            return self.json_message("Invalid secret", HTTP_UNAUTHORIZED)
+
         if data["version"] != VERSION:
             _LOGGER.error("Invalid API version: %s", data["version"])
             return self.json_message("Invalid version", HTTP_UNPROCESSABLE_ENTITY)
-        _LOGGER.debug("Valid Secret")
+
         if data["type"] not in ("DevicesSeen", "BluetoothDevicesSeen"):
             _LOGGER.error("Unknown Device %s", data["type"])
             return self.json_message("Invalid device type", HTTP_UNPROCESSABLE_ENTITY)

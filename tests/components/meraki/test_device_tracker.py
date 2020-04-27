@@ -47,20 +47,20 @@ async def test_invalid_or_missing_data(mock_device_tracker_conf, meraki_client):
 
     req = await meraki_client.post(URL, data=b"{}")
     text = await req.json()
-    assert req.status == 422
-    assert text["message"] == "No secret"
+    assert req.status == 401
+    assert text["message"] == "Invalid secret"
+
+    data = {"version": "2.0", "secret": "invalid"}
+    req = await meraki_client.post(URL, data=json.dumps(data))
+    text = await req.json()
+    assert req.status == 401
+    assert text["message"] == "Invalid secret"
 
     data = {"version": "1.0", "secret": "secret"}
     req = await meraki_client.post(URL, data=json.dumps(data))
     text = await req.json()
     assert req.status == 422
     assert text["message"] == "Invalid version"
-
-    data = {"version": "2.0", "secret": "invalid"}
-    req = await meraki_client.post(URL, data=json.dumps(data))
-    text = await req.json()
-    assert req.status == 422
-    assert text["message"] == "Invalid secret"
 
     data = {"version": "2.0", "secret": "secret", "type": "InvalidType"}
     req = await meraki_client.post(URL, data=json.dumps(data))
