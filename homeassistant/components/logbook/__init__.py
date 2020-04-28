@@ -45,6 +45,7 @@ ATTR_MESSAGE = "message"
 
 CONF_DOMAINS = "domains"
 CONF_ENTITIES = "entities"
+CONF_REQUIRE_ADMIN = "require_admin"
 CONTINUOUS_DOMAINS = ["proximity", "sensor"]
 
 DOMAIN = "logbook"
@@ -71,6 +72,7 @@ CONFIG_SCHEMA = vol.Schema(
                         ),
                     }
                 ),
+                vol.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean,
             }
         )
     },
@@ -138,7 +140,10 @@ async def async_setup(hass, config):
     hass.http.register_view(LogbookView(config.get(DOMAIN, {})))
 
     hass.components.frontend.async_register_built_in_panel(
-        "logbook", "logbook", "hass:format-list-bulleted-type"
+        "logbook",
+        "logbook",
+        "hass:format-list-bulleted-type",
+        require_admin=CONF_REQUIRE_ADMIN,
     )
 
     hass.services.async_register(DOMAIN, "log", log_message, schema=LOG_MESSAGE_SCHEMA)
