@@ -6,8 +6,8 @@ from homeassistant.components.zwave_mqtt.config_flow import TITLE
 from homeassistant.components.zwave_mqtt.const import DOMAIN
 
 
-async def test_form(hass):
-    """Test we get the form."""
+async def test_user_create_entry(hass):
+    """Test the user step creates an entry."""
     hass.config.components.add("mqtt")
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
