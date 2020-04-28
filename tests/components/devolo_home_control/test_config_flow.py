@@ -25,6 +25,9 @@ async def test_form(hass):
     ) as mock_setup_entry, patch(
         "homeassistant.components.devolo_home_control.config_flow.Mydevolo.credentials_valid",
         return_value=True,
+    ), patch(
+        "homeassistant.components.devolo_home_control.config_flow.Mydevolo.get_gateway_ids",
+        return_value=["123456"],
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
