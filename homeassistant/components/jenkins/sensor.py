@@ -14,17 +14,18 @@ from .const import CONF_JOB_NAME, DOMAIN
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Jenkins sensor based on a config entry."""
     try:
-        jenkins = Jenkins(
+        jenkins = await hass.async_add_executor_job(
+            Jenkins,
             entry.data[CONF_URL],
-            username=entry.data[CONF_USERNAME],
-            password=entry.data[CONF_PASSWORD],
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
         )
         _LOGGER.debug(f"Successfully connected to {entry.data[CONF_URL]}")
     except HTTPError as exception:
         raise PlatformNotReady from exception
 
     [repository, branch] = entry.data[CONF_JOB_NAME].split("/", maxsplit=1)
-    job = jenkins.get_job(entry.data[CONF_JOB_NAME])
+    job = await hass.async_add_executor_job(jenkins.get_job, entry.data[CONF_JOB_NAME])
     sensor = JenkinsSensor(repository, branch, job)
 
     async_add_entities([sensor], True)
@@ -41,8 +42,6 @@ class JenkinsSensor(Entity):
         self._name = f"{repository} {branch}"
         self._state = None
         self._attributes = None
-
-        self.update()
 
     @property
     def name(self):
@@ -69,9 +68,9 @@ class JenkinsSensor(Entity):
         """Return the state attributes."""
         return self._attributes
 
-    def update(self):
+    async def async_update(self):
         """Fetch the latest build and update state."""
-        last_build = self.job.get_last_build()
+        last_build = await self.hass.async_add_executor_job(self.job.get_last_build)
         self._state = last_build.get_status()
 
         self._attributes = {
