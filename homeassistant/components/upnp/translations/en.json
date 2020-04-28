@@ -1,6 +1,6 @@
 {
     "config": {
-        "flow_title": "UPnP/IGD: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "abort": {
             "already_configured": "UPnP/IGD is already configured",
             "no_devices_discovered": "No UPnP/IGDs discovered",

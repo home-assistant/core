@@ -173,13 +173,6 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
             entry=config_entry, unique_id=device.unique_id,
         )
 
-    # Ensure entry has a title.
-    # Only via SSDP-discovery the title can be set directly.
-    if not config_entry.title:
-        hass.config_entries.async_update_entry(
-            entry=config_entry, title=device.name,
-        )
-
     # create device registry entry
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
