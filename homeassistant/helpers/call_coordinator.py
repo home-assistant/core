@@ -21,9 +21,9 @@ def cache_per_instance(data_key: str) -> Callable[[FUNC], FUNC]:
 
         @functools.wraps(func)
         async def wrapped(hass: HomeAssistant) -> T:
-            reg_or_evt = hass.data.get(data_key)
+            obj_or_evt = hass.data.get(data_key)
 
-            if not reg_or_evt:
+            if not obj_or_evt:
                 evt = hass.data[data_key] = asyncio.Event()
 
                 result = await func(hass)
@@ -32,12 +32,12 @@ def cache_per_instance(data_key: str) -> Callable[[FUNC], FUNC]:
                 evt.set()
                 return cast(T, result)
 
-            if isinstance(reg_or_evt, asyncio.Event):
-                evt = reg_or_evt
+            if isinstance(obj_or_evt, asyncio.Event):
+                evt = obj_or_evt
                 await evt.wait()
                 return cast(T, hass.data.get(data_key))
 
-            return cast(T, reg_or_evt)
+            return cast(T, obj_or_evt)
 
         return wrapped
 
