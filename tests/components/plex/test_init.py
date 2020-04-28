@@ -35,8 +35,12 @@ from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_test_home_assistant,
-    mock_storage,
 )
+
+
+@pytest.fixture(autouse=True)
+def mock_storage(hass_storage):
+    """Autouse hass_storage for the TestCase tests."""
 
 
 async def test_setup_with_config(hass):
@@ -85,13 +89,13 @@ class TestClockedPlex(ClockedTestCase):
     async def setUp(self):
         """Initialize this test class."""
         self.hass = await async_test_home_assistant(self.loop)
-        self.mock_storage = mock_storage()
-        self.mock_storage.__enter__()
+        # self.mock_storage = mock_storage()
+        # self.mock_storage.__enter__()
 
     async def tearDown(self):
         """Clean up the HomeAssistant instance."""
         await self.hass.async_stop()
-        self.mock_storage.__exit__(None, None, None)
+        # self.mock_storage.__exit__(None, None, None)
 
     async def test_setup_with_config_entry(self):
         """Test setup component with config."""
