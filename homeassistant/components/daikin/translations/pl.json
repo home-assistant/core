@@ -8,7 +8,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host"
+                    "host": "Nazwa hosta lub adres IP"
                 },
                 "description": "Wprowad\u017a adres IP Daikin AC.",
                 "title": "Konfiguracja Daikin AC"

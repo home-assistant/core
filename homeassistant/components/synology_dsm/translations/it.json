@@ -8,7 +8,7 @@
             "missing_data": "Dati mancanti: si prega di riprovare pi\u00f9 tardi o un'altra configurazione",
             "otp_failed": "Autenticazione in due fasi fallita, riprovare con un nuovo codice di accesso"
         },
-        "flow_title": "Synology DSM {nome} ({host})",
+        "flow_title": "Synology DSM {name} ({host})",
         "step": {
             "2sa": {
                 "data": {
@@ -24,7 +24,7 @@
                     "ssl": "Utilizzare SSL/TLS per connettersi al NAS",
                     "username": "Nome utente"
                 },
-                "description": "Vuoi impostare {nome} ({host})?",
+                "description": "Vuoi impostare {name} ({host})?",
                 "title": "Synology DSM"
             },
             "user": {

@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "invalid_webhook_url": "Home Assistant ass net richteg konfigur\u00e9iert fir Updates vun SmartThings z'empf\u00e4nken.\nWebhook URL ass ong\u00eblteg:\n>{webhook_url}\n\u00c4nner deng Konfiguratioun sou w\u00e9i an den [Instruktioune]({component_url}) start Home Assistant fr\u00ebsch an prob\u00e9ier nach eemol.",
             "no_available_locations": "Keng disponibel Smartthings Standuerte fir am Home Assistant anzeriichten."
         },
         "error": {
@@ -8,7 +9,7 @@
             "token_forbidden": "De Jeton huet net d\u00e9i n\u00e9ideg OAuth M\u00e9iglechkeeten.",
             "token_invalid_format": "De Jeton muss am UID/GUID Format sinn",
             "token_unauthorized": "De Jeton ass ong\u00eblteg oder net m\u00e9i autoris\u00e9iert.",
-            "webhook_error": "SmartThings konnt den an der 'base_url' defin\u00e9ierten Endpoint net valid\u00e9ieren. Iwwerpr\u00e9ift d'Viraussetzunge vun d\u00ebser Komponente"
+            "webhook_error": "SmartThings konnt d'Webhook URL valid\u00e9ieren. Stell s\u00e9cher dass d'URL vum Internet aus ereechbar ass a prob\u00e9ier nach eemol."
         },
         "step": {
             "authorize": {
@@ -25,11 +26,12 @@
                 "data": {
                     "location_id": "Standuert"
                 },
+                "description": "Wiel SmartThings Standuert aus fir en am Home Assistant dob\u00e4i ze setzen. Dann geht eng nei F\u00ebnster op mat engem Login an fir d'Installatioun vun der Integratioun  am Home Assistanr z'erlaaben.",
                 "title": "Standuert auswielen"
             },
             "user": {
-                "description": "Gitt w.e.g. ee [Pers\u00e9inlechen Acc\u00e8s Jeton]({token_url}) vu SmartThings an dee via [d'Instruktiounen] ({component_url}) erstallt gouf.",
-                "title": "Pers\u00e9inlechen Acc\u00e8ss Jeton uginn"
+                "description": "SmartThings g\u00ebtt ageriicht fir Push Aktualis\u00e9ierungen un Home Assistant ze sch\u00e9cken un d'Adresse:\n>{webhook_url}\n\nFalls d\u00ebs net korrekt ass, \u00e4nner deng Konfiguratioun, start Home Assistant fr\u00ebsch a prob\u00e9ier nach emol.",
+                "title": "Callback URL confirm\u00e9ieren"
             }
         }
     }
