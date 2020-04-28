@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
 
 from .const import DATA_DISCOVERED_HOSTS, DOMAIN
 
@@ -42,6 +43,9 @@ class HeosFlowHandler(config_entries.ConfigFlow):
     async def async_step_import(self, user_input=None):
         """Occurs when an entry is setup through config."""
         host = user_input[CONF_HOST]
+        player_id = await _async_get_player_id(host)
+        if player_id:
+            await self.async_set_unique_id(str(player_id))
         return self.async_create_entry(title=format_title(host), data={CONF_HOST: host})
 
     async def async_step_user(self, user_input=None):
@@ -58,14 +62,22 @@ class HeosFlowHandler(config_entries.ConfigFlow):
             # Map host from friendly name if in discovered hosts
             host = self.hass.data[DATA_DISCOVERED_HOSTS].get(host, host)
             heos = Heos(host)
+            players = None
             try:
                 await heos.connect()
+                players = await heos.get_players()
                 self.hass.data.pop(DATA_DISCOVERED_HOSTS)
-                return await self.async_step_import({CONF_HOST: host})
             except HeosError:
                 errors[CONF_HOST] = "connection_failure"
             finally:
                 await heos.disconnect()
+            if not errors:
+                player_id = _async_find_player_id_in_players(players, host)
+                if player_id:
+                    await self.async_set_unique_id(str(player_id))
+                return self.async_create_entry(
+                    title=format_title(host), data={CONF_HOST: host}
+                )
 
         # Return form
         host_type = (
@@ -90,7 +102,12 @@ async def _async_get_player_id(ip_address):
         return None
     finally:
         await heos.disconnect()
+    return _async_find_player_id_in_players(players, ip_address)
 
+
+@callback
+def _async_find_player_id_in_players(players, ip_address):
+    """Look though players to find the player_id for an ip address."""
     if not players:
         return None
     for player_id, player in players.items():

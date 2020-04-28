@@ -7,6 +7,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components import heos, ssdp
 from homeassistant.components.heos.config_flow import HeosFlowHandler
 from homeassistant.components.heos.const import DATA_DISCOVERED_HOSTS
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP
 from homeassistant.const import CONF_HOST
 
 from tests.async_mock import patch
@@ -55,6 +56,7 @@ async def test_create_entry_when_host_valid(hass, controller):
             heos.DOMAIN, context={"source": "user"}, data=data
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["result"].unique_id == "1"
         assert result["title"] == "Controller (127.0.0.1)"
         assert result["data"] == data
         assert controller.connect.call_count == 1
@@ -70,6 +72,7 @@ async def test_create_entry_when_friendly_name_valid(hass, controller):
             heos.DOMAIN, context={"source": "user"}, data=data
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["result"].unique_id == "1"
         assert result["title"] == "Controller (127.0.0.1)"
         assert result["data"] == {CONF_HOST: "127.0.0.1"}
         assert controller.connect.call_count == 1
@@ -114,13 +117,27 @@ async def test_discovery_finds_correct_player_id(hass, controller, discovery_dat
     discovery_data[ssdp.ATTR_UPNP_FRIENDLY_NAME] = "Bedroom"
 
     await hass.config_entries.flow.async_init(
-        heos.DOMAIN, context={"source": "ssdp"}, data=discovery_data
+        heos.DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data
     )
     await hass.async_block_till_done()
     flows_in_progress = hass.config_entries.flow.async_progress()
     assert flows_in_progress[0]["context"]["unique_id"] == "2"
     assert len(flows_in_progress) == 1
     assert hass.data[DATA_DISCOVERED_HOSTS] == {"Bedroom (127.0.0.2)": "127.0.0.2"}
+
+
+async def test_import_finds_correct_player_id(hass, controller):
+    """Test import finds the correct player id for the given host."""
+
+    with patch("homeassistant.components.heos.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            heos.DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_HOST: "127.0.0.2"},
+        )
+    await hass.async_block_till_done()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["result"].unique_id == "2"
 
 
 async def test_disovery_flow_aborts_already_setup(
