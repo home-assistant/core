@@ -4,14 +4,34 @@
             "already_configured": "Ten klucz API jest ju\u017c w u\u017cyciu."
         },
         "error": {
-            "invalid_api_key": "Nieprawid\u0142owy klucz API"
+            "general_error": "Nieznany b\u0142\u0105d",
+            "invalid_api_key": "Nieprawid\u0142owy klucz API",
+            "unable_to_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z jednostk\u0105 Node/Pro."
         },
         "step": {
-            "user": {
+            "geography": {
                 "data": {
                     "api_key": "Klucz API",
                     "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna"
+                },
+                "title": "Konfiguracja Geography"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "Nazwa hosta lub adres IP jednostki",
+                    "password": "Has\u0142o jednostki"
+                },
+                "description": "Has\u0142o",
+                "title": "Konfiguracja AirVisual Node/Pro"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "cloud_api": "Lokalizacja geograficzna",
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
                     "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
+                    "node_pro": "AirVisual Node Pro",
                     "type": "Typ integracji"
                 },
                 "description": "Monitoruj jako\u015b\u0107 powietrza w okre\u015blonej lokalizacji geograficznej.",

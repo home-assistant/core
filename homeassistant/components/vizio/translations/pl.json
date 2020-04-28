@@ -6,6 +6,7 @@
         },
         "error": {
             "cant_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z urz\u0105dzeniem. [Przejrzyj dokumentacj\u0119] (https://www.home-assistant.io/integrations/vizio/) i ponownie sprawd\u017a, czy: \n - urz\u0105dzenie jest w\u0142\u0105czone,\n - urz\u0105dzenie jest pod\u0142\u0105czone do sieci,\n - wprowadzone warto\u015bci s\u0105 prawid\u0142owe,\n przed pr\u00f3b\u0105 ponownego przes\u0142ania.",
+            "complete_pairing failed": "Nie mo\u017cna uko\u0144czy\u0107 parowania. Upewnij si\u0119, \u017ce podany kod PIN jest prawid\u0142owy, a telewizor jest zasilany i pod\u0142\u0105czony do sieci przed ponownym przes\u0142aniem.",
             "host_exists": "Urz\u0105dzenie Vizio z okre\u015blonym hostem jest ju\u017c skonfigurowane.",
             "name_exists": "Urz\u0105dzenie Vizio o okre\u015blonej nazwie jest ju\u017c skonfigurowane."
         },
@@ -13,12 +14,16 @@
             "pair_tv": {
                 "data": {
                     "pin": "PIN"
-                }
+                },
+                "description": "Tw\u00f3j telewizor powinien wy\u015bwietla\u0107 kod. Wprowad\u017a ten kod do formularza, a nast\u0119pnie przejd\u017a do nast\u0119pnego kroku, aby zako\u0144czy\u0107 parowanie.",
+                "title": "Ko\u0144czenie procesu parowania"
             },
             "pairing_complete": {
+                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistant'em.",
                 "title": "Parowanie zako\u0144czone"
             },
             "pairing_complete_import": {
+                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistant'em.\n\nTw\u00f3j token dost\u0119powy to '**{access_token}**'.",
                 "title": "Parowanie zako\u0144czone"
             },
             "user": {
@@ -28,6 +33,7 @@
                     "host": "<Host/IP>:<Port>",
                     "name": "Nazwa"
                 },
+                "description": "Token dost\u0119powy potrzebny jest tylko dla telewizor\u00f3w. Je\u015bli konfigurujesz telewizor i nie masz jeszcze tokenu dost\u0119powego, pozostaw go pusty aby przej\u015b\u0107 przez proces parowania.",
                 "title": "Konfiguracja klienta Vizio SmartCast"
             }
         }
