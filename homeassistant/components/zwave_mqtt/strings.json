@@ -3,19 +3,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to the device",
-        "data": {
-          "host": "Host"
-        }
+        "title": "Confirm set up"
       }
-    },
-    "error": {
-      "cannot_connect": "Failed to connect, please try again",
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error"
-    },
-    "abort": {
-      "already_configured": "Device is already configured"
     }
   }
 }
