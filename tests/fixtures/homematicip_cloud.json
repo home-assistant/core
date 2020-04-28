@@ -1591,7 +1591,7 @@
                     "groupIndex": 1,
                     "groups": [],
                     "index": 1,
-                    "label": "",
+                    "label": "Treppe CH",
                     "on": true,
                     "profileMode": "AUTOMATIC",
                     "userDesiredProfileMode": "AUTOMATIC"
@@ -1603,7 +1603,7 @@
                     "groupIndex": 2,
                     "groups": [],
                     "index": 2,
-                    "label": "",
+                    "label": "Alarm Status",
                     "on": null,
                     "profileMode": "AUTOMATIC",
                     "simpleRGBColorState": "RED",
@@ -4576,7 +4576,7 @@
                         "00000000-0000-0000-0000-000000000042"
                     ],
                     "index": 1,
-                    "label": "",
+                    "label": "SW1",
                     "on": false,
                     "profileMode": "AUTOMATIC",
                     "userDesiredProfileMode": "AUTOMATIC"
@@ -4590,7 +4590,7 @@
                         "00000000-0000-0000-0000-000000000040"
                     ],
                     "index": 2,
-                    "label": "",
+                    "label": "SW2",
                     "on": false,
                     "profileMode": "AUTOMATIC",
                     "userDesiredProfileMode": "AUTOMATIC"

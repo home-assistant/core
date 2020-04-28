@@ -1,13 +1,10 @@
 {
   "config": {
-    "title": "IQVIA",
     "step": {
       "user": {
         "title": "IQVIA",
         "description": "Fill out your U.S. or Canadian ZIP code.",
-        "data": {
-          "zip_code": "ZIP Code"
-        }
+        "data": { "zip_code": "ZIP Code" }
       }
     },
     "error": {

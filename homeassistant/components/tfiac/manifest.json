@@ -3,6 +3,5 @@
   "name": "Tfiac",
   "documentation": "https://www.home-assistant.io/integrations/tfiac",
   "requirements": ["pytfiac==0.4"],
-  "dependencies": [],
   "codeowners": ["@fredrike", "@mellado"]
 }

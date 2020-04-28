@@ -7,7 +7,7 @@ from homeassistant.components.cover import (
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
-    CoverDevice,
+    CoverEntity,
 )
 
 from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
@@ -17,17 +17,17 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Lutron Caseta shades as a cover device."""
-    devs = []
+    entities = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
     cover_devices = bridge.get_devices_by_domain(DOMAIN)
     for cover_device in cover_devices:
-        dev = LutronCasetaCover(cover_device, bridge)
-        devs.append(dev)
+        entity = LutronCasetaCover(cover_device, bridge)
+        entities.append(entity)
 
-    async_add_entities(devs, True)
+    async_add_entities(entities, True)
 
 
-class LutronCasetaCover(LutronCasetaDevice, CoverDevice):
+class LutronCasetaCover(LutronCasetaDevice, CoverEntity):
     """Representation of a Lutron shade."""
 
     @property

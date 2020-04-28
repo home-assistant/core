@@ -1,10 +1,10 @@
 ---
-name: Report a bug with Home Assistant 
-about: Report an issue with Home Assistant
+name: Report a bug with Home Assistant Core
+about: Report an issue with Home Assistant Core
 ---
 <!-- READ THIS FIRST:
   - If you need additional help with this template, please refer to https://www.home-assistant.io/help/reporting_issues/
-  - Make sure you are running the latest version of Home Assistant before reporting an issue: https://github.com/home-assistant/home-assistant/releases
+  - Make sure you are running the latest version of Home Assistant before reporting an issue: https://github.com/home-assistant/core/releases
   - Do not report issues for integrations if you are using custom components or integrations.
   - Provide as many details as possible. Paste logs, configuration samples and code into the backticks.
   DO NOT DELETE ANY TEXT from this template! Otherwise, your issue may be closed without comment.
@@ -12,7 +12,7 @@ about: Report an issue with Home Assistant
 ## The problem
 <!-- 
   Describe the issue you are experiencing here to communicate to the
-  maintainers. Tell us what you were trying to do and what happened instead.
+  maintainers. Tell us what you were trying to do and what happened.
 -->
 
 
@@ -23,9 +23,9 @@ about: Report an issue with Home Assistant
   Home Assistant frontend: Developer tools -> Info.
 -->
 
-- Home Assistant release with the issue: 
-- Last working Home Assistant release (if known): 
-- Operating environment (Hass.io/Docker/Windows/etc.): 
+- Home Assistant Core release with the issue: 
+- Last working Home Assistant Core release (if known): 
+- Operating environment (Home Assistant/Supervised/Docker/venv): 
 - Integration causing this issue: 
 - Link to integration documentation on our website: 
 

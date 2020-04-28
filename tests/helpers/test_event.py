@@ -1,6 +1,5 @@
 """Test event helpers."""
 # pylint: disable=protected-access
-import asyncio
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
@@ -104,8 +103,7 @@ async def test_track_state_change(hass):
 
     async_track_state_change(hass, "light.Bowl", wildcard_run_callback)
 
-    @asyncio.coroutine
-    def wildercard_run_callback(entity_id, old_state, new_state):
+    async def wildercard_run_callback(entity_id, old_state, new_state):
         wildercard_runs.append((old_state, new_state))
 
     async_track_state_change(hass, MATCH_ALL, wildercard_run_callback)
@@ -189,8 +187,7 @@ async def test_track_template(hass):
 
     async_track_template(hass, template_condition, wildcard_run_callback)
 
-    @asyncio.coroutine
-    def wildercard_run_callback(entity_id, old_state, new_state):
+    async def wildercard_run_callback(entity_id, old_state, new_state):
         wildercard_runs.append((old_state, new_state))
 
     async_track_template(
@@ -263,8 +260,7 @@ async def test_track_same_state_simple_trigger(hass):
         entity_ids="light.Bowl",
     )
 
-    @asyncio.coroutine
-    def coroutine_run_callback():
+    async def coroutine_run_callback():
         coroutine_runs.append(1)
 
     async_track_same_state(
@@ -738,27 +734,27 @@ async def test_periodic_task_duplicate_time(hass):
 
 async def test_periodic_task_entering_dst(hass):
     """Test periodic task behavior when entering dst."""
-    tz = dt_util.get_time_zone("Europe/Vienna")
-    dt_util.set_default_time_zone(tz)
+    timezone = dt_util.get_time_zone("Europe/Vienna")
+    dt_util.set_default_time_zone(timezone)
     specific_runs = []
 
     unsub = async_track_time_change(
         hass, lambda x: specific_runs.append(1), hour=2, minute=30, second=0
     )
 
-    _send_time_changed(hass, tz.localize(datetime(2018, 3, 25, 1, 50, 0)))
+    _send_time_changed(hass, timezone.localize(datetime(2018, 3, 25, 1, 50, 0)))
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    _send_time_changed(hass, tz.localize(datetime(2018, 3, 25, 3, 50, 0)))
+    _send_time_changed(hass, timezone.localize(datetime(2018, 3, 25, 3, 50, 0)))
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    _send_time_changed(hass, tz.localize(datetime(2018, 3, 26, 1, 50, 0)))
+    _send_time_changed(hass, timezone.localize(datetime(2018, 3, 26, 1, 50, 0)))
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
-    _send_time_changed(hass, tz.localize(datetime(2018, 3, 26, 2, 50, 0)))
+    _send_time_changed(hass, timezone.localize(datetime(2018, 3, 26, 2, 50, 0)))
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
@@ -767,29 +763,35 @@ async def test_periodic_task_entering_dst(hass):
 
 async def test_periodic_task_leaving_dst(hass):
     """Test periodic task behavior when leaving dst."""
-    tz = dt_util.get_time_zone("Europe/Vienna")
-    dt_util.set_default_time_zone(tz)
+    timezone = dt_util.get_time_zone("Europe/Vienna")
+    dt_util.set_default_time_zone(timezone)
     specific_runs = []
 
     unsub = async_track_time_change(
         hass, lambda x: specific_runs.append(1), hour=2, minute=30, second=0
     )
 
-    _send_time_changed(hass, tz.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=False))
+    _send_time_changed(
+        hass, timezone.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=False)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
     _send_time_changed(
-        hass, tz.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=False)
+        hass, timezone.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=False)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    _send_time_changed(hass, tz.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=True))
+    _send_time_changed(
+        hass, timezone.localize(datetime(2018, 10, 28, 2, 5, 0), is_dst=True)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    _send_time_changed(hass, tz.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=True))
+    _send_time_changed(
+        hass, timezone.localize(datetime(2018, 10, 28, 2, 55, 0), is_dst=True)
+    )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 

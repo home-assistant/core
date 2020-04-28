@@ -31,9 +31,9 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def configured_displays(hass):
     """Return a set of configured Toon displays."""
-    return set(
+    return {
         entry.data[CONF_DISPLAY] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
 @config_entries.HANDLERS.register(DOMAIN)

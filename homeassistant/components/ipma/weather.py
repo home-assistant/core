@@ -104,7 +104,7 @@ async def async_get_api(hass):
 
 async def async_get_location(hass, api, latitude, longitude):
     """Retrieve pyipma location, location name to be used as the entity name."""
-    with async_timeout.timeout(10):
+    with async_timeout.timeout(30):
         location = await Location.get(api, float(latitude), float(longitude))
 
     _LOGGER.debug(

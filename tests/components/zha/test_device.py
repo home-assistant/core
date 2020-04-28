@@ -8,9 +8,10 @@ import pytest
 import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.zha.core.device as zha_core_device
+import homeassistant.helpers.device_registry as ha_dev_reg
 import homeassistant.util.dt as dt_util
 
-from .common import async_enable_traffic
+from .common import async_enable_traffic, make_zcl_header
 
 from tests.common import async_fire_time_changed
 
@@ -61,6 +62,26 @@ def device_with_basic_channel(zigpy_device_mains):
 def device_without_basic_channel(zigpy_device):
     """Return a zha device with a basic channel present."""
     return zigpy_device(with_basic_channel=False)
+
+
+@pytest.fixture
+async def ota_zha_device(zha_device_restored, zigpy_device_mock):
+    """ZHA device with OTA cluster fixture."""
+    zigpy_dev = zigpy_device_mock(
+        {
+            1: {
+                "in_clusters": [general.Basic.cluster_id],
+                "out_clusters": [general.Ota.cluster_id],
+                "device_type": 0x1234,
+            }
+        },
+        "00:11:22:33:44:55:66:77",
+        "test manufacturer",
+        "test model",
+    )
+
+    zha_device = await zha_device_restored(zigpy_dev)
+    return zha_device
 
 
 def _send_time_changed(hass, seconds):
@@ -190,3 +211,20 @@ async def test_check_available_no_basic_channel(
     await hass.async_block_till_done()
     assert zha_device.available is False
     assert "does not have a mandatory basic cluster" in caplog.text
+
+
+async def test_ota_sw_version(hass, ota_zha_device):
+    """Test device entry gets sw_version updated via OTA channel."""
+
+    ota_ch = ota_zha_device.channels.pools[0].client_channels["1:0x0019"]
+    dev_registry = await ha_dev_reg.async_get_registry(hass)
+    entry = dev_registry.async_get(ota_zha_device.device_id)
+    assert entry.sw_version is None
+
+    cluster = ota_ch.cluster
+    hdr = make_zcl_header(1, global_command=False)
+    sw_version = 0x2345
+    cluster.handle_message(hdr, [1, 2, 3, sw_version, None])
+    await hass.async_block_till_done()
+    entry = dev_registry.async_get(ota_zha_device.device_id)
+    assert int(entry.sw_version, base=16) == sw_version

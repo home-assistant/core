@@ -2,42 +2,37 @@
 
 from homeassistant.helpers.entity import Entity
 
-from .const import (
-    DOMAIN,
-    MANUFACTURER,
-    MODEL,
-    POWERWALL_SITE_NAME,
-    SITE_INFO_GRID_CODE,
-    SITE_INFO_NOMINAL_SYSTEM_ENERGY_KWH,
-    SITE_INFO_UTILITY,
-)
+from .const import DOMAIN, MANUFACTURER, MODEL
 
 
 class PowerWallEntity(Entity):
     """Base class for powerwall entities."""
 
-    def __init__(self, coordinator, site_info):
+    def __init__(
+        self, coordinator, site_info, status, device_type, powerwalls_serial_numbers
+    ):
         """Initialize the sensor."""
         super().__init__()
         self._coordinator = coordinator
         self._site_info = site_info
-        # This group of properties will be unique to to the site
-        unique_group = (
-            site_info[SITE_INFO_UTILITY],
-            site_info[SITE_INFO_GRID_CODE],
-            str(site_info[SITE_INFO_NOMINAL_SYSTEM_ENERGY_KWH]),
-        )
-        self.base_unique_id = "_".join(unique_group)
+        self._device_type = device_type
+        self._version = status.version
+        # The serial numbers of the powerwalls are unique to every site
+        self.base_unique_id = "_".join(powerwalls_serial_numbers)
 
     @property
     def device_info(self):
         """Powerwall device info."""
-        return {
+        device_info = {
             "identifiers": {(DOMAIN, self.base_unique_id)},
-            "name": self._site_info[POWERWALL_SITE_NAME],
+            "name": self._site_info.site_name,
             "manufacturer": MANUFACTURER,
-            "model": MODEL,
         }
+        model = MODEL
+        model += f" ({self._device_type.name})"
+        device_info["model"] = model
+        device_info["sw_version"] = self._version
+        return device_info
 
     @property
     def available(self):
@@ -58,8 +53,6 @@ class PowerWallEntity(Entity):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self._coordinator.async_add_listener(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """Undo subscription."""
-        self._coordinator.async_remove_listener(self.async_write_ha_state)
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, mock_open, patch
 from aiohttp.hdrs import AUTHORIZATION
 
 import homeassistant.components.html5.notify as html5
+from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
@@ -335,7 +336,7 @@ async def test_registering_new_device_fails_view(hass, hass_client):
     ):
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
-    assert resp.status == 500
+    assert resp.status == HTTP_INTERNAL_SERVER_ERROR
     assert registrations == {}
 
 
@@ -380,7 +381,7 @@ async def test_registering_existing_device_fails_view(hass, hass_client):
         mock_save.side_effect = HomeAssistantError
         resp = await client.post(REGISTER_URL, data=json.dumps(SUBSCRIPTION_4))
 
-    assert resp.status == 500
+    assert resp.status == HTTP_INTERNAL_SERVER_ERROR
     assert registrations == {"unnamed device": SUBSCRIPTION_1}
 
 
@@ -451,7 +452,7 @@ async def test_unregistering_device_view_handles_save_error(hass, hass_client):
             data=json.dumps({"subscription": SUBSCRIPTION_1["subscription"]}),
         )
 
-    assert resp.status == 500, resp.response
+    assert resp.status == HTTP_INTERNAL_SERVER_ERROR, resp.response
     assert registrations == {
         "some device": SUBSCRIPTION_1,
         "other device": SUBSCRIPTION_2,

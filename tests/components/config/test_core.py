@@ -1,6 +1,5 @@
 """Test hassbian config."""
-from unittest.mock import patch
-
+from asynctest import patch
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
@@ -8,8 +7,6 @@ from homeassistant.components import config
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL
 from homeassistant.util import dt as dt_util, location
-
-from tests.common import mock_coro
 
 ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
 
@@ -31,7 +28,7 @@ async def test_validate_config_ok(hass, hass_client):
 
     with patch(
         "homeassistant.components.config.core.async_check_ha_config_file",
-        return_value=mock_coro(),
+        return_value=None,
     ):
         resp = await client.post("/api/config/core/check_config")
 
@@ -42,7 +39,7 @@ async def test_validate_config_ok(hass, hass_client):
 
     with patch(
         "homeassistant.components.config.core.async_check_ha_config_file",
-        return_value=mock_coro("beer"),
+        return_value="beer",
     ):
         resp = await client.post("/api/config/core/check_config")
 
@@ -121,8 +118,7 @@ async def test_websocket_bad_core_update(hass, client):
 async def test_detect_config(hass, client):
     """Test detect config."""
     with patch(
-        "homeassistant.util.location.async_detect_location_info",
-        return_value=mock_coro(None),
+        "homeassistant.util.location.async_detect_location_info", return_value=None,
     ):
         await client.send_json({"id": 1, "type": "config/core/detect"})
 
@@ -136,20 +132,18 @@ async def test_detect_config_fail(hass, client):
     """Test detect config."""
     with patch(
         "homeassistant.util.location.async_detect_location_info",
-        return_value=mock_coro(
-            location.LocationInfo(
-                ip=None,
-                country_code=None,
-                country_name=None,
-                region_code=None,
-                region_name=None,
-                city=None,
-                zip_code=None,
-                latitude=None,
-                longitude=None,
-                use_metric=True,
-                time_zone="Europe/Amsterdam",
-            )
+        return_value=location.LocationInfo(
+            ip=None,
+            country_code=None,
+            country_name=None,
+            region_code=None,
+            region_name=None,
+            city=None,
+            zip_code=None,
+            latitude=None,
+            longitude=None,
+            use_metric=True,
+            time_zone="Europe/Amsterdam",
         ),
     ):
         await client.send_json({"id": 1, "type": "config/core/detect"})

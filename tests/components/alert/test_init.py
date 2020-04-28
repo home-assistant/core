@@ -234,15 +234,15 @@ class TestAlert(unittest.TestCase):
         self.hass.services.register(notify.DOMAIN, NOTIFIER, record_event)
 
         assert setup_component(self.hass, alert.DOMAIN, config)
-        assert 0 == len(events)
+        assert len(events) == 0
 
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
-        assert 1 == len(events)
+        assert len(events) == 1
 
         self.hass.states.set("sensor.test", STATE_OFF)
         self.hass.block_till_done()
-        assert 1 == len(events)
+        assert len(events) == 1
 
     def test_notification(self):
         """Test notifications."""
@@ -256,15 +256,15 @@ class TestAlert(unittest.TestCase):
         self.hass.services.register(notify.DOMAIN, NOTIFIER, record_event)
 
         assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
-        assert 0 == len(events)
+        assert len(events) == 0
 
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
-        assert 1 == len(events)
+        assert len(events) == 1
 
         self.hass.states.set("sensor.test", STATE_OFF)
         self.hass.block_till_done()
-        assert 2 == len(events)
+        assert len(events) == 2
 
     def test_sending_non_templated_notification(self):
         """Test notifications."""
@@ -350,11 +350,11 @@ class TestAlert(unittest.TestCase):
         self.hass.services.register(notify.DOMAIN, NOTIFIER, record_event)
 
         assert setup_component(self.hass, alert.DOMAIN, config)
-        assert 0 == len(events)
+        assert len(events) == 0
 
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
-        assert 0 == len(events)
+        assert len(events) == 0
 
     def test_noack(self):
         """Test no ack feature."""

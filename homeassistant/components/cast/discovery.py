@@ -25,14 +25,13 @@ def discover_chromecast(hass: HomeAssistant, info: ChromecastInfo):
         _LOGGER.debug("Discovered previous chromecast %s", info)
 
     # Either discovered completely new chromecast or a "moved" one.
-    info = info.fill_out_missing_chromecast_info()
     _LOGGER.debug("Discovered chromecast %s", info)
 
     if info.uuid is not None:
         # Remove previous cast infos with same uuid from known chromecasts.
-        same_uuid = set(
+        same_uuid = {
             x for x in hass.data[KNOWN_CHROMECAST_INFO_KEY] if info.uuid == x.uuid
-        )
+        }
         hass.data[KNOWN_CHROMECAST_INFO_KEY] -= same_uuid
 
     hass.data[KNOWN_CHROMECAST_INFO_KEY].add(info)

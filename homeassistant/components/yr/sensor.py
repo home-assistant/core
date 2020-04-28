@@ -17,9 +17,11 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEGREE,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    HTTP_OK,
     PRESSURE_HPA,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
@@ -46,7 +48,7 @@ SENSOR_TYPES = {
     "windSpeed": ["Wind speed", SPEED_METERS_PER_SECOND, None],
     "windGust": ["Wind gust", SPEED_METERS_PER_SECOND, None],
     "pressure": ["Pressure", PRESSURE_HPA, DEVICE_CLASS_PRESSURE],
-    "windDirection": ["Wind direction", "°", None],
+    "windDirection": ["Wind direction", DEGREE, None],
     "humidity": ["Humidity", UNIT_PERCENTAGE, DEVICE_CLASS_HUMIDITY],
     "fog": ["Fog", UNIT_PERCENTAGE, None],
     "cloudiness": ["Cloudiness", UNIT_PERCENTAGE, None],
@@ -96,11 +98,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     dev = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         dev.append(YrSensor(name, sensor_type))
-    async_add_entities(dev)
 
     weather = YrData(hass, coordinates, forecast, dev)
-    async_track_utc_time_change(hass, weather.updating_devices, minute=31, second=0)
+    async_track_utc_time_change(
+        hass, weather.updating_devices, minute=randrange(60), second=0
+    )
     await weather.fetching_data()
+    async_add_entities(dev)
 
 
 class YrSensor(Entity):
@@ -137,7 +141,7 @@ class YrSensor(Entity):
             return None
         return (
             "https://api.met.no/weatherapi/weathericon/1.1/"
-            "?symbol={0};content_type=image/png".format(self._state)
+            f"?symbol={self._state};content_type=image/png"
         )
 
     @property
@@ -183,7 +187,7 @@ class YrData:
             websession = async_get_clientsession(self.hass)
             with async_timeout.timeout(10):
                 resp = await websession.get(self._url, params=self._urlparams)
-            if resp.status != 200:
+            if resp.status != HTTP_OK:
                 try_again(f"{resp.url} returned {resp.status}")
                 return
             text = await resp.text()
@@ -234,7 +238,6 @@ class YrData:
         ordered_entries.sort(key=lambda item: item[0])
 
         # Update all devices
-        tasks = []
         if ordered_entries:
             for dev in self.devices:
                 new_state = None
@@ -274,7 +277,5 @@ class YrData:
                 # pylint: disable=protected-access
                 if new_state != dev._state:
                     dev._state = new_state
-                    tasks.append(dev.async_update_ha_state())
-
-        if tasks:
-            await asyncio.wait(tasks)
+                    if dev.hass:
+                        dev.async_write_ha_state()

@@ -39,7 +39,7 @@ async def test_entity_state(hass, device_factory):
     state = hass.states.get("sensor.sensor_1_battery")
     assert state.state == "100"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UNIT_PERCENTAGE
-    assert state.attributes[ATTR_FRIENDLY_NAME] == device.label + " Battery"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} Battery"
 
 
 async def test_entity_three_axis_state(hass, device_factory):
@@ -50,13 +50,13 @@ async def test_entity_three_axis_state(hass, device_factory):
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     state = hass.states.get("sensor.three_axis_x_coordinate")
     assert state.state == "100"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == device.label + " X Coordinate"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} X Coordinate"
     state = hass.states.get("sensor.three_axis_y_coordinate")
     assert state.state == "75"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == device.label + " Y Coordinate"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} Y Coordinate"
     state = hass.states.get("sensor.three_axis_z_coordinate")
     assert state.state == "25"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == device.label + " Z Coordinate"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{device.label} Z Coordinate"
 
 
 async def test_entity_three_axis_invalid_state(hass, device_factory):
@@ -84,7 +84,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     # Assert
     entry = entity_registry.async_get("sensor.sensor_1_battery")
     assert entry
-    assert entry.unique_id == device.device_id + "." + Attribute.battery
+    assert entry.unique_id == f"{device.device_id}.{Attribute.battery}"
     entry = device_registry.async_get_device({(DOMAIN, device.device_id)}, [])
     assert entry
     assert entry.name == device.label

@@ -5,7 +5,7 @@ import logging
 import pytz
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import (
     CONF_AFTER,
     CONF_BEFORE,
@@ -60,7 +60,7 @@ def is_sun_event(event):
     return event in (SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 
 
-class TodSensor(BinarySensorDevice):
+class TodSensor(BinarySensorEntity):
     """Time of the Day Sensor."""
 
     def __init__(self, name, after, after_offset, before, before_offset):
@@ -234,7 +234,7 @@ class TodSensor(BinarySensorDevice):
     def _point_in_time_listener(self, now):
         """Run when the state of the sensor should be updated."""
         self._calculate_next_update()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         async_track_point_in_utc_time(
             self.hass, self._point_in_time_listener, self.next_update

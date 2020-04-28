@@ -3,7 +3,7 @@ select_cmode:
   fields:
     entity_id:
       description: Name of projector
-      example: 'media_player.epson_projector'
+      example: "media_player.epson_projector"
     cmode:
       description: Name of Cmode
-      example: 'cinema'
+      example: "cinema"

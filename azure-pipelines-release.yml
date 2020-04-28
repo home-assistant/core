@@ -14,7 +14,7 @@ schedules:
     always: true
 variables:
   - name: versionBuilder
-    value: '6.9'
+    value: '7.2.0'
   - group: docker
   - group: github
   - group: twine
@@ -108,11 +108,9 @@ stages:
         docker run --rm --privileged \
           -v ~/.docker:/root/.docker:rw \
           -v /run/docker.sock:/run/docker.sock:rw \
-          -v $(pwd):/homeassistant:ro \
+          -v $(pwd):/data:ro \
           homeassistant/amd64-builder:$(versionBuilder) \
-          --homeassistant $(homeassistantRelease) "--$(buildArch)" \
-          -r https://github.com/home-assistant/hassio-homeassistant \
-          -t generic --docker-hub homeassistant
+          --generic $(homeassistantRelease) "--$(buildArch)" -t /data \
 
         docker run --rm --privileged \
           -v ~/.docker:/root/.docker \

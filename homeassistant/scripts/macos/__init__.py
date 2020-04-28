@@ -15,7 +15,7 @@ def install_osx():
 
     template_path = os.path.join(os.path.dirname(__file__), "launchd.plist")
 
-    with open(template_path, "r", encoding="utf-8") as inp:
+    with open(template_path, encoding="utf-8") as inp:
         plist = inp.read()
 
     plist = plist.replace("$HASS_PATH$", hass_path)

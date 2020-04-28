@@ -14,7 +14,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
-    VacuumDevice,
+    VacuumEntity,
 )
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -48,14 +48,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(vacuums, True)
 
 
-class EcovacsVacuum(VacuumDevice):
+class EcovacsVacuum(VacuumEntity):
     """Ecovacs Vacuums such as Deebot."""
 
     def __init__(self, device):
         """Initialize the Ecovacs Vacuum."""
         self.device = device
         self.device.connect_and_wait_until_ready()
-        if self.device.vacuum.get("nick", None) is not None:
+        if self.device.vacuum.get("nick") is not None:
             self._name = str(self.device.vacuum["nick"])
         else:
             # In case there is no nickname defined, use the device id
@@ -96,7 +96,7 @@ class EcovacsVacuum(VacuumDevice):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return self.device.vacuum.get("did", None)
+        return self.device.vacuum.get("did")
 
     @property
     def is_on(self):

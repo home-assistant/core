@@ -69,7 +69,7 @@ async def test_learn(hass):
 
         assert mock_create.call_count == 1
         assert mock_create.call_args == call(
-            "Received packet is: {}".format(DUMMY_IR_PACKET), title="Broadlink switch"
+            f"Received packet is: {DUMMY_IR_PACKET}", title="Broadlink switch"
         )
 
 

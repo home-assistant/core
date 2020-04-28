@@ -17,6 +17,7 @@ ATTR_ON = "on"
 ATTR_PALETTE = "palette"
 ATTR_PLAYLIST = "playlist"
 ATTR_PRESET = "preset"
+ATTR_REVERSE = "reverse"
 ATTR_SEGMENT_ID = "segment_id"
 ATTR_SOFTWARE_VERSION = "sw_version"
 ATTR_SPEED = "speed"
@@ -26,3 +27,6 @@ ATTR_UDP_PORT = "udp_port"
 # Units of measurement
 CURRENT_MA = "mA"
 SIGNAL_DBM = "dBm"
+
+# Services
+SERVICE_EFFECT = "effect"

@@ -271,14 +271,14 @@ def test_logarithm(hass):
     for value, base, expected in tests:
         assert (
             template.Template(
-                "{{ %s | log(%s) | round(1) }}" % (value, base), hass
+                f"{{{{ {value} | log({base}) | round(1) }}}}", hass
             ).async_render()
             == expected
         )
 
         assert (
             template.Template(
-                "{{ log(%s, %s) | round(1) }}" % (value, base), hass
+                f"{{{{ log({value}, {base}) | round(1) }}}}", hass
             ).async_render()
             == expected
         )
@@ -439,13 +439,13 @@ def test_arc_tan2(hass):
     for y, x, expected in tests:
         assert (
             template.Template(
-                "{{ (%s, %s) | atan2 | round(3) }}" % (y, x), hass
+                f"{{{{ ({y}, {x}) | atan2 | round(3) }}}}", hass
             ).async_render()
             == expected
         )
         assert (
             template.Template(
-                "{{ atan2(%s, %s) | round(3) }}" % (y, x), hass
+                f"{{{{ atan2({y}, {x}) | round(3) }}}}", hass
             ).async_render()
             == expected
         )
@@ -468,7 +468,7 @@ def test_strptime(hass):
         if expected is None:
             expected = datetime.strptime(inp, fmt)
 
-        temp = "{{ strptime('%s', '%s') }}" % (inp, fmt)
+        temp = f"{{{{ strptime('{inp}', '{fmt}') }}}}"
 
         assert template.Template(temp, hass).async_render() == str(expected)
 
@@ -492,9 +492,7 @@ def test_timestamp_custom(hass):
         else:
             fil = "timestamp_custom"
 
-        assert (
-            template.Template("{{ %s | %s }}" % (inp, fil), hass).async_render() == out
-        )
+        assert template.Template(f"{{{{ {inp} | {fil} }}}}", hass).async_render() == out
 
 
 def test_timestamp_local(hass):
@@ -828,6 +826,48 @@ def test_now(mock_is_safe, hass):
         assert (
             now.isoformat()
             == template.Template("{{ now().isoformat() }}", hass).async_render()
+        )
+
+
+@patch(
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
+    return_value=True,
+)
+def test_relative_time(mock_is_safe, hass):
+    """Test relative_time method."""
+    now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+    with patch("homeassistant.util.dt.now", return_value=now):
+        assert (
+            "1 hour"
+            == template.Template(
+                '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}',
+                hass,
+            ).async_render()
+        )
+        assert (
+            "2 hours"
+            == template.Template(
+                '{{relative_time(strptime("2000-01-01 09:00:00 +01:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+                hass,
+            ).async_render()
+        )
+        assert (
+            "1 hour"
+            == template.Template(
+                '{{relative_time(strptime("2000-01-01 03:00:00 -06:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+                hass,
+            ).async_render()
+        )
+        assert (
+            str(template.strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z"))
+            == template.Template(
+                '{{relative_time(strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+                hass,
+            ).async_render()
+        )
+        assert (
+            "string"
+            == template.Template('{{relative_time("string")}}', hass,).async_render()
         )
 
 

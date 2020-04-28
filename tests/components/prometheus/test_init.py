@@ -7,6 +7,7 @@ from homeassistant.components.demo.sensor import DemoSensor
 import homeassistant.components.prometheus as prometheus
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    DEGREE,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
 )
@@ -40,12 +41,14 @@ async def prometheus_client(loop, hass, hass_client):
     sensor2.entity_id = "sensor.radio_energy"
     await sensor2.async_update_ha_state()
 
-    sensor3 = DemoSensor(None, "Electricity price", 0.123, None, "SEK/kWh", None)
+    sensor3 = DemoSensor(
+        None, "Electricity price", 0.123, None, f"SEK/{ENERGY_KILO_WATT_HOUR}", None
+    )
     sensor3.hass = hass
     sensor3.entity_id = "sensor.electricity_price"
     await sensor3.async_update_ha_state()
 
-    sensor4 = DemoSensor(None, "Wind Direction", 25, None, "°", None)
+    sensor4 = DemoSensor(None, "Wind Direction", 25, None, DEGREE, None)
     sensor4.hass = hass
     sensor4.entity_id = "sensor.wind_direction"
     await sensor4.async_update_ha_state()

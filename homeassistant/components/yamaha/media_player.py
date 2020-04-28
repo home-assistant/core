@@ -5,7 +5,7 @@ import requests
 import rxv
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_NEXT_TRACK,
@@ -153,7 +153,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class YamahaDevice(MediaPlayerDevice):
+class YamahaDevice(MediaPlayerEntity):
     """Representation of a Yamaha device."""
 
     def __init__(self, name, receiver, source_ignore, source_names, zone_names):
@@ -233,7 +233,7 @@ class YamahaDevice(MediaPlayerDevice):
         zone_name = self._zone_names.get(self._zone, self._zone)
         if zone_name != "Main_Zone":
             # Zone will be one of Main_Zone, Zone_2, Zone_3
-            name += " " + zone_name.replace("_", " ")
+            name += f" {zone_name.replace('_', ' ')}"
         return name
 
     @property

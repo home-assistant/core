@@ -1,4 +1,5 @@
 """Support for functionality to interact with Android TV / Fire TV devices."""
+from datetime import datetime
 import functools
 import logging
 import os
@@ -15,7 +16,7 @@ from androidtv.constants import APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -87,12 +88,14 @@ CONF_GET_SOURCES = "get_sources"
 CONF_STATE_DETECTION_RULES = "state_detection_rules"
 CONF_TURN_ON_COMMAND = "turn_on_command"
 CONF_TURN_OFF_COMMAND = "turn_off_command"
+CONF_SCREENCAP = "screencap"
 
 DEFAULT_NAME = "Android TV"
 DEFAULT_PORT = 5555
 DEFAULT_ADB_SERVER_PORT = 5037
 DEFAULT_GET_SOURCES = True
 DEFAULT_DEVICE_CLASS = "auto"
+DEFAULT_SCREENCAP = True
 
 DEVICE_ANDROIDTV = "androidtv"
 DEVICE_FIRETV = "firetv"
@@ -135,7 +138,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ADB_SERVER_IP): cv.string,
         vol.Optional(CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT): cv.port,
         vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean,
-        vol.Optional(CONF_APPS, default=dict()): vol.Schema(
+        vol.Optional(CONF_APPS, default={}): vol.Schema(
             {cv.string: vol.Any(cv.string, None)}
         ),
         vol.Optional(CONF_TURN_ON_COMMAND): cv.string,
@@ -144,6 +147,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             {cv.string: ha_state_detection_rules_validator(vol.Invalid)}
         ),
         vol.Optional(CONF_EXCLUDE_UNNAMED_APPS, default=False): cv.boolean,
+        vol.Optional(CONF_SCREENCAP, default=DEFAULT_SCREENCAP): cv.boolean,
     }
 )
 
@@ -237,6 +241,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         config.get(CONF_TURN_ON_COMMAND),
         config.get(CONF_TURN_OFF_COMMAND),
         config[CONF_EXCLUDE_UNNAMED_APPS],
+        config[CONF_SCREENCAP],
     ]
 
     if aftv.DEVICE_CLASS == DEVICE_ANDROIDTV:
@@ -325,7 +330,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             target_device.adb_push(local_path, device_path)
 
     hass.services.register(
-        ANDROIDTV_DOMAIN, SERVICE_UPLOAD, service_upload, schema=SERVICE_UPLOAD_SCHEMA,
+        ANDROIDTV_DOMAIN, SERVICE_UPLOAD, service_upload, schema=SERVICE_UPLOAD_SCHEMA
     )
 
 
@@ -368,7 +373,7 @@ def adb_decorator(override_available=False):
     return _adb_decorator
 
 
-class ADBDevice(MediaPlayerDevice):
+class ADBDevice(MediaPlayerEntity):
     """Representation of an Android TV or Fire TV device."""
 
     def __init__(
@@ -380,6 +385,7 @@ class ADBDevice(MediaPlayerDevice):
         turn_on_command,
         turn_off_command,
         exclude_unnamed_apps,
+        screencap,
     ):
         """Initialize the Android TV / Fire TV device."""
         self.aftv = aftv
@@ -399,6 +405,7 @@ class ADBDevice(MediaPlayerDevice):
         self.turn_off_command = turn_off_command
 
         self._exclude_unnamed_apps = exclude_unnamed_apps
+        self._screencap = screencap
 
         # ADB exceptions to catch
         if not self.aftv.adb_server_ip:
@@ -474,6 +481,26 @@ class ADBDevice(MediaPlayerDevice):
     def unique_id(self):
         """Return the device unique id."""
         return self._unique_id
+
+    async def async_get_media_image(self):
+        """Fetch current playing image."""
+        if not self._screencap or self.state in [STATE_OFF, None] or not self.available:
+            return None, None
+
+        media_data = await self.hass.async_add_executor_job(self.get_raw_media_data)
+        if media_data:
+            return media_data, "image/png"
+        return None, None
+
+    @adb_decorator()
+    def get_raw_media_data(self):
+        """Raw image data."""
+        return self.aftv.adb_screencap()
+
+    @property
+    def media_image_hash(self):
+        """Hash value for media image."""
+        return f"{datetime.now().timestamp()}"
 
     @adb_decorator()
     def media_play(self):
@@ -583,6 +610,7 @@ class AndroidTVDevice(ADBDevice):
         turn_on_command,
         turn_off_command,
         exclude_unnamed_apps,
+        screencap,
     ):
         """Initialize the Android TV device."""
         super().__init__(
@@ -593,6 +621,7 @@ class AndroidTVDevice(ADBDevice):
             turn_on_command,
             turn_off_command,
             exclude_unnamed_apps,
+            screencap,
         )
 
         self._is_volume_muted = None

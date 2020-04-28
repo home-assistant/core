@@ -132,6 +132,11 @@ class Season(Entity):
         return self.season
 
     @property
+    def device_class(self):
+        """Return the device class."""
+        return "season__season"
+
+    @property
     def icon(self):
         """Icon to use in the frontend, if any."""
         return SEASON_ICONS.get(self.season, "mdi:cloud")

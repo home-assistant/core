@@ -6,7 +6,7 @@ import logging
 import denonavr
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MUSIC,
@@ -103,8 +103,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         cache = hass.data[KEY_DENON_CACHE] = set()
 
     # Get config option for show_all_sources and timeout
-    show_all_sources = config.get(CONF_SHOW_ALL_SOURCES)
-    timeout = config.get(CONF_TIMEOUT)
+    show_all_sources = config[CONF_SHOW_ALL_SOURCES]
+    timeout = config[CONF_TIMEOUT]
 
     # Get config option for additional zones
     zones = config.get(CONF_ZONES)
@@ -159,7 +159,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities(receivers)
 
 
-class DenonDevice(MediaPlayerDevice):
+class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon Media Player Device."""
 
     def __init__(self, receiver):
@@ -197,7 +197,9 @@ class DenonDevice(MediaPlayerDevice):
 
     async def async_added_to_hass(self):
         """Register signal handler."""
-        async_dispatcher_connect(self.hass, DOMAIN, self.signal_handler)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, DOMAIN, self.signal_handler)
+        )
 
     def signal_handler(self, data):
         """Handle domain-specific signal by calling appropriate method."""

@@ -6,7 +6,7 @@ import os
 import mpd
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
@@ -81,7 +81,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([device], True)
 
 
-class MpdDevice(MediaPlayerDevice):
+class MpdDevice(MediaPlayerEntity):
     """Representation of a MPD server."""
 
     # pylint: disable=no-member
@@ -249,7 +249,7 @@ class MpdDevice(MediaPlayerDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
         if self._status is None:
-            return None
+            return 0
 
         supported = SUPPORT_MPD
         if "volume" in self._status:

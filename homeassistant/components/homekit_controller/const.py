@@ -27,6 +27,7 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     "temperature": "sensor",
     "battery": "sensor",
     "smoke": "binary_sensor",
+    "leak": "binary_sensor",
     "fan": "fan",
     "fanv2": "fan",
     "air-quality": "air_quality",

@@ -4,9 +4,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sentry",
   "requirements": ["sentry-sdk==0.13.5"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": ["@dcramer"]
 }

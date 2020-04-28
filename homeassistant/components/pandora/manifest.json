@@ -3,6 +3,5 @@
   "name": "Pandora",
   "documentation": "https://www.home-assistant.io/integrations/pandora",
   "requirements": ["pexpect==4.6.0"],
-  "dependencies": [],
   "codeowners": []
 }

@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "invalid_webhook_url": "Home Assistant nie jest poprawnie skonfigurowany do otrzymywania danych od SmartThings. Adres URL  webhook jest nieprawid\u0142owy: \n > {webhook_url} \n\n Zaktualizuj konfiguracj\u0119 zgodnie z [instrukcj\u0105]({component_url}), uruchom ponownie Home Assistant i spr\u00f3buj ponownie.",
+            "no_available_locations": "Nie ma dost\u0119pnych lokalizacji SmartThings do skonfigurowania w Home Assistant."
+        },
+        "error": {
+            "app_setup_error": "Nie mo\u017cna skonfigurowa\u0107 SmartApp. Spr\u00f3buj ponownie.",
+            "token_forbidden": "Token nie ma wymaganych zakres\u00f3w OAuth.",
+            "token_invalid_format": "Token musi by\u0107 w formacie UID/GUID",
+            "token_unauthorized": "Token jest niewa\u017cny lub nie ma ju\u017c autoryzacji.",
+            "webhook_error": "SmartThings nie mo\u017ce sprawdzi\u0107 poprawno\u015bci punktu ko\u0144cowego skonfigurowanego w `base_url`. Sprawd\u017a wymagania dotycz\u0105ce komponentu."
+        },
+        "step": {
+            "authorize": {
+                "title": "Autoryzuj Home Assistant'a"
+            },
+            "pat": {
+                "data": {
+                    "access_token": "Token dost\u0119pu"
+                },
+                "title": "Wprowad\u017a osobisty token dost\u0119pu"
+            },
+            "select_location": {
+                "data": {
+                    "location_id": "Lokalizacja"
+                },
+                "title": "Wybierz lokalizacj\u0119"
+            },
+            "user": {
+                "description": "Wprowad\u017a [token dost\u0119pu osobistego]({token_url}) SmartThings, kt\u00f3ry zosta\u0142 utworzony zgodnie z [instrukcj\u0105]({component_url}).",
+                "title": "Wprowad\u017a osobisty token dost\u0119pu"
+            }
+        }
+    }
+}

@@ -3,7 +3,7 @@ import logging
 
 from openhomedevice.Device import Device
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_NEXT_TRACK,
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class OpenhomeDevice(MediaPlayerDevice):
+class OpenhomeDevice(MediaPlayerEntity):
     """Representation of an Openhome device."""
 
     def __init__(self, hass, device):
@@ -64,7 +64,7 @@ class OpenhomeDevice(MediaPlayerDevice):
         self._volume_level = None
         self._volume_muted = None
         self._supported_features = SUPPORT_OPENHOME
-        self._source_names = list()
+        self._source_names = []
         self._source_index = {}
         self._source = {}
         self._name = None
@@ -79,7 +79,7 @@ class OpenhomeDevice(MediaPlayerDevice):
         self._name = self._device.Room().decode("utf-8")
         self._supported_features = SUPPORT_OPENHOME
         source_index = {}
-        source_names = list()
+        source_names = []
 
         if self._device.VolumeEnabled():
             self._supported_features |= (

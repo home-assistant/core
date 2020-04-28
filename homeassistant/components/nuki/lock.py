@@ -6,7 +6,7 @@ from pynuki import NukiBridge
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockDevice
+from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockEntity
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import extract_entity_ids
@@ -71,7 +71,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class NukiLock(LockDevice):
+class NukiLock(LockEntity):
     """Representation of a Nuki lock."""
 
     def __init__(self, nuki_lock):

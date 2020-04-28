@@ -91,8 +91,10 @@ class SpeedtestSensor(RestoreEntity):
             return
         self._state = state.state
 
-        async_dispatcher_connect(
-            self.hass, DATA_UPDATED, self._schedule_immediate_update
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, DATA_UPDATED, self._schedule_immediate_update
+            )
         )
 
     def update(self):

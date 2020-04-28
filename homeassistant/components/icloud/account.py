@@ -167,7 +167,7 @@ class IcloudAccount:
             ):
                 continue
 
-            if self._devices.get(device_id, None) is not None:
+            if self._devices.get(device_id) is not None:
                 # Seen device -> updating
                 _LOGGER.debug("Updating iCloud device: %s", device_name)
                 self._devices[device_id].update(status)

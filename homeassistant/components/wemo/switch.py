@@ -5,7 +5,7 @@ import logging
 
 import async_timeout
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import convert
@@ -47,7 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class WemoSwitch(SwitchDevice):
+class WemoSwitch(SwitchEntity):
     """Representation of a WeMo switch."""
 
     def __init__(self, device):
@@ -77,7 +77,7 @@ class WemoSwitch(SwitchDevice):
             return
 
         await self._async_locked_update(force_update)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def unique_id(self):

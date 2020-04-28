@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Nom\u00e9s cal una sola inst\u00e0ncia."
+        },
+        "step": {
+            "user": {
+                "description": "Vols configurar temps de preg\u00e0ria isl\u00e0mica?",
+                "title": "Configuraci\u00f3 de temps de preg\u00e0ria isl\u00e0mica"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calc_method": "M\u00e8tode de c\u00e0lcul dels temps"
+                }
+            }
+        }
+    },
+    "title": "Temps de preg\u00e0ria isl\u00e0mica"
+}

@@ -128,7 +128,7 @@ class EntityComponent:
             tasks.append(self.async_setup_platform(p_type, p_config))
 
         if tasks:
-            await asyncio.wait(tasks)
+            await asyncio.gather(*tasks)
 
         # Generic discovery listener for loading platform dynamically
         # Refer to: homeassistant.components.discovery.load_platform()
@@ -191,7 +191,7 @@ class EntityComponent:
 
         This method must be run in the event loop.
         """
-        return await service.async_extract_entities(  # type: ignore
+        return await service.async_extract_entities(
             self.hass, self.entities, service_call, expand_group
         )
 
@@ -254,10 +254,16 @@ class EntityComponent:
 
         This method must be run in the event loop.
         """
-        tasks = [platform.async_reset() for platform in self._platforms.values()]
+        tasks = []
+
+        for key, platform in self._platforms.items():
+            if key == self.domain:
+                tasks.append(platform.async_reset())
+            else:
+                tasks.append(platform.async_destroy())
 
         if tasks:
-            await asyncio.wait(tasks)
+            await asyncio.gather(*tasks)
 
         self._platforms = {self.domain: self._platforms[self.domain]}
         self.config = None

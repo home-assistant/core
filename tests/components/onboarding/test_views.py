@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components import onboarding
 from homeassistant.components.onboarding import const, views
+from homeassistant.const import HTTP_FORBIDDEN
 from homeassistant.setup import async_setup_component
 
 from . import mock_storage
@@ -65,7 +66,7 @@ async def test_onboarding_user_already_done(hass, hass_storage, aiohttp_client):
         },
     )
 
-    assert resp.status == 403
+    assert resp.status == HTTP_FORBIDDEN
 
 
 async def test_onboarding_user(hass, hass_storage, aiohttp_client):
@@ -179,7 +180,7 @@ async def test_onboarding_user_race(hass, hass_storage, aiohttp_client):
 
     res1, res2 = await asyncio.gather(resp1, resp2)
 
-    assert sorted([res1.status, res2.status]) == [200, 403]
+    assert sorted([res1.status, res2.status]) == [200, HTTP_FORBIDDEN]
 
 
 async def test_onboarding_integration(hass, hass_storage, hass_client):

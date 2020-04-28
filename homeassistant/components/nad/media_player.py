@@ -4,7 +4,7 @@ import logging
 from nad_receiver import NADReceiver, NADReceiverTCP, NADReceiverTelnet
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -105,7 +105,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
 
 
-class NAD(MediaPlayerDevice):
+class NAD(MediaPlayerEntity):
     """Representation of a NAD Receiver."""
 
     def __init__(self, name, nad_receiver, min_volume, max_volume, source_dict):
@@ -221,7 +221,7 @@ class NAD(MediaPlayerDevice):
         )
 
 
-class NADtcp(MediaPlayerDevice):
+class NADtcp(MediaPlayerEntity):
     """Representation of a NAD Digital amplifier."""
 
     def __init__(self, name, nad_device, min_volume, max_volume, volume_step):

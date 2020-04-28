@@ -3,6 +3,5 @@
   "name": "Lyft",
   "documentation": "https://www.home-assistant.io/integrations/lyft",
   "requirements": ["lyft_rides==0.2"],
-  "dependencies": [],
   "codeowners": []
 }

@@ -379,15 +379,16 @@ async def test_update_entity(hass):
     """Test that we can update an entity with the helper."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     entity = MockEntity()
+    entity.async_write_ha_state = Mock()
     entity.async_update_ha_state = Mock(return_value=mock_coro())
     await component.async_add_entities([entity])
 
     # Called as part of async_add_entities
-    assert len(entity.async_update_ha_state.mock_calls) == 1
+    assert len(entity.async_write_ha_state.mock_calls) == 1
 
     await hass.helpers.entity_component.async_update_entity(entity.entity_id)
 
-    assert len(entity.async_update_ha_state.mock_calls) == 2
+    assert len(entity.async_update_ha_state.mock_calls) == 1
     assert entity.async_update_ha_state.mock_calls[-1][1][0] is True
 
 

@@ -1,10 +1,9 @@
 """Viessmann ViCare climate device."""
-from datetime import timedelta
 import logging
 
 import requests
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -80,9 +79,6 @@ HA_TO_VICARE_PRESET_HEATING = {
 
 PYVICARE_ERROR = "error"
 
-# Scan interval of 15 minutes seems to be safe to not hit the ViCare server rate limit
-SCAN_INTERVAL = timedelta(seconds=900)
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the ViCare climate devices."""
@@ -101,7 +97,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ViCareClimate(ClimateDevice):
+class ViCareClimate(ClimateEntity):
     """Representation of the ViCare heating climate device."""
 
     def __init__(self, name, api, heating_type):

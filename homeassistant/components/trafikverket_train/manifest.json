@@ -3,6 +3,5 @@
   "name": "Trafikverket Train",
   "documentation": "https://www.home-assistant.io/integrations/trafikverket_train",
   "requirements": ["pytrafikverket==0.1.6.1"],
-  "dependencies": [],
   "codeowners": ["@endor-force"]
 }

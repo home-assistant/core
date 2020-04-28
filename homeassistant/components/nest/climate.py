@@ -4,7 +4,7 @@ import logging
 from nest.nest import APIError
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -88,7 +88,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(all_devices, True)
 
 
-class NestThermostat(ClimateDevice):
+class NestThermostat(ClimateEntity):
     """Representation of a Nest thermostat."""
 
     def __init__(self, structure, device, temp_unit):
@@ -151,7 +151,9 @@ class NestThermostat(ClimateDevice):
             """Update device state."""
             await self.async_update_ha_state(True)
 
-        async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE, async_update_state)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE, async_update_state)
+        )
 
     @property
     def supported_features(self):

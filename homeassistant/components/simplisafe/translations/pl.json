@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "To konto SimpliSafe jest ju\u017c w u\u017cyciu."
+        },
+        "error": {
+            "identifier_exists": "Konto jest ju\u017c zarejestrowane.",
+            "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Adres e-mail"
+                },
+                "title": "Wprowad\u017a dane"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Kod (u\u017cywany w interfejsie u\u017cytkownika Home Assistant'a)"
+                },
+                "title": "Konfiguracja SimpliSafe"
+            }
+        }
+    }
+}

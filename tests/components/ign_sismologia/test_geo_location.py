@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_START,
+    LENGTH_KILOMETERS,
 )
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -126,7 +127,7 @@ async def test_setup(hass):
                 ),
                 ATTR_IMAGE_URL: "http://image.url/map.jpg",
                 ATTR_MAGNITUDE: 5.7,
-                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
                 ATTR_SOURCE: "ign_sismologia",
                 ATTR_ICON: "mdi:pulse",
             }
@@ -142,7 +143,7 @@ async def test_setup(hass):
                 ATTR_FRIENDLY_NAME: "M 4.6",
                 ATTR_TITLE: "Title 2",
                 ATTR_MAGNITUDE: 4.6,
-                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
                 ATTR_SOURCE: "ign_sismologia",
                 ATTR_ICON: "mdi:pulse",
             }
@@ -158,7 +159,7 @@ async def test_setup(hass):
                 ATTR_FRIENDLY_NAME: "Region 3",
                 ATTR_TITLE: "Title 3",
                 ATTR_REGION: "Region 3",
-                ATTR_UNIT_OF_MEASUREMENT: "km",
+                ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
                 ATTR_SOURCE: "ign_sismologia",
                 ATTR_ICON: "mdi:pulse",
             }

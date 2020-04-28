@@ -19,7 +19,7 @@ from homeassistant.components.light import (
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
-    Light,
+    LightEntity,
 )
 from homeassistant.components.mqtt import (
     CONF_COMMAND_TOPIC,
@@ -45,6 +45,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
+from ..debug_info import log_messages
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,7 +105,7 @@ class MqttTemplate(
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
-    Light,
+    LightEntity,
     RestoreEntity,
 ):
     """Representation of a MQTT Template light."""
@@ -215,6 +216,7 @@ class MqttTemplate(
         last_state = await self.async_get_last_state()
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new MQTT messages."""
             state = self._templates[

@@ -115,13 +115,9 @@ async def test_devices(
     }
 
     entity_map = device["entity_map"]
-    assert zha_entity_ids == set(
-        [
-            e["entity_id"]
-            for e in entity_map.values()
-            if not e.get("default_match", False)
-        ]
-    )
+    assert zha_entity_ids == {
+        e["entity_id"] for e in entity_map.values() if not e.get("default_match", False)
+    }
     assert event_channels == set(device["event_channels"])
 
     for call in _dispatch.call_args_list:
@@ -133,7 +129,7 @@ async def test_devices(
         assert entity_id is not None
         no_tail_id = NO_TAIL_ID.sub("", entity_map[key]["entity_id"])
         assert entity_id.startswith(no_tail_id)
-        assert set([ch.name for ch in channels]) == set(entity_map[key]["channels"])
+        assert {ch.name for ch in channels} == set(entity_map[key]["channels"])
         assert entity_cls.__name__ == entity_map[key]["entity_class"]
 
 
@@ -281,7 +277,7 @@ async def test_discover_endpoint(device_info, channels_mock, hass):
         map_id = (comp, unique_id)
         assert map_id in device_info["entity_map"]
         entity_info = device_info["entity_map"][map_id]
-        assert set([ch.name for ch in channels]) == set(entity_info["channels"])
+        assert {ch.name for ch in channels} == set(entity_info["channels"])
         assert ent_cls.__name__ == entity_info["entity_class"]
 
 
@@ -396,3 +392,12 @@ async def test_device_override(hass, zigpy_device_mock, setup_zha, override, ent
     await zha_gateway.async_device_initialized(zigpy_device)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id) is not None
+
+
+async def test_group_probe_cleanup_called(hass, setup_zha, config_entry):
+    """Test cleanup happens when zha is unloaded."""
+    await setup_zha()
+    disc.GROUP_PROBE.cleanup = mock.Mock(wraps=disc.GROUP_PROBE.cleanup)
+    await config_entry.async_unload(hass)
+    await hass.async_block_till_done()
+    disc.GROUP_PROBE.cleanup.assert_called()

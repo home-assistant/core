@@ -193,17 +193,15 @@ async def test_security_vuln_check(hass):
     entry = MockConfigEntry(domain=hue.DOMAIN, data={"host": "0.0.0.0"})
     entry.add_to_hass(hass)
 
+    config = Mock(bridgeid="", mac="", modelid="BSB002", swversion="1935144020")
+    config.name = "Hue"
+
     with patch.object(
         hue,
         "HueBridge",
         Mock(
             return_value=Mock(
-                async_setup=CoroutineMock(return_value=True),
-                api=Mock(
-                    config=Mock(
-                        bridgeid="", mac="", modelid="BSB002", swversion="1935144020"
-                    )
-                ),
+                async_setup=CoroutineMock(return_value=True), api=Mock(config=config)
             )
         ),
     ):

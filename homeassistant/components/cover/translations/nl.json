@@ -1,0 +1,30 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_closed": "{entity_name} is gesloten",
+            "is_closing": "{entity_name} wordt gesloten",
+            "is_open": "{entity_name} is open",
+            "is_opening": "{entity_name} wordt geopend",
+            "is_position": "Huidige {entity_name} positie is",
+            "is_tilt_position": "Huidige {entity_name} kantel positie is"
+        },
+        "trigger_type": {
+            "closed": "{entity_name} gesloten",
+            "closing": "{entity_name} wordt gesloten",
+            "opened": "{entity_name} geopend",
+            "opening": "{entity_name} wordt geopend",
+            "position": "{entity_name} positiewijzigingen",
+            "tilt_position": "{entity_name} kantel positiewijzigingen"
+        }
+    },
+    "state": {
+        "_": {
+            "closed": "Gesloten",
+            "closing": "Sluit",
+            "open": "Open",
+            "opening": "Opent",
+            "stopped": "Gestopt"
+        }
+    },
+    "title": "Bedekking"
+}

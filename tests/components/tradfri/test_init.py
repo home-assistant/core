@@ -1,9 +1,9 @@
 """Tests for Tradfri setup."""
-from unittest.mock import patch
+from asynctest import patch
 
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 
 async def test_config_yaml_host_not_imported(hass):
@@ -51,9 +51,12 @@ async def test_config_json_host_not_imported(hass):
 
 async def test_config_json_host_imported(hass, mock_gateway_info, mock_entry_setup):
     """Test that we import a configured host."""
-    mock_gateway_info.side_effect = lambda hass, host, identity, key: mock_coro(
-        {"host": host, "identity": identity, "key": key, "gateway_id": "mock-gateway"}
-    )
+    mock_gateway_info.side_effect = lambda hass, host, identity, key: {
+        "host": host,
+        "identity": identity,
+        "key": key,
+        "gateway_id": "mock-gateway",
+    }
 
     with patch(
         "homeassistant.components.tradfri.load_json",

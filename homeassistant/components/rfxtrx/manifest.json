@@ -3,6 +3,5 @@
   "name": "RFXCOM RFXtrx",
   "documentation": "https://www.home-assistant.io/integrations/rfxtrx",
   "requirements": ["pyRFXtrx==0.25"],
-  "dependencies": [],
   "codeowners": ["@danielhiversen"]
 }

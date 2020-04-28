@@ -48,6 +48,8 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
             if entity_data == old_entity.query_serialize():
                 return
 
+        _LOGGER.debug("Reporting state for %s: %s", changed_entity, entity_data)
+
         await google_config.async_report_state_all(
             {"devices": {"states": {changed_entity: entity_data}}}
         )

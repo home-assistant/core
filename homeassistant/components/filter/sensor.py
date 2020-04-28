@@ -212,7 +212,7 @@ class SensorFilter(Entity):
                 )
 
             if update_ha:
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
 
         if "recorder" in self.hass.config.components:
             history_list = []

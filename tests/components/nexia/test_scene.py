@@ -1,10 +1,10 @@
-"""The lock tests for the august platform."""
+"""The scene tests for the nexia platform."""
 
 from .util import async_init_integration
 
 
-async def test_automation_scenees(hass):
-    """Test creation automation scenees."""
+async def test_automation_scenes(hass):
+    """Test creation automation scenes."""
 
     await async_init_integration(hass)
 

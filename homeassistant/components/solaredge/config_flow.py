@@ -14,10 +14,10 @@ from .const import CONF_SITE_ID, DEFAULT_NAME, DOMAIN
 @callback
 def solaredge_entries(hass: HomeAssistant):
     """Return the site_ids for the domain."""
-    return set(
+    return {
         (entry.data[CONF_SITE_ID])
         for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
 class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

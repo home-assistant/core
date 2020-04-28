@@ -1,12 +1,9 @@
 {
   "domain": "roomba",
   "name": "iRobot Roomba",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/roomba",
-  "requirements": [
-    "roombapy==1.4.3"
-  ],
+  "requirements": ["roombapy==1.5.1"],
   "dependencies": [],
-  "codeowners": [
-    "@pschmitt"
-  ]
+  "codeowners": ["@pschmitt", "@cyr-ius", "@shenxn"]
 }

@@ -2,7 +2,5 @@
   "domain": "sonarr",
   "name": "Sonarr",
   "documentation": "https://www.home-assistant.io/integrations/sonarr",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@ctalkington"]
 }

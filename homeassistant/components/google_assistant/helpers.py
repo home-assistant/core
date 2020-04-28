@@ -372,13 +372,18 @@ class GoogleEntity:
     @callback
     def might_2fa(self) -> bool:
         """Return if the entity might encounter 2FA."""
+        if not self.config.should_2fa(self.state):
+            return False
+
+        return self.might_2fa_traits()
+
+    @callback
+    def might_2fa_traits(self) -> bool:
+        """Return if the entity might encounter 2FA based on just traits."""
         state = self.state
         domain = state.domain
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-
-        if not self.config.should_2fa(state):
-            return False
 
         return any(
             trait.might_2fa(domain, features, device_class) for trait in self.traits()
@@ -418,8 +423,9 @@ class GoogleEntity:
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
             device["customData"] = {
                 "webhookId": self.config.local_sdk_webhook_id,
-                "httpPort": self.hass.config.api.port,
+                "httpPort": self.hass.http.server_port,
                 "httpSSL": self.hass.config.api.use_ssl,
+                "baseUrl": self.hass.config.api.base_url,
                 "proxyDeviceId": agent_user_id,
             }
 

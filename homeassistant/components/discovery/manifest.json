@@ -3,7 +3,6 @@
   "name": "Discovery",
   "documentation": "https://www.home-assistant.io/integrations/discovery",
   "requirements": ["netdisco==2.6.0"],
-  "dependencies": [],
   "codeowners": [],
   "quality_scale": "internal"
 }

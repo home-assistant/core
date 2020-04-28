@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "accessory_not_found_error": "Kan ikke legge til sammenkobling da enheten ikke lenger kan bli funnet.",
+            "already_configured": "Tilbeh\u00f8r er allerede konfigurert med denne kontrolleren.",
+            "already_in_progress": "Konfigurasjonsflyt for enhet p\u00e5g\u00e5r allerede.",
+            "already_paired": "Dette tilbeh\u00f8ret er allerede sammenkoblet med en annen enhet. Vennligst tilbakestill tilbeh\u00f8ret og pr\u00f8v igjen.",
+            "ignored_model": "HomeKit st\u00f8tte for denne modellen er blokkert da en mer funksjonsrik standard integrering er tilgjengelig.",
+            "invalid_config_entry": "Denne enheten vises som klar til sammenkobling, men det er allerede en motstridende konfigurasjonsoppf\u00f8ring for den i Hjelpeassistenten som f\u00f8rst m\u00e5 fjernes.",
+            "no_devices": "Ingen ukoblede enheter ble funnet"
+        },
+        "error": {
+            "authentication_error": "Ugyldig HomeKit kode. Vennligst sjekk den og pr\u00f8v igjen.",
+            "busy_error": "Enheten nekter \u00e5 sammenkoble da den allerede er sammenkoblet med en annen kontroller.",
+            "max_peers_error": "Enheten nekter \u00e5 sammenkoble da den ikke har ledig sammenkoblingslagring.",
+            "max_tries_error": "Enheten nekter \u00e5 sammenkoble da den har mottatt mer enn 100 mislykkede godkjenningsfors\u00f8k.",
+            "pairing_failed": "En uh\u00e5ndtert feil oppstod under fors\u00f8k p\u00e5 \u00e5 koble til denne enheten. Dette kan v\u00e6re en midlertidig feil, eller at enheten din kan ikke st\u00f8ttes for \u00f8yeblikket.",
+            "unable_to_pair": "Kunne ikke koble til, vennligst pr\u00f8v igjen.",
+            "unknown_error": "Enheten rapporterte en ukjent feil. Sammenkobling mislyktes."
+        },
+        "flow_title": "HomeKit Tilbeh\u00f8r: {name}",
+        "step": {
+            "pair": {
+                "data": {
+                    "pairing_code": "Sammenkoblingskode"
+                },
+                "description": "Skriv inn din HomeKit-sammenkoblingskode (i formatet XXX-XX-XXX) for \u00e5 bruke dette tilbeh\u00f8ret",
+                "title": "Koble til HomeKit tilbeh\u00f8r"
+            },
+            "user": {
+                "data": {
+                    "device": "Enhet"
+                },
+                "description": "Velg enheten du vil koble til",
+                "title": "Koble til HomeKit tilbeh\u00f8r"
+            }
+        }
+    },
+    "title": "HomeKit-kontroller"
+}

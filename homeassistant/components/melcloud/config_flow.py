@@ -9,7 +9,7 @@ import pymelcloud
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME, HTTP_FORBIDDEN
 
 from .const import DOMAIN  # pylint: disable=unused-import
 
@@ -27,7 +27,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(username)
         self._abort_if_unique_id_configured({CONF_TOKEN: token})
         return self.async_create_entry(
-            title=username, data={CONF_USERNAME: username, CONF_TOKEN: token},
+            title=username, data={CONF_USERNAME: username, CONF_TOKEN: token}
         )
 
     async def _create_client(
@@ -40,7 +40,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Create client."""
         if password is None and token is None:
             raise ValueError(
-                "Invalid internal state. Called without either password or token",
+                "Invalid internal state. Called without either password or token"
             )
 
         try:
@@ -57,7 +57,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass.helpers.aiohttp_client.async_get_clientsession(),
                 )
         except ClientResponseError as err:
-            if err.status == 401 or err.status == 403:
+            if err.status == 401 or err.status == HTTP_FORBIDDEN:
                 return self.async_abort(reason="invalid_auth")
             return self.async_abort(reason="cannot_connect")
         except (asyncio.TimeoutError, ClientError):

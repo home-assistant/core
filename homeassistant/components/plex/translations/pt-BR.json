@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "non-interactive": "Importa\u00e7\u00e3o n\u00e3o interativa"
+        }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "use_episode_art": "Usar arte epis\u00f3dio"
+                },
+                "description": "Op\u00e7\u00f5es para Plex Media Players"
+            }
+        }
+    }
+}

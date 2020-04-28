@@ -36,9 +36,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an ADS sensor device."""
     ads_hub = hass.data.get(ads.DATA_ADS)
 
-    ads_var = config.get(CONF_ADS_VAR)
-    ads_type = config.get(CONF_ADS_TYPE)
-    name = config.get(CONF_NAME)
+    ads_var = config[CONF_ADS_VAR]
+    ads_type = config[CONF_ADS_TYPE]
+    name = config[CONF_NAME]
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
     factor = config.get(CONF_ADS_FACTOR)
 

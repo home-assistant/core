@@ -100,13 +100,23 @@ def test_dimmer_turn_on(mock_openzwave):
 
     node.reset_mock()
 
+    device.turn_on(**{ATTR_BRIGHTNESS: 224})
+
+    assert node.set_dimmer.called
+    value_id, brightness = node.set_dimmer.mock_calls[0][1]
+
+    assert value_id == value.value_id
+    assert brightness == 87  # round(224 / 255 * 99)
+
+    node.reset_mock()
+
     device.turn_on(**{ATTR_BRIGHTNESS: 120})
 
     assert node.set_dimmer.called
     value_id, brightness = node.set_dimmer.mock_calls[0][1]
 
     assert value_id == value.value_id
-    assert brightness == 46  # int(120 / 255 * 99)
+    assert brightness == 47  # round(120 / 255 * 99)
 
     with patch.object(light, "_LOGGER", MagicMock()) as mock_logger:
         device.turn_on(**{ATTR_TRANSITION: 35})

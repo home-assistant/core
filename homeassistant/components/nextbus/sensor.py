@@ -201,13 +201,13 @@ class NextBusDepartureSensor(Entity):
         messages = listify(results.get("message", []))
         self._log_debug("Messages: %s", messages)
         self._attributes["message"] = " -- ".join(
-            (message.get("text", "") for message in messages)
+            message.get("text", "") for message in messages
         )
 
         # List out all directions in the attributes
         directions = listify(results.get("direction", []))
         self._attributes["direction"] = ", ".join(
-            (direction.get("title", "") for direction in directions)
+            direction.get("title", "") for direction in directions
         )
 
         # Chain all predictions together

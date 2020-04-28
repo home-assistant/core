@@ -23,8 +23,8 @@ async def test_bridge_setup(hass):
 
     assert hue_bridge.api is api
     assert len(mock_forward.mock_calls) == 3
-    forward_entries = set(c[1][1] for c in mock_forward.mock_calls)
-    assert forward_entries == set(["light", "binary_sensor", "sensor"])
+    forward_entries = {c[1][1] for c in mock_forward.mock_calls}
+    assert forward_entries == {"light", "binary_sensor", "sensor"}
 
 
 async def test_bridge_setup_invalid_username(hass):
@@ -99,7 +99,7 @@ async def test_reset_unloads_entry_if_setup(hass):
 
 async def test_handle_unauthorized(hass):
     """Test handling an unauthorized error on update."""
-    entry = Mock()
+    entry = Mock(async_setup=Mock(return_value=mock_coro(Mock())))
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
     hue_bridge = bridge.HueBridge(hass, entry, False, False)
 

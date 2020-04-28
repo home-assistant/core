@@ -21,7 +21,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
@@ -64,12 +64,20 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class HomematicipLight(HomematicipGenericDevice, Light):
+class HomematicipLight(HomematicipGenericDevice, LightEntity):
     """Representation of a HomematicIP Cloud light device."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the light device."""
         super().__init__(hap, device)
+
+    @property
+    def name(self) -> str:
+        """Return the name of the multi switch channel."""
+        label = self._get_label_by_channel(1)
+        if label:
+            return label
+        return super().name
 
     @property
     def is_on(self) -> bool:
@@ -102,7 +110,7 @@ class HomematicipLightMeasuring(HomematicipLight):
         return state_attr
 
 
-class HomematicipDimmer(HomematicipGenericDevice, Light):
+class HomematicipDimmer(HomematicipGenericDevice, LightEntity):
     """Representation of HomematicIP Cloud dimmer light device."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
@@ -136,7 +144,7 @@ class HomematicipDimmer(HomematicipGenericDevice, Light):
         await self._device.set_dim_level(0)
 
 
-class HomematicipNotificationLight(HomematicipGenericDevice, Light):
+class HomematicipNotificationLight(HomematicipGenericDevice, LightEntity):
     """Representation of HomematicIP Cloud dimmer light device."""
 
     def __init__(self, hap: HomematicipHAP, device, channel: int) -> None:
@@ -193,6 +201,9 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     @property
     def name(self) -> str:
         """Return the name of the generic device."""
+        label = self._get_label_by_channel(self.channel)
+        if label:
+            return label
         return f"{super().name} Notification"
 
     @property

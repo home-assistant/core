@@ -1,16 +1,11 @@
 {
   "config": {
-    "title": "GeoNet NZ Volcano",
     "step": {
       "user": {
         "title": "Fill in your filter details.",
-        "data": {
-          "radius": "Radius"
-        }
+        "data": { "radius": "Radius" }
       }
     },
-    "error": {
-      "identifier_exists": "Location already registered"
-    }
+    "error": { "identifier_exists": "Location already registered" }
   }
 }

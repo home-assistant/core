@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import mqtt, switch
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_ICON,
@@ -34,6 +34,7 @@ from . import (
     MqttEntityDeviceInfo,
     subscription,
 )
+from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,7 +104,7 @@ class MqttSwitch(
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
-    SwitchDevice,
+    SwitchEntity,
     RestoreEntity,
 ):
     """Representation of a switch that can be toggled using MQTT."""
@@ -162,6 +163,7 @@ class MqttSwitch(
             template.hass = self.hass
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def state_message_received(msg):
             """Handle new MQTT state messages."""
             payload = msg.payload

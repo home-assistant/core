@@ -26,7 +26,6 @@ async def test_reproducing_states(hass, caplog):
             # Should not raise
             State("input_number.non_existing", "234"),
         ],
-        blocking=True,
     )
 
     assert hass.states.get("input_number.test_number").state == VALID_NUMBER1
@@ -38,14 +37,13 @@ async def test_reproducing_states(hass, caplog):
             # Should not raise
             State("input_number.non_existing", "234"),
         ],
-        blocking=True,
     )
 
     assert hass.states.get("input_number.test_number").state == VALID_NUMBER2
 
     # Test setting state to number out of range
     await hass.helpers.state.async_reproduce_state(
-        [State("input_number.test_number", "150")], blocking=True
+        [State("input_number.test_number", "150")]
     )
 
     # The entity states should be unchanged after trying to set them to out-of-range number
@@ -58,5 +56,4 @@ async def test_reproducing_states(hass, caplog):
             # Set to state it already is.
             State("input_number.test_number", VALID_NUMBER2),
         ],
-        blocking=True,
     )

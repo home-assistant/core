@@ -12,7 +12,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
-    CoverDevice,
+    CoverEntity,
 )
 
 from tests.common import MockEntity
@@ -65,7 +65,7 @@ async def async_setup_platform(
     async_add_entities_callback(ENTITIES)
 
 
-class MockCover(MockEntity, CoverDevice):
+class MockCover(MockEntity, CoverEntity):
     """Mock Cover class."""
 
     @property

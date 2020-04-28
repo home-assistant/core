@@ -3,9 +3,8 @@ from datetime import datetime, timedelta
 import json
 import logging
 import os
-from unittest.mock import Mock, call
 
-from asynctest import patch
+from asynctest import Mock, call, patch
 import pytest
 
 from homeassistant.components import zone
@@ -548,7 +547,7 @@ async def test_async_added_to_hass(hass):
 
     for key, val in attr.items():
         atr = state.attributes.get(key)
-        assert atr == val, "{}={} expected: {}".format(key, atr, val)
+        assert atr == val, f"{key}={atr} expected: {val}"
 
 
 async def test_bad_platform(hass):

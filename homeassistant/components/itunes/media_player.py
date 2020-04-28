@@ -4,7 +4,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
@@ -163,7 +163,7 @@ class Itunes:
 
         if found_playlists:
             playlist = found_playlists[0]
-            path = "/playlists/" + playlist["id"] + "/play"
+            path = f"/playlists/{playlist['id']}/play"
             return self._request("PUT", path)
 
     def artwork_url(self):
@@ -198,14 +198,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 config.get(CONF_NAME),
                 config.get(CONF_HOST),
                 config.get(CONF_PORT),
-                config.get(CONF_SSL),
+                config[CONF_SSL],
                 add_entities,
             )
         ]
     )
 
 
-class ItunesDevice(MediaPlayerDevice):
+class ItunesDevice(MediaPlayerEntity):
     """Representation of an iTunes API instance."""
 
     def __init__(self, name, host, port, use_ssl, add_entities):
@@ -324,7 +324,7 @@ class ItunesDevice(MediaPlayerDevice):
             self.player_state in (STATE_PLAYING, STATE_IDLE, STATE_PAUSED)
             and self.current_title is not None
         ):
-            return self.client.artwork_url() + "?id=" + self.content_id
+            return f"{self.client.artwork_url()}?id={self.content_id}"
 
         return (
             "https://cloud.githubusercontent.com/assets/260/9829355"
@@ -408,7 +408,7 @@ class ItunesDevice(MediaPlayerDevice):
         self.update_state(response)
 
 
-class AirPlayDevice(MediaPlayerDevice):
+class AirPlayDevice(MediaPlayerEntity):
     """Representation an AirPlay device via an iTunes API instance."""
 
     def __init__(self, device_id, client):

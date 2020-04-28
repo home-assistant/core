@@ -79,8 +79,8 @@ def generate_and_validate(integrations: Dict[str, Integration]):
             if model in homekit_dict:
                 integration.add_error(
                     "zeroconf",
-                    "Integrations {} and {} have overlapping HomeKit "
-                    "models".format(domain, homekit_dict[model]),
+                    f"Integrations {domain} and {homekit_dict[model]} "
+                    "have overlapping HomeKit models",
                 )
                 break
 
@@ -100,8 +100,8 @@ def generate_and_validate(integrations: Dict[str, Integration]):
             if key.startswith(key_2) or key_2.startswith(key):
                 integration.add_error(
                     "zeroconf",
-                    "Integrations {} and {} have overlapping HomeKit "
-                    "models".format(homekit_dict[key], homekit_dict[key_2]),
+                    f"Integrations {homekit_dict[key]} and {homekit_dict[key_2]} "
+                    "have overlapping HomeKit models",
                 )
                 warned.add(key)
                 warned.add(key_2)
@@ -120,7 +120,10 @@ def validate(integrations: Dict[str, Integration], config: Config):
     zeroconf_path = config.root / "homeassistant/generated/zeroconf.py"
     config.cache["zeroconf"] = content = generate_and_validate(integrations)
 
-    with open(str(zeroconf_path), "r") as fp:
+    if config.specific_integrations:
+        return
+
+    with open(str(zeroconf_path)) as fp:
         current = fp.read().strip()
         if current != content:
             config.add_error(
@@ -135,4 +138,4 @@ def generate(integrations: Dict[str, Integration], config: Config):
     """Generate zeroconf file."""
     zeroconf_path = config.root / "homeassistant/generated/zeroconf.py"
     with open(str(zeroconf_path), "w") as fp:
-        fp.write(config.cache["zeroconf"] + "\n")
+        fp.write(f"{config.cache['zeroconf']}\n")

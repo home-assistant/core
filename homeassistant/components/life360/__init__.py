@@ -57,7 +57,7 @@ def _prefix(value):
     if not value:
         return ""
     if not value.endswith("_"):
-        return value + "_"
+        return f"{value}_"
     return value
 
 

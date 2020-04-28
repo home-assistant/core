@@ -12,12 +12,18 @@ from homeassistant.components import (
     light,
 )
 from homeassistant.components.device_tracker.const import DOMAIN
-from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_PLATFORM,
+    STATE_HOME,
+    STATE_NOT_HOME,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
-from tests.components.light import common as common_light
 
 
 @pytest.fixture
@@ -74,7 +80,12 @@ async def test_lights_on_when_sun_sets(hass, scanner):
             hass, device_sun_light_trigger.DOMAIN, {device_sun_light_trigger.DOMAIN: {}}
         )
 
-    await common_light.async_turn_off(hass)
+    await hass.services.async_call(
+        light.DOMAIN,
+        light.SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "test.light"},
+        blocking=True,
+    )
 
     test_time = test_time.replace(hour=3)
     with patch("homeassistant.util.dt.utcnow", return_value=test_time):
@@ -82,7 +93,8 @@ async def test_lights_on_when_sun_sets(hass, scanner):
         await hass.async_block_till_done()
 
     assert all(
-        light.is_on(hass, ent_id) for ent_id in hass.states.async_entity_ids("light")
+        hass.states.get(ent_id).state == STATE_ON
+        for ent_id in hass.states.async_entity_ids("light")
     )
 
 
@@ -91,7 +103,12 @@ async def test_lights_turn_off_when_everyone_leaves(hass):
     assert await async_setup_component(
         hass, "light", {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
-    await common_light.async_turn_on(hass)
+    await hass.services.async_call(
+        light.DOMAIN,
+        light.SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "test.light"},
+        blocking=True,
+    )
     hass.states.async_set("device_tracker.bla", STATE_HOME)
 
     assert await async_setup_component(
@@ -103,7 +120,7 @@ async def test_lights_turn_off_when_everyone_leaves(hass):
     await hass.async_block_till_done()
 
     assert all(
-        not light.is_on(hass, ent_id)
+        hass.states.get(ent_id).state == STATE_OFF
         for ent_id in hass.states.async_entity_ids("light")
     )
 
@@ -112,7 +129,9 @@ async def test_lights_turn_on_when_coming_home_after_sun_set(hass, scanner):
     """Test lights turn on when coming home after sun set."""
     test_time = datetime(2017, 4, 5, 3, 2, 3, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=test_time):
-        await common_light.async_turn_off(hass)
+        await hass.services.async_call(
+            light.DOMAIN, light.SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "all"}, blocking=True
+        )
 
         assert await async_setup_component(
             hass, device_sun_light_trigger.DOMAIN, {device_sun_light_trigger.DOMAIN: {}}
@@ -123,7 +142,8 @@ async def test_lights_turn_on_when_coming_home_after_sun_set(hass, scanner):
         await hass.async_block_till_done()
 
     assert all(
-        light.is_on(hass, ent_id) for ent_id in hass.states.async_entity_ids("light")
+        hass.states.get(ent_id).state == light.STATE_ON
+        for ent_id in hass.states.async_entity_ids("light")
     )
 
 
@@ -134,7 +154,9 @@ async def test_lights_turn_on_when_coming_home_after_sun_set_person(hass, scanne
 
     test_time = datetime(2017, 4, 5, 3, 2, 3, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=test_time):
-        await common_light.async_turn_off(hass)
+        await hass.services.async_call(
+            light.DOMAIN, light.SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "all"}, blocking=True
+        )
         hass.states.async_set(device_1, STATE_NOT_HOME)
         hass.states.async_set(device_2, STATE_NOT_HOME)
         await hass.async_block_till_done()
@@ -161,7 +183,7 @@ async def test_lights_turn_on_when_coming_home_after_sun_set_person(hass, scanne
         )
 
         assert all(
-            not light.is_on(hass, ent_id)
+            hass.states.get(ent_id).state == STATE_OFF
             for ent_id in hass.states.async_entity_ids("light")
         )
         assert hass.states.get(device_1).state == "not_home"
@@ -173,7 +195,7 @@ async def test_lights_turn_on_when_coming_home_after_sun_set_person(hass, scanne
         await hass.async_block_till_done()
 
         assert all(
-            not light.is_on(hass, ent_id)
+            hass.states.get(ent_id).state == STATE_OFF
             for ent_id in hass.states.async_entity_ids("light")
         )
         assert hass.states.get(device_1).state == "not_home"
@@ -186,7 +208,7 @@ async def test_lights_turn_on_when_coming_home_after_sun_set_person(hass, scanne
         await hass.async_block_till_done()
 
         assert all(
-            light.is_on(hass, ent_id)
+            hass.states.get(ent_id).state == light.STATE_ON
             for ent_id in hass.states.async_entity_ids("light")
         )
         assert hass.states.get(device_1).state == "home"

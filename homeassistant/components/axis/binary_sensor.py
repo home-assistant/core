@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from axis.event_stream import CLASS_INPUT, CLASS_OUTPUT
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_TRIGGER_TIME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -32,7 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class AxisBinarySensor(AxisEventBase, BinarySensorDevice):
+class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
     """Representation of a binary Axis event."""
 
     def __init__(self, event, device):
@@ -53,13 +53,13 @@ class AxisBinarySensor(AxisEventBase, BinarySensorDevice):
             self.remove_timer = None
 
         if self.is_on or delay == 0 or no_delay:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
             return
 
         @callback
         def _delay_update(now):
             """Timer callback for sensor update."""
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
             self.remove_timer = None
 
         self.remove_timer = async_track_point_in_utc_time(

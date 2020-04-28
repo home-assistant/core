@@ -1,7 +1,7 @@
 """Support for the myStrom buttons."""
 import logging
 
-from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
+from homeassistant.components.binary_sensor import DOMAIN, BinarySensorEntity
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY
 from homeassistant.core import callback
@@ -59,7 +59,7 @@ class MyStromView(HomeAssistantView):
             self.buttons[entity_id].async_on_update(new_state)
 
 
-class MyStromBinarySensor(BinarySensorDevice):
+class MyStromBinarySensor(BinarySensorEntity):
     """Representation of a myStrom button."""
 
     def __init__(self, button_id):
@@ -86,4 +86,4 @@ class MyStromBinarySensor(BinarySensorDevice):
     def async_on_update(self, value):
         """Receive an update."""
         self._state = value
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
