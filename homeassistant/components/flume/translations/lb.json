@@ -16,6 +16,7 @@
                     "password": "Passwuert",
                     "username": "Benotzernumm"
                 },
+                "description": "Fir k\u00ebnnen op Flume Personal API z'acc\u00e9d\u00e9ieren muss du eng 'Client ID' an eng 'Client Secret' op https://portal.flumetech.com/settings#token ufroen.",
                 "title": "Verbann dech mat dengem Flume Kont."
             }
         }
