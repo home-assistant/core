@@ -1,5 +1,4 @@
 """Support for interfacing to the Logitech SqueezeBox API."""
-import asyncio
 import logging
 import socket
 
@@ -33,11 +32,11 @@ from homeassistant.const import (
     STATE_OFF,
 )
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN, SQUEEZEBOX_MODE
+from .const import SQUEEZEBOX_MODE
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
@@ -99,19 +98,6 @@ SQUEEZEBOX_SYNC_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
     {vol.Required(ATTR_OTHER_PLAYER): cv.string}
 )
 
-SERVICE_TO_METHOD = {
-    SERVICE_CALL_METHOD: {
-        "method": "async_call_method",
-        "schema": SQUEEZEBOX_CALL_METHOD_SCHEMA,
-    },
-    SERVICE_CALL_QUERY: {
-        "method": "async_call_query",
-        "schema": SQUEEZEBOX_CALL_METHOD_SCHEMA,
-    },
-    SERVICE_SYNC: {"method": "async_sync", "schema": SQUEEZEBOX_SYNC_SCHEMA},
-    SERVICE_UNSYNC: {"method": "async_unsync", "schema": None},
-}
-
 ATTR_TO_PROPERTY = [
     ATTR_QUERY_RESULT,
     ATTR_SYNC_GROUP,
@@ -166,38 +152,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     hass.data[DATA_SQUEEZEBOX].extend(media_players)
     async_add_entities(media_players)
 
-    async def async_service_handler(service):
-        """Map services to methods on MediaPlayerEntity."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        if not method:
-            return
+    platform = entity_platform.current_platform.get()
 
-        params = {
-            key: value for key, value in service.data.items() if key != "entity_id"
-        }
-        entity_ids = service.data.get("entity_id")
-        if entity_ids and entity_ids != "all":
-            target_players = [
-                player
-                for player in hass.data[DATA_SQUEEZEBOX]
-                if player.entity_id in entity_ids
-            ]
-        else:
-            target_players = hass.data[DATA_SQUEEZEBOX]
+    platform.async_register_entity_service(
+        SERVICE_CALL_METHOD, SQUEEZEBOX_CALL_METHOD_SCHEMA, "async_call_method",
+    )
 
-        update_tasks = []
-        for player in target_players:
-            await getattr(player, method["method"])(**params)
-            update_tasks.append(player.async_update_ha_state(True))
+    platform.async_register_entity_service(
+        SERVICE_CALL_QUERY, SQUEEZEBOX_CALL_METHOD_SCHEMA, "async_call_query",
+    )
 
-        if update_tasks:
-            await asyncio.wait(update_tasks)
+    platform.async_register_entity_service(
+        SERVICE_SYNC, SQUEEZEBOX_SYNC_SCHEMA, "async_sync",
+    )
 
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service]["schema"]
-        hass.services.async_register(
-            DOMAIN, service, async_service_handler, schema=schema
-        )
+    platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unsync")
 
     return True
 
@@ -323,16 +292,15 @@ class SqueezeBoxDevice(MediaPlayerEntity):
 
     @property
     def sync_group(self):
-        """
-        List of players we are synced with.
-
-        If the player is a squeezebox entity, returns the entity id. If it is unknown,
-        return the player_id.
-        """
+        """List players we are synced with."""
         player_ids = {p.unique_id: p.entity_id for p in self.hass.data[DATA_SQUEEZEBOX]}
-        return [
-            player_ids[s] if s in player_ids else s for s in self._player.sync_group
-        ]
+        sync_group = []
+        for player in self._player.sync_group:
+            if player in player_ids:
+                sync_group.append(player_ids[player])
+            else:
+                _LOGGER.debug("Squeezebox %s in sync_group but not an entity.", player)
+        return sync_group
 
     @property
     def query_result(self):
@@ -443,7 +411,7 @@ class SqueezeBoxDevice(MediaPlayerEntity):
         If the other player is a member of a sync group, it will leave the current sync group
         without asking.
         """
-        player_ids = {p.unique_id: p.entity_id for p in self.hass.data[DATA_SQUEEZEBOX]}
+        player_ids = {p.entity_id: p.unique_id for p in self.hass.data[DATA_SQUEEZEBOX]}
         other_player_id = player_ids.get(other_player)
         if other_player_id:
             await self._player.async_sync(other_player_id)
