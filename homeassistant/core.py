@@ -71,7 +71,7 @@ from homeassistant.exceptions import (
 from homeassistant.util import location
 from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
 import homeassistant.util.dt as dt_util
-from homeassistant.util.threading import fix_threading_exception_logging
+from homeassistant.util.thread import fix_threading_exception_logging
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 # Typing imports that create a circular dependency
