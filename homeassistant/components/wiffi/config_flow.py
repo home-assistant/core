@@ -46,7 +46,8 @@ class WiffiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="addr_in_use")
             return self.async_abort(reason="start_server_failed")
 
-    async def _async_show_form(self, errors=None):
+    @callback
+    def _async_show_form(self, errors=None):
         """Show the config flow form to the user."""
         data_schema = {vol.Required(CONF_PORT, default=DEFAULT_PORT): int}
 
