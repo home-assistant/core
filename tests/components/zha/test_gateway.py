@@ -1,6 +1,8 @@
 """Test ZHA Gateway."""
+import asyncio
 import logging
 import time
+from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha as zha
@@ -169,6 +171,12 @@ async def test_gateway_group_methods(hass, device_light_1, device_light_2, coord
 
     # the group entity should not have been cleaned up
     assert entity_id not in hass.states.async_entity_ids(LIGHT_DOMAIN)
+
+    with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
+        await zha_group.members[0].async_remove_from_group()
+        assert len(zha_group.members) == 1
+        for member in zha_group.members:
+            assert member.device.ieee in [device_light_1.ieee]
 
 
 async def test_updating_device_store(hass, zigpy_dev_basic, zha_dev_basic):
