@@ -650,7 +650,7 @@ python-miio==0.5.0.1
 python-nest==4.1.0
 
 # homeassistant.components.synology_dsm
-python-synology==0.7.1
+python-synology==0.7.2
 
 # homeassistant.components.tado
 python-tado==0.8.1
