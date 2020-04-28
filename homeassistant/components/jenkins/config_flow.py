@@ -4,7 +4,7 @@ from requests.exceptions import HTTPError, MissingSchema
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_USERNAME
 
 from . import _LOGGER
 from .const import CONF_JOB_NAME, DOMAIN
@@ -20,14 +20,14 @@ class JenkinsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_URL): str,
+                vol.Required(CONF_HOST): str,
                 vol.Optional(CONF_USERNAME): str,
                 vol.Optional(CONF_TOKEN): str,
             }
         )
 
         if user_input is not None:
-            self.url = user_input[CONF_URL]
+            self.url = user_input[CONF_HOST]
             self.username = (
                 user_input[CONF_USERNAME] if CONF_USERNAME in user_input else None
             )
@@ -76,7 +76,7 @@ class JenkinsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=user_input[CONF_JOB_NAME],
                 data={
-                    CONF_URL: self.server.baseurl,
+                    CONF_HOST: self.server.baseurl,
                     CONF_USERNAME: self.username,
                     CONF_TOKEN: self.token,
                     CONF_JOB_NAME: self.job_name,

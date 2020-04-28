@@ -5,7 +5,7 @@
         "title": "Connect to Jenkins.",
         "description": "Username & token are optional and may not be required if anonymous reads are allowed.",
         "data": {
-          "url": "URL",
+          "host": "Host",
           "username": "Username (Optional)",
           "token": "Token (Optional)"
         }
