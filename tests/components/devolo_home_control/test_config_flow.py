@@ -1,8 +1,6 @@
 """Test the devolo_home_control config flow."""
 from unittest.mock import patch
 
-from devolo_home_control_api.mydevolo import Mydevolo
-
 from homeassistant import config_entries, setup
 from homeassistant.components.devolo_home_control.const import DOMAIN
 
@@ -11,7 +9,6 @@ from tests.common import mock_coro
 
 async def test_form(hass):
     """Test we get the form."""
-    Mydevolo()
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -55,10 +52,6 @@ async def test_form(hass):
 
 async def test_form_invalid_credentials(hass):
     """Test if we get the error message on invalid credentials."""
-    try:
-        Mydevolo()
-    except SyntaxError:
-        Mydevolo.get_instance()
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
