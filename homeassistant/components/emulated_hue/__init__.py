@@ -305,6 +305,7 @@ class Config:
         """Get turn on mode for climate entities by entity ID."""
         if entity_id in self.entities and CONF_TURN_ON_MODE in self.entities[entity_id]:
             turn_on_mode = self.entities[entity_id][CONF_TURN_ON_MODE]
+            _LOGGER.error(self.hass.states.get(entity_id))
             if turn_on_mode in self.hass.states.get(entity_id)[ATTR_HVAC_MODES]:
                 return turn_on_mode
 

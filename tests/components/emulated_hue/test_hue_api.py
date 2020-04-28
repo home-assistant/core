@@ -157,10 +157,7 @@ def hue_client(loop, hass_hue, aiohttp_client):
                 # Expose cover
                 "cover.living_room_window": {emulated_hue.CONF_ENTITY_HIDDEN: False},
                 # Expose climate with "cool" as turn_on_mode
-                "climate.hvac": {
-                    emulated_hue.CONF_ENTITY_HIDDEN: False,
-                    emulated_hue.CONF_TURN_ON_MODE: climate.const.HVAC_MODE_COOL,
-                },
+                "climate.hvac": {emulated_hue.CONF_ENTITY_HIDDEN: False},
                 # Expose HeatPump
                 "climate.heatpump": {emulated_hue.CONF_ENTITY_HIDDEN: False},
             },
@@ -538,34 +535,34 @@ async def test_put_light_state_climate(hass_hue, hue_client):
         blocking=True,
     )
 
-    # Turn the climate entity on
-    hvac_result = await perform_put_light_state(
-        hass_hue, hue_client, "climate.hvac", True
-    )
+    with patch(
+        "homeassistant.components.emulated_hue.Config.get_turn_on_mode",
+        return_value=climate.const.HVAC_MODE_COOL,
+    ):
+        await perform_put_light_state(hass_hue, hue_client, "climate.hvac", True)
 
-    # Convert brightness to temperature
-    brightness = 19
-    temperature = round(brightness / 254 * 100)
+        # Emulated hue converts 0.0-1.0 to 0-254.
+        brightness = 19
+        temperature = round(brightness / 254 * 100)
 
-    # Set the brightness
-    hvac_result = await perform_put_light_state(
-        hass_hue, hue_client, "climate.hvac", True, brightness
-    )
+        hvac_result = await perform_put_light_state(
+            hass_hue, hue_client, "climate.hvac", True, brightness
+        )
 
-    hvac_result_json = await hvac_result.json()
+        hvac_result_json = await hvac_result.json()
 
-    assert hvac_result.status == 200
-    assert len(hvac_result_json) == 2
+        assert hvac_result.status == 200
+        assert len(hvac_result_json) == 2
 
-    hvac = hass_hue.states.get("climate.hvac")
-    assert hvac.state == climate.const.HVAC_MODE_COOL
-    assert hvac.attributes[climate.ATTR_TEMPERATURE] == temperature
+        hvac = hass_hue.states.get("climate.hvac")
+        assert hvac.state == climate.const.HVAC_MODE_COOL
+        assert hvac.attributes[climate.ATTR_TEMPERATURE] == temperature
 
-    # Make sure we can't change the ecobee temperature since it's not exposed
-    ecobee_result = await perform_put_light_state(
-        hass_hue, hue_client, "climate.ecobee", True
-    )
-    assert ecobee_result.status == 401
+        # Make sure we can't change the ecobee temperature since it's not exposed
+        ecobee_result = await perform_put_light_state(
+            hass_hue, hue_client, "climate.ecobee", True
+        )
+        assert ecobee_result.status == 401
 
 
 async def test_put_light_state_media_player(hass_hue, hue_client):
