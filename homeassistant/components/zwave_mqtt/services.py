@@ -149,10 +149,12 @@ class ZWaveServices:
             )
             # Bool value
             if value.type == ValueType.BOOL:
-                return value.send_value(int(selection == "True"))
+                value.send_value(int(selection == "True"))
+                return
             # List value
             if value.type == ValueType.LIST:
-                return value.send_value(str(selection))
+                value.send_value(str(selection))
+                return
             # Button
             if value.type == ValueType.BUTTON:
                 value.send_value(True)
