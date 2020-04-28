@@ -10,15 +10,13 @@ Warnungen vor markantem Wetter (Stufe 2)
 Wetterwarnungen (Stufe 1)
 """
 from datetime import timedelta
-import json
 import logging
 
+from dwdwfsapi import DwdWeatherWarningsAPI
 import voluptuous as vol
 
-from homeassistant.components.rest.sensor import RestData
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_NAME
-from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE as HA_USER_AGENT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -49,7 +47,7 @@ MONITORED_CONDITIONS = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_REGION_NAME): cv.string,
+        vol.Required(CONF_REGION_NAME): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(
             CONF_MONITORED_CONDITIONS, default=list(MONITORED_CONDITIONS)
@@ -65,10 +63,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     api = DwdWeatherWarningsAPI(region_name)
 
-    sensors = [
-        DwdWeatherWarningsSensor(api, name, condition)
-        for condition in config[CONF_MONITORED_CONDITIONS]
-    ]
+    # Build sensor list and activate update only for the first one
+    sensors = []
+    call_update = True
+    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
+        sensors.append(DwdWeatherWarningsSensor(api, name, sensor_type, call_update))
+        call_update = False
 
     add_entities(sensors, True)
 
@@ -76,179 +76,97 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DwdWeatherWarningsSensor(Entity):
     """Representation of a DWD-Weather-Warnings sensor."""
 
-    def __init__(self, api, name, variable):
+    def __init__(self, api, name, sensor_type, call_update):
         """Initialize a DWD-Weather-Warnings sensor."""
         self._api = api
         self._name = name
-        self._var_id = variable
-
-        variable_info = MONITORED_CONDITIONS[variable]
-        self._var_name = variable_info[0]
-        self._var_units = variable_info[1]
-        self._var_icon = variable_info[2]
+        self._sensor_type = sensor_type
+        self._call_update = call_update
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._name} {self._var_name}"
+        return f"{self._name} {MONITORED_CONDITIONS[self._sensor_type][0]}"
 
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return self._var_icon
+        return MONITORED_CONDITIONS[self._sensor_type][2]
 
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self._var_units
+        return MONITORED_CONDITIONS[self._sensor_type][1]
 
     @property
     def state(self):
         """Return the state of the device."""
-        try:
-            return round(self._api.data[self._var_id], 2)
-        except TypeError:
-            return self._api.data[self._var_id]
+        if self._sensor_type == "current_warning_level":
+            warning_level = self._api.current_warning_level
+        else:
+            warning_level = self._api.expected_warning_level
+        return warning_level
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the DWD-Weather-Warnings."""
-        data = {ATTR_ATTRIBUTION: ATTRIBUTION, "region_name": self._api.region_name}
+        data = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
-        if self._api.region_id is not None:
-            data["region_id"] = self._api.region_id
-
-        if self._api.region_state is not None:
-            data["region_state"] = self._api.region_state
-
-        if self._api.data["time"] is not None:
-            data["last_update"] = dt_util.as_local(
-                dt_util.utc_from_timestamp(self._api.data["time"] / 1000)
-            )
-
-        if self._var_id == "current_warning_level":
-            prefix = "current"
-        elif self._var_id == "advance_warning_level":
-            prefix = "advance"
+        data["region_name"] = self._api.warncell_name
+        data["region_id"] = self._api.warncell_id
+        data["region_state"] = "N/A"  # Not available via new API
+        if self._api.last_update is not None:
+            data["last_update"] = dt_util.as_local(self._api.last_update)
         else:
-            raise Exception("Unknown warning type")
+            data["last_update"] = None
 
-        data["warning_count"] = self._api.data[f"{prefix}_warning_count"]
+        if self._sensor_type == "current_warning_level":
+            searched_warnings = self._api.current_warnings
+        else:
+            searched_warnings = self._api.expected_warnings
+
+        data["warning_count"] = len(searched_warnings)
         i = 0
-        for event in self._api.data[f"{prefix}_warnings"]:
+        for warning in searched_warnings:
             i = i + 1
+            data[f"warning_{i}_name"] = warning["event"]
+            data[f"warning_{i}_type"] = warning["event_code"]
+            data[f"warning_{i}_level"] = warning["level"]
+            data[f"warning_{i}_headline"] = warning["headline"]
+            data[f"warning_{i}_description"] = warning["description"]
+            data[f"warning_{i}_instruction"] = warning["instruction"]
+            if warning["start_time"] is not None:
+                data[f"warning_{i}_start"] = dt_util.as_local(warning["start_time"])
+            else:
+                data[f"warning_{i}_start"] = None
+            if warning["end_time"] is not None:
+                data[f"warning_{i}_end"] = dt_util.as_local(warning["end_time"])
+            else:
+                data[f"warning_{i}_end"] = None
+            data[f"warning_{i}_parameters"] = warning["parameters"]
+            data[f"warning_{i}_color"] = warning["color"]
 
-            # dictionary for the attribute containing the complete warning as json
-            event_json = event.copy()
-
-            data[f"warning_{i}_name"] = event["event"]
-            data[f"warning_{i}_level"] = event["level"]
-            data[f"warning_{i}_type"] = event["type"]
-            if event["headline"]:
-                data[f"warning_{i}_headline"] = event["headline"]
-            if event["description"]:
-                data[f"warning_{i}_description"] = event["description"]
-            if event["instruction"]:
-                data[f"warning_{i}_instruction"] = event["instruction"]
-
-            if event["start"] is not None:
-                data[f"warning_{i}_start"] = dt_util.as_local(
-                    dt_util.utc_from_timestamp(event["start"] / 1000)
-                )
-                event_json["start"] = data[f"warning_{i}_start"]
-
-            if event["end"] is not None:
-                data[f"warning_{i}_end"] = dt_util.as_local(
-                    dt_util.utc_from_timestamp(event["end"] / 1000)
-                )
-                event_json["end"] = data[f"warning_{i}_end"]
-
-            data[f"warning_{i}"] = event_json
+            # Dictionary for the attribute containing the complete warning
+            warning_copy = warning.copy()
+            warning_copy["start_time"] = data[f"warning_{i}_start"]
+            warning_copy["end_time"] = data[f"warning_{i}_end"]
+            data[f"warning_{i}"] = warning_copy
 
         return data
 
     @property
     def available(self):
         """Could the device be accessed during the last update call."""
-        return self._api.available
-
-    def update(self):
-        """Get the latest data from the DWD-Weather-Warnings API."""
-        self._api.update()
-
-
-class DwdWeatherWarningsAPI:
-    """Get the latest data and update the states."""
-
-    def __init__(self, region_name):
-        """Initialize the data object."""
-        resource = "https://www.dwd.de/DWD/warnungen/warnapp_landkreise/json/warnings.json?jsonp=loadWarnings"
-
-        # a User-Agent is necessary for this rest api endpoint (#29496)
-        headers = {"User-Agent": HA_USER_AGENT}
-
-        self._rest = RestData("GET", resource, None, headers, None, True)
-        self.region_name = region_name
-        self.region_id = None
-        self.region_state = None
-        self.data = None
-        self.available = True
-        self.update()
+        return self._api.data_valid
 
     @Throttle(SCAN_INTERVAL)
     def update(self):
-        """Get the latest data from the DWD-Weather-Warnings."""
-        try:
-            self._rest.update()
-
-            json_string = self._rest.data[24 : len(self._rest.data) - 2]
-            json_obj = json.loads(json_string)
-
-            data = {"time": json_obj["time"]}
-
-            for mykey, myvalue in {
-                "current": "warnings",
-                "advance": "vorabInformation",
-            }.items():
-
-                _LOGGER.debug(
-                    "Found %d %s global DWD warnings", len(json_obj[myvalue]), mykey
-                )
-
-                data[f"{mykey}_warning_level"] = 0
-                my_warnings = []
-
-                if self.region_id is not None:
-                    # get a specific region_id
-                    if self.region_id in json_obj[myvalue]:
-                        my_warnings = json_obj[myvalue][self.region_id]
-
-                else:
-                    # loop through all items to find warnings, region_id
-                    # and region_state for region_name
-                    for key in json_obj[myvalue]:
-                        my_region = json_obj[myvalue][key][0]["regionName"]
-                        if my_region != self.region_name:
-                            continue
-                        my_warnings = json_obj[myvalue][key]
-                        my_state = json_obj[myvalue][key][0]["stateShort"]
-                        self.region_id = key
-                        self.region_state = my_state
-                        break
-
-                # Get max warning level
-                maxlevel = data[f"{mykey}_warning_level"]
-                for event in my_warnings:
-                    if event["level"] >= maxlevel:
-                        data[f"{mykey}_warning_level"] = event["level"]
-
-                data[f"{mykey}_warning_count"] = len(my_warnings)
-                data[f"{mykey}_warnings"] = my_warnings
-
-                _LOGGER.debug("Found %d %s local DWD warnings", len(my_warnings), mykey)
-
-            self.data = data
-            self.available = True
-        except TypeError:
-            _LOGGER.error("Unable to fetch data from DWD-Weather-Warnings")
-            self.available = False
+        """Get the latest data from the DWD-Weather-Warnings API."""
+        if self._call_update:
+            self._api.update()
+            _LOGGER.debug(
+                "Update for %s (%s) by %s",
+                self._api.warncell_name,
+                self._api.warncell_id,
+                self._sensor_type,
+            )
