@@ -142,14 +142,6 @@ class NetatmoCamera(Camera, NetatmoBase):
         return response.content
 
     @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return True
-
-    @property
     def name(self):
         """Return the name of this Netatmo camera device."""
         return self._name

@@ -141,12 +141,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     "https and port 443 is required to register the webhook"
                 )
                 return
-        elif hass.http.server_port not in [80, 443]:
-            _LOGGER.warning(
-                "Webhook not registered - "
-                "port 80 or 443 is required to register the webhook"
-            )
-            return
 
         try:
             webhook_register(
