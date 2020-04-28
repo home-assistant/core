@@ -54,16 +54,9 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not credentials_valid:
             return self._show_form({"base": "invalid_credentials"})
         _LOGGER.debug("Credentials valid")
-        try:
-            if (
-                self.hass.data[DOMAIN]["homecontrol"].gateway.id
-                in mydevolo.get_gateway_ids()
-            ):
-                return self._show_form({"base": "gateway_already_added"})
-        except KeyError:
-            _LOGGER.debug(
-                "Integration is not added yet, so there is no gateway to check."
-            )
+        await self.async_set_unique_id(mydevolo.get_gateway_ids()[0])
+        self._abort_if_unique_id_configured()
+
         return self.async_create_entry(
             title="devolo Home Control",
             data={
