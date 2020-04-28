@@ -20,7 +20,7 @@ async def setup_zwave(hass, entry=None, fixture=None):
             connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         )
 
-    entry.add_to_hass(hass)
+        entry.add_to_hass(hass)
 
     with patch("homeassistant.components.mqtt.async_subscribe") as mock_subscribe:
         await hass.config_entries.async_setup(entry.entry_id)
