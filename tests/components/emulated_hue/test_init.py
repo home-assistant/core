@@ -1,6 +1,7 @@
 """Test the Emulated Hue component."""
 from unittest.mock import MagicMock, Mock, patch
 
+from homeassistant.components.climate import HVAC_MODES
 from homeassistant.components.emulated_hue import Config
 
 
@@ -115,3 +116,15 @@ def test_config_alexa_entity_id_to_number():
 
     entity_id = conf.number_to_entity_id("light.test")
     assert entity_id == "light.test"
+
+
+def test_config_get_turn_on_mode():
+    """Test getting turn_on_mode from config."""
+    mock_hass = Mock()
+    mock_entity_state = {"hvac_modes": HVAC_MODES}
+    mock_hass.states.get = lambda entity_id: mock_entity_state
+
+    conf = Config(mock_hass, {"entities": {"climate.hvac": {"turn_on_mode": "cool"}}})
+
+    turn_on_mode = conf.get_turn_on_mode("climate.hvac")
+    assert turn_on_mode == "cool"

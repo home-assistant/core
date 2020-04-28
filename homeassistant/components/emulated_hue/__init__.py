@@ -5,7 +5,7 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.climate.const import HVAC_MODES
+from homeassistant.components.climate import ATTR_HVAC_MODES
 from homeassistant.components.http import real_ip
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
@@ -302,13 +302,13 @@ class Config:
         return False
 
     def get_turn_on_mode(self, entity_id):
-        """Get turn on mode for climate entities by entity id."""
+        """Get turn on mode for climate entities by entity ID."""
         if entity_id in self.entities and CONF_TURN_ON_MODE in self.entities[entity_id]:
             turn_on_mode = self.entities[entity_id][CONF_TURN_ON_MODE]
-            if turn_on_mode in HVAC_MODES:
+            if turn_on_mode in self.hass.states.get(entity_id)[ATTR_HVAC_MODES]:
                 return turn_on_mode
 
-            _LOGGER.warning("Invalid HVAC mode for %s", entity_id)
+            _LOGGER.warning("HVAC mode not supported by %s", entity_id)
 
         return None
 
