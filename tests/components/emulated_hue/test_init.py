@@ -121,7 +121,10 @@ def test_config_alexa_entity_id_to_number():
 def test_config_get_turn_on_mode():
     """Test getting turn_on_mode from config."""
     mock_hass = Mock()
-    mock_entity_state = {"hvac_modes": HVAC_MODES}
+
+    mock_entity_state = Mock()
+    mock_entity_state.attributes = {"hvac_modes": HVAC_MODES}
+
     mock_hass.states.get = lambda entity_id: mock_entity_state
 
     conf = Config(mock_hass, {"entities": {"climate.hvac": {"turn_on_mode": "cool"}}})
