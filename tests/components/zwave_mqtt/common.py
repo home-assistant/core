@@ -1,6 +1,5 @@
 """Helpers for tests."""
 import json
-import logging
 
 from asynctest import Mock, patch
 
@@ -8,8 +7,6 @@ from homeassistant import config_entries, core as ha
 from homeassistant.components.zwave_mqtt.const import DOMAIN
 
 from tests.common import MockConfigEntry, load_fixture
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def setup_zwave(hass, entry=None, fixture=None):
