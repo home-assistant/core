@@ -2,6 +2,7 @@
 from urllib.parse import urlparse
 
 from pyfritzhome import Fritzhome, LoginError
+from requests.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -32,6 +33,7 @@ DATA_SCHEMA_CONFIRM = vol.Schema(
 
 RESULT_AUTH_FAILED = "auth_failed"
 RESULT_NOT_FOUND = "not_found"
+RESULT_NOT_SUPPORTED = "not_supported"
 RESULT_SUCCESS = "success"
 
 
@@ -67,12 +69,15 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         try:
             fritzbox.login()
+            fritzbox.get_device_elements()
             fritzbox.logout()
             return RESULT_SUCCESS
-        except OSError:
-            return RESULT_NOT_FOUND
         except LoginError:
             return RESULT_AUTH_FAILED
+        except HTTPError:
+            return RESULT_NOT_SUPPORTED
+        except OSError:
+            return RESULT_NOT_FOUND
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
