@@ -282,10 +282,7 @@ async def async_setup(hass, config):
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
     hass.components.frontend.async_register_built_in_panel(
-        "history",
-        "history",
-        "hass:poll-box",
-        require_admin=CONF_REQUIRE_ADMIN,
+        "history", "history", "hass:poll-box", require_admin=CONF_REQUIRE_ADMIN,
     )
 
     return True
