@@ -1,4 +1,4 @@
-"""Support for Tuya Smart devices."""
+"""Support for Tuya Smart devices. """
 from datetime import timedelta
 import logging
 
