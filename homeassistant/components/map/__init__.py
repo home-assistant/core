@@ -10,7 +10,7 @@ DOMAIN = "map"
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {vol.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean,}
+            {vol.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean, }
         )
     },
     extra=vol.ALLOW_EXTRA,
