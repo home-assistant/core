@@ -20,6 +20,23 @@ async def test_failing_setups_no_entities(hass, numato_fixture, monkeypatch):
         assert entity_id not in hass.states.async_entity_ids()
 
 
+async def test_setup_callbacks(hass, numato_fixture, monkeypatch):
+    """During setup a callback shall be registered."""
+
+    numato_fixture.discover()
+
+    def mock_add_event_detect(self, port, callback, direction):
+        assert self == numato_fixture.devices[0]
+        assert port == 1
+        assert callback is callable
+        assert direction == numato_fixture.BOTH
+
+    monkeypatch.setattr(
+        numato_fixture.devices[0], "add_event_detect", mock_add_event_detect
+    )
+    assert await async_setup_component(hass, "numato", NUMATO_CFG)
+
+
 async def test_hass_binary_sensor_notification(hass, numato_fixture):
     """Test regular operations from within Home Assistant."""
     assert await async_setup_component(hass, "numato", NUMATO_CFG)
