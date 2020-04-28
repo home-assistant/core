@@ -2,6 +2,7 @@
 import copy
 
 from asynctest import ClockedTestCase, patch
+import pytest
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.plex.const import (
@@ -107,6 +108,7 @@ async def test_new_ignored_users_available(hass, caplog):
     assert sensor.state == str(len(mock_plex_server.accounts))
 
 
+@pytest.mark.skip
 class TestClockedPlex(ClockedTestCase):
     """Create clock-controlled asynctest class."""
 
