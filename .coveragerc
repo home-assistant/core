@@ -311,7 +311,10 @@ omit =
     homeassistant/components/huawei_lte/*
     homeassistant/components/huawei_router/device_tracker.py
     homeassistant/components/hue/light.py
+    homeassistant/components/hunterdouglas_powerview/__init__.py
     homeassistant/components/hunterdouglas_powerview/scene.py
+    homeassistant/components/hunterdouglas_powerview/cover.py
+    homeassistant/components/hunterdouglas_powerview/entity.py
     homeassistant/components/hydrawise/*
     homeassistant/components/hyperion/light.py
     homeassistant/components/ialarm/alarm_control_panel.py
