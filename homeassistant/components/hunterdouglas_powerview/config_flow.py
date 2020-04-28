@@ -98,7 +98,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             return self.async_abort(reason="unknown")
 
-        await self.async_set_unique_id(info["unique_id"])
+        await self.async_set_unique_id(info["unique_id"], raise_on_progress=False)
         self._abort_if_unique_id_configured({CONF_HOST: homekit_info["host"]})
 
         name = homekit_info["name"]
