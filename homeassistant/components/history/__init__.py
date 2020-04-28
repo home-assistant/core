@@ -29,12 +29,14 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "history"
 CONF_ORDER = "use_include_order"
+CONF_REQUIRE_ADMIN = "require_admin"
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: recorder.FILTER_SCHEMA.extend(
             {vol.Optional(CONF_ORDER, default=False): cv.boolean}
-        )
+        ),
+        vol.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -278,7 +280,10 @@ async def async_setup(hass, config):
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
     hass.components.frontend.async_register_built_in_panel(
-        "history", "history", "hass:poll-box"
+        "history",
+        "history",
+        "hass:poll-box",
+        require_admin=CONF_REQUIRE_ADMIN,
     )
 
     return True
