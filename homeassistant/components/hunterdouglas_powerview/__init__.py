@@ -5,7 +5,7 @@ import logging
 
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.helpers.constants import ATTR_ID
-from aiopvapi.hub import Hub
+from aiopvapi.helpers.tools import base64_to_unicode
 from aiopvapi.rooms import Rooms
 from aiopvapi.scenes import Scenes
 from aiopvapi.shades import Shades
@@ -33,6 +33,7 @@ from .const import (
     DOMAIN,
     FIRMWARE_IN_USERDATA,
     HUB_EXCEPTIONS,
+    HUB_NAME,
     MAC_ADDRESS_IN_USERDATA,
     MAINPROCESSOR_IN_USERDATA_FIRMWARE,
     MODEL_IN_MAINPROCESSOR,
@@ -99,19 +100,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     pv_request = AioRequest(hub_address, loop=hass.loop, websession=websession)
 
-    hub = Hub(pv_request)
-
     try:
         async with async_timeout.timeout(10):
-            await hub.query_user_data()
+            device_info = await async_get_device_info(pv_request)
     except HUB_EXCEPTIONS:
         _LOGGER.error("Connection error to PowerView hub: %s", hub_address)
         raise ConfigEntryNotReady
-    if not hub.ip:
+    if not device_info:
         _LOGGER.error("Unable to initialize PowerView hub: %s", hub_address)
         raise ConfigEntryNotReady
-
-    device_info = await _async_get_device_info(hub, pv_request)
 
     rooms = Rooms(pv_request)
     room_data = _async_map_data_by_id((await rooms.get_resources())[ROOM_DATA])
@@ -156,15 +153,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def _async_get_device_info(hub, pv_request):
+async def async_get_device_info(pv_request):
     """Determine device info."""
     userdata = UserData(pv_request)
-    userdata_data = (await userdata.get_resources())[USER_DATA]
+    resources = await userdata.get_resources()
+    import pprint
+
+    pprint.pprint(resources)
+    userdata_data = resources[USER_DATA]
+
     main_processor_info = userdata_data[FIRMWARE_IN_USERDATA][
         MAINPROCESSOR_IN_USERDATA_FIRMWARE
     ]
     return {
-        DEVICE_NAME: hub.name,
+        DEVICE_NAME: base64_to_unicode(userdata_data[HUB_NAME]),
         DEVICE_MAC_ADDRESS: userdata_data[MAC_ADDRESS_IN_USERDATA],
         DEVICE_SERIAL_NUMBER: userdata_data[SERIAL_NUMBER_IN_USERDATA],
         DEVICE_REVISION: main_processor_info[REVISION_IN_MAINPROCESSOR],

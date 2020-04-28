@@ -1,20 +1,28 @@
 """Test the Logitech Harmony Hub config flow."""
 import asyncio
+import json
 
-from asynctest import CoroutineMock, MagicMock, PropertyMock, patch
+from asynctest import CoroutineMock, MagicMock, patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 
+from tests.common import load_fixture
 
-def _get_mock_powerview_hub(ip=None, query_user_data=None):
-    mock_powerview_hub = MagicMock()
-    type(mock_powerview_hub).ip = PropertyMock(return_value=ip)
-    type(mock_powerview_hub).name = PropertyMock(return_value="My Hub")
-    type(mock_powerview_hub).query_user_data = CoroutineMock(
-        side_effect=query_user_data
-    )
-    return mock_powerview_hub
+
+def _get_mock_powerview_userdata(userdata=None, get_resources=None):
+    mock_powerview_userdata = MagicMock()
+    if not userdata:
+        userdata = json.loads(load_fixture("hunterdouglas_powerview/userdata.json"))
+    if get_resources:
+        type(mock_powerview_userdata).get_resources = CoroutineMock(
+            side_effect=get_resources
+        )
+    else:
+        type(mock_powerview_userdata).get_resources = CoroutineMock(
+            return_value=userdata
+        )
+    return mock_powerview_userdata
 
 
 async def test_user_form(hass):
@@ -26,10 +34,10 @@ async def test_user_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    mock_powerview_hub = _get_mock_powerview_hub(ip="1.2.3.4")
+    mock_powerview_userdata = _get_mock_powerview_userdata()
     with patch(
-        "homeassistant.components.hunterdouglas_powerview.config_flow.Hub",
-        return_value=mock_powerview_hub,
+        "homeassistant.components.hunterdouglas_powerview.UserData",
+        return_value=mock_powerview_userdata,
     ), patch(
         "homeassistant.components.hunterdouglas_powerview.async_setup",
         return_value=True,
@@ -42,7 +50,7 @@ async def test_user_form(hass):
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "My Hub"
+    assert result2["title"] == "AlexanderHD"
     assert result2["data"] == {
         "host": "1.2.3.4",
     }
@@ -66,10 +74,10 @@ async def test_form_import(hass):
     """Test we get the form with import source."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    mock_powerview_hub = _get_mock_powerview_hub(ip="1.2.3.4")
+    mock_powerview_userdata = _get_mock_powerview_userdata()
     with patch(
-        "homeassistant.components.hunterdouglas_powerview.config_flow.Hub",
-        return_value=mock_powerview_hub,
+        "homeassistant.components.hunterdouglas_powerview.UserData",
+        return_value=mock_powerview_userdata,
     ), patch(
         "homeassistant.components.hunterdouglas_powerview.async_setup",
         return_value=True,
@@ -84,7 +92,7 @@ async def test_form_import(hass):
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == "My Hub"
+    assert result["title"] == "AlexanderHD"
     assert result["data"] == {
         "host": "1.2.3.4",
     }
@@ -97,10 +105,10 @@ async def test_form_homekit(hass):
     """Test we get the form with homekit source."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    mock_powerview_hub = _get_mock_powerview_hub(ip="1.2.3.4")
+    mock_powerview_userdata = _get_mock_powerview_userdata()
     with patch(
-        "homeassistant.components.hunterdouglas_powerview.config_flow.Hub",
-        return_value=mock_powerview_hub,
+        "homeassistant.components.hunterdouglas_powerview.UserData",
+        return_value=mock_powerview_userdata,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -121,8 +129,8 @@ async def test_form_homekit(hass):
     }
 
     with patch(
-        "homeassistant.components.hunterdouglas_powerview.config_flow.Hub",
-        return_value=mock_powerview_hub,
+        "homeassistant.components.hunterdouglas_powerview.UserData",
+        return_value=mock_powerview_userdata,
     ), patch(
         "homeassistant.components.hunterdouglas_powerview.async_setup",
         return_value=True,
@@ -133,9 +141,9 @@ async def test_form_homekit(hass):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "My Hub"
+    assert result2["title"] == "PowerViewHub"
     assert result2["data"] == {"host": "1.2.3.4"}
-    assert result2["result"].unique_id == "AA::BB::CC::DD::EE::FF"
+    assert result2["result"].unique_id == "ABC123"
 
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -159,12 +167,12 @@ async def test_form_cannot_connect(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_powerview_hub = _get_mock_powerview_hub(
-        ip="1.2.3.4", query_user_data=asyncio.TimeoutError
+    mock_powerview_userdata = _get_mock_powerview_userdata(
+        get_resources=asyncio.TimeoutError
     )
     with patch(
-        "homeassistant.components.hunterdouglas_powerview.config_flow.Hub",
-        return_value=mock_powerview_hub,
+        "homeassistant.components.hunterdouglas_powerview.UserData",
+        return_value=mock_powerview_userdata,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.2.3.4"},
@@ -174,23 +182,23 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_no_ip(hass):
-    """Test we handle no ip being returned from the hub."""
+async def test_form_no_data(hass):
+    """Test we handle no data being returned from the hub."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_powerview_hub = _get_mock_powerview_hub()
+    mock_powerview_userdata = _get_mock_powerview_userdata(userdata={"userData": {}})
     with patch(
-        "homeassistant.components.hunterdouglas_powerview.config_flow.Hub",
-        return_value=mock_powerview_hub,
+        "homeassistant.components.hunterdouglas_powerview.UserData",
+        return_value=mock_powerview_userdata,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.2.3.4"},
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_form_unknown_exception(hass):
@@ -199,12 +207,10 @@ async def test_form_unknown_exception(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_powerview_hub = _get_mock_powerview_hub(
-        ip="1.2.3.4", query_user_data=ValueError
-    )
+    mock_powerview_userdata = _get_mock_powerview_userdata(userdata={"userData": {}})
     with patch(
-        "homeassistant.components.hunterdouglas_powerview.config_flow.Hub",
-        return_value=mock_powerview_hub,
+        "homeassistant.components.hunterdouglas_powerview.UserData",
+        return_value=mock_powerview_userdata,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "1.2.3.4"},
