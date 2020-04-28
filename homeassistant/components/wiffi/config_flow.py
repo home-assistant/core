@@ -29,7 +29,7 @@ class WiffiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         contains a dict with the user entered values then.
         """
         if user_input is None:
-            return await self._async_show_form()
+            return self._async_show_form()
 
         # received input from form or configuration.yaml
 
