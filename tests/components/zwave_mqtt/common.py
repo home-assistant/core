@@ -1,13 +1,13 @@
 """Helpers for tests."""
+import json
 import logging
-from pathlib import Path
 
 from asynctest import Mock, patch
 
 from homeassistant import config_entries, core as ha
 from homeassistant.components.zwave_mqtt.const import DOMAIN
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,12 +33,11 @@ async def setup_zwave(hass, fixture=None):
     receive_message = mock_subscribe.mock_calls[0][1][2]
 
     if fixture is not None:
-        data = Path(__file__).parent / "fixtures" / fixture
+        data = await hass.async_add_executor_job(load_fixture, f"zwave_mqtt/{fixture}")
 
-        with data.open("rt") as fp:
-            for line in fp:
-                topic, payload = line.strip().split(",", 1)
-                receive_message(Mock(topic=topic, payload=payload))
+        for line in data.split("\n"):
+            topic, payload = line.strip().split(",", 1)
+            receive_message(Mock(topic=topic, payload=payload))
 
         await hass.async_block_till_done()
 
@@ -56,3 +55,20 @@ def async_capture_events(hass, event_name):
     hass.bus.async_listen(event_name, capture_events)
 
     return events
+
+
+class MQTTMessage:
+    """Represent a mock MQTT message."""
+
+    def __init__(self, topic, payload):
+        """Set up message."""
+        self.topic = topic
+        self.payload = payload
+
+    def decode(self):
+        """Decode message payload from a string to a json dict."""
+        self.payload = json.loads(self.payload)
+
+    def encode(self):
+        """Encode message payload into a string."""
+        self.payload = json.dumps(self.payload)

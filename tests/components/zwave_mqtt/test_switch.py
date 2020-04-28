@@ -2,9 +2,9 @@
 from .common import setup_zwave
 
 
-async def test_switch(hass, sent_messages):
+async def test_switch(hass, sent_messages, switch_msg):
     """Test setting up config entry."""
-    await setup_zwave(hass, "generic_network_dump.csv")
+    receive_message = await setup_zwave(hass, "generic_network_dump.csv")
 
     # Test loaded
     state = hass.states.get("switch.smart_plug_switch")
@@ -19,6 +19,17 @@ async def test_switch(hass, sent_messages):
     msg = sent_messages[0]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": True, "ValueIDKey": 541671440}
+
+    # Feedback on state
+    switch_msg.decode()
+    switch_msg.payload["Value"] = True
+    switch_msg.encode()
+    receive_message(switch_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.smart_plug_switch")
+    assert state is not None
+    assert state.state == "on"
 
     # Test turning off
     await hass.services.async_call(
