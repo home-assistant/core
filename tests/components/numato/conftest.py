@@ -1,6 +1,6 @@
 """Fixtures for numato tests."""
 
-from copy import copy, deepcopy
+from copy import deepcopy
 
 import pytest
 
@@ -23,7 +23,6 @@ def config():
 @pytest.fixture
 def numato_fixture(monkeypatch):
     """Inject the numato mockup into numato homeassistant module."""
-    module_mock = copy(numato_mock.NumatoModuleMock)
+    module_mock = numato_mock.NumatoModuleMock()
     monkeypatch.setattr(numato, "gpio", module_mock)
-    yield module_mock
-    module_mock.cleanup()
+    return module_mock

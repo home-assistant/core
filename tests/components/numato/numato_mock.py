@@ -7,6 +7,10 @@ class NumatoModuleMock:
 
     NumatoGpioError = NumatoGpioError
 
+    def __init__(self):
+        """Initialize the numato_gpio module mockup class."""
+        self.devices = {}
+
     class NumatoDeviceMock:
         """Mockup for the numato_gpio.NumatoUsbGpio class."""
 
@@ -45,7 +49,6 @@ class NumatoModuleMock:
             """Make the mockup execute a notification callback."""
             self.callbacks[port](port, value)
 
-    devices = {}
     OUT = 0
     IN = 1
 
@@ -53,15 +56,13 @@ class NumatoModuleMock:
     FALLING = 2
     BOTH = 3
 
-    @classmethod
-    def discover(cls, _=None):
+    def discover(self, _=None):
         """Mockup for the numato device discovery.
 
         Ignore the device list argument, mock discovers /dev/ttyACM0.
         """
-        NumatoModuleMock.devices[0] = NumatoModuleMock.NumatoDeviceMock("/dev/ttyACM0")
+        self.devices[0] = NumatoModuleMock.NumatoDeviceMock("/dev/ttyACM0")
 
-    @classmethod
-    def cleanup(cls):
+    def cleanup(self):
         """Mockup for the numato device cleanup."""
-        NumatoModuleMock.devices.clear()
+        self.devices.clear()
