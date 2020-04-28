@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Disse koordinatene er allerede registrert."
+            "already_configured": "Disse koordinatene eller Node / Pro ID er allerede registrert."
         },
         "error": {
             "general_error": "Det oppstod en ukjent feil.",
@@ -35,7 +35,7 @@
                     "node_pro": "AirVisual Node Pro",
                     "type": "Integrasjonstype"
                 },
-                "description": "Overv\u00e5k luftkvaliteten p\u00e5 et geografisk sted.",
+                "description": "Velg hvilken type AirVisual-data du vil overv\u00e5ke.",
                 "title": "Konfigurer AirVisual"
             }
         }

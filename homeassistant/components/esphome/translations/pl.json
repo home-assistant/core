@@ -23,7 +23,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
+                    "host": "Nazwa hosta lub adres IP",
                     "port": "Port"
                 },
                 "description": "Wprowad\u017a ustawienia po\u0142\u0105czenia [ESPHome](https://esphomelib.com/) w\u0119z\u0142a.",

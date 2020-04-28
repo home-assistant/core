@@ -4,6 +4,7 @@
             "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "error": {
+            "connection": "Feeler beim verbannen Iwwerpr\u00e9if w.e.g. den Numm, Passwuert & SSL",
             "login": "Feeler beim Login: iwwerpr\u00e9if de Benotzernumm & Passwuert",
             "missing_data": "Donn\u00e9\u00ebe feelen, prob\u00e9ier sp\u00e9ider oder mat enger aner Konfiguratioun",
             "otp_failed": "Feeler mam 2-Faktor-Authentifikatiouns, prob\u00e9ier mat engem neie Code",
