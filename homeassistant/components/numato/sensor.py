@@ -104,7 +104,7 @@ class NumatoGpioAdc(Entity):
                 "Failed to update Numato device %s ADC-port %s: %s",
                 self._device_id,
                 self._port,
-                str(err),
+                err,
             )
 
     def _clamp_to_source_range(self, val):

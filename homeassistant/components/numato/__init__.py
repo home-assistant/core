@@ -134,7 +134,7 @@ def setup(hass, config):
     try:
         gpio.discover(config[DOMAIN][CONF_DISCOVER])
     except gpio.NumatoGpioError as err:
-        _LOGGER.info("Error discovering Numato devices: %s", str(err))
+        _LOGGER.info("Error discovering Numato devices: %s", err)
         gpio.cleanup()
         return False
 

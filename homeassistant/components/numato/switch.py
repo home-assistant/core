@@ -88,7 +88,7 @@ class NumatoGpioSwitch(ToggleEntity):
                 "Failed to turn on Numato device %s port %s: %s",
                 self._device_id,
                 self._port,
-                str(err),
+                err,
             )
 
     def turn_off(self, **kwargs):
@@ -104,5 +104,5 @@ class NumatoGpioSwitch(ToggleEntity):
                 "Failed to turn off Numato device %s port %s: %s",
                 self._device_id,
                 self._port,
-                str(err),
+                err,
             )

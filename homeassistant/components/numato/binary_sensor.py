@@ -116,5 +116,5 @@ class NumatoGpioBinarySensor(BinarySensorDevice):
                 "Failed to update Numato device %s port %s: %s",
                 self._device_id,
                 self._port,
-                str(err),
+                err,
             )
