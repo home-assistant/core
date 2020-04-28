@@ -166,14 +166,15 @@ async def async_setup_entry(hass, config_entry):
         async def async_update_data():
             """Get new data from the API."""
             if CONF_CITY in config_entry.data:
-                return await client.api.city(
+                api_coro = client.api.city(
                     config_entry.data[CONF_CITY],
                     config_entry.data[CONF_STATE],
                     config_entry.data[CONF_COUNTRY],
                 )
-            api_coro = client.api.nearest_city(
-                config_entry.data[CONF_LATITUDE], config_entry.data[CONF_LONGITUDE],
-            )
+            else:
+                api_coro = client.api.nearest_city(
+                    config_entry.data[CONF_LATITUDE], config_entry.data[CONF_LONGITUDE],
+                )
 
             try:
                 return await api_coro
@@ -327,6 +328,8 @@ class AirVisualEntity(Entity):
             self.async_write_ha_state()
 
         self.async_on_remove(self.coordinator.async_add_listener(update))
+
+        self.update_from_latest_data()
 
     @callback
     def update_from_latest_data(self):
