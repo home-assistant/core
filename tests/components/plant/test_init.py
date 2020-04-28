@@ -1,5 +1,4 @@
 """Unit tests for platform/plant.py."""
-import asyncio
 from datetime import datetime, timedelta
 import unittest
 
@@ -15,6 +14,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import State
 from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant, init_recorder_component
@@ -47,31 +47,27 @@ GOOD_CONFIG = {
 }
 
 
-class _MockState:
-    def __init__(self, state=None):
-        self.state = state
-
-
 class TestPlant(unittest.TestCase):
     """Tests for component "plant"."""
 
     def setUp(self):
         """Create test instance of Home Assistant."""
         self.hass = get_test_home_assistant()
-        self.hass.start()
 
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @asyncio.coroutine
-    def test_valid_data(self):
+    async def test_valid_data(self):
         """Test processing valid data."""
         sensor = plant.Plant("my plant", GOOD_CONFIG)
+        sensor.entity_id = "sensor.mqtt_plant_battery"
         sensor.hass = self.hass
         for reading, value in GOOD_DATA.items():
             sensor.state_changed(
-                GOOD_CONFIG["sensors"][reading], None, _MockState(value)
+                GOOD_CONFIG["sensors"][reading],
+                None,
+                State(GOOD_CONFIG["sensors"][reading], value),
             )
         assert sensor.state == "ok"
         attrib = sensor.state_attributes
@@ -80,14 +76,16 @@ class TestPlant(unittest.TestCase):
             # the JSON format than in hass
             assert attrib[reading] == value
 
-    @asyncio.coroutine
-    def test_low_battery(self):
+    async def test_low_battery(self):
         """Test processing with low battery data and limit set."""
         sensor = plant.Plant("other plant", GOOD_CONFIG)
+        sensor.entity_id = "sensor.mqtt_plant_battery"
         sensor.hass = self.hass
         assert sensor.state_attributes["problem"] == "none"
         sensor.state_changed(
-            "sensor.mqtt_plant_battery", _MockState(45), _MockState(10)
+            "sensor.mqtt_plant_battery",
+            State("sensor.mqtt_plant_battery", 45),
+            State("sensor.mqtt_plant_battery", 10),
         )
         assert sensor.state == "problem"
         assert sensor.state_attributes["problem"] == "battery low"
