@@ -1,4 +1,5 @@
 """The Netatmo data handler."""
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -70,11 +71,15 @@ class NetatmoDataHandler:
 
         async def async_update(event_time):
             """Update device."""
-            for data_class in self._data_classes:
-                self.data[data_class.__name__] = await self.hass.async_add_executor_job(
-                    data_class, self._auth
-                )
-                print("dispatch signal", data_class.__name__)
+            results = await asyncio.gather(
+                *[
+                    self.hass.async_add_executor_job(data_class, self._auth)
+                    for data_class in self._data_classes
+                ]
+            )
+
+            for data_class, result in zip(self._data_classes, results):
+                self.data[data_class.__name__] = result
                 async_dispatcher_send(
                     self.hass, f"netatmo-update-{data_class.__name__}"
                 )
