@@ -16,7 +16,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host"
+                    "host": "Nazwa hosta lub adres IP"
                 },
                 "description": "Puste",
                 "title": "Wybierz punkt ko\u0144cowy."
