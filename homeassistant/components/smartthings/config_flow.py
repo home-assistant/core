@@ -26,6 +26,7 @@ from .const import (
 from .smartapp import (
     create_app,
     find_app,
+    format_unique_id,
     get_webhook_url,
     setup_smartapp,
     setup_smartapp_endpoint,
@@ -183,6 +184,7 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         self.location_id = user_input[CONF_LOCATION_ID]
+        await self.async_set_unique_id(format_unique_id(self.app_id, self.location_id))
         return await self.async_step_authorize()
 
     async def async_step_authorize(self, user_input=None):
