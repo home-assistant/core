@@ -81,9 +81,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_homekit(self, homekit_info):
         """Handle HomeKit discovery."""
-        if self._host_already_configured(homekit_info["host"]):
+        self._abort_if_unique_id_configured({CONF_HOST: homekit_info["host"]})
+
+        host = homekit_info["host"]
+
+        for entry in self._async_current_entries():
+            if entry.data[CONF_HOST] != host:
+                continue
+
+            # Backwards compat, we update old entries
+            if not entry.unique_id:
+                self.hass.config_entries.async_update_entry(
+                    entry, unique_id=homekit_info["properties"]["id"]
+                )
+
             return self.async_abort(reason="already_configured")
-        await self.async_set_unique_id(homekit_info["properties"]["id"])
 
         name = homekit_info["name"]
         if name.endswith(HAP_SUFFIX):
