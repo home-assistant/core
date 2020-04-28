@@ -38,11 +38,6 @@ from tests.common import (
 )
 
 
-@pytest.fixture(autouse=True)
-def mock_storage(hass_storage):
-    """Autouse hass_storage for the TestCase tests."""
-
-
 async def test_setup_with_config(hass):
     """Test setup component with config."""
     config = {
@@ -83,7 +78,7 @@ class TestClockedPlex(ClockedTestCase):
     """Create clock-controlled asynctest class."""
 
     @pytest.fixture(autouse=True)
-    def inject_fixture(self, caplog):
+    def inject_fixture(self, caplog, hass_storage):
         """Inject pytest fixtures as instance attributes."""
         self.caplog = caplog
 
