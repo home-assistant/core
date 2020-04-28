@@ -129,7 +129,7 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
         self._host = host
-        self._name = user_input[ATTR_UPNP_FRIENDLY_NAME]
+        self._name = user_input.get(ATTR_UPNP_FRIENDLY_NAME) or host
 
         self.context["title_placeholders"] = {"name": self._name}
         return await self.async_step_confirm()
