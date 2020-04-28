@@ -121,10 +121,6 @@ class RachioSwitch(RachioDevice, SwitchEntity):
 class RachioStandbySwitch(RachioSwitch):
     """Representation of a standby status/button."""
 
-    def __init__(self, controller):
-        """Instantiate a new Rachio standby mode switch."""
-        super().__init__(controller)
-
     @property
     def name(self) -> str:
         """Return the name of the standby switch."""
@@ -174,11 +170,6 @@ class RachioStandbySwitch(RachioSwitch):
 
 class RachioRainDelay(RachioSwitch):
     """Representation of a rain delay status/switch."""
-
-    def __init__(self, controller):
-        """Instantiate a new Rachio rain delay switch."""
-        super().__init__(controller)
-        self._state = False
 
     @property
     def name(self) -> str:
