@@ -81,6 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_homekit(self, homekit_info):
         """Handle HomeKit discovery."""
+        await self.async_set_unique_id(homekit_info["properties"]["id"])
         self._abort_if_unique_id_configured({CONF_HOST: homekit_info["host"]})
 
         host = homekit_info["host"]
