@@ -176,7 +176,7 @@ async def _async_get_device_info(hub, pv_request):
 @callback
 def _async_map_data_by_id(data):
     """Return a dict with the key being the id for a list of entries."""
-    return {entry[ATTR_ID]: entry for entry in data if ATTR_ID in entry}
+    return {entry[ATTR_ID]: entry for entry in data}
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
