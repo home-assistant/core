@@ -158,6 +158,11 @@ class SongpalDevice(MediaPlayerEntity):
         interface_info = await self.dev.get_interface_information()
         self._model = interface_info.modelName
 
+    async def async_will_remove_from_hass(self):
+        """Run when entity will be removed from hass."""
+        self.hass.data[DOMAIN].pop(self._endpoint)
+        await self.dev.stop_listen_notifications()
+
     async def async_activate_websocket(self):
         """Activate websocket for listening if wanted."""
         _LOGGER.info("Activating websocket connection..")

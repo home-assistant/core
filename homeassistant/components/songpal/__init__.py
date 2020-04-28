@@ -18,3 +18,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         hass.config_entries.async_forward_entry_setup(entry, "media_player")
     )
     return True
+
+
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+    """Unload songpal media player."""
+    return await hass.config_entries.async_forward_entry_unload(entry, "media_player")
