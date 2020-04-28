@@ -141,6 +141,7 @@ FLOWS = [
     "withings",
     "wled",
     "wwlln",
+    "xiaomi_miio",
     "zha",
     "zwave"
 ]
