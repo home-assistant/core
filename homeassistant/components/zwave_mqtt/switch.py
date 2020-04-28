@@ -1,7 +1,4 @@
 """Representation of Z-Wave switches."""
-
-import logging
-
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
@@ -9,8 +6,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DATA_UNSUBSCRIBE, DOMAIN
 from .entity import ZWaveDeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
