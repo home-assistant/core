@@ -17,11 +17,14 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-MOCK_CONFIG_ENTRY_DATA = {
+MOCK_CONFIG_DATA = {
     CONF_HOST: "0.0.0.0",
     CONF_NAME: DEFAULT_NAME,
     CONF_PORT: DEFAULT_PORT,
     CONF_ON_ACTION: None,
+}
+
+MOCK_ENCRYPTION_DATA = {
     CONF_APP_ID: "test-app-id",
     CONF_ENCRYPTION_KEY: "test-encryption-key",
 }
@@ -39,10 +42,40 @@ def get_mock_remote():
     return mock_remote
 
 
-async def test_setup_entry(hass):
-    """Test setup with config entry."""
+async def test_setup_entry_encrypted(hass):
+    """Test setup with encrypted config entry."""
     mock_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="0.0.0.0", data=MOCK_CONFIG_ENTRY_DATA
+        domain=DOMAIN,
+        unique_id="0.0.0.0",
+        data={**MOCK_CONFIG_DATA, **MOCK_ENCRYPTION_DATA},
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    mock_remote = get_mock_remote()
+
+    with patch(
+        "homeassistant.components.panasonic_viera.Remote", return_value=mock_remote,
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert hass.data[DOMAIN]["0.0.0.0"][ATTR_REMOTE] == mock_remote
+
+        state_tv = hass.states.get("media_player.panasonic_viera_tv")
+        state_remote = hass.states.get("remote.panasonic_viera_tv_remote")
+
+        assert state_tv
+        assert state_tv.name == DEFAULT_NAME
+
+        assert state_remote
+        assert state_remote.name == DEFAULT_NAME + " Remote"
+
+
+async def test_setup_entry_unencrypted(hass):
+    """Test setup with unencrypted config entry."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="0.0.0.0", data=MOCK_CONFIG_DATA
     )
 
     mock_entry.add_to_hass(hass)
@@ -80,7 +113,7 @@ async def test_setup_config_flow_initiated(hass):
 async def test_setup_unload_entry(hass):
     """Test if config entry is unloaded."""
     mock_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="0.0.0.0", data=MOCK_CONFIG_ENTRY_DATA
+        domain=DOMAIN, unique_id="0.0.0.0", data=MOCK_CONFIG_DATA
     )
 
     mock_entry.add_to_hass(hass)

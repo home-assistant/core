@@ -61,7 +61,7 @@ def get_mock_remote_control(
     return mock_remote_control
 
 
-async def test_flow_non_encrypted(hass):
+async def test_flow_unencrypted(hass):
     """Test flow without encryption."""
 
     result = await hass.config_entries.flow.async_init(
@@ -281,7 +281,7 @@ async def test_flow_encrypted_unknown_abort(hass):
     assert result["reason"] == REASON_UNKNOWN
 
 
-async def test_flow_non_encrypted_already_configured_abort(hass):
+async def test_flow_unencrypted_already_configured_abort(hass):
     """Test flow without encryption and existing config entry abortion."""
 
     MockConfigEntry(
@@ -325,7 +325,7 @@ async def test_flow_encrypted_already_configured_abort(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_imported_flow_non_encrypted(hass):
+async def test_imported_flow_unencrypted(hass):
     """Test imported flow without encryption."""
 
     mock_remote_control = get_mock_remote_control(encrypted=False)
@@ -545,7 +545,7 @@ async def test_imported_flow_unknown_abort(hass):
     assert result["reason"] == REASON_UNKNOWN
 
 
-async def test_imported_flow_non_encrypted_already_configured_abort(hass):
+async def test_imported_flow_unencrypted_already_configured_abort(hass):
     """Test imported flow without encryption and existing config entry abortion."""
 
     MockConfigEntry(
