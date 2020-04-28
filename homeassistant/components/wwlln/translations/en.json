@@ -7,10 +7,20 @@
             "user": {
                 "data": {
                     "latitude": "Latitude",
-                    "longitude": "Longitude",
-                    "radius": "Radius (using your base unit system)"
+                    "longitude": "Longitude"
                 },
                 "title": "Fill in your location information."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "radius": "The radius to monitor (using your base unit system)",
+                    "window": "The number of seconds \"back\" to look for strikes"
+                },
+                "title": "Configure WWLLN"
             }
         }
     }

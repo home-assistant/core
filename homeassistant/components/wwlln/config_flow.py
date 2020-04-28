@@ -3,6 +3,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import (  # pylint: disable=unused-import
@@ -30,7 +31,6 @@ class WWLLNFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
-                vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int,
             }
         )
 
@@ -40,19 +40,18 @@ class WWLLNFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=self.data_schema, errors=errors or {}
         )
 
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Define the config flow to handle options."""
+        return WWLLNOptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
         if not user_input:
             return await self._show_form()
 
-        latitude = user_input.get(CONF_LATITUDE, self.hass.config.latitude)
-        longitude = user_input.get(CONF_LONGITUDE, self.hass.config.longitude)
-
-        identifier = f"{latitude}, {longitude}"
+        identifier = f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}"
 
         await self.async_set_unique_id(identifier)
         self._abort_if_unique_id_configured()
@@ -60,11 +59,36 @@ class WWLLNFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=identifier,
             data={
-                CONF_LATITUDE: latitude,
-                CONF_LONGITUDE: longitude,
-                CONF_RADIUS: user_input.get(CONF_RADIUS, DEFAULT_RADIUS),
-                CONF_WINDOW: user_input.get(
-                    CONF_WINDOW, DEFAULT_WINDOW.total_seconds()
-                ),
+                CONF_LATITUDE: user_input[CONF_LATITUDE],
+                CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+                CONF_RADIUS: DEFAULT_RADIUS,
+                CONF_WINDOW: DEFAULT_WINDOW,
             },
+        )
+
+
+class WWLLNOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a WWLLN options flow."""
+
+    def __init__(self, config_entry):
+        """Initialize."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_RADIUS, default=self.config_entry.options.get(CONF_RADIUS),
+                    ): int,
+                    vol.Optional(
+                        CONF_WINDOW, default=self.config_entry.options.get(CONF_WINDOW),
+                    ): int,
+                }
+            ),
         )

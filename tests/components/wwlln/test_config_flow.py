@@ -8,7 +8,7 @@ from homeassistant.components.wwlln import (
     DOMAIN,
     async_setup_entry,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 
 from tests.common import MockConfigEntry
@@ -38,28 +38,6 @@ async def test_show_form(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-
-
-async def test_step_import(hass):
-    """Test that the import step works."""
-    conf = {
-        CONF_LATITUDE: 39.128712,
-        CONF_LONGITUDE: -104.9812612,
-        CONF_RADIUS: 25,
-    }
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "39.128712, -104.9812612"
-    assert result["data"] == {
-        CONF_LATITUDE: 39.128712,
-        CONF_LONGITUDE: -104.9812612,
-        CONF_RADIUS: 25,
-        CONF_WINDOW: 3600.0,
-    }
 
 
 async def test_step_user(hass):

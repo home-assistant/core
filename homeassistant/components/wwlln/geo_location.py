@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_RADIUS,
     CONF_UNIT_SYSTEM_IMPERIAL,
+    EVENT_HOMEASSISTANT_STOP,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
 )
@@ -22,7 +23,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import utc_from_timestamp
 
-from .const import CONF_WINDOW, DATA_CLIENT, DOMAIN
+from .const import CONF_WINDOW, DATA_CLIENT, DOMAIN, TOPIC_OPTIONS_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,20 +35,20 @@ DEFAULT_EVENT_NAME = "Lightning Strike: {0}"
 DEFAULT_ICON = "mdi:flash"
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=10)
 
-SIGNAL_DELETE_ENTITY = "wwlln_delete_entity_{0}"
+TOPIC_DELETE_ENTITY = "wwlln_delete_entity_{0}"
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up WWLLN based on a config entry."""
-    client = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    client = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
     manager = WWLLNEventManager(
         hass,
         async_add_entities,
         client,
-        entry.data[CONF_LATITUDE],
-        entry.data[CONF_LONGITUDE],
-        entry.data[CONF_RADIUS],
-        entry.data[CONF_WINDOW],
+        config_entry.data[CONF_LATITUDE],
+        config_entry.data[CONF_LONGITUDE],
+        config_entry.options[CONF_RADIUS],
+        config_entry.options[CONF_WINDOW],
     )
     await manager.async_init()
 
@@ -74,6 +75,7 @@ class WWLLNEventManager:
         self._managed_strike_ids = set()
         self._radius = radius
         self._strikes = {}
+        self._unsub_callbacks = []
         self._window = timedelta(seconds=window_seconds)
 
         if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
@@ -105,17 +107,43 @@ class WWLLNEventManager:
         """Remove old geo location events."""
         _LOGGER.debug("Going to remove %s", ids_to_remove)
         for strike_id in ids_to_remove:
-            async_dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(strike_id))
+            async_dispatcher_send(self._hass, TOPIC_DELETE_ENTITY.format(strike_id))
 
     async def async_init(self):
         """Schedule regular updates based on configured time interval."""
+        await self.async_update()
 
-        async def update(event_time):
+        @callback
+        def update_options(options):
+            """Update the entity with new config entry options."""
+            _LOGGER.debug("Updating options: %s", options)
+            self._radius = options[CONF_RADIUS]
+            self._window = timedelta(seconds=options[CONF_WINDOW])
+
+        self._unsub_callbacks.append(
+            async_dispatcher_connect(
+                self._hass,
+                TOPIC_OPTIONS_UPDATE.format(f"{self._latitude}, {self._longitude}"),
+                update_options,
+            )
+        )
+
+        async def update(_):
             """Update."""
             await self.async_update()
 
-        await self.async_update()
-        async_track_time_interval(self._hass, update, DEFAULT_UPDATE_INTERVAL)
+        self._unsub_callbacks.append(
+            async_track_time_interval(self._hass, update, DEFAULT_UPDATE_INTERVAL)
+        )
+
+        @callback
+        def close(_):
+            """Cancel all active listener/dispatcher callbacks."""
+            for cancel in self._unsub_callbacks:
+                cancel()
+            self._unsub_callbacks = []
+
+        self._hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close)
 
     async def async_update(self):
         """Refresh data."""
@@ -157,7 +185,6 @@ class WWLLNEvent(GeolocationEvent):
         self._latitude = latitude
         self._longitude = longitude
         self._publication_date = publication_date
-        self._remove_signal_delete = None
         self._strike_id = strike_id
         self._unit_of_measurement = unit
 
@@ -213,16 +240,16 @@ class WWLLNEvent(GeolocationEvent):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
-    @callback
-    def _delete_callback(self):
-        """Remove this entity."""
-        self._remove_signal_delete()
-        self.hass.async_create_task(self.async_remove())
-
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self._remove_signal_delete = async_dispatcher_connect(
-            self.hass,
-            SIGNAL_DELETE_ENTITY.format(self._strike_id),
-            self._delete_callback,
+
+        @callback
+        def delete(self):
+            """Remove this entity."""
+            self.hass.async_create_task(self.async_remove())
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, TOPIC_DELETE_ENTITY.format(self._strike_id), delete
+            )
         )

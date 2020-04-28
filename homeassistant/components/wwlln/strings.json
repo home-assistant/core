@@ -5,11 +5,21 @@
         "title": "Fill in your location information.",
         "data": {
           "latitude": "Latitude",
-          "longitude": "Longitude",
-          "radius": "Radius (using your base unit system)"
+          "longitude": "Longitude"
         }
       }
     },
     "abort": { "already_configured": "This location is already registered." }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure WWLLN",
+        "data": {
+          "radius": "The radius to monitor (using your base unit system)",
+          "window": "The number of seconds \"back\" to look for strikes"
+        }
+      }
+    }
   }
 }
