@@ -4,7 +4,7 @@ from requests.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_USERNAME
 
 from . import _LOGGER
 from .const import CONF_JOB_NAME, DOMAIN
@@ -61,7 +61,7 @@ class JenkinsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_URL: self.server.baseurl,
                     CONF_USERNAME: self.username,
-                    CONF_PASSWORD: self.token,
+                    CONF_TOKEN: self.token,
                     CONF_JOB_NAME: self.job_name,
                 },
             )

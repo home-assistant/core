@@ -3,7 +3,7 @@
 from jenkinsapi.jenkins import Jenkins
 from requests.exceptions import HTTPError
 
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 
@@ -18,7 +18,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             Jenkins,
             entry.data[CONF_URL],
             entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
+            entry.data[CONF_TOKEN],
         )
         _LOGGER.debug(f"Successfully connected to {entry.data[CONF_URL]}")
     except HTTPError as exception:
