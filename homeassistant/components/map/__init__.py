@@ -18,6 +18,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+
 async def async_setup(hass, config):
     """Register the built-in map panel."""
     hass.components.frontend.async_register_built_in_panel(
