@@ -15,13 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
-from .const import (
-    ATTR_NAME,
-    CONF_SSL_CERTIFICATE,
-    CONF_SSL_KEY,
-    DOMAIN,
-    SERVICE_TRIGGER_SCENARIO,
-)
+from .const import CONF_SSL_CERTIFICATE, CONF_SSL_KEY, DOMAIN
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -55,7 +49,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         return True
 
     configured_hosts = {
-        entry.data.get("ip_address")
+        entry.data.get(CONF_IP_ADDRESS)
         for entry in hass.config_entries.async_entries(DOMAIN)
     }
 
@@ -74,7 +68,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Bosch SHC from a config entry."""
     data = entry.data
 
-    _LOGGER.debug("Connecting to Bosch Smart Home Controller API")
     session = await hass.async_add_executor_job(
         SHCSession,
         data[CONF_IP_ADDRESS],
@@ -84,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     shc_info = session.information
     if shc_info.version == "n/a":
-        _LOGGER.error("Unable to connect to Bosch Smart Home Controller API")
+        _LOGGER.warning("Unable to connect to Bosch Smart Home Controller API")
         return False
     if shc_info.updateState.name == "UPDATE_AVAILABLE":
         _LOGGER.warning("Please check for software updates in the Bosch Smart Home App")
@@ -108,12 +101,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def stop_polling(event):
         """Stop polling service."""
-        _LOGGER.debug("Stopping polling service of SHC")
         await hass.async_add_executor_job(session.stop_polling)
 
     async def start_polling(event):
         """Start polling service."""
-        _LOGGER.debug("Starting polling service of SHC")
         await hass.async_add_executor_job(session.start_polling)
         session.reset_connection_listener = hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, stop_polling
@@ -121,7 +112,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_polling)
 
-    register_services(hass, entry)
     return True
 
 
@@ -144,29 +134,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-def register_services(hass, entry):
-    """Register services for the component."""
-    service_scenario_trigger_schema = vol.Schema(
-        {
-            vol.Required(ATTR_NAME): vol.All(
-                cv.string, vol.In(hass.data[DOMAIN][entry.entry_id].scenario_names)
-            )
-        }
-    )
-
-    async def scenario_service_call(call):
-        """SHC Scenario service call."""
-        name = call.data[ATTR_NAME]
-        for scenario in hass.data[DOMAIN][entry.entry_id].scenarios:
-            if scenario.name == name:
-                _LOGGER.debug("Trigger scenario: %s (%s)", scenario.name, scenario.id)
-                hass.async_add_executor_job(scenario.trigger)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_TRIGGER_SCENARIO,
-        scenario_service_call,
-        service_scenario_trigger_schema,
-    )

@@ -5,7 +5,7 @@ from boschshcpy import SHCSession
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_ICON, CONF_IP_ADDRESS, CONF_NAME
+from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME
 
 from .const import CONF_SSL_CERTIFICATE, CONF_SSL_KEY
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -18,7 +18,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_IP_ADDRESS): str,
         vol.Required(CONF_SSL_CERTIFICATE): str,
         vol.Required(CONF_SSL_KEY): str,
-        vol.Optional(CONF_ICON): str,
     }
 )
 

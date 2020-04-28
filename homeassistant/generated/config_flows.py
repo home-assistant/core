@@ -33,7 +33,7 @@ FLOWS = [
     "blink",
     "bmw_connected_drive",
     "bond",
-    "boschshc",
+    "bosch_shc",
     "braviatv",
     "broadlink",
     "brother",

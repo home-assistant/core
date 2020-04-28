@@ -39,43 +39,25 @@ class SHCEntity(Entity):
         return self._device.serial
 
     @property
-    def device_id(self):
-        """Return the ID of this binary sensor."""
-        return self._device.id
-
-    @property
-    def root_device(self):
-        """Return the root device id."""
-        return self._device.root_device_id
-
-    @property
     def name(self):
         """Name of the device."""
         return self._device.name
 
     @property
-    def manufacturer(self):
-        """Manufacturer of the device."""
-        return self._device.manufacturer
-
-    @property
     def device_info(self):
         """Return the device info."""
         return {
-            "identifiers": {(DOMAIN, self.device_id)},
+            "identifiers": {(DOMAIN, self._device.id)},
             "name": self.name,
-            "manufacturer": self.manufacturer,
+            "manufacturer": self._device.manufacturer,
             "model": self._device.device_model,
-            "sw_version": "",
             "via_device": (DOMAIN, self._controller_ip),
         }
 
     @property
     def available(self):
         """Return false if status is unavailable."""
-        if self._device.status == "AVAILABLE":
-            return True
-        return False
+        return self._device.status == "AVAILABLE"
 
     @property
     def should_poll(self):
@@ -87,11 +69,9 @@ class SHCEntity(Entity):
         self._device.update()
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Extend state attribute of the device."""
-        state_attr = super().state_attributes
-        if state_attr is None:
-            state_attr = dict()
+        state_attr = {}
         if self._room_name:
-            state_attr["boschshc_room_name"] = self._room_name
+            state_attr["bosch_shc_room_name"] = self._room_name
         return state_attr
