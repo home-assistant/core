@@ -1,6 +1,7 @@
 """Config flow for ONVIF."""
 import os
 from pprint import pformat
+from typing import List
 from urllib.parse import urlparse
 
 import onvif
@@ -8,6 +9,7 @@ from onvif import ONVIFCamera, exceptions
 import voluptuous as vol
 from wsdiscovery.discovery import ThreadedWSDiscovery as WSDiscovery
 from wsdiscovery.scope import Scope
+from wsdiscovery.service import Service
 from zeep.asyncio import AsyncTransport
 from zeep.exceptions import Fault
 
@@ -38,19 +40,20 @@ from .const import (
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
 
+def wsdiscovery() -> List[Service]:
+    """Get ONVIF Profile S devices from network."""
+    discovery = WSDiscovery(ttl=4)
+    discovery.start()
+    services = discovery.searchServices(
+        scopes=[Scope("onvif://www.onvif.org/Profile/Streaming")]
+    )
+    discovery.stop()
+    return services
+
+
 async def async_discovery(hass) -> bool:
     """Return if there are devices that can be discovered."""
-
-    def wsdiscovery():
-        discovery = WSDiscovery(ttl=4)
-        discovery.start()
-        services = discovery.searchServices(
-            scopes=[Scope("onvif://www.onvif.org/Profile/Streaming")]
-        )
-        discovery.stop()
-        return services
-
-    print("Starting ONVIF discovery...")
+    LOGGER.debug("Starting ONVIF discovery...")
     services = await hass.async_add_executor_job(wsdiscovery)
 
     devices = []
@@ -89,8 +92,6 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the ONVIF config flow."""
         self.device_id = None
         self.devices = []
-        self.profiles = {}
-        self.active_profile = None
         self.onvif_config = {}
 
     async def async_step_user(self, user_input=None):
@@ -173,16 +174,6 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.onvif_config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
             return await self.async_step_profiles()
 
-        if self.device_id is not None:
-            await self.async_set_unique_id(self.device_id)
-            self._abort_if_unique_id_configured(
-                updates={
-                    CONF_HOST: self.onvif_config[CONF_HOST],
-                    CONF_PORT: self.onvif_config[CONF_PORT],
-                    CONF_NAME: self.onvif_config[CONF_NAME],
-                }
-            )
-
         return self.async_show_form(
             step_id="auth",
             data_schema=vol.Schema(
@@ -198,22 +189,20 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "Fetching profiles from ONVIF device %s", pformat(self.onvif_config)
         )
 
-        session = async_get_clientsession(self.hass)
-        transport = AsyncTransport(None, session=session)
-        camera = ONVIFCamera(
+        device = get_device(
+            self.hass,
             self.onvif_config[CONF_HOST],
             self.onvif_config[CONF_PORT],
             self.onvif_config[CONF_USERNAME],
             self.onvif_config[CONF_PASSWORD],
-            f"{os.path.dirname(onvif.__file__)}/wsdl/",
-            transport=transport,
         )
-        await camera.update_xaddrs()
+
+        await device.update_xaddrs()
 
         try:
             # Get the MAC address to use as the unique ID for the config flow
             if not self.device_id:
-                devicemgmt = camera.create_devicemgmt_service()
+                devicemgmt = device.create_devicemgmt_service()
                 network_interfaces = await devicemgmt.GetNetworkInterfaces()
                 for interface in network_interfaces:
                     if interface.Enabled:
@@ -233,7 +222,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not self.onvif_config.get(CONF_PROFILE):
                 self.onvif_config[CONF_PROFILE] = []
-                media_service = camera.create_media_service()
+                media_service = device.create_media_service()
                 profiles = await media_service.GetProfiles()
                 LOGGER.debug("Media Profiles %s", pformat(profiles))
                 for key, profile in enumerate(profiles):
@@ -281,7 +270,7 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_onvif_devices(self, user_input=None):
         """Manage the ONVIF devices options."""
         if user_input is not None:
-            self.options[CONF_PROFILE] = user_input[CONF_PROFILE]
+            self.options[CONF_EXTRA_ARGUMENTS] = user_input[CONF_EXTRA_ARGUMENTS]
             self.options[CONF_RTSP_TRANSPORT] = user_input[CONF_RTSP_TRANSPORT]
             return self.async_create_entry(title="", data=self.options)
 
@@ -304,3 +293,19 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
                 }
             ),
         )
+
+
+def get_device(hass, host, port, username, password) -> ONVIFCamera:
+    """Get ONVIFCamera instance."""
+    session = async_get_clientsession(hass)
+    transport = AsyncTransport(None, session=session)
+    device = ONVIFCamera(
+        host,
+        port,
+        username,
+        password,
+        f"{os.path.dirname(onvif.__file__)}/wsdl/",
+        transport=transport,
+    )
+
+    return device
