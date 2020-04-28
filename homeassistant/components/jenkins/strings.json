@@ -16,6 +16,12 @@
           "job_name": "Select Job"
         }
       }
+    },
+    "error": {
+      "missing_schema": "Host missing schema, prefix it with 'http://' or 'https://'.",
+      "invalid_host": "Could not find a Jenkins instance at the specified host.",
+      "credentials_needed": "Unable to connect without user credentials.",
+      "invalid_credentials": "Could not authenticate user with specified credentials."
     }
   }
 }
