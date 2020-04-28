@@ -9,6 +9,14 @@ from .common import MQTTMessage
 from tests.common import load_fixture
 
 
+@pytest.fixture(name="generic_data")
+async def generic_data_fixture(hass):
+    """Load generic MQTT data and return it."""
+    return await hass.async_add_executor_job(
+        load_fixture, f"zwave_mqtt/generic_network_dump.csv"
+    )
+
+
 @pytest.fixture(name="sent_messages")
 def sent_messages_fixture():
     """Fixture to capture sent messages."""

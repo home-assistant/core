@@ -6,7 +6,7 @@ from asynctest import Mock, patch
 from homeassistant import config_entries, core as ha
 from homeassistant.components.zwave_mqtt.const import DOMAIN
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry
 
 
 async def setup_zwave(hass, entry=None, fixture=None):
@@ -31,9 +31,7 @@ async def setup_zwave(hass, entry=None, fixture=None):
     receive_message = mock_subscribe.mock_calls[0][1][2]
 
     if fixture is not None:
-        data = await hass.async_add_executor_job(load_fixture, f"zwave_mqtt/{fixture}")
-
-        for line in data.split("\n"):
+        for line in fixture.split("\n"):
             topic, payload = line.strip().split(",", 1)
             receive_message(Mock(topic=topic, payload=payload))
 
