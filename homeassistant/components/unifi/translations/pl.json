@@ -12,7 +12,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
+                    "host": "Nazwa hosta lub adres IP",
                     "password": "Has\u0142o",
                     "port": "Port",
                     "site": "Identyfikator witryny",
@@ -28,7 +28,8 @@
             "client_control": {
                 "data": {
                     "block_client": "Klienci z kontrol\u0105 dost\u0119pu do sieci",
-                    "new_client": "Dodaj nowego klienta do kontroli dost\u0119pu do sieci"
+                    "new_client": "Dodaj nowego klienta do kontroli dost\u0119pu do sieci",
+                    "poe_clients": "Zezwalaj na kontrol\u0119 POE klient\u00f3w"
                 },
                 "description": "Konfigurowanie kontroli klienta\n\nUtw\u00f3rz prze\u0142\u0105czniki dla numer\u00f3w seryjnych, dla kt\u00f3rych chcesz kontrolowa\u0107 dost\u0119p do sieci.",
                 "title": "UniFi opcje 2/3"

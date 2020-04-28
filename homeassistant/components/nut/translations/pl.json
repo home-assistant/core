@@ -23,7 +23,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
+                    "host": "Nazwa hosta lub adres IP",
                     "password": "Has\u0142o",
                     "port": "Port",
                     "username": "Nazwa u\u017cytkownika"

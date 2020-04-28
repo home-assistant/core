@@ -28,6 +28,7 @@
     "state": {
         "_": {
             "closing": "Lukker",
+            "opening": "\u00c5pner",
             "stopped": "Stoppet"
         }
     },
