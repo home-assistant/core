@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -30,7 +30,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await hass.data[DOMAIN][config_entry.entry_id]["mark_platform_loaded"]("switch")
 
 
-class ZWaveSwitch(ZWaveDeviceEntity, SwitchDevice):
+class ZWaveSwitch(ZWaveDeviceEntity, SwitchEntity):
     """Representation of a Z-Wave switch."""
 
     @property
