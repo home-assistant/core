@@ -82,12 +82,3 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(self.data_schema),
             errors=errors if errors else {},
         )
-
-
-def create_config_flow(hass):
-    """Start a config flow."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-        )
-    )
