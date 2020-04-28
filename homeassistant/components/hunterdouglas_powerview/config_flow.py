@@ -96,7 +96,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_link()
 
     async def async_step_link(self, user_input=None):
-        """Attempt to link with the Harmony."""
+        """Attempt to link with Powerview."""
         if user_input is not None:
             return await self.async_step_user(self.powerview_config)
 
