@@ -10,7 +10,7 @@ T = TypeVar("T")
 FUNC = Callable[[HomeAssistant], Awaitable[T]]
 
 
-def cache_per_instance(data_key: str) -> Callable[[FUNC], FUNC]:
+def singleton(data_key: str) -> Callable[[FUNC], FUNC]:
     """Decorate a function that should be called once per instance.
 
     Result will be cached and simultaneous calls will be handled.

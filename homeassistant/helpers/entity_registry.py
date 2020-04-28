@@ -38,7 +38,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 from homeassistant.util.yaml import load_yaml
 
-from .call_coordinator import cache_per_instance
+from .singleton import singleton
 from .typing import HomeAssistantType
 
 if TYPE_CHECKING:
@@ -492,7 +492,7 @@ class EntityRegistry:
 
 
 @bind_hass
-@cache_per_instance(DATA_REGISTRY)
+@singleton(DATA_REGISTRY)
 async def async_get_registry(hass: HomeAssistantType) -> EntityRegistry:
     """Create entity registry."""
     reg = EntityRegistry(hass)

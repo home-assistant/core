@@ -9,7 +9,7 @@ import attr
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
-from .call_coordinator import cache_per_instance
+from .singleton import singleton
 from .typing import HomeAssistantType
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
@@ -356,7 +356,7 @@ class DeviceRegistry:
 
 
 @bind_hass
-@cache_per_instance(DATA_REGISTRY)
+@singleton(DATA_REGISTRY)
 async def async_get_registry(hass: HomeAssistantType) -> DeviceRegistry:
     """Create entity registry."""
     reg = DeviceRegistry(hass)
