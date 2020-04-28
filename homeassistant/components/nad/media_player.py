@@ -187,21 +187,15 @@ class NAD(MediaPlayerEntity):
 
     def update(self):
         """Retrieve latest state."""
-        if self._nad_receiver.main_power("?") == "Off":
-            self._state = STATE_OFF
-        else:
-            self._state = STATE_ON
+        self._state = STATE_ON if self._nad_receiver.main_power("?") == "On" else STATE_OFF
 
-        if self._nad_receiver.main_mute("?") == "Off":
-            self._mute = False
-        else:
-            self._mute = True
-
-        volume = self._nad_receiver.main_volume("?")
-        # Some receivers cannot report the volume, e.g. C 356BEE,
-        # instead they only support stepping the volume up or down
-        self._volume = self.calc_volume(volume) if volume is not None else None
-        self._source = self._source_dict.get(self._nad_receiver.main_source("?"))
+        if self._state == STATE_ON:
+            self._mute = self._nad_receiver.main_mute("?") == "On"
+            volume = self._nad_receiver.main_volume("?")
+            # Some receivers cannot report the volume, e.g. C 356BEE,
+            # instead they only support stepping the volume up or down
+            self._volume = self.calc_volume(volume) if volume is not None else None
+            self._source = self._source_dict.get(self._nad_receiver.main_source("?"))
 
     def calc_volume(self, decibel):
         """
