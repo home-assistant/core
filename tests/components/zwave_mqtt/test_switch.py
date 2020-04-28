@@ -4,7 +4,7 @@ from .common import setup_zwave
 
 async def test_switch(hass, sent_messages, switch_msg):
     """Test setting up config entry."""
-    receive_message = await setup_zwave(hass, "generic_network_dump.csv")
+    receive_message = await setup_zwave(hass, fixture="generic_network_dump.csv")
 
     # Test loaded
     state = hass.states.get("switch.smart_plug_switch")

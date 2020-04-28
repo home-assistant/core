@@ -6,7 +6,7 @@ from .common import setup_zwave
 
 async def test_init_entry(hass):
     """Test setting up config entry."""
-    await setup_zwave(hass, "generic_network_dump.csv")
+    await setup_zwave(hass, fixture="generic_network_dump.csv")
 
     # Verify integration + platform loaded.
     assert "zwave_mqtt" in hass.config.components

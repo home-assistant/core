@@ -12,15 +12,16 @@ from tests.common import MockConfigEntry, load_fixture
 _LOGGER = logging.getLogger(__name__)
 
 
-async def setup_zwave(hass, fixture=None):
+async def setup_zwave(hass, entry=None, fixture=None):
     """Set up Z-Wave and load a dump."""
     hass.config.components.add("mqtt")
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Z-Wave",
-        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
-    )
+    if entry is None:
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            title="Z-Wave",
+            connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
+        )
 
     entry.add_to_hass(hass)
 

@@ -9,7 +9,7 @@ from .common import async_capture_events, setup_zwave
 async def test_scenes(hass, sent_messages):
     """Test setting up config entry."""
 
-    receive_message = await setup_zwave(hass, "generic_network_dump.csv")
+    receive_message = await setup_zwave(hass, fixture="generic_network_dump.csv")
     events = async_capture_events(hass, "zwave_mqtt.scene_activated")
 
     # Publish fake scene event on mqtt
