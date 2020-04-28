@@ -3,17 +3,11 @@
     "step": {
       "user": {
         "title": "Connect to Jenkins.",
-        "description": "Get information about builds from jobs on Jenkins.",
+        "description": "Username & token are optional and may not be required if anonymous reads are allowed.",
         "data": {
-          "url": "URL"
-        }
-      },
-      "userLogin": {
-        "title": "Login.",
-        "description": "Use your login credentials.",
-        "data": {
-          "username": "username",
-          "password": "token"
+          "url": "URL",
+          "username": "Username (Optional)",
+          "token": "Token (Optional)"
         }
       },
       "job": {

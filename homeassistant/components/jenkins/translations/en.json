@@ -1,29 +1,21 @@
 {
-"config": {
-    "step": {
-        "user": {
-            "title": "Connect to Jenkins.",
-            "description": "Get information about builds from jobs on Jenkins.",
-            "data": {
-                "url": "URL"
-            }
-        },
-        "userLogin": {
-            "title": "Login.",
-            "description": "Use your login credentials.",
-            "data": {
-                "username": "username",
-                "token": "token"
-            }
-        },
-        "job": {
-            "title": "Select the job you like to monitor.",
-            "data": {
-                "repository": "username",
-                "job": "token"
+    "config": {
+        "step": {
+            "job": {
+                "data": {
+                    "job_name": "Select Job"
+                },
+                "title": "Select the job you like to monitor."
+            },
+            "user": {
+                "data": {
+                    "token": "Token (Optional)",
+                    "url": "URL",
+                    "username": "Username (Optional)"
+                },
+                "description": "Username & token are optional and may not be required if anonymous reads are allowed.",
+                "title": "Connect to Jenkins."
             }
         }
-      }
     }
-  }
-  
+}
