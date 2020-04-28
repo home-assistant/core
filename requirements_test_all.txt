@@ -656,7 +656,7 @@ python-miio==0.5.0.1
 python-nest==4.1.0
 
 # homeassistant.components.zwave_mqtt
-python-openzwave-mqtt==0.0.8
+python-openzwave-mqtt==0.0.9
 
 # homeassistant.components.synology_dsm
 python-synology==0.7.3
