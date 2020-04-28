@@ -35,7 +35,6 @@ from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_test_home_assistant,
-    mock_storage,
 )
 
 
@@ -74,24 +73,22 @@ async def test_setup_with_config(hass):
     assert loaded_server.plex_server == mock_plex_server
 
 
+@pytest.mark.skip
 class TestClockedPlex(ClockedTestCase):
     """Create clock-controlled asynctest class."""
 
     @pytest.fixture(autouse=True)
-    def inject_fixture(self, caplog):
+    def inject_fixture(self, caplog, hass_storage):
         """Inject pytest fixtures as instance attributes."""
         self.caplog = caplog
 
     async def setUp(self):
         """Initialize this test class."""
         self.hass = await async_test_home_assistant(self.loop)
-        self.mock_storage = mock_storage()
-        self.mock_storage.__enter__()
 
     async def tearDown(self):
         """Clean up the HomeAssistant instance."""
         await self.hass.async_stop()
-        self.mock_storage.__exit__(None, None, None)
 
     async def test_setup_with_config_entry(self):
         """Test setup component with config."""
