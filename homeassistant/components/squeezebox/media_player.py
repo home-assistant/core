@@ -46,7 +46,6 @@ SERVICE_UNSYNC = "unsync"
 
 ATTR_QUERY_RESULT = "query_result"
 ATTR_SYNC_GROUP = "sync_group"
-ATTR_PLAYER_ID = "player_id"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,7 +115,6 @@ SERVICE_TO_METHOD = {
 ATTR_TO_PROPERTY = [
     ATTR_QUERY_RESULT,
     ATTR_SYNC_GROUP,
-    ATTR_PLAYER_ID,
 ]
 
 
@@ -325,22 +323,21 @@ class SqueezeBoxDevice(MediaPlayerEntity):
 
     @property
     def sync_group(self):
-        """List of players we are synced with."""
-        try:
-            sync_group = f"{self._status['sync_master']}: {self._status['sync_slaves']}"
-        except KeyError:
-            sync_group = "unsynced"
-        return sync_group
+        """
+        List of players we are synced with.
+
+        If the player is a squeezebox entity, returns the entity id. If it is unknown,
+        return the player_id.
+        """
+        player_ids = {p.unique_id: p.entity_id for p in self.hass.data[DATA_SQUEEZEBOX]}
+        return [
+            player_ids[s] if s in player_ids else s for s in self._player.sync_group
+        ]
 
     @property
     def query_result(self):
-        """Exposes the result from the call_query service."""
+        """Return the result from the call_query service."""
         return self._query_result
-
-    @property
-    def player_id(self):
-        """Exposes the player id. Needed for sync."""
-        return self._id
 
     async def async_turn_off(self):
         """Turn off media player."""
@@ -436,7 +433,7 @@ class SqueezeBoxDevice(MediaPlayerEntity):
         if parameters:
             for parameter in parameters:
                 all_params.append(parameter)
-        self._query_result = await self.async_query(*all_params)
+        self._query_result = await self._player.async_query(*all_params)
         _LOGGER.debug("call_query got result %s", self._query_result)
 
     async def async_sync(self, other_player):
@@ -446,18 +443,13 @@ class SqueezeBoxDevice(MediaPlayerEntity):
         If the other player is a member of a sync group, it will leave the current sync group
         without asking.
         """
-        other_player_id = None
-        other_player_state = self._lms.hass.states.get(other_player)
-        if other_player_state:
-            try:
-                other_player_id = other_player_state.attributes["player_id"]
-            except KeyError:
-                _LOGGER.info(
-                    "Could not find player_id for %s. Not syncing.", other_player
-                )
+        player_ids = {p.unique_id: p.entity_id for p in self.hass.data[DATA_SQUEEZEBOX]}
+        other_player_id = player_ids.get(other_player)
         if other_player_id:
-            await self.async_query("sync", other_player_id)
+            await self._player.async_sync(other_player_id)
+        else:
+            _LOGGER.info("Could not find player_id for %s. Not syncing.", other_player)
 
     async def async_unsync(self):
         """Unsync this Squeezebox player."""
-        await self.async_query("sync", "-")
+        await self._player.async_unsync()
