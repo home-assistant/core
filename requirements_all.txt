@@ -943,7 +943,7 @@ niko-home-control==0.2.1
 niluclient==0.1.2
 
 # homeassistant.components.nederlandse_spoorwegen
-nsapi==3.0.3
+nsapi==3.0.4
 
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.0.10
