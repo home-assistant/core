@@ -157,9 +157,6 @@ async def async_get_device_info(pv_request):
     """Determine device info."""
     userdata = UserData(pv_request)
     resources = await userdata.get_resources()
-    import pprint
-
-    pprint.pprint(resources)
     userdata_data = resources[USER_DATA]
 
     main_processor_info = userdata_data[FIRMWARE_IN_USERDATA][
