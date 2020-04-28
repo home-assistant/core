@@ -25,5 +25,11 @@
             "tilt_position": "{entity_name} endringer i vippeposisjon"
         }
     },
+    "state": {
+        "_": {
+            "closing": "Lukker",
+            "stopped": "Stoppet"
+        }
+    },
     "title": "Dekke"
 }

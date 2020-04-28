@@ -3,7 +3,6 @@
     "flow_title": "Roku: {name}",
     "step": {
       "user": {
-        "title": "Roku",
         "description": "Enter your Roku information.",
         "data": { "host": "Host or IP address" }
       },

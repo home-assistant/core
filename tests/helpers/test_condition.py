@@ -127,6 +127,73 @@ async def test_or_condition_with_template(hass):
     assert test(hass)
 
 
+async def test_not_condition(hass):
+    """Test the 'not' condition."""
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "not",
+            "conditions": [
+                {
+                    "condition": "state",
+                    "entity_id": "sensor.temperature",
+                    "state": "100",
+                },
+                {
+                    "condition": "numeric_state",
+                    "entity_id": "sensor.temperature",
+                    "below": 50,
+                },
+            ],
+        },
+    )
+
+    hass.states.async_set("sensor.temperature", 101)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature", 50)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature", 49)
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert not test(hass)
+
+
+async def test_not_condition_with_template(hass):
+    """Test the 'or' condition."""
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "not",
+            "conditions": [
+                {
+                    "condition": "template",
+                    "value_template": '{{ states.sensor.temperature.state == "100" }}',
+                },
+                {
+                    "condition": "numeric_state",
+                    "entity_id": "sensor.temperature",
+                    "below": 50,
+                },
+            ],
+        },
+    )
+
+    hass.states.async_set("sensor.temperature", 101)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature", 50)
+    assert test(hass)
+
+    hass.states.async_set("sensor.temperature", 49)
+    assert not test(hass)
+
+    hass.states.async_set("sensor.temperature", 100)
+    assert not test(hass)
+
+
 async def test_time_window(hass):
     """Test time condition windows."""
     sixam = dt.parse_time("06:00:00")

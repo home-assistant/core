@@ -54,6 +54,7 @@ ATTR_DISTANCE = "distance"
 ATTR_SPEED = "speed"
 ATTR_MOVE_MODE = "move_mode"
 ATTR_CONTINUOUS_DURATION = "continuous_duration"
+ATTR_PRESET = "preset"
 
 DIR_UP = "UP"
 DIR_DOWN = "DOWN"
@@ -67,6 +68,7 @@ ZOOM_FACTOR = {ZOOM_IN: 1, ZOOM_OUT: -1}
 CONTINUOUS_MOVE = "ContinuousMove"
 RELATIVE_MOVE = "RelativeMove"
 ABSOLUTE_MOVE = "AbsoluteMove"
+GOTOPRESET_MOVE = "GotoPreset"
 
 SERVICE_PTZ = "ptz"
 
@@ -99,10 +101,13 @@ SERVICE_PTZ_SCHEMA = vol.Schema(
         vol.Optional(ATTR_PAN): vol.In([DIR_LEFT, DIR_RIGHT]),
         vol.Optional(ATTR_TILT): vol.In([DIR_UP, DIR_DOWN]),
         vol.Optional(ATTR_ZOOM): vol.In([ZOOM_OUT, ZOOM_IN]),
-        ATTR_MOVE_MODE: vol.In([CONTINUOUS_MOVE, RELATIVE_MOVE, ABSOLUTE_MOVE]),
+        ATTR_MOVE_MODE: vol.In(
+            [CONTINUOUS_MOVE, RELATIVE_MOVE, ABSOLUTE_MOVE, GOTOPRESET_MOVE]
+        ),
         vol.Optional(ATTR_CONTINUOUS_DURATION, default=0.5): cv.small_float,
         vol.Optional(ATTR_DISTANCE, default=0.1): cv.small_float,
         vol.Optional(ATTR_SPEED, default=0.5): cv.small_float,
+        vol.Optional(ATTR_PRESET, default="0"): cv.string,
     }
 )
 
@@ -120,6 +125,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         speed = service.data[ATTR_SPEED]
         move_mode = service.data.get(ATTR_MOVE_MODE)
         continuous_duration = service.data[ATTR_CONTINUOUS_DURATION]
+        preset = service.data[ATTR_PRESET]
         all_cameras = hass.data[ONVIF_DATA][ENTITIES]
         entity_ids = await async_extract_entity_ids(hass, service)
         target_cameras = []
@@ -131,7 +137,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             ]
         for camera in target_cameras:
             await camera.async_perform_ptz(
-                pan, tilt, zoom, distance, speed, move_mode, continuous_duration
+                pan, tilt, zoom, distance, speed, move_mode, continuous_duration, preset
             )
 
     hass.services.async_register(
@@ -435,7 +441,7 @@ class ONVIFHassCamera(Camera):
         _LOGGER.debug("Completed set up of the ONVIF camera component")
 
     async def async_perform_ptz(
-        self, pan, tilt, zoom, distance, speed, move_mode, continuous_duration
+        self, pan, tilt, zoom, distance, speed, move_mode, continuous_duration, preset
     ):
         """Perform a PTZ action on the camera."""
         if self._ptz_service is None:
@@ -447,13 +453,15 @@ class ONVIFHassCamera(Camera):
             tilt_val = distance * TILT_FACTOR.get(tilt, 0)
             zoom_val = distance * ZOOM_FACTOR.get(zoom, 0)
             speed_val = speed
+            preset_val = preset
             _LOGGER.debug(
-                "Calling %s PTZ | Pan = %4.2f | Tilt = %4.2f | Zoom = %4.2f | Speed = %4.2f",
+                "Calling %s PTZ | Pan = %4.2f | Tilt = %4.2f | Zoom = %4.2f | Speed = %4.2f | Preset = %s",
                 move_mode,
                 pan_val,
                 tilt_val,
                 zoom_val,
                 speed_val,
+                preset_val,
             )
             try:
                 req = self._ptz_service.create_type(move_mode)
@@ -489,6 +497,13 @@ class ONVIFHassCamera(Camera):
                         "Zoom": {"x": speed_val},
                     }
                     await self._ptz_service.AbsoluteMove(req)
+                elif move_mode == GOTOPRESET_MOVE:
+                    req.PresetToken = preset_val
+                    req.Speed = {
+                        "PanTilt": {"x": speed_val, "y": speed_val},
+                        "Zoom": {"x": speed_val},
+                    }
+                    await self._ptz_service.GotoPreset(req)
             except exceptions.ONVIFError as err:
                 if "Bad Request" in err.reason:
                     self._ptz_service = None

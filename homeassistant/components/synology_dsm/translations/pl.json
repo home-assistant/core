@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Host jest ju\u017c skonfigurowany."
+        },
+        "error": {
+            "login": "B\u0142\u0105d logowania: sprawd\u017a nazw\u0119 u\u017cytkownika i has\u0142o"
+        },
+        "flow_title": "Synology DSM {name} ({host})",
+        "step": {
+            "link": {
+                "data": {
+                    "api_version": "Wersja DSM",
+                    "password": "Has\u0142o",
+                    "port": "Port (opcjonalnie)",
+                    "ssl": "U\u017cyj SSL/TLS, aby po\u0142\u0105czy\u0107 si\u0119 z serwerem NAS",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Czy chcesz skonfigurowa\u0107 {name} ({host})?",
+                "title": "Synology DSM"
+            },
+            "user": {
+                "data": {
+                    "api_version": "Wersja DSM",
+                    "host": "Host",
+                    "password": "Has\u0142o",
+                    "port": "Port (opcjonalnie)",
+                    "ssl": "U\u017cyj SSL/TLS, aby po\u0142\u0105czy\u0107 si\u0119 z serwerem NAS",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "title": "Synology DSM"
+            }
+        }
+    }
+}

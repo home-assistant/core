@@ -37,6 +37,7 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Z\u00e4it a Sekonne vum leschten Z\u00e4itpunkt un bis den Apparat als \u00ebnnerwee consider\u00e9iert g\u00ebtt",
+                    "ignore_wired_bug": "UniFi wired bug log ausschalten",
                     "ssid_filter": "SSIDs auswielen fir Clienten ze verfollegen",
                     "track_clients": "Netzwierk Cliente verfollegen",
                     "track_devices": "Netzwierk Apparater (Ubiquiti Apparater) verfollegen",

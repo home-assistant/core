@@ -28,7 +28,7 @@ from .const import (
     CONF_TRACK_WIRED_CLIENTS,
     CONTROLLER_ID,
     DEFAULT_POE_CLIENTS,
-    DOMAIN,
+    DOMAIN as UNIFI_DOMAIN,
     LOGGER,
 )
 from .controller import get_controller
@@ -48,13 +48,7 @@ def get_controller_id_from_config_entry(config_entry):
     )
 
 
-@callback
-def get_controller_from_config_entry(hass, config_entry):
-    """Return controller with a matching bridge id."""
-    return hass.data[DOMAIN][get_controller_id_from_config_entry(config_entry)]
-
-
-class UnifiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     """Handle a UniFi config flow."""
 
     VERSION = 1
@@ -179,7 +173,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the UniFi options."""
-        self.controller = get_controller_from_config_entry(self.hass, self.config_entry)
+        self.controller = self.hass.data[UNIFI_DOMAIN][self.config_entry.entry_id]
         self.options[CONF_BLOCK_CLIENT] = self.controller.option_block_clients
         return await self.async_step_device_tracker()
 

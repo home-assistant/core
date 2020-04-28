@@ -137,6 +137,32 @@ async def async_or_from_config(
     return if_or_condition
 
 
+async def async_not_from_config(
+    hass: HomeAssistant, config: ConfigType, config_validation: bool = True
+) -> ConditionCheckerType:
+    """Create multi condition matcher using 'NOT'."""
+    if config_validation:
+        config = cv.NOT_CONDITION_SCHEMA(config)
+    checks = [
+        await async_from_config(hass, entry, False) for entry in config["conditions"]
+    ]
+
+    def if_not_condition(
+        hass: HomeAssistant, variables: TemplateVarsType = None
+    ) -> bool:
+        """Test not condition."""
+        try:
+            for check in checks:
+                if check(hass, variables):
+                    return False
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.warning("Error during not-condition: %s", ex)
+
+        return True
+
+    return if_not_condition
+
+
 def numeric_state(
     hass: HomeAssistant,
     entity: Union[None, str, State],

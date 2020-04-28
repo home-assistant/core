@@ -5,7 +5,7 @@ from urllib.request import URLError
 
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_URL,
     SUPPORT_NEXT_TRACK,
@@ -68,7 +68,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([tv_device])
 
 
-class PanasonicVieraTVDevice(MediaPlayerDevice):
+class PanasonicVieraTVDevice(MediaPlayerEntity):
     """Representation of a Panasonic Viera TV."""
 
     def __init__(

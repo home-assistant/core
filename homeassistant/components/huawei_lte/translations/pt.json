@@ -5,6 +5,7 @@
             "already_in_progress": "Este dispositivo j\u00e1 est\u00e1 a ser configurado"
         },
         "error": {
+            "connection_timeout": "Liga\u00e7\u00e3o expirou",
             "incorrect_password": "Palavra-passe incorreta",
             "incorrect_username": "Nome de Utilizador incorreto",
             "incorrect_username_or_password": "Nome de utilizador ou palavra passe incorretos"
@@ -14,7 +15,7 @@
                 "data": {
                     "password": "Palavra-passe",
                     "url": "",
-                    "username": "Utilizador"
+                    "username": "Nome do utilizador"
                 },
                 "title": "Configurar o Huawei LTE"
             }

@@ -1,7 +1,8 @@
 """Test UPnP/IGD setup process."""
 
 from ipaddress import IPv4Address
-from unittest.mock import patch
+
+from asynctest import patch
 
 from homeassistant.components import upnp
 from homeassistant.components.upnp.device import Device

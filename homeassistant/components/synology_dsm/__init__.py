@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    CONF_API_VERSION,
     CONF_DISKS,
     CONF_HOST,
     CONF_PASSWORD,
@@ -22,14 +21,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_VOLUMES, DEFAULT_DSM_VERSION, DEFAULT_SSL, DOMAIN
+from .const import CONF_VOLUMES, DEFAULT_SSL, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_API_VERSION, default=DEFAULT_DSM_VERSION): cv.positive_int,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_DISKS): cv.ensure_list,
@@ -70,12 +68,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     password = entry.data[CONF_PASSWORD]
     unit = hass.config.units.temperature_unit
     use_ssl = entry.data[CONF_SSL]
-    api_version = entry.data.get(CONF_API_VERSION, DEFAULT_DSM_VERSION)
     device_token = entry.data.get("device_token")
 
-    api = SynoApi(
-        hass, host, port, username, password, unit, use_ssl, device_token, api_version
-    )
+    api = SynoApi(hass, host, port, username, password, unit, use_ssl, device_token)
 
     await api.async_setup()
 
@@ -109,7 +104,6 @@ class SynoApi:
         temp_unit: str,
         use_ssl: bool,
         device_token: str,
-        api_version: int,
     ):
         """Initialize the API wrapper class."""
         self._hass = hass
@@ -119,7 +113,6 @@ class SynoApi:
         self._password = password
         self._use_ssl = use_ssl
         self._device_token = device_token
-        self._api_version = api_version
         self.temp_unit = temp_unit
 
         self._dsm: SynologyDSM = None
@@ -143,7 +136,6 @@ class SynoApi:
             self._password,
             self._use_ssl,
             device_token=self._device_token,
-            dsm_version=self._api_version,
         )
 
         await self._hass.async_add_executor_job(self._fetch_device_configuration)

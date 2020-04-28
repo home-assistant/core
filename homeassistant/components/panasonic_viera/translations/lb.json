@@ -1,6 +1,8 @@
 {
     "config": {
         "abort": {
+            "already_configured": "D\u00ebs Panasonic Viera TA ass scho konfigur\u00e9iert.",
+            "not_connected": "Verbindung mam Panasonic Viera TV as \u00ebnnerbrach. Kuck Log fir w\u00e9ider Informatiounen.",
             "unknown": "Onbekannte Feeler opgetrueden. Kuck d'Logs fir m\u00e9i Informatiounen."
         },
         "error": {

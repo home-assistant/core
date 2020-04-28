@@ -15,9 +15,10 @@ from aiounifi.events import (
     WIRELESS_CLIENT_UNBLOCKED,
 )
 
-from homeassistant.components.unifi.unifi_entity_base import UniFiBase
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+
+from .unifi_entity_base import UniFiBase
 
 LOGGER = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 """Test the Powerwall config flow."""
 
 from asynctest import patch
-from tesla_powerwall import PowerwallUnreachableError
+from tesla_powerwall import APIChangedError, PowerwallUnreachableError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.powerwall.const import DOMAIN
@@ -86,3 +86,23 @@ async def test_form_cannot_connect(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_wrong_version(hass):
+    """Test we can handle wrong version error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_powerwall = _mock_powerwall_side_effect(site_info=APIChangedError(object, {}))
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_IP_ADDRESS: "1.2.3.4"},
+        )
+
+    assert result3["type"] == "form"
+    assert result3["errors"] == {"base": "wrong_version"}

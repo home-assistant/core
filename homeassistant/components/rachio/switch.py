@@ -3,7 +3,7 @@ from abc import abstractmethod
 from datetime import timedelta
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -79,7 +79,7 @@ def _create_entities(hass, config_entry):
     return entities
 
 
-class RachioSwitch(RachioDevice, SwitchDevice):
+class RachioSwitch(RachioDevice, SwitchEntity):
     """Represent a Rachio state that can be toggled."""
 
     def __init__(self, controller, poll=True):

@@ -2,8 +2,8 @@
 from collections import OrderedDict
 from copy import deepcopy
 import unittest
-from unittest.mock import Mock, patch
 
+from asynctest import CoroutineMock, Mock, patch
 import pytest
 import voluptuous as vol
 
@@ -30,7 +30,6 @@ from homeassistant.setup import async_setup_component
 from tests.common import (
     MockEntity,
     get_test_home_assistant,
-    mock_coro,
     mock_device_registry,
     mock_registry,
     mock_service,
@@ -40,10 +39,7 @@ from tests.common import (
 @pytest.fixture
 def mock_handle_entity_call():
     """Mock service platform call."""
-    with patch(
-        "homeassistant.helpers.service._handle_entity_call",
-        side_effect=lambda *args: mock_coro(),
-    ) as mock_call:
+    with patch("homeassistant.helpers.service._handle_entity_call") as mock_call:
         yield mock_call
 
 
@@ -310,7 +306,7 @@ async def test_async_get_all_descriptions(hass):
 
 async def test_call_with_required_features(hass, mock_entities):
     """Test service calls invoked only if entity has required feautres."""
-    test_service_mock = Mock(return_value=mock_coro())
+    test_service_mock = CoroutineMock(return_value=None)
     await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
@@ -374,11 +370,9 @@ async def test_call_context_target_all(hass, mock_handle_entity_call, mock_entit
     """Check we only target allowed entities if targeting all."""
     with patch(
         "homeassistant.auth.AuthManager.async_get_user",
-        return_value=mock_coro(
-            Mock(
-                permissions=PolicyPermissions(
-                    {"entities": {"entity_ids": {"light.kitchen": True}}}, None
-                )
+        return_value=Mock(
+            permissions=PolicyPermissions(
+                {"entities": {"entity_ids": {"light.kitchen": True}}}, None
             )
         ),
     ):
@@ -404,11 +398,9 @@ async def test_call_context_target_specific(
     """Check targeting specific entities."""
     with patch(
         "homeassistant.auth.AuthManager.async_get_user",
-        return_value=mock_coro(
-            Mock(
-                permissions=PolicyPermissions(
-                    {"entities": {"entity_ids": {"light.kitchen": True}}}, None
-                )
+        return_value=Mock(
+            permissions=PolicyPermissions(
+                {"entities": {"entity_ids": {"light.kitchen": True}}}, None
             )
         ),
     ):
@@ -435,7 +427,7 @@ async def test_call_context_target_specific_no_auth(
     with pytest.raises(exceptions.Unauthorized) as err:
         with patch(
             "homeassistant.auth.AuthManager.async_get_user",
-            return_value=mock_coro(Mock(permissions=PolicyPermissions({}, None))),
+            return_value=Mock(permissions=PolicyPermissions({}, None)),
         ):
             await service.entity_service_call(
                 hass,
@@ -606,7 +598,7 @@ async def test_domain_control_unknown(hass, mock_entities):
 
     with patch(
         "homeassistant.helpers.entity_registry.async_get_registry",
-        return_value=mock_coro(Mock(entities=mock_entities)),
+        return_value=Mock(entities=mock_entities),
     ):
         protected_mock_service = hass.helpers.service.verify_domain_control(
             "test_domain"

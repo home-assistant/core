@@ -4,7 +4,8 @@ import os
 import tempfile
 from typing import Tuple
 import unittest
-from unittest.mock import Mock, patch
+
+from asynctest import Mock, patch
 
 from homeassistant.components import shell_command
 from homeassistant.setup import setup_component

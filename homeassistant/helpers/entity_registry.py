@@ -62,6 +62,18 @@ ATTR_RESTORED = "restored"
 STORAGE_VERSION = 1
 STORAGE_KEY = "core.entity_registry"
 
+# Attributes relevant to describing entity
+# to external services.
+ENTITY_DESCRIBING_ATTRIBUTES = {
+    "entity_id",
+    "name",
+    "original_name",
+    "capabilities",
+    "supported_features",
+    "device_class",
+    "unit_of_measurement",
+}
+
 
 @attr.s(slots=True, frozen=True)
 class RegistryEntry:

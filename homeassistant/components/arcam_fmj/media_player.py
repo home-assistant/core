@@ -6,7 +6,7 @@ from arcam.fmj import DecodeMode2CH, DecodeModeMCH, IncomingAudioFormat, SourceC
 from arcam.fmj.state import State
 
 from homeassistant import config_entries
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_SELECT_SOUND_MODE,
@@ -63,7 +63,7 @@ async def async_setup_entry(
     return True
 
 
-class ArcamFmj(MediaPlayerDevice):
+class ArcamFmj(MediaPlayerEntity):
     """Representation of a media device."""
 
     def __init__(self, state: State, name: str, turn_on: Optional[ConfigType]):

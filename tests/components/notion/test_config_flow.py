@@ -1,7 +1,6 @@
 """Define tests for the Notion config flow."""
-from unittest.mock import patch
-
 import aionotion
+from asynctest import patch
 import pytest
 
 from homeassistant import data_entry_flow

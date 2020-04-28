@@ -50,6 +50,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
@@ -279,6 +280,7 @@ class HomeAssistant:
 
         self.state = CoreState.running
         _async_create_timer(self)
+        self.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 
     def add_job(self, target: Callable[..., Any], *args: Any) -> None:
         """Add job to the executor pool.

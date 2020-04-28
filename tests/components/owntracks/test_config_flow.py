@@ -1,6 +1,5 @@
 """Tests for OwnTracks config flow."""
-from unittest.mock import Mock, patch
-
+from asynctest import Mock, patch
 import pytest
 
 from homeassistant import data_entry_flow

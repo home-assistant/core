@@ -6,7 +6,6 @@
         "description": "A Konnected Alarm Panel with ID {id} has been discovered in configuration.yaml. This flow will allow you to import it into a config entry."
       },
       "user": {
-        "title": "Discover Konnected Device",
         "description": "Please enter the host information for your Konnected Panel.",
         "data": {
           "host": "Konnected device IP address",

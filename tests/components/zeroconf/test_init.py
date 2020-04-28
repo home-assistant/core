@@ -1,6 +1,5 @@
 """Test Zeroconf component setup process."""
-from unittest.mock import patch
-
+from asynctest import patch
 import pytest
 from zeroconf import ServiceInfo, ServiceStateChange
 
@@ -75,7 +74,7 @@ async def test_setup(hass, mock_zeroconf):
     expected_flow_calls = 0
     for matching_components in zc_gen.ZEROCONF.values():
         expected_flow_calls += len(matching_components)
-    assert len(mock_config_flow.mock_calls) == expected_flow_calls * 2
+    assert len(mock_config_flow.mock_calls) == expected_flow_calls
 
 
 async def test_homekit_match_partial_space(hass, mock_zeroconf):
@@ -91,7 +90,7 @@ async def test_homekit_match_partial_space(hass, mock_zeroconf):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
 
     assert len(mock_service_browser.mock_calls) == 1
-    assert len(mock_config_flow.mock_calls) == 2
+    assert len(mock_config_flow.mock_calls) == 1
     assert mock_config_flow.mock_calls[0][1][0] == "lifx"
 
 
@@ -110,7 +109,7 @@ async def test_homekit_match_partial_dash(hass, mock_zeroconf):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
 
     assert len(mock_service_browser.mock_calls) == 1
-    assert len(mock_config_flow.mock_calls) == 2
+    assert len(mock_config_flow.mock_calls) == 1
     assert mock_config_flow.mock_calls[0][1][0] == "rachio"
 
 
@@ -127,7 +126,7 @@ async def test_homekit_match_full(hass, mock_zeroconf):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
 
     assert len(mock_service_browser.mock_calls) == 1
-    assert len(mock_config_flow.mock_calls) == 2
+    assert len(mock_config_flow.mock_calls) == 1
     assert mock_config_flow.mock_calls[0][1][0] == "hue"
 
 

@@ -1,6 +1,7 @@
 """The tests for the IPMA weather component."""
 from collections import namedtuple
-from unittest.mock import patch
+
+from asynctest import patch
 
 from homeassistant.components import weather
 from homeassistant.components.weather import (
@@ -22,7 +23,7 @@ from homeassistant.components.weather import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import now
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 TEST_CONFIG = {"name": "HomeTown", "latitude": "40.00", "longitude": "-8.00"}
 
@@ -128,7 +129,7 @@ async def test_setup_configuration(hass):
     """Test for successfully setting up the IPMA platform."""
     with patch(
         "homeassistant.components.ipma.weather.async_get_location",
-        return_value=mock_coro(MockLocation()),
+        return_value=MockLocation(),
     ):
         assert await async_setup_component(
             hass,
@@ -153,7 +154,7 @@ async def test_setup_config_flow(hass):
     """Test for successfully setting up the IPMA platform."""
     with patch(
         "homeassistant.components.ipma.weather.async_get_location",
-        return_value=mock_coro(MockLocation()),
+        return_value=MockLocation(),
     ):
         entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
         await hass.config_entries.async_forward_entry_setup(entry, WEATHER_DOMAIN)
@@ -175,7 +176,7 @@ async def test_daily_forecast(hass):
     """Test for successfully getting daily forecast."""
     with patch(
         "homeassistant.components.ipma.weather.async_get_location",
-        return_value=mock_coro(MockLocation()),
+        return_value=MockLocation(),
     ):
         assert await async_setup_component(
             hass,
@@ -201,7 +202,7 @@ async def test_hourly_forecast(hass):
     """Test for successfully getting daily forecast."""
     with patch(
         "homeassistant.components.ipma.weather.async_get_location",
-        return_value=mock_coro(MockLocation()),
+        return_value=MockLocation(),
     ):
         assert await async_setup_component(
             hass,

@@ -1012,6 +1012,7 @@ async def test_component_config_exceptions(hass, caplog):
         ("not_existing", vol.Schema({vol.Optional("zone", default=dict): dict}), None,),
         ("non_existing", vol.Schema({"zone": int}), None),
         ("zone", vol.Schema({}), None),
+        ("plex", vol.Schema(vol.All({"plex": {"host": str}})), "dict"),
     ],
 )
 def test_identify_config_schema(domain, schema, expected):

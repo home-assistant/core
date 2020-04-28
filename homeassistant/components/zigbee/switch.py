@@ -1,7 +1,7 @@
 """Support for Zigbee switches."""
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import DOMAIN, PLATFORM_SCHEMA, ZigBeeDigitalOut, ZigBeeDigitalOutConfig
 
@@ -20,5 +20,5 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([ZigBeeSwitch(ZigBeeDigitalOutConfig(config), zigbee_device)])
 
 
-class ZigBeeSwitch(ZigBeeDigitalOut, SwitchDevice):
+class ZigBeeSwitch(ZigBeeDigitalOut, SwitchEntity):
     """Representation of a Zigbee Digital Out device."""

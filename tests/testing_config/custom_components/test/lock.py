@@ -3,7 +3,7 @@ Provide a mock lock platform.
 
 Call init before using it in your tests to ensure clean test data.
 """
-from homeassistant.components.lock import SUPPORT_OPEN, LockDevice
+from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
 
 from tests.common import MockEntity
 
@@ -41,7 +41,7 @@ async def async_setup_platform(
     async_add_entities_callback(list(ENTITIES.values()))
 
 
-class MockLock(MockEntity, LockDevice):
+class MockLock(MockEntity, LockEntity):
     """Mock Lock class."""
 
     @property

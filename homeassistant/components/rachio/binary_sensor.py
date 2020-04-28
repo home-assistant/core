@@ -4,7 +4,7 @@ import logging
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -38,7 +38,7 @@ def _create_entities(hass, config_entry):
     return entities
 
 
-class RachioControllerBinarySensor(RachioDevice, BinarySensorDevice):
+class RachioControllerBinarySensor(RachioDevice, BinarySensorEntity):
     """Represent a binary sensor that reflects a Rachio state."""
 
     def __init__(self, controller, poll=True):

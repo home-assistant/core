@@ -41,6 +41,7 @@ def client_fixture():
         "homeassistant.components.webostv.WebOsClient", autospec=True
     ) as mock_client_class:
         client = mock_client_class.return_value
+        client.connection = True
         client.software_info = {"device_id": "a1:b1:c1:d1:e1:f1"}
         yield client
 

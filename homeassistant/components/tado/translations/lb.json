@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "no_homes": "Keng Immobilien mat d\u00ebsem Tado Kont verbonnen.",
             "unknown": "Onerwaarte Feeler"
         },
         "step": {
@@ -13,7 +14,18 @@
                 "data": {
                     "password": "Passwuert",
                     "username": "Benotzernumm"
-                }
+                },
+                "title": "Verbann dech mat dengem Tado Kont."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "fallback": "Fallback Modus aktiv\u00e9ieren"
+                },
+                "title": "Tado Optiounen \u00e4nneren"
             }
         }
     }

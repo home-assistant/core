@@ -22,7 +22,7 @@
                     "enable_sensors": "Add traffic sensors",
                     "igd": "UPnP/IGD"
                 },
-                "title": "Configuration options for the UPnP/IGD"
+                "title": "Configuration options"
             }
         }
     }

@@ -18,7 +18,8 @@
                 "data": {
                     "alias": "Alias",
                     "resources": "Ressourcen"
-                }
+                },
+                "title": "UPS fir z'iwwerwaachen auswielen"
             },
             "user": {
                 "data": {
@@ -35,7 +36,8 @@
         "step": {
             "init": {
                 "data": {
-                    "resources": "Ressourcen"
+                    "resources": "Ressourcen",
+                    "scan_interval": "Scan Intervall (sekonnen)"
                 },
                 "description": "Sensor Ressourcen auswielen"
             }

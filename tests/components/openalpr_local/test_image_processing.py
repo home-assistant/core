@@ -1,5 +1,5 @@
 """The tests for the openalpr local platform."""
-from unittest.mock import MagicMock, PropertyMock, patch
+from asynctest import MagicMock, PropertyMock, patch
 
 import homeassistant.components.image_processing as ip
 from homeassistant.const import ATTR_ENTITY_PICTURE

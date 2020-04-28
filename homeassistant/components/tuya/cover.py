@@ -4,7 +4,7 @@ from homeassistant.components.cover import (
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_STOP,
-    CoverDevice,
+    CoverEntity,
 )
 
 from . import DATA_TUYA, TuyaDevice
@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class TuyaCover(TuyaDevice, CoverDevice):
+class TuyaCover(TuyaDevice, CoverEntity):
     """Tuya cover devices."""
 
     def __init__(self, tuya):

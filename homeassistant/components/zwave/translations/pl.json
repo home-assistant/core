@@ -26,8 +26,8 @@
             "sleeping": "u\u015bpiony"
         },
         "query_stage": {
-            "dead": "martwy ({query_stage})",
-            "initializing": "inicjalizacja ({query_stage})"
+            "dead": "martwy",
+            "initializing": "inicjalizacja"
         }
     }
 }

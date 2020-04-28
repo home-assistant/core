@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant.components.switch import (
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
-    SwitchDevice,
+    SwitchEntity,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -96,7 +96,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(switches)
 
 
-class SwitchTemplate(SwitchDevice):
+class SwitchTemplate(SwitchEntity):
     """Representation of a Template switch."""
 
     def __init__(

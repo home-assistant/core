@@ -1,7 +1,8 @@
 """Tests for the Google Assistant traits."""
 import logging
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
+from asynctest import patch
 import pytest
 
 from homeassistant.components import (
@@ -45,7 +46,7 @@ from homeassistant.util import color
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.common import async_mock_service, mock_coro
+from tests.common import async_mock_service
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,7 +118,7 @@ async def test_camera_stream(hass):
 
     with patch(
         "homeassistant.components.camera.async_request_stream",
-        return_value=mock_coro("/api/streams/bla"),
+        return_value="/api/streams/bla",
     ):
         await trt.execute(trait.COMMAND_GET_CAMERA_STREAM, BASIC_DATA, {}, {})
 

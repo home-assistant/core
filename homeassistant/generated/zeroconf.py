@@ -10,9 +10,6 @@ ZEROCONF = {
         "axis",
         "doorbird"
     ],
-    "_coap._udp.local.": [
-        "tradfri"
-    ],
     "_elg._tcp.local.": [
         "elgato"
     ],

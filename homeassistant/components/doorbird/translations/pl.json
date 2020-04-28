@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "BoorBird jest ju\u017c skonfigurowany."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
+            "invalid_auth": "Niepoprawne uwierzytelnienie.",
+            "unknown": "Niespodziewany b\u0142\u0105d."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "name": "Nazwa urz\u0105dzenia",
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "title": "Po\u0142\u0105czenie z DoorBird"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "events": "Lista wydarze\u0144 oddzielona przecinkami"
+                },
+                "description": "Dodaj nazwy wydarze\u0144 oddzielonych przecinkami, kt\u00f3re chcesz \u015bledzi\u0107. Po wprowadzeniu ich tutaj u\u017cyj aplikacji DoorBird, aby przypisa\u0107 je do okre\u015blonych zdarze\u0144. Zapoznaj si\u0119 z dokumentacj\u0105 na stronie https://www.home-assistant.io/integrations/doorbird/#events.\nPrzyk\u0142ad: nacisnienie_przycisku, ruch"
+            }
+        }
+    }
+}
