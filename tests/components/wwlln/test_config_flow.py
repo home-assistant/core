@@ -2,12 +2,7 @@
 from asynctest import patch
 
 from homeassistant import data_entry_flow
-from homeassistant.components.wwlln import (
-    CONF_WINDOW,
-    DATA_CLIENT,
-    DOMAIN,
-    async_setup_entry,
-)
+from homeassistant.components.wwlln import CONF_WINDOW, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 
@@ -44,9 +39,10 @@ async def test_step_user(hass):
     """Test that the user step works."""
     conf = {CONF_LATITUDE: 39.128712, CONF_LONGITUDE: -104.9812612, CONF_RADIUS: 25}
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=conf
-    )
+    with patch("homeassistant.components.wwlln.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=conf
+        )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "39.128712, -104.9812612"
@@ -66,9 +62,10 @@ async def test_different_unit_system(hass):
         CONF_RADIUS: 25,
     }
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=conf
-    )
+    with patch("homeassistant.components.wwlln.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=conf
+        )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "39.128712, -104.9812612"
@@ -86,12 +83,13 @@ async def test_custom_window(hass):
         CONF_LATITUDE: 39.128712,
         CONF_LONGITUDE: -104.9812612,
         CONF_RADIUS: 25,
-        CONF_WINDOW: 7200,
+        CONF_WINDOW: 3600,
     }
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=conf
-    )
+    with patch("homeassistant.components.wwlln.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=conf
+        )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "39.128712, -104.9812612"
@@ -99,16 +97,34 @@ async def test_custom_window(hass):
         CONF_LATITUDE: 39.128712,
         CONF_LONGITUDE: -104.9812612,
         CONF_RADIUS: 25,
-        CONF_WINDOW: 7200,
+        CONF_WINDOW: 3600,
     }
 
 
-async def test_component_load_config_entry(hass, config_entry):
-    """Test that loading an existing config entry yields a client."""
-    config_entry.add_to_hass(hass)
-    with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
-        assert await async_setup_entry(hass, config_entry)
+async def test_options_flow(hass):
+    """Test config flow options."""
+    conf = {
+        CONF_LATITUDE: 39.128712,
+        CONF_LONGITUDE: -104.9812612,
+    }
 
-        await hass.async_block_till_done()
-        assert forward_mock.call_count == 1
-        assert len(hass.data[DOMAIN][DATA_CLIENT]) == 1
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="39.128712, -104.9812612",
+        data=conf,
+        options={CONF_RADIUS: 25, CONF_WINDOW: 3600},
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.wwlln.async_setup_entry", return_value=True):
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_RADIUS: 50}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert config_entry.options == {CONF_RADIUS: 50, CONF_WINDOW: 3600}

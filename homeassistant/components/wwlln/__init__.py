@@ -79,14 +79,12 @@ async def async_migrate_entry(hass, config_entry):
     version = config_entry.version
     data = config_entry.data
 
-    default_total_seconds = DEFAULT_WINDOW.total_seconds()
-
     _LOGGER.debug("Migrating from version %s", version)
 
-    # 1 -> 2: Expanding the default window to 1 hour (if needed):
+    # 1 -> 2: Expanding the default window (if needed):
     if version == 1:
-        if data[CONF_WINDOW] < default_total_seconds:
-            data[CONF_WINDOW] = default_total_seconds
+        if data[CONF_WINDOW] < DEFAULT_WINDOW:
+            data[CONF_WINDOW] = DEFAULT_WINDOW
         version = config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry, data=data)
         _LOGGER.info("Migration to version %s successful", version)
