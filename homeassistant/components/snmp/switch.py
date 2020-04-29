@@ -1,8 +1,6 @@
 """Support for SNMP enabled switch."""
 import logging
 
-from pysnmp.proto.rfc1902 import *
-
 import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
     CommunityData,
@@ -14,6 +12,20 @@ from pysnmp.hlapi.asyncio import (
     UsmUserData,
     getCmd,
     setCmd,
+)
+from pysnmp.proto.rfc1902 import (
+    Counter32,
+    Counter64,
+    Gauge32,
+    Integer,
+    Integer32,
+    IpAddress,
+    Null,
+    ObjectIdentifier,
+    OctetString,
+    Opaque,
+    TimeTicks,
+    Unsigned32,
 )
 import voluptuous as vol
 
@@ -35,18 +47,18 @@ from .const import (
     CONF_COMMUNITY,
     CONF_PRIV_KEY,
     CONF_PRIV_PROTOCOL,
+    CONF_VARTYPE,
     CONF_VERSION,
     DEFAULT_AUTH_PROTOCOL,
     DEFAULT_HOST,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_PRIV_PROTOCOL,
+    DEFAULT_VARTYPE,
     DEFAULT_VERSION,
     MAP_AUTH_PROTOCOLS,
     MAP_PRIV_PROTOCOLS,
     SNMP_VERSIONS,
-    DEFAULT_VARTYPE,
-	CONF_VARTYPE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,7 +93,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL): vol.In(
             MAP_PRIV_PROTOCOLS
         ),
-		vol.Optional(CONF_VARTYPE, default=DEFAULT_VARTYPE): cv.string,
+        vol.Optional(CONF_VARTYPE, default=DEFAULT_VARTYPE): cv.string,
     }
 )
 
@@ -125,7 +137,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 payload_off,
                 command_payload_on,
                 command_payload_off,
-				vartype,
+                vartype,
             )
         ],
         True,
@@ -153,7 +165,7 @@ class SnmpSwitch(SwitchEntity):
         payload_off,
         command_payload_on,
         command_payload_off,
-		vartype,
+        vartype,
     ):
         """Initialize the switch."""
 
@@ -207,41 +219,38 @@ class SnmpSwitch(SwitchEntity):
         await self._execute_command(self._command_payload_off)
 
     async def _execute_command(self, command):
-        if  self._vartype == "Null":
-            await self._set(Null(''))
+        if self._vartype == "Null":
+            await self._set(Null(""))
         elif self._vartype == "Integer32":
-            await self._set(Integer32(command))		
+            await self._set(Integer32(command))
         elif self._vartype == "Integer":
-            await self._set(Integer(command))		
+            await self._set(Integer(command))
         elif self._vartype == "OctetString":
-            await self._set(OctetString(command))		
+            await self._set(OctetString(command))
         elif self._vartype == "IpAddress":
-            await self._set(IpAddress(command))	
+            await self._set(IpAddress(command))
         # some work todo to support tuple ObjectIdentifier, this just supports str
         elif self._vartype == "ObjectIdentifier":
-            await self._set(ObjectIdentifier(command))		
+            await self._set(ObjectIdentifier(command))
         elif self._vartype == "Counter32":
-            await self._set(Counter32(command))		
+            await self._set(Counter32(command))
         elif self._vartype == "Gauge32":
-            await self._set(Gauge32(command))		
+            await self._set(Gauge32(command))
         elif self._vartype == "Unsigned32":
-            await self._set(Unsigned32(command))		
+            await self._set(Unsigned32(command))
         elif self._vartype == "TimeTicks":
-            await self._set(TimeTicks(command))		
+            await self._set(TimeTicks(command))
         elif self._vartype == "Opaque":
-            await self._set(Opaque(command))		
+            await self._set(Opaque(command))
         elif self._vartype == "Counter64":
-            await self._set(Counter64(command))	
-        # some work todo to support bits
-        # elif self._vartype == "Bits":
-            # await self._set(Integer(command))	
-        # all other cases failed, vartype not set
-        # try to make an integer, else use the NULL type
+            await self._set(Counter64(command))
+        # all other cases failed, vartype not set. Last try to make an integer, else use the NULL type
         else:
             if self._command_payload_on.isdigit():
                 await self._set(Integer(command))
             else:
                 await self._set(command)
+
     async def async_update(self):
         """Update the state."""
         errindication, errstatus, errindex, restable = await getCmd(
@@ -284,4 +293,3 @@ class SnmpSwitch(SwitchEntity):
         await setCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._commandoid), value)
         )
-
