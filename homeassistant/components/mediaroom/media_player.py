@@ -200,9 +200,7 @@ class MediaroomDevice(MediaPlayerDevice):
         )
         if media_type == MEDIA_TYPE_CHANNEL:
             if not media_id.isdigit():
-                _LOGGER.error(
-                    "Invalid media_id %s: Must be a channel number", media_id
-                )
+                _LOGGER.error("Invalid media_id %s: Must be a channel number", media_id)
                 return
             media_id = int(media_id)
         elif media_type == MEDIA_TYPE_MEDIAROOM:
