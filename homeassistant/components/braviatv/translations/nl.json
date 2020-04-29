@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Deze tv is al geconfigureerd."
+        },
+        "error": {
+            "cannot_connect": "Geen verbinding, ongeldige host of PIN-code.",
+            "invalid_host": "Ongeldige hostnaam of IP-adres.",
+            "unsupported_model": "Uw tv-model wordt niet ondersteund."
+        },
+        "step": {
+            "authorize": {
+                "data": {
+                    "pin": "PIN-code"
+                },
+                "description": "Voer de pincode in die wordt weergegeven op de Sony Bravia tv. \n\nAls de pincode niet wordt weergegeven, moet u de Home Assistant op uw tv afmelden, ga naar: Instellingen -> Netwerk -> Instellingen extern apparaat -> Afmelden extern apparaat.",
+                "title": "Autoriseer Sony Bravia tv"
+            },
+            "user": {
+                "data": {
+                    "host": "Hostnaam of IP-adres van tv"
+                },
+                "description": "Stel Sony Bravia TV-integratie in. Als je problemen hebt met de configuratie ga dan naar: https://www.home-assistant.io/integrations/braviatv \n\nZorg ervoor dat uw tv is ingeschakeld."
+            }
+        }
+    }
+}

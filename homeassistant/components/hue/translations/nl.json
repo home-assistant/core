@@ -33,8 +33,18 @@
             "button_2": "Tweede knop",
             "button_3": "Derde knop",
             "button_4": "Vierde knop",
+            "dim_up": "Dim omhoog",
+            "double_buttons_1_3": "Eerste en derde knop",
+            "double_buttons_2_4": "Tweede en vierde knop",
             "turn_off": "Uitschakelen",
             "turn_on": "Inschakelen"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "\"{subtype}\" knop losgelaten na lang drukken",
+            "remote_button_short_press": "\"{subtype}\" knop ingedrukt",
+            "remote_button_short_release": "\"{subtype}\" knop losgelaten",
+            "remote_double_button_long_press": "Beide \"{subtype}\" vrijgegeven na lang indrukken",
+            "remote_double_button_short_press": "Beide \"{subtype}\" vrijgegeven"
         }
     }
 }

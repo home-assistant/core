@@ -7,7 +7,7 @@
         "error": {
             "connection_error": "Kunne ikke koble til WLED-enheten."
         },
-        "flow_title": "WLED: {name}",
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {

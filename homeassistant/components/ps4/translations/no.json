@@ -20,10 +20,10 @@
             },
             "link": {
                 "data": {
-                    "code": "PIN",
+                    "code": "",
                     "ip_address": "IP adresse",
                     "name": "Navn",
-                    "region": "Region"
+                    "region": ""
                 },
                 "description": "Skriv inn PlayStation 4-informasjonen. For 'PIN', naviger til 'Innstillinger' p\u00e5 PlayStation 4-konsollen. Naviger deretter til 'Mobile App Connection Settings' og velg 'Add Device'. Tast inn PIN-koden som vises. Se [dokumentasjonen] (https://www.home-assistant.io/components/ps4/) for mer informasjon.",
                 "title": ""
