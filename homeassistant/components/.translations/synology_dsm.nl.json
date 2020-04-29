@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Host is al geconfigureerd."
+        },
+        "error": {
+            "unknown": "Onbekende fout: probeer het later opnieuw of een andere configuratie"
+        },
+        "flow_title": "Synology DSM {name} ({host})",
+        "step": {
+            "link": {
+                "data": {
+                    "api_version": "DSM-versie",
+                    "password": "Wachtwoord",
+                    "port": "Poort (optioneel)",
+                    "ssl": "Gebruik SSL/TLS om verbinding te maken met uw NAS",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "Wil je {name} ({host}) instellen?",
+                "title": "Synology DSM"
+            },
+            "user": {
+                "data": {
+                    "api_version": "DSM-versie",
+                    "host": "Host",
+                    "name": "Naam",
+                    "password": "Wachtwoord",
+                    "port": "Poort (optioneel)",
+                    "ssl": "Gebruik SSL/TLS om verbinding te maken met uw NAS",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "Synology DSM"
+            }
+        },
+        "title": "Synology DSM"
+    }
+}

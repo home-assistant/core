@@ -4,8 +4,7 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "bad_config_file": "Fehlerhafte Daten aus der Konfigurationsdatei",
             "link_local_address": "Link-local Adressen werden nicht unterst\u00fctzt",
-            "not_axis_device": "Erkanntes Ger\u00e4t ist kein Axis-Ger\u00e4t",
-            "updated_configuration": "Ger\u00e4tekonfiguration mit neuer Hostadresse aktualisiert"
+            "not_axis_device": "Erkanntes Ger\u00e4t ist kein Axis-Ger\u00e4t"
         },
         "error": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",

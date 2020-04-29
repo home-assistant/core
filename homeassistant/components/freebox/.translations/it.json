@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Host gi\u00e0 configurato"
+        },
+        "error": {
+            "connection_failed": "Impossibile connettersi, si prega di riprovare",
+            "register_failed": "Errore in fase di registrazione, si prega di riprovare",
+            "unknown": "Errore sconosciuto: riprovare pi\u00f9 tardi"
+        },
+        "step": {
+            "link": {
+                "description": "Fare clic su \"Invia\", quindi toccare la freccia destra sul router per registrare Freebox con Home Assistant.\n\n![Posizione del pulsante sul router](/static/images/config_freebox.png)",
+                "title": "Collega il router Freebox"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Porta"
+                },
+                "title": "Freebox"
+            }
+        },
+        "title": "Freebox"
+    }
+}

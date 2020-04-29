@@ -15,6 +15,7 @@ from homeassistant.const import (
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
     EVENT_THEMES_UPDATED,
+    EVENT_CALL_SERVICE,
 )
 from homeassistant.helpers.area_registry import EVENT_AREA_REGISTRY_UPDATED
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
@@ -36,4 +37,6 @@ SUBSCRIBE_WHITELIST = {
     EVENT_SHOPPING_LIST_UPDATED,
     EVENT_STATE_CHANGED,
     EVENT_THEMES_UPDATED,
+    # ais fix
+    EVENT_CALL_SERVICE,
 }

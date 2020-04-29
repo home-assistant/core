@@ -4,7 +4,6 @@
             "already_configured": "Questa chiave dell'app \u00e8 gi\u00e0 in uso."
         },
         "error": {
-            "identifier_exists": "API Key e/o Application Key gi\u00e0 registrata",
             "invalid_key": "API Key e/o Application Key non valida",
             "no_devices": "Nessun dispositivo trovato nell'account"
         },

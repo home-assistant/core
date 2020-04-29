@@ -12,8 +12,7 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "name": "Name",
-                    "port": "Port"
+                    "name": "Name"
                 },
                 "description": "Set up your Minecraft Server instance to allow monitoring.",
                 "title": "Link your Minecraft Server"

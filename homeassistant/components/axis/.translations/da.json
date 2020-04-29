@@ -4,8 +4,7 @@
             "already_configured": "Enheden er allerede konfigureret",
             "bad_config_file": "Forkerte data fra konfigurationsfilen",
             "link_local_address": "Link lokale adresser underst\u00f8ttes ikke",
-            "not_axis_device": "Fundet enhed ikke en Axis enhed",
-            "updated_configuration": "Opdaterede enhedskonfiguration med ny v\u00e6rtsadresse"
+            "not_axis_device": "Fundet enhed ikke en Axis enhed"
         },
         "error": {
             "already_configured": "Enheden er allerede konfigureret",

@@ -40,19 +40,19 @@ REQUIRES = [
     "certifi>=2019.11.28",
     "ciso8601==2.1.3",
     "importlib-metadata==1.5.0",
-    "jinja2>=2.10.3",
+    "jinja2>=2.11.1",
     "PyJWT==1.7.1",
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==2.8",
     "pip>=8.0.3",
     "python-slugify==4.0.0",
     "pytz>=2019.03",
-    "pyyaml==5.3",
+    "pyyaml==5.3.1",
     "requests==2.23.0",
     "ruamel.yaml==0.15.100",
     "voluptuous==0.11.7",
     "voluptuous-serialize==2.3.0",
-    "ais-dom-frontend==20200320.1",
+    "ais-dom-frontend==20200407.7",
 ]
 
 MIN_PY_VERSION = ".".join(map(str, hass_const.REQUIRED_PYTHON_VER))

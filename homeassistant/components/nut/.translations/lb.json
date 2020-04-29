@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "alias": "Alias",
+                    "host": "Apparat",
+                    "name": "Numm",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "resources": "Ressourcen",
+                    "username": "Benotzernumm"
+                },
+                "description": "Falls m\u00e9i w\u00e9i een UPS mat deem NUT Server verbonnen ass, g\u00e8eff den UPS Numm am 'Alias' Feld un fir ze sichen.",
+                "title": "Mam NUT Server verbannen"
+            }
+        },
+        "title": "Network UPS Tools (NUT)"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "Ressourcen"
+                },
+                "description": "Sensor Ressourcen auswielen"
+            }
+        }
+    }
+}

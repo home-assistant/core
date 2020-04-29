@@ -12,8 +12,7 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "name": "Nome",
-                    "port": "Porta"
+                    "name": "Nome"
                 },
                 "description": "Configurare l'istanza del Server Minecraft per consentire il monitoraggio.",
                 "title": "Collega il tuo Server Minecraft"

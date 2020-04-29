@@ -191,16 +191,19 @@ class AirVisualSensor(Entity):
                 }
             )
 
-        geography = self._airvisual.geographies[self._geography_id]
-        if CONF_LATITUDE in geography:
+        if CONF_LATITUDE in self._airvisual.geography_data:
             if self._airvisual.options[CONF_SHOW_ON_MAP]:
-                self._attrs[ATTR_LATITUDE] = geography[CONF_LATITUDE]
-                self._attrs[ATTR_LONGITUDE] = geography[CONF_LONGITUDE]
+                self._attrs[ATTR_LATITUDE] = self._airvisual.geography_data[
+                    CONF_LATITUDE
+                ]
+                self._attrs[ATTR_LONGITUDE] = self._airvisual.geography_data[
+                    CONF_LONGITUDE
+                ]
                 self._attrs.pop("lati", None)
                 self._attrs.pop("long", None)
             else:
-                self._attrs["lati"] = geography[CONF_LATITUDE]
-                self._attrs["long"] = geography[CONF_LONGITUDE]
+                self._attrs["lati"] = self._airvisual.geography_data[CONF_LATITUDE]
+                self._attrs["long"] = self._airvisual.geography_data[CONF_LONGITUDE]
                 self._attrs.pop(ATTR_LATITUDE, None)
                 self._attrs.pop(ATTR_LONGITUDE, None)
 

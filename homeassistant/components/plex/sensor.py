@@ -2,14 +2,19 @@
 import logging
 
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_call_later
 
 from .const import (
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
     NAME_FORMAT,
+    PLEX_UPDATE_PLATFORMS_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
     SERVERS,
 )
@@ -55,11 +60,71 @@ class PlexSensor(Entity):
         )
         self.hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
-    @callback
-    def async_refresh_sensor(self, sessions):
+    async def async_refresh_sensor(self, sessions):
         """Set instance object and trigger an entity state update."""
+        _LOGGER.debug("Refreshing sensor [%s]", self.unique_id)
+
         self.sessions = sessions
-        self.async_schedule_update_ha_state(True)
+        update_failed = False
+
+        @callback
+        def update_plex(_):
+            async_dispatcher_send(
+                self.hass,
+                PLEX_UPDATE_PLATFORMS_SIGNAL.format(self._server.machine_identifier),
+            )
+
+        now_playing = []
+        for sess in self.sessions:
+            if sess.TYPE == "photo":
+                _LOGGER.debug("Photo session detected, skipping: %s", sess)
+                continue
+            if not sess.usernames:
+                _LOGGER.debug(
+                    "Session temporarily incomplete, will try again: %s", sess
+                )
+                update_failed = True
+                continue
+            user = sess.usernames[0]
+            device = sess.players[0].title
+            now_playing_user = f"{user} - {device}"
+            now_playing_title = ""
+
+            if sess.TYPE in ["clip", "episode"]:
+                # example:
+                # "Supernatural (2005) - s01e13 - Route 666"
+                season_title = sess.grandparentTitle
+                show = await self.hass.async_add_executor_job(sess.show)
+                if show.year is not None:
+                    season_title += f" ({show.year!s})"
+                season_episode = sess.seasonEpisode
+                episode_title = sess.title
+                now_playing_title = (
+                    f"{season_title} - {season_episode} - {episode_title}"
+                )
+            elif sess.TYPE == "track":
+                # example:
+                # "Billy Talent - Afraid of Heights - Afraid of Heights"
+                track_artist = sess.grandparentTitle
+                track_album = sess.parentTitle
+                track_title = sess.title
+                now_playing_title = f"{track_artist} - {track_album} - {track_title}"
+            else:
+                # example:
+                # "picture_of_last_summer_camp (2015)"
+                # "The Incredible Hulk (2008)"
+                now_playing_title = sess.title
+                if sess.year is not None:
+                    now_playing_title += f" ({sess.year})"
+
+            now_playing.append((now_playing_user, now_playing_title))
+        self._state = len(self.sessions)
+        self._now_playing = now_playing
+
+        self.async_write_ha_state()
+
+        if update_failed:
+            async_call_later(self.hass, 5, update_plex)
 
     @property
     def name(self):
@@ -95,49 +160,6 @@ class PlexSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {content[0]: content[1] for content in self._now_playing}
-
-    def update(self):
-        """Update method for Plex sensor."""
-        _LOGGER.debug("Refreshing sensor [%s]", self.unique_id)
-        now_playing = []
-        for sess in self.sessions:
-            if sess.TYPE == "photo":
-                _LOGGER.debug("Photo session detected, skipping: %s", sess)
-                continue
-            user = sess.usernames[0]
-            device = sess.players[0].title
-            now_playing_user = f"{user} - {device}"
-            now_playing_title = ""
-
-            if sess.TYPE in ["clip", "episode"]:
-                # example:
-                # "Supernatural (2005) - s01e13 - Route 666"
-                season_title = sess.grandparentTitle
-                if sess.show().year is not None:
-                    season_title += f" ({sess.show().year!s})"
-                season_episode = sess.seasonEpisode
-                episode_title = sess.title
-                now_playing_title = (
-                    f"{season_title} - {season_episode} - {episode_title}"
-                )
-            elif sess.TYPE == "track":
-                # example:
-                # "Billy Talent - Afraid of Heights - Afraid of Heights"
-                track_artist = sess.grandparentTitle
-                track_album = sess.parentTitle
-                track_title = sess.title
-                now_playing_title = f"{track_artist} - {track_album} - {track_title}"
-            else:
-                # example:
-                # "picture_of_last_summer_camp (2015)"
-                # "The Incredible Hulk (2008)"
-                now_playing_title = sess.title
-                if sess.year is not None:
-                    now_playing_title += f" ({sess.year})"
-
-            now_playing.append((now_playing_user, now_playing_title))
-        self._state = len(self.sessions)
-        self._now_playing = now_playing
 
     @property
     def device_info(self):

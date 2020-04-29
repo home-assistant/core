@@ -75,7 +75,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             pin = host_config["pin"]
             mac = host_config["mac"]
             name = config.get(CONF_NAME)
-            add_entities([BraviaTVDevice(host, mac, name, pin)])
+            braviarc = BraviaRC(host, mac)
+            braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
+            unique_id = braviarc.get_system_info()["cid"].lower()
+
+            add_entities([BraviaTVDevice(braviarc, name, pin, unique_id)])
             return
 
     setup_bravia(config, pin, hass, add_entities)
@@ -111,8 +115,11 @@ def setup_bravia(config, pin, hass, add_entities):
         hass.config.path(BRAVIA_CONFIG_FILE),
         {host: {"pin": pin, "host": host, "mac": mac}},
     )
+    braviarc = BraviaRC(host, mac)
+    braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
+    unique_id = braviarc.get_system_info()["cid"].lower()
 
-    add_entities([BraviaTVDevice(host, mac, name, pin)])
+    add_entities([BraviaTVDevice(braviarc, name, pin, unique_id)])
 
 
 def request_configuration(config, hass, add_entities):
@@ -154,11 +161,11 @@ def request_configuration(config, hass, add_entities):
 class BraviaTVDevice(MediaPlayerDevice):
     """Representation of a Sony Bravia TV."""
 
-    def __init__(self, host, mac, name, pin):
+    def __init__(self, client, name, pin, unique_id):
         """Initialize the Sony Bravia device."""
 
         self._pin = pin
-        self._braviarc = BraviaRC(host, mac)
+        self._braviarc = client
         self._name = name
         self._state = STATE_OFF
         self._muted = False
@@ -171,15 +178,14 @@ class BraviaTVDevice(MediaPlayerDevice):
         self._content_mapping = {}
         self._duration = None
         self._content_uri = None
-        self._id = None
         self._playing = False
         self._start_date_time = None
         self._program_media_type = None
         self._min_volume = None
         self._max_volume = None
         self._volume = None
+        self._unique_id = unique_id
 
-        self._braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
         if self._braviarc.is_connected():
             self.update()
         else:
@@ -212,8 +218,8 @@ class BraviaTVDevice(MediaPlayerDevice):
                     self._channel_name = playing_info.get("title")
                     self._program_media_type = playing_info.get("programMediaType")
                     self._channel_number = playing_info.get("dispNum")
-                    self._source = playing_info.get("source")
                     self._content_uri = playing_info.get("uri")
+                    self._source = self._get_source()
                     self._duration = playing_info.get("durationSec")
                     self._start_date_time = playing_info.get("startDateTime")
             else:
@@ -222,6 +228,12 @@ class BraviaTVDevice(MediaPlayerDevice):
         except Exception as exception_instance:  # pylint: disable=broad-except
             _LOGGER.error(exception_instance)
             self._state = STATE_OFF
+
+    def _get_source(self):
+        """Return the name of the source."""
+        for key, value in self._content_mapping.items():
+            if value == self._content_uri:
+                return key
 
     def _reset_playing_info(self):
         self._program_name = None
@@ -253,6 +265,11 @@ class BraviaTVDevice(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return a unique_id for this entity."""
+        return self._unique_id
 
     @property
     def state(self):

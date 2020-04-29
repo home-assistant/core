@@ -11,14 +11,18 @@ from homeassistant.components.vizio.const import (
     CONF_APPS,
     CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
     CONF_INCLUDE,
-    CONF_INCLUDE_OR_EXCLUDE,
     CONF_VOLUME_STEP,
     DEFAULT_NAME,
     DEFAULT_VOLUME_STEP,
     DOMAIN,
     VIZIO_SCHEMA,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_IMPORT,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+)
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
@@ -39,6 +43,7 @@ from .const import (
     MOCK_PIN_CONFIG,
     MOCK_SPEAKER_CONFIG,
     MOCK_TV_CONFIG_NO_TOKEN,
+    MOCK_TV_WITH_ADDITIONAL_APPS_CONFIG,
     MOCK_TV_WITH_EXCLUDE_CONFIG,
     MOCK_USER_VALID_TV_CONFIG,
     MOCK_ZEROCONF_SERVICE_INFO,
@@ -46,6 +51,7 @@ from .const import (
     NAME2,
     UNIQUE_ID,
     VOLUME_STEP,
+    ZEROCONF_HOST,
 )
 
 from tests.common import MockConfigEntry
@@ -95,52 +101,17 @@ async def test_user_flow_all_fields(
         result["flow_id"], user_input=MOCK_USER_VALID_TV_CONFIG
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "tv_apps"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_INCLUDE_APPS
-    )
-
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
     assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
-    assert result["data"][CONF_APPS][CONF_INCLUDE] == [CURRENT_APP]
+    assert CONF_APPS not in result["data"]
 
 
-async def test_user_apps_with_tv(
-    hass: HomeAssistantType,
-    vizio_connect: pytest.fixture,
-    vizio_bypass_setup: pytest.fixture,
-) -> None:
-    """Test TV can have selected apps during user setup."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_IMPORT_VALID_TV_CONFIG
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "tv_apps"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_INCLUDE_APPS
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == NAME
-    assert result["data"][CONF_NAME] == NAME
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
-    assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
-    assert result["data"][CONF_APPS][CONF_INCLUDE] == [CURRENT_APP]
-    assert CONF_APPS_TO_INCLUDE_OR_EXCLUDE not in result["data"]
-    assert CONF_INCLUDE_OR_EXCLUDE not in result["data"]
-
-
-async def test_options_flow(hass: HomeAssistantType) -> None:
-    """Test options config flow."""
+async def test_speaker_options_flow(hass: HomeAssistantType) -> None:
+    """Test options config flow for speaker."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_SPEAKER_CONFIG)
     entry.add_to_hass(hass)
 
@@ -158,6 +129,91 @@ async def test_options_flow(hass: HomeAssistantType) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
+    assert CONF_APPS not in result["data"]
+
+
+async def test_tv_options_flow_no_apps(hass: HomeAssistantType) -> None:
+    """Test options config flow for TV without providing apps option."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG)
+    entry.add_to_hass(hass)
+
+    assert not entry.options
+
+    result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    options = {CONF_VOLUME_STEP: VOLUME_STEP}
+    options.update(MOCK_INCLUDE_NO_APPS)
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input=options
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == ""
+    assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
+    assert CONF_APPS not in result["data"]
+
+
+async def test_tv_options_flow_with_apps(hass: HomeAssistantType) -> None:
+    """Test options config flow for TV with providing apps option."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG)
+    entry.add_to_hass(hass)
+
+    assert not entry.options
+
+    result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    options = {CONF_VOLUME_STEP: VOLUME_STEP}
+    options.update(MOCK_INCLUDE_APPS)
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input=options
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == ""
+    assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
+    assert CONF_APPS in result["data"]
+    assert result["data"][CONF_APPS] == {CONF_INCLUDE: [CURRENT_APP]}
+
+
+async def test_tv_options_flow_start_with_volume(hass: HomeAssistantType) -> None:
+    """Test options config flow for TV with providing apps option after providing volume step in initial config."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_USER_VALID_TV_CONFIG,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+    )
+    entry.add_to_hass(hass)
+
+    assert entry.options
+    assert entry.options == {CONF_VOLUME_STEP: VOLUME_STEP}
+    assert CONF_APPS not in entry.options
+    assert CONF_APPS_TO_INCLUDE_OR_EXCLUDE not in entry.options
+
+    result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    options = {CONF_VOLUME_STEP: VOLUME_STEP}
+    options.update(MOCK_INCLUDE_APPS)
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input=options
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == ""
+    assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
+    assert CONF_APPS in result["data"]
+    assert result["data"][CONF_APPS] == {CONF_INCLUDE: [CURRENT_APP]}
 
 
 async def test_user_host_already_configured(
@@ -282,11 +338,9 @@ async def test_user_tv_pairing_no_apps(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "tv_apps"
+    assert result["step_id"] == "pairing_complete"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_INCLUDE_NO_APPS
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
@@ -333,6 +387,26 @@ async def test_user_invalid_pin(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "pair_tv"
     assert result["errors"] == {CONF_PIN: "complete_pairing_failed"}
+
+
+async def test_user_ignore(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_setup: pytest.fixture,
+) -> None:
+    """Test user config flow doesn't throw an error when there's an existing ignored source."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_SPEAKER_CONFIG,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        source=SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_SPEAKER_CONFIG
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 async def test_import_flow_minimum_fields(
@@ -427,10 +501,8 @@ async def test_import_flow_update_options(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "updated_entry"
-    assert (
-        hass.config_entries.async_get_entry(entry_id).options[CONF_VOLUME_STEP]
-        == VOLUME_STEP + 1
-    )
+    config_entry = hass.config_entries.async_get_entry(entry_id)
+    assert config_entry.options[CONF_VOLUME_STEP] == VOLUME_STEP + 1
 
 
 async def test_import_flow_update_name_and_apps(
@@ -461,10 +533,10 @@ async def test_import_flow_update_name_and_apps(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "updated_entry"
-    assert hass.config_entries.async_get_entry(entry_id).data[CONF_NAME] == NAME2
-    assert hass.config_entries.async_get_entry(entry_id).data[CONF_APPS] == {
-        CONF_INCLUDE: [CURRENT_APP]
-    }
+    config_entry = hass.config_entries.async_get_entry(entry_id)
+    assert config_entry.data[CONF_NAME] == NAME2
+    assert config_entry.data[CONF_APPS] == {CONF_INCLUDE: [CURRENT_APP]}
+    assert config_entry.options[CONF_APPS] == {CONF_INCLUDE: [CURRENT_APP]}
 
 
 async def test_import_flow_update_remove_apps(
@@ -482,7 +554,9 @@ async def test_import_flow_update_remove_apps(
 
     assert result["result"].data[CONF_NAME] == NAME
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    entry_id = result["result"].entry_id
+    config_entry = hass.config_entries.async_get_entry(result["result"].entry_id)
+    assert CONF_APPS in config_entry.data
+    assert CONF_APPS in config_entry.options
 
     updated_config = MOCK_TV_WITH_EXCLUDE_CONFIG.copy()
     updated_config.pop(CONF_APPS)
@@ -494,7 +568,8 @@ async def test_import_flow_update_remove_apps(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "updated_entry"
-    assert hass.config_entries.async_get_entry(entry_id).data.get(CONF_APPS) is None
+    assert CONF_APPS not in config_entry.data
+    assert CONF_APPS not in config_entry.options
 
 
 async def test_import_needs_pairing(
@@ -577,6 +652,26 @@ async def test_import_with_apps_needs_pairing(
     assert result["data"][CONF_APPS][CONF_INCLUDE] == [CURRENT_APP]
 
 
+async def test_import_flow_additional_configs(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_update: pytest.fixture,
+) -> None:
+    """Test import config flow with additional configs defined in CONF_APPS."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=vol.Schema(VIZIO_SCHEMA)(MOCK_TV_WITH_ADDITIONAL_APPS_CONFIG),
+    )
+    await hass.async_block_till_done()
+
+    assert result["result"].data[CONF_NAME] == NAME
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    config_entry = hass.config_entries.async_get_entry(result["result"].entry_id)
+    assert CONF_APPS in config_entry.data
+    assert CONF_APPS not in config_entry.options
+
+
 async def test_import_error(
     hass: HomeAssistantType,
     vizio_connect: pytest.fixture,
@@ -608,6 +703,29 @@ async def test_import_error(
         if log.name == "homeassistant.components.vizio.config_flow"
     ]
     assert len(vizio_log_list) == 1
+
+
+async def test_import_ignore(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_setup: pytest.fixture,
+) -> None:
+    """Test import config flow doesn't throw an error when there's an existing ignored source."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_SPEAKER_CONFIG,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        source=SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG),
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 async def test_zeroconf_flow(
@@ -687,3 +805,51 @@ async def test_zeroconf_dupe_fail(
     # Flow should abort because device is already setup
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_in_progress"
+
+
+async def test_zeroconf_ignore(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_setup: pytest.fixture,
+    vizio_guess_device_type: pytest.fixture,
+) -> None:
+    """Test zeroconf discovery doesn't throw an error when there's an existing ignored source."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_SPEAKER_CONFIG,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        source=SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+
+async def test_zeroconf_abort_when_ignored(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_setup: pytest.fixture,
+    vizio_guess_device_type: pytest.fixture,
+) -> None:
+    """Test zeroconf discovery aborts when the same host has been ignored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_SPEAKER_CONFIG,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        source=SOURCE_IGNORE,
+        unique_id=ZEROCONF_HOST,
+    )
+    entry.add_to_hass(hass)
+
+    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"

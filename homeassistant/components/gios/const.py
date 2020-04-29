@@ -4,10 +4,9 @@ from datetime import timedelta
 ATTR_NAME = "name"
 ATTR_STATION = "station"
 CONF_STATION_ID = "station_id"
-DATA_CLIENT = "client"
 DEFAULT_NAME = "GIOŚ"
 # Term of service GIOŚ allow downloading data no more than twice an hour.
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
+SCAN_INTERVAL = timedelta(minutes=30)
 DOMAIN = "gios"
 
 AQI_GOOD = "dobry"

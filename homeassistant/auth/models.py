@@ -123,4 +123,8 @@ class Credentials:
     is_new = attr.ib(type=bool, default=True)
 
 
-UserMeta = NamedTuple("UserMeta", [("name", Optional[str]), ("is_active", bool)])
+class UserMeta(NamedTuple):
+    """User metadata."""
+
+    name: Optional[str]
+    is_active: bool

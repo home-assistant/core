@@ -17,6 +17,7 @@ import sys
 import aiohttp
 import async_timeout
 import voluptuous as vol
+import requests
 
 from homeassistant.components import ais_cloud
 from homeassistant.components.ais_dom import ais_global
@@ -63,11 +64,15 @@ UPDATER_URL = "https://powiedz.co/ords/dom/dom/updater_new"
 UPDATER_STATUS_FILE = ".ais_update_status"
 UPDATER_DOWNLOAD_FOLDER = "ais_update"
 APT_VERSION_INFO_FILE = ".ais_apt"
+ZIGBEE2MQTT_VERSION_PACKAGE_FILE = (
+    "/data/data/pl.sviete.dom/files/home/zigbee2mqtt/package.json"
+)
 G_CURRENT_ANDROID_DOM_V = "0"
 G_CURRENT_ANDROID_LAUNCHER_V = "0"
 G_CURRENT_ANDROID_TTS_V = "0"
 G_CURRENT_ANDROID_STT_V = "0"
 G_CURRENT_LINUX_V = "0"
+G_CURRENT_ZIGBEE2MQTT_V = "0"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -153,6 +158,7 @@ async def async_setup(hass, config):
         if result is None:
             return
 
+        # overriding auto_update, in case the we don't want to zigbee2mqtt without user
         need_to_update, dom_app_newest_version, release_notes = result
 
         # Validate version
@@ -384,6 +390,17 @@ def get_current_linux_apt_version(hass):
         return current_version
 
 
+def get_current_zigbee2mqtt_version(hass):
+    # try to take version from file
+    try:
+        with open(ZIGBEE2MQTT_VERSION_PACKAGE_FILE) as json_file:
+            z2m_settings = json.load(json_file)
+            return z2m_settings["version"]
+    except Exception as e:
+        _LOGGER.info("Error get_current_zigbee2mqtt_version " + str(e))
+    return "0"
+
+
 async def get_system_info(hass, include_components):
     """Return info about the system."""
     global G_CURRENT_ANDROID_DOM_V
@@ -391,6 +408,7 @@ async def get_system_info(hass, include_components):
     global G_CURRENT_ANDROID_TTS_V
     global G_CURRENT_ANDROID_STT_V
     global G_CURRENT_LINUX_V
+    global G_CURRENT_ZIGBEE2MQTT_V
     gate_id = hass.states.get("sensor.ais_secure_android_id_dom").state
     (
         G_CURRENT_ANDROID_DOM_V,
@@ -399,6 +417,8 @@ async def get_system_info(hass, include_components):
         G_CURRENT_ANDROID_STT_V,
     ) = get_current_android_apk_version()
     G_CURRENT_LINUX_V = get_current_linux_apt_version(hass)
+    G_CURRENT_ZIGBEE2MQTT_V = get_current_zigbee2mqtt_version(hass)
+
     info_object = {
         "arch": platform.machine(),
         "os_name": platform.system(),
@@ -410,6 +430,7 @@ async def get_system_info(hass, include_components):
         "android_app_tts_version": G_CURRENT_ANDROID_TTS_V,
         "android_app_stt_version": G_CURRENT_ANDROID_STT_V,
         "linux_apt_version": G_CURRENT_LINUX_V,
+        "zigbee2mqtt_version": G_CURRENT_ZIGBEE2MQTT_V,
     }
 
     if include_components:
@@ -425,6 +446,7 @@ def get_system_info_sync(hass):
     global G_CURRENT_ANDROID_TTS_V
     global G_CURRENT_ANDROID_STT_V
     global G_CURRENT_LINUX_V
+    global G_CURRENT_ZIGBEE2MQTT_V
     gate_id = hass.states.get("sensor.ais_secure_android_id_dom").state
     (
         G_CURRENT_ANDROID_DOM_V,
@@ -433,6 +455,7 @@ def get_system_info_sync(hass):
         G_CURRENT_ANDROID_STT_V,
     ) = get_current_android_apk_version()
     G_CURRENT_LINUX_V = get_current_linux_apt_version(hass)
+    G_CURRENT_ZIGBEE2MQTT_V = get_current_zigbee2mqtt_version(hass)
     info_object = {
         "gate_id": gate_id,
         "dom_app_version": current_version,
@@ -441,6 +464,7 @@ def get_system_info_sync(hass):
         "android_app_tts_version": G_CURRENT_ANDROID_TTS_V,
         "android_app_stt_version": G_CURRENT_ANDROID_STT_V,
         "linux_apt_version": G_CURRENT_LINUX_V,
+        "zigbee2mqtt_version": G_CURRENT_ZIGBEE2MQTT_V,
     }
     return info_object
 
@@ -484,6 +508,8 @@ async def get_newest_version(hass, include_components, go_to_download):
                 "reinstall_android_app": False,
                 "linux_apt_current_version": G_CURRENT_LINUX_V,
                 "reinstall_linux_apt": False,
+                "zigbee2mqtt_current_version": G_CURRENT_ZIGBEE2MQTT_V,
+                "reinstall_zigbee2mqtt": False,
                 "release_script": release_script,
                 "fix_script": fix_script,
                 "beta": beta,
@@ -500,6 +526,7 @@ async def get_newest_version(hass, include_components, go_to_download):
         reinstall_dom_app = False
         reinstall_android_app = False
         reinstall_linux_apt = False
+        reinstall_zigbee2mqtt = False
         if StrictVersion(res["dom_app_version"]) > StrictVersion(current_version):
             reinstall_dom_app = True
         if G_CURRENT_ANDROID_DOM_V != "0":
@@ -512,11 +539,20 @@ async def get_newest_version(hass, include_components, go_to_download):
                 G_CURRENT_LINUX_V
             ):
                 reinstall_linux_apt = True
-
+        if G_CURRENT_ZIGBEE2MQTT_V != "0":
+            if StrictVersion(res["zigbee2mqtt_version"]) > StrictVersion(
+                G_CURRENT_ZIGBEE2MQTT_V
+            ):
+                reinstall_zigbee2mqtt = True
         need_to_update = False
         info = "Twój system jest aktualny. " + res["release_notes"]
         system_status = UPDATE_STATUS_UPDATED
-        if reinstall_dom_app or reinstall_android_app or reinstall_linux_apt:
+        if (
+            reinstall_dom_app
+            or reinstall_android_app
+            or reinstall_linux_apt
+            or reinstall_zigbee2mqtt
+        ):
             need_to_update = True
             info = "Dostępna jest aktualizacja. " + res["release_notes"]
             system_status = UPDATE_STATUS_OUTDATED
@@ -548,6 +584,9 @@ async def get_newest_version(hass, include_components, go_to_download):
                 "linux_apt_current_version": G_CURRENT_LINUX_V,
                 "linux_apt_newest_version": res["linux_apt_version"],
                 "reinstall_linux_apt": reinstall_linux_apt,
+                "zigbee2mqtt_current_version": G_CURRENT_ZIGBEE2MQTT_V,
+                "zigbee2mqtt_newest_version": res["zigbee2mqtt_version"],
+                "reinstall_zigbee2mqtt": reinstall_zigbee2mqtt,
                 "release_script": release_script,
                 "fix_script": fix_script,
                 "beta": beta,
@@ -578,6 +617,8 @@ async def get_newest_version(hass, include_components, go_to_download):
                 "linux_apt_current_version": G_CURRENT_LINUX_V,
                 "reinstall_linux_apt": False,
                 "release_script": release_script,
+                "zigbee2mqtt_current_version": G_CURRENT_ZIGBEE2MQTT_V,
+                "reinstall_zigbee2mqtt": False,
                 "fix_script": fix_script,
                 "beta": beta,
                 "force": force,
@@ -617,11 +658,13 @@ def do_execute_upgrade(hass, call):
     reinstall_dom_app = attr.get("reinstall_dom_app", False)
     reinstall_android_app = attr.get("reinstall_android_app", False)
     reinstall_linux_apt = attr.get("reinstall_linux_apt", False)
+    reinstall_zigbee2mqtt = attr.get("reinstall_zigbee2mqtt", False)
 
     if (
         reinstall_dom_app is False
         and reinstall_android_app is False
         and reinstall_linux_apt is False
+        and reinstall_zigbee2mqtt is False
     ):
         # this call was only version check
         hass.services.call(
@@ -645,6 +688,7 @@ def do_execute_upgrade(hass, call):
         reinstall_dom_app = False
         reinstall_android_app = False
         reinstall_linux_apt = False
+        reinstall_zigbee2mqtt = False
         _LOGGER.info(str(StrictVersion(ws_resp["dom_app_version"])))
         _LOGGER.info(str(StrictVersion(current_version)))
         if StrictVersion(ws_resp["dom_app_version"]) > StrictVersion(current_version):
@@ -659,11 +703,21 @@ def do_execute_upgrade(hass, call):
                 G_CURRENT_LINUX_V
             ):
                 reinstall_linux_apt = True
+        if G_CURRENT_ZIGBEE2MQTT_V != "0":
+            if StrictVersion(ws_resp["zigbee2mqtt_version"]) > StrictVersion(
+                G_CURRENT_ZIGBEE2MQTT_V
+            ):
+                reinstall_zigbee2mqtt = True
 
         info = "Twój system jest aktualny. " + ws_resp["release_notes"]
         system_status = UPDATE_STATUS_UPDATED
         need_to_update = False
-        if reinstall_dom_app or reinstall_android_app or reinstall_linux_apt:
+        if (
+            reinstall_dom_app
+            or reinstall_android_app
+            or reinstall_linux_apt
+            or reinstall_zigbee2mqtt
+        ):
             need_to_update = True
             info = "Dostępna jest aktualizacja. " + ws_resp["release_notes"]
             system_status = UPDATE_STATUS_OUTDATED
@@ -696,6 +750,9 @@ def do_execute_upgrade(hass, call):
                 "linux_apt_current_version": G_CURRENT_LINUX_V,
                 "linux_apt_newest_version": ws_resp["linux_apt_version"],
                 "reinstall_linux_apt": reinstall_linux_apt,
+                "zigbee2mqtt_current_version": G_CURRENT_ZIGBEE2MQTT_V,
+                "zigbee2mqtt_newest_version": ws_resp["zigbee2mqtt_version"],
+                "reinstall_zigbee2mqtt": reinstall_zigbee2mqtt,
                 "release_script": release_script,
                 "fix_script": fix_script,
                 "beta": beta,
@@ -770,6 +827,7 @@ def do_download_upgrade(hass, call):
     reinstall_android_app = attr.get("reinstall_android_app", False)
     dom_app_newest_version = attr.get("dom_app_newest_version", "")
     release_script = attr.get("release_script", "")
+    reinstall_zigbee2mqtt = attr.get("reinstall_zigbee2mqtt", False)
 
     # add the grant to save on sdcard
     if reinstall_android_app:
@@ -793,6 +851,23 @@ def do_download_upgrade(hass, call):
             _LOGGER.error("Can't download release_script, error: " + str(e))
     else:
         _LOGGER.info("No release_scripts this time!")
+
+    # download zigbee2mqtt packages
+    if reinstall_zigbee2mqtt:
+        # download zigbee update zip
+        try:
+            zigbee_update_url = "http://powiedz.co/ota/zigbee.zip"
+            ws_resp = requests.get(zigbee_update_url, timeout=360)
+            if ws_resp.status_code != 200:
+                _LOGGER.error(
+                    "download zigbee2mqtt update return: " + str(ws_resp.status_code)
+                )
+            else:
+                with open(ais_global.G_AIS_HOME_DIR + "/zigbee_update.zip", "wb") as f:
+                    for chunk in ws_resp.iter_content(1024):
+                        f.write(chunk)
+        except Exception as e:
+            _LOGGER.error("download zigbee2mqtt packages: " + str(e))
 
     # assuming that all will be OK
     l_ret = 0
@@ -839,6 +914,8 @@ def do_install_upgrade(hass, call):
     dom_app_newest_version = attr.get("dom_app_newest_version", False)
     reinstall_android_app = attr.get("reinstall_android_app", False)
     reinstall_linux_apt = attr.get("reinstall_linux_apt", False)
+    reinstall_zigbee2mqtt = attr.get("reinstall_zigbee2mqtt", False)
+    zigbee2mqtt_newest_version = attr.get("zigbee2mqtt_newest_version", 0)
     release_script = attr.get("release_script", "")
     beta = attr.get("beta", False)
     force = attr.get("force", False)
@@ -859,6 +936,76 @@ def do_install_upgrade(hass, call):
             _LOGGER.error("Can't install release_script, error: " + str(e))
     else:
         _LOGGER.info("No release_script this time!")
+
+    # zigbee
+    if reinstall_zigbee2mqtt:
+        _LOGGER.info("We have zigbee2mqtt to update ")
+        # check if file exists
+        if not os.path.isfile(ais_global.G_AIS_HOME_DIR + "/zigbee_update.zip"):
+            _LOGGER.error("Can't find zigbee2mqtt update on disk ")
+            if not reinstall_dom_app and not reinstall_android_app:
+                _set_update_status(hass, UPDATE_STATUS_UNKNOWN)
+        else:
+            # cp current zigbee conf
+            ret = subprocess.check_output(
+                "cp -R "
+                + ais_global.G_AIS_HOME_DIR
+                + "/zigbee2mqtt/data "
+                + ais_global.G_AIS_HOME_DIR
+                + "/data-backup",
+                shell=True,  # nosec
+            )
+            # rm current zigbee
+            ret = subprocess.check_output(
+                "rm -rf " + ais_global.G_AIS_HOME_DIR + "/zigbee2mqtt", shell=True
+            )  # nosec
+
+            # unzip zigbee
+            try:
+                ret = subprocess.check_output(
+                    "7z x -mmt=2 "
+                    + " -o"
+                    + ais_global.G_AIS_HOME_DIR
+                    + "/zigbee2mqtt "
+                    + ais_global.G_AIS_HOME_DIR
+                    + "/zigbee_update.zip "
+                    + "-y",
+                    shell=True,  # nosec
+                )
+                ret = subprocess.check_output(
+                    "rm -rf " + ais_global.G_AIS_HOME_DIR + "/zigbee_update.zip",
+                    shell=True,  # nosec
+                )
+            except Exception as e:
+                _LOGGER.error("Can't unzip zigbee2mqtt, error: " + str(e))
+
+            # copy zigbee config back
+            ret = subprocess.check_output(
+                "cp -R "
+                + ais_global.G_AIS_HOME_DIR
+                + "/data-backup/* "
+                + ais_global.G_AIS_HOME_DIR
+                + "/zigbee2mqtt/data",
+                shell=True,  # nosec
+            )
+
+            # delete config backup
+            ret = subprocess.check_output(
+                "rm -rf " + ais_global.G_AIS_HOME_DIR + "/data-backup", shell=True
+            )  # nosec
+
+            # the update was OK set the version info
+            attr = hass.states.get("sensor.wersja_zigbee2mqtt").attributes
+            hass.states.set(
+                "sensor.wersja_zigbee2mqtt", zigbee2mqtt_newest_version, attr
+            )
+
+            # This was only Zigbee2Mqtt update
+            if not reinstall_dom_app and not reinstall_android_app:
+                # set update status
+                _set_update_status(hass, UPDATE_STATUS_RESTART)
+                # restart ais-dom
+                hass.services.call("homeassistant", "stop", {"ais_command": "restart"})
 
     # pip
     update_dir = hass.config.path(UPDATER_DOWNLOAD_FOLDER)

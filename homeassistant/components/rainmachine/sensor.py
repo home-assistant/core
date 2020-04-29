@@ -1,6 +1,7 @@
 """This platform provides support for sensor data from RainMachine."""
 import logging
 
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import RainMachineEntity
@@ -146,9 +147,15 @@ class RainMachineSensor(RainMachineEntity):
             async_dispatcher_connect(self.hass, SENSOR_UPDATE_TOPIC, self._update_state)
         )
         await self.rainmachine.async_register_sensor_api_interest(self._api_category)
-        await self.async_update()
+        self.update_from_latest_data()
 
-    async def async_update(self):
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listeners and deregister API interest."""
+        super().async_will_remove_from_hass()
+        self.rainmachine.async_deregister_sensor_api_interest(self._api_category)
+
+    @callback
+    def update_from_latest_data(self):
         """Update the sensor's state."""
         if self._sensor_type == TYPE_FLOW_SENSOR_CLICK_M3:
             self._state = self.rainmachine.data[DATA_PROVISION_SETTINGS]["system"].get(
@@ -178,8 +185,3 @@ class RainMachineSensor(RainMachineEntity):
             self._state = self.rainmachine.data[DATA_RESTRICTIONS_UNIVERSAL][
                 "freezeProtectTemp"
             ]
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listeners and deregister API interest."""
-        super().async_will_remove_from_hass()
-        self.rainmachine.async_deregister_sensor_api_interest(self._api_category)

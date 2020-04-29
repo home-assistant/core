@@ -1,0 +1,10 @@
+{
+  "domain": "pvpc_hourly_pricing",
+  "name": "Spain electricity hourly pricing (PVPC)",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/pvpc_hourly_pricing",
+  "requirements": ["aiopvpc==1.0.2"],
+  "dependencies": [],
+  "codeowners": ["@azogue"],
+  "quality_scale": "platinum"
+}

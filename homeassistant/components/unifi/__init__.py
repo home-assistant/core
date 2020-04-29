@@ -1,69 +1,26 @@
 """Support for devices connected to UniFi POE."""
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .config_flow import get_controller_id_from_config_entry
-from .const import (
-    ATTR_MANUFACTURER,
-    CONF_BLOCK_CLIENT,
-    CONF_DETECTION_TIME,
-    CONF_DONT_TRACK_CLIENTS,
-    CONF_DONT_TRACK_DEVICES,
-    CONF_DONT_TRACK_WIRED_CLIENTS,
-    CONF_SITE_ID,
-    CONF_SSID_FILTER,
-    DOMAIN,
-    UNIFI_CONFIG,
-    UNIFI_WIRELESS_CLIENTS,
-)
+from .const import ATTR_MANUFACTURER, DOMAIN, UNIFI_WIRELESS_CLIENTS
 from .controller import UniFiController
 
 SAVE_DELAY = 10
 STORAGE_KEY = "unifi_data"
 STORAGE_VERSION = 1
 
-CONF_CONTROLLERS = "controllers"
-
-CONTROLLER_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_SITE_ID): cv.string,
-        vol.Optional(CONF_BLOCK_CLIENT, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-        vol.Optional(CONF_DONT_TRACK_CLIENTS): cv.boolean,
-        vol.Optional(CONF_DONT_TRACK_DEVICES): cv.boolean,
-        vol.Optional(CONF_DONT_TRACK_WIRED_CLIENTS): cv.boolean,
-        vol.Optional(CONF_DETECTION_TIME): cv.positive_int,
-        vol.Optional(CONF_SSID_FILTER): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
-
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CONTROLLERS): vol.All(
-                    cv.ensure_list, [CONTROLLER_SCHEMA]
-                )
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
+    cv.deprecated(DOMAIN, invalidation_version="0.109"), {DOMAIN: cv.match_all}
 )
 
 
 async def async_setup(hass, config):
     """Component doesn't support configuration through configuration.yaml."""
-    hass.data[UNIFI_CONFIG] = []
-
-    if DOMAIN in config:
-        hass.data[UNIFI_CONFIG] = config[DOMAIN][CONF_CONTROLLERS]
-
     hass.data[UNIFI_WIRELESS_CLIENTS] = wireless_clients = UnifiWirelessClients(hass)
     await wireless_clients.async_load()
 

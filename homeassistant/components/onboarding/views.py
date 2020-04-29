@@ -3,6 +3,7 @@ import asyncio
 
 import voluptuous as vol
 
+from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import callback
@@ -99,7 +100,7 @@ class UserOnboardingView(_BaseOnboardingView):
             provider = _async_get_hass_provider(hass)
             await provider.async_initialize()
 
-            user = await hass.auth.async_create_user(data["name"])
+            user = await hass.auth.async_create_user(data["name"], [GROUP_ID_ADMIN])
             await hass.async_add_executor_job(
                 provider.data.add_auth, data["username"], data["password"]
             )

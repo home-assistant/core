@@ -4,7 +4,6 @@
             "already_configured": "Ta televizor Samsung je \u017ee konfiguriran.",
             "already_in_progress": "Konfiguracija Samsung TV je \u017ee v teku.",
             "auth_missing": "Home Assistant nima dovoljenja za povezavo s tem televizorjem Samsung. Preverite nastavitve televizorja, da ga pooblastite.",
-            "not_found": "V omre\u017eju ni bilo najdenih nobenih podprtih naprav Samsung TV.",
             "not_successful": "Povezave s to napravo Samsung TV ni mogo\u010de vzpostaviti.",
             "not_supported": "Ta naprava Samsung TV trenutno ni podprta."
         },

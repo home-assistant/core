@@ -950,6 +950,15 @@ def async_load_api(hass):
         schema=SERVICE_SCHEMAS[SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND],
     )
 
+    def _get_ias_wd_channel(zha_device):
+        """Get the IASWD channel for a device."""
+        cluster_channels = {
+            ch.name: ch
+            for pool in zha_device.channels.pools
+            for ch in pool.claimed_channels.values()
+        }
+        return cluster_channels.get(CHANNEL_IAS_WD)
+
     async def warning_device_squawk(service):
         """Issue the squawk command for an IAS warning device."""
         ieee = service.data[ATTR_IEEE]
@@ -959,9 +968,9 @@ def async_load_api(hass):
 
         zha_device = zha_gateway.get_device(ieee)
         if zha_device is not None:
-            channel = zha_device.cluster_channels.get(CHANNEL_IAS_WD)
+            channel = _get_ias_wd_channel(zha_device)
             if channel:
-                await channel.squawk(mode, strobe, level)
+                await channel.issue_squawk(mode, strobe, level)
             else:
                 _LOGGER.error(
                     "Squawking IASWD: %s: [%s] is missing the required IASWD channel!",
@@ -1003,9 +1012,9 @@ def async_load_api(hass):
 
         zha_device = zha_gateway.get_device(ieee)
         if zha_device is not None:
-            channel = zha_device.cluster_channels.get(CHANNEL_IAS_WD)
+            channel = _get_ias_wd_channel(zha_device)
             if channel:
-                await channel.start_warning(
+                await channel.issue_start_warning(
                     mode, strobe, level, duration, duty_mode, intensity
                 )
             else:

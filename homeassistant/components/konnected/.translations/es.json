@@ -11,7 +11,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Modelo: {model}\nHost: {host}\nPuerto: {port}\n\nPuede configurar las E/S y el comportamiento del panel en los ajustes del panel de alarmas Konnected.",
+                "description": "Modelo: {model}\nID: {id}\nHost: {host}\nPuerto: {port}\n\nPuede configurar las E/S y el comportamiento del panel en los ajustes del Panel de Alarmas Konnected.",
                 "title": "Dispositivo Konnected Listo"
             },
             "import_confirm": {
@@ -34,6 +34,7 @@
             "not_konn_panel": "No es un dispositivo Konnected.io reconocido"
         },
         "error": {
+            "bad_host": "URL del host de la API de invalidaci\u00f3n no v\u00e1lida",
             "one": "",
             "other": "otros"
         },
@@ -86,7 +87,9 @@
             },
             "options_misc": {
                 "data": {
-                    "blink": "Parpadea el LED del panel cuando se env\u00eda un cambio de estado"
+                    "api_host": "Invalidar la direcci\u00f3n URL del host de la API (opcional)",
+                    "blink": "Parpadea el LED del panel cuando se env\u00eda un cambio de estado",
+                    "override_api_host": "Reemplazar la URL predeterminada del panel host de la API de Home Assistant"
                 },
                 "description": "Seleccione el comportamiento deseado para su panel",
                 "title": "Configurar miscel\u00e1neos"
@@ -95,6 +98,7 @@
                 "data": {
                     "activation": "Salida cuando est\u00e1 activada",
                     "momentary": "Duraci\u00f3n del pulso (ms) (opcional)",
+                    "more_states": "Configurar estados adicionales para esta zona",
                     "name": "Nombre (opcional)",
                     "pause": "Pausa entre pulsos (ms) (opcional)",
                     "repeat": "Tiempos de repetici\u00f3n (-1 = infinito) (opcional)"

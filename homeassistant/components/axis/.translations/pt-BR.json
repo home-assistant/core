@@ -4,8 +4,7 @@
             "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
             "bad_config_file": "Dados incorretos do arquivo de configura\u00e7\u00e3o",
             "link_local_address": "Link de endere\u00e7os locais n\u00e3o s\u00e3o suportados",
-            "not_axis_device": "Dispositivo descoberto n\u00e3o \u00e9 um dispositivo Axis",
-            "updated_configuration": "Configura\u00e7\u00e3o do dispositivo atualizada com novo endere\u00e7o de host"
+            "not_axis_device": "Dispositivo descoberto n\u00e3o \u00e9 um dispositivo Axis"
         },
         "error": {
             "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",

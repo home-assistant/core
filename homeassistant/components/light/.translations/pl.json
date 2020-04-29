@@ -1,6 +1,8 @@
 {
     "device_automation": {
         "action_type": {
+            "brightness_decrease": "zmniejsz jasno\u015b\u0107 {entity_name}",
+            "brightness_increase": "zwi\u0119ksz jasno\u015b\u0107 {entity_name}",
             "toggle": "prze\u0142\u0105cz {entity_name}",
             "turn_off": "wy\u0142\u0105cz {entity_name}",
             "turn_on": "w\u0142\u0105cz {entity_name}"

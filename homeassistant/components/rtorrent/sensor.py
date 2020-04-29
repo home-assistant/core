@@ -21,12 +21,24 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPE_CURRENT_STATUS = "current_status"
 SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
 SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
+SENSOR_TYPE_ALL_TORRENTS = "all_torrents"
+SENSOR_TYPE_STOPPED_TORRENTS = "stopped_torrents"
+SENSOR_TYPE_COMPLETE_TORRENTS = "complete_torrents"
+SENSOR_TYPE_UPLOADING_TORRENTS = "uploading_torrents"
+SENSOR_TYPE_DOWNLOADING_TORRENTS = "downloading_torrents"
+SENSOR_TYPE_ACTIVE_TORRENTS = "active_torrents"
 
 DEFAULT_NAME = "rtorrent"
 SENSOR_TYPES = {
     SENSOR_TYPE_CURRENT_STATUS: ["Status", None],
     SENSOR_TYPE_DOWNLOAD_SPEED: ["Down Speed", DATA_RATE_KILOBYTES_PER_SECOND],
     SENSOR_TYPE_UPLOAD_SPEED: ["Up Speed", DATA_RATE_KILOBYTES_PER_SECOND],
+    SENSOR_TYPE_ALL_TORRENTS: ["All Torrents", None],
+    SENSOR_TYPE_STOPPED_TORRENTS: ["Stopped Torrents", None],
+    SENSOR_TYPE_COMPLETE_TORRENTS: ["Complete Torrents", None],
+    SENSOR_TYPE_UPLOADING_TORRENTS: ["Uploading Torrents", None],
+    SENSOR_TYPE_DOWNLOADING_TORRENTS: ["Downloading Torrents", None],
+    SENSOR_TYPE_ACTIVE_TORRENTS: ["Active Torrents", None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -102,6 +114,11 @@ class RTorrentSensor(Entity):
         multicall = xmlrpc.client.MultiCall(self.client)
         multicall.throttle.global_up.rate()
         multicall.throttle.global_down.rate()
+        multicall.d.multicall2("", "main")
+        multicall.d.multicall2("", "stopped")
+        multicall.d.multicall2("", "complete")
+        multicall.d.multicall2("", "seeding", "d.up.rate=")
+        multicall.d.multicall2("", "leeching", "d.down.rate=")
 
         try:
             self.data = multicall()
@@ -113,6 +130,21 @@ class RTorrentSensor(Entity):
 
         upload = self.data[0]
         download = self.data[1]
+        all_torrents = self.data[2]
+        stopped_torrents = self.data[3]
+        complete_torrents = self.data[4]
+
+        uploading_torrents = 0
+        for up_torrent in self.data[5]:
+            if up_torrent[0]:
+                uploading_torrents += 1
+
+        downloading_torrents = 0
+        for down_torrent in self.data[6]:
+            if down_torrent[0]:
+                downloading_torrents += 1
+
+        active_torrents = uploading_torrents + downloading_torrents
 
         if self.type == SENSOR_TYPE_CURRENT_STATUS:
             if self.data:
@@ -132,3 +164,15 @@ class RTorrentSensor(Entity):
                 self._state = format_speed(download)
             elif self.type == SENSOR_TYPE_UPLOAD_SPEED:
                 self._state = format_speed(upload)
+            elif self.type == SENSOR_TYPE_ALL_TORRENTS:
+                self._state = len(all_torrents)
+            elif self.type == SENSOR_TYPE_STOPPED_TORRENTS:
+                self._state = len(stopped_torrents)
+            elif self.type == SENSOR_TYPE_COMPLETE_TORRENTS:
+                self._state = len(complete_torrents)
+            elif self.type == SENSOR_TYPE_UPLOADING_TORRENTS:
+                self._state = uploading_torrents
+            elif self.type == SENSOR_TYPE_DOWNLOADING_TORRENTS:
+                self._state = downloading_torrents
+            elif self.type == SENSOR_TYPE_ACTIVE_TORRENTS:
+                self._state = active_torrents

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Esta Zona de Carga ya est\u00e1 configurada"
+        },
+        "error": {
+            "cannot_connect": "No se ha podido conectar, por favor, int\u00e9ntalo de nuevo.",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "loadzone": "Zona de Carga (Punto del Asentamiento)"
+                },
+                "description": "Tu Zona de Carga est\u00e1 en tu cuenta de Griddy en \"Account > Meter > Load Zone\"",
+                "title": "Configurar tu Zona de Carga de Griddy"
+            }
+        },
+        "title": "Griddy"
+    }
+}

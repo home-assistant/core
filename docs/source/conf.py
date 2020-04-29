@@ -26,7 +26,7 @@ from homeassistant.const import __short_version__, __version__
 PROJECT_NAME = "Home Assistant"
 PROJECT_PACKAGE_NAME = "homeassistant"
 PROJECT_AUTHOR = "The Home Assistant Authors"
-PROJECT_COPYRIGHT = " 2013-2018, {}".format(PROJECT_AUTHOR)
+PROJECT_COPYRIGHT = " 2013-2020, {}".format(PROJECT_AUTHOR)
 PROJECT_LONG_DESCRIPTION = (
     "Home Assistant is an open-source "
     "home automation platform running on Python 3. "
@@ -34,8 +34,8 @@ PROJECT_LONG_DESCRIPTION = (
     "automate control. "
     "Installation in less than a minute."
 )
-PROJECT_GITHUB_USERNAME = "home-assistant"
-PROJECT_GITHUB_REPOSITORY = "home-assistant"
+PROJECT_GITHUB_USERNAME = "sviete"
+PROJECT_GITHUB_REPOSITORY = "AIS-home-assistant"
 
 GITHUB_PATH = "{}/{}".format(PROJECT_GITHUB_USERNAME, PROJECT_GITHUB_REPOSITORY)
 GITHUB_URL = "https://github.com/{}".format(GITHUB_PATH)
@@ -358,7 +358,7 @@ latex_documents = [
         "Home Assistant Documentation",
         "Home Assistant Team",
         "manual",
-    ),
+    )
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -421,7 +421,7 @@ texinfo_documents = [
         "Home Assistant",
         "Open-source home automation platform.",
         "Miscellaneous",
-    ),
+    )
 ]
 
 # Documents to append as an appendix to all manuals.

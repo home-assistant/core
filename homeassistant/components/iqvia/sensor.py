@@ -7,7 +7,6 @@ import numpy as np
 from homeassistant.components.iqvia import (
     DATA_CLIENT,
     DOMAIN,
-    SENSORS,
     TYPE_ALLERGY_FORECAST,
     TYPE_ALLERGY_INDEX,
     TYPE_ALLERGY_OUTLOOK,
@@ -23,6 +22,9 @@ from homeassistant.components.iqvia import (
     IQVIAEntity,
 )
 from homeassistant.const import ATTR_STATE
+from homeassistant.core import callback
+
+from .const import SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,13 +67,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
         TYPE_DISEASE_TODAY: IndexSensor,
     }
 
-    sensors = []
-    for sensor_type in SENSORS:
-        klass = sensor_class_mapping[sensor_type]
-        name, icon = SENSORS[sensor_type]
-        sensors.append(klass(iqvia, sensor_type, name, icon, iqvia.zip_code))
-
-    async_add_entities(sensors, True)
+    async_add_entities(
+        [
+            sensor_class_mapping[sensor_type](
+                iqvia, sensor_type, name, icon, iqvia.zip_code
+            )
+            for sensor_type, (name, icon) in SENSORS.items()
+        ]
+    )
 
 
 def calculate_trend(indices):
@@ -93,9 +96,10 @@ def calculate_trend(indices):
 class ForecastSensor(IQVIAEntity):
     """Define sensor related to forecast data."""
 
-    async def async_update(self):
+    @callback
+    def update_from_latest_data(self):
         """Update the sensor."""
-        if not self._iqvia.data:
+        if not self._iqvia.data.get(self._type):
             return
 
         data = self._iqvia.data[self._type].get("Location")
@@ -131,12 +135,10 @@ class ForecastSensor(IQVIAEntity):
 class IndexSensor(IQVIAEntity):
     """Define sensor related to indices."""
 
-    async def async_update(self):
+    @callback
+    def update_from_latest_data(self):
         """Update the sensor."""
         if not self._iqvia.data:
-            _LOGGER.warning(
-                "IQVIA didn't return data for %s; trying again later", self.name
-            )
             return
 
         try:
@@ -147,9 +149,6 @@ class IndexSensor(IQVIAEntity):
             elif self._type == TYPE_DISEASE_TODAY:
                 data = self._iqvia.data[TYPE_DISEASE_INDEX].get("Location")
         except KeyError:
-            _LOGGER.warning(
-                "IQVIA didn't return data for %s; trying again later", self.name
-            )
             return
 
         key = self._type.split("_")[-1].title()
@@ -157,9 +156,6 @@ class IndexSensor(IQVIAEntity):
         try:
             [period] = [p for p in data["periods"] if p["Type"] == key]
         except ValueError:
-            _LOGGER.warning(
-                "IQVIA didn't return data for %s; trying again later", self.name
-            )
             return
 
         [rating] = [

@@ -3,8 +3,7 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "Nosaukums",
-                    "port": "Ports"
+                    "name": "Nosaukums"
                 }
             }
         }

@@ -4,8 +4,8 @@ import logging
 from typing import Any, Callable, Dict, List, Optional
 
 from pyvizio import VizioAsync
-from pyvizio.const import INPUT_APPS, NO_APP_RUNNING, UNKNOWN_APP
-from pyvizio.helpers import find_app_name
+from pyvizio.api.apps import find_app_name
+from pyvizio.const import APP_HOME, APPS, INPUT_APPS, NO_APP_RUNNING, UNKNOWN_APP
 
 from homeassistant.components.media_player import (
     DEVICE_CLASS_SPEAKER,
@@ -60,7 +60,6 @@ async def async_setup_entry(
     token = config_entry.data.get(CONF_ACCESS_TOKEN)
     name = config_entry.data[CONF_NAME]
     device_class = config_entry.data[CONF_DEVICE_CLASS]
-    conf_apps = config_entry.data.get(CONF_APPS, {})
 
     # If config entry options not set up, set them up, otherwise assign values managed in options
     volume_step = config_entry.options.get(
@@ -70,6 +69,20 @@ async def async_setup_entry(
     params = {}
     if not config_entry.options:
         params["options"] = {CONF_VOLUME_STEP: volume_step}
+        include_or_exclude_key = next(
+            (
+                key
+                for key in config_entry.data.get(CONF_APPS, {})
+                if key in [CONF_INCLUDE, CONF_EXCLUDE]
+            ),
+            None,
+        )
+        if include_or_exclude_key:
+            params["options"][CONF_APPS] = {
+                include_or_exclude_key: config_entry.data[CONF_APPS][
+                    include_or_exclude_key
+                ].copy()
+            }
 
     if not config_entry.data.get(CONF_VOLUME_STEP):
         new_data = config_entry.data.copy()
@@ -93,9 +106,7 @@ async def async_setup_entry(
         _LOGGER.warning("Failed to connect to %s", host)
         raise PlatformNotReady
 
-    entity = VizioDevice(
-        config_entry, device, name, volume_step, device_class, conf_apps,
-    )
+    entity = VizioDevice(config_entry, device, name, device_class,)
 
     async_add_entities([entity], update_before_add=True)
 
@@ -108,9 +119,7 @@ class VizioDevice(MediaPlayerDevice):
         config_entry: ConfigEntry,
         device: VizioAsync,
         name: str,
-        volume_step: int,
         device_class: str,
-        conf_apps: Dict[str, List[Any]],
     ) -> None:
         """Initialize Vizio device."""
         self._config_entry = config_entry
@@ -119,14 +128,17 @@ class VizioDevice(MediaPlayerDevice):
         self._name = name
         self._state = None
         self._volume_level = None
-        self._volume_step = volume_step
+        self._volume_step = config_entry.options[CONF_VOLUME_STEP]
         self._is_muted = None
         self._current_input = None
         self._current_app = None
+        self._current_app_config = None
         self._available_inputs = []
         self._available_apps = []
-        self._conf_apps = conf_apps
-        self._additional_app_configs = self._conf_apps.get(CONF_ADDITIONAL_CONFIGS, [])
+        self._conf_apps = config_entry.options.get(CONF_APPS, {})
+        self._additional_app_configs = config_entry.data.get(CONF_APPS, {}).get(
+            CONF_ADDITIONAL_CONFIGS, []
+        )
         self._device_class = device_class
         self._supported_commands = SUPPORTED_COMMANDS[device_class]
         self._device = device
@@ -145,20 +157,6 @@ class VizioDevice(MediaPlayerDevice):
             return [app for app in apps if app not in self._conf_apps[CONF_EXCLUDE]]
 
         return apps
-
-    async def _current_app_name(self) -> Optional[str]:
-        """Return name of the currently running app by parsing pyvizio output."""
-        app = await self._device.get_current_app(log_api_exception=False)
-        if app in [None, NO_APP_RUNNING]:
-            return None
-
-        if app == UNKNOWN_APP and self._additional_app_configs:
-            return find_app_name(
-                await self._device.get_current_app_config(log_api_exception=False),
-                self._additional_app_configs,
-            )
-
-        return app
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
@@ -191,6 +189,7 @@ class VizioDevice(MediaPlayerDevice):
             self._current_input = None
             self._available_inputs = None
             self._current_app = None
+            self._current_app_config = None
             self._available_apps = None
             return
 
@@ -226,9 +225,16 @@ class VizioDevice(MediaPlayerDevice):
         if not self._available_apps:
             self._available_apps = self._apps_list(self._device.get_apps_list())
 
-        # Attempt to get current app name. If app name is unknown, check list
-        # of additional apps specified in configuration
-        self._current_app = await self._current_app_name()
+        self._current_app_config = await self._device.get_current_app_config(
+            log_api_exception=False
+        )
+
+        self._current_app = find_app_name(
+            self._current_app_config, [APP_HOME, *APPS, *self._additional_app_configs]
+        )
+
+        if self._current_app == NO_APP_RUNNING:
+            self._current_app = None
 
     def _get_additional_app_names(self) -> List[Dict[str, Any]]:
         """Return list of additional apps that were included in configuration.yaml."""
@@ -248,6 +254,7 @@ class VizioDevice(MediaPlayerDevice):
     async def _async_update_options(self, config_entry: ConfigEntry) -> None:
         """Update options if the update signal comes from this entity."""
         self._volume_step = config_entry.options[CONF_VOLUME_STEP]
+        self._conf_apps.update(config_entry.options.get(CONF_APPS, {}))
 
     async def async_added_to_hass(self):
         """Register callbacks when entity is added."""
@@ -323,15 +330,26 @@ class VizioDevice(MediaPlayerDevice):
                     if _input not in INPUT_APPS
                 ],
                 *self._available_apps,
-                *self._get_additional_app_names(),
+                *[
+                    app
+                    for app in self._get_additional_app_names()
+                    if app not in self._available_apps
+                ],
             ]
 
         return self._available_inputs
 
     @property
     def app_id(self) -> Optional[str]:
-        """Return the current app."""
-        return self._current_app
+        """Return the ID of the current app if it is unknown by pyvizio."""
+        if self._current_app_config and self.app_name == UNKNOWN_APP:
+            return {
+                "APP_ID": self._current_app_config.APP_ID,
+                "NAME_SPACE": self._current_app_config.NAME_SPACE,
+                "MESSAGE": self._current_app_config.MESSAGE,
+            }
+
+        return None
 
     @property
     def app_name(self) -> Optional[str]:

@@ -91,11 +91,12 @@
                 "data": {
                     "activation": "Sortida quan estigui ON",
                     "momentary": "Durada del pols (ms) (opcional)",
+                    "more_states": "Configura estats addicionals per a aquesta zona",
                     "name": "Nom (opcional)",
                     "pause": "Pausa entre polsos (ms) (opcional)",
                     "repeat": "Repeticions (-1 = infinit) (opcional)"
                 },
-                "description": "Selecciona les opcions de sortida per a {zone}",
+                "description": "Selecciona les opcions de sortida per a {zone}: estat {state}",
                 "title": "Configuraci\u00f3 de sortida commutable"
             }
         },

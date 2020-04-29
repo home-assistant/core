@@ -46,7 +46,6 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} bater\u00eda baja",
-            "closed": "{entity_name} cerrado",
             "cold": "{entity_name} se enfri\u00f3",
             "connected": "{entity_name} conectado",
             "gas": "{entity_name} empez\u00f3 a detectar gas",
@@ -54,7 +53,6 @@
             "light": "{entity_name} empez\u00f3 a detectar la luz",
             "locked": "{entity_name} bloqueado",
             "moist": "{entity_name} se humedece",
-            "moist\u00a7": "{entity_name} se humedeci\u00f3",
             "motion": "{entity_name} comenz\u00f3 a detectar movimiento",
             "moving": "{entity_name} empez\u00f3 a moverse",
             "no_gas": "{entity_name} dej\u00f3 de detectar gas",

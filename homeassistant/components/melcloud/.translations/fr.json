@@ -8,6 +8,7 @@
         "step": {
             "user": {
                 "data": {
+                    "password": "Mot de passe MELCloud.",
                     "username": "E-mail utilis\u00e9e pour vous connecter \u00e0 MELCloud."
                 },
                 "description": "Se connecter en utilisant votre MELCloud compte.",

@@ -46,7 +46,6 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} Batterie niddereg",
-            "closed": "{entity_name} gouf zougemaach",
             "cold": "{entity_name} gouf kal",
             "connected": "{entity_name} ass verbonnen",
             "gas": "{entity_name} huet ugefaangen Gas z'entdecken",
@@ -54,7 +53,6 @@
             "light": "{entity_name} huet ugefange Luucht z'entdecken",
             "locked": "{entity_name} gespaart",
             "moist": "{entity_name} gouf fiicht",
-            "moist\u00a7": "{entity_name} gouf fiicht",
             "motion": "{entity_name} huet ugefaange Beweegung z'entdecken",
             "moving": "{entity_name} huet ugefaangen sech ze beweegen",
             "no_gas": "{entity_name} huet opgehale Gas z'entdecken",

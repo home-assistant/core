@@ -73,3 +73,16 @@ stop_tour:
     entity_id:
       description: "Name(s) of the cameras, or 'all' for all cameras."
       example: 'camera.house_front'
+
+ptz_control:
+  description: Move (Pan/Tilt) and/or Zoom a PTZ camera
+  fields:
+    entity_id:
+      description: "Name of the camera, or 'all' for all cameras."
+      example: 'camera.house_front'
+    movement:
+      description: "up, down, right, left, right_up, right_down, left_up, left_down, zoom_in, zoom_out"
+      example: 'right'
+    travel_time:
+      description: "(optional) Travel time in fractional seconds: from 0 to 1.  Default: .2"
+      example: '.5'

@@ -1,5 +1,6 @@
 """Test dispatcher helpers."""
 import asyncio
+from functools import partial
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
@@ -147,9 +148,13 @@ async def test_callback_exception_gets_logged(hass, caplog):
         """Record calls."""
         raise Exception("This is a bad message callback")
 
-    async_dispatcher_connect(hass, "test", bad_handler)
+    # wrap in partial to test message logging.
+    async_dispatcher_connect(hass, "test", partial(bad_handler))
     dispatcher_send(hass, "test", "bad")
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert "Exception in bad_handler when dispatching 'test': ('bad',)" in caplog.text
+    assert (
+        f"Exception in functools.partial({bad_handler}) when dispatching 'test': ('bad',)"
+        in caplog.text
+    )

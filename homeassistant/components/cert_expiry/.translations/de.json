@@ -1,15 +1,13 @@
 {
     "config": {
         "abort": {
-            "host_port_exists": "Diese Kombination aus Host und Port ist bereits konfiguriert."
+            "already_configured": "Diese Kombination aus Host und Port ist bereits konfiguriert.",
+            "import_failed": "Import aus Konfiguration fehlgeschlagen"
         },
         "error": {
-            "certificate_error": "Zertifikat konnte nicht validiert werden",
-            "certificate_fetch_failed": "Zertifikat kann von dieser Kombination aus Host und Port nicht abgerufen werden",
+            "connection_refused": "Verbindung beim Herstellen einer Verbindung zum Host abgelehnt",
             "connection_timeout": "Zeit\u00fcberschreitung beim Herstellen einer Verbindung mit diesem Host",
-            "host_port_exists": "Diese Kombination aus Host und Port ist bereits konfiguriert.",
-            "resolve_failed": "Dieser Host kann nicht aufgel\u00f6st werden",
-            "wrong_host": "Zertifikat stimmt nicht mit Hostname \u00fcberein"
+            "resolve_failed": "Dieser Host kann nicht aufgel\u00f6st werden"
         },
         "step": {
             "user": {

@@ -17,13 +17,29 @@ import homeassistant.components.ais_dom.ais_global as ais_global
 
 DOMAIN = "ais_usb"
 _LOGGER = logging.getLogger(__name__)
+
 G_ZIGBEE_ID = "0451:16a8"
+G_ZWAVE_ID = "0658:0200"
 G_AIS_REMOTE_ID = "0c45:5102"
+# ignore internal devices
+G_AIS_INTERNAL_DEVICES_ID = ["14cd:8608", "05e3:0608", "1d6b:0002", "1d6b:0003"]
 
 G_USB_DRIVES_PATH = "/mnt/media_rw"
 if platform.machine() == "x86_64":
     # local test
     G_USB_DRIVES_PATH = "/media/andrzej"
+
+
+# check if usb is valid external drive
+def is_usb_url_valid_external_drive(path):
+    # check if the path is correct for external usb / sdcard usr
+    path = path.replace("sqlite:////", "")
+    path = path.replace("/ais.db", "")
+    path = path.replace("/ais.log", "")
+    if os.path.islink(path):
+        if os.readlink(path).startswith(G_USB_DRIVES_PATH):
+            return True
+    return False
 
 
 def get_device_info(pathname):
@@ -49,6 +65,7 @@ def prepare_usb_device(hass, device_info):
             require_admin=True,
             sidebar_title="Zigbee",
             sidebar_icon="mdi:zigbee",
+            update=True,
         )
 
         # check if zigbee already exists
@@ -74,6 +91,9 @@ def prepare_usb_device(hass, device_info):
             "--error NULL --restart-delay=30000 -- run start "
         )
         os.system("pm2 save")
+        # TODO check the /dev/ttyACM..
+        os.system("su -c 'chmod 777 /dev/ttyACM0'")
+        #
         if ais_global.G_AIS_START_IS_DONE:
             hass.async_add_job(
                 hass.services.async_call(
@@ -115,8 +135,7 @@ async def async_setup(hass, config):
 
                     os.symlink(
                         str(event.pathname),
-                        "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/dysk_"
-                        + str(drive_id),
+                        ais_global.G_REMOTE_DRIVES_DOM_PATH + "/dysk_" + str(drive_id),
                     )
                     hass.async_add_job(
                         hass.services.async_call(
@@ -159,12 +178,15 @@ async def async_setup(hass, config):
         def process_IN_DELETE(self, event):
             if event.pathname.startswith(G_USB_DRIVES_PATH):
                 # delete symlink
-                td = "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne"
-                for f in os.listdir(td):
-                    if str(os.path.realpath(os.path.join(td, f))) == str(
-                        event.pathname
-                    ):
-                        os.system("rm " + td + "/" + str(f))
+                for f in os.listdir(ais_global.G_REMOTE_DRIVES_DOM_PATH):
+                    if str(
+                        os.path.realpath(
+                            os.path.join(ais_global.G_REMOTE_DRIVES_DOM_PATH, f)
+                        )
+                    ) == str(event.pathname):
+                        os.system(
+                            "rm " + ais_global.G_REMOTE_DRIVES_DOM_PATH + "/" + str(f)
+                        )
                         hass.async_add_job(
                             hass.services.async_call(
                                 "ais_ai_service",
@@ -188,6 +210,40 @@ async def async_setup(hass, config):
                                 "info" in device_info
                                 and "xHCI Host Controller " not in device_info["info"]
                             ):
+                                # quick stop access to files - to prevent
+                                # ProcessKiller: Process xxx (10754) has open file /mnt/media_rw/...
+                                # ProcessKiller: Sending Interrupt to process 10754
+
+                                # 1. check the if log file exists, if not then stop logs
+                                if ais_global.G_LOG_SETTINGS_INFO is not None:
+                                    if "logDrive" in ais_global.G_LOG_SETTINGS_INFO:
+                                        if not os.path.isfile(
+                                            ais_global.G_REMOTE_DRIVES_DOM_PATH
+                                            + "/"
+                                            + ais_global.G_LOG_SETTINGS_INFO["logDrive"]
+                                            + "/ais.log"
+                                        ):
+                                            print("usb ais_stop_logs_event")
+                                            hass.bus.async_fire("ais_stop_logs_event")
+                                # 2. check the if recorder db file exists, if not then stop recorder
+                                if ais_global.G_DB_SETTINGS_INFO is not None:
+                                    db_url = ais_global.G_DB_SETTINGS_INFO["dbUrl"]
+                                    if (
+                                        "dbUrl" in ais_global.G_DB_SETTINGS_INFO
+                                        and ais_global.G_REMOTE_DRIVES_DOM_PATH
+                                        in ais_global.G_DB_SETTINGS_INFO["dbUrl"]
+                                    ):
+                                        if not os.path.isfile(
+                                            ais_global.G_DB_SETTINGS_INFO[
+                                                "dbUrl"
+                                            ].replace("sqlite:////", "")
+                                        ):
+                                            print("usb ais_stop_recorder_event")
+                                            hass.bus.async_fire(
+                                                "ais_stop_recorder_event"
+                                            )
+
+                                # 3. check the if media file exists, if not then stop player
                                 state = hass.states.get(
                                     "media_player.wbudowany_glosnik"
                                 )
@@ -195,18 +251,19 @@ async def async_setup(hass, config):
                                 media_content_id = attr.get("media_content_id")
                                 if (
                                     media_content_id is not None
-                                    and media_content_id.startswith(
-                                        "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/"
-                                    )
+                                    and ais_global.G_REMOTE_DRIVES_DOM_PATH
+                                    in media_content_id
                                 ):
-                                    # quick stop audio - to prevent
-                                    # ProcessKiller: Process pl.sviete.dom (10754) has open file /mnt/media_rw/...
-                                    # ProcessKiller: Sending Interrupt to process 10754
-                                    hass.services.call(
-                                        "ais_ai_service",
-                                        "publish_command_to_frame",
-                                        {"key": "stopAudio", "val": True},
-                                    )
+                                    if not os.path.isfile(media_content_id):
+                                        # quick stop player - to prevent
+                                        # ProcessKiller: Process pl.sviete.dom (10754) has open file /mnt/media_rw/...
+                                        # ProcessKiller: Sending Interrupt to process 10754
+                                        hass.services.call(
+                                            "ais_ai_service",
+                                            "publish_command_to_frame",
+                                            {"key": "stopAudio", "val": True},
+                                        )
+
                     # info to user
                     if (
                         device_info["id"] != G_AIS_REMOTE_ID
@@ -246,8 +303,8 @@ async def async_setup(hass, config):
 
     async def lsusb(call):
         # check if the call was from scheduler or service / web app
-        devices = _lsusb()
-        for device in devices:
+        ais_global.G_USB_DEVICES = _lsusb()
+        for device in ais_global.G_USB_DEVICES:
             if device["id"] == G_ZIGBEE_ID:
                 # USB zigbee dongle
                 prepare_usb_device(hass, device)
@@ -255,19 +312,19 @@ async def async_setup(hass, config):
     async def mount_external_drives(call):
         """mount_external_drives."""
         try:
-            os.system("rm /data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/*")
+            os.system("rm " + ais_global.G_REMOTE_DRIVES_DOM_PATH + "/*")
             dirs = os.listdir(G_USB_DRIVES_PATH)
             for d in dirs:
                 os.symlink(
                     G_USB_DRIVES_PATH + "/" + d,
-                    "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/dysk_" + d,
+                    ais_global.G_REMOTE_DRIVES_DOM_PATH + "/dysk_" + d,
                 )
         except Exception as e:
             _LOGGER.error("mount_external_drives " + str(e))
 
     async def ls_flash_drives(call):
         ais_usb_flash_drives = [ais_global.G_EMPTY_OPTION]
-        dirs = os.listdir("/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/")
+        dirs = os.listdir(ais_global.G_REMOTE_DRIVES_DOM_PATH)
         for d in dirs:
             ais_usb_flash_drives.append(d)
         # set drives on list
@@ -302,7 +359,8 @@ def _lsusb():
             info = device_re.match(i)
             if info:
                 dinfo = info.groupdict()
-                devices.append(dinfo)
+                if dinfo["id"] not in G_AIS_INTERNAL_DEVICES_ID:
+                    devices.append(dinfo)
 
     di = subprocess.check_output("ls /sys/bus/usb/devices", shell=True)
     for d in di.decode("utf-8").split("\n"):
@@ -325,57 +383,72 @@ def _lsusb():
                     .decode("utf-8")
                     .strip()
                 )
-                product = (
-                    subprocess.check_output(
-                        "cat /sys/bus/usb/devices/" + d + "/product", shell=True
-                    )
-                    .decode("utf-8")
-                    .strip()
-                )
-                if os.path.exists("/sys/bus/usb/devices/" + d + "/manufacturer"):
-                    manufacturer = (
-                        subprocess.check_output(
-                            "cat /sys/bus/usb/devices/" + d + "/manufacturer",
-                            shell=True,
+                id_vendor_product = id_vendor + ":" + id_product
+                manufacturer = " "
+                product = ""
+                if id_vendor_product not in G_AIS_INTERNAL_DEVICES_ID:
+                    if id_vendor_product not in [
+                        G_ZIGBEE_ID,
+                        G_ZWAVE_ID,
+                        G_AIS_REMOTE_ID,
+                    ]:
+                        product = (
+                            subprocess.check_output(
+                                "cat /sys/bus/usb/devices/" + d + "/product", shell=True
+                            )
+                            .decode("utf-8")
+                            .strip()
                         )
-                        .decode("utf-8")
-                        .strip()
-                    )
-                    manufacturer = " producent " + manufacturer
-                else:
-                    manufacturer = " "
-
-                _LOGGER.info(
-                    "id_vendor: "
-                    + id_vendor
-                    + " id_product: "
-                    + id_product
-                    + " product: "
-                    + product
-                    + " manufacturer: "
-                    + manufacturer
-                )
-                for device in devices:
-                    if device["id"] == id_vendor + ":" + id_product:
-                        device["product"] = product
-                        device["manufacturer"] = manufacturer
-                        # special cases
-                        if device["id"] == G_ZIGBEE_ID:
-                            # USB zigbee dongle
-                            device["info"] = (
-                                "urządzenie Zigbee" + product + manufacturer
+                        if os.path.exists(
+                            "/sys/bus/usb/devices/" + d + "/manufacturer"
+                        ):
+                            manufacturer = (
+                                subprocess.check_output(
+                                    "cat /sys/bus/usb/devices/" + d + "/manufacturer",
+                                    shell=True,
+                                )
+                                .decode("utf-8")
+                                .strip()
                             )
-                        elif device["id"] == G_AIS_REMOTE_ID:
-                            # USB ais remote dongle
-                            device[
-                                "info"
-                            ] = "urządzenie Pilot radiowy z mikrofonem, producent AI-Speaker"
+                            manufacturer = " producent " + manufacturer
                         else:
-                            device["info"] = (
-                                "urządzenie " + str(product) + str(manufacturer)
-                            )
+                            manufacturer = " "
+
+                        _LOGGER.debug(
+                            "id_vendor: "
+                            + id_vendor
+                            + " id_product: "
+                            + id_product
+                            + " product: "
+                            + product
+                            + " manufacturer: "
+                            + manufacturer
+                        )
+                    #
+                    for device in devices:
+                        if device["id"] == id_vendor_product:
+                            device["product"] = product
+                            device["manufacturer"] = manufacturer
+                            # special cases
+                            if device["id"] == G_ZIGBEE_ID:
+                                # USB zigbee dongle
+                                device["info"] = (
+                                    "urządzenie Zigbee" + product + manufacturer
+                                )
+                            elif device["id"] == G_AIS_REMOTE_ID:
+                                # USB ais remote dongle
+                                device[
+                                    "info"
+                                ] = "urządzenie Pilot radiowy z mikrofonem, producent AI-Speaker"
+                            elif device["id"] == G_ZWAVE_ID:
+                                # USB ais zwave dongle
+                                device["info"] = "urządzenie Z-Wave Aeotec"
+                            else:
+                                device["info"] = (
+                                    "urządzenie " + str(product) + str(manufacturer)
+                                )
 
             except Exception as e:
-                _LOGGER.info("no info about usb in: /sys/bus/usb/devices/" + d)
+                _LOGGER.debug("no info about usb in: /sys/bus/usb/devices/" + d)
 
     return devices

@@ -110,10 +110,11 @@ def zigpy_device_mock(zigpy_app_controller):
         manufacturer="FakeManufacturer",
         model="FakeModel",
         node_descriptor=b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00",
+        nwk=0xB79C,
     ):
         """Make a fake device using the specified cluster classes."""
         device = FakeDevice(
-            zigpy_app_controller, ieee, manufacturer, model, node_descriptor
+            zigpy_app_controller, ieee, manufacturer, model, node_descriptor, nwk=nwk
         )
         for epid, ep in endpoints.items():
             endpoint = FakeEndpoint(manufacturer, model, epid)

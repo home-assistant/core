@@ -266,7 +266,7 @@ def attach_entity_component_collection(
         """Handle a collection change."""
         if change_type == CHANGE_ADDED:
             entity = create_entity(config)
-            await entity_component.async_add_entities([entity])  # type: ignore
+            await entity_component.async_add_entities([entity])
             entities[item_id] = entity
             return
 

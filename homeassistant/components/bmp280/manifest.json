@@ -1,0 +1,9 @@
+{
+  "domain": "bmp280",
+  "name": "Bosch BMP280 Environmental Sensor",
+  "documentation": "https://www.home-assistant.io/integrations/bmp280",
+  "dependencies": [],
+  "codeowners": ["@belidzs"],
+  "requirements": ["adafruit-circuitpython-bmp280==3.1.1", "RPi.GPIO==0.7.0"],
+  "quality_scale": "silver"
+}

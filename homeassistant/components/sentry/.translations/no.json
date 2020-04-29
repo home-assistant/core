@@ -10,9 +10,9 @@
         "step": {
             "user": {
                 "description": "Fyll inn din Sentry DNS",
-                "title": "Sentry"
+                "title": ""
             }
         },
-        "title": "Sentry"
+        "title": ""
     }
 }

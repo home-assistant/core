@@ -5,7 +5,7 @@
             "client_secret": "Skrivnost iz konfiguracije odjemalca ni veljaven.",
             "no_agreements": "Ta ra\u010dun nima prikazov Toon.",
             "no_app": "Toon morate konfigurirati, preden ga boste lahko uporabili za overitev. [Preberite navodila] (https://www.home-assistant.io/components/toon/).",
-            "unknown_auth_fail": "Pri preverjanju pristnosti je pri\u0161lo do nepri\u010dakovane napake."
+            "unknown_auth_fail": "Med preverjanjem pristnosti je pri\u0161lo do nepri\u010dakovane napake."
         },
         "error": {
             "credentials": "Navedene poverilnice niso veljavne.",

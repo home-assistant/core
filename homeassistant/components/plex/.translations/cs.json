@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "discovery_no_file": "Nebyl nalezen \u017e\u00e1dn\u00fd star\u0161\u00ed konfigura\u010dn\u00ed soubor"
-        },
         "step": {
             "start_website_auth": {
                 "description": "Pokra\u010dujte v autorizaci na plex.tv.",

@@ -7,9 +7,7 @@
         },
         "condition_type": {
             "is_off": "{entity_name} is off",
-            "is_on": "{entity_name} is on",
-            "turn_off": "{entity_name} turned off",
-            "turn_on": "{entity_name} turned on"
+            "is_on": "{entity_name} is on"
         },
         "trigger_type": {
             "turned_off": "{entity_name} turned off",

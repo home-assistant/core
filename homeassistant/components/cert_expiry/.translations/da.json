@@ -1,15 +1,8 @@
 {
     "config": {
-        "abort": {
-            "host_port_exists": "Denne v\u00e6rt- og portkombination er allerede konfigureret"
-        },
         "error": {
-            "certificate_error": "Certifikatet kunne ikke valideres",
-            "certificate_fetch_failed": "Kan ikke hente certifikat fra denne v\u00e6rt- og portkombination",
             "connection_timeout": "Timeout ved tilslutning til denne v\u00e6rt",
-            "host_port_exists": "Denne v\u00e6rt- og portkombination er allerede konfigureret",
-            "resolve_failed": "V\u00e6rten kunne ikke findes",
-            "wrong_host": "Certifikatet stemmer ikke overens med v\u00e6rtsnavnet"
+            "resolve_failed": "V\u00e6rten kunne ikke findes"
         },
         "step": {
             "user": {

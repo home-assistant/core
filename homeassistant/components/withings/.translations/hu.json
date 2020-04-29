@@ -2,8 +2,7 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s az \u00e9rv\u00e9nyes\u00edt\u00e9si url gener\u00e1l\u00e1sa sor\u00e1n.",
-            "missing_configuration": "A Withings integr\u00e1ci\u00f3 nincs konfigur\u00e1lva. K\u00e9rj\u00fck, k\u00f6vesse a dokument\u00e1ci\u00f3t.",
-            "no_flows": "Konfigur\u00e1lnia kell a Withings-et, miel\u0151tt hiteles\u00edtheti mag\u00e1t vele. K\u00e9rj\u00fck, olvassa el a dokument\u00e1ci\u00f3t."
+            "missing_configuration": "A Withings integr\u00e1ci\u00f3 nincs konfigur\u00e1lva. K\u00e9rj\u00fck, k\u00f6vesse a dokument\u00e1ci\u00f3t."
         },
         "create_entry": {
             "default": "A Withings sikeresen hiteles\u00edtett."
@@ -17,13 +16,6 @@
                     "profile": "Profil"
                 },
                 "description": "Melyik profilt v\u00e1lasztottad ki a Withings weboldalon? Fontos, hogy a profilok egyeznek, k\u00fcl\u00f6nben az adatok helytelen c\u00edmk\u00e9vel lesznek ell\u00e1tva.",
-                "title": "Felhaszn\u00e1l\u00f3i profil."
-            },
-            "user": {
-                "data": {
-                    "profile": "Profil"
-                },
-                "description": "V\u00e1lasszon egy felhaszn\u00e1l\u00f3i profilt, amelyet szeretn\u00e9, hogy a Home Assistant hozz\u00e1rendeljen a Withings profilhoz. \u00dcgyeljen arra, hogy ugyanazt a felhaszn\u00e1l\u00f3t v\u00e1lassza a Withings oldalon, k\u00fcl\u00f6nben az adatok nem lesznek megfelel\u0151en felcimk\u00e9zve.",
                 "title": "Felhaszn\u00e1l\u00f3i profil."
             }
         },

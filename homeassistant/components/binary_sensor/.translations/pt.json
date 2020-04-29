@@ -17,7 +17,6 @@
             "is_vibration": "{entity_name} est\u00e1 a detectar vibra\u00e7\u00f5es"
         },
         "trigger_type": {
-            "closed": "{entity_name} est\u00e1 fechado",
             "moist": "ficou h\u00famido {entity_name}",
             "not_opened": "fechado {entity_name}",
             "not_plugged_in": "{entity_name} desligado",

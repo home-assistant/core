@@ -10,10 +10,8 @@
             "init": {
                 "data": {
                     "device": "Ruta o URL",
-                    "floor_temperature": "Temperatura del pis",
                     "id": "ID",
-                    "name": "Nom",
-                    "precision": "Precisi\u00f3 de la temperatura"
+                    "name": "Nom"
                 },
                 "title": "Passarel\u00b7la d'OpenTherm"
             }

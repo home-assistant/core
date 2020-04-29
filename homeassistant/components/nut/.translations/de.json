@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "alias": "Alias",
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "resources": "Ressourcen",
+                    "username": "Benutzername"
+                },
+                "title": "Stellen Sie eine Verbindung zum NUT-Server her"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "Ressourcen"
+                },
+                "description": "W\u00e4hlen Sie Sensorressourcen"
+            }
+        }
+    }
+}

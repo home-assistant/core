@@ -10,10 +10,8 @@
             "init": {
                 "data": {
                     "device": "Pfad oder URL",
-                    "floor_temperature": "Buedem Klima Temperatur",
                     "id": "ID",
-                    "name": "Numm",
-                    "precision": "Klima Temperatur Prezisioun"
+                    "name": "Numm"
                 },
                 "title": "OpenTherm Gateway"
             }

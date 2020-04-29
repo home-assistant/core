@@ -133,7 +133,7 @@ async def async_setup(hass, config):
                     hass, p_config, discovery_info
                 )
             else:
-                provider = await hass.async_add_job(
+                provider = await hass.async_add_executor_job(
                     platform.get_engine, hass, p_config, discovery_info
                 )
 
@@ -226,41 +226,17 @@ class SpeechManager:
         self.time_memory = time_memory
         self.base_url = base_url
 
-        def init_tts_cache_dir(cache_dir):
-            """Init cache folder."""
-            if not os.path.isabs(cache_dir):
-                cache_dir = self.hass.config.path(cache_dir)
-            if not os.path.isdir(cache_dir):
-                _LOGGER.info("Create cache dir %s.", cache_dir)
-                os.mkdir(cache_dir)
-            return cache_dir
-
         try:
-            self.cache_dir = await self.hass.async_add_job(
-                init_tts_cache_dir, cache_dir
+            self.cache_dir = await self.hass.async_add_executor_job(
+                _init_tts_cache_dir, self.hass, cache_dir
             )
         except OSError as err:
             raise HomeAssistantError(f"Can't init cache dir {err}")
 
-        def get_cache_files():
-            """Return a dict of given engine files."""
-            cache = {}
-
-            folder_data = os.listdir(self.cache_dir)
-            for file_data in folder_data:
-                record = _RE_VOICE_FILE.match(file_data)
-                if record:
-                    key = KEY_PATTERN.format(
-                        record.group(1),
-                        record.group(2),
-                        record.group(3),
-                        record.group(4),
-                    )
-                    cache[key.lower()] = file_data.lower()
-            return cache
-
         try:
-            cache_files = await self.hass.async_add_job(get_cache_files)
+            cache_files = await self.hass.async_add_executor_job(
+                _get_cache_files, self.cache_dir
+            )
         except OSError as err:
             raise HomeAssistantError(f"Can't read cache dir {err}")
 
@@ -273,13 +249,13 @@ class SpeechManager:
 
         def remove_files():
             """Remove files from filesystem."""
-            for _, filename in self.file_cache.items():
+            for filename in self.file_cache.values():
                 try:
                     os.remove(os.path.join(self.cache_dir, filename))
                 except OSError as err:
                     _LOGGER.warning("Can't remove cache file '%s': %s", filename, err)
 
-        await self.hass.async_add_job(remove_files)
+        await self.hass.async_add_executor_job(remove_files)
         self.file_cache = {}
 
     @callback
@@ -312,6 +288,7 @@ class SpeechManager:
             merged_options.update(options)
             options = merged_options
         options = options or provider.default_options
+
         if options is not None:
             invalid_opts = [
                 opt_name
@@ -378,10 +355,10 @@ class SpeechManager:
                 speech.write(data)
 
         try:
-            await self.hass.async_add_job(save_speech)
+            await self.hass.async_add_executor_job(save_speech)
             self.file_cache[key] = filename
-        except OSError:
-            _LOGGER.error("Can't write %s", filename)
+        except OSError as err:
+            _LOGGER.error("Can't write %s: %s", filename, err)
 
     async def async_file_to_mem(self, key):
         """Load voice from file cache into memory.
@@ -400,7 +377,7 @@ class SpeechManager:
                 return speech.read()
 
         try:
-            data = await self.hass.async_add_job(load_speech)
+            data = await self.hass.async_add_executor_job(load_speech)
         except OSError:
             del self.file_cache[key]
             raise HomeAssistantError(f"Can't read {voice_file}")
@@ -506,9 +483,34 @@ class Provider:
 
         Return a tuple of file extension and data as bytes.
         """
-        return await self.hass.async_add_job(
+        return await self.hass.async_add_executor_job(
             ft.partial(self.get_tts_audio, message, language, options=options)
         )
+
+
+def _init_tts_cache_dir(hass, cache_dir):
+    """Init cache folder."""
+    if not os.path.isabs(cache_dir):
+        cache_dir = hass.config.path(cache_dir)
+    if not os.path.isdir(cache_dir):
+        _LOGGER.info("Create cache dir %s", cache_dir)
+        os.mkdir(cache_dir)
+    return cache_dir
+
+
+def _get_cache_files(cache_dir):
+    """Return a dict of given engine files."""
+    cache = {}
+
+    folder_data = os.listdir(cache_dir)
+    for file_data in folder_data:
+        record = _RE_VOICE_FILE.match(file_data)
+        if record:
+            key = KEY_PATTERN.format(
+                record.group(1), record.group(2), record.group(3), record.group(4),
+            )
+            cache[key.lower()] = file_data.lower()
+    return cache
 
 
 class TextToSpeechUrlView(HomeAssistantView):

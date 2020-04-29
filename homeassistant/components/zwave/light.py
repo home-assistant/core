@@ -104,7 +104,7 @@ def byte_to_zwave_brightness(value):
     `value` -- (int) Brightness byte value from 0-255.
     """
     if value > 0:
-        return max(1, int((value / 255) * 99))
+        return max(1, round((value / 255) * 99))
     return 0
 
 

@@ -4,7 +4,6 @@
             "already_configured": "This Samsung TV is already configured.",
             "already_in_progress": "Samsung TV configuration is already in progress.",
             "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Please check your TV's settings to authorize Home Assistant.",
-            "not_found": "No supported Samsung TV devices found on the network.",
             "not_successful": "Unable to connect to this Samsung TV device.",
             "not_supported": "This Samsung TV device is currently not supported."
         },

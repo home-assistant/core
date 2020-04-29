@@ -422,7 +422,8 @@ def _create_auth_code_store():
         if key not in temp_results:
             return None
 
-        created, _, result = temp_results.pop(key)
+        # ais fix - we need to use the key later to take token in mob
+        created, _, result = temp_results.get(key)
 
         # OAuth 4.2.1
         # The authorization code MUST expire shortly after it is issued to

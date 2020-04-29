@@ -7,9 +7,7 @@
         },
         "condition_type": {
             "is_off": "{entity_name} er av",
-            "is_on": "{entity_name} er p\u00e5",
-            "turn_off": "{entity_name} sl\u00e5tt av",
-            "turn_on": "{entity_name} sl\u00e5tt p\u00e5"
+            "is_on": "{entity_name} er p\u00e5"
         },
         "trigger_type": {
             "turned_off": "{entity_name} sl\u00e5tt av",

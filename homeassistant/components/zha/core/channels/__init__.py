@@ -163,18 +163,23 @@ class ChannelPool:
         self._channels: Channels = channels
         self._claimed_channels: ChannelsDict = {}
         self._id: int = ep_id
-        self._relay_channels: Dict[str, zha_typing.EventRelayChannelType] = {}
+        self._client_channels: Dict[str, zha_typing.ClientChannelType] = {}
         self._unique_id: str = f"{channels.unique_id}-{ep_id}"
 
     @property
     def all_channels(self) -> ChannelsDict:
-        """All channels of an endpoint."""
+        """All server channels of an endpoint."""
         return self._all_channels
 
     @property
     def claimed_channels(self) -> ChannelsDict:
         """Channels in use."""
         return self._claimed_channels
+
+    @property
+    def client_channels(self) -> Dict[str, zha_typing.ClientChannelType]:
+        """Return a dict of client channels."""
+        return self._client_channels
 
     @property
     def endpoint(self) -> zha_typing.ZigpyEndpointType:
@@ -217,11 +222,6 @@ class ChannelPool:
         return self._channels.zha_device.model
 
     @property
-    def relay_channels(self) -> Dict[str, zha_typing.EventRelayChannelType]:
-        """Return a dict of event relay channels."""
-        return self._relay_channels
-
-    @property
     def skip_configuration(self) -> bool:
         """Return True if device does not require channel configuration."""
         return self._channels.zha_device.skip_configuration
@@ -236,7 +236,7 @@ class ChannelPool:
         """Create new channels for an endpoint."""
         pool = cls(channels, ep_id)
         pool.add_all_channels()
-        pool.add_relay_channels()
+        pool.add_client_channels()
         zha_disc.PROBE.discover_entities(pool)
         return pool
 
@@ -270,13 +270,13 @@ class ChannelPool:
             self.all_channels[channel.id] = channel
 
     @callback
-    def add_relay_channels(self) -> None:
-        """Create relay channels for all output clusters if in the registry."""
-        for cluster_id in zha_regs.EVENT_RELAY_CLUSTERS:
+    def add_client_channels(self) -> None:
+        """Create client channels for all output clusters if in the registry."""
+        for cluster_id, channel_class in zha_regs.CLIENT_CHANNELS_REGISTRY.items():
             cluster = self.endpoint.out_clusters.get(cluster_id)
             if cluster is not None:
-                channel = base.EventRelayChannel(cluster, self)
-                self.relay_channels[channel.id] = channel
+                channel = channel_class(cluster, self)
+                self.client_channels[channel.id] = channel
 
     async def async_initialize(self, from_cache: bool = False) -> None:
         """Initialize claimed channels."""
@@ -293,7 +293,7 @@ class ChannelPool:
             async with self._channels.semaphore:
                 return await coro
 
-        channels = [*self.claimed_channels.values(), *self.relay_channels.values()]
+        channels = [*self.claimed_channels.values(), *self.client_channels.values()]
         tasks = [_throttle(getattr(ch, func_name)(*args)) for ch in channels]
         results = await asyncio.gather(*tasks, return_exceptions=True)
         for channel, outcome in zip(channels, results):

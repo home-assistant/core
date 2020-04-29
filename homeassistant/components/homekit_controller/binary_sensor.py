@@ -4,6 +4,7 @@ import logging
 from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OCCUPANCY,
     DEVICE_CLASS_OPENING,
@@ -89,11 +90,30 @@ class HomeKitOccupancySensor(HomeKitEntity, BinarySensorDevice):
         return self.service.value(CharacteristicsTypes.OCCUPANCY_DETECTED) == 1
 
 
+class HomeKitLeakSensor(HomeKitEntity, BinarySensorDevice):
+    """Representation of a Homekit leak sensor."""
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity is tracking."""
+        return [CharacteristicsTypes.LEAK_DETECTED]
+
+    @property
+    def device_class(self):
+        """Define this binary_sensor as a leak sensor."""
+        return DEVICE_CLASS_MOISTURE
+
+    @property
+    def is_on(self):
+        """Return true if a leak is detected from the binary sensor."""
+        return self.service.value(CharacteristicsTypes.LEAK_DETECTED) == 1
+
+
 ENTITY_TYPES = {
     "motion": HomeKitMotionSensor,
     "contact": HomeKitContactSensor,
     "smoke": HomeKitSmokeSensor,
     "occupancy": HomeKitOccupancySensor,
+    "leak": HomeKitLeakSensor,
 }
 
 

@@ -1,4 +1,5 @@
 """Support for Xiaomi Mi Flora BLE plant sensor."""
+
 from datetime import timedelta
 import logging
 
@@ -15,11 +16,14 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
+    TEMP_FAHRENHEIT,
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt_util
+from homeassistant.util.temperature import celsius_to_fahrenheit
 
 try:
     import bluepy.btle  # noqa: F401 pylint: disable=unused-import
@@ -32,13 +36,17 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ADAPTER = "adapter"
 CONF_MEDIAN = "median"
+CONF_GO_UNAVAILABLE_TIMEOUT = "go_unavailable_timeout"
 
 DEFAULT_ADAPTER = "hci0"
 DEFAULT_FORCE_UPDATE = False
 DEFAULT_MEDIAN = 3
 DEFAULT_NAME = "Mi Flora"
+DEFAULT_GO_UNAVAILABLE_TIMEOUT = timedelta(seconds=7200)
 
 SCAN_INTERVAL = timedelta(seconds=1200)
+
+ATTR_LAST_SUCCESSFUL_UPDATE = "last_successful_update"
 
 # Sensor types are defined like: Name, units, icon
 SENSOR_TYPES = {
@@ -59,6 +67,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_MEDIAN, default=DEFAULT_MEDIAN): cv.positive_int,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
         vol.Optional(CONF_ADAPTER, default=DEFAULT_ADAPTER): cv.string,
+        vol.Optional(
+            CONF_GO_UNAVAILABLE_TIMEOUT, default=DEFAULT_GO_UNAVAILABLE_TIMEOUT
+        ): cv.time_period,
     }
 )
 
@@ -78,11 +89,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     force_update = config.get(CONF_FORCE_UPDATE)
     median = config.get(CONF_MEDIAN)
 
+    go_unavailable_timeout = config.get(CONF_GO_UNAVAILABLE_TIMEOUT)
+
     devs = []
 
     for parameter in config[CONF_MONITORED_CONDITIONS]:
         name = SENSOR_TYPES[parameter][0]
-        unit = SENSOR_TYPES[parameter][1]
+        unit = (
+            hass.config.units.temperature_unit
+            if parameter == "temperature"
+            else SENSOR_TYPES[parameter][1]
+        )
         icon = SENSOR_TYPES[parameter][2]
 
         prefix = config.get(CONF_NAME)
@@ -90,7 +107,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             name = f"{prefix} {name}"
 
         devs.append(
-            MiFloraSensor(poller, parameter, name, unit, icon, force_update, median)
+            MiFloraSensor(
+                poller,
+                parameter,
+                name,
+                unit,
+                icon,
+                force_update,
+                median,
+                go_unavailable_timeout,
+            )
         )
 
     async_add_entities(devs)
@@ -99,7 +125,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class MiFloraSensor(Entity):
     """Implementing the MiFlora sensor."""
 
-    def __init__(self, poller, parameter, name, unit, icon, force_update, median):
+    def __init__(
+        self,
+        poller,
+        parameter,
+        name,
+        unit,
+        icon,
+        force_update,
+        median,
+        go_unavailable_timeout,
+    ):
         """Initialize the sensor."""
         self.poller = poller
         self.parameter = parameter
@@ -107,9 +143,10 @@ class MiFloraSensor(Entity):
         self._icon = icon
         self._name = name
         self._state = None
-        self._available = False
         self.data = []
         self._force_update = force_update
+        self.go_unavailable_timeout = go_unavailable_timeout
+        self.last_successful_update = dt_util.utc_from_timestamp(0)
         # Median is used to filter out outliers. median of 3 will filter
         # single outliers, while  median of 5 will filter double outliers
         # Use median_count = 1 if no filtering is required.
@@ -136,8 +173,16 @@ class MiFloraSensor(Entity):
 
     @property
     def available(self):
-        """Return True if entity is available."""
-        return self._available
+        """Return True if did update since 2h."""
+        return self.last_successful_update > (
+            dt_util.utcnow() - self.go_unavailable_timeout
+        )
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        attr = {ATTR_LAST_SUCCESSFUL_UPDATE: self.last_successful_update}
+        return attr
 
     @property
     def unit_of_measurement(self):
@@ -165,13 +210,14 @@ class MiFloraSensor(Entity):
             data = self.poller.parameter_value(self.parameter)
         except (OSError, BluetoothBackendException) as err:
             _LOGGER.info("Polling error %s: %s", type(err).__name__, err)
-            self._available = False
             return
 
         if data is not None:
             _LOGGER.debug("%s = %s", self.name, data)
-            self._available = True
+            if self._unit == TEMP_FAHRENHEIT:
+                data = celsius_to_fahrenheit(data)
             self.data.append(data)
+            self.last_successful_update = dt_util.utcnow()
         else:
             _LOGGER.info("Did not receive any data from Mi Flora sensor %s", self.name)
             # Remove old data from median list or set sensor value to None

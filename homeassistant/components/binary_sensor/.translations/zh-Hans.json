@@ -44,7 +44,6 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} \u7535\u6c60\u7535\u91cf\u4f4e",
-            "closed": "{entity_name} \u5df2\u5173\u95ed",
             "cold": "{entity_name} \u53d8\u51b7",
             "connected": "{entity_name} \u5df2\u8fde\u63a5",
             "gas": "{entity_name} \u5f00\u59cb\u68c0\u6d4b\u5230\u71c3\u6c14\u6cc4\u6f0f",

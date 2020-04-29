@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Clave de aplicaci\u00f3n y/o clave de API ya registrada",
             "invalid_key": "Clave de API y/o clave de aplicaci\u00f3n no v\u00e1lida",
             "no_devices": "No se han encontrado dispositivos en la cuenta."
         },

@@ -2,7 +2,7 @@
   "domain": "apprise",
   "name": "Apprise",
   "documentation": "https://www.home-assistant.io/integrations/apprise",
-  "requirements": ["apprise==0.8.4"],
+  "requirements": ["apprise==0.8.5"],
   "dependencies": [],
   "codeowners": ["@caronc"]
 }

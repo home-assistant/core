@@ -4,8 +4,7 @@
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
             "bad_config_file": "Mauvaises donn\u00e9es du fichier de configuration",
             "link_local_address": "Les adresses locales ne sont pas prises en charge",
-            "not_axis_device": "L'appareil d\u00e9couvert n'est pas un appareil Axis",
-            "updated_configuration": "Mise \u00e0 jour de la configuration du dispositif avec la nouvelle adresse de l'h\u00f4te"
+            "not_axis_device": "L'appareil d\u00e9couvert n'est pas un appareil Axis"
         },
         "error": {
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",

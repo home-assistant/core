@@ -1,7 +1,7 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Standort bereits registriert"
+        "abort": {
+            "already_configured": "Der Standort ist bereits konfiguriert."
         },
         "step": {
             "user": {

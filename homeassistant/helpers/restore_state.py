@@ -4,7 +4,10 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, Awaitable, Dict, List, Optional, Set, cast
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_HOMEASSISTANT_START,
+)
 from homeassistant.core import (
     CoreState,
     HomeAssistant,
@@ -184,7 +187,9 @@ class RestoreStateData:
         async_track_time_interval(self.hass, _async_dump_states, STATE_DUMP_INTERVAL)
 
         # Dump states when stopping hass
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_dump_states)
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_FINAL_WRITE, _async_dump_states
+        )
 
     @callback
     def async_restore_entity_added(self, entity_id: str) -> None:

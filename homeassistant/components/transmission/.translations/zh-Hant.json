@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u4e3b\u6a5f\u7aef\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002",
-            "one_instance_allowed": "\u50c5\u9700\u8a2d\u5b9a\u4e00\u7d44\u7269\u4ef6\u5373\u53ef\u3002"
+            "already_configured": "\u4e3b\u6a5f\u7aef\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002"
         },
         "error": {
             "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3\u4e3b\u6a5f\u7aef",
@@ -10,12 +9,6 @@
             "wrong_credentials": "\u4f7f\u7528\u8005\u540d\u7a31\u6216\u5bc6\u78bc\u932f\u8aa4"
         },
         "step": {
-            "options": {
-                "data": {
-                    "scan_interval": "\u66f4\u65b0\u983b\u7387"
-                },
-                "title": "\u8a2d\u5b9a\u9078\u9805"
-            },
             "user": {
                 "data": {
                     "host": "\u4e3b\u6a5f\u7aef",
@@ -35,7 +28,6 @@
                 "data": {
                     "scan_interval": "\u66f4\u65b0\u983b\u7387"
                 },
-                "description": "Transmission \u8a2d\u5b9a\u9078\u9805",
                 "title": "Transmission \u8a2d\u5b9a\u9078\u9805"
             }
         }

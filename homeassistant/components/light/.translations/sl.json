@@ -1,6 +1,8 @@
 {
     "device_automation": {
         "action_type": {
+            "brightness_decrease": "Zmanj\u0161ajte svetlost {entity_name}",
+            "brightness_increase": "Pove\u010dajte svetlost {entity_name}",
             "toggle": "Preklopite {entity_name}",
             "turn_off": "Izklopite {entity_name}",
             "turn_on": "Vklopite {entity_name}"

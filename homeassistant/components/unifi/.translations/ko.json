@@ -6,7 +6,8 @@
         },
         "error": {
             "faulty_credentials": "\uc0ac\uc6a9\uc790 \uc790\uaca9\uc99d\uba85\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
-            "service_unavailable": "\uc0ac\uc6a9\ud560 \uc218 \uc788\ub294 \uc11c\ube44\uc2a4\uac00 \uc5c6\uc2b5\ub2c8\ub2e4"
+            "service_unavailable": "\uc0ac\uc6a9\ud560 \uc218 \uc788\ub294 \uc11c\ube44\uc2a4\uac00 \uc5c6\uc2b5\ub2c8\ub2e4",
+            "unknown_client_mac": "\ud574\ub2f9 MAC \uc8fc\uc18c\uc5d0\uc11c \uc0ac\uc6a9 \uac00\ub2a5\ud55c \ud074\ub77c\uc774\uc5b8\ud2b8\uac00 \uc5c6\uc2b5\ub2c8\ub2e4."
         },
         "step": {
             "user": {
@@ -23,8 +24,20 @@
         },
         "title": "UniFi \ucee8\ud2b8\ub864\ub7ec"
     },
+    "error": {
+        "unknown_client_mac": "\ud574\ub2f9 MAC \uc8fc\uc18c\uc758 UniFi \uc5d0\uc11c \uc0ac\uc6a9\ud560 \uc218 \uc788\ub294 \ud074\ub77c\uc774\uc5b8\ud2b8\uac00 \uc5c6\uc2b5\ub2c8\ub2e4."
+    },
     "options": {
         "step": {
+            "client_control": {
+                "data": {
+                    "block_client": "\ub124\ud2b8\uc6cc\ud06c \uc561\uc138\uc2a4 \uc81c\uc5b4 \ud074\ub77c\uc774\uc5b8\ud2b8",
+                    "new_client": "\ub124\ud2b8\uc6cc\ud06c \uc561\uc138\uc2a4 \uc81c\uc5b4\ub97c \uc704\ud55c \uc0c8\ub85c\uc6b4 \ud074\ub77c\uc774\uc5b8\ud2b8 \ucd94\uac00",
+                    "poe_clients": "\ud074\ub77c\uc774\uc5b8\ud2b8\uc758 POE \uc81c\uc5b4 \ud5c8\uc6a9"
+                },
+                "description": "\ud074\ub77c\uc774\uc5b8\ud2b8 \ucee8\ud2b8\ub864 \uad6c\uc131 \n\n\ub124\ud2b8\uc6cc\ud06c \uc561\uc138\uc2a4\ub97c \uc81c\uc5b4\ud558\ub824\ub294 \uc2dc\ub9ac\uc5bc \ubc88\ud638\uc5d0 \ub300\ud55c \uc2a4\uc704\uce58\ub97c \ub9cc\ub4ed\ub2c8\ub2e4.",
+                "title": "UniFi \uc635\uc158 2/3"
+            },
             "device_tracker": {
                 "data": {
                     "detection_time": "\ub9c8\uc9c0\ub9c9\uc73c\ub85c \ud655\uc778\ub41c \uc2dc\uac04\ubd80\ud130 \uc678\ucd9c \uc0c1\ud0dc\ub85c \uac04\uc8fc\ub418\ub294 \uc2dc\uac04 (\ucd08)",
@@ -33,15 +46,15 @@
                     "track_devices": "\ub124\ud2b8\uc6cc\ud06c \uae30\uae30 \ucd94\uc801 (Ubiquiti \uae30\uae30)",
                     "track_wired_clients": "\uc720\uc120 \ub124\ud2b8\uc6cc\ud06c \ud074\ub77c\uc774\uc5b8\ud2b8 \ud3ec\ud568"
                 },
-                "description": "\uc7a5\uce58 \ucd94\uc801 \uad6c\uc131",
-                "title": "UniFi \uc635\uc158"
+                "description": "\uae30\uae30 \ucd94\uc801 \uad6c\uc131",
+                "title": "UniFi \uc635\uc158 1/3"
             },
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "\ub124\ud2b8\uc6cc\ud06c \ud074\ub77c\uc774\uc5b8\ud2b8 \ub300\uc5ed\ud3ed \uc0ac\uc6a9\ub7c9 \uc13c\uc11c"
                 },
                 "description": "\ud1b5\uacc4 \uc13c\uc11c \uad6c\uc131",
-                "title": "UniFi \uc635\uc158"
+                "title": "UniFi \uc635\uc158 3/3"
             }
         }
     }

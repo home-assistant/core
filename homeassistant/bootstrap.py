@@ -20,6 +20,7 @@ from homeassistant.const import (
     REQUIRED_NEXT_PYTHON_VER,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import DATA_SETUP, async_setup_component
 from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
@@ -132,7 +133,7 @@ async def async_setup_hass(
 
 
 async def async_from_config_dict(
-    config: Dict[str, Any], hass: core.HomeAssistant
+    config: ConfigType, hass: core.HomeAssistant
 ) -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a configuration dictionary.
 
@@ -251,27 +252,43 @@ def async_enable_logging(
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
-    # AIS fix
-    return
+    # AIS dom fix
+    try:
+        import json
+        from homeassistant.components.ais_dom import ais_global
 
+        with open(
+            "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_log_settings_info"
+        ) as json_file:
+            ais_logs_settings = json.load(json_file)
+            log_drive = ais_logs_settings["logDrive"]
+    except Exception:
+        # no log settings file is present
+        return
+    log_rotate_days = 10
+    if "logRotating" in ais_logs_settings:
+        log_rotate_days = ais_logs_settings["logRotating"]
+    log_file = ais_global.G_REMOTE_DRIVES_DOM_PATH + "/" + log_drive + "/ais.log"
     # Log errors to a file if we have write access to file or config dir
-    if log_file is None:
-        err_log_path = hass.config.path(ERROR_LOG_FILENAME)
-    else:
-        err_log_path = os.path.abspath(log_file)
+    err_log_path = os.path.abspath(log_file)
 
     err_path_exists = os.path.isfile(err_log_path)
     err_dir = os.path.dirname(err_log_path)
+    # check if this is correct external drive
+    from homeassistant.components import ais_usb
+
+    err_path_is_external_drive = ais_usb.is_usb_url_valid_external_drive(err_dir)
 
     # Check if we can write to the error log if it exists or that
     # we can create files in the containing directory if not.
-    if (err_path_exists and os.access(err_log_path, os.W_OK)) or (
-        not err_path_exists and os.access(err_dir, os.W_OK)
+    if err_path_is_external_drive and (
+        (err_path_exists and os.access(err_log_path, os.W_OK))
+        or (not err_path_exists and os.access(err_dir, os.W_OK))
     ):
 
         if log_rotate_days:
             err_handler: logging.FileHandler = logging.handlers.TimedRotatingFileHandler(
-                err_log_path, when="midnight", backupCount=log_rotate_days
+                err_log_path, when="midnight", backupCount=int(log_rotate_days)
             )
         else:
             err_handler = logging.FileHandler(err_log_path, mode="w", delay=True)
@@ -283,10 +300,19 @@ def async_enable_logging(
 
         async def async_stop_async_handler(_: Any) -> None:
             """Cleanup async handler."""
+            print("Cleanup async handler.")
+            # just to be sure
+            log = logging.getLogger()  # root logger
+            log.disabled = True
+            for hdlr in log.handlers[:]:  # remove all old handlers
+                hdlr.flush()
+                hdlr.close()
+                log.removeHandler(hdlr)
             logging.getLogger("").removeHandler(async_handler)  # type: ignore
             await async_handler.async_close(blocking=True)
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, async_stop_async_handler)
+        hass.bus.async_listen("ais_stop_logs_event", async_stop_async_handler)
 
         logger = logging.getLogger("")
         logger.addHandler(async_handler)  # type: ignore
@@ -331,15 +357,30 @@ async def _async_set_up_integrations(
     hass: core.HomeAssistant, config: Dict[str, Any]
 ) -> None:
     """Set up all the integrations."""
+
+    async def async_setup_multi_components(domains: Set[str]) -> None:
+        """Set up multiple domains. Log on failure."""
+        futures = {
+            domain: hass.async_create_task(async_setup_component(hass, domain, config))
+            for domain in domains
+        }
+        await asyncio.wait(futures.values())
+        errors = [domain for domain in domains if futures[domain].exception()]
+        for domain in errors:
+            exception = futures[domain].exception()
+            _LOGGER.error(
+                "Error setting up integration %s - received exception",
+                domain,
+                exc_info=(type(exception), exception, exception.__traceback__),
+            )
+
     domains = _get_domains(hass, config)
 
     # Start up debuggers. Start these first in case they want to wait.
     debuggers = domains & DEBUGGER_INTEGRATIONS
     if debuggers:
         _LOGGER.debug("Starting up debuggers %s", debuggers)
-        await asyncio.gather(
-            *(async_setup_component(hass, domain, config) for domain in debuggers)
-        )
+        await async_setup_multi_components(debuggers)
         domains -= DEBUGGER_INTEGRATIONS
 
     # Resolve all dependencies of all components so we can find the logging
@@ -364,9 +405,7 @@ async def _async_set_up_integrations(
     if logging_domains:
         _LOGGER.info("Setting up %s", logging_domains)
 
-        await asyncio.gather(
-            *(async_setup_component(hass, domain, config) for domain in logging_domains)
-        )
+        await async_setup_multi_components(logging_domains)
 
     # Kick off loading the registries. They don't need to be awaited.
     asyncio.gather(
@@ -376,9 +415,7 @@ async def _async_set_up_integrations(
     )
 
     if stage_1_domains:
-        await asyncio.gather(
-            *(async_setup_component(hass, domain, config) for domain in stage_1_domains)
-        )
+        await async_setup_multi_components(stage_1_domains)
 
     # Load all integrations
     after_dependencies: Dict[str, Set[str]] = {}
@@ -407,9 +444,7 @@ async def _async_set_up_integrations(
 
         _LOGGER.debug("Setting up %s", domains_to_load)
 
-        await asyncio.gather(
-            *(async_setup_component(hass, domain, config) for domain in domains_to_load)
-        )
+        await async_setup_multi_components(domains_to_load)
 
         last_load = domains_to_load
         stage_2_domains -= domains_to_load
@@ -419,9 +454,7 @@ async def _async_set_up_integrations(
     if stage_2_domains:
         _LOGGER.debug("Final set up: %s", stage_2_domains)
 
-        await asyncio.gather(
-            *(async_setup_component(hass, domain, config) for domain in stage_2_domains)
-        )
+        await async_setup_multi_components(stage_2_domains)
 
     # Wrap up startup
     await hass.async_block_till_done()

@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'amfitri\u00f3 ja est\u00e0 configurat.",
-            "one_instance_allowed": "Nom\u00e9s cal una sola inst\u00e0ncia."
+            "already_configured": "L'amfitri\u00f3 ja est\u00e0 configurat."
         },
         "error": {
             "cannot_connect": "No s'ha pogut connectar amb l'amfitri\u00f3",
@@ -10,12 +9,6 @@
             "wrong_credentials": "Nom d'usuari o contrasenya incorrectes"
         },
         "step": {
-            "options": {
-                "data": {
-                    "scan_interval": "Freq\u00fc\u00e8ncia d\u2019actualitzaci\u00f3"
-                },
-                "title": "Opcions de configuraci\u00f3"
-            },
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3",
@@ -35,7 +28,6 @@
                 "data": {
                     "scan_interval": "Freq\u00fc\u00e8ncia d\u2019actualitzaci\u00f3"
                 },
-                "description": "Opcions de configuraci\u00f3 de Transmission",
                 "title": "Opcions de configuraci\u00f3 de Transmission"
             }
         }

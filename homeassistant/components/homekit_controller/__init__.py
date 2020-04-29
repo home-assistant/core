@@ -132,14 +132,6 @@ class HomeKitEntity(Entity):
         if CharacteristicPermissions.events in char.perms:
             self.watchable_characteristics.append((self._aid, char.iid))
 
-        # Callback to allow entity to configure itself based on this
-        # characteristics metadata (valid values, value ranges, features, etc)
-        setup_fn_name = escape_characteristic_name(char.type_name)
-        setup_fn = getattr(self, f"_setup_{setup_fn_name}", None)
-        if not setup_fn:
-            return
-        setup_fn(char.to_accessory_and_service_list())
-
     @property
     def unique_id(self) -> str:
         """Return the ID of this device."""

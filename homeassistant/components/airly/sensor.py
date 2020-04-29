@@ -18,7 +18,6 @@ from .const import (
     ATTR_API_PM1,
     ATTR_API_PRESSURE,
     ATTR_API_TEMPERATURE,
-    DATA_CLIENT,
     DOMAIN,
 )
 
@@ -60,14 +59,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Airly sensor entities based on a config entry."""
     name = config_entry.data[CONF_NAME]
 
-    data = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     sensors = []
     for sensor in SENSOR_TYPES:
         unique_id = f"{config_entry.unique_id}-{sensor.lower()}"
-        sensors.append(AirlySensor(data, name, sensor, unique_id))
+        sensors.append(AirlySensor(coordinator, name, sensor, unique_id))
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors, False)
 
 
 def round_state(func):
@@ -85,10 +84,9 @@ def round_state(func):
 class AirlySensor(Entity):
     """Define an Airly sensor."""
 
-    def __init__(self, airly, name, kind, unique_id):
+    def __init__(self, coordinator, name, kind, unique_id):
         """Initialize."""
-        self.airly = airly
-        self.data = airly.data
+        self.coordinator = coordinator
         self._name = name
         self._unique_id = unique_id
         self.kind = kind
@@ -104,9 +102,14 @@ class AirlySensor(Entity):
         return f"{self._name} {SENSOR_TYPES[self.kind][ATTR_LABEL]}"
 
     @property
+    def should_poll(self):
+        """Return the polling requirement of the entity."""
+        return False
+
+    @property
     def state(self):
         """Return the state."""
-        self._state = self.data[self.kind]
+        self._state = self.coordinator.data[self.kind]
         if self.kind in [ATTR_API_PM1, ATTR_API_PRESSURE]:
             self._state = round(self._state)
         if self.kind in [ATTR_API_TEMPERATURE, ATTR_API_HUMIDITY]:
@@ -142,11 +145,16 @@ class AirlySensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self.data)
+        return self.coordinator.last_update_success
+
+    async def async_added_to_hass(self):
+        """Connect to dispatcher listening for entity data notifications."""
+        self.coordinator.async_add_listener(self.async_write_ha_state)
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect from update signal."""
+        self.coordinator.async_remove_listener(self.async_write_ha_state)
 
     async def async_update(self):
-        """Update the sensor."""
-        await self.airly.async_update()
-
-        if self.airly.data:
-            self.data = self.airly.data
+        """Update Airly entity."""
+        await self.coordinator.async_request_refresh()

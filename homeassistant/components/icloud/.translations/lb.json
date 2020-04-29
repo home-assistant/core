@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kont ass scho konfigur\u00e9iert"
+            "already_configured": "Kont ass scho konfigur\u00e9iert",
+            "no_device": "Kee vun dengen Apparater huet \"Find my iPhone\" aktiv\u00e9iert"
         },
         "error": {
             "login": "Feeler beim Login: iwwerpr\u00e9ift \u00e4r E-Mail & Passwuert",
@@ -19,7 +20,8 @@
             "user": {
                 "data": {
                     "password": "Passwuert",
-                    "username": "E-Mail"
+                    "username": "E-Mail",
+                    "with_family": "Mat der Famill"
                 },
                 "description": "F\u00ebllt \u00e4r Umeldungs Informatiounen aus",
                 "title": "iCloud Umeldungs Informatiounen"

@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port s\u00e8rie",
+                    "source_1": "Nom de la font #1",
+                    "source_2": "Nom de la font #2",
+                    "source_3": "Nom de la font #3",
+                    "source_4": "Nom de la font #4",
+                    "source_5": "Nom de la font #5",
+                    "source_6": "Nom de la font #6"
+                },
+                "title": "Connexi\u00f3 amb el dispositiu"
+            }
+        },
+        "title": "Amplificador Monoprice de 6 zones"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source_1": "Nom de la font #1",
+                    "source_2": "Nom de la font #2",
+                    "source_3": "Nom de la font #3",
+                    "source_4": "Nom de la font #4",
+                    "source_5": "Nom de la font #5",
+                    "source_6": "Nom de la font #6"
+                },
+                "title": "Configuraci\u00f3 de les fonts"
+            }
+        }
+    }
+}

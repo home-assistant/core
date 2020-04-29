@@ -1270,7 +1270,7 @@ class TestComponentLogbook(unittest.TestCase):
 
 async def test_logbook_view(hass, hass_client):
     """Test the logbook view."""
-    await hass.async_add_job(init_recorder_component, hass)
+    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", {})
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
@@ -1280,7 +1280,7 @@ async def test_logbook_view(hass, hass_client):
 
 async def test_logbook_view_period_entity(hass, hass_client):
     """Test the logbook view with period and entity."""
-    await hass.async_add_job(init_recorder_component, hass)
+    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "logbook", {})
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 

@@ -5,7 +5,6 @@
         },
         "error": {
             "auth": "API \u5bc6\u9470\u4e0d\u6b63\u78ba\u3002",
-            "name_exists": "\u8a72\u540d\u7a31\u5df2\u5b58\u5728",
             "wrong_location": "\u8a72\u5340\u57df\u6c92\u6709 Arily \u76e3\u6e2c\u7ad9\u3002"
         },
         "step": {

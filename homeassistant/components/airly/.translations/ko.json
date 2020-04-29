@@ -5,7 +5,6 @@
         },
         "error": {
             "auth": "API \ud0a4\uac00 \uc62c\ubc14\ub974\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
-            "name_exists": "\uc774\ub984\uc774 \uc774\ubbf8 \uc874\uc7ac\ud569\ub2c8\ub2e4.",
             "wrong_location": "\uc774 \uc9c0\uc5ed\uc5d0\ub294 Airly \uce21\uc815 \uc2a4\ud14c\uc774\uc158\uc774 \uc5c6\uc2b5\ub2c8\ub2e4."
         },
         "step": {

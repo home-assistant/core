@@ -1,5 +1,13 @@
 {
     "device_automation": {
+        "action_type": {
+            "close": "{entity_name} \ub2eb\uae30",
+            "close_tilt": "{entity_name} \ub2eb\uae30",
+            "open": "{entity_name} \uc5f4\uae30",
+            "open_tilt": "{entity_name} \uc5f4\uae30",
+            "set_position": "{entity_name} \uac1c\ud3d0 \uc704\uce58 \uc124\uc815\ud558\uae30",
+            "set_tilt_position": "{entity_name} \uac1c\ud3d0 \uae30\uc6b8\uae30 \uc124\uc815\ud558\uae30"
+        },
         "condition_type": {
             "is_closed": "{entity_name} \uc774(\uac00) \ub2eb\ud600 \uc788\uc73c\uba74",
             "is_closing": "{entity_name} \uc774(\uac00) \ub2eb\ud788\ub294 \uc911\uc774\uba74",

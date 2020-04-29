@@ -5,7 +5,6 @@
         },
         "error": {
             "auth": "Der API-Schl\u00fcssel ist nicht korrekt.",
-            "name_exists": "Name existiert bereits",
             "wrong_location": "Keine Airly Luftmessstation an diesem Ort"
         },
         "step": {

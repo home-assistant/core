@@ -5,7 +5,6 @@
         },
         "error": {
             "auth": "API-sleutel is niet correct.",
-            "name_exists": "Naam bestaat al.",
             "wrong_location": "Geen Airly meetstations in dit gebied."
         },
         "step": {

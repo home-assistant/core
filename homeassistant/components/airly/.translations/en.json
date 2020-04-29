@@ -5,7 +5,6 @@
         },
         "error": {
             "auth": "API key is not correct.",
-            "name_exists": "Name already exists.",
             "wrong_location": "No Airly measuring stations in this area."
         },
         "step": {

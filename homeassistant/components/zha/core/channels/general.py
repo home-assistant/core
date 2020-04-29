@@ -19,8 +19,9 @@ from ..const import (
     SIGNAL_MOVE_LEVEL,
     SIGNAL_SET_LEVEL,
     SIGNAL_STATE_ATTR,
+    SIGNAL_UPDATE_DEVICE,
 )
-from .base import ZigbeeChannel, parse_and_log_command
+from .base import ClientChannel, ZigbeeChannel, parse_and_log_command
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -166,8 +167,14 @@ class Identify(ZigbeeChannel):
             self.async_send_signal(f"{self.unique_id}_{cmd}", args[0])
 
 
+@registries.CLIENT_CHANNELS_REGISTRY.register(general.LevelControl.cluster_id)
+class LevelControlClientChannel(ClientChannel):
+    """LevelControl client cluster."""
+
+    pass
+
+
 @registries.BINDABLE_CLUSTERS.register(general.LevelControl.cluster_id)
-@registries.EVENT_RELAY_CLUSTERS.register(general.LevelControl.cluster_id)
 @registries.LIGHT_CLUSTERS.register(general.LevelControl.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.LevelControl.cluster_id)
 class LevelControlChannel(ZigbeeChannel):
@@ -233,9 +240,15 @@ class MultistateValue(ZigbeeChannel):
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
+@registries.CLIENT_CHANNELS_REGISTRY.register(general.OnOff.cluster_id)
+class OnOffClientChannel(ClientChannel):
+    """OnOff client channel."""
+
+    pass
+
+
 @registries.BINARY_SENSOR_CLUSTERS.register(general.OnOff.cluster_id)
 @registries.BINDABLE_CLUSTERS.register(general.OnOff.cluster_id)
-@registries.EVENT_RELAY_CLUSTERS.register(general.OnOff.cluster_id)
 @registries.LIGHT_CLUSTERS.register(general.OnOff.cluster_id)
 @registries.SWITCH_CLUSTERS.register(general.OnOff.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.OnOff.cluster_id)
@@ -321,11 +334,20 @@ class OnOffConfiguration(ZigbeeChannel):
     pass
 
 
+@registries.CLIENT_CHANNELS_REGISTRY.register(general.Ota.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Ota.cluster_id)
 class Ota(ZigbeeChannel):
     """OTA Channel."""
 
-    pass
+    @callback
+    def cluster_command(
+        self, tsn: int, command_id: int, args: Optional[List[Any]]
+    ) -> None:
+        """Handle OTA commands."""
+        cmd_name = self.cluster.server_commands.get(command_id, [command_id])[0]
+        signal_id = self._ch_pool.unique_id.split("-")[0]
+        if cmd_name == "query_next_image":
+            self.async_send_signal(SIGNAL_UPDATE_DEVICE.format(signal_id), args[3])
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Partition.cluster_id)
@@ -437,7 +459,13 @@ class RSSILocation(ZigbeeChannel):
     pass
 
 
-@registries.EVENT_RELAY_CLUSTERS.register(general.Scenes.cluster_id)
+@registries.CLIENT_CHANNELS_REGISTRY.register(general.Scenes.cluster_id)
+class ScenesClientChannel(ClientChannel):
+    """Scenes channel."""
+
+    pass
+
+
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Scenes.cluster_id)
 class Scenes(ZigbeeChannel):
     """Scenes channel."""

@@ -7,6 +7,13 @@
             "disarm": "{entity_name} \uacbd\ube44\ud574\uc81c",
             "trigger": "{entity_name} \ud2b8\ub9ac\uac70"
         },
+        "condition_type": {
+            "is_armed_away": "{entity_name} \uc774(\uac00) \uc678\ucd9c \uacbd\ube44\ubaa8\ub4dc \uc0c1\ud0dc\uc774\uba74",
+            "is_armed_home": "{entity_name} \uc774(\uac00) \uc7ac\uc2e4 \uacbd\ube44\ubaa8\ub4dc \uc0c1\ud0dc\uc774\uba74",
+            "is_armed_night": "{entity_name} \uc774(\uac00) \uc57c\uac04 \uacbd\ube44\ubaa8\ub4dc \uc0c1\ud0dc\uc774\uba74",
+            "is_disarmed": "{entity_name} \uc774(\uac00) \ud574\uc81c \uc0c1\ud0dc\uc774\uba74",
+            "is_triggered": "{entity_name} \uc774(\uac00) \ud2b8\ub9ac\uac70\ub418\uc5c8\uc73c\uba74"
+        },
         "trigger_type": {
             "armed_away": "{entity_name} \uc774(\uac00) \uc678\ucd9c \uacbd\ube44\ubaa8\ub4dc\ub85c \uc124\uc815\ub420 \ub54c",
             "armed_home": "{entity_name} \uc774(\uac00) \uc7ac\uc2e4 \uacbd\ube44\ubaa8\ub4dc\ub85c \uc124\uc815\ub420 \ub54c",

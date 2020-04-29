@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
+            "unknown": "Niespodziewany b\u0142\u0105d."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "alias": "Alias",
+                    "host": "Host",
+                    "name": "Nazwa",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "resources": "Zasoby",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Je\u015bli do serwera NUT pod\u0142\u0105czonych jest wiele zasilaczy UPS, wprowad\u017a w polu Alias nazw\u0119 zasilacza UPS, kt\u00f3rego dotyczy zapytanie.",
+                "title": "Po\u0142\u0105cz z serwerem NUT"
+            }
+        },
+        "title": "Sieciowe narz\u0119dzia UPS (NUT)"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "Zasoby"
+                },
+                "description": "Wybierz zasoby sensor\u00f3w"
+            }
+        }
+    }
+}

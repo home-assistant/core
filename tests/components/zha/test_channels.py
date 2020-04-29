@@ -274,7 +274,9 @@ def test_epch_claim_channels(channel):
         assert "1:0x0300" in ep_channels.claimed_channels
 
 
-@mock.patch("homeassistant.components.zha.core.channels.ChannelPool.add_relay_channels")
+@mock.patch(
+    "homeassistant.components.zha.core.channels.ChannelPool.add_client_channels"
+)
 @mock.patch(
     "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
@@ -319,7 +321,9 @@ def test_ep_channels_all_channels(m1, zha_device_mock):
     assert "2:0x0300" in ep_channels.all_channels
 
 
-@mock.patch("homeassistant.components.zha.core.channels.ChannelPool.add_relay_channels")
+@mock.patch(
+    "homeassistant.components.zha.core.channels.ChannelPool.add_client_channels"
+)
 @mock.patch(
     "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
@@ -387,14 +391,14 @@ async def test_ep_channels_configure(channel):
     ep_channels = zha_channels.ChannelPool(channels, mock.sentinel.ep)
 
     claimed = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
-    relay = {ch_4.id: ch_4, ch_5.id: ch_5}
+    client_chans = {ch_4.id: ch_4, ch_5.id: ch_5}
 
     with mock.patch.dict(ep_channels.claimed_channels, claimed, clear=True):
-        with mock.patch.dict(ep_channels.relay_channels, relay, clear=True):
+        with mock.patch.dict(ep_channels.client_channels, client_chans, clear=True):
             await ep_channels.async_configure()
             await ep_channels.async_initialize(mock.sentinel.from_cache)
 
-    for ch in [*claimed.values(), *relay.values()]:
+    for ch in [*claimed.values(), *client_chans.values()]:
         assert ch.async_initialize.call_count == 1
         assert ch.async_initialize.await_count == 1
         assert ch.async_initialize.call_args[0][0] is mock.sentinel.from_cache

@@ -1,5 +1,13 @@
 {
     "device_automation": {
+        "action_type": {
+            "close": "Zapri {entity_name}",
+            "close_tilt": "Zapri {entity_name} nagib",
+            "open": "Odprite {entity_name}",
+            "open_tilt": "Odprite {entity_name} nagib",
+            "set_position": "Nastavite polo\u017eaj {entity_name}",
+            "set_tilt_position": "Nastavite {entity_name} nagibni polo\u017eaj"
+        },
         "condition_type": {
             "is_closed": "{entity_name} je/so zaprt/a",
             "is_closing": "{entity_name} se zapira/jo",

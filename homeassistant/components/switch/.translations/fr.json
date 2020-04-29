@@ -7,9 +7,7 @@
         },
         "condition_type": {
             "is_off": "{entity_name} est \u00e9teint",
-            "is_on": "{entity_name} est allum\u00e9",
-            "turn_off": "{entity_name} \u00e9teint",
-            "turn_on": "{entity_name} allum\u00e9"
+            "is_on": "{entity_name} est allum\u00e9"
         },
         "trigger_type": {
             "turned_off": "{entity_name} \u00e9teint",

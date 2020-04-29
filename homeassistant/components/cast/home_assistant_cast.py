@@ -12,6 +12,7 @@ from .const import DOMAIN, SIGNAL_HASS_CAST_SHOW_VIEW
 
 SERVICE_SHOW_VIEW = "show_lovelace_view"
 ATTR_VIEW_PATH = "view_path"
+ATTR_URL_PATH = "dashboard_path"
 
 
 async def async_setup_ha_cast(
@@ -63,11 +64,18 @@ async def async_setup_ha_cast(
             controller,
             call.data[ATTR_ENTITY_ID],
             call.data[ATTR_VIEW_PATH],
+            call.data.get(ATTR_URL_PATH),
         )
 
     hass.helpers.service.async_register_admin_service(
         DOMAIN,
         SERVICE_SHOW_VIEW,
         handle_show_view,
-        vol.Schema({ATTR_ENTITY_ID: cv.entity_id, ATTR_VIEW_PATH: str}),
+        vol.Schema(
+            {
+                ATTR_ENTITY_ID: cv.entity_id,
+                ATTR_VIEW_PATH: str,
+                vol.Optional(ATTR_URL_PATH): str,
+            }
+        ),
     )

@@ -46,7 +46,6 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} lavt batteriniveau",
-            "closed": "{entity_name} lukket",
             "cold": "{entity_name} blev kold",
             "connected": "{entity_name} tilsluttet",
             "gas": "{entity_name} begyndte at registrere gas",
@@ -54,7 +53,6 @@
             "light": "{entity_name} begyndte at registrere lys",
             "locked": "{entity_name} l\u00e5st",
             "moist": "{entity_name} blev fugtig",
-            "moist\u00a7": "{entity_name} blev fugtig",
             "motion": "{entity_name} begyndte at registrere bev\u00e6gelse",
             "moving": "{entity_name} begyndte at bev\u00e6ge sig",
             "no_gas": "{entity_name} stoppede med at registrere gas",

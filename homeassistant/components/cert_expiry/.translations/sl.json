@@ -1,15 +1,13 @@
 {
     "config": {
         "abort": {
-            "host_port_exists": "Ta kombinacija gostitelja in vrat je \u017ee konfigurirana"
+            "already_configured": "Ta kombinacija gostitelja in vrat je \u017ee konfigurirana",
+            "import_failed": "Uvoz iz konfiguracije ni uspel"
         },
         "error": {
-            "certificate_error": "Certifikata ni bilo mogo\u010de preveriti",
-            "certificate_fetch_failed": "Iz te kombinacije gostitelja in vrat ni mogo\u010de pridobiti potrdila",
+            "connection_refused": "Povezava zavrnjena, ko ste se povezali z gostiteljem",
             "connection_timeout": "\u010casovna omejitev za povezavo s tem gostiteljem je potekla",
-            "host_port_exists": "Ta kombinacija gostitelja in vrat je \u017ee konfigurirana",
-            "resolve_failed": "Tega gostitelja ni mogo\u010de razre\u0161iti",
-            "wrong_host": "Potrdilo se ne ujema z imenom gostitelja"
+            "resolve_failed": "Tega gostitelja ni mogo\u010de razre\u0161iti"
         },
         "step": {
             "user": {

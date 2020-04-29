@@ -10,6 +10,7 @@ from homeassistant.components.http import (
     CONF_SERVER_HOST,
     CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE,
+    DEFAULT_SERVER_HOST,
 )
 from homeassistant.const import SERVER_PORT
 
@@ -133,9 +134,14 @@ class HassIO:
             "refresh_token": refresh_token.token,
         }
 
-        if CONF_SERVER_HOST in http_config:
+        if (
+            http_config.get(CONF_SERVER_HOST, DEFAULT_SERVER_HOST)
+            != DEFAULT_SERVER_HOST
+        ):
             options["watchdog"] = False
-            _LOGGER.warning("Don't use 'server_host' options with Hass.io")
+            _LOGGER.warning(
+                "Found incompatible HTTP option 'server_host'. Watchdog feature disabled"
+            )
 
         return await self.send_command("/homeassistant/options", payload=options)
 

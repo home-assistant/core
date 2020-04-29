@@ -22,6 +22,7 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_wake_on_start": "Forc\u00e9ier d'Erw\u00e4chen vun den Autoen beim starten",
                     "scan_interval": "Sekonnen t\u00ebscht Scannen"
                 }
             }

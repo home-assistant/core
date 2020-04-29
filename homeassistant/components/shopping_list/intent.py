@@ -27,7 +27,7 @@ class AddItemIntent(intent.IntentHandler):
         intent_obj.hass.data[DOMAIN].async_add(item)
 
         response = intent_obj.create_response()
-        response.async_set_speech(f"I've added {item} to your shopping list")
+        response.async_set_speech(f"Dodano {item} do twojej listy zakupów")
         intent_obj.hass.bus.async_fire(EVENT)
         return response
 
@@ -44,12 +44,19 @@ class ListTopItemsIntent(intent.IntentHandler):
         response = intent_obj.create_response()
 
         if not items:
-            response.async_set_speech("There are no items on your shopping list")
+            response.async_set_speech("Nie ma elementów na liście zakupów.")
         else:
-            response.async_set_speech(
-                "These are the top {} items on your shopping list: {}".format(
-                    min(len(items), 5),
-                    ", ".join(itm["name"] for itm in reversed(items)),
+            if len(items) == 1:
+                response.async_set_speech(
+                    "Masz {} na liście zakupów.".format(
+                        "".join(itm["name"] for itm in reversed(items))
+                    )
                 )
-            )
+            else:
+                response.async_set_speech(
+                    "Oto najnowsze {} elementy na liście zakupów: {}".format(
+                        min(len(items), 5),
+                        ", ".join(itm["name"] for itm in reversed(items)),
+                    )
+                )
         return response

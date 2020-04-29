@@ -86,9 +86,10 @@ class DeconzDevice(DeconzBase, Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         self._device.remove_callback(self.async_update_callback)
-        del self.gateway.deconz_ids[self.entity_id]
-        for unsub_dispatcher in self.listeners:
-            unsub_dispatcher()
+        if self.entity_id in self.gateway.deconz_ids:
+            del self.gateway.deconz_ids[self.entity_id]
+            for unsub_dispatcher in self.listeners:
+                unsub_dispatcher()
 
     async def async_remove_self(self, deconz_ids: list) -> None:
         """Schedule removal of this entity.

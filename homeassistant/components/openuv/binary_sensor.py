@@ -3,14 +3,12 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import as_local, parse_datetime, utcnow
 
 from . import (
     DATA_OPENUV_CLIENT,
     DATA_PROTECTION_WINDOW,
     DOMAIN,
-    TOPIC_UPDATE,
     TYPE_PROTECTION_WINDOW,
     OpenUvEntity,
 )
@@ -75,24 +73,8 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):
         """Return a unique, Home Assistant friendly identifier for this entity."""
         return f"{self._latitude}_{self._longitude}_{self._sensor_type}"
 
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update
-        )
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-
-    async def async_update(self):
+    @callback
+    def update_from_latest_data(self):
         """Update the state."""
         data = self.openuv.data[DATA_PROTECTION_WINDOW]
 

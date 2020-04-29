@@ -1,7 +1,7 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "\uc704\uce58\uac00 \uc774\ubbf8 \ub4f1\ub85d\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        "abort": {
+            "already_configured": "\uc774 \uc704\uce58\ub294 \uc774\ubbf8 \ub4f1\ub85d\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "step": {
             "user": {

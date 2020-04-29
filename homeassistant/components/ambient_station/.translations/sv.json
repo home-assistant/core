@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Applikationsnyckel och/eller API-nyckel \u00e4r redan registrerade",
             "invalid_key": "Ogiltigt API-nyckel och/eller applikationsnyckel",
             "no_devices": "Inga enheter hittades i kontot"
         },

@@ -1,0 +1,22 @@
+{
+  "config": {
+    "title": "Nexia",
+    "step": {
+      "user": {
+        "title": "Connect to mynexia.com",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "This nexia home is already configured"
+    }
+  }
+}

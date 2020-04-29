@@ -4,7 +4,6 @@
             "already_configured": "Dieser Benutzername wird bereits benutzt."
         },
         "error": {
-            "identifier_exists": "Benutzername bereits registriert",
             "invalid_credentials": "Ung\u00fcltiger Benutzername oder Passwort",
             "no_devices": "Keine Ger\u00e4te im Konto gefunden"
         },

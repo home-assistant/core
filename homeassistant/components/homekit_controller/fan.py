@@ -44,11 +44,6 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     # that controls whether the fan is on or off.
     on_characteristic = None
 
-    def __init__(self, *args):
-        """Initialise the fan."""
-        self._features = 0
-        super().__init__(*args)
-
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -57,15 +52,6 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             CharacteristicsTypes.ROTATION_SPEED,
             self.on_characteristic,
         ]
-
-    def _setup_rotation_direction(self, char):
-        self._features |= SUPPORT_DIRECTION
-
-    def _setup_rotation_speed(self, char):
-        self._features |= SUPPORT_SET_SPEED
-
-    def _setup_swing_mode(self, char):
-        self._features |= SUPPORT_OSCILLATE
 
     @property
     def is_on(self):
@@ -113,7 +99,18 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return self._features
+        features = 0
+
+        if self.service.has(CharacteristicsTypes.ROTATION_DIRECTION):
+            features |= SUPPORT_DIRECTION
+
+        if self.service.has(CharacteristicsTypes.ROTATION_SPEED):
+            features |= SUPPORT_SET_SPEED
+
+        if self.service.has(CharacteristicsTypes.SWING_MODE):
+            features |= SUPPORT_OSCILLATE
+
+        return features
 
     async def async_set_direction(self, direction):
         """Set the direction of the fan."""

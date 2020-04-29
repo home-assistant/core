@@ -10,7 +10,6 @@
         "step": {
             "user": {
                 "data": {
-                    "code": "Code (fir Home Assistant)",
                     "password": "Passwuert",
                     "username": "E-Mail Adress"
                 },
@@ -18,5 +17,15 @@
             }
         },
         "title": "SimpliSafe"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Code (den am Home Assistant Interface benotzt g\u00ebtt)"
+                },
+                "title": "Simplisafe konfigur\u00e9ieren"
+            }
+        }
     }
 }

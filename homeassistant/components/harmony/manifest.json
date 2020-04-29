@@ -4,5 +4,12 @@
   "documentation": "https://www.home-assistant.io/integrations/harmony",
   "requirements": ["aioharmony==0.1.13"],
   "dependencies": [],
-  "codeowners": ["@ehendrix23"]
+  "codeowners": ["@ehendrix23","@bramkragten","@bdraco"],
+  "ssdp": [
+    {
+      "manufacturer": "Logitech",
+      "deviceType": "urn:myharmony-com:device:harmony:1"
+    }
+  ],
+  "config_flow": true
 }

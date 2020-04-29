@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "\u4f4d\u7f6e\u5df2\u7ecf\u6ce8\u518c"
-        },
         "step": {
             "user": {
                 "data": {

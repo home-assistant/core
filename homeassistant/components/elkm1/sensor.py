@@ -7,31 +7,22 @@ from elkm1_lib.const import (
 )
 from elkm1_lib.util import pretty_const, username
 
-from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
+from . import ElkAttachedEntity, create_elk_entities
+from .const import DOMAIN
+
+UNDEFINED_TEMPATURE = -40
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Create the Elk-M1 sensor platform."""
-    if discovery_info is None:
-        return
-
-    elk_datas = hass.data[ELK_DOMAIN]
+    elk_data = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
-    for elk_data in elk_datas.values():
-        elk = elk_data["elk"]
-        entities = create_elk_entities(
-            elk_data, elk.counters, "counter", ElkCounter, entities
-        )
-        entities = create_elk_entities(
-            elk_data, elk.keypads, "keypad", ElkKeypad, entities
-        )
-        entities = create_elk_entities(
-            elk_data, [elk.panel], "panel", ElkPanel, entities
-        )
-        entities = create_elk_entities(
-            elk_data, elk.settings, "setting", ElkSetting, entities
-        )
-        entities = create_elk_entities(elk_data, elk.zones, "zone", ElkZone, entities)
+    elk = elk_data["elk"]
+    create_elk_entities(elk_data, elk.counters, "counter", ElkCounter, entities)
+    create_elk_entities(elk_data, elk.keypads, "keypad", ElkKeypad, entities)
+    create_elk_entities(elk_data, [elk.panel], "panel", ElkPanel, entities)
+    create_elk_entities(elk_data, elk.settings, "setting", ElkSetting, entities)
+    create_elk_entities(elk_data, elk.zones, "zone", ElkZone, entities)
     async_add_entities(entities, True)
 
 
@@ -40,7 +31,7 @@ def temperature_to_state(temperature, undefined_temperature):
     return temperature if temperature > undefined_temperature else None
 
 
-class ElkSensor(ElkEntity):
+class ElkSensor(ElkAttachedEntity):
     """Base representation of Elk-M1 sensor."""
 
     def __init__(self, element, elk, elk_data):
@@ -89,7 +80,7 @@ class ElkKeypad(ElkSensor):
         """Attributes of the sensor."""
         attrs = self.initial_attrs()
         attrs["area"] = self._element.area + 1
-        attrs["temperature"] = self._element.temperature
+        attrs["temperature"] = self._state
         attrs["last_user_time"] = self._element.last_user_time.isoformat()
         attrs["last_user"] = self._element.last_user + 1
         attrs["code"] = self._element.code
@@ -98,14 +89,9 @@ class ElkKeypad(ElkSensor):
         return attrs
 
     def _element_changed(self, element, changeset):
-        self._state = temperature_to_state(self._element.temperature, -40)
-
-    async def async_added_to_hass(self):
-        """Register callback for ElkM1 changes and update entity state."""
-        await super().async_added_to_hass()
-        elk_datas = self.hass.data[ELK_DOMAIN]
-        for elk_data in elk_datas.values():
-            elk_data["keypads"][self._element.index] = self.entity_id
+        self._state = temperature_to_state(
+            self._element.temperature, UNDEFINED_TEMPATURE
+        )
 
 
 class ElkPanel(ElkSensor):
@@ -214,7 +200,9 @@ class ElkZone(ElkSensor):
 
     def _element_changed(self, element, changeset):
         if self._element.definition == ZoneType.TEMPERATURE.value:
-            self._state = temperature_to_state(self._element.temperature, -60)
+            self._state = temperature_to_state(
+                self._element.temperature, UNDEFINED_TEMPATURE
+            )
         elif self._element.definition == ZoneType.ANALOG_ZONE.value:
             self._state = self._element.voltage
         else:

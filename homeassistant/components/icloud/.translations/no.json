@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontoen er allerede konfigurert"
+            "already_configured": "Kontoen er allerede konfigurert",
+            "no_device": "Ingen av enhetene dine har \"Finn min iPhone\" aktivert"
         },
         "error": {
             "login": "Innloggingsfeil: vennligst sjekk e-postadressen og passordet ditt",
@@ -19,7 +20,8 @@
             "user": {
                 "data": {
                     "password": "Passord",
-                    "username": "E-post"
+                    "username": "E-post",
+                    "with_family": "Med familie"
                 },
                 "description": "Angi legitimasjonsbeskrivelsen",
                 "title": "iCloud-legitimasjon"

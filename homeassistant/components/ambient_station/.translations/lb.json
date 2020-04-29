@@ -4,7 +4,6 @@
             "already_configured": "D\u00ebsen App Schl\u00ebssel g\u00ebtt scho benotzt"
         },
         "error": {
-            "identifier_exists": "Applikatioun's Schl\u00ebssel an/oder API Schl\u00ebssel ass scho registr\u00e9iert",
             "invalid_key": "Ong\u00ebltegen API Schl\u00ebssel an/oder Applikatioun's Schl\u00ebssel",
             "no_devices": "Keng Apparater am Kont fonnt"
         },

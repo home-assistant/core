@@ -687,19 +687,29 @@ async def test_list_google_entities(hass, hass_ws_client, setup_api, mock_cloud_
     entity = GoogleEntity(
         hass, MockConfig(should_expose=lambda *_: False), State("light.kitchen", "on")
     )
+    entity2 = GoogleEntity(
+        hass,
+        MockConfig(should_expose=lambda *_: True, should_2fa=lambda *_: False),
+        State("cover.garage", "open", {"device_class": "garage"}),
+    )
     with patch(
         "homeassistant.components.google_assistant.helpers.async_get_entities",
-        return_value=[entity],
+        return_value=[entity, entity2],
     ):
         await client.send_json({"id": 5, "type": "cloud/google_assistant/entities"})
         response = await client.receive_json()
 
     assert response["success"]
-    assert len(response["result"]) == 1
+    assert len(response["result"]) == 2
     assert response["result"][0] == {
         "entity_id": "light.kitchen",
         "might_2fa": False,
         "traits": ["action.devices.traits.OnOff"],
+    }
+    assert response["result"][1] == {
+        "entity_id": "cover.garage",
+        "might_2fa": True,
+        "traits": ["action.devices.traits.OpenClose"],
     }
 
 

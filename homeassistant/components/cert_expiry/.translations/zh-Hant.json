@@ -2,17 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "\u6b64\u4e3b\u6a5f\u7aef\u8207\u901a\u8a0a\u57e0\u7d44\u5408\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "host_port_exists": "\u6b64\u4e3b\u6a5f\u7aef\u8207\u901a\u8a0a\u57e0\u7d44\u5408\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "import_failed": "\u532f\u5165\u8a2d\u5b9a\u5931\u6557"
         },
         "error": {
-            "certificate_error": "\u8a8d\u8b49\u7121\u6cd5\u78ba\u8a8d",
-            "certificate_fetch_failed": "\u7121\u6cd5\u81ea\u6b64\u4e3b\u6a5f\u7aef\u8207\u901a\u8a0a\u57e0\u7d44\u5408\u7372\u5f97\u8a8d\u8b49",
             "connection_refused": "\u9023\u7dda\u81f3\u4e3b\u6a5f\u6642\u906d\u62d2\u7d55",
             "connection_timeout": "\u9023\u7dda\u81f3\u4e3b\u6a5f\u7aef\u903e\u6642",
-            "host_port_exists": "\u6b64\u4e3b\u6a5f\u7aef\u8207\u901a\u8a0a\u57e0\u7d44\u5408\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "resolve_failed": "\u4e3b\u6a5f\u7aef\u7121\u6cd5\u89e3\u6790",
-            "wrong_host": "\u8a8d\u8b49\u8207\u4e3b\u6a5f\u540d\u7a31\u4e0d\u7b26\u5408"
+            "resolve_failed": "\u4e3b\u6a5f\u7aef\u7121\u6cd5\u89e3\u6790"
         },
         "step": {
             "user": {

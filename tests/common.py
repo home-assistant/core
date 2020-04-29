@@ -14,6 +14,8 @@ import threading
 from unittest.mock import MagicMock, Mock, patch
 import uuid
 
+from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa
+
 from homeassistant import auth, config_entries, core as ha, loader
 from homeassistant.auth import (
     auth_store,
@@ -37,7 +39,6 @@ from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED,
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
-    SERVER_PORT,
     STATE_OFF,
     STATE_ON,
 )
@@ -59,7 +60,6 @@ import homeassistant.util.dt as date_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.yaml.loader as yaml_loader
 
-_TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
 CLIENT_ID = "https://example.com/app"
@@ -215,18 +215,6 @@ async def async_test_home_assistant(loop):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
 
     return hass
-
-
-def get_test_instance_port():
-    """Return unused port for running test instance.
-
-    The socket that holds the default port does not get released when we stop
-    HA in a different test case. Until I have figured out what is going on,
-    let's run each test on a different port.
-    """
-    global _TEST_INSTANCE_PORT
-    _TEST_INSTANCE_PORT += 1
-    return _TEST_INSTANCE_PORT
 
 
 def async_mock_service(hass, domain, service, schema=None):

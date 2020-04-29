@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El compte ja ha estat configurat"
+            "already_configured": "El compte ja ha estat configurat",
+            "no_device": "Cap dels teus dispositius t\u00e9 activada la opci\u00f3 \"Troba el meu iPhone\""
         },
         "error": {
             "login": "Error d\u2019inici de sessi\u00f3: comprova el correu electr\u00f2nic i la contrasenya",
@@ -19,7 +20,8 @@
             "user": {
                 "data": {
                     "password": "Contrasenya",
-                    "username": "Correu electr\u00f2nic"
+                    "username": "Correu electr\u00f2nic",
+                    "with_family": "Amb fam\u00edlia"
                 },
                 "description": "Introdueix les teves credencials",
                 "title": "Credencials d'iCloud"

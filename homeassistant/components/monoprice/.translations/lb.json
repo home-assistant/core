@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Serielle Port",
+                    "source_1": "Numm vun der Quell #1",
+                    "source_2": "Numm vun der Quell #2",
+                    "source_3": "Numm vun der Quell #3",
+                    "source_4": "Numm vun der Quell #4",
+                    "source_5": "Numm vun der Quell #5",
+                    "source_6": "Numm vun der Quell #6"
+                },
+                "title": "Mam Apparat verbannen"
+            }
+        },
+        "title": "Monoprice 6-Zone Verst\u00e4rker"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source_1": "Numm vun der Quell #1",
+                    "source_2": "Numm vun der Quell #2",
+                    "source_3": "Numm vun der Quell #3",
+                    "source_4": "Numm vun der Quell #4",
+                    "source_5": "Numm vun der Quell #5",
+                    "source_6": "Numm vun der Quell #6"
+                },
+                "title": "Quelle konfigur\u00e9ieren"
+            }
+        }
+    }
+}

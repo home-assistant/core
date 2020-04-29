@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Denna RainMachine-enhet \u00e4r redan konfigurerad"
+        },
         "error": {
             "identifier_exists": "Kontot \u00e4r redan registrerat",
             "invalid_credentials": "Ogiltiga autentiseringsuppgifter"

@@ -12,8 +12,7 @@
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3",
-                    "name": "Nom",
-                    "port": "Port"
+                    "name": "Nom"
                 },
                 "description": "Configuraci\u00f3 d'una inst\u00e0ncia de servidor de Minecraft per poder monitoritzar-lo.",
                 "title": "Enlla\u00e7 del servidor de Minecraft"

@@ -41,7 +41,6 @@ _LOGGER = logging.getLogger(__name__)
 DATA_CONFIG = "config"
 
 DEFAULT_SOCKET_MIN_RETRY = 15
-DEFAULT_WATCHDOG_SECONDS = 5 * 60
 
 TYPE_24HOURRAININ = "24hourrainin"
 TYPE_BAROMABSIN = "baromabsin"
@@ -342,38 +341,30 @@ class AmbientStation:
         self._config_entry = config_entry
         self._entry_setup_complete = False
         self._hass = hass
-        self._watchdog_listener = None
         self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
         self.client = client
         self.stations = {}
 
     async def _attempt_connect(self):
         """Attempt to connect to the socket (retrying later on fail)."""
-        try:
+
+        async def connect(timestamp=None):
+            """Connect."""
             await self.client.websocket.connect()
+
+        try:
+            await connect()
         except WebsocketError as err:
             _LOGGER.error("Error with the websocket connection: %s", err)
             self._ws_reconnect_delay = min(2 * self._ws_reconnect_delay, 480)
-            async_call_later(self._hass, self._ws_reconnect_delay, self.ws_connect)
+            async_call_later(self._hass, self._ws_reconnect_delay, connect)
 
     async def ws_connect(self):
         """Register handlers and connect to the websocket."""
 
-        async def _ws_reconnect(event_time):
-            """Forcibly disconnect from and reconnect to the websocket."""
-            _LOGGER.debug("Watchdog expired; forcing socket reconnection")
-            await self.client.websocket.disconnect()
-            await self._attempt_connect()
-
         def on_connect():
             """Define a handler to fire when the websocket is connected."""
             _LOGGER.info("Connected to websocket")
-            _LOGGER.debug("Watchdog starting")
-            if self._watchdog_listener is not None:
-                self._watchdog_listener()
-            self._watchdog_listener = async_call_later(
-                self._hass, DEFAULT_WATCHDOG_SECONDS, _ws_reconnect
-            )
 
         def on_data(data):
             """Define a handler to fire when the data is received."""
@@ -384,12 +375,6 @@ class AmbientStation:
                 async_dispatcher_send(
                     self._hass, f"ambient_station_data_update_{mac_address}"
                 )
-
-            _LOGGER.debug("Resetting watchdog")
-            self._watchdog_listener()
-            self._watchdog_listener = async_call_later(
-                self._hass, DEFAULT_WATCHDOG_SECONDS, _ws_reconnect
-            )
 
         def on_disconnect():
             """Define a handler to fire when the websocket is disconnected."""
@@ -520,13 +505,22 @@ class AmbientWeatherEntity(Entity):
         @callback
         def update():
             """Update the state."""
-            self.async_schedule_update_ha_state(True)
+            self.update_from_latest_data()
+            self.async_write_ha_state()
 
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
             self.hass, f"ambient_station_data_update_{self._mac_address}", update
         )
 
+        self.update_from_latest_data()
+
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
         if self._async_unsub_dispatcher_connect:
             self._async_unsub_dispatcher_connect()
+            self._async_unsub_dispatcher_connect = None
+
+    @callback
+    def update_from_latest_data(self):
+        """Update the entity from the latest data."""
+        raise NotImplementedError

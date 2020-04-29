@@ -57,14 +57,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class HomeKitTelevision(HomeKitEntity, MediaPlayerDevice):
     """Representation of a HomeKit Controller Television."""
 
-    def __init__(self, accessory, discovery_info):
-        """Initialise the TV."""
-        self._state = None
-        self._features = 0
-        self._supported_target_media_state = set()
-        self._supported_remote_key = set()
-        super().__init__(accessory, discovery_info)
-
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -78,28 +70,6 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerDevice):
             CharacteristicsTypes.IDENTIFIER,
         ]
 
-    def _setup_active_identifier(self, char):
-        self._features |= SUPPORT_SELECT_SOURCE
-
-    def _setup_target_media_state(self, char):
-        self._supported_target_media_state = clamp_enum_to_char(
-            TargetMediaStateValues, char
-        )
-
-        if TargetMediaStateValues.PAUSE in self._supported_target_media_state:
-            self._features |= SUPPORT_PAUSE
-
-        if TargetMediaStateValues.PLAY in self._supported_target_media_state:
-            self._features |= SUPPORT_PLAY
-
-        if TargetMediaStateValues.STOP in self._supported_target_media_state:
-            self._features |= SUPPORT_STOP
-
-    def _setup_remote_key(self, char):
-        self._supported_remote_key = clamp_enum_to_char(RemoteKeyValues, char)
-        if RemoteKeyValues.PLAY_PAUSE in self._supported_remote_key:
-            self._features |= SUPPORT_PAUSE | SUPPORT_PLAY
-
     @property
     def device_class(self):
         """Define the device class for a HomeKit enabled TV."""
@@ -108,7 +78,47 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return self._features
+        features = 0
+
+        if self.service.has(CharacteristicsTypes.ACTIVE_IDENTIFIER):
+            features |= SUPPORT_SELECT_SOURCE
+
+        if self.service.has(CharacteristicsTypes.TARGET_MEDIA_STATE):
+            if TargetMediaStateValues.PAUSE in self.supported_media_states:
+                features |= SUPPORT_PAUSE
+
+            if TargetMediaStateValues.PLAY in self.supported_media_states:
+                features |= SUPPORT_PLAY
+
+            if TargetMediaStateValues.STOP in self.supported_media_states:
+                features |= SUPPORT_STOP
+
+        if self.service.has(CharacteristicsTypes.REMOTE_KEY):
+            if RemoteKeyValues.PLAY_PAUSE in self.supported_remote_keys:
+                features |= SUPPORT_PAUSE | SUPPORT_PLAY
+
+        return features
+
+    @property
+    def supported_media_states(self):
+        """Mediate state flags that are supported."""
+        if not self.service.has(CharacteristicsTypes.TARGET_MEDIA_STATE):
+            return frozenset()
+
+        return clamp_enum_to_char(
+            TargetMediaStateValues,
+            self.service[CharacteristicsTypes.TARGET_MEDIA_STATE],
+        )
+
+    @property
+    def supported_remote_keys(self):
+        """Remote key buttons that are supported."""
+        if not self.service.has(CharacteristicsTypes.REMOTE_KEY):
+            return frozenset()
+
+        return clamp_enum_to_char(
+            RemoteKeyValues, self.service[CharacteristicsTypes.REMOTE_KEY]
+        )
 
     @property
     def source_list(self):
@@ -164,11 +174,11 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerDevice):
             _LOGGER.debug("Cannot play while already playing")
             return
 
-        if TargetMediaStateValues.PLAY in self._supported_target_media_state:
+        if TargetMediaStateValues.PLAY in self.supported_media_states:
             await self.async_put_characteristics(
                 {CharacteristicsTypes.TARGET_MEDIA_STATE: TargetMediaStateValues.PLAY}
             )
-        elif RemoteKeyValues.PLAY_PAUSE in self._supported_remote_key:
+        elif RemoteKeyValues.PLAY_PAUSE in self.supported_remote_keys:
             await self.async_put_characteristics(
                 {CharacteristicsTypes.REMOTE_KEY: RemoteKeyValues.PLAY_PAUSE}
             )
@@ -179,11 +189,11 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerDevice):
             _LOGGER.debug("Cannot pause while already paused")
             return
 
-        if TargetMediaStateValues.PAUSE in self._supported_target_media_state:
+        if TargetMediaStateValues.PAUSE in self.supported_media_states:
             await self.async_put_characteristics(
                 {CharacteristicsTypes.TARGET_MEDIA_STATE: TargetMediaStateValues.PAUSE}
             )
-        elif RemoteKeyValues.PLAY_PAUSE in self._supported_remote_key:
+        elif RemoteKeyValues.PLAY_PAUSE in self.supported_remote_keys:
             await self.async_put_characteristics(
                 {CharacteristicsTypes.REMOTE_KEY: RemoteKeyValues.PLAY_PAUSE}
             )
@@ -194,7 +204,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerDevice):
             _LOGGER.debug("Cannot stop when already idle")
             return
 
-        if TargetMediaStateValues.STOP in self._supported_target_media_state:
+        if TargetMediaStateValues.STOP in self.supported_media_states:
             await self.async_put_characteristics(
                 {CharacteristicsTypes.TARGET_MEDIA_STATE: TargetMediaStateValues.STOP}
             )

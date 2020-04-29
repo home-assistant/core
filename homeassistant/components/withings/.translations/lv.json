@@ -1,13 +1,5 @@
 {
     "config": {
-        "step": {
-            "user": {
-                "data": {
-                    "profile": "Profils"
-                },
-                "title": "Lietot\u0101ja profils."
-            }
-        },
         "title": "Withings"
     }
 }

@@ -4,7 +4,6 @@
             "already_configured": "D\u00ebse Benotzernumm g\u00ebtt scho benotzt."
         },
         "error": {
-            "identifier_exists": "Benotzernumm ass scho registr\u00e9iert",
             "invalid_credentials": "Ong\u00ebltege Benotzernumm oder Passwuert",
             "no_devices": "Keng Apparater am Kont fonnt"
         },

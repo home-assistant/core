@@ -14,10 +14,6 @@
         "flow_title": "deCONZ Zigbee gateway ( {host} )",
         "step": {
             "hassio_confirm": {
-                "data": {
-                    "allow_clip_sensor": "Sta het importeren van virtuele sensoren toe",
-                    "allow_deconz_groups": "Sta de import van deCONZ-groepen toe"
-                },
                 "description": "Wilt u de Home Assistant configureren om verbinding te maken met de deCONZ gateway van de hass.io add-on {addon}?",
                 "title": "deCONZ Zigbee Gateway via Hass.io add-on"
             },
@@ -31,13 +27,6 @@
             "link": {
                 "description": "Ontgrendel je deCONZ gateway om te registreren met Home Assistant.\n\n1. Ga naar deCONZ systeeminstellingen (Instellingen -> Gateway -> Geavanceerd)\n2. Druk op de knop \"Gateway ontgrendelen\"",
                 "title": "Koppel met deCONZ"
-            },
-            "options": {
-                "data": {
-                    "allow_clip_sensor": "Sta het importeren van virtuele sensoren toe",
-                    "allow_deconz_groups": "Sta de import van deCONZ-groepen toe"
-                },
-                "title": "Extra configuratieopties voor deCONZ"
             }
         },
         "title": "deCONZ Zigbee gateway"
@@ -96,13 +85,6 @@
     },
     "options": {
         "step": {
-            "async_step_deconz_devices": {
-                "data": {
-                    "allow_clip_sensor": "DeCONZ CLIP sensoren toestaan",
-                    "allow_deconz_groups": "DeCONZ-lichtgroepen toestaan"
-                },
-                "description": "De zichtbaarheid van deCONZ-apparaattypen configureren"
-            },
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "DeCONZ CLIP sensoren toestaan",

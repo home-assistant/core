@@ -155,11 +155,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # AIS dom fix - get recorder config from file
     try:
         import json
+        from homeassistant.components import ais_files
+        import homeassistant.components.ais_dom.ais_global as ais_global
 
-        with open(
-            "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_settings_info"
-        ) as json_file:
+        with open(ais_files.G_DB_SETTINGS_INFO_FILE) as json_file:
             db_settings = json.load(json_file)
+            ais_global.G_DB_SETTINGS_INFO = db_settings
         db_url = db_settings["dbUrl"]
         if db_url == "sqlite:///:memory:":
             keep_days = 2
@@ -168,6 +169,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             db_max_retries = 10
             db_retry_wait = 3
         else:
+            if db_url.startswith("sqlite://///"):
+                # DB in file
+                from homeassistant.components import ais_usb
+
+                if ais_usb.is_usb_url_valid_external_drive(db_url) is not True:
+                    _LOGGER.error(
+                        "Invalid external drive: %s selected for recording! ", db_url
+                    )
+                    return False
             keep_days = 10
             if "dbKeepDays" in db_settings:
                 keep_days = int(db_settings["dbKeepDays"])
@@ -188,18 +198,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     include = conf.get(CONF_INCLUDE, {})
     exclude = {
         "domains": [
-            "ais_dom" "ais_ai_service",
+            "ais_ai_service",
             "ais_amplifier_service",
             "ais_audiobooks_service",
             "ais_bookmarks",
             "ais_cloud",
             "ais_device_search_mqtt",
+            "ais_dom",
             "ais_dom_device",
             "ais_drives_service",
             "ais_exo_player",
             "ais_files",
             "ais_gm_service",
-            "ais_google_home," "ais_help",
+            "ais_google_home",
+            "ais_help",
             "ais_host",
             "ais_ingress",
             "ais_knowledge_service",
@@ -512,12 +524,14 @@ class Recorder(threading.Thread):
 
             def shutdown(event):
                 """Shut down the Recorder."""
+                print("Shut down the Recorder.")
                 if not hass_started.done():
                     hass_started.set_result(shutdown_task)
                 self.queue.put(None)
                 self.join()
 
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+            self.hass.bus.async_listen("ais_stop_recorder_event", shutdown)
 
             if self.hass.state == CoreState.running:
                 hass_started.set_result(None)
@@ -604,7 +618,7 @@ class Recorder(threading.Thread):
                 _LOGGER.warning("Event is not JSON serializable: %s", event)
             except Exception as err:  # pylint: disable=broad-except
                 # Must catch the exception to prevent the loop from collapsing
-                _LOGGER.exception("Error adding event: %s", err)
+                _LOGGER.error("Error adding event: %s", err)
 
             if dbevent and event.event_type == EVENT_STATE_CHANGED:
                 try:
@@ -624,7 +638,6 @@ class Recorder(threading.Thread):
             # than we commit right away
             if not self.commit_interval:
                 self._commit_event_session_or_retry()
-
             self.queue.task_done()
 
     def _commit_event_session_or_retry(self):

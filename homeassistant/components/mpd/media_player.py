@@ -249,7 +249,7 @@ class MpdDevice(MediaPlayerDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
         if self._status is None:
-            return None
+            return 0
 
         supported = SUPPORT_MPD
         if "volume" in self._status:

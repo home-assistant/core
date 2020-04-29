@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Sprejemnik DirecTV je \u017ee konfiguriran",
+            "unknown": "Nepri\u010dakovana napaka"
+        },
+        "error": {
+            "cannot_connect": "Povezava ni uspela, poskusite znova"
+        },
+        "flow_title": "DirecTV: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "data": {
+                    "few": "nekaj",
+                    "one": "ena",
+                    "other": "drugo",
+                    "two": "dva"
+                },
+                "description": "Ali \u017eelite nastaviti {name} ?",
+                "title": "Pove\u017eite se s sprejemnikom DirecTV"
+            },
+            "user": {
+                "data": {
+                    "host": "Gostitelj ali IP naslov"
+                },
+                "title": "Pove\u017eite se s sprejemnikom DirecTV"
+            }
+        },
+        "title": "DirecTV"
+    }
+}

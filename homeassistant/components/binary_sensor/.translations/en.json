@@ -46,7 +46,6 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} battery low",
-            "closed": "{entity_name} closed",
             "cold": "{entity_name} became cold",
             "connected": "{entity_name} connected",
             "gas": "{entity_name} started detecting gas",
@@ -54,7 +53,6 @@
             "light": "{entity_name} started detecting light",
             "locked": "{entity_name} locked",
             "moist": "{entity_name} became moist",
-            "moist\u00a7": "{entity_name} became moist",
             "motion": "{entity_name} started detecting motion",
             "moving": "{entity_name} started moving",
             "no_gas": "{entity_name} stopped detecting gas",

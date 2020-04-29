@@ -7,9 +7,7 @@
         },
         "condition_type": {
             "is_off": "{entity_name} est\u00e0 apagat",
-            "is_on": "{entity_name} est\u00e0 enc\u00e8s",
-            "turn_off": "{entity_name} desactivat",
-            "turn_on": "{entity_name} activat"
+            "is_on": "{entity_name} est\u00e0 enc\u00e8s"
         },
         "trigger_type": {
             "turned_off": "{entity_name} desactivat",

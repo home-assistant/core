@@ -14,7 +14,11 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
+    PRESET_BOOST,
+    PRESET_COMFORT,
+    PRESET_ECO,
     SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE,
     SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SWING_BOTH,
@@ -57,8 +61,24 @@ MAP_IH_TO_HVAC_MODE = {
     "heat": HVAC_MODE_HEAT,
     "off": HVAC_MODE_OFF,
 }
-
 MAP_HVAC_MODE_TO_IH = {v: k for k, v in MAP_IH_TO_HVAC_MODE.items()}
+
+MAP_IH_TO_PRESET_MODE = {
+    "eco": PRESET_ECO,
+    "comfort": PRESET_COMFORT,
+    "powerful": PRESET_BOOST,
+}
+MAP_PRESET_MODE_TO_IH = {v: k for k, v in MAP_IH_TO_PRESET_MODE.items()}
+
+IH_SWING_STOP = "auto/stop"
+IH_SWING_SWING = "swing"
+MAP_SWING_TO_IH = {
+    SWING_OFF: {"vvane": IH_SWING_STOP, "hvane": IH_SWING_STOP},
+    SWING_BOTH: {"vvane": IH_SWING_SWING, "hvane": IH_SWING_SWING},
+    SWING_HORIZONTAL: {"vvane": IH_SWING_STOP, "hvane": IH_SWING_SWING},
+    SWING_VERTICAL: {"vvane": IH_SWING_SWING, "hvane": IH_SWING_STOP},
+}
+
 
 MAP_STATE_ICONS = {
     HVAC_MODE_COOL: "mdi:snowflake",
@@ -67,15 +87,6 @@ MAP_STATE_ICONS = {
     HVAC_MODE_HEAT: "mdi:white-balance-sunny",
     HVAC_MODE_HEAT_COOL: "mdi:cached",
 }
-
-IH_HVAC_MODES = [
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_OFF,
-]
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -132,31 +143,53 @@ class IntesisAC(ClimateDevice):
         self._setpoint_step = 1
         self._current_temp = None
         self._max_temp = None
+        self._hvac_mode_list = []
         self._min_temp = None
         self._target_temp = None
         self._outdoor_temp = None
+        self._hvac_mode = None
+        self._preset = None
+        self._preset_list = [PRESET_ECO, PRESET_COMFORT, PRESET_BOOST]
         self._run_hours = None
         self._rssi = None
-        self._swing = None
-        self._swing_list = None
+        self._swing_list = [SWING_OFF]
         self._vvane = None
         self._hvane = None
         self._power = False
         self._fan_speed = None
-        self._hvac_mode = None
-        self._fan_modes = controller.get_fan_speed_list(ih_device_id)
-        self._support = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
-        self._swing_list = [SWING_OFF]
+        self._support = 0
+        self._power_consumption_heat = None
+        self._power_consumption_cool = None
 
-        if ih_device.get("config_vertical_vanes"):
+        # Setpoint support
+        if controller.has_setpoint_control(ih_device_id):
+            self._support |= SUPPORT_TARGET_TEMPERATURE
+
+        # Setup swing list
+        if controller.has_vertical_swing(ih_device_id):
             self._swing_list.append(SWING_VERTICAL)
-        if ih_device.get("config_horizontal_vanes"):
+        if controller.has_horizontal_swing(ih_device_id):
             self._swing_list.append(SWING_HORIZONTAL)
-        if len(self._swing_list) == 3:
+        if SWING_HORIZONTAL in self._swing_list and SWING_VERTICAL in self._swing_list:
             self._swing_list.append(SWING_BOTH)
+        if len(self._swing_list) > 1:
             self._support |= SUPPORT_SWING_MODE
-        elif len(self._swing_list) == 2:
-            self._support |= SUPPORT_SWING_MODE
+
+        # Setup fan speeds
+        self._fan_modes = controller.get_fan_speed_list(ih_device_id)
+        if self._fan_modes:
+            self._support |= SUPPORT_FAN_MODE
+
+        # Preset support
+        if ih_device.get("climate_working_mode"):
+            self._support |= SUPPORT_PRESET_MODE
+
+        # Setup HVAC modes
+        modes = controller.get_mode_list(ih_device_id)
+        if modes:
+            mode_list = [MAP_IH_TO_HVAC_MODE[mode] for mode in modes]
+            self._hvac_mode_list.extend(mode_list)
+        self._hvac_mode_list.append(HVAC_MODE_OFF)
 
     async def async_added_to_hass(self):
         """Subscribe to event updates."""
@@ -181,11 +214,17 @@ class IntesisAC(ClimateDevice):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         attrs = {}
-        if len(self._swing_list) > 1:
-            attrs["vertical_vane"] = self._vvane
-            attrs["horizontal_vane"] = self._hvane
         if self._outdoor_temp:
             attrs["outdoor_temp"] = self._outdoor_temp
+        if self._power_consumption_heat:
+            attrs["power_consumption_heat_kw"] = round(
+                self._power_consumption_heat / 1000, 1
+            )
+        if self._power_consumption_cool:
+            attrs["power_consumption_cool_kw"] = round(
+                self._power_consumption_cool / 1000, 1
+            )
+
         return attrs
 
     @property
@@ -197,6 +236,16 @@ class IntesisAC(ClimateDevice):
     def target_temperature_step(self) -> float:
         """Return whether setpoint should be whole or half degree precision."""
         return self._setpoint_step
+
+    @property
+    def preset_modes(self):
+        """Return a list of HVAC preset modes."""
+        return self._preset_list
+
+    @property
+    def preset_mode(self):
+        """Return the current preset mode."""
+        return self._preset
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -248,21 +297,21 @@ class IntesisAC(ClimateDevice):
         self._fan_speed = fan_mode
         self.async_write_ha_state()
 
+    async def async_set_preset_mode(self, preset_mode):
+        """Set preset mode."""
+        ih_preset_mode = MAP_PRESET_MODE_TO_IH.get(preset_mode)
+        await self._controller.set_preset_mode(self._device_id, ih_preset_mode)
+
     async def async_set_swing_mode(self, swing_mode):
         """Set the vertical vane."""
-        if swing_mode == SWING_OFF:
-            await self._controller.set_vertical_vane(self._device_id, "auto/stop")
-            await self._controller.set_horizontal_vane(self._device_id, "auto/stop")
-        elif swing_mode == SWING_BOTH:
-            await self._controller.set_vertical_vane(self._device_id, "swing")
-            await self._controller.set_horizontal_vane(self._device_id, "swing")
-        elif swing_mode == SWING_HORIZONTAL:
-            await self._controller.set_vertical_vane(self._device_id, "auto/stop")
-            await self._controller.set_horizontal_vane(self._device_id, "swing")
-        elif swing_mode == SWING_VERTICAL:
-            await self._controller.set_vertical_vane(self._device_id, "swing")
-            await self._controller.set_horizontal_vane(self._device_id, "auto/stop")
-        self._swing = swing_mode
+        swing_settings = MAP_SWING_TO_IH.get(swing_mode)
+        if swing_settings:
+            await self._controller.set_vertical_vane(
+                self._device_id, swing_settings.get("vvane")
+            )
+            await self._controller.set_horizontal_vane(
+                self._device_id, swing_settings.get("hvane")
+            )
 
     async def async_update(self):
         """Copy values from controller dictionary to climate device."""
@@ -282,19 +331,22 @@ class IntesisAC(ClimateDevice):
         mode = self._controller.get_mode(self._device_id)
         self._hvac_mode = MAP_IH_TO_HVAC_MODE.get(mode)
 
+        # Preset mode
+        preset = self._controller.get_preset_mode(self._device_id)
+        self._preset = MAP_IH_TO_PRESET_MODE.get(preset)
+
         # Swing mode
         # Climate module only supports one swing setting.
         self._vvane = self._controller.get_vertical_swing(self._device_id)
         self._hvane = self._controller.get_horizontal_swing(self._device_id)
 
-        if self._vvane == "swing" and self._hvane == "swing":
-            self._swing = SWING_BOTH
-        elif self._vvane == "swing":
-            self._swing = SWING_VERTICAL
-        elif self._hvane == "swing":
-            self._swing = SWING_HORIZONTAL
-        else:
-            self._swing = SWING_OFF
+        # Power usage
+        self._power_consumption_heat = self._controller.get_heat_power_consumption(
+            self._device_id
+        )
+        self._power_consumption_cool = self._controller.get_cool_power_consumption(
+            self._device_id
+        )
 
     async def async_will_remove_from_hass(self):
         """Shutdown the controller when the device is being removed."""
@@ -357,7 +409,7 @@ class IntesisAC(ClimateDevice):
     @property
     def hvac_modes(self):
         """List of available operation modes."""
-        return IH_HVAC_MODES
+        return self._hvac_mode_list
 
     @property
     def fan_mode(self):
@@ -367,7 +419,15 @@ class IntesisAC(ClimateDevice):
     @property
     def swing_mode(self):
         """Return current swing mode."""
-        return self._swing
+        if self._vvane == IH_SWING_SWING and self._hvane == IH_SWING_SWING:
+            swing = SWING_BOTH
+        elif self._vvane == IH_SWING_SWING:
+            swing = SWING_VERTICAL
+        elif self._hvane == IH_SWING_SWING:
+            swing = SWING_HORIZONTAL
+        else:
+            swing = SWING_OFF
+        return swing
 
     @property
     def fan_modes(self):

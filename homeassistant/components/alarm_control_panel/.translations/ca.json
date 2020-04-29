@@ -7,10 +7,17 @@
             "disarm": "Desactiva {entity_name}",
             "trigger": "Dispara {entity_name}"
         },
+        "condition_type": {
+            "is_armed_away": "{entity_name} est\u00e0 activada en mode 'a fora'",
+            "is_armed_home": "{entity_name} est\u00e0 activada en mode 'a casa'",
+            "is_armed_night": "{entity_name} est\u00e0 activada en mode 'nocturn'",
+            "is_disarmed": "{entity_name} est\u00e0 desactivada",
+            "is_triggered": "{entity_name} est\u00e0 disparada"
+        },
         "trigger_type": {
-            "armed_away": "{entity_name} activada en mode a fora",
-            "armed_home": "{entity_name} activada en mode a casa",
-            "armed_night": "{entity_name} activada en mode nocturn",
+            "armed_away": "{entity_name} activada en mode 'a fora'",
+            "armed_home": "{entity_name} activada en mode 'a casa'",
+            "armed_night": "{entity_name} activada en mode 'nocturn'",
             "disarmed": "{entity_name} desactivada",
             "triggered": "{entity_name} disparat/ada"
         }

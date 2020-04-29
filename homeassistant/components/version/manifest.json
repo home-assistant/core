@@ -2,7 +2,7 @@
   "domain": "version",
   "name": "Version",
   "documentation": "https://www.home-assistant.io/integrations/version",
-  "requirements": ["pyhaversion==3.2.0"],
+  "requirements": ["pyhaversion==3.3.0"],
   "dependencies": [],
   "codeowners": ["@fabaff"],
   "quality_scale": "internal"

@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ta klju\u010d API je \u017ee v uporabi."
+        },
+        "error": {
+            "invalid_api_key": "Neveljaven API klju\u010d"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Klju\u010d",
+                    "latitude": "Zemljepisna \u0161irina",
+                    "longitude": "Zemljepisna dol\u017eina"
+                },
+                "description": "Spremljajte kakovost zraka na zemljepisni lokaciji.",
+                "title": "Nastavite AirVisual"
+            }
+        },
+        "title": "AirVisual"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Prika\u017ei nadzorovano obmo\u010dje na zemljevidu"
+                },
+                "description": "Nastavite razli\u010dne mo\u017enosti za integracijo AirVisual.",
+                "title": "Nastavite AirVisual"
+            }
+        }
+    }
+}

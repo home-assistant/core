@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "no_device": "\u8a2d\u5099\u7686\u672a\u958b\u555f\u300c\u5c0b\u627e\u6211\u7684 iPhone\u300d\u529f\u80fd\u3002"
         },
         "error": {
             "login": "\u767b\u5165\u932f\u8aa4\uff1a\u8acb\u78ba\u8a8d\u96fb\u5b50\u90f5\u4ef6\u8207\u79d8\u5bc6\u6b63\u78ba\u6027",
@@ -19,7 +20,8 @@
             "user": {
                 "data": {
                     "password": "\u5bc6\u78bc",
-                    "username": "\u96fb\u5b50\u90f5\u4ef6"
+                    "username": "\u96fb\u5b50\u90f5\u4ef6",
+                    "with_family": "\u8207\u5bb6\u4eba\u5171\u4eab"
                 },
                 "description": "\u8f38\u5165\u6191\u8b49",
                 "title": "iCloud \u6191\u8b49"

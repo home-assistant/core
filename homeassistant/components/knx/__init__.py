@@ -205,7 +205,7 @@ class KNXModule:
 
     def connection_config_tunneling(self):
         """Return the connection_config if tunneling is configured."""
-        gateway_ip = self.config[DOMAIN][CONF_KNX_TUNNELING].get(CONF_HOST)
+        gateway_ip = self.config[DOMAIN][CONF_KNX_TUNNELING][CONF_HOST]
         gateway_port = self.config[DOMAIN][CONF_KNX_TUNNELING].get(CONF_PORT)
         local_ip = self.config[DOMAIN][CONF_KNX_TUNNELING].get(CONF_KNX_LOCAL_IP)
         if gateway_port is None:
@@ -215,6 +215,7 @@ class KNXModule:
             gateway_ip=gateway_ip,
             gateway_port=gateway_port,
             local_ip=local_ip,
+            auto_reconnect=True,
         )
 
     def connection_config_auto(self):

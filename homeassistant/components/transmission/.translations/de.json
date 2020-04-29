@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host ist bereits konfiguriert.",
-            "one_instance_allowed": "Nur eine einzige Instanz ist notwendig."
+            "already_configured": "Host ist bereits konfiguriert."
         },
         "error": {
             "cannot_connect": "Verbindung zum Host nicht m\u00f6glich",
@@ -10,12 +9,6 @@
             "wrong_credentials": "Falscher Benutzername oder Kennwort"
         },
         "step": {
-            "options": {
-                "data": {
-                    "scan_interval": "Aktualisierungsfrequenz"
-                },
-                "title": "Konfigurationsoptionen"
-            },
             "user": {
                 "data": {
                     "host": "Host",
@@ -35,7 +28,6 @@
                 "data": {
                     "scan_interval": "Aktualisierungsfrequenz"
                 },
-                "description": "Konfigurieren von Optionen f\u00fcr Transmission",
                 "title": "Konfiguriere die Optionen f\u00fcr die \u00dcbertragung"
             }
         }

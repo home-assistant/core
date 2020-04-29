@@ -19,17 +19,13 @@
                     "pin": "PIN"
                 }
             },
+            "pairing_complete": {
+                "title": "Pairing Complete",
+                "description": "Your Vizio SmartCast device is now connected to Home Assistant."
+            },
             "pairing_complete_import": {
                 "title": "Pairing Complete",
                 "description": "Your Vizio SmartCast TV is now connected to Home Assistant.\n\nYour Access Token is '**{access_token}**'."
-            },
-            "tv_apps": {
-                "title": "Configure Apps for Smart TV",
-                "description": "If you have a Smart TV, you can optionally filter your source list by choosing which apps to include or exclude in your source list. You can skip this step for TVs that don't support apps.",
-                "data": {
-                    "include_or_exclude": "Include or Exclude Apps?",
-                    "apps_to_include_or_exclude": "Apps to Include or Exclude"
-                }
             }
         },
         "error": {
@@ -48,8 +44,11 @@
         "step": {
             "init": {
                 "title": "Update Vizo SmartCast Options",
+                "description": "If you have a Smart TV, you can optionally filter your source list by choosing which apps to include or exclude in your source list.",
                 "data": {
-                    "volume_step": "Volume Step Size"
+                    "volume_step": "Volume Step Size",
+                    "include_or_exclude": "Include or Exclude Apps?",
+                    "apps_to_include_or_exclude": "Apps to Include or Exclude"
                 }
             }
         }

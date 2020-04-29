@@ -12,8 +12,7 @@
             "user": {
                 "data": {
                     "host": "V\u00e6rt",
-                    "name": "Navn",
-                    "port": "Port"
+                    "name": "Navn"
                 },
                 "description": "Konfigurer din Minecraft-server-instans for at tillade overv\u00e5gning.",
                 "title": "Forbind din Minecraft-server"

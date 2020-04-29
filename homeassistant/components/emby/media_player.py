@@ -305,7 +305,7 @@ class EmbyDevice(MediaPlayerDevice):
         """Flag media player features that are supported."""
         if self.supports_remote_control:
             return SUPPORT_EMBY
-        return None
+        return 0
 
     async def async_media_play(self):
         """Play media."""

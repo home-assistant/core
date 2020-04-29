@@ -4,7 +4,6 @@
             "all_configured": "Vsi povezani stre\u017eniki so \u017ee konfigurirani",
             "already_configured": "Ta stre\u017enik Plex je \u017ee konfiguriran",
             "already_in_progress": "Plex se konfigurira",
-            "discovery_no_file": "Podatkovne konfiguracijske datoteke ni bilo mogo\u010de najti",
             "invalid_import": "Uvo\u017eena konfiguracija ni veljavna",
             "non-interactive": "Neinteraktivni uvoz",
             "token_request_timeout": "Potekla \u010dasovna omejitev za pridobitev \u017eetona",
@@ -13,20 +12,9 @@
         "error": {
             "faulty_credentials": "Avtorizacija ni uspela",
             "no_servers": "Ni stre\u017enikov povezanih z ra\u010dunom",
-            "no_token": "Vnesite \u017eeton ali izberite ro\u010dno nastavitev",
             "not_found": "Plex stre\u017enika ni mogo\u010de najti"
         },
         "step": {
-            "manual_setup": {
-                "data": {
-                    "host": "Gostitelj",
-                    "port": "Vrata",
-                    "ssl": "Uporaba SSL",
-                    "token": "\u017deton (po potrebi)",
-                    "verify_ssl": "Preverite SSL potrdilo"
-                },
-                "title": "Plex stre\u017enik"
-            },
             "select_server": {
                 "data": {
                     "server": "Stre\u017enik"
@@ -37,14 +25,6 @@
             "start_website_auth": {
                 "description": "Nadaljujte z avtorizacijo na plex.tv.",
                 "title": "Pove\u017eite stre\u017enik Plex"
-            },
-            "user": {
-                "data": {
-                    "manual_setup": "Ro\u010dna nastavitev",
-                    "token": "Plex \u017eeton"
-                },
-                "description": "Nadaljujte z avtorizacijo na plex.tv ali ro\u010dno konfigurirajte stre\u017enik.",
-                "title": "Pove\u017eite stre\u017enik Plex"
             }
         },
         "title": "Plex"
@@ -53,7 +33,8 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
-                    "show_all_controls": "Poka\u017ei vse kontrole",
+                    "ignore_new_shared_users": "Ignorirajte nove upravljane/deljene uporabnike",
+                    "monitored_users": "Nadzorovani uporabniki",
                     "use_episode_art": "Uporabi naslovno sliko epizode"
                 },
                 "description": "Mo\u017enosti za predvajalnike Plex"

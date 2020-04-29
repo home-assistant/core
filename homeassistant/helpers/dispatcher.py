@@ -47,7 +47,10 @@ def async_dispatcher_connect(
     wrapped_target = catch_log_exception(
         target,
         lambda *args: "Exception in {} when dispatching '{}': {}".format(
-            target.__name__, signal, args
+            # Functions wrapped in partial do not have a __name__
+            getattr(target, "__name__", None) or str(target),
+            signal,
+            args,
         ),
     )
 

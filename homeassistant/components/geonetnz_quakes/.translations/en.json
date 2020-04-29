@@ -1,7 +1,7 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Location already registered"
+        "abort": {
+            "already_configured": "Location is already configured."
         },
         "step": {
             "user": {

@@ -1,20 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_in_progress": "Konfigurationsfl\u00f6de f\u00f6r vizio-komponenten p\u00e5g\u00e5r\nredan.",
             "already_setup": "Den h\u00e4r posten har redan st\u00e4llts in.",
-            "already_setup_with_diff_host_and_name": "Den h\u00e4r posten verkar redan ha st\u00e4llts in med en annan v\u00e4rd och ett annat namn baserat p\u00e5 dess serienummer. Ta bort alla gamla poster fr\u00e5n configuration.yaml och fr\u00e5n menyn Integrationer innan du f\u00f6rs\u00f6ker l\u00e4gga till den h\u00e4r enheten igen.",
-            "host_exists": "Vizio-komponenten med v\u00e4rdnamnet \u00e4r redan konfigurerad.",
-            "name_exists": "Vizio-komponent med namn redan konfigurerad.",
-            "updated_entry": "Den h\u00e4r posten har redan konfigurerats, men namnet och/eller alternativen som definierats i konfigurationen matchar inte den tidigare importerade konfigurationen och d\u00e4rf\u00f6r har konfigureringsposten uppdaterats i enlighet med detta.",
-            "updated_options": "Den h\u00e4r posten har redan st\u00e4llts in men de alternativ som definierats i konfigurationen matchar inte de tidigare importerade alternativv\u00e4rdena s\u00e5 konfigurationsposten har uppdaterats i enlighet med detta.",
-            "updated_volume_step": "Den h\u00e4r posten har redan st\u00e4llts in men volymstegstorleken i konfigurationen matchar inte konfigurationsposten s\u00e5 konfigurationsposten har uppdaterats i enlighet med detta."
+            "updated_entry": "Den h\u00e4r posten har redan konfigurerats, men namnet och/eller alternativen som definierats i konfigurationen matchar inte den tidigare importerade konfigurationen och d\u00e4rf\u00f6r har konfigureringsposten uppdaterats i enlighet med detta."
         },
         "error": {
             "cant_connect": "Det gick inte att ansluta till enheten. [Granska dokumentationen] (https://www.home-assistant.io/integrations/vizio/) och p\u00e5 nytt kontrollera att\n- Enheten \u00e4r p\u00e5slagen\n- Enheten \u00e4r ansluten till n\u00e4tverket\n- De v\u00e4rden du fyllt i \u00e4r korrekta\ninnan du f\u00f6rs\u00f6ker skicka in igen.",
             "host_exists": "Vizio-enheten med angivet v\u00e4rdnamn \u00e4r redan konfigurerad.",
-            "name_exists": "Vizio-enheten med angivet namn \u00e4r redan konfigurerad.",
-            "tv_needs_token": "N\u00e4r Enhetstyp \u00e4r 'tv' beh\u00f6vs en giltig \u00e5tkomsttoken."
+            "name_exists": "Vizio-enheten med angivet namn \u00e4r redan konfigurerad."
         },
         "step": {
             "user": {
@@ -33,7 +26,6 @@
         "step": {
             "init": {
                 "data": {
-                    "timeout": "Timeout f\u00f6r API-anrop (sekunder)",
                     "volume_step": "Storlek p\u00e5 volymsteg"
                 },
                 "title": "Uppdatera Vizo SmartCast-alternativ"

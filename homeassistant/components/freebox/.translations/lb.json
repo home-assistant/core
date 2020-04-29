@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "connection_failed": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "register_failed": "Feeler beim registr\u00e9ieren, prob\u00e9ier w.e.g. nach emol",
+            "unknown": "Onbekannte Feeler: prob\u00e9iertsp\u00e9ider nach emol"
+        },
+        "step": {
+            "link": {
+                "description": "Dr\u00e9ck \"Ofsch\u00e9cken\", dann dr\u00e9ck de rietse Feil um Router fir d'Freebox mam Home Assistant ze registr\u00e9ieren.\n\n![Location of button on the router](/static/images/config_freebox.png)",
+                "title": "Freebox Router verbannen"
+            },
+            "user": {
+                "data": {
+                    "host": "Apparat",
+                    "port": "Port"
+                },
+                "title": "Freebox"
+            }
+        },
+        "title": "Freebox"
+    }
+}

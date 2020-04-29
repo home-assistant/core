@@ -1,7 +1,12 @@
 """Support for Homekit climate devices."""
 import logging
 
-from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import (
+    CharacteristicsTypes,
+    HeatingCoolingCurrentValues,
+    HeatingCoolingTargetValues,
+)
+from aiohomekit.utils import clamp_enum_to_char
 
 from homeassistant.components.climate import (
     DEFAULT_MAX_HUMIDITY,
@@ -28,21 +33,19 @@ _LOGGER = logging.getLogger(__name__)
 
 # Map of Homekit operation modes to hass modes
 MODE_HOMEKIT_TO_HASS = {
-    0: HVAC_MODE_OFF,
-    1: HVAC_MODE_HEAT,
-    2: HVAC_MODE_COOL,
-    3: HVAC_MODE_HEAT_COOL,
+    HeatingCoolingTargetValues.OFF: HVAC_MODE_OFF,
+    HeatingCoolingTargetValues.HEAT: HVAC_MODE_HEAT,
+    HeatingCoolingTargetValues.COOL: HVAC_MODE_COOL,
+    HeatingCoolingTargetValues.AUTO: HVAC_MODE_HEAT_COOL,
 }
 
 # Map of hass operation modes to homekit modes
 MODE_HASS_TO_HOMEKIT = {v: k for k, v in MODE_HOMEKIT_TO_HASS.items()}
 
-DEFAULT_VALID_MODES = list(MODE_HOMEKIT_TO_HASS)
-
 CURRENT_MODE_HOMEKIT_TO_HASS = {
-    0: CURRENT_HVAC_IDLE,
-    1: CURRENT_HVAC_HEAT,
-    2: CURRENT_HVAC_COOL,
+    HeatingCoolingCurrentValues.IDLE: CURRENT_HVAC_IDLE,
+    HeatingCoolingCurrentValues.HEATING: CURRENT_HVAC_HEAT,
+    HeatingCoolingCurrentValues.COOLING: CURRENT_HVAC_COOL,
 }
 
 
@@ -65,15 +68,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
     """Representation of a Homekit climate device."""
 
-    def __init__(self, *args):
-        """Initialise the device."""
-        self._valid_modes = []
-        self._min_target_temp = None
-        self._max_target_temp = None
-        self._min_target_humidity = DEFAULT_MIN_HUMIDITY
-        self._max_target_humidity = DEFAULT_MAX_HUMIDITY
-        super().__init__(*args)
-
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -84,44 +78,6 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
             CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT,
             CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET,
         ]
-
-    def _setup_heating_cooling_target(self, characteristic):
-        if "valid-values" in characteristic:
-            valid_values = [
-                val
-                for val in DEFAULT_VALID_MODES
-                if val in characteristic["valid-values"]
-            ]
-        else:
-            valid_values = DEFAULT_VALID_MODES
-            if "minValue" in characteristic:
-                valid_values = [
-                    val for val in valid_values if val >= characteristic["minValue"]
-                ]
-            if "maxValue" in characteristic:
-                valid_values = [
-                    val for val in valid_values if val <= characteristic["maxValue"]
-                ]
-
-        self._valid_modes = [MODE_HOMEKIT_TO_HASS[mode] for mode in valid_values]
-
-    def _setup_temperature_target(self, characteristic):
-        self._features |= SUPPORT_TARGET_TEMPERATURE
-
-        if "minValue" in characteristic:
-            self._min_target_temp = characteristic["minValue"]
-
-        if "maxValue" in characteristic:
-            self._max_target_temp = characteristic["maxValue"]
-
-    def _setup_relative_humidity_target(self, characteristic):
-        self._features |= SUPPORT_TARGET_HUMIDITY
-
-        if "minValue" in characteristic:
-            self._min_target_humidity = characteristic["minValue"]
-
-        if "maxValue" in characteristic:
-            self._max_target_humidity = characteristic["maxValue"]
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -160,15 +116,17 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum target temp."""
-        if self._max_target_temp:
-            return self._min_target_temp
+        if self.service.has(CharacteristicsTypes.TEMPERATURE_TARGET):
+            char = self.service[CharacteristicsTypes.TEMPERATURE_TARGET]
+            return char.minValue
         return super().min_temp
 
     @property
     def max_temp(self):
         """Return the maximum target temp."""
-        if self._max_target_temp:
-            return self._max_target_temp
+        if self.service.has(CharacteristicsTypes.TEMPERATURE_TARGET):
+            char = self.service[CharacteristicsTypes.TEMPERATURE_TARGET]
+            return char.maxValue
         return super().max_temp
 
     @property
@@ -184,12 +142,14 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
     @property
     def min_humidity(self):
         """Return the minimum humidity."""
-        return self._min_target_humidity
+        char = self.service[CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET]
+        return char.minValue or DEFAULT_MIN_HUMIDITY
 
     @property
     def max_humidity(self):
         """Return the maximum humidity."""
-        return self._max_target_humidity
+        char = self.service[CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET]
+        return char.maxValue or DEFAULT_MAX_HUMIDITY
 
     @property
     def hvac_action(self):
@@ -213,12 +173,24 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
     @property
     def hvac_modes(self):
         """Return the list of available hvac operation modes."""
-        return self._valid_modes
+        valid_values = clamp_enum_to_char(
+            HeatingCoolingTargetValues,
+            self.service[CharacteristicsTypes.HEATING_COOLING_TARGET],
+        )
+        return [MODE_HOMEKIT_TO_HASS[mode] for mode in valid_values]
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return self._features
+        features = 0
+
+        if self.service.has(CharacteristicsTypes.TEMPERATURE_TARGET):
+            features |= SUPPORT_TARGET_TEMPERATURE
+
+        if self.service.has(CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET):
+            features |= SUPPORT_TARGET_HUMIDITY
+
+        return features
 
     @property
     def temperature_unit(self):

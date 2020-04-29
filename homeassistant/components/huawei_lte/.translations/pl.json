@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "To urz\u0105dzenie jest ju\u017c skonfigurowane.",
-            "already_in_progress": "To urz\u0105dzenie jest ju\u017c skonfigurowane.",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
+            "already_in_progress": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
             "not_huawei_lte": "To nie jest urz\u0105dzenie Huawei LTE"
         },
         "error": {

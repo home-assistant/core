@@ -56,12 +56,27 @@ async def async_call_from_config(
     hass, config, blocking=False, variables=None, validate_config=True, context=None
 ):
     """Call a service based on a config hash."""
+    try:
+        parms = async_prepare_call_from_config(hass, config, variables, validate_config)
+    except HomeAssistantError as ex:
+        if blocking:
+            raise
+        _LOGGER.error(ex)
+    else:
+        await hass.services.async_call(*parms, blocking, context)
+
+
+@ha.callback
+@bind_hass
+def async_prepare_call_from_config(hass, config, variables=None, validate_config=False):
+    """Prepare to call a service based on a config hash."""
     if validate_config:
         try:
             config = cv.SERVICE_SCHEMA(config)
         except vol.Invalid as ex:
-            _LOGGER.error("Invalid config for calling service: %s", ex)
-            return
+            raise HomeAssistantError(
+                f"Invalid config for calling service: {ex}"
+            ) from ex
 
     if CONF_SERVICE in config:
         domain_service = config[CONF_SERVICE]
@@ -71,17 +86,15 @@ async def async_call_from_config(
             domain_service = config[CONF_SERVICE_TEMPLATE].async_render(variables)
             domain_service = cv.service(domain_service)
         except TemplateError as ex:
-            if blocking:
-                raise
-            _LOGGER.error("Error rendering service name template: %s", ex)
-            return
-        except vol.Invalid:
-            if blocking:
-                raise
-            _LOGGER.error("Template rendered invalid service: %s", domain_service)
-            return
+            raise HomeAssistantError(
+                f"Error rendering service name template: {ex}"
+            ) from ex
+        except vol.Invalid as ex:
+            raise HomeAssistantError(
+                f"Template rendered invalid service: {domain_service}"
+            ) from ex
 
-    domain, service_name = domain_service.split(".", 1)
+    domain, service = domain_service.split(".", 1)
     service_data = dict(config.get(CONF_SERVICE_DATA, {}))
 
     if CONF_SERVICE_DATA_TEMPLATE in config:
@@ -91,15 +104,12 @@ async def async_call_from_config(
                 template.render_complex(config[CONF_SERVICE_DATA_TEMPLATE], variables)
             )
         except TemplateError as ex:
-            _LOGGER.error("Error rendering data template: %s", ex)
-            return
+            raise HomeAssistantError(f"Error rendering data template: {ex}") from ex
 
     if CONF_SERVICE_ENTITY_ID in config:
         service_data[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
 
-    await hass.services.async_call(
-        domain, service_name, service_data, blocking=blocking, context=context
-    )
+    return domain, service, service_data
 
 
 @bind_hass

@@ -14,10 +14,6 @@
         "flow_title": "deCONZ Zigbee gateway ({host})",
         "step": {
             "hassio_confirm": {
-                "data": {
-                    "allow_clip_sensor": "Tillad import af virtuelle sensorer",
-                    "allow_deconz_groups": "Tillad import af deCONZ-grupper"
-                },
                 "description": "Vil du konfigurere Home Assistant til at oprette forbindelse til deCONZ-gateway'en leveret af Hass.io-tilf\u00f8jelsen {addon}?",
                 "title": "deCONZ Zigbee-gateway via Hass.io-tilf\u00f8jelse"
             },
@@ -31,13 +27,6 @@
             "link": {
                 "description": "L\u00e5s din deCONZ-gateway op for at registrere dig med Home Assistant. \n\n 1. G\u00e5 til deCONZ settings -> Gateway -> Advanced\n 2. Tryk p\u00e5 knappen \"Authenticate app\"",
                 "title": "Forbind med deCONZ"
-            },
-            "options": {
-                "data": {
-                    "allow_clip_sensor": "Tillad import af virtuelle sensorer",
-                    "allow_deconz_groups": "Tillad import af deCONZ-grupper"
-                },
-                "title": "Ekstra konfigurationsindstillinger for deCONZ"
             }
         },
         "title": "deCONZ Zigbee gateway"
@@ -96,13 +85,6 @@
     },
     "options": {
         "step": {
-            "async_step_deconz_devices": {
-                "data": {
-                    "allow_clip_sensor": "Tillad deCONZ CLIP-sensorer",
-                    "allow_deconz_groups": "Tillad deCONZ-lysgrupper"
-                },
-                "description": "Konfigurer synligheden af deCONZ-enhedstyper"
-            },
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Tillad deCONZ CLIP-sensorer",

@@ -12,7 +12,7 @@
                     "broker": "Megler",
                     "discovery": "Aktiver oppdagelse",
                     "password": "Passord",
-                    "port": "Port",
+                    "port": "",
                     "username": "Brukernavn"
                 },
                 "description": "Vennligst oppgi tilkoblingsinformasjonen for din MQTT megler.",
@@ -22,7 +22,7 @@
                 "data": {
                     "discovery": "Aktiver oppdagelse"
                 },
-                "description": "Vil du konfigurere Home Assistant til \u00e5 koble til MQTT broker som er levert av Hass.io-tillegget (addon)?",
+                "description": "Vil du konfigurere Home Assistant til \u00e5 koble til en MQTT megler som er levert av Hass.io-tillegget {addon}?",
                 "title": "MQTT megler via Hass.io tillegg"
             }
         },

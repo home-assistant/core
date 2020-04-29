@@ -46,7 +46,6 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} akkufesz\u00fclts\u00e9g alacsony",
-            "closed": "{entity_name} be lett csukva",
             "cold": "{entity_name} hideg lett",
             "connected": "{entity_name} csatlakozik",
             "gas": "{entity_name} g\u00e1zt \u00e9rz\u00e9kel",
@@ -54,7 +53,6 @@
             "light": "{entity_name} f\u00e9nyt \u00e9rz\u00e9kel",
             "locked": "{entity_name} be lett z\u00e1rva",
             "moist": "{entity_name} nedves lett",
-            "moist\u00a7": "{entity_name} nedves lett",
             "motion": "{entity_name} mozg\u00e1st \u00e9rz\u00e9kel",
             "moving": "{entity_name} mozog",
             "no_gas": "{entity_name} m\u00e1r nem \u00e9rz\u00e9kel g\u00e1zt",

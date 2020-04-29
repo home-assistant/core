@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Gebruikersnaam al geregistreerd",
             "invalid_credentials": "Ongeldige gebruikersnaam of wachtwoord",
             "no_devices": "Geen apparaten gevonden in account"
         },

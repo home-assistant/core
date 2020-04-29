@@ -27,5 +27,22 @@
             }
         },
         "title": "Philips Hue"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Primer bot\u00f3",
+            "button_2": "Segon bot\u00f3",
+            "button_3": "Tercer bot\u00f3",
+            "button_4": "Quart bot\u00f3",
+            "dim_down": "Atenua la brillantor",
+            "dim_up": "Augmenta la brillantor",
+            "turn_off": "Apaga",
+            "turn_on": "Enc\u00e9n"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "Bot\u00f3 \"{subtype}\" alliberat despr\u00e9s d'una estona premut",
+            "remote_button_short_press": "Bot\u00f3 \"{subtype}\" premut",
+            "remote_button_short_release": "Bot\u00f3 \"{subtype}\" alliberat"
+        }
     }
 }

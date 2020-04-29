@@ -58,11 +58,10 @@ class AbstractOAuth2Implementation(ABC):
 
         Pass external data in with:
 
-        ```python
         await hass.config_entries.flow.async_configure(
             flow_id=flow_id, user_input=external_data
         )
-        ```
+
         """
 
     @abstractmethod
@@ -196,7 +195,9 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         """Extra data that needs to be appended to the authorize url."""
         return {}
 
-    async def async_step_pick_implementation(self, user_input: dict = None) -> dict:
+    async def async_step_pick_implementation(
+        self, user_input: Optional[dict] = None
+    ) -> dict:
         """Handle a flow start."""
         assert self.hass
         implementations = await async_get_implementations(self.hass, self.DOMAIN)
@@ -224,7 +225,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             ),
         )
 
-    async def async_step_auth(self, user_input: dict = None) -> dict:
+    async def async_step_auth(self, user_input: Optional[dict] = None) -> dict:
         """Create an entry for auth."""
         # Flow has been triggered by external data
         if user_input:
@@ -241,7 +242,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
 
         return self.async_external_step(step_id="auth", url=url)
 
-    async def async_step_creation(self, user_input: dict = None) -> dict:
+    async def async_step_creation(self, user_input: Optional[dict] = None) -> dict:
         """Create config entry from external data."""
         token = await self.flow_impl.async_resolve_external_data(self.external_data)
         token["expires_at"] = time.time() + token["expires_in"]
@@ -259,7 +260,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         """
         return self.async_create_entry(title=self.flow_impl.name, data=data)
 
-    async def async_step_discovery(self, user_input: dict = None) -> dict:
+    async def async_step_discovery(self, user_input: Optional[dict] = None) -> dict:
         """Handle a flow initialized by discovery."""
         await self.async_set_unique_id(self.DOMAIN)
 

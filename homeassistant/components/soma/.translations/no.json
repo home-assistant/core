@@ -14,12 +14,12 @@
             "user": {
                 "data": {
                     "host": "Vert",
-                    "port": "Port"
+                    "port": ""
                 },
                 "description": "Vennligst skriv tilkoblingsinnstillingene for din SOMA Connect.",
-                "title": "SOMA Connect"
+                "title": ""
             }
         },
-        "title": "Soma"
+        "title": ""
     }
 }

@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "updated_configuration": "Friss\u00edtett eszk\u00f6zkonfigur\u00e1ci\u00f3 \u00faj \u00e1llom\u00e1sc\u00edmmel"
-        },
         "error": {
             "already_configured": "Az eszk\u00f6zt m\u00e1r konfigur\u00e1ltuk",
             "device_unavailable": "Az eszk\u00f6z nem \u00e9rhet\u0151 el",

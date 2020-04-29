@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uc774 \uad6d\uac00\ub294 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "\uad6d\uac00"
+                },
+                "title": "\ubaa8\ub2c8\ud130\ub9c1 \ud560 \uad6d\uac00\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694"
+            }
+        },
+        "title": "\ucf54\ub85c\ub098 \ubc14\uc774\ub7ec\uc2a4"
+    }
+}

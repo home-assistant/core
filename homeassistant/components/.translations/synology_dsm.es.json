@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El host ya est\u00e1 configurado."
+        },
+        "error": {
+            "login": "Error de inicio de sesi\u00f3n: comprueba tu direcci\u00f3n de correo electr\u00f3nico y contrase\u00f1a",
+            "unknown": "Error desconocido: por favor vuelve a intentarlo m\u00e1s tarde o usa otra configuraci\u00f3n"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_version": "Versi\u00f3n del DSM",
+                    "host": "Host",
+                    "name": "Nombre",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "ssl": "Usar SSL/TLS para conectar con tu NAS",
+                    "username": "Usuario"
+                },
+                "title": "Synology DSM"
+            }
+        },
+        "title": "Synology DSM"
+    }
+}

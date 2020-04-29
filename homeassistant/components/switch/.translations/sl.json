@@ -7,9 +7,7 @@
         },
         "condition_type": {
             "is_off": "{entity_name} je izklopljen",
-            "is_on": "{entity_name} je vklopljen",
-            "turn_off": "{entity_name} izklopljen",
-            "turn_on": "{entity_name} vklopljen"
+            "is_on": "{entity_name} je vklopljen"
         },
         "trigger_type": {
             "turned_off": "{entity_name} izklopljen",

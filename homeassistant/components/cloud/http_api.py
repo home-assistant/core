@@ -482,7 +482,7 @@ async def google_assistant_list(hass, connection, msg):
             {
                 "entity_id": entity.entity_id,
                 "traits": [trait.name for trait in entity.traits()],
-                "might_2fa": entity.might_2fa(),
+                "might_2fa": entity.might_2fa_traits(),
             }
         )
 

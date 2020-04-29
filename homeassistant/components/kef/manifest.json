@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/kef",
   "dependencies": [],
   "codeowners": ["@basnijholt"],
-  "requirements": ["aiokef==0.2.7", "getmac==0.8.1"]
+  "requirements": ["aiokef==0.2.9", "getmac==0.8.1"]
 }

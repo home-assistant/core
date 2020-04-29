@@ -4,7 +4,6 @@
             "already_configured": "\u6b64\u61c9\u7528\u7a0b\u5f0f\u5bc6\u9470\u5df2\u88ab\u4f7f\u7528\u3002"
         },
         "error": {
-            "identifier_exists": "API \u5bc6\u9470\u53ca/\u6216\u61c9\u7528\u5bc6\u9470\u5df2\u8a3b\u518a",
             "invalid_key": "API \u5bc6\u9470\u53ca/\u6216\u61c9\u7528\u5bc6\u9470\u7121\u6548",
             "no_devices": "\u5e33\u865f\u4e2d\u627e\u4e0d\u5230\u4efb\u4f55\u8a2d\u5099"
         },
