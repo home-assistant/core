@@ -200,15 +200,17 @@ class MediaroomDevice(MediaPlayerDevice):
         )
         if media_type == MEDIA_TYPE_CHANNEL:
             if not media_id.isdigit():
-                _LOGGER.error("media_id must be a channel number")
+                _LOGGER.error(
+                    "Invalid media_id %s: Must be a channel number", media_id
+                )
                 return
             media_id = int(media_id)
         elif media_type == MEDIA_TYPE_MEDIAROOM:
             if media_id not in COMMANDS:
-                _LOGGER.error("media_id is not a valid command")
+                _LOGGER.error("Invalid media_id %s: Must be a command", media_id)
                 return
         else:
-            _LOGGER.error("invalid media type")
+            _LOGGER.error("Invalid media type %s", media_type)
             return
 
         try:
