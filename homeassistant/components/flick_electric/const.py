@@ -1,6 +1,6 @@
 """Constants for the Flick Electric integration."""
 
-DOMAIN = "flickelectric"
+DOMAIN = "flick_electric"
 
 CONF_TOKEN_EXPIRES_IN = "expires_in"
 CONF_TOKEN_EXPIRY = "expires"

@@ -6,7 +6,7 @@
 # homeassistant.components.homekit
 HAP-python==2.8.2
 
-# homeassistant.components.flickelectric
+# homeassistant.components.flick_electric
 PyFlick==0.0.2
 
 # homeassistant.components.mobile_app

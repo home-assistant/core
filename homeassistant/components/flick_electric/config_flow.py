@@ -70,7 +70,7 @@ class FlickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(
-                    f"flickelectric_{user_input[CONF_USERNAME]}"
+                    f"flick_electric_{user_input[CONF_USERNAME]}"
                 )
                 self._abort_if_unique_id_configured()
 
