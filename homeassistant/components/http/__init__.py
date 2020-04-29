@@ -79,7 +79,7 @@ HTTP_SCHEMA = vol.Schema(
         vol.Inclusive(CONF_TRUSTED_PROXIES, "proxy"): vol.All(
             cv.ensure_list, [ip_network]
         ),
-        vol.Optional(CONF_DEPTH, default=['-1']): cv.string,
+        vol.Optional(CONF_DEPTH, default=["-1"]): cv.string,
         vol.Optional(
             CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
         ): vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
@@ -141,7 +141,7 @@ async def async_setup(hass, config):
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
-    depth = conf[CONF_DEPTH, "-1"]
+    depth = conf[CONF_DEPTH]
 
     server = HomeAssistantHTTP(
         hass,
@@ -156,6 +156,7 @@ async def async_setup(hass, config):
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
         ssl_profile=ssl_profile,
+        depth=depth,
     )
 
     async def stop_server(event):
@@ -217,6 +218,7 @@ class HomeAssistantHTTP:
         login_threshold,
         is_ban_enabled,
         ssl_profile,
+        depth,
     ):
         """Initialize the HTTP Home Assistant server."""
         app = self.app = web.Application(
@@ -242,11 +244,11 @@ class HomeAssistantHTTP:
         self.server_port = server_port
         self.trusted_proxies = trusted_proxies
         self.is_ban_enabled = is_ban_enabled
-        self.depth = depth
         self.ssl_profile = ssl_profile
         self._handler = None
         self.runner = None
         self.site = None
+        self.depth = depth
 
     def register_view(self, view):
         """Register a view with the WSGI server.
