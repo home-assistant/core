@@ -68,12 +68,12 @@ USER_INPUT_IPV6 = {
 
 USER_INPUT_PORT_TOO_SMALL = {
     CONF_NAME: DEFAULT_NAME,
-    CONF_HOST: f"mc.dummyserver.com:1023",
+    CONF_HOST: "mc.dummyserver.com:1023",
 }
 
 USER_INPUT_PORT_TOO_LARGE = {
     CONF_NAME: DEFAULT_NAME,
-    CONF_HOST: f"mc.dummyserver.com:65536",
+    CONF_HOST: "mc.dummyserver.com:65536",
 }
 
 SRV_RECORDS = asyncio.Future()
