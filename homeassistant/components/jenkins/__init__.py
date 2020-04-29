@@ -6,7 +6,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):
-    """Set up the AdGuard Home components."""
+    """Set up Jenkins components."""
     return True
 
 
