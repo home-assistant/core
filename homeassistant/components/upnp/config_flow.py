@@ -52,7 +52,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="no_devices_discovered")
 
             discovery = matching_discoveries[0]
-            await self.async_set_unique_id(discovery[DISCOVERY_USN], raise_on_progress=False)
+            await self.async_set_unique_id(
+                discovery[DISCOVERY_USN], raise_on_progress=False
+            )
             return await self._async_create_entry_from_data(discovery)
 
         # Discover devices.
@@ -168,7 +170,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Create an entry from own _data."""
         # Get name from device, if not found already.
         if DISCOVERY_NAME not in discovery and DISCOVERY_LOCATION in discovery:
-            device = await Device.async_create_device(self.hass, discovery[DISCOVERY_LOCATION])
+            device = await Device.async_create_device(
+                self.hass, discovery[DISCOVERY_LOCATION]
+            )
             discovery[DISCOVERY_NAME] = device.name
 
         title = discovery.get(DISCOVERY_NAME, "")
