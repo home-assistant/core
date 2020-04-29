@@ -4,16 +4,23 @@ from requests.exceptions import HTTPError, MissingSchema
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.jenkins import _LOGGER
+from homeassistant.components.jenkins.const import CONF_JOB_NAME, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_USERNAME
-
-from . import _LOGGER
-from .const import CONF_JOB_NAME, DOMAIN
 
 
 class JenkinsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle Jenkins config flow."""
 
     VERSION = 1
+
+    def __init__(self):
+        """Initialize flow."""
+        self.url = None
+        self.username = None
+        self.token = None
+        self.server = None
+        self.job_name = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
@@ -37,7 +44,7 @@ class JenkinsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self.server = await self.hass.async_add_executor_job(
                     Jenkins, self.url, self.username, self.token
                 )
-                _LOGGER.debug(f"Successfully connected to host: {self.url}")
+                _LOGGER.debug("Successfully connected to host: %s", self.url)
                 return await self.async_step_job()
             except MissingSchema:
                 return self.async_show_form(
@@ -52,13 +59,15 @@ class JenkinsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         data_schema=data_schema,
                         errors={"base": "credentials_needed"},
                     )
-                elif error.response.status_code == 403:
+
+                if error.response.status_code == 403:
                     return self.async_show_form(
                         step_id="user",
                         data_schema=data_schema,
                         errors={"base": "invalid_credentials"},
                     )
-                elif error.response.status_code == 404:
+
+                if error.response.status_code == 404:
                     return self.async_show_form(
                         step_id="user",
                         data_schema=data_schema,
@@ -71,7 +80,7 @@ class JenkinsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle selecting which job to add a sensor for."""
         if user_input is not None:
             self.job_name = user_input[CONF_JOB_NAME]
-            _LOGGER.debug(f"Creating entry for {self.job_name}.")
+            _LOGGER.debug("Creating entry for %s", self.job_name)
 
             return self.async_create_entry(
                 title=user_input[CONF_JOB_NAME],

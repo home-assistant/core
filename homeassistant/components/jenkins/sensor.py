@@ -20,7 +20,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             entry.data[CONF_USERNAME],
             entry.data[CONF_TOKEN],
         )
-        _LOGGER.debug(f"Successfully connected to {entry.data[CONF_HOST]}")
+        _LOGGER.debug("Successfully connected to %s", entry.data[CONF_HOST])
     except HTTPError as exception:
         raise PlatformNotReady from exception
 
