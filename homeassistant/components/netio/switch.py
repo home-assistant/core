@@ -92,7 +92,6 @@ class NetioApiView(HomeAssistantView):
     @callback
     def get(self, request, host):
         """Request handler."""
-        hass = request.app["hass"]
         data = request.query
         states, consumptions, cumulated_consumptions, start_dates = [], [], [], []
 
@@ -121,7 +120,7 @@ class NetioApiView(HomeAssistantView):
         ndev.start_dates = start_dates
 
         for dev in DEVICES[host].entities:
-            hass.async_create_task(dev.async_update_ha_state())
+            dev.async_write_ha_state()
 
         return self.json(True)
 

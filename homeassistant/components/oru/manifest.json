@@ -2,7 +2,6 @@
   "domain": "oru",
   "name": "Orange and Rockland Utility (ORU)",
   "documentation": "https://www.home-assistant.io/integrations/oru",
-  "dependencies": [],
   "codeowners": ["@bvlaicu"],
   "requirements": ["oru==0.1.11"]
 }

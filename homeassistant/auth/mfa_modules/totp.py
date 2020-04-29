@@ -35,13 +35,13 @@ _LOGGER = logging.getLogger(__name__)
 
 def _generate_qr_code(data: str) -> str:
     """Generate a base64 PNG string represent QR Code image of data."""
-    import pyqrcode
+    import pyqrcode  # pylint: disable=import-outside-toplevel
 
     qr_code = pyqrcode.create(data)
 
     with BytesIO() as buffer:
         qr_code.svg(file=buffer, scale=4)
-        return "{}".format(
+        return str(
             buffer.getvalue()
             .decode("ascii")
             .replace("\n", "")
@@ -55,7 +55,7 @@ def _generate_qr_code(data: str) -> str:
 
 def _generate_secret_and_qr_code(username: str) -> Tuple[str, str, str]:
     """Generate a secret, url, and QR code."""
-    import pyotp
+    import pyotp  # pylint: disable=import-outside-toplevel
 
     ota_secret = pyotp.random_base32()
     url = pyotp.totp.TOTP(ota_secret).provisioning_uri(
@@ -105,7 +105,7 @@ class TotpAuthModule(MultiFactorAuthModule):
 
     def _add_ota_secret(self, user_id: str, secret: Optional[str] = None) -> str:
         """Create a ota_secret for user."""
-        import pyotp
+        import pyotp  # pylint: disable=import-outside-toplevel
 
         ota_secret: str = secret or pyotp.random_base32()
 
@@ -160,7 +160,7 @@ class TotpAuthModule(MultiFactorAuthModule):
 
     def _validate_2fa(self, user_id: str, code: str) -> bool:
         """Validate two factor authentication code."""
-        import pyotp
+        import pyotp  # pylint: disable=import-outside-toplevel
 
         ota_secret = self._users.get(user_id)  # type: ignore
         if ota_secret is None:
@@ -195,7 +195,7 @@ class TotpSetupFlow(SetupFlow):
         Return self.async_show_form(step_id='init') if user_input is None.
         Return self.async_create_entry(data={'result': result}) if finish.
         """
-        import pyotp
+        import pyotp  # pylint: disable=import-outside-toplevel
 
         errors: Dict[str, str] = {}
 

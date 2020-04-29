@@ -36,7 +36,7 @@ FIRST_RETRY_TIME = 60
 MAX_RETRY_TIME = 900
 
 SECRET_GROUP = "Password or SSH Key"
-SENSOR_TYPES = ["upload_speed", "download_speed", "download", "upload"]
+SENSOR_TYPES = ["devices", "upload_speed", "download_speed", "download", "upload"]
 
 CONFIG_SCHEMA = vol.Schema(
     {

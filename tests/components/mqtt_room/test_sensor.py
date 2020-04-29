@@ -16,10 +16,10 @@ NAME = "test_device"
 BEDROOM = "bedroom"
 LIVING_ROOM = "living_room"
 
-BEDROOM_TOPIC = "room_presence/{}".format(BEDROOM)
-LIVING_ROOM_TOPIC = "room_presence/{}".format(LIVING_ROOM)
+BEDROOM_TOPIC = f"room_presence/{BEDROOM}"
+LIVING_ROOM_TOPIC = f"room_presence/{LIVING_ROOM}"
 
-SENSOR_STATE = "sensor.{}".format(NAME)
+SENSOR_STATE = f"sensor.{NAME}"
 
 CONF_DEVICE_ID = "device_id"
 CONF_TIMEOUT = "timeout"

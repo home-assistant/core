@@ -125,8 +125,9 @@ class OpenHardwareMonitorData:
 
     def refresh(self):
         """Download and parse JSON from OHM."""
-        data_url = "http://{}:{}/data.json".format(
-            self._config.get(CONF_HOST), self._config.get(CONF_PORT)
+        data_url = (
+            f"http://{self._config.get(CONF_HOST)}:"
+            f"{self._config.get(CONF_PORT)}/data.json"
         )
 
         try:

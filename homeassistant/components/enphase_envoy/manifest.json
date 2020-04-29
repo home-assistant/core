@@ -3,6 +3,5 @@
   "name": "Enphase Envoy",
   "documentation": "https://www.home-assistant.io/integrations/enphase_envoy",
   "requirements": ["envoy_reader==0.11.0"],
-  "dependencies": [],
   "codeowners": []
 }

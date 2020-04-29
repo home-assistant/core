@@ -132,7 +132,11 @@ class SynologySrmDeviceScanner(DeviceScanner):
         """Check the router for connected devices."""
         _LOGGER.debug("Scanning for connected devices")
 
-        self.devices = self.client.core.network_nsm_device({"is_online": True})
+        try:
+            self.devices = self.client.core.get_network_nsm_device({"is_online": True})
+        except synology_srm.http.SynologyException as ex:
+            _LOGGER.error("Error with the Synology SRM: %s", ex)
+            return False
 
         _LOGGER.debug("Found %d device(s) connected to the router", len(self.devices))
 

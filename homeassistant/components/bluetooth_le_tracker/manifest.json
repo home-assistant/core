@@ -3,6 +3,5 @@
   "name": "Bluetooth LE Tracker",
   "documentation": "https://www.home-assistant.io/integrations/bluetooth_le_tracker",
   "requirements": ["pygatt[GATTTOOL]==4.0.5"],
-  "dependencies": [],
   "codeowners": []
 }

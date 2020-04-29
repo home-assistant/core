@@ -68,7 +68,7 @@ class MpcHcDevice(MediaPlayerDevice):
         """Initialize the MPC-HC device."""
         self._name = name
         self._url = url
-        self._player_variables = dict()
+        self._player_variables = {}
         self._available = False
 
     def update(self):
@@ -83,7 +83,7 @@ class MpcHcDevice(MediaPlayerDevice):
             self._available = True
         except requests.exceptions.RequestException:
             _LOGGER.error("Could not connect to MPC-HC at: %s", self._url)
-            self._player_variables = dict()
+            self._player_variables = {}
             self._available = False
 
     def _send_command(self, command_id):

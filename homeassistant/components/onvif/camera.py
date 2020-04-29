@@ -183,7 +183,7 @@ class ONVIFHassCamera(Camera):
             self._port,
             self._username,
             self._password,
-            "{}/wsdl/".format(os.path.dirname(onvif.__file__)),
+            f"{os.path.dirname(onvif.__file__)}/wsdl/",
             transport=transport,
         )
 

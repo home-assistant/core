@@ -33,7 +33,7 @@ async def test_network_unreachable(hass):
             hass, DOMAIN, {DOMAIN: {CONF_HOST: "fake_host", CONF_USERNAME: "fake_user"}}
         )
         assert result
-        assert hass.data.get(DATA_ASUSWRT, None) is None
+        assert hass.data.get(DATA_ASUSWRT) is None
 
 
 async def test_get_scanner_with_password_no_pubkey(hass):

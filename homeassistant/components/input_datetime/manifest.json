@@ -2,8 +2,6 @@
   "domain": "input_datetime",
   "name": "Input Datetime",
   "documentation": "https://www.home-assistant.io/integrations/input_datetime",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal"
 }

@@ -484,7 +484,7 @@ class Person(RestoreEntity):
             self._longitude = None
             self._gps_accuracy = None
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def _parse_source_state(self, state):

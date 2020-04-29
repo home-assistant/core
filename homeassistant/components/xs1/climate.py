@@ -115,7 +115,6 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateDevice):
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
-        pass
 
     async def async_update(self):
         """Also update the sensor when available."""

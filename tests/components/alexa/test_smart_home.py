@@ -167,7 +167,7 @@ def assert_endpoint_capabilities(endpoint, *interfaces):
     them.
     """
     capabilities = endpoint["capabilities"]
-    supported = set(feature["interface"] for feature in capabilities)
+    supported = {feature["interface"] for feature in capabilities}
 
     assert supported == set(interfaces)
     return capabilities
@@ -979,7 +979,7 @@ async def test_media_player(hass):
         hass,
     )
 
-    call, _ = await assert_request_calls_service(
+    await assert_request_calls_service(
         "Alexa.ChannelController",
         "ChangeChannel",
         "media_player#test",
@@ -988,7 +988,7 @@ async def test_media_player(hass):
         payload={"channel": {"number": "24"}, "channelMetadata": {"name": ""}},
     )
 
-    call, _ = await assert_request_calls_service(
+    await assert_request_calls_service(
         "Alexa.ChannelController",
         "ChangeChannel",
         "media_player#test",
@@ -997,7 +997,7 @@ async def test_media_player(hass):
         payload={"channel": {"callSign": "ABC"}, "channelMetadata": {"name": ""}},
     )
 
-    call, _ = await assert_request_calls_service(
+    await assert_request_calls_service(
         "Alexa.ChannelController",
         "ChangeChannel",
         "media_player#test",
@@ -1006,7 +1006,7 @@ async def test_media_player(hass):
         payload={"channel": {"number": ""}, "channelMetadata": {"name": "ABC"}},
     )
 
-    call, _ = await assert_request_calls_service(
+    await assert_request_calls_service(
         "Alexa.ChannelController",
         "ChangeChannel",
         "media_player#test",
@@ -1018,7 +1018,7 @@ async def test_media_player(hass):
         },
     )
 
-    call, _ = await assert_request_calls_service(
+    await assert_request_calls_service(
         "Alexa.ChannelController",
         "ChangeChannel",
         "media_player#test",
@@ -1027,7 +1027,7 @@ async def test_media_player(hass):
         payload={"channel": {"uri": "ABC"}, "channelMetadata": {"name": ""}},
     )
 
-    call, _ = await assert_request_calls_service(
+    await assert_request_calls_service(
         "Alexa.ChannelController",
         "SkipChannels",
         "media_player#test",
@@ -1036,7 +1036,7 @@ async def test_media_player(hass):
         payload={"channelCount": 1},
     )
 
-    call, _ = await assert_request_calls_service(
+    await assert_request_calls_service(
         "Alexa.ChannelController",
         "SkipChannels",
         "media_player#test",
@@ -1467,7 +1467,7 @@ async def test_media_player_seek_error(hass):
 
     # Test for media_position error.
     with pytest.raises(AssertionError):
-        call, msg = await assert_request_calls_service(
+        _, msg = await assert_request_calls_service(
             "Alexa.SeekController",
             "AdjustSeekPosition",
             "media_player#test_seek",
@@ -1707,11 +1707,7 @@ async def assert_percentage_changes(
     AdjustPercentage, AdjustBrightness, etc. are examples of such requests.
     """
     for result_volume, adjustment in adjustments:
-        if parameter:
-            payload = {parameter: adjustment}
-        else:
-            payload = {}
-
+        payload = {parameter: adjustment} if parameter else {}
         call, _ = await assert_request_calls_service(
             namespace, name, endpoint, service, hass, payload=payload
         )
@@ -2475,7 +2471,7 @@ async def test_alarm_control_panel_disarmed(hass):
     properties = await reported_properties(hass, "alarm_control_panel#test_1")
     properties.assert_equal("Alexa.SecurityPanelController", "armState", "DISARMED")
 
-    call, msg = await assert_request_calls_service(
+    _, msg = await assert_request_calls_service(
         "Alexa.SecurityPanelController",
         "Arm",
         "alarm_control_panel#test_1",
@@ -2487,7 +2483,7 @@ async def test_alarm_control_panel_disarmed(hass):
     properties = ReportedProperties(msg["context"]["properties"])
     properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_STAY")
 
-    call, msg = await assert_request_calls_service(
+    _, msg = await assert_request_calls_service(
         "Alexa.SecurityPanelController",
         "Arm",
         "alarm_control_panel#test_1",

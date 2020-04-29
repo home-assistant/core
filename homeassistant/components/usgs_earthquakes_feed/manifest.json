@@ -3,6 +3,5 @@
   "name": "U.S. Geological Survey Earthquake Hazards (USGS)",
   "documentation": "https://www.home-assistant.io/integrations/usgs_earthquakes_feed",
   "requirements": ["geojson_client==0.4"],
-  "dependencies": [],
   "codeowners": ["@exxamalte"]
 }

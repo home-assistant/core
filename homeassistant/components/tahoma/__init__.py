@@ -37,6 +37,7 @@ TAHOMA_TYPES = {
     "io:AwningValanceIOComponent": "cover",
     "io:ExteriorVenetianBlindIOComponent": "cover",
     "io:DiscreteGarageOpenerIOComponent": "cover",
+    "io:DiscreteGarageOpenerWithPartialPositionIOComponent": "cover",
     "io:HorizontalAwningIOComponent": "cover",
     "io:GarageOpenerIOComponent": "cover",
     "io:LightIOSystemSensor": "sensor",

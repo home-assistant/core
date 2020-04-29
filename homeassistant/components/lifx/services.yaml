@@ -17,7 +17,7 @@ set_state:
       example: 10
     power:
       description: Turn the light on (True) or off (False). Leave out to keep the power as it is.
-      example: True
+      example: false
 
 effect_pulse:
   description: Run a flash effect by changing to a color and back.
@@ -45,7 +45,7 @@ effect_pulse:
       example: 2
     power_on:
       description: Powered off lights are temporarily turned on during the effect (default True).
-      example: False
+      example: false
 
 effect_colorloop:
   description: Run an effect with looping colors.
@@ -67,7 +67,7 @@ effect_colorloop:
       example: 0
     power_on:
       description: Powered off lights are temporarily turned on during the effect (default True).
-      example: False
+      example: false
 
 effect_stop:
   description: Stop a running effect.

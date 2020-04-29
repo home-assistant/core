@@ -3,6 +3,5 @@
   "name": "Free Mobile",
   "documentation": "https://www.home-assistant.io/integrations/free_mobile",
   "requirements": ["freesms==0.1.2"],
-  "dependencies": [],
   "codeowners": []
 }

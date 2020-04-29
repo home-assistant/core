@@ -79,7 +79,7 @@ def setup(hass, config):
             # Send attribute values
             for key, value in states.items():
                 if isinstance(value, (float, int)):
-                    stat = "%s.%s" % (state.entity_id, key.replace(" ", "_"))
+                    stat = "{}.{}".format(state.entity_id, key.replace(" ", "_"))
                     statsd_client.gauge(stat, value, sample_rate)
 
         else:

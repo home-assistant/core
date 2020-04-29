@@ -22,6 +22,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,8 +53,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up our socket to the AVR."""
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
     name = config.get(CONF_NAME)
     device = None
 
@@ -60,7 +64,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     def async_anthemav_update_callback(message):
         """Receive notification from transport that new data exists."""
         _LOGGER.debug("Received update callback from AVR: %s", message)
-        hass.async_create_task(device.async_update_ha_state())
+        async_dispatcher_send(hass, DOMAIN)
 
     avr = await anthemav.Connection.create(
         host=host, port=port, update_callback=async_anthemav_update_callback
@@ -86,6 +90,12 @@ class AnthemAVR(MediaPlayerDevice):
 
     def _lookup(self, propname, dval=None):
         return getattr(self.avr.protocol, propname, dval)
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
+        )
 
     @property
     def supported_features(self):
@@ -132,9 +142,8 @@ class AnthemAVR(MediaPlayerDevice):
     def app_name(self):
         """Return details about current video and audio stream."""
         return (
-            self._lookup("video_input_resolution_text", "")
-            + " "
-            + self._lookup("audio_input_name", "")
+            f"{self._lookup('video_input_resolution_text', '')} "
+            f"{self._lookup('audio_input_name', '')}"
         )
 
     @property
@@ -176,4 +185,5 @@ class AnthemAVR(MediaPlayerDevice):
     def dump_avrdata(self):
         """Return state of avr object for debugging forensics."""
         attrs = vars(self)
-        return "dump_avrdata: " + ", ".join("%s: %s" % item for item in attrs.items())
+        items_string = ", ".join(f"{item}: {item}" for item in attrs.items())
+        return f"dump_avrdata: {items_string}"

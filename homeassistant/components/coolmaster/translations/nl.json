@@ -1,0 +1,22 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Kan geen verbinding maken met CoolMasterNet-instantie. Controleer uw host",
+            "no_units": "Kon geen HVAC units vinden in CoolMasterNet host."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "cool": "Ondersteuning afkoelen modus",
+                    "dry": "Ondersteuning droog modus",
+                    "fan_only": "Ondersteunt alleen ventilatormodus",
+                    "heat": "Ondersteuning warmtemodus",
+                    "heat_cool": "Ondersteuning van automatische warmte/koelmodus",
+                    "host": "Host",
+                    "off": "Kan uitgeschakeld worden"
+                },
+                "title": "Stel uw CoolMasterNet-verbindingsgegevens in."
+            }
+        }
+    }
+}

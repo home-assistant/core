@@ -3,7 +3,6 @@
   "name": "Python Scripts",
   "documentation": "https://www.home-assistant.io/integrations/python_script",
   "requirements": ["restrictedpython==5.0"],
-  "dependencies": [],
   "codeowners": [],
   "quality_scale": "internal"
 }

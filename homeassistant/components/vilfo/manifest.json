@@ -4,6 +4,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vilfo",
   "requirements": ["vilfo-api-client==0.3.2"],
-  "dependencies": [],
   "codeowners": ["@ManneW"]
 }

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Byen er allerede konfigurert",
+            "unknown": "Ukjent feil: pr\u00f8v p\u00e5 nytt senere"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "city": "By"
+                },
+                "description": "Skriv inn postnummeret (bare for Frankrike, anbefalt) eller bynavn",
+                "title": ""
+            }
+        }
+    }
+}

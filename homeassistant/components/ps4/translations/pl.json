@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "credential_error": "B\u0142\u0105d podczas pobierania danych logowania.",
+            "devices_configured": "Wszystkie znalezione urz\u0105dzenia s\u0105 ju\u017c skonfigurowane.",
+            "no_devices_found": "W sieci nie znaleziono urz\u0105dze\u0144 PlayStation 4.",
+            "port_987_bind_error": "Nie mo\u017cna powi\u0105za\u0107 z portem 987.",
+            "port_997_bind_error": "Nie mo\u017cna powi\u0105za\u0107 z portem 997."
+        },
+        "error": {
+            "credential_timeout": "Przekroczono limit czasu us\u0142ugi po\u015bwiadcze\u0144. Naci\u015bnij przycisk \"Zatwierd\u017a\", aby ponowi\u0107.",
+            "login_failed": "Nie uda\u0142o si\u0119 sparowa\u0107 z PlayStation 4. Sprawd\u017a, czy PIN jest poprawny.",
+            "no_ipaddress": "Wprowad\u017a adres IP PlayStation 4, kt\u00f3ry chcesz skonfigurowa\u0107.",
+            "not_ready": "PlayStation 4 nie jest w\u0142\u0105czona lub po\u0142\u0105czona z sieci\u0105."
+        },
+        "step": {
+            "creds": {
+                "description": "Wymagane s\u0105 po\u015bwiadczenia. Naci\u015bnij przycisk \"Zatwierd\u017a\", a nast\u0119pnie w aplikacji PS4 Second Screen, od\u015bwie\u017c urz\u0105dzenia i wybierz urz\u0105dzenie 'Home-Assistant', aby kontynuowa\u0107.",
+                "title": "PlayStation 4"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN",
+                    "ip_address": "Adres IP",
+                    "name": "Nazwa",
+                    "region": "Region"
+                },
+                "description": "Wprowad\u017a informacje o PlayStation 4. Aby uzyska\u0107 'PIN', przejd\u017a do 'Ustawienia' na konsoli PlayStation 4. Nast\u0119pnie przejd\u017a do 'Ustawienia po\u0142\u0105czenia aplikacji mobilnej' i wybierz 'Dodaj urz\u0105dzenie'. Wprowad\u017a wy\u015bwietlony kod PIN.",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "ip_address": "Adres IP (pozostaw puste, je\u015bli u\u017cywasz funkcji Auto Discovery).",
+                    "mode": "Tryb konfiguracji"
+                },
+                "description": "Wybierz tryb konfiguracji. Pole adresu IP mo\u017cna pozostawi\u0107 puste, je\u015bli wybierzesz opcj\u0119 Auto Discovery, poniewa\u017c urz\u0105dzenia zostan\u0105 automatycznie wykryte.",
+                "title": "PlayStation 4"
+            }
+        }
+    }
+}

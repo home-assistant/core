@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Keng iZone Apparater am Netzwierk fonnt.",
+            "single_instance_allowed": "N\u00ebmmen eng eenzeg Konfiguratioun vun iZone ass n\u00e9ideg."
+        },
+        "step": {
+            "confirm": {
+                "description": "Soll iZone konfigur\u00e9iert ginn?",
+                "title": "iZone"
+            }
+        }
+    }
+}

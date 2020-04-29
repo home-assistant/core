@@ -3,6 +3,5 @@
   "name": "Hikvision",
   "documentation": "https://www.home-assistant.io/integrations/hikvisioncam",
   "requirements": ["hikvision==0.4"],
-  "dependencies": [],
   "codeowners": ["@fbradyirl"]
 }

@@ -5,7 +5,7 @@ add_to_playlist:
   fields:
     entity_id:
       description: Name(s) of the Kodi entities where to add the media.
-      example: 'media_player.living_room_kodi'
+      example: "media_player.living_room_kodi"
     media_type:
       description: Media type identifier. It must be one of SONG or ALBUM.
       example: ALBUM
@@ -14,17 +14,17 @@ add_to_playlist:
       example: 123456
     media_name:
       description: Optional media name for filtering media. Can be 'ALL' when `media_type` is 'ALBUM' and `artist_name` is specified, to add all songs from one artist.
-      example: 'Highway to Hell'
+      example: "Highway to Hell"
     artist_name:
       description: Optional artist name for filtering media.
-      example: 'AC/DC'
+      example: "AC/DC"
 
 call_method:
-  description: 'Call a Kodi JSONRPC API method with optional parameters. Results of the Kodi API call will be redirected in a Home Assistant event: `kodi_call_method_result`.'
+  description: "Call a Kodi JSONRPC API method with optional parameters. Results of the Kodi API call will be redirected in a Home Assistant event: `kodi_call_method_result`."
   fields:
     entity_id:
       description: Name(s) of the Kodi entities where to run the API method.
-      example: 'media_player.living_room_kodi'
+      example: "media_player.living_room_kodi"
     method:
       description: Name of the Kodi JSONRPC API method to be called.
-      example: 'VideoLibrary.GetRecentlyAddedEpisodes'
+      example: "VideoLibrary.GetRecentlyAddedEpisodes"

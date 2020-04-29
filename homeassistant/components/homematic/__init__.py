@@ -222,7 +222,7 @@ def setup(hass, config):
             "password": rconfig.get(CONF_PASSWORD),
             "callbackip": rconfig.get(CONF_CALLBACK_IP),
             "callbackport": rconfig.get(CONF_CALLBACK_PORT),
-            "ssl": rconfig.get(CONF_SSL),
+            "ssl": rconfig[CONF_SSL],
             "verify_ssl": rconfig.get(CONF_VERIFY_SSL),
             "connect": True,
         }

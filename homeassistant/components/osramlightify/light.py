@@ -1,7 +1,6 @@
 """Support for Osram Lightify."""
 import logging
 import random
-import socket
 
 from lightify import Lightify
 import voluptuous as vol
@@ -74,9 +73,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config[CONF_HOST]
     try:
         bridge = Lightify(host, log_level=logging.NOTSET)
-    except socket.error as err:
-        msg = "Error connecting to bridge: {} due to: {}".format(host, str(err))
-        _LOGGER.exception(msg)
+    except OSError as err:
+        _LOGGER.exception("Error connecting to bridge: %s due to: %s", host, err)
         return
 
     setup_bridge(bridge, add_entities, config)
@@ -381,9 +379,7 @@ class OsramLightifyLight(Luminary):
         """Update static attributes of the luminary."""
         super().update_static_attributes()
         attrs = {
-            "device_type": "{} ({})".format(
-                self._luminary.type_id(), self._luminary.devicename()
-            ),
+            "device_type": f"{self._luminary.type_id()} ({self._luminary.devicename()})",
             "firmware_version": self._luminary.version(),
         }
         if self._luminary.devicetype().name == "SENSOR":
@@ -404,7 +400,7 @@ class OsramLightifyGroup(Luminary):
         #       It should be something like "<gateway host>-<group.idx()>"
         #       For now keeping it as is for backward compatibility with existing
         #       users.
-        return "{}".format(self._luminary.lights())
+        return f"{self._luminary.lights()}"
 
     def _get_supported_features(self):
         """Get list of supported features."""

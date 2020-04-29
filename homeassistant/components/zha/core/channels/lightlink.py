@@ -13,5 +13,3 @@ _LOGGER = logging.getLogger(__name__)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(lightlink.LightLink.cluster_id)
 class LightLink(ZigbeeChannel):
     """Lightlink channel."""
-
-    pass

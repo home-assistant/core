@@ -69,7 +69,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for variable in conditions:
         if variable in _BINARY_TYPES_DEPRECATED:
             wstr = (
-                variable + " is no a longer supported "
+                f"{variable} is no a longer supported "
                 "monitored_conditions. See "
                 "https://www.home-assistant.io/integrations/binary_sensor.nest/ "
                 "for valid options."

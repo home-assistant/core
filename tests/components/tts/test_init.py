@@ -15,6 +15,7 @@ from homeassistant.components.media_player.const import (
 )
 import homeassistant.components.tts as tts
 from homeassistant.components.tts import _get_cache_files
+from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_mock_service
@@ -51,7 +52,7 @@ def mock_init_cache_dir():
 
 
 @pytest.fixture
-def empty_cache_dir(tmp_path, mock_init_cache_dir, mock_get_cache_files):
+def empty_cache_dir(tmp_path, mock_init_cache_dir, mock_get_cache_files, request):
     """Mock the TTS cache dir with empty dir."""
     mock_init_cache_dir.side_effect = None
     mock_init_cache_dir.return_value = str(tmp_path)
@@ -59,7 +60,18 @@ def empty_cache_dir(tmp_path, mock_init_cache_dir, mock_get_cache_files):
     # Restore original get cache files behavior, we're working with a real dir.
     mock_get_cache_files.side_effect = _get_cache_files
 
-    return tmp_path
+    yield tmp_path
+
+    if request.node.rep_call.passed:
+        return
+
+    # Print contents of dir if failed
+    print("Content of dir for", request.node.nodeid)
+    for fil in tmp_path.iterdir():
+        print(fil.relative_to(tmp_path))
+
+    # To show the log.
+    assert False
 
 
 @pytest.fixture(autouse=True)
@@ -487,7 +499,7 @@ async def test_setup_component_and_web_view_wrong_file(hass, hass_client):
     url = "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
 
     req = await client.get(url)
-    assert req.status == 404
+    assert req.status == HTTP_NOT_FOUND
 
 
 async def test_setup_component_and_web_view_wrong_filename(hass, hass_client):
@@ -502,7 +514,7 @@ async def test_setup_component_and_web_view_wrong_filename(hass, hass_client):
     url = "/api/tts_proxy/265944dsk32c1b2a621be5930510bb2cd_en_-_demo.mp3"
 
     req = await client.get(url)
-    assert req.status == 404
+    assert req.status == HTTP_NOT_FOUND
 
 
 async def test_setup_component_test_without_cache(hass, empty_cache_dir):

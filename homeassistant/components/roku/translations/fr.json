@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le p\u00e9riph\u00e9rique Roku est d\u00e9j\u00e0 configur\u00e9",
+            "unknown": "Erreur inattendue"
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer"
+        },
+        "flow_title": "Roku: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Voulez-vous configurer {name} ?",
+                "title": "Roku"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te ou adresse IP"
+                },
+                "description": "Entrez vos informations Roku.",
+                "title": "Roku"
+            }
+        }
+    }
+}

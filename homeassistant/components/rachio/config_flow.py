@@ -5,7 +5,7 @@ from rachiopy import Rachio
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, HTTP_OK
 from homeassistant.core import callback
 
 from .const import (
@@ -33,13 +33,13 @@ async def validate_input(hass: core.HomeAssistant, data):
     try:
         data = await hass.async_add_executor_job(rachio.person.getInfo)
         _LOGGER.debug("rachio.person.getInfo: %s", data)
-        if int(data[0][KEY_STATUS]) != 200:
+        if int(data[0][KEY_STATUS]) != HTTP_OK:
             raise InvalidAuth
 
         rachio_id = data[1][KEY_ID]
         data = await hass.async_add_executor_job(rachio.person.get, rachio_id)
         _LOGGER.debug("rachio.person.get: %s", data)
-        if int(data[0][KEY_STATUS]) != 200:
+        if int(data[0][KEY_STATUS]) != HTTP_OK:
             raise CannotConnect
 
         username = data[1][KEY_USERNAME]

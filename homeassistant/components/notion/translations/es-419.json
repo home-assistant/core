@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "invalid_credentials": "Nombre de usuario o contrase\u00f1a inv\u00e1lidos",
+            "no_devices": "No se han encontrado dispositivos en la cuenta."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Nombre de usuario/direcci\u00f3n de correo electr\u00f3nico"
+                },
+                "title": "Complete su informaci\u00f3n"
+            }
+        }
+    }
+}

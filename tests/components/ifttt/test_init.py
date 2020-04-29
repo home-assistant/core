@@ -28,16 +28,16 @@ async def test_config_flow_registers_webhook(hass, aiohttp_client):
     hass.bus.async_listen(ifttt.EVENT_RECEIVED, handle_event)
 
     client = await aiohttp_client(hass.http.app)
-    await client.post("/api/webhook/{}".format(webhook_id), json={"hello": "ifttt"})
+    await client.post(f"/api/webhook/{webhook_id}", json={"hello": "ifttt"})
 
     assert len(ifttt_events) == 1
     assert ifttt_events[0].data["webhook_id"] == webhook_id
     assert ifttt_events[0].data["hello"] == "ifttt"
 
     # Invalid JSON
-    await client.post("/api/webhook/{}".format(webhook_id), data="not a dict")
+    await client.post(f"/api/webhook/{webhook_id}", data="not a dict")
     assert len(ifttt_events) == 1
 
     # Not a dict
-    await client.post("/api/webhook/{}".format(webhook_id), json="not a dict")
+    await client.post(f"/api/webhook/{webhook_id}", json="not a dict")
     assert len(ifttt_events) == 1

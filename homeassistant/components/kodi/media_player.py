@@ -171,7 +171,7 @@ def _check_deprecated_turn_off(hass, turn_off_action):
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Kodi platform."""
     if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = dict()
+        hass.data[DOMAIN] = {}
 
     unique_id = None
     # Is this a manual configuration?
@@ -333,7 +333,7 @@ class KodiDevice(MediaPlayerDevice):
         self._turn_on_action = turn_on_action
         self._turn_off_action = turn_off_action
         self._enable_websocket = websocket
-        self._players = list()
+        self._players = []
         self._properties = {}
         self._item = {}
         self._app_properties = {}
@@ -364,14 +364,14 @@ class KodiDevice(MediaPlayerDevice):
         self._item = {}
         self._media_position_updated_at = None
         self._media_position = None
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def async_on_volume_changed(self, sender, data):
         """Handle the volume changes."""
         self._app_properties["volume"] = data["volume"]
         self._app_properties["muted"] = data["muted"]
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def async_on_quit(self, sender, data):
@@ -429,7 +429,7 @@ class KodiDevice(MediaPlayerDevice):
                 # to reconnect on the next poll.
                 pass
             # Update HA state after Kodi disconnects
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         # Create a task instead of adding a tracking job, since this task will
         # run until the websocket connection is closed.

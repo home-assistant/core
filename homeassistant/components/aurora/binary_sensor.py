@@ -41,8 +41,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Lat. or long. not set in Home Assistant config")
         return False
 
-    name = config.get(CONF_NAME)
-    threshold = config.get(CONF_THRESHOLD)
+    name = config[CONF_NAME]
+    threshold = config[CONF_THRESHOLD]
 
     try:
         aurora_data = AuroraData(hass.config.latitude, hass.config.longitude, threshold)

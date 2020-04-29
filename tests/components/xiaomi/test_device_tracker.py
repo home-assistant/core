@@ -70,7 +70,7 @@ def mocked_requests(*args, **kwargs):
             },
             200,
         )
-    if str(args[0]).endswith("timedOut/" + URL_LIST_END) and FIRST_CALL is True:
+    if str(args[0]).endswith(f"timedOut/{URL_LIST_END}") and FIRST_CALL is True:
         FIRST_CALL = False
         # deliver an error when called with expired token
         return MockResponse({"code": "401", "msg": "Invalid token"}, 200)

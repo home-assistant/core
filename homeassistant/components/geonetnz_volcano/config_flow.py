@@ -24,10 +24,10 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def configured_instances(hass):
     """Return a set of configured GeoNet NZ Volcano instances."""
-    return set(
+    return {
         f"{entry.data[CONF_LATITUDE]}, {entry.data[CONF_LONGITUDE]}"
         for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
 class GeonetnzVolcanoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

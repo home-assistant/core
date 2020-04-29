@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kont ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen, prob\u00e9iert w.e.g. nach emol.",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "login_method": "Login Method",
+                    "password": "Passwuert",
+                    "timeout": "Z\u00e4itiwwerscheidung (sekonnen)",
+                    "username": "Benotzernumm"
+                },
+                "description": "Wann d'Login Method 'E-Mail' ass, dannn ass de Benotzernumm d'E-Mail Adress. Wann d'Login-Method 'Telefon' ass, ass den Benotzernumm d'Telefonsnummer am Format '+ NNNNNNNNN'.",
+                "title": "August Kont ariichten"
+            },
+            "validation": {
+                "data": {
+                    "code": "Verifikatiouns Code"
+                },
+                "description": "Pr\u00e9ift w.e.g. \u00c4re {login_method} ({username}) a gitt de Verifikatiounscode hei dr\u00ebnner an",
+                "title": "2-Faktor-Authentifikatioun"
+            }
+        }
+    }
+}

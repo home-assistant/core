@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ciutat ja configurada",
+            "unknown": "Error desconegut: torna-ho a provar m\u00e9s tard"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "city": "Ciutat"
+                },
+                "description": "Introdueix el codi postal (nom\u00e9s recomanat per Fran\u00e7a) o nom de la ciutat",
+                "title": "M\u00e9t\u00e9o-France"
+            }
+        }
+    }
+}

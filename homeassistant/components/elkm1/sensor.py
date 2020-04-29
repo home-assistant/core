@@ -7,6 +7,8 @@ from elkm1_lib.const import (
 )
 from elkm1_lib.util import pretty_const, username
 
+from homeassistant.const import VOLT
+
 from . import ElkAttachedEntity, create_elk_entities
 from .const import DOMAIN
 
@@ -195,7 +197,7 @@ class ElkZone(ElkSensor):
         if self._element.definition == ZoneType.TEMPERATURE.value:
             return self._temperature_unit
         if self._element.definition == ZoneType.ANALOG_ZONE.value:
-            return "V"
+            return VOLT
         return None
 
     def _element_changed(self, element, changeset):

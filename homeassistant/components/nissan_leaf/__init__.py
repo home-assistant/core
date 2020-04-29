@@ -7,7 +7,7 @@ import sys
 from pycarwings2 import CarwingsError, Session
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_OK
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -287,7 +287,7 @@ class LeafDataStore:
         if server_response is not None:
             _LOGGER.debug("Server Response: %s", server_response.__dict__)
 
-            if server_response.answer["status"] == 200:
+            if server_response.answer["status"] == HTTP_OK:
                 self.data[DATA_BATTERY] = server_response.battery_percent
 
                 # pycarwings2 library doesn't always provide cruising rnages
@@ -467,8 +467,10 @@ class LeafEntity(Entity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.log_registration()
-        async_dispatcher_connect(
-            self.car.hass, SIGNAL_UPDATE_LEAF, self._update_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.car.hass, SIGNAL_UPDATE_LEAF, self._update_callback
+            )
         )
 
     @callback

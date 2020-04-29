@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Naprava je \u017ee konfigurirana"
+        },
+        "error": {
+            "cannot_connect": "Povezava ni uspela, poskusite znova",
+            "invalid_auth": "Neveljavna avtentikacija",
+            "unknown": "Nepri\u010dakovana napaka"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Klju\u010d API za ra\u010dun Rachio."
+                },
+                "description": "Potrebovali boste API klju\u010d iz https://app.rach.io/. Izberite ' nastavitve ra\u010duna in kliknite 'get API KEY'.",
+                "title": "Pove\u017eite se z napravo Rachio"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual_run_mins": "Kako dolgo, v minutah, da vklopite postajo, ko je stikalo omogo\u010deno."
+                }
+            }
+        }
+    }
+}

@@ -3,6 +3,5 @@
   "name": "Genius Hub",
   "documentation": "https://www.home-assistant.io/integrations/geniushub",
   "requirements": ["geniushub-client==0.6.30"],
-  "dependencies": [],
   "codeowners": ["@zxdavb"]
 }
