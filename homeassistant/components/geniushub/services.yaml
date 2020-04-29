@@ -3,18 +3,18 @@
 
 set_zone_mode:
   description: >-
-      Set the zone to an operating mode.
+    Set the zone to an operating mode.
   fields:
     entity_id:
       description: The zone's entity_id.
       example: climate.kitchen
     mode:
-      description: 'One of: off, timer or footprint.'
+      description: "One of: off, timer or footprint."
       example: timer
 
 set_zone_override:
   description: >-
-      Override the zone's setpoint for a given duration.
+    Override the zone's setpoint for a given duration.
   fields:
     entity_id:
       description: The zone's entity_id.
@@ -24,6 +24,5 @@ set_zone_override:
       example: 19.2
     duration:
       description: >-
-          The duration of the override. Optional, default 1 hour, maximum 24 hours.
+        The duration of the override. Optional, default 1 hour, maximum 24 hours.
       example: '{"minutes": 135}'
-

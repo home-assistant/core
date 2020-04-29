@@ -75,8 +75,10 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
                 self._state = 1
             else:
                 self._state = 0
-        async_dispatcher_connect(
-            self.hass, self._react_to_signal, self._devices_updated
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self._react_to_signal, self._devices_updated
+            )
         )
 
     @property
@@ -110,4 +112,4 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
         """Update the zone's state, if needed."""
         if self._device_number in zones and self._state != zones[self._device_number]:
             self._state = zones[self._device_number]
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

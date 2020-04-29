@@ -208,7 +208,7 @@ class WatsonIOTThread(threading.Thread):
                         _LOGGER.error("Failed to publish message to Watson IoT")
                         continue
                     break
-                except (MissingMessageEncoderException, IOError):
+                except (MissingMessageEncoderException, OSError):
                     if retry < MAX_TRIES:
                         time.sleep(RETRY_DELAY)
                     else:

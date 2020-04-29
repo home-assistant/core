@@ -19,19 +19,21 @@ from .const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_IGNORE_WIRED_BUG,
+    CONF_POE_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
     CONTROLLER_ID,
+    DEFAULT_POE_CLIENTS,
     DOMAIN,
     LOGGER,
 )
 from .controller import get_controller
 from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 
-CONF_NEW_CLIENT = "new_client"
 DEFAULT_PORT = 8443
 DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
@@ -214,6 +216,10 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                             self.controller.option_detection_time.total_seconds()
                         ),
                     ): int,
+                    vol.Optional(
+                        CONF_IGNORE_WIRED_BUG,
+                        default=self.controller.option_ignore_wired_bug,
+                    ): bool,
                 }
             ),
         )
@@ -223,40 +229,15 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
         errors = {}
 
         if user_input is not None:
-            new_client = user_input.pop(CONF_NEW_CLIENT, None)
             self.options.update(user_input)
-
-            if new_client:
-                if (
-                    new_client in self.controller.api.clients
-                    or new_client in self.controller.api.clients_all
-                ):
-                    self.options[CONF_BLOCK_CLIENT].append(new_client)
-
-                else:
-                    errors["base"] = "unknown_client_mac"
-
-            else:
-                return await self.async_step_statistics_sensors()
+            return await self.async_step_statistics_sensors()
 
         clients_to_block = {}
 
-        for mac in self.options[CONF_BLOCK_CLIENT]:
-
-            name = None
-
-            for clients in [
-                self.controller.api.clients,
-                self.controller.api.clients_all,
-            ]:
-                if mac in clients:
-                    name = f"{clients[mac].name or clients[mac].hostname} ({mac})"
-                    break
-
-            if not name:
-                name = mac
-
-            clients_to_block[mac] = name
+        for client in self.controller.api.clients.values():
+            clients_to_block[
+                client.mac
+            ] = f"{client.name or client.hostname} ({client.mac})"
 
         return self.async_show_form(
             step_id="client_control",
@@ -265,7 +246,10 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_BLOCK_CLIENT, default=self.options[CONF_BLOCK_CLIENT]
                     ): cv.multi_select(clients_to_block),
-                    vol.Optional(CONF_NEW_CLIENT): str,
+                    vol.Optional(
+                        CONF_POE_CLIENTS,
+                        default=self.options.get(CONF_POE_CLIENTS, DEFAULT_POE_CLIENTS),
+                    ): bool,
                 }
             ),
             errors=errors,

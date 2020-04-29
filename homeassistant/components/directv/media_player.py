@@ -8,6 +8,7 @@ from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
+    MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -33,6 +34,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+KNOWN_MEDIA_TYPES = [MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW]
 
 SUPPORT_DTV = (
     SUPPORT_PAUSE
@@ -177,8 +180,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerDevice):
         if self._is_standby or self._program is None:
             return None
 
-        known_types = [MEDIA_TYPE_MOVIE, MEDIA_TYPE_TVSHOW]
-        if self._program.program_type in known_types:
+        if self._program.program_type in KNOWN_MEDIA_TYPES:
             return self._program.program_type
 
         return MEDIA_TYPE_MOVIE
@@ -213,7 +215,26 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerDevice):
         if self._is_standby or self._program is None:
             return None
 
+        if self.media_content_type == MEDIA_TYPE_MUSIC:
+            return self._program.music_title
+
         return self._program.title
+
+    @property
+    def media_artist(self):
+        """Artist of current playing media, music track only."""
+        if self._is_standby or self._program is None:
+            return None
+
+        return self._program.music_artist
+
+    @property
+    def media_album_name(self):
+        """Album name of current playing media, music track only."""
+        if self._is_standby or self._program is None:
+            return None
+
+        return self._program.music_album
 
     @property
     def media_series_title(self):

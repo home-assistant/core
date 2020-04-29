@@ -1,0 +1,17 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_idle": "{entity_name} er inaktiv",
+            "is_off": "{entity_name} er sl\u00e5tt av",
+            "is_on": "{entity_name} er sl\u00e5tt p\u00e5",
+            "is_paused": "{entity_name} er satt p\u00e5 pause",
+            "is_playing": "{entity_name} spiller n\u00e5"
+        }
+    },
+    "state": {
+        "_": {
+            "playing": "Spiller"
+        }
+    },
+    "title": "Mediaspiller"
+}

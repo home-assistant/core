@@ -40,12 +40,12 @@ class TestCommandSensorSensor(unittest.TestCase):
 
         command_line.setup_platform(self.hass, config, add_dev_callback)
 
-        assert 1 == len(devices)
+        assert len(devices) == 1
         entity = devices[0]
         entity.update()
-        assert "Test" == entity.name
-        assert "in" == entity.unit_of_measurement
-        assert "5" == entity.state
+        assert entity.name == "Test"
+        assert entity.unit_of_measurement == "in"
+        assert entity.state == "5"
 
     def test_template(self):
         """Test command sensor with template."""
@@ -61,7 +61,7 @@ class TestCommandSensorSensor(unittest.TestCase):
         )
 
         entity.update()
-        assert 5 == float(entity.state)
+        assert float(entity.state) == 5
 
     def test_template_render(self):
         """Ensure command with templates get rendered properly."""
@@ -71,7 +71,7 @@ class TestCommandSensorSensor(unittest.TestCase):
         )
         data.update()
 
-        assert "Works" == data.value
+        assert data.value == "Works"
 
     def test_bad_command(self):
         """Test bad command."""
@@ -95,11 +95,11 @@ class TestCommandSensorSensor(unittest.TestCase):
             self.hass, data, "test", None, None, ["key", "another_key", "key_three"]
         )
         self.sensor.update()
-        assert "some_json_value" == self.sensor.device_state_attributes["key"]
+        assert self.sensor.device_state_attributes["key"] == "some_json_value"
         assert (
-            "another_json_value" == self.sensor.device_state_attributes["another_key"]
+            self.sensor.device_state_attributes["another_key"] == "another_json_value"
         )
-        assert "value_three" == self.sensor.device_state_attributes["key_three"]
+        assert self.sensor.device_state_attributes["key_three"] == "value_three"
 
     @patch("homeassistant.components.command_line.sensor._LOGGER")
     def test_update_with_json_attrs_no_data(self, mock_logger):
@@ -156,12 +156,12 @@ class TestCommandSensorSensor(unittest.TestCase):
             ["key", "another_key", "key_three", "special_key"],
         )
         self.sensor.update()
-        assert "some_json_value" == self.sensor.device_state_attributes["key"]
+        assert self.sensor.device_state_attributes["key"] == "some_json_value"
         assert (
-            "another_json_value" == self.sensor.device_state_attributes["another_key"]
+            self.sensor.device_state_attributes["another_key"] == "another_json_value"
         )
-        assert "value_three" == self.sensor.device_state_attributes["key_three"]
-        assert not ("special_key" in self.sensor.device_state_attributes)
+        assert self.sensor.device_state_attributes["key_three"] == "value_three"
+        assert "special_key" not in self.sensor.device_state_attributes
 
     def test_update_with_unnecessary_json_attrs(self):
         """Test attributes get extracted from a JSON result."""
@@ -178,8 +178,8 @@ class TestCommandSensorSensor(unittest.TestCase):
             self.hass, data, "test", None, None, ["key", "another_key"]
         )
         self.sensor.update()
-        assert "some_json_value" == self.sensor.device_state_attributes["key"]
+        assert self.sensor.device_state_attributes["key"] == "some_json_value"
         assert (
-            "another_json_value" == self.sensor.device_state_attributes["another_key"]
+            self.sensor.device_state_attributes["another_key"] == "another_json_value"
         )
-        assert not ("key_three" in self.sensor.device_state_attributes)
+        assert "key_three" not in self.sensor.device_state_attributes

@@ -1,8 +1,6 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "This account is already configured."
-    },
+    "abort": { "already_configured": "This account is already configured." },
     "error": {
       "cannot_connect": "Failed to connect, please try again.",
       "invalid_auth": "Invalid authentication.",
@@ -11,14 +9,10 @@
     },
     "step": {
       "user": {
-        "data": {
-          "password": "Password",
-          "username": "Username"
-        },
+        "data": { "password": "Password", "username": "Username" },
         "description": "Enter your credentials.",
         "title": "Garmin Connect"
       }
-    },
-    "title": "Garmin Connect"
+    }
   }
 }

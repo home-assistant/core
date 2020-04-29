@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Dit item is al ingesteld.",
+            "updated_entry": "Dit item is al ingesteld, maar de naam en/of opties die zijn gedefinieerd in de configuratie komen niet overeen met de eerder ge\u00efmporteerde configuratie, dus het configuratie-item is dienovereenkomstig bijgewerkt."
+        },
+        "error": {
+            "cant_connect": "Kan geen verbinding maken met het apparaat. [Bekijk de documenten] (https://www.home-assistant.io/integrations/vizio/) en controleer of:\n- Het apparaat is ingeschakeld\n- Het apparaat is aangesloten op het netwerk\n- De waarden die u ingevuld correct zijn\nvoordat u weer probeert om opnieuw in te dienen.",
+            "host_exists": "Vizio apparaat met opgegeven host al geconfigureerd.",
+            "name_exists": "Vizio apparaat met opgegeven naam al geconfigureerd."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Toegangstoken",
+                    "device_class": "Apparaattype",
+                    "host": "<Host/IP>:<Port>",
+                    "name": "Naam"
+                },
+                "title": "Vizio SmartCast Client instellen"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "volume_step": "Volume Stapgrootte"
+                },
+                "title": "Update Vizo SmartCast Opties"
+            }
+        }
+    }
+}

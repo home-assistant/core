@@ -1,5 +1,8 @@
 """Test Home Assistant json utility functions."""
-from json import JSONEncoder
+from datetime import datetime
+from functools import partial
+from json import JSONEncoder, dumps
+import math
 import os
 import sys
 from tempfile import mkdtemp
@@ -8,6 +11,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.json import (
     SerializationError,
@@ -38,7 +42,7 @@ def teardown():
 
 
 def _path_for(leaf_name):
-    return os.path.join(TMP_DIR, leaf_name + ".json")
+    return os.path.join(TMP_DIR, f"{leaf_name}.json")
 
 
 def test_save_and_load():
@@ -77,8 +81,9 @@ def test_save_bad_data():
     with pytest.raises(SerializationError) as excinfo:
         save_json("test4", {"hello": set()})
 
-    assert "Failed to serialize to JSON: test4. Bad data found at $.hello" in str(
-        excinfo.value
+    assert (
+        "Failed to serialize to JSON: test4. Bad data at $.hello=set()(<class 'set'>"
+        in str(excinfo.value)
     )
 
 
@@ -109,16 +114,46 @@ def test_custom_encoder():
 
 def test_find_unserializable_data():
     """Find unserializeable data."""
-    assert find_paths_unserializable_data(1) == []
-    assert find_paths_unserializable_data([1, 2]) == []
-    assert find_paths_unserializable_data({"something": "yo"}) == []
+    assert find_paths_unserializable_data(1) == {}
+    assert find_paths_unserializable_data([1, 2]) == {}
+    assert find_paths_unserializable_data({"something": "yo"}) == {}
 
-    assert find_paths_unserializable_data({"something": set()}) == ["$.something"]
-    assert find_paths_unserializable_data({"something": [1, set()]}) == [
-        "$.something[1]"
-    ]
-    assert find_paths_unserializable_data([1, {"bla": set(), "blub": set()}]) == [
-        "$[1].bla",
-        "$[1].blub",
-    ]
-    assert find_paths_unserializable_data({("A",): 1}) == ["$<key: ('A',)>"]
+    assert find_paths_unserializable_data({"something": set()}) == {
+        "$.something": set()
+    }
+    assert find_paths_unserializable_data({"something": [1, set()]}) == {
+        "$.something[1]": set()
+    }
+    assert find_paths_unserializable_data([1, {"bla": set(), "blub": set()}]) == {
+        "$[1].bla": set(),
+        "$[1].blub": set(),
+    }
+    assert find_paths_unserializable_data({("A",): 1}) == {"$<key: ('A',)>": ("A",)}
+    assert math.isnan(
+        find_paths_unserializable_data(
+            float("nan"), dump=partial(dumps, allow_nan=False)
+        )["$"]
+    )
+
+    # Test custom encoder + State support.
+
+    class MockJSONEncoder(JSONEncoder):
+        """Mock JSON encoder."""
+
+        def default(self, o):
+            """Mock JSON encode method."""
+            if isinstance(o, datetime):
+                return o.isoformat()
+            return super().default(o)
+
+    bad_data = object()
+
+    assert find_paths_unserializable_data(
+        [State("mock_domain.mock_entity", "on", {"bad": bad_data})],
+        dump=partial(dumps, cls=MockJSONEncoder),
+    ) == {"$[0](state: mock_domain.mock_entity).attributes.bad": bad_data}
+
+    assert find_paths_unserializable_data(
+        [Event("bad_event", {"bad_attribute": bad_data})],
+        dump=partial(dumps, cls=MockJSONEncoder),
+    ) == {"$[0](event: bad_event).data.bad_attribute": bad_data}

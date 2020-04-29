@@ -3,7 +3,6 @@
   "name": "Locative",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/locative",
-  "requirements": [],
   "dependencies": ["webhook"],
   "codeowners": []
 }

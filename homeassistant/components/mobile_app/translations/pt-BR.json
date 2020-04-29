@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "install_app": "Abra o aplicativo m\u00f3vel para configurar a integra\u00e7\u00e3o com o Home Assistant. Veja [os documentos] ( {apps_url} ) para obter uma lista de aplicativos compat\u00edveis."
+        },
+        "step": {
+            "confirm": {
+                "description": "Deseja configurar o componente do aplicativo m\u00f3vel?",
+                "title": "Aplicativo m\u00f3vel"
+            }
+        }
+    }
+}

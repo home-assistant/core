@@ -71,7 +71,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     host = config.get(CONF_HOST)
     key = config.get(CONF_API_KEY)
     port = config.get(CONF_PORT)
-    ssl = config.get(CONF_SSL)
+    ssl = config[CONF_SSL]
 
     if port is None:
         port = DEFAULT_SSL_PORT if ssl else DEFAULT_PORT
@@ -166,7 +166,7 @@ class EmbyDevice(MediaPlayerDevice):
             self.media_status_last_position = None
             self.media_status_received = None
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def available(self):

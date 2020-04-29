@@ -6,10 +6,10 @@ start:
   fields:
     entity_id:
       description: Entity id of the timer to start. [optional]
-      example: 'timer.timer0'
+      example: "timer.timer0"
     duration:
       description: Duration the timer requires to finish. [optional]
-      example: '00:01:00 or 60'
+      example: "00:01:00 or 60"
 
 pause:
   description: Pause a timer.
@@ -17,7 +17,7 @@ pause:
   fields:
     entity_id:
       description: Entity id of the timer to pause. [optional]
-      example: 'timer.timer0'
+      example: "timer.timer0"
 
 cancel:
   description: Cancel a timer.
@@ -25,7 +25,7 @@ cancel:
   fields:
     entity_id:
       description: Entity id of the timer to cancel. [optional]
-      example: 'timer.timer0'
+      example: "timer.timer0"
 
 finish:
   description: Finish a timer.
@@ -33,4 +33,4 @@ finish:
   fields:
     entity_id:
       description: Entity id of the timer to finish. [optional]
-      example: 'timer.timer0'
+      example: "timer.timer0"

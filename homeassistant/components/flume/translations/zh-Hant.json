@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u6b64\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "\u5ba2\u6236\u7aef ID",
+                    "client_secret": "\u5ba2\u6236\u7aef\u5bc6\u9470",
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u6b32\u5b58\u53d6 Flume \u500b\u4eba API\u3001\u5c07\u9700\u8981\u65bc https://portal.flumetech.com/settings#token \u7372\u5f97\u5ba2\u6236\u7aef ID\uff08Client ID\u300f\u53ca\u5ba2\u6236\u7aef\u5bc6\u9470\uff08Client Secret\uff09",
+                "title": "\u9023\u7dda\u81f3 Flume \u5e33\u865f"
+            }
+        }
+    }
+}

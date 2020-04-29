@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Integraci\u00f3 ja configurada amb un sensor amb aquesta tarifa"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nom del sensor",
+                    "tariff": "Tarifa contractada (1, 2 o 3 per\u00edodes)"
+                },
+                "description": "Aquest sensor utilitza l'API oficial de la xarxa el\u00e8ctrica espanyola (REE) per obtenir els [preus per hora de l\u2019electricitat (PVPC)](https://www.esios.ree.es/es/pvpc) a Espanya.\nPer a m\u00e9s informaci\u00f3, consulta la [documentaci\u00f3 de la integraci\u00f3](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/). \n\nSelecciona la tarifa contractada, cadascuna t\u00e9 un nombre determinat de per\u00edodes: \n - 1 per\u00edode: normal (sense discriminaci\u00f3)\n - 2 per\u00edodes: discriminaci\u00f3 (tarifa nocturna) \n - 3 per\u00edodes: cotxe el\u00e8ctric (tarifa nocturna de 3 per\u00edodes)",
+                "title": "Selecci\u00f3 de tarifa"
+            }
+        }
+    }
+}

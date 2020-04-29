@@ -2,15 +2,14 @@
 import asyncio
 from collections import namedtuple
 import concurrent.futures
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 import queue
-from sqlite3 import Connection
 import threading
 import time
 from typing import Any, Dict, Optional
 
-from sqlalchemy import create_engine, exc
+from sqlalchemy import create_engine, exc, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.event import listens_for
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -61,7 +60,9 @@ DEFAULT_URL = "sqlite:///{hass_config_path}"
 DEFAULT_DB_FILE = "home-assistant_v2.db"
 DEFAULT_DB_MAX_RETRIES = 10
 DEFAULT_DB_RETRY_WAIT = 3
+KEEPALIVE_TIME = 30
 
+CONF_AUTO_PURGE = "auto_purge"
 CONF_DB_URL = "db_url"
 CONF_DB_MAX_RETRIES = "db_max_retries"
 CONF_DB_RETRY_WAIT = "db_retry_wait"
@@ -90,25 +91,29 @@ FILTER_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Optional(DOMAIN, default=dict): FILTER_SCHEMA.extend(
-            {
-                vol.Optional(CONF_PURGE_KEEP_DAYS, default=10): vol.All(
-                    vol.Coerce(int), vol.Range(min=1)
-                ),
-                vol.Optional(CONF_PURGE_INTERVAL, default=1): vol.All(
-                    vol.Coerce(int), vol.Range(min=0)
-                ),
-                vol.Optional(CONF_DB_URL): cv.string,
-                vol.Optional(CONF_COMMIT_INTERVAL, default=1): vol.All(
-                    vol.Coerce(int), vol.Range(min=0)
-                ),
-                vol.Optional(
-                    CONF_DB_MAX_RETRIES, default=DEFAULT_DB_MAX_RETRIES
-                ): cv.positive_int,
-                vol.Optional(
-                    CONF_DB_RETRY_WAIT, default=DEFAULT_DB_RETRY_WAIT
-                ): cv.positive_int,
-            }
+        vol.Optional(DOMAIN, default=dict): vol.All(
+            cv.deprecated(CONF_PURGE_INTERVAL),
+            FILTER_SCHEMA.extend(
+                {
+                    vol.Optional(CONF_AUTO_PURGE, default=True): cv.boolean,
+                    vol.Optional(CONF_PURGE_KEEP_DAYS, default=10): vol.All(
+                        vol.Coerce(int), vol.Range(min=1)
+                    ),
+                    vol.Optional(CONF_PURGE_INTERVAL, default=1): vol.All(
+                        vol.Coerce(int), vol.Range(min=0)
+                    ),
+                    vol.Optional(CONF_DB_URL): cv.string,
+                    vol.Optional(CONF_COMMIT_INTERVAL, default=1): vol.All(
+                        vol.Coerce(int), vol.Range(min=0)
+                    ),
+                    vol.Optional(
+                        CONF_DB_MAX_RETRIES, default=DEFAULT_DB_MAX_RETRIES
+                    ): cv.positive_int,
+                    vol.Optional(
+                        CONF_DB_RETRY_WAIT, default=DEFAULT_DB_RETRY_WAIT
+                    ): cv.positive_int,
+                }
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -143,13 +148,13 @@ def run_information(hass, point_in_time: Optional[datetime] = None):
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     conf = config[DOMAIN]
-    keep_days = conf.get(CONF_PURGE_KEEP_DAYS)
-    purge_interval = conf.get(CONF_PURGE_INTERVAL)
+    auto_purge = conf[CONF_AUTO_PURGE]
+    keep_days = conf[CONF_PURGE_KEEP_DAYS]
     commit_interval = conf[CONF_COMMIT_INTERVAL]
     db_max_retries = conf[CONF_DB_MAX_RETRIES]
     db_retry_wait = conf[CONF_DB_RETRY_WAIT]
 
-    db_url = conf.get(CONF_DB_URL, None)
+    db_url = conf.get(CONF_DB_URL)
     if not db_url:
         db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
 
@@ -157,8 +162,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     exclude = conf.get(CONF_EXCLUDE, {})
     instance = hass.data[DATA_INSTANCE] = Recorder(
         hass=hass,
+        auto_purge=auto_purge,
         keep_days=keep_days,
-        purge_interval=purge_interval,
         commit_interval=commit_interval,
         uri=db_url,
         db_max_retries=db_max_retries,
@@ -189,8 +194,8 @@ class Recorder(threading.Thread):
     def __init__(
         self,
         hass: HomeAssistant,
+        auto_purge: bool,
         keep_days: int,
-        purge_interval: int,
         commit_interval: int,
         uri: str,
         db_max_retries: int,
@@ -202,8 +207,8 @@ class Recorder(threading.Thread):
         threading.Thread.__init__(self, name="Recorder")
 
         self.hass = hass
+        self.auto_purge = auto_purge
         self.keep_days = keep_days
-        self.purge_interval = purge_interval
         self.commit_interval = commit_interval
         self.queue: Any = queue.Queue()
         self.recording_start = dt_util.utcnow()
@@ -223,6 +228,7 @@ class Recorder(threading.Thread):
         self.exclude_t = exclude.get(CONF_EVENT_TYPES, [])
 
         self._timechanges_seen = 0
+        self._keepalive_count = 0
         self.event_session = None
         self.get_session = None
 
@@ -313,28 +319,17 @@ class Recorder(threading.Thread):
             return
 
         # Start periodic purge
-        if self.keep_days and self.purge_interval:
+        if self.auto_purge:
 
             @callback
             def async_purge(now):
-                """Trigger the purge and schedule the next run."""
+                """Trigger the purge."""
                 self.queue.put(PurgeTask(self.keep_days, repack=False))
-                self.hass.helpers.event.async_track_point_in_time(
-                    async_purge, now + timedelta(days=self.purge_interval)
-                )
 
-            earliest = dt_util.utcnow() + timedelta(minutes=30)
-            run = latest = dt_util.utcnow() + timedelta(days=self.purge_interval)
-            with session_scope(session=self.get_session()) as session:
-                event = session.query(Events).first()
-                if event is not None:
-                    session.expunge(event)
-                    run = dt_util.as_utc(event.time_fired) + timedelta(
-                        days=self.keep_days + self.purge_interval
-                    )
-            run = min(latest, max(run, earliest))
-
-            self.hass.helpers.event.track_point_in_time(async_purge, run)
+            # Purge every night at 4:12am
+            self.hass.helpers.event.track_time_change(
+                async_purge, hour=4, minute=12, second=0
+            )
 
         self.event_session = self.get_session()
         # Use a session for the event read loop
@@ -353,6 +348,10 @@ class Recorder(threading.Thread):
                 continue
             if event.event_type == EVENT_TIME_CHANGED:
                 self.queue.task_done()
+                self._keepalive_count += 1
+                if self._keepalive_count >= KEEPALIVE_TIME:
+                    self._keepalive_count = 0
+                    self._send_keep_alive()
                 if self.commit_interval:
                     self._timechanges_seen += 1
                     if self._timechanges_seen >= self.commit_interval:
@@ -400,6 +399,18 @@ class Recorder(threading.Thread):
 
             self.queue.task_done()
 
+    def _send_keep_alive(self):
+        try:
+            _LOGGER.debug("Sending keepalive")
+            self.event_session.connection().scalar(select([1]))
+            return
+        except Exception as err:  # pylint: disable=broad-except
+            # Must catch the exception to prevent the loop from collapsing
+            _LOGGER.error(
+                "Error in database connectivity during keepalive: %s.", err,
+            )
+            self._reopen_event_session()
+
     def _commit_event_session_or_retry(self):
         tries = 1
         while tries <= self.db_max_retries:
@@ -419,7 +430,7 @@ class Recorder(threading.Thread):
                     )
                 else:
                     _LOGGER.error(
-                        "Error in database connectivity: %s. "
+                        "Error in database connectivity during commit: %s. "
                         "(retrying in %s seconds)",
                         err,
                         self.db_retry_wait,
@@ -435,6 +446,15 @@ class Recorder(threading.Thread):
             "Error in database update. Could not save " "after %d tries. Giving up",
             tries,
         )
+        self._reopen_event_session()
+
+    def _reopen_event_session(self):
+        try:
+            self.event_session.rollback()
+        except Exception as err:  # pylint: disable=broad-except
+            # Must catch the exception to prevent the loop from collapsing
+            _LOGGER.exception("Error while rolling back event session: %s", err)
+
         try:
             self.event_session.close()
         except Exception as err:  # pylint: disable=broad-except
@@ -470,15 +490,23 @@ class Recorder(threading.Thread):
 
         # pylint: disable=unused-variable
         @listens_for(Engine, "connect")
-        def set_sqlite_pragma(dbapi_connection, connection_record):
-            """Set sqlite's WAL mode."""
-            if isinstance(dbapi_connection, Connection):
+        def setup_connection(dbapi_connection, connection_record):
+            """Dbapi specific connection settings."""
+
+            # We do not import sqlite3 here so mysql/other
+            # users do not have to pay for it to be loaded in
+            # memory
+            if self.db_url == "sqlite://" or ":memory:" in self.db_url:
                 old_isolation = dbapi_connection.isolation_level
                 dbapi_connection.isolation_level = None
                 cursor = dbapi_connection.cursor()
                 cursor.execute("PRAGMA journal_mode=WAL")
                 cursor.close()
                 dbapi_connection.isolation_level = old_isolation
+            elif self.db_url.startswith("mysql"):
+                cursor = dbapi_connection.cursor()
+                cursor.execute("SET session wait_timeout=28800")
+                cursor.close()
 
         if self.db_url == "sqlite://" or ":memory:" in self.db_url:
             kwargs["connect_args"] = {"check_same_thread": False}

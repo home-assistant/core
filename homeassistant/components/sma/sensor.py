@@ -1,5 +1,4 @@
 """SMA Solar Webconnect interface."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -132,7 +131,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     session = async_get_clientsession(hass, verify_ssl=config[CONF_VERIFY_SSL])
     grp = config[CONF_GROUP]
 
-    url = "http{}://{}".format("s" if config[CONF_SSL] else "", config[CONF_HOST])
+    protocol = "https" if config[CONF_SSL] else "http"
+    url = f"{protocol}://{config[CONF_HOST]}"
 
     sma = pysma.SMA(session, url, config[CONF_PASSWORD], group=grp)
 
@@ -163,13 +163,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             return
         backoff_step = 0
 
-        tasks = []
         for sensor in hass_sensors:
-            task = sensor.async_update_values()
-            if task:
-                tasks.append(task)
-        if tasks:
-            await asyncio.wait(tasks)
+            sensor.async_update_values()
 
     interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=5)
     async_track_time_interval(hass, async_sma, interval)
@@ -226,7 +221,8 @@ class SMAsensor(Entity):
             update = True
             self._state = self._sensor.value
 
-        return self.async_update_ha_state() if update else None
+        if update:
+            self.async_write_ha_state()
 
     @property
     def unique_id(self):

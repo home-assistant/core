@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bridge-ul este deja configurat"
+        },
+        "error": {
+            "cannot_connect": "Nu se poate conecta la gateway.",
+            "invalid_key": "Nu s-a \u00eenregistrat cu cheia furnizat\u0103. Dac\u0103 acest lucru se \u00eent\u00e2mpl\u0103 \u00een continuare, \u00eencerca\u021bi s\u0103 reporni\u021bi gateway-ul.",
+            "timeout": "Timeout la validarea codului."
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Gazd\u0103",
+                    "security_code": "Cod de securitate"
+                },
+                "description": "Pute\u021bi g\u0103si codul de securitate pe spatele gateway-ului.",
+                "title": "Introduce\u021bi codul de securitate"
+            }
+        }
+    }
+}

@@ -352,7 +352,7 @@ class PS4Device(MediaPlayerDevice):
         else:
             _sw_version = status["system-version"]
             _sw_version = _sw_version[1:4]
-            sw_version = "{}.{}".format(_sw_version[0], _sw_version[1:])
+            sw_version = f"{_sw_version[0]}.{_sw_version[1:]}"
             self._info = {
                 "name": status["host-name"],
                 "model": "PlayStation 4",

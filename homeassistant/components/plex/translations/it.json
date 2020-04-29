@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Tutti i server collegati sono gi\u00e0 configurati",
+            "already_configured": "Questo server Plex \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Plex \u00e8 in fase di configurazione",
+            "invalid_import": "La configurazione importata non \u00e8 valida",
+            "non-interactive": "Importazione non interattiva",
+            "token_request_timeout": "Timeout per l'ottenimento del token",
+            "unknown": "Non riuscito per motivo sconosciuto"
+        },
+        "error": {
+            "faulty_credentials": "Autorizzazione non riuscita",
+            "no_servers": "Nessun server collegato all'account",
+            "not_found": "Server Plex non trovato"
+        },
+        "step": {
+            "select_server": {
+                "data": {
+                    "server": "Server"
+                },
+                "description": "Sono disponibili pi\u00f9 server, selezionarne uno:",
+                "title": "Selezionare il server Plex"
+            },
+            "start_website_auth": {
+                "description": "Continuare ad autorizzare su plex.tv.",
+                "title": "Collegare il server Plex"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "ignore_new_shared_users": "Ignora nuovi utenti gestiti/condivisi",
+                    "monitored_users": "Utenti monitorati",
+                    "use_episode_art": "Usa la grafica dell'episodio"
+                },
+                "description": "Opzioni per i lettori multimediali Plex"
+            }
+        }
+    }
+}

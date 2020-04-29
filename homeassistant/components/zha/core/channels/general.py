@@ -30,8 +30,6 @@ _LOGGER = logging.getLogger(__name__)
 class Alarms(ZigbeeChannel):
     """Alarms channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.AnalogInput.cluster_id)
 class AnalogInput(ZigbeeChannel):
@@ -57,8 +55,6 @@ class AnalogValue(ZigbeeChannel):
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.ApplianceControl.cluster_id)
 class ApplianceContorl(ZigbeeChannel):
     """Appliance Control channel."""
-
-    pass
 
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(general.Basic.cluster_id)
@@ -130,28 +126,20 @@ class BinaryValue(ZigbeeChannel):
 class Commissioning(ZigbeeChannel):
     """Commissioning channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.DeviceTemperature.cluster_id)
 class DeviceTemperature(ZigbeeChannel):
     """Device Temperature channel."""
-
-    pass
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.GreenPowerProxy.cluster_id)
 class GreenPowerProxy(ZigbeeChannel):
     """Green Power Proxy channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Groups.cluster_id)
 class Groups(ZigbeeChannel):
     """Groups channel."""
-
-    pass
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Identify.cluster_id)
@@ -170,8 +158,6 @@ class Identify(ZigbeeChannel):
 @registries.CLIENT_CHANNELS_REGISTRY.register(general.LevelControl.cluster_id)
 class LevelControlClientChannel(ClientChannel):
     """LevelControl client cluster."""
-
-    pass
 
 
 @registries.BINDABLE_CLUSTERS.register(general.LevelControl.cluster_id)
@@ -243,8 +229,6 @@ class MultistateValue(ZigbeeChannel):
 @registries.CLIENT_CHANNELS_REGISTRY.register(general.OnOff.cluster_id)
 class OnOffClientChannel(ClientChannel):
     """OnOff client channel."""
-
-    pass
 
 
 @registries.BINARY_SENSOR_CLUSTERS.register(general.OnOff.cluster_id)
@@ -331,8 +315,6 @@ class OnOffChannel(ZigbeeChannel):
 class OnOffConfiguration(ZigbeeChannel):
     """OnOff Configuration channel."""
 
-    pass
-
 
 @registries.CLIENT_CHANNELS_REGISTRY.register(general.Ota.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Ota.cluster_id)
@@ -353,8 +335,6 @@ class Ota(ZigbeeChannel):
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Partition.cluster_id)
 class Partition(ZigbeeChannel):
     """Partition channel."""
-
-    pass
 
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(general.PollControl.cluster_id)
@@ -449,32 +429,22 @@ class PowerConfigurationChannel(ZigbeeChannel):
 class PowerProfile(ZigbeeChannel):
     """Power Profile channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.RSSILocation.cluster_id)
 class RSSILocation(ZigbeeChannel):
     """RSSI Location channel."""
-
-    pass
 
 
 @registries.CLIENT_CHANNELS_REGISTRY.register(general.Scenes.cluster_id)
 class ScenesClientChannel(ClientChannel):
     """Scenes channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Scenes.cluster_id)
 class Scenes(ZigbeeChannel):
     """Scenes channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Time.cluster_id)
 class Time(ZigbeeChannel):
     """Time channel."""
-
-    pass

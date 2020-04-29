@@ -130,7 +130,7 @@ class W800rf32BinarySensor(BinarySensorDevice):
     def update_state(self, state):
         """Update the state of the device."""
         self._state = state
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Register update callback."""

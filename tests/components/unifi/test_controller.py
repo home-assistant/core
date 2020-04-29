@@ -4,7 +4,7 @@ from copy import deepcopy
 from datetime import timedelta
 
 import aiounifi
-from asynctest import Mock, patch
+from asynctest import patch
 import pytest
 
 from homeassistant.components import unifi
@@ -68,11 +68,7 @@ async def setup_unifi_integration(
     controllers=None,
 ):
     """Create the UniFi controller."""
-    configuration = {}
-    if controllers:
-        configuration = {unifi.DOMAIN: {unifi.CONF_CONTROLLERS: controllers}}
-
-    assert await async_setup_component(hass, unifi.DOMAIN, configuration)
+    assert await async_setup_component(hass, unifi.DOMAIN, {})
 
     config_entry = MockConfigEntry(
         domain=unifi.DOMAIN,
@@ -108,20 +104,21 @@ async def setup_unifi_integration(
     async def mock_request(self, method, path, json=None):
         mock_requests.append({"method": method, "path": path, "json": json})
 
-        if path == "s/{site}/stat/sta" and mock_client_responses:
+        if path == "/stat/sta" and mock_client_responses:
             return mock_client_responses.popleft()
-        if path == "s/{site}/stat/device" and mock_device_responses:
+        if path == "/stat/device" and mock_device_responses:
             return mock_device_responses.popleft()
-        if path == "s/{site}/rest/user" and mock_client_all_responses:
+        if path == "/rest/user" and mock_client_all_responses:
             return mock_client_all_responses.popleft()
-        if path == "s/{site}/rest/wlanconf" and mock_wlans_responses:
+        if path == "/rest/wlanconf" and mock_wlans_responses:
             return mock_wlans_responses.popleft()
         return {}
 
-    # "aiounifi.Controller.start_websocket", return_value=True
-    with patch("aiounifi.Controller.login", return_value=True), patch(
-        "aiounifi.Controller.sites", return_value=sites
-    ), patch("aiounifi.Controller.request", new=mock_request), patch.object(
+    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
+        "aiounifi.Controller.login", return_value=True,
+    ), patch("aiounifi.Controller.sites", return_value=sites), patch(
+        "aiounifi.Controller.request", new=mock_request
+    ), patch.object(
         aiounifi.websocket.WSClient, "start", return_value=True
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -180,6 +177,7 @@ async def test_controller_setup(hass):
     assert controller.mac is None
 
     assert controller.signal_update == "unifi-update-1.2.3.4-site_id"
+    assert controller.signal_remove == "unifi-remove-1.2.3.4-site_id"
     assert controller.signal_options_update == "unifi-options-1.2.3.4-site_id"
 
 
@@ -244,7 +242,9 @@ async def test_wireless_client_event_calls_update_wireless_devices(hass):
 
 async def test_get_controller(hass):
     """Successful call."""
-    with patch("aiounifi.Controller.login", return_value=Mock()):
+    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
+        "aiounifi.Controller.login", return_value=True
+    ):
         assert await unifi.controller.get_controller(hass, **CONTROLLER_DATA)
 
 
@@ -252,13 +252,15 @@ async def test_get_controller_verify_ssl_false(hass):
     """Successful call with verify ssl set to false."""
     controller_data = dict(CONTROLLER_DATA)
     controller_data[CONF_VERIFY_SSL] = False
-    with patch("aiounifi.Controller.login", return_value=Mock()):
+    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
+        "aiounifi.Controller.login", return_value=True
+    ):
         assert await unifi.controller.get_controller(hass, **controller_data)
 
 
 async def test_get_controller_login_failed(hass):
     """Check that get_controller can handle a failed login."""
-    with patch(
+    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", side_effect=aiounifi.Unauthorized
     ), pytest.raises(unifi.errors.AuthenticationRequired):
         await unifi.controller.get_controller(hass, **CONTROLLER_DATA)
@@ -266,7 +268,7 @@ async def test_get_controller_login_failed(hass):
 
 async def test_get_controller_controller_unavailable(hass):
     """Check that get_controller can handle controller being unavailable."""
-    with patch(
+    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", side_effect=aiounifi.RequestError
     ), pytest.raises(unifi.errors.CannotConnect):
         await unifi.controller.get_controller(hass, **CONTROLLER_DATA)
@@ -274,7 +276,7 @@ async def test_get_controller_controller_unavailable(hass):
 
 async def test_get_controller_unknown_error(hass):
     """Check that get_controller can handle unknown errors."""
-    with patch(
+    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", side_effect=aiounifi.AiounifiException
     ), pytest.raises(unifi.errors.AuthenticationRequired):
         await unifi.controller.get_controller(hass, **CONTROLLER_DATA)

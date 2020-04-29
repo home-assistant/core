@@ -62,11 +62,9 @@ async def test_flow_works(hass):
     assert result["step_id"] == "link"
 
     flow = next(
-        (
-            flow
-            for flow in hass.config_entries.flow.async_progress()
-            if flow["flow_id"] == result["flow_id"]
-        )
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
     )
     assert flow["context"]["unique_id"] == "aabbccddeeff"
 
@@ -168,11 +166,9 @@ async def test_flow_two_bridges_discovered_one_new(hass, aioclient_mock):
     assert result["type"] == "form"
     assert result["step_id"] == "link"
     flow = next(
-        (
-            flow
-            for flow in hass.config_entries.flow.async_progress()
-            if flow["flow_id"] == result["flow_id"]
-        )
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
     )
     assert flow["context"]["unique_id"] == "beer"
 

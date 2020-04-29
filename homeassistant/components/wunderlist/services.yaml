@@ -6,10 +6,10 @@ create_task:
   fields:
     list_name:
       description: name of the new list where the task will be created
-      example: 'Shopping list'
+      example: "Shopping list"
     name:
       description: name of the new task
-      example: 'Buy 5 bottles of beer'
+      example: "Buy 5 bottles of beer"
     starred:
       description: Create the task as starred [Optional]
       example: true

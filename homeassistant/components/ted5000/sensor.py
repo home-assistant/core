@@ -7,7 +7,7 @@ import voluptuous as vol
 import xmltodict
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, POWER_WATT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, POWER_WATT, VOLT
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dev = []
     for mtu in gateway.data:
         dev.append(Ted5000Sensor(gateway, name, mtu, POWER_WATT))
-        dev.append(Ted5000Sensor(gateway, name, mtu, "V"))
+        dev.append(Ted5000Sensor(gateway, name, mtu, VOLT))
 
     add_entities(dev)
     return True
@@ -54,7 +54,7 @@ class Ted5000Sensor(Entity):
 
     def __init__(self, gateway, name, mtu, unit):
         """Initialize the sensor."""
-        units = {POWER_WATT: "power", "V": "voltage"}
+        units = {POWER_WATT: "power", VOLT: "voltage"}
         self._gateway = gateway
         self._name = "{} mtu{} {}".format(name, mtu, units[unit])
         self._mtu = mtu
@@ -90,7 +90,7 @@ class Ted5000Gateway:
     def __init__(self, url):
         """Initialize the data object."""
         self.url = url
-        self.data = dict()
+        self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -108,4 +108,4 @@ class Ted5000Gateway:
                 power = int(doc["LiveData"]["Power"]["MTU%d" % mtu]["PowerNow"])
                 voltage = int(doc["LiveData"]["Voltage"]["MTU%d" % mtu]["VoltageNow"])
 
-                self.data[mtu] = {POWER_WATT: power, "V": voltage / 10}
+                self.data[mtu] = {POWER_WATT: power, VOLT: voltage / 10}

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "name_exists": "El nombre ya existe"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host_ip": "IP del host",
+                    "name": "Nombre"
+                },
+                "title": "Definir la configuraci\u00f3n del servidor."
+            }
+        }
+    },
+    "title": "EmulatedRoku"
+}

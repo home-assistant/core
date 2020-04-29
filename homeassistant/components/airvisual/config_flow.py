@@ -16,7 +16,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from . import async_get_geography_id
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import CONF_GEOGRAPHIES, DOMAIN  # pylint: disable=unused-import
 
 
 class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -69,6 +69,18 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         geo_id = async_get_geography_id(user_input)
         await self._async_set_unique_id(geo_id)
+        self._abort_if_unique_id_configured()
+
+        # Find older config entries without unique ID
+        for entry in self._async_current_entries():
+            if entry.version != 1:
+                continue
+
+            if any(
+                geo_id == async_get_geography_id(geography)
+                for geography in entry.data[CONF_GEOGRAPHIES]
+            ):
+                return self.async_abort(reason="already_configured")
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
         client = Client(websession, api_key=user_input[CONF_API_KEY])
@@ -90,9 +102,10 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     )
 
                 checked_keys.add(user_input[CONF_API_KEY])
-                return self.async_create_entry(
-                    title=f"Cloud API ({geo_id})", data=user_input
-                )
+
+            return self.async_create_entry(
+                title=f"Cloud API ({geo_id})", data=user_input
+            )
 
 
 class AirVisualOptionsFlowHandler(config_entries.OptionsFlow):

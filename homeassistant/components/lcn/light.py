@@ -102,7 +102,7 @@ class LcnOutputLight(LcnDevice, Light):
             transition = self._transition
 
         self.address_connection.dim_output(self.output.value, percent, transition)
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
@@ -117,7 +117,7 @@ class LcnOutputLight(LcnDevice, Light):
         self._is_dimming_to_zero = bool(transition)
 
         self.address_connection.dim_output(self.output.value, 0, transition)
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     def input_received(self, input_obj):
         """Set light state when LCN input object (command) is received."""
@@ -132,7 +132,7 @@ class LcnOutputLight(LcnDevice, Light):
             self._is_dimming_to_zero = False
         if not self._is_dimming_to_zero:
             self._is_on = self.brightness > 0
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
 
 class LcnRelayLight(LcnDevice, Light):
@@ -164,7 +164,7 @@ class LcnRelayLight(LcnDevice, Light):
         states[self.output.value] = pypck.lcn_defs.RelayStateModifier.ON
         self.address_connection.control_relays(states)
 
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
@@ -174,7 +174,7 @@ class LcnRelayLight(LcnDevice, Light):
         states[self.output.value] = pypck.lcn_defs.RelayStateModifier.OFF
         self.address_connection.control_relays(states)
 
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     def input_received(self, input_obj):
         """Set light state when LCN input object (command) is received."""
@@ -182,4 +182,4 @@ class LcnRelayLight(LcnDevice, Light):
             return
 
         self._is_on = input_obj.get_state(self.output.value)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

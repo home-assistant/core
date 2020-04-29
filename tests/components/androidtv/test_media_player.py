@@ -1,4 +1,5 @@
 """The tests for the androidtv platform."""
+import base64
 import logging
 from unittest.mock import patch
 
@@ -23,6 +24,7 @@ from homeassistant.components.media_player.const import (
     DOMAIN,
     SERVICE_SELECT_SOURCE,
 )
+from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
@@ -968,3 +970,34 @@ async def test_androidtv_volume_set(hass):
         )
 
         patch_set_volume_level.assert_called_with(0.5)
+
+
+async def test_get_image(hass, hass_ws_client):
+    """Test taking a screen capture.
+
+    This is based on `test_get_image` in tests/components/media_player/test_init.py.
+    """
+    patch_key, entity_id = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
+
+    with patchers.patch_shell("11")[patch_key]:
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+
+    client = await hass_ws_client(hass)
+
+    with patch("androidtv.basetv.BaseTV.adb_screencap", return_value=b"image"):
+        await client.send_json(
+            {"id": 5, "type": "media_player_thumbnail", "entity_id": entity_id}
+        )
+
+        msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"]["content_type"] == "image/png"
+    assert msg["result"]["content"] == base64.b64encode(b"image").decode("utf-8")

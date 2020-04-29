@@ -2,8 +2,6 @@
   "domain": "input_boolean",
   "name": "Input Boolean",
   "documentation": "https://www.home-assistant.io/integrations/input_boolean",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal"
 }

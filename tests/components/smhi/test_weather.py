@@ -74,11 +74,6 @@ async def test_setup_hass(hass: HomeAssistant, aioclient_mock) -> None:
     assert forecast[ATTR_FORECAST_CONDITION] == "partlycloudy"
 
 
-async def test_setup_plattform(hass):
-    """Test that setup platform does nothing."""
-    assert await weather_smhi.async_setup_platform(hass, None, None) is None
-
-
 def test_properties_no_data(hass: HomeAssistant) -> None:
     """Test properties when no API data available."""
     weather = weather_smhi.SmhiWeather("name", "10", "10")

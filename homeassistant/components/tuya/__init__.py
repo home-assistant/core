@@ -17,6 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_COUNTRYCODE = "country_code"
 
+PARALLEL_UPDATES = 0
+
 DOMAIN = "tuya"
 DATA_TUYA = "data_tuya"
 
@@ -134,7 +136,7 @@ class TuyaDevice(Entity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return "tuya.{}".format(self.tuya.object_id())
+        return f"tuya.{self.tuya.object_id()}"
 
     @property
     def name(self):

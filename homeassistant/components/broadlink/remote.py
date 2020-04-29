@@ -7,9 +7,8 @@ from datetime import timedelta
 from ipaddress import ip_address
 from itertools import product
 import logging
-import socket
 
-import broadlink
+import broadlink as blk
 import voluptuous as vol
 
 from homeassistant.components.remote import (
@@ -25,7 +24,7 @@ from homeassistant.components.remote import (
     SUPPORT_LEARN_COMMAND,
     RemoteDevice,
 )
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -33,20 +32,25 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util.dt import utcnow
 
 from . import DOMAIN, data_packet, hostname, mac_address
+from .const import (
+    DEFAULT_LEARNING_TIMEOUT,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DEFAULT_RETRY,
+    DEFAULT_TIMEOUT,
+    RM4_TYPES,
+    RM_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_LEARNING_TIMEOUT = 20
-DEFAULT_NAME = "Broadlink"
-DEFAULT_PORT = 80
-DEFAULT_RETRY = 3
-DEFAULT_TIMEOUT = 5
 
 SCAN_INTERVAL = timedelta(minutes=2)
 
 CODE_STORAGE_VERSION = 1
 FLAG_STORAGE_VERSION = 1
 FLAG_SAVE_DELAY = 15
+
+DEVICE_TYPES = RM_TYPES + RM4_TYPES
 
 MINIMUM_SERVICE_SCHEMA = vol.Schema(
     {
@@ -73,6 +77,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): vol.All(vol.Any(hostname, ip_address), cv.string),
         vol.Required(CONF_MAC): mac_address,
+        vol.Optional(CONF_TYPE, default=DEVICE_TYPES[0]): vol.In(DEVICE_TYPES),
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
@@ -83,6 +88,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the Broadlink remote."""
     host = config[CONF_HOST]
     mac_addr = config[CONF_MAC]
+    model = config[CONF_TYPE]
     timeout = config[CONF_TIMEOUT]
     name = config[CONF_NAME]
     unique_id = f"remote_{hexlify(mac_addr).decode('utf-8')}"
@@ -92,7 +98,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
     hass.data[DOMAIN][COMPONENT].append(unique_id)
 
-    api = broadlink.rm((host, DEFAULT_PORT), mac_addr, None)
+    if model in RM_TYPES:
+        api = blk.rm((host, DEFAULT_PORT), mac_addr, None)
+    else:
+        api = blk.rm4((host, DEFAULT_PORT), mac_addr, None)
     api.timeout = timeout
     code_storage = Store(hass, CODE_STORAGE_VERSION, f"broadlink_{unique_id}_codes")
     flag_storage = Store(hass, FLAG_STORAGE_VERSION, f"broadlink_{unique_id}_flags")
@@ -103,7 +112,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         connected, loaded = await asyncio.gather(
             hass.async_add_executor_job(api.auth), remote.async_load_storage_files()
         )
-    except socket.error:
+    except OSError:
         pass
     if not connected:
         hass.data[DOMAIN][COMPONENT].remove(unique_id)
@@ -327,7 +336,7 @@ class BroadlinkRemote(RemoteDevice):
                 continue
             try:
                 await self.hass.async_add_executor_job(function, *args)
-            except socket.error:
+            except OSError:
                 continue
             return
         raise ConnectionError
@@ -336,7 +345,7 @@ class BroadlinkRemote(RemoteDevice):
         """Connect to the remote."""
         try:
             auth = await self.hass.async_add_executor_job(self._api.auth)
-        except socket.error:
+        except OSError:
             auth = False
         if auth and not self._available:
             _LOGGER.warning("Connected to the remote")

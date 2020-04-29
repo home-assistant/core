@@ -85,7 +85,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     ZiggoMediaboxXLDevice(mediabox, host, name, connection_successful)
                 )
                 known_devices.add(ip_addr)
-        except socket.error as error:
+        except OSError as error:
             _LOGGER.error("Can't connect to %s: %s", host, error)
     else:
         _LOGGER.info("Ignoring duplicate Ziggo Mediabox XL %s", host)
@@ -115,7 +115,7 @@ class ZiggoMediaboxXLDevice(MediaPlayerDevice):
                 self._available = True
             else:
                 self._available = False
-        except socket.error:
+        except OSError:
             _LOGGER.error("Couldn't fetch state from %s", self._host)
             self._available = False
 
@@ -123,7 +123,7 @@ class ZiggoMediaboxXLDevice(MediaPlayerDevice):
         """Send keys to the device and handle exceptions."""
         try:
             self._mediabox.send_keys(keys)
-        except socket.error:
+        except OSError:
             _LOGGER.error("Couldn't send keys to %s", self._host)
 
     @property

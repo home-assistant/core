@@ -61,8 +61,8 @@ def setup_platform(hass, config, add_entities, discover_info=None):
 
     host = config.get(CONF_HOST)
     password = config.get(CONF_PASSWORD)
-    port = config.get(CONF_PORT)
-    name = config.get(CONF_NAME)
+    port = config[CONF_PORT]
+    name = config[CONF_NAME]
 
     try:
         cmus_remote = CmusDevice(host, password, port, name)

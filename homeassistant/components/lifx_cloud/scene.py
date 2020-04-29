@@ -1,6 +1,7 @@
 """Support for LIFX Cloud scenes."""
 import asyncio
 import logging
+from typing import Any
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION
@@ -8,7 +9,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.scene import Scene
-from homeassistant.const import CONF_PLATFORM, CONF_TIMEOUT, CONF_TOKEN
+from homeassistant.const import CONF_PLATFORM, CONF_TIMEOUT, CONF_TOKEN, HTTP_OK
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -44,11 +45,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return False
 
     status = scenes_resp.status
-    if status == 200:
+    if status == HTTP_OK:
         data = await scenes_resp.json()
-        devices = []
-        for scene in data:
-            devices.append(LifxCloudScene(hass, headers, timeout, scene))
+        devices = [LifxCloudScene(hass, headers, timeout, scene) for scene in data]
         async_add_entities(devices)
         return True
     if status == 401:
@@ -75,7 +74,7 @@ class LifxCloudScene(Scene):
         """Return the name of the scene."""
         return self._name
 
-    async def async_activate(self):
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         url = f"https://api.lifx.com/v1/scenes/scene_id:{self._uuid}/activate"
 

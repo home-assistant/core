@@ -98,7 +98,7 @@ def _resize_image(image, opts):
         new_width = old_width
 
     scale = new_width / float(old_width)
-    new_height = int((float(old_height) * float(scale)))
+    new_height = int(float(old_height) * float(scale))
 
     img = img.resize((new_width, new_height), Image.ANTIALIAS)
     imgbuf = io.BytesIO()
@@ -188,8 +188,8 @@ class ProxyCamera(Camera):
         super().__init__()
         self.hass = hass
         self._proxied_camera = config.get(CONF_ENTITY_ID)
-        self._name = config.get(CONF_NAME) or "{} - {}".format(
-            DEFAULT_BASENAME, self._proxied_camera
+        self._name = (
+            config.get(CONF_NAME) or f"{DEFAULT_BASENAME} - {self._proxied_camera}"
         )
         self._image_opts = ImageOpts(
             config.get(CONF_MAX_IMAGE_WIDTH),
@@ -258,7 +258,7 @@ class ProxyCamera(Camera):
             )
 
         return await async_get_still_stream(
-            request, self._async_stream_image, self.content_type, self.frame_interval,
+            request, self._async_stream_image, self.content_type, self.frame_interval
         )
 
     @property

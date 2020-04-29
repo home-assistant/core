@@ -1,12 +1,14 @@
-"""Support for interface with a Sony Bravia TV."""
-import ipaddress
+"""Support for interface with a Bravia TV."""
+import asyncio
 import logging
 
-from bravia_tv import BraviaRC
-from getmac import get_mac_address
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import (
+    DEVICE_CLASS_TV,
+    PLATFORM_SCHEMA,
+    MediaPlayerDevice,
+)
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -20,20 +22,20 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import load_json
 
-BRAVIA_CONFIG_FILE = "bravia.conf"
-
-CLIENTID_PREFIX = "HomeAssistant"
-
-DEFAULT_NAME = "Sony Bravia TV"
-
-NICKNAME = "Home Assistant"
-
-# Map ip to request id for configuring
-_CONFIGURING = {}
+from .const import (
+    ATTR_MANUFACTURER,
+    BRAVIA_CONFIG_FILE,
+    CLIENTID_PREFIX,
+    CONF_IGNORED_SOURCES,
+    DEFAULT_NAME,
+    DOMAIN,
+    NICKNAME,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,110 +61,66 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Sony Bravia TV platform."""
-    host = config.get(CONF_HOST)
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Bravia TV platform."""
+    host = config[CONF_HOST]
 
-    if host is None:
-        return
-
-    pin = None
-    bravia_config = load_json(hass.config.path(BRAVIA_CONFIG_FILE))
-    while bravia_config:
-        # Set up a configured TV
-        host_ip, host_config = bravia_config.popitem()
-        if host_ip == host:
-            pin = host_config["pin"]
-            mac = host_config["mac"]
-            name = config.get(CONF_NAME)
-            braviarc = BraviaRC(host, mac)
-            braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
-            unique_id = braviarc.get_system_info()["cid"].lower()
-
-            add_entities([BraviaTVDevice(braviarc, name, pin, unique_id)])
-            return
-
-    setup_bravia(config, pin, hass, add_entities)
-
-
-def setup_bravia(config, pin, hass, add_entities):
-    """Set up a Sony Bravia TV based on host parameter."""
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-
-    if pin is None:
-        request_configuration(config, hass, add_entities)
-        return
-
-    try:
-        if ipaddress.ip_address(host).version == 6:
-            mode = "ip6"
-        else:
-            mode = "ip"
-    except ValueError:
-        mode = "hostname"
-    mac = get_mac_address(**{mode: host})
-
-    # If we came here and configuring this host, mark as done
-    if host in _CONFIGURING:
-        request_id = _CONFIGURING.pop(host)
-        configurator = hass.components.configurator
-        configurator.request_done(request_id)
-        _LOGGER.info("Discovery configuration done")
-
-    # Save config
-    save_json(
-        hass.config.path(BRAVIA_CONFIG_FILE),
-        {host: {"pin": pin, "host": host, "mac": mac}},
+    bravia_config_file_path = hass.config.path(BRAVIA_CONFIG_FILE)
+    bravia_config = await hass.async_add_executor_job(
+        load_json, bravia_config_file_path
     )
-    braviarc = BraviaRC(host, mac)
-    braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
-    unique_id = braviarc.get_system_info()["cid"].lower()
-
-    add_entities([BraviaTVDevice(braviarc, name, pin, unique_id)])
-
-
-def request_configuration(config, hass, add_entities):
-    """Request configuration steps from the user."""
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-
-    configurator = hass.components.configurator
-
-    # We got an error if this method is called while we are configuring
-    if host in _CONFIGURING:
-        configurator.notify_errors(
-            _CONFIGURING[host], "Failed to register, please try again."
+    if not bravia_config:
+        _LOGGER.error(
+            "Configuration import failed, there is no bravia.conf file in the configuration folder"
         )
         return
 
-    def bravia_configuration_callback(data):
-        """Handle the entry of user PIN."""
+    while bravia_config:
+        # Import a configured TV
+        host_ip, host_config = bravia_config.popitem()
+        if host_ip == host:
+            pin = host_config[CONF_PIN]
 
-        pin = data.get("pin")
-        _braviarc = BraviaRC(host)
-        _braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
-        if _braviarc.is_connected():
-            setup_bravia(config, pin, hass, add_entities)
-        else:
-            request_configuration(config, hass, add_entities)
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_IMPORT},
+                    data={CONF_HOST: host, CONF_PIN: pin},
+                )
+            )
+            return
 
-    _CONFIGURING[host] = configurator.request_config(
-        name,
-        bravia_configuration_callback,
-        description="Enter the Pin shown on your Sony Bravia TV."
-        + "If no Pin is shown, enter 0000 to let TV show you a Pin.",
-        description_image="/static/images/smart-tv.png",
-        submit_caption="Confirm",
-        fields=[{"id": "pin", "name": "Enter the pin", "type": ""}],
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Add BraviaTV entities from a config_entry."""
+    ignored_sources = []
+    pin = config_entry.data[CONF_PIN]
+    unique_id = config_entry.unique_id
+    device_info = {
+        "identifiers": {(DOMAIN, unique_id)},
+        "name": DEFAULT_NAME,
+        "manufacturer": ATTR_MANUFACTURER,
+        "model": config_entry.title,
+    }
+
+    braviarc = hass.data[DOMAIN][config_entry.entry_id]
+
+    ignored_sources = config_entry.options.get(CONF_IGNORED_SOURCES, [])
+
+    async_add_entities(
+        [
+            BraviaTVDevice(
+                braviarc, DEFAULT_NAME, pin, unique_id, device_info, ignored_sources
+            )
+        ]
     )
 
 
 class BraviaTVDevice(MediaPlayerDevice):
-    """Representation of a Sony Bravia TV."""
+    """Representation of a Bravia TV."""
 
-    def __init__(self, client, name, pin, unique_id):
-        """Initialize the Sony Bravia device."""
+    def __init__(self, client, name, pin, unique_id, device_info, ignored_sources):
+        """Initialize the Bravia TV device."""
 
         self._pin = pin
         self._braviarc = client
@@ -185,49 +143,41 @@ class BraviaTVDevice(MediaPlayerDevice):
         self._max_volume = None
         self._volume = None
         self._unique_id = unique_id
+        self._device_info = device_info
+        self._ignored_sources = ignored_sources
+        self._state_lock = asyncio.Lock()
+        self._need_refresh = True
 
-        if self._braviarc.is_connected():
-            self.update()
-        else:
-            self._state = STATE_OFF
-
-    def update(self):
+    async def async_update(self):
         """Update TV info."""
-        if not self._braviarc.is_connected():
-            if self._braviarc.get_power_status() != "off":
-                self._braviarc.connect(self._pin, CLIENTID_PREFIX, NICKNAME)
-            if not self._braviarc.is_connected():
+        if self._state_lock.locked():
+            return
+
+        if self._state == STATE_OFF:
+            self._need_refresh = True
+
+        power_status = await self.hass.async_add_executor_job(
+            self._braviarc.get_power_status
+        )
+        if power_status == "active":
+            if self._need_refresh:
+                connected = await self.hass.async_add_executor_job(
+                    self._braviarc.connect, self._pin, CLIENTID_PREFIX, NICKNAME
+                )
+                self._need_refresh = False
+            else:
+                connected = self._braviarc.is_connected()
+            if not connected:
                 return
 
-        # Retrieve the latest data.
-        try:
-            if self._state == STATE_ON:
-                # refresh volume info:
-                self._refresh_volume()
-                self._refresh_channels()
-
-            power_status = self._braviarc.get_power_status()
-            if power_status == "active":
-                self._state = STATE_ON
-                playing_info = self._braviarc.get_playing_info()
-                self._reset_playing_info()
-                if playing_info is None or not playing_info:
-                    self._channel_name = "App"
-                else:
-                    self._program_name = playing_info.get("programTitle")
-                    self._channel_name = playing_info.get("title")
-                    self._program_media_type = playing_info.get("programMediaType")
-                    self._channel_number = playing_info.get("dispNum")
-                    self._content_uri = playing_info.get("uri")
-                    self._source = self._get_source()
-                    self._duration = playing_info.get("durationSec")
-                    self._start_date_time = playing_info.get("startDateTime")
-            else:
-                self._state = STATE_OFF
-
-        except Exception as exception_instance:  # pylint: disable=broad-except
-            _LOGGER.error(exception_instance)
-            self._state = STATE_OFF
+            self._state = STATE_ON
+            if (
+                await self._async_refresh_volume()
+                and await self._async_refresh_channels()
+            ):
+                await self._async_refresh_playing_info()
+                return
+        self._state = STATE_OFF
 
     def _get_source(self):
         """Return the name of the source."""
@@ -235,31 +185,48 @@ class BraviaTVDevice(MediaPlayerDevice):
             if value == self._content_uri:
                 return key
 
-    def _reset_playing_info(self):
-        self._program_name = None
-        self._channel_name = None
-        self._program_media_type = None
-        self._channel_number = None
-        self._source = None
-        self._content_uri = None
-        self._duration = None
-        self._start_date_time = None
-
-    def _refresh_volume(self):
+    async def _async_refresh_volume(self):
         """Refresh volume information."""
-        volume_info = self._braviarc.get_volume_info()
+        volume_info = await self.hass.async_add_executor_job(
+            self._braviarc.get_volume_info
+        )
         if volume_info is not None:
             self._volume = volume_info.get("volume")
             self._min_volume = volume_info.get("minVolume")
             self._max_volume = volume_info.get("maxVolume")
             self._muted = volume_info.get("mute")
+            return True
+        return False
 
-    def _refresh_channels(self):
+    async def _async_refresh_channels(self):
+        """Refresh source and channels list."""
         if not self._source_list:
-            self._content_mapping = self._braviarc.load_source_list()
+            self._content_mapping = await self.hass.async_add_executor_job(
+                self._braviarc.load_source_list
+            )
             self._source_list = []
+            if not self._content_mapping:
+                return False
             for key in self._content_mapping:
-                self._source_list.append(key)
+                if key not in self._ignored_sources:
+                    self._source_list.append(key)
+        return True
+
+    async def _async_refresh_playing_info(self):
+        """Refresh Playing information."""
+        playing_info = await self.hass.async_add_executor_job(
+            self._braviarc.get_playing_info
+        )
+        self._program_name = playing_info.get("programTitle")
+        self._channel_name = playing_info.get("title")
+        self._program_media_type = playing_info.get("programMediaType")
+        self._channel_number = playing_info.get("dispNum")
+        self._content_uri = playing_info.get("uri")
+        self._source = self._get_source()
+        self._duration = playing_info.get("durationSec")
+        self._start_date_time = playing_info.get("startDateTime")
+        if not playing_info:
+            self._channel_name = "App"
 
     @property
     def name(self):
@@ -267,9 +234,19 @@ class BraviaTVDevice(MediaPlayerDevice):
         return self._name
 
     @property
+    def device_class(self):
+        """Set the device class to TV."""
+        return DEVICE_CLASS_TV
+
+    @property
     def unique_id(self):
         """Return a unique_id for this entity."""
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return self._device_info
 
     @property
     def state(self):
@@ -327,13 +304,15 @@ class BraviaTVDevice(MediaPlayerDevice):
         """Set volume level, range 0..1."""
         self._braviarc.set_volume_level(volume)
 
-    def turn_on(self):
+    async def async_turn_on(self):
         """Turn the media player on."""
-        self._braviarc.turn_on()
+        async with self._state_lock:
+            await self.hass.async_add_executor_job(self._braviarc.turn_on)
 
-    def turn_off(self):
+    async def async_turn_off(self):
         """Turn off media player."""
-        self._braviarc.turn_off()
+        async with self._state_lock:
+            await self.hass.async_add_executor_job(self._braviarc.turn_off)
 
     def volume_up(self):
         """Volume up the media player."""

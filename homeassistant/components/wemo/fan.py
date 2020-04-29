@@ -172,7 +172,7 @@ class WemoHumidifier(FanEntity):
             return
 
         await self._async_locked_update(force_update)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def unique_id(self):

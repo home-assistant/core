@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "adguard_home_addon_outdated": "This integration requires AdGuard Home {minimal_version} or higher, you have {current_version}. Please update your Hass.io AdGuard Home add-on.",
+            "adguard_home_outdated": "This integration requires AdGuard Home {minimal_version} or higher, you have {current_version}.",
+            "existing_instance_updated": "Updated existing configuration.",
+            "single_instance_allowed": "Only a single configuration of AdGuard Home is allowed."
+        },
+        "error": {
+            "connection_error": "Failed to connect."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Do you want to configure Home Assistant to connect to the AdGuard Home provided by the Hass.io add-on: {addon}?",
+                "title": "AdGuard Home via Hass.io add-on"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "ssl": "AdGuard Home uses a SSL certificate",
+                    "username": "Username",
+                    "verify_ssl": "AdGuard Home uses a proper certificate"
+                },
+                "description": "Set up your AdGuard Home instance to allow monitoring and control.",
+                "title": "Link your AdGuard Home."
+            }
+        }
+    }
+}

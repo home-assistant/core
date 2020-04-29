@@ -2,11 +2,6 @@
   "domain": "nextcloud",
   "name": "Nextcloud",
   "documentation": "https://www.home-assistant.io/integrations/nextcloud",
-  "requirements": [
-    "nextcloudmonitor==1.1.0"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@meichthys"
-  ]
+  "requirements": ["nextcloudmonitor==1.1.0"],
+  "codeowners": ["@meichthys"]
 }

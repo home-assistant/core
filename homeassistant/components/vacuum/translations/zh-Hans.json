@@ -1,0 +1,28 @@
+{
+    "device_automation": {
+        "action_type": {
+            "clean": "\u4f7f {entity_name} \u5f00\u59cb\u6e05\u626b"
+        },
+        "condition_type": {
+            "is_cleaning": "{entity_name} \u6b63\u5728\u6e05\u626b",
+            "is_docked": "{entity_name} \u6b63\u505c\u9760\u5728\u5e95\u5ea7\u4e0a"
+        },
+        "trigger_type": {
+            "cleaning": "{entity_name} \u5f00\u59cb\u6e05\u626b",
+            "docked": "{entity_name} \u8fd4\u56de\u5e95\u5ea7"
+        }
+    },
+    "state": {
+        "_": {
+            "cleaning": "\u6b63\u5728\u6e05\u626b",
+            "docked": "\u505c\u9760",
+            "error": "\u9519\u8bef",
+            "idle": "\u7a7a\u95f2",
+            "off": "\u5173\u95ed",
+            "on": "\u5f00\u542f",
+            "paused": "\u5df2\u6682\u505c",
+            "returning": "\u6b63\u5728\u8fd4\u56de"
+        }
+    },
+    "title": "\u626b\u5730\u673a"
+}

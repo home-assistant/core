@@ -8,6 +8,7 @@ from homeassistant.const import (
     TIME_HOURS,
     TIME_MINUTES,
     TIME_SECONDS,
+    VOLT,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -129,7 +130,7 @@ class GEMSensor(Entity):
     async def async_will_remove_from_hass(self):
         """Remove listener from the sensor."""
         if self._sensor:
-            self._sensor.remove_listener(self._schedule_update)
+            self._sensor.remove_listener(self.async_write_ha_state)
         else:
             monitors = self.hass.data[DATA_GREENEYE_MONITOR]
             monitors.remove_listener(self._on_new_monitor)
@@ -140,15 +141,12 @@ class GEMSensor(Entity):
             return False
 
         self._sensor = self._get_sensor(monitor)
-        self._sensor.add_listener(self._schedule_update)
+        self._sensor.add_listener(self.async_write_ha_state)
 
         return True
 
     def _get_sensor(self, monitor):
         raise NotImplementedError()
-
-    def _schedule_update(self):
-        self.async_schedule_update_ha_state(False)
 
 
 class CurrentSensor(GEMSensor):
@@ -313,4 +311,4 @@ class VoltageSensor(GEMSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement for this sensor."""
-        return "V"
+        return VOLT

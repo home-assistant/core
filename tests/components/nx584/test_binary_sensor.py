@@ -154,7 +154,7 @@ class TestNX584Watcher(unittest.TestCase):
         watcher = nx584.NX584Watcher(None, zones)
         watcher._process_zone_event({"zone": 1, "zone_state": False})
         assert not zone1["state"]
-        assert 1 == mock_update.call_count
+        assert mock_update.call_count == 1
 
     @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
     def test_process_zone_event_missing_zone(self, mock_update):
@@ -204,8 +204,7 @@ class TestNX584Watcher(unittest.TestCase):
             if empty_me:
                 empty_me.pop()
                 raise requests.exceptions.ConnectionError()
-            else:
-                raise StopMe()
+            raise StopMe()
 
         watcher = nx584.NX584Watcher(None, {})
         with mock.patch.object(watcher, "_run") as mock_inner:

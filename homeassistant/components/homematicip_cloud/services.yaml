@@ -62,13 +62,13 @@ dump_hap_config:
   fields:
     config_output_path:
       description: (Default is 'Your home-assistant config directory') Path where to store the config.
-      example: '/config'
+      example: "/config"
     config_output_file_prefix:
       description: (Default is 'hmip-config') Name of the config file. The SGTIN of the AP will always be appended.
-      example: 'hmip-config'
+      example: "hmip-config"
     anonymize:
       description: (Default is True) Should the Configuration be anonymized?
-      example: True
+      example: true
 
 reset_energy_counter:
   description: Reset the energy counter of a measuring entity.

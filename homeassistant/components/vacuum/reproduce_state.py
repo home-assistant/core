@@ -1,7 +1,7 @@
 """Reproduce an Vacuum state."""
 import asyncio
 import logging
-from typing import Iterable, Optional
+from typing import Any, Dict, Iterable, Optional
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -41,7 +41,11 @@ VALID_STATES_STATE = {
 
 
 async def _async_reproduce_state(
-    hass: HomeAssistantType, state: State, context: Optional[Context] = None
+    hass: HomeAssistantType,
+    state: State,
+    *,
+    context: Optional[Context] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce a single state."""
     cur_state = hass.states.get(state.entity_id)
@@ -50,7 +54,7 @@ async def _async_reproduce_state(
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
-    if state.state not in VALID_STATES_TOGGLE and state.state not in VALID_STATES_STATE:
+    if not (state.state in VALID_STATES_TOGGLE or state.state in VALID_STATES_STATE):
         _LOGGER.warning(
             "Invalid state specified for %s: %s", state.entity_id, state.state
         )
@@ -72,7 +76,7 @@ async def _async_reproduce_state(
             service = SERVICE_TURN_OFF
         elif state.state == STATE_CLEANING:
             service = SERVICE_START
-        elif state.state == STATE_DOCKED or state.state == STATE_RETURNING:
+        elif state.state in [STATE_DOCKED, STATE_RETURNING]:
             service = SERVICE_RETURN_TO_BASE
         elif state.state == STATE_IDLE:
             service = SERVICE_STOP
@@ -92,10 +96,19 @@ async def _async_reproduce_state(
 
 
 async def async_reproduce_states(
-    hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
+    hass: HomeAssistantType,
+    states: Iterable[State],
+    *,
+    context: Optional[Context] = None,
+    reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce Vacuum states."""
     # Reproduce states in parallel.
     await asyncio.gather(
-        *(_async_reproduce_state(hass, state, context) for state in states)
+        *(
+            _async_reproduce_state(
+                hass, state, context=context, reproduce_options=reproduce_options
+            )
+            for state in states
+        )
     )

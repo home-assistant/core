@@ -1,0 +1,38 @@
+{
+    "device_automation": {
+        "action_type": {
+            "close": "Chiudi {entity_name}",
+            "close_tilt": "Chiudi l'inclinazione di {entity_name}",
+            "open": "Apri {entity_name}",
+            "open_tilt": "Apri l'inclinazione di {entity_name}",
+            "set_position": "Imposta la posizione di {entity_name}",
+            "set_tilt_position": "Imposta la posizione di inclinazione di {entity_name}"
+        },
+        "condition_type": {
+            "is_closed": "{entity_name} \u00e8 chiuso",
+            "is_closing": "{entity_name} si sta chiudendo",
+            "is_open": "{entity_name} \u00e8 aperto",
+            "is_opening": "{entity_name} si sta aprendo",
+            "is_position": "La posizione attuale di {entity_name} \u00e8",
+            "is_tilt_position": "La posizione d'inclinazione attuale di {entity_name} \u00e8"
+        },
+        "trigger_type": {
+            "closed": "{entity_name} chiuso",
+            "closing": "{entity_name} in chiusura",
+            "opened": "{entity_name} aperto",
+            "opening": "{entity_name} in apertura",
+            "position": "{entity_name} cambiamenti della posizione",
+            "tilt_position": "{entity_name} cambiamenti della posizione d'inclinazione"
+        }
+    },
+    "state": {
+        "_": {
+            "closed": "Chiuso",
+            "closing": "In chiusura",
+            "open": "Aperto",
+            "opening": "In apertura",
+            "stopped": "Arrestato"
+        }
+    },
+    "title": "Chiusure"
+}

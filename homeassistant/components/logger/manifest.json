@@ -2,8 +2,6 @@
   "domain": "logger",
   "name": "Logger",
   "documentation": "https://www.home-assistant.io/integrations/logger",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal"
 }

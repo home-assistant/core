@@ -14,7 +14,7 @@ from homeassistant.helpers import config_validation as cv, discovery
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "waterfurnace"
-UPDATE_TOPIC = DOMAIN + "_update"
+UPDATE_TOPIC = f"{DOMAIN}_update"
 SCAN_INTERVAL = timedelta(seconds=10)
 ERROR_INTERVAL = timedelta(seconds=300)
 MAX_FAILS = 10

@@ -6,7 +6,7 @@ from homeassistant.components import light, scene
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.yaml import loader as yaml_loader
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_service
 from tests.components.light import common as common_light
 from tests.components.scene import common
 
@@ -87,11 +87,11 @@ class TestScene(unittest.TestCase):
             "scene:\n"
             "  - name: test\n"
             "    entities:\n"
-            "      {0}: on\n"
-            "      {1}:\n"
+            f"      {self.light_1.entity_id}: on\n"
+            f"      {self.light_2.entity_id}:\n"
             "        state: on\n"
             "        brightness: 100\n"
-        ).format(self.light_1.entity_id, self.light_2.entity_id)
+        )
 
         with io.StringIO(config) as file:
             doc = yaml_loader.yaml.safe_load(file)
@@ -127,7 +127,19 @@ class TestScene(unittest.TestCase):
 
         assert self.light_1.is_on
         assert self.light_2.is_on
-        assert 100 == self.light_2.last_call("turn_on")[1].get("brightness")
+        assert self.light_2.last_call("turn_on")[1].get("brightness") == 100
+
+        turn_on_calls = mock_service(self.hass, "light", "turn_on")
+
+        self.hass.services.call(
+            scene.DOMAIN, "turn_on", {"transition": 42, "entity_id": "scene.test"}
+        )
+        self.hass.block_till_done()
+
+        assert len(turn_on_calls) == 1
+        assert turn_on_calls[0].domain == "light"
+        assert turn_on_calls[0].service == "turn_on"
+        assert turn_on_calls[0].data.get("transition") == 42
 
 
 async def test_services_registered(hass):

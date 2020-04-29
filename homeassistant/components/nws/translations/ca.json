@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clau API (correu electr\u00f2nic)",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "station": "Codi d'estaci\u00f3 METAR"
+                },
+                "description": "Si no s'especifica un codi d'estaci\u00f3 METAR, la latitud i longitud s'utilitzaran per trobar l'estaci\u00f3 m\u00e9s propera.",
+                "title": "Connexi\u00f3 amb el Servei Meteorol\u00f2gic Nacional (USA)"
+            }
+        }
+    }
+}

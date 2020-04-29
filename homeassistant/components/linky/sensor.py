@@ -159,4 +159,4 @@ class LinkySensor(Entity):
             year_index = INDEX_CURRENT
             if self._time.endswith("Dec"):
                 year_index = INDEX_LAST
-            self._time += " " + self._account.data[YEARLY][year_index][TIME]
+            self._time += f" {self._account.data[YEARLY][year_index][TIME]}"

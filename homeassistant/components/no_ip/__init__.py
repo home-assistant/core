@@ -83,7 +83,7 @@ async def _update_no_ip(hass, session, domain, auth_str, timeout):
     params = {"hostname": domain}
 
     headers = {
-        AUTHORIZATION: "Basic {}".format(auth_str.decode("utf-8")),
+        AUTHORIZATION: f"Basic {auth_str.decode('utf-8')}",
         USER_AGENT: HA_USER_AGENT,
     }
 

@@ -90,13 +90,11 @@ class MoldIndicator(Entity):
         self._calib_factor = calib_factor
         self._is_metric = is_metric
         self._available = False
-        self._entities = set(
-            [
-                self._indoor_temp_sensor,
-                self._indoor_humidity_sensor,
-                self._outdoor_temp_sensor,
-            ]
-        )
+        self._entities = {
+            self._indoor_temp_sensor,
+            self._indoor_humidity_sensor,
+            self._outdoor_temp_sensor,
+        }
 
         self._dewpoint = None
         self._indoor_temp = None

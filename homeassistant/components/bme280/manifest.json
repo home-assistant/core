@@ -3,6 +3,5 @@
   "name": "Bosch BME280 Environmental Sensor",
   "documentation": "https://www.home-assistant.io/integrations/bme280",
   "requirements": ["i2csense==0.0.4", "smbus-cffi==0.5.1"],
-  "dependencies": [],
   "codeowners": []
 }
