@@ -366,7 +366,7 @@ nessclient==0.9.15
 netdisco==2.6.0
 
 # homeassistant.components.nexia
-nexia==0.9.2
+nexia==0.9.3
 
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.0.10
