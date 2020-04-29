@@ -4,6 +4,12 @@
             "unknown": "Onverwachte fout"
         },
         "step": {
+            "resources": {
+                "data": {
+                    "resources": "Bronnen"
+                },
+                "title": "Kies de te controleren bronnen"
+            },
             "ups": {
                 "title": "Kies een UPS om uit te lezen"
             },

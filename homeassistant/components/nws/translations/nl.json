@@ -3,6 +3,8 @@
         "step": {
             "user": {
                 "data": {
+                    "api_key": "API-sleutel (e-mail)",
+                    "latitude": "Breedtegraad",
                     "longitude": "Lengtegraad"
                 }
             }

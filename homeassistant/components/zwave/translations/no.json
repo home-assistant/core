@@ -24,6 +24,10 @@
             "initializing": "Initialiserer",
             "ready": "Klar",
             "sleeping": "Sover"
+        },
+        "query_stage": {
+            "dead": "D\u00f8d",
+            "initializing": "Initialiserer"
         }
     }
 }
