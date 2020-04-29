@@ -15,8 +15,7 @@
     "error": {
       "cannot_connect": "Failed to connect, please try again",
       "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error",
-      "already_configured": "That account is already configured"
+      "unknown": "Unexpected error"
     },
     "abort": {
       "already_configured": "That account is already configured"
