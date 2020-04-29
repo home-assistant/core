@@ -21,7 +21,7 @@ call_query:
       example: 'albums'
     parameters:
       description: Array of additional parameters to pass to Logitech Media Server (p1, ..., pN in the CLI documentation).
-      example: ["0","20","Revolver"]
+      example: ["0", "20", "Revolver"]
 sync:
   description: Add another player to this player's sync group. If the other player is already in a sync group, it will leave it.
   fields:
