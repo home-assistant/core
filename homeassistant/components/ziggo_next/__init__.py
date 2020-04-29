@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         api.initialize(_LOGGER, False)
         hass.data[ZIGGO_API] = api
     except Exception as exception:
-        raise ConfigEntryNotReady from exception
+        raise ConfigEntryNotReady
 
     for component in PLATFORMS:
         hass.async_create_task(
