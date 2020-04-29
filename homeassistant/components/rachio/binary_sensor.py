@@ -66,8 +66,6 @@ class RachioControllerBinarySensor(RachioDevice, BinarySensorEntity):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self._state = self._controller.init_data[KEY_STATUS] == STATUS_ONLINE
-
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -99,6 +97,11 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
     def icon(self) -> str:
         """Return the name of an icon for this sensor."""
         return "mdi:wifi-strength-4" if self.is_on else "mdi:wifi-strength-off-outline"
+
+    async def async_added_to_hass(self):
+        """Get initial state."""
+        self._state = self._controller.init_data[KEY_STATUS] == STATUS_ONLINE
+        await super().async_added_to_hass()
 
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
