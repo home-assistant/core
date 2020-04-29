@@ -37,13 +37,16 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _show_setup_form(self, user_input=None, errors=None):
         user_input = user_input or {}
-        default_endpoint = user_input.get(CONF_ENDPOINT)
-        if default_endpoint is not None:
-            data_schema = {vol.Required(CONF_ENDPOINT, default=default_endpoint): str}
-        else:
-            data_schema = {vol.Required(CONF_ENDPOINT): str}
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(data_schema), errors=errors or {},
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_ENDPOINT, default=user_input.get(CONF_ENDPOINT, "")
+                    ): str,
+                }
+            ),
+            errors=errors or {},
         )
 
     async def async_step_user(self, user_input=None):

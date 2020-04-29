@@ -4,7 +4,6 @@
     "step": {
       "user": {
         "data": {
-          "name": "Name (Optional)",
           "endpoint": "Endpoint"
         },
         "title": "Sony Songpal"
