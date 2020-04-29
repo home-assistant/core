@@ -7,7 +7,7 @@ from pysmartthings.installedapp import format_install_url
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_ACCESS_TOKEN, HTTP_FORBIDDEN
+from homeassistant.const import CONF_ACCESS_TOKEN, HTTP_FORBIDDEN, HTTP_UNAUTHORIZED
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 # pylint: disable=unused-import
@@ -139,7 +139,7 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self._show_step_pat(errors)
         except ClientResponseError as ex:
-            if ex.status == 401:
+            if ex.status == HTTP_UNAUTHORIZED:
                 errors[CONF_ACCESS_TOKEN] = "token_unauthorized"
                 _LOGGER.debug(
                     "Unauthorized error received setting up SmartApp", exc_info=True
