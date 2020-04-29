@@ -5,7 +5,7 @@ from bravia_tv import BraviaRC
 
 from homeassistant.const import CONF_HOST, CONF_MAC
 
-from .const import DOMAIN
+from .const import BRAVIARC, DOMAIN, UNDO_UPDATE_LISTENER
 
 PLATFORMS = ["media_player"]
 
@@ -20,10 +20,13 @@ async def async_setup_entry(hass, config_entry):
     host = config_entry.data[CONF_HOST]
     mac = config_entry.data[CONF_MAC]
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = BraviaRC(host, mac)
+    undo_listener = config_entry.add_update_listener(update_listener)
 
-    config_entry.add_update_listener(update_listener)
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][config_entry.entry_id] = {
+        BRAVIARC: BraviaRC(host, mac),
+        UNDO_UPDATE_LISTENER: undo_listener,
+    }
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -43,6 +46,9 @@ async def async_unload_entry(hass, config_entry):
             ]
         )
     )
+
+    hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
+
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
