@@ -1,7 +1,12 @@
 """Constants for Met Office Integration."""
+from datetime import timedelta
+
 DOMAIN = "metoffice"
 
 DEFAULT_NAME = "Met Office"
+ATTRIBUTION = "Data provided by the Met Office"
+
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=15)
 
 METOFFICE_DATA = "metoffice_data"
 METOFFICE_COORDINATOR = "metoffice_coordinator"
@@ -44,5 +49,3 @@ VISIBILITY_DISTANCE_CLASSES = {
     "VG": "20-40",
     "EX": ">40",
 }
-
-ATTRIBUTION = "Data provided by the Met Office"

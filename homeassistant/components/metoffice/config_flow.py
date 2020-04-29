@@ -13,7 +13,7 @@ from .data import MetOfficeData
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: core.HomeAssistant, data):
     """Validate that the user input allows us to connect to DataPoint.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -22,11 +22,12 @@ def validate_input(hass: core.HomeAssistant, data):
     longitude = data[CONF_LONGITUDE]
     api_key = data[CONF_API_KEY]
 
-    metoffice_data = MetOfficeData(api_key, latitude, longitude)
-    if metoffice_data.site is None:
+    metoffice_data = MetOfficeData(hass, api_key, latitude, longitude)
+    await metoffice_data.async_update_site()
+    if metoffice_data.site_name is None:
         raise CannotConnect()
 
-    return {"site_name": metoffice_data.site.name}
+    return {"site_name": metoffice_data.site_name}
 
 
 class MetOfficeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -44,7 +45,7 @@ class MetOfficeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             self._abort_if_unique_id_configured()
             try:
-                info = validate_input(self.hass, user_input)
+                info = await validate_input(self.hass, user_input)
                 user_input[CONF_NAME] = info["site_name"]
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input

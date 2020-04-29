@@ -18,7 +18,6 @@ async def test_form(hass, requests_mock):
 
     # all metoffice test data encapsulated in here
     mock_json = json.loads(load_fixture("metoffice.json"))
-
     all_sites = json.dumps(mock_json["all_sites"])
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
 

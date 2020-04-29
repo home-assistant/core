@@ -5,7 +5,7 @@ import logging
 
 from asynctest import patch
 
-from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN, METOFFICE_DATA
+from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
 
 from .const import DATETIME_FORMAT, METOFFICE_CONFIG
 
@@ -28,7 +28,6 @@ async def test_weather_platform(hass, requests_mock):
 
     # all metoffice test data encapsulated in here
     mock_json = json.loads(load_fixture("metoffice.json"))
-
     all_sites = json.dumps(mock_json["all_sites"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
 
@@ -46,11 +45,6 @@ async def test_weather_platform(hass, requests_mock):
     entry = MockConfigEntry(domain=DOMAIN, data=METOFFICE_CONFIG,)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
-
-    hass_data = hass.data[DOMAIN][entry.entry_id]
-    metoffice_data = hass_data[METOFFICE_DATA]
-    metoffice_data.update()
-
     await hass.async_block_till_done()
 
     entity = hass.states.get("weather.met_office_wavertree")
@@ -88,11 +82,6 @@ async def test_sensor_platform(hass, requests_mock):
     entry = MockConfigEntry(domain=DOMAIN, data=METOFFICE_CONFIG,)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
-
-    hass_data = hass.data[DOMAIN][entry.entry_id]
-    metoffice_data = hass_data[METOFFICE_DATA]
-    metoffice_data.update()
-
     await hass.async_block_till_done()
 
     expected_results = {

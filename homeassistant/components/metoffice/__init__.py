@@ -9,8 +9,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, METOFFICE_DATA, METOFFICE_NAME
+from .const import (
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    METOFFICE_COORDINATOR,
+    METOFFICE_DATA,
+    METOFFICE_NAME,
+)
 from .data import MetOfficeData
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,13 +55,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     api_key = entry.data[CONF_API_KEY]
     name = entry.data[CONF_NAME]
 
-    metoffice_data = MetOfficeData(api_key, latitude, longitude)
+    metoffice_data = MetOfficeData(hass, api_key, latitude, longitude)
+    await metoffice_data.async_update_site()
+
+    metoffice_coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"MetOffice Coordinator for {metoffice_data.site_name}",
+        update_method=metoffice_data.async_update,
+        update_interval=DEFAULT_SCAN_INTERVAL,
+    )
 
     metoffice_hass_data = hass.data.setdefault(DOMAIN, {})
     metoffice_hass_data[entry.entry_id] = {
         METOFFICE_DATA: metoffice_data,
+        METOFFICE_COORDINATOR: metoffice_coordinator,
         METOFFICE_NAME: name,
     }
+
+    # Fetch initial data so we have data when entities subscribe
+    await metoffice_coordinator.async_refresh()
 
     if not entry.unique_id:
         hass.config_entries.async_update_entry(

@@ -4,6 +4,7 @@ import logging
 
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.const import LENGTH_KILOMETERS, TEMP_CELSIUS
+from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
@@ -11,6 +12,7 @@ from .const import (
     CONDITION_CLASSES,
     DEFAULT_NAME,
     DOMAIN,
+    METOFFICE_COORDINATOR,
     METOFFICE_DATA,
     METOFFICE_NAME,
     VISIBILITY_CLASSES,
@@ -35,10 +37,14 @@ class MetOfficeWeather(WeatherEntity):
     """Implementation of a Met Office weather condition."""
 
     def __init__(self, entry_data, hass_data):
-        """Initialise the platform with a data instance and site."""
+        """Initialise the platform with a data instance."""
         self._data = hass_data[METOFFICE_DATA]
+        self._coordinator = hass_data[METOFFICE_COORDINATOR]
+
         self._name = f"{DEFAULT_NAME} {hass_data[METOFFICE_NAME]}"
         self._unique_id = f"{DOMAIN}_{self._data.latitude}_{self._data.longitude}"
+
+        self.metoffice_now = None
 
     @property
     def name(self):
@@ -57,9 +63,9 @@ class MetOfficeWeather(WeatherEntity):
             [
                 k
                 for k, v in CONDITION_CLASSES.items()
-                if self._data.now.weather.value in v
+                if self.metoffice_now.weather.value in v
             ][0]
-            if self._data.now
+            if self.metoffice_now
             else None
         )
 
@@ -67,8 +73,8 @@ class MetOfficeWeather(WeatherEntity):
     def temperature(self):
         """Return the platform temperature."""
         return (
-            self._data.now.temperature.value
-            if self._data.now and self._data.now.temperature
+            self.metoffice_now.temperature.value
+            if self.metoffice_now and self.metoffice_now.temperature
             else None
         )
 
@@ -81,8 +87,8 @@ class MetOfficeWeather(WeatherEntity):
     def visibility(self):
         """Return the platform visibility."""
         _visibility = None
-        if hasattr(self._data.now, "visibility"):
-            _visibility = f"{VISIBILITY_CLASSES.get(self._data.now.visibility.value)} - {VISIBILITY_DISTANCE_CLASSES.get(self._data.now.visibility.value)}"
+        if hasattr(self.metoffice_now, "visibility"):
+            _visibility = f"{VISIBILITY_CLASSES.get(self.metoffice_now.visibility.value)} - {VISIBILITY_DISTANCE_CLASSES.get(self.metoffice_now.visibility.value)}"
         return _visibility
 
     @property
@@ -94,8 +100,8 @@ class MetOfficeWeather(WeatherEntity):
     def pressure(self):
         """Return the mean sea-level pressure."""
         return (
-            self._data.now.pressure.value
-            if self._data.now and self._data.now.pressure
+            self.metoffice_now.pressure.value
+            if self.metoffice_now and self.metoffice_now.pressure
             else None
         )
 
@@ -103,8 +109,8 @@ class MetOfficeWeather(WeatherEntity):
     def humidity(self):
         """Return the relative humidity."""
         return (
-            self._data.now.humidity.value
-            if self._data.now and self._data.now.humidity
+            self.metoffice_now.humidity.value
+            if self.metoffice_now and self.metoffice_now.humidity
             else None
         )
 
@@ -112,8 +118,8 @@ class MetOfficeWeather(WeatherEntity):
     def wind_speed(self):
         """Return the wind speed."""
         return (
-            self._data.now.wind_speed.value
-            if self._data.now and self._data.now.wind_speed
+            self.metoffice_now.wind_speed.value
+            if self.metoffice_now and self.metoffice_now.wind_speed
             else None
         )
 
@@ -121,8 +127,8 @@ class MetOfficeWeather(WeatherEntity):
     def wind_bearing(self):
         """Return the wind bearing."""
         return (
-            self._data.now.wind_direction.value
-            if self._data.now and self._data.now.wind_direction
+            self.metoffice_now.wind_direction.value
+            if self.metoffice_now and self.metoffice_now.wind_direction
             else None
         )
 
@@ -131,6 +137,20 @@ class MetOfficeWeather(WeatherEntity):
         """Return the attribution."""
         return ATTRIBUTION
 
-    def update(self):
-        """Update current conditions."""
-        self._data.update()
+    async def async_added_to_hass(self) -> None:
+        """Set up a listener and load data."""
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self._update_callback)
+        )
+        self._update_callback()
+
+    @callback
+    def _update_callback(self) -> None:
+        """Load data from integration."""
+        self.metoffice_now = self._data.now
+        self.async_write_ha_state()
+
+    @property
+    def should_poll(self) -> bool:
+        """Entities do not individually poll."""
+        return False

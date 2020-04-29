@@ -10,6 +10,7 @@ from homeassistant.const import (
     UNIT_PERCENTAGE,
     UV_INDEX,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
@@ -17,6 +18,7 @@ from .const import (
     ATTRIBUTION,
     CONDITION_CLASSES,
     DOMAIN,
+    METOFFICE_COORDINATOR,
     METOFFICE_DATA,
     METOFFICE_NAME,
     VISIBILITY_CLASSES,
@@ -76,10 +78,16 @@ class MetOfficeCurrentSensor(Entity):
 
     def __init__(self, entry_data, hass_data, sensor_type):
         """Initialize the sensor."""
-        self._type = sensor_type
         self._data = hass_data[METOFFICE_DATA]
+        self._coordinator = hass_data[METOFFICE_COORDINATOR]
+
+        self._type = sensor_type
         self._name = f"{hass_data[METOFFICE_NAME]} {SENSOR_TYPES[self._type][0]}"
         self._unique_id = f"{hass_data[METOFFICE_NAME]}_{SENSOR_TYPES[self._type][0]}_{self._data.latitude}_{self._data.longitude}"
+
+        self.metoffice_site_id = None
+        self.metoffice_site_name = None
+        self.metoffice_now = None
 
     @property
     def name(self):
@@ -97,22 +105,22 @@ class MetOfficeCurrentSensor(Entity):
         value = None
 
         if self._type == "visibility_distance" and hasattr(
-            self._data.now, "visibility"
+            self.metoffice_now, "visibility"
         ):
-            value = VISIBILITY_DISTANCE_CLASSES.get(self._data.now.visibility.value)
+            value = VISIBILITY_DISTANCE_CLASSES.get(self.metoffice_now.visibility.value)
 
-        if self._type == "visibility" and hasattr(self._data.now, "visibility"):
-            value = VISIBILITY_CLASSES.get(self._data.now.visibility.value)
+        if self._type == "visibility" and hasattr(self.metoffice_now, "visibility"):
+            value = VISIBILITY_CLASSES.get(self.metoffice_now.visibility.value)
 
-        elif self._type == "weather" and hasattr(self._data.now, self._type):
+        elif self._type == "weather" and hasattr(self.metoffice_now, self._type):
             value = [
                 k
                 for k, v in CONDITION_CLASSES.items()
-                if self._data.now.weather.value in v
+                if self.metoffice_now.weather.value in v
             ][0]
 
-        elif hasattr(self._data.now, self._type):
-            value = getattr(self._data.now, self._type)
+        elif hasattr(self.metoffice_now, self._type):
+            value = getattr(self.metoffice_now, self._type)
 
             if not isinstance(value, int):
                 value = value.value
@@ -138,12 +146,30 @@ class MetOfficeCurrentSensor(Entity):
         """Return the state attributes of the device."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_LAST_UPDATE: self._data.now.date if self._data.now else None,
+            ATTR_LAST_UPDATE: self.metoffice_now.date if self.metoffice_now else None,
             ATTR_SENSOR_ID: self._type,
-            ATTR_SITE_ID: self._data.site.id if self._data.site else None,
-            ATTR_SITE_NAME: self._data.site.name if self._data.site else None,
+            ATTR_SITE_ID: self.metoffice_site_id if self.metoffice_site_id else None,
+            ATTR_SITE_NAME: self.metoffice_site_name
+            if self.metoffice_site_name
+            else None,
         }
 
-    def update(self):
-        """Update current conditions."""
-        self._data.update()
+    async def async_added_to_hass(self) -> None:
+        """Set up a listener and load data."""
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self._update_callback)
+        )
+        self._update_callback()
+
+    @callback
+    def _update_callback(self) -> None:
+        """Load data from integration."""
+        self.metoffice_site_id = self._data.site_id
+        self.metoffice_site_name = self._data.site_name
+        self.metoffice_now = self._data.now
+        self.async_write_ha_state()
+
+    @property
+    def should_poll(self) -> bool:
+        """Entities do not individually poll."""
+        return False

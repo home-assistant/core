@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, please try again",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Met Office DataPoint API key",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "name": "Friendly name"
+                },
+                "description": "The latitude and longitude will be used to find the closest weather station.",
+                "title": "Connect to the UK Met Office"
+            }
+        }
+    }
+}
