@@ -109,15 +109,19 @@ async def _create_august_with_devices(
     def lock_return_activities_side_effect(access_token, device_id):
         lock = _get_device_detail("locks", device_id)
         return [
-            _mock_lock_operation_activity(lock, "lock"),
-            _mock_door_operation_activity(lock, "doorclosed"),
+            _mock_lock_operation_activity(lock, "lock", 0),
+            # There is a check to prevent out of order events
+            # so we set the doorclosed event in the future
+            # to prevent a race condition where we reject the event
+            # because it happened before the dooropen event.
+            _mock_door_operation_activity(lock, "doorclosed", 2000),
         ]
 
     def unlock_return_activities_side_effect(access_token, device_id):
         lock = _get_device_detail("locks", device_id)
         return [
-            _mock_lock_operation_activity(lock, "unlock"),
-            _mock_door_operation_activity(lock, "dooropen"),
+            _mock_lock_operation_activity(lock, "unlock", 0),
+            _mock_door_operation_activity(lock, "dooropen", 0),
         ]
 
     if "get_lock_detail" not in api_call_side_effects:
@@ -288,10 +292,10 @@ async def _mock_doorsense_missing_august_lock_detail(hass):
     return await _mock_lock_from_fixture(hass, "get_lock.online_missing_doorsense.json")
 
 
-def _mock_lock_operation_activity(lock, action):
+def _mock_lock_operation_activity(lock, action, offset):
     return LockOperationActivity(
         {
-            "dateTime": time.time() * 1000,
+            "dateTime": (time.time() + offset) * 1000,
             "deviceID": lock.device_id,
             "deviceType": "lock",
             "action": action,
@@ -299,10 +303,10 @@ def _mock_lock_operation_activity(lock, action):
     )
 
 
-def _mock_door_operation_activity(lock, action):
+def _mock_door_operation_activity(lock, action, offset):
     return DoorOperationActivity(
         {
-            "dateTime": time.time() * 1000,
+            "dateTime": (time.time() + offset) * 1000,
             "deviceID": lock.device_id,
             "deviceType": "lock",
             "action": action,
