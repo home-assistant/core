@@ -289,7 +289,6 @@ class SnmpSwitch(SwitchEntity):
         return self._state
 
     async def _set(self, value):
-
         await setCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._commandoid), value)
         )
