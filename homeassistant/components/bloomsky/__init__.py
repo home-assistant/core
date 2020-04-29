@@ -6,14 +6,13 @@ from aiohttp.hdrs import AUTHORIZATION
 import requests
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, HTTP_OK
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-BLOOMSKY = None
 BLOOMSKY_TYPE = ["camera", "binary_sensor", "sensor"]
 
 DOMAIN = "bloomsky"
@@ -31,11 +30,12 @@ def setup(hass, config):
     """Set up the BloomSky component."""
     api_key = config[DOMAIN][CONF_API_KEY]
 
-    global BLOOMSKY
     try:
-        BLOOMSKY = BloomSky(api_key, hass.config.units.is_metric)
+        bloomsky = BloomSky(api_key, hass.config.units.is_metric)
     except RuntimeError:
         return False
+
+    hass.data[DOMAIN] = bloomsky
 
     for component in BLOOMSKY_TYPE:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
@@ -72,7 +72,7 @@ class BloomSky:
         if response.status_code == 405:
             _LOGGER.error("You have no bloomsky devices configured")
             return
-        if response.status_code != 200:
+        if response.status_code != HTTP_OK:
             _LOGGER.error("Invalid HTTP response: %s", response.status_code)
             return
         # Create dictionary keyed off of the device unique id

@@ -41,14 +41,14 @@ class AbodeCamera(AbodeDevice, Camera):
         """Subscribe Abode events."""
         await super().async_added_to_hass()
 
-        self.hass.async_add_job(
+        self.hass.async_add_executor_job(
             self._data.abode.events.add_timeline_callback,
             self._event,
             self._capture_callback,
         )
 
         signal = f"abode_camera_capture_{self.entity_id}"
-        async_dispatcher_connect(self.hass, signal, self.capture)
+        self.async_on_remove(async_dispatcher_connect(self.hass, signal, self.capture))
 
     def capture(self):
         """Request a new image capture."""

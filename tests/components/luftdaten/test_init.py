@@ -15,7 +15,9 @@ async def test_config_with_sensor_passed_to_config_entry(hass):
         CONF_SCAN_INTERVAL: 600,
     }
 
-    with patch.object(hass, "config_entries") as mock_config_entries, patch.object(
+    with patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_entries, patch.object(
         luftdaten, "configured_sensors", return_value=[]
     ):
         assert await async_setup_component(hass, DOMAIN, conf) is True
@@ -27,7 +29,9 @@ async def test_config_already_registered_not_passed_to_config_entry(hass):
     """Test that an already registered sensor does not initiate an import."""
     conf = {CONF_SENSOR_ID: "12345abcde"}
 
-    with patch.object(hass, "config_entries") as mock_config_entries, patch.object(
+    with patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_entries, patch.object(
         luftdaten, "configured_sensors", return_value=["12345abcde"]
     ):
         assert await async_setup_component(hass, DOMAIN, conf) is True

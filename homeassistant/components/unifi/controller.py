@@ -5,7 +5,14 @@ import ssl
 
 from aiohttp import CookieJar
 import aiounifi
-from aiounifi.controller import SIGNAL_CONNECTION_STATE
+from aiounifi.controller import (
+    DATA_CLIENT,
+    DATA_CLIENT_REMOVED,
+    DATA_DEVICE,
+    DATA_EVENT,
+    SIGNAL_CONNECTION_STATE,
+    SIGNAL_DATA,
+)
 from aiounifi.events import WIRELESS_CLIENT_CONNECTED, WIRELESS_GUEST_CONNECTED
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 import async_timeout
@@ -24,6 +31,8 @@ from .const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_IGNORE_WIRED_BUG,
+    CONF_POE_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
@@ -32,6 +41,8 @@ from .const import (
     CONTROLLER_ID,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_DETECTION_TIME,
+    DEFAULT_IGNORE_WIRED_BUG,
+    DEFAULT_POE_CLIENTS,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
@@ -61,6 +72,8 @@ class UniFiController:
         self._site_name = None
         self._site_role = None
 
+        self.entities = {}
+
     @property
     def controller_id(self):
         """Return the controller ID."""
@@ -87,16 +100,14 @@ class UniFiController:
         return self._site_role
 
     @property
-    def option_allow_bandwidth_sensors(self):
-        """Config entry option to allow bandwidth sensors."""
-        return self.config_entry.options.get(
-            CONF_ALLOW_BANDWIDTH_SENSORS, DEFAULT_ALLOW_BANDWIDTH_SENSORS
-        )
+    def mac(self):
+        """Return the mac address of this controller."""
+        for client in self.api.clients.values():
+            if self.host == client.ip:
+                return client.mac
+        return None
 
-    @property
-    def option_block_clients(self):
-        """Config entry option with list of clients to control network access."""
-        return self.config_entry.options.get(CONF_BLOCK_CLIENT, [])
+    # Device tracker options
 
     @property
     def option_track_clients(self):
@@ -104,16 +115,21 @@ class UniFiController:
         return self.config_entry.options.get(CONF_TRACK_CLIENTS, DEFAULT_TRACK_CLIENTS)
 
     @property
-    def option_track_devices(self):
-        """Config entry option to not track devices."""
-        return self.config_entry.options.get(CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES)
-
-    @property
     def option_track_wired_clients(self):
         """Config entry option to not track wired clients."""
         return self.config_entry.options.get(
             CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
         )
+
+    @property
+    def option_track_devices(self):
+        """Config entry option to not track devices."""
+        return self.config_entry.options.get(CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES)
+
+    @property
+    def option_ssid_filter(self):
+        """Config entry option listing what SSIDs are being used to track clients."""
+        return self.config_entry.options.get(CONF_SSID_FILTER, [])
 
     @property
     def option_detection_time(self):
@@ -125,17 +141,32 @@ class UniFiController:
         )
 
     @property
-    def option_ssid_filter(self):
-        """Config entry option listing what SSIDs are being used to track clients."""
-        return self.config_entry.options.get(CONF_SSID_FILTER, [])
+    def option_ignore_wired_bug(self):
+        """Config entry option to ignore wired bug."""
+        return self.config_entry.options.get(
+            CONF_IGNORE_WIRED_BUG, DEFAULT_IGNORE_WIRED_BUG
+        )
+
+    # Client control options
 
     @property
-    def mac(self):
-        """Return the mac address of this controller."""
-        for client in self.api.clients.values():
-            if self.host == client.ip:
-                return client.mac
-        return None
+    def option_poe_clients(self):
+        """Config entry option to control poe clients."""
+        return self.config_entry.options.get(CONF_POE_CLIENTS, DEFAULT_POE_CLIENTS)
+
+    @property
+    def option_block_clients(self):
+        """Config entry option with list of clients to control network access."""
+        return self.config_entry.options.get(CONF_BLOCK_CLIENT, [])
+
+    # Statistics sensor options
+
+    @property
+    def option_allow_bandwidth_sensors(self):
+        """Config entry option to allow bandwidth sensors."""
+        return self.config_entry.options.get(
+            CONF_ALLOW_BANDWIDTH_SENSORS, DEFAULT_ALLOW_BANDWIDTH_SENSORS
+        )
 
     @callback
     def async_unifi_signalling_callback(self, signal, data):
@@ -154,15 +185,22 @@ class UniFiController:
                 if not self.available:
                     self.hass.loop.call_later(RETRY_TIMER, self.reconnect)
 
-        elif signal == "new_data" and data:
-            if "event" in data:
-                if data["event"].event in (
+        elif signal == SIGNAL_DATA and data:
+
+            if DATA_EVENT in data:
+                if data[DATA_EVENT].event in (
                     WIRELESS_CLIENT_CONNECTED,
                     WIRELESS_GUEST_CONNECTED,
                 ):
                     self.update_wireless_clients()
-            elif "clients" in data or "devices" in data:
+
+            elif DATA_CLIENT in data or DATA_DEVICE in data:
                 async_dispatcher_send(self.hass, self.signal_update)
+
+            elif DATA_CLIENT_REMOVED in data:
+                async_dispatcher_send(
+                    self.hass, self.signal_remove, data[DATA_CLIENT_REMOVED]
+                )
 
     @property
     def signal_reachable(self) -> str:
@@ -173,6 +211,11 @@ class UniFiController:
     def signal_update(self):
         """Event specific per UniFi entry to signal new data."""
         return f"unifi-update-{self.controller_id}"
+
+    @property
+    def signal_remove(self):
+        """Event specific per UniFi entry to signal removal of entities."""
+        return f"unifi-remove-{self.controller_id}"
 
     @property
     def signal_options_update(self):
@@ -320,6 +363,7 @@ async def get_controller(
 
     try:
         with async_timeout.timeout(10):
+            await controller.check_unifi_os()
             await controller.login()
         return controller
 

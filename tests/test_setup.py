@@ -1,6 +1,5 @@
 """Test component/platform setup."""
 # pylint: disable=protected-access
-import asyncio
 import logging
 import os
 import threading
@@ -265,8 +264,7 @@ class TestSetup:
         """Test component setup while waiting for lock is not set up twice."""
         result = []
 
-        @asyncio.coroutine
-        def async_setup(hass, config):
+        async def async_setup(hass, config):
             """Tracking Setup."""
             result.append(1)
 
@@ -462,21 +460,17 @@ class TestSetup:
         assert call_order == [1, 1, 2]
 
 
-@asyncio.coroutine
-def test_component_cannot_depend_config(hass):
+async def test_component_cannot_depend_config(hass):
     """Test config is not allowed to be a dependency."""
-    result = yield from setup._async_process_dependencies(
-        hass, None, "test", ["config"]
-    )
+    result = await setup._async_process_dependencies(hass, None, "test", ["config"])
     assert not result
 
 
-@asyncio.coroutine
-def test_component_warn_slow_setup(hass):
+async def test_component_warn_slow_setup(hass):
     """Warn we log when a component setup takes a long time."""
     mock_integration(hass, MockModule("test_component1"))
     with mock.patch.object(hass.loop, "call_later", mock.MagicMock()) as mock_call:
-        result = yield from setup.async_setup_component(hass, "test_component1", {})
+        result = await setup.async_setup_component(hass, "test_component1", {})
         assert result
         assert mock_call.called
         assert len(mock_call.mock_calls) == 3
@@ -489,14 +483,13 @@ def test_component_warn_slow_setup(hass):
         assert mock_call().cancel.called
 
 
-@asyncio.coroutine
-def test_platform_no_warn_slow(hass):
+async def test_platform_no_warn_slow(hass):
     """Do not warn for long entity setup time."""
     mock_integration(
         hass, MockModule("test_component1", platform_schema=PLATFORM_SCHEMA)
     )
     with mock.patch.object(hass.loop, "call_later", mock.MagicMock()) as mock_call:
-        result = yield from setup.async_setup_component(hass, "test_component1", {})
+        result = await setup.async_setup_component(hass, "test_component1", {})
         assert result
         assert not mock_call.called
 

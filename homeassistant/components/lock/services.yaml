@@ -25,7 +25,7 @@ lock:
   fields:
     entity_id:
       description: Name of lock to lock.
-      example: 'lock.front_door'
+      example: "lock.front_door"
     code:
       description: An optional code to lock the lock with.
       example: 1234
@@ -35,7 +35,7 @@ open:
   fields:
     entity_id:
       description: Name of lock to open.
-      example: 'lock.front_door'
+      example: "lock.front_door"
     code:
       description: An optional code to open the lock with.
       example: 1234
@@ -58,7 +58,7 @@ unlock:
   fields:
     entity_id:
       description: Name of lock to unlock.
-      example: 'lock.front_door'
+      example: "lock.front_door"
     code:
       description: An optional code to unlock the lock with.
       example: 1234

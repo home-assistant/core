@@ -96,6 +96,8 @@ async def async_devices_sync(hass, data, payload):
 
     await data.config.async_connect_agent_user(agent_user_id)
 
+    _LOGGER.debug("Syncing entities response: %s", response)
+
     return response
 
 
@@ -243,7 +245,7 @@ async def async_devices_identify(hass, data: RequestData, payload):
     """
     return {
         "device": {
-            "id": data.context.user_id,
+            "id": data.config.get_agent_user_id(data.context),
             "isLocalOnly": True,
             "isProxy": True,
             "deviceInfo": {
@@ -262,7 +264,7 @@ async def async_devices_reachable(hass, data: RequestData, payload):
 
     https://developers.google.com/actions/smarthome/create#actiondevicesdisconnect
     """
-    google_ids = set(dev["id"] for dev in (data.devices or []))
+    google_ids = {dev["id"] for dev in (data.devices or [])}
 
     return {
         "devices": [

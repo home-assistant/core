@@ -3,6 +3,5 @@
   "name": "Minio",
   "documentation": "https://www.home-assistant.io/integrations/minio",
   "requirements": ["minio==4.0.9"],
-  "dependencies": [],
   "codeowners": ["@tkislan"]
 }

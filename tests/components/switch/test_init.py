@@ -77,7 +77,7 @@ class TestSwitch(unittest.TestCase):
             switch.DOMAIN,
             {
                 switch.DOMAIN: {CONF_PLATFORM: "test"},
-                "{} 2".format(switch.DOMAIN): {CONF_PLATFORM: "test2"},
+                f"{switch.DOMAIN} 2": {CONF_PLATFORM: "test2"},
             },
         )
 

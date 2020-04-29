@@ -1,6 +1,8 @@
 """Support for the for Danfoss Air HRV sensors."""
 import logging
 
+from pydanfossair.commands import ReadCommand
+
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
@@ -17,8 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available Danfoss Air sensors etc."""
-    from pydanfossair.commands import ReadCommand
-
     data = hass.data[DANFOSS_AIR_DOMAIN]
 
     sensors = [

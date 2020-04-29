@@ -1,7 +1,7 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 108
-PATCH_VERSION = "9"
+MINOR_VERSION = 109
+PATCH_VERSION = "0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER = (3, 7, 0)
@@ -183,6 +183,7 @@ EVENT_COMPONENT_LOADED = "component_loaded"
 EVENT_CORE_CONFIG_UPDATE = "core_config_updated"
 EVENT_HOMEASSISTANT_CLOSE = "homeassistant_close"
 EVENT_HOMEASSISTANT_START = "homeassistant_start"
+EVENT_HOMEASSISTANT_STARTED = "homeassistant_started"
 EVENT_HOMEASSISTANT_STOP = "homeassistant_stop"
 EVENT_HOMEASSISTANT_FINAL_WRITE = "homeassistant_final_write"
 EVENT_LOGBOOK_ENTRY = "logbook_entry"
@@ -345,13 +346,20 @@ ATTR_TEMPERATURE = "temperature"
 # Power units
 POWER_WATT = "W"
 
+# Voltage units
+VOLT = "V"
+
 # Energy units
-ENERGY_KILO_WATT_HOUR = "kWh"
-ENERGY_WATT_HOUR = "Wh"
+ENERGY_WATT_HOUR = f"{POWER_WATT}h"
+ENERGY_KILO_WATT_HOUR = f"k{ENERGY_WATT_HOUR}"
+
+# Degree units
+DEGREE = "°"
 
 # Temperature units
-TEMP_CELSIUS = "°C"
-TEMP_FAHRENHEIT = "°F"
+TEMP_CELSIUS = f"{DEGREE}C"
+TEMP_FAHRENHEIT = f"{DEGREE}F"
+TEMP_KELVIN = f"{DEGREE}K"
 
 # Time units
 TIME_MICROSECONDS = "μs"
@@ -373,6 +381,10 @@ LENGTH_INCHES: str = "in"
 LENGTH_FEET: str = "ft"
 LENGTH_YARD: str = "yd"
 LENGTH_MILES: str = "mi"
+
+# Frequency units
+FREQUENCY_HERTZ = "Hz"
+FREQUENCY_GIGAHERTZ = f"G{FREQUENCY_HERTZ}"
 
 # Pressure units
 PRESSURE_PA: str = "Pa"
@@ -402,11 +414,15 @@ MASS_MICROGRAMS = "µg"
 MASS_OUNCES: str = "oz"
 MASS_POUNDS: str = "lb"
 
+# Conductivity units
+CONDUCTIVITY: str = f"µS/{LENGTH_CENTIMETERS}"
+
 # UV Index units
-UNIT_UV_INDEX: str = "UV index"
+UV_INDEX: str = "UV index"
 
 # Percentage units
 UNIT_PERCENTAGE = "%"
+
 # Irradiation units
 IRRADIATION_WATTS_PER_SQUARE_METER = f"{POWER_WATT}/{AREA_SQUARE_METERS}"
 
@@ -527,6 +543,7 @@ HTTP_CREATED = 201
 HTTP_MOVED_PERMANENTLY = 301
 HTTP_BAD_REQUEST = 400
 HTTP_UNAUTHORIZED = 401
+HTTP_FORBIDDEN = 403
 HTTP_NOT_FOUND = 404
 HTTP_METHOD_NOT_ALLOWED = 405
 HTTP_UNPROCESSABLE_ENTITY = 422

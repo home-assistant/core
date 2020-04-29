@@ -209,7 +209,7 @@ class ThermostatDevice(ClimateDevice):
             preset_temperature = presets.get(self._preset_mode, "none")
             if self.hvac_mode == HVAC_MODE_AUTO:
                 if self._thermostat_temperature == self._schedule_temperature:
-                    return "{}".format(self._selected_schema)
+                    return f"{self._selected_schema}"
                 if self._thermostat_temperature == preset_temperature:
                     return self._preset_mode
                 return "Temporary"

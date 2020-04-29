@@ -4,9 +4,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/coronavirus",
   "requirements": ["coronavirus==1.1.0"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": ["@home_assistant/core"]
 }

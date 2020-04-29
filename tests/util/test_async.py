@@ -1,7 +1,7 @@
 """Tests for async util methods from Python source."""
 import asyncio
 from unittest import TestCase
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -165,3 +165,82 @@ class RunThreadsafeTests(TestCase):
         with self.assertRaises(ValueError) as exc_context:
             self.loop.run_until_complete(future)
         self.assertIn("Invalid!", exc_context.exception.args)
+
+
+async def test_check_loop_async():
+    """Test check_loop detects when called from event loop without integration context."""
+    with pytest.raises(RuntimeError):
+        hasync.check_loop()
+
+
+async def test_check_loop_async_integration(caplog):
+    """Test check_loop detects when called from event loop from integration context."""
+    with patch(
+        "homeassistant.util.async_.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/paulus/homeassistant/components/hue/light.py",
+                lineno="23",
+                line="self.light.is_on",
+            ),
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ],
+    ):
+        hasync.check_loop()
+    assert (
+        "Detected I/O inside the event loop. This is causing stability issues. Please report issue for hue doing I/O at homeassistant/components/hue/light.py, line 23: self.light.is_on"
+        in caplog.text
+    )
+
+
+async def test_check_loop_async_custom(caplog):
+    """Test check_loop detects when called from event loop with custom component context."""
+    with patch(
+        "homeassistant.util.async_.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/paulus/config/custom_components/hue/light.py",
+                lineno="23",
+                line="self.light.is_on",
+            ),
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ],
+    ):
+        hasync.check_loop()
+    assert (
+        "Detected I/O inside the event loop. This is causing stability issues. Please report issue to the custom component author for hue doing I/O at custom_components/hue/light.py, line 23: self.light.is_on"
+        in caplog.text
+    )
+
+
+def test_check_loop_sync(caplog):
+    """Test check_loop does nothing when called from thread."""
+    hasync.check_loop()
+    assert "Detected I/O inside the event loop" not in caplog.text
+
+
+def test_protect_loop_sync():
+    """Test protect_loop calls check_loop."""
+    calls = []
+    with patch("homeassistant.util.async_.check_loop") as mock_loop:
+        hasync.protect_loop(calls.append)(1)
+    assert len(mock_loop.mock_calls) == 1
+    assert calls == [1]

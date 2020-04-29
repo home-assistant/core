@@ -26,6 +26,8 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_O
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
+from .common import load_mock_device
+
 from tests.common import get_test_home_assistant
 
 
@@ -40,37 +42,19 @@ class MockDysonState(DysonPureCoolState):
 def _get_dyson_purecool_device():
     """Return a valid device as provided by the Dyson web services."""
     device = mock.Mock(spec=DysonPureCool)
-    device.serial = "XX-XXXXX-XX"
+    load_mock_device(device)
     device.name = "Living room"
-    device.connect = mock.Mock(return_value=True)
-    device.auto_connect = mock.Mock(return_value=True)
-    device.state = mock.Mock()
-    device.state.oscillation = "OION"
-    device.state.fan_power = "ON"
-    device.state.speed = FanSpeed.FAN_SPEED_AUTO.value
-    device.state.night_mode = "OFF"
-    device.state.auto_mode = "ON"
-    device.state.oscillation_angle_low = "0090"
-    device.state.oscillation_angle_high = "0180"
-    device.state.front_direction = "ON"
-    device.state.sleep_timer = 60
-    device.state.hepa_filter_state = "0090"
-    device.state.carbon_filter_state = "0080"
     return device
 
 
 def _get_dyson_purecoollink_device():
     """Return a valid device as provided by the Dyson web services."""
     device = mock.Mock(spec=DysonPureCoolLink)
-    device.serial = "XX-XXXXX-XX"
+    load_mock_device(device)
     device.name = "Living room"
-    device.connect = mock.Mock(return_value=True)
-    device.auto_connect = mock.Mock(return_value=True)
-    device.state = mock.Mock()
     device.state.oscillation = "ON"
     device.state.fan_mode = "FAN"
     device.state.speed = FanSpeed.FAN_SPEED_AUTO.value
-    device.state.night_mode = "OFF"
     return device
 
 

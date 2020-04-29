@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -102,7 +103,7 @@ class TomatoDeviceScanner(DeviceScanner):
 
             # Calling and parsing the Tomato api here. We only need the
             # wldev and dhcpd_lease values.
-            if response.status_code == 200:
+            if response.status_code == HTTP_OK:
 
                 for param, value in self.parse_api_pattern.findall(response.text):
 
@@ -113,10 +114,7 @@ class TomatoDeviceScanner(DeviceScanner):
             if response.status_code == 401:
                 # Authentication error
                 _LOGGER.exception(
-                    (
-                        "Failed to authenticate, "
-                        "please check your username and password"
-                    )
+                    "Failed to authenticate, please check your username and password"
                 )
                 return False
 

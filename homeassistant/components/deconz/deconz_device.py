@@ -106,7 +106,7 @@ class DeconzDevice(DeconzBase, Entity):
         if ignore_update:
             return
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def available(self):

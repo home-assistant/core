@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "app_setup_error": "No se puede configurar el SmartApp.  Por favor, int\u00e9ntelo de nuevo.",
+            "token_invalid_format": "El token debe estar en formato UID/GUID",
+            "token_unauthorized": "El token no es v\u00e1lido o ya no est\u00e1 autorizado.",
+            "webhook_error": "SmartThings no pudo validar el endpoint configurado en `base_url`. Por favor, revise los requisitos de los componentes."
+        },
+        "step": {
+            "user": {
+                "title": "Ingresar token de acceso personal"
+            }
+        }
+    }
+}

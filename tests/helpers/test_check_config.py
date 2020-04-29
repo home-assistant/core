@@ -128,7 +128,7 @@ async def test_bootstrap_error(hass, loop):
         res = await async_check_ha_config_file(hass)
         log_ha_config(res)
 
-        res.errors[0].domain is None
+        assert res.errors[0].domain is None
 
         # Only 1 error expected
         res.errors.pop(0)

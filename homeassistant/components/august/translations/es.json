@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya est\u00e1 configurada"
+        },
+        "error": {
+            "cannot_connect": "No se ha podido conectar, por favor, int\u00e9ntalo de nuevo.",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "login_method": "M\u00e9todo de inicio de sesi\u00f3n",
+                    "password": "Contrase\u00f1a",
+                    "timeout": "Tiempo de espera (segundos)",
+                    "username": "Usuario"
+                },
+                "description": "Si el M\u00e9todo de Inicio de Sesi\u00f3n es 'correo electr\u00f3nico', Usuario es la direcci\u00f3n de correo electr\u00f3nico. Si el M\u00e9todo de Inicio de Sesi\u00f3n es 'tel\u00e9fono', Usuario es el n\u00famero de tel\u00e9fono en formato '+NNNNNNNNN'.",
+                "title": "Configurar una cuenta de August"
+            },
+            "validation": {
+                "data": {
+                    "code": "C\u00f3digo de verificaci\u00f3n"
+                },
+                "description": "Por favor, comprueba tu {login_method} ({username}) e introduce el c\u00f3digo de verificaci\u00f3n a continuaci\u00f3n",
+                "title": "Autenticaci\u00f3n de dos factores"
+            }
+        }
+    }
+}

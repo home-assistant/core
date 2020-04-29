@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Tiempo de espera agotado para la autorizaci\u00f3n de la url.",
+            "missing_configuration": "La integraci\u00f3n de Withings no est\u00e1 configurada. Por favor, siga la documentaci\u00f3n."
+        },
+        "create_entry": {
+            "default": "Autenticado correctamente con Withings para el perfil seleccionado."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Elija el m\u00e9todo de autenticaci\u00f3n"
+            },
+            "profile": {
+                "data": {
+                    "profile": "Perfil"
+                },
+                "description": "\u00bfQu\u00e9 perfil seleccion\u00f3 en el sitio web de Withings? Es importante que los perfiles coincidan, de lo contrario los datos se etiquetar\u00e1n incorrectamente.",
+                "title": "Perfil de usuario."
+            }
+        }
+    }
+}

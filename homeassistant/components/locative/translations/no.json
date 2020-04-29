@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Home Assistant m\u00e5 v\u00e6re tilgjengelig fra internett for \u00e5 kunne motta meldinger fra Geofency.",
+            "one_instance_allowed": "Kun en forekomst er n\u00f8dvendig."
+        },
+        "create_entry": {
+            "default": "For \u00e5 kunne sende steder til Home Assistant, m\u00e5 du sette opp webhook-funksjonen i Locative. \n\n Fyll ut f\u00f8lgende informasjon: \n\n - URL: `{webhook_url}` \n - Metode: POST \n\n Se [dokumentasjonen]({docs_url}) for ytterligere detaljer."
+        },
+        "step": {
+            "user": {
+                "description": "Er du sikker p\u00e5 at du vil sette opp Locative Webhook?",
+                "title": "Sett opp Locative Webhook"
+            }
+        }
+    }
+}

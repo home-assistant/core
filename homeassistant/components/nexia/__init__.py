@@ -9,7 +9,12 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    HTTP_BAD_REQUEST,
+    HTTP_INTERNAL_SERVER_ERROR,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
@@ -28,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_PASSWORD): cv.string,
             },
             extra=vol.ALLOW_EXTRA,
-        ),
+        )
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -76,10 +81,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.error("Unable to connect to Nexia service: %s", ex)
         raise ConfigEntryNotReady
     except HTTPError as http_ex:
-        if http_ex.response.status_code >= 400 and http_ex.response.status_code < 500:
+        if (
+            http_ex.response.status_code >= HTTP_BAD_REQUEST
+            and http_ex.response.status_code < HTTP_INTERNAL_SERVER_ERROR
+        ):
             _LOGGER.error(
-                "Access error from Nexia service, please check credentials: %s",
-                http_ex,
+                "Access error from Nexia service, please check credentials: %s", http_ex
             )
             return False
         _LOGGER.error("HTTP error from Nexia service: %s", http_ex)

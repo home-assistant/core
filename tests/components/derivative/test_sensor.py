@@ -2,7 +2,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.const import TIME_HOURS, TIME_MINUTES, TIME_SECONDS
+from homeassistant.const import POWER_WATT, TIME_HOURS, TIME_MINUTES, TIME_SECONDS
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -192,14 +192,14 @@ async def test_prefix(hass):
 
     entity_id = config["sensor"]["source"]
     hass.states.async_set(
-        entity_id, 1000, {"unit_of_measurement": "W"}, force_update=True
+        entity_id, 1000, {"unit_of_measurement": POWER_WATT}, force_update=True
     )
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=3600)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.states.async_set(
-            entity_id, 1000, {"unit_of_measurement": "W"}, force_update=True
+            entity_id, 1000, {"unit_of_measurement": POWER_WATT}, force_update=True
         )
         await hass.async_block_till_done()
 

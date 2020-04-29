@@ -1,4 +1,5 @@
 """Config flow to configure Z-Wave."""
+# pylint: disable=import-outside-toplevel
 from collections import OrderedDict
 import logging
 
@@ -65,7 +66,7 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
                 # Generate a random key
                 from random import choice
 
-                key = str()
+                key = ""
                 for i in range(16):
                     key += "0x"
                     key += choice("1234567890ABCDEF")

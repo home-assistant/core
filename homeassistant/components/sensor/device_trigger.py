@@ -129,16 +129,14 @@ async def async_get_triggers(hass, device_id):
         )
 
         triggers.extend(
-            (
-                {
-                    **automation,
-                    "platform": "device",
-                    "device_id": device_id,
-                    "entity_id": entry.entity_id,
-                    "domain": DOMAIN,
-                }
-                for automation in templates
-            )
+            {
+                **automation,
+                "platform": "device",
+                "device_id": device_id,
+                "entity_id": entry.entity_id,
+                "domain": DOMAIN,
+            }
+            for automation in templates
         )
 
     return triggers

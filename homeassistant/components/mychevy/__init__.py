@@ -13,7 +13,7 @@ from homeassistant.util import Throttle
 
 DOMAIN = "mychevy"
 UPDATE_TOPIC = DOMAIN
-ERROR_TOPIC = DOMAIN + "_error"
+ERROR_TOPIC = f"{DOMAIN}_error"
 
 MYCHEVY_SUCCESS = "success"
 MYCHEVY_ERROR = "error"

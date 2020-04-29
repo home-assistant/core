@@ -28,6 +28,7 @@ from typing import (
     Optional,
     Set,
     TypeVar,
+    Union,
 )
 import uuid
 
@@ -35,7 +36,7 @@ from async_timeout import timeout
 import attr
 import voluptuous as vol
 
-from homeassistant import loader, util
+from homeassistant import block_async_io, loader, util
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -49,12 +50,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     EVENT_TIMER_OUT_OF_SYNC,
+    LENGTH_METERS,
     MATCH_ALL,
     __version__,
 )
@@ -74,6 +77,9 @@ from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitS
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntries
     from homeassistant.components.http import HomeAssistantHTTP
+
+
+block_async_io.enable()
 
 # pylint: disable=invalid-name
 T = TypeVar("T")
@@ -152,7 +158,7 @@ class CoreState(enum.Enum):
     starting = "STARTING"
     running = "RUNNING"
     stopping = "STOPPING"
-    writing_data = "WRITING_DATA"
+    final_write = "FINAL_WRITE"
 
     def __str__(self) -> str:
         """Return the event."""
@@ -230,6 +236,7 @@ class HomeAssistant:
 
         await self.async_start()
         if attach_signals:
+            # pylint: disable=import-outside-toplevel
             from homeassistant.helpers.signal import async_register_signal_handling
 
             async_register_signal_handling(self)
@@ -273,6 +280,7 @@ class HomeAssistant:
 
         self.state = CoreState.running
         _async_create_timer(self)
+        self.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 
     def add_job(self, target: Callable[..., Any], *args: Any) -> None:
         """Add job to the executor pool.
@@ -358,7 +366,9 @@ class HomeAssistant:
         self._track_task = False
 
     @callback
-    def async_run_job(self, target: Callable[..., None], *args: Any) -> None:
+    def async_run_job(
+        self, target: Callable[..., Union[None, Awaitable]], *args: Any
+    ) -> None:
         """Run a job from within the event loop.
 
         This method must be run in the event loop.
@@ -414,7 +424,7 @@ class HomeAssistant:
             # regardless of the state of the loop.
             if self.state == CoreState.not_running:  # just ignore
                 return
-            if self.state == CoreState.stopping or self.state == CoreState.writing_data:
+            if self.state == CoreState.stopping or self.state == CoreState.final_write:
                 _LOGGER.info("async_stop called twice: ignored")
                 return
             if self.state == CoreState.starting:
@@ -428,7 +438,7 @@ class HomeAssistant:
         await self.async_block_till_done()
 
         # stage 2
-        self.state = CoreState.writing_data
+        self.state = CoreState.final_write
         self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
         await self.async_block_till_done()
 
@@ -478,7 +488,7 @@ class Event:
     def __init__(
         self,
         event_type: str,
-        data: Optional[Dict] = None,
+        data: Optional[Dict[str, Any]] = None,
         origin: EventOrigin = EventOrigin.local,
         time_fired: Optional[int] = None,
         context: Optional[Context] = None,
@@ -507,11 +517,9 @@ class Event:
         """Return the representation."""
         # pylint: disable=maybe-no-member
         if self.data:
-            return "<Event {}[{}]: {}>".format(
-                self.event_type, str(self.origin)[0], util.repr_helper(self.data)
-            )
+            return f"<Event {self.event_type}[{str(self.origin)[0]}]: {util.repr_helper(self.data)}>"
 
-        return "<Event {}[{}]>".format(self.event_type, str(self.origin)[0])
+        return f"<Event {self.event_type}[{str(self.origin)[0]}]>"
 
     def __eq__(self, other: Any) -> bool:
         """Return the comparison."""
@@ -544,9 +552,7 @@ class EventBus:
     @property
     def listeners(self) -> Dict[str, int]:
         """Return dictionary with events and the number of listeners."""
-        return run_callback_threadsafe(  # type: ignore
-            self._hass.loop, self.async_listeners
-        ).result()
+        return run_callback_threadsafe(self._hass.loop, self.async_listeners).result()
 
     def fire(
         self,
@@ -824,15 +830,11 @@ class State:
 
     def __repr__(self) -> str:
         """Return the representation of the states."""
-        attrs = (
-            "; {}".format(util.repr_helper(self.attributes)) if self.attributes else ""
-        )
+        attrs = f"; {util.repr_helper(self.attributes)}" if self.attributes else ""
 
-        return "<state {}={}{} @ {}>".format(
-            self.entity_id,
-            self.state,
-            attrs,
-            dt_util.as_local(self.last_changed).isoformat(),
+        return (
+            f"<state {self.entity_id}={self.state}{attrs}"
+            f" @ {dt_util.as_local(self.last_changed).isoformat()}>"
         )
 
 
@@ -850,7 +852,7 @@ class StateMachine:
         future = run_callback_threadsafe(
             self._loop, self.async_entity_ids, domain_filter
         )
-        return future.result()  # type: ignore
+        return future.result()
 
     @callback
     def async_entity_ids(self, domain_filter: Optional[str] = None) -> List[str]:
@@ -871,9 +873,7 @@ class StateMachine:
 
     def all(self) -> List[State]:
         """Create a list of all states."""
-        return run_callback_threadsafe(  # type: ignore
-            self._loop, self.async_all
-        ).result()
+        return run_callback_threadsafe(self._loop, self.async_all).result()
 
     @callback
     def async_all(self) -> List[State]:
@@ -903,7 +903,7 @@ class StateMachine:
 
         Returns boolean to indicate if an entity was removed.
         """
-        return run_callback_threadsafe(  # type: ignore
+        return run_callback_threadsafe(
             self._loop, self.async_remove, entity_id
         ).result()
 
@@ -1043,8 +1043,9 @@ class ServiceCall:
     def __repr__(self) -> str:
         """Return the representation of the service."""
         if self.data:
-            return "<ServiceCall {}.{} (c:{}): {}>".format(
-                self.domain, self.service, self.context.id, util.repr_helper(self.data)
+            return (
+                f"<ServiceCall {self.domain}.{self.service} "
+                f"(c:{self.context.id}): {util.repr_helper(self.data)}>"
             )
 
         return f"<ServiceCall {self.domain}.{self.service} (c:{self.context.id})>"
@@ -1061,9 +1062,7 @@ class ServiceRegistry:
     @property
     def services(self) -> Dict[str, Dict[str, Service]]:
         """Return dictionary with per domain a list of available services."""
-        return run_callback_threadsafe(  # type: ignore
-            self._hass.loop, self.async_services
-        ).result()
+        return run_callback_threadsafe(self._hass.loop, self.async_services).result()
 
     @callback
     def async_services(self) -> Dict[str, Dict[str, Service]]:
@@ -1223,29 +1222,57 @@ class ServiceRegistry:
             context=context,
         )
 
+        coro = self._execute_service(handler, service_call)
         if not blocking:
-            self._hass.async_create_task(self._safe_execute(handler, service_call))
+            self._run_service_in_background(coro, service_call)
             return None
 
+        task = self._hass.async_create_task(coro)
         try:
-            async with timeout(limit):
-                await asyncio.shield(self._execute_service(handler, service_call))
-            return True
-        except asyncio.TimeoutError:
-            return False
+            await asyncio.wait({task}, timeout=limit)
+        except asyncio.CancelledError:
+            # Task calling us was cancelled, so cancel service call task, and wait for
+            # it to be cancelled, within reason, before leaving.
+            _LOGGER.debug("Service call was cancelled: %s", service_call)
+            task.cancel()
+            await asyncio.wait({task}, timeout=SERVICE_CALL_LIMIT)
+            raise
 
-    async def _safe_execute(self, handler: Service, service_call: ServiceCall) -> None:
-        """Execute a service and catch exceptions."""
-        try:
-            await self._execute_service(handler, service_call)
-        except Unauthorized:
-            _LOGGER.warning(
-                "Unauthorized service called %s/%s",
-                service_call.domain,
-                service_call.service,
-            )
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error executing service %s", service_call)
+        if task.cancelled():
+            # Service call task was cancelled some other way, such as during shutdown.
+            _LOGGER.debug("Service was cancelled: %s", service_call)
+            raise asyncio.CancelledError
+        if task.done():
+            # Propagate any exceptions that might have happened during service call.
+            task.result()
+            # Service call completed successfully!
+            return True
+        # Service call task did not complete before timeout expired.
+        # Let it keep running in background.
+        self._run_service_in_background(task, service_call)
+        _LOGGER.debug("Service did not complete before timeout: %s", service_call)
+        return False
+
+    def _run_service_in_background(
+        self, coro_or_task: Union[Coroutine, asyncio.Task], service_call: ServiceCall
+    ) -> None:
+        """Run service call in background, catching and logging any exceptions."""
+
+        async def catch_exceptions() -> None:
+            try:
+                await coro_or_task
+            except Unauthorized:
+                _LOGGER.warning(
+                    "Unauthorized service called %s/%s",
+                    service_call.domain,
+                    service_call.service,
+                )
+            except asyncio.CancelledError:
+                _LOGGER.debug("Service was cancelled: %s", service_call)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Error executing service: %s", service_call)
+
+        self._hass.async_create_task(catch_exceptions())
 
     async def _execute_service(
         self, handler: Service, service_call: ServiceCall
@@ -1299,7 +1326,7 @@ class Config:
         Async friendly.
         """
         return self.units.length(
-            location.distance(self.latitude, self.longitude, lat, lon), "m"
+            location.distance(self.latitude, self.longitude, lat, lon), LENGTH_METERS
         )
 
     def path(self, *path: str) -> str:

@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
+    POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UNIT_PERCENTAGE,
@@ -21,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
 PERCENT_UNITS = [UNIT_PERCENTAGE, UNIT_PERCENTAGE]
 SALT_UNITS = ["g/L", "PPM"]
-WATT_UNITS = ["W", "W"]
+WATT_UNITS = [POWER_WATT, POWER_WATT]
 NO_UNITS = [None, None]
 
 # sensor_type [ description, unit, icon ]
@@ -52,7 +53,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sensors = []
 
     processor = hass.data[DOMAIN]
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
+    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(AquaLogicSensor(processor, sensor_type))
 
     async_add_entities(sensors)
@@ -99,8 +100,10 @@ class AquaLogicSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.async_update_callback
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                UPDATE_TOPIC, self.async_update_callback
+            )
         )
 
     @callback
@@ -109,4 +112,4 @@ class AquaLogicSensor(Entity):
         panel = self._processor.panel
         if panel is not None:
             self._state = getattr(panel, self._type)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

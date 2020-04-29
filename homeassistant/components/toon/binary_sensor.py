@@ -177,16 +177,10 @@ class ToonBinarySensor(ToonEntity, BinarySensorDevice):
 class ToonBoilerBinarySensor(ToonBinarySensor, ToonBoilerDeviceEntity):
     """Defines a Boiler binary sensor."""
 
-    pass
-
 
 class ToonDisplayBinarySensor(ToonBinarySensor, ToonDisplayDeviceEntity):
     """Defines a Toon Display binary sensor."""
 
-    pass
-
 
 class ToonBoilerModuleBinarySensor(ToonBinarySensor, ToonBoilerModuleDeviceEntity):
     """Defines a Boiler module binary sensor."""
-
-    pass

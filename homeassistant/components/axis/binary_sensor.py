@@ -53,13 +53,13 @@ class AxisBinarySensor(AxisEventBase, BinarySensorDevice):
             self.remove_timer = None
 
         if self.is_on or delay == 0 or no_delay:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
             return
 
         @callback
         def _delay_update(now):
             """Timer callback for sensor update."""
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
             self.remove_timer = None
 
         self.remove_timer = async_track_point_in_utc_time(

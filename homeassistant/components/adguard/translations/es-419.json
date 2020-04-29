@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "adguard_home_addon_outdated": "Esta integraci\u00f3n requiere AdGuard Home {minimal_version} o superior, tiene {current_version}. Actualice su complemento Hass.io AdGuard Home.",
+            "adguard_home_outdated": "Esta integraci\u00f3n requiere AdGuard Home {minimal_version} o superior, tiene {current_version}.",
+            "existing_instance_updated": "Se actualiz\u00f3 la configuraci\u00f3n existente.",
+            "single_instance_allowed": "Solo se permite una \u00fanica configuraci\u00f3n de AdGuard Home."
+        },
+        "error": {
+            "connection_error": "Error al conectar."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "\u00bfDesea configurar Home Assistant para conectarse a la p\u00e1gina principal de AdGuard proporcionada por el complemento Hass.io: {addon}?",
+                "title": "AdGuard Home a trav\u00e9s del complemento Hass.io"
+            },
+            "user": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "ssl": "AdGuard Home utiliza un certificado SSL",
+                    "username": "Nombre de usuario",
+                    "verify_ssl": "AdGuard Home utiliza un certificado adecuado"
+                },
+                "description": "Configure su instancia de AdGuard Home para permitir la supervisi\u00f3n y el control.",
+                "title": "Enlace su AdGuard Home."
+            }
+        }
+    }
+}

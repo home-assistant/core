@@ -14,7 +14,10 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "ADS Switch"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_ADS_VAR): cv.string, vol.Optional(CONF_NAME): cv.string}
+    {
+        vol.Required(CONF_ADS_VAR): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
 )
 
 
@@ -22,8 +25,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up switch platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
 
-    name = config.get(CONF_NAME)
-    ads_var = config.get(CONF_ADS_VAR)
+    name = config[CONF_NAME]
+    ads_var = config[CONF_ADS_VAR]
 
     add_entities([AdsSwitch(ads_hub, name, ads_var)])
 

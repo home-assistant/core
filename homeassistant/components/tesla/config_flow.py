@@ -33,7 +33,7 @@ DATA_SCHEMA = vol.Schema(
 @callback
 def configured_instances(hass):
     """Return a set of configured Tesla instances."""
-    return set(entry.title for entry in hass.config_entries.async_entries(DOMAIN))
+    return {entry.title for entry in hass.config_entries.async_entries(DOMAIN)}
 
 
 class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

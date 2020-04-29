@@ -3,6 +3,5 @@
   "name": "Swiss Hydrological Data",
   "documentation": "https://www.home-assistant.io/integrations/swiss_hydrological_data",
   "requirements": ["swisshydrodata==0.0.3"],
-  "dependencies": [],
   "codeowners": ["@fabaff"]
 }

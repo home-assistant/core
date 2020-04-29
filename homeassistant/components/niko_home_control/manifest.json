@@ -3,6 +3,5 @@
   "name": "Niko Home Control",
   "documentation": "https://www.home-assistant.io/integrations/niko_home_control",
   "requirements": ["niko-home-control==0.2.1"],
-  "dependencies": [],
   "codeowners": []
 }

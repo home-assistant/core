@@ -397,6 +397,8 @@ async def test_update(registry):
         updated_entry = registry.async_update_device(
             entry.id,
             area_id="12345A",
+            manufacturer="Test Producer",
+            model="Test Model",
             name_by_user="Test Friendly Name",
             new_identifiers=new_identifiers,
             via_device_id="98765B",
@@ -405,6 +407,8 @@ async def test_update(registry):
     assert mock_save.call_count == 1
     assert updated_entry != entry
     assert updated_entry.area_id == "12345A"
+    assert updated_entry.manufacturer == "Test Producer"
+    assert updated_entry.model == "Test Model"
     assert updated_entry.name_by_user == "Test Friendly Name"
     assert updated_entry.identifiers == new_identifiers
     assert updated_entry.via_device_id == "98765B"

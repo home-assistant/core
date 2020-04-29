@@ -23,9 +23,9 @@ async def async_init_integration(
     def _handle_mock_api_request(method, endpoint, **kwargs):
         if endpoint == "Login":
             return {"SecurityToken": 1234}
-        elif endpoint == "My":
+        if endpoint == "My":
             return {"Account": {"Id": 1}}
-        elif endpoint == "Accounts/1/Devices":
+        if endpoint == "Accounts/1/Devices":
             return devices_dict
         return {}
 

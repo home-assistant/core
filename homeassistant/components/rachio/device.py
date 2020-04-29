@@ -3,16 +3,18 @@
 import logging
 from typing import Optional
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, HTTP_OK
 
 from .const import (
     KEY_DEVICES,
     KEY_ENABLED,
     KEY_EXTERNAL_ID,
+    KEY_FLEX_SCHEDULES,
     KEY_ID,
     KEY_MAC_ADDRESS,
     KEY_MODEL,
     KEY_NAME,
+    KEY_SCHEDULES,
     KEY_SERIAL_NUMBER,
     KEY_STATUS,
     KEY_USERNAME,
@@ -38,12 +40,12 @@ class RachioPerson:
     def setup(self, hass):
         """Rachio device setup."""
         response = self.rachio.person.getInfo()
-        assert int(response[0][KEY_STATUS]) == 200, "API key error"
+        assert int(response[0][KEY_STATUS]) == HTTP_OK, "API key error"
         self._id = response[1][KEY_ID]
 
         # Use user ID to get user data
         data = self.rachio.person.get(self._id)
-        assert int(data[0][KEY_STATUS]) == 200, "User ID error"
+        assert int(data[0][KEY_STATUS]) == HTTP_OK, "User ID error"
         self.username = data[1][KEY_USERNAME]
         devices = data[1][KEY_DEVICES]
         for controller in devices:
@@ -90,6 +92,8 @@ class RachioIro:
         self.mac_address = data[KEY_MAC_ADDRESS]
         self.model = data[KEY_MODEL]
         self._zones = data[KEY_ZONES]
+        self._schedules = data[KEY_SCHEDULES]
+        self._flex_schedules = data[KEY_FLEX_SCHEDULES]
         self._init_data = data
         self._webhooks = webhooks
         _LOGGER.debug('%s has ID "%s"', str(self), self.controller_id)
@@ -173,6 +177,14 @@ class RachioIro:
                 return zone
 
         return None
+
+    def list_schedules(self) -> list:
+        """Return a list of fixed schedules."""
+        return self._schedules
+
+    def list_flex_schedules(self) -> list:
+        """Return a list of flex schedules."""
+        return self._flex_schedules
 
     def stop_watering(self) -> None:
         """Stop watering all zones connected to this controller."""

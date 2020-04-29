@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Aquest dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "Aquest dispositiu ja s'est\u00e0 configurant",
+            "not_huawei_lte": "No \u00e9s un dispositiu Huawei LTE"
+        },
+        "error": {
+            "connection_failed": "La connexi\u00f3 ha fallat",
+            "connection_timeout": "S'ha acabat el temps d'espera de la connexi\u00f3",
+            "incorrect_password": "Contrasenya incorrecta",
+            "incorrect_username": "Nom d'usuari incorrecte",
+            "incorrect_username_or_password": "Nom d'usuari o contrasenya incorrectes",
+            "invalid_url": "URL inv\u00e0lid",
+            "login_attempts_exceeded": "Nombre m\u00e0xim d'intents d'inici de sessi\u00f3 superat, torna-ho a provar m\u00e9s tard",
+            "response_error": "S'ha produ\u00eft un error desconegut del dispositiu",
+            "unknown_connection_error": "S'ha produ\u00eft un error desconegut en connectar-se al dispositiu"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "url": "URL",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Introdueix les dades d\u2019acc\u00e9s del dispositiu. El nom d\u2019usuari i contrasenya s\u00f3n opcionals, per\u00f2 habiliten m\u00e9s funcions de la integraci\u00f3. D'altra banda, (mentre la integraci\u00f3 estigui activa) l'\u00fas d'una connexi\u00f3 autoritzada pot causar problemes per accedir a la interf\u00edcie web del dispositiu des de fora de Home Assistant i viceversa.",
+                "title": "Configuraci\u00f3 de Huawei LTE"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Nom del servei de notificacions (reinici necessari si canvia)",
+                    "recipient": "Destinataris de notificacions SMS",
+                    "track_new_devices": "Segueix dispositius nous"
+                }
+            }
+        }
+    }
+}

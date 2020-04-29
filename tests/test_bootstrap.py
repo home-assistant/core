@@ -1,6 +1,5 @@
 """Test the bootstrapping."""
 # pylint: disable=protected-access
-import asyncio
 import logging
 import os
 from unittest.mock import Mock
@@ -29,11 +28,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @patch("homeassistant.bootstrap.async_enable_logging", Mock())
-@asyncio.coroutine
-def test_home_assistant_core_config_validation(hass):
+async def test_home_assistant_core_config_validation(hass):
     """Test if we pass in wrong information for HA conf."""
     # Extensive HA conf validation testing is done
-    result = yield from bootstrap.async_from_config_dict(
+    result = await bootstrap.async_from_config_dict(
         {"homeassistant": {"latitude": "some string"}}, hass
     )
     assert result is None

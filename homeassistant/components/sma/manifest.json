@@ -3,6 +3,5 @@
   "name": "SMA Solar",
   "documentation": "https://www.home-assistant.io/integrations/sma",
   "requirements": ["pysma==0.3.5"],
-  "dependencies": [],
   "codeowners": ["@kellerza"]
 }

@@ -54,9 +54,9 @@ class Light(HomeAccessory):
         super().__init__(*args, category=CATEGORY_LIGHTBULB)
 
         self.chars = []
-        self._features = self.hass.states.get(self.entity_id).attributes.get(
-            ATTR_SUPPORTED_FEATURES
-        )
+        state = self.hass.states.get(self.entity_id)
+
+        self._features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if self._features & SUPPORT_BRIGHTNESS:
             self.chars.append(CHAR_BRIGHTNESS)
@@ -101,10 +101,12 @@ class Light(HomeAccessory):
         if CHAR_SATURATION in self.chars:
             self.char_saturation = serv_light.configure_char(CHAR_SATURATION, value=75)
 
+        self.update_state(state)
+
         serv_light.setter_callback = self._set_chars
 
     def _set_chars(self, char_values):
-        _LOGGER.debug("_set_chars: %s", char_values)
+        _LOGGER.debug("Light _set_chars: %s", char_values)
         events = []
         service = SERVICE_TURN_ON
         params = {ATTR_ENTITY_ID: self.entity_id}
@@ -115,7 +117,7 @@ class Light(HomeAccessory):
 
         if CHAR_BRIGHTNESS in char_values:
             if char_values[CHAR_BRIGHTNESS] == 0:
-                events[-1] = f"Set state to 0"
+                events[-1] = "Set state to 0"
                 service = SERVICE_TURN_OFF
             else:
                 params[ATTR_BRIGHTNESS_PCT] = char_values[CHAR_BRIGHTNESS]

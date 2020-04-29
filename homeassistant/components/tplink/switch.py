@@ -24,17 +24,6 @@ ATTR_TOTAL_ENERGY_KWH = "total_energy_kwh"
 ATTR_CURRENT_A = "current_a"
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the platform.
-
-    Deprecated.
-    """
-    _LOGGER.warning(
-        "Loading as a platform is no longer supported, "
-        "convert to use the tplink component."
-    )
-
-
 def add_entity(device: SmartPlug, async_add_entities):
     """Check if device is online and add the entity."""
     # Attempt to get the sysinfo. If it fails, it will raise an

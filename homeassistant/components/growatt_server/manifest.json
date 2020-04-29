@@ -3,6 +3,5 @@
   "name": "Growatt",
   "documentation": "https://www.home-assistant.io/integrations/growatt_server/",
   "requirements": ["growattServer==0.0.1"],
-  "dependencies": [],
   "codeowners": ["@indykoning"]
 }

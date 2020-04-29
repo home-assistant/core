@@ -52,11 +52,9 @@ class NexiaEntity(Entity):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self._coordinator.async_add_listener(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """Undo subscription."""
-        self._coordinator.async_remove_listener(self.async_write_ha_state)
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
 
 class NexiaThermostatEntity(NexiaEntity):
@@ -66,7 +64,6 @@ class NexiaThermostatEntity(NexiaEntity):
         """Initialize the entity."""
         super().__init__(coordinator, name, unique_id)
         self._thermostat = thermostat
-        self._thermostat_update_subscription = None
 
     @property
     def device_info(self):
@@ -82,17 +79,13 @@ class NexiaThermostatEntity(NexiaEntity):
     async def async_added_to_hass(self):
         """Listen for signals for services."""
         await super().async_added_to_hass()
-        self._thermostat_update_subscription = async_dispatcher_connect(
-            self.hass,
-            f"{SIGNAL_THERMOSTAT_UPDATE}-{self._thermostat.thermostat_id}",
-            self.async_write_ha_state,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SIGNAL_THERMOSTAT_UPDATE}-{self._thermostat.thermostat_id}",
+                self.async_write_ha_state,
+            )
         )
-
-    async def async_will_remove_from_hass(self):
-        """Unsub from signals for services."""
-        await super().async_will_remove_from_hass()
-        if self._thermostat_update_subscription:
-            self._thermostat_update_subscription()
 
 
 class NexiaThermostatZoneEntity(NexiaThermostatEntity):
@@ -102,7 +95,6 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
         """Initialize the entity."""
         super().__init__(coordinator, zone.thermostat, name, unique_id)
         self._zone = zone
-        self._zone_update_subscription = None
 
     @property
     def device_info(self):
@@ -120,14 +112,10 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
     async def async_added_to_hass(self):
         """Listen for signals for services."""
         await super().async_added_to_hass()
-        self._zone_update_subscription = async_dispatcher_connect(
-            self.hass,
-            f"{SIGNAL_ZONE_UPDATE}-{self._zone.zone_id}",
-            self.async_write_ha_state,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SIGNAL_ZONE_UPDATE}-{self._zone.zone_id}",
+                self.async_write_ha_state,
+            )
         )
-
-    async def async_will_remove_from_hass(self):
-        """Unsub from signals for services."""
-        await super().async_will_remove_from_hass()
-        if self._zone_update_subscription:
-            self._zone_update_subscription()

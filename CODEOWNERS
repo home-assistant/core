@@ -33,7 +33,9 @@ homeassistant/components/aprs/* @PhilRW
 homeassistant/components/arcam_fmj/* @elupus
 homeassistant/components/arduino/* @fabaff
 homeassistant/components/arest/* @fabaff
+homeassistant/components/arris_tg2492lg/* @vanbalken
 homeassistant/components/asuswrt/* @kennedyshead
+homeassistant/components/atag/* @MatsNL
 homeassistant/components/aten_pe/* @mtdcr
 homeassistant/components/atome/* @baqs
 homeassistant/components/august/* @bdraco
@@ -55,12 +57,13 @@ homeassistant/components/blink/* @fronzbot
 homeassistant/components/bmp280/* @belidzs
 homeassistant/components/bmw_connected_drive/* @gerard33
 homeassistant/components/bom/* @maddenp
-homeassistant/components/braviatv/* @robbiet480
+homeassistant/components/braviatv/* @robbiet480 @bieniu
 homeassistant/components/broadlink/* @danielhiversen @felipediel
 homeassistant/components/brother/* @bieniu
 homeassistant/components/brunt/* @eavanvalkenburg
 homeassistant/components/bt_smarthub/* @jxwolstenholme
 homeassistant/components/buienradar/* @mjj4791 @ties
+homeassistant/components/cast/* @emontnemery
 homeassistant/components/cert_expiry/* @Cereal2nd @jjlawren
 homeassistant/components/cisco_ios/* @fbradyirl
 homeassistant/components/cisco_mobility_express/* @fbradyirl
@@ -120,7 +123,7 @@ homeassistant/components/filter/* @dgomes
 homeassistant/components/fitbit/* @robbiet480
 homeassistant/components/fixer/* @fabaff
 homeassistant/components/flock/* @fabaff
-homeassistant/components/flume/* @ChrisMandich
+homeassistant/components/flume/* @ChrisMandich @bdraco
 homeassistant/components/flunearyou/* @bachya
 homeassistant/components/fortigate/* @kifeo
 homeassistant/components/fortios/* @kimfrellsen
@@ -161,6 +164,7 @@ homeassistant/components/hisense_aehw4a1/* @bannhead
 homeassistant/components/history/* @home-assistant/core
 homeassistant/components/hive/* @Rendili @KJonline
 homeassistant/components/homeassistant/* @home-assistant/core
+homeassistant/components/homekit/* @bdraco
 homeassistant/components/homekit_controller/* @Jc2k
 homeassistant/components/homematic/* @pvizeli @danielperna84
 homeassistant/components/homematicip_cloud/* @SukramJ
@@ -190,6 +194,7 @@ homeassistant/components/ipma/* @dgomes @abmantis
 homeassistant/components/ipp/* @ctalkington
 homeassistant/components/iqvia/* @bachya
 homeassistant/components/irish_rail_transport/* @ttroy50
+homeassistant/components/islamic_prayer_times/* @engrbm87
 homeassistant/components/izone/* @Swamp-Ig
 homeassistant/components/jewish_calendar/* @tsvi
 homeassistant/components/juicenet/* @jesserockz
@@ -236,7 +241,7 @@ homeassistant/components/modbus/* @adamchengtkc @janiversen
 homeassistant/components/monoprice/* @etsinko
 homeassistant/components/moon/* @fabaff
 homeassistant/components/mpd/* @fabaff
-homeassistant/components/mqtt/* @home-assistant/core
+homeassistant/components/mqtt/* @home-assistant/core @emontnemery
 homeassistant/components/msteams/* @peroyvind
 homeassistant/components/myq/* @bdraco
 homeassistant/components/mysensors/* @MartinHjelmare
@@ -269,17 +274,20 @@ homeassistant/components/ohmconnect/* @robbiet480
 homeassistant/components/ombi/* @larssont
 homeassistant/components/onboarding/* @home-assistant/core
 homeassistant/components/onewire/* @garbled1
+homeassistant/components/openerz/* @misialq
 homeassistant/components/opentherm_gw/* @mvn23
 homeassistant/components/openuv/* @bachya
 homeassistant/components/openweathermap/* @fabaff
 homeassistant/components/opnsense/* @mtreinish
 homeassistant/components/orangepi_gpio/* @pascallj
 homeassistant/components/oru/* @bvlaicu
+homeassistant/components/panasonic_viera/* @joogps
 homeassistant/components/panel_custom/* @home-assistant/frontend
 homeassistant/components/panel_iframe/* @home-assistant/frontend
 homeassistant/components/pcal9535a/* @Shulyaka
 homeassistant/components/persistent_notification/* @home-assistant/core
 homeassistant/components/philips_js/* @elupus
+homeassistant/components/pi4ioe5v9xxxx/* @antonverburg
 homeassistant/components/pi_hole/* @fabaff @johnluetke
 homeassistant/components/pilight/* @trekky12
 homeassistant/components/plaato/* @JohNan
@@ -288,7 +296,7 @@ homeassistant/components/plex/* @jjlawren
 homeassistant/components/plugwise/* @laetificat @CoMPaTech @bouwew
 homeassistant/components/plum_lightpad/* @ColinHarrington
 homeassistant/components/point/* @fredrike
-homeassistant/components/powerwall/* @bdraco
+homeassistant/components/powerwall/* @bdraco @jrester
 homeassistant/components/proxmoxve/* @k4ds3
 homeassistant/components/ps4/* @ktnrg45
 homeassistant/components/ptvsd/* @swamp-ig
@@ -311,7 +319,7 @@ homeassistant/components/rfxtrx/* @danielhiversen
 homeassistant/components/ring/* @balloob
 homeassistant/components/rmvtransport/* @cgtobi
 homeassistant/components/roku/* @ctalkington
-homeassistant/components/roomba/* @pschmitt
+homeassistant/components/roomba/* @pschmitt @cyr-ius @shenxn
 homeassistant/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
 homeassistant/components/salt/* @bjornorri
@@ -325,6 +333,7 @@ homeassistant/components/sense/* @kbickar
 homeassistant/components/sensibo/* @andrey-git
 homeassistant/components/sentry/* @dcramer
 homeassistant/components/serial/* @fabaff
+homeassistant/components/seven_segments/* @fabaff
 homeassistant/components/seventeentrack/* @bachya
 homeassistant/components/shell_command/* @home-assistant/core
 homeassistant/components/shiftr/* @fabaff
@@ -346,6 +355,7 @@ homeassistant/components/solarlog/* @Ernst79
 homeassistant/components/solax/* @squishykid
 homeassistant/components/soma/* @ratsept
 homeassistant/components/somfy/* @tetienne
+homeassistant/components/sonarr/* @ctalkington
 homeassistant/components/songpal/* @rytilahti
 homeassistant/components/sonos/* @amelchio
 homeassistant/components/spaceapi/* @fabaff
@@ -369,6 +379,7 @@ homeassistant/components/switchbot/* @danielhiversen
 homeassistant/components/switcher_kis/* @tomerfi
 homeassistant/components/switchmate/* @danielhiversen
 homeassistant/components/syncthru/* @nielstron
+homeassistant/components/synology_dsm/* @ProtoThis @Quentame
 homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
 homeassistant/components/tado/* @michaelarnauts @bdraco
@@ -409,6 +420,7 @@ homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes
 homeassistant/components/velbus/* @Cereal2nd @brefra
 homeassistant/components/velux/* @Julius2342
+homeassistant/components/vera/* @vangorra
 homeassistant/components/versasense/* @flamm3blemuff1n
 homeassistant/components/version/* @fabaff
 homeassistant/components/vesync/* @markperdue @webdjoe

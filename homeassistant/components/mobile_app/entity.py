@@ -103,4 +103,4 @@ class MobileAppEntity(Entity):
             return
 
         self._config = data
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

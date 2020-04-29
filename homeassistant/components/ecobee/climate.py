@@ -15,9 +15,9 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_IDLE,
     FAN_AUTO,
     FAN_ON,
-    HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_NONE,
@@ -64,7 +64,7 @@ ECOBEE_HVAC_TO_HASS = collections.OrderedDict(
     [
         ("heat", HVAC_MODE_HEAT),
         ("cool", HVAC_MODE_COOL),
-        ("auto", HVAC_MODE_AUTO),
+        ("auto", HVAC_MODE_HEAT_COOL),
         ("off", HVAC_MODE_OFF),
         ("auxHeatOnly", HVAC_MODE_HEAT),
     ]
@@ -259,7 +259,7 @@ class Thermostat(ClimateDevice):
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         self._name = self.thermostat["name"]
         self.vacation = None
-        self._last_active_hvac_mode = HVAC_MODE_AUTO
+        self._last_active_hvac_mode = HVAC_MODE_HEAT_COOL
 
         self._operation_list = []
         if (
@@ -270,7 +270,7 @@ class Thermostat(ClimateDevice):
         if self.thermostat["settings"]["coolStages"]:
             self._operation_list.append(HVAC_MODE_COOL)
         if len(self._operation_list) == 2:
-            self._operation_list.insert(0, HVAC_MODE_AUTO)
+            self._operation_list.insert(0, HVAC_MODE_HEAT_COOL)
         self._operation_list.append(HVAC_MODE_OFF)
 
         self._preset_modes = {
@@ -347,21 +347,21 @@ class Thermostat(ClimateDevice):
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
-        if self.hvac_mode == HVAC_MODE_AUTO:
+        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
             return self.thermostat["runtime"]["desiredHeat"] / 10.0
         return None
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
-        if self.hvac_mode == HVAC_MODE_AUTO:
+        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
             return self.thermostat["runtime"]["desiredCool"] / 10.0
         return None
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self.hvac_mode == HVAC_MODE_AUTO:
+        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
             return None
         if self.hvac_mode == HVAC_MODE_HEAT:
             return self.thermostat["runtime"]["desiredHeat"] / 10.0
@@ -556,7 +556,7 @@ class Thermostat(ClimateDevice):
 
     def set_fan_mode(self, fan_mode):
         """Set the fan mode.  Valid values are "on" or "auto"."""
-        if fan_mode.lower() != STATE_ON and fan_mode.lower() != HVAC_MODE_AUTO:
+        if fan_mode.lower() not in (FAN_ON, FAN_AUTO):
             error = "Invalid fan_mode value:  Valid values are 'on' or 'auto'"
             _LOGGER.error(error)
             return
@@ -599,7 +599,7 @@ class Thermostat(ClimateDevice):
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
 
-        if self.hvac_mode == HVAC_MODE_AUTO and (
+        if self.hvac_mode == HVAC_MODE_HEAT_COOL and (
             low_temp is not None or high_temp is not None
         ):
             self.set_auto_temp_hold(low_temp, high_temp)

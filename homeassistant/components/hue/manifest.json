@@ -21,7 +21,6 @@
   "homekit": {
     "models": ["BSB002"]
   },
-  "dependencies": [],
   "codeowners": ["@balloob"],
   "quality_scale": "platinum"
 }

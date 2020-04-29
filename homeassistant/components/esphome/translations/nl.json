@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "ESP is al geconfigureerd"
+        },
+        "error": {
+            "connection_error": "Kan geen verbinding maken met ESP. Zorg ervoor dat uw YAML-bestand een regel 'api:' bevat.",
+            "invalid_password": "Ongeldig wachtwoord!",
+            "resolve_error": "Kan het adres van de ESP niet vinden. Als deze fout aanhoudt, stel dan een statisch IP-adres in: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+        },
+        "flow_title": "ESPHome: {name}",
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Wachtwoord"
+                },
+                "description": "Voer het wachtwoord in dat u in uw configuratie heeft ingesteld voor {name}.",
+                "title": "Voer wachtwoord in"
+            },
+            "discovery_confirm": {
+                "description": "Wil je de ESPHome-node `{name}` toevoegen aan de Home Assistant?",
+                "title": "ESPHome node ontdekt"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Poort"
+                },
+                "description": "Voer de verbindingsinstellingen in van uw [ESPHome](https://esphomelib.com/) node.",
+                "title": "[%key:component::esphome::title%]"
+            }
+        }
+    }
+}
