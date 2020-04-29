@@ -24,7 +24,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_COMMAND,
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -66,8 +65,6 @@ SUPPORT_SQUEEZEBOX = (
     | SUPPORT_CLEAR_PLAYLIST
 )
 
-MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -84,19 +81,6 @@ KNOWN_SERVERS = "squeezebox_known_servers"
 ATTR_PARAMETERS = "parameters"
 
 ATTR_OTHER_PLAYER = "other_player"
-
-SQUEEZEBOX_CALL_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
-    {
-        vol.Required(ATTR_COMMAND): cv.string,
-        vol.Optional(ATTR_PARAMETERS): vol.All(
-            cv.ensure_list, vol.Length(min=1), [cv.string]
-        ),
-    }
-)
-
-SQUEEZEBOX_SYNC_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
-    {vol.Required(ATTR_OTHER_PLAYER): cv.string}
-)
 
 ATTR_TO_PROPERTY = [
     ATTR_QUERY_RESULT,
@@ -155,15 +139,29 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
-        SERVICE_CALL_METHOD, SQUEEZEBOX_CALL_METHOD_SCHEMA, "async_call_method",
+        SERVICE_CALL_METHOD,
+        {
+            vol.Required(ATTR_COMMAND): cv.string,
+            vol.Optional(ATTR_PARAMETERS): vol.All(
+                cv.ensure_list, vol.Length(min=1), [cv.string]
+            ),
+        },
+        "async_call_method",
     )
 
     platform.async_register_entity_service(
-        SERVICE_CALL_QUERY, SQUEEZEBOX_CALL_METHOD_SCHEMA, "async_call_query",
+        SERVICE_CALL_QUERY,
+        {
+            vol.Required(ATTR_COMMAND): cv.string,
+            vol.Optional(ATTR_PARAMETERS): vol.All(
+                cv.ensure_list, vol.Length(min=1), [cv.string]
+            ),
+        },
+        "async_call_query",
     )
 
     platform.async_register_entity_service(
-        SERVICE_SYNC, SQUEEZEBOX_SYNC_SCHEMA, "async_sync",
+        SERVICE_SYNC, {vol.Required(ATTR_OTHER_PLAYER): cv.string}, "async_sync",
     )
 
     platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unsync")
@@ -298,8 +296,6 @@ class SqueezeBoxDevice(MediaPlayerEntity):
         for player in self._player.sync_group:
             if player in player_ids:
                 sync_group.append(player_ids[player])
-            else:
-                _LOGGER.debug("Squeezebox %s in sync_group but not an entity.", player)
         return sync_group
 
     @property
