@@ -87,7 +87,7 @@ class PioneerDevice(MediaPlayerDevice):
         self._muted = False
         self._selected_source = ""
         self._source_name_to_number = sources
-        self._source_number_to_name = dict((v, k) for k, v in sources.items())
+        self._source_number_to_name = {v: k for k, v in sources.items()}
 
     @classmethod
     def telnet_request(cls, telnet, command, expected_prefix):
@@ -142,7 +142,7 @@ class PioneerDevice(MediaPlayerDevice):
         # Build the source name dictionaries if necessary
         if not self._source_name_to_number:
             for i in range(MAX_SOURCE_NUMBERS):
-                result = self.telnet_request(telnet, "?RGB" + str(i).zfill(2), "RGB")
+                result = self.telnet_request(telnet, f"?RGB{str(i).zfill(2)}", "RGB")
 
                 if not result:
                     continue
@@ -225,7 +225,7 @@ class PioneerDevice(MediaPlayerDevice):
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         # 60dB max
-        self.telnet_command(str(round(volume * MAX_VOLUME)).zfill(3) + "VL")
+        self.telnet_command(f"{round(volume * MAX_VOLUME):03}VL")
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
@@ -237,4 +237,4 @@ class PioneerDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        self.telnet_command(self._source_name_to_number.get(source) + "FN")
+        self.telnet_command(f"{self._source_name_to_number.get(source)}FN")

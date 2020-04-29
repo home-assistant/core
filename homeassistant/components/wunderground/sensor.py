@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
+    DEGREE,
     IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_FEET,
     LENGTH_INCHES,
@@ -217,9 +218,9 @@ class WUHourlyForecastSensorConfig(WUSensorConfig):
         :param field: field name to use as value
         """
         super().__init__(
-            friendly_name=lambda wu: "{} {}".format(
-                wu.data["hourly_forecast"][period]["FCTTIME"]["weekday_name_abbrev"],
-                wu.data["hourly_forecast"][period]["FCTTIME"]["civil"],
+            friendly_name=lambda wu: (
+                f"{wu.data['hourly_forecast'][period]['FCTTIME']['weekday_name_abbrev']} "
+                f"{wu.data['hourly_forecast'][period]['FCTTIME']['civil']}"
             ),
             feature="hourly",
             value=lambda wu: wu.data["hourly_forecast"][period][field],
@@ -329,7 +330,7 @@ class WUAlertsSensorConfig(WUSensorConfig):
             for alert in ALERTS_ATTRS:
                 if data[alert]:
                     if multiple_alerts:
-                        dkey = alert.capitalize() + "_" + data["type"]
+                        dkey = f"{alert.capitalize()}_{data['type']}"
                     else:
                         dkey = alert.capitalize()
                     attrs[dkey] = data[alert]
@@ -456,7 +457,7 @@ SENSOR_TYPES = {
     ),
     "weather": WUCurrentConditionsSensorConfig("Weather Summary", "weather", None),
     "wind_degrees": WUCurrentConditionsSensorConfig(
-        "Wind Degrees", "wind_degrees", "mdi:weather-windy", "°"
+        "Wind Degrees", "wind_degrees", "mdi:weather-windy", DEGREE
     ),
     "wind_dir": WUCurrentConditionsSensorConfig(
         "Wind Direction", "wind_dir", "mdi:weather-windy"
@@ -477,8 +478,9 @@ SENSOR_TYPES = {
         "Wind Summary", "wind_string", "mdi:weather-windy"
     ),
     "temp_high_record_c": WUAlmanacSensorConfig(
-        lambda wu: "High Temperature Record ({})".format(
-            wu.data["almanac"]["temp_high"]["recordyear"]
+        lambda wu: (
+            f"High Temperature Record "
+            f"({wu.data['almanac']['temp_high']['recordyear']})"
         ),
         "temp_high",
         "record",
@@ -487,8 +489,9 @@ SENSOR_TYPES = {
         "mdi:thermometer",
     ),
     "temp_high_record_f": WUAlmanacSensorConfig(
-        lambda wu: "High Temperature Record ({})".format(
-            wu.data["almanac"]["temp_high"]["recordyear"]
+        lambda wu: (
+            f"High Temperature Record "
+            f"({wu.data['almanac']['temp_high']['recordyear']})"
         ),
         "temp_high",
         "record",
@@ -497,8 +500,9 @@ SENSOR_TYPES = {
         "mdi:thermometer",
     ),
     "temp_low_record_c": WUAlmanacSensorConfig(
-        lambda wu: "Low Temperature Record ({})".format(
-            wu.data["almanac"]["temp_low"]["recordyear"]
+        lambda wu: (
+            f"Low Temperature Record "
+            f"({wu.data['almanac']['temp_low']['recordyear']})"
         ),
         "temp_low",
         "record",
@@ -507,8 +511,9 @@ SENSOR_TYPES = {
         "mdi:thermometer",
     ),
     "temp_low_record_f": WUAlmanacSensorConfig(
-        lambda wu: "Low Temperature Record ({})".format(
-            wu.data["almanac"]["temp_low"]["recordyear"]
+        lambda wu: (
+            f"Low Temperature Record "
+            f"({wu.data['almanac']['temp_low']['recordyear']})"
         ),
         "temp_low",
         "record",

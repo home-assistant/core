@@ -40,18 +40,16 @@ CANARY_COMPONENTS = ["alarm_control_panel", "camera", "sensor"]
 def setup(hass, config):
     """Set up the Canary component."""
     conf = config[DOMAIN]
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
-    timeout = conf.get(CONF_TIMEOUT)
+    username = conf[CONF_USERNAME]
+    password = conf[CONF_PASSWORD]
+    timeout = conf[CONF_TIMEOUT]
 
     try:
         hass.data[DATA_CANARY] = CanaryData(username, password, timeout)
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Canary service: %s", str(ex))
         hass.components.persistent_notification.create(
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
+            f"Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )

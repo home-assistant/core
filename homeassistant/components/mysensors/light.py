@@ -8,7 +8,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_WHITE_VALUE,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
@@ -34,7 +34,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class MySensorsLight(mysensors.device.MySensorsEntity, Light):
+class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
     """Representation of a MySensors Light child node."""
 
     def __init__(self, *args):
@@ -149,7 +149,7 @@ class MySensorsLight(mysensors.device.MySensorsEntity, Light):
             # optimistically assume that light has changed state
             self._state = False
             self._values[value_type] = STATE_OFF
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @callback
     def _async_update_light(self):
@@ -189,7 +189,7 @@ class MySensorsLightDimmer(MySensorsLight):
         self._turn_on_light()
         self._turn_on_dimmer(**kwargs)
         if self.gateway.optimistic:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_update(self):
         """Update the controller with the latest value from a sensor."""
@@ -215,7 +215,7 @@ class MySensorsLightRGB(MySensorsLight):
         self._turn_on_dimmer(**kwargs)
         self._turn_on_rgb_and_w("%02x%02x%02x", **kwargs)
         if self.gateway.optimistic:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_update(self):
         """Update the controller with the latest value from a sensor."""
@@ -242,4 +242,4 @@ class MySensorsLightRGBW(MySensorsLightRGB):
         self._turn_on_dimmer(**kwargs)
         self._turn_on_rgb_and_w("%02x%02x%02x%02x", **kwargs)
         if self.gateway.optimistic:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

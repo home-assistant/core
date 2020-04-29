@@ -3,6 +3,5 @@
   "name": "DSMR Slimme Meter",
   "documentation": "https://www.home-assistant.io/integrations/dsmr",
   "requirements": ["dsmr_parser==0.18"],
-  "dependencies": [],
   "codeowners": []
 }

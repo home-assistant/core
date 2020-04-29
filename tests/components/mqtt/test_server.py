@@ -2,12 +2,18 @@
 from unittest.mock import MagicMock, Mock
 
 from asynctest import CoroutineMock, patch
+import pytest
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant, mock_coro
+
+
+@pytest.fixture(autouse=True)
+def inject_fixture(hass_storage):
+    """Inject pytest fixtures."""
 
 
 class TestMQTT:

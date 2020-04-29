@@ -2,7 +2,6 @@
   "domain": "default_config",
   "name": "Default Config",
   "documentation": "https://www.home-assistant.io/integrations/default_config",
-  "requirements": [],
   "dependencies": [
     "automation",
     "cloud",

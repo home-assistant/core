@@ -19,7 +19,7 @@ from homeassistant.components.light import (
     VALID_TRANSITION,
     is_on,
 )
-from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_LIGHTS,
@@ -168,7 +168,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     hass.services.async_register(DOMAIN, service_name, async_update)
 
 
-class FluxSwitch(SwitchDevice, RestoreEntity):
+class FluxSwitch(SwitchEntity, RestoreEntity):
     """Representation of a Flux switch."""
 
     def __init__(
@@ -233,7 +233,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
         # Make initial update
         await self.async_flux_update()
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn off flux."""
@@ -241,7 +241,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
             self.unsub_tracker()
             self.unsub_tracker = None
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_flux_update(self, utcnow=None):
         """Update all the lights using flux."""

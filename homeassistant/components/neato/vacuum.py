@@ -22,7 +22,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_START,
     SUPPORT_STATE,
     SUPPORT_STOP,
-    StateVacuumDevice,
+    StateVacuumEntity,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 import homeassistant.helpers.config_validation as cv
@@ -126,7 +126,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class NeatoConnectedVacuum(StateVacuumDevice):
+class NeatoConnectedVacuum(StateVacuumEntity):
     """Representation of a Neato Connected Vacuum."""
 
     def __init__(self, neato, robot, mapdata, persistent_maps):
@@ -199,16 +199,15 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             if robot_alert is None:
                 self._clean_state = STATE_CLEANING
                 self._status_state = (
-                    MODE.get(self._state["cleaning"]["mode"])
-                    + " "
-                    + ACTION.get(self._state["action"])
+                    f"{MODE.get(self._state['cleaning']['mode'])} "
+                    f"{ACTION.get(self._state['action'])}"
                 )
                 if (
                     "boundary" in self._state["cleaning"]
                     and "name" in self._state["cleaning"]["boundary"]
                 ):
                     self._status_state += (
-                        " " + self._state["cleaning"]["boundary"]["name"]
+                        f" {self._state['cleaning']['boundary']['name']}"
                     )
             else:
                 self._status_state = robot_alert

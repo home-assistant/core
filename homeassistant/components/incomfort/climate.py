@@ -1,7 +1,7 @@
 """Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
 from typing import Any, Dict, List, Optional
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateDevice
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     SUPPORT_TARGET_TEMPERATURE,
@@ -24,7 +24,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class InComfortClimate(IncomfortChild, ClimateDevice):
+class InComfortClimate(IncomfortChild, ClimateEntity):
     """Representation of an InComfort/InTouch climate device."""
 
     def __init__(self, client, heater, room) -> None:
@@ -90,4 +90,3 @@ class InComfortClimate(IncomfortChild, ClimateDevice):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        pass

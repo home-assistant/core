@@ -252,7 +252,6 @@ class AlexaEntity:
 
         Raises _UnsupportedInterface.
         """
-        pass
 
     def interfaces(self):
         """Return a list of supported interfaces.
@@ -268,8 +267,7 @@ class AlexaEntity:
             if not interface.properties_proactively_reported():
                 continue
 
-            for prop in interface.serialize_properties():
-                yield prop
+            yield from interface.serialize_properties()
 
     def serialize_discovery(self):
         """Serialize the entity for discovery."""
@@ -283,10 +281,12 @@ class AlexaEntity:
         }
 
         locale = self.config.locale
-        capabilities = []
-        for i in self.interfaces():
-            if locale in i.supported_locales:
-                capabilities.append(i.serialize_discovery())
+        capabilities = [
+            i.serialize_discovery()
+            for i in self.interfaces()
+            if locale in i.supported_locales
+        ]
+
         result["capabilities"] = capabilities
 
         return result
@@ -791,19 +791,18 @@ class CameraCapabilities(AlexaEntity):
         yield Alexa(self.hass)
 
     def _check_requirements(self):
-        """Check the hass URL for HTTPS scheme and port 443."""
+        """Check the hass URL for HTTPS scheme."""
         if "stream" not in self.hass.config.components:
-            _LOGGER.error(
+            _LOGGER.debug(
                 "%s requires stream component for AlexaCameraStreamController",
                 self.entity_id,
             )
             return False
 
         url = urlparse(network.async_get_external_url(self.hass))
-        if url.scheme != "https" or (url.port is not None and url.port != 443):
-            _LOGGER.error(
-                "%s requires HTTPS support on port 443 for AlexaCameraStreamController",
-                self.entity_id,
+        if url.scheme != "https":
+            _LOGGER.debug(
+                "%s requires HTTPS for AlexaCameraStreamController", self.entity_id
             )
             return False
 

@@ -13,7 +13,7 @@ from songpal import (
 )
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -117,7 +117,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class SongpalDevice(MediaPlayerDevice):
+class SongpalDevice(MediaPlayerEntity):
     """Class representing a Songpal device."""
 
     def __init__(self, name, endpoint, poll=False):
@@ -159,21 +159,21 @@ class SongpalDevice(MediaPlayerDevice):
             _LOGGER.debug("Volume changed: %s", volume)
             self._volume = volume.volume
             self._is_muted = volume.mute
-            await self.async_update_ha_state()
+            self.async_write_ha_state()
 
         async def _source_changed(content: ContentChange):
             _LOGGER.debug("Source changed: %s", content)
             if content.is_input:
                 self._active_source = self._sources[content.source]
                 _LOGGER.debug("New active source: %s", self._active_source)
-                await self.async_update_ha_state()
+                self.async_write_ha_state()
             else:
                 _LOGGER.debug("Got non-handled content change: %s", content)
 
         async def _power_changed(power: PowerChange):
             _LOGGER.debug("Power changed: %s", power)
             self._state = power.status
-            await self.async_update_ha_state()
+            self.async_write_ha_state()
 
         async def _try_reconnect(connect: ConnectChange):
             _LOGGER.error(
@@ -181,7 +181,7 @@ class SongpalDevice(MediaPlayerDevice):
             )
             self._available = False
             self.dev.clear_notification_callbacks()
-            await self.async_update_ha_state()
+            self.async_write_ha_state()
 
             # Try to reconnect forever, a successful reconnect will initialize
             # the websocket connection again.

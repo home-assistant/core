@@ -7,6 +7,5 @@
     "adafruit-blinka==3.9.0",
     "adafruit-circuitpython-mcp230xx==2.2.2"
   ],
-  "dependencies": [],
   "codeowners": ["@jardiamj"]
 }

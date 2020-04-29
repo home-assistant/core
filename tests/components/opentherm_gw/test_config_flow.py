@@ -1,8 +1,8 @@
 """Test the Opentherm Gateway config flow."""
 import asyncio
-from unittest.mock import patch
 
-from pyotgw import OTGW_ABOUT
+from asynctest import patch
+from pyotgw.vars import OTGW_ABOUT
 from serial import SerialException
 
 from homeassistant import config_entries, data_entry_flow, setup

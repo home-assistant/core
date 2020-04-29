@@ -594,9 +594,9 @@ def _verify(
     state = hass.states.get(_TEST_FAN)
     attributes = state.attributes
     assert state.state == expected_state
-    assert attributes.get(ATTR_SPEED, None) == expected_speed
-    assert attributes.get(ATTR_OSCILLATING, None) == expected_oscillating
-    assert attributes.get(ATTR_DIRECTION, None) == expected_direction
+    assert attributes.get(ATTR_SPEED) == expected_speed
+    assert attributes.get(ATTR_OSCILLATING) == expected_oscillating
+    assert attributes.get(ATTR_DIRECTION) == expected_direction
 
 
 async def _register_components(hass, speed_list=None):

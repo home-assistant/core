@@ -156,7 +156,7 @@ class StationPriceSensor(Entity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return "{} {}".format(self._station_data.get_station_name(), self._fuel_type)
+        return f"{self._station_data.get_station_name()} {self._fuel_type}"
 
     @property
     def state(self) -> Optional[float]:

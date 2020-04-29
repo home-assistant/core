@@ -9,6 +9,7 @@ from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_C
 from homeassistant.components.vizio.config_flow import _get_config_schema
 from homeassistant.components.vizio.const import (
     CONF_APPS,
+    CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
     CONF_INCLUDE,
     CONF_VOLUME_STEP,
     DEFAULT_NAME,
@@ -16,7 +17,12 @@ from homeassistant.components.vizio.const import (
     DOMAIN,
     VIZIO_SCHEMA,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_IMPORT,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+)
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
@@ -45,6 +51,7 @@ from .const import (
     NAME2,
     UNIQUE_ID,
     VOLUME_STEP,
+    ZEROCONF_HOST,
 )
 
 from tests.common import MockConfigEntry
@@ -156,6 +163,39 @@ async def test_tv_options_flow_with_apps(hass: HomeAssistantType) -> None:
     entry.add_to_hass(hass)
 
     assert not entry.options
+
+    result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    options = {CONF_VOLUME_STEP: VOLUME_STEP}
+    options.update(MOCK_INCLUDE_APPS)
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input=options
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == ""
+    assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
+    assert CONF_APPS in result["data"]
+    assert result["data"][CONF_APPS] == {CONF_INCLUDE: [CURRENT_APP]}
+
+
+async def test_tv_options_flow_start_with_volume(hass: HomeAssistantType) -> None:
+    """Test options config flow for TV with providing apps option after providing volume step in initial config."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_USER_VALID_TV_CONFIG,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+    )
+    entry.add_to_hass(hass)
+
+    assert entry.options
+    assert entry.options == {CONF_VOLUME_STEP: VOLUME_STEP}
+    assert CONF_APPS not in entry.options
+    assert CONF_APPS_TO_INCLUDE_OR_EXCLUDE not in entry.options
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
 
@@ -347,6 +387,26 @@ async def test_user_invalid_pin(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "pair_tv"
     assert result["errors"] == {CONF_PIN: "complete_pairing_failed"}
+
+
+async def test_user_ignore(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_setup: pytest.fixture,
+) -> None:
+    """Test user config flow doesn't throw an error when there's an existing ignored source."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_SPEAKER_CONFIG,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        source=SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_SPEAKER_CONFIG
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 async def test_import_flow_minimum_fields(
@@ -645,6 +705,29 @@ async def test_import_error(
     assert len(vizio_log_list) == 1
 
 
+async def test_import_ignore(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_setup: pytest.fixture,
+) -> None:
+    """Test import config flow doesn't throw an error when there's an existing ignored source."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_SPEAKER_CONFIG,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        source=SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG),
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+
 async def test_zeroconf_flow(
     hass: HomeAssistantType,
     vizio_connect: pytest.fixture,
@@ -722,3 +805,51 @@ async def test_zeroconf_dupe_fail(
     # Flow should abort because device is already setup
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_in_progress"
+
+
+async def test_zeroconf_ignore(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_setup: pytest.fixture,
+    vizio_guess_device_type: pytest.fixture,
+) -> None:
+    """Test zeroconf discovery doesn't throw an error when there's an existing ignored source."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_SPEAKER_CONFIG,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        source=SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+
+async def test_zeroconf_abort_when_ignored(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_setup: pytest.fixture,
+    vizio_guess_device_type: pytest.fixture,
+) -> None:
+    """Test zeroconf discovery aborts when the same host has been ignored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_SPEAKER_CONFIG,
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        source=SOURCE_IGNORE,
+        unique_id=ZEROCONF_HOST,
+    )
+    entry.add_to_hass(hass)
+
+    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"

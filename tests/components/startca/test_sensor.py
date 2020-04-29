@@ -1,7 +1,7 @@
 """Tests for the Start.ca sensor platform."""
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.startca.sensor import StartcaData
-from homeassistant.const import DATA_GIGABYTES, UNIT_PERCENTAGE
+from homeassistant.const import DATA_GIGABYTES, HTTP_NOT_FOUND, UNIT_PERCENTAGE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
@@ -197,7 +197,9 @@ async def test_unlimited_setup(hass, aioclient_mock):
 
 async def test_bad_return_code(hass, aioclient_mock):
     """Test handling a return code that isn't HTTP OK."""
-    aioclient_mock.get("https://www.start.ca/support/usage/api?key=NOTAKEY", status=404)
+    aioclient_mock.get(
+        "https://www.start.ca/support/usage/api?key=NOTAKEY", status=HTTP_NOT_FOUND
+    )
 
     scd = StartcaData(hass.loop, async_get_clientsession(hass), "NOTAKEY", 400)
 

@@ -1,0 +1,17 @@
+{
+    "state": {
+        "_": {
+            "closed": "Closed",
+            "home": "Home",
+            "locked": "Locked",
+            "not_home": "Away",
+            "off": "Off",
+            "ok": "OK",
+            "on": "On",
+            "open": "Open",
+            "problem": "Problem",
+            "unlocked": "Unlocked"
+        }
+    },
+    "title": "Group"
+}

@@ -316,7 +316,7 @@ class TraccarScanner:
                     None,
                 )
                 self._hass.bus.async_fire(
-                    "traccar_" + self._event_types.get(event["type"]),
+                    f"traccar_{self._event_types.get(event['type'])}",
                     {
                         "device_traccar_id": event["deviceId"],
                         "device_name": device_name,

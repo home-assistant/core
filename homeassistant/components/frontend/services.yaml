@@ -5,7 +5,7 @@ set_theme:
   fields:
     name:
       description: Name of a predefined theme or 'default'.
-      example: 'light'
+      example: "light"
 
 reload_themes:
   description: Reload themes from yaml configuration.

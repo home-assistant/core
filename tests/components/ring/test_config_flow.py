@@ -1,5 +1,5 @@
 """Test the Ring config flow."""
-from unittest.mock import Mock, patch
+from asynctest import Mock, patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.ring import DOMAIN

@@ -3,7 +3,7 @@
   "name": "UPnP",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/upnp",
-  "requirements": ["async-upnp-client==0.14.12"],
+  "requirements": ["async-upnp-client==0.14.13"],
   "dependencies": [],
   "codeowners": ["@StevenLooman"]
 }

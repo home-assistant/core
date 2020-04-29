@@ -4,7 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/freebox",
   "requirements": ["aiofreepybox==0.0.8"],
-  "dependencies": [],
   "after_dependencies": ["discovery"],
   "codeowners": ["@snoof85", "@Quentame"]
 }

@@ -1,17 +1,16 @@
 """Test service helpers."""
-import asyncio
 from collections import OrderedDict
 from copy import deepcopy
 import unittest
-from unittest.mock import Mock, patch
 
+from asynctest import CoroutineMock, Mock, patch
 import pytest
 import voluptuous as vol
 
 # To prevent circular import when running just this file
 from homeassistant import core as ha, exceptions
 from homeassistant.auth.permissions import PolicyPermissions
-import homeassistant.components  # noqa: F401
+import homeassistant.components  # noqa: F401, pylint: disable=unused-import
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
@@ -31,7 +30,6 @@ from homeassistant.setup import async_setup_component
 from tests.common import (
     MockEntity,
     get_test_home_assistant,
-    mock_coro,
     mock_device_registry,
     mock_registry,
     mock_service,
@@ -41,10 +39,7 @@ from tests.common import (
 @pytest.fixture
 def mock_handle_entity_call():
     """Mock service platform call."""
-    with patch(
-        "homeassistant.helpers.service._handle_entity_call",
-        side_effect=lambda *args: mock_coro(),
-    ) as mock_call:
+    with patch("homeassistant.helpers.service._handle_entity_call") as mock_call:
         yield mock_call
 
 
@@ -144,10 +139,10 @@ class TestServiceHelpers(unittest.TestCase):
         service.call_from_config(self.hass, config)
         self.hass.block_till_done()
 
-        assert "goodbye" == self.calls[0].data["hello"]
-        assert "complex" == self.calls[0].data["data"]["value"]
-        assert "simple" == self.calls[0].data["data"]["simple"]
-        assert "list" == self.calls[0].data["list"][0]
+        assert self.calls[0].data["hello"] == "goodbye"
+        assert self.calls[0].data["data"]["value"] == "complex"
+        assert self.calls[0].data["data"]["simple"] == "simple"
+        assert self.calls[0].data["list"][0] == "list"
 
     def test_passing_variables_to_templates(self):
         """Test passing variables to templates."""
@@ -167,7 +162,7 @@ class TestServiceHelpers(unittest.TestCase):
         )
         self.hass.block_till_done()
 
-        assert "goodbye" == self.calls[0].data["hello"]
+        assert self.calls[0].data["hello"] == "goodbye"
 
     def test_bad_template(self):
         """Test passing bad template."""
@@ -223,13 +218,13 @@ class TestServiceHelpers(unittest.TestCase):
     def test_fail_silently_if_no_service(self, mock_log):
         """Test failing if service is missing."""
         service.call_from_config(self.hass, None)
-        assert 1 == mock_log.call_count
+        assert mock_log.call_count == 1
 
         service.call_from_config(self.hass, {})
-        assert 2 == mock_log.call_count
+        assert mock_log.call_count == 2
 
         service.call_from_config(self.hass, {"service": "invalid"})
-        assert 3 == mock_log.call_count
+        assert mock_log.call_count == 3
 
 
 async def test_extract_entity_ids(hass):
@@ -286,13 +281,12 @@ async def test_extract_entity_ids_from_area(hass, area_mock):
     )
 
 
-@asyncio.coroutine
-def test_async_get_all_descriptions(hass):
+async def test_async_get_all_descriptions(hass):
     """Test async_get_all_descriptions."""
     group = hass.components.group
     group_config = {group.DOMAIN: {}}
-    yield from async_setup_component(hass, group.DOMAIN, group_config)
-    descriptions = yield from service.async_get_all_descriptions(hass)
+    await async_setup_component(hass, group.DOMAIN, group_config)
+    descriptions = await service.async_get_all_descriptions(hass)
 
     assert len(descriptions) == 1
 
@@ -301,8 +295,8 @@ def test_async_get_all_descriptions(hass):
 
     logger = hass.components.logger
     logger_config = {logger.DOMAIN: {}}
-    yield from async_setup_component(hass, logger.DOMAIN, logger_config)
-    descriptions = yield from service.async_get_all_descriptions(hass)
+    await async_setup_component(hass, logger.DOMAIN, logger_config)
+    descriptions = await service.async_get_all_descriptions(hass)
 
     assert len(descriptions) == 2
 
@@ -312,7 +306,7 @@ def test_async_get_all_descriptions(hass):
 
 async def test_call_with_required_features(hass, mock_entities):
     """Test service calls invoked only if entity has required feautres."""
-    test_service_mock = Mock(return_value=mock_coro())
+    test_service_mock = CoroutineMock(return_value=None)
     await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
@@ -376,11 +370,9 @@ async def test_call_context_target_all(hass, mock_handle_entity_call, mock_entit
     """Check we only target allowed entities if targeting all."""
     with patch(
         "homeassistant.auth.AuthManager.async_get_user",
-        return_value=mock_coro(
-            Mock(
-                permissions=PolicyPermissions(
-                    {"entities": {"entity_ids": {"light.kitchen": True}}}, None
-                )
+        return_value=Mock(
+            permissions=PolicyPermissions(
+                {"entities": {"entity_ids": {"light.kitchen": True}}}, None
             )
         ),
     ):
@@ -406,11 +398,9 @@ async def test_call_context_target_specific(
     """Check targeting specific entities."""
     with patch(
         "homeassistant.auth.AuthManager.async_get_user",
-        return_value=mock_coro(
-            Mock(
-                permissions=PolicyPermissions(
-                    {"entities": {"entity_ids": {"light.kitchen": True}}}, None
-                )
+        return_value=Mock(
+            permissions=PolicyPermissions(
+                {"entities": {"entity_ids": {"light.kitchen": True}}}, None
             )
         ),
     ):
@@ -437,7 +427,7 @@ async def test_call_context_target_specific_no_auth(
     with pytest.raises(exceptions.Unauthorized) as err:
         with patch(
             "homeassistant.auth.AuthManager.async_get_user",
-            return_value=mock_coro(Mock(permissions=PolicyPermissions({}, None))),
+            return_value=Mock(permissions=PolicyPermissions({}, None)),
         ):
             await service.entity_service_call(
                 hass,
@@ -608,7 +598,7 @@ async def test_domain_control_unknown(hass, mock_entities):
 
     with patch(
         "homeassistant.helpers.entity_registry.async_get_registry",
-        return_value=mock_coro(Mock(entities=mock_entities)),
+        return_value=Mock(entities=mock_entities),
     ):
         protected_mock_service = hass.helpers.service.verify_domain_control(
             "test_domain"

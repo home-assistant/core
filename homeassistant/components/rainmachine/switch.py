@@ -4,7 +4,7 @@ import logging
 
 from regenmaschine.errors import RequestError
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import ATTR_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -111,7 +111,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class RainMachineSwitch(RainMachineEntity, SwitchDevice):
+class RainMachineSwitch(RainMachineEntity, SwitchEntity):
     """A class to represent a generic RainMachine switch."""
 
     def __init__(self, rainmachine, switch_data):
@@ -142,7 +142,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
     @property
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return "{0}_{1}_{2}".format(
+        return "{}_{}_{}".format(
             self.rainmachine.device_mac.replace(":", ""),
             self._switch_type,
             self._rainmachine_entity_id,
@@ -188,7 +188,7 @@ class RainMachineProgram(RainMachineSwitch):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._dispatcher_handlers.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, PROGRAM_UPDATE_TOPIC, self._update_state
             )
@@ -219,7 +219,7 @@ class RainMachineProgram(RainMachineSwitch):
 
         try:
             next_run = datetime.strptime(
-                "{0} {1}".format(
+                "{} {}".format(
                     self._switch_data["nextRun"], self._switch_data["startTime"]
                 ),
                 "%Y-%m-%d %H:%M",
@@ -248,12 +248,12 @@ class RainMachineZone(RainMachineSwitch):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._dispatcher_handlers.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, PROGRAM_UPDATE_TOPIC, self._update_state
             )
         )
-        self._dispatcher_handlers.append(
+        self.async_on_remove(
             async_dispatcher_connect(self.hass, ZONE_UPDATE_TOPIC, self._update_state)
         )
 

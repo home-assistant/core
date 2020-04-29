@@ -58,17 +58,17 @@ class PushoverNotificationService(BaseNotificationService):
         # Extract params from data dict
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = dict(kwargs.get(ATTR_DATA) or {})
-        url = data.get(ATTR_URL, None)
-        url_title = data.get(ATTR_URL_TITLE, None)
-        priority = data.get(ATTR_PRIORITY, None)
-        retry = data.get(ATTR_RETRY, None)
-        expire = data.get(ATTR_EXPIRE, None)
-        callback_url = data.get(ATTR_CALLBACK_URL, None)
-        timestamp = data.get(ATTR_TIMESTAMP, None)
-        sound = data.get(ATTR_SOUND, None)
+        url = data.get(ATTR_URL)
+        url_title = data.get(ATTR_URL_TITLE)
+        priority = data.get(ATTR_PRIORITY)
+        retry = data.get(ATTR_RETRY)
+        expire = data.get(ATTR_EXPIRE)
+        callback_url = data.get(ATTR_CALLBACK_URL)
+        timestamp = data.get(ATTR_TIMESTAMP)
+        sound = data.get(ATTR_SOUND)
         html = 1 if data.get(ATTR_HTML, False) else 0
 
-        image = data.get(ATTR_ATTACHMENT, None)
+        image = data.get(ATTR_ATTACHMENT)
         # Check for attachment
         if image is not None:
             # Only allow attachments from whitelisted paths, check valid path

@@ -5,61 +5,61 @@ turn_off:
   fields:
     entity_id:
       description: Entity id.
-      example: 'camera.living_room'
+      example: "camera.living_room"
 
 turn_on:
   description: Turn on camera.
   fields:
     entity_id:
       description: Entity id.
-      example: 'camera.living_room'
+      example: "camera.living_room"
 
 enable_motion_detection:
   description: Enable the motion detection in a camera.
   fields:
     entity_id:
       description: Name(s) of entities to enable motion detection.
-      example: 'camera.living_room_camera'
+      example: "camera.living_room_camera"
 
 disable_motion_detection:
   description: Disable the motion detection in a camera.
   fields:
     entity_id:
       description: Name(s) of entities to disable motion detection.
-      example: 'camera.living_room_camera'
+      example: "camera.living_room_camera"
 
 snapshot:
   description: Take a snapshot from a camera.
   fields:
     entity_id:
       description: Name(s) of entities to create snapshots from.
-      example: 'camera.living_room_camera'
+      example: "camera.living_room_camera"
     filename:
       description: Template of a Filename. Variable is entity_id.
-      example: '/tmp/snapshot_{{ entity_id }}'
+      example: "/tmp/snapshot_{{ entity_id }}"
 
 play_stream:
   description: Play camera stream on supported media player.
   fields:
     entity_id:
       description: Name(s) of entities to stream from.
-      example: 'camera.living_room_camera'
+      example: "camera.living_room_camera"
     media_player:
       description: Name(s) of media player to stream to.
-      example: 'media_player.living_room_tv'
+      example: "media_player.living_room_tv"
     format:
       description: (Optional) Stream format supported by media player.
-      example: 'hls'
+      example: "hls"
 
 record:
   description: Record live camera feed.
   fields:
     entity_id:
       description: Name of entities to record.
-      example: 'camera.living_room_camera'
+      example: "camera.living_room_camera"
     filename:
       description: Template of a Filename. Variable is entity_id.  Must be mp4.
-      example: '/tmp/snapshot_{{ entity_id }}.mp4'
+      example: "/tmp/snapshot_{{ entity_id }}.mp4"
     duration:
       description: (Optional) Target recording length (in seconds).
       default: 30
@@ -67,4 +67,3 @@ record:
     lookback:
       description: (Optional) Target lookback period (in seconds) to include in addition to duration.  Only available if there is currently an active HLS stream.
       example: 4
-

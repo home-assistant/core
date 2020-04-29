@@ -6,7 +6,7 @@ import os
 from homeassistant.util.yaml import _SECRET_NAMESPACE
 
 # mypy: allow-untyped-defs
-REQUIREMENTS = ["keyring==20.0.0", "keyrings.alt==3.4.0"]
+REQUIREMENTS = ["keyring==21.2.0", "keyrings.alt==3.4.0"]
 
 
 def run(args):
@@ -26,7 +26,9 @@ def run(args):
     )
     parser.add_argument("name", help="Name of the secret", nargs="?", default=None)
 
-    import keyring
+    import keyring  # pylint: disable=import-outside-toplevel
+
+    # pylint: disable=import-outside-toplevel
     from keyring.util import platform_ as platform
 
     args = parser.parse_args(args)
@@ -37,7 +39,7 @@ def run(args):
         print(f"Active keyring  : {keyr.__module__}")
         config_name = os.path.join(platform.config_root(), "keyringrc.cfg")
         print(f"Config location : {config_name}")
-        print("Data location   : {}\n".format(platform.data_root()))
+        print(f"Data location   : {platform.data_root()}\n")
     elif args.name is None:
         parser.print_help()
         return 1

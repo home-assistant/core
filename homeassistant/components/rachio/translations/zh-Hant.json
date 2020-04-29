@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Rachio \u5e33\u865f API \u91d1\u9470\u3002"
+                },
+                "description": "\u5c07\u6703\u9700\u8981\u7531 https://app.rach.io/ \u53d6\u5f97 App \u5bc6\u9470\u3002\u9078\u64c7\u5e33\u865f\u8a2d\u5b9a\uff08Account Settings\uff09\u3001\u4e26\u9078\u64c7\u7372\u5f97\u5bc6\u9470\uff08GET API KEY\uff09\u3002",
+                "title": "\u9023\u7dda\u81f3 Rachio \u8a2d\u5099"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual_run_mins": "\u7576\u958b\u95dc\u958b\u555f\u5f8c\u3001\u5de5\u4f5c\u7ad9\u6240\u8981\u958b\u555f\u7684\u5206\u9418\u6578\u3002"
+                }
+            }
+        }
+    }
+}

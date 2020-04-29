@@ -64,10 +64,7 @@ async def _create_august_with_devices(
     if api_call_side_effects is None:
         api_call_side_effects = {}
 
-    device_data = {
-        "doorbells": [],
-        "locks": [],
-    }
+    device_data = {"doorbells": [], "locks": []}
     for device in devices:
         if isinstance(device, LockDetail):
             device_data["locks"].append(
@@ -112,15 +109,19 @@ async def _create_august_with_devices(
     def lock_return_activities_side_effect(access_token, device_id):
         lock = _get_device_detail("locks", device_id)
         return [
-            _mock_lock_operation_activity(lock, "lock"),
-            _mock_door_operation_activity(lock, "doorclosed"),
+            _mock_lock_operation_activity(lock, "lock", 0),
+            # There is a check to prevent out of order events
+            # so we set the doorclosed event in the future
+            # to prevent a race condition where we reject the event
+            # because it happened before the dooropen event.
+            _mock_door_operation_activity(lock, "doorclosed", 2000),
         ]
 
     def unlock_return_activities_side_effect(access_token, device_id):
         lock = _get_device_detail("locks", device_id)
         return [
-            _mock_lock_operation_activity(lock, "unlock"),
-            _mock_door_operation_activity(lock, "dooropen"),
+            _mock_lock_operation_activity(lock, "unlock", 0),
+            _mock_door_operation_activity(lock, "dooropen", 0),
         ]
 
     if "get_lock_detail" not in api_call_side_effects:
@@ -212,7 +213,7 @@ def _mock_august_doorbell_data(deviceid="mockdeviceid1", houseid="mockhouseid1")
     return {
         "_id": deviceid,
         "DeviceID": deviceid,
-        "name": deviceid + " Name",
+        "name": f"{deviceid} Name",
         "HouseID": houseid,
         "UserType": "owner",
         "serialNumber": "mockserial",
@@ -232,7 +233,7 @@ def _mock_august_lock_data(lockid="mocklockid1", houseid="mockhouseid1"):
     return {
         "_id": lockid,
         "LockID": lockid,
-        "LockName": lockid + " Name",
+        "LockName": f"{lockid} Name",
         "HouseID": houseid,
         "UserType": "owner",
         "SerialNumber": "mockserial",
@@ -291,10 +292,10 @@ async def _mock_doorsense_missing_august_lock_detail(hass):
     return await _mock_lock_from_fixture(hass, "get_lock.online_missing_doorsense.json")
 
 
-def _mock_lock_operation_activity(lock, action):
+def _mock_lock_operation_activity(lock, action, offset):
     return LockOperationActivity(
         {
-            "dateTime": time.time() * 1000,
+            "dateTime": (time.time() + offset) * 1000,
             "deviceID": lock.device_id,
             "deviceType": "lock",
             "action": action,
@@ -302,10 +303,10 @@ def _mock_lock_operation_activity(lock, action):
     )
 
 
-def _mock_door_operation_activity(lock, action):
+def _mock_door_operation_activity(lock, action, offset):
     return DoorOperationActivity(
         {
-            "dateTime": time.time() * 1000,
+            "dateTime": (time.time() + offset) * 1000,
             "deviceID": lock.device_id,
             "deviceType": "lock",
             "action": action,

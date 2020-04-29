@@ -171,7 +171,7 @@ class LaCrosseSensor(Entity):
         """Triggered when value is expired."""
         self._expiration_trigger = None
         self._value = None
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
 
 class LaCrosseTemperature(LaCrosseSensor):

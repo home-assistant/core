@@ -23,6 +23,7 @@ def _get_mock_thermostat_run():
         schedule_mode=SCHEDULE_RUN,
         target_celsius=22,
         target_fahrenheit=72,
+        target_temperature=2217,
     )
 
     thermostat.get_data = Mock()
@@ -48,6 +49,7 @@ def _get_mock_thermostat_schedule_hold_unavailable():
         schedule_mode=SCHEDULE_HOLD,
         target_celsius=23,
         target_fahrenheit=79,
+        target_temperature=2609,
     )
 
     thermostat.get_data = Mock()
@@ -73,6 +75,7 @@ def _get_mock_thermostat_schedule_hold_available():
         schedule_mode=SCHEDULE_HOLD,
         target_celsius=23,
         target_fahrenheit=79,
+        target_temperature=2609,
     )
 
     thermostat.get_data = Mock()
@@ -98,6 +101,7 @@ def _get_mock_thermostat_schedule_temporary_hold():
         schedule_mode=SCHEDULE_TEMPORARY_HOLD,
         target_celsius=43,
         target_fahrenheit=99,
+        target_temperature=3729,
     )
 
     thermostat.get_data = Mock()

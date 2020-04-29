@@ -72,41 +72,41 @@ class TestVultrSwitchSetup(unittest.TestCase):
 
         for device in self.DEVICES:
             if device.subscription == "555555":
-                assert "Vultr {}" == device.name
+                assert device.name == "Vultr {}"
                 tested += 1
 
             device.update()
             device_attrs = device.device_state_attributes
 
             if device.subscription == "555555":
-                assert "Vultr Another Server" == device.name
+                assert device.name == "Vultr Another Server"
                 tested += 1
 
             if device.name == "A Server":
                 assert device.is_on is True
-                assert "on" == device.state
-                assert "mdi:server" == device.icon
-                assert "1000" == device_attrs[ATTR_ALLOWED_BANDWIDTH]
-                assert "yes" == device_attrs[ATTR_AUTO_BACKUPS]
-                assert "123.123.123.123" == device_attrs[ATTR_IPV4_ADDRESS]
-                assert "10.05" == device_attrs[ATTR_COST_PER_MONTH]
-                assert "2013-12-19 14:45:41" == device_attrs[ATTR_CREATED_AT]
-                assert "576965" == device_attrs[ATTR_SUBSCRIPTION_ID]
+                assert device.state == "on"
+                assert device.icon == "mdi:server"
+                assert device_attrs[ATTR_ALLOWED_BANDWIDTH] == "1000"
+                assert device_attrs[ATTR_AUTO_BACKUPS] == "yes"
+                assert device_attrs[ATTR_IPV4_ADDRESS] == "123.123.123.123"
+                assert device_attrs[ATTR_COST_PER_MONTH] == "10.05"
+                assert device_attrs[ATTR_CREATED_AT] == "2013-12-19 14:45:41"
+                assert device_attrs[ATTR_SUBSCRIPTION_ID] == "576965"
                 tested += 1
 
             elif device.name == "Failed Server":
                 assert device.is_on is False
-                assert "off" == device.state
-                assert "mdi:server-off" == device.icon
-                assert "1000" == device_attrs[ATTR_ALLOWED_BANDWIDTH]
-                assert "no" == device_attrs[ATTR_AUTO_BACKUPS]
-                assert "192.168.100.50" == device_attrs[ATTR_IPV4_ADDRESS]
-                assert "73.25" == device_attrs[ATTR_COST_PER_MONTH]
-                assert "2014-10-13 14:45:41" == device_attrs[ATTR_CREATED_AT]
-                assert "123456" == device_attrs[ATTR_SUBSCRIPTION_ID]
+                assert device.state == "off"
+                assert device.icon == "mdi:server-off"
+                assert device_attrs[ATTR_ALLOWED_BANDWIDTH] == "1000"
+                assert device_attrs[ATTR_AUTO_BACKUPS] == "no"
+                assert device_attrs[ATTR_IPV4_ADDRESS] == "192.168.100.50"
+                assert device_attrs[ATTR_COST_PER_MONTH] == "73.25"
+                assert device_attrs[ATTR_CREATED_AT] == "2014-10-13 14:45:41"
+                assert device_attrs[ATTR_SUBSCRIPTION_ID] == "123456"
                 tested += 1
 
-        assert 4 == tested
+        assert tested == 4
 
     @requests_mock.Mocker()
     def test_turn_on(self, mock):
@@ -120,7 +120,7 @@ class TestVultrSwitchSetup(unittest.TestCase):
                     device.turn_on()
 
         # Turn on
-        assert 1 == mock_start.call_count
+        assert mock_start.call_count == 1
 
     @requests_mock.Mocker()
     def test_turn_off(self, mock):
@@ -134,7 +134,7 @@ class TestVultrSwitchSetup(unittest.TestCase):
                     device.turn_off()
 
         # Turn off
-        assert 1 == mock_halt.call_count
+        assert mock_halt.call_count == 1
 
     def test_invalid_switch_config(self):
         """Test config type failures."""

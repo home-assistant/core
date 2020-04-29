@@ -47,7 +47,7 @@ RESPONSE_TOKEN = 1234
 PIN = "abcd"
 
 
-class MockStartPairingResponse(object):
+class MockStartPairingResponse:
     """Mock Vizio start pairing response."""
 
     def __init__(self, ch_type: int, token: int) -> None:
@@ -56,13 +56,16 @@ class MockStartPairingResponse(object):
         self.token = token
 
 
-class MockCompletePairingResponse(object):
+class MockCompletePairingResponse:
     """Mock Vizio complete pairing response."""
 
     def __init__(self, auth_token: str) -> None:
         """Initialize mock complete pairing response."""
         self.auth_token = auth_token
 
+
+CURRENT_EQ = "Music"
+EQ_LIST = ["Music", "Movie"]
 
 CURRENT_INPUT = "HDMI"
 INPUT_LIST = ["HDMI", "USB", "Bluetooth", "AUX"]
@@ -174,6 +177,7 @@ MOCK_INCLUDE_APPS = {
     CONF_INCLUDE_OR_EXCLUDE: CONF_INCLUDE.title(),
     CONF_APPS_TO_INCLUDE_OR_EXCLUDE: [CURRENT_APP],
 }
+
 MOCK_INCLUDE_NO_APPS = {
     CONF_INCLUDE_OR_EXCLUDE: CONF_INCLUDE.title(),
     CONF_APPS_TO_INCLUDE_OR_EXCLUDE: [],

@@ -1,6 +1,5 @@
 """Test Google Smart Home."""
-from unittest.mock import Mock, patch
-
+from asynctest import Mock, patch
 import pytest
 
 from homeassistant.components import camera
@@ -29,12 +28,7 @@ from homeassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.common import (
-    mock_area_registry,
-    mock_coro,
-    mock_device_registry,
-    mock_registry,
-)
+from tests.common import mock_area_registry, mock_device_registry, mock_registry
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
@@ -262,6 +256,8 @@ async def test_query_message(hass):
         },
     }
 
+    await hass.async_block_till_done()
+
     assert len(events) == 4
     assert events[0].event_type == EVENT_QUERY_RECEIVED
     assert events[0].data == {
@@ -442,6 +438,9 @@ async def test_execute(hass):
         "source": "cloud",
     }
 
+    service_events = sorted(
+        service_events, key=lambda ev: ev.data["service_data"]["entity_id"]
+    )
     assert len(service_events) == 4
     assert service_events[0].data == {
         "domain": "light",
@@ -785,9 +784,7 @@ async def test_query_disconnect(hass):
     config = MockConfig(hass=hass)
     config.async_enable_report_state()
     assert config._unsub_report_state is not None
-    with patch.object(
-        config, "async_disconnect_agent_user", side_effect=mock_coro
-    ) as mock_disconnect:
+    with patch.object(config, "async_disconnect_agent_user") as mock_disconnect:
         result = await sh.async_handle_message(
             hass,
             config,
@@ -808,7 +805,7 @@ async def test_trait_execute_adding_query_data(hass):
 
     with patch(
         "homeassistant.components.camera.async_request_stream",
-        return_value=mock_coro("/api/streams/bla"),
+        return_value="/api/streams/bla",
     ):
         result = await sh.async_handle_message(
             hass,

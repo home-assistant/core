@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.lock import DOMAIN, LockDevice
+from homeassistant.components.lock import DOMAIN, LockEntity
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -239,7 +239,7 @@ def get_device(node, values, **kwargs):
     return ZwaveLock(values)
 
 
-class ZwaveLock(ZWaveDeviceEntity, LockDevice):
+class ZwaveLock(ZWaveDeviceEntity, LockEntity):
     """Representation of a Z-Wave Lock."""
 
     def __init__(self, values):
@@ -337,21 +337,20 @@ class ZwaveLock(ZWaveDeviceEntity, LockDevice):
             )
 
         if alarm_type == 21:
-            self._lock_status = "{}{}".format(
-                LOCK_ALARM_TYPE.get(str(alarm_type)),
-                MANUAL_LOCK_ALARM_LEVEL.get(str(alarm_level)),
+            self._lock_status = (
+                f"{LOCK_ALARM_TYPE.get(str(alarm_type))}"
+                f"{MANUAL_LOCK_ALARM_LEVEL.get(str(alarm_level))}"
             )
             return
         if str(alarm_type) in ALARM_TYPE_STD:
-            self._lock_status = "{}{}".format(
-                LOCK_ALARM_TYPE.get(str(alarm_type)), str(alarm_level)
-            )
+            self._lock_status = f"{LOCK_ALARM_TYPE.get(str(alarm_type))}{alarm_level}"
             return
         if alarm_type == 161:
-            self._lock_status = "{}{}".format(
-                LOCK_ALARM_TYPE.get(str(alarm_type)),
-                TAMPER_ALARM_LEVEL.get(str(alarm_level)),
+            self._lock_status = (
+                f"{LOCK_ALARM_TYPE.get(str(alarm_type))}"
+                f"{TAMPER_ALARM_LEVEL.get(str(alarm_level))}"
             )
+
             return
         if alarm_type != 0:
             self._lock_status = LOCK_ALARM_TYPE.get(str(alarm_type))

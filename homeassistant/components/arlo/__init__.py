@@ -43,9 +43,9 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up an Arlo component."""
     conf = config[DOMAIN]
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
-    scan_interval = conf.get(CONF_SCAN_INTERVAL)
+    username = conf[CONF_USERNAME]
+    password = conf[CONF_PASSWORD]
+    scan_interval = conf[CONF_SCAN_INTERVAL]
 
     try:
 

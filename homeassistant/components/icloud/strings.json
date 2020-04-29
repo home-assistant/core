@@ -1,39 +1,34 @@
 {
-    "config": {
-        "title": "Apple iCloud",
-        "step": {
-            "user": {
-                "title": "iCloud credentials",
-                "description": "Enter your credentials",
-                "data": {
-                    "username": "Email",
-                    "password": "Password",
-                    "with_family": "With family"
-                }
-            },
-            "trusted_device": {
-                "title": "iCloud trusted device",
-                "description": "Select your trusted device",
-                "data": {
-                    "trusted_device": "Trusted device"
-                }
-            },
-            "verification_code": {
-                "title": "iCloud verification code",
-                "description": "Please enter the verification code you just received from iCloud",
-                "data": {
-                    "verification_code": "Verification code"
-                }
-            }
-        },
-        "error": {
-            "login": "Login error: please check your email & password",
-            "send_verification_code": "Failed to send verification code",
-            "validate_verification_code": "Failed to verify your verification code, choose a trust device and start the verification again"
-        },
-        "abort": {
-            "already_configured": "Account already configured",
-            "no_device": "None of your devices have \"Find my iPhone\" activated"
+  "config": {
+    "step": {
+      "user": {
+        "title": "iCloud credentials",
+        "description": "Enter your credentials",
+        "data": {
+          "username": "Email",
+          "password": "Password",
+          "with_family": "With family"
         }
+      },
+      "trusted_device": {
+        "title": "iCloud trusted device",
+        "description": "Select your trusted device",
+        "data": { "trusted_device": "Trusted device" }
+      },
+      "verification_code": {
+        "title": "iCloud verification code",
+        "description": "Please enter the verification code you just received from iCloud",
+        "data": { "verification_code": "Verification code" }
+      }
+    },
+    "error": {
+      "login": "Login error: please check your email & password",
+      "send_verification_code": "Failed to send verification code",
+      "validate_verification_code": "Failed to verify your verification code, choose a trust device and start the verification again"
+    },
+    "abort": {
+      "already_configured": "Account already configured",
+      "no_device": "None of your devices have \"Find my iPhone\" activated"
     }
+  }
 }

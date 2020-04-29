@@ -2,7 +2,8 @@
 import asyncio
 from datetime import datetime
 import logging
-from unittest.mock import Mock, patch
+
+from asynctest import Mock, patch
 
 from homeassistant.components.smhi import weather as weather_smhi
 from homeassistant.components.smhi.const import ATTR_SMHI_CLOUDINESS
@@ -72,11 +73,6 @@ async def test_setup_hass(hass: HomeAssistant, aioclient_mock) -> None:
     assert forecast[ATTR_FORECAST_TEMP_LOW] == 6
     assert forecast[ATTR_FORECAST_PRECIPITATION] == 0
     assert forecast[ATTR_FORECAST_CONDITION] == "partlycloudy"
-
-
-async def test_setup_plattform(hass):
-    """Test that setup platform does nothing."""
-    assert await weather_smhi.async_setup_platform(hass, None, None) is None
 
 
 def test_properties_no_data(hass: HomeAssistant) -> None:

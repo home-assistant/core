@@ -75,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         "host": config[CONF_HOST],
         "password": config.get(CONF_PASSWORD),
         "port": config.get(CONF_PORT),
-        "ssl": config.get(CONF_SSL),
+        "ssl": config[CONF_SSL],
         "username": config.get(CONF_USERNAME),
         "verify_ssl": config.get(CONF_VERIFY_SSL),
     }
@@ -203,7 +203,7 @@ class InfluxSensorData:
         points = list(self.influx.query(self.query).get_points())
         if not points:
             _LOGGER.warning(
-                "Query returned no points, sensor state set to UNKNOWN: %s", self.query,
+                "Query returned no points, sensor state set to UNKNOWN: %s", self.query
             )
             self.value = None
         else:

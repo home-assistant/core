@@ -13,7 +13,7 @@ from aiohttp.web_exceptions import (
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant.const import CONTENT_TYPE_JSON, HTTP_OK
 from homeassistant.core import Context, is_callback
 from homeassistant.helpers.json import JSONEncoder
 
@@ -44,7 +44,7 @@ class HomeAssistantView:
         return Context(user_id=user.id)
 
     @staticmethod
-    def json(result, status_code=200, headers=None):
+    def json(result, status_code=HTTP_OK, headers=None):
         """Return a JSON response."""
         try:
             msg = json.dumps(
@@ -62,7 +62,9 @@ class HomeAssistantView:
         response.enable_compression()
         return response
 
-    def json_message(self, message, status_code=200, message_code=None, headers=None):
+    def json_message(
+        self, message, status_code=HTTP_OK, message_code=None, headers=None
+    ):
         """Return a JSON message response."""
         data = {"message": message}
         if message_code is not None:
@@ -132,7 +134,7 @@ def request_handler_factory(view, handler):
             # The method handler returned a ready-made Response, how nice of it
             return result
 
-        status_code = 200
+        status_code = HTTP_OK
 
         if isinstance(result, tuple):
             result, status_code = result

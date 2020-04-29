@@ -46,8 +46,8 @@ class ZhaStorage:
             name=device.name, ieee=str(device.ieee), last_seen=device.last_seen
         )
         self.devices[device_entry.ieee] = device_entry
-
-        return self.async_update_device(device)
+        self.async_schedule_save()
+        return device_entry
 
     @callback
     def async_get_or_create_device(self, device: ZhaDeviceType) -> ZhaDeviceEntry:

@@ -4,6 +4,7 @@ import logging
 import uuid
 
 from homeassistant.components import http
+from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.core import callback
 from homeassistant.helpers import template
 import homeassistant.util.dt as dt_util
@@ -54,7 +55,7 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
         if self.flash_briefings.get(briefing_id) is None:
             err = "No configured Alexa flash briefing was found for: %s"
             _LOGGER.error(err, briefing_id)
-            return b"", 404
+            return b"", HTTP_NOT_FOUND
 
         briefing = []
 

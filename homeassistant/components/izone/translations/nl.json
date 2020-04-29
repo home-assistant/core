@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Geen iZone-apparaten gevonden op het netwerk.",
+            "single_instance_allowed": "Er is slechts \u00e9\u00e9n configuratie van iZone nodig."
+        },
+        "step": {
+            "confirm": {
+                "description": "Wilt u iZone instellen?",
+                "title": "iZone"
+            }
+        }
+    }
+}

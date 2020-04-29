@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from pizone import Controller, Zone
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
@@ -100,7 +100,7 @@ def _return_on_connection_error(ret=None):
     return wrap
 
 
-class ControllerDevice(ClimateDevice):
+class ControllerDevice(ClimateEntity):
     """Representation of iZone Controller."""
 
     def __init__(self, controller: Controller) -> None:
@@ -175,7 +175,7 @@ class ControllerDevice(ClimateDevice):
             """Handle controller data updates."""
             if ctrl is not self._controller:
                 return
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
             for zone in self.zones.values():
                 zone.async_schedule_update_ha_state()
 
@@ -210,7 +210,7 @@ class ControllerDevice(ClimateDevice):
             )
 
         self._available = available
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
         for zone in self.zones.values():
             zone.async_schedule_update_ha_state()
 
@@ -399,7 +399,7 @@ class ControllerDevice(ClimateDevice):
         await self.wrap_and_catch(self._controller.set_on(True))
 
 
-class ZoneDevice(ClimateDevice):
+class ZoneDevice(ClimateEntity):
     """Representation of iZone Zone."""
 
     def __init__(self, controller: ControllerDevice, zone: Zone) -> None:
@@ -439,7 +439,7 @@ class ZoneDevice(ClimateDevice):
             if zone is not self._zone:
                 return
             self._name = zone.name.title()
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         self.async_on_remove(
             async_dispatcher_connect(self.hass, DISPATCH_ZONE_UPDATE, zone_update)
@@ -549,7 +549,7 @@ class ZoneDevice(ClimateDevice):
         """Set new target operation mode."""
         mode = self._state_to_pizone[hvac_mode]
         await self._controller.wrap_and_catch(self._zone.set_mode(mode))
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def is_on(self):
@@ -562,9 +562,9 @@ class ZoneDevice(ClimateDevice):
             await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.AUTO))
         else:
             await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.OPEN))
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self):
         """Turn device off (close zone)."""
         await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.CLOSE))
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

@@ -21,7 +21,7 @@ from simplipy.websocket import (
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
     FORMAT_TEXT,
-    AlarmControlPanel,
+    AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -72,7 +72,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
+class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
     """Representation of a SimpliSafe alarm."""
 
     def __init__(self, simplisafe, system):
@@ -216,6 +216,22 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
                     ATTR_WIFI_STRENGTH: self._system.wifi_strength,
                 }
             )
+
+        # Although system state updates are designed the come via the websocket, the
+        # SimpliSafe cloud can sporadically fail to send those updates as expected; so,
+        # just in case, we synchronize the state via the REST API, too:
+        if self._system.state == SystemStates.alarm:
+            self._state = STATE_ALARM_TRIGGERED
+        elif self._system.state == SystemStates.away:
+            self._state = STATE_ALARM_ARMED_AWAY
+        elif self._system.state in (SystemStates.away_count, SystemStates.exit_delay):
+            self._state = STATE_ALARM_ARMING
+        elif self._system.state == SystemStates.home:
+            self._state = STATE_ALARM_ARMED_HOME
+        elif self._system.state == SystemStates.off:
+            self._state = STATE_ALARM_DISARMED
+        else:
+            self._state = None
 
     @callback
     def async_update_from_websocket_event(self, event):

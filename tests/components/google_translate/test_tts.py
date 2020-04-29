@@ -189,7 +189,7 @@ class TestTTSGooglePlatform:
         self.url_param["total"] = 9
         self.url_param["q"] = "I%20person%20is%20on%20front%20of%20your%20door"
         self.url_param["textlen"] = 33
-        for idx in range(0, 9):
+        for idx in range(9):
             self.url_param["idx"] = idx
             aioclient_mock.get(
                 self.url, params=self.url_param, status=200, content=b"test"

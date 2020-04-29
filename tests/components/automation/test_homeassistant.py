@@ -25,6 +25,7 @@ async def test_if_fires_on_hass_start(hass):
     assert len(calls) == 0
 
     await hass.async_start()
+    await hass.async_block_till_done()
     assert automation.is_on(hass, "automation.hello")
     assert len(calls) == 1
 
@@ -61,6 +62,7 @@ async def test_if_fires_on_hass_shutdown(hass):
 
     await hass.async_start()
     assert automation.is_on(hass, "automation.hello")
+    await hass.async_block_till_done()
     assert len(calls) == 0
 
     with patch.object(hass.loop, "stop"):

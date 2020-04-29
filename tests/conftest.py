@@ -1,8 +1,8 @@
 """Set up some common test helper things."""
 import functools
 import logging
-from unittest.mock import patch
 
+from asynctest import patch
 import pytest
 import requests_mock as _requests_mock
 
@@ -19,8 +19,6 @@ from homeassistant.exceptions import ServiceNotFound
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
-from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
-
 pytest.register_assert_rewrite("tests.common")
 
 from tests.common import (  # noqa: E402, isort:skip
@@ -28,7 +26,6 @@ from tests.common import (  # noqa: E402, isort:skip
     INSTANCES,
     MockUser,
     async_test_home_assistant,
-    mock_coro,
     mock_storage as mock_storage,
 )
 from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
@@ -97,11 +94,6 @@ def hass(loop, hass_storage, request):
 
     loop.run_until_complete(hass.async_stop(force=True))
     for ex in exceptions:
-        if (
-            request.module.__name__,
-            request.function.__name__,
-        ) in IGNORE_UNCAUGHT_EXCEPTIONS:
-            continue
         if isinstance(ex, ServiceNotFound):
             continue
         raise ex
@@ -135,7 +127,7 @@ def mock_device_tracker_conf():
         side_effect=mock_update_config,
     ), patch(
         "homeassistant.components.device_tracker.legacy.async_load_config",
-        side_effect=lambda *args: mock_coro(devices),
+        side_effect=lambda *args: devices,
     ):
         yield devices
 
@@ -211,17 +203,17 @@ def hass_client(hass, aiohttp_client, hass_access_token):
     async def auth_client():
         """Return an authenticated client."""
         return await aiohttp_client(
-            hass.http.app, headers={"Authorization": f"Bearer {hass_access_token}"},
+            hass.http.app, headers={"Authorization": f"Bearer {hass_access_token}"}
         )
 
     return auth_client
 
 
 @pytest.fixture
-def hass_ws_client(aiohttp_client, hass_access_token):
+def hass_ws_client(aiohttp_client, hass_access_token, hass):
     """Websocket client fixture connected to websocket server."""
 
-    async def create_client(hass, access_token=hass_access_token):
+    async def create_client(hass=hass, access_token=hass_access_token):
         """Create a websocket client."""
         assert await async_setup_component(hass, "websocket_api", {})
 

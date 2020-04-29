@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Die MELCloud-Integration ist bereits f\u00fcr diese E-Mail konfiguriert. Das Zugriffstoken wurde aktualisiert."
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "MELCloud Passwort.",
+                    "username": "E-Mail-Adresse f\u00fcr die Anmeldung bei MELCloud."
+                },
+                "description": "Verbinden Sie sich mit Ihrem MELCloud-Konto.",
+                "title": "Stellen Sie eine Verbindung zu MELCloud her"
+            }
+        }
+    }
+}

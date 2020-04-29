@@ -68,7 +68,7 @@ async def async_setup(hass, config):
         pub_exclude.get(CONF_ENTITIES, []),
     )
     if not base_topic.endswith("/"):
-        base_topic = base_topic + "/"
+        base_topic = f"{base_topic}/"
 
     @callback
     def _state_publisher(entity_id, old_state, new_state):
@@ -80,17 +80,17 @@ async def async_setup(hass, config):
 
         payload = new_state.state
 
-        mybase = base_topic + entity_id.replace(".", "/") + "/"
-        hass.components.mqtt.async_publish(mybase + "state", payload, 1, True)
+        mybase = f"{base_topic}{entity_id.replace('.', '/')}/"
+        hass.components.mqtt.async_publish(f"{mybase}state", payload, 1, True)
 
         if publish_timestamps:
             if new_state.last_updated:
                 hass.components.mqtt.async_publish(
-                    mybase + "last_updated", new_state.last_updated.isoformat(), 1, True
+                    f"{mybase}last_updated", new_state.last_updated.isoformat(), 1, True
                 )
             if new_state.last_changed:
                 hass.components.mqtt.async_publish(
-                    mybase + "last_changed", new_state.last_changed.isoformat(), 1, True
+                    f"{mybase}last_changed", new_state.last_changed.isoformat(), 1, True
                 )
 
         if publish_attributes:

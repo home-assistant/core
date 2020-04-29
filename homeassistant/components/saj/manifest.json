@@ -3,6 +3,5 @@
   "name": "SAJ Solar Inverter",
   "documentation": "https://www.home-assistant.io/integrations/saj",
   "requirements": ["pysaj==0.0.14"],
-  "dependencies": [],
   "codeowners": ["@fredericvl"]
 }

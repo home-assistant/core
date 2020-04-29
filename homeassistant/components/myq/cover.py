@@ -10,7 +10,7 @@ from homeassistant.components.cover import (
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
@@ -27,6 +27,8 @@ from homeassistant.helpers.event import async_call_later
 
 from .const import (
     DOMAIN,
+    KNOWN_MODELS,
+    MANUFACTURER,
     MYQ_COORDINATOR,
     MYQ_DEVICE_STATE,
     MYQ_DEVICE_STATE_ONLINE,
@@ -78,7 +80,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class MyQDevice(CoverDevice):
+class MyQDevice(CoverEntity):
     """Representation of a MyQ cover."""
 
     def __init__(self, coordinator, device):
@@ -181,9 +183,12 @@ class MyQDevice(CoverDevice):
         device_info = {
             "identifiers": {(DOMAIN, self._device.device_id)},
             "name": self._device.name,
-            "manufacturer": "The Chamberlain Group Inc.",
+            "manufacturer": MANUFACTURER,
             "sw_version": self._device.firmware_version,
         }
+        model = KNOWN_MODELS.get(self._device.device_id[2:4])
+        if model:
+            device_info["model"] = model
         if self._device.parent_device_id:
             device_info["via_device"] = (DOMAIN, self._device.parent_device_id)
         return device_info
@@ -204,10 +209,11 @@ class MyQDevice(CoverDevice):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self._coordinator.async_add_listener(self._async_consume_update)
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self._async_consume_update)
+        )
 
     async def async_will_remove_from_hass(self):
         """Undo subscription."""
-        self._coordinator.async_remove_listener(self._async_consume_update)
         if self._scheduled_transition_update:
             self._scheduled_transition_update()

@@ -1,0 +1,227 @@
+[
+   {
+      "deviceTypes" : [
+         "WR02"
+      ],
+      "type" : "HEATING",
+      "reportAvailable" : false,
+      "dazzleMode" : {
+         "enabled" : true,
+         "supported" : true
+      },
+      "name" : "Baseboard Heater",
+      "supportsDazzle" : true,
+      "id" : 1,
+      "devices" : [
+         {
+            "duties" : [
+               "ZONE_UI",
+               "ZONE_DRIVER",
+               "ZONE_LEADER"
+            ],
+            "currentFwVersion" : "59.4",
+            "deviceType" : "WR02",
+            "serialNo" : "WR4",
+            "shortSerialNo" : "WR4",
+            "commandTableUploadState" : "FINISHED",
+            "connectionState" : {
+               "value" : true,
+               "timestamp" : "2020-03-23T18:30:07.377Z"
+            },
+            "accessPointWiFi" : {
+               "ssid" : "tado8480"
+            },
+            "characteristics" : {
+               "capabilities" : [
+                  "INSIDE_TEMPERATURE_MEASUREMENT",
+                  "IDENTIFY"
+               ]
+            }
+         }
+      ],
+      "dateCreated" : "2019-11-28T15:58:48.968Z",
+      "dazzleEnabled" : true
+   },
+   {
+      "type" : "HOT_WATER",
+      "reportAvailable" : false,
+      "deviceTypes" : [
+         "WR02"
+      ],
+      "devices" : [
+         {
+            "connectionState" : {
+               "value" : true,
+               "timestamp" : "2020-03-23T18:30:07.377Z"
+            },
+            "accessPointWiFi" : {
+               "ssid" : "tado8480"
+            },
+            "characteristics" : {
+               "capabilities" : [
+                  "INSIDE_TEMPERATURE_MEASUREMENT",
+                  "IDENTIFY"
+               ]
+            },
+            "duties" : [
+               "ZONE_UI",
+               "ZONE_DRIVER",
+               "ZONE_LEADER"
+            ],
+            "currentFwVersion" : "59.4",
+            "deviceType" : "WR02",
+            "serialNo" : "WR4",
+            "shortSerialNo" : "WR4",
+            "commandTableUploadState" : "FINISHED"
+         }
+      ],
+      "dazzleEnabled" : true,
+      "dateCreated" : "2019-11-28T15:58:48.968Z",
+      "name" : "Water Heater",
+      "dazzleMode" : {
+         "enabled" : true,
+         "supported" : true
+      },
+      "id" : 2,
+      "supportsDazzle" : true
+   },
+   {
+      "dazzleMode" : {
+         "supported" : true,
+         "enabled" : true
+      },
+      "name" : "Air Conditioning",
+      "id" : 3,
+      "supportsDazzle" : true,
+      "devices" : [
+         {
+            "deviceType" : "WR02",
+            "shortSerialNo" : "WR4",
+            "serialNo" : "WR4",
+            "commandTableUploadState" : "FINISHED",
+            "duties" : [
+               "ZONE_UI",
+               "ZONE_DRIVER",
+               "ZONE_LEADER"
+            ],
+            "currentFwVersion" : "59.4",
+            "characteristics" : {
+               "capabilities" : [
+                  "INSIDE_TEMPERATURE_MEASUREMENT",
+                  "IDENTIFY"
+               ]
+            },
+            "accessPointWiFi" : {
+               "ssid" : "tado8480"
+            },
+            "connectionState" : {
+               "timestamp" : "2020-03-23T18:30:07.377Z",
+               "value" : true
+            }
+         }
+      ],
+      "dazzleEnabled" : true,
+      "dateCreated" : "2019-11-28T15:58:48.968Z",
+      "openWindowDetection" : {
+         "timeoutInSeconds" : 900,
+         "enabled" : true,
+         "supported" : true
+      },
+      "deviceTypes" : [
+         "WR02"
+      ],
+      "reportAvailable" : false,
+      "type" : "AIR_CONDITIONING"
+   },
+   {
+      "type" : "HOT_WATER",
+      "reportAvailable" : false,
+      "deviceTypes" : [
+         "WR02"
+      ],
+      "devices" : [
+         {
+            "connectionState" : {
+               "value" : true,
+               "timestamp" : "2020-03-23T18:30:07.377Z"
+            },
+            "accessPointWiFi" : {
+               "ssid" : "tado8480"
+            },
+            "characteristics" : {
+               "capabilities" : [
+                  "INSIDE_TEMPERATURE_MEASUREMENT",
+                  "IDENTIFY"
+               ]
+            },
+            "duties" : [
+               "ZONE_UI",
+               "ZONE_DRIVER",
+               "ZONE_LEADER"
+            ],
+            "currentFwVersion" : "59.4",
+            "deviceType" : "WR02",
+            "serialNo" : "WR4",
+            "shortSerialNo" : "WR4",
+            "commandTableUploadState" : "FINISHED"
+         }
+      ],
+      "dazzleEnabled" : true,
+      "dateCreated" : "2019-11-28T15:58:48.968Z",
+      "name" : "Second Water Heater",
+      "dazzleMode" : {
+         "enabled" : true,
+         "supported" : true
+      },
+      "id" : 4,
+      "supportsDazzle" : true
+   },
+   {
+      "dazzleMode" : {
+         "supported" : true,
+         "enabled" : true
+      },
+      "name" : "Air Conditioning with swing",
+      "id" : 5,
+      "supportsDazzle" : true,
+      "devices" : [
+         {
+            "deviceType" : "WR02",
+            "shortSerialNo" : "WR4",
+            "serialNo" : "WR4",
+            "commandTableUploadState" : "FINISHED",
+            "duties" : [
+               "ZONE_UI",
+               "ZONE_DRIVER",
+               "ZONE_LEADER"
+            ],
+            "currentFwVersion" : "59.4",
+            "characteristics" : {
+               "capabilities" : [
+                  "INSIDE_TEMPERATURE_MEASUREMENT",
+                  "IDENTIFY"
+               ]
+            },
+            "accessPointWiFi" : {
+               "ssid" : "tado8480"
+            },
+            "connectionState" : {
+               "timestamp" : "2020-03-23T18:30:07.377Z",
+               "value" : true
+            }
+         }
+      ],
+      "dazzleEnabled" : true,
+      "dateCreated" : "2019-11-28T15:58:48.968Z",
+      "openWindowDetection" : {
+         "timeoutInSeconds" : 900,
+         "enabled" : true,
+         "supported" : true
+      },
+      "deviceTypes" : [
+         "WR02"
+      ],
+      "reportAvailable" : false,
+      "type" : "AIR_CONDITIONING"
+   }
+]

@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components import binary_sensor, mqtt
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import (
     CONF_DEVICE,
@@ -37,6 +37,7 @@ from . import (
     MqttEntityDeviceInfo,
     subscription,
 )
+from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
@@ -106,7 +107,7 @@ class MqttBinarySensor(
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
-    BinarySensorDevice,
+    BinarySensorEntity,
 ):
     """Representation a binary sensor that is updated by MQTT."""
 
@@ -118,7 +119,11 @@ class MqttBinarySensor(
         self._sub_state = None
         self._expiration_trigger = None
         self._delay_listener = None
-        self._expired = None
+        expire_after = config.get(CONF_EXPIRE_AFTER)
+        if expire_after is not None and expire_after > 0:
+            self._expired = True
+        else:
+            self._expired = None
         device_config = config.get(CONF_DEVICE)
 
         MqttAttributes.__init__(self, config)
@@ -155,6 +160,7 @@ class MqttBinarySensor(
             self.async_write_ha_state()
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def state_message_received(msg):
             """Handle a new received MQTT state message."""
             payload = msg.payload

@@ -32,6 +32,11 @@ from tests.common import (
 from tests.mock.zwave import MockEntityValues, MockNetwork, MockNode, MockValue
 
 
+@pytest.fixture(autouse=True)
+def mock_storage(hass_storage):
+    """Autouse hass_storage for the TestCase tests."""
+
+
 async def test_valid_device_config(hass, mock_openzwave):
     """Test valid device config."""
     device_config = {"light.kitchen": {"ignored": "true"}}
@@ -703,7 +708,7 @@ async def test_power_schemes(hass, mock_openzwave):
         genre=const.GENRE_USER,
         type=const.TYPE_BOOL,
     )
-    hass.async_add_job(mock_receivers[0], node, switch)
+    await hass.async_add_job(mock_receivers[0], node, switch)
 
     await hass.async_block_till_done()
 
@@ -725,8 +730,9 @@ async def test_power_schemes(hass, mock_openzwave):
             index=const.INDEX_SENSOR_MULTILEVEL_POWER,
             instance=13,
             command_class=const.COMMAND_CLASS_SENSOR_MULTILEVEL,
+            genre=const.GENRE_USER,  # to avoid exception
         )
-        hass.async_add_job(mock_receivers[0], node, power)
+        await hass.async_add_job(mock_receivers[0], node, power)
         await hass.async_block_till_done()
 
     assert (

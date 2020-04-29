@@ -13,7 +13,7 @@ from homeassistant.components.alexa import (
     errors as alexa_errors,
     state_report as alexa_state_report,
 )
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_BAD_REQUEST
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.event import async_call_later
@@ -114,14 +114,14 @@ class AlexaConfig(alexa_config.AbstractConfig):
         resp = await cloud_api.async_alexa_access_token(self._cloud)
         body = await resp.json()
 
-        if resp.status == 400:
+        if resp.status == HTTP_BAD_REQUEST:
             if body["reason"] in ("RefreshTokenNotFound", "UnknownRegion"):
                 if self.should_report_state:
                     await self._prefs.async_update(alexa_report_state=False)
                     self.hass.components.persistent_notification.async_create(
-                        "There was an error reporting state to Alexa ({}). "
+                        f"There was an error reporting state to Alexa ({body['reason']}). "
                         "Please re-link your Alexa skill via the Alexa app to "
-                        "continue using it.".format(body["reason"]),
+                        "continue using it.",
                         "Alexa state reporting disabled",
                         "cloud_alexa_report",
                     )
@@ -271,15 +271,25 @@ class AlexaConfig(alexa_config.AbstractConfig):
         if not self.enabled or not self._cloud.is_logged_in:
             return
 
-        action = event.data["action"]
         entity_id = event.data["entity_id"]
+
+        if not self.should_expose(entity_id):
+            return
+
+        action = event.data["action"]
         to_update = []
         to_remove = []
 
-        if action == "create" and self.should_expose(entity_id):
+        if action == "create":
             to_update.append(entity_id)
-        elif action == "remove" and self.should_expose(entity_id):
+        elif action == "remove":
             to_remove.append(entity_id)
+        elif action == "update" and bool(
+            set(event.data["changes"]) & entity_registry.ENTITY_DESCRIBING_ATTRIBUTES
+        ):
+            to_update.append(entity_id)
+            if "old_entity_id" in event.data:
+                to_remove.append(event.data["old_entity_id"])
 
         try:
             await self._sync_helper(to_update, to_remove)

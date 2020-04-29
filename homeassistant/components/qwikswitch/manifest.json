@@ -3,6 +3,5 @@
   "name": "QwikSwitch QSUSB",
   "documentation": "https://www.home-assistant.io/integrations/qwikswitch",
   "requirements": ["pyqwikswitch==0.93"],
-  "dependencies": [],
   "codeowners": ["@kellerza"]
 }

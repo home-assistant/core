@@ -1,0 +1,13 @@
+{
+    "state": {
+        "_": {
+            "idle": "Inactivo",
+            "off": "Apagado",
+            "on": "Encendido",
+            "paused": "Pausado",
+            "playing": "Reproduciendo",
+            "standby": "Modo de espera"
+        }
+    },
+    "title": "Reproductor multimedia"
+}

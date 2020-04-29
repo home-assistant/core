@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "bad_config_file": "\u8a2d\u5b9a\u6a94\u6848\u8cc7\u6599\u7121\u6548\u932f\u8aa4",
+            "link_local_address": "\u4e0d\u652f\u63f4\u9023\u7d50\u672c\u5730\u7aef\u4f4d\u5740",
+            "not_axis_device": "\u6240\u767c\u73fe\u7684\u8a2d\u5099\u4e26\u975e Axis \u8a2d\u5099"
+        },
+        "error": {
+            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "\u8a2d\u5099\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d\u3002",
+            "device_unavailable": "\u8a2d\u5099\u7121\u6cd5\u4f7f\u7528",
+            "faulty_credentials": "\u4f7f\u7528\u8005\u6191\u8b49\u7121\u6548"
+        },
+        "flow_title": "Axis \u8a2d\u5099\uff1a{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "password": "\u5bc6\u78bc",
+                    "port": "\u901a\u8a0a\u57e0",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "title": "\u8a2d\u5b9a Axis \u8a2d\u5099"
+            }
+        }
+    },
+    "title": "Axis \u8a2d\u5099"
+}

@@ -9,7 +9,7 @@ from homeassistant.components.cover import (
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.const import (
     CONF_COVERS,
@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             CONF_NAME: device_config.get(CONF_NAME),
             CONF_HOST: device_config.get(CONF_HOST),
             CONF_PORT: device_config.get(CONF_PORT),
-            CONF_SSL: device_config.get(CONF_SSL),
+            CONF_SSL: device_config[CONF_SSL],
             CONF_VERIFY_SSL: device_config.get(CONF_VERIFY_SSL),
             CONF_DEVICE_KEY: device_config.get(CONF_DEVICE_KEY),
         }
@@ -74,13 +74,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(covers, True)
 
 
-class OpenGarageCover(CoverDevice):
+class OpenGarageCover(CoverEntity):
     """Representation of a OpenGarage cover."""
 
     def __init__(self, args):
         """Initialize the cover."""
-        self.opengarage_url = "{}://{}:{}".format(
-            "https" if args[CONF_SSL] else "http", args[CONF_HOST], args[CONF_PORT]
+        self.opengarage_url = (
+            f"{'https' if args[CONF_SSL] else 'http'}://"
+            f"{args[CONF_HOST]}:{args[CONF_PORT]}"
         )
         self._name = args[CONF_NAME]
         self._device_key = args[CONF_DEVICE_KEY]

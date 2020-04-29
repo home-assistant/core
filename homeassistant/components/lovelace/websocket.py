@@ -72,6 +72,7 @@ async def websocket_lovelace_config(hass, connection, msg, config):
     return await config.async_load(msg["force"])
 
 
+@websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {
@@ -86,6 +87,7 @@ async def websocket_lovelace_save_config(hass, connection, msg, config):
     await config.async_save(msg["config"])
 
 
+@websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {

@@ -16,7 +16,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nanoleaf light."""
 
     if DATA_NANOLEAF not in hass.data:
-        hass.data[DATA_NANOLEAF] = dict()
+        hass.data[DATA_NANOLEAF] = {}
 
     token = ""
     if discovery_info is not None:
@@ -103,7 +103,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([NanoleafLight(nanoleaf_light, name)], True)
 
 
-class NanoleafLight(Light):
+class NanoleafLight(LightEntity):
     """Representation of a Nanoleaf Light."""
 
     def __init__(self, light, name):

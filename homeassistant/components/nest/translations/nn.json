@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Du kan berre konfiguere \u00e9in Nest-brukar.",
+            "authorize_url_fail": "Ukjent feil ved generering av autentiserings-URL",
+            "authorize_url_timeout": "Tida gjekk ut for generert autentikasjons-URL",
+            "no_flows": "Du m\u00e5 konfiguere Nest f\u00f8r du kan autentisere den. (Les instruksjonane) (https://www.home-assistant.io/components/nest/)"
+        },
+        "error": {
+            "internal_error": "Intern feil ved validering av kode",
+            "invalid_code": "Ugyldig kode",
+            "timeout": "Tida gjekk ut for validering av kode",
+            "unknown": "Det hende ein ukjent feil ved validering av kode."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Leverand\u00f8r"
+                },
+                "description": "Vel kva for ein autentiseringsleverand\u00f8r du vil godkjenne med Nest.",
+                "title": "Autentiseringsleverand\u00f8r"
+            },
+            "link": {
+                "data": {
+                    "code": "Pinkode"
+                },
+                "description": "For \u00e5 linke Nestkontoen din, [autoriser kontoen din]{url}.\nEtter autentiseringa, kopier-lim inn koda du fekk under her.",
+                "title": "Link Nestkonto"
+            }
+        }
+    }
+}

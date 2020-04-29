@@ -1,7 +1,7 @@
 """Support for Minut Point binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
+from homeassistant.components.binary_sensor import DOMAIN, BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -63,7 +63,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class MinutPointBinarySensor(MinutPointEntity, BinarySensorDevice):
+class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(self, point_client, device_id, device_class):
@@ -95,7 +95,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorDevice):
             self._is_on = True
         else:
             self._is_on = None
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def _webhook_event(self, data, webhook):
@@ -111,7 +111,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorDevice):
             self._is_on = True
         if _type == self._events[1]:
             self._is_on = None
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def is_on(self):

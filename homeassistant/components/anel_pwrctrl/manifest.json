@@ -3,6 +3,5 @@
   "name": "Anel NET-PwrCtrl",
   "documentation": "https://www.home-assistant.io/integrations/anel_pwrctrl",
   "requirements": ["anel_pwrctrl-homeassistant==0.0.1.dev2"],
-  "dependencies": [],
   "codeowners": []
 }

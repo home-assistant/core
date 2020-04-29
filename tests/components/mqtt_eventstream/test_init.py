@@ -2,6 +2,8 @@
 import json
 from unittest.mock import ANY, patch
 
+import pytest
+
 import homeassistant.components.mqtt_eventstream as eventstream
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import State, callback
@@ -16,6 +18,11 @@ from tests.common import (
     mock_mqtt_component,
     mock_state_change_event,
 )
+
+
+@pytest.fixture(autouse=True)
+def mock_storage(hass_storage):
+    """Autouse hass_storage for the TestCase tests."""
 
 
 class TestMqttEventStream:

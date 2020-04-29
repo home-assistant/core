@@ -33,6 +33,8 @@ from homeassistant.setup import async_setup_component
 
 DEVICE_1_IP = "192.168.0.1"
 DEVICE_2_IP = "192.168.0.2"
+DEVICE_1_ID = 1
+DEVICE_2_ID = 2
 
 
 def get_config(host=DEVICE_1_IP, port=8090, name="soundtouch"):
@@ -60,20 +62,22 @@ def one_device_fixture():
 def two_zones_fixture():
     """Mock one master and one slave."""
     device_1 = MockDevice(
+        DEVICE_1_ID,
         MockZoneStatus(
             is_master=True,
-            master_id=1,
+            master_id=DEVICE_1_ID,
             master_ip=DEVICE_1_IP,
             slaves=[MockZoneSlave(DEVICE_2_IP)],
-        )
+        ),
     )
     device_2 = MockDevice(
+        DEVICE_2_ID,
         MockZoneStatus(
             is_master=False,
-            master_id=1,
+            master_id=DEVICE_1_ID,
             master_ip=DEVICE_1_IP,
             slaves=[MockZoneSlave(DEVICE_2_IP)],
-        )
+        ),
     )
     devices = {DEVICE_1_IP: device_1, DEVICE_2_IP: device_2}
     device_patch = patch(
@@ -112,9 +116,9 @@ async def setup_soundtouch(hass, config):
 class MockDevice(STD):
     """Mock device."""
 
-    def __init__(self, zone_status=None):
+    def __init__(self, id=None, zone_status=None):
         """Init the class."""
-        self._config = MockConfig()
+        self._config = MockConfig(id)
         self._zone_status = zone_status or MockZoneStatus()
 
     def zone_status(self, refresh=True):
@@ -125,9 +129,10 @@ class MockDevice(STD):
 class MockConfig(Config):
     """Mock config."""
 
-    def __init__(self):
+    def __init__(self, id=None):
         """Init class."""
         self._name = "name"
+        self._id = id or DEVICE_1_ID
 
 
 class MockZoneStatus(ZoneStatus):

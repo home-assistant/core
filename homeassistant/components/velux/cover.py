@@ -8,7 +8,7 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.core import callback
 
@@ -25,7 +25,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class VeluxCover(CoverDevice):
+class VeluxCover(CoverEntity):
     """Representation of a Velux cover."""
 
     def __init__(self, node):
@@ -38,13 +38,18 @@ class VeluxCover(CoverDevice):
 
         async def after_update_callback(device):
             """Call after device was updated."""
-            await self.async_update_ha_state()
+            self.async_write_ha_state()
 
         self.node.register_device_updated_cb(after_update_callback)
 
     async def async_added_to_hass(self):
         """Store register state change callback."""
         self.async_register_callbacks()
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of this cover."""
+        return self.node.serial_number
 
     @property
     def name(self):

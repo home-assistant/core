@@ -1,16 +1,18 @@
 """Support to interface with the Plex API."""
 import json
 import logging
-from xml.etree.ElementTree import ParseError
 
 import plexapi.exceptions
 import requests.exceptions
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerDevice
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_EPISODE,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TVSHOW,
+    MEDIA_TYPE_VIDEO,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -38,14 +40,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Plex media_player platform.
-
-    Deprecated.
-    """
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -94,7 +88,7 @@ def _async_add_entities(
     async_add_entities(entities, True)
 
 
-class PlexMediaPlayer(MediaPlayerDevice):
+class PlexMediaPlayer(MediaPlayerEntity):
     """Representation of a Plex device."""
 
     def __init__(self, plex_server, device, session=None):
@@ -500,7 +494,6 @@ class PlexMediaPlayer(MediaPlayerDevice):
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.setVolume(int(volume * 100), self._active_media_plexapi_type)
             self._volume_level = volume  # store since we can't retrieve
-            self.plex_server.update_platforms()
 
     @property
     def volume_level(self):
@@ -539,66 +532,73 @@ class PlexMediaPlayer(MediaPlayerDevice):
         """Send play command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.play(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def media_pause(self):
         """Send pause command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.pause(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def media_stop(self):
         """Send stop command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.stop(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def media_next_track(self):
         """Send next track command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.skipNext(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def media_previous_track(self):
         """Send previous track command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.skipPrevious(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         if not (self.device and "playback" in self._device_protocol_capabilities):
+            _LOGGER.debug(
+                "Client is not currently accepting playback controls: %s", self.name
+            )
             return
 
+        media_type = media_type.lower()
         src = json.loads(media_id)
-        library = src.get("library_name")
-        shuffle = src.get("shuffle", 0)
+        if media_type == PLEX_DOMAIN and isinstance(src, int):
+            try:
+                media = self.plex_server.fetch_item(src)
+            except plexapi.exceptions.NotFound:
+                _LOGGER.error("Media for key %s not found", src)
+                return
+            shuffle = 0
+        else:
+            library = src.get("library_name")
+            shuffle = src.get("shuffle", 0)
+            media = None
 
-        media = None
-
-        if media_type == "MUSIC":
-            media = self._get_music_media(library, src)
-        elif media_type == "EPISODE":
-            media = self._get_tv_media(library, src)
-        elif media_type == "PLAYLIST":
-            media = self.plex_server.playlist(src["playlist_name"])
-        elif media_type == "VIDEO":
-            media = self.plex_server.library.section(library).get(src["video_name"])
+        try:
+            if media_type == MEDIA_TYPE_MUSIC:
+                media = self._get_music_media(library, src)
+            elif media_type == MEDIA_TYPE_EPISODE:
+                media = self._get_tv_media(library, src)
+            elif media_type == MEDIA_TYPE_PLAYLIST:
+                media = self.plex_server.playlist(src["playlist_name"])
+            elif media_type == MEDIA_TYPE_VIDEO:
+                media = self.plex_server.library.section(library).get(src["video_name"])
+        except plexapi.exceptions.NotFound:
+            _LOGGER.error("Media could not be found: %s", media_id)
+            return
 
         if media is None:
             _LOGGER.error("Media could not be found: %s", media_id)
             return
 
+        _LOGGER.debug("Attempting to play %s on %s", media, self.name)
+
         playqueue = self.plex_server.create_playqueue(media, shuffle=shuffle)
         try:
             self.device.playMedia(playqueue)
-        except ParseError:
-            # Temporary workaround for Plexamp / plexapi issue
-            pass
         except requests.exceptions.ConnectTimeout:
             _LOGGER.error("Timed out playing on %s", self.name)
-
-        self.plex_server.update_platforms()
 
     def _get_music_media(self, library_name, src):
         """Find music media and return a Plex media object."""

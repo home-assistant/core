@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -29,15 +29,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Binary Sensor platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
 
-    ads_var = config.get(CONF_ADS_VAR)
-    name = config.get(CONF_NAME)
+    ads_var = config[CONF_ADS_VAR]
+    name = config[CONF_NAME]
     device_class = config.get(CONF_DEVICE_CLASS)
 
     ads_sensor = AdsBinarySensor(ads_hub, name, ads_var, device_class)
     add_entities([ads_sensor])
 
 
-class AdsBinarySensor(AdsEntity, BinarySensorDevice):
+class AdsBinarySensor(AdsEntity, BinarySensorEntity):
     """Representation of ADS binary sensors."""
 
     def __init__(self, ads_hub, name, ads_var, device_class):

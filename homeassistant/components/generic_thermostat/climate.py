@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_PRESET_MODE,
     CURRENT_HVAC_COOL,
@@ -127,7 +127,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class GenericThermostat(ClimateDevice, RestoreEntity):
+class GenericThermostat(ClimateEntity, RestoreEntity):
     """Representation of a Generic Thermostat device."""
 
     def __init__(
@@ -325,7 +325,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
             _LOGGER.error("Unrecognized hvac mode: %s", hvac_mode)
             return
         # Ensure we update the current operation after changing the mode
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -334,7 +334,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
             return
         self._target_temp = temperature
         await self._async_control_heating(force=True)
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def min_temp(self):
@@ -361,14 +361,14 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
 
         self._async_update_temp(new_state)
         await self._async_control_heating()
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def _async_switch_changed(self, entity_id, old_state, new_state):
         """Handle heater switch state changes."""
         if new_state is None:
             return
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def _async_update_temp(self, state):
@@ -468,4 +468,4 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
             self._target_temp = self._saved_target_temp
             await self._async_control_heating(force=True)
 
-        await self.async_update_ha_state()
+        self.async_write_ha_state()

@@ -43,7 +43,7 @@ class TelldusLiveEntity(Entity):
         """Return the property of the device might have changed."""
         if self.device.name:
             self._name = self.device.name
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def device_id(self):
