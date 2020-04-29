@@ -12,7 +12,7 @@ from .const import KEY_REAL_IP
 
 
 @callback
-def setup_real_ip(app, use_x_forwarded_for, trusted_proxies):
+def setup_real_ip(app, use_x_forwarded_for, trusted_proxies, depth):
     """Create IP Ban middleware for the app."""
 
     @middleware
@@ -31,7 +31,7 @@ def setup_real_ip(app, use_x_forwarded_for, trusted_proxies):
                 )
             ):
                 request[KEY_REAL_IP] = ip_address(
-                    request.headers.get(X_FORWARDED_FOR).split(", ")[-1]
+                    request.headers.get(X_FORWARDED_FOR).split(", ")[int(depth)]
                 )
         except ValueError:
             pass
