@@ -1,4 +1,6 @@
 """Config flow for OpenWeatherMap."""
+import logging
+
 from pyowm import OWM
 from pyowm.exceptions.api_call_error import APICallError
 from pyowm.exceptions.api_response_error import UnauthorizedError
@@ -26,6 +28,8 @@ from .const import (
     MONITORED_CONDITIONS,
 )
 from .const import DOMAIN  # pylint:disable=unused-import
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -56,8 +60,10 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             api_key_valid = _validate_api_key(user_input[CONF_API_KEY])
+
+            _LOGGER.error(user_input)
             monitored_conditions_valid = _validate_monitored_conditions(
-                user_input[CONF_MONITORED_CONDITIONS]
+                user_input.get(CONF_MONITORED_CONDITIONS, None)
             )
             if not api_key_valid:
                 errors["base"] = "auth"
@@ -144,6 +150,9 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
 
 
 def _validate_monitored_conditions(conditions_str):
+    if not conditions_str:
+        return True
+
     conditions = list(filter(None, str(conditions_str).split(",")))
     for condition in conditions:
         if condition.strip() not in MONITORED_CONDITIONS:
