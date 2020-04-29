@@ -11,7 +11,7 @@ import logging
 import time
 from typing import List, Optional, Tuple
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -159,7 +159,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 @STRICT_MATCH(channel_names=CHANNEL_THERMOSTAT, aux_channels=CHANNEL_FAN)
-class Thermostat(ZhaEntity, ClimateDevice):
+class Thermostat(ZhaEntity, ClimateEntity):
     """Representation of a ZHA Thermostat device."""
 
     DEFAULT_MAX_TEMP = 35
