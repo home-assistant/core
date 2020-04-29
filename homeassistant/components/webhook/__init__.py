@@ -78,9 +78,9 @@ async def async_handle_webhook(hass, webhook_id, request):
             "Received message for unregistered webhook %s from %s", webhook_id, peer_ip
         )
         # Look at content to provide some context for received webhook
-        content = await request.content.read()
+        content = await request.content.read(64)
         # Limit to 64 chars to avoid flooding the log
-        _LOGGER.debug("%s...", content[:64])
+        _LOGGER.debug("%s...", content)
         return Response(status=HTTP_OK)
 
     try:
