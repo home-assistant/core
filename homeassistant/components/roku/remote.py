@@ -43,7 +43,6 @@ class RokuRemote(RemoteDevice):
             self._available = True
         except (RequestsConnectionError, RequestsReadTimeout, RokuException):
             self._available = False
-            pass
 
     @property
     def name(self):

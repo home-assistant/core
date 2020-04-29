@@ -3,6 +3,5 @@
   "name": "ThermoWorks Smoke",
   "documentation": "https://www.home-assistant.io/integrations/thermoworks_smoke",
   "requirements": ["stringcase==1.2.0", "thermoworks_smoke==0.1.8"],
-  "dependencies": [],
   "codeowners": []
 }

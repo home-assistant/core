@@ -17,6 +17,7 @@ from homeassistant.components.smartthings.const import (
     SIGNAL_SMARTTHINGS_UPDATE,
     SUPPORTED_PLATFORMS,
 )
+from homeassistant.const import HTTP_FORBIDDEN, HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
@@ -80,7 +81,7 @@ async def test_recoverable_api_errors_raise_not_ready(
     config_entry.add_to_hass(hass)
     request_info = Mock(real_url="http://example.com")
     smartthings_mock.app.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=500
+        request_info=request_info, history=None, status=HTTP_INTERNAL_SERVER_ERROR
     )
 
     with pytest.raises(ConfigEntryNotReady):
@@ -96,7 +97,7 @@ async def test_scenes_api_errors_raise_not_ready(
     smartthings_mock.app.return_value = app
     smartthings_mock.installed_app.return_value = installed_app
     smartthings_mock.scenes.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=500
+        request_info=request_info, history=None, status=HTTP_INTERNAL_SERVER_ERROR
     )
     with pytest.raises(ConfigEntryNotReady):
         await smartthings.async_setup_entry(hass, config_entry)
@@ -154,11 +155,11 @@ async def test_scenes_unauthorized_loads_platforms(
     smartthings_mock.installed_app.return_value = installed_app
     smartthings_mock.devices.return_value = [device]
     smartthings_mock.scenes.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=403
+        request_info=request_info, history=None, status=HTTP_FORBIDDEN
     )
     mock_token = Mock()
-    mock_token.access_token.return_value = str(uuid4())
-    mock_token.refresh_token.return_value = str(uuid4())
+    mock_token.access_token = str(uuid4())
+    mock_token.refresh_token = str(uuid4())
     smartthings_mock.generate_tokens.return_value = mock_token
     subscriptions = [
         subscription_factory(capability) for capability in device.capabilities
@@ -189,8 +190,8 @@ async def test_config_entry_loads_platforms(
     smartthings_mock.devices.return_value = [device]
     smartthings_mock.scenes.return_value = [scene]
     mock_token = Mock()
-    mock_token.access_token.return_value = str(uuid4())
-    mock_token.refresh_token.return_value = str(uuid4())
+    mock_token.access_token = str(uuid4())
+    mock_token.refresh_token = str(uuid4())
     smartthings_mock.generate_tokens.return_value = mock_token
     subscriptions = [
         subscription_factory(capability) for capability in device.capabilities
@@ -223,8 +224,8 @@ async def test_config_entry_loads_unconnected_cloud(
     smartthings_mock.devices.return_value = [device]
     smartthings_mock.scenes.return_value = [scene]
     mock_token = Mock()
-    mock_token.access_token.return_value = str(uuid4())
-    mock_token.refresh_token.return_value = str(uuid4())
+    mock_token.access_token = str(uuid4())
+    mock_token.refresh_token = str(uuid4())
     smartthings_mock.generate_tokens.return_value = mock_token
     subscriptions = [
         subscription_factory(capability) for capability in device.capabilities
@@ -306,10 +307,10 @@ async def test_remove_entry_already_deleted(hass, config_entry, smartthings_mock
     request_info = Mock(real_url="http://example.com")
     # Arrange
     smartthings_mock.delete_installed_app.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=403
+        request_info=request_info, history=None, status=HTTP_FORBIDDEN
     )
     smartthings_mock.delete_app.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=403
+        request_info=request_info, history=None, status=HTTP_FORBIDDEN
     )
     # Act
     await smartthings.async_remove_entry(hass, config_entry)
@@ -325,7 +326,7 @@ async def test_remove_entry_installedapp_api_error(
     request_info = Mock(real_url="http://example.com")
     # Arrange
     smartthings_mock.delete_installed_app.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=500
+        request_info=request_info, history=None, status=HTTP_INTERNAL_SERVER_ERROR
     )
     # Act
     with pytest.raises(ClientResponseError):
@@ -354,7 +355,7 @@ async def test_remove_entry_app_api_error(hass, config_entry, smartthings_mock):
     # Arrange
     request_info = Mock(real_url="http://example.com")
     smartthings_mock.delete_app.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=500
+        request_info=request_info, history=None, status=HTTP_INTERNAL_SERVER_ERROR
     )
     # Act
     with pytest.raises(ClientResponseError):

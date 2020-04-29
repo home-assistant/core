@@ -2,7 +2,6 @@
   "domain": "ffmpeg_motion",
   "name": "FFmpeg Motion",
   "documentation": "https://www.home-assistant.io/integrations/ffmpeg_motion",
-  "requirements": [],
   "dependencies": ["ffmpeg"],
   "codeowners": []
 }

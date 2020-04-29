@@ -3,6 +3,5 @@
   "name": "Velux",
   "documentation": "https://www.home-assistant.io/integrations/velux",
   "requirements": ["pyvlx==0.2.12"],
-  "dependencies": [],
   "codeowners": ["@Julius2342"]
 }

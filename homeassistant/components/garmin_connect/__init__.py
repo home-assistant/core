@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     garmin_client = Garmin(username, password)
 
     try:
-        garmin_client.login()
+        await hass.async_add_executor_job(garmin_client.login)
     except (
         GarminConnectAuthenticationError,
         GarminConnectTooManyRequestsError,

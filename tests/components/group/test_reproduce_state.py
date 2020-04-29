@@ -39,7 +39,7 @@ async def test_reproduce_group(hass):
 
         state = State("group.test", "on")
 
-        await async_reproduce_states(hass, [state], context)
+        await async_reproduce_states(hass, [state], context=context)
 
         fun.assert_called_once_with(
             hass,
@@ -48,6 +48,6 @@ async def test_reproduce_group(hass):
                 clone_state(state, "light.test2"),
                 clone_state(state, "switch.test1"),
             ],
-            blocking=True,
             context=context,
+            reproduce_options=None,
         )

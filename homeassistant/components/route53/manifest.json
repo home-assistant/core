@@ -3,6 +3,5 @@
   "name": "AWS Route53",
   "documentation": "https://www.home-assistant.io/integrations/route53",
   "requirements": ["boto3==1.9.252", "ipify==1.0.0"],
-  "dependencies": [],
   "codeowners": []
 }

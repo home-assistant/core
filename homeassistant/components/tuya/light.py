@@ -13,6 +13,8 @@ from homeassistant.util import color as colorutil
 
 from . import DATA_TUYA, TuyaDevice
 
+PARALLEL_UPDATES = 0
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tuya light platform."""

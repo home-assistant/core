@@ -58,8 +58,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Clementine platform."""
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
     token = config.get(CONF_ACCESS_TOKEN)
 
     client = ClementineRemote(host, port, token, reconnect=True)

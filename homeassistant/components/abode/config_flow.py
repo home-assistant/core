@@ -5,7 +5,7 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_BAD_REQUEST
 from homeassistant.core import callback
 
 from .const import DEFAULT_CACHEDB, DOMAIN, LOGGER  # pylint: disable=unused-import
@@ -46,7 +46,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         except (AbodeException, ConnectTimeout, HTTPError) as ex:
             LOGGER.error("Unable to connect to Abode: %s", str(ex))
-            if ex.errcode == 400:
+            if ex.errcode == HTTP_BAD_REQUEST:
                 return self._show_form({"base": "invalid_credentials"})
             return self._show_form({"base": "connection_error"})
 

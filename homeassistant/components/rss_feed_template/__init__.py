@@ -5,6 +5,7 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import HTTP_OK
 import homeassistant.helpers.config_validation as cv
 
 CONTENT_TYPE_XML = "text/xml"
@@ -98,4 +99,6 @@ class RssView(HomeAssistantView):
 
         response += "</rss>\n"
 
-        return web.Response(body=response, content_type=CONTENT_TYPE_XML, status=200)
+        return web.Response(
+            body=response, content_type=CONTENT_TYPE_XML, status=HTTP_OK
+        )

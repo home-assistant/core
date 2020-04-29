@@ -2,12 +2,13 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import DEVICE_CLASS_POWER
+from homeassistant.const import ATTR_ATTRIBUTION, DEVICE_CLASS_POWER
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_registry import async_get_registry
 
 from .const import (
+    ATTRIBUTION,
     DOMAIN,
     MDI_ICONS,
     SENSE_DATA,
@@ -98,6 +99,11 @@ class SenseDevice(BinarySensorDevice):
     def old_unique_id(self):
         """Return the old not so unique id of the binary sensor."""
         return self._id
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def icon(self):

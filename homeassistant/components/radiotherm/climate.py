@@ -198,7 +198,7 @@ class RadioThermostat(ClimateDevice):
 
     def set_fan_mode(self, fan_mode):
         """Turn fan on/off."""
-        code = FAN_MODE_TO_CODE.get(fan_mode, None)
+        code = FAN_MODE_TO_CODE.get(fan_mode)
         if code is not None:
             self.device.fmode = code
 

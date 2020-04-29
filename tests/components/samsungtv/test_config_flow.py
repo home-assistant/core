@@ -76,6 +76,7 @@ def remote_fixture():
         remote_class.return_value = remote
         socket = mock.Mock()
         socket_class.return_value = socket
+        socket_class.gethostbyname.return_value = "FAKE_IP_ADDRESS"
         yield remote
 
 
@@ -91,8 +92,10 @@ def remotews_fixture():
         remotews.__enter__ = mock.Mock()
         remotews.__exit__ = mock.Mock()
         remotews_class.return_value = remotews
+        remotews_class().__enter__().token = "FAKE_TOKEN"
         socket = mock.Mock()
         socket_class.return_value = socket
+        socket_class.gethostbyname.return_value = "FAKE_IP_ADDRESS"
         yield remotews
 
 

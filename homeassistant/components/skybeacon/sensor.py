@@ -176,7 +176,7 @@ class Monitor(threading.Thread):
             value[2],
             value[1],
         )
-        self.data["temp"] = float(("%d.%d" % (value[0], value[2])))
+        self.data["temp"] = float("%d.%d" % (value[0], value[2]))
         self.data["humid"] = value[1]
 
     def terminate(self):

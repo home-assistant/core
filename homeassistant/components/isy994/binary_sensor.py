@@ -319,7 +319,6 @@ class ISYBinarySensorHeartbeat(ISYDevice, BinarySensorDevice):
 
         We listen directly to the Control events for this device.
         """
-        pass
 
     @property
     def value(self) -> object:

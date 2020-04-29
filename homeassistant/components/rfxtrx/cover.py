@@ -82,7 +82,7 @@ class RfxtrxCover(RfxtrxDevice, CoverDevice, RestoreEntity):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return None
+        return not self._state
 
     def open_cover(self, **kwargs):
         """Move the cover up."""

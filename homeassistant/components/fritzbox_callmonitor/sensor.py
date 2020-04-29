@@ -63,7 +63,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Try to resolve a hostname; if it is already an IP, it will be returned as-is
     try:
         host = socket.gethostbyname(host)
-    except socket.error:
+    except OSError:
         _LOGGER.error("Could not resolve hostname %s", host)
         return
     port = config.get(CONF_PORT)
@@ -170,7 +170,7 @@ class FritzBoxCallMonitor:
         try:
             self.sock.connect((self.host, self.port))
             threading.Thread(target=self._listen).start()
-        except socket.error as err:
+        except OSError as err:
             self.sock = None
             _LOGGER.error(
                 "Cannot connect to %s on port %s: %s", self.host, self.port, err

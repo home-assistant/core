@@ -25,7 +25,7 @@ from buienradar.constants import (
 )
 from buienradar.urls import JSON_FEED_URL, json_precipitation_forecast_url
 
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, HTTP_OK
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
@@ -67,15 +67,12 @@ class BrData:
 
     async def update_devices(self):
         """Update all devices/sensors."""
-        if self.devices:
-            tasks = []
-            # Update all devices
-            for dev in self.devices:
-                if dev.load_data(self.data):
-                    tasks.append(dev.async_update_ha_state())
+        if not self.devices:
+            return
 
-            if tasks:
-                await asyncio.wait(tasks)
+        # Update all devices
+        for dev in self.devices:
+            dev.data_updated(self.data)
 
     async def schedule_update(self, minute=1):
         """Schedule an update after minute minutes."""
@@ -95,7 +92,7 @@ class BrData:
 
                 result[STATUS_CODE] = resp.status
                 result[CONTENT] = await resp.text()
-                if resp.status == 200:
+                if resp.status == HTTP_OK:
                     result[SUCCESS] = True
                 else:
                     result[MESSAGE] = "Got http statuscode: %d" % (resp.status)

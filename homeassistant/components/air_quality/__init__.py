@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -144,3 +145,8 @@ class AirQualityEntity(Entity):
     def state(self):
         """Return the current state."""
         return self.particulate_matter_2_5
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER

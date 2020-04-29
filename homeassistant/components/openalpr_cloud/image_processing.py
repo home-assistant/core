@@ -17,7 +17,7 @@ from homeassistant.components.image_processing import (
 from homeassistant.components.openalpr_local.image_processing import (
     ImageProcessingAlprEntity,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, HTTP_OK
 from homeassistant.core import split_entity_id
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -86,7 +86,7 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
         if name:
             self._name = name
         else:
-            self._name = "OpenAlpr {0}".format(split_entity_id(camera_entity)[1])
+            self._name = f"OpenAlpr {split_entity_id(camera_entity)[1]}"
 
     @property
     def confidence(self):
@@ -121,7 +121,7 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
 
                 data = await request.json()
 
-                if request.status != 200:
+                if request.status != HTTP_OK:
                     _LOGGER.error("Error %d -> %s.", request.status, data.get("error"))
                     return
 

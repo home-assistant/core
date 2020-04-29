@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Host jest ju\u017c skonfigurowany."
+        },
+        "error": {
+            "connection_failed": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
+            "register_failed": "Nie uda\u0142o si\u0119 zarejestrowa\u0107. Spr\u00f3buj ponownie.",
+            "unknown": "Nieznany b\u0142\u0105d, spr\u00f3buj ponownie p\u00f3\u017aniej."
+        },
+        "step": {
+            "link": {
+                "description": "Kliknij \"Zatwierd\u017a\", a nast\u0119pnie naci\u015bnij przycisk strza\u0142ki w prawo na routerze, aby zarejestrowa\u0107 Freebox w Home Assistan'cie. \n\n ![Lokalizacja przycisku na routerze] (/static/images/config_freebox.png)",
+                "title": "Po\u0142\u0105cz z routerem Freebox"
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port"
+                },
+                "title": "Freebox"
+            }
+        }
+    }
+}

@@ -33,6 +33,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    HTTP_OK,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
@@ -223,7 +224,7 @@ class LogitechMediaServer:
             with async_timeout.timeout(TIMEOUT):
                 response = await websession.post(url, data=data, auth=auth)
 
-                if response.status != 200:
+                if response.status != HTTP_OK:
                     _LOGGER.error(
                         "Query failed, response code: %s Full message: %s",
                         response.status,

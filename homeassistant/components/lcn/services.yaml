@@ -5,7 +5,7 @@ output_abs:
   fields:
     address:
       description: Module address
-      example: 'myhome.s0.m7'
+      example: "myhome.s0.m7"
     output:
       description: Output port
       example: "output1"
@@ -21,7 +21,7 @@ output_rel:
   fields:
     address:
       description: Module address
-      example: 'myhome.s0.m7'
+      example: "myhome.s0.m7"
     output:
       description: Output port
       example: "output1"
@@ -37,7 +37,7 @@ output_toggle:
   fields:
     address:
       description: Module address
-      example: 'myhome.s0.m7'
+      example: "myhome.s0.m7"
     output:
       description: Output port
       example: "output1"
@@ -50,7 +50,7 @@ relays:
   fields:
     address:
       description: Module address
-      example: 'myhome.s0.m7'
+      example: "myhome.s0.m7"
     state:
       description: Relays states as string (1=on, 2=off, t=toggle, -=nochange)
       example: "t---001-"
@@ -60,16 +60,16 @@ led:
   fields:
     address:
       description: Module address
-      example: 'myhome.s0.m7'
+      example: "myhome.s0.m7"
     led:
       description: Led
       example: "led6"
     state:
       description: Led state
-      example: 'blink'
+      example: "blink"
       values:
-        - on
-        - off
+        - "on"
+        - "off"
         - blink
         - flicker
 
@@ -78,45 +78,45 @@ var_abs:
   fields:
     address:
       description: Module address
-      example: 'myhome.s0.m7'
+      example: "myhome.s0.m7"
     variable:
       description: Variable or setpoint name
-      example: 'var1'
+      example: "var1"
     value:
       description: Value to set
-      example: '50'
+      example: "50"
     unit_of_measurement:
       description: Unit of value
-      example: 'celsius'
+      example: "celsius"
 
 var_reset:
   description: Reset value of variable or setpoint.
   fields:
     address:
       description: Module address
-      example: 'myhome.s0.m7'
+      example: "myhome.s0.m7"
     variable:
       description: Variable or setpoint name
-      example: 'var1'
+      example: "var1"
 
 var_rel:
   description: Shift value of a variable, setpoint or threshold.
   fields:
     address:
       description: Module address
-      example: 'myhome.s0.m7'
+      example: "myhome.s0.m7"
     variable:
       description: Variable or setpoint name
-      example: 'var1'
+      example: "var1"
     value:
       description: Shift value
-      example: '50'
+      example: "50"
     unit_of_measurement:
       description: Unit of value
-      example: 'celsius'
+      example: "celsius"
     value_reference:
       description: Reference value (current or programmed) for setpoint and threshold
-      example: 'current'
+      example: "current"
       values:
         - current
         - prog
@@ -126,10 +126,10 @@ lock_regulator:
   fields:
     address:
       description: Module address
-      example: 'myhome.s0.m7'
+      example: "myhome.s0.m7"
     setpoint:
       description: Setpoint name
-      example: 'r1varsetpoint'
+      example: "r1varsetpoint"
     state:
       description: New setpoint state
       example: true
@@ -139,13 +139,13 @@ send_keys:
   fields:
     address:
       description: Module address
-      example: 'myhome.s0.m7'
+      example: "myhome.s0.m7"
     keys:
       description: Keys to send
-      example: 'a1a5d8'
+      example: "a1a5d8"
     state:
-      description: 'Key state upon sending (optional, must be hit for deferred)'
-      example: 'hit'
+      description: "Key state upon sending (optional, must be hit for deferred)"
+      example: "hit"
       values:
         - hit
         - make
@@ -155,46 +155,46 @@ send_keys:
       example: 10
     time_unit:
       description: Time unit of send delay (optional)
-      example: 's'
+      example: "s"
 
 lock_keys:
   description: Lock keys.
   fields:
     address:
       description: Module address
-      example: 'myhome.s0.m7'
+      example: "myhome.s0.m7"
     table:
-      description: 'Table with keys to lock (optional, must be A for interval).'
-      example: 'A5'
+      description: "Table with keys to lock (optional, must be A for interval)."
+      example: "A5"
     state:
       description: Key lock states as string (1=on, 2=off, T=toggle, -=nochange)
-      example: '1---t0--'
+      example: "1---t0--"
     time:
       description: Lock interval (optional)
       example: 10
     time_unit:
       description: Time unit of lock interval (optional)
-      example: 's'
+      example: "s"
 
 dyn_text:
   description: Send dynamic text to LCN-GTxD displays.
   fields:
     address:
       description: Module address
-      example: 'myhome.s0.m7'
+      example: "myhome.s0.m7"
     row:
       description: Text row 1..4 (support of 4 independent text rows)
       example: 1
     text:
       description: Text to send (up to 60 characters encoded as UTF-8)
-      example: 'text up to 60 characters'
+      example: "text up to 60 characters"
 
 pck:
   description: Send arbitrary PCK command.
   fields:
     address:
       description: Module address
-      example: 'myhome.s0.m7'
+      example: "myhome.s0.m7"
     pck:
       description: PCK command (without address header)
-      example: 'PIN4'
+      example: "PIN4"

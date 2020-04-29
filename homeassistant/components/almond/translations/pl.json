@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Mo\u017cesz skonfigurowa\u0107 tylko jedno konto Almond.",
+            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z serwerem Almond.",
+            "missing_configuration": "Prosz\u0119 zapozna\u0107 si\u0119 z dokumentacj\u0105 konfiguracji Almond."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistant'a, aby \u0142\u0105czy\u0142 si\u0119 z Almond dostarczonym przez dodatek Hass.io: {addon}?",
+                "title": "Almond poprzez dodatek Hass.io"
+            },
+            "pick_implementation": {
+                "title": "Wybierz metod\u0119 uwierzytelniania"
+            }
+        }
+    }
+}

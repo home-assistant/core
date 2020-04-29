@@ -25,6 +25,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -44,6 +45,9 @@ from .util import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# We want to fire remote commands right away
+PARALLEL_UPDATES = 0
 
 ATTR_CHANNEL = "channel"
 ATTR_CURRENT_ACTIVITY = "current_activity"
@@ -110,44 +114,14 @@ async def async_setup_entry(
     _LOGGER.debug("Harmony Remote: %s", device)
 
     async_add_entities([device])
-    register_services(hass)
 
+    platform = entity_platform.current_platform.get()
 
-def register_services(hass):
-    """Register all services for harmony devices."""
-
-    async def _apply_service(service, service_func, *service_func_args):
-        """Handle services to apply."""
-        entity_ids = service.data.get("entity_id")
-
-        want_devices = [
-            hass.data[DOMAIN][config_entry_id] for config_entry_id in hass.data[DOMAIN]
-        ]
-
-        if entity_ids:
-            want_devices = [
-                device for device in want_devices if device.entity_id in entity_ids
-            ]
-
-        for device in want_devices:
-            await service_func(device, *service_func_args)
-
-    async def _sync_service(service):
-        await _apply_service(service, HarmonyRemote.sync)
-
-    async def _change_channel_service(service):
-        channel = service.data.get(ATTR_CHANNEL)
-        await _apply_service(service, HarmonyRemote.change_channel, channel)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SYNC, _sync_service, schema=HARMONY_SYNC_SCHEMA
+    platform.async_register_entity_service(
+        SERVICE_SYNC, HARMONY_SYNC_SCHEMA, "sync",
     )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CHANGE_CHANNEL,
-        _change_channel_service,
-        schema=HARMONY_CHANGE_CHANNEL_SCHEMA,
+    platform.async_register_entity_service(
+        SERVICE_CHANGE_CHANNEL, HARMONY_CHANGE_CHANNEL_SCHEMA, "change_channel"
     )
 
 
@@ -166,7 +140,6 @@ class HarmonyRemote(remote.RemoteDevice):
         self.delay_secs = delay_secs
         self._available = False
         self._unique_id = unique_id
-        self._undo_dispatch_subscription = None
 
     @property
     def activity_names(self):
@@ -180,11 +153,6 @@ class HarmonyRemote(remote.RemoteDevice):
             activities.remove(ACTIVITY_POWER_OFF)
 
         return activities
-
-    async def async_will_remove_from_hass(self):
-        """Undo subscription."""
-        if self._undo_dispatch_subscription:
-            self._undo_dispatch_subscription()
 
     async def _async_update_options(self, data):
         """Change options when the options flow does."""
@@ -205,10 +173,12 @@ class HarmonyRemote(remote.RemoteDevice):
             disconnect=self.got_disconnected,
         )
 
-        self._undo_dispatch_subscription = async_dispatcher_connect(
-            self.hass,
-            f"{HARMONY_OPTIONS_UPDATE}-{self.unique_id}",
-            self._async_update_options,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{HARMONY_OPTIONS_UPDATE}-{self.unique_id}",
+                self._async_update_options,
+            )
         )
 
         # Store Harmony HUB config, this will also update our current
@@ -289,7 +259,7 @@ class HarmonyRemote(remote.RemoteDevice):
         self._current_activity = activity_name
         self._state = bool(activity_id != -1)
         self._available = True
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def new_config(self, _=None):
         """Call for updating the current activity."""
@@ -314,7 +284,7 @@ class HarmonyRemote(remote.RemoteDevice):
 
         if not self._available:
             # Still disconnected. Let the state engine know.
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs):
         """Start an activity from the Harmony device."""
@@ -331,7 +301,7 @@ class HarmonyRemote(remote.RemoteDevice):
 
             if activity_id is None:
                 _LOGGER.debug("%s: Find activity ID based on name", self.name)
-                activity_id = self._client.get_activity_id(str(activity).strip())
+                activity_id = self._client.get_activity_id(str(activity))
 
             if activity_id is None:
                 _LOGGER.error("%s: Activity %s is invalid", self.name, activity)
@@ -444,7 +414,7 @@ class HarmonyRemote(remote.RemoteDevice):
         try:
             with open(self._config_path, "w+", encoding="utf-8") as file_out:
                 json.dump(self._client.json_config, file_out, sort_keys=True, indent=4)
-        except IOError as exc:
+        except OSError as exc:
             _LOGGER.error(
                 "%s: Unable to write HUB configuration to %s: %s",
                 self.name,

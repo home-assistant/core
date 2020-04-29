@@ -9,19 +9,6 @@ from .test_device import MAC, setup_axis_integration
 from tests.common import MockConfigEntry, mock_coro
 
 
-async def test_setup_device_already_configured(hass):
-    """Test already configured device does not configure a second."""
-    with patch.object(hass, "config_entries") as mock_config_entries:
-
-        assert await async_setup_component(
-            hass,
-            axis.DOMAIN,
-            {axis.DOMAIN: {"device_name": {axis.CONF_HOST: "1.2.3.4"}}},
-        )
-
-    assert not mock_config_entries.flow.mock_calls
-
-
 async def test_setup_no_config(hass):
     """Test setup without configuration."""
     assert await async_setup_component(hass, axis.DOMAIN, {})

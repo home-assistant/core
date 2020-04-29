@@ -59,7 +59,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     api_key = config[CONF_API_KEY]
     monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
     user = config.get(CONF_MONITORED_USERS)
-    use_ssl = config.get(CONF_SSL)
+    use_ssl = config[CONF_SSL]
     verify_ssl = config.get(CONF_VERIFY_SSL)
 
     session = async_get_clientsession(hass, verify_ssl)

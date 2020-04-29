@@ -1,10 +1,14 @@
 """Support for Tesla HVAC system."""
 import logging
+from typing import List, Optional
+
+from teslajsonpy.exceptions import UnknownPresetMode
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
+    SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -45,7 +49,7 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
+        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
     @property
     def hvac_mode(self):
@@ -93,15 +97,39 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        _LOGGER.debug("Setting temperature for: %s", self._name)
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature:
+            _LOGGER.debug("%s: Setting temperature to %s", self._name, temperature)
             await self.tesla_device.set_temperature(temperature)
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
-        _LOGGER.debug("Setting mode for: %s", self._name)
+        _LOGGER.debug("%s: Setting hvac mode to %s", self._name, hvac_mode)
         if hvac_mode == HVAC_MODE_OFF:
             await self.tesla_device.set_status(False)
         elif hvac_mode == HVAC_MODE_HEAT_COOL:
             await self.tesla_device.set_status(True)
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        _LOGGER.debug("%s: Setting preset_mode to: %s", self.name, preset_mode)
+        try:
+            await self.tesla_device.set_preset_mode(preset_mode)
+        except UnknownPresetMode as ex:
+            _LOGGER.error("%s", ex.message)
+
+    @property
+    def preset_mode(self) -> Optional[str]:
+        """Return the current preset mode, e.g., home, away, temp.
+
+        Requires SUPPORT_PRESET_MODE.
+        """
+        return self.tesla_device.preset_mode
+
+    @property
+    def preset_modes(self) -> Optional[List[str]]:
+        """Return a list of available preset modes.
+
+        Requires SUPPORT_PRESET_MODE.
+        """
+        return self.tesla_device.preset_modes

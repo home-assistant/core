@@ -28,7 +28,7 @@ def calls(hass):
 
 def get_switch_name(number):
     """Get a mock switch name."""
-    return "Mock Switch #" + str(number)
+    return f"Mock Switch #{number}"
 
 
 @pytest.fixture

@@ -1,78 +1,112 @@
 """Vera tests."""
-from unittest.mock import MagicMock
+from asynctest import MagicMock
+import pyvera as pv
+from requests.exceptions import RequestException
 
-from pyvera import (
-    VeraArmableDevice,
-    VeraBinarySensor,
-    VeraController,
-    VeraCurtain,
-    VeraDevice,
-    VeraDimmer,
-    VeraLock,
-    VeraScene,
-    VeraSceneController,
-    VeraSensor,
-    VeraSwitch,
-    VeraThermostat,
-)
-
-from homeassistant.components.vera import (
-    CONF_EXCLUDE,
-    CONF_LIGHTS,
-    DOMAIN,
-    VERA_DEVICES,
-)
+from homeassistant.components.vera import CONF_CONTROLLER, DOMAIN
+from homeassistant.config_entries import ENTRY_STATE_NOT_LOADED
 from homeassistant.core import HomeAssistant
 
-from .common import ComponentFactory
+from .common import ComponentFactory, new_simple_controller_config
 
-
-def new_vera_device(cls, device_id: int) -> VeraDevice:
-    """Create new mocked vera device.."""
-    vera_device = MagicMock(spec=cls)  # type: VeraDevice
-    vera_device.device_id = device_id
-    vera_device.name = f"dev${device_id}"
-    return vera_device
-
-
-def assert_hass_vera_devices(hass: HomeAssistant, platform: str, arr_len: int) -> None:
-    """Assert vera devices are present.."""
-    assert hass.data[VERA_DEVICES][platform]
-    assert len(hass.data[VERA_DEVICES][platform]) == arr_len
+from tests.common import MockConfigEntry
 
 
 async def test_init(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-
-    def setup_callback(controller: VeraController, hass_config: dict) -> None:
-        hass_config[DOMAIN][CONF_EXCLUDE] = [11]
-        hass_config[DOMAIN][CONF_LIGHTS] = [10]
+    vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device1.device_id = 1
+    vera_device1.vera_device_id = 1
+    vera_device1.name = "first_dev"
+    vera_device1.is_tripped = False
+    entity1_id = "binary_sensor.first_dev_1"
 
     await vera_component_factory.configure_component(
         hass=hass,
-        devices=(
-            new_vera_device(VeraDimmer, 1),
-            new_vera_device(VeraBinarySensor, 2),
-            new_vera_device(VeraSensor, 3),
-            new_vera_device(VeraArmableDevice, 4),
-            new_vera_device(VeraLock, 5),
-            new_vera_device(VeraThermostat, 6),
-            new_vera_device(VeraCurtain, 7),
-            new_vera_device(VeraSceneController, 8),
-            new_vera_device(VeraSwitch, 9),
-            new_vera_device(VeraSwitch, 10),
-            new_vera_device(VeraSwitch, 11),
+        controller_config=new_simple_controller_config(
+            config={CONF_CONTROLLER: "http://127.0.0.1:111"},
+            config_from_file=False,
+            serial_number="first_serial",
+            devices=(vera_device1,),
         ),
-        scenes=(MagicMock(spec=VeraScene),),
-        setup_callback=setup_callback,
     )
 
-    assert_hass_vera_devices(hass, "light", 2)
-    assert_hass_vera_devices(hass, "binary_sensor", 1)
-    assert_hass_vera_devices(hass, "sensor", 2)
-    assert_hass_vera_devices(hass, "switch", 2)
-    assert_hass_vera_devices(hass, "lock", 1)
-    assert_hass_vera_devices(hass, "climate", 1)
-    assert_hass_vera_devices(hass, "cover", 1)
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entry1 = entity_registry.async_get(entity1_id)
+
+    assert entry1
+
+
+async def test_init_from_file(
+    hass: HomeAssistant, vera_component_factory: ComponentFactory
+) -> None:
+    """Test function."""
+    vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device1.device_id = 1
+    vera_device1.vera_device_id = 1
+    vera_device1.name = "first_dev"
+    vera_device1.is_tripped = False
+    entity1_id = "binary_sensor.first_dev_1"
+
+    await vera_component_factory.configure_component(
+        hass=hass,
+        controller_config=new_simple_controller_config(
+            config={CONF_CONTROLLER: "http://127.0.0.1:111"},
+            config_from_file=True,
+            serial_number="first_serial",
+            devices=(vera_device1,),
+        ),
+    )
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entry1 = entity_registry.async_get(entity1_id)
+    assert entry1
+
+
+async def test_unload(
+    hass: HomeAssistant, vera_component_factory: ComponentFactory
+) -> None:
+    """Test function."""
+    vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device1.device_id = 1
+    vera_device1.vera_device_id = 1
+    vera_device1.name = "first_dev"
+    vera_device1.is_tripped = False
+
+    await vera_component_factory.configure_component(
+        hass=hass, controller_config=new_simple_controller_config()
+    )
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert entries
+
+    for config_entry in entries:
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        assert config_entry.state == ENTRY_STATE_NOT_LOADED
+
+
+async def test_async_setup_entry_error(
+    hass: HomeAssistant, vera_component_factory: ComponentFactory
+) -> None:
+    """Test function."""
+
+    def setup_callback(controller: pv.VeraController) -> None:
+        controller.get_devices.side_effect = RequestException()
+        controller.get_scenes.side_effect = RequestException()
+
+    await vera_component_factory.configure_component(
+        hass=hass,
+        controller_config=new_simple_controller_config(setup_callback=setup_callback),
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_CONTROLLER: "http://127.0.0.1"},
+        options={},
+        unique_id="12345",
+    )
+    entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)

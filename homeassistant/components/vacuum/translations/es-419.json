@@ -1,0 +1,15 @@
+{
+    "state": {
+        "_": {
+            "cleaning": "Limpiando",
+            "docked": "Acoplado",
+            "error": "Error",
+            "idle": "Inactivo",
+            "off": "Encendida",
+            "on": "Apagada",
+            "paused": "Pausado",
+            "returning": "Regresar al dock"
+        }
+    },
+    "title": "Aspiradora"
+}

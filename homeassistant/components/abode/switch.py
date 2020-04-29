@@ -53,7 +53,7 @@ class AbodeAutomationSwitch(AbodeAutomation, SwitchDevice):
         await super().async_added_to_hass()
 
         signal = f"abode_trigger_automation_{self.entity_id}"
-        async_dispatcher_connect(self.hass, signal, self.trigger)
+        self.async_on_remove(async_dispatcher_connect(self.hass, signal, self.trigger))
 
     def turn_on(self, **kwargs):
         """Enable the automation."""

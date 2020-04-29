@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "init": {
+                "title": ""
+            },
+            "user": {
+                "data": {
+                    "igd": ""
+                }
+            }
+        }
+    }
+}

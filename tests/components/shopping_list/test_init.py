@@ -1,6 +1,7 @@
 """Test shopping list component."""
 
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.helpers import intent
 
 
@@ -99,7 +100,7 @@ async def test_deprecated_api_update(hass, hass_client, sl_setup):
 
     client = await hass_client()
     resp = await client.post(
-        "/api/shopping_list/item/{}".format(beer_id), json={"name": "soda"}
+        f"/api/shopping_list/item/{beer_id}", json={"name": "soda"}
     )
 
     assert resp.status == 200
@@ -107,7 +108,7 @@ async def test_deprecated_api_update(hass, hass_client, sl_setup):
     assert data == {"id": beer_id, "name": "soda", "complete": False}
 
     resp = await client.post(
-        "/api/shopping_list/item/{}".format(wine_id), json={"complete": True}
+        f"/api/shopping_list/item/{wine_id}", json={"complete": True}
     )
 
     assert resp.status == 200
@@ -171,12 +172,10 @@ async def test_api_update_fails(hass, hass_client, sl_setup):
     client = await hass_client()
     resp = await client.post("/api/shopping_list/non_existing", json={"name": "soda"})
 
-    assert resp.status == 404
+    assert resp.status == HTTP_NOT_FOUND
 
     beer_id = hass.data["shopping_list"].items[0]["id"]
-    resp = await client.post(
-        "/api/shopping_list/item/{}".format(beer_id), json={"name": 123}
-    )
+    resp = await client.post(f"/api/shopping_list/item/{beer_id}", json={"name": 123})
 
     assert resp.status == 400
 
@@ -221,7 +220,7 @@ async def test_deprecated_api_clear_completed(hass, hass_client, sl_setup):
 
     # Mark beer as completed
     resp = await client.post(
-        "/api/shopping_list/item/{}".format(beer_id), json={"complete": True}
+        f"/api/shopping_list/item/{beer_id}", json={"complete": True}
     )
     assert resp.status == 200
 

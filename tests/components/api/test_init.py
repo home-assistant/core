@@ -52,7 +52,7 @@ async def test_api_get_state(hass, mock_api_client):
 async def test_api_get_non_existing_state(hass, mock_api_client):
     """Test if the debug interface allows us to get a state."""
     resp = await mock_api_client.get("/api/states/does_not_exist")
-    assert resp.status == 404
+    assert resp.status == const.HTTP_NOT_FOUND
 
 
 async def test_api_state_change(hass, mock_api_client):

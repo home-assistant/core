@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
+            "no_device": "Ingen av enhetene dine har \"Finn min iPhone\" aktivert"
+        },
+        "error": {
+            "login": "Innloggingsfeil: vennligst sjekk e-postadressen og passordet ditt",
+            "send_verification_code": "Kunne ikke sende bekreftelseskode",
+            "validate_verification_code": "Kunne ikke bekrefte bekreftelseskoden din, velg en tillitsenhet og start bekreftelsen p\u00e5 nytt"
+        },
+        "step": {
+            "trusted_device": {
+                "data": {
+                    "trusted_device": "P\u00e5litelig enhet"
+                },
+                "description": "Velg den p\u00e5litelige enheten din",
+                "title": "iCloud p\u00e5litelig enhet"
+            },
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "E-post",
+                    "with_family": "Med familie"
+                },
+                "description": "Angi legitimasjonsbeskrivelsen",
+                "title": "iCloud-legitimasjon"
+            },
+            "verification_code": {
+                "data": {
+                    "verification_code": "iCloud-bekreftelseskode"
+                },
+                "description": "Vennligst skriv inn bekreftelseskoden du nettopp har f\u00e5tt fra iCloud",
+                "title": "iCloud-bekreftelseskode"
+            }
+        }
+    }
+}

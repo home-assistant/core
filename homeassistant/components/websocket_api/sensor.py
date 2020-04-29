@@ -28,11 +28,15 @@ class APICount(Entity):
 
     async def async_added_to_hass(self):
         """Added to hass."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_WEBSOCKET_CONNECTED, self._update_count
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_WEBSOCKET_CONNECTED, self._update_count
+            )
         )
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_WEBSOCKET_DISCONNECTED, self._update_count
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_WEBSOCKET_DISCONNECTED, self._update_count
+            )
         )
         self._update_count()
 
@@ -54,4 +58,4 @@ class APICount(Entity):
     @callback
     def _update_count(self):
         self.count = self.hass.data.get(DATA_CONNECTIONS, 0)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

@@ -2,8 +2,6 @@
   "domain": "alert",
   "name": "Alert",
   "documentation": "https://www.home-assistant.io/integrations/alert",
-  "requirements": [],
-  "dependencies": [],
   "after_dependencies": ["notify"],
   "codeowners": [],
   "quality_scale": "internal"

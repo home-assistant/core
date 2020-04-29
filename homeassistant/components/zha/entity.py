@@ -117,24 +117,11 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     def async_set_state(self, attr_id: int, attr_name: str, value: Any) -> None:
         """Set the entity state."""
 
-    async def async_added_to_hass(self) -> None:
-        """Run when about to be added to hass."""
-        await super().async_added_to_hass()
-        self.remove_future = asyncio.Future()
-        await self.async_accept_signal(
-            None,
-            "{}_{}".format(SIGNAL_REMOVE, str(self.zha_device.ieee)),
-            self.async_remove,
-            signal_override=True,
-        )
-
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
         for unsub in self._unsubs[:]:
             unsub()
             self._unsubs.remove(unsub)
-        self.zha_device.gateway.remove_entity_reference(self)
-        self.remove_future.set_result(True)
 
     async def async_accept_signal(
         self, channel: ChannelType, signal: str, func: CALLABLE_T, signal_override=False
@@ -189,7 +176,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
         await self.async_check_recently_seen()
         await self.async_accept_signal(
             None,
-            "{}_{}".format(self.zha_device.available_signal, "entity"),
+            f"{self.zha_device.available_signal}_entity",
             self.async_set_available,
             signal_override=True,
         )
@@ -293,4 +280,3 @@ class ZhaGroupEntity(BaseZhaEntity):
 
     async def async_update(self) -> None:
         """Update the state of the group entity."""
-        pass

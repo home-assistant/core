@@ -75,7 +75,6 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
 
     async def get_device_class(self):
         """Get the HA device class from the channel."""
-        pass
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""

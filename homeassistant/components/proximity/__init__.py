@@ -3,7 +3,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICES, CONF_UNIT_OF_MEASUREMENT, CONF_ZONE
+from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_ZONE,
+    LENGTH_KILOMETERS,
+    LENGTH_METERS,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
@@ -28,7 +34,7 @@ DEFAULT_PROXIMITY_ZONE = "home"
 DEFAULT_TOLERANCE = 1
 DOMAIN = "proximity"
 
-UNITS = ["km", "m", "mi", "ft"]
+UNITS = [LENGTH_KILOMETERS, LENGTH_METERS, "mi", "ft"]
 
 ZONE_SCHEMA = vol.Schema(
     {
@@ -56,7 +62,7 @@ def setup_proximity_component(hass, name, config):
     unit_of_measurement = config.get(
         CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit
     )
-    zone_id = "zone.{}".format(config.get(CONF_ZONE))
+    zone_id = f"zone.{config.get(CONF_ZONE)}"
 
     proximity = Proximity(
         hass,
@@ -160,7 +166,7 @@ class Proximity(Entity):
             if (device_state.state).lower() == (self.friendly_name).lower():
                 device_friendly = device_state.name
                 if devices_in_zone != "":
-                    devices_in_zone = devices_in_zone + ", "
+                    devices_in_zone = f"{devices_in_zone}, "
                 devices_in_zone = devices_in_zone + device_friendly
 
         # No-one to track so reset the entity.
@@ -205,7 +211,7 @@ class Proximity(Entity):
 
             # Add the device and distance to a dictionary.
             distances_to_zone[device] = round(
-                convert(dist_to_zone, "m", self.unit_of_measurement), 1
+                convert(dist_to_zone, LENGTH_METERS, self.unit_of_measurement), 1
             )
 
         # Loop through each of the distances collected and work out the

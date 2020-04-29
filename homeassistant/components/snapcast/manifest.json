@@ -3,6 +3,5 @@
   "name": "Snapcast",
   "documentation": "https://www.home-assistant.io/integrations/snapcast",
   "requirements": ["snapcast==2.0.10"],
-  "dependencies": [],
   "codeowners": []
 }

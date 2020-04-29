@@ -113,16 +113,14 @@ async def async_get_conditions(
         )
 
         conditions.extend(
-            (
-                {
-                    **template,
-                    "condition": "device",
-                    "device_id": device_id,
-                    "entity_id": entry.entity_id,
-                    "domain": DOMAIN,
-                }
-                for template in templates
-            )
+            {
+                **template,
+                "condition": "device",
+                "device_id": device_id,
+                "entity_id": entry.entity_id,
+                "domain": DOMAIN,
+            }
+            for template in templates
         )
 
     return conditions

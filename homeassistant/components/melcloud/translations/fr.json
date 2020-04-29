@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
+            "invalid_auth": "Authentification non valide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Mot de passe MELCloud.",
+                    "username": "E-mail utilis\u00e9e pour vous connecter \u00e0 MELCloud."
+                },
+                "description": "Se connecter en utilisant votre MELCloud compte.",
+                "title": "Se connecter \u00e0 MELCloud"
+            }
+        }
+    }
+}

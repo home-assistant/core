@@ -1,13 +1,9 @@
 {
   "config": {
-    "title": "SimpliSafe",
     "step": {
       "user": {
         "title": "Fill in your information",
-        "data": {
-          "username": "Email Address",
-          "password": "Password"
-        }
+        "data": { "username": "Email Address", "password": "Password" }
       }
     },
     "error": {
@@ -22,9 +18,7 @@
     "step": {
       "init": {
         "title": "Configure SimpliSafe",
-        "data": {
-          "code": "Code (used in Home Assistant UI)"
-        }
+        "data": { "code": "Code (used in Home Assistant UI)" }
       }
     }
   }

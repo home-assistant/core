@@ -33,6 +33,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
@@ -533,6 +534,22 @@ async def test_set_hold(hass, mqtt_mock):
     assert state.attributes.get("preset_mode") is None
 
 
+async def test_set_preset_mode_twice(hass, mqtt_mock):
+    """Test setting of the same mode twice only publishes once."""
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, DEFAULT_CONFIG)
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("preset_mode") is None
+    await common.async_set_preset_mode(hass, "hold-on", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_called_once_with("hold-topic", "hold-on", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("preset_mode") == "hold-on"
+
+    await common.async_set_preset_mode(hass, "hold-on", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_not_called()
+
+
 async def test_set_aux_pessimistic(hass, mqtt_mock):
     """Test setting of the aux heating in pessimistic mode."""
     config = copy.deepcopy(DEFAULT_CONFIG)
@@ -776,6 +793,20 @@ async def test_temp_step_custom(hass, mqtt_mock):
     assert temp_step == 0.01
 
 
+async def test_temperature_unit(hass, mqtt_mock):
+    """Test that setting temperature unit converts temperature values."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["climate"]["temperature_unit"] = "F"
+    config["climate"]["current_temperature_topic"] = "current_temperature"
+
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+
+    async_fire_mqtt_message(hass, "current_temperature", "77")
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("current_temperature") == 25
+
+
 async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
@@ -905,6 +936,20 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
         hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_debug_info_message(hass, mqtt_mock):
+    """Test MQTT debug info."""
+    config = {
+        CLIMATE_DOMAIN: {
+            "platform": "mqtt",
+            "name": "test",
+            "mode_state_topic": "test-topic",
+        }
+    }
+    await help_test_entity_debug_info_message(
+        hass, mqtt_mock, CLIMATE_DOMAIN, config, "test-topic"
     )
 
 

@@ -1,4 +1,5 @@
 """Helpers for interacting with pynws."""
+from homeassistant.components.nws.const import CONF_STATION
 from homeassistant.components.nws.weather import ATTR_FORECAST_PRECIP_PROB
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -14,6 +15,9 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
 )
 from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
     LENGTH_MILES,
@@ -26,6 +30,13 @@ from homeassistant.const import (
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 from homeassistant.util.temperature import convert as convert_temperature
+
+NWS_CONFIG = {
+    CONF_API_KEY: "test",
+    CONF_LATITUDE: 35,
+    CONF_LONGITUDE: -75,
+    CONF_STATION: "ABC",
+}
 
 DEFAULT_STATIONS = ["ABC", "XYZ"]
 

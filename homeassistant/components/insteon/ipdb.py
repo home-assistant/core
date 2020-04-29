@@ -71,8 +71,7 @@ class IPDB:
 
     def __iter__(self):
         """Itterate through the INSTEON state types to HA platforms."""
-        for product in self.states:
-            yield product
+        yield from self.states
 
     def __getitem__(self, key):
         """Return a Home Assistant platform from an INSTEON state type."""

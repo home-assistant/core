@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ra\u010dun \u017ee nastavljen"
+        },
+        "error": {
+            "login": "Napaka pri prijavi: preverite svoje uporabni\u0161ko ime in geslo"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Geslo",
+                    "username": "Uporabni\u0161ko ime"
+                },
+                "title": "Total Connect"
+            }
+        }
+    }
+}

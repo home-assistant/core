@@ -1,27 +1,24 @@
 """Support for Fritzbox binary sensors."""
-import logging
-
 import requests
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.const import CONF_DEVICES
 
-from . import DOMAIN as FRITZBOX_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_CONNECTIONS, DOMAIN as FRITZBOX_DOMAIN, LOGGER
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Fritzbox binary sensor platform."""
-    devices = []
-    fritz_list = hass.data[FRITZBOX_DOMAIN]
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Fritzbox binary sensor from config_entry."""
+    entities = []
+    devices = hass.data[FRITZBOX_DOMAIN][CONF_DEVICES]
+    fritz = hass.data[FRITZBOX_DOMAIN][CONF_CONNECTIONS][config_entry.entry_id]
 
-    for fritz in fritz_list:
-        device_list = fritz.get_devices()
-        for device in device_list:
-            if device.has_alarm:
-                devices.append(FritzboxBinarySensor(device, fritz))
+    for device in await hass.async_add_executor_job(fritz.get_devices):
+        if device.has_alarm and device.ain not in devices:
+            entities.append(FritzboxBinarySensor(device, fritz))
+            devices.add(device.ain)
 
-    add_entities(devices, True)
+    async_add_entities(entities, True)
 
 
 class FritzboxBinarySensor(BinarySensorDevice):
@@ -31,6 +28,22 @@ class FritzboxBinarySensor(BinarySensorDevice):
         """Initialize the Fritzbox binary sensor."""
         self._device = device
         self._fritz = fritz
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": self.name,
+            "identifiers": {(FRITZBOX_DOMAIN, self._device.ain)},
+            "manufacturer": self._device.manufacturer,
+            "model": self._device.productname,
+            "sw_version": self._device.fw_version,
+        }
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the device."""
+        return self._device.ain
 
     @property
     def name(self):
@@ -54,5 +67,5 @@ class FritzboxBinarySensor(BinarySensorDevice):
         try:
             self._device.update()
         except requests.exceptions.HTTPError as ex:
-            _LOGGER.warning("Connection error: %s", ex)
+            LOGGER.warning("Connection error: %s", ex)
             self._fritz.login()

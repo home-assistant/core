@@ -61,7 +61,6 @@ class StarlineAccount:
             )
         except Exception as err:  # pylint: disable=broad-except
             LOGGER.error("Error updating SLNet token: %s", err)
-            pass
 
     def _update_data(self):
         """Update StarLine data."""

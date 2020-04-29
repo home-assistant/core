@@ -27,12 +27,15 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEGREE,
     IRRADIATION_WATTS_PER_SQUARE_METER,
+    LENGTH_KILOMETERS,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     TIME_HOURS,
     UNIT_PERCENTAGE,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
@@ -74,9 +77,9 @@ SENSOR_TYPES = {
     "windspeed": ["Wind speed", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
     "windforce": ["Wind force", "Bft", "mdi:weather-windy"],
     "winddirection": ["Wind direction", None, "mdi:compass-outline"],
-    "windazimuth": ["Wind direction azimuth", "°", "mdi:compass-outline"],
+    "windazimuth": ["Wind direction azimuth", DEGREE, "mdi:compass-outline"],
     "pressure": ["Pressure", "hPa", "mdi:gauge"],
-    "visibility": ["Visibility", "km", None],
+    "visibility": ["Visibility", LENGTH_KILOMETERS, None],
     "windgust": ["Wind gust", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
     "precipitation": ["Precipitation", f"mm/{TIME_HOURS}", "mdi:weather-pouring"],
     "irradiance": ["Irradiance", IRRADIATION_WATTS_PER_SQUARE_METER, "mdi:sunglasses"],
@@ -146,11 +149,11 @@ SENSOR_TYPES = {
     "winddirection_3d": ["Wind direction 3d", None, "mdi:compass-outline"],
     "winddirection_4d": ["Wind direction 4d", None, "mdi:compass-outline"],
     "winddirection_5d": ["Wind direction 5d", None, "mdi:compass-outline"],
-    "windazimuth_1d": ["Wind direction azimuth 1d", "°", "mdi:compass-outline"],
-    "windazimuth_2d": ["Wind direction azimuth 2d", "°", "mdi:compass-outline"],
-    "windazimuth_3d": ["Wind direction azimuth 3d", "°", "mdi:compass-outline"],
-    "windazimuth_4d": ["Wind direction azimuth 4d", "°", "mdi:compass-outline"],
-    "windazimuth_5d": ["Wind direction azimuth 5d", "°", "mdi:compass-outline"],
+    "windazimuth_1d": ["Wind direction azimuth 1d", DEGREE, "mdi:compass-outline"],
+    "windazimuth_2d": ["Wind direction azimuth 2d", DEGREE, "mdi:compass-outline"],
+    "windazimuth_3d": ["Wind direction azimuth 3d", DEGREE, "mdi:compass-outline"],
+    "windazimuth_4d": ["Wind direction azimuth 4d", DEGREE, "mdi:compass-outline"],
+    "windazimuth_5d": ["Wind direction azimuth 5d", DEGREE, "mdi:compass-outline"],
     "condition_1d": ["Condition 1d", None, None],
     "condition_2d": ["Condition 2d", None, None],
     "condition_3d": ["Condition 3d", None, None],
@@ -191,7 +194,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Inclusive(
             CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
         ): cv.longitude,
-        vol.Optional(CONF_TIMEFRAME, default=60): vol.All(
+        vol.Optional(CONF_TIMEFRAME, default=DEFAULT_TIMEFRAME): vol.All(
             vol.Coerce(int), vol.Range(min=5, max=120)
         ),
         vol.Optional(CONF_NAME, default="br"): cv.string,
@@ -204,7 +207,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    timeframe = config.get(CONF_TIMEFRAME, DEFAULT_TIMEFRAME)
+    timeframe = config[CONF_TIMEFRAME]
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -254,13 +257,18 @@ class BrSensor(Entity):
     def uid(self, coordinates):
         """Generate a unique id using coordinates and sensor type."""
         # The combination of the location, name and sensor type is unique
-        return "%2.6f%2.6f%s" % (
-            coordinates[CONF_LATITUDE],
-            coordinates[CONF_LONGITUDE],
-            self.type,
+        return "{:2.6f}{:2.6f}{}".format(
+            coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE], self.type
         )
 
-    def load_data(self, data):
+    @callback
+    def data_updated(self, data):
+        """Update data."""
+        if self._load_data(data) and self.hass:
+            self.async_write_ha_state()
+
+    @callback
+    def _load_data(self, data):
         """Load the sensor with relevant data."""
         # Find sensor
 
@@ -301,17 +309,17 @@ class BrSensor(Entity):
                     return False
 
                 if condition:
-                    new_state = condition.get(CONDITION, None)
+                    new_state = condition.get(CONDITION)
                     if self.type.startswith(SYMBOL):
-                        new_state = condition.get(EXACTNL, None)
+                        new_state = condition.get(EXACTNL)
                     if self.type.startswith("conditioncode"):
-                        new_state = condition.get(CONDCODE, None)
+                        new_state = condition.get(CONDCODE)
                     if self.type.startswith("conditiondetailed"):
-                        new_state = condition.get(DETAILED, None)
+                        new_state = condition.get(DETAILED)
                     if self.type.startswith("conditionexact"):
-                        new_state = condition.get(EXACT, None)
+                        new_state = condition.get(EXACT)
 
-                    img = condition.get(IMAGE, None)
+                    img = condition.get(IMAGE)
 
                     if new_state != self._state or img != self._entity_picture:
                         self._state = new_state
@@ -340,20 +348,20 @@ class BrSensor(Entity):
 
         if self.type == SYMBOL or self.type.startswith(CONDITION):
             # update weather symbol & status text
-            condition = data.get(CONDITION, None)
+            condition = data.get(CONDITION)
             if condition:
                 if self.type == SYMBOL:
-                    new_state = condition.get(EXACTNL, None)
+                    new_state = condition.get(EXACTNL)
                 if self.type == CONDITION:
-                    new_state = condition.get(CONDITION, None)
+                    new_state = condition.get(CONDITION)
                 if self.type == "conditioncode":
-                    new_state = condition.get(CONDCODE, None)
+                    new_state = condition.get(CONDCODE)
                 if self.type == "conditiondetailed":
-                    new_state = condition.get(DETAILED, None)
+                    new_state = condition.get(DETAILED)
                 if self.type == "conditionexact":
-                    new_state = condition.get(EXACT, None)
+                    new_state = condition.get(EXACT)
 
-                img = condition.get(IMAGE, None)
+                img = condition.get(IMAGE)
 
                 if new_state != self._state or img != self._entity_picture:
                     self._state = new_state

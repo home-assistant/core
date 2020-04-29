@@ -335,7 +335,7 @@ class HTML5PushCallbackView(HomeAssistantView):
     def check_authorization_header(self, request):
         """Check the authorization header."""
 
-        auth = request.headers.get(AUTHORIZATION, None)
+        auth = request.headers.get(AUTHORIZATION)
         if not auth:
             return self.json_message(
                 "Authorization header is expected", status_code=HTTP_UNAUTHORIZED
