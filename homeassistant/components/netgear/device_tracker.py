@@ -1,170 +1,141 @@
 """Support for Netgear routers."""
 import logging
-from pprint import pformat
+from typing import Dict
 
-from pynetgear import Netgear
-import voluptuous as vol
+from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import HomeAssistantType
 
-from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA,
-    DeviceScanner,
-)
-from homeassistant.const import (
-    CONF_DEVICES,
-    CONF_EXCLUDE,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-)
-import homeassistant.helpers.config_validation as cv
+from .const import DEVICE_ICONS, DOMAIN
+from .router import NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_APS = "accesspoints"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST, default=""): cv.string,
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_USERNAME, default=""): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_DEVICES, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_EXCLUDE, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_APS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up device tracker for Netgear component."""
+    router = hass.data[DOMAIN][entry.unique_id]
+    tracked = set()
 
+    @callback
+    def update_router():
+        """Update the values of the router."""
+        add_entities(router, async_add_entities, tracked)
 
-def get_scanner(hass, config):
-    """Validate the configuration and returns a Netgear scanner."""
-    info = config[DOMAIN]
-    host = info[CONF_HOST]
-    ssl = info[CONF_SSL]
-    username = info[CONF_USERNAME]
-    password = info[CONF_PASSWORD]
-    port = info.get(CONF_PORT)
-    devices = info[CONF_DEVICES]
-    excluded_devices = info[CONF_EXCLUDE]
-    accesspoints = info[CONF_APS]
+    router.listeners.append(
+        async_dispatcher_connect(hass, router.signal_device_new, update_router)
+    )
 
-    api = Netgear(password, host, username, port, ssl)
-    scanner = NetgearDeviceScanner(api, devices, excluded_devices, accesspoints)
-
-    _LOGGER.debug("Logging in")
-
-    results = scanner.get_attached_devices()
-
-    if results is not None:
-        scanner.last_results = results
-    else:
-        _LOGGER.error("Failed to Login")
-        return None
-
-    return scanner
+    update_router()
 
 
-class NetgearDeviceScanner(DeviceScanner):
-    """Queries a Netgear wireless router using the SOAP-API."""
+@callback
+def add_entities(router, async_add_entities, tracked):
+    """Add new tracker entities from the router."""
+    new_tracked = []
 
-    def __init__(
-        self,
-        api,
-        devices,
-        excluded_devices,
-        accesspoints,
-    ):
-        """Initialize the scanner."""
-        self.tracked_devices = devices
-        self.excluded_devices = excluded_devices
-        self.tracked_accesspoints = accesspoints
-        self.last_results = []
-        self._api = api
+    for mac, device in router.devices.items():
+        if mac in tracked:
+            continue
 
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
+        new_tracked.append(NetgearDevice(router, device))
+        tracked.add(mac)
 
-        devices = []
+    if new_tracked:
+        async_add_entities(new_tracked, True)
 
-        for dev in self.last_results:
-            tracked = (
-                not self.tracked_devices
-                or dev.mac in self.tracked_devices
-                or dev.name in self.tracked_devices
+
+class NetgearDevice(ScannerEntity):
+    """Representation of a Netgear device."""
+
+    def __init__(self, router: NetgearRouter, device: Dict[str, any]) -> None:
+        """Initialize a Netgear device."""
+        self._router = router
+        self._name = device["name"]
+        self._mac = device["mac"]
+        self._manufacturer = device["device_model"]
+        self._icon = icon_for_device(device)
+        self._active = True
+        self._attrs = {}
+
+    def update(self) -> None:
+        """Update the Netgear device."""
+        device = self._router.devices[self._mac]
+        self._active = device["active"]
+        self._attrs = {
+            "link_type": device["type"],
+            "link_rate": device["link_rate"],
+            "signal_strength": device["signal"],
+        }
+        if not self._active:
+            self._attrs = {}
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._mac
+
+    @property
+    def name(self) -> str:
+        """Return the name."""
+        return self._name
+
+    @property
+    def is_connected(self):
+        """Return true if the device is connected to the network."""
+        return self._active
+
+    @property
+    def source_type(self) -> str:
+        """Return the source type."""
+        return SOURCE_TYPE_ROUTER
+
+    @property
+    def icon(self) -> str:
+        """Return the icon."""
+        return self._icon
+
+    @property
+    def device_state_attributes(self) -> Dict[str, any]:
+        """Return the attributes."""
+        return self._attrs
+
+    @property
+    def device_info(self) -> Dict[str, any]:
+        """Return the device information."""
+        return {
+            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": self._manufacturer,
+        }
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
+
+    async def async_on_demand_update(self):
+        """Update state."""
+        self.async_schedule_update_ha_state(True)
+
+    async def async_added_to_hass(self):
+        """Register state update callback."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self._router.signal_device_update,
+                self.async_on_demand_update,
             )
-            tracked = tracked and (
-                not self.excluded_devices
-                or not (
-                    dev.mac in self.excluded_devices
-                    or dev.name in self.excluded_devices
-                )
-            )
-            if tracked:
-                devices.append(dev.mac)
-                if (
-                    self.tracked_accesspoints
-                    and dev.conn_ap_mac in self.tracked_accesspoints
-                ):
-                    devices.append(f"{dev.mac}_{dev.conn_ap_mac}")
+        )
 
-        return devices
 
-    def get_device_name(self, device):
-        """Return the name of the given device or the MAC if we don't know."""
-        parts = device.split("_")
-        mac = parts[0]
-        ap_mac = None
-        if len(parts) > 1:
-            ap_mac = parts[1]
-
-        name = None
-        for dev in self.last_results:
-            if dev.mac == mac:
-                name = dev.name
-                break
-
-        if not name or name == "--":
-            name = mac
-
-        if ap_mac:
-            ap_name = "Router"
-            for dev in self.last_results:
-                if dev.mac == ap_mac:
-                    ap_name = dev.name
-                    break
-
-            return f"{name} on {ap_name}"
-
-        return name
-
-    def _update_info(self):
-        """Retrieve latest information from the Netgear router.
-
-        Returns boolean if scanning successful.
-        """
-        _LOGGER.debug("Scanning")
-
-        results = self.get_attached_devices()
-
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("Scan result: \n%s", pformat(results))
-
-        if results is None:
-            _LOGGER.warning("Error scanning devices")
-
-        self.last_results = results or []
-
-    def get_attached_devices(self):
-        """List attached devices with pynetgear.
-
-        The v2 method takes more time and is more heavy on the router
-        so we only use it if we need connected AP info.
-        """
-        if self.tracked_accesspoints:
-            return self._api.get_attached_devices_2()
-
-        return self._api.get_attached_devices()
+def icon_for_device(device) -> str:
+    """Return the device icon from his type."""
+    return DEVICE_ICONS.get(device["device_type"], "mdi:help-network")

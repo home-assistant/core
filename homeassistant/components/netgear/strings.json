@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Netgear",
+        "description": "Default host: {host}\n Default port: {port}\n Default username: {username}",
+        "data": {
+          "host": "Host (Optional)",
+          "port": "Port (Optional)",
+          "ssl": "Use SSL (Optional)",
+          "username": "Username (Optional)",
+          "password": "Password"
+        }
+      },
+      "link": {
+        "title": "Netgear",
+        "description": "Do you want to setup router {name} ({url})?\n Default username: {username}",
+        "data": {
+          "username": "Username (Optional)",
+          "password": "Password"
+        }
+      },
+      "discover": {
+        "title": "Netgear: discovery",
+        "description": "Submit to try to discover your router host, port and SSL"
+      }
+    },
+    "error": {
+      "connection": "Connection error: please check your host, password & ssl",
+      "login": "Login error: please check your username & password",
+      "unknown": "Unknown error: please check logs to get more details"
+    },
+    "abort": {
+      "already_configured": "Host already configured"
+    }
+  }
+}
