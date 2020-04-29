@@ -33,30 +33,36 @@ DEFAULT_XONXOFF = False
 DEFAULT_RTSCTS = False
 DEFAULT_DSRDTR = False
 
-"""
- __init__(port=None, baudrate=9600, bytesize=EIGHTBITS, parity=PARITY_NONE, stopbits=STOPBITS_ONE, timeout=None, xonxoff=False, rtscts=False, write_timeout=None, dsrdtr=False, inter_byte_timeout=None, exclusive=None)
-    Parameters:	
-
-        port – Device name or None.
-        baudrate (int) – Baud rate such as 9600 or 115200 etc.
-        bytesize – Number of data bits. Possible values: FIVEBITS, SIXBITS, SEVENBITS, EIGHTBITS
-        parity – Enable parity checking. Possible values: PARITY_NONE, PARITY_EVEN, PARITY_ODD PARITY_MARK, PARITY_SPACE
-        stopbits – Number of stop bits. Possible values: STOPBITS_ONE, STOPBITS_ONE_POINT_FIVE, STOPBITS_TWO
-        timeout (float) – Set a read timeout value.
-        xonxoff (bool) – Enable software flow control.
-        rtscts (bool) – Enable hardware (RTS/CTS) flow control.
-        dsrdtr (bool) – Enable hardware (DSR/DTR) flow control.
-"""
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SERIAL_PORT): cv.string,
         vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): cv.positive_int,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_BYTESIZE, default=DEFAULT_BYTESIZE): cv.positive_int,
-        vol.Optional(CONF_PARITY, default=DEFAULT_PARITY): cv.string,
-        vol.Optional(CONF_STOPBITS, default=DEFAULT_STOPBITS): cv.positive_int,
+        vol.Optional(CONF_BYTESIZE, default=DEFAULT_BYTESIZE): vol.In(
+            [
+                serial_asyncio.serial.FIVEBITS,
+                serial_asyncio.serial.SIXBITS,
+                serial_asyncio.serial.SEVENBITS,
+                serial_asyncio.serial.EIGHTBITS,
+            ]
+        ),
+        vol.Optional(CONF_PARITY, default=DEFAULT_PARITY): vol.In(
+            [
+                serial_asyncio.serial.PARITY_NONE,
+                serial_asyncio.serial.PARITY_EVEN,
+                serial_asyncio.serial.PARITY_ODD,
+                serial_asyncio.serial.PARITY_MARK,
+                serial_asyncio.serial.PARITY_SPACE,
+            ]
+        ),
+        vol.Optional(CONF_STOPBITS, default=DEFAULT_STOPBITS): vol.In(
+            [
+                serial_asyncio.serial.STOPBITS_ONE,
+                serial_asyncio.serial.STOPBITS_ONE_POINT_FIVE,
+                serial_asyncio.serial.STOPBITS_TWO,
+            ]
+        ),
         vol.Optional(CONF_XONXOFF, default=DEFAULT_XONXOFF): cv.boolean,
         vol.Optional(CONF_RTSCTS, default=DEFAULT_RTSCTS): cv.boolean,
         vol.Optional(CONF_DSRDTR, default=DEFAULT_DSRDTR): cv.boolean,
