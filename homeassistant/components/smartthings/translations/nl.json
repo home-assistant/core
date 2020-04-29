@@ -8,6 +8,15 @@
             "webhook_error": "SmartThings kon het in 'base_url` geconfigureerde endpoint niet goedkeuren. Lees de componentvereisten door."
         },
         "step": {
+            "authorize": {
+                "title": "Machtig Home Assistant"
+            },
+            "pat": {
+                "data": {
+                    "access_token": "Toegangstoken"
+                },
+                "title": "Persoonlijk toegangstoken invoeren"
+            },
             "select_location": {
                 "data": {
                     "location_id": "Locatie"

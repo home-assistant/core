@@ -16,7 +16,7 @@
                     "longitude": "Lengdegrad"
                 },
                 "description": "Bruk AirVisual cloud API til \u00e5 overv\u00e5ke en geografisk plassering.",
-                "title": "Konfigurer en geografi"
+                "title": "Konfigurer en Geography"
             },
             "node_pro": {
                 "data": {
@@ -32,7 +32,7 @@
                     "cloud_api": "Geografisk plassering",
                     "latitude": "Breddegrad",
                     "longitude": "Lengdegrad",
-                    "node_pro": "AirVisual Node Pro",
+                    "node_pro": "",
                     "type": "Integrasjonstype"
                 },
                 "description": "Velg hvilken type AirVisual-data du vil overv\u00e5ke.",
