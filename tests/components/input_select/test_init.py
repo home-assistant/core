@@ -444,6 +444,7 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None
+    await hass.async_block_till_done()
 
 
 async def test_load_from_storage(hass, storage_setup):

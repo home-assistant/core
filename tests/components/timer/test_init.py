@@ -338,6 +338,7 @@ async def test_config_reload(hass, hass_admin_user, hass_read_only_user):
     assert STATUS_IDLE == state_3.state
     assert ATTR_ICON not in state_3.attributes
     assert ATTR_FRIENDLY_NAME not in state_3.attributes
+    await hass.async_block_till_done()
 
 
 async def test_timer_restarted_event(hass):

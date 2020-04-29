@@ -471,6 +471,7 @@ async def test_editable_state_attribute(hass, storage_setup):
     state = hass.states.get(f"{DOMAIN}.from_yaml")
     assert state.state == "2001-01-02 12:34:56"
     assert not state.attributes[ATTR_EDITABLE]
+    await hass.async_block_till_done()
 
 
 async def test_ws_list(hass, hass_ws_client, storage_setup):
