@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http.const import KEY_REAL_IP
 from homeassistant.const import HTTP_OK, STATE_UNKNOWN
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
@@ -72,11 +73,9 @@ async def async_handle_webhook(hass, webhook_id, request):
     # Always respond successfully to not give away if a hook exists or not.
     if webhook is None:
         host = STATE_UNKNOWN
-        peername = request.transport.get_extra_info("peername")
-        if peername is not None:
-            host, _ = peername
+        peer_ip = request[KEY_REAL_IP]
         _LOGGER.warning(
-            "Received message for unregistered webhook %s from %s", webhook_id, host
+            "Received message for unregistered webhook %s from %s", webhook_id, peer_ip
         )
         # Look at content to provide some context for received webhook
         content = await request.content.read()
