@@ -97,6 +97,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     def async_node_changed(node):
         _LOGGER.debug("[NODE CHANGED] node_id: %s", node.id)
         data_nodes[node.id] = node
+        # notify devices about the node change
+        if node.id not in removed_nodes:
+            hass.async_create_task(handle_node_update(hass, node))
 
     @callback
     def async_node_removed(node):
@@ -260,6 +263,34 @@ async def handle_remove_node(hass: HomeAssistant, node: OZWNode):
         # note: removal of entity registry is handled by core
         for dev_id in devices_to_remove:
             dev_registry.async_remove_device(dev_id)
+
+
+async def handle_node_update(hass: HomeAssistant, node: OZWNode):
+    """
+    Handle a node updated event from OZW.
+
+    Meaning some of the basic info like name/model is updated.
+    We want these changes to be pushed to the device registry.
+    """
+    dev_registry = await get_dev_reg(hass)
+    # grab device in device registry attached to this node
+    device = dev_registry.async_get_device([(DOMAIN, node.id)], [])
+    if not device:
+        return
+    # update device in device registry with (updated) info
+    for item in dev_registry.devices.values():
+        if item.id != device.id and item.via_device_id != device.id:
+            continue
+        if node.meta_data.get("Name"):
+            dev_name = node.meta_data["Name"]
+        else:
+            dev_name = node.node_product_name
+        dev_registry.async_update_device(
+            item.id,
+            manufacturer=node.node_manufacturer_name,
+            model=node.node_product_name,
+            name=dev_name,
+        )
 
 
 @callback
