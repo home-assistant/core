@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
+                    "host": "Nazwa hosta lub adres IP",
                     "name": "Nazwa",
                     "password": "Has\u0142o",
                     "port": "Port",

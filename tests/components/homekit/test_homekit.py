@@ -133,6 +133,7 @@ async def test_setup_auto_start_disabled(hass):
     homekit.status = STATUS_READY
 
     await hass.services.async_call(DOMAIN, SERVICE_HOMEKIT_START, blocking=True)
+    await hass.async_block_till_done()
     assert homekit.async_start.called is True
 
     # Test start call with driver started
@@ -141,6 +142,7 @@ async def test_setup_auto_start_disabled(hass):
     homekit.status = STATUS_STOPPED
 
     await hass.services.async_call(DOMAIN, SERVICE_HOMEKIT_START, blocking=True)
+    await hass.async_block_till_done()
     assert homekit.async_start.called is False
 
 
@@ -326,6 +328,7 @@ async def test_homekit_start(hass, hk_driver, debounce_patcher):
     ) as hk_driver_start:
         await homekit.async_start()
 
+    await hass.async_block_till_done()
     mock_add_acc.assert_called_with(state)
     mock_setup_msg.assert_called_with(hass, pin, ANY)
     hk_driver_add_acc.assert_called_with(homekit.bridge)
@@ -335,6 +338,7 @@ async def test_homekit_start(hass, hk_driver, debounce_patcher):
     # Test start() if already started
     hk_driver_start.reset_mock()
     await homekit.async_start()
+    await hass.async_block_till_done()
     assert not hk_driver_start.called
 
 
@@ -362,6 +366,7 @@ async def test_homekit_start_with_a_broken_accessory(hass, hk_driver, debounce_p
     ) as hk_driver_start:
         await homekit.async_start()
 
+    await hass.async_block_till_done()
     mock_setup_msg.assert_called_with(hass, pin, ANY)
     hk_driver_add_acc.assert_called_with(homekit.bridge)
     assert hk_driver_start.called
@@ -370,6 +375,7 @@ async def test_homekit_start_with_a_broken_accessory(hass, hk_driver, debounce_p
     # Test start() if already started
     hk_driver_start.reset_mock()
     await homekit.async_start()
+    await hass.async_block_till_done()
     assert not hk_driver_start.called
 
 
@@ -508,6 +514,7 @@ async def test_homekit_finds_linked_batteries(
         "pyhap.accessory_driver.AccessoryDriver.start"
     ):
         await homekit.async_start()
+    await hass.async_block_till_done()
 
     mock_get_acc.assert_called_with(
         hass,

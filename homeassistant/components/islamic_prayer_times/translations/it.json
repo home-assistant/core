@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "\u00c8 necessaria solo una singola istanza."
+        },
+        "step": {
+            "user": {
+                "description": "Vuoi impostare i tempi di preghiera islamici?",
+                "title": "Impostare i tempi di preghiera islamici"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calc_method": "Metodo di calcolo della preghiera"
+                }
+            }
+        }
+    },
+    "title": "Tempi di preghiera islamica"
+}

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Er is al een controller geconfigureerd."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "vera_controller_url": "Controller-URL"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Vera controller opties"
+            }
+        }
+    }
+}

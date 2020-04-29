@@ -10,10 +10,11 @@
         "step": {
             "user": {
                 "data": {
+                    "code": "Code (used in Home Assistant UI)",
                     "password": "Password",
                     "username": "Email Address"
                 },
-                "title": "Fill in your information"
+                "title": "Fill in your information."
             }
         }
     },
