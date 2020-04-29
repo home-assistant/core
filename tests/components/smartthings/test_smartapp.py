@@ -6,8 +6,6 @@ from pysmartthings import AppEntity, Capability
 
 from homeassistant.components.smartthings import smartapp
 from homeassistant.components.smartthings.const import (
-    CONF_INSTALLED_APP_ID,
-    CONF_LOCATION_ID,
     CONF_REFRESH_TOKEN,
     DATA_MANAGER,
     DOMAIN,
@@ -39,36 +37,6 @@ async def test_update_app_updated_needed(hass, app):
     assert mock_app.classifications == app.classifications
 
 
-async def test_smartapp_install_configures_flow(hass):
-    """Test install event continues an existing flow."""
-    # Arrange
-    flow_id = str(uuid4())
-    flows = [{"flow_id": flow_id, "handler": DOMAIN}]
-    app = Mock()
-    app.app_id = uuid4()
-    request = Mock()
-    request.installed_app_id = str(uuid4())
-    request.auth_token = str(uuid4())
-    request.location_id = str(uuid4())
-    request.refresh_token = str(uuid4())
-
-    # Act
-    with patch.object(
-        hass.config_entries.flow, "async_progress", return_value=flows
-    ), patch.object(hass.config_entries.flow, "async_configure") as configure_mock:
-
-        await smartapp.smartapp_install(hass, request, None, app)
-
-        configure_mock.assert_called_once_with(
-            flow_id,
-            {
-                CONF_INSTALLED_APP_ID: request.installed_app_id,
-                CONF_LOCATION_ID: request.location_id,
-                CONF_REFRESH_TOKEN: request.refresh_token,
-            },
-        )
-
-
 async def test_smartapp_update_saves_token(
     hass, smartthings_mock, location, device_factory
 ):
@@ -90,36 +58,6 @@ async def test_smartapp_update_saves_token(
     await smartapp.smartapp_update(hass, request, None, app)
     # Assert
     assert entry.data[CONF_REFRESH_TOKEN] == request.refresh_token
-
-
-async def test_smartapp_update_configures_flow(hass):
-    """Test update event continues an existing flow."""
-    # Arrange
-    flow_id = str(uuid4())
-    flows = [{"flow_id": flow_id, "handler": DOMAIN}]
-    app = Mock()
-    app.app_id = uuid4()
-    request = Mock()
-    request.installed_app_id = str(uuid4())
-    request.auth_token = str(uuid4())
-    request.location_id = str(uuid4())
-    request.refresh_token = str(uuid4())
-
-    # Act
-    with patch.object(
-        hass.config_entries.flow, "async_progress", return_value=flows
-    ), patch.object(hass.config_entries.flow, "async_configure") as configure_mock:
-
-        await smartapp.smartapp_update(hass, request, None, app)
-
-        configure_mock.assert_called_once_with(
-            flow_id,
-            {
-                CONF_INSTALLED_APP_ID: request.installed_app_id,
-                CONF_LOCATION_ID: request.location_id,
-                CONF_REFRESH_TOKEN: request.refresh_token,
-            },
-        )
 
 
 async def test_smartapp_uninstall(hass, config_entry):
