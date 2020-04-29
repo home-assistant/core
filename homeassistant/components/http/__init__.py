@@ -141,8 +141,7 @@ async def async_setup(hass, config):
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
-    depth = conf[CONF_DEPTH, '-1']
-
+    depth = conf[CONF_DEPTH, "-1"]
 
     server = HomeAssistantHTTP(
         hass,
