@@ -71,6 +71,8 @@ async def test_configuring_device_types(hass, name, cls, platform, count):
         "homeassistant.components.tplink.common.Discover.discover"
     ) as discover, patch(
         "homeassistant.components.tplink.common.SmartDevice._query_helper"
+    ), patch(
+        "homeassistant.components.tplink.light.async_setup_entry", return_value=True,
     ):
         discovery_data = {
             f"123.123.123.{c}": cls("123.123.123.123") for c in range(count)
