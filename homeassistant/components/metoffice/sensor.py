@@ -135,11 +135,14 @@ class MetOfficeCurrentSensor(Entity):
     @property
     def icon(self):
         """Return the icon for the entity card."""
-        return (
-            f"mdi:weather-{self.state}"
-            if self._type == "weather"
-            else SENSOR_TYPES[self._type][2]
-        )
+        value = SENSOR_TYPES[self._type][2]
+        if self._type == "weather":
+            value = self.state
+            if value == "partlycloudy":
+                value = "partly-cloudy"
+            value = f"mdi:weather-{value}"
+
+        return value
 
     @property
     def device_state_attributes(self):
