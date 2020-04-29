@@ -346,6 +346,7 @@ ATTR_TEMPERATURE = "temperature"
 # #### UNITS OF MEASUREMENT ####
 # Power units
 POWER_WATT = "W"
+POWER_KILO_WATT = f"k{POWER_WATT}"
 
 # Voltage units
 VOLT = "V"
