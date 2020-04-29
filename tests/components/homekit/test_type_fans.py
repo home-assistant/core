@@ -419,8 +419,7 @@ async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
     )
     await hass.async_block_till_done()
     acc.speed_mapping.speed_to_states.assert_called_with(42)
-    assert call_turn_on
-    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert not call_turn_on
     assert call_set_speed[0]
     assert call_set_speed[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_speed[0].data[ATTR_SPEED] == "ludicrous"
@@ -430,11 +429,11 @@ async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
     assert call_set_direction[0]
     assert call_set_direction[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_direction[0].data[ATTR_DIRECTION] == DIRECTION_REVERSE
-    assert len(events) == 4
+    assert len(events) == 3
 
-    assert events[1].data[ATTR_VALUE] is True
-    assert events[2].data[ATTR_VALUE] == DIRECTION_REVERSE
-    assert events[3].data[ATTR_VALUE] == "ludicrous"
+    assert events[0].data[ATTR_VALUE] is True
+    assert events[1].data[ATTR_VALUE] == DIRECTION_REVERSE
+    assert events[2].data[ATTR_VALUE] == "ludicrous"
 
     hass.states.async_set(
         entity_id,
@@ -482,7 +481,7 @@ async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
     # and we set a fan speed
     await hass.async_block_till_done()
     acc.speed_mapping.speed_to_states.assert_called_with(42)
-    assert len(events) == 7
+    assert len(events) == 6
     assert call_set_speed[1]
     assert call_set_speed[1].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_speed[1].data[ATTR_SPEED] == "ludicrous"
@@ -526,7 +525,7 @@ async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
     )
     await hass.async_block_till_done()
 
-    assert len(events) == 8
+    assert len(events) == 7
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(call_set_speed) == 2
