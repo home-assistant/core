@@ -2,7 +2,13 @@
 
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from pyplaato.plaato import PlaatoKeg
+
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_PROBLEM,
+    BinarySensorEntity,
+)
 from homeassistant.const import CONF_TOKEN
 
 from .const import CONF_DEVICE_NAME, CONF_USE_WEBHOOK, DOMAIN
@@ -44,3 +50,14 @@ class PlaatoBinarySensor(PlaatoEntity, BinarySensorEntity):
         if self._coordinator is not None:
             return self._coordinator.data.binary_sensors.get(self._sensor_type)
         return False
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        if self._coordinator is not None:
+            if self._sensor_type is PlaatoKeg.Pins.LEAK_DETECTION:
+                return DEVICE_CLASS_PROBLEM
+            if self._sensor_type is PlaatoKeg.Pins.POURING:
+                return DEVICE_CLASS_OPENING
+
+        return None

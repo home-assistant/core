@@ -1,7 +1,11 @@
 """Support for Plaato Airlock sensors."""
 
 import logging
+from typing import Optional
 
+from pyplaato.plaato import PlaatoKeg
+
+from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
 from homeassistant.const import CONF_TOKEN, PERCENTAGE
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -98,6 +102,16 @@ class PlaatoSensor(PlaatoEntity):
             .get(PLAATO_DEVICE_ATTRS, [])
             .get(sensor_type, "")
         )
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        if self._coordinator is not None:
+            if self._sensor_type == PlaatoKeg.Pins.TEMPERATURE:
+                return DEVICE_CLASS_TEMPERATURE
+        if self._sensor_type == ATTR_TEMP:
+            return DEVICE_CLASS_TEMPERATURE
+        return None
 
     @property
     def state(self):
