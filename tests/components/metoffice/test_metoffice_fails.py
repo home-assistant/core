@@ -3,7 +3,6 @@ from datetime import timedelta
 import json
 import logging
 
-from asynctest import patch
 
 from homeassistant.components.metoffice.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
@@ -12,6 +11,7 @@ from homeassistant.util import utcnow
 from . import MockDateTime
 from .const import CONFIG_WAVERTREE_3HOURLY, EXPECTED_WAVERTREE_SENSOR_RESULTS
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 _LOGGER = logging.getLogger(__name__)

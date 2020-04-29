@@ -2,8 +2,6 @@
 import json
 import logging
 
-from asynctest import patch
-
 from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
 
 from . import MockDateTime
@@ -18,6 +16,7 @@ from .const import (
     TEST_SITE_NAME_WAVERTREE,
 )
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 _LOGGER = logging.getLogger(__name__)

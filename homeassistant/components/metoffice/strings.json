@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "config": {
     "step": {
       "user": {
@@ -30,3 +31,26 @@
     }
   }
 }
+=======
+    "config": {
+      "step": {
+        "user": {
+          "description": "The latitude and longitude will be used to find the closest weather station.",
+          "title": "Connect to the UK Met Office",
+          "data": {
+            "api_key": "Met Office DataPoint API key",
+            "latitude": "Latitude",
+            "longitude": "Longitude",
+            "name": "Friendly name"
+          }
+        }
+      },
+      "error": {
+        "cannot_connect": "Failed to connect, please try again",
+        "unknown": "Unexpected error"
+      },
+      "abort": { "already_configured": "Device is already configured" }
+    }
+  }
+  
+>>>>>>> Converted MetOffice to use UI for configuration
