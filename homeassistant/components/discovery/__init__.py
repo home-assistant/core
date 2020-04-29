@@ -37,7 +37,6 @@ SERVICE_KONNECTED = "konnected"
 SERVICE_MOBILE_APP = "hass_mobile_app"
 SERVICE_NETGEAR = "netgear_router"
 SERVICE_OCTOPRINT = "octoprint"
-SERVICE_ROKU = "roku"
 SERVICE_SABNZBD = "sabnzbd"
 SERVICE_SAMSUNG_PRINTER = "samsung_printer"
 SERVICE_TELLDUSLIVE = "tellstick"
@@ -59,7 +58,6 @@ SERVICE_HANDLERS = {
     SERVICE_HASSIO: ("hassio", None),
     SERVICE_APPLE_TV: ("apple_tv", None),
     SERVICE_ENIGMA2: ("media_player", "enigma2"),
-    SERVICE_ROKU: ("roku", None),
     SERVICE_WINK: ("wink", None),
     SERVICE_XIAOMI_GW: ("xiaomi_aqara", None),
     SERVICE_SABNZBD: ("sabnzbd", None),
