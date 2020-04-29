@@ -45,6 +45,7 @@ CONF_TRUSTED_PROXIES = "trusted_proxies"
 CONF_LOGIN_ATTEMPTS_THRESHOLD = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED = "ip_ban_enabled"
 CONF_SSL_PROFILE = "ssl_profile"
+CONF_DEPTH = "depth"
 
 SSL_MODERN = "modern"
 SSL_INTERMEDIATE = "intermediate"
@@ -78,6 +79,7 @@ HTTP_SCHEMA = vol.Schema(
         vol.Inclusive(CONF_TRUSTED_PROXIES, "proxy"): vol.All(
             cv.ensure_list, [ip_network]
         ),
+        vol.Inclusive(CONF_DEPTH, default=[-1], "proxy"): cv.string,
         vol.Optional(
             CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
         ): vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
@@ -139,6 +141,8 @@ async def async_setup(hass, config):
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
+    depth = conf[CONF_DEPTH, '-1']
+
 
     server = HomeAssistantHTTP(
         hass,
@@ -222,7 +226,7 @@ class HomeAssistantHTTP:
         app[KEY_HASS] = hass
 
         # This order matters
-        setup_real_ip(app, use_x_forwarded_for, trusted_proxies)
+        setup_real_ip(app, use_x_forwarded_for, trusted_proxies, depth)
 
         if is_ban_enabled:
             setup_bans(hass, app, login_threshold)
@@ -239,6 +243,7 @@ class HomeAssistantHTTP:
         self.server_port = server_port
         self.trusted_proxies = trusted_proxies
         self.is_ban_enabled = is_ban_enabled
+        self.depth = depth
         self.ssl_profile = ssl_profile
         self._handler = None
         self.runner = None
