@@ -15,6 +15,7 @@ from .const import (  # pylint:disable=unused-import
     ATTR_CID,
     ATTR_MAC,
     ATTR_MODEL,
+    BRAVIARC,
     CLIENTID_PREFIX,
     CONF_IGNORED_SOURCES,
     DOMAIN,
@@ -152,7 +153,7 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
-        self.braviarc = self.hass.data[DOMAIN][self.config_entry.entry_id]
+        self.braviarc = self.hass.data[DOMAIN][self.config_entry.entry_id][BRAVIARC]
         if not self.braviarc.is_connected():
             await self.hass.async_add_executor_job(
                 self.braviarc.connect, self.pin, CLIENTID_PREFIX, NICKNAME,
