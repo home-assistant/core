@@ -9,7 +9,8 @@ from homeassistant.components.jenkins.const import CONF_JOB_NAME, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_USERNAME
 
 
-class JenkinsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+@config_entries.HANDLERS.register(DOMAIN)
+class JenkinsFlowHandler(config_entries.ConfigFlow):
     """Handle Jenkins config flow."""
 
     VERSION = 1
@@ -24,7 +25,6 @@ class JenkinsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
-
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_HOST): str,
