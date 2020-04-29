@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigType) -> bool:
     )
     hass.data.setdefault(DATA_TOON_CLIENT, {})[entry.entry_id] = toon
 
-    toon_data = ToonData(hass, entry, toon)
+    toon_data = await hass.async_add_executor_job(ToonData, hass, entry, toon)
     hass.data.setdefault(DATA_TOON, {})[entry.entry_id] = toon_data
     async_track_time_interval(hass, toon_data.update, conf[CONF_SCAN_INTERVAL])
 
