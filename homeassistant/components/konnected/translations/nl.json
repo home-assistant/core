@@ -68,6 +68,7 @@
             },
             "options_switch": {
                 "data": {
+                    "more_states": "Aanvullende statussen voor deze zone configureren",
                     "name": "Naam (optioneel)"
                 },
                 "title": "Schakelbare uitgang configureren"

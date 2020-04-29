@@ -829,7 +829,17 @@ omit =
     homeassistant/components/xfinity/device_tracker.py
     homeassistant/components/xiaomi/camera.py
     homeassistant/components/xiaomi_aqara/*
-    homeassistant/components/xiaomi_miio/*
+    homeassistant/components/xiaomi_miio/__init__.py
+    homeassistant/components/xiaomi_miio/air_quality.py
+    homeassistant/components/xiaomi_miio/alarm_control_panel.py
+    homeassistant/components/xiaomi_miio/device_tracker.py
+    homeassistant/components/xiaomi_miio/fan.py
+    homeassistant/components/xiaomi_miio/gateway.py
+    homeassistant/components/xiaomi_miio/light.py
+    homeassistant/components/xiaomi_miio/remote.py
+    homeassistant/components/xiaomi_miio/sensor.py
+    homeassistant/components/xiaomi_miio/switch.py
+    homeassistant/components/xiaomi_miio/vacuum.py
     homeassistant/components/xiaomi_tv/media_player.py
     homeassistant/components/xmpp/notify.py
     homeassistant/components/xs1/*

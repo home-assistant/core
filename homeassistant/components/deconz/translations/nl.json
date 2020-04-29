@@ -48,6 +48,7 @@
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "Beide knoppen",
+            "bottom_buttons": "Onderste knoppen",
             "button_1": "Eerste knop",
             "button_2": "Tweede knop",
             "button_3": "Derde knop",
@@ -64,6 +65,7 @@
             "side_4": "Zijde 4",
             "side_5": "Zijde 5",
             "side_6": "Zijde 6",
+            "top_buttons": "Bovenste knoppen",
             "turn_off": "Uitschakelen",
             "turn_on": "Inschakelen"
         },

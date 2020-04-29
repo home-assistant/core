@@ -12,7 +12,7 @@
         "step": {
             "pairing": {
                 "data": {
-                    "pin": "PIN"
+                    "pin": ""
                 },
                 "description": "Skriv inn PIN-koden som vises p\u00e5 TV-en",
                 "title": "Sammenkobling"
@@ -27,5 +27,5 @@
             }
         }
     },
-    "title": "Panasonic Viera"
+    "title": ""
 }

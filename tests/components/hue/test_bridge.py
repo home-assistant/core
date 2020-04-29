@@ -1,18 +1,15 @@
 """Test Hue bridge."""
-from unittest.mock import Mock, patch
-
+from asynctest import CoroutineMock, Mock, patch
 import pytest
 
 from homeassistant.components.hue import bridge, errors
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from tests.common import mock_coro
-
 
 async def test_bridge_setup(hass):
     """Test a successful setup."""
     entry = Mock()
-    api = Mock(initialize=mock_coro)
+    api = Mock(initialize=CoroutineMock())
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
     hue_bridge = bridge.HueBridge(hass, entry, False, False)
 
@@ -35,9 +32,7 @@ async def test_bridge_setup_invalid_username(hass):
 
     with patch.object(
         bridge, "authenticate_bridge", side_effect=errors.AuthenticationRequired
-    ), patch.object(
-        hass.config_entries.flow, "async_init", return_value=mock_coro()
-    ) as mock_init:
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_init:
         assert await hue_bridge.async_setup() is False
 
     assert len(mock_init.mock_calls) == 1
@@ -78,18 +73,16 @@ async def test_reset_unloads_entry_if_setup(hass):
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
     hue_bridge = bridge.HueBridge(hass, entry, False, False)
 
-    with patch.object(
-        bridge, "authenticate_bridge", return_value=mock_coro(Mock())
-    ), patch("aiohue.Bridge", return_value=Mock()), patch.object(
-        hass.config_entries, "async_forward_entry_setup"
-    ) as mock_forward:
+    with patch.object(bridge, "authenticate_bridge", return_value=Mock()), patch(
+        "aiohue.Bridge", return_value=Mock()
+    ), patch.object(hass.config_entries, "async_forward_entry_setup") as mock_forward:
         assert await hue_bridge.async_setup() is True
 
     assert len(hass.services.async_services()) == 1
     assert len(mock_forward.mock_calls) == 3
 
     with patch.object(
-        hass.config_entries, "async_forward_entry_unload", return_value=mock_coro(True)
+        hass.config_entries, "async_forward_entry_unload", return_value=True
     ) as mock_forward:
         assert await hue_bridge.async_reset()
 
@@ -99,13 +92,13 @@ async def test_reset_unloads_entry_if_setup(hass):
 
 async def test_handle_unauthorized(hass):
     """Test handling an unauthorized error on update."""
-    entry = Mock(async_setup=Mock(return_value=mock_coro(Mock())))
+    entry = Mock(async_setup=CoroutineMock())
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
     hue_bridge = bridge.HueBridge(hass, entry, False, False)
 
-    with patch.object(
-        bridge, "authenticate_bridge", return_value=mock_coro(Mock())
-    ), patch("aiohue.Bridge", return_value=Mock()):
+    with patch.object(bridge, "authenticate_bridge", return_value=Mock()), patch(
+        "aiohue.Bridge", return_value=Mock()
+    ):
         assert await hue_bridge.async_setup() is True
 
     assert hue_bridge.authorized is True

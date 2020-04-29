@@ -34,10 +34,14 @@ from tests.common import (
     mock_device_registry,
     mock_mqtt_component,
     mock_registry,
-    mock_storage,
     threadsafe_coroutine_factory,
 )
 from tests.testing_config.custom_components.test.sensor import DEVICE_CLASSES
+
+
+@pytest.fixture(autouse=True)
+def mock_storage(hass_storage):
+    """Autouse hass_storage for the TestCase tests."""
 
 
 @pytest.fixture
@@ -87,15 +91,12 @@ class TestMQTTComponent(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.mock_storage = mock_storage()
-        self.mock_storage.__enter__()
         mock_mqtt_component(self.hass)
         self.calls = []
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
-        self.mock_storage.__exit__(None, None, None)
 
     @callback
     def record_calls(self, *args):
@@ -305,15 +306,12 @@ class TestMQTTCallbacks(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.mock_storage = mock_storage()
-        self.mock_storage.__enter__()
         mock_mqtt_client(self.hass)
         self.calls = []
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
-        self.mock_storage.__exit__(None, None, None)
 
     @callback
     def record_calls(self, *args):

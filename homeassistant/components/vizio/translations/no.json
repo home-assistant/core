@@ -30,7 +30,7 @@
                 "data": {
                     "access_token": "Tilgangstoken",
                     "device_class": "Enhetstype",
-                    "host": "<Host/IP>:<Port>",
+                    "host": "<Vert/IP>:<Port>",
                     "name": "Navn"
                 },
                 "description": "En tilgangstoken er bare n\u00f8dvendig for TV-er. Hvis du konfigurerer en TV og ikke har tilgangstoken enn\u00e5, m\u00e5 du la den st\u00e5 tom for \u00e5 g\u00e5 gjennom en sammenkoblingsprosess.",

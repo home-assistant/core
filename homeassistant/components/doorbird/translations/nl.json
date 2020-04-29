@@ -1,0 +1,14 @@
+{
+    "config": {
+        "flow_title": "DoorBird {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Apparaatnaam",
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                }
+            }
+        }
+    }
+}
