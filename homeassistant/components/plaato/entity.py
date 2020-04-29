@@ -24,7 +24,7 @@ class PlaatoEntity(entity.Entity):
             self._device_type = coordinator.data.device_type
             sensor_name = coordinator.data.get_sensor_name(self._sensor_type)
             self._name = f"{device_name} {sensor_name}"
-            self._attributes = coordinator.data.attributes
+            self._attributes = PlaatoEntity._to_snake_case(coordinator.data.attributes)
 
         self._state = 0
 
@@ -85,3 +85,7 @@ class PlaatoEntity(entity.Entity):
         """When entity will be removed from hass."""
         if self._coordinator is not None:
             self._coordinator.async_remove_listener(self.async_write_ha_state)
+
+    @staticmethod
+    def _to_snake_case(dictionary: dict):
+        return {k.lower().replace(" ", "_"): v for k, v in dictionary.items()}
