@@ -54,6 +54,7 @@ FLOWS = [
     "homematicip_cloud",
     "huawei_lte",
     "hue",
+    "hunterdouglas_powerview",
     "iaqualink",
     "icloud",
     "ifttt",

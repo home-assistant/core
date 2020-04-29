@@ -85,6 +85,9 @@ aiohue==2.1.0
 # homeassistant.components.notion
 aionotion==1.1.0
 
+# homeassistant.components.hunterdouglas_powerview
+aiopvapi==1.6.14
+
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==1.0.2
 
