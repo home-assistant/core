@@ -347,6 +347,7 @@ omit =
     homeassistant/components/isy994/*
     homeassistant/components/itach/remote.py
     homeassistant/components/itunes/media_player.py
+    homeassistant/components/jenkins/*
     homeassistant/components/joaoapps_join/*
     homeassistant/components/juicenet/*
     homeassistant/components/kaiterra/*
