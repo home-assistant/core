@@ -48,14 +48,14 @@ class TestProximity(unittest.TestCase):
         proximities = ["home", "work"]
 
         for prox in proximities:
-            state = self.hass.states.get("proximity." + prox)
+            state = self.hass.states.get(f"proximity.{prox}")
             assert state.state == "not set"
             assert state.attributes.get("nearest") == "not set"
             assert state.attributes.get("dir_of_travel") == "not set"
 
-            self.hass.states.set("proximity." + prox, "0")
+            self.hass.states.set(f"proximity.{prox}", "0")
             self.hass.block_till_done()
-            state = self.hass.states.get("proximity." + prox)
+            state = self.hass.states.get(f"proximity.{prox}")
             assert state.state == "0"
 
     def test_proximities_setup(self):

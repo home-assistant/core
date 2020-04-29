@@ -3,6 +3,5 @@
   "name": "Nissan Leaf",
   "documentation": "https://www.home-assistant.io/integrations/nissan_leaf",
   "requirements": ["pycarwings2==2.9"],
-  "dependencies": [],
   "codeowners": ["@filcole"]
 }

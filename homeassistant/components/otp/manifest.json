@@ -3,7 +3,6 @@
   "name": "One-Time Password (OTP)",
   "documentation": "https://www.home-assistant.io/integrations/otp",
   "requirements": ["pyotp==2.3.0"],
-  "dependencies": [],
   "codeowners": [],
   "quality_scale": "internal"
 }

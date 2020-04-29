@@ -100,12 +100,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
-    friendly_name = config.get(CONF_NAME, "xiaomi_miio_" + host.replace(".", "_"))
+    friendly_name = config.get(CONF_NAME, f"xiaomi_miio_{host.replace('.', '_')}")
     slot = config.get(CONF_SLOT)
     timeout = config.get(CONF_TIMEOUT)
 
     xiaomi_miio_remote = XiaomiMiioRemote(
-        friendly_name, device, unique_id, slot, timeout, config.get(CONF_COMMANDS),
+        friendly_name, device, unique_id, slot, timeout, config.get(CONF_COMMANDS)
     )
 
     hass.data[DATA_KEY][host] = xiaomi_miio_remote

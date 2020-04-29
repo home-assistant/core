@@ -47,10 +47,10 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
             KankunSwitch(
                 hass,
                 properties.get(CONF_NAME, dev_name),
-                properties.get(CONF_HOST, None),
+                properties.get(CONF_HOST),
                 properties.get(CONF_PORT, DEFAULT_PORT),
                 properties.get(CONF_PATH, DEFAULT_PATH),
-                properties.get(CONF_USERNAME, None),
+                properties.get(CONF_USERNAME),
                 properties.get(CONF_PASSWORD),
             )
         )

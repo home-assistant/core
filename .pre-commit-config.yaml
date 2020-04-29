@@ -1,4 +1,10 @@
+#
 repos:
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.1.0
+    hooks:
+      - id: pyupgrade
+        args: [--py37-plus]
   - repo: https://github.com/psf/black
     rev: 19.10b0
     hooks:
@@ -24,28 +30,39 @@ repos:
   #         - flake8-docstrings==1.5.0
   #         - pydocstyle==5.0.2
   #       files: ^(homeassistant|script|tests)/.+\.py$
-  # - repo: https://github.com/PyCQA/bandit
-  #   rev: 1.6.2
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.6.2
+    hooks:
+      - id: bandit
+        args:
+          - --quiet
+          - --format=custom
+          - --configfile=tests/bandit.yaml
+        files: ^(homeassistant|script|tests)/.+\.py$
+  - repo: https://github.com/pre-commit/mirrors-isort
+    rev: v4.3.21
+    hooks:
+      - id: isort
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.4.0
+    hooks:
+      - id: check-executables-have-shebangs
+        stages: [manual]
+      - id: check-json
+      - id: no-commit-to-branch
+        args:
+          - --branch=dev
+          - --branch=master
+          - --branch=rc
+  # - repo: https://github.com/adrienverge/yamllint.git
+  #   rev: v1.23.0
   #   hooks:
-  #     - id: bandit
-  #       args:
-  #         - --quiet
-  #         - --format=custom
-  #         - --configfile=tests/bandit.yaml
-  #       files: ^(homeassistant|script|tests)/.+\.py$
-  # - repo: https://github.com/pre-commit/mirrors-isort
-  #   rev: v4.3.21
-  #   hooks:
-  #     - id: isort
-  # - repo: https://github.com/pre-commit/pre-commit-hooks
-  #   rev: v2.4.0
-  #   hooks:
-  #     - id: check-json
-  #     - id: no-commit-to-branch
-  #       args:
-  #         - --branch=dev
-  #         - --branch=master
-  #         - --branch=rc
+  #     - id: yamllint
+  - repo: https://github.com/prettier/prettier
+    rev: 2.0.4
+    hooks:
+      - id: prettier
+        stages: [manual]
   # - repo: local
   #   hooks:
   #     # Run mypy through our wrapper script in order to get the possible
@@ -72,4 +89,4 @@ repos:
   #       pass_filenames: false
   #       language: script
   #       types: [json]
-  #       files: ^homeassistant/.+/manifest\.json$
+  #       files: ^homeassistant/.+/(manifest|strings)\.json$

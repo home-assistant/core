@@ -45,12 +45,10 @@ def ensure_unique_names_and_slugs(config):
             slugs[conf[CONF_SLUG]] = conf[CONF_HOST]
         else:
             raise vol.Invalid(
-                "Duplicate name '{}' (or slug '{}') for '{}' (already in use by '{}'). Each configured Pi-hole must have a unique name.".format(
-                    conf[CONF_NAME],
-                    conf[CONF_SLUG],
-                    conf[CONF_HOST],
-                    names.get(conf[CONF_NAME], slugs[conf[CONF_SLUG]]),
-                )
+                f"Duplicate name '{conf[CONF_NAME]}' (or slug '{conf[CONF_SLUG]}') "
+                f"for '{conf[CONF_HOST]}' (already in use by "
+                f"'{names.get(conf[CONF_NAME], slugs[conf[CONF_SLUG]])}'). "
+                "Each configured Pi-hole must have a unique name."
             )
     return config
 
@@ -108,9 +106,8 @@ async def async_setup(hass, config):
 
             if (data[slug]).api.api_token is None:
                 raise vol.Invalid(
-                    "Pi-hole '{}' must have an api_key provided in configuration to be enabled.".format(
-                        pi_hole.name
-                    )
+                    f"Pi-hole '{pi_hole.name}' must have an api_key "
+                    "provided in configuration to be enabled."
                 )
 
         return call_data
@@ -122,7 +119,7 @@ async def async_setup(hass, config):
                     cv.time_period_str, cv.positive_timedelta
                 ),
                 vol.Optional(SERVICE_DISABLE_ATTR_NAME): vol.In(
-                    [conf[CONF_NAME] for conf in config[DOMAIN]], msg="Unknown Pi-Hole",
+                    [conf[CONF_NAME] for conf in config[DOMAIN]], msg="Unknown Pi-Hole"
                 ),
             },
             ensure_api_token,

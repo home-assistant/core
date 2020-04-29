@@ -142,7 +142,6 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateDevice):
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        pass
 
     def update(self) -> None:
         """Update local state."""

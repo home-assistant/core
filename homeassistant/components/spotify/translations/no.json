@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Du kan bare konfigurere en Spotify-konto.",
+            "authorize_url_timeout": "Tidsavbrudd ved generering av autoriseringsadresse.",
+            "missing_configuration": "Spotify-integrasjonen er ikke konfigurert. F\u00f8lg dokumentasjonen."
+        },
+        "create_entry": {
+            "default": "Vellykket autentisering med Spotify."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Velg autentiseringsmetode"
+            }
+        }
+    }
+}

@@ -233,7 +233,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
         # Make initial update
         await self.async_flux_update()
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn off flux."""
@@ -241,7 +241,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
             self.unsub_tracker()
             self.unsub_tracker = None
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_flux_update(self, utcnow=None):
         """Update all the lights using flux."""

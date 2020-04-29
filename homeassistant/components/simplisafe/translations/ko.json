@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uc774 SimpliSafe \uacc4\uc815\uc740 \uc774\ubbf8 \uc0ac\uc6a9 \uc911\uc785\ub2c8\ub2e4."
+        },
+        "error": {
+            "identifier_exists": "\uacc4\uc815\uc774 \uc774\ubbf8 \ub4f1\ub85d\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "invalid_credentials": "\ube44\ubc00\ubc88\ud638\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "username": "\uc774\uba54\uc77c \uc8fc\uc18c"
+                },
+                "title": "\uc0ac\uc6a9\uc790 \uc815\ubcf4 \uc785\ub825"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "\ucf54\ub4dc (Home Assistant UI \uc5d0\uc11c \uc0ac\uc6a9\ub428)"
+                },
+                "title": "SimpliSafe \uad6c\uc131"
+            }
+        }
+    }
+}

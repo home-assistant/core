@@ -104,8 +104,7 @@ class WinkWaterHeater(WinkDevice, WaterHeaterDevice):
             else:
                 error = (
                     "Invalid operation mode mapping. "
-                    + mode
-                    + " doesn't map. Please report this."
+                    f"{mode} doesn't map. Please report this."
                 )
                 _LOGGER.error(error)
         return op_list

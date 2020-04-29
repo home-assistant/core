@@ -13,7 +13,7 @@ from homeassistant.components.alexa import (
     errors as alexa_errors,
     state_report as alexa_state_report,
 )
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_BAD_REQUEST
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.event import async_call_later
@@ -114,14 +114,14 @@ class AlexaConfig(alexa_config.AbstractConfig):
         resp = await cloud_api.async_alexa_access_token(self._cloud)
         body = await resp.json()
 
-        if resp.status == 400:
+        if resp.status == HTTP_BAD_REQUEST:
             if body["reason"] in ("RefreshTokenNotFound", "UnknownRegion"):
                 if self.should_report_state:
                     await self._prefs.async_update(alexa_report_state=False)
                     self.hass.components.persistent_notification.async_create(
-                        "There was an error reporting state to Alexa ({}). "
+                        f"There was an error reporting state to Alexa ({body['reason']}). "
                         "Please re-link your Alexa skill via the Alexa app to "
-                        "continue using it.".format(body["reason"]),
+                        "continue using it.",
                         "Alexa state reporting disabled",
                         "cloud_alexa_report",
                     )

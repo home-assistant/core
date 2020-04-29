@@ -1,0 +1,28 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_hvac_mode": "Endre HVAC-modus p\u00e5 {entity_name}",
+            "set_preset_mode": "Endre forh\u00e5ndsinnstilling p\u00e5 {entity_name}"
+        },
+        "condition_type": {
+            "is_hvac_mode": "{entity_name} er satt til en spesifikk HVAC-modus",
+            "is_preset_mode": "{entity_name} er satt til en spesifikk forh\u00e5ndsinnstilt modus"
+        },
+        "trigger_type": {
+            "current_humidity_changed": "{entity_name} m\u00e5lt fuktighet er endret",
+            "current_temperature_changed": "{entity_name} m\u00e5lt temperatur er endret",
+            "hvac_mode_changed": "{entity_name} HVAC-modus er endret"
+        }
+    },
+    "state": {
+        "_": {
+            "auto": "Auto",
+            "cool": "Kj\u00f8le",
+            "dry": "T\u00f8rr",
+            "fan_only": "Kun vifte",
+            "heat": "Varme",
+            "heat_cool": "Varme/kj\u00f8lig"
+        }
+    },
+    "title": "Klima"
+}

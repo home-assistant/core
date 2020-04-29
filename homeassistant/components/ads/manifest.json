@@ -3,6 +3,5 @@
   "name": "ADS",
   "documentation": "https://www.home-assistant.io/integrations/ads",
   "requirements": ["pyads==3.0.7"],
-  "dependencies": [],
   "codeowners": []
 }

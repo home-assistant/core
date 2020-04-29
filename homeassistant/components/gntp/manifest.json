@@ -3,6 +3,5 @@
   "name": "Growl (GnGNTP)",
   "documentation": "https://www.home-assistant.io/integrations/gntp",
   "requirements": ["gntp==1.0.3"],
-  "dependencies": [],
   "codeowners": ["@robbiet480"]
 }

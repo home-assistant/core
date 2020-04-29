@@ -1,4 +1,5 @@
 {
+  "title": "Binary sensor",
   "device_automation": {
     "condition_type": {
       "is_bat_low": "{entity_name} battery is low",
@@ -87,7 +88,88 @@
       "not_opened": "{entity_name} closed",
       "turned_on": "{entity_name} turned on",
       "turned_off": "{entity_name} turned off"
-
+    }
+  },
+  "state": {
+    "battery": {
+      "off": "Normal",
+      "on": "Low"
+    },
+    "cold": {
+      "off": "[%key:component::binary_sensor::state::battery::off%]",
+      "on": "Cold"
+    },
+    "connectivity": {
+      "off": "[%key:common::state::disconnected%]",
+      "on": "[%key:common::state::connected%]"
+    },
+    "door": {
+      "off": "[%key:common::state::closed%]",
+      "on": "[%key:common::state::open%]"
+    },
+    "garage_door": {
+      "off": "[%key:common::state::closed%]",
+      "on": "[%key:common::state::open%]"
+    },
+    "gas": {
+      "off": "Clear",
+      "on": "Detected"
+    },
+    "heat": {
+      "off": "[%key:component::binary_sensor::state::battery::off%]",
+      "on": "Hot"
+    },
+    "lock": {
+      "off": "[%key:common::state::locked%]",
+      "on": "[%key:common::state::unlocked%]"
+    },
+    "moisture": {
+      "off": "Dry",
+      "on": "Wet"
+    },
+    "motion": {
+      "off": "[%key:component::binary_sensor::state::gas::off%]",
+      "on": "[%key:component::binary_sensor::state::gas::on%]"
+    },
+    "occupancy": {
+      "off": "[%key:component::binary_sensor::state::gas::off%]",
+      "on": "[%key:component::binary_sensor::state::gas::on%]"
+    },
+    "opening": {
+      "off": "[%key:common::state::closed%]",
+      "on": "[%key:common::state::open%]"
+    },
+    "presence": {
+      "off": "[%key:component::device_tracker::state::_::not_home%]",
+      "on": "[%key:component::device_tracker::state::_::home%]"
+    },
+    "problem": {
+      "off": "OK",
+      "on": "Problem"
+    },
+    "safety": {
+      "off": "Safe",
+      "on": "Unsafe"
+    },
+    "smoke": {
+      "off": "[%key:component::binary_sensor::state::gas::off%]",
+      "on": "[%key:component::binary_sensor::state::gas::on%]"
+    },
+    "sound": {
+      "off": "[%key:component::binary_sensor::state::gas::off%]",
+      "on": "[%key:component::binary_sensor::state::gas::on%]"
+    },
+    "vibration": {
+      "off": "[%key:component::binary_sensor::state::gas::off%]",
+      "on": "[%key:component::binary_sensor::state::gas::on%]"
+    },
+    "window": {
+      "off": "[%key:common::state::closed%]",
+      "on": "[%key:common::state::open%]"
+    },
+    "_": {
+      "off": "[%key:common::state::off%]",
+      "on": "[%key:common::state::on%]"
     }
   }
 }

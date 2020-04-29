@@ -7,10 +7,8 @@ import json
 import logging
 from operator import attrgetter
 import os
-import socket
 import ssl
 import sys
-import time
 from typing import Any, Callable, List, Optional, Union
 
 import attr
@@ -41,6 +39,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
 from homeassistant.loader import bind_hass
+from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
 
@@ -873,7 +872,9 @@ class MQTT:
         subscription = Subscription(topic, msg_callback, qos, encoding)
         self.subscriptions.append(subscription)
 
-        await self._async_perform_subscription(topic, qos)
+        # Only subscribe if currently connected.
+        if self.connected:
+            await self._async_perform_subscription(topic, qos)
 
         @callback
         def async_remove() -> None:
@@ -929,7 +930,6 @@ class MQTT:
                 "Unable to connect to the MQTT broker: %s",
                 mqtt.connack_string(result_code),
             )
-            self._mqttc.disconnect()
             return
 
         self.connected = True
@@ -946,7 +946,8 @@ class MQTT:
                 self.async_publish(  # pylint: disable=no-value-for-parameter
                     *attr.astuple(
                         self.birth_message,
-                        filter=lambda attr, value: attr.name != "subscribed_topic",
+                        filter=lambda attr, value: attr.name
+                        not in ["subscribed_topic", "timestamp"],
                     )
                 )
             )
@@ -963,6 +964,7 @@ class MQTT:
             " (retained)" if msg.retain else "",
             msg.payload,
         )
+        timestamp = dt_util.utcnow()
 
         for subscription in self.subscriptions:
             if not _match_topic(subscription.topic, msg.topic):
@@ -984,37 +986,20 @@ class MQTT:
 
             self.hass.async_run_job(
                 subscription.callback,
-                Message(msg.topic, payload, msg.qos, msg.retain, subscription.topic),
+                Message(
+                    msg.topic,
+                    payload,
+                    msg.qos,
+                    msg.retain,
+                    subscription.topic,
+                    timestamp,
+                ),
             )
 
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
         """Disconnected callback."""
         self.connected = False
-
-        # When disconnected because of calling disconnect()
-        if result_code == 0:
-            return
-
-        tries = 0
-
-        while True:
-            try:
-                if self._mqttc.reconnect() == 0:
-                    self.connected = True
-                    _LOGGER.info("Successfully reconnected to the MQTT server")
-                    break
-            except socket.error:
-                pass
-
-            wait_time = min(2 ** tries, MAX_RECONNECT_WAIT)
-            _LOGGER.warning(
-                "Disconnected from MQTT (%s). Trying to reconnect in %s s",
-                result_code,
-                wait_time,
-            )
-            # It is ok to sleep here as we are in the MQTT thread.
-            time.sleep(wait_time)
-            tries += 1
+        _LOGGER.warning("Disconnected from MQTT (%s).", result_code)
 
 
 def _raise_on_error(result_code: int) -> None:
@@ -1171,6 +1156,7 @@ class MqttAvailability(Entity):
 async def cleanup_device_registry(hass, device_id):
     """Remove device registry entry if there are no remaining entities or triggers."""
     # Local import to avoid circular dependencies
+    # pylint: disable=import-outside-toplevel
     from . import device_trigger
 
     device_registry = await hass.helpers.device_registry.async_get_registry()

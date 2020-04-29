@@ -46,9 +46,7 @@ SERVICE_TO_METHOD = {
 
 async def async_setup(hass, config):
     """Set up the Kodi integration."""
-    if any(
-        ((CONF_PLATFORM, DOMAIN) in cfg.items() for cfg in config.get(MP_DOMAIN, []))
-    ):
+    if any((CONF_PLATFORM, DOMAIN) in cfg.items() for cfg in config.get(MP_DOMAIN, [])):
         # Register the Kodi media_player services
         async def async_service_handler(service):
             """Map services to methods on MediaPlayerDevice."""

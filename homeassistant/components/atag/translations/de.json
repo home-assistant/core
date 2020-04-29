@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Nur ein Atag-Ger\u00e4t kann mit Home Assistant verbunden werden."
+        },
+        "error": {
+            "connection_error": "Verbindung fehlgeschlagen, versuchen Sie es erneut"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port (10000)"
+                },
+                "title": "Stellen Sie eine Verbindung zum Ger\u00e4t her"
+            }
+        }
+    },
+    "title": "Atag"
+}

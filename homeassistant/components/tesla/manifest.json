@@ -3,12 +3,6 @@
   "name": "Tesla",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tesla",
-  "requirements": [
-    "teslajsonpy==0.6.0"
-  ],
-  "dependencies": [],
-  "codeowners": [
-    "@zabuldon",
-    "@alandtse"
-  ]
+  "requirements": ["teslajsonpy==0.8.0"],
+  "codeowners": ["@zabuldon", "@alandtse"]
 }

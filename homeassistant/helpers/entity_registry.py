@@ -9,9 +9,18 @@ timer.
 """
 import asyncio
 from collections import OrderedDict
-from itertools import chain
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    cast,
+)
 
 import attr
 
@@ -27,7 +36,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, callback, split_entity_id, valid_entity_id
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.loader import bind_hass
-from homeassistant.util import ensure_unique_string, slugify
+from homeassistant.util import slugify
 from homeassistant.util.yaml import load_yaml
 
 from .typing import HomeAssistantType
@@ -123,6 +132,22 @@ class EntityRegistry:
         )
 
     @callback
+    def async_get_device_class_lookup(self, domain_device_classes: set) -> dict:
+        """Return a lookup for the device class by domain."""
+        lookup: Dict[str, Dict[Tuple[Any, Any], str]] = {}
+        for entity in self.entities.values():
+            if not entity.device_id:
+                continue
+            domain_device_class = (entity.domain, entity.device_class)
+            if domain_device_class not in domain_device_classes:
+                continue
+            if entity.device_id not in lookup:
+                lookup[entity.device_id] = {domain_device_class: entity.entity_id}
+            else:
+                lookup[entity.device_id][domain_device_class] = entity.entity_id
+        return lookup
+
+    @callback
     def async_is_registered(self, entity_id: str) -> bool:
         """Check if an entity_id is currently registered."""
         return entity_id in self.entities
@@ -157,14 +182,21 @@ class EntityRegistry:
 
         Conflicts checked against registered and currently existing entities.
         """
-        return ensure_unique_string(
-            "{}.{}".format(domain, slugify(suggested_object_id)),
-            chain(
-                self.entities.keys(),
-                self.hass.states.async_entity_ids(domain),
-                known_object_ids if known_object_ids else [],
-            ),
-        )
+        preferred_string = f"{domain}.{slugify(suggested_object_id)}"
+        test_string = preferred_string
+        if not known_object_ids:
+            known_object_ids = {}
+
+        tries = 1
+        while (
+            test_string in self.entities
+            or test_string in known_object_ids
+            or self.hass.states.get(test_string)
+        ):
+            tries += 1
+            test_string = f"{preferred_string}_{tries}"
+
+        return test_string
 
     @callback
     def async_get_or_create(

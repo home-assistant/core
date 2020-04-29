@@ -1,0 +1,41 @@
+{
+    "config": {
+        "error": {
+            "error_auth_app": "Incorrect application id or secret",
+            "error_auth_mfa": "Incorrect code",
+            "error_auth_user": "Incorrect username or password"
+        },
+        "step": {
+            "auth_app": {
+                "data": {
+                    "app_id": "App ID",
+                    "app_secret": "Secret"
+                },
+                "description": "Application ID and secret code from <a href=\"https://my.starline.ru/developer\" target=\"_blank\">StarLine developer account</a>",
+                "title": "Application credentials"
+            },
+            "auth_captcha": {
+                "data": {
+                    "captcha_code": "Code from image"
+                },
+                "description": "{captcha_img}",
+                "title": "Captcha"
+            },
+            "auth_mfa": {
+                "data": {
+                    "mfa_code": "SMS code"
+                },
+                "description": "Enter the code sent to phone {phone_number}",
+                "title": "Two-factor authorization"
+            },
+            "auth_user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "StarLine account email and password",
+                "title": "User credentials"
+            }
+        }
+    }
+}

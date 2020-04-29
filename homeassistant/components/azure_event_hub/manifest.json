@@ -3,6 +3,5 @@
   "name": "Azure Event Hub",
   "documentation": "https://www.home-assistant.io/integrations/azure_event_hub",
   "requirements": ["azure-eventhub==1.3.1"],
-  "dependencies": [],
   "codeowners": ["@eavanvalkenburg"]
 }

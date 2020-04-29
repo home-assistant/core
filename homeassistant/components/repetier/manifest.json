@@ -3,6 +3,5 @@
   "name": "Repetier-Server",
   "documentation": "https://www.home-assistant.io/integrations/repetier",
   "requirements": ["pyrepetier==3.0.5"],
-  "dependencies": [],
   "codeowners": ["@MTrab"]
 }

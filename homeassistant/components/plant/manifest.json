@@ -2,8 +2,6 @@
   "domain": "plant",
   "name": "Plant Monitor",
   "documentation": "https://www.home-assistant.io/integrations/plant",
-  "requirements": [],
-  "dependencies": [],
   "after_dependencies": ["recorder"],
   "codeowners": ["@ChristianKuehnel"],
   "quality_scale": "internal"

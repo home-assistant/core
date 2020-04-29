@@ -119,7 +119,7 @@ class MeteoFranceWeather(WeatherEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        data = dict()
+        data = {}
         if self._data and "next_rain" in self._data:
             data["next_rain"] = self._data["next_rain"]
         return data

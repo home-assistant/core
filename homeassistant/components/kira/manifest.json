@@ -3,6 +3,5 @@
   "name": "Kira",
   "documentation": "https://www.home-assistant.io/integrations/kira",
   "requirements": ["pykira==0.1.1"],
-  "dependencies": [],
   "codeowners": []
 }

@@ -13,7 +13,7 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 
-from . import CONF_COMM_TYPE, CONTROLLER, DOMAIN, REQ_LOCK
+from . import CONF_COMM_TYPE, DOMAIN, REQ_LOCK
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,8 +38,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up X10 dimmers over a mochad controller."""
+    mochad_controller = hass.data[DOMAIN]
     devs = config.get(CONF_DEVICES)
-    add_entities([MochadLight(hass, CONTROLLER.ctrl, dev) for dev in devs])
+    add_entities([MochadLight(hass, mochad_controller.ctrl, dev) for dev in devs])
     return True
 
 

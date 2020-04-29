@@ -1,0 +1,22 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_hvac_mode": "Cambiar el modo HVAC en {entity_name}"
+        },
+        "condition_type": {
+            "is_hvac_mode": "{entity_name} est\u00e1 configurado en un modo HVAC espec\u00edfico"
+        }
+    },
+    "state": {
+        "_": {
+            "auto": "Automatico",
+            "cool": "Enfriar",
+            "dry": "Seco",
+            "fan_only": "S\u00f3lo ventilador",
+            "heat": "Calentar",
+            "heat_cool": "Calentar/Enfriar",
+            "off": "Desactivar"
+        }
+    },
+    "title": "Clima"
+}

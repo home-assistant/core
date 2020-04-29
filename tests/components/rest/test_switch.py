@@ -4,6 +4,7 @@ import asyncio
 import aiohttp
 
 import homeassistant.components.rest.switch as rest
+from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.helpers.template import Template
 from homeassistant.setup import setup_component
 
@@ -140,7 +141,7 @@ class TestRestSwitch:
 
     def test_turn_on_status_not_ok(self, aioclient_mock):
         """Test turn_on when error status returned."""
-        aioclient_mock.post(self.resource, status=500)
+        aioclient_mock.post(self.resource, status=HTTP_INTERNAL_SERVER_ERROR)
         asyncio.run_coroutine_threadsafe(
             self.switch.async_turn_on(), self.hass.loop
         ).result()
@@ -150,7 +151,7 @@ class TestRestSwitch:
 
     def test_turn_on_timeout(self, aioclient_mock):
         """Test turn_on when timeout occurs."""
-        aioclient_mock.post(self.resource, status=500)
+        aioclient_mock.post(self.resource, status=HTTP_INTERNAL_SERVER_ERROR)
         asyncio.run_coroutine_threadsafe(
             self.switch.async_turn_on(), self.hass.loop
         ).result()
@@ -169,7 +170,7 @@ class TestRestSwitch:
 
     def test_turn_off_status_not_ok(self, aioclient_mock):
         """Test turn_off when error status returned."""
-        aioclient_mock.post(self.resource, status=500)
+        aioclient_mock.post(self.resource, status=HTTP_INTERNAL_SERVER_ERROR)
         asyncio.run_coroutine_threadsafe(
             self.switch.async_turn_off(), self.hass.loop
         ).result()

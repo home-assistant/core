@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ten AVM FRITZ!Box jest ju\u017c skonfigurowany.",
+            "already_in_progress": "Konfiguracja AVM FRITZ!Box jest ju\u017c w toku.",
+            "not_found": "W sieci nie znaleziono obs\u0142ugiwanego urz\u0105dzenia AVM FRITZ!Box.",
+            "not_supported": "Po\u0142\u0105czony z AVM FRITZ! Box, ale nie jest w stanie kontrolowa\u0107 urz\u0105dze\u0144 Smart Home."
+        },
+        "error": {
+            "auth_failed": "Nazwa u\u017cytkownika i/lub has\u0142o s\u0105 nieprawid\u0142owe."
+        },
+        "flow_title": "AVM FRITZ!Box: {name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Czy chcesz skonfigurowa\u0107 {name}?",
+                "title": "AVM FRITZ! Box"
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Wprowad\u017a informacje o urz\u0105dzeniu AVM FRITZ! Box.",
+                "title": "AVM FRITZ! Box"
+            }
+        }
+    }
+}

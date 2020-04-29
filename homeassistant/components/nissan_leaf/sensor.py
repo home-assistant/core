@@ -41,7 +41,7 @@ class LeafBatterySensor(LeafEntity):
     @property
     def name(self):
         """Sensor Name."""
-        return self.car.leaf.nickname + " Charge"
+        return f"{self.car.leaf.nickname} Charge"
 
     @property
     def device_class(self):
@@ -77,8 +77,8 @@ class LeafRangeSensor(LeafEntity):
     def name(self):
         """Update sensor name depending on AC."""
         if self._ac_on is True:
-            return self.car.leaf.nickname + " Range (AC)"
-        return self.car.leaf.nickname + " Range"
+            return f"{self.car.leaf.nickname} Range (AC)"
+        return f"{self.car.leaf.nickname} Range"
 
     def log_registration(self):
         """Log registration."""

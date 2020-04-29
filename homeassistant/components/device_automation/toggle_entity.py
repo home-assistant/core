@@ -186,15 +186,13 @@ async def _async_get_automations(
 
     for entry in entries:
         automations.extend(
-            (
-                {
-                    **template,
-                    "device_id": device_id,
-                    "entity_id": entry.entity_id,
-                    "domain": domain,
-                }
-                for template in automation_templates
-            )
+            {
+                **template,
+                "device_id": device_id,
+                "entity_id": entry.entity_id,
+                "domain": domain,
+            }
+            for template in automation_templates
         )
 
     return automations

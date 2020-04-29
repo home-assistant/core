@@ -5,7 +5,6 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     BinarySensorDevice,
 )
-from homeassistant.core import callback
 
 from .const import (
     DOMAIN,
@@ -95,14 +94,8 @@ class MyQBinarySensorDevice(BinarySensorDevice):
         """Return False, updates are controlled via coordinator."""
         return False
 
-    @callback
-    def _async_consume_update(self):
-        self.async_write_ha_state()
-
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self._coordinator.async_add_listener(self._async_consume_update)
-
-    async def async_will_remove_from_hass(self):
-        """Undo subscription."""
-        self._coordinator.async_remove_listener(self._async_consume_update)
+        self.async_on_remove(
+            self._coordinator.async_add_listener(self.async_write_ha_state)
+        )

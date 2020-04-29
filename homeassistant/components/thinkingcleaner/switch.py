@@ -98,7 +98,7 @@ class ThinkingCleanerSwitch(ToggleEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._tc_object.name + " " + SWITCH_TYPES[self.type][0]
+        return f"{self._tc_object.name} {SWITCH_TYPES[self.type][0]}"
 
     @property
     def is_on(self):

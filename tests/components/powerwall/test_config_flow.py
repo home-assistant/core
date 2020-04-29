@@ -1,13 +1,13 @@
 """Test the Powerwall config flow."""
 
 from asynctest import patch
-from tesla_powerwall import PowerWallUnreachableError
+from tesla_powerwall import PowerwallUnreachableError
 
 from homeassistant import config_entries, setup
-from homeassistant.components.powerwall.const import DOMAIN, POWERWALL_SITE_NAME
+from homeassistant.components.powerwall.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 
-from .mocks import _mock_powerwall_return_value, _mock_powerwall_side_effect
+from .mocks import _mock_powerwall_side_effect, _mock_powerwall_site_name
 
 
 async def test_form_source_user(hass):
@@ -19,12 +19,10 @@ async def test_form_source_user(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    mock_powerwall = _mock_powerwall_return_value(
-        site_info={POWERWALL_SITE_NAME: "My site"}
-    )
+    mock_powerwall = await _mock_powerwall_site_name(hass, "My site")
 
     with patch(
-        "homeassistant.components.powerwall.config_flow.PowerWall",
+        "homeassistant.components.powerwall.config_flow.Powerwall",
         return_value=mock_powerwall,
     ), patch(
         "homeassistant.components.powerwall.async_setup", return_value=True
@@ -47,12 +45,9 @@ async def test_form_source_import(hass):
     """Test we setup the config entry via import."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    mock_powerwall = _mock_powerwall_return_value(
-        site_info={POWERWALL_SITE_NAME: "Imported site"}
-    )
-
+    mock_powerwall = await _mock_powerwall_site_name(hass, "Imported site")
     with patch(
-        "homeassistant.components.powerwall.config_flow.PowerWall",
+        "homeassistant.components.powerwall.config_flow.Powerwall",
         return_value=mock_powerwall,
     ), patch(
         "homeassistant.components.powerwall.async_setup", return_value=True
@@ -79,10 +74,10 @@ async def test_form_cannot_connect(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_powerwall = _mock_powerwall_side_effect(site_info=PowerWallUnreachableError)
+    mock_powerwall = _mock_powerwall_side_effect(site_info=PowerwallUnreachableError)
 
     with patch(
-        "homeassistant.components.powerwall.config_flow.PowerWall",
+        "homeassistant.components.powerwall.config_flow.Powerwall",
         return_value=mock_powerwall,
     ):
         result2 = await hass.config_entries.flow.async_configure(

@@ -5,6 +5,7 @@ import logging
 
 import aiohttp
 
+from homeassistant.const import POWER_WATT
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, dt as dt_util
@@ -109,7 +110,7 @@ class TibberSensorElPrice(TibberSensor):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "Electricity price {}".format(self._name)
+        return f"Electricity price {self._name}"
 
     @property
     def icon(self):
@@ -169,7 +170,7 @@ class TibberSensorRT(TibberSensor):
                 continue
             self._device_state_attributes[key] = value
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def available(self):
@@ -179,7 +180,7 @@ class TibberSensorRT(TibberSensor):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "Real time consumption {}".format(self._name)
+        return f"Real time consumption {self._name}"
 
     @property
     def should_poll(self):
@@ -194,7 +195,7 @@ class TibberSensorRT(TibberSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return "W"
+        return POWER_WATT
 
     @property
     def unique_id(self):

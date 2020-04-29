@@ -90,10 +90,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     customize = config.get(CONF_CUSTOMIZE)
 
-    if config.get(CONF_SSL):
-        protocol = "https"
-    else:
-        protocol = "http"
+    protocol = "https" if config[CONF_SSL] else "http"
 
     url = f"{protocol}://{host}"
 

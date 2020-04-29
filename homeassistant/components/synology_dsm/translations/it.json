@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Host gi\u00e0 configurato"
+        },
+        "error": {
+            "login": "Errore di accesso: si prega di controllare il nome utente e la password",
+            "missing_data": "Dati mancanti: si prega di riprovare pi\u00f9 tardi o un'altra configurazione",
+            "otp_failed": "Autenticazione in due fasi fallita, riprovare con un nuovo codice di accesso"
+        },
+        "flow_title": "Synology DSM {name} ({host})",
+        "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Codice"
+                },
+                "title": "Synology DSM: autenticazione in due fasi"
+            },
+            "link": {
+                "data": {
+                    "api_version": "Versione DSM",
+                    "password": "Password",
+                    "port": "Porta (opzionale)",
+                    "ssl": "Utilizzare SSL/TLS per connettersi al NAS",
+                    "username": "Nome utente"
+                },
+                "description": "Vuoi impostare {name} ({host})?",
+                "title": "Synology DSM"
+            },
+            "user": {
+                "data": {
+                    "api_version": "Versione DSM",
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Porta (opzionale)",
+                    "ssl": "Utilizzare SSL/TLS per connettersi al NAS",
+                    "username": "Nome utente"
+                },
+                "title": "Synology DSM"
+            }
+        }
+    }
+}

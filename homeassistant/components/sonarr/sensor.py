@@ -1,9 +1,7 @@
 """Support for Sonarr."""
-from datetime import datetime
+from datetime import timedelta
 import logging
-import time
 
-from pytz import timezone
 import requests
 import voluptuous as vol
 
@@ -23,9 +21,11 @@ from homeassistant.const import (
     DATA_TERABYTES,
     DATA_YOTTABYTES,
     DATA_ZETTABYTES,
+    HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,13 +51,13 @@ SENSOR_TYPES = {
 }
 
 ENDPOINTS = {
-    "diskspace": "http{0}://{1}:{2}/{3}api/diskspace",
-    "queue": "http{0}://{1}:{2}/{3}api/queue",
-    "upcoming": "http{0}://{1}:{2}/{3}api/calendar?start={4}&end={5}",
-    "wanted": "http{0}://{1}:{2}/{3}api/wanted/missing",
-    "series": "http{0}://{1}:{2}/{3}api/series",
-    "commands": "http{0}://{1}:{2}/{3}api/command",
-    "status": "http{0}://{1}:{2}/{3}api/system/status",
+    "diskspace": "{0}://{1}:{2}/{3}api/diskspace",
+    "queue": "{0}://{1}:{2}/{3}api/queue",
+    "upcoming": "{0}://{1}:{2}/{3}api/calendar?start={4}&end={5}",
+    "wanted": "{0}://{1}:{2}/{3}api/wanted/missing",
+    "series": "{0}://{1}:{2}/{3}api/series",
+    "commands": "{0}://{1}:{2}/{3}api/command",
+    "status": "{0}://{1}:{2}/{3}api/system/status",
 }
 
 # Support to Yottabytes for the future, why not
@@ -92,13 +92,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sonarr platform."""
     conditions = config.get(CONF_MONITORED_CONDITIONS)
-    add_entities([SonarrSensor(hass, config, sensor) for sensor in conditions], True)
+    add_entities([SonarrSensor(config, sensor) for sensor in conditions], True)
 
 
 class SonarrSensor(Entity):
     """Implementation of the Sonarr sensor."""
 
-    def __init__(self, hass, conf, sensor_type):
+    def __init__(self, conf, sensor_type):
         """Create Sonarr entity."""
 
         self.conf = conf
@@ -110,10 +110,9 @@ class SonarrSensor(Entity):
         self.apikey = conf.get(CONF_API_KEY)
         self.included = conf.get(CONF_INCLUDED)
         self.days = int(conf.get(CONF_DAYS))
-        self.ssl = "s" if conf.get(CONF_SSL) else ""
+        self.ssl = "https" if conf.get(CONF_SSL) else "http"
         self._state = None
         self.data = []
-        self._tz = timezone(str(hass.config.time_zone))
         self.type = sensor_type
         self._name = SENSOR_TYPES[self.type][0]
         if self.type == "diskspace":
@@ -149,6 +148,9 @@ class SonarrSensor(Entity):
         attributes = {}
         if self.type == "upcoming":
             for show in self.data:
+                if show["series"]["title"] in attributes:
+                    continue
+
                 attributes[show["series"]["title"]] = "S{:02d}E{:02d}".format(
                     show["seasonNumber"], show["episodeNumber"]
                 )
@@ -204,12 +206,18 @@ class SonarrSensor(Entity):
 
     def update(self):
         """Update the data for the sensor."""
-        start = get_date(self._tz)
-        end = get_date(self._tz, self.days)
+        local = dt_util.start_of_local_day().replace(microsecond=0)
+        start = dt_util.as_utc(local)
+        end = start + timedelta(days=self.days)
         try:
             res = requests.get(
                 ENDPOINTS[self.type].format(
-                    self.ssl, self.host, self.port, self.urlbase, start, end
+                    self.ssl,
+                    self.host,
+                    self.port,
+                    self.urlbase,
+                    start.isoformat().replace("+00:00", "Z"),
+                    end.isoformat().replace("+00:00", "Z"),
                 ),
                 headers={"X-Api-Key": self.apikey},
                 timeout=10,
@@ -220,16 +228,9 @@ class SonarrSensor(Entity):
             self._state = None
             return
 
-        if res.status_code == 200:
+        if res.status_code == HTTP_OK:
             if self.type in ["upcoming", "queue", "series", "commands"]:
-                if self.days == 1 and self.type == "upcoming":
-                    # Sonarr API returns an empty array if start and end dates
-                    # are the same, so we need to filter to just today
-                    self.data = list(
-                        filter(lambda x: x["airDate"] == str(start), res.json())
-                    )
-                else:
-                    self.data = res.json()
+                self.data = res.json()
                 self._state = len(self.data)
             elif self.type == "wanted":
                 data = res.json()
@@ -261,12 +262,6 @@ class SonarrSensor(Entity):
                 self.data = res.json()
                 self._state = self.data["version"]
             self._available = True
-
-
-def get_date(zone, offset=0):
-    """Get date based on timezone and offset of days."""
-    day = 60 * 60 * 24
-    return datetime.date(datetime.fromtimestamp(time.time() + day * offset, tz=zone))
 
 
 def to_unit(value, unit):

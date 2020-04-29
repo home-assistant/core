@@ -30,7 +30,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.debug(
             "Adding device %s entity %s to Binary Sensor platform",
             device.address.hex,
-            device.states[state_key].name,
+            name,
         )
 
         new_entity = InsteonBinarySensor(device, state_key)

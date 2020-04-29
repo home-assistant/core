@@ -116,7 +116,6 @@ class AuthProvider:
 
     async def async_initialize(self) -> None:
         """Initialize the auth provider."""
-        pass
 
 
 async def auth_provider_from_config(

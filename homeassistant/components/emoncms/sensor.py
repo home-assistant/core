@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
+    HTTP_OK,
     POWER_WATT,
     STATE_UNKNOWN,
 )
@@ -245,7 +246,7 @@ class EmonCmsData:
             _LOGGER.error(exception)
             return
         else:
-            if req.status_code == 200:
+            if req.status_code == HTTP_OK:
                 self.data = req.json()
             else:
                 _LOGGER.error(

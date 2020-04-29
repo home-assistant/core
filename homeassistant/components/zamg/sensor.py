@@ -17,7 +17,10 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEGREE,
+    LENGTH_METERS,
     SPEED_KILOMETERS_PER_HOUR,
+    TEMP_CELSIUS,
     UNIT_PERCENTAGE,
     __version__,
 )
@@ -47,22 +50,27 @@ SENSOR_TYPES = {
         f"WG {SPEED_KILOMETERS_PER_HOUR}",
         float,
     ),
-    "wind_bearing": ("Wind Bearing", "°", "WR °", int),
+    "wind_bearing": ("Wind Bearing", DEGREE, f"WR {DEGREE}", int),
     "wind_max_speed": (
         "Top Wind Speed",
         SPEED_KILOMETERS_PER_HOUR,
         f"WSG {SPEED_KILOMETERS_PER_HOUR}",
         float,
     ),
-    "wind_max_bearing": ("Top Wind Bearing", "°", "WSR °", int),
+    "wind_max_bearing": ("Top Wind Bearing", DEGREE, f"WSR {DEGREE}", int),
     "sun_last_hour": ("Sun Last Hour", UNIT_PERCENTAGE, f"SO {UNIT_PERCENTAGE}", int),
-    "temperature": ("Temperature", "°C", "T °C", float),
+    "temperature": ("Temperature", TEMP_CELSIUS, f"T {TEMP_CELSIUS}", float),
     "precipitation": ("Precipitation", "l/m²", "N l/m²", float),
-    "dewpoint": ("Dew Point", "°C", "TP °C", float),
+    "dewpoint": ("Dew Point", TEMP_CELSIUS, f"TP {TEMP_CELSIUS}", float),
     # The following probably not useful for general consumption,
     # but we need them to fill in internal attributes
     "station_name": ("Station Name", None, "Name", str),
-    "station_elevation": ("Station Elevation", "m", "Höhe m", int),
+    "station_elevation": (
+        "Station Elevation",
+        LENGTH_METERS,
+        f"Höhe {LENGTH_METERS}",
+        int,
+    ),
     "update_date": ("Update Date", None, "Datum", str),
     "update_time": ("Update Time", None, "Zeit", str),
 }
@@ -159,7 +167,7 @@ class ZamgData:
     """The class for handling the data retrieval."""
 
     API_URL = "http://www.zamg.ac.at/ogd/"
-    API_HEADERS = {USER_AGENT: "{} {}".format("home-assistant.zamg/", __version__)}
+    API_HEADERS = {USER_AGENT: f"home-assistant.zamg/ {__version__}"}
 
     def __init__(self, station_id):
         """Initialize the probe."""

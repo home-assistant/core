@@ -18,11 +18,12 @@ LOGGER = logging.getLogger(__name__)
 @pytest.fixture
 def crd(hass):
     """Coordinator mock."""
-    calls = []
+    calls = 0
 
     async def refresh():
-        calls.append(None)
-        return len(calls)
+        nonlocal calls
+        calls += 1
+        return calls
 
     crd = update_coordinator.DataUpdateCoordinator(
         hass,
@@ -48,16 +49,20 @@ async def test_async_refresh(crd):
     def update_callback():
         updates.append(crd.data)
 
-    crd.async_add_listener(update_callback)
-
+    unsub = crd.async_add_listener(update_callback)
     await crd.async_refresh()
+    assert updates == [2]
+    assert crd._unsub_refresh is not None
 
+    # Test unsubscribing through function
+    unsub()
+    await crd.async_refresh()
     assert updates == [2]
 
+    # Test unsubscribing through method
+    crd.async_add_listener(update_callback)
     crd.async_remove_listener(update_callback)
-
     await crd.async_refresh()
-
     assert updates == [2]
 
 

@@ -300,9 +300,7 @@ class EntityPlatform:
             return
 
         self._async_unsub_polling = async_track_time_interval(
-            self.hass,
-            self._update_entity_states,  # type: ignore
-            self.scan_interval,
+            self.hass, self._update_entity_states, self.scan_interval,
         )
 
     async def _async_add_entity(
@@ -444,7 +442,7 @@ class EntityPlatform:
         await entity.async_internal_added_to_hass()
         await entity.async_added_to_hass()
 
-        await entity.async_update_ha_state()
+        entity.async_write_ha_state()
 
     async def async_reset(self) -> None:
         """Remove all entities and reset data.

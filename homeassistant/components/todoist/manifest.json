@@ -3,6 +3,5 @@
   "name": "Todoist",
   "documentation": "https://www.home-assistant.io/integrations/todoist",
   "requirements": ["todoist-python==8.0.0"],
-  "dependencies": [],
   "codeowners": ["@boralyl"]
 }

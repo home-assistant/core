@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ce compte est d\u00e9j\u00e0 configur\u00e9."
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
+            "invalid_auth": "Authentification non valide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Pour acc\u00e9der \u00e0 l'API personnel Flume, vous devez demander un \"Client ID\" et un \"Client Secret\" \u00e0 l'adresse https://portal.flumetech.com/settings#token",
+                "title": "Se connecter \u00e0 votre compte Flume"
+            }
+        }
+    }
+}

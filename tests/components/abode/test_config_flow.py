@@ -5,7 +5,7 @@ from abodepy.exceptions import AbodeAuthenticationException
 
 from homeassistant import data_entry_flow
 from homeassistant.components.abode import config_flow
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_INTERNAL_SERVER_ERROR
 
 from tests.common import MockConfigEntry
 
@@ -74,7 +74,9 @@ async def test_connection_error(hass):
 
     with patch(
         "homeassistant.components.abode.config_flow.Abode",
-        side_effect=AbodeAuthenticationException((500, "connection error")),
+        side_effect=AbodeAuthenticationException(
+            (HTTP_INTERNAL_SERVER_ERROR, "connection error")
+        ),
     ):
         result = await flow.async_step_user(user_input=conf)
         assert result["errors"] == {"base": "connection_error"}

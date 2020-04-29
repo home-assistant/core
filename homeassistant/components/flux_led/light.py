@@ -1,7 +1,6 @@
 """Support for Flux lights."""
 import logging
 import random
-import socket
 
 from flux_led import BulbScanner, WifiLedBulb
 import voluptuous as vol
@@ -363,7 +362,7 @@ class FluxLight(Light):
             try:
                 self._connect()
                 self._error_reported = False
-            except socket.error:
+            except OSError:
                 self._disconnect()
                 if not self._error_reported:
                     _LOGGER.warning(

@@ -3,6 +3,7 @@ import asyncio
 
 from aiohttp.client_exceptions import ClientResponseError
 
+from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -202,7 +203,7 @@ async def test_retries_after_error(aioclient_mock, hass, hass_client):
 
     client = await hass_client()
 
-    aioclient_mock.get(radar_map_url(), text=None, status=500)
+    aioclient_mock.get(radar_map_url(), text=None, status=HTTP_INTERNAL_SERVER_ERROR)
 
     # A 404 should not return data and throw:
     try:

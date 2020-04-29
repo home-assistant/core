@@ -1,0 +1,40 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "Aktiver {entity_name} borte",
+            "arm_home": "Aktiver {entity_name} hjemme",
+            "arm_night": "Aktiver {entity_name} natt",
+            "disarm": "Deaktiver {entity_name}",
+            "trigger": "Utl\u00f8ser {entity_name}"
+        },
+        "condition_type": {
+            "is_armed_away": "{entity_name} aktivert borte",
+            "is_armed_home": "{entity_name} aktivert hjemme",
+            "is_armed_night": "{entity_name} aktivert natt",
+            "is_disarmed": "{entity_name} er deaktivert",
+            "is_triggered": "{entity_name} er utl\u00f8st"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} aktivert borte",
+            "armed_home": "{entity_name} aktivert hjemme",
+            "armed_night": "{entity_name} aktivert natt",
+            "disarmed": "{entity_name} deaktivert",
+            "triggered": "{entity_name} utl\u00f8st"
+        }
+    },
+    "state": {
+        "_": {
+            "armed": "Armert",
+            "armed_away": "Armert borte",
+            "armed_custom_bypass": "Armert tilpasset unntak",
+            "armed_home": "Armert hjemme",
+            "armed_night": "Armert natt",
+            "arming": "Armerer",
+            "disarmed": "Avsl\u00e5tt",
+            "disarming": "Disarmer",
+            "pending": "Ventende",
+            "triggered": "Utl\u00f8st"
+        }
+    },
+    "title": "Alarm kontrollpanel"
+}

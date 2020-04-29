@@ -9,6 +9,7 @@ from homeassistant.components import recorder
 import homeassistant.components.plant as plant
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    CONDUCTIVITY,
     STATE_OK,
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
@@ -93,13 +94,15 @@ class TestPlant(unittest.TestCase):
 
     def test_initial_states(self):
         """Test plant initialises attributes if sensor already exists."""
-        self.hass.states.set(MOISTURE_ENTITY, 5, {ATTR_UNIT_OF_MEASUREMENT: "us/cm"})
+        self.hass.states.set(
+            MOISTURE_ENTITY, 5, {ATTR_UNIT_OF_MEASUREMENT: CONDUCTIVITY}
+        )
         plant_name = "some_plant"
         assert setup_component(
             self.hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}
         )
         self.hass.block_till_done()
-        state = self.hass.states.get("plant." + plant_name)
+        state = self.hass.states.get(f"plant.{plant_name}")
         assert 5 == state.attributes[plant.READING_MOISTURE]
 
     def test_update_states(self):
@@ -111,9 +114,11 @@ class TestPlant(unittest.TestCase):
         assert setup_component(
             self.hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}
         )
-        self.hass.states.set(MOISTURE_ENTITY, 5, {ATTR_UNIT_OF_MEASUREMENT: "us/cm"})
+        self.hass.states.set(
+            MOISTURE_ENTITY, 5, {ATTR_UNIT_OF_MEASUREMENT: CONDUCTIVITY}
+        )
         self.hass.block_till_done()
-        state = self.hass.states.get("plant." + plant_name)
+        state = self.hass.states.get(f"plant.{plant_name}")
         assert STATE_PROBLEM == state.state
         assert 5 == state.attributes[plant.READING_MOISTURE]
 
@@ -127,10 +132,10 @@ class TestPlant(unittest.TestCase):
             self.hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}
         )
         self.hass.states.set(
-            MOISTURE_ENTITY, STATE_UNAVAILABLE, {ATTR_UNIT_OF_MEASUREMENT: "us/cm"}
+            MOISTURE_ENTITY, STATE_UNAVAILABLE, {ATTR_UNIT_OF_MEASUREMENT: CONDUCTIVITY}
         )
         self.hass.block_till_done()
-        state = self.hass.states.get("plant." + plant_name)
+        state = self.hass.states.get(f"plant.{plant_name}")
         assert state.state == STATE_PROBLEM
         assert state.attributes[plant.READING_MOISTURE] == STATE_UNAVAILABLE
 
@@ -143,16 +148,18 @@ class TestPlant(unittest.TestCase):
         assert setup_component(
             self.hass, plant.DOMAIN, {plant.DOMAIN: {plant_name: GOOD_CONFIG}}
         )
-        self.hass.states.set(MOISTURE_ENTITY, 42, {ATTR_UNIT_OF_MEASUREMENT: "us/cm"})
+        self.hass.states.set(
+            MOISTURE_ENTITY, 42, {ATTR_UNIT_OF_MEASUREMENT: CONDUCTIVITY}
+        )
         self.hass.block_till_done()
-        state = self.hass.states.get("plant." + plant_name)
+        state = self.hass.states.get(f"plant.{plant_name}")
         assert state.state == STATE_OK
         assert state.attributes[plant.READING_MOISTURE] == 42
         self.hass.states.set(
-            MOISTURE_ENTITY, STATE_UNAVAILABLE, {ATTR_UNIT_OF_MEASUREMENT: "us/cm"}
+            MOISTURE_ENTITY, STATE_UNAVAILABLE, {ATTR_UNIT_OF_MEASUREMENT: CONDUCTIVITY}
         )
         self.hass.block_till_done()
-        state = self.hass.states.get("plant." + plant_name)
+        state = self.hass.states.get(f"plant.{plant_name}")
         assert state.state == STATE_PROBLEM
         assert state.attributes[plant.READING_MOISTURE] == STATE_UNAVAILABLE
 
@@ -184,7 +191,7 @@ class TestPlant(unittest.TestCase):
         )
         self.hass.block_till_done()
 
-        state = self.hass.states.get("plant." + plant_name)
+        state = self.hass.states.get(f"plant.{plant_name}")
         assert STATE_UNKNOWN == state.state
         max_brightness = state.attributes.get(plant.ATTR_MAX_BRIGHTNESS_HISTORY)
         assert 30 == max_brightness
@@ -197,17 +204,17 @@ class TestPlant(unittest.TestCase):
         )
         self.hass.states.set(BRIGHTNESS_ENTITY, 100, {ATTR_UNIT_OF_MEASUREMENT: "lux"})
         self.hass.block_till_done()
-        state = self.hass.states.get("plant." + plant_name)
+        state = self.hass.states.get(f"plant.{plant_name}")
         assert STATE_PROBLEM == state.state
 
         self.hass.states.set(BRIGHTNESS_ENTITY, 600, {ATTR_UNIT_OF_MEASUREMENT: "lux"})
         self.hass.block_till_done()
-        state = self.hass.states.get("plant." + plant_name)
+        state = self.hass.states.get(f"plant.{plant_name}")
         assert STATE_OK == state.state
 
         self.hass.states.set(BRIGHTNESS_ENTITY, 100, {ATTR_UNIT_OF_MEASUREMENT: "lux"})
         self.hass.block_till_done()
-        state = self.hass.states.get("plant." + plant_name)
+        state = self.hass.states.get(f"plant.{plant_name}")
         assert STATE_OK == state.state
 
 

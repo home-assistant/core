@@ -214,7 +214,11 @@ class EightSleepUserEntity(Entity):
             """Update callback."""
             self.async_schedule_update_ha_state(True)
 
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_USER, async_eight_user_update)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_USER, async_eight_user_update
+            )
+        )
 
     @property
     def should_poll(self):
@@ -237,7 +241,11 @@ class EightSleepHeatEntity(Entity):
             """Update callback."""
             self.async_schedule_update_ha_state(True)
 
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_HEAT, async_eight_heat_update)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_HEAT, async_eight_heat_update
+            )
+        )
 
     @property
     def should_poll(self):

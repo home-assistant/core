@@ -285,7 +285,7 @@ class TestComponentsGroup(unittest.TestCase):
 
         group_conf = OrderedDict()
         group_conf["second_group"] = {
-            "entities": "light.Bowl, " + test_group.entity_id,
+            "entities": f"light.Bowl, {test_group.entity_id}",
             "icon": "mdi:work",
         }
         group_conf["test_group"] = "hello.world,sensor.happy"
@@ -295,7 +295,7 @@ class TestComponentsGroup(unittest.TestCase):
 
         group_state = self.hass.states.get(f"{group.DOMAIN}.second_group")
         assert STATE_ON == group_state.state
-        assert set((test_group.entity_id, "light.bowl")) == set(
+        assert {test_group.entity_id, "light.bowl"} == set(
             group_state.attributes["entity_id"]
         )
         assert group_state.attributes.get(group.ATTR_AUTO) is None
@@ -304,7 +304,7 @@ class TestComponentsGroup(unittest.TestCase):
 
         group_state = self.hass.states.get(f"{group.DOMAIN}.test_group")
         assert STATE_UNKNOWN == group_state.state
-        assert set(("sensor.happy", "hello.world")) == set(
+        assert {"sensor.happy", "hello.world"} == set(
             group_state.attributes["entity_id"]
         )
         assert group_state.attributes.get(group.ATTR_AUTO) is None
