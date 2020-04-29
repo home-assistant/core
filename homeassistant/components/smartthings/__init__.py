@@ -37,6 +37,7 @@ from .const import (
     TOKEN_REFRESH_INTERVAL,
 )
 from .smartapp import (
+    format_unique_id,
     setup_smartapp,
     setup_smartapp_endpoint,
     smartapp_sync_subscriptions,
@@ -76,6 +77,15 @@ async def async_migrate_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Initialize config entry which represents an installed SmartApp."""
+    # For backwards compat
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            entry,
+            unique_id=format_unique_id(
+                entry.data[CONF_APP_ID], entry.data[CONF_LOCATION_ID]
+            ),
+        )
+
     if not validate_webhook_requirements(hass):
         _LOGGER.warning(
             "The 'base_url' of the 'http' integration must be configured and start with 'https://'"
