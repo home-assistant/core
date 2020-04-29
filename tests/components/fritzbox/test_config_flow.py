@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 from pyfritzhome import LoginError
 import pytest
+from requests.exceptions import HTTPError
 
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.components.ssdp import (
@@ -121,6 +122,28 @@ async def test_ssdp(hass: HomeAssistantType, fritz: Mock):
     assert result["result"].unique_id == "only-a-test"
 
 
+async def test_ssdp_no_friendly_name(hass: HomeAssistantType, fritz: Mock):
+    """Test starting a flow from discovery without friendly name."""
+    MOCK_NO_NAME = MOCK_SSDP_DATA.copy()
+    del MOCK_NO_NAME[ATTR_UPNP_FRIENDLY_NAME]
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "ssdp"}, data=MOCK_NO_NAME
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "fake_pass", CONF_USERNAME: "fake_user"},
+    )
+    assert result["type"] == "create_entry"
+    assert result["title"] == "fake_host"
+    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_PASSWORD] == "fake_pass"
+    assert result["data"][CONF_USERNAME] == "fake_user"
+    assert result["result"].unique_id == "only-a-test"
+
+
 async def test_ssdp_auth_failed(hass: HomeAssistantType, fritz: Mock):
     """Test starting a flow from discovery with authentication failure."""
     fritz().login.side_effect = LoginError("Boom")
@@ -157,6 +180,24 @@ async def test_ssdp_not_successful(hass: HomeAssistantType, fritz: Mock):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "not_found"
+
+
+async def test_ssdp_not_supported(hass: HomeAssistantType, fritz: Mock):
+    """Test starting a flow from discovery with unsupported device."""
+    fritz().get_device_elements.side_effect = HTTPError("Boom")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "whatever", CONF_USERNAME: "whatever"},
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_supported"
 
 
 async def test_ssdp_already_in_progress_unique_id(hass: HomeAssistantType, fritz: Mock):
