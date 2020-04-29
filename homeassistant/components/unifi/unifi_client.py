@@ -24,10 +24,12 @@ LOGGER = logging.getLogger(__name__)
 CLIENT_BLOCKED = (WIRED_CLIENT_BLOCKED, WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (WIRED_CLIENT_UNBLOCKED, WIRELESS_CLIENT_UNBLOCKED)
 WIRED_CLIENT = (WIRED_CLIENT_CONNECTED, WIRED_CLIENT_DISCONNECTED)
+WIRELESS_CLIENT_ROAMRADIO = "EVT_WU_RoamRadio"
 WIRELESS_CLIENT = (
     WIRELESS_CLIENT_CONNECTED,
     WIRELESS_CLIENT_DISCONNECTED,
     WIRELESS_CLIENT_ROAM,
+    WIRELESS_CLIENT_ROAMRADIO,
 )
 
 
@@ -71,6 +73,7 @@ class UniFiClient(UniFiBase):
                 self.wireless_connection = self.client.event.event in (
                     WIRELESS_CLIENT_CONNECTED,
                     WIRELESS_CLIENT_ROAM,
+                    WIRELESS_CLIENT_ROAMRADIO,
                 )
 
             elif self.client.event.event in WIRED_CLIENT:
