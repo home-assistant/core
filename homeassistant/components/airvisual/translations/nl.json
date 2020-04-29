@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "general_error": "Er is een onbekende fout opgetreden."
+        },
+        "step": {
+            "geography": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad"
+                },
+                "title": "Configureer een geografie"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "IP adres/hostname van unit",
+                    "password": "Wachtwoord van unit"
+                }
+            },
+            "user": {
+                "data": {
+                    "cloud_api": "Geografische ligging",
+                    "type": "Integratietype"
+                }
+            }
+        }
+    }
+}

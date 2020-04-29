@@ -32,6 +32,7 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Tijd in seconden vanaf laatst gezien tot beschouwd als weg",
+                    "ignore_wired_bug": "Schakel UniFi bedrade buglogica uit",
                     "track_clients": "Volg netwerkclients",
                     "track_devices": "Netwerkapparaten volgen (Ubiquiti-apparaten)",
                     "track_wired_clients": "Inclusief bedrade netwerkcli\u00ebnten"

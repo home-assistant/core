@@ -96,6 +96,7 @@
                 "data": {
                     "activation": "Wyj\u015bcie, gdy w\u0142\u0105czone",
                     "momentary": "Czas trwania impulsu (ms) (opcjonalnie)",
+                    "more_states": "Konfigurowanie dodatkowych stan\u00f3w dla tej strefy",
                     "name": "Nazwa (opcjonalnie)",
                     "pause": "Przerwa mi\u0119dzy impulsami (ms) (opcjonalnie)",
                     "repeat": "Ilo\u015b\u0107 powt\u00f3rze\u0144 (-1=niesko\u0144czenie) (opcjonalnie)"

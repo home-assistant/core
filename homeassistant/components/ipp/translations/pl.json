@@ -1,7 +1,34 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Ta drukarka jest ju\u017c skonfigurowana.",
+            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z drukark\u0105.",
+            "connection_upgrade": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z drukark\u0105 z powodu konieczno\u015bci uaktualnienia po\u0142\u0105czenia.",
+            "ipp_error": "Wyst\u0105pi\u0142 b\u0142\u0105d IPP.",
+            "ipp_version_error": "Wersja IPP nie obs\u0142ugiwana przez drukark\u0119.",
             "parse_error": "Nie mo\u017cna przeanalizowa\u0107 odpowiedzi z drukarki."
+        },
+        "error": {
+            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z drukark\u0105.",
+            "connection_upgrade": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z drukark\u0105. Spr\u00f3buj ponownie z zaznaczon\u0105 opcj\u0105 SSL/TLS."
+        },
+        "flow_title": "Drukarka: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "base_path": "\u015acie\u017cka wzgl\u0119dna do drukarki",
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port",
+                    "ssl": "Drukarka obs\u0142uguje komunikacj\u0119 przez SSL/TLS",
+                    "verify_ssl": "Drukarka u\u017cywa prawid\u0142owego certyfikatu"
+                },
+                "description": "Skonfiguruj drukark\u0119 za pomoc\u0105 protoko\u0142u IPP (Internet Printing Protocol) w celu integracji z Home Assistant.",
+                "title": "Po\u0142\u0105cz swoj\u0105 drukark\u0119"
+            },
+            "zeroconf_confirm": {
+                "description": "Czy chcesz doda\u0107 drukark\u0119 o nazwie `{name}` do Home Assistant'a?",
+                "title": "Wykryto drukark\u0119"
+            }
         }
     }
 }

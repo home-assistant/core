@@ -1,6 +1,8 @@
 """The tests for the MQTT statestream component."""
 from unittest.mock import ANY, call, patch
 
+import pytest
+
 import homeassistant.components.mqtt_statestream as statestream
 from homeassistant.core import State
 from homeassistant.setup import setup_component
@@ -9,8 +11,12 @@ from tests.common import (
     get_test_home_assistant,
     mock_mqtt_component,
     mock_state_change_event,
-    mock_storage,
 )
+
+
+@pytest.fixture(autouse=True)
+def mock_storage(hass_storage):
+    """Autouse hass_storage for the TestCase tests."""
 
 
 class TestMqttStateStream:
@@ -19,14 +25,11 @@ class TestMqttStateStream:
     def setup_method(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.mock_storage = mock_storage()
-        self.mock_storage.__enter__()
         self.mock_mqtt = mock_mqtt_component(self.hass)
 
     def teardown_method(self):
         """Stop everything that was started."""
         self.hass.stop()
-        self.mock_storage.__exit__(None, None, None)
 
     def add_statestream(
         self,

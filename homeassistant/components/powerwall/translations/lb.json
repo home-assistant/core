@@ -5,7 +5,8 @@
         },
         "error": {
             "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
-            "unknown": "Onerwaarte Feeler"
+            "unknown": "Onerwaarte Feeler",
+            "wrong_version": "Deng Powerwall benotzt eng Software Versioun d\u00e9i net \u00ebnnerst\u00ebtzt ass. Betruecht een Upgrade ze maachen oder d\u00ebst ze mellen, sou dass et ka gel\u00e9ist ginn."
         },
         "step": {
             "user": {
