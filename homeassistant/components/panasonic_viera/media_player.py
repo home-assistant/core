@@ -17,7 +17,14 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 
-from .const import ATTR_REMOTE, DOMAIN
+from .const import (
+    ATTR_DEVICE_INFO,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL_NUMBER,
+    ATTR_REMOTE,
+    ATTR_UDN,
+    DOMAIN,
+)
 
 SUPPORT_VIERATV = (
     SUPPORT_PAUSE
@@ -44,26 +51,38 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     remote = hass.data[DOMAIN][host][ATTR_REMOTE]
 
-    tv_device = PanasonicVieraTVDevice(remote, name)
+    device_info = config[ATTR_DEVICE_INFO]
+
+    tv_device = PanasonicVieraTVEntity(remote, name, device_info)
     async_add_entities([tv_device])
 
 
-class PanasonicVieraTVDevice(MediaPlayerEntity):
+class PanasonicVieraTVEntity(MediaPlayerEntity):
     """Representation of a Panasonic Viera TV."""
 
     def __init__(
-        self, remote, name, uuid=None,
+        self, remote, name, device_info,
     ):
-        """Initialize the Panasonic device."""
+        """Initialize the entity."""
         # Save a reference to the imported class
         self._remote = remote
         self._name = name
-        self._uuid = uuid
+        self._device_info = device_info
 
     @property
     def unique_id(self) -> str:
         """Return the unique ID of the device."""
-        return self._uuid
+        return self._device_info[ATTR_UDN]
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": self._name,
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "manufacturer": self._device_info[ATTR_MANUFACTURER],
+            "model": self._device_info[ATTR_MODEL_NUMBER],
+        }
 
     @property
     def name(self):

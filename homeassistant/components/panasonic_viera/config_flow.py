@@ -10,6 +10,9 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 
 from .const import (  # pylint: disable=unused-import
+    ATTR_DEVICE_INFO,
+    ATTR_FRIENDLY_NAME,
+    ATTR_UDN,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
     CONF_ON_ACTION,
@@ -38,6 +41,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: None,
             CONF_PORT: None,
             CONF_ON_ACTION: None,
+            ATTR_DEVICE_INFO: None,
         }
 
         self._remote = None
@@ -60,6 +64,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason=REASON_UNKNOWN)
 
             if "base" not in errors:
+                self._data[ATTR_DEVICE_INFO] = await self.hass.async_add_executor_job(
+                    self._remote.get_device_info
+                )
+
+                await self.async_set_unique_id(self._data[ATTR_DEVICE_INFO][ATTR_UDN])
+                self._abort_if_unique_id_configured()
+
+                if self._data[CONF_NAME] == DEFAULT_NAME:
+                    self._data[CONF_NAME] = self._data[ATTR_DEVICE_INFO][
+                        ATTR_FRIENDLY_NAME
+                    ].replace("_", " ")
+
                 if self._remote.type == TV_TYPE_ENCRYPTED:
                     return await self.async_step_pairing()
 
@@ -95,7 +111,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             pin = user_input[CONF_PIN]
             try:
-                self._remote.authorize_pin_code(pincode=pin)
+                await self.hass.async_add_executor_job(
+                    partial(self._remote.authorize_pin_code, pincode=pin)
+                )
             except SOAPError as err:
                 _LOGGER.error("Invalid PIN code: %s", err)
                 errors["base"] = ERROR_INVALID_PIN_CODE
@@ -119,7 +137,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         try:
-            self._remote.request_pin_code(name="Home Assistant")
+            await self.hass.async_add_executor_job(
+                partial(self._remote.request_pin_code, name="Home Assistant")
+            )
         except (TimeoutError, URLError, SOAPError, OSError) as err:
             _LOGGER.error("The remote connection was lost: %s", err)
             return self.async_abort(reason=REASON_NOT_CONNECTED)
@@ -147,6 +167,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._data[CONF_ON_ACTION] = (
             self._data[CONF_ON_ACTION] if CONF_ON_ACTION in self._data else None
         )
-
-        await self.async_set_unique_id(self._data[CONF_HOST])
-        self._abort_if_unique_id_configured()

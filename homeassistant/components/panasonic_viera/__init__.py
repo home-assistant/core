@@ -18,6 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 
 from .const import (
+    ATTR_DEVICE_INFO,
     ATTR_REMOTE,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
@@ -90,6 +91,17 @@ async def async_setup_entry(hass, config_entry):
     await remote.async_create_remote_control(during_setup=True)
 
     hass.data[DOMAIN][host] = {ATTR_REMOTE: remote}
+
+    if ATTR_DEVICE_INFO not in config:
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **config,
+                ATTR_DEVICE_INFO: await hass.async_add_executor_job(
+                    remote._control.get_device_info
+                ),
+            },
+        )
 
     for component in PLATFORMS:
         hass.async_create_task(

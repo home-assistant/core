@@ -1,10 +1,17 @@
 """Remote control support for Panasonic Viera TV."""
 import logging
 
-from homeassistant.components.remote import RemoteDevice
+from homeassistant.components.remote import RemoteEntity
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_ON
 
-from .const import ATTR_REMOTE, DOMAIN
+from .const import (
+    ATTR_DEVICE_INFO,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL_NUMBER,
+    ATTR_REMOTE,
+    ATTR_UDN,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,30 +22,42 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     config = config_entry.data
 
     host = config[CONF_HOST]
-    name = config[CONF_NAME] + " Remote"
+    name = config[CONF_NAME]
 
     remote = hass.data[DOMAIN][host][ATTR_REMOTE]
 
-    remote_device = PanasonicVieraRemoteDevice(remote, name)
+    device_info = config[ATTR_DEVICE_INFO]
+
+    remote_device = PanasonicVieraRemoteEntity(remote, name, device_info)
     async_add_entities([remote_device])
 
 
-class PanasonicVieraRemoteDevice(RemoteDevice):
+class PanasonicVieraRemoteEntity(RemoteEntity):
     """Representation of a Panasonic Viera TV Remote."""
 
     def __init__(
-        self, remote, name, uuid=None,
+        self, remote, name, device_info,
     ):
-        """Initialize the Panasonic Viera TV Remote."""
+        """Initialize the entity."""
         # Save a reference to the imported class
         self._remote = remote
         self._name = name
-        self._uuid = uuid
+        self._device_info = device_info
 
     @property
     def unique_id(self) -> str:
         """Return the unique ID of the device."""
-        return self._uuid
+        return self._device_info[ATTR_UDN] + "-remote"
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": self.name,
+            "identifiers": {(DOMAIN, self._device_info[ATTR_UDN])},
+            "manufacturer": self._device_info[ATTR_MANUFACTURER],
+            "model": self._device_info[ATTR_MODEL_NUMBER],
+        }
 
     @property
     def name(self):
