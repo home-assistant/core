@@ -1819,7 +1819,8 @@ class AisColudData:
         # Zigbee backup
         if backup_type in ("all", "zigbee"):
             # we need to use password even if it's empty - to prevent the prompt
-            password = "-p" + password
+            if password == "":
+                password = "-p" + password
             # 1. download
             self.get_backup_info(
                 call, 1, None, None, None, "Pobieram kopie konfiguracji zigbee"
