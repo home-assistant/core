@@ -27,6 +27,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.util.dt import utcnow
 
 from .const import (
+    CALLBACK_TIMEOUT,
     CONF_PIPE_CONTROL,
     CONF_PIPE_CONTROL_PORT,
     CONF_TTS_PAUSE_TIME,
@@ -114,7 +115,7 @@ class ForkedDaapdZone(MediaPlayerDevice):
         self._output = output
         self._output_id = output["id"]
         self._last_volume = DEFAULT_UNMUTE_VOLUME  # used for mute/unmute
-        self._available = False
+        self._available = True
 
     async def async_added_to_hass(self):
         """Use lifecycle hooks."""
@@ -125,7 +126,7 @@ class ForkedDaapdZone(MediaPlayerDevice):
         )
 
     @callback
-    def _async_update_output_callback(self, outputs):
+    def _async_update_output_callback(self, outputs, _event=None):
         new_output = next(
             (output for output in outputs if output["id"] == self._output_id), None
         )
@@ -240,6 +241,8 @@ class ForkedDaapdMaster(MediaPlayerDevice):
         self._clientsession = clientsession
         self._config_entry = config_entry
         self.update_options(config_entry.options)
+        self._tts_paused_event = asyncio.Event()
+        self._tts_pause_requested = False
 
     async def async_added_to_hass(self):
         """Use lifecycle hooks."""
@@ -282,22 +285,26 @@ class ForkedDaapdMaster(MediaPlayerDevice):
             )
         else:
             self._pipe_control_api = None
-        if options.get(CONF_TTS_PAUSE_TIME):
+        if CONF_TTS_PAUSE_TIME in options:
             self._tts_pause_time = options[CONF_TTS_PAUSE_TIME]
-        if options.get(CONF_TTS_VOLUME):
+        if CONF_TTS_VOLUME in options:
             self._tts_volume = options[CONF_TTS_VOLUME]
 
     @callback
-    def _update_player(self, player):
+    def _update_player(self, player, event):
         self._player = player
         self._player_last_updated = utcnow()
         self._update_track_info()
         if self._tts_queued:
             self._tts_playing_event.set()
             self._tts_queued = False
+        if self._tts_pause_requested:
+            self._tts_paused_event.set()
+            self._tts_pause_requested = False
+        event.set()
 
     @callback
-    def _update_queue(self, queue):
+    def _update_queue(self, queue, event):
         self._queue = queue
         if (
             self._tts_requested
@@ -307,10 +314,13 @@ class ForkedDaapdMaster(MediaPlayerDevice):
             self._tts_requested = False
             self._tts_queued = True
         self._update_track_info()
+        event.set()
 
     @callback
-    def _update_outputs(self, outputs):
-        self._outputs = outputs
+    def _update_outputs(self, outputs, event=None):
+        if event:  # Calling without event is meant for zone, so ignore
+            self._outputs = outputs
+            event.set()
 
     def _update_track_info(self):  # run during every player or queue update
         try:
@@ -320,7 +330,7 @@ class ForkedDaapdMaster(MediaPlayerDevice):
                 if track["id"] == self._player["item_id"]
             )
         except (StopIteration, TypeError, KeyError):
-            _LOGGER.debug("Could not get track info.")
+            _LOGGER.debug("Could not get track info")
             self._track_info = defaultdict(str)
 
     @property
@@ -388,10 +398,10 @@ class ForkedDaapdMaster(MediaPlayerDevice):
         """State of the player."""
         if self._player["state"] == "play":
             return STATE_PLAYING
-        if not any([output["selected"] for output in self._outputs]):
-            return STATE_OFF  # off is any state when it's not playing and all outputs are disabled
         if self._player["state"] == "pause":
             return STATE_PAUSED
+        if not any([output["selected"] for output in self._outputs]):
+            return STATE_OFF
         if self._player["state"] == "stop":  # this should catch all remaining cases
             return STATE_IDLE
 
@@ -496,7 +506,10 @@ class ForkedDaapdMaster(MediaPlayerDevice):
 
     async def async_media_stop(self):
         """Stop playback."""
-        await self._api.stop_playback()
+        if self._pipe_control_api:
+            await self._pipe_control_api.player_pause()
+        else:
+            await self._api.stop_playback()
 
     async def async_media_previous_track(self):
         """Skip to previous track."""
@@ -548,9 +561,19 @@ class ForkedDaapdMaster(MediaPlayerDevice):
         """Play a URI."""
         if media_type == MEDIA_TYPE_MUSIC:
             saved_state = self.state  # save play state
+            self._tts_pause_requested = True
             await self.async_turn_off()  # pauses and saves output states
+            sleep_future = asyncio.create_task(
+                asyncio.sleep(self._tts_pause_time)
+            )  # start timing now, but not exact because of fd buffer + tts latency
+            try:
+                await asyncio.wait_for(
+                    self._tts_paused_event.wait(), timeout=CALLBACK_TIMEOUT
+                )  # wait for paused
+            except asyncio.TimeoutError:
+                self._tts_pause_requested = False
+            self._tts_paused_event.clear()
             await self._set_tts_volumes()
-            await asyncio.sleep(self._tts_pause_time)
             # save position
             saved_song_position = self._player["item_progress_ms"]
             saved_queue = (
@@ -564,6 +587,7 @@ class ForkedDaapdMaster(MediaPlayerDevice):
                 )
                 await self._api.clear_queue()
             self._tts_requested = True
+            await sleep_future
             await self._api.add_to_queue(uris=media_id, playback="start")
             try:
                 await asyncio.wait_for(
@@ -577,7 +601,7 @@ class ForkedDaapdMaster(MediaPlayerDevice):
                 )
             except asyncio.TimeoutError:
                 self._tts_requested = False
-                _LOGGER.warning("TTS request timed out.")
+                _LOGGER.warning("TTS request timed out")
             self._tts_playing_event.clear()
             # TTS done, return to normal
             await self.async_turn_on()  # restores outputs
@@ -596,10 +620,12 @@ class ForkedDaapdMaster(MediaPlayerDevice):
                         playback_from_position=saved_queue_position,
                     )
                     await self._api.seek(position_ms=saved_song_position)
-                    if saved_state != STATE_PLAYING:
+                    if saved_state == STATE_PAUSED:
                         await self.async_media_pause()
+                    elif saved_state != STATE_PLAYING:
+                        await self.async_media_stop()
         else:
-            _LOGGER.debug("Media type '%s' not supported.", media_type)
+            _LOGGER.debug("Media type '%s' not supported", media_type)
 
 
 class ForkedDaapdUpdater:
@@ -610,7 +636,7 @@ class ForkedDaapdUpdater:
         self.hass = hass
         self._api = api
         self.websocket_handler = None
-        self._all_output_ids = []
+        self._all_output_ids = set()
 
     async def async_init(self):
         """Perform async portion of class initialization."""
@@ -627,7 +653,7 @@ class ForkedDaapdUpdater:
                 )
             )
         else:
-            _LOGGER.error("Invalid websocket port.")
+            _LOGGER.error("Invalid websocket port")
 
     def _disconnected_callback(self):
         async_dispatcher_send(self.hass, SIGNAL_UPDATE_MASTER, False)
@@ -635,39 +661,58 @@ class ForkedDaapdUpdater:
 
     async def _update(self, update_types):
         """Private update method."""
-
-        def intersect(list1, list2):  # local helper
-            intersection = [i for i in list1 + list2 if i in list1 and i in list2]
-            return bool(intersection)
-
+        update_types = set(update_types)
+        update_events = {}
         _LOGGER.debug("Updating %s", update_types)
-        if "queue" in update_types:  # update queue
+        if (
+            "queue" in update_types
+        ):  # update queue, queue before player for async_play_media
             queue = await self._api.get_request("queue")
-            async_dispatcher_send(self.hass, SIGNAL_UPDATE_QUEUE, queue)
-            await self.hass.async_block_till_done()  # make sure queue done before player for async_play_media
+            update_events["queue"] = asyncio.Event()
+            async_dispatcher_send(
+                self.hass, SIGNAL_UPDATE_QUEUE, queue, update_events["queue"]
+            )
         # order of below don't matter
-        if intersect(["player", "options", "volume"], update_types):  # update player
-            player = await self._api.get_request("player")
-            async_dispatcher_send(self.hass, SIGNAL_UPDATE_PLAYER, player)
-        if intersect(["outputs", "volume"], update_types):  # update outputs
+        if not {"outputs", "volume"}.isdisjoint(update_types):  # update outputs
             outputs = (await self._api.get_request("outputs"))["outputs"]
-            await self._add_zones(outputs)
-            async_dispatcher_send(self.hass, SIGNAL_UPDATE_OUTPUTS, outputs)
-        if intersect(["database", "update", "config"], update_types):  # not supported
+            update_events[
+                "outputs"
+            ] = asyncio.Event()  # only for master, zones should ignore
+            async_dispatcher_send(
+                self.hass, SIGNAL_UPDATE_OUTPUTS, outputs, update_events["outputs"]
+            )
+            self._add_zones(outputs)
+        if not {"database", "update", "config"}.isdisjoint(
+            update_types
+        ):  # not supported
             _LOGGER.debug(
                 "database/update notifications neither requested nor supported"
             )
-        await self.hass.async_block_till_done()  # make sure callbacks done before requesting state update
-        async_dispatcher_send(self.hass, SIGNAL_UPDATE_MASTER, True)
+        if not {"player", "options", "volume"}.isdisjoint(
+            update_types
+        ):  # update player
+            player = await self._api.get_request("player")
+            update_events["player"] = asyncio.Event()
+            if update_events.get("queue"):
+                await update_events[
+                    "queue"
+                ].wait()  # make sure queue done before player for async_play_media
+            async_dispatcher_send(
+                self.hass, SIGNAL_UPDATE_PLAYER, player, update_events["player"]
+            )
+        if update_events:
+            await asyncio.wait(
+                [event.wait() for event in update_events.values()]
+            )  # make sure callbacks done before update
+            async_dispatcher_send(self.hass, SIGNAL_UPDATE_MASTER, True)
 
-    async def _add_zones(self, outputs):
+    def _add_zones(self, outputs):
         outputs_to_add = []
         for output in outputs:
             if output["id"] not in self._all_output_ids:
-                self._all_output_ids.append(output["id"])
+                self._all_output_ids.add(output["id"])
                 outputs_to_add.append(output)
         if outputs_to_add:
             async_dispatcher_send(
                 self.hass, SIGNAL_ADD_ZONES, self._api, outputs_to_add
             )
-            await self.hass.async_block_till_done()  # make sure all zones are added before returning

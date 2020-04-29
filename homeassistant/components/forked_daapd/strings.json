@@ -30,7 +30,7 @@
         "title": "Configure forked-daapd options",
         "description": "Set various options for the forked-daapd integration.",
         "data": {
-          "pipe_control": "Use pipe control? (Leave blank or 'librespot-java')",
+          "pipe_control": "Use pipe control? ('No' or 'librespot-java')",
           "pipe_control_port": "Port for pipe control",
           "tts_volume": "TTS volume (float in range [0,1])",
           "tts_pause_time": "Seconds to pause before and after TTS"

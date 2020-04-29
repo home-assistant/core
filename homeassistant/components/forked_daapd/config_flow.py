@@ -34,7 +34,8 @@ DATA_SCHEMA_DICT = {
     vol.Optional(CONF_PASSWORD, default=""): str,
 }
 
-ERROR_LOOKUP_DICT = {
+TEST_CONNECTION_ERROR_DICT = {
+    "ok": "ok",
     "websocket_not_enabled": "websocket_not_enabled",
     "wrong_host_or_port": "wrong_host_or_port",
     "wrong_password": "wrong_password",
@@ -117,12 +118,13 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def validate_input(self, user_input):
         """Validate the user input."""
         websession = async_get_clientsession(self.hass)
-        return await ForkedDaapdAPI.test_connection(
+        validate_result = await ForkedDaapdAPI.test_connection(
             websession=websession,
             host=user_input[CONF_HOST],
             port=user_input[CONF_PORT],
             password=user_input[CONF_PASSWORD],
         )
+        return TEST_CONNECTION_ERROR_DICT.get(validate_result, "unknown_error")
 
     async def async_step_user(self, user_input=None):
         """Handle a forked-daapd config flow start.
@@ -136,7 +138,6 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=f"{FD_NAME} server", data=user_input
                 )
-            validate_result = ERROR_LOOKUP_DICT.get(validate_result, "unknown_error")
             return self.async_show_form(
                 step_id="user",
                 data_schema=vol.Schema(fill_in_schema_dict(user_input)),

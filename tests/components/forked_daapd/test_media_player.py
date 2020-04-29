@@ -1,6 +1,4 @@
 """The media player tests for the forked_daapd media player platform."""
-from asyncio import TimeoutError as AsyncioTimeoutError, create_task, gather
-from unittest.mock import patch
 
 import pytest
 
@@ -58,9 +56,10 @@ from homeassistant.const import (
     CONF_PORT,
     STATE_ON,
     STATE_PAUSED,
+    STATE_UNAVAILABLE,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, patch
 
 TEST_MASTER_ENTITY_NAME = "media_player.forked_daapd_server"
 TEST_ZONE_ENTITY_NAMES = [
@@ -73,7 +72,7 @@ TEST_ZONE_FRIENDLY_NAME = "forked-daapd output (kitchen)"
 OPTIONS_DATA = {
     CONF_PIPE_CONTROL: "librespot-java",
     CONF_PIPE_CONTROL_PORT: "123",
-    CONF_TTS_PAUSE_TIME: 0.5,
+    CONF_TTS_PAUSE_TIME: 0,
     CONF_TTS_VOLUME: 0.25,
 }
 
@@ -123,7 +122,7 @@ SAMPLE_TTS_QUEUE = {
             "album": "No album",
             "album_artist": "The xx",
             "artwork_url": "http://art",
-            "length_ms": 50,
+            "length_ms": 0,
             "track_number": 1,
             "media_kind": "music",
             "uri": "tts_proxy_somefile.mp3",
@@ -243,7 +242,7 @@ def config_entry_fixture():
         domain=DOMAIN,
         title="",
         data=data,
-        options={},
+        options={CONF_TTS_PAUSE_TIME: 0},
         system_options={},
         source=SOURCE_USER,
         connection_class=CONN_CLASS_LOCAL_PUSH,
@@ -295,6 +294,11 @@ async def mock_api_object_fixture(hass, config_entry, get_request_return_values)
         add_to_queue_side_effect  # for play_media testing
     )
 
+    async def pause_side_effect():
+        await updater_update(["player"])
+
+    mock_api.return_value.pause_playback.side_effect = pause_side_effect
+
     return mock_api.return_value
 
 
@@ -310,7 +314,6 @@ async def test_unload_config_entry(hass, config_entry, mock_api_object):
 def test_master_state(hass, mock_api_object):
     """Test master state attributes."""
     state = hass.states.get(TEST_MASTER_ENTITY_NAME)
-    print(hass.states.get(TEST_ZONE_ENTITY_NAMES[0]))
     assert state.state == STATE_PAUSED
     assert state.attributes[ATTR_FRIENDLY_NAME] == TEST_MASTER_FRIENDLY_NAME
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORTED_FEATURES
@@ -367,6 +370,17 @@ async def test_zone(hass, mock_api_object):
     await _service_call(
         hass, zone_entity_name, SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: True}
     )
+    output_id = SAMPLE_OUTPUTS_ON[0]["id"]
+    initial_volume = SAMPLE_OUTPUTS_ON[0]["volume"]
+    mock_api_object.change_output.assert_any_call(output_id, selected=True)
+    mock_api_object.change_output.assert_any_call(output_id, selected=False)
+    mock_api_object.set_volume.assert_any_call(output_id=output_id, volume=30)
+    mock_api_object.set_volume.assert_any_call(output_id=output_id, volume=0)
+    mock_api_object.set_volume.assert_any_call(
+        output_id=output_id, volume=initial_volume
+    )
+    output_id = SAMPLE_OUTPUTS_ON[2]["id"]
+    mock_api_object.change_output.assert_any_call(output_id, selected=True)
 
 
 async def test_last_outputs_master(hass, mock_api_object):
@@ -445,74 +459,166 @@ async def test_bunch_of_stuff_master(hass, mock_api_object, get_request_return_v
     await hass.async_block_till_done()
     # toggle from off
     await _service_call(hass, TEST_MASTER_ENTITY_NAME, SERVICE_TOGGLE)
-    # test media play
-    with patch(
-        "homeassistant.components.forked_daapd.media_player.asyncio.sleep",
-        autospec=True,
-    ):
-        task = _service_call(
-            hass,
-            TEST_MASTER_ENTITY_NAME,
-            SERVICE_PLAY_MEDIA,
-            {
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
-                ATTR_MEDIA_CONTENT_ID: "somefile.mp3",
-            },
-            blocking=False,
-        )  # don't block and gather task later so hass_async_block_till_done() calls inside _update don't get stuck
-        await gather(task)
-        await hass.async_block_till_done()
-        # try playing unsupported media type
+    for output in SAMPLE_OUTPUTS_ON:
+        mock_api_object.change_output.assert_any_call(
+            output["id"], selected=output["selected"], volume=output["volume"],
+        )
+    mock_api_object.set_volume.assert_any_call(volume=0)
+    mock_api_object.set_volume.assert_any_call(volume=SAMPLE_PLAYER_PAUSED["volume"])
+    mock_api_object.set_volume.assert_any_call(volume=50)
+    mock_api_object.set_enabled_outputs.assert_any_call(
+        [output["id"] for output in SAMPLE_OUTPUTS_ON]
+    )
+    mock_api_object.set_enabled_outputs.assert_any_call([])
+    mock_api_object.start_playback.assert_called_once()
+    assert mock_api_object.pause_playback.call_count == 3
+    mock_api_object.stop_playback.assert_called_once()
+    mock_api_object.previous_track.assert_called_once()
+    mock_api_object.next_track.assert_called_once()
+    mock_api_object.seek.assert_called_once()
+    mock_api_object.shuffle.assert_called_once()
+    mock_api_object.clear_queue.assert_called_once()
+
+
+async def test_async_play_media_from_paused(hass, mock_api_object):
+    """Test async play media from paused."""
+    initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+            ATTR_MEDIA_CONTENT_ID: "somefile.mp3",
+        },
+    )
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.state == initial_state.state
+    assert state.last_updated > initial_state.last_updated
+
+
+async def test_async_play_media_from_stopped(
+    hass, get_request_return_values, mock_api_object
+):
+    """Test async play media from stopped."""
+    updater_update = mock_api_object.start_websocket_handler.call_args[0][2]
+
+    get_request_return_values["player"] = SAMPLE_PLAYER_STOPPED
+    await updater_update(["player"])
+    await hass.async_block_till_done()
+    initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+            ATTR_MEDIA_CONTENT_ID: "somefile.mp3",
+        },
+    )
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.state == initial_state.state
+    assert state.last_updated > initial_state.last_updated
+
+
+async def test_async_play_media_unsupported(hass, mock_api_object):
+    """Test async play media on unsupported media type."""
+    initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_TVSHOW,
+            ATTR_MEDIA_CONTENT_ID: "wontwork.mp4",
+        },
+    )
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.last_updated == initial_state.last_updated
+
+
+async def test_async_play_media_tts_timeout(hass, mock_api_object):
+    """Test async play media with TTS timeout."""
+    mock_api_object.add_to_queue.side_effect = None
+    with patch("homeassistant.components.forked_daapd.media_player.TTS_TIMEOUT", 0):
+        initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
         await _service_call(
             hass,
             TEST_MASTER_ENTITY_NAME,
             SERVICE_PLAY_MEDIA,
             {
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_TVSHOW,
-                ATTR_MEDIA_CONTENT_ID: "wontwork.mp4",
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+                ATTR_MEDIA_CONTENT_ID: "somefile.mp3",
             },
         )
-
-        # throw timeout error in media play
-        def timeout_side_effect(coro, timeout=None):
-            create_task(coro).cancel()
-            raise AsyncioTimeoutError
-
-        with patch("asyncio.wait_for", autospec=True) as wait_for_mock:
-            wait_for_mock.side_effect = timeout_side_effect
-            task = _service_call(
-                hass,
-                TEST_MASTER_ENTITY_NAME,
-                SERVICE_PLAY_MEDIA,
-                {
-                    ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
-                    ATTR_MEDIA_CONTENT_ID: "somefile.mp3",
-                },
-                blocking=False,
-            )
-            await gather(task)
-            await hass.async_block_till_done()
+        state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+        assert state.state == initial_state.state
+        assert state.last_updated > initial_state.last_updated
 
 
-async def test_librespot_java_stuff(
-    hass, mock_api_object, config_entry, get_request_return_values
+@pytest.fixture(name="pipe_control_api_object")
+async def pipe_control_api_object_fixture(
+    hass, config_entry, get_request_return_values, mock_api_object
 ):
-    """Test options update and librespot-java stuff."""
+    """Fixture for mock librespot_java api."""
     with patch(
         "homeassistant.components.forked_daapd.media_player.LibrespotJavaAPI",
         autospec=True,
-    ):
+    ) as pipe_control_api:
         hass.config_entries.async_update_entry(config_entry, options=OPTIONS_DATA)
         await hass.async_block_till_done()
     get_request_return_values["player"] = SAMPLE_PLAYER_PLAYING
     updater_update = mock_api_object.start_websocket_handler.call_args[0][2]
     await updater_update(["player"])
-    # test media play
+    await hass.async_block_till_done()
+
+    async def pause_side_effect():
+        await updater_update(["player"])
+
+    pipe_control_api.return_value.player_pause.side_effect = pause_side_effect
+    return pipe_control_api.return_value
+
+
+async def test_librespot_java_stuff(hass, pipe_control_api_object):
+    """Test options update and librespot-java stuff."""
+
+    # call some basic services
+    await _service_call(hass, TEST_MASTER_ENTITY_NAME, SERVICE_MEDIA_STOP)
+    await _service_call(hass, TEST_MASTER_ENTITY_NAME, SERVICE_MEDIA_PREVIOUS_TRACK)
+    await _service_call(hass, TEST_MASTER_ENTITY_NAME, SERVICE_MEDIA_NEXT_TRACK)
+    await _service_call(hass, TEST_MASTER_ENTITY_NAME, SERVICE_MEDIA_PLAY)
+    pipe_control_api_object.player_pause.assert_called_once()
+    pipe_control_api_object.player_prev.assert_called_once()
+    pipe_control_api_object.player_next.assert_called_once()
+    pipe_control_api_object.player_resume.assert_called_once()
+
+
+async def test_librespot_java_play_media(hass, pipe_control_api_object):
+    """Test play media with librespot-java pipe."""
+    initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+            ATTR_MEDIA_CONTENT_ID: "somefile.mp3",
+        },
+    )
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.state == initial_state.state
+    assert state.last_updated > initial_state.last_updated
+
+
+async def test_librespot_java_play_media_pause_timeout(hass, pipe_control_api_object):
+    """Test play media with librespot-java pipe."""
+    # test media play with pause timeout
+    pipe_control_api_object.player_pause.side_effect = None
     with patch(
-        "homeassistant.components.forked_daapd.media_player.asyncio.sleep",
-        autospec=True,
+        "homeassistant.components.forked_daapd.media_player.CALLBACK_TIMEOUT", 0
     ):
-        task = _service_call(
+        initial_state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+        await _service_call(
             hass,
             TEST_MASTER_ENTITY_NAME,
             SERVICE_PLAY_MEDIA,
@@ -520,19 +626,19 @@ async def test_librespot_java_stuff(
                 ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
                 ATTR_MEDIA_CONTENT_ID: "somefile.mp3",
             },
-            blocking=False,
-        )  # don't block and gather task later so hass_async_block_till_done() calls inside _update don't get stuck
-        await gather(task)
-        await hass.async_block_till_done()
-    await _service_call(hass, TEST_MASTER_ENTITY_NAME, SERVICE_MEDIA_PREVIOUS_TRACK)
-    await _service_call(hass, TEST_MASTER_ENTITY_NAME, SERVICE_MEDIA_NEXT_TRACK)
-    await _service_call(hass, TEST_MASTER_ENTITY_NAME, SERVICE_MEDIA_PLAY)
+        )
+        state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+        assert state.state == initial_state.state
+        assert state.last_updated > initial_state.last_updated
 
 
-async def test_unsupported_update(mock_api_object):
-    """Test unsupported but known update type."""
+async def test_unsupported_update(hass, mock_api_object):
+    """Test unsupported update type."""
+    last_updated = hass.states.get(TEST_MASTER_ENTITY_NAME).last_updated
     updater_update = mock_api_object.start_websocket_handler.call_args[0][2]
     await updater_update(["database"])
+    await hass.async_block_till_done()
+    assert hass.states.get(TEST_MASTER_ENTITY_NAME).last_updated == last_updated
 
 
 async def test_invalid_websocket_port(hass, config_entry):
@@ -545,11 +651,15 @@ async def test_invalid_websocket_port(hass, config_entry):
         config_entry.add_to_hass(hass)
         await config_entry.async_setup(hass)
         await hass.async_block_till_done()
-        print(mock_api.return_value.get_request.call_args)
+        assert hass.states.get(TEST_MASTER_ENTITY_NAME).state == STATE_UNAVAILABLE
 
 
 async def test_websocket_disconnect(hass, mock_api_object):
     """Test websocket disconnection."""
+    assert hass.states.get(TEST_MASTER_ENTITY_NAME).state != STATE_UNAVAILABLE
+    assert hass.states.get(TEST_ZONE_ENTITY_NAMES[0]).state != STATE_UNAVAILABLE
     updater_disconnected = mock_api_object.start_websocket_handler.call_args[0][4]
     updater_disconnected()
     await hass.async_block_till_done()
+    assert hass.states.get(TEST_MASTER_ENTITY_NAME).state == STATE_UNAVAILABLE
+    assert hass.states.get(TEST_ZONE_ENTITY_NAMES[0]).state == STATE_UNAVAILABLE

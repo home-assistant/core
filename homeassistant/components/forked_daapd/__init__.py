@@ -24,6 +24,5 @@ async def async_unload_entry(hass, entry):
         hass.data[DOMAIN][HASS_DATA_UPDATER_KEY].websocket_handler.cancel()
         for remove_listener in hass.data[DOMAIN][HASS_DATA_REMOVE_LISTENERS_KEY]:
             remove_listener()
-        await hass.data[DOMAIN][HASS_DATA_UPDATER_KEY].websocket_handler
         del hass.data[DOMAIN]
     return status

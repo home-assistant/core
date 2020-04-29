@@ -1,6 +1,5 @@
 """The config flow tests for the forked_daapd media player platform."""
-
-from unittest.mock import patch
+from asyncio import Future
 
 import pytest
 
@@ -20,7 +19,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, patch
 
 SAMPLE_CONFIG = {
     "websocket_port": 3688,
@@ -76,10 +75,12 @@ async def test_config_flow(hass, config_entry):
         "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection"
     ) as mock_test_connection:
         with patch(
-            "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request"
+            "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request",
+            autospec=True,
         ) as mock_get_request:
             mock_get_request.return_value = SAMPLE_CONFIG
-            mock_test_connection.return_value = "ok"
+            mock_test_connection.return_value = Future()
+            mock_test_connection.return_value.set_result("ok")
             config_data = config_entry.data
             result = await hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_USER}, data=config_data
@@ -94,17 +95,23 @@ async def test_config_flow(hass, config_entry):
             # remove entry
             await config_entry.async_unload(hass)
 
+
+async def test_config_flow_no_websocket(hass, config_entry):
+    """Test config flow setup without websocket enabled on server."""
+    with patch(
+        "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection"
+    ) as mock_test_connection:
         # test invalid config data
-        mock_test_connection.return_value = "websocket_not_enabled"
+        mock_test_connection.return_value = Future()
+        mock_test_connection.return_value.set_result("websocket_not_enabled")
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=config_data
+            DOMAIN, context={"source": SOURCE_USER}, data=config_entry.data
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
-async def test_config_flow_zeroconf(hass):
-    """Test that the user step works."""
-    # test invalid zeroconf entry
+async def test_config_flow_zeroconf_invalid(hass):
+    """Test that an invalid zeroconf entry doesn't work."""
     discovery_info = {"host": "127.0.0.1", "port": 23}
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
@@ -112,10 +119,13 @@ async def test_config_flow_zeroconf(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "not_forked_daapd"
 
-    # now test valid entry
-    discovery_info["properties"] = {
-        "mtd-version": 1,
-        "Machine Name": "zeroconf_test",
+
+async def test_config_flow_zeroconf_valid(hass):
+    """Test that a valid zeroconf entry works."""
+    discovery_info = {
+        "host": "127.0.0.1",
+        "port": 23,
+        "properties": {"mtd-version": 1, "Machine Name": "zeroconf_test"},
     }
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
@@ -127,7 +137,8 @@ async def test_options_flow(hass, config_entry):
     """Test config flow options."""
 
     with patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request"
+        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request",
+        autospec=True,
     ) as mock_get_request:
         mock_get_request.return_value = SAMPLE_CONFIG
         config_entry.add_to_hass(hass)
@@ -145,3 +156,4 @@ async def test_options_flow(hass, config_entry):
                 CONF_PIPE_CONTROL: "",
             },
         )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
