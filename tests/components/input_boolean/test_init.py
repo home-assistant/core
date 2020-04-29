@@ -265,7 +265,6 @@ async def test_reload(hass, hass_admin_user):
     assert STATE_ON == state_2.state  # reload is not supposed to change entity state
     assert "Hello World reloaded" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
     assert "mdi:work_reloaded" == state_2.attributes.get(ATTR_ICON)
-    await hass.async_block_till_done()
 
 
 async def test_load_person_storage(hass, storage_setup):

@@ -193,6 +193,13 @@ class RestoreStateData:
     @callback
     def async_restore_entity_removed(self, entity_id: str) -> None:
         """Unregister this entity from saving state."""
+
+        # If the entity is removed from the entity registry and the
+        # registry was out of sync it never was added so there
+        # is nothing to do here.
+        if entity_id not in self.entity_ids:
+            return
+
         # When an entity is being removed from hass, store its last state. This
         # allows us to support state restoration if the entity is removed, then
         # re-added while hass is still running.

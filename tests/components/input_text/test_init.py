@@ -353,7 +353,6 @@ async def test_editable_state_attribute(hass, storage_setup):
     assert not state.attributes[ATTR_EDITABLE]
     assert state.attributes[ATTR_MAX] == 33
     assert state.attributes[ATTR_MIN] == 3
-    await hass.async_block_till_done()
 
 
 async def test_ws_list(hass, hass_ws_client, storage_setup):

@@ -773,7 +773,6 @@ async def test_reload(hass, hass_admin_user):
     assert state_2 is None
     assert state_3 is not None
     assert state_3.name == "Person 3"
-    await hass.async_block_till_done()
 
 
 async def test_person_storage_fixing_device_trackers(storage_collection):
