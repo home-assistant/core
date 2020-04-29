@@ -3,7 +3,6 @@ import asyncio
 from ipaddress import ip_network
 from unittest.mock import MagicMock, Mock
 
-from asynctest import patch
 from hass_nabucasa import thingtalk
 from hass_nabucasa.auth import Unauthenticated, UnknownError
 from hass_nabucasa.const import STATE_CONNECTED
@@ -20,6 +19,7 @@ from homeassistant.core import State
 
 from . import mock_cloud, mock_cloud_prefs
 
+from tests.async_mock import patch
 from tests.common import mock_coro
 from tests.components.google_assistant import MockConfig
 

@@ -3,7 +3,6 @@ from collections import OrderedDict
 from copy import deepcopy
 import unittest
 
-from asynctest import CoroutineMock, Mock, patch
 import pytest
 import voluptuous as vol
 
@@ -27,6 +26,7 @@ from homeassistant.helpers import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import (
     MockEntity,
     get_test_home_assistant,
@@ -306,7 +306,7 @@ async def test_async_get_all_descriptions(hass):
 
 async def test_call_with_required_features(hass, mock_entities):
     """Test service calls invoked only if entity has required feautres."""
-    test_service_mock = CoroutineMock(return_value=None)
+    test_service_mock = AsyncMock(return_value=None)
     await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],

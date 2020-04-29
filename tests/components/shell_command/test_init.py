@@ -5,11 +5,10 @@ import tempfile
 from typing import Tuple
 import unittest
 
-from asynctest import Mock, patch
-
 from homeassistant.components import shell_command
 from homeassistant.setup import setup_component
 
+from tests.async_mock import Mock, patch
 from tests.common import get_test_home_assistant
 
 

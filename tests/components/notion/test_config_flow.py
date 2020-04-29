@@ -1,6 +1,5 @@
 """Define tests for the Notion config flow."""
 import aionotion
-from asynctest import patch
 import pytest
 
 from homeassistant import data_entry_flow
@@ -8,6 +7,7 @@ from homeassistant.components.notion import DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, mock_coro
 
 

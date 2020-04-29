@@ -3,8 +3,6 @@ import asyncio
 from datetime import datetime
 import logging
 
-from asynctest import Mock, patch
-
 from homeassistant.components.smhi import weather as weather_smhi
 from homeassistant.components.smhi.const import ATTR_SMHI_CLOUDINESS
 from homeassistant.components.weather import (
@@ -25,6 +23,7 @@ from homeassistant.components.weather import (
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry, load_fixture
 
 _LOGGER = logging.getLogger(__name__)

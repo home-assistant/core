@@ -1,11 +1,10 @@
 """Test Hue setup process."""
 from unittest.mock import Mock
 
-from asynctest import CoroutineMock, patch
-
 from homeassistant.components import hue
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry, mock_coro
 
 
@@ -201,7 +200,7 @@ async def test_security_vuln_check(hass):
         "HueBridge",
         Mock(
             return_value=Mock(
-                async_setup=CoroutineMock(return_value=True), api=Mock(config=config)
+                async_setup=AsyncMock(return_value=True), api=Mock(config=config)
             )
         ),
     ):

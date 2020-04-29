@@ -2,7 +2,6 @@
 from uuid import uuid4
 
 from aiohttp import ClientResponseError
-from asynctest import Mock, patch
 from pysmartthings import APIResponseError
 from pysmartthings.installedapp import format_install_url
 
@@ -23,6 +22,7 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry, mock_coro
 
 

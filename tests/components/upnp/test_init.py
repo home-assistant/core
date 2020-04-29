@@ -2,13 +2,12 @@
 
 from ipaddress import IPv4Address
 
-from asynctest import patch
-
 from homeassistant.components import upnp
 from homeassistant.components.upnp.device import Device
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, mock_coro
 
 

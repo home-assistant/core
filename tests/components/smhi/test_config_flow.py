@@ -1,10 +1,10 @@
 """Tests for SMHI config flow."""
-from asynctest import Mock, patch
 from smhi.smhi_lib import Smhi as SmhiApi, SmhiForecastException
 
 from homeassistant.components.smhi import config_flow
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 
+from tests.async_mock import Mock, patch
 from tests.common import mock_coro
 
 

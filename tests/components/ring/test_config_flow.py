@@ -1,10 +1,9 @@
 """Test the Ring config flow."""
-from asynctest import Mock, patch
-
 from homeassistant import config_entries, setup
 from homeassistant.components.ring import DOMAIN
 from homeassistant.components.ring.config_flow import InvalidAuth
 
+from tests.async_mock import Mock, patch
 from tests.common import mock_coro
 
 

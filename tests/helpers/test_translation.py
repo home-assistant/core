@@ -3,7 +3,6 @@ import asyncio
 from os import path
 import pathlib
 
-from asynctest import Mock, patch
 import pytest
 
 from homeassistant.const import EVENT_COMPONENT_LOADED
@@ -11,6 +10,8 @@ from homeassistant.generated import config_flows
 from homeassistant.helpers import translation
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import Mock, patch
 
 
 @pytest.fixture

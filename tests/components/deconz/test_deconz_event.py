@@ -1,11 +1,11 @@
 """Test deCONZ remote events."""
 from copy import deepcopy
 
-from asynctest import Mock
-
 from homeassistant.components.deconz.deconz_event import CONF_DECONZ_EVENT
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
+
+from tests.async_mock import Mock
 
 SENSORS = {
     "1": {

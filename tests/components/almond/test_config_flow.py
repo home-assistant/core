@@ -1,13 +1,12 @@
 """Test the Almond config flow."""
 import asyncio
 
-from asynctest import patch
-
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.almond import config_flow
 from homeassistant.components.almond.const import DOMAIN
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, mock_coro
 
 CLIENT_ID_VALUE = "1234"

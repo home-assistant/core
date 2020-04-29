@@ -3,9 +3,7 @@
 from collections import OrderedDict
 from datetime import timedelta
 import logging
-from unittest.mock import Mock, patch
 
-import asynctest
 import pytest
 import voluptuous as vol
 
@@ -17,6 +15,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockEntity,
@@ -82,13 +81,8 @@ async def test_setup_recovers_when_setup_raises(hass):
     assert platform2_setup.called
 
 
-@asynctest.patch(
-    "homeassistant.helpers.entity_component.EntityComponent.async_setup_platform",
-    return_value=mock_coro(),
-)
-@asynctest.patch(
-    "homeassistant.setup.async_setup_component", return_value=mock_coro(True)
-)
+@patch("homeassistant.helpers.entity_component.EntityComponent.async_setup_platform",)
+@patch("homeassistant.setup.async_setup_component", return_value=True)
 async def test_setup_does_discovery(mock_setup_component, mock_setup, hass):
     """Test setup for discovery."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -105,7 +99,7 @@ async def test_setup_does_discovery(mock_setup_component, mock_setup, hass):
     assert ("platform_test", {}, {"msg": "discovery_info"}) == mock_setup.call_args[0]
 
 
-@asynctest.patch("homeassistant.helpers.entity_platform.async_track_time_interval")
+@patch("homeassistant.helpers.entity_platform.async_track_time_interval")
 async def test_set_scan_interval_via_config(mock_track, hass):
     """Test the setting of the scan interval via configuration."""
 

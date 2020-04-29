@@ -1,5 +1,4 @@
 """The tests for the MQTT switch platform."""
-from asynctest import patch
 import pytest
 
 from homeassistant.components import switch
@@ -29,6 +28,7 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
+from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message, async_mock_mqtt_component, mock_coro
 from tests.components.switch import common
 

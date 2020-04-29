@@ -1,14 +1,13 @@
 """Tests for the IPP sensor platform."""
 from datetime import datetime
 
-from asynctest import patch
-
 from homeassistant.components.ipp.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT, UNIT_PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
+from tests.async_mock import patch
 from tests.components.ipp import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 

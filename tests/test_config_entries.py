@@ -2,7 +2,6 @@
 import asyncio
 from datetime import timedelta
 
-from asynctest import CoroutineMock, MagicMock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, loader
@@ -11,6 +10,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
+from tests.async_mock import AsyncMock, MagicMock, patch
 from tests.common import (
     MockConfigEntry,
     MockEntity,
@@ -1476,7 +1476,7 @@ async def test_async_setup_init_entry(hass):
         )
         return True
 
-    async_setup_entry = CoroutineMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=True)
     mock_integration(
         hass,
         MockModule(

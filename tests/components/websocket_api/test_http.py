@@ -2,12 +2,12 @@
 from datetime import timedelta
 
 from aiohttp import WSMsgType
-from asynctest import patch
 import pytest
 
 from homeassistant.components.websocket_api import const, http
 from homeassistant.util.dt import utcnow
 
+from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 

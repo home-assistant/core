@@ -1,12 +1,12 @@
 """Tests for the Ambiclimate config flow."""
 import ambiclimate
-from asynctest import Mock, patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.ambiclimate import config_flow
 from homeassistant.setup import async_setup_component
 from homeassistant.util import aiohttp
 
+from tests.async_mock import Mock, patch
 from tests.common import mock_coro
 
 

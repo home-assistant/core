@@ -2,9 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from unittest.mock import MagicMock, Mock, patch
 
-import asynctest
 import pytest
 
 from homeassistant.const import UNIT_PERCENTAGE
@@ -18,6 +16,7 @@ from homeassistant.helpers.entity_component import (
 )
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import MagicMock, Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockEntity,
@@ -136,7 +135,7 @@ async def test_update_state_adds_entities_with_update_before_add_false(hass):
     assert not ent.update.called
 
 
-@asynctest.patch("homeassistant.helpers.entity_platform.async_track_time_interval")
+@patch("homeassistant.helpers.entity_platform.async_track_time_interval")
 async def test_set_scan_interval_via_platform(mock_track, hass):
     """Test the setting of the scan interval via platform."""
 

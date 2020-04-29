@@ -1,7 +1,6 @@
 """Test the Opentherm Gateway config flow."""
 import asyncio
 
-from asynctest import patch
 from pyotgw.vars import OTGW_ABOUT
 from serial import SerialException
 
@@ -13,6 +12,7 @@ from homeassistant.components.opentherm_gw.const import (
 )
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME, PRECISION_HALVES
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, mock_coro
 
 

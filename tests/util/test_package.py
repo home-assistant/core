@@ -5,11 +5,12 @@ import os
 from subprocess import PIPE
 import sys
 
-from asynctest import MagicMock, call, patch
 import pkg_resources
 import pytest
 
 import homeassistant.util.package as package
+
+from tests.async_mock import MagicMock, call, patch
 
 RESOURCE_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "resources")

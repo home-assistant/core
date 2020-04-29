@@ -4,7 +4,6 @@ import json
 import ssl
 import unittest
 
-from asynctest import CoroutineMock, MagicMock, call, mock_open, patch
 import pytest
 import voluptuous as vol
 
@@ -24,6 +23,7 @@ from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
+from tests.async_mock import AsyncMock, MagicMock, call, mock_open, patch
 from tests.common import (
     MockConfigEntry,
     async_fire_mqtt_message,
@@ -60,8 +60,8 @@ def entity_reg(hass):
 def mock_mqtt():
     """Make sure connection is established."""
     with patch("homeassistant.components.mqtt.MQTT") as mock_mqtt:
-        mock_mqtt.return_value.async_connect = CoroutineMock(return_value=True)
-        mock_mqtt.return_value.async_disconnect = CoroutineMock(return_value=True)
+        mock_mqtt.return_value.async_connect = AsyncMock(return_value=True)
+        mock_mqtt.return_value.async_disconnect = AsyncMock(return_value=True)
         yield mock_mqtt
 
 

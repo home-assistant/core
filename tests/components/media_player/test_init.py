@@ -1,12 +1,11 @@
 """Test the base functions of the media player."""
 import base64
 
-from asynctest import patch
-
 from homeassistant.components import media_player
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import mock_coro
 
 

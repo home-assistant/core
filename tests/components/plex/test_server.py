@@ -1,7 +1,6 @@
 """Tests for Plex server."""
 import copy
 
-from asynctest import ClockedTestCase, patch
 import pytest
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -18,6 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
 from .mock_classes import MockPlexServer
 
+from tests.async_mock import ClockedTestCase, patch
 from tests.common import MockConfigEntry, async_test_home_assistant
 
 
@@ -110,7 +110,7 @@ async def test_new_ignored_users_available(hass, caplog):
 
 @pytest.mark.skip
 class TestClockedPlex(ClockedTestCase):
-    """Create clock-controlled asynctest class."""
+    """Create clock-controlled tests.async_mock class."""
 
     async def setUp(self):
         """Initialize this test class."""

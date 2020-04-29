@@ -3,7 +3,6 @@ import copy
 from datetime import timedelta
 import ssl
 
-from asynctest import ClockedTestCase, patch
 import plexapi
 import pytest
 import requests
@@ -31,6 +30,7 @@ import homeassistant.util.dt as dt_util
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
 from .mock_classes import MockPlexAccount, MockPlexServer
 
+from tests.async_mock import ClockedTestCase, patch
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -75,7 +75,7 @@ async def test_setup_with_config(hass):
 
 @pytest.mark.skip
 class TestClockedPlex(ClockedTestCase):
-    """Create clock-controlled asynctest class."""
+    """Create clock-controlled tests.async_mock class."""
 
     @pytest.fixture(autouse=True)
     def inject_fixture(self, caplog, hass_storage):

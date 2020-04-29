@@ -1,8 +1,6 @@
 """The tests for the Restore component."""
 from datetime import datetime
 
-from asynctest import patch
-
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import CoreState, State
 from homeassistant.exceptions import HomeAssistantError
@@ -16,6 +14,7 @@ from homeassistant.helpers.restore_state import (
 )
 from homeassistant.util import dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import mock_coro
 
 
