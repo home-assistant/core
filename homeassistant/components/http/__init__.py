@@ -79,7 +79,7 @@ HTTP_SCHEMA = vol.Schema(
         vol.Inclusive(CONF_TRUSTED_PROXIES, "proxy"): vol.All(
             cv.ensure_list, [ip_network]
         ),
-        vol.Inclusive(CONF_DEPTH, default=[-1], "proxy"): cv.string,
+        vol.Inclusive(CONF_DEPTH, "proxy", default=['-1']): cv.string,
         vol.Optional(
             CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
         ): vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
