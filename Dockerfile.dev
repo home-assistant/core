@@ -40,8 +40,7 @@ RUN pip3 install -r requirements_test.txt -c package_constraints.txt \
     && rm -f requirements_test.txt package_constraints.txt requirements_test_pre_commit.txt
 
 # Setup hass-release
-RUN mkdir src && cd src \
-    && git clone --depth 1 https://github.com/home-assistant/hass-release \
+RUN git clone --depth 1 https://github.com/home-assistant/hass-release \
     && pip3 install -e hass-release/
 
 # Set the default shell to bash instead of sh
