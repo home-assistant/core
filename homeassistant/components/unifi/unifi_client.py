@@ -55,7 +55,6 @@ class UniFiClient(UniFiBase):
     async def async_added_to_hass(self) -> None:
         """Client entity created."""
         await super().async_added_to_hass()
-        LOGGER.debug("New client %s (%s)", self.entity_id, self.client.mac)
         self.client.register_callback(self.async_update_callback)
 
     async def async_will_remove_from_hass(self) -> None:
