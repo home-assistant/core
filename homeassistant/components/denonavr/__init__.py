@@ -21,7 +21,7 @@ SERVICE_TO_METHOD = {
 }
 
 
-def async_setup(hass: core.HomeAssistant, config: dict):
+def setup(hass: core.HomeAssistant, config: dict):
     """Set up the denonavr platform."""
 
     def service_handler(service):
@@ -32,7 +32,9 @@ def async_setup(hass: core.HomeAssistant, config: dict):
 
     for service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[service]["schema"]
-        hass.services.register(DOMAIN, service, service_handler, schema=schema)
+        hass.services.register(
+            DOMAIN, service, service_handler, schema=schema
+        )
 
     return True
 

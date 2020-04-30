@@ -65,14 +65,14 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # discovery using denonavr library
             self.d_receivers = denonavr.discover()
             # More than one receiver could be discovered by that method
-            if len(self.d_receivers) == 0:
-                errors["base"] = "discovery_error"
             if len(self.d_receivers) == 1:
                 self.host = self.d_receivers[0]["host"]
                 return await self.async_step_connect()
+            if len(self.d_receivers) > 1:
+                # show selection form
+                return await self.async_step_select()
 
-            # show selection form
-            return await self.async_step_select()
+            errors["base"] = "discovery_error"
 
         return self.async_show_form(
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
