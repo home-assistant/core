@@ -94,3 +94,15 @@ async def test_disabled_by_default_sensors(
     assert entry
     assert entry.disabled
     assert entry.disabled_by == "integration"
+
+
+async def test_missing_entry_unique_id(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the unique_id of IPP sensor when printer is missing identifiers."""
+    entry = await init_integration(hass, aioclient_mock, uuid=None, unique_id=None)
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
+    entity = registry.async_get("sensor.epson_xp_6000_series")
+    assert entity
+    assert entity.unique_id == f"{entry.entry_id}_printer"
