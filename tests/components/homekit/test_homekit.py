@@ -1,7 +1,6 @@
 """Tests for the HomeKit component."""
 from unittest.mock import ANY, Mock, patch
 
-from asynctest import CoroutineMock
 import pytest
 from zeroconf import InterfaceChoice
 
@@ -44,6 +43,7 @@ from homeassistant.core import State
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.entityfilter import generate_filter
 
+from tests.async_mock import AsyncMock
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 from tests.components.homekit.common import patch_debounce
 
@@ -104,7 +104,7 @@ async def test_setup_auto_start_disabled(hass):
 
     with patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit:
         mock_homekit.return_value = homekit = Mock()
-        type(homekit).async_start = CoroutineMock()
+        type(homekit).async_start = AsyncMock()
         assert await setup.async_setup_component(hass, DOMAIN, config)
 
     mock_homekit.assert_any_call(

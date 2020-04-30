@@ -1,6 +1,5 @@
 """Test UniFi config flow."""
 import aiounifi
-from asynctest import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.unifi.const import (
@@ -27,6 +26,7 @@ from homeassistant.const import (
 
 from .test_controller import setup_unifi_integration
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CLIENTS = [{"mac": "00:00:00:00:00:01"}]
