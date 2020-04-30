@@ -47,6 +47,7 @@ SENSOR_TYPES = {
         "HWTimerFriday": ["hwcTimer.Friday", None, "mdi:timer", 1],
         "HWTimerSaturday": ["hwcTimer.Saturday", None, "mdi:timer", 1],
         "HWTimerSunday": ["hwcTimer.Sunday", None, "mdi:timer", 1],
+        "HWOperativeMode": ["HwcOpMode", None, "mdi:math-compass", 3],
         "WaterPressure": ["WaterPressure", PRESSURE_BAR, "mdi:water-pump", 0],
         "Zone1RoomZoneMapping": ["z1RoomZoneMapping", None, "mdi:label", 0],
         "Zone1NightTemperature": ["z1NightTemp", TEMP_CELSIUS, "mdi:weather-night", 0],
