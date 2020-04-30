@@ -1,7 +1,6 @@
 """Test config entries API."""
 
 from collections import OrderedDict
-from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -13,10 +12,10 @@ from homeassistant.core import callback
 from homeassistant.generated import config_flows
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import AsyncMock, patch
 from tests.common import (
     MockConfigEntry,
     MockModule,
-    mock_coro_func,
     mock_entity_platform,
     mock_integration,
 )
@@ -228,7 +227,9 @@ async def test_create_account(hass, client):
     """Test a flow that creates an account."""
     mock_entity_platform(hass, "config_flow.test", None)
 
-    mock_integration(hass, MockModule("test", async_setup_entry=mock_coro_func(True)))
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
 
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 1
@@ -263,7 +264,9 @@ async def test_create_account(hass, client):
 
 async def test_two_step_flow(hass, client):
     """Test we can finish a two step flow."""
-    mock_integration(hass, MockModule("test", async_setup_entry=mock_coro_func(True)))
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
     mock_entity_platform(hass, "config_flow.test", None)
 
     class TestFlow(core_ce.ConfigFlow):
@@ -320,7 +323,9 @@ async def test_two_step_flow(hass, client):
 
 async def test_continue_flow_unauth(hass, client, hass_admin_user):
     """Test we can't finish a two step flow."""
-    mock_integration(hass, MockModule("test", async_setup_entry=mock_coro_func(True)))
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
     mock_entity_platform(hass, "config_flow.test", None)
 
     class TestFlow(core_ce.ConfigFlow):
@@ -516,7 +521,9 @@ async def test_options_flow(hass, client):
 
 async def test_two_step_options_flow(hass, client):
     """Test we can finish a two step options flow."""
-    mock_integration(hass, MockModule("test", async_setup_entry=mock_coro_func(True)))
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
 
     class TestFlow(core_ce.ConfigFlow):
         @staticmethod
@@ -666,7 +673,9 @@ async def test_update_entry_nonexisting(hass, hass_ws_client):
 async def test_ignore_flow(hass, hass_ws_client):
     """Test we can ignore a flow."""
     assert await async_setup_component(hass, "config", {})
-    mock_integration(hass, MockModule("test", async_setup_entry=mock_coro_func(True)))
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
     mock_entity_platform(hass, "config_flow.test", None)
 
     class TestFlow(core_ce.ConfigFlow):

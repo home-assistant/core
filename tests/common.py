@@ -752,15 +752,6 @@ def mock_coro(return_value=None, exception=None):
     return fut
 
 
-def mock_coro_func(return_value=None, exception=None):
-    """Return a method to create a coro function that returns a value."""
-
-    if exception:
-        return AsyncMock(side_effect=exception)
-
-    return AsyncMock(return_value=return_value)
-
-
 @contextmanager
 def assert_setup_component(count, domain=None):
     """Collect valid configuration from setup_component.
@@ -841,52 +832,6 @@ def mock_restore_cache(hass, states):
 
     # Patch the singleton task in hass.data to return our new RestoreStateData
     hass.data[key] = hass.async_create_task(get_restore_state_data())
-
-
-class MockDependency:
-    """Decorator to mock install a dependency."""
-
-    def __init__(self, root, *args):
-        """Initialize decorator."""
-        self.root = root
-        self.submodules = args
-
-    def __enter__(self):
-        """Start mocking."""
-
-        def resolve(mock, path):
-            """Resolve a mock."""
-            if not path:
-                return mock
-
-            return resolve(getattr(mock, path[0]), path[1:])
-
-        base = MagicMock()
-        to_mock = {
-            f"{self.root}.{tom}": resolve(base, tom.split("."))
-            for tom in self.submodules
-        }
-        to_mock[self.root] = base
-
-        self.patcher = patch.dict("sys.modules", to_mock)
-        self.patcher.start()
-        return base
-
-    def __exit__(self, *exc):
-        """Stop mocking."""
-        self.patcher.stop()
-        return False
-
-    def __call__(self, func):
-        """Apply decorator."""
-
-        def run_mocked(*args, **kwargs):
-            """Run with mocked dependencies."""
-            with self as base:
-                args = list(args) + [base]
-                func(*args, **kwargs)
-
-        return run_mocked
 
 
 class MockEntity(entity.Entity):
