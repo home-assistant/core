@@ -1,14 +1,13 @@
 """The denonavr component."""
-import voluptuous as vol
-
 import denonavr
+import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_TIMEOUT
-from homeassistant.helpers import device_registry as dr, config_validation as cv, dispatcher_send
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .config_flow import DOMAIN, CONF_SHOW_ALL_SOURCES, CONF_ZONE2, CONF_ZONE3
-
+from .config_flow import CONF_SHOW_ALL_SOURCES, CONF_ZONE2, CONF_ZONE3, DOMAIN
 
 SERVICE_GET_COMMAND = "get_command"
 ATTR_COMMAND = "command"
@@ -37,6 +36,7 @@ def async_setup(hass: core.HomeAssistant, config: dict):
 
     return True
 
+
 async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
@@ -49,7 +49,7 @@ async def async_setup_entry(
     if entry.data[CONF_ZONE3]:
         zones["Zone3"] = None
 
-    # Connect to reciever
+    # Connect to receiver
     receiver = denonavr.DenonAVR(
         host=entry.data[CONF_HOST],
         show_all_inputs=entry.data[CONF_SHOW_ALL_SOURCES],
@@ -63,9 +63,9 @@ async def async_setup_entry(
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.data["receiver_id"])},
-        manufacturer=reciever.manufacturer,
-        name=reciever.name,
-        model=reciever.model_name,
+        manufacturer=receiver.manufacturer,
+        name=receiver.name,
+        model=receiver.model_name,
     )
 
     hass.async_create_task(
