@@ -1,6 +1,5 @@
 """Representation of Z-Wave switches."""
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
-from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -33,11 +32,9 @@ class ZWaveSwitch(ZWaveDeviceEntity, SwitchEntity):
     """Representation of a Z-Wave switch."""
 
     @property
-    def state(self):
-        """Return the state of the switch."""
-        if self.values.primary.value:
-            return STATE_ON
-        return STATE_OFF
+    def is_on(self):
+        """Return a boolean for the state of the switch."""
+        return bool(self.values.primary.value)
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
