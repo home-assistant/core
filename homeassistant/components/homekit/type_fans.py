@@ -94,13 +94,13 @@ class Fan(HomeAccessory):
         _LOGGER.debug("Fan _set_chars: %s", char_values)
         if CHAR_ACTIVE in char_values:
             if char_values[CHAR_ACTIVE]:
-                is_on = False
-                state = self.hass.states.get(self.entity_id)
-                if state and state.state == STATE_ON:
-                    is_on = True
-                # Only set the state to active if we
-                # did not get a rotation speed or its off
-                if not is_on or CHAR_ROTATION_SPEED not in char_values:
+                # If the device supports set speed we
+                # do not want to turn on as it will take
+                # the fan to 100% than to the desired speed.
+                #
+                # Setting the speed will take care of turning
+                # on the fan if SUPPORT_SET_SPEED is set.
+                if not self.char_speed or CHAR_ROTATION_SPEED not in char_values:
                     self.set_state(1)
             else:
                 # Its off, nothing more to do as setting the
