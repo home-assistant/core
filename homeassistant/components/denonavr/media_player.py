@@ -2,9 +2,7 @@
 
 import logging
 
-import denonavr
-
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MUSIC,
@@ -23,10 +21,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_TIMEOUT,
-    CONF_ZONE,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     STATE_OFF,
@@ -60,14 +54,18 @@ SUPPORT_MEDIA_MODES = (
     | SUPPORT_PLAY
 )
 
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Xiaomi Gateway Alarm from a config entry."""
     entities = []
     receiver = hass.data[DOMAIN][config_entry.entry_id]
     for receiver_zone in receiver.zones.values():
         entities.append(DenonDevice(receiver_zone))
-    _LOGGER.info("%s receiver at host %s initialized", receiver.manufacturer, receiver.host)
+    _LOGGER.info(
+        "%s receiver at host %s initialized", receiver.manufacturer, receiver.host
+    )
     async_add_entities(entities)
+
 
 class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon Media Player Device."""
