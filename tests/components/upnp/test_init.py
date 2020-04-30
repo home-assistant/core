@@ -85,8 +85,8 @@ async def test_async_setup_entry_default(hass):
             {"udn": udn, "ssdp_description": "http://192.168.1.1/desc.xml"}
         ]
 
-        create_device.return_value = mock_coro(return_value=mock_device)
-        async_discover.return_value = mock_coro(return_value=discovery_infos)
+        create_device.return_value = mock_device
+        async_discover.return_value = discovery_infos
 
         assert await upnp.async_setup_entry(hass, entry) is True
 
@@ -127,8 +127,8 @@ async def test_async_setup_entry_port_mapping(hass):
             {"udn": udn, "ssdp_description": "http://192.168.1.1/desc.xml"}
         ]
 
-        create_device.return_value = mock_coro(return_value=mock_device)
-        async_discover.return_value = mock_coro(return_value=discovery_infos)
+        create_device.return_value = mock_device
+        async_discover.return_value = discovery_infos
 
         assert await upnp.async_setup_entry(hass, entry) is True
 

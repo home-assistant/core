@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 
 from tests.async_mock import Mock, patch
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 
 async def test_import_shows_user_step(hass):
@@ -355,7 +355,7 @@ async def test_entry_created_with_cloudhook(
     ), patch.object(
         hass.components.cloud,
         "async_create_cloudhook",
-        return_value=mock_coro("http://cloud.test"),
+        return_value="http://cloud.test",
     ) as mock_create_cloudhook:
 
         await smartapp.setup_smartapp_endpoint(hass)

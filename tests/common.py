@@ -316,11 +316,12 @@ async def async_mock_mqtt_component(hass, config=None):
         async_fire_mqtt_message(hass, topic, payload, qos, retain)
 
     with patch("paho.mqtt.client.Client") as mock_client:
-        mock_client().connect.return_value = 0
-        mock_client().subscribe.return_value = (0, 0)
-        mock_client().unsubscribe.return_value = (0, 0)
-        mock_client().publish.return_value = (0, 0)
-        mock_client().publish.side_effect = _async_fire_mqtt_message
+        mock_client = mock_client.return_value
+        mock_client.connect.return_value = 0
+        mock_client.subscribe.return_value = (0, 0)
+        mock_client.unsubscribe.return_value = (0, 0)
+        mock_client.publish.return_value = (0, 0)
+        mock_client.publish.side_effect = _async_fire_mqtt_message
 
         result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
         assert result
@@ -732,8 +733,7 @@ def mock_coro(return_value=None, exception=None):
 def mock_coro_func(return_value=None, exception=None):
     """Return a method to create a coro function that returns a value."""
 
-    @asyncio.coroutine
-    def coro(*args, **kwargs):
+    async def coro(*args, **kwargs):
         """Fake coroutine."""
         if exception:
             raise exception

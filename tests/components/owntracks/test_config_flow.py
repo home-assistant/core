@@ -9,7 +9,7 @@ from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import Mock, patch
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 CONF_WEBHOOK_URL = "webhook_url"
 
@@ -140,7 +140,7 @@ async def test_unload(hass):
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_unload",
-        return_value=mock_coro(),
+        return_value=None,
     ) as mock_unload:
         assert await hass.config_entries.async_unload(entry.entry_id)
 
@@ -157,7 +157,7 @@ async def test_with_cloud_sub(hass):
         "homeassistant.components.cloud.async_active_subscription", return_value=True
     ), patch(
         "homeassistant.components.cloud.async_create_cloudhook",
-        return_value=mock_coro("https://hooks.nabu.casa/ABCD"),
+        return_value="https://hooks.nabu.casa/ABCD",
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}, data={}

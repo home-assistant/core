@@ -15,7 +15,6 @@ from homeassistant.helpers.restore_state import (
 from homeassistant.util import dt as dt_util
 
 from tests.async_mock import patch
-from tests.common import mock_coro
 
 
 async def test_caching_data(hass):
@@ -192,7 +191,7 @@ async def test_dump_error(hass):
 
     with patch(
         "homeassistant.helpers.restore_state.Store.async_save",
-        return_value=mock_coro(exception=HomeAssistantError),
+        side_effect=HomeAssistantError,
     ) as mock_write_data, patch.object(hass.states, "async_all", return_value=states):
         await data.async_dump_states()
 
@@ -207,7 +206,7 @@ async def test_load_error(hass):
 
     with patch(
         "homeassistant.helpers.storage.Store.async_load",
-        return_value=mock_coro(exception=HomeAssistantError),
+        side_effect=HomeAssistantError,
     ):
         state = await entity.async_get_last_state()
 
