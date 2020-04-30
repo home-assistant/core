@@ -54,15 +54,6 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema({vol.Required(CONF_DEVICE_PATH): vol.In(list_of_ports)})
         return self.async_show_form(step_id="user", data_schema=schema)
 
-    async def async_step_import(self, import_info):
-        """Handle a zha config import."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
-        return self.async_create_entry(
-            title=import_info[CONF_DEVICE][CONF_DEVICE_PATH], data=import_info
-        )
-
     async def async_step_pick_radio(self, user_input=None):
         """Select radio type."""
 

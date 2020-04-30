@@ -71,23 +71,10 @@ async def async_setup(hass, config):
     """Set up ZHA from config."""
     hass.data[DATA_ZHA] = {}
 
-    if DOMAIN not in config:
-        return True
+    if DOMAIN in config:
+        conf = config[DOMAIN]
+        hass.data[DATA_ZHA][DATA_ZHA_CONFIG] = conf
 
-    conf = config[DOMAIN]
-    hass.data[DATA_ZHA][DATA_ZHA_CONFIG] = conf
-
-    if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data={
-                    CONF_DEVICE: conf[CONF_DEVICE],
-                    CONF_RADIO_TYPE: conf[CONF_RADIO_TYPE].value,
-                },
-            )
-        )
     return True
 
 
