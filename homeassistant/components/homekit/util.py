@@ -2,7 +2,9 @@
 from collections import OrderedDict, namedtuple
 import io
 import logging
+import os
 import secrets
+import socket
 
 import pyqrcode
 import voluptuous as vol
@@ -15,8 +17,9 @@ from homeassistant.const import (
     CONF_TYPE,
     TEMP_CELSIUS,
 )
-from homeassistant.core import split_entity_id
+from homeassistant.core import HomeAssistant, split_entity_id
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.util.temperature as temp_util
 
 from .const import (
@@ -25,11 +28,12 @@ from .const import (
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
+    DOMAIN,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
-    HOMEKIT_NOTIFY_ID,
+    HOMEKIT_FILE,
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
     TYPE_FAUCET,
@@ -42,6 +46,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+MAX_PORT = 65535
 
 BASIC_INFO_SCHEMA = vol.Schema(
     {
@@ -210,7 +215,7 @@ class HomeKitSpeedMapping:
         return list(self.speed_ranges.keys())[0]
 
 
-def show_setup_message(hass, pincode, uri):
+def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
     """Display persistent notification with setup information."""
     pin = pincode.decode()
     _LOGGER.info("Pincode: %s", pin)
@@ -220,23 +225,23 @@ def show_setup_message(hass, pincode, uri):
     url.svg(buffer, scale=5)
     pairing_secret = secrets.token_hex(32)
 
-    hass.data[HOMEKIT_PAIRING_QR] = buffer.getvalue()
-    hass.data[HOMEKIT_PAIRING_QR_SECRET] = pairing_secret
+    hass.data[DOMAIN][entry_id][HOMEKIT_PAIRING_QR] = buffer.getvalue()
+    hass.data[DOMAIN][entry_id][HOMEKIT_PAIRING_QR_SECRET] = pairing_secret
 
     message = (
-        f"To set up Home Assistant in the Home App, "
+        f"To set up {bridge_name} in the Home App, "
         f"scan the QR code or enter the following code:\n"
         f"### {pin}\n"
-        f"![image](/api/homekit/pairingqr?{pairing_secret})"
+        f"![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
     )
     hass.components.persistent_notification.create(
-        message, "HomeKit Setup", HOMEKIT_NOTIFY_ID
+        message, "HomeKit Bridge Setup", entry_id
     )
 
 
-def dismiss_setup_message(hass):
+def dismiss_setup_message(hass, entry_id):
     """Dismiss persistent notification and remove QR code."""
-    hass.components.persistent_notification.dismiss(HOMEKIT_NOTIFY_ID)
+    hass.components.persistent_notification.dismiss(entry_id)
 
 
 def convert_to_float(state):
@@ -268,3 +273,85 @@ def density_to_air_quality(density):
     if density <= 150:
         return 4
     return 5
+
+
+def get_persist_filename_for_entry_id(entry_id: str):
+    """Determine the filename of the homekit state file."""
+    return f"{DOMAIN}.{entry_id}.state"
+
+
+def get_aid_storage_filename_for_entry_id(entry_id: str):
+    """Determine the ilename of homekit aid storage file."""
+    return f"{DOMAIN}.{entry_id}.aids"
+
+
+def get_persist_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str):
+    """Determine the path to the homekit state file."""
+    return hass.config.path(STORAGE_DIR, get_persist_filename_for_entry_id(entry_id))
+
+
+def get_aid_storage_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str):
+    """Determine the path to the homekit aid storage file."""
+    return hass.config.path(
+        STORAGE_DIR, get_aid_storage_filename_for_entry_id(entry_id)
+    )
+
+
+def migrate_filesystem_state_data_for_primary_imported_entry_id(
+    hass: HomeAssistant, entry_id: str
+):
+    """Migrate the old paths to the storage directory."""
+    legacy_persist_file_path = hass.config.path(HOMEKIT_FILE)
+    if os.path.exists(legacy_persist_file_path):
+        os.rename(
+            legacy_persist_file_path, get_persist_fullpath_for_entry_id(hass, entry_id)
+        )
+
+    legacy_aid_storage_path = hass.config.path(STORAGE_DIR, "homekit.aids")
+    if os.path.exists(legacy_aid_storage_path):
+        os.rename(
+            legacy_aid_storage_path,
+            get_aid_storage_fullpath_for_entry_id(hass, entry_id),
+        )
+
+
+def remove_state_files_for_entry_id(hass: HomeAssistant, entry_id: str):
+    """Remove the state files from disk."""
+    persist_file_path = get_persist_fullpath_for_entry_id(hass, entry_id)
+    aid_storage_path = get_aid_storage_fullpath_for_entry_id(hass, entry_id)
+    os.unlink(persist_file_path)
+    if os.path.exists(aid_storage_path):
+        os.unlink(aid_storage_path)
+    return True
+
+
+def _get_test_socket():
+    """Create a socket to test binding ports."""
+    test_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    test_socket.setblocking(False)
+    test_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    return test_socket
+
+
+def port_is_available(port: int):
+    """Check to see if a port is available."""
+    test_socket = _get_test_socket()
+    try:
+        test_socket.bind(("", port))
+    except OSError:
+        return False
+
+    return True
+
+
+def find_next_available_port(start_port: int):
+    """Find the next available port starting with the given port."""
+    test_socket = _get_test_socket()
+    for port in range(start_port, MAX_PORT):
+        try:
+            test_socket.bind(("", port))
+            return port
+        except OSError:
+            if port == MAX_PORT:
+                raise
+            continue

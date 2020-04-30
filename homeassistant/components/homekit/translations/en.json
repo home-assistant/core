@@ -1,0 +1,54 @@
+{
+	"title": "HomeKit Bridge",
+	"config": {
+		"step": {
+			"user": {
+				"description": "A HomeKit Bridge will allow you to access your Home Assistant entities in HomeKit. HomeKit Bridges are limited to 150 accessories per instance including the bridge itself. If you wish to bridge more than the maximum number of accessories, it is recommended that you use multiple HomeKit bridges for different domains. Detailed entity configuration is only available via YAML for the primary bridge.",
+				"title": "Activate HomeKit Bridge",
+				"data": {
+					"include_domains": "Domains to include",
+					"port": "Bridge Port",
+					"auto_start": "Autostart (disable if using Z-Wave or other delayed start system)"
+				}
+			},
+			"pairing": {
+				"description": "As soon as the {name} bridge is ready, pairing will be available in “Notifications” as “HomeKit Bridge Setup”.",
+				"title": "Pair HomeKit Bridge"
+			}
+		},
+		"abort": {
+			"port_name_in_use": "A bridge with the same name or port is already configured."
+		}
+	},
+	"options": {
+		"step": {
+			"yaml": {
+				"description": "This entry is controlled via YAML",
+				"title": "Adjust HomeKit Bridge Options"
+			},
+			"init": {
+				"data": {
+					"include_domains": "Domains to include"
+				},
+				"description": "Entities in the “Domains to include” will be bridged to HomeKit. You will be able to select which entities to exclude from this list on the next screen.",
+				"title": "Select domains to bridge."
+			},
+			"exclude": {
+				"description": "Choose the entities that you do NOT want to be bridged.",
+				"title": "Exclude entities in selected domains from bridge",
+				"data": {
+					"exclude_entities": "Entities to exclude"
+				}
+			},
+			"advanced": {
+				"title": "Advanced Configuration",
+				"description": "These settings only need to be adjusted if the HomeKit bridge is not functional.",
+				"data": {
+					"auto_start": "Autostart (disable if using Z-Wave or other delayed start system)",
+					"zeroconf_default_interface": "Use default zeroconf interface (enable if the bridge cannot be found in the Home app)",
+					"safe_mode": "Safe Mode (enable only if pairing fails)"
+				}
+			}
+		}
+	}
+}

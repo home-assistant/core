@@ -1,10 +1,11 @@
 """Tests for the HomeKit component."""
+import os
+from typing import Dict
 from unittest.mock import ANY, Mock, patch
 
 import pytest
 from zeroconf import InterfaceChoice
 
-from homeassistant import setup
 from homeassistant.components.binary_sensor import DEVICE_CLASS_BATTERY_CHARGING
 from homeassistant.components.homekit import (
     MAX_DEVICES,
@@ -19,6 +20,7 @@ from homeassistant.components.homekit.const import (
     AID_STORAGE,
     BRIDGE_NAME,
     CONF_AUTO_START,
+    CONF_ENTRY_INDEX,
     CONF_SAFE_MODE,
     CONF_ZEROCONF_DEFAULT_INTERFACE,
     DEFAULT_PORT,
@@ -28,6 +30,11 @@ from homeassistant.components.homekit.const import (
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     SERVICE_HOMEKIT_START,
 )
+from homeassistant.components.homekit.util import (
+    get_aid_storage_fullpath_for_entry_id,
+    get_persist_fullpath_for_entry_id,
+)
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -42,13 +49,17 @@ from homeassistant.const import (
 from homeassistant.core import State
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.entityfilter import generate_filter
+from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.setup import async_setup_component
+from homeassistant.util import json as json_util
+
+from .util import PATH_HOMEKIT, async_init_entry, async_init_integration
 
 from tests.async_mock import AsyncMock
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 from tests.components.homekit.common import patch_debounce
 
 IP_ADDRESS = "127.0.0.1"
-PATH_HOMEKIT = "homeassistant.components.homekit"
 
 
 @pytest.fixture
@@ -73,11 +84,31 @@ def debounce_patcher():
 
 async def test_setup_min(hass):
     """Test async_setup with min config options."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT},
+        options={},
+    )
+    entry.add_to_hass(hass)
+
     with patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit:
-        assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        mock_homekit.return_value = homekit = Mock()
+        type(homekit).async_start = AsyncMock()
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     mock_homekit.assert_any_call(
-        hass, BRIDGE_NAME, DEFAULT_PORT, None, ANY, {}, DEFAULT_SAFE_MODE, None, None
+        hass,
+        BRIDGE_NAME,
+        DEFAULT_PORT,
+        None,
+        ANY,
+        {},
+        DEFAULT_SAFE_MODE,
+        None,
+        None,
+        entry.entry_id,
     )
     assert mock_homekit().setup.called is True
 
@@ -86,26 +117,27 @@ async def test_setup_min(hass):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    mock_homekit().async_start.assert_called_with(ANY)
+    mock_homekit().async_start.assert_called()
 
 
 async def test_setup_auto_start_disabled(hass):
     """Test async_setup with auto start disabled and test service calls."""
-    config = {
-        DOMAIN: {
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "Test Name", CONF_PORT: 11111, CONF_IP_ADDRESS: "172.0.0.0"},
+        options={
             CONF_AUTO_START: False,
-            CONF_NAME: "Test Name",
-            CONF_PORT: 11111,
-            CONF_IP_ADDRESS: "172.0.0.0",
             CONF_SAFE_MODE: DEFAULT_SAFE_MODE,
             CONF_ZEROCONF_DEFAULT_INTERFACE: True,
-        }
-    }
+        },
+    )
+    entry.add_to_hass(hass)
 
     with patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit:
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
-        assert await setup.async_setup_component(hass, DOMAIN, config)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     mock_homekit.assert_any_call(
         hass,
@@ -117,6 +149,7 @@ async def test_setup_auto_start_disabled(hass):
         DEFAULT_SAFE_MODE,
         None,
         InterfaceChoice.Default,
+        entry.entry_id,
     )
     assert mock_homekit().setup.called is True
 
@@ -148,7 +181,23 @@ async def test_setup_auto_start_disabled(hass):
 
 async def test_homekit_setup(hass, hk_driver):
     """Test setup of bridge and driver."""
-    homekit = HomeKit(hass, BRIDGE_NAME, DEFAULT_PORT, None, {}, {}, DEFAULT_SAFE_MODE)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        source=SOURCE_IMPORT,
+    )
+    homekit = HomeKit(
+        hass,
+        BRIDGE_NAME,
+        DEFAULT_PORT,
+        None,
+        {},
+        {},
+        DEFAULT_SAFE_MODE,
+        advertise_ip=None,
+        interface_choice=None,
+        entry_id=entry.entry_id,
+    )
 
     with patch(
         f"{PATH_HOMEKIT}.accessories.HomeDriver", return_value=hk_driver
@@ -156,10 +205,12 @@ async def test_homekit_setup(hass, hk_driver):
         mock_ip.return_value = IP_ADDRESS
         await hass.async_add_executor_job(homekit.setup)
 
-    path = hass.config.path(HOMEKIT_FILE)
+    path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
     assert isinstance(homekit.bridge, HomeBridge)
     mock_driver.assert_called_with(
         hass,
+        entry.entry_id,
+        BRIDGE_NAME,
         address=IP_ADDRESS,
         port=DEFAULT_PORT,
         persist_file=path,
@@ -174,17 +225,36 @@ async def test_homekit_setup(hass, hk_driver):
 
 async def test_homekit_setup_ip_address(hass, hk_driver):
     """Test setup with given IP address."""
-    homekit = HomeKit(hass, BRIDGE_NAME, DEFAULT_PORT, "172.0.0.0", {}, {}, None)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        source=SOURCE_IMPORT,
+    )
+    homekit = HomeKit(
+        hass,
+        BRIDGE_NAME,
+        DEFAULT_PORT,
+        "172.0.0.0",
+        {},
+        {},
+        None,
+        None,
+        interface_choice=None,
+        entry_id=entry.entry_id,
+    )
 
+    path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
     with patch(
         f"{PATH_HOMEKIT}.accessories.HomeDriver", return_value=hk_driver
     ) as mock_driver:
         await hass.async_add_executor_job(homekit.setup)
     mock_driver.assert_called_with(
         hass,
+        entry.entry_id,
+        BRIDGE_NAME,
         address="172.0.0.0",
         port=DEFAULT_PORT,
-        persist_file=ANY,
+        persist_file=path,
         advertised_address=None,
         interface_choice=None,
     )
@@ -192,19 +262,36 @@ async def test_homekit_setup_ip_address(hass, hk_driver):
 
 async def test_homekit_setup_advertise_ip(hass, hk_driver):
     """Test setup with given IP address to advertise."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        source=SOURCE_IMPORT,
+    )
     homekit = HomeKit(
-        hass, BRIDGE_NAME, DEFAULT_PORT, "0.0.0.0", {}, {}, None, "192.168.1.100"
+        hass,
+        BRIDGE_NAME,
+        DEFAULT_PORT,
+        "0.0.0.0",
+        {},
+        {},
+        None,
+        "192.168.1.100",
+        interface_choice=None,
+        entry_id=entry.entry_id,
     )
 
+    path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
     with patch(
         f"{PATH_HOMEKIT}.accessories.HomeDriver", return_value=hk_driver
     ) as mock_driver:
         await hass.async_add_executor_job(homekit.setup)
     mock_driver.assert_called_with(
         hass,
+        entry.entry_id,
+        BRIDGE_NAME,
         address="0.0.0.0",
         port=DEFAULT_PORT,
-        persist_file=ANY,
+        persist_file=path,
         advertised_address="192.168.1.100",
         interface_choice=None,
     )
@@ -212,6 +299,11 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver):
 
 async def test_homekit_setup_interface_choice(hass, hk_driver):
     """Test setup with interface choice of Default."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        source=SOURCE_IMPORT,
+    )
     homekit = HomeKit(
         hass,
         BRIDGE_NAME,
@@ -222,17 +314,21 @@ async def test_homekit_setup_interface_choice(hass, hk_driver):
         None,
         None,
         InterfaceChoice.Default,
+        entry_id=entry.entry_id,
     )
 
+    path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
     with patch(
         f"{PATH_HOMEKIT}.accessories.HomeDriver", return_value=hk_driver
     ) as mock_driver:
         await hass.async_add_executor_job(homekit.setup)
     mock_driver.assert_called_with(
         hass,
+        entry.entry_id,
+        BRIDGE_NAME,
         address="0.0.0.0",
         port=DEFAULT_PORT,
-        persist_file=ANY,
+        persist_file=path,
         advertised_address=None,
         interface_choice=InterfaceChoice.Default,
     )
@@ -240,7 +336,23 @@ async def test_homekit_setup_interface_choice(hass, hk_driver):
 
 async def test_homekit_setup_safe_mode(hass, hk_driver):
     """Test if safe_mode flag is set."""
-    homekit = HomeKit(hass, BRIDGE_NAME, DEFAULT_PORT, None, {}, {}, True, None)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        source=SOURCE_IMPORT,
+    )
+    homekit = HomeKit(
+        hass,
+        BRIDGE_NAME,
+        DEFAULT_PORT,
+        None,
+        {},
+        {},
+        True,
+        advertise_ip=None,
+        interface_choice=None,
+        entry_id=entry.entry_id,
+    )
 
     with patch(f"{PATH_HOMEKIT}.accessories.HomeDriver", return_value=hk_driver):
         await hass.async_add_executor_job(homekit.setup)
@@ -249,12 +361,25 @@ async def test_homekit_setup_safe_mode(hass, hk_driver):
 
 async def test_homekit_add_accessory(hass):
     """Add accessory if config exists and get_acc returns an accessory."""
-    homekit = HomeKit(hass, None, None, None, lambda entity_id: True, {}, None, None)
+    entry = await async_init_integration(hass)
+
+    homekit = HomeKit(
+        hass,
+        None,
+        None,
+        None,
+        lambda entity_id: True,
+        {},
+        DEFAULT_SAFE_MODE,
+        advertise_ip=None,
+        interface_choice=None,
+        entry_id=entry.entry_id,
+    )
     homekit.driver = "driver"
     homekit.bridge = mock_bridge = Mock()
     homekit.bridge.accessories = range(10)
 
-    assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await async_init_integration(hass)
 
     with patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc:
         mock_get_acc.side_effect = [None, "acc", None]
@@ -273,7 +398,20 @@ async def test_homekit_add_accessory(hass):
 
 async def test_homekit_remove_accessory(hass):
     """Remove accessory from bridge."""
-    homekit = HomeKit("hass", None, None, None, lambda entity_id: True, {}, None, None)
+    entry = await async_init_integration(hass)
+
+    homekit = HomeKit(
+        hass,
+        None,
+        None,
+        None,
+        lambda entity_id: True,
+        {},
+        DEFAULT_SAFE_MODE,
+        advertise_ip=None,
+        interface_choice=None,
+        entry_id=entry.entry_id,
+    )
     homekit.driver = "driver"
     homekit.bridge = mock_bridge = Mock()
     mock_bridge.accessories = {"light.demo": "acc"}
@@ -285,10 +423,21 @@ async def test_homekit_remove_accessory(hass):
 
 async def test_homekit_entity_filter(hass):
     """Test the entity filter."""
-    assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    entry = await async_init_integration(hass)
 
     entity_filter = generate_filter(["cover"], ["demo.test"], [], [])
-    homekit = HomeKit(hass, None, None, None, entity_filter, {}, None, None)
+    homekit = HomeKit(
+        hass,
+        None,
+        None,
+        None,
+        entity_filter,
+        {},
+        DEFAULT_SAFE_MODE,
+        advertise_ip=None,
+        interface_choice=None,
+        entry_id=entry.entry_id,
+    )
     homekit.bridge = Mock()
     homekit.bridge.accessories = {}
 
@@ -309,8 +458,21 @@ async def test_homekit_entity_filter(hass):
 
 async def test_homekit_start(hass, hk_driver, debounce_patcher):
     """Test HomeKit start method."""
+    entry = await async_init_integration(hass)
+
     pin = b"123-45-678"
-    homekit = HomeKit(hass, None, None, None, {}, {"cover.demo": {}}, None, None)
+    homekit = HomeKit(
+        hass,
+        None,
+        None,
+        None,
+        {},
+        {},
+        DEFAULT_SAFE_MODE,
+        advertise_ip=None,
+        interface_choice=None,
+        entry_id=entry.entry_id,
+    )
     homekit.bridge = Mock()
     homekit.bridge.accessories = []
     homekit.driver = hk_driver
@@ -330,7 +492,7 @@ async def test_homekit_start(hass, hk_driver, debounce_patcher):
 
     await hass.async_block_till_done()
     mock_add_acc.assert_called_with(state)
-    mock_setup_msg.assert_called_with(hass, pin, ANY)
+    mock_setup_msg.assert_called_with(hass, entry.entry_id, None, pin, ANY)
     hk_driver_add_acc.assert_called_with(homekit.bridge)
     assert hk_driver_start.called
     assert homekit.status == STATUS_RUNNING
@@ -345,11 +507,25 @@ async def test_homekit_start(hass, hk_driver, debounce_patcher):
 async def test_homekit_start_with_a_broken_accessory(hass, hk_driver, debounce_patcher):
     """Test HomeKit start method."""
     pin = b"123-45-678"
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
     entity_filter = generate_filter(["cover", "light"], ["demo.test"], [], [])
 
-    assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await async_init_entry(hass, entry)
+    homekit = HomeKit(
+        hass,
+        None,
+        None,
+        None,
+        entity_filter,
+        {},
+        DEFAULT_SAFE_MODE,
+        advertise_ip=None,
+        interface_choice=None,
+        entry_id=entry.entry_id,
+    )
 
-    homekit = HomeKit(hass, None, None, None, entity_filter, {}, None, None)
     homekit.bridge = Mock()
     homekit.bridge.accessories = []
     homekit.driver = hk_driver
@@ -367,7 +543,7 @@ async def test_homekit_start_with_a_broken_accessory(hass, hk_driver, debounce_p
         await homekit.async_start()
 
     await hass.async_block_till_done()
-    mock_setup_msg.assert_called_with(hass, pin, ANY)
+    mock_setup_msg.assert_called_with(hass, entry.entry_id, None, pin, ANY)
     hk_driver_add_acc.assert_called_with(homekit.bridge)
     assert hk_driver_start.called
     assert homekit.status == STATUS_RUNNING
@@ -381,10 +557,23 @@ async def test_homekit_start_with_a_broken_accessory(hass, hk_driver, debounce_p
 
 async def test_homekit_stop(hass):
     """Test HomeKit stop method."""
-    homekit = HomeKit(hass, None, None, None, None, None, None)
+    entry = await async_init_integration(hass)
+
+    homekit = HomeKit(
+        hass,
+        None,
+        None,
+        None,
+        {},
+        {},
+        DEFAULT_SAFE_MODE,
+        advertise_ip=None,
+        interface_choice=None,
+        entry_id=entry.entry_id,
+    )
     homekit.driver = Mock()
 
-    assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await async_init_integration(hass)
 
     assert homekit.status == STATUS_READY
     await homekit.async_stop()
@@ -406,8 +595,23 @@ async def test_homekit_stop(hass):
 
 async def test_homekit_reset_accessories(hass):
     """Test adding too many accessories to HomeKit."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
     entity_id = "light.demo"
-    homekit = HomeKit(hass, None, None, None, {}, {entity_id: {}}, None)
+    homekit = HomeKit(
+        hass,
+        None,
+        None,
+        None,
+        {},
+        {entity_id: {}},
+        DEFAULT_SAFE_MODE,
+        advertise_ip=None,
+        interface_choice=None,
+        entry_id=entry.entry_id,
+    )
     homekit.bridge = Mock()
     homekit.bridge.accessories = {}
 
@@ -415,11 +619,14 @@ async def test_homekit_reset_accessories(hass):
         f"{PATH_HOMEKIT}.HomeKit.setup"
     ), patch("pyhap.accessory.Bridge.add_accessory") as mock_add_accessory, patch(
         "pyhap.accessory_driver.AccessoryDriver.config_changed"
-    ) as hk_driver_config_changed:
+    ) as hk_driver_config_changed, patch(
+        "pyhap.accessory_driver.AccessoryDriver.start"
+    ):
+        await async_init_entry(hass, entry)
 
-        assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-
-        aid = hass.data[AID_STORAGE].get_or_allocate_aid_for_entity_id(entity_id)
+        aid = hass.data[DOMAIN][entry.entry_id][
+            AID_STORAGE
+        ].get_or_allocate_aid_for_entity_id(entity_id)
         homekit.bridge.accessories = {aid: "acc"}
         homekit.status = STATUS_RUNNING
 
@@ -438,10 +645,22 @@ async def test_homekit_reset_accessories(hass):
 
 async def test_homekit_too_many_accessories(hass, hk_driver):
     """Test adding too many accessories to HomeKit."""
+    entry = await async_init_integration(hass)
 
     entity_filter = generate_filter(["cover", "light"], ["demo.test"], [], [])
 
-    homekit = HomeKit(hass, None, None, None, entity_filter, {}, None, None)
+    homekit = HomeKit(
+        hass,
+        None,
+        None,
+        None,
+        entity_filter,
+        {},
+        DEFAULT_SAFE_MODE,
+        advertise_ip=None,
+        interface_choice=None,
+        entry_id=entry.entry_id,
+    )
     homekit.bridge = Mock()
     # The bridge itself counts as an accessory
     homekit.bridge.accessories = range(MAX_DEVICES)
@@ -463,9 +682,20 @@ async def test_homekit_finds_linked_batteries(
     hass, hk_driver, debounce_patcher, device_reg, entity_reg
 ):
     """Test HomeKit start method."""
-    assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    entry = await async_init_integration(hass)
 
-    homekit = HomeKit(hass, None, None, None, {}, {"light.demo": {}}, None, None)
+    homekit = HomeKit(
+        hass,
+        None,
+        None,
+        None,
+        {},
+        {"light.demo": {}},
+        DEFAULT_SAFE_MODE,
+        advertise_ip=None,
+        interface_choice=None,
+        entry_id=entry.entry_id,
+    )
     homekit.driver = hk_driver
     homekit._filter = Mock(return_value=True)
     homekit.bridge = HomeBridge(hass, hk_driver, "mock_bridge")
@@ -526,3 +756,132 @@ async def test_homekit_finds_linked_batteries(
             "linked_battery_sensor": "sensor.light_battery",
         },
     )
+
+
+async def test_setup_imported(hass):
+    """Test async_setup with imported config options."""
+    legacy_persist_file_path = hass.config.path(HOMEKIT_FILE)
+    legacy_aid_storage_path = hass.config.path(STORAGE_DIR, "homekit.aids")
+    legacy_homekit_state_contents = {"homekit.state": 1}
+    legacy_homekit_aids_contents = {"homekit.aids": 1}
+    await hass.async_add_executor_job(
+        _write_data, legacy_persist_file_path, legacy_homekit_state_contents
+    )
+    await hass.async_add_executor_job(
+        _write_data, legacy_aid_storage_path, legacy_homekit_aids_contents
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_IMPORT,
+        data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT, CONF_ENTRY_INDEX: 0},
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit:
+        mock_homekit.return_value = homekit = Mock()
+        type(homekit).async_start = AsyncMock()
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_homekit.assert_any_call(
+        hass,
+        BRIDGE_NAME,
+        DEFAULT_PORT,
+        None,
+        ANY,
+        {},
+        DEFAULT_SAFE_MODE,
+        None,
+        None,
+        entry.entry_id,
+    )
+    assert mock_homekit().setup.called is True
+
+    # Test auto start enabled
+    mock_homekit.reset_mock()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    mock_homekit().async_start.assert_called()
+
+    migrated_persist_file_path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
+    assert (
+        await hass.async_add_executor_job(
+            json_util.load_json, migrated_persist_file_path
+        )
+        == legacy_homekit_state_contents
+    )
+    os.unlink(migrated_persist_file_path)
+    migrated_aid_file_path = get_aid_storage_fullpath_for_entry_id(hass, entry.entry_id)
+    assert (
+        await hass.async_add_executor_job(json_util.load_json, migrated_aid_file_path)
+        == legacy_homekit_aids_contents
+    )
+    os.unlink(migrated_aid_file_path)
+
+
+async def test_yaml_updates_update_config_entry_for_name(hass):
+    """Test async_setup with imported config."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_IMPORT,
+        data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT},
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit:
+        mock_homekit.return_value = homekit = Mock()
+        type(homekit).async_start = AsyncMock()
+        assert await async_setup_component(
+            hass, "homekit", {"homekit": {CONF_NAME: BRIDGE_NAME, CONF_PORT: 12345}}
+        )
+        await hass.async_block_till_done()
+
+    mock_homekit.assert_any_call(
+        hass,
+        BRIDGE_NAME,
+        12345,
+        None,
+        ANY,
+        {},
+        DEFAULT_SAFE_MODE,
+        None,
+        None,
+        entry.entry_id,
+    )
+    assert mock_homekit().setup.called is True
+
+    # Test auto start enabled
+    mock_homekit.reset_mock()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    mock_homekit().async_start.assert_called()
+
+
+async def test_raise_config_entry_not_ready(hass):
+    """Test async_setup when the port is not available."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT},
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homekit.port_is_available", return_value=False,
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+def _write_data(path: str, data: Dict) -> None:
+    """Write the data."""
+    if not os.path.isdir(os.path.dirname(path)):
+        os.makedirs(os.path.dirname(path))
+    json_util.save_json(path, data)
