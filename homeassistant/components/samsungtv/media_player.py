@@ -6,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant import core
 from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
-
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
