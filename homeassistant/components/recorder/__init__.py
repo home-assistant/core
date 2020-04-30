@@ -504,7 +504,7 @@ class Recorder(threading.Thread):
                 cursor.execute("SET session wait_timeout=28800")
                 cursor.close()
 
-        if self.db_url.startswith("sqlite://") or ":memory:" in self.db_url:
+        if self.db_url == "sqlite://" or ":memory:" in self.db_url:
             kwargs["connect_args"] = {"check_same_thread": False}
             kwargs["poolclass"] = StaticPool
             kwargs["pool_reset_on_return"] = None
