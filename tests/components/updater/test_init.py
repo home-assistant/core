@@ -6,7 +6,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
-from tests.common import MockDependency, mock_component
+from tests.common import mock_component
 
 NEW_VERSION = "10000.0"
 MOCK_VERSION = "10.0"
@@ -15,13 +15,6 @@ MOCK_HUUID = "abcdefg"
 MOCK_RESPONSE = {"version": "0.15", "release-notes": "https://home-assistant.io"}
 MOCK_CONFIG = {updater.DOMAIN: {"reporting": True}}
 RELEASE_NOTES = "test release notes"
-
-
-@pytest.fixture(autouse=True)
-def mock_distro():
-    """Mock distro dep."""
-    with MockDependency("distro"):
-        yield
 
 
 @pytest.fixture(autouse=True)
