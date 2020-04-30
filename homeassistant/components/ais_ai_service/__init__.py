@@ -2,20 +2,23 @@
 Support for functionality to have conversations with AI-Speaker.
 
 """
-import asyncio
 import datetime
 import json
 import logging
 import re
 import warnings
 
+import aiohttp
 from aiohttp.web import json_response
-import requests
 import voluptuous as vol
 
 from homeassistant import core
 from homeassistant.components import ais_cloud, ais_drives_service, conversation
 import homeassistant.components.ais_dom.ais_global as ais_global
+from homeassistant.components.conversation.default_agent import (
+    DefaultAgent,
+    async_register,
+)
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -53,15 +56,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
-from homeassistant.helpers import config_validation as cv, event
+from homeassistant.helpers import config_validation as cv, event, intent
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
-from homeassistant.helpers import intent
+
 from .ais_agent import AisAgent
-from homeassistant.components.conversation.default_agent import (
-    DefaultAgent,
-    async_register,
-)
 
 aisCloudWS = ais_cloud.AisCloudWS()
 
@@ -520,7 +519,7 @@ def get_curr_group_view():
 
 
 def say_curr_group_view(hass):
-    _say_it(hass, get_curr_group_view())
+    await _async_say_it(hass, get_curr_group_view())
 
 
 def set_curr_group_view():
@@ -580,7 +579,7 @@ def set_prev_virtual_keyboard_mode():
 
 
 def say_curr_virtual_keyboard_mode(hass):
-    _say_it(hass, get_curr_virtual_keyboard_mode())
+    await _async_say_it(hass, get_curr_virtual_keyboard_mode())
 
 
 def get_curr_virtual_key():
@@ -645,7 +644,7 @@ def say_curr_virtual_key(hass):
     elif km == "Usuwanie":
         text = "" + key
 
-    _say_it(hass, text)
+    await _async_say_it(hass, text)
 
 
 def reset_virtual_keyboard(hass):
@@ -681,7 +680,7 @@ def set_time_hour_up(hass, entity_id):
         G_INPUT_CURRENT_HOUR = 0
     else:
         G_INPUT_CURRENT_HOUR = G_INPUT_CURRENT_HOUR + 1
-    _say_it(hass, get_hour_to_say(G_INPUT_CURRENT_HOUR, G_INPUT_CURRENT_MINNUTE))
+    await _async_say_it(hass, get_hour_to_say(G_INPUT_CURRENT_HOUR, G_INPUT_CURRENT_MINNUTE))
 
 
 def set_time_hour_down(hass, entity_id):
@@ -695,7 +694,7 @@ def set_time_hour_down(hass, entity_id):
         G_INPUT_CURRENT_HOUR = 23
     else:
         G_INPUT_CURRENT_HOUR = G_INPUT_CURRENT_HOUR - 1
-    _say_it(hass, get_hour_to_say(G_INPUT_CURRENT_HOUR, G_INPUT_CURRENT_MINNUTE))
+    await _async_say_it(hass, get_hour_to_say(G_INPUT_CURRENT_HOUR, G_INPUT_CURRENT_MINNUTE))
 
 
 def set_time_minute_up(hass, entity_id):
@@ -709,7 +708,7 @@ def set_time_minute_up(hass, entity_id):
         G_INPUT_CURRENT_MINNUTE = 0
     else:
         G_INPUT_CURRENT_MINNUTE = G_INPUT_CURRENT_MINNUTE + 1
-    _say_it(hass, get_hour_to_say(G_INPUT_CURRENT_HOUR, G_INPUT_CURRENT_MINNUTE))
+    await _async_say_it(hass, get_hour_to_say(G_INPUT_CURRENT_HOUR, G_INPUT_CURRENT_MINNUTE))
 
 
 def set_time_minute_down(hass, entity_id):
@@ -723,7 +722,7 @@ def set_time_minute_down(hass, entity_id):
         G_INPUT_CURRENT_MINNUTE = 59
     else:
         G_INPUT_CURRENT_MINNUTE = G_INPUT_CURRENT_MINNUTE - 1
-    _say_it(hass, get_hour_to_say(G_INPUT_CURRENT_HOUR, G_INPUT_CURRENT_MINNUTE))
+    await _async_say_it(hass, get_hour_to_say(G_INPUT_CURRENT_HOUR, G_INPUT_CURRENT_MINNUTE))
 
 
 def remove_selected_action(key_code):
@@ -771,7 +770,7 @@ def get_curr_group_idx():
 
 
 def say_curr_group(hass):
-    _say_it(hass, get_curr_group()["friendly_name"])
+    await _async_say_it(hass, get_curr_group()["friendly_name"])
 
 
 def set_bookmarks_curr_group(hass):
@@ -971,22 +970,22 @@ def say_curr_entity(hass):
     entity_id = get_curr_entity()
     if entity_id is None:
         if CURR_GROUP["entity_id"] == "group.all_ais_persons":
-            _say_it(
+            await _async_say_it(
                 hass,
                 "Brak informacji o osobach. W konfiguracji możesz dodać osoby, "
                 "oraz urządzenia raportujące lokalizację osób.",
             )
         elif CURR_GROUP["entity_id"] == "group.all_automations":
-            _say_it(
+            await _async_say_it(
                 hass,
                 "Brak zdefiniowanych automatyzacji. Dodaj automatyzację w konfiguracji.",
             )
         else:
-            _say_it(hass, "Brak pozycji")
+            await _async_say_it(hass, "Brak pozycji")
         return
     state = hass.states.get(entity_id)
     if state is None:
-        _say_it(hass, "Brak pozycji")
+        await _async_say_it(hass, "Brak pozycji")
         return
     text = state.attributes.get("text")
     info_name = state.attributes.get("friendly_name")
@@ -996,20 +995,20 @@ def say_curr_entity(hass):
         text = ""
     # handle special cases...
     if entity_id == "sensor.aisknowledgeanswer":
-        _say_it(hass, "Odpowiedź: " + text)
+        await _async_say_it(hass, "Odpowiedź: " + text)
         return
     elif entity_id == "sensor.ais_drives":
         state = hass.states.get("sensor.ais_drives")
         if state.state is None or state.state == "":
-            _say_it(hass, "dysk wewnętrzny")
+            await _async_say_it(hass, "dysk wewnętrzny")
         else:
             attr = state.attributes
             files = attr.get("files", [])
             info = ais_drives_service.get_pozycji_variety(len(files))
-            _say_it(hass, info)
+            await _async_say_it(hass, info)
         return
     elif entity_id == "sensor.ais_secure_android_id_dom":
-        _say_it(
+        await _async_say_it(
             hass, info_name + " " + info_data + ". Aby przeliterować naciśnij 'OK'."
         )
         return
@@ -1021,14 +1020,14 @@ def say_curr_entity(hass):
             "następnie poczekaj aż dioda na urządzeniu, zacznie pulsować. Gdy urządzenie jest w trybie parowania, "
             "to naciśnij OK na pilocie, aby rozpocząć wyszukiwanie urządzenia."
         )
-        _say_it(hass, info)
+        await _async_say_it(hass, info)
         return
     elif entity_id == "input_boolean.ais_quiet_mode":
         state = hass.states.get("input_boolean.ais_quiet_mode").state
         info_value = " wyłączony. Naciśnij OK by włączyć. "
         if state == "on":
             info_value = " włączony. Naciśnij OK by wyłączyć. "
-        _say_it(
+        await _async_say_it(
             hass,
             info_name
             + info_value
@@ -1048,38 +1047,38 @@ def say_curr_entity(hass):
                 "zainstalujemy dostępne aktualizacje składowych systemu. "
                 "Naciśnij OK by wyłączyć aktualizacje automatyczne. "
             )
-        _say_it(hass, info_value)
+        await _async_say_it(hass, info_value)
         return
     elif entity_id == "input_select.ais_bookmark_last_played":
-        _say_it(hass, info_name + " " + info_data.replace("Local;", ""))
+        await _async_say_it(hass, info_name + " " + info_data.replace("Local;", ""))
         return
     elif entity_id == "sensor.ais_wifi_service_current_network_info":
         state = hass.states.get("sensor.ais_wifi_service_current_network_info")
         attr = state.attributes
         info = attr.get("description", "brak informacji o połączeniu")
-        _say_it(hass, "Prędkość połączenia " + info)
+        await _async_say_it(hass, "Prędkość połączenia " + info)
         return
     elif entity_id.startswith("script."):
-        _say_it(hass, info_name + " Naciśnij OK by uruchomić.")
+        await _async_say_it(hass, info_name + " Naciśnij OK by uruchomić.")
         return
     elif entity_id.startswith("automation."):
-        _say_it(hass, info_name + " Naciśnij OK by uruchomić.")
+        await _async_say_it(hass, info_name + " Naciśnij OK by uruchomić.")
         return
     elif entity_id.startswith("input_datetime."):
         state = hass.states.get(entity_id)
         attr = state.attributes
         info_name = info_name + "; "
         info_time = get_hour_to_say(attr.get("hour", "00"), attr.get("minute", 0))
-        _say_it(hass, info_name + info_time + ". Naciśnij OK by zmienić godzinę.")
+        await _async_say_it(hass, info_name + info_time + ". Naciśnij OK by zmienić godzinę.")
         return
     elif entity_id.startswith("input_text."):
         if CURR_BUTTON_CODE == 4:
             if CURR_VIRTUAL_KEYBOARD_VALUE is None:
-                _say_it(hass, "Nic nie wpisałeś")
+                await _async_say_it(hass, "Nic nie wpisałeś")
             else:
-                _say_it(hass, "Wpisałeś " + CURR_VIRTUAL_KEYBOARD_VALUE)
+                await _async_say_it(hass, "Wpisałeś " + CURR_VIRTUAL_KEYBOARD_VALUE)
         else:
-            _say_it(
+            await _async_say_it(
                 hass,
                 info_name
                 + " "
@@ -1090,14 +1089,14 @@ def say_curr_entity(hass):
     elif entity_id.startswith("input_select."):
         if CURR_BUTTON_CODE == 4:
             if info_data == ais_global.G_EMPTY_OPTION:
-                _say_it(hass, "Brak wyboru")
+                await _async_say_it(hass, "Brak wyboru")
             else:
-                _say_it(hass, "Wybrałeś " + info_data)
+                await _async_say_it(hass, "Wybrałeś " + info_data)
         else:
             if info_data != ais_global.G_EMPTY_OPTION:
-                _say_it(hass, info_name + " " + info_data + ". Naciśnij OK by zmienić.")
+                await _async_say_it(hass, info_name + " " + info_data + ". Naciśnij OK by zmienić.")
             else:
-                _say_it(hass, info_name + " " + info_data + ". Naciśnij OK by wybrać.")
+                await _async_say_it(hass, info_name + " " + info_data + ". Naciśnij OK by wybrać.")
         return
     elif entity_id.startswith("sensor.") and entity_id.endswith("list"):
         info_name = ""
@@ -1110,9 +1109,9 @@ def say_curr_entity(hass):
                 info_name = ""
         if CURR_BUTTON_CODE == 4:
             if int(info_data) == -1:
-                _say_it(hass, "Brak wybranej pozycji ")
+                await _async_say_it(hass, "Brak wybranej pozycji ")
             else:
-                _say_it(hass, "Lista na pozycji " + info_name)
+                await _async_say_it(hass, "Lista na pozycji " + info_name)
         else:
             if entity_id == "sensor.radiolist":
                 info = "Lista stacji radiowych "
@@ -1148,7 +1147,7 @@ def say_curr_entity(hass):
             else:
                 additional_info = ". Naciśnij OK by wybrać."
 
-            _say_it(hass, info + info_name + additional_info)
+            await _async_say_it(hass, info + info_name + additional_info)
 
         return
     # normal case
@@ -1159,7 +1158,7 @@ def say_curr_entity(hass):
     if not info_unit:
         info_unit = ""
     info = "%s %s %s" % (info_name, info_data, info_unit)
-    _say_it(hass, info)
+    await _async_say_it(hass, info)
 
 
 def get_curent_position(hass):
@@ -1218,7 +1217,7 @@ def commit_current_position(hass):
             },
         )
         text = get_hour_to_say(G_INPUT_CURRENT_HOUR, G_INPUT_CURRENT_MINNUTE)
-        _say_it(hass, "wpisana " + text)
+        await _async_say_it(hass, "wpisana " + text)
         CURR_ENTITIE_ENTERED = False
     elif CURR_ENTITIE.startswith("sensor.") and CURR_ENTITIE.endswith("list"):
         # play/read selected source
@@ -1291,10 +1290,10 @@ def commit_current_position(hass):
             )
 
     if CURR_ENTITIE == "input_select.ais_android_wifi_network":
-        _say_it(hass, "wybrano wifi: " + get_curent_position(hass).split(";")[0])
+        await _async_say_it(hass, "wybrano wifi: " + get_curent_position(hass).split(";")[0])
 
     elif CURR_ENTITIE == "input_select.ais_music_service":
-        _say_it(
+        await _async_say_it(
             hass,
             "Wybrano " + position + ", napisz lub powiedz jakiej muzyki mam wyszukać",
         )
@@ -1321,20 +1320,20 @@ def set_next_position(hass):
         # the "-" option is always first
         options = attr.get("options")
         if len(options) < 2:
-            _say_it(hass, "brak pozycji")
+            await _async_say_it(hass, "brak pozycji")
         else:
             CURR_ENTITIE_POSITION = get_next(options, CURR_ENTITIE_POSITION)
-            _say_it(hass, CURR_ENTITIE_POSITION)
+            await _async_say_it(hass, CURR_ENTITIE_POSITION)
     elif CURR_ENTITIE.startswith("sensor.") and CURR_ENTITIE.endswith("list"):
         if len(attr) == 0:
-            _say_it(hass, "brak pozycji")
+            await _async_say_it(hass, "brak pozycji")
         else:
             curr_id = int(state.state)
             next_id = int(curr_id) + 1
             if next_id == len(attr):
                 next_id = 0
             track = attr.get(int(next_id))
-            _say_it(hass, track["name"])
+            await _async_say_it(hass, track["name"])
             # update list
             hass.states.async_set(CURR_ENTITIE, next_id, attr)
     elif CURR_ENTITIE.startswith("input_number."):
@@ -1342,7 +1341,7 @@ def set_next_position(hass):
         _step = float(state.attributes.get("step"))
         _curr = float(CURR_ENTITIE_POSITION)
         CURR_ENTITIE_POSITION = str(round(min(_curr + _step, _max), 2))
-        _say_it(hass, str(CURR_ENTITIE_POSITION))
+        await _async_say_it(hass, str(CURR_ENTITIE_POSITION))
 
 
 def set_prev_position(hass):
@@ -1353,20 +1352,20 @@ def set_prev_position(hass):
     if CURR_ENTITIE.startswith("input_select."):
         options = attr.get("options")
         if len(options) < 2:
-            _say_it(hass, "brak pozycji")
+            await _async_say_it(hass, "brak pozycji")
         else:
             CURR_ENTITIE_POSITION = get_prev(options, CURR_ENTITIE_POSITION)
-            _say_it(hass, CURR_ENTITIE_POSITION)
+            await _async_say_it(hass, CURR_ENTITIE_POSITION)
     elif CURR_ENTITIE.startswith("sensor.") and CURR_ENTITIE.endswith("list"):
         if len(attr) == 0:
-            _say_it(hass, "brak pozycji")
+            await _async_say_it(hass, "brak pozycji")
         else:
             curr_id = int(state.state)
             prev_id = curr_id - 1
             if prev_id < 0:
                 prev_id = len(attr) - 1
             track = attr.get(int(prev_id))
-            _say_it(hass, track["name"])
+            await _async_say_it(hass, track["name"])
             # update list
             hass.states.async_set(CURR_ENTITIE, prev_id, attr)
     elif CURR_ENTITIE.startswith("input_number."):
@@ -1374,7 +1373,7 @@ def set_prev_position(hass):
         _step = float(state.attributes.get("step"))
         _curr = float(CURR_ENTITIE_POSITION)
         CURR_ENTITIE_POSITION = str(round(max(_curr - _step, _min), 2))
-        _say_it(hass, str(CURR_ENTITIE_POSITION))
+        await _async_say_it(hass, str(CURR_ENTITIE_POSITION))
 
 
 def select_entity(hass, long_press):
@@ -1425,14 +1424,14 @@ def select_entity(hass, long_press):
             state = hass.states.get("media_player.wbudowany_glosnik")
             shuffle = state.attributes.get("shuffle", False)
             if shuffle:
-                _say_it(hass, "Włączono odtwarzanie w kolejności.")
+                await _async_say_it(hass, "Włączono odtwarzanie w kolejności.")
                 hass.services.call(
                     "media_player",
                     "shuffle_set",
                     {"entity_id": CURR_ENTITIE, "shuffle": False},
                 )
             else:
-                _say_it(hass, "Włączono odtwarzanie losowe.")
+                await _async_say_it(hass, "Włączono odtwarzanie losowe.")
                 hass.services.call(
                     "media_player",
                     "shuffle_set",
@@ -1446,12 +1445,12 @@ def select_entity(hass, long_press):
             if can_entity_be_entered(hass, CURR_ENTITIE):
                 CURR_ENTITIE_ENTERED = True
                 if CURR_ENTITIE.startswith("input_text."):
-                    _say_it(hass, "Wpisywanie/dyktowanie tekstu włączone")
+                    await _async_say_it(hass, "Wpisywanie/dyktowanie tekstu włączone")
                     reset_virtual_keyboard(hass)
                 elif CURR_ENTITIE.startswith("input_datetime."):
                     G_INPUT_CURRENT_MINNUTE = None
                     G_INPUT_CURRENT_HOUR = None
-                    _say_it(
+                    await _async_say_it(
                         hass,
                         "OK, dostosuj godzinę strzałkami góra lub dół a minuty strzałkami lewo lub prawo."
                         " By zatwierdzić naciśnij 'OK'.",
@@ -1468,55 +1467,55 @@ def select_entity(hass, long_press):
                     curr_state = hass.states.get(CURR_ENTITIE).state
                     if curr_state == "playing":
                         if long_press is True:
-                            _say_it(hass, "stop")
+                            await _async_say_it(hass, "stop")
                             hass.services.call(
                                 "media_player",
                                 "media_stop",
                                 {"entity_id": CURR_ENTITIE},
                             )
                         else:
-                            _say_it(hass, "pauza")
+                            await _async_say_it(hass, "pauza")
                             hass.services.call(
                                 "media_player",
                                 "media_pause",
                                 {"entity_id": CURR_ENTITIE},
                             )
                     else:
-                        _say_it(hass, "graj")
+                        await _async_say_it(hass, "graj")
                         hass.services.call(
                             "media_player", "media_play", {"entity_id": CURR_ENTITIE}
                         )
                 elif CURR_ENTITIE.startswith("input_boolean."):
                     curr_state = hass.states.get(CURR_ENTITIE).state
                     if curr_state == "on":
-                        _say_it(hass, "ok, wyłączam")
+                        await _async_say_it(hass, "ok, wyłączam")
                     if curr_state == "off":
-                        _say_it(hass, "ok, włączam")
+                        await _async_say_it(hass, "ok, włączam")
                     hass.services.call(
                         "input_boolean", "toggle", {"entity_id": CURR_ENTITIE}
                     )
                 elif CURR_ENTITIE.startswith("switch."):
                     curr_state = hass.states.get(CURR_ENTITIE).state
                     if curr_state == "on":
-                        _say_it(hass, "ok, wyłączam")
+                        await _async_say_it(hass, "ok, wyłączam")
                     if curr_state == "off":
-                        _say_it(hass, "ok, włączam")
+                        await _async_say_it(hass, "ok, włączam")
                     if curr_state == "unavailable":
-                        _say_it(hass, "przełącznik jest niedostępny")
+                        await _async_say_it(hass, "przełącznik jest niedostępny")
                     hass.services.call("switch", "toggle", {"entity_id": CURR_ENTITIE})
                 elif CURR_ENTITIE.startswith("light."):
                     curr_state = hass.states.get(CURR_ENTITIE).state
                     if curr_state == "on":
-                        _say_it(hass, "ok, wyłączam")
+                        await _async_say_it(hass, "ok, wyłączam")
                     elif curr_state == "off":
-                        _say_it(hass, "ok, włączam")
+                        await _async_say_it(hass, "ok, włączam")
                     elif curr_state == "unavailable":
-                        _say_it(hass, "oświetlnie jest niedostępne")
+                        await _async_say_it(hass, "oświetlnie jest niedostępne")
                     hass.services.call("light", "toggle", {"entity_id": CURR_ENTITIE})
                 elif CURR_ENTITIE.startswith("script."):
                     hass.services.call("script", CURR_ENTITIE.split(".")[1])
                 elif CURR_ENTITIE.startswith("automation."):
-                    _say_it(hass, "ok, uruchamiam")
+                    await _async_say_it(hass, "ok, uruchamiam")
                     hass.services.call(
                         "automation", "trigger", {"entity_id": CURR_ENTITIE}
                     )
@@ -1535,9 +1534,9 @@ def select_entity(hass, long_press):
                     and reinstall_android_app is False
                     and reinstall_linux_apt is False
                 ):
-                    _say_it(hass, "Twoja wersja jest aktualna")
+                    await _async_say_it(hass, "Twoja wersja jest aktualna")
                 else:
-                    _say_it(
+                    await _async_say_it(
                         hass,
                         "Poczekaj na zakończenie aktualizacji i restart. Do usłyszenia.",
                     )
@@ -1548,14 +1547,14 @@ def select_entity(hass, long_press):
                 state = hass.states.get("sensor.ais_secure_android_id_dom")
                 dom_id = state.state.replace("dom-", "")
                 dom_id = "; ".join(dom_id)
-                _say_it(hass, dom_id)
+                await _async_say_it(hass, dom_id)
                 return
             elif CURR_ENTITIE == "sensor.ais_connect_iot_device_info":
                 # start searching for the device
                 hass.services.call("script", "ais_scan_iot_devices_in_network")
                 return
             else:
-                _say_it(hass, "Tej pozycji nie można zmieniać")
+                await _async_say_it(hass, "Tej pozycji nie można zmieniać")
 
     if CURR_ENTITIE_ENTERED is True:
         # check if we can change this item
@@ -1570,7 +1569,7 @@ def select_entity(hass, long_press):
                     # delete
                     if CURR_ENTITIE == "sensor.aisfavoriteslist":
                         item_idx = hass.states.get("sensor.aisfavoriteslist").state
-                        _say_it(hass, "OK usuwam tą pozycję z ulubionych.")
+                        await _async_say_it(hass, "OK usuwam tą pozycję z ulubionych.")
                         hass.async_run_job(
                             hass.services.call(
                                 "ais_bookmarks", "delete_favorite", {"id": item_idx}
@@ -1583,7 +1582,7 @@ def select_entity(hass, long_press):
                                 "ais_bookmarks", "delete_bookmark", {"id": item_idx}
                             )
                         )
-                        _say_it(hass, "OK. Usuwam tą zakładkę.")
+                        await _async_say_it(hass, "OK. Usuwam tą zakładkę.")
                     # reset action
                     CURR_ENTITIE_SELECTED_ACTION = None
                     return
@@ -1594,17 +1593,17 @@ def select_entity(hass, long_press):
                 curr_state = hass.states.get(CURR_ENTITIE).state
                 if curr_state == "playing":
                     if long_press is True:
-                        _say_it(hass, "stop")
+                        await _async_say_it(hass, "stop")
                         hass.services.call(
                             "media_player", "media_stop", {"entity_id": CURR_ENTITIE}
                         )
                     else:
-                        _say_it(hass, "pauza")
+                        await _async_say_it(hass, "pauza")
                         hass.services.call(
                             "media_player", "media_pause", {"entity_id": CURR_ENTITIE}
                         )
                 else:
-                    _say_it(hass, "graj")
+                    await _async_say_it(hass, "graj")
                     hass.services.call(
                         "media_player", "media_play", {"entity_id": CURR_ENTITIE}
                     )
@@ -1614,7 +1613,7 @@ def select_entity(hass, long_press):
                 commit_current_position(hass)
         else:
             # eneter on unchanged item
-            _say_it(hass, "Tej pozycji nie można zmieniać")
+            await _async_say_it(hass, "Tej pozycji nie można zmieniać")
 
 
 def can_entity_be_changed(hass, entity):
@@ -1669,7 +1668,7 @@ def set_on_dpad_down(hass, long_press):
                 CURR_ENTITIE_SELECTED_ACTION = ais_global.G_ACTION_SET_AUDIO_SPEED
                 state = hass.states.get("input_number.media_player_speed")
                 l_speed_pl = ais_global.get_audio_speed_name(state.state)
-                _say_it(
+                await _async_say_it(
                     hass,
                     "Prędkość odtwarzania audio "
                     + l_speed_pl
@@ -1680,11 +1679,11 @@ def set_on_dpad_down(hass, long_press):
                 state = hass.states.get("media_player.wbudowany_glosnik")
                 shuffle = state.attributes.get("shuffle", False)
                 if shuffle:
-                    _say_it(
+                    await _async_say_it(
                         hass, "Odtwarzanie losowe włączone. Naciśnij OK by wyłączyć."
                     )
                 else:
-                    _say_it(
+                    await _async_say_it(
                         hass, "Odtwarzanie losowe wyłączone. Naciśnij OK by włączyć."
                     )
             return
@@ -1696,23 +1695,23 @@ def set_on_dpad_down(hass, long_press):
             set_time_hour_down(hass, CURR_ENTITIE)
             return
         elif CURR_ENTITIE_ENTERED and CURR_ENTITIE == "sensor.aisfavoriteslist":
-            _say_it(hass, "Usuwanie. Naciśnij OK aby usunąć pozycję z ulubionych.")
+            await _async_say_it(hass, "Usuwanie. Naciśnij OK aby usunąć pozycję z ulubionych.")
             CURR_ENTITIE_SELECTED_ACTION = ais_global.G_ACTION_DELETE
             return
         elif CURR_ENTITIE_ENTERED and CURR_ENTITIE == "sensor.aisbookmarkslist":
-            _say_it(hass, "Usuwanie. Naciśnij OK aby usunąć tą zakładkę.")
+            await _async_say_it(hass, "Usuwanie. Naciśnij OK aby usunąć tą zakładkę.")
             CURR_ENTITIE_SELECTED_ACTION = ais_global.G_ACTION_DELETE
             return
         elif CURR_ENTITIE == "sensor.ais_drives":
             path = hass.states.get(CURR_ENTITIE).state
             if path.startswith("/dysk-wewnętrzny"):
-                _say_it(hass, "Usuwanie. Naciśnij OK aby usunąć tą pozycję.")
+                await _async_say_it(hass, "Usuwanie. Naciśnij OK aby usunąć tą pozycję.")
                 CURR_ENTITIE_SELECTED_ACTION = ais_global.G_ACTION_DELETE
             else:
-                _say_it(hass, "Wybrana pozycja nie ma dodatkowych opcji.")
+                await _async_say_it(hass, "Wybrana pozycja nie ma dodatkowych opcji.")
             return
         else:
-            _say_it(hass, "Wybrana pozycja nie ma dodatkowych opcji.")
+            await _async_say_it(hass, "Wybrana pozycja nie ma dodatkowych opcji.")
 
 
 def set_on_dpad_up(hass, long_press):
@@ -1722,7 +1721,7 @@ def set_on_dpad_up(hass, long_press):
             CURR_ENTITIE_SELECTED_ACTION = ais_global.G_ACTION_SET_AUDIO_SPEED
             state = hass.states.get("input_number.media_player_speed")
             l_speed_pl = ais_global.get_audio_speed_name(state.state)
-            _say_it(
+            await _async_say_it(
                 hass,
                 "Prędkość odtwarzania audio "
                 + l_speed_pl
@@ -1731,7 +1730,7 @@ def set_on_dpad_up(hass, long_press):
             return
         elif CURR_ENTITIE_SELECTED_ACTION == ais_global.G_ACTION_SET_AUDIO_SPEED:
             CURR_ENTITIE_SELECTED_ACTION = None
-            _say_it(hass, "Sterowanie odtwarzaczem")
+            await _async_say_it(hass, "Sterowanie odtwarzaczem")
         elif CURR_ENTITIE.startswith("media_player."):
             # info about audio
             state = hass.states.get("media_player.wbudowany_glosnik")
@@ -1740,7 +1739,7 @@ def set_on_dpad_up(hass, long_press):
                 state.attributes.get("source", ""), state.attributes.get("source", "")
             )
             text += " z " + audio_type_pl
-            _say_it(hass, text)
+            await _async_say_it(hass, text)
             return
         elif CURR_ENTITIE.startswith("input_text.") and CURR_ENTITIE_ENTERED:
             set_next_virtual_keyboard_mode()
@@ -1750,7 +1749,7 @@ def set_on_dpad_up(hass, long_press):
             set_time_hour_up(hass, CURR_ENTITIE)
             return
         else:
-            _say_it(hass, "Wybrana pozycja nie ma dodatkowych informacji.")
+            await _async_say_it(hass, "Wybrana pozycja nie ma dodatkowych informacji.")
 
 
 def set_focus_on_prev_entity(hass, long_press):
@@ -1785,7 +1784,7 @@ def set_focus_on_prev_entity(hass, long_press):
                             "value": _curr,
                         },
                     )
-                    _say_it(hass, ais_global.get_audio_speed_name(_curr))
+                    await _async_say_it(hass, ais_global.get_audio_speed_name(_curr))
                     return
 
     # no group is selected go to prev in the groups view menu
@@ -1862,7 +1861,7 @@ def set_focus_on_next_entity(hass, long_press):
                         "publish_command_to_frame",
                         {"key": "setPlaybackSpeed", "val": _curr},
                     )
-                    _say_it(hass, ais_global.get_audio_speed_name(_curr))
+                    await _async_say_it(hass, ais_global.get_audio_speed_name(_curr))
                     return
     # no group is selected go to next in the groups view menu
     if CURR_GROUP is None:
@@ -1926,7 +1925,7 @@ def go_up_in_menu(hass):
                 CURR_ENTITIE = None
                 CURR_ENTITIE_ENTERED = False
                 PREV_CURR_GROUP["friendly_name"]
-                _say_it(hass, PREV_CURR_GROUP["friendly_name"])
+                await _async_say_it(hass, PREV_CURR_GROUP["friendly_name"])
             else:
                 # go home
                 go_home(hass)
@@ -1986,7 +1985,7 @@ def type_to_input_text(hass, key):
         else:
             CURR_VIRTUAL_KEYBOARD_VALUE = CURR_VIRTUAL_KEYBOARD_VALUE + chr(key)
 
-        _say_it(hass, "wpisano: " + chr(key))
+        await _async_say_it(hass, "wpisano: " + chr(key))
 
 
 def type_to_input_text_from_virtual_keyboard(hass):
@@ -1996,9 +1995,9 @@ def type_to_input_text_from_virtual_keyboard(hass):
         CURR_VIRTUAL_KEYBOARD_VALUE = ""
     if CURR_VIRTUAL_KEY is None:
         if get_curr_virtual_keyboard_mode() == "Usuwanie":
-            _say_it(hass, "wybierz tryb usuwania")
+            await _async_say_it(hass, "wybierz tryb usuwania")
         else:
-            _say_it(hass, "wybierz znak do wpisania")
+            await _async_say_it(hass, "wybierz znak do wpisania")
         return
 
     key = get_curr_virtual_key()
@@ -2031,7 +2030,7 @@ def type_to_input_text_from_virtual_keyboard(hass):
     elif km == "Usuwanie":
         text = "OK, usuwam " + key
 
-    _say_it(hass, text)
+    await _async_say_it(hass, text)
 
 
 def go_to_player(hass, say):
@@ -2053,7 +2052,7 @@ def go_to_player(hass, say):
             set_curr_entity(hass, "media_player.wbudowany_glosnik")
             CURR_ENTITIE_ENTERED = True
             if say:
-                _say_it(hass, "Sterowanie odtwarzaczem")
+                await _async_say_it(hass, "Sterowanie odtwarzaczem")
             break
 
 
@@ -2258,7 +2257,9 @@ async def async_process_json_from_frame(hass, json_req):
     elif topic == "ais/speech_command":
         try:
             # TODO add info if the intent is media player type - to publish
-            intent_resp = await _process(hass, payload, ais_gate_client_id, hot_word_on)
+            intent_resp = await _async_process(
+                hass, payload, ais_gate_client_id, hot_word_on
+            )
             resp_text = intent_resp.speech["plain"]["speech"]
             res = {"ais": "ok", "say_it": resp_text}
         except Exception as e:
@@ -2286,7 +2287,6 @@ async def async_process_json_from_frame(hass, json_req):
     return json_response(res)
 
 
-@asyncio.coroutine
 async def async_setup(hass, config):
     """Register the process service."""
     warnings.filterwarnings("ignore", module="fuzzywuzzy")
@@ -2301,37 +2301,28 @@ async def async_setup(hass, config):
             conf = intents[intent_type] = []
         conf.extend(_create_matcher(utterance) for utterance in utterances)
 
-    @asyncio.coroutine
     async def process(service):
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
-        await _process(hass, text)
+        await _async_process(hass, text)
 
-    def process_code(service):
+    async def async_process_code(service):
         """Parse remote code into action."""
         text = json.loads(service.data.get(ATTR_TEXT))
-        _process_code(hass, text)
+        await _async_process_code(hass, text)
 
-    def say_it(service):
+    async def async_say_it(service):
         """Info to the user."""
         text = ""
+        img = None
         if ATTR_TEXT in service.data:
             text = service.data[ATTR_TEXT]
-        # TODO else:
-        #     # check message template
-        #     if "template_text" in service.data:
-        #         tpl = template.Template(service.data["template_text"], hass)
-        #         message = tpl.async_render()
-        #     else:
-        #         return
         if "img" in service.data:
             img = service.data["img"]
             if img is not None:
                 if len(img) < 3:
                     img = None
-        else:
-            img = None
-        _say_it(hass, text, img)
+       await _async_say_it(hass, message=text, img=img)
 
     def say_in_browser(service):
         """Info to the via browser - this is handled by ais-tts in card"""
@@ -2350,13 +2341,12 @@ async def async_setup(hass, config):
                 "Uwaga, uruchomienie bez dostępu do sieci, część usług może nie działać poprawnie."
                 "Sprawdź połączenie z Internetem."
             )
-        _say_it(hass, text)
+        await _async_say_it(hass, text)
 
         # set the flag to info that the AIS start part is done - this is needed to don't say some info before this flag
         ais_global.G_AIS_START_IS_DONE = True
 
-    @asyncio.coroutine
-    def set_context(service):
+    async def async_set_context(service):
         """Set the context in app."""
         context = service.data[ATTR_TEXT]
         for idx, menu in enumerate(GROUP_ENTITIES, start=0):
@@ -2367,7 +2357,7 @@ async def async_setup(hass, config):
                     set_curr_group(hass, menu)
                     set_curr_entity(hass, None)
                     if context == "spotify":
-                        yield from hass.services.async_call(
+                        await hass.services.async_call(
                             "input_select",
                             "select_option",
                             {
@@ -2376,7 +2366,7 @@ async def async_setup(hass, config):
                             },
                         )
                     elif context == "youtube":
-                        yield from hass.services.async_call(
+                        await hass.services.async_call(
                             "input_select",
                             "select_option",
                             {
@@ -2386,8 +2376,7 @@ async def async_setup(hass, config):
                         )
                     break
 
-    @asyncio.coroutine
-    def check_local_ip(service):
+    async def async_check_local_ip(service):
         """Set the local ip in app."""
         ip = ais_global.get_my_global_ip()
         hass.states.async_set(
@@ -2396,12 +2385,11 @@ async def async_setup(hass, config):
             {"friendly_name": "Lokalny adres IP", "icon": "mdi:access-point-network"},
         )
 
-    @asyncio.coroutine
-    def switch_ui(service):
+    async def async_switch_ui(service):
         mode = service.data["mode"]
         if mode in ("YouTube", "Spotify"):
             hass.states.async_set("sensor.ais_player_mode", "music_player")
-            yield from hass.services.async_call(
+            await hass.services.async_call(
                 "input_select",
                 "select_option",
                 {"entity_id": "input_select.ais_music_service", "option": mode},
@@ -2411,15 +2399,98 @@ async def async_setup(hass, config):
         elif mode == "Podcast":
             hass.states.async_set("sensor.ais_player_mode", "podcast_player")
 
-    @asyncio.coroutine
-    def publish_command_to_frame(service):
+    async def async_publish_command_to_frame(service):
         key = service.data["key"]
         val = service.data["val"]
         ip = "localhost"
         if "ip" in service.data:
             if service.data["ip"] is not None:
                 ip = service.data["ip"]
-        _publish_command_to_frame(hass, key, val, ip)
+        # sent the command to the android frame via http
+        url = ais_global.G_HTTP_REST_SERVICE_BASE_URL.format(ip)
+
+        if key == "WifiConnectToSid":
+            ssid = val.split(";")[0]
+            if ssid is None or ssid == "-" or ssid == "":
+                await _async_say_it(hass, "Wybierz sieć WiFi z listy")
+                return
+
+            # TODO get password from file
+            password = hass.states.get("input_text.ais_android_wifi_password").state
+            if len(password.strip()) == 0:
+                await _async_say_it(hass, "ok, przełączam na sieć: " + ssid)
+            else:
+                await _async_say_it(hass, "ok, łączę z siecią: " + ssid)
+
+            wifi_type = val.split(";")[-3]
+            bssid = val.split(";")[-1].replace("MAC:", "").strip()
+            requests_json = {
+                key: ssid,
+                "ip": ip,
+                "WifiNetworkPass": password,
+                "WifiNetworkType": wifi_type,
+                "bssid": bssid,
+            }
+
+        elif key == "WifiConnectTheDevice":
+            iot = val.split(";")[0]
+            if iot == ais_global.G_EMPTY_OPTION:
+                await _async_say_it(hass, "wybierz urządzenie które mam dołączyć")
+                return
+            # check if wifi is selected
+            ssid = hass.states.get("input_select.ais_android_wifi_network").state.split(
+                ";"
+            )[0]
+            if ssid == ais_global.G_EMPTY_OPTION:
+                await _async_say_it(hass, "wybierz wifi do której mam dołączyć urządzenie")
+                return
+
+            # take bssid
+            bssid = val.split(";")[-1].replace("MAC:", "").strip()
+
+            # check the frequency
+            wifi_frequency_mhz = val.split(";")[-2]
+            if not wifi_frequency_mhz.startswith("2.4"):
+                await _async_say_it(
+                    hass,
+                    "Urządzenia mogą pracować tylko w sieci 2.4 GHz, wybierz inną sieć.",
+                )
+
+            # check if name is selected, if not then add the device name
+            name = hass.states.get("input_text.ais_iot_device_name").state
+            # friendly name (32 chars max)
+            if name == "":
+                name = iot
+            if len(name) > 32:
+                await _async_say_it(hass, "nazwa urządzenie może mieć maksymalnie 32 znaki")
+                return
+            await _async_say_it(hass, "OK, dodajemy: " + name)
+            password = hass.states.get("input_text.ais_iot_device_wifi_password").state
+
+            # save the time when this was executed
+            # to inform the user about new device
+            import time
+
+            ais_global.G_AIS_NEW_DEVICE_NAME = name
+            ais_global.G_AIS_NEW_DEVICE_START_ADD_TIME = time.time()
+            requests_json = {
+                key: iot,
+                "ip": ip,
+                "WifiNetworkPass": password,
+                "WifiNetworkSsid": ssid,
+                "IotName": name,
+                "bsssid": bssid,
+            }
+        else:
+            requests_json = {key: val, "ip": ip}
+
+        # todo async
+        try:
+            async with aiohttp.ClientSession() as session:
+                await session.post(url + "/command", json=requests_json, timeout=2)
+        except:
+            # non on gate
+            pass
 
     # old
     def process_command_from_frame(service):
@@ -2487,8 +2558,7 @@ async def async_setup(hass, config):
                         },
                     )
 
-    @asyncio.coroutine
-    def check_night_mode(service):
+    async def async_check_night_mode(service):
         # check the night / quiet mode
         timer = False
         if "timer" in service.data:
@@ -2496,7 +2566,7 @@ async def async_setup(hass, config):
         quiet_mode = hass.states.get("input_boolean.ais_quiet_mode").state
 
         def apply_night_mode():
-            _LOGGER.info("Start Night ")
+            _LOGGER.debug("Start Night ")
             ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL = hass.states.get(
                 "media_player.wbudowany_glosnik"
             ).attributes["volume_level"]
@@ -2608,24 +2678,24 @@ async def async_setup(hass, config):
 
     # register services
     hass.services.async_register(DOMAIN, "process", process)
-    hass.services.async_register(DOMAIN, "process_code", process_code)
-    hass.services.async_register(DOMAIN, "say_it", say_it)
+    hass.services.async_register(DOMAIN, "process_code", async_process_code)
+    hass.services.async_register(DOMAIN, "say_it", async_say_it)
     hass.services.async_register(DOMAIN, "say_in_browser", say_in_browser)
     hass.services.async_register(DOMAIN, "welcome_home", welcome_home)
     hass.services.async_register(
-        DOMAIN, "publish_command_to_frame", publish_command_to_frame
+        DOMAIN, "publish_command_to_frame", async_publish_command_to_frame
     )
     hass.services.async_register(
-        DOMAIN, "process_command_from_frame", process_command_from_frame
+        DOMAIN, "process_command_from_frame", async_process_command_from_frame
     )
     hass.services.async_register(DOMAIN, "prepare_remote_menu", prepare_remote_menu)
     hass.services.async_register(
         DOMAIN, "on_new_iot_device_selection", on_new_iot_device_selection
     )
-    hass.services.async_register(DOMAIN, "set_context", set_context)
-    hass.services.async_register(DOMAIN, "check_local_ip", check_local_ip)
-    hass.services.async_register(DOMAIN, "switch_ui", switch_ui)
-    hass.services.async_register(DOMAIN, "check_night_mode", check_night_mode)
+    hass.services.async_register(DOMAIN, "set_context", async_set_context)
+    hass.services.async_register(DOMAIN, "check_local_ip", async_check_local_ip)
+    hass.services.async_register(DOMAIN, "switch_ui", async_switch_ui)
+    hass.services.async_register(DOMAIN, "check_night_mode", async_check_night_mode)
 
     # register intents
     hass.helpers.intent.async_register(GetTimeIntent())
@@ -2856,110 +2926,19 @@ async def async_setup(hass, config):
         },
     )
 
-    async def ais_run_each_minute(now):
+    async def async_ais_run_each_minute(now):
         await hass.services.async_call(
             "ais_ai_service", "check_night_mode", {"timer": True}
         )
 
     # run each minute at first second
     _dt = dt_util.utcnow()
-    event.async_track_utc_time_change(hass, ais_run_each_minute, second=1)
+    event.async_track_utc_time_change(hass, async_ais_run_each_minute, second=1)
 
     # AIS agent
     agent = AisAgent(hass)
     conversation.async_set_agent(hass, agent)
     return True
-
-
-def _publish_command_to_frame(hass, key, val, ip):
-    # sent the command to the android frame via http
-    url = ais_global.G_HTTP_REST_SERVICE_BASE_URL.format(ip)
-
-    if key == "WifiConnectToSid":
-        ssid = val.split(";")[0]
-        if ssid is None or ssid == "-" or ssid == "":
-            _say_it(hass, "Wybierz sieć WiFi z listy")
-            return
-
-        # TODO get password from file
-        password = hass.states.get("input_text.ais_android_wifi_password").state
-        if len(password.strip()) == 0:
-            _say_it(hass, "ok, przełączam na sieć: " + ssid)
-        else:
-            _say_it(hass, "ok, łączę z siecią: " + ssid)
-
-        wifi_type = val.split(";")[-3]
-        bssid = val.split(";")[-1].replace("MAC:", "").strip()
-        requests.post(
-            url + "/command",
-            json={
-                key: ssid,
-                "ip": ip,
-                "WifiNetworkPass": password,
-                "WifiNetworkType": wifi_type,
-                "bssid": bssid,
-            },
-            timeout=2,
-        )
-
-    elif key == "WifiConnectTheDevice":
-        iot = val.split(";")[0]
-        if iot == ais_global.G_EMPTY_OPTION:
-            _say_it(hass, "wybierz urządzenie które mam dołączyć")
-            return
-        # check if wifi is selected
-        ssid = hass.states.get("input_select.ais_android_wifi_network").state.split(
-            ";"
-        )[0]
-        if ssid == ais_global.G_EMPTY_OPTION:
-            _say_it(hass, "wybierz wifi do której mam dołączyć urządzenie")
-            return
-
-        # take bssid
-        bssid = val.split(";")[-1].replace("MAC:", "").strip()
-
-        # check the frequency
-        wifi_frequency_mhz = val.split(";")[-2]
-        if not wifi_frequency_mhz.startswith("2.4"):
-            _say_it(
-                hass,
-                "Urządzenia mogą pracować tylko w sieci 2.4 GHz, wybierz inną sieć.",
-            )
-
-        # check if name is selected, if not then add the device name
-        name = hass.states.get("input_text.ais_iot_device_name").state
-        # friendly name (32 chars max)
-        if name == "":
-            name = iot
-        if len(name) > 32:
-            _say_it(hass, "nazwa urządzenie może mieć maksymalnie 32 znaki")
-            return
-        _say_it(hass, "OK, dodajemy: " + name)
-        password = hass.states.get("input_text.ais_iot_device_wifi_password").state
-
-        # save the time when this was executed
-        # to inform the user about new device
-        import time
-
-        ais_global.G_AIS_NEW_DEVICE_NAME = name
-        ais_global.G_AIS_NEW_DEVICE_START_ADD_TIME = time.time()
-        requests.post(
-            url + "/command",
-            json={
-                key: iot,
-                "ip": ip,
-                "WifiNetworkPass": password,
-                "WifiNetworkSsid": ssid,
-                "IotName": name,
-                "bsssid": bssid,
-            },
-            timeout=2,
-        )
-    else:
-        try:
-            requests.post(url + "/command", json={key: val, "ip": ip}, timeout=2)
-        except Exception as e:
-            pass
 
 
 def _wifi_rssi_to_info(rssi):
@@ -3015,7 +2994,7 @@ def _publish_wifi_status(hass, service):
     return len(wifis_names) - 1
 
 
-def _process_command_from_frame(hass, service):
+async def async_process_command_from_frame(hass, service):
     # process from frame
     if "web_hook_json" in service.data:
         import ast
@@ -3025,17 +3004,15 @@ def _process_command_from_frame(hass, service):
         return
 
     if service.data["topic"] == "ais/speech_command":
-        hass.async_run_job(
-            hass.services.async_call(
-                "conversation", "process", {"text": service.data["payload"]}
-            )
+        await hass.services.async_call(
+            "conversation", "process", {"text": service.data["payload"]}
         )
         return
     elif service.data["topic"] == "ais/key_command":
-        _process_code(hass, json.loads(service.data["payload"]))
+        await _async_process_code(hass, json.loads(service.data["payload"]))
         return
     elif service.data["topic"] == "ais/speech_text":
-        _say_it(hass, service.data["payload"])
+        await _async_say_it(hass, service.data["payload"])
         return
     elif service.data["topic"] == "ais/speech_status":
         # TODO pause/resume, service.data["payload"] can be: START -> DONE/ERROR
@@ -3064,7 +3041,7 @@ def _process_command_from_frame(hass, service):
         return
     elif service.data["topic"] == "ais/player_speed":
         # speed = json.loads(service.data["payload"])
-        # _say_it(hass, "prędkość odtwarzania: " + str(speed["currentSpeed"]))
+        # await _async_say_it(hass, "prędkość odtwarzania: " + str(speed["currentSpeed"]))
         # hass.services.call(
         #     'input_number',
         #     'set_value', {
@@ -3074,7 +3051,7 @@ def _process_command_from_frame(hass, service):
     elif service.data["topic"] == "ais/wifi_scan_info":
         len_wifis = _publish_wifi_status(hass, service)
         info = "Mamy dostępne " + str(len_wifis) + " wifi."
-        _say_it(hass, info)
+        await _async_say_it(hass, info)
         return
     elif service.data["topic"] == "ais/iot_scan_info":
         iot = json.loads(service.data["payload"])
@@ -3155,7 +3132,7 @@ def _process_command_from_frame(hass, service):
                     {"entity_id": "input_select.ais_iot_devices_in_network"},
                 )
             )
-        _say_it(hass, info)
+        await _async_say_it(hass, info)
         return
     elif service.data["topic"] == "ais/wifi_status_info":
         _publish_wifi_status(hass, service)
@@ -3325,33 +3302,8 @@ def _process_command_from_frame(hass, service):
     return
 
 
-def _post_message(message, hass, exclude_say_it=None):
+async def _async_post_message(message, hass, exclude_say_it=None):
     """Post the message to TTS service."""
-    # message = message.replace("°C", "stopni Celsjusza")
-    # message = message.replace("(Pobrane z Google)", "")
-    # replace emoticons
-    # emoji_pattern = re.compile(
-    #     "["
-    #     "\U0001F600-\U0001F64F"  # emoticons
-    #     "\U0001F300-\U0001F5FF"  # symbols & pictographs
-    #     "\U0001F680-\U0001F6FF"  # transport & map symbols
-    #     "\U0001F1E0-\U0001F1FF"  # flags (iOS)
-    #     "\U0001F1F2-\U0001F1F4"  # Macau flag
-    #     "\U0001F1E6-\U0001F1FF"  # flags
-    #     "\U0001F600-\U0001F64F"
-    #     "\U00002702-\U000027B0"
-    #     "\U000024C2-\U0001F251"
-    #     "\U0001f926-\U0001f937"
-    #     "\U0001F1F2"
-    #     "\U0001F1F4"
-    #     "\U0001F620"
-    #     "\u200d"
-    #     "\u2640-\u2642"
-    #     "]+",
-    #     flags=re.UNICODE,
-    # )
-    #
-    # text = emoji_pattern.sub(r"", message)
     j_data = {
         "text": message,
         "pitch": ais_global.GLOBAL_TTS_PITCH,
@@ -3373,13 +3325,15 @@ def _post_message(message, hass, exclude_say_it=None):
         )
     )
     try:
-        requests.post(
-            ais_global.G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1")
-            + "/text_to_speech",
-            json=j_data,
-            timeout=1,
-        )
-    except Exception as e:
+        async with aiohttp.ClientSession() as session:
+            await session.post(
+                ais_global.G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1")
+                + "/text_to_speech",
+                json=j_data,
+                timeout=1,
+            )
+    except:
+        # non on gate
         pass
     # do the same for speakers in the group
     for s in ais_global.G_SPEAKERS_GROUP_LIST:
@@ -3390,15 +3344,17 @@ def _post_message(message, hass, exclude_say_it=None):
                 "1111111111111111111",
             ):
                 try:
-                    requests.post(
-                        ais_global.G_HTTP_REST_SERVICE_BASE_URL.format(
-                            attr["device_ip"]
+                    async with aiohttp.ClientSession() as session:
+                        await session.post(
+                            ais_global.G_HTTP_REST_SERVICE_BASE_URL.format(
+                                attr["device_ip"]
+                            )
+                            + "/text_to_speech",
+                            json=j_data,
+                            timeout=1,
                         )
-                        + "/text_to_speech",
-                        json=j_data,
-                        timeout=1,
-                    )
-                except Exception:
+                except:
+                    # non on gate
                     pass
 
 
@@ -3410,10 +3366,10 @@ def _beep_it(hass, tone):
     )
 
 
-def _say_it(hass, message, img=None, exclude_say_it=None):
+async def _async_say_it(hass, message, img=None, exclude_say_it=None):
     # sent the tts message to the panel via http api
     message = message.replace("°C", "stopni Celsjusza")
-    _post_message(message, hass, exclude_say_it)
+    await _async_post_message(message, hass, exclude_say_it)
 
     if len(message) > 1999:
         tts_text = message[0:1999] + "..."
@@ -3461,7 +3417,7 @@ def _create_matcher(utterance):
     return re.compile("".join(pattern), re.I)
 
 
-def _process_code(hass, data):
+async def _async_process_code(hass, data):
     """Process a code from remote."""
     global CURR_BUTTON_CODE
     global CURR_BUTTON_LONG_PRESS
@@ -3502,7 +3458,7 @@ def _process_code(hass, data):
     # set the code in global variable
     CURR_BUTTON_CODE = code
     # show the code in web app
-    hass.states.set("binary_sensor.ais_remote_button", code)
+    hass.states.async_set("binary_sensor.ais_remote_button", code)
 
     # remove selected action
     remove_selected_action(code)
@@ -3581,8 +3537,7 @@ def get_context_suffix(hass):
     return context_suffix
 
 
-@asyncio.coroutine
-def _process(hass, text, calling_client_id=None, hot_word_on=False):
+async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
     """Process a line of text."""
     global CURR_VIRTUAL_KEYBOARD_VALUE
     # clear text
@@ -3590,9 +3545,13 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
     text = text.replace("-", " ").lower()
     # check if the text input is selected
     #  binary_sensor.selected_entity / binary_sensor.ais_remote_button
-    if CURR_ENTITIE_ENTERED and CURR_ENTITIE is not None:
+    if (
+        CURR_ENTITIE_ENTERED
+        and CURR_ENTITIE is not None
+        and CURR_ENTITIE.startswith("input_text.")
+    ):
         if CURR_ENTITIE.startswith("input_text."):
-            yield from hass.services.async_call(
+            await hass.services.async_call(
                 "input_text", "set_value", {"entity_id": CURR_ENTITIE, "value": text}
             )
             # return response to the hass conversation
@@ -3612,7 +3571,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
     ha_agent = hass.data.get("ha_conversation_agent")
     if ha_agent is None:
         ha_agent = hass.data["ha_conversation_agent"] = DefaultAgent(hass)
-        yield from ha_agent.async_initialize(hass.data.get("conversation_config"))
+        await ha_agent.async_initialize(hass.data.get("conversation_config"))
 
     # first check the conversation intents
     conv_intents = hass.data.get("conversation", {})
@@ -3621,7 +3580,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
             match = matcher.match(text)
             if not match:
                 continue
-            response = yield from hass.helpers.intent.async_handle(
+            response = await hass.helpers.intent.async_handle(
                 "conversation",
                 intent_type,
                 {key: {"value": value} for key, value in match.groupdict().items()},
@@ -3640,7 +3599,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
                 if match:
                     # we have a match
                     found_intent = intent_type
-                    m, s = yield from hass.helpers.intent.async_handle(
+                    m, s = await hass.helpers.intent.async_handle(
                         DOMAIN,
                         intent_type,
                         {
@@ -3653,14 +3612,14 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
         # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is radio or podcast???
         if s is False and found_intent == INTENT_TURN_ON:
             m_org = m
-            m, s = yield from hass.helpers.intent.async_handle(
+            m, s = await hass.helpers.intent.async_handle(
                 DOMAIN,
                 INTENT_PLAY_RADIO,
                 {key: {"value": value} for key, value in match.groupdict().items()},
                 text.replace("włącz", "włącz radio"),
             )
             if s is False:
-                m, s = yield from hass.helpers.intent.async_handle(
+                m, s = await hass.helpers.intent.async_handle(
                     DOMAIN,
                     INTENT_PLAY_PODCAST,
                     {key: {"value": value} for key, value in match.groupdict().items()},
@@ -3671,7 +3630,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
         # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is climate???
         if s is False and found_intent == INTENT_TURN_ON and "ogrzewanie" in text:
             m_org = m
-            m, s = yield from hass.helpers.intent.async_handle(
+            m, s = await hass.helpers.intent.async_handle(
                 DOMAIN,
                 INTENT_CLIMATE_SET_ALL_ON,
                 {key: {"value": value} for key, value in match.groupdict().items()},
@@ -3682,7 +3641,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
         # the item was match as INTENT_TURN_OFF but we don't have such device - maybe it is climate???
         if s is False and found_intent == INTENT_TURN_OFF and "ogrzewanie" in text:
             m_org = m
-            m, s = yield from hass.helpers.intent.async_handle(
+            m, s = await hass.helpers.intent.async_handle(
                 DOMAIN,
                 INTENT_CLIMATE_SET_ALL_OFF,
                 {key: {"value": value} for key, value in match.groupdict().items()},
@@ -3715,7 +3674,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
                         if match:
                             # we have a match
                             found_intent = intent_type
-                            m, s = yield from hass.helpers.intent.async_handle(
+                            m, s = await hass.helpers.intent.async_handle(
                                 DOMAIN,
                                 intent_type,
                                 {
@@ -3766,10 +3725,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
                                     if match:
                                         # we have a match
                                         found_intent = intent_type
-                                        (
-                                            m,
-                                            s,
-                                        ) = yield from hass.helpers.intent.async_handle(
+                                        (m, s) = await hass.helpers.intent.async_handle(
                                             DOMAIN,
                                             intent_type,
                                             {
@@ -3800,7 +3756,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
     if m.startswith("DO_NOT_SAY"):
         m = m.replace("DO_NOT_SAY", "")
     else:
-        _say_it(hass, m, exclude_say_it=calling_client_id)
+        await _async_say_it(hass, m, exclude_say_it=calling_client_id)
     # return response to the hass conversation
     intent_resp = intent.IntentResponse()
     # intent_resp.async_set_card("Beer ordered", "You chose a XXX")
@@ -3832,8 +3788,7 @@ class TurnOnIntent(intent.IntentHandler):
     intent_type = INTENT_TURN_ON
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle turn on intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -3856,7 +3811,7 @@ class TurnOnIntent(intent.IntentHandler):
                     else:
                         assumed_state = True
                 if assumed_state:
-                    yield from hass.services.async_call(
+                    await hass.services.async_call(
                         core.DOMAIN,
                         SERVICE_TURN_ON,
                         {ATTR_ENTITY_ID: entity.entity_id},
@@ -3875,8 +3830,7 @@ class TurnOffIntent(intent.IntentHandler):
     intent_type = INTENT_TURN_OFF
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle turn off intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -3898,7 +3852,7 @@ class TurnOffIntent(intent.IntentHandler):
                     else:
                         assumed_state = True
                 if assumed_state:
-                    yield from hass.services.async_call(
+                    await hass.services.async_call(
                         core.DOMAIN,
                         SERVICE_TURN_OFF,
                         {ATTR_ENTITY_ID: entity.entity_id},
@@ -3917,8 +3871,7 @@ class StatusIntent(intent.IntentHandler):
     intent_type = INTENT_STATUS
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle status intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -3947,8 +3900,7 @@ class SpellStatusIntent(intent.IntentHandler):
     intent_type = INTENT_SPELL_STATUS
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle status intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -3977,8 +3929,7 @@ class PlayRadioIntent(intent.IntentHandler):
     intent_type = INTENT_PLAY_RADIO
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -3997,9 +3948,7 @@ class PlayRadioIntent(intent.IntentHandler):
             if len(name.replace(" ", "")) == 0:
                 message = "Niestety nie znajduję radia " + station
             else:
-                yield from hass.services.async_call(
-                    "ais_cloud", "play_audio", json_ws_resp
-                )
+                await hass.services.async_call("ais_cloud", "play_audio", json_ws_resp)
                 message = "OK, gramy radio " + name
                 success = True
         return message, success
@@ -4011,8 +3960,7 @@ class AisPlayPodcastIntent(intent.IntentHandler):
     intent_type = INTENT_PLAY_PODCAST
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -4031,9 +3979,7 @@ class AisPlayPodcastIntent(intent.IntentHandler):
             if len(name.replace(" ", "")) == 0:
                 message = "Niestety nie znajduję podcasta " + item
             else:
-                yield from hass.services.async_call(
-                    "ais_cloud", "play_audio", json_ws_resp
-                )
+                await hass.services.async_call("ais_cloud", "play_audio", json_ws_resp)
                 message = "OK, pobieram odcinki audycji " + item
                 success = True
         return message, success
@@ -4045,8 +3991,7 @@ class AisPlayYtMusicIntent(intent.IntentHandler):
     intent_type = INTENT_PLAY_YT_MUSIC
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -4056,14 +4001,11 @@ class AisPlayYtMusicIntent(intent.IntentHandler):
         if not item:
             message = "Nie wiem jaką muzykę mam szukać "
         else:
-            yield from hass.services.async_call(
-                "ais_yt_service", "search", {"query": item}
-            )
+            await hass.services.async_call("ais_yt_service", "search", {"query": item})
             # switch UI to YT
-            yield from hass.services.async_call(
+            await hass.services.async_call(
                 "ais_ai_service", "switch_ui", {"mode": "YouTube"}
             )
-            #
             message = "OK, szukam na YouTube " + item
             success = True
         return message, success
@@ -4075,23 +4017,28 @@ class AisPlaySpotifyIntent(intent.IntentHandler):
     intent_type = INTENT_PLAY_SPOTIFY
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
         item = slots["item"]["value"]
         success = False
-        # TODO check if we have Spotify enabled
+        # check if we have Spotify enabled
+        if not hass.services.has_service("ais_spotify_service", "search"):
+            message = (
+                "Żeby słuchać muzyki z serwisu Spotify, dodaj integrację AIS Spotify. Więcej informacji "
+                "znajdziesz w dokumentacji [Asystenta domowego](https://www.ai-speaker.com). "
+            )
+            return message, True
 
         if not item:
             message = "Nie wiem jaką muzykę mam szukać "
         else:
-            yield from hass.services.async_call(
+            await hass.services.async_call(
                 "ais_spotify_service", "search", {"query": item}
             )
             # switch UI to Spotify
-            yield from hass.services.async_call(
+            await hass.services.async_call(
                 "ais_ai_service", "switch_ui", {"mode": "Spotify"}
             )
             #
@@ -4106,8 +4053,7 @@ class AskQuestionIntent(intent.IntentHandler):
     intent_type = INTENT_ASK_QUESTION
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -4119,7 +4065,7 @@ class AskQuestionIntent(intent.IntentHandler):
         else:
             from homeassistant.components import ais_knowledge_service
 
-            message = yield from ais_knowledge_service.process_ask_async(hass, question)
+            message = await ais_knowledge_service.async_process_ask(hass, question)
         return "DO_NOT_SAY " + message, True
 
 
@@ -4129,8 +4075,7 @@ class AskWikiQuestionIntent(intent.IntentHandler):
     intent_type = INTENT_ASKWIKI_QUESTION
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -4142,9 +4087,7 @@ class AskWikiQuestionIntent(intent.IntentHandler):
         else:
             from homeassistant.components import ais_knowledge_service
 
-            message = yield from ais_knowledge_service.process_ask_wiki_async(
-                hass, question
-            )
+            message = await ais_knowledge_service.async_process_ask(hass, question)
 
         return "DO_NOT_SAY " + message, True
 
@@ -4154,8 +4097,7 @@ class ChangeContextIntent(intent.IntentHandler):
 
     intent_type = INTENT_CHANGE_CONTEXT
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         if len(GROUP_ENTITIES) == 0:
@@ -4171,7 +4113,7 @@ class ChangeContextIntent(intent.IntentHandler):
                     message = menu["context_answer"]
                     # special case spotify and youtube
                     if text == "spotify":
-                        yield from hass.services.async_call(
+                        await hass.services.async_call(
                             "input_select",
                             "select_option",
                             {
@@ -4180,7 +4122,7 @@ class ChangeContextIntent(intent.IntentHandler):
                             },
                         )
                     elif text == "youtube":
-                        yield from hass.services.async_call(
+                        await hass.services.async_call(
                             "input_select",
                             "select_option",
                             {
@@ -4199,8 +4141,7 @@ class GetTimeIntent(intent.IntentHandler):
 
     intent_type = INTENT_GET_TIME
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         import babel.dates
 
@@ -4214,8 +4155,7 @@ class AisGetWeather(intent.IntentHandler):
 
     intent_type = INTENT_GET_WEATHER
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         # weather = hass.states.get('sensor.pogoda_info').state
@@ -4246,8 +4186,7 @@ class AisGetWeather48(intent.IntentHandler):
 
     intent_type = INTENT_GET_WEATHER_48
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         weather = hass.states.get("sensor.dark_sky_daily_summary").state
@@ -4259,11 +4198,10 @@ class AisLampsOn(intent.IntentHandler):
 
     intent_type = INTENT_LAMPS_ON
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "light", "turn_on", {"entity_id": "group.all_lights"}
         )
         return "ok", True
@@ -4274,11 +4212,10 @@ class AisLampsOff(intent.IntentHandler):
 
     intent_type = INTENT_LAMPS_OFF
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "light", "turn_off", {"entity_id": "group.all_lights"}
         )
         return "ok", True
@@ -4289,11 +4226,10 @@ class AisSwitchesOn(intent.IntentHandler):
 
     intent_type = INTENT_SWITCHES_ON
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "switch", "turn_on", {"entity_id": "group.all_switches"}
         )
         return "ok", True
@@ -4304,11 +4240,10 @@ class AisSwitchesOff(intent.IntentHandler):
 
     intent_type = INTENT_SWITCHES_OFF
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "switch", "turn_off", {"entity_id": "group.all_switches"}
         )
         return "ok", True
@@ -4319,8 +4254,7 @@ class GetDateIntent(intent.IntentHandler):
 
     intent_type = INTENT_GET_DATE
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         import babel.dates
 
@@ -4335,8 +4269,7 @@ class AisOpenCover(intent.IntentHandler):
     intent_type = INTENT_OPEN_COVER
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -4355,11 +4288,8 @@ class AisOpenCover(intent.IntentHandler):
                 elif entity.state == "unavailable":
                     message = "Urządzenie " + name + " jest niedostępne"
                 else:
-                    yield from hass.services.async_call(
-                        "cover",
-                        SERVICE_OPEN_COVER,
-                        {ATTR_ENTITY_ID: entity.entity_id},
-                        blocking=True,
+                    await hass.services.async_call(
+                        "cover", SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: entity.entity_id}
                     )
                     message = "OK, otwieram {}".format(entity.name)
                 success = True
@@ -4374,8 +4304,7 @@ class AisCloseCover(intent.IntentHandler):
     intent_type = INTENT_CLOSE_COVER
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle turn off intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -4393,11 +4322,8 @@ class AisCloseCover(intent.IntentHandler):
                 elif entity.state == "unavailable":
                     msg = "Urządzenie {} jest niedostępne".format(entity.name)
                 else:
-                    yield from hass.services.async_call(
-                        "cover",
-                        SERVICE_CLOSE_COVER,
-                        {ATTR_ENTITY_ID: entity.entity_id},
-                        blocking=True,
+                    await hass.services.async_call(
+                        "cover", SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: entity.entity_id}
                     )
                     msg = "OK, zamykam {}".format(entity.name)
                     success = True
@@ -4411,11 +4337,10 @@ class AisStop(intent.IntentHandler):
 
     intent_type = INTENT_STOP
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "media_player", "media_stop", {"entity_id": "all"}
         )
         message = "ok, stop"
@@ -4427,11 +4352,10 @@ class AisPlay(intent.IntentHandler):
 
     intent_type = INTENT_PLAY
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "media_player",
             "media_play",
             {ATTR_ENTITY_ID: "media_player.wbudowany_glosnik"},
@@ -4445,11 +4369,10 @@ class AisNext(intent.IntentHandler):
 
     intent_type = INTENT_NEXT
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "media_player",
             "media_next_track",
             {ATTR_ENTITY_ID: "media_player.wbudowany_glosnik"},
@@ -4463,11 +4386,10 @@ class AisPrev(intent.IntentHandler):
 
     intent_type = INTENT_PREV
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "media_player",
             "media_previous_track",
             {ATTR_ENTITY_ID: "media_player.wbudowany_glosnik"},
@@ -4482,8 +4404,7 @@ class AisSceneActive(intent.IntentHandler):
     intent_type = INTENT_SCENE
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -4496,11 +4417,8 @@ class AisSceneActive(intent.IntentHandler):
         else:
             # check if we can open on this device
             if entity.entity_id.startswith("scene."):
-                yield from hass.services.async_call(
-                    "scene",
-                    "turn_on",
-                    {ATTR_ENTITY_ID: entity.entity_id},
-                    blocking=True,
+                await hass.services.async_call(
+                    "scene", "turn_on", {ATTR_ENTITY_ID: entity.entity_id}
                 )
                 message = "OK, aktywuję {}".format(entity.name)
                 success = True
@@ -4515,8 +4433,7 @@ class AisRunAutomation(intent.IntentHandler):
     intent_type = INTENT_RUN_AUTOMATION
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -4529,7 +4446,7 @@ class AisRunAutomation(intent.IntentHandler):
         else:
             # check if we can open on this device
             if entity.entity_id.startswith("automation."):
-                yield from hass.services.async_call(
+                await hass.services.async_call(
                     "automation", "trigger", {ATTR_ENTITY_ID: entity.entity_id}
                 )
                 message = "OK, uruchamiam {}".format(entity.name)
@@ -4545,15 +4462,14 @@ class AisAskGoogle(intent.IntentHandler):
     intent_type = INTENT_ASK_GOOGLE
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
         hass = intent_obj.hass
         command = slots["item"]["value"]
 
         if hass.services.has_service("ais_google_home", "command"):
-            yield from hass.services.async_call(
+            await hass.services.async_call(
                 "ais_google_home", "command", {"text": command}
             )
             m = ""
@@ -4574,8 +4490,7 @@ class AisSayIt(intent.IntentHandler):
     intent_type = INTENT_SAY_IT
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         try:
             slots = self.async_validate_slots(intent_obj.slots)
@@ -4608,8 +4523,7 @@ class AisClimateSetTemperature(intent.IntentHandler):
     intent_type = INTENT_CLIMATE_SET_TEMPERATURE
     slot_schema = {"temp": cv.string, "item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         try:
             hass = intent_obj.hass
@@ -4640,11 +4554,10 @@ class AisClimateSetTemperature(intent.IntentHandler):
                         entity.name, temp, "stopni"
                     )
                 else:
-                    yield from hass.services.async_call(
+                    await hass.services.async_call(
                         "climate",
                         "set_temperature",
                         {ATTR_ENTITY_ID: entity.entity_id, "temperature": temp},
-                        blocking=True,
                     )
                     msg = "OK, ustawiono temperaturę {} {} w {}".format(
                         temp, "stopni", entity.name
@@ -4661,8 +4574,7 @@ class AisClimateSetPresentMode(intent.IntentHandler):
     intent_type = INTENT_CLIMATE_SET_PRESENT_MODE
     slot_schema = {"item": cv.string}
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
         hass = intent_obj.hass
@@ -4692,7 +4604,7 @@ class AisClimateSetPresentMode(intent.IntentHandler):
             present_mode = "activity"
 
         if present_mode != "":
-            yield from hass.services.async_call(
+            await hass.services.async_call(
                 "climate",
                 "set_preset_mode",
                 {"entity_id": "all", "preset_mode": present_mode},
@@ -4708,11 +4620,10 @@ class AisClimateSetAllOn(intent.IntentHandler):
 
     intent_type = INTENT_CLIMATE_SET_ALL_ON
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "climate", "set_hvac_mode", {"entity_id": "all", "hvac_mode": "heat"}
         )
         message = "ok, całe ogrzewanie włączone"
@@ -4724,92 +4635,11 @@ class AisClimateSetAllOff(intent.IntentHandler):
 
     intent_type = INTENT_CLIMATE_SET_ALL_OFF
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             "climate", "set_hvac_mode", {"entity_id": "all", "hvac_mode": "off"}
         )
         message = "ok, całe ogrzewanie wyłączone"
         return message, True
-
-
-# class AisClimateSetOff(intent.IntentHandler):
-#     """Handle AisClimateSetOff intents."""
-#     intent_type = INTENT_CLIMATE_SET_OFF
-#     slot_schema = {
-#         'item': cv.string,
-#     }
-#
-#     @asyncio.coroutine
-#     def async_handle(self, intent_obj):
-#         """Handle the intent."""
-#         try:
-#             hass = intent_obj.hass
-#             slots = self.async_validate_slots(intent_obj.slots)
-#             name = slots['item']['value']
-#             entity = _match_entity(hass, name)
-#         except Exception:
-#             text = None
-#         success = False
-#         if not entity:
-#             msg = 'Nie znajduję grzejnika, o nazwie: ' + name
-#         else:
-#             # check if we can close on this device
-#             if entity.entity_id.startswith('climate.'):
-#             # check if the device already is off
-#                 if entity.state == 'off':
-#                     msg = '{} jest już wyłączony'.format(entity.name)
-#                 elif entity.state == 'unavailable':
-#                     msg = '{} jest niedostępny'.format(entity.name)
-#                 else:
-#                     yield from hass.services.async_call(
-#                         'climate', 'turn_off', {
-#                             ATTR_ENTITY_ID: entity.entity_id
-#                         }, blocking=True)
-#                     msg = 'OK, wyłączono ogrzewanie {} '.format(entity.name)
-#                     success = True
-#             else:
-#                 msg = 'Na urządzeniu ' + name + ' nie można wyłączyć ogrzwania.'
-#             return msg, success
-#
-#
-# class AisClimateSetOn(intent.IntentHandler):
-#     """Handle AisClimateSetOn intents."""
-#     intent_type = INTENT_CLIMATE_SET_ON
-#     slot_schema = {
-#         'item': cv.string,
-#     }
-#
-#     @asyncio.coroutine
-#     def async_handle(self, intent_obj):
-#         """Handle the intent."""
-#         try:
-#             hass = intent_obj.hass
-#             slots = self.async_validate_slots(intent_obj.slots)
-#             name = slots['item']['value']
-#             entity = _match_entity(hass, name)
-#         except Exception:
-#             text = None
-#         success = False
-#         if not entity:
-#             msg = 'Nie znajduję grzejnika, o nazwie: ' + name
-#         else:
-#             # check if we can close on this device
-#             if entity.entity_id.startswith('climate.'):
-#                 # check if the device already is heat
-#                 if entity.state == 'heat':
-#                     msg = '{} jest już włączony'.format(entity.name)
-#                 elif entity.state == 'unavailable':
-#                     msg = '{} jest niedostępny'.format(entity.name)
-#                 else:
-#                     yield from hass.services.async_call(
-#                         'climate', 'turn_on', {
-#                             ATTR_ENTITY_ID: entity.entity_id
-#                         }, blocking=True)
-#                     msg = 'OK, wyłączono ogrzewanie {} '.format(entity.name)
-#                     success = True
-#             else:
-#                 msg = 'Na urządzeniu ' + name + ' nie można wyłączyć ogrzwania.'
-#             return msg, success
