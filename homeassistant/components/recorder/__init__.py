@@ -492,7 +492,7 @@ class Recorder(threading.Thread):
             # We do not import sqlite3 here so mysql/other
             # users do not have to pay for it to be loaded in
             # memory
-            if self.db_url == "sqlite://" or ":memory:" in self.db_url:
+            if self.db_url.startswith("sqlite://") or ":memory:" in self.db_url:
                 old_isolation = dbapi_connection.isolation_level
                 dbapi_connection.isolation_level = None
                 cursor = dbapi_connection.cursor()
@@ -504,7 +504,7 @@ class Recorder(threading.Thread):
                 cursor.execute("SET session wait_timeout=28800")
                 cursor.close()
 
-        if self.db_url == "sqlite://" or ":memory:" in self.db_url:
+        if self.db_url.startswith("sqlite://") or ":memory:" in self.db_url:
             kwargs["connect_args"] = {"check_same_thread": False}
             kwargs["poolclass"] = StaticPool
             kwargs["pool_reset_on_return"] = None
