@@ -14,7 +14,7 @@
         "step": {
             "init": {
                 "data": {
-                    "calc_method": "Metode for beregning av b\u00f8nn"
+                    "calculation_method": "Metode for beregning av b\u00f8nn"
                 }
             }
         }

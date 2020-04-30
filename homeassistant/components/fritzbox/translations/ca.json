@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Aquest AVM FRITZ!Box ja est\u00e0 configurat.",
             "already_in_progress": "La configuraci\u00f3 de l'AVM FRITZ!Box ja est\u00e0 en curs.",
-            "not_found": "No s'ha trobat cap AVM FRITZ!Box compatible a la xarxa."
+            "not_found": "No s'ha trobat cap AVM FRITZ!Box compatible a la xarxa.",
+            "not_supported": "Connectat a AVM FRITZ!Box per\u00f2 no es poden controlar dispositius Smart Home."
         },
         "error": {
             "auth_failed": "Nom d'usuari i/o contrasenya incorrectes."
