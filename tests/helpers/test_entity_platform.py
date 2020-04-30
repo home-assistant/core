@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_component import (
 )
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import MagicMock, Mock, patch
+from tests.async_mock import Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockEntity,
@@ -182,7 +182,7 @@ async def test_platform_warn_slow_setup(hass):
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    with patch.object(hass.loop, "call_later", MagicMock()) as mock_call:
+    with patch.object(hass.loop, "call_later") as mock_call:
         await component.async_setup({DOMAIN: {"platform": "platform"}})
         assert mock_call.called
 
