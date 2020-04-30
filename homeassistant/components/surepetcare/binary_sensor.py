@@ -8,7 +8,7 @@ from surepy import SureLocationID, SureProductID
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_PRESENCE,
-    BinarySensorEntity,
+    BinarySensorDevice,
 )
 from homeassistant.const import CONF_ID, CONF_TYPE
 from homeassistant.core import callback
@@ -16,6 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import SurePetcareAPI
 from .const import DATA_SURE_PETCARE, SPC, TOPIC_UPDATE
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +56,7 @@ async def async_setup_platform(
     async_add_entities(entities, True)
 
 
-class SurePetcareBinarySensor(BinarySensorEntity):
+class SurePetcareBinarySensor(BinarySensorDevice):
     """A binary sensor implementation for Sure Petcare Entities."""
 
     def __init__(
@@ -105,7 +106,7 @@ class SurePetcareBinarySensor(BinarySensorEntity):
         return None if not self._device_class else self._device_class
 
     @property
-    def unique_id(self: BinarySensorEntity) -> str:
+    def unique_id(self) -> str:
         """Return an unique ID."""
         return f"{self._spc_data['household_id']}-{self._id}"
 
@@ -214,7 +215,7 @@ class DeviceConnectivity(SurePetcareBinarySensor):
         return f"{self._name}_connectivity"
 
     @property
-    def unique_id(self: BinarySensorEntity) -> str:
+    def unique_id(self) -> str:
         """Return an unique ID."""
         return f"{self._spc_data['household_id']}-{self._id}-connectivity"
 

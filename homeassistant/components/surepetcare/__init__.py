@@ -2,6 +2,7 @@
 import logging
 from typing import Any, Dict, List
 
+
 from surepy import (
     SurePetcare,
     SurePetcareAuthenticationError,
@@ -14,6 +15,7 @@ from homeassistant.const import (
     CONF_ID,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
+    CONF_TIMEOUT,
     CONF_TYPE,
     CONF_USERNAME,
 )
@@ -35,6 +37,7 @@ from .const import (
     TOPIC_UPDATE,
 )
 
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -51,6 +54,7 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.ensure_list, [cv.positive_int]
                 ),
                 vol.Optional(CONF_PETS): vol.All(cv.ensure_list, [cv.positive_int]),
+                vol.Optional(CONF_TIMEOUT, default=15): cv.positive_int,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period,
@@ -78,6 +82,7 @@ async def async_setup(hass, config) -> bool:
             conf[CONF_PASSWORD],
             hass.loop,
             async_get_clientsession(hass),
+            api_timeout=conf[CONF_TIMEOUT],
         )
         await surepy.get_data()
     except SurePetcareAuthenticationError:
