@@ -363,9 +363,30 @@ async def test_missing_linked_battery_sensor(hass, hk_driver, caplog):
     await hass.async_block_till_done()
 
     assert not acc.linked_battery_sensor
-    assert not hasattr(acc, "_char_battery")
-    assert not hasattr(acc, "_char_low_battery")
-    assert not hasattr(acc, "_char_charging")
+    assert acc._char_battery is None
+    assert acc._char_low_battery is None
+    assert acc._char_charging is None
+
+
+async def test_battery_appears_after_startup(hass, hk_driver, caplog):
+    """Test battery level appears after homekit is started."""
+    entity_id = "homekit.accessory"
+    hass.states.async_set(entity_id, None, {})
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory(
+        hass, hk_driver, "Accessory without battery", entity_id, 2, None
+    )
+    acc.update_state = lambda x: None
+    assert acc._char_battery is None
+
+    await acc.run_handler()
+    await hass.async_block_till_done()
+    assert acc._char_battery is None
+
+    hass.states.async_set(entity_id, None, {ATTR_BATTERY_LEVEL: 15})
+    await hass.async_block_till_done()
+    assert acc._char_battery is None
 
 
 async def test_call_service(hass, hk_driver, events):
