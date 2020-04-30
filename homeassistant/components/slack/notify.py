@@ -132,7 +132,7 @@ class SlackNotificationService(BaseNotificationService):
 
         if ATTR_FILE in data:
             return await self._async_send_local_file_message(
-                data[ATTR_FILE]['path'], targets, message, title
+                data[ATTR_FILE]["path"], targets, message, title
             )
 
         attachments = data.get(ATTR_ATTACHMENTS, {})
