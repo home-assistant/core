@@ -104,6 +104,8 @@ MOCK_CALLS_ENTRY_WS = {
     "token": "abcde",
 }
 
+MOCK_OPTIONS = {"mac": "11:11:11"}
+
 ENTITY_ID_NOTURNON = f"{DOMAIN}.fake_noturnon"
 MOCK_CONFIG_NOTURNON = {
     SAMSUNGTV_DOMAIN: [
@@ -755,3 +757,43 @@ async def test_on_script_from_mac(hass, remote):
     assert len(result.sequence) == 1
     assert result.sequence[0]["service"] == "wake_on_lan.send_magic_packet"
     assert result.sequence[0]["data"] == {"mac": "11:11:11"}
+
+
+async def test_setup_with_options(hass, remote):
+    """Test setup with mac address in options."""
+    entity_id = f"{DOMAIN}.fake"
+    entry = MockConfigEntry(
+        domain=SAMSUNGTV_DOMAIN,
+        data=MOCK_ENTRY_WS,
+        unique_id=entity_id,
+        options=MOCK_OPTIONS,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.samsungtv.media_player.async_get_on_script_from_mac"
+    ) as on_script:
+        await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
+        # await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert on_script.call_count == 1
+        assert on_script.call_args_list == [call(hass, MOCK_OPTIONS["mac"])]
+
+
+async def test_setup_without_options(hass, remote):
+    """Test setup without mac address in options."""
+    entity_id = f"{DOMAIN}.fake"
+    entry = MockConfigEntry(
+        domain=SAMSUNGTV_DOMAIN, data=MOCK_ENTRY_WS, unique_id=entity_id
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.samsungtv.media_player.async_get_on_script_from_mac"
+    ) as on_script:
+        await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
+        # await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert on_script.call_count == 0
