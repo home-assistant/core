@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Denne AVM FRITZ!Box er allerede konfigurert.",
             "already_in_progress": "AVM FRITZ!Box-konfigurasjon p\u00e5g\u00e5r allerede.",
-            "not_found": "Ingen st\u00f8ttet AVM FRITZ!Box funnet p\u00e5 nettverket."
+            "not_found": "Ingen st\u00f8ttet AVM FRITZ!Box funnet p\u00e5 nettverket.",
+            "not_supported": "Tilkoblet AVM FRITZ! Box, men den klarer ikke \u00e5 kontrollere Smart Home-enheter."
         },
         "error": {
             "auth_failed": "Brukernavn og/eller passord er feil."

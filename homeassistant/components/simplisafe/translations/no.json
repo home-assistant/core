@@ -22,7 +22,7 @@
         "step": {
             "init": {
                 "data": {
-                    "code": "Kode (brukt i home assistant ui)"
+                    "code": "Kode (brukt i Home Assistant brukergrensesnittet)"
                 },
                 "title": "Konfigurer SimpliSafe"
             }
