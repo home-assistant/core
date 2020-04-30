@@ -46,6 +46,15 @@
         "description": "Configure client controls\n\nCreate switches for serial numbers you want to control network access for.",
         "title": "UniFi options 2/3"
       },
+      "simple_options": {
+        "data": {
+          "track_clients": "Track network clients",
+          "track_devices": "Track network devices (Ubiquiti devices)",
+          "block_client": "Network access controlled clients"
+        },
+        "description": "Configure statistics sensors",
+        "title": "UniFi options 3/3"
+      },
       "statistics_sensors": {
         "data": {
           "allow_bandwidth_sensors": "Bandwidth usage sensors for network clients"
