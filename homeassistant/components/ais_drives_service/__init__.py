@@ -1,20 +1,20 @@
-# -*- coding: utf-8 -*-
 """
 Support for AIS local audio
 
 For more details about this component, please refer to the documentation at
 https://www.ai-speaker.com
 """
-import asyncio
-import logging
-import os
 import json
+import logging
 import mimetypes
-import subprocess
+import os
 import platform
+import subprocess
 import time
+
 from homeassistant.components import ais_cloud
 from homeassistant.components.ais_dom import ais_global
+
 from .config_flow import configured_drivers
 
 aisCloud = ais_cloud.AisCloudWS()
@@ -57,61 +57,60 @@ def get_pozycji_variety(n):
     return str(n) + " pozycji"
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Register the service."""
     _LOGGER.info("Initialize the folders and files list.")
     data = hass.data[DOMAIN] = LocalData(hass)
-    yield from data.async_load_all()
+    await data.async_load_all()
 
     # register services
     def browse_path(call):
+        _LOGGER.debug("browse_path")
         data.browse_path(call)
 
     def sync_locations(call):
-        _LOGGER.info("sync_locations")
+        _LOGGER.debug("sync_locations")
         data.sync_locations(call)
 
     def play_next(call):
-        _LOGGER.info("play_next")
+        _LOGGER.debug("play_next")
         data.play_next(call)
 
     def play_prev(call):
-        _LOGGER.info("play_prev")
+        _LOGGER.debug("play_prev")
         data.play_prev(call)
 
     def remote_next_item(call):
-        _LOGGER.info("remote_next_item")
+        _LOGGER.debug("remote_next_item")
         data.remote_next_item(True)
 
     def remote_prev_item(call):
-        _LOGGER.info("remote_prev_item")
+        _LOGGER.debug("remote_prev_item")
         data.remote_prev_item(True)
 
     def remote_select_item(call):
-        _LOGGER.info("remote_select_item")
+        _LOGGER.debug("remote_select_item")
         data.remote_select_item(True)
 
     def remote_cancel_item(call):
-        _LOGGER.info("remote_cancel_item")
+        _LOGGER.debug("remote_cancel_item")
         data.remote_cancel_item(True)
 
     def remote_delete_item(call):
-        _LOGGER.info("remote_delete_item")
+        _LOGGER.debug("remote_delete_item")
         data.remote_delete_item(True)
 
     def rclone_mount_drive(call):
-        _LOGGER.info("rclone_mount_drive")
+        _LOGGER.debug("rclone_mount_drive")
         if "name" in call.data:
             data.rclone_mount_drive(call.data["name"])
 
     def rclone_remove_drive(call):
-        _LOGGER.info("rclone_remove_drive")
+        _LOGGER.debug("rclone_remove_drive")
         if "name" in call.data:
             data.rclone_remove_drive(call.data["name"])
 
     def rclone_mount_drives(call):
-        _LOGGER.info("rclone_mount_drives")
         data.rclone_mount_drives()
 
     hass.services.async_register(DOMAIN, "rclone_mount_drives", rclone_mount_drives)
@@ -132,7 +131,6 @@ def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up drive as rclone config entry."""
-    _LOGGER.info("Set up drive as rclone config entry")
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
     )
@@ -562,7 +560,7 @@ class LocalData:
         self.dispalay_current_path()
 
     def display_root_items(self, say):
-        self.hass.states.set(
+        self.hass.states.async_set(
             "sensor.ais_drives",
             "",
             {
@@ -950,32 +948,26 @@ class LocalData:
             else:
                 self.say("Tej pozycji nie można usunąć")
 
-    @asyncio.coroutine
-    def async_load_all(self):
+    async def async_load_all(self):
         """Load all the folders and files."""
 
-        def load():
-            self.display_root_items(False)
-            global G_DRIVE_SECRET, G_DRIVE_CLIENT_ID
+        self.display_root_items(False)
+        global G_DRIVE_SECRET, G_DRIVE_CLIENT_ID
 
-            # version 0.105 config migration - to allow backup to AIS cloud
-            if os.path.isfile(G_RCLONE_OLD_CONF_FILE):
-                if not os.path.isfile(G_RCLONE_CONF_FILE):
-                    subprocess.call(
-                        "mv %s %s" % (G_RCLONE_OLD_CONF_FILE, G_RCLONE_CONF_FILE),
-                        shell=True,
-                    )
+        # version 0.105 config migration - to allow backup to AIS cloud
+        if os.path.isfile(G_RCLONE_OLD_CONF_FILE):
+            if not os.path.isfile(G_RCLONE_CONF_FILE):
+                subprocess.call(
+                    f"mv {G_RCLONE_OLD_CONF_FILE} {G_RCLONE_CONF_FILE}",
+                    shell=True,  # nosec
+                )
 
-            # set client and secret
-            try:
-                ws_resp = aisCloud.key("gdrive_client_id")
-                json_ws_resp = ws_resp.json()
-                G_DRIVE_CLIENT_ID = json_ws_resp["key"]
-                ws_resp = aisCloud.key("gdrive_secret")
-                json_ws_resp = ws_resp.json()
-                G_DRIVE_SECRET = json_ws_resp["key"]
-            except Exception as e:
-                _LOGGER.error("Error " + str(e))
-                ais_global.G_OFFLINE_MODE = True
-
-        yield from self.hass.async_add_job(load)
+        # set client and secret
+        try:
+            json_ws_resp = await aisCloud.async_key("gdrive_client_id")
+            G_DRIVE_CLIENT_ID = json_ws_resp["key"]
+            json_ws_resp = await aisCloud.async_key("gdrive_secret")
+            G_DRIVE_SECRET = json_ws_resp["key"]
+        except Exception as e:
+            _LOGGER.error("Error " + str(e))
+            ais_global.G_OFFLINE_MODE = True
