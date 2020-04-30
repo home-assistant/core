@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.remote import RemoteEntity
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_ON
+from homeassistant.const import CONF_NAME, STATE_ON
 
 from .const import (
     ATTR_DEVICE_INFO,
@@ -21,11 +21,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     config = config_entry.data
 
-    host = config[CONF_HOST]
+    remote = hass.data[DOMAIN][config_entry.entry_id][ATTR_REMOTE]
     name = config[CONF_NAME]
-
-    remote = hass.data[DOMAIN][host][ATTR_REMOTE]
-
     device_info = config[ATTR_DEVICE_INFO]
 
     remote_device = PanasonicVieraRemoteEntity(remote, name, device_info)
@@ -47,17 +44,21 @@ class PanasonicVieraRemoteEntity(RemoteEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID of the device."""
-        return self._device_info[ATTR_UDN] + "-remote"
+        if self._device_info is not None:
+            return self._device_info[ATTR_UDN] + "-remote"
+        return None
 
     @property
     def device_info(self):
         """Return device specific attributes."""
-        return {
-            "name": self.name,
-            "identifiers": {(DOMAIN, self._device_info[ATTR_UDN])},
-            "manufacturer": self._device_info[ATTR_MANUFACTURER],
-            "model": self._device_info[ATTR_MODEL_NUMBER],
-        }
+        if self._device_info is not None:
+            return {
+                "name": self.name,
+                "identifiers": {(DOMAIN, self._device_info[ATTR_UDN])},
+                "manufacturer": self._device_info[ATTR_MANUFACTURER],
+                "model": self._device_info[ATTR_MODEL_NUMBER],
+            }
+        return None
 
     @property
     def name(self):

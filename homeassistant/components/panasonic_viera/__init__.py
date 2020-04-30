@@ -20,6 +20,7 @@ from homeassistant.helpers.script import Script
 from .const import (
     ATTR_DEVICE_INFO,
     ATTR_REMOTE,
+    ATTR_UDN,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
     CONF_ON_ACTION,
@@ -90,17 +91,22 @@ async def async_setup_entry(hass, config_entry):
     remote = Remote(hass, host, port, on_action, **params)
     await remote.async_create_remote_control(during_setup=True)
 
-    hass.data[DOMAIN][host] = {ATTR_REMOTE: remote}
+    hass.data[DOMAIN][config_entry.entry_id] = {ATTR_REMOTE: remote}
 
-    if ATTR_DEVICE_INFO not in config:
+    # Add device_info to older config entries
+    if ATTR_DEVICE_INFO not in config or config[ATTR_DEVICE_INFO] is None:
+        device_info = await remote.async_get_device_info()
+        unique_id = config_entry.unique_id
+        if device_info is None:
+            _LOGGER.error(
+                "Couldn't gather device info. Please restart Home Assistant with your TV turned on and connected to your network."
+            )
+        else:
+            unique_id = device_info[ATTR_UDN]
         hass.config_entries.async_update_entry(
             config_entry,
-            data={
-                **config,
-                ATTR_DEVICE_INFO: await hass.async_add_executor_job(
-                    remote._control.get_device_info
-                ),
-            },
+            unique_id=unique_id,
+            data={**config, ATTR_DEVICE_INFO: device_info},
         )
 
     for component in PLATFORMS:
@@ -123,7 +129,7 @@ async def async_unload_entry(hass, config_entry):
     )
 
     if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.data[CONF_HOST])
+        hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
 
@@ -190,7 +196,7 @@ class Remote:
 
         await self._handle_errors(self._update)
 
-    async def _update(self):
+    def _update(self):
         """Retrieve the latest data."""
         self.muted = self._control.get_mute()
         self.volume = self._control.get_volume() / 100
@@ -242,13 +248,22 @@ class Remote:
 
         await self._handle_errors(self._control.open_webpage, media_id)
 
+    async def async_get_device_info(self):
+        """Return device info."""
+        if self._control is not None:
+            return await self._handle_errors(self._control.get_device_info)
+
     async def _handle_errors(self, func, *args):
         """Handle errors from func, set available and reconnect if needed."""
         try:
-            await self._hass.async_add_executor_job(func, *args)
+            return await self._hass.async_add_executor_job(func, *args)
         except EncryptionRequired:
             _LOGGER.error("The connection couldn't be encrypted")
         except (TimeoutError, URLError, SOAPError, OSError):
             self.state = STATE_OFF
             self.available = self._on_action is not None
             await self.async_create_remote_control()
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.exception("An unknown error occurred: %s", err)
+            self.state = STATE_OFF
+            self.available = self._on_action is not None

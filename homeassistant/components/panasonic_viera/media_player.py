@@ -15,7 +15,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_NAME
 
 from .const import (
     ATTR_DEVICE_INFO,
@@ -46,11 +46,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     config = config_entry.data
 
-    host = config[CONF_HOST]
+    remote = hass.data[DOMAIN][config_entry.entry_id][ATTR_REMOTE]
     name = config[CONF_NAME]
-
-    remote = hass.data[DOMAIN][host][ATTR_REMOTE]
-
     device_info = config[ATTR_DEVICE_INFO]
 
     tv_device = PanasonicVieraTVEntity(remote, name, device_info)
@@ -72,17 +69,21 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID of the device."""
-        return self._device_info[ATTR_UDN]
+        if self._device_info is not None:
+            return self._device_info[ATTR_UDN]
+        return None
 
     @property
     def device_info(self):
         """Return device specific attributes."""
-        return {
-            "name": self._name,
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "manufacturer": self._device_info[ATTR_MANUFACTURER],
-            "model": self._device_info[ATTR_MODEL_NUMBER],
-        }
+        if self._device_info is not None:
+            return {
+                "name": self._name,
+                "identifiers": {(DOMAIN, self._device_info[ATTR_UDN])},
+                "manufacturer": self._device_info[ATTR_MANUFACTURER],
+                "model": self._device_info[ATTR_MODEL_NUMBER],
+            }
+        return None
 
     @property
     def name(self):

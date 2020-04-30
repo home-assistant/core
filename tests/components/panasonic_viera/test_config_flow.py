@@ -7,6 +7,9 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.panasonic_viera.const import (
+    ATTR_DEVICE_INFO,
+    ATTR_FRIENDLY_NAME,
+    ATTR_UDN,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
     CONF_ON_ACTION,
@@ -35,7 +38,12 @@ def panasonic_viera_setup_fixture():
 
 
 def get_mock_remote_control(
-    authorize_error=None, encrypted=False, app_id=None, encryption_key=None,
+    authorize_error=None,
+    encrypted=False,
+    app_id="mock-app-id",
+    encryption_key="mock-encryption-key",
+    name=DEFAULT_NAME,
+    unique_id="mock-unique-id",
 ):
     """Return a mock remote control."""
     mock_remote_control = Mock()
@@ -57,6 +65,11 @@ def get_mock_remote_control(
             raise authorize_error
 
     mock_remote_control.authorize_pin_code = authorize_pin_code
+
+    def get_device_info():
+        return {ATTR_FRIENDLY_NAME: name, ATTR_UDN: unique_id}
+
+    mock_remote_control.get_device_info = get_device_info
 
     return mock_remote_control
 
@@ -88,6 +101,10 @@ async def test_flow_unencrypted(hass):
         CONF_NAME: DEFAULT_NAME,
         CONF_PORT: DEFAULT_PORT,
         CONF_ON_ACTION: None,
+        ATTR_DEVICE_INFO: {
+            ATTR_FRIENDLY_NAME: DEFAULT_NAME,
+            ATTR_UDN: "mock-unique-id",
+        },
     }
 
 
@@ -146,9 +163,7 @@ async def test_flow_encrypted_valid_pin_code(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
 
-    mock_remote_control = get_mock_remote_control(
-        encrypted=True, app_id="test-app-id", encryption_key="test-encryption-key",
-    )
+    mock_remote_control = get_mock_remote_control(encrypted=True,)
 
     with patch(
         "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
@@ -172,8 +187,12 @@ async def test_flow_encrypted_valid_pin_code(hass):
         CONF_NAME: DEFAULT_NAME,
         CONF_PORT: DEFAULT_PORT,
         CONF_ON_ACTION: None,
-        CONF_APP_ID: "test-app-id",
-        CONF_ENCRYPTION_KEY: "test-encryption-key",
+        CONF_APP_ID: "mock-app-id",
+        CONF_ENCRYPTION_KEY: "mock-encryption-key",
+        ATTR_DEVICE_INFO: {
+            ATTR_FRIENDLY_NAME: DEFAULT_NAME,
+            ATTR_UDN: "mock-unique-id",
+        },
     }
 
 
@@ -281,48 +300,27 @@ async def test_flow_encrypted_unknown_abort(hass):
     assert result["reason"] == REASON_UNKNOWN
 
 
-async def test_flow_unencrypted_already_configured_abort(hass):
+async def test_flow_already_configured_abort(hass):
     """Test flow without encryption and existing config entry abortion."""
 
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="1.2.3.4",
-        data={CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME, CONF_PORT: DEFAULT_PORT},
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+    MockConfigEntry(domain=DOMAIN, unique_id="mock-unique-id", data={},).add_to_hass(
+        hass
     )
 
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
+    mock_remote_control = get_mock_remote_control(encrypted=False)
 
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        return_value=mock_remote_control,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+        )
 
-async def test_flow_encrypted_already_configured_abort(hass):
-    """Test flow with encryption and existing config entry abortion."""
-
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="1.2.3.4",
-        data={
-            CONF_HOST: "1.2.3.4",
-            CONF_NAME: DEFAULT_NAME,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_APP_ID: "test-app-id",
-            CONF_ENCRYPTION_KEY: "test-encryption-key",
-        },
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
+        assert result["type"] == "abort"
+        assert result["reason"] == "already_configured"
 
 
 async def test_imported_flow_unencrypted(hass):
@@ -341,7 +339,7 @@ async def test_imported_flow_unencrypted(hass):
                 CONF_HOST: "1.2.3.4",
                 CONF_NAME: DEFAULT_NAME,
                 CONF_PORT: DEFAULT_PORT,
-                CONF_ON_ACTION: "test-on-action",
+                CONF_ON_ACTION: "mock-on-action",
             },
         )
 
@@ -351,16 +349,18 @@ async def test_imported_flow_unencrypted(hass):
         CONF_HOST: "1.2.3.4",
         CONF_NAME: DEFAULT_NAME,
         CONF_PORT: DEFAULT_PORT,
-        CONF_ON_ACTION: "test-on-action",
+        CONF_ON_ACTION: "mock-on-action",
+        ATTR_DEVICE_INFO: {
+            ATTR_FRIENDLY_NAME: DEFAULT_NAME,
+            ATTR_UDN: "mock-unique-id",
+        },
     }
 
 
 async def test_imported_flow_encrypted_valid_pin_code(hass):
     """Test imported flow with encryption and valid PIN code."""
 
-    mock_remote_control = get_mock_remote_control(
-        encrypted=True, app_id="test-app-id", encryption_key="test-encryption-key",
-    )
+    mock_remote_control = get_mock_remote_control(encrypted=True,)
 
     with patch(
         "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
@@ -373,7 +373,7 @@ async def test_imported_flow_encrypted_valid_pin_code(hass):
                 CONF_HOST: "1.2.3.4",
                 CONF_NAME: DEFAULT_NAME,
                 CONF_PORT: DEFAULT_PORT,
-                CONF_ON_ACTION: "test-on-action",
+                CONF_ON_ACTION: "mock-on-action",
             },
         )
 
@@ -390,9 +390,13 @@ async def test_imported_flow_encrypted_valid_pin_code(hass):
         CONF_HOST: "1.2.3.4",
         CONF_NAME: DEFAULT_NAME,
         CONF_PORT: DEFAULT_PORT,
-        CONF_ON_ACTION: "test-on-action",
-        CONF_APP_ID: "test-app-id",
-        CONF_ENCRYPTION_KEY: "test-encryption-key",
+        CONF_ON_ACTION: "mock-on-action",
+        CONF_APP_ID: "mock-app-id",
+        CONF_ENCRYPTION_KEY: "mock-encryption-key",
+        ATTR_DEVICE_INFO: {
+            ATTR_FRIENDLY_NAME: DEFAULT_NAME,
+            ATTR_UDN: "mock-unique-id",
+        },
     }
 
 
@@ -414,7 +418,7 @@ async def test_imported_flow_encrypted_invalid_pin_code_error(hass):
                 CONF_HOST: "1.2.3.4",
                 CONF_NAME: DEFAULT_NAME,
                 CONF_PORT: DEFAULT_PORT,
-                CONF_ON_ACTION: "test-on-action",
+                CONF_ON_ACTION: "mock-on-action",
             },
         )
 
@@ -452,7 +456,7 @@ async def test_imported_flow_encrypted_not_connected_abort(hass):
                 CONF_HOST: "1.2.3.4",
                 CONF_NAME: DEFAULT_NAME,
                 CONF_PORT: DEFAULT_PORT,
-                CONF_ON_ACTION: "test-on-action",
+                CONF_ON_ACTION: "mock-on-action",
             },
         )
 
@@ -485,7 +489,7 @@ async def test_imported_flow_encrypted_unknown_abort(hass):
                 CONF_HOST: "1.2.3.4",
                 CONF_NAME: DEFAULT_NAME,
                 CONF_PORT: DEFAULT_PORT,
-                CONF_ON_ACTION: "test-on-action",
+                CONF_ON_ACTION: "mock-on-action",
             },
         )
 
@@ -514,7 +518,7 @@ async def test_imported_flow_not_connected_error(hass):
                 CONF_HOST: "1.2.3.4",
                 CONF_NAME: DEFAULT_NAME,
                 CONF_PORT: DEFAULT_PORT,
-                CONF_ON_ACTION: "test-on-action",
+                CONF_ON_ACTION: "mock-on-action",
             },
         )
 
@@ -537,7 +541,7 @@ async def test_imported_flow_unknown_abort(hass):
                 CONF_HOST: "1.2.3.4",
                 CONF_NAME: DEFAULT_NAME,
                 CONF_PORT: DEFAULT_PORT,
-                CONF_ON_ACTION: "test-on-action",
+                CONF_ON_ACTION: "mock-on-action",
             },
         )
 
@@ -545,51 +549,24 @@ async def test_imported_flow_unknown_abort(hass):
     assert result["reason"] == REASON_UNKNOWN
 
 
-async def test_imported_flow_unencrypted_already_configured_abort(hass):
+async def test_imported_flow_already_configured_abort(hass):
     """Test imported flow without encryption and existing config entry abortion."""
 
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="1.2.3.4",
-        data={
-            CONF_HOST: "1.2.3.4",
-            CONF_NAME: DEFAULT_NAME,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_ON_ACTION: "test-on-action",
-        },
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+    MockConfigEntry(domain=DOMAIN, unique_id="mock-unique-id", data={},).add_to_hass(
+        hass
     )
 
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
+    mock_remote_control = get_mock_remote_control(encrypted=False)
 
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        return_value=mock_remote_control,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+        )
 
-async def test_imported_flow_encrypted_already_configured_abort(hass):
-    """Test imported flow with encryption and existing config entry abortion."""
-
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="1.2.3.4",
-        data={
-            CONF_HOST: "1.2.3.4",
-            CONF_NAME: DEFAULT_NAME,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_ON_ACTION: "test-on-action",
-            CONF_APP_ID: "test-app-id",
-            CONF_ENCRYPTION_KEY: "test-encryption-key",
-        },
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
+        assert result["type"] == "abort"
+        assert result["reason"] == "already_configured"
