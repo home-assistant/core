@@ -1,12 +1,11 @@
 """Test Alexa config."""
 import contextlib
-from unittest.mock import Mock, patch
 
 from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import AsyncMock
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import async_fire_time_changed
 
 
@@ -29,7 +28,7 @@ async def test_alexa_config_report_state(hass, cloud_prefs):
     assert conf.should_report_state is False
     assert conf.is_reporting_states is False
 
-    with patch.object(conf, "async_get_access_token", return_value="hello"):
+    with patch.object(conf, "async_get_access_token", AsyncMock(return_value="hello")):
         await cloud_prefs.async_update(alexa_report_state=True)
         await hass.async_block_till_done()
 
