@@ -173,7 +173,7 @@ class SerialSensor(Entity):
                     stopbits=stopbits,
                     xonxoff=xonxoff,
                     rtscts=rtscts,
-                    dsrdtr=dsrdtr, 
+                    dsrdtr=dsrdtr,
                     **kwargs,
                 )
 
