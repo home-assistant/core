@@ -85,6 +85,9 @@ aiohue==2.1.0
 # homeassistant.components.notion
 aionotion==1.1.0
 
+# homeassistant.components.hunterdouglas_powerview
+aiopvapi==1.6.14
+
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==1.0.2
 
@@ -147,7 +150,7 @@ bravia-tv==1.0.2
 broadlink==0.13.2
 
 # homeassistant.components.brother
-brother==0.1.13
+brother==0.1.14
 
 # homeassistant.components.buienradar
 buienradar==1.0.4
@@ -291,7 +294,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200427.0
+home-assistant-frontend==20200427.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -366,13 +369,16 @@ nessclient==0.9.15
 netdisco==2.6.0
 
 # homeassistant.components.nexia
-nexia==0.9.2
+nexia==0.9.3
 
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.0.10
 
 # homeassistant.components.nuheat
 nuheat==0.3.0
+
+# homeassistant.components.numato
+numato-gpio==0.7.1
 
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
@@ -650,7 +656,7 @@ python-miio==0.5.0.1
 python-nest==4.1.0
 
 # homeassistant.components.synology_dsm
-python-synology==0.7.1
+python-synology==0.7.3
 
 # homeassistant.components.tado
 python-tado==0.8.1

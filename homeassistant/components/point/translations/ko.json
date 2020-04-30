@@ -17,7 +17,7 @@
         "step": {
             "auth": {
                 "description": "\uc544\ub798 \ub9c1\ud06c\ub97c \ud074\ub9ad\ud558\uc5ec Minut \uacc4\uc815\uc5d0 \ub300\ud574 <b>\ub3d9\uc758</b> \ud55c \ub2e4\uc74c, \ub2e4\uc2dc \ub3cc\uc544\uc640\uc11c \ud558\ub2e8\uc758 <b>Submit</b> \ubc84\ud2bc\uc744 \ub20c\ub7ec\uc8fc\uc138\uc694. \n\n[\ub9c1\ud06c] ({authorization_url})",
-                "title": "Point \uc778\uc99d"
+                "title": "Point \uc778\uc99d\ud558\uae30"
             },
             "user": {
                 "data": {

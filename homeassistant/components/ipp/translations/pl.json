@@ -5,7 +5,7 @@
             "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z drukark\u0105.",
             "connection_upgrade": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z drukark\u0105 z powodu konieczno\u015bci uaktualnienia po\u0142\u0105czenia.",
             "ipp_error": "Wyst\u0105pi\u0142 b\u0142\u0105d IPP.",
-            "ipp_version_error": "Wersja IPP nie obs\u0142ugiwana przez drukark\u0119.",
+            "ipp_version_error": "Wersja IPP nieobs\u0142ugiwana przez drukark\u0119.",
             "parse_error": "Nie mo\u017cna przeanalizowa\u0107 odpowiedzi z drukarki."
         },
         "error": {
