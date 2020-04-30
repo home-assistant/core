@@ -9,7 +9,7 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
-    CoverDevice,
+    CoverEntity,
 )
 
 from . import VelbusEntity
@@ -29,7 +29,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class VelbusCover(VelbusEntity, CoverDevice):
+class VelbusCover(VelbusEntity, CoverEntity):
     """Representation a Velbus cover."""
 
     @property

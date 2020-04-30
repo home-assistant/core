@@ -294,6 +294,58 @@ async def test_update(hass):
     assert state.attributes[ATTR_INPUT_SOURCE] == "three"
 
 
+async def test_failed_update(hass):
+    """Test updating failure from monoprice."""
+    monoprice = MockMonoprice()
+    await _setup_monoprice(hass, monoprice)
+
+    # Changing media player to new state
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
+    )
+    await _call_media_player_service(
+        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
+    )
+
+    monoprice.set_source(11, 3)
+    monoprice.set_volume(11, 38)
+
+    with patch.object(MockMonoprice, "zone_status", side_effect=SerialException):
+        await async_update_entity(hass, ZONE_1_ID)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ZONE_1_ID)
+
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.0
+    assert state.attributes[ATTR_INPUT_SOURCE] == "one"
+
+
+async def test_empty_update(hass):
+    """Test updating with no state from monoprice."""
+    monoprice = MockMonoprice()
+    await _setup_monoprice(hass, monoprice)
+
+    # Changing media player to new state
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
+    )
+    await _call_media_player_service(
+        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
+    )
+
+    monoprice.set_source(11, 3)
+    monoprice.set_volume(11, 38)
+
+    with patch.object(MockMonoprice, "zone_status", return_value=None):
+        await async_update_entity(hass, ZONE_1_ID)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ZONE_1_ID)
+
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.0
+    assert state.attributes[ATTR_INPUT_SOURCE] == "one"
+
+
 async def test_supported_features(hass):
     """Test supported features property."""
     await _setup_monoprice(hass, MockMonoprice())

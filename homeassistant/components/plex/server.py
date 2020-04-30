@@ -1,5 +1,4 @@
 """Shared class to maintain Plex server instances."""
-from functools import partial, wraps
 import logging
 import ssl
 from urllib.parse import urlparse
@@ -13,8 +12,8 @@ import requests.exceptions
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_call_later
 
 from .const import (
     CONF_CLIENT_IDENTIFIER,
@@ -43,31 +42,6 @@ plexapi.X_PLEX_PRODUCT = X_PLEX_PRODUCT
 plexapi.X_PLEX_VERSION = X_PLEX_VERSION
 
 
-def debounce(func):
-    """Decorate function to debounce callbacks from Plex websocket."""
-
-    unsub = None
-
-    async def call_later_listener(self, _):
-        """Handle call_later callback."""
-        nonlocal unsub
-        unsub = None
-        await func(self)
-
-    @wraps(func)
-    async def wrapper(self):
-        """Schedule async callback."""
-        nonlocal unsub
-        if unsub:
-            _LOGGER.debug("Throttling update of %s", self.friendly_name)
-            unsub()  # pylint: disable=not-callable
-        unsub = async_call_later(
-            self.hass, DEBOUNCE_TIMEOUT, partial(call_later_listener, self),
-        )
-
-    return wrapper
-
-
 class PlexServer:
     """Manages a single Plex server connection."""
 
@@ -87,6 +61,13 @@ class PlexServer:
         self._accounts = []
         self._owner_username = None
         self._version = None
+        self.async_update_platforms = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=DEBOUNCE_TIMEOUT,
+            immediate=True,
+            function=self._async_update_platforms,
+        ).async_call
 
         # Header conditionally added as it is not available in config entry v1
         if CONF_CLIENT_IDENTIFIER in server_config:
@@ -192,8 +173,7 @@ class PlexServer:
         """Fetch all data from the Plex server in a single method."""
         return (self._plex_server.clients(), self._plex_server.sessions())
 
-    @debounce
-    async def async_update_platforms(self):
+    async def _async_update_platforms(self):
         """Update the platform entities."""
         _LOGGER.debug("Updating devices")
 
@@ -227,35 +207,36 @@ class PlexServer:
             )
             return
 
-        for device in devices:
+        def process_device(source, device):
             self._known_idle.discard(device.machineIdentifier)
-            available_clients[device.machineIdentifier] = {"device": device}
+            available_clients.setdefault(device.machineIdentifier, {"device": device})
 
             if device.machineIdentifier not in self._known_clients:
                 new_clients.add(device.machineIdentifier)
-                _LOGGER.debug("New device: %s", device.machineIdentifier)
+                _LOGGER.debug(
+                    "New %s %s: %s", device.product, source, device.machineIdentifier
+                )
+
+        for device in devices:
+            process_device("device", device)
 
         for session in sessions:
             if session.TYPE == "photo":
                 _LOGGER.debug("Photo session detected, skipping: %s", session)
                 continue
+
             session_username = session.usernames[0]
             for player in session.players:
                 if session_username and session_username not in monitored_users:
                     ignored_clients.add(player.machineIdentifier)
                     _LOGGER.debug(
-                        "Ignoring Plex client owned by '%s'", session_username
+                        "Ignoring %s client owned by '%s'",
+                        player.product,
+                        session_username,
                     )
                     continue
-                self._known_idle.discard(player.machineIdentifier)
-                available_clients.setdefault(
-                    player.machineIdentifier, {"device": player}
-                )
+                process_device("session", player)
                 available_clients[player.machineIdentifier]["session"] = session
-
-                if player.machineIdentifier not in self._known_clients:
-                    new_clients.add(player.machineIdentifier)
-                    _LOGGER.debug("New session: %s", player.machineIdentifier)
 
         new_entity_configs = []
         for client_id, client_data in available_clients.items():
@@ -352,3 +333,7 @@ class PlexServer:
     def create_playqueue(self, media, **kwargs):
         """Create playqueue on Plex server."""
         return plexapi.playqueue.PlayQueue.create(self._plex_server, media, **kwargs)
+
+    def fetch_item(self, item):
+        """Fetch item from Plex server."""
+        return self._plex_server.fetchItem(item)

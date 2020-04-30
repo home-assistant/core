@@ -22,7 +22,13 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, HTTP_NOT_FOUND, HTTP_OK
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_PLATFORM,
+    HTTP_BAD_REQUEST,
+    HTTP_NOT_FOUND,
+    HTTP_OK,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
@@ -529,9 +535,11 @@ class TextToSpeechUrlView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON specified", 400)
+            return self.json_message("Invalid JSON specified", HTTP_BAD_REQUEST)
         if not data.get(ATTR_PLATFORM) and data.get(ATTR_MESSAGE):
-            return self.json_message("Must specify platform and message", 400)
+            return self.json_message(
+                "Must specify platform and message", HTTP_BAD_REQUEST
+            )
 
         p_type = data[ATTR_PLATFORM]
         message = data[ATTR_MESSAGE]
@@ -546,7 +554,7 @@ class TextToSpeechUrlView(HomeAssistantView):
             resp = self.json({"url": url}, HTTP_OK)
         except HomeAssistantError as err:
             _LOGGER.error("Error on init tts: %s", err)
-            resp = self.json({"error": err}, 400)
+            resp = self.json({"error": err}, HTTP_BAD_REQUEST)
 
         return resp
 

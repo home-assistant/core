@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
+    POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UNIT_PERCENTAGE,
@@ -21,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
 PERCENT_UNITS = [UNIT_PERCENTAGE, UNIT_PERCENTAGE]
 SALT_UNITS = ["g/L", "PPM"]
-WATT_UNITS = ["W", "W"]
+WATT_UNITS = [POWER_WATT, POWER_WATT]
 NO_UNITS = [None, None]
 
 # sensor_type [ description, unit, icon ]

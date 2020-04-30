@@ -1,0 +1,20 @@
+{
+  "common": {
+    "state": {
+      "off": "Off",
+      "on": "On",
+      "open": "Open",
+      "closed": "Closed",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "locked": "Locked",
+      "unlocked": "Unlocked",
+      "active": "Active",
+      "idle": "Idle",
+      "standby": "Standby",
+      "paused": "Paused",
+      "home": "Home",
+      "not_home": "Away"
+    }
+  }
+}

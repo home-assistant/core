@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto bereits konfiguriert"
+        },
+        "error": {
+            "login": "Login-Fehler: Bitte \u00fcberpr\u00fcfen Sie Ihren Benutzernamen & Passwort"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "title": "Total Connect"
+            }
+        }
+    }
+}

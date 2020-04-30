@@ -2,7 +2,6 @@
 import logging
 
 from nexia.const import (
-    FAN_MODES,
     OPERATION_MODE_AUTO,
     OPERATION_MODE_COOL,
     OPERATION_MODE_HEAT,
@@ -14,7 +13,7 @@ from nexia.const import (
 )
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
@@ -134,7 +133,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class NexiaZone(NexiaThermostatZoneEntity, ClimateDevice):
+class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
     """Provides Nexia Climate support."""
 
     def __init__(self, coordinator, zone):
@@ -192,7 +191,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateDevice):
     @property
     def fan_modes(self):
         """Return the list of available fan modes."""
-        return FAN_MODES
+        return self._thermostat.get_fan_modes()
 
     @property
     def min_temp(self):

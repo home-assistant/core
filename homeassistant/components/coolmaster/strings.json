@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "CoolMasterNet",
     "step": {
       "user": {
         "title": "Setup your CoolMasterNet connection details.",

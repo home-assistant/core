@@ -1,6 +1,6 @@
 """Definitions for DSMR Reader sensors added to MQTT."""
 
-from homeassistant.const import VOLUME_CUBIC_METERS
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, VOLT, VOLUME_CUBIC_METERS
 
 
 def dsmr_transform(value):
@@ -21,22 +21,22 @@ DEFINITIONS = {
     "dsmr/reading/electricity_delivered_1": {
         "name": "Low tariff usage",
         "icon": "mdi:flash",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/reading/electricity_returned_1": {
         "name": "Low tariff returned",
         "icon": "mdi:flash-outline",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/reading/electricity_delivered_2": {
         "name": "High tariff usage",
         "icon": "mdi:flash",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/reading/electricity_returned_2": {
         "name": "High tariff returned",
         "icon": "mdi:flash-outline",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/reading/electricity_currently_delivered": {
         "name": "Current power usage",
@@ -86,17 +86,17 @@ DEFINITIONS = {
     "dsmr/reading/phase_voltage_l1": {
         "name": "Current voltage L1",
         "icon": "mdi:flash",
-        "unit": "V",
+        "unit": VOLT,
     },
     "dsmr/reading/phase_voltage_l2": {
         "name": "Current voltage L2",
         "icon": "mdi:flash",
-        "unit": "V",
+        "unit": VOLT,
     },
     "dsmr/reading/phase_voltage_l3": {
         "name": "Current voltage L3",
         "icon": "mdi:flash",
-        "unit": "V",
+        "unit": VOLT,
     },
     "dsmr/consumption/gas/delivered": {
         "name": "Gas usage",
@@ -116,32 +116,32 @@ DEFINITIONS = {
     "dsmr/day-consumption/electricity1": {
         "name": "Low tariff usage",
         "icon": "mdi:counter",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/day-consumption/electricity2": {
         "name": "High tariff usage",
         "icon": "mdi:counter",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/day-consumption/electricity1_returned": {
         "name": "Low tariff return",
         "icon": "mdi:counter",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/day-consumption/electricity2_returned": {
         "name": "High tariff return",
         "icon": "mdi:counter",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/day-consumption/electricity_merged": {
         "name": "Power usage total",
         "icon": "mdi:counter",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/day-consumption/electricity_returned_merged": {
         "name": "Power return total",
         "icon": "mdi:counter",
-        "unit": "kWh",
+        "unit": ENERGY_KILO_WATT_HOUR,
     },
     "dsmr/day-consumption/electricity1_cost": {
         "name": "Low tariff cost",

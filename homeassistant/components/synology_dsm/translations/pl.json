@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Host jest ju\u017c skonfigurowany."
+        },
+        "error": {
+            "connection": "B\u0142\u0105d po\u0142\u0105czenia: sprawd\u017a host, port i SSL",
+            "login": "B\u0142\u0105d logowania: sprawd\u017a nazw\u0119 u\u017cytkownika i has\u0142o",
+            "missing_data": "Brakuj\u0105ce dane: spr\u00f3buj ponownie p\u00f3\u017aniej lub skorzystaj z innej konfiguracji",
+            "otp_failed": "Uwierzytelnianie dwuetapowe nie powiod\u0142o si\u0119, spr\u00f3buj ponownie z nowym kodem dost\u0119pu",
+            "unknown": "Nieznany b\u0142\u0105d, sprawd\u017a logi aby uzyska\u0107 wi\u0119cej szczeg\u00f3\u0142\u00f3w"
+        },
+        "flow_title": "Synology DSM {name} ({host})",
+        "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Kod"
+                },
+                "title": "Synology DSM: Uwierzytelnianie dwusk\u0142adnikowe"
+            },
+            "link": {
+                "data": {
+                    "api_version": "Wersja DSM",
+                    "password": "Has\u0142o",
+                    "port": "Port (opcjonalnie)",
+                    "ssl": "U\u017cyj SSL/TLS, aby po\u0142\u0105czy\u0107 si\u0119 z serwerem NAS",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Czy chcesz skonfigurowa\u0107 {name} ({host})?",
+                "title": "Synology DSM"
+            },
+            "user": {
+                "data": {
+                    "api_version": "Wersja DSM",
+                    "host": "Nazwa hosta lub adres IP",
+                    "password": "Has\u0142o",
+                    "port": "Port (opcjonalnie)",
+                    "ssl": "U\u017cyj SSL/TLS, aby po\u0142\u0105czy\u0107 si\u0119 z serwerem NAS",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "title": "Synology DSM"
+            }
+        }
+    }
+}

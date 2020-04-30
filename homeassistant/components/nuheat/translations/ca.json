@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El term\u00f2stat ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "invalid_thermostat": "El n\u00famero de s\u00e8rie del term\u00f2stat no \u00e9s v\u00e0lid.",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "serial_number": "N\u00famero de s\u00e8rie del term\u00f2stat.",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Has d\u2019obtenir el n\u00famero de s\u00e8rie o identificador del teu term\u00f2stat entrant a https://MyNuHeat.com i seleccionant el teu term\u00f2stat.",
+                "title": "Connexi\u00f3 amb NuHeat"
+            }
+        }
+    }
+}

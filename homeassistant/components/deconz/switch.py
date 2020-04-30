@@ -1,5 +1,5 @@
 """Support for deCONZ switches."""
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -43,7 +43,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_switch(gateway.api.lights.values())
 
 
-class DeconzPowerPlug(DeconzDevice, SwitchDevice):
+class DeconzPowerPlug(DeconzDevice, SwitchEntity):
     """Representation of a deCONZ power plug."""
 
     @property
@@ -62,7 +62,7 @@ class DeconzPowerPlug(DeconzDevice, SwitchDevice):
         await self._device.async_set_state(data)
 
 
-class DeconzSiren(DeconzDevice, SwitchDevice):
+class DeconzSiren(DeconzDevice, SwitchEntity):
     """Representation of a deCONZ siren."""
 
     @property

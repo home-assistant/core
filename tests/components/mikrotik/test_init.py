@@ -1,6 +1,7 @@
 """Test Mikrotik setup process."""
 from datetime import timedelta
-from unittest.mock import patch
+
+from asynctest import CoroutineMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components import mikrotik
@@ -9,7 +10,7 @@ from homeassistant.setup import async_setup_component
 from . import ENTRY_DATA, OLD_ENTRY_CONFIG
 from .test_hub import setup_mikrotik_integration
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 
 async def test_setup_with_no_config(hass, api):
@@ -33,7 +34,7 @@ async def test_old_config_entry(hass, api):
 async def test_config_fail_setup(hass, api):
     """Test that a failed setup will not store the config."""
     with patch.object(mikrotik, "Mikrotik") as mock_integration:
-        mock_integration.return_value.async_setup.return_value = mock_coro(False)
+        mock_integration.return_value.async_setup.return_value = CoroutineMock(False)
 
         config_entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=dict(ENTRY_DATA))
         config_entry.add_to_hass(hass)

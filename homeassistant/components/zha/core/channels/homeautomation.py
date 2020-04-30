@@ -81,27 +81,19 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
 
     async def fetch_config(self, from_cache):
         """Fetch config from device and updates format specifier."""
-        divisor = await self.get_attribute_value(
-            "ac_power_divisor", from_cache=from_cache
+        results = await self.get_attributes(
+            [
+                "ac_power_divisor",
+                "power_divisor",
+                "ac_power_multiplier",
+                "power_multiplier",
+            ],
+            from_cache=from_cache,
         )
-        if divisor is None:
-            divisor = await self.get_attribute_value(
-                "power_divisor", from_cache=from_cache
-            )
-            if divisor is None:
-                divisor = 1
-        self._divisor = divisor
-
-        mult = await self.get_attribute_value(
-            "ac_power_multiplier", from_cache=from_cache
+        self._divisor = results.get("ac_power_divisor", results.get("power_divisor", 1))
+        self._multiplier = results.get(
+            "ac_power_multiplier", results.get("power_multiplier", 1)
         )
-        if mult is None:
-            mult = await self.get_attribute_value(
-                "power_multiplier", from_cache=from_cache
-            )
-            if mult is None:
-                mult = 1
-        self._multiplier = mult
 
     @property
     def divisor(self) -> Optional[int]:

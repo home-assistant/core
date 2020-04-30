@@ -11,17 +11,10 @@ import voluptuous as vol
 
 from homeassistant.components import logbook, recorder, sun
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
-from homeassistant.components.homekit.const import (
-    ATTR_DISPLAY_NAME,
-    ATTR_VALUE,
-    DOMAIN as DOMAIN_HOMEKIT,
-    EVENT_HOMEKIT_CHANGED,
-)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_HIDDEN,
     ATTR_NAME,
-    ATTR_SERVICE,
     EVENT_AUTOMATION_TRIGGERED,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
@@ -287,9 +280,7 @@ class TestComponentLogbook(unittest.TestCase):
             {
                 ha.DOMAIN: {},
                 logbook.DOMAIN: {
-                    logbook.CONF_EXCLUDE: {
-                        logbook.CONF_DOMAINS: ["switch", "alexa", DOMAIN_HOMEKIT]
-                    }
+                    logbook.CONF_EXCLUDE: {logbook.CONF_DOMAINS: ["switch", "alexa"]}
                 },
             }
         )
@@ -299,7 +290,6 @@ class TestComponentLogbook(unittest.TestCase):
             for e in (
                 ha.Event(EVENT_HOMEASSISTANT_START),
                 ha.Event(EVENT_ALEXA_SMART_HOME),
-                ha.Event(EVENT_HOMEKIT_CHANGED),
                 eventA,
                 eventB,
             )
@@ -439,14 +429,6 @@ class TestComponentLogbook(unittest.TestCase):
             EVENT_ALEXA_SMART_HOME,
             {"request": {"namespace": "Alexa.Discovery", "name": "Discover"}},
         )
-        event_homekit = ha.Event(
-            EVENT_HOMEKIT_CHANGED,
-            {
-                ATTR_ENTITY_ID: "lock.front_door",
-                ATTR_DISPLAY_NAME: "Front Door",
-                ATTR_SERVICE: "lock",
-            },
-        )
 
         eventA = self.create_state_changed_event(pointA, entity_id, 10)
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
@@ -455,34 +437,25 @@ class TestComponentLogbook(unittest.TestCase):
             {
                 ha.DOMAIN: {},
                 logbook.DOMAIN: {
-                    logbook.CONF_INCLUDE: {
-                        logbook.CONF_DOMAINS: ["sensor", "alexa", DOMAIN_HOMEKIT]
-                    }
+                    logbook.CONF_INCLUDE: {logbook.CONF_DOMAINS: ["sensor", "alexa"]}
                 },
             }
         )
         entities_filter = logbook._generate_filter_from_config(config[logbook.DOMAIN])
         events = [
             e
-            for e in (
-                ha.Event(EVENT_HOMEASSISTANT_START),
-                event_alexa,
-                event_homekit,
-                eventA,
-                eventB,
-            )
+            for e in (ha.Event(EVENT_HOMEASSISTANT_START), event_alexa, eventA, eventB,)
             if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
 
-        assert len(entries) == 4
+        assert len(entries) == 3
         self.assert_entry(
             entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
         )
         self.assert_entry(entries[1], name="Amazon Alexa", domain="alexa")
-        self.assert_entry(entries[2], name="HomeKit", domain=DOMAIN_HOMEKIT)
         self.assert_entry(
-            entries[3], pointB, "blu", domain="sensor", entity_id=entity_id2
+            entries[2], pointB, "blu", domain="sensor", entity_id=entity_id2
         )
 
     def test_include_exclude_events(self):
@@ -1360,44 +1333,6 @@ async def test_logbook_view_period_entity(hass, hass_client):
     json = await response.json()
     assert len(json) == 1
     assert json[0]["entity_id"] == entity_id_test
-
-
-async def test_humanify_homekit_changed_event(hass):
-    """Test humanifying HomeKit changed event."""
-    event1, event2 = list(
-        logbook.humanify(
-            hass,
-            [
-                ha.Event(
-                    EVENT_HOMEKIT_CHANGED,
-                    {
-                        ATTR_ENTITY_ID: "lock.front_door",
-                        ATTR_DISPLAY_NAME: "Front Door",
-                        ATTR_SERVICE: "lock",
-                    },
-                ),
-                ha.Event(
-                    EVENT_HOMEKIT_CHANGED,
-                    {
-                        ATTR_ENTITY_ID: "cover.window",
-                        ATTR_DISPLAY_NAME: "Window",
-                        ATTR_SERVICE: "set_cover_position",
-                        ATTR_VALUE: 75,
-                    },
-                ),
-            ],
-        )
-    )
-
-    assert event1["name"] == "HomeKit"
-    assert event1["domain"] == DOMAIN_HOMEKIT
-    assert event1["message"] == "send command lock for Front Door"
-    assert event1["entity_id"] == "lock.front_door"
-
-    assert event2["name"] == "HomeKit"
-    assert event2["domain"] == DOMAIN_HOMEKIT
-    assert event2["message"] == "send command set_cover_position to 75 for Window"
-    assert event2["entity_id"] == "cover.window"
 
 
 async def test_humanify_automation_triggered_event(hass):

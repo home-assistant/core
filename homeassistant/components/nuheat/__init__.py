@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_PASSWORD,
     CONF_USERNAME,
+    HTTP_BAD_REQUEST,
     HTTP_INTERNAL_SERVER_ERROR,
 )
 from homeassistant.core import HomeAssistant
@@ -84,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryNotReady
     except requests.exceptions.HTTPError as ex:
         if (
-            ex.response.status_code > 400
+            ex.response.status_code > HTTP_BAD_REQUEST
             and ex.response.status_code < HTTP_INTERNAL_SERVER_ERROR
         ):
             _LOGGER.error("Failed to login to nuheat: %s", ex)

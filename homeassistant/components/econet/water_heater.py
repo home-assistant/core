@@ -40,6 +40,10 @@ ATTR_IN_USE = "in_use"
 ATTR_START_DATE = "start_date"
 ATTR_END_DATE = "end_date"
 
+ATTR_LOWER_TEMP = "lower_temp"
+ATTR_UPPER_TEMP = "upper_temp"
+ATTR_IS_ENABLED = "is_enabled"
+
 SUPPORT_FLAGS_HEATER = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 ADD_VACATION_SCHEMA = vol.Schema(
@@ -163,6 +167,13 @@ class EcoNetWaterHeater(WaterHeaterDevice):
         if todays_usage:
             data[ATTR_TODAYS_ENERGY_USAGE] = todays_usage
         data[ATTR_IN_USE] = self.water_heater.in_use
+
+        if self.water_heater.lower_temp is not None:
+            data[ATTR_LOWER_TEMP] = round(self.water_heater.lower_temp, 2)
+        if self.water_heater.upper_temp is not None:
+            data[ATTR_UPPER_TEMP] = round(self.water_heater.upper_temp, 2)
+        if self.water_heater.is_enabled is not None:
+            data[ATTR_IS_ENABLED] = self.water_heater.is_enabled
 
         return data
 

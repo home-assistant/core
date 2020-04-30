@@ -111,16 +111,26 @@ async def test_form_homekit(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "homekit"}
+        DOMAIN,
+        context={"source": "homekit"},
+        data={"properties": {"id": "AA:BB:CC:DD:EE:FF"}},
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
+    flow = next(
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
+    )
+    assert flow["context"]["unique_id"] == "AA:BB:CC:DD:EE:FF"
 
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_API_KEY: "api_key"})
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "homekit"}
+        DOMAIN,
+        context={"source": "homekit"},
+        data={"properties": {"id": "AA:BB:CC:DD:EE:FF"}},
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"

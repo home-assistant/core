@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Verten er allerede konfigurert."
+        },
+        "error": {
+            "cannot_connect": "Kan ikke koble til vert",
+            "name_exists": "Navnet eksisterer allerede",
+            "wrong_credentials": "Ugyldig brukernavn eller passord"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "name": "Navn",
+                    "password": "Passord",
+                    "port": "",
+                    "username": "Brukernavn"
+                },
+                "title": "Oppsett av Transmission-klient"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Oppdater frekvens"
+                },
+                "title": "Konfigurer alternativer for Transmission"
+            }
+        }
+    }
+}

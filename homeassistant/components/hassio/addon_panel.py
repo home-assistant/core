@@ -5,6 +5,7 @@ import logging
 from aiohttp import web
 
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import ATTR_ADMIN, ATTR_ENABLE, ATTR_ICON, ATTR_PANELS, ATTR_TITLE
@@ -52,7 +53,7 @@ class HassIOAddonPanel(HomeAssistantView):
         # Panel exists for add-on slug
         if addon not in panels or not panels[addon][ATTR_ENABLE]:
             _LOGGER.error("Panel is not enable for %s", addon)
-            return web.Response(status=400)
+            return web.Response(status=HTTP_BAD_REQUEST)
         data = panels[addon]
 
         # Register panel

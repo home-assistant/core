@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El punto de acceso ya est\u00e1 configurado",
+            "connection_aborted": "No se pudo conectar al servidor HMIP",
+            "unknown": "Se ha producido un error desconocido."
+        },
+        "error": {
+            "invalid_pin": "PIN no v\u00e1lido, por favor int\u00e9ntalo de nuevo.",
+            "press_the_button": "Por favor, pulsa el bot\u00f3n azul",
+            "register_failed": "No se pudo registrar, por favor intentelo de nuevo.",
+            "timeout_button": "Tiempo de espera agotado desde que se apret\u00f3 el bot\u00f3n azul, por favor, int\u00e9ntalo de nuevo."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "hapid": "ID de punto de acceso (SGTIN)",
+                    "name": "Nombre (opcional, utilizado como prefijo para todos los dispositivos)",
+                    "pin": "C\u00f3digo PIN (opcional)"
+                },
+                "title": "Elegir punto de acceso HomematicIP"
+            },
+            "link": {
+                "description": "Pulsa el bot\u00f3n azul en el punto de acceso y el bot\u00f3n de env\u00edo para registrar HomematicIP en Home Assistant.\n\n![Ubicaci\u00f3n del bot\u00f3n en el puente](/static/images/config_flows/config_homematicip_cloud.png)",
+                "title": "Enlazar punto de acceso"
+            }
+        }
+    }
+}

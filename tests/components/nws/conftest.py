@@ -22,3 +22,14 @@ def mock_simple_nws():
         instance.forecast = DEFAULT_FORECAST
         instance.forecast_hourly = DEFAULT_FORECAST
         yield mock_nws
+
+
+@pytest.fixture()
+def mock_simple_nws_config():
+    """Mock pynws SimpleNWS with default values in config_flow."""
+    with patch("homeassistant.components.nws.config_flow.SimpleNWS") as mock_nws:
+        instance = mock_nws.return_value
+        instance.set_station.return_value = mock_coro()
+        instance.station = "ABC"
+        instance.stations = ["ABC"]
+        yield mock_nws

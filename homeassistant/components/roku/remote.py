@@ -7,7 +7,7 @@ from requests.exceptions import (
 )
 from roku import RokuException
 
-from homeassistant.components.remote import RemoteDevice
+from homeassistant.components.remote import RemoteEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -24,7 +24,7 @@ async def async_setup_entry(
     async_add_entities([RokuRemote(roku)], True)
 
 
-class RokuRemote(RemoteDevice):
+class RokuRemote(RemoteEntity):
     """Device that sends commands to an Roku."""
 
     def __init__(self, roku):

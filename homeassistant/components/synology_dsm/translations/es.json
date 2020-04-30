@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El host ya est\u00e1 configurado."
+        },
+        "error": {
+            "connection": "Error de conexi\u00f3n: comprueba tu host, puerto y ssl",
+            "login": "Error de inicio de sesi\u00f3n: comprueba tu nombre de usuario y contrase\u00f1a",
+            "missing_data": "Faltan datos: por favor, vuelva a intentarlo m\u00e1s tarde o pruebe con otra configuraci\u00f3n",
+            "otp_failed": "La autenticaci\u00f3n de dos pasos fall\u00f3, vuelva a intentar con un nuevo c\u00f3digo de acceso",
+            "unknown": "Error desconocido: por favor, consulta logs para obtener m\u00e1s detalles"
+        },
+        "flow_title": "Synology DSM {name} ({host})",
+        "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "C\u00f3digo"
+                },
+                "title": "Synology DSM: autenticaci\u00f3n en dos pasos"
+            },
+            "link": {
+                "data": {
+                    "api_version": "Versi\u00f3n del DSM",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto (opcional)",
+                    "ssl": "Usar SSL/TLS para conectar con tu NAS",
+                    "username": "Usuario"
+                },
+                "description": "\u00bfQuieres configurar {name} ({host})?",
+                "title": "Synology DSM"
+            },
+            "user": {
+                "data": {
+                    "api_version": "Versi\u00f3n del DSM",
+                    "host": "Host",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "ssl": "Usar SSL/TLS para conectar con tu NAS",
+                    "username": "Usuario"
+                },
+                "title": "Synology DSM"
+            }
+        }
+    }
+}

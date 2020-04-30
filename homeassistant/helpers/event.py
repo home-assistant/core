@@ -1,7 +1,7 @@
 """Helpers for listening to events."""
 from datetime import datetime, timedelta
 import functools as ft
-from typing import Any, Callable, Dict, Iterable, Optional, Union, cast
+from typing import Any, Awaitable, Callable, Dict, Iterable, Optional, Union, cast
 
 import attr
 
@@ -274,7 +274,9 @@ call_later = threaded_listener_factory(async_call_later)
 @callback
 @bind_hass
 def async_track_time_interval(
-    hass: HomeAssistant, action: Callable[..., None], interval: timedelta
+    hass: HomeAssistant,
+    action: Callable[..., Union[None, Awaitable]],
+    interval: timedelta,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
     remove = None

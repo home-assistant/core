@@ -1,5 +1,11 @@
 """Constants for the Garmin Connect integration."""
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, TIME_MINUTES, UNIT_PERCENTAGE
+from homeassistant.const import (
+    DEVICE_CLASS_TIMESTAMP,
+    LENGTH_METERS,
+    MASS_KILOGRAMS,
+    TIME_MINUTES,
+    UNIT_PERCENTAGE,
+)
 
 DOMAIN = "garmin_connect"
 ATTRIBUTION = "Data provided by garmin.com"
@@ -27,7 +33,13 @@ GARMIN_ENTITY_LIST = {
         False,
     ],
     "netCalorieGoal": ["Net Calorie Goal", "cal", "mdi:food", None, False],
-    "totalDistanceMeters": ["Total Distance Mtr", "m", "mdi:walk", None, True],
+    "totalDistanceMeters": [
+        "Total Distance Mtr",
+        LENGTH_METERS,
+        "mdi:walk",
+        None,
+        True,
+    ],
     "wellnessStartTimeLocal": [
         "Wellness Start Time",
         "",
@@ -43,7 +55,13 @@ GARMIN_ENTITY_LIST = {
         False,
     ],
     "wellnessDescription": ["Wellness Description", "", "mdi:clock", None, False],
-    "wellnessDistanceMeters": ["Wellness Distance Mtr", "m", "mdi:walk", None, False],
+    "wellnessDistanceMeters": [
+        "Wellness Distance Mtr",
+        LENGTH_METERS,
+        "mdi:walk",
+        None,
+        False,
+    ],
     "wellnessActiveKilocalories": [
         "Wellness Active KiloCalories",
         "kcal",
@@ -76,8 +94,20 @@ GARMIN_ENTITY_LIST = {
         None,
         True,
     ],
-    "floorsAscendedInMeters": ["Floors Ascended Mtr", "m", "mdi:stairs", None, False],
-    "floorsDescendedInMeters": ["Floors Descended Mtr", "m", "mdi:stairs", None, False],
+    "floorsAscendedInMeters": [
+        "Floors Ascended Mtr",
+        LENGTH_METERS,
+        "mdi:stairs",
+        None,
+        False,
+    ],
+    "floorsDescendedInMeters": [
+        "Floors Descended Mtr",
+        LENGTH_METERS,
+        "mdi:stairs",
+        None,
+        False,
+    ],
     "floorsAscended": ["Floors Ascended", "floors", "mdi:stairs", None, True],
     "floorsDescended": ["Floors Descended", "floors", "mdi:stairs", None, True],
     "userFloorsAscendedGoal": [
@@ -309,12 +339,12 @@ GARMIN_ENTITY_LIST = {
         DEVICE_CLASS_TIMESTAMP,
         False,
     ],
-    "weight": ["Weight", "kg", "mdi:weight-kilogram", None, False],
+    "weight": ["Weight", MASS_KILOGRAMS, "mdi:weight-kilogram", None, False],
     "bmi": ["BMI", "", "mdi:food", None, False],
-    "bodyFat": ["Body Fat", "%", "mdi:food", None, False],
-    "bodyWater": ["Body Water", "%", "mdi:water-percent", None, False],
-    "bodyMass": ["Body Mass", "kg", "mdi:food", None, False],
-    "muscleMass": ["Muscle Mass", "kg", "mdi:dumbbell", None, False],
+    "bodyFat": ["Body Fat", UNIT_PERCENTAGE, "mdi:food", None, False],
+    "bodyWater": ["Body Water", UNIT_PERCENTAGE, "mdi:water-percent", None, False],
+    "bodyMass": ["Body Mass", MASS_KILOGRAMS, "mdi:food", None, False],
+    "muscleMass": ["Muscle Mass", MASS_KILOGRAMS, "mdi:dumbbell", None, False],
     "physiqueRating": ["Physique Rating", "", "mdi:numeric", None, False],
     "visceralFat": ["Visceral Fat", "", "mdi:food", None, False],
     "metabolicAge": ["Metabolic Age", "", "mdi:calendar-heart", None, False],

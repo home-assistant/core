@@ -1,0 +1,31 @@
+{
+  "config": {
+    "flow_title": "AVM FRITZ!Box: {name}",
+    "step": {
+      "user": {
+        "description": "Enter your AVM FRITZ!Box information.",
+        "data": {
+          "host": "Host or IP address",
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "confirm": {
+        "description": "Do you want to set up {name}?",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "abort": {
+      "already_in_progress": "AVM FRITZ!Box configuration is already in progress.",
+      "already_configured": "This AVM FRITZ!Box is already configured.",
+      "not_found": "No supported AVM FRITZ!Box found on the network.",
+      "not_supported": "Connected to AVM FRITZ!Box but it's unable to control Smart Home devices."
+    },
+    "error": {
+      "auth_failed": "Username and/or password are incorrect."
+    }
+  }
+}

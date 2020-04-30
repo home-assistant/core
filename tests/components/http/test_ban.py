@@ -20,6 +20,7 @@ from homeassistant.components.http.ban import (
     setup_bans,
 )
 from homeassistant.components.http.view import request_handler_factory
+from homeassistant.const import HTTP_FORBIDDEN
 from homeassistant.setup import async_setup_component
 
 from . import mock_real_ip
@@ -55,12 +56,16 @@ async def test_access_from_banned_ip(hass, aiohttp_client):
     for remote_addr in BANNED_IPS:
         set_real_ip(remote_addr)
         resp = await client.get("/")
-        assert resp.status == 403
+        assert resp.status == HTTP_FORBIDDEN
 
 
 @pytest.mark.parametrize(
     "remote_addr, bans, status",
-    list(zip(BANNED_IPS_WITH_SUPERVISOR, [1, 1, 0], [403, 403, 401])),
+    list(
+        zip(
+            BANNED_IPS_WITH_SUPERVISOR, [1, 1, 0], [HTTP_FORBIDDEN, HTTP_FORBIDDEN, 401]
+        )
+    ),
 )
 async def test_access_from_supervisor_ip(
     remote_addr, bans, status, hass, aiohttp_client, hassio_env
@@ -78,7 +83,7 @@ async def test_access_from_supervisor_ip(
     mock_real_ip(app)(remote_addr)
 
     with patch(
-        "homeassistant.components.http.ban.async_load_ip_bans_config", return_value=[],
+        "homeassistant.components.http.ban.async_load_ip_bans_config", return_value=[]
     ):
         client = await aiohttp_client(app)
 
@@ -151,7 +156,7 @@ async def test_ip_bans_file_creation(hass, aiohttp_client):
         m_open.assert_called_once_with(hass.config.path(IP_BANS_FILE), "a")
 
         resp = await client.get("/")
-        assert resp.status == 403
+        assert resp.status == HTTP_FORBIDDEN
         assert m_open.call_count == 1
 
 

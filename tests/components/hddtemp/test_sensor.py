@@ -3,6 +3,7 @@ import socket
 import unittest
 from unittest.mock import patch
 
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
@@ -64,25 +65,25 @@ class TestHDDTempSensor(unittest.TestCase):
             "/dev/sda1": {
                 "device": "/dev/sda1",
                 "temperature": "29",
-                "unit_of_measurement": "°C",
+                "unit_of_measurement": TEMP_CELSIUS,
                 "model": "WDC WD30EZRX-12DC0B0",
             },
             "/dev/sdb1": {
                 "device": "/dev/sdb1",
                 "temperature": "32",
-                "unit_of_measurement": "°C",
+                "unit_of_measurement": TEMP_CELSIUS,
                 "model": "WDC WD15EADS-11P7B2",
             },
             "/dev/sdc1": {
                 "device": "/dev/sdc1",
                 "temperature": "29",
-                "unit_of_measurement": "°C",
+                "unit_of_measurement": TEMP_CELSIUS,
                 "model": "WDC WD20EARX-22MMMB0",
             },
             "/dev/sdd1": {
                 "device": "/dev/sdd1",
                 "temperature": "32",
-                "unit_of_measurement": "°C",
+                "unit_of_measurement": TEMP_CELSIUS,
                 "model": "WDC WD15EARS-00Z5B1",
             },
         }

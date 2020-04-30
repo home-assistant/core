@@ -1,7 +1,6 @@
 """Test Dynalite bridge."""
 
 from asynctest import CoroutineMock, Mock, patch
-from dynalite_devices_lib.const import CONF_ALL
 
 from homeassistant.components import dynalite
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -29,7 +28,7 @@ async def test_update_device(hass):
     async_dispatcher_connect(
         hass, f"dynalite-update-{host}-{device.unique_id}", specific_func
     )
-    update_device_func(CONF_ALL)
+    update_device_func()
     await hass.async_block_till_done()
     wide_func.assert_called_once()
     specific_func.assert_not_called()

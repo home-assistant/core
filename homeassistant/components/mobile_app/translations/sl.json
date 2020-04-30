@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "install_app": "Odprite mobilno aplikacijo, da nastavite integracijo s storitvijo Home Assistant. Za seznam zdru\u017eljivih aplikacij si oglejte [docs] ({apps_url})."
+        },
+        "step": {
+            "confirm": {
+                "description": "Ali \u017eelite nastaviti komponento aplikacije Mobile App?",
+                "title": "Mobilna Aplikacija"
+            }
+        }
+    }
+}

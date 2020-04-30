@@ -3,20 +3,19 @@ import aiounifi
 from asynctest import patch
 
 from homeassistant import data_entry_flow
-from homeassistant.components import unifi
-from homeassistant.components.unifi import config_flow
-from homeassistant.components.unifi.config_flow import CONF_NEW_CLIENT
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_IGNORE_WIRED_BUG,
     CONF_POE_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
+    DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -39,7 +38,7 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
     """Test config flow."""
     mock_discovery.return_value = "1"
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": "user"}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -97,7 +96,7 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
 async def test_flow_works_multiple_sites(hass, aioclient_mock):
     """Test config flow works when finding multiple sites."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": "user"}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -143,12 +142,12 @@ async def test_flow_works_multiple_sites(hass, aioclient_mock):
 async def test_flow_fails_site_already_configured(hass, aioclient_mock):
     """Test config flow."""
     entry = MockConfigEntry(
-        domain=unifi.DOMAIN, data={"controller": {"host": "1.2.3.4", "site": "site_id"}}
+        domain=UNIFI_DOMAIN, data={"controller": {"host": "1.2.3.4", "site": "site_id"}}
     )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": "user"}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -188,7 +187,7 @@ async def test_flow_fails_site_already_configured(hass, aioclient_mock):
 async def test_flow_fails_user_credentials_faulty(hass, aioclient_mock):
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": "user"}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -215,7 +214,7 @@ async def test_flow_fails_user_credentials_faulty(hass, aioclient_mock):
 async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": "user"}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -242,7 +241,7 @@ async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
 async def test_flow_fails_unknown_problem(hass, aioclient_mock):
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": "user"}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -292,38 +291,9 @@ async def test_option_flow(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "client_control"
 
-    clients_to_block = hass.config_entries.options._progress[result["flow_id"]].options[
-        CONF_BLOCK_CLIENT
-    ]
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_BLOCK_CLIENT: clients_to_block,
-            CONF_NEW_CLIENT: "00:00:00:00:00:01",
-            CONF_POE_CLIENTS: False,
-        },
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "client_control"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_BLOCK_CLIENT: clients_to_block,
-            CONF_NEW_CLIENT: "00:00:00:00:00:02",
-        },
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "client_control"
-    assert result["errors"] == {"base": "unknown_client_mac"}
-
-    clients_to_block = hass.config_entries.options._progress[result["flow_id"]].options[
-        CONF_BLOCK_CLIENT
-    ]
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_BLOCK_CLIENT: clients_to_block},
+        user_input={CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]], CONF_POE_CLIENTS: False},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -338,9 +308,10 @@ async def test_option_flow(hass):
         CONF_TRACK_CLIENTS: False,
         CONF_TRACK_WIRED_CLIENTS: False,
         CONF_TRACK_DEVICES: False,
-        CONF_DETECTION_TIME: 100,
         CONF_SSID_FILTER: ["SSID 1"],
-        CONF_BLOCK_CLIENT: ["00:00:00:00:00:01"],
+        CONF_DETECTION_TIME: 100,
+        CONF_IGNORE_WIRED_BUG: False,
         CONF_POE_CLIENTS: False,
+        CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
     }

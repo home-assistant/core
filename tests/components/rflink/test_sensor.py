@@ -12,7 +12,7 @@ from homeassistant.components.rflink import (
     EVENT_KEY_SENSOR,
     TMP_ENTITY,
 )
-from homeassistant.const import STATE_UNKNOWN, UNIT_PERCENTAGE
+from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS, UNIT_PERCENTAGE
 
 from tests.components.rflink.test_init import mock_rflink
 
@@ -42,23 +42,27 @@ async def test_default_setup(hass, monkeypatch):
     config_sensor = hass.states.get("sensor.test")
     assert config_sensor
     assert config_sensor.state == "unknown"
-    assert config_sensor.attributes["unit_of_measurement"] == "°C"
+    assert config_sensor.attributes["unit_of_measurement"] == TEMP_CELSIUS
 
     # test event for config sensor
-    event_callback({"id": "test", "sensor": "temperature", "value": 1, "unit": "°C"})
+    event_callback(
+        {"id": "test", "sensor": "temperature", "value": 1, "unit": TEMP_CELSIUS}
+    )
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.test").state == "1"
 
     # test event for new unconfigured sensor
-    event_callback({"id": "test2", "sensor": "temperature", "value": 0, "unit": "°C"})
+    event_callback(
+        {"id": "test2", "sensor": "temperature", "value": 0, "unit": TEMP_CELSIUS}
+    )
     await hass.async_block_till_done()
 
     # test  state of new sensor
     new_sensor = hass.states.get("sensor.test2")
     assert new_sensor
     assert new_sensor.state == "0"
-    assert new_sensor.attributes["unit_of_measurement"] == "°C"
+    assert new_sensor.attributes["unit_of_measurement"] == TEMP_CELSIUS
     assert new_sensor.attributes["icon"] == "mdi:thermometer"
 
 
@@ -73,7 +77,9 @@ async def test_disable_automatic_add(hass, monkeypatch):
     event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
     # test event for new unconfigured sensor
-    event_callback({"id": "test2", "sensor": "temperature", "value": 0, "unit": "°C"})
+    event_callback(
+        {"id": "test2", "sensor": "temperature", "value": 0, "unit": TEMP_CELSIUS}
+    )
     await hass.async_block_till_done()
 
     # make sure new device is not added

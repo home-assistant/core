@@ -76,7 +76,7 @@ async def async_setup_platform(
     )
 
 
-class LightGroup(light.Light):
+class LightGroup(light.LightEntity):
     """Representation of a light group."""
 
     def __init__(self, name: str, entity_ids: List[str]) -> None:

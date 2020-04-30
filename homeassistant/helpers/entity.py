@@ -35,7 +35,7 @@ from homeassistant.helpers.entity_registry import (
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 from homeassistant.util.async_ import run_callback_threadsafe
 
-# mypy: allow-untyped-defs, no-check-untyped-defs, no-warn-return-any
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -319,11 +319,7 @@ class Entity(ABC):
         else:
             state = self.state
 
-            if state is None:
-                state = STATE_UNKNOWN
-            else:
-                state = str(state)
-
+            state = STATE_UNKNOWN if state is None else str(state)
             attr.update(self.state_attributes or {})
             attr.update(self.device_state_attributes or {})
 
@@ -497,12 +493,13 @@ class Entity(ABC):
     async def async_remove(self) -> None:
         """Remove entity from Home Assistant."""
         assert self.hass is not None
-        await self.async_internal_will_remove_from_hass()
-        await self.async_will_remove_from_hass()
 
         if self._on_remove is not None:
             while self._on_remove:
                 self._on_remove.pop()()
+
+        await self.async_internal_will_remove_from_hass()
+        await self.async_will_remove_from_hass()
 
         self.hass.states.async_remove(self.entity_id, context=self._context)
 
@@ -622,7 +619,7 @@ class ToggleEntity(Entity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        await self.hass.async_add_job(ft.partial(self.turn_on, **kwargs))
+        await self.hass.async_add_executor_job(ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -630,7 +627,7 @@ class ToggleEntity(Entity):
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        await self.hass.async_add_job(ft.partial(self.turn_off, **kwargs))
+        await self.hass.async_add_executor_job(ft.partial(self.turn_off, **kwargs))
 
     def toggle(self, **kwargs: Any) -> None:
         """Toggle the entity."""

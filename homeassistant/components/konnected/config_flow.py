@@ -283,11 +283,6 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # build config info and wait for user confirmation
             self.data[CONF_HOST] = user_input[CONF_HOST]
             self.data[CONF_PORT] = user_input[CONF_PORT]
-            self.data[CONF_ACCESS_TOKEN] = self.hass.data.get(DOMAIN, {}).get(
-                CONF_ACCESS_TOKEN
-            ) or "".join(
-                random.choices(f"{string.ascii_uppercase}{string.digits}", k=20)
-            )
 
             # brief delay to allow processing of recent status req
             await asyncio.sleep(0.1)
@@ -343,8 +338,12 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        # Attach default options and create entry
+        # Create access token, attach default options and create entry
         self.data[CONF_DEFAULT_OPTIONS] = self.options
+        self.data[CONF_ACCESS_TOKEN] = self.hass.data.get(DOMAIN, {}).get(
+            CONF_ACCESS_TOKEN
+        ) or "".join(random.choices(f"{string.ascii_uppercase}{string.digits}", k=20))
+
         return self.async_create_entry(
             title=KONN_PANEL_MODEL_NAMES[self.data[CONF_MODEL]], data=self.data,
         )

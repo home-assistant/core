@@ -20,7 +20,10 @@ from homeassistant.helpers.device_registry import (
     async_get_registry as get_dev_reg,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_registry import async_get_registry as get_ent_reg
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_device,
+    async_get_registry as get_ent_reg,
+)
 
 from . import discovery, typing as zha_typing
 from .const import (
@@ -77,7 +80,7 @@ from .const import (
 from .device import DeviceStatus, ZHADevice
 from .group import ZHAGroup
 from .patches import apply_application_controller_patch
-from .registries import RADIO_TYPES
+from .registries import GROUP_ENTITY_DOMAINS, RADIO_TYPES
 from .store import async_get_registry
 from .typing import ZhaDeviceType, ZhaGroupType, ZigpyEndpointType, ZigpyGroupType
 
@@ -273,6 +276,9 @@ class ZHAGateway:
         async_dispatcher_send(
             self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{zigpy_group.group_id:04x}"
         )
+        if len(zha_group.members) == 2:
+            # we need to do this because there wasn't already a group entity to remove and re-add
+            discovery.GROUP_PROBE.discover_group_entities(zha_group)
 
     def group_added(self, zigpy_group: ZigpyGroupType) -> None:
         """Handle zigpy group added event."""
@@ -289,6 +295,7 @@ class ZHAGateway:
         async_dispatcher_send(
             self._hass, f"{SIGNAL_REMOVE_GROUP}_0x{zigpy_group.group_id:04x}"
         )
+        self._cleanup_group_entity_registry_entries(zigpy_group)
 
     def _send_group_gateway_message(
         self, zigpy_group: ZigpyGroupType, gateway_message_type: str
@@ -367,6 +374,35 @@ class ZHAGateway:
             self.device_registry[entity.zha_device.ieee] = [
                 e for e in entity_refs if e.reference_id != entity.entity_id
             ]
+
+    def _cleanup_group_entity_registry_entries(
+        self, zigpy_group: ZigpyGroupType
+    ) -> None:
+        """Remove entity registry entries for group entities when the groups are removed from HA."""
+        # first we collect the potential unique ids for entities that could be created from this group
+        possible_entity_unique_ids = [
+            f"{domain}_zha_group_0x{zigpy_group.group_id:04x}"
+            for domain in GROUP_ENTITY_DOMAINS
+        ]
+
+        # then we get all group entity entries tied to the coordinator
+        all_group_entity_entries = async_entries_for_device(
+            self.ha_entity_registry, self.coordinator_zha_device.device_id
+        )
+
+        # then we get the entity entries for this specific group by getting the entries that match
+        entries_to_remove = [
+            entry
+            for entry in all_group_entity_entries
+            if entry.unique_id in possible_entity_unique_ids
+        ]
+
+        # then we remove the entries from the entity registry
+        for entry in entries_to_remove:
+            _LOGGER.debug(
+                "cleaning up entity registry entry for entity: %s", entry.entity_id
+            )
+            self.ha_entity_registry.async_remove(entry.entity_id)
 
     @property
     def devices(self):
@@ -557,15 +593,7 @@ class ZHAGateway:
                     )
                     tasks.append(self.devices[ieee].async_add_to_group(group_id))
                 await asyncio.gather(*tasks)
-        zha_group = self.groups.get(group_id)
-        _LOGGER.debug(
-            "Probing group: %s:0x%04x for entity discovery",
-            zha_group.name,
-            zha_group.group_id,
-        )
-        discovery.GROUP_PROBE.discover_group_entities(zha_group)
-
-        return zha_group
+        return self.groups.get(group_id)
 
     async def async_remove_zigpy_group(self, group_id: int) -> None:
         """Remove a Zigbee group from Zigpy."""

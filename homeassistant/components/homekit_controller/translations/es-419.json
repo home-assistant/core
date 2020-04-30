@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El accesorio ya est\u00e1 configurado con este controlador.",
+            "already_paired": "Este accesorio ya est\u00e1 emparejado con otro dispositivo. Por favor, reinicie el accesorio y vuelva a intentarlo."
+        },
+        "error": {
+            "pairing_failed": "Se produjo un error no controlado al intentar vincularse con este dispositivo. Esto puede ser una falla temporal o su dispositivo puede no ser compatible actualmente.",
+            "unable_to_pair": "No se puede vincular, por favor intente nuevamente.",
+            "unknown_error": "El dispositivo inform\u00f3 un error desconocido. Vinculaci\u00f3n fallida."
+        },
+        "flow_title": "Accesorio HomeKit: {name}",
+        "step": {
+            "pair": {
+                "data": {
+                    "pairing_code": "C\u00f3digo de emparejamiento"
+                },
+                "description": "Ingrese su c\u00f3digo de emparejamiento de HomeKit (en el formato XXX-XX-XXX) para usar este accesorio",
+                "title": "Vincular con el accesorio HomeKit"
+            },
+            "user": {
+                "data": {
+                    "device": "Dispositivo"
+                },
+                "description": "Seleccione el dispositivo con el que desea vincular",
+                "title": "Vincular con el accesorio HomeKit"
+            }
+        }
+    },
+    "title": "Accesorio HomeKit"
+}

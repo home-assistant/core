@@ -28,3 +28,12 @@ restore:
     entity_id:
       description: Name(s) of entities that will be restored. Platform dependent.
       example: "media_player.living_room"
+
+set_latency:
+  description: Set client set_latency
+  fields:
+    entity_id:
+      description: Name of entities that will have adjusted latency
+    latency:
+      description: Latency in master
+      example: 14

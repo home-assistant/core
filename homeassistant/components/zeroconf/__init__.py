@@ -157,7 +157,14 @@ def info_from_service(service):
         # See https://ietf.org/rfc/rfc6763.html#section-6.4 and
         # https://ietf.org/rfc/rfc6763.html#section-6.5 for expected encodings
         # for property keys and values
-        key = key.decode("ascii")
+        try:
+            key = key.decode("ascii")
+        except UnicodeDecodeError:
+            _LOGGER.debug(
+                "Ignoring invalid key provided by [%s]: %s", service.name, key
+            )
+            continue
+
         properties["_raw"][key] = value
 
         try:

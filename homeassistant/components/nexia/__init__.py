@@ -9,7 +9,12 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_INTERNAL_SERVER_ERROR
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    HTTP_BAD_REQUEST,
+    HTTP_INTERNAL_SERVER_ERROR,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
@@ -60,6 +65,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
 
+    state_file = hass.config.path(f"nexia_config_{username}.conf")
+
     try:
         nexia_home = await hass.async_add_executor_job(
             partial(
@@ -67,6 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 username=username,
                 password=password,
                 device_name=hass.config.location_name,
+                state_file=state_file,
             )
         )
     except ConnectTimeout as ex:
@@ -74,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryNotReady
     except HTTPError as http_ex:
         if (
-            http_ex.response.status_code >= 400
+            http_ex.response.status_code >= HTTP_BAD_REQUEST
             and http_ex.response.status_code < HTTP_INTERNAL_SERVER_ERROR
         ):
             _LOGGER.error(

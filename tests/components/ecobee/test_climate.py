@@ -107,25 +107,25 @@ class TestEcobee(unittest.TestCase):
 
     def test_hvac_mode(self):
         """Test current operation property."""
-        assert "auto" == self.thermostat.hvac_mode
+        assert self.thermostat.hvac_mode == "heat_cool"
         self.ecobee["settings"]["hvacMode"] = "heat"
-        assert "heat" == self.thermostat.hvac_mode
+        assert self.thermostat.hvac_mode == "heat"
         self.ecobee["settings"]["hvacMode"] = "cool"
-        assert "cool" == self.thermostat.hvac_mode
+        assert self.thermostat.hvac_mode == "cool"
         self.ecobee["settings"]["hvacMode"] = "auxHeatOnly"
-        assert "heat" == self.thermostat.hvac_mode
+        assert self.thermostat.hvac_mode == "heat"
         self.ecobee["settings"]["hvacMode"] = "off"
-        assert "off" == self.thermostat.hvac_mode
+        assert self.thermostat.hvac_mode == "off"
 
     def test_hvac_modes(self):
         """Test operation list property."""
-        assert ["auto", "heat", "cool", "off"] == self.thermostat.hvac_modes
+        assert ["heat_cool", "heat", "cool", "off"] == self.thermostat.hvac_modes
 
     def test_hvac_mode2(self):
         """Test operation mode property."""
-        assert "auto" == self.thermostat.hvac_mode
+        assert self.thermostat.hvac_mode == "heat_cool"
         self.ecobee["settings"]["hvacMode"] = "heat"
-        assert "heat" == self.thermostat.hvac_mode
+        assert self.thermostat.hvac_mode == "heat"
 
     def test_device_state_attributes(self):
         """Test device state attributes property."""
@@ -222,7 +222,7 @@ class TestEcobee(unittest.TestCase):
     def test_set_hvac_mode(self):
         """Test operation mode setter."""
         self.data.reset_mock()
-        self.thermostat.set_hvac_mode("auto")
+        self.thermostat.set_hvac_mode("heat_cool")
         self.data.ecobee.set_hvac_mode.assert_has_calls([mock.call(1, "auto")])
         self.data.reset_mock()
         self.thermostat.set_hvac_mode("heat")

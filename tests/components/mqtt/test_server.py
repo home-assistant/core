@@ -2,12 +2,18 @@
 from unittest.mock import MagicMock, Mock
 
 from asynctest import CoroutineMock, patch
+import pytest
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant, mock_coro, mock_storage
+from tests.common import get_test_home_assistant, mock_coro
+
+
+@pytest.fixture(autouse=True)
+def inject_fixture(hass_storage):
+    """Inject pytest fixtures."""
 
 
 class TestMQTT:
@@ -16,13 +22,10 @@ class TestMQTT:
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.mock_storage = mock_storage()
-        self.mock_storage.__enter__()
 
     def teardown_method(self, method):
         """Stop everything that was started."""
         self.hass.stop()
-        self.mock_storage.__exit__(None, None, None)
 
     @patch("passlib.apps.custom_app_context", Mock(return_value=""))
     @patch("tempfile.NamedTemporaryFile", Mock(return_value=MagicMock()))

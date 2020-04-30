@@ -13,7 +13,7 @@ from songpal import (
 )
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -117,7 +117,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class SongpalDevice(MediaPlayerDevice):
+class SongpalDevice(MediaPlayerEntity):
     """Class representing a Songpal device."""
 
     def __init__(self, name, endpoint, poll=False):

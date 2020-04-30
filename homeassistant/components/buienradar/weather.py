@@ -102,7 +102,7 @@ class BrWeather(WeatherEntity):
     def __init__(self, data, config):
         """Initialise the platform with a data instance and station name."""
         self._stationname = config.get(CONF_NAME)
-        self._forecast = config.get(CONF_FORECAST)
+        self._forecast = config[CONF_FORECAST]
         self._data = data
 
     @property

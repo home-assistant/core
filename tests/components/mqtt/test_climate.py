@@ -793,6 +793,20 @@ async def test_temp_step_custom(hass, mqtt_mock):
     assert temp_step == 0.01
 
 
+async def test_temperature_unit(hass, mqtt_mock):
+    """Test that setting temperature unit converts temperature values."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["climate"]["temperature_unit"] = "F"
+    config["climate"]["current_temperature_topic"] = "current_temperature"
+
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+
+    async_fire_mqtt_message(hass, "current_temperature", "77")
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("current_temperature") == 25
+
+
 async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(

@@ -11,7 +11,7 @@ from homeassistant.components.modbus.const import (
     CONF_REGISTER_TYPE,
     CONF_REGISTERS,
     DEFAULT_HUB,
-    MODBUS_DOMAIN,
+    MODBUS_DOMAIN as DOMAIN,
 )
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_SCAN_INTERVAL
 from homeassistant.setup import async_setup_component
@@ -25,10 +25,10 @@ _LOGGER = logging.getLogger(__name__)
 @pytest.fixture()
 def mock_hub(hass):
     """Mock hub."""
-    mock_integration(hass, MockModule(MODBUS_DOMAIN))
+    mock_integration(hass, MockModule(DOMAIN))
     hub = mock.MagicMock()
     hub.name = "hub"
-    hass.data[MODBUS_DOMAIN] = {DEFAULT_HUB: hub}
+    hass.data[DOMAIN] = {DEFAULT_HUB: hub}
     return hub
 
 
@@ -40,18 +40,10 @@ class ReadResult:
         self.registers = register_words
 
 
-read_result = None
-
-
 async def run_test(
     hass, use_mock_hub, register_config, entity_domain, register_words, expected
 ):
     """Run test for given config and check that sensor outputs expected result."""
-
-    async def simulate_read_registers(unit, address, count):
-        """Simulate modbus register read."""
-        del unit, address, count  # not used in simulation, but in real connection
-        return read_result
 
     # Full sensor configuration
     sensor_name = "modbus_test_sensor"
@@ -69,9 +61,9 @@ async def run_test(
     # Setup inputs for the sensor
     read_result = ReadResult(register_words)
     if register_config.get(CONF_REGISTER_TYPE) == CALL_TYPE_REGISTER_INPUT:
-        use_mock_hub.read_input_registers = simulate_read_registers
+        use_mock_hub.read_input_registers.return_value = read_result
     else:
-        use_mock_hub.read_holding_registers = simulate_read_registers
+        use_mock_hub.read_holding_registers.return_value = read_result
 
     # Initialize sensor
     now = dt_util.utcnow()

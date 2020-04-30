@@ -27,7 +27,9 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEGREE,
     IRRADIATION_WATTS_PER_SQUARE_METER,
+    LENGTH_KILOMETERS,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     TIME_HOURS,
@@ -75,9 +77,9 @@ SENSOR_TYPES = {
     "windspeed": ["Wind speed", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
     "windforce": ["Wind force", "Bft", "mdi:weather-windy"],
     "winddirection": ["Wind direction", None, "mdi:compass-outline"],
-    "windazimuth": ["Wind direction azimuth", "°", "mdi:compass-outline"],
+    "windazimuth": ["Wind direction azimuth", DEGREE, "mdi:compass-outline"],
     "pressure": ["Pressure", "hPa", "mdi:gauge"],
-    "visibility": ["Visibility", "km", None],
+    "visibility": ["Visibility", LENGTH_KILOMETERS, None],
     "windgust": ["Wind gust", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
     "precipitation": ["Precipitation", f"mm/{TIME_HOURS}", "mdi:weather-pouring"],
     "irradiance": ["Irradiance", IRRADIATION_WATTS_PER_SQUARE_METER, "mdi:sunglasses"],
@@ -147,11 +149,11 @@ SENSOR_TYPES = {
     "winddirection_3d": ["Wind direction 3d", None, "mdi:compass-outline"],
     "winddirection_4d": ["Wind direction 4d", None, "mdi:compass-outline"],
     "winddirection_5d": ["Wind direction 5d", None, "mdi:compass-outline"],
-    "windazimuth_1d": ["Wind direction azimuth 1d", "°", "mdi:compass-outline"],
-    "windazimuth_2d": ["Wind direction azimuth 2d", "°", "mdi:compass-outline"],
-    "windazimuth_3d": ["Wind direction azimuth 3d", "°", "mdi:compass-outline"],
-    "windazimuth_4d": ["Wind direction azimuth 4d", "°", "mdi:compass-outline"],
-    "windazimuth_5d": ["Wind direction azimuth 5d", "°", "mdi:compass-outline"],
+    "windazimuth_1d": ["Wind direction azimuth 1d", DEGREE, "mdi:compass-outline"],
+    "windazimuth_2d": ["Wind direction azimuth 2d", DEGREE, "mdi:compass-outline"],
+    "windazimuth_3d": ["Wind direction azimuth 3d", DEGREE, "mdi:compass-outline"],
+    "windazimuth_4d": ["Wind direction azimuth 4d", DEGREE, "mdi:compass-outline"],
+    "windazimuth_5d": ["Wind direction azimuth 5d", DEGREE, "mdi:compass-outline"],
     "condition_1d": ["Condition 1d", None, None],
     "condition_2d": ["Condition 2d", None, None],
     "condition_3d": ["Condition 3d", None, None],
@@ -192,7 +194,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Inclusive(
             CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
         ): cv.longitude,
-        vol.Optional(CONF_TIMEFRAME, default=60): vol.All(
+        vol.Optional(CONF_TIMEFRAME, default=DEFAULT_TIMEFRAME): vol.All(
             vol.Coerce(int), vol.Range(min=5, max=120)
         ),
         vol.Optional(CONF_NAME, default="br"): cv.string,
@@ -205,7 +207,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    timeframe = config.get(CONF_TIMEFRAME, DEFAULT_TIMEFRAME)
+    timeframe = config[CONF_TIMEFRAME]
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
