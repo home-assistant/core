@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "no_device_selected": "Geen apparaat geselecteerd, selecteer 1 apparaat alstublieft"
+        },
+        "step": {
+            "gateway": {
+                "data": {
+                    "host": "IP-adres"
+                },
+                "title": "Maak verbinding met een Xiaomi Gateway"
+            },
+            "user": {
+                "data": {
+                    "gateway": "Maak verbinding met een Xiaomi Gateway"
+                },
+                "description": "Selecteer het apparaat waarmee u verbinding wilt maken"
+            }
+        }
+    }
+}
