@@ -256,16 +256,17 @@ async def handle_remove_node(hass: HomeAssistant, node: OZWNode):
     # grab device in device registry attached to this node
     dev_id = create_device_id(node)
     device = dev_registry.async_get_device({(DOMAIN, dev_id)}, set())
-    if device:
-        devices_to_remove = [device.id]
-        # also grab slave devices (node instances)
-        for item in dev_registry.devices.values():
-            if item.via_device_id == device.id:
-                devices_to_remove.append(item.id)
-        # remove all devices in registry related to this node
-        # note: removal of entity registry is handled by core
-        for dev_id in devices_to_remove:
-            dev_registry.async_remove_device(dev_id)
+    if not device:
+        return
+    devices_to_remove = [device.id]
+    # also grab slave devices (node instances)
+    for item in dev_registry.devices.values():
+        if item.via_device_id == device.id:
+            devices_to_remove.append(item.id)
+    # remove all devices in registry related to this node
+    # note: removal of entity registry is handled by core
+    for dev_id in devices_to_remove:
+        dev_registry.async_remove_device(dev_id)
 
 
 async def handle_node_update(hass: HomeAssistant, node: OZWNode):
