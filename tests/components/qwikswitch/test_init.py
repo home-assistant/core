@@ -3,13 +3,13 @@ import asyncio
 import logging
 
 from aiohttp.client_exceptions import ClientError
-from asynctest import Mock
 import pytest
 from yarl import URL
 
 from homeassistant.components.qwikswitch import DOMAIN as QWIKSWITCH
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import Mock
 from tests.test_util.aiohttp import AiohttpClientMockResponse, MockLongPollSideEffect
 
 _LOGGER = logging.getLogger(__name__)

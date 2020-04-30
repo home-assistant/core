@@ -1,13 +1,13 @@
 """Tests for the Atag config flow."""
 from unittest.mock import PropertyMock
 
-from asynctest import patch
 from pyatag import AtagException
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.atag import DOMAIN
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 FIXTURE_USER_INPUT = {

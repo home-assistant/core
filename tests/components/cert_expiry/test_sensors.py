@@ -3,13 +3,12 @@ from datetime import timedelta
 import socket
 import ssl
 
-from asynctest import patch
-
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 import homeassistant.util.dt as dt_util
 
 from .const import HOST, PORT
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 

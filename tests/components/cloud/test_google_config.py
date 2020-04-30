@@ -1,8 +1,6 @@
 """Test the Cloud Google Config."""
 from unittest.mock import Mock
 
-from asynctest import patch
-
 from homeassistant.components.cloud import GACTIONS_SCHEMA
 from homeassistant.components.cloud.google_config import CloudGoogleConfig
 from homeassistant.components.google_assistant import helpers as ga_helpers
@@ -11,7 +9,8 @@ from homeassistant.core import CoreState
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed, mock_coro
+from tests.async_mock import AsyncMock, patch
+from tests.common import async_fire_time_changed
 
 
 async def test_google_update_report_state(hass, cloud_prefs):
@@ -43,12 +42,12 @@ async def test_sync_entities(aioclient_mock, hass, cloud_prefs):
         GACTIONS_SCHEMA({}),
         "mock-user-id",
         cloud_prefs,
-        Mock(auth=Mock(async_check_token=Mock(side_effect=mock_coro))),
+        Mock(auth=Mock(async_check_token=AsyncMock())),
     )
 
     with patch(
         "hass_nabucasa.cloud_api.async_google_actions_request_sync",
-        return_value=mock_coro(Mock(status=HTTP_NOT_FOUND)),
+        return_value=Mock(status=HTTP_NOT_FOUND),
     ) as mock_request_sync:
         assert await config.async_sync_entities("user") == HTTP_NOT_FOUND
         assert len(mock_request_sync.mock_calls) == 1

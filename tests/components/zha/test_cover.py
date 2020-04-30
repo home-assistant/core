@@ -1,7 +1,4 @@
 """Test zha cover."""
-from unittest.mock import MagicMock, call, patch
-
-import asynctest
 import pytest
 import zigpy.types
 import zigpy.zcl.clusters.closures as closures
@@ -17,6 +14,7 @@ from .common import (
     send_attributes_report,
 )
 
+from tests.async_mock import MagicMock, call, patch
 from tests.common import mock_coro
 
 
@@ -34,7 +32,7 @@ def zigpy_cover_device(zigpy_device_mock):
     return zigpy_device_mock(endpoints)
 
 
-@asynctest.patch(
+@patch(
     "homeassistant.components.zha.core.channels.closures.WindowCovering.async_initialize"
 )
 async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):

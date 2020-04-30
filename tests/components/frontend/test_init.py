@@ -1,7 +1,6 @@
 """The tests for Home Assistant frontend."""
 import re
 
-from asynctest import patch
 import pytest
 
 from homeassistant.components.frontend import (
@@ -17,6 +16,7 @@ from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import async_capture_events
 
 CONFIG_THEMES = {DOMAIN: {CONF_THEMES: {"happy": {"primary-color": "red"}}}}

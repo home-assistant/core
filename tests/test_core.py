@@ -7,7 +7,6 @@ import logging
 import os
 from tempfile import TemporaryDirectory
 import unittest
-from unittest.mock import MagicMock, patch
 
 import pytest
 import pytz
@@ -35,6 +34,7 @@ from homeassistant.exceptions import InvalidEntityFormatError, InvalidStateError
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from tests.async_mock import MagicMock, patch
 from tests.common import async_mock_service, get_test_home_assistant
 
 PST = pytz.timezone("America/Los_Angeles")

@@ -1,12 +1,12 @@
 """Test config flow."""
 from collections import namedtuple
-from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.components.esphome import DATA_KEY, config_flow
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.async_mock import AsyncMock, MagicMock, patch
+from tests.common import MockConfigEntry
 
 MockDeviceInfo = namedtuple("DeviceInfo", ["uses_password", "name"])
 
@@ -24,8 +24,8 @@ def mock_client():
             return mock_client
 
         mock_client.side_effect = mock_constructor
-        mock_client.connect.return_value = mock_coro()
-        mock_client.disconnect.return_value = mock_coro()
+        mock_client.connect = AsyncMock()
+        mock_client.disconnect = AsyncMock()
 
         yield mock_client
 
@@ -53,7 +53,7 @@ async def test_user_connection_works(hass, mock_client):
     result = await flow.async_step_user(user_input=None)
     assert result["type"] == "form"
 
-    mock_client.device_info.return_value = mock_coro(MockDeviceInfo(False, "test"))
+    mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(False, "test"))
 
     result = await flow.async_step_user(user_input={"host": "127.0.0.1", "port": 80})
 
@@ -119,7 +119,7 @@ async def test_user_with_password(hass, mock_client):
     flow = _setup_flow_handler(hass)
     await flow.async_step_user(user_input=None)
 
-    mock_client.device_info.return_value = mock_coro(MockDeviceInfo(True, "test"))
+    mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(True, "test"))
 
     result = await flow.async_step_user(user_input={"host": "127.0.0.1", "port": 6053})
 
@@ -142,7 +142,7 @@ async def test_user_invalid_password(hass, mock_api_connection_error, mock_clien
     flow = _setup_flow_handler(hass)
     await flow.async_step_user(user_input=None)
 
-    mock_client.device_info.return_value = mock_coro(MockDeviceInfo(True, "test"))
+    mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(True, "test"))
 
     await flow.async_step_user(user_input={"host": "127.0.0.1", "port": 6053})
     mock_client.connect.side_effect = mock_api_connection_error
@@ -163,7 +163,7 @@ async def test_discovery_initiation(hass, mock_client):
         "properties": {},
     }
 
-    mock_client.device_info.return_value = mock_coro(MockDeviceInfo(False, "test8266"))
+    mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(False, "test8266"))
 
     result = await flow.async_step_zeroconf(user_input=service_info)
     assert result["type"] == "form"
@@ -245,7 +245,7 @@ async def test_discovery_duplicate_data(hass, mock_client):
         "properties": {"address": "test8266.local"},
     }
 
-    mock_client.device_info.return_value = mock_coro(MockDeviceInfo(False, "test8266"))
+    mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(False, "test8266"))
 
     result = await hass.config_entries.flow.async_init(
         "esphome", data=service_info, context={"source": "zeroconf"}

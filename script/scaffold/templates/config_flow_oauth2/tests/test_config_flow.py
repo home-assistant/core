@@ -1,6 +1,4 @@
 """Test the NEW_NAME config flow."""
-from asynctest import patch
-
 from homeassistant import config_entries, setup
 from homeassistant.components.NEW_DOMAIN.const import (
     DOMAIN,
@@ -8,6 +6,8 @@ from homeassistant.components.NEW_DOMAIN.const import (
     OAUTH2_TOKEN,
 )
 from homeassistant.helpers import config_entry_oauth2_flow
+
+from tests.async_mock import patch
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"

@@ -1,11 +1,10 @@
 """The gateway tests for the august platform."""
 from unittest.mock import MagicMock
 
-from asynctest import mock
-
 from homeassistant.components.august.const import DOMAIN
 from homeassistant.components.august.gateway import AugustGateway
 
+from tests.async_mock import patch
 from tests.components.august.mocks import _mock_august_authentication, _mock_get_config
 
 
@@ -14,11 +13,9 @@ async def test_refresh_access_token(hass):
     await _patched_refresh_access_token(hass, "new_token", 5678)
 
 
-@mock.patch(
-    "homeassistant.components.august.gateway.AuthenticatorAsync.async_authenticate"
-)
-@mock.patch("homeassistant.components.august.gateway.AuthenticatorAsync.should_refresh")
-@mock.patch(
+@patch("homeassistant.components.august.gateway.AuthenticatorAsync.async_authenticate")
+@patch("homeassistant.components.august.gateway.AuthenticatorAsync.should_refresh")
+@patch(
     "homeassistant.components.august.gateway.AuthenticatorAsync.async_refresh_access_token"
 )
 async def _patched_refresh_access_token(

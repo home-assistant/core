@@ -165,7 +165,7 @@ class HomeAccessory(Accessory):
         Run inside the Home Assistant event loop.
         """
         state = self.hass.states.get(self.entity_id)
-        self.hass.async_add_executor_job(self.update_state_callback, None, None, state)
+        self.hass.async_add_job(self.update_state_callback, None, None, state)
         async_track_state_change(self.hass, self.entity_id, self.update_state_callback)
 
         battery_charging_state = None

@@ -3,7 +3,6 @@
 import asyncio
 
 import aiodns
-from asynctest import patch
 from mcstatus.pinger import PingResponse
 
 from homeassistant.components.minecraft_server.const import (
@@ -20,6 +19,7 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

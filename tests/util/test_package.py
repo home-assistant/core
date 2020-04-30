@@ -5,11 +5,12 @@ import os
 from subprocess import PIPE
 import sys
 
-from asynctest import MagicMock, call, patch
 import pkg_resources
 import pytest
 
 import homeassistant.util.package as package
+
+from tests.async_mock import MagicMock, call, patch
 
 RESOURCE_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "resources")
@@ -70,13 +71,11 @@ def mock_venv():
         yield mock
 
 
-@asyncio.coroutine
 def mock_async_subprocess():
     """Return an async Popen mock."""
     async_popen = MagicMock()
 
-    @asyncio.coroutine
-    def communicate(input=None):
+    async def communicate(input=None):
         """Communicate mock."""
         stdout = bytes("/deps_dir/lib_dir", "utf-8")
         return (stdout, None)
