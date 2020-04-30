@@ -4,14 +4,14 @@ from unittest.mock import Mock, patch
 from homeassistant.components import emulated_roku
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro_func
+from tests.async_mock import AsyncMock
 
 
 async def test_config_required_fields(hass):
     """Test that configuration is successful with required fields."""
     with patch.object(emulated_roku, "configured_servers", return_value=[]), patch(
         "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
-        return_value=Mock(start=mock_coro_func(), close=mock_coro_func()),
+        return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ):
         assert (
             await async_setup_component(
@@ -36,7 +36,7 @@ async def test_config_already_registered_not_configured(hass):
     """Test that an already registered name causes the entry to be ignored."""
     with patch(
         "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
-        return_value=Mock(start=mock_coro_func(), close=mock_coro_func()),
+        return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ) as instantiate, patch.object(
         emulated_roku, "configured_servers", return_value=["Emulated Roku Test"]
     ):
@@ -75,7 +75,7 @@ async def test_setup_entry_successful(hass):
 
     with patch(
         "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
-        return_value=Mock(start=mock_coro_func(), close=mock_coro_func()),
+        return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ) as instantiate:
         assert await emulated_roku.async_setup_entry(hass, entry) is True
 
@@ -99,7 +99,7 @@ async def test_unload_entry(hass):
 
     with patch(
         "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
-        return_value=Mock(start=mock_coro_func(), close=mock_coro_func()),
+        return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ):
         assert await emulated_roku.async_setup_entry(hass, entry) is True
 

@@ -89,7 +89,7 @@ def patch_sync_helper():
     to_update = []
     to_remove = []
 
-    async def sync_helper(to_upd, to_rem):
+    def sync_helper(to_upd, to_rem):
         to_update.extend([ent_id for ent_id in to_upd if ent_id not in to_update])
         to_remove.extend([ent_id for ent_id in to_rem if ent_id not in to_remove])
         return True
