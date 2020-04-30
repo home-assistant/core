@@ -5,6 +5,11 @@ from ipaddress import IPv4Address
 from asynctest import patch
 
 from homeassistant.components import upnp
+from homeassistant.components.upnp.const import (
+    DISCOVERY_LOCATION,
+    DISCOVERY_ST,
+    DISCOVERY_UDN,
+)
 from homeassistant.components.upnp.device import Device
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.setup import async_setup_component
@@ -69,20 +74,29 @@ class MockDevice(Device):
 async def test_async_setup_entry_default(hass):
     """Test async_setup_entry."""
     udn = "uuid:device_1"
-    entry = MockConfigEntry(domain=upnp.DOMAIN)
+    st = MockDevice.device_type
+    entry = MockConfigEntry(domain=upnp.DOMAIN, data={"udn": udn, "st": st})
 
     config = {
         # no upnp
     }
     with patch.object(Device, "async_create_device") as create_device, patch.object(
-        Device, "async_discover", return_value=mock_coro([])
+        Device, "async_discover"
     ) as async_discover:
+        async_discover.return_value = mock_coro(return_value=[])
+
         await async_setup_component(hass, "upnp", config)
         await hass.async_block_till_done()
 
         # mock homeassistant.components.upnp.device.Device
         mock_device = MockDevice(udn)
-        discovery_infos = [{"udn": udn, "ssdp_location": "http://192.168.1.1/desc.xml"}]
+        discovery_infos = [
+            {
+                DISCOVERY_UDN: udn,
+                DISCOVERY_ST: st,
+                DISCOVERY_LOCATION: "http://192.168.1.1/desc.xml",
+            }
+        ]
 
         create_device.return_value = mock_coro(return_value=mock_device)
         async_discover.return_value = mock_coro(return_value=discovery_infos)
@@ -104,7 +118,8 @@ async def test_async_setup_entry_port_mapping(hass):
     """Test async_setup_entry."""
     # pylint: disable=invalid-name
     udn = "uuid:device_1"
-    entry = MockConfigEntry(domain=upnp.DOMAIN)
+    st = MockDevice.device_type
+    entry = MockConfigEntry(domain=upnp.DOMAIN, data={"udn": udn, "st": st})
 
     config = {
         "http": {},
@@ -115,14 +130,22 @@ async def test_async_setup_entry_port_mapping(hass):
         },
     }
     with patch.object(Device, "async_create_device") as create_device, patch.object(
-        Device, "async_discover", return_value=mock_coro([])
+        Device, "async_discover"
     ) as async_discover:
+        async_discover.return_value = mock_coro(return_value=[])
+
         await async_setup_component(hass, "http", config)
         await async_setup_component(hass, "upnp", config)
         await hass.async_block_till_done()
 
         mock_device = MockDevice(udn)
-        discovery_infos = [{"udn": udn, "ssdp_location": "http://192.168.1.1/desc.xml"}]
+        discovery_infos = [
+            {
+                DISCOVERY_UDN: udn,
+                DISCOVERY_ST: st,
+                DISCOVERY_LOCATION: "http://192.168.1.1/desc.xml",
+            }
+        ]
 
         create_device.return_value = mock_coro(return_value=mock_device)
         async_discover.return_value = mock_coro(return_value=discovery_infos)
