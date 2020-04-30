@@ -106,4 +106,4 @@ class DIRECTVRemote(DIRECTVEntity, RemoteEntity):
                         "Sending command %s to device %s failed",
                         single_command,
                         self._device_id,
-                   )
+                    )
