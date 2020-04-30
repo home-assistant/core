@@ -153,7 +153,7 @@ class Remote:
             self.available = True
         except (TimeoutError, URLError, SOAPError, OSError) as err:
             if control_existed or during_setup:
-                _LOGGER.error("Could not establish remote connection: %s", err)
+                _LOGGER.debug("Could not establish remote connection: %s", err)
 
             self._control = None
             self.state = STATE_OFF
@@ -225,7 +225,9 @@ class Remote:
         try:
             return await self._hass.async_add_executor_job(func, *args)
         except EncryptionRequired:
-            _LOGGER.error("The connection couldn't be encrypted")
+            _LOGGER.error(
+                "The connection couldn't be encrypted. Please reconfigure your TV"
+            )
         except (TimeoutError, URLError, SOAPError, OSError):
             self.state = STATE_OFF
             self.available = self._on_action is not None
