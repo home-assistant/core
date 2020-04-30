@@ -67,7 +67,6 @@ def setup_zha(hass, config_entry, zigpy_app_controller, zigpy_radio):
     zha_config = {zha_const.CONF_ENABLE_QUIRKS: False}
 
     radio_details = {
-        zha_const.ZHA_GW_RADIO: mock.MagicMock(return_value=zigpy_radio),
         zha_const.CONTROLLER: mock.MagicMock(return_value=zigpy_app_controller),
         zha_const.ZHA_GW_RADIO_DESCRIPTION: "mock radio",
     }

@@ -2,7 +2,7 @@
 from unittest import mock
 
 from homeassistant.components.zha import config_flow
-from homeassistant.components.zha.core.const import CONTROLLER, DOMAIN, ZHA_GW_RADIO
+from homeassistant.components.zha.core.const import CONTROLLER, DOMAIN
 import homeassistant.components.zha.core.registries
 
 import tests.async_mock
@@ -80,19 +80,17 @@ async def test_check_zigpy_connection():
 
     mock_radio = tests.async_mock.MagicMock()
     mock_radio.connect = tests.async_mock.AsyncMock()
-    radio_cls = tests.async_mock.MagicMock(return_value=mock_radio)
 
     bad_radio = tests.async_mock.MagicMock()
     bad_radio.connect = tests.async_mock.AsyncMock(side_effect=Exception)
-    bad_radio_cls = tests.async_mock.MagicMock(return_value=bad_radio)
 
     mock_ctrl = tests.async_mock.MagicMock()
     mock_ctrl.startup = tests.async_mock.AsyncMock()
     mock_ctrl.shutdown = tests.async_mock.AsyncMock()
     ctrl_cls = tests.async_mock.MagicMock(return_value=mock_ctrl)
     new_radios = {
-        mock.sentinel.radio: {ZHA_GW_RADIO: radio_cls, CONTROLLER: ctrl_cls},
-        mock.sentinel.bad_radio: {ZHA_GW_RADIO: bad_radio_cls, CONTROLLER: ctrl_cls},
+        mock.sentinel.radio: {CONTROLLER: ctrl_cls},
+        mock.sentinel.bad_radio: {CONTROLLER: ctrl_cls},
     }
 
     with mock.patch.dict(
