@@ -36,24 +36,10 @@ class MetOfficeData:
         """Return the stored latitude value."""
         return self._latitude
 
-    @latitude.setter
-    async def latitude(self, latitude):
-        """Update the stored latitude value and flag the DataPoint Site for a possible refresh."""
-        if self._latitude != latitude:
-            self._latitude = latitude
-            await self.async_update_site()
-
     @property
     def longitude(self):
         """Return the stored longitude value."""
         return self._longitude
-
-    @longitude.setter
-    async def longitude(self, longitude):
-        """Update the stored longitude value and flag the DataPoint Site for a possible refresh."""
-        if self._longitude != longitude:
-            self._longitude = longitude
-            await self.async_update_site()
 
     async def async_update_site(self):
         """Async wrapper for getting the DataPoint site."""
@@ -62,7 +48,7 @@ class MetOfficeData:
     def _update_site(self):
         """Return the stored DataPoint Site (will retrieve an updated one if the latitude/longitude have been updated)."""
         try:
-            new_site = self._datapoint.get_nearest_site(
+            new_site = self._datapoint.get_nearest_forecast_site(
                 latitude=self._latitude, longitude=self._longitude
             )
             if self._site is None or self._site.id != new_site.id:
