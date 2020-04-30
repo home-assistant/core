@@ -83,7 +83,7 @@ def hass(loop, hass_storage, request):
 
     def exc_handle(loop, context):
         """Handle exceptions by rethrowing them, which will fail the test."""
-        exceptions.append(context.get("exception"))
+        exceptions.append(context["exception"])
         orig_exception_handler(loop, context)
 
     exceptions = []
