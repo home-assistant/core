@@ -539,16 +539,6 @@ async def test_put_light_state_climate_with_turn_on_state(hass_hue, hue_client):
         "homeassistant.components.emulated_hue.Config.get_turn_on_mode",
         return_value=climate.const.HVAC_MODE_COOL,
     ):
-        # Turn it on
-        hvac_result = await perform_put_light_state(
-            hass_hue, hue_client, "climate.hvac", True
-        )
-
-        hvac_result_json = await hvac_result.json()
-
-        assert hvac_result.status == 200
-        assert len(hvac_result_json) == 1
-
         # Emulated hue converts 0.0-1.0 to 0-254.
         brightness = 19
         temperature = round(brightness / 254 * 100)
@@ -562,6 +552,16 @@ async def test_put_light_state_climate_with_turn_on_state(hass_hue, hue_client):
 
         assert hvac_result.status == 200
         assert len(hvac_result_json) == 2
+
+        # Separate call for turn on
+        hvac_result = await perform_put_light_state(
+            hass_hue, hue_client, "climate.hvac", True
+        )
+
+        hvac_result_json = await hvac_result.json()
+
+        assert hvac_result.status == 200
+        assert len(hvac_result_json) == 1
 
         hvac = hass_hue.states.get("climate.hvac")
         assert hvac.state == climate.HVAC_MODE_COOL
