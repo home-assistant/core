@@ -39,19 +39,11 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN
+from .config_flow import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOUND_MODE_RAW = "sound_mode_raw"
-
-CONF_INVALID_ZONES_ERR = "Invalid Zone (expected Zone2 or Zone3)"
-CONF_SHOW_ALL_SOURCES = "show_all_sources"
-CONF_VALID_ZONES = ["Zone2", "Zone3"]
-CONF_ZONES = "zones"
-
-DEFAULT_SHOW_SOURCES = False
-DEFAULT_TIMEOUT = 2
 
 KEY_DENON_CACHE = "denonavr_hosts"
 
@@ -71,23 +63,6 @@ SUPPORT_MEDIA_MODES = (
     | SUPPORT_NEXT_TRACK
     | SUPPORT_VOLUME_SET
     | SUPPORT_PLAY
-)
-
-DENON_ZONE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ZONE): vol.In(CONF_VALID_ZONES, CONF_INVALID_ZONES_ERR),
-        vol.Optional(CONF_NAME): cv.string,
-    }
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_SHOW_ALL_SOURCES, default=DEFAULT_SHOW_SOURCES): cv.boolean,
-        vol.Optional(CONF_ZONES): vol.All(cv.ensure_list, [DENON_ZONE_SCHEMA]),
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    }
 )
 
 NewHost = namedtuple("NewHost", ["host", "name"])

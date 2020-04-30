@@ -5,7 +5,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-DOMAIN = "denonavr"
+
 
 SERVICE_GET_COMMAND = "get_command"
 ATTR_COMMAND = "command"
