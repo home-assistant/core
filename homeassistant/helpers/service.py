@@ -479,13 +479,9 @@ async def _handle_entity_call(hass, entity, func, data, context):
     else:
         result = hass.async_add_job(func, entity, data)
 
-    print(result)
-
     # Guard because callback functions do not return a task when passed to async_add_job.
     if result is not None:
         await result
-
-    print(result)
 
     if asyncio.iscoroutine(result):
         _LOGGER.error(
