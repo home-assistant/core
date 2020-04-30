@@ -22,7 +22,7 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 
-from tests.async_mock import Mock, patch
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -351,11 +351,11 @@ async def test_entry_created_with_cloudhook(
     request.refresh_token = refresh_token
 
     with patch.object(
-        hass.components.cloud, "async_active_subscription", return_value=True
+        hass.components.cloud, "async_active_subscription", AsyncMock(return_value=True)
     ), patch.object(
         hass.components.cloud,
         "async_create_cloudhook",
-        return_value="http://cloud.test",
+        AsyncMock(return_value="http://cloud.test"),
     ) as mock_create_cloudhook:
 
         await smartapp.setup_smartapp_endpoint(hass)
