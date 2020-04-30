@@ -1,6 +1,4 @@
 """The tests for the Updater component."""
-from unittest.mock import Mock
-
 import pytest
 
 from homeassistant.components import updater
@@ -123,7 +121,7 @@ async def test_get_newest_version_analytics_when_huuid(hass, aioclient_mock):
 
     with patch(
         "homeassistant.helpers.system_info.async_get_system_info",
-        Mock(return_value={"fake": "bla"}),
+        return_value={"fake": "bla"},
     ):
         res = await updater.get_newest_version(hass, MOCK_HUUID, False)
         assert res == (MOCK_RESPONSE["version"], MOCK_RESPONSE["release-notes"])
@@ -135,7 +133,7 @@ async def test_error_fetching_new_version_bad_json(hass, aioclient_mock):
 
     with patch(
         "homeassistant.helpers.system_info.async_get_system_info",
-        Mock(return_value={"fake": "bla"}),
+        return_value={"fake": "bla"},
     ), pytest.raises(UpdateFailed):
         await updater.get_newest_version(hass, MOCK_HUUID, False)
 
@@ -152,7 +150,7 @@ async def test_error_fetching_new_version_invalid_response(hass, aioclient_mock)
 
     with patch(
         "homeassistant.helpers.system_info.async_get_system_info",
-        Mock(return_value={"fake": "bla"}),
+        return_value={"fake": "bla"},
     ), pytest.raises(UpdateFailed):
         await updater.get_newest_version(hass, MOCK_HUUID, False)
 
