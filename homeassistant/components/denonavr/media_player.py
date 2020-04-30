@@ -1,10 +1,8 @@
 """Support for Denon AVR receivers using their HTTP interface."""
 
-from collections import namedtuple
 import logging
 
 import denonavr
-import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -36,7 +34,6 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .config_flow import DOMAIN
@@ -44,8 +41,6 @@ from .config_flow import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOUND_MODE_RAW = "sound_mode_raw"
-
-KEY_DENON_CACHE = "denonavr_hosts"
 
 SUPPORT_DENON = (
     SUPPORT_VOLUME_STEP
@@ -65,74 +60,14 @@ SUPPORT_MEDIA_MODES = (
     | SUPPORT_PLAY
 )
 
-NewHost = namedtuple("NewHost", ["host", "name"])
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Denon platform."""
-    # Initialize list with receivers to be started
-    receivers = []
-
-    cache = hass.data.get(KEY_DENON_CACHE)
-    if cache is None:
-        cache = hass.data[KEY_DENON_CACHE] = set()
-
-    # Get config option for show_all_sources and timeout
-    show_all_sources = config[CONF_SHOW_ALL_SOURCES]
-    timeout = config[CONF_TIMEOUT]
-
-    # Get config option for additional zones
-    zones = config.get(CONF_ZONES)
-    if zones is not None:
-        add_zones = {}
-        for entry in zones:
-            add_zones[entry[CONF_ZONE]] = entry.get(CONF_NAME)
-    else:
-        add_zones = None
-
-    # Start assignment of host and name
-    new_hosts = []
-    # 1. option: manual setting
-    if config.get(CONF_HOST) is not None:
-        host = config.get(CONF_HOST)
-        name = config.get(CONF_NAME)
-        new_hosts.append(NewHost(host=host, name=name))
-
-    # 2. option: discovery using netdisco
-    if discovery_info is not None:
-        host = discovery_info.get("host")
-        name = discovery_info.get("name")
-        new_hosts.append(NewHost(host=host, name=name))
-
-    # 3. option: discovery using denonavr library
-    if config.get(CONF_HOST) is None and discovery_info is None:
-        d_receivers = denonavr.discover()
-        # More than one receiver could be discovered by that method
-        for d_receiver in d_receivers:
-            host = d_receiver["host"]
-            name = d_receiver["friendlyName"]
-            new_hosts.append(NewHost(host=host, name=name))
-
-    for entry in new_hosts:
-        # Check if host not in cache, append it and save for later
-        # starting
-        if entry.host not in cache:
-            new_device = denonavr.DenonAVR(
-                host=entry.host,
-                name=entry.name,
-                show_all_inputs=show_all_sources,
-                timeout=timeout,
-                add_zones=add_zones,
-            )
-            for new_zone in new_device.zones.values():
-                receivers.append(DenonDevice(new_zone))
-            cache.add(host)
-            _LOGGER.info("Denon receiver at host %s initialized", host)
-
-    # Add all freshly discovered receivers
-    if receivers:
-        add_entities(receivers)
-
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Xiaomi Gateway Alarm from a config entry."""
+    entities = []
+    receiver = hass.data[DOMAIN][config_entry.entry_id]
+    for receiver_zone in receiver.zones.values():
+        entities.append(DenonDevice(receiver_zone))
+    _LOGGER.info("%s receiver at host %s initialized", receiver.manufacturer, receiver.host)
+    async_add_entities(entities)
 
 class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon Media Player Device."""

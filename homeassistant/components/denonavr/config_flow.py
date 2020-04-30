@@ -111,7 +111,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             add_zones=zones,
         )
         
-        unique_id = f"{receiver.model}-{receiver.serial_number}"
+        unique_id = f"{receiver.model_name}-{receiver.serial_number}"
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
         
