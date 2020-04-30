@@ -4,6 +4,7 @@ import json
 import logging
 import os
 
+import aiohttp
 import requests
 
 from homeassistant.components.ais_dom import ais_global
@@ -280,7 +281,7 @@ class AisCloudWS:
         global CLOUD_WS_TOKEN, CLOUD_WS_HEADER
         if CLOUD_WS_TOKEN is None:
             CLOUD_WS_TOKEN = ais_global.get_sercure_android_id_dom()
-            CLOUD_WS_HEADER = {"Authorization": "{}".format(CLOUD_WS_TOKEN)}
+            CLOUD_WS_HEADER = {"Authorization": f"{CLOUD_WS_TOKEN}"}
 
     def gh_ais_add_device(self, oauth_json):
         self.setCloudToken()
@@ -379,6 +380,19 @@ class AisCloudWS:
         rest_url = self.url + "key?service=" + service
         ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
         return ws_resp
+
+    async def async_key(self, service):
+        self.setCloudToken()
+        rest_url = self.url + "key?service=" + service
+        try:
+            async with aiohttp.ClientSession() as session:
+                ws_resp = await session.get(
+                    rest_url, headers=CLOUD_WS_HEADER, timeout=5
+                )
+                ws_resp_json = await ws_resp.json()
+        except Exception as e:
+            _LOGGER.error(e)
+        return ws_resp_json
 
     def new_key(self, service, old_key):
         self.setCloudToken()
@@ -1598,11 +1612,11 @@ class AisColudData:
                 ret = subprocess.check_output(
                     "7za a -mmt=2 "
                     + password
-                    + " -xr\!deps"
-                    + " -xr\!ais_update"
-                    + " -xr\!*.log"
-                    + " -xr\!*.db"
-                    + " -xr\!home-assistant* "
+                    + r" -xr\!deps"
+                    + r" -xr\!ais_update"
+                    + r" -xr\!*.log"
+                    + r" -xr\!*.db"
+                    + r" -xr\!home-assistant* "
                     + home_dir
                     + "backup.zip "
                     + home_dir
@@ -1681,7 +1695,7 @@ class AisColudData:
                 c = (
                     "7za a -mmt=2 "
                     + password
-                    + " -xr\!log "
+                    + r" -xr\!log "
                     + home_dir
                     + "zigbee_backup.zip "
                     + home_dir
@@ -1691,7 +1705,7 @@ class AisColudData:
                 ret = subprocess.check_output(
                     "7za a -mmt=2 "
                     + password
-                    + " -xr\!logs "
+                    + r" -xr\!logs "
                     + home_dir
                     + "zigbee_backup.zip "
                     + home_dir
