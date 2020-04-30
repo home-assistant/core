@@ -48,12 +48,11 @@
       },
       "simple_options": {
         "data": {
-          "track_clients": "Track network clients",
-          "track_devices": "Track network devices (Ubiquiti devices)",
-          "block_client": "Network access controlled clients"
+          "track_clients": "[%key:component::unifi::options::step::device_tracker::data::track_clients%]",
+          "track_devices": "[%key:component::unifi::options::step::device_tracker::data::track_devices%]",
+          "block_client": "[%key:component::unifi::options::step::client_control::data::block_client%]"
         },
-        "description": "Configure UniFi integration",
-        "title": "UniFi options"
+        "description": "Configure UniFi integration"
       },
       "statistics_sensors": {
         "data": {
