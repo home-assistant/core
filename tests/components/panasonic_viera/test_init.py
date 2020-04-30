@@ -4,7 +4,6 @@ from unittest.mock import Mock
 from asynctest import patch
 
 from homeassistant.components.panasonic_viera.const import (
-    ATTR_REMOTE,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
     CONF_ON_ACTION,
@@ -12,6 +11,7 @@ from homeassistant.components.panasonic_viera.const import (
     DEFAULT_PORT,
     DOMAIN,
 )
+from homeassistant.config_entries import ENTRY_STATE_NOT_LOADED
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.setup import async_setup_component
 
@@ -60,8 +60,6 @@ async def test_setup_entry_encrypted(hass):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert hass.data[DOMAIN][mock_entry.entry_id][ATTR_REMOTE] == mock_remote
-
         state = hass.states.get("media_player.panasonic_viera_tv")
 
         assert state
@@ -83,8 +81,6 @@ async def test_setup_entry_unencrypted(hass):
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
-
-        assert hass.data[DOMAIN][mock_entry.entry_id][ATTR_REMOTE] == mock_remote
 
         state = hass.states.get("media_player.panasonic_viera_tv")
 
@@ -120,7 +116,7 @@ async def test_setup_unload_entry(hass):
 
     await hass.config_entries.async_unload(mock_entry.entry_id)
 
-    assert hass.data[DOMAIN] == {}
+    assert mock_entry.state == ENTRY_STATE_NOT_LOADED
 
     state = hass.states.get("media_player.panasonic_viera_tv")
 

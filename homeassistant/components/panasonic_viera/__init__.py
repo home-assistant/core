@@ -7,10 +7,7 @@ from urllib.request import URLError
 from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
 import voluptuous as vol
 
-from homeassistant.components.media_player.const import (
-    DOMAIN as MEDIA_PLAYER_DOMAIN,
-    MEDIA_TYPE_URL,
-)
+from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
@@ -68,8 +65,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up Panasonic Viera from a config entry."""
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
+    panasonic_viera_data = hass.data.setdefault(DOMAIN, {})
 
     config = config_entry.data
 
@@ -88,7 +84,7 @@ async def async_setup_entry(hass, config_entry):
     remote = Remote(hass, host, port, on_action, **params)
     await remote.async_create_remote_control(during_setup=True)
 
-    hass.data[DOMAIN][config_entry.entry_id] = {ATTR_REMOTE: remote}
+    panasonic_viera_data[config_entry.entry_id] = {ATTR_REMOTE: remote}
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -222,11 +218,6 @@ class Remote:
     async def async_play_media(self, media_type, media_id):
         """Play media."""
         _LOGGER.debug("Play media: %s (%s)", media_id, media_type)
-
-        if media_type != MEDIA_TYPE_URL:
-            _LOGGER.warning("Unsupported media_type: %s", media_type)
-            return
-
         await self._handle_errors(self._control.open_webpage, media_id)
 
     async def _handle_errors(self, func, *args):

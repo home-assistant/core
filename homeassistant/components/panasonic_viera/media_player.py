@@ -1,8 +1,11 @@
 """Media player support for Panasonic Viera TV."""
+import logging
+
 from panasonic_viera import Keys
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_URL,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -32,6 +35,8 @@ SUPPORT_VIERATV = (
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_STOP
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -151,4 +156,8 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play media."""
+        if media_type != MEDIA_TYPE_URL:
+            _LOGGER.warning("Unsupported media_type: %s", media_type)
+            return
+
         await self._remote.async_play_media(media_type, media_id)
