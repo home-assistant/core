@@ -124,9 +124,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def async_update_data():
         """Fetch data from API endpoint."""
         # Check if we had an error before
-        _LOGGER.info("Checking if update failed")
+        _LOGGER.debug("Checking if update failed")
         if not hass.data[DOMAIN][entry.entry_id][POWERWALL_API_CHANGED]:
-            _LOGGER.info("Updating data")
+            _LOGGER.debug("Updating data")
             try:
                 return await hass.async_add_executor_job(
                     _fetch_powerwall_data, power_wall
