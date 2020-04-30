@@ -19,7 +19,7 @@ from homeassistant.core import State
 
 from . import mock_cloud, mock_cloud_prefs
 
-from tests.async_mock import patch
+from tests.async_mock import AsyncMock, patch
 from tests.common import mock_coro
 from tests.components.google_assistant import MockConfig
 
@@ -184,7 +184,7 @@ async def test_login_view_unknown_error(cloud_client):
 async def test_logout_view(hass, cloud_client):
     """Test logging out."""
     cloud = hass.data["cloud"] = MagicMock()
-    cloud.logout.return_value = mock_coro()
+    cloud.logout = AsyncMock(return_value=None)
     req = await cloud_client.post("/api/cloud/logout")
     assert req.status == 200
     data = await req.json()

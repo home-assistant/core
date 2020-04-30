@@ -59,7 +59,7 @@ import homeassistant.util.dt as date_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.yaml.loader as yaml_loader
 
-from tests.async_mock import MagicMock, Mock, patch
+from tests.async_mock import AsyncMock, MagicMock, Mock, patch
 
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
@@ -161,19 +161,19 @@ async def async_test_home_assistant(loop):
     def async_add_job(target, *args):
         """Add job."""
         if isinstance(target, Mock):
-            return mock_coro(target(*args))
+            return AsyncMock(return_value=target(*args))()
         return orig_async_add_job(target, *args)
 
     def async_add_executor_job(target, *args):
         """Add executor job."""
         if isinstance(target, Mock):
-            return mock_coro(target(*args))
+            return AsyncMock(return_value=target(*args))()
         return orig_async_add_executor_job(target, *args)
 
     def async_create_task(coroutine):
         """Create task."""
         if isinstance(coroutine, Mock):
-            return mock_coro()
+            return AsyncMock(return_value=None)()
         return orig_async_create_task(coroutine)
 
     hass.async_add_job = async_add_job
@@ -505,7 +505,7 @@ class MockModule:
             self.async_setup = async_setup
 
         if setup is None and async_setup is None:
-            self.async_setup = mock_coro_func(True)
+            self.async_setup = AsyncMock(return_value=True)
 
         if async_setup_entry is not None:
             self.async_setup_entry = async_setup_entry
@@ -563,7 +563,7 @@ class MockPlatform:
             self.async_setup_entry = async_setup_entry
 
         if setup_platform is None and async_setup_platform is None:
-            self.async_setup_platform = mock_coro_func()
+            self.async_setup_platform = AsyncMock()
 
 
 class MockEntityPlatform(entity_platform.EntityPlatform):
@@ -733,13 +733,10 @@ def mock_coro(return_value=None, exception=None):
 def mock_coro_func(return_value=None, exception=None):
     """Return a method to create a coro function that returns a value."""
 
-    async def coro(*args, **kwargs):
-        """Fake coroutine."""
-        if exception:
-            raise exception
-        return return_value
+    if exception:
+        return AsyncMock(side_effect=exception)
 
-    return coro
+    return AsyncMock(return_value=return_value)
 
 
 @contextmanager

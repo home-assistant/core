@@ -6,7 +6,7 @@ from homeassistant.components.ambiclimate import config_flow
 from homeassistant.setup import async_setup_component
 from homeassistant.util import aiohttp
 
-from tests.async_mock import Mock, patch
+from tests.async_mock import AsyncMock, patch
 from tests.common import mock_coro
 
 
@@ -118,7 +118,7 @@ async def test_already_setup(hass):
 
 async def test_view(hass):
     """Test view."""
-    hass.config_entries.flow.async_init = Mock()
+    hass.config_entries.flow.async_init = AsyncMock()
 
     request = aiohttp.MockRequest(b"", query_string="code=test_code")
     request.app = {"hass": hass}

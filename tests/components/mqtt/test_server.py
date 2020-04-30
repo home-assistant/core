@@ -37,7 +37,7 @@ class TestMQTT:
 
         Since 0.77, MQTT server has to set up its own password.
         """
-        mock_mqtt().async_connect.return_value = mock_coro(True)
+        mock_mqtt().async_connect = AsyncMock(return_value=True)
         self.hass.bus.listen_once = MagicMock()
         password = "mqtt_secret"
 
@@ -59,7 +59,7 @@ class TestMQTT:
 
         Since 0.77, MQTT server has to set up its own password.
         """
-        mock_mqtt().async_connect.return_value = mock_coro(True)
+        mock_mqtt().async_connect = AsyncMock(return_value=True)
         self.hass.bus.listen_once = MagicMock()
         password = "mqtt_secret"
 
