@@ -113,8 +113,7 @@ class YouTubeData:
 
         if self.yt_key is None:
             try:
-                ws_resp = aisCloud.key("ytsearch")
-                json_ws_resp = ws_resp.json()
+                json_ws_resp = await aisCloud.async_key("ytsearch")
                 self.yt_key = json_ws_resp["key"]
             except Exception as e:
                 ais_global.G_OFFLINE_MODE = True
@@ -230,7 +229,7 @@ class YouTubeData:
             else:
                 if next_page_token is None and prev_page_token is None:
                     text = "Znaleziono: {}, włączam pierwszy: {}".format(
-                        str(total_results), list_info[0]["title"],
+                        str(total_results), list_info[0]["title"]
                     )
                     await self.hass.services.async_call(
                         "ais_yt_service", "select_track_uri", {"id": 0}
