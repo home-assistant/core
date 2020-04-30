@@ -12,6 +12,7 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_cloud, mock_cloud_prefs
 
+from tests.async_mock import AsyncMock
 from tests.common import mock_coro
 from tests.components.alexa import test_smart_home as test_alexa
 
@@ -221,7 +222,7 @@ async def test_set_username(hass):
     prefs = MagicMock(
         alexa_enabled=False,
         google_enabled=False,
-        async_set_username=MagicMock(return_value=mock_coro()),
+        async_set_username=AsyncMock(return_value=None),
     )
     client = CloudClient(hass, prefs, None, {}, {})
     client.cloud = MagicMock(is_logged_in=True, username="mock-username")

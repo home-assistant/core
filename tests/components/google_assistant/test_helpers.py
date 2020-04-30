@@ -1,7 +1,6 @@
 """Test Google Assistant helpers."""
 from datetime import timedelta
 
-from asynctest.mock import Mock, call, patch
 import pytest
 
 from homeassistant.components.google_assistant import helpers
@@ -14,6 +13,7 @@ from homeassistant.util import dt
 
 from . import MockConfig
 
+from tests.async_mock import Mock, call, patch
 from tests.common import (
     async_capture_events,
     async_fire_time_changed,

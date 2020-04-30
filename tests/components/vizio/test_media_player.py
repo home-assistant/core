@@ -5,7 +5,6 @@ import logging
 from typing import Any, Dict, List, Optional
 from unittest.mock import call
 
-from asynctest import patch
 import pytest
 from pytest import raises
 from pyvizio.api.apps import AppConfig
@@ -74,6 +73,7 @@ from .const import (
     VOLUME_STEP,
 )
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)

@@ -1,6 +1,5 @@
 """Test config flow."""
 from collections import namedtuple
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -12,7 +11,8 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.async_mock import AsyncMock, MagicMock, patch
+from tests.common import MockConfigEntry
 
 MockDeviceInfo = namedtuple("DeviceInfo", ["uses_password", "name"])
 
@@ -30,8 +30,8 @@ def mock_client():
             return mock_client
 
         mock_client.side_effect = mock_constructor
-        mock_client.connect.return_value = mock_coro()
-        mock_client.disconnect.return_value = mock_coro()
+        mock_client.connect = AsyncMock()
+        mock_client.disconnect = AsyncMock()
 
         yield mock_client
 
@@ -55,7 +55,7 @@ async def test_user_connection_works(hass, mock_client):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    mock_client.device_info.return_value = mock_coro(MockDeviceInfo(False, "test"))
+    mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(False, "test"))
 
     result = await hass.config_entries.flow.async_init(
         "esphome",
@@ -126,7 +126,7 @@ async def test_user_connection_error(hass, mock_api_connection_error, mock_clien
 
 async def test_user_with_password(hass, mock_client):
     """Test user step with password."""
-    mock_client.device_info.return_value = mock_coro(MockDeviceInfo(True, "test"))
+    mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(True, "test"))
 
     result = await hass.config_entries.flow.async_init(
         "esphome",
@@ -152,7 +152,7 @@ async def test_user_with_password(hass, mock_client):
 
 async def test_user_invalid_password(hass, mock_api_connection_error, mock_client):
     """Test user step with invalid password."""
-    mock_client.device_info.return_value = mock_coro(MockDeviceInfo(True, "test"))
+    mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(True, "test"))
 
     result = await hass.config_entries.flow.async_init(
         "esphome",
@@ -176,7 +176,7 @@ async def test_user_invalid_password(hass, mock_api_connection_error, mock_clien
 
 async def test_discovery_initiation(hass, mock_client):
     """Test discovery importing works."""
-    mock_client.device_info.return_value = mock_coro(MockDeviceInfo(False, "test8266"))
+    mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(False, "test8266"))
 
     service_info = {
         "host": "192.168.43.183",
@@ -187,10 +187,6 @@ async def test_discovery_initiation(hass, mock_client):
     flow = await hass.config_entries.flow.async_init(
         "esphome", context={"source": "zeroconf"}, data=service_info
     )
-
-    assert flow["type"] == RESULT_TYPE_FORM
-    assert flow["step_id"] == "discovery_confirm"
-    assert flow["description_placeholders"]["name"] == "test8266"
 
     result = await hass.config_entries.flow.async_configure(
         flow["flow_id"], user_input={}
@@ -293,7 +289,7 @@ async def test_discovery_duplicate_data(hass, mock_client):
         "properties": {"address": "test8266.local"},
     }
 
-    mock_client.device_info.return_value = mock_coro(MockDeviceInfo(False, "test8266"))
+    mock_client.device_info = AsyncMock(return_value=MockDeviceInfo(False, "test8266"))
 
     result = await hass.config_entries.flow.async_init(
         "esphome", data=service_info, context={"source": "zeroconf"}

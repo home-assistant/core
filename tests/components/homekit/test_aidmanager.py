@@ -2,7 +2,6 @@
 import os
 from zlib import adler32
 
-from asynctest import patch
 import pytest
 
 from homeassistant.components.homekit.aidmanager import (
@@ -13,6 +12,7 @@ from homeassistant.components.homekit.aidmanager import (
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.storage import STORAGE_DIR
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 
 

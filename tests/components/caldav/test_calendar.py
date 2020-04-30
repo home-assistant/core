@@ -2,13 +2,14 @@
 import datetime
 from unittest.mock import MagicMock, Mock
 
-from asynctest import patch
 from caldav.objects import Event
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
+
+from tests.async_mock import patch
 
 # pylint: disable=redefined-outer-name
 
