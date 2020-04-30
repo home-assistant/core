@@ -4,10 +4,12 @@ Support for interacting with Spotify.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.spotify/
 """
-import logging
 import asyncio
-from homeassistant.components.ais_dom import ais_global
+import logging
+
 from homeassistant.components import ais_cloud
+from homeassistant.components.ais_dom import ais_global
+
 from .config_flow import configured_service, setUrl
 
 aisCloud = ais_cloud.AisCloudWS()
@@ -39,8 +41,7 @@ SCOPE = "app-remote-control streaming user-read-email"
 _CONFIGURING = {}
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Spotify platform."""
     import spotipy.oauth2
     import json
@@ -56,15 +57,14 @@ def async_setup(hass, config):
         await hass.async_block_till_done()
 
     try:
-        ws_resp = aisCloud.key("spotify_oauth")
-        json_ws_resp = ws_resp.json()
+        json_ws_resp = await aisCloud.async_key("spotify_oauth")
         spotify_redirect_url = json_ws_resp["SPOTIFY_REDIRECT_URL"]
         spotify_client_id = json_ws_resp["SPOTIFY_CLIENT_ID"]
         spotify_client_secret = json_ws_resp["SPOTIFY_CLIENT_SECRET"]
         spotify_scope = json_ws_resp["SPOTIFY_SCOPE"]
         try:
-            ws_resp = aisCloud.key("spotify_token")
-            key = ws_resp.json()["key"]
+            json_ws_resp = await aisCloud.async_key("spotify_token")
+            key = json_ws_resp["key"]
             AIS_SPOTIFY_TOKEN = json.loads(key)
         except:
             AIS_SPOTIFY_TOKEN = None
@@ -141,7 +141,7 @@ async def async_setup_entry(hass, config_entry):
     """Set up spotify token as config entry."""
     # setup the Spotify
     if AIS_SPOTIFY_TOKEN is None:
-        await async_setup(hass, hass.config)
+        return await async_setup(hass, hass.config)
 
     return True
 
@@ -398,9 +398,8 @@ class SpotifyData:
         self.hass.states.async_set("sensor.spotifylist", -1, {})
 
         if len(list_info) > 0:
-            text = "Znaleziono: %s, włączam utwory %s" % (
-                str(len(list_info)),
-                list_info[0]["title"],
+            text = "Znaleziono: {}, włączam utwory {}".format(
+                str(len(list_info)), list_info[0]["title"],
             )
             yield from self.hass.services.async_call(
                 "ais_spotify_service", "select_search_uri", {"id": 0}
