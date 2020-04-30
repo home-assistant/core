@@ -165,7 +165,9 @@ class Fan(HomeAccessory):
                     self.char_direction.set_value(hk_direction)
 
         # Handle Speed
-        if self.char_speed is not None:
+        if self.char_speed is not None and state != STATE_OFF:
+            # We do not change the homekit speed when turning off
+            # as it will clear the restore state
             speed = new_state.attributes.get(ATTR_SPEED)
             hk_speed_value = self.speed_mapping.speed_to_homekit(speed)
             if hk_speed_value is not None and self.char_speed.value != hk_speed_value:
