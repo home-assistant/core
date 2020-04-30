@@ -24,6 +24,7 @@ def mocked_upb(sync_complete=True, config_ok=True):
 
 async def valid_tcp_flow(hass, sync_complete=True, config_ok=True):
     """Get result dict that are standard for most tests."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
     with mocked_upb(sync_complete, config_ok), patch(
         "homeassistant.components.upb.async_setup_entry", return_value=True
     ):
