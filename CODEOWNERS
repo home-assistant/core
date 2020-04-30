@@ -196,6 +196,7 @@ homeassistant/components/ipp/* @ctalkington
 homeassistant/components/iqvia/* @bachya
 homeassistant/components/irish_rail_transport/* @ttroy50
 homeassistant/components/islamic_prayer_times/* @engrbm87
+homeassistant/components/isy994/* @bdraco
 homeassistant/components/izone/* @Swamp-Ig
 homeassistant/components/jewish_calendar/* @tsvi
 homeassistant/components/juicenet/* @jesserockz
