@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Support for AIS knowledge
 
@@ -6,12 +7,10 @@ https://www.ai-speaker.com
 """
 import asyncio
 import logging
-
 import voluptuous as vol
-
-from homeassistant.components import ais_cloud
 from homeassistant.components.ais_dom import ais_global
 from homeassistant.helpers import config_validation as cv
+from homeassistant.components import ais_cloud
 
 aisCloud = ais_cloud.AisCloudWS()
 
@@ -57,7 +56,7 @@ def async_setup(hass, config):
 
 
 @asyncio.coroutine
-async def process_ask_async(hass, query):
+def process_ask_async(hass, query):
     import requests
 
     global G_GKS_KEY
@@ -67,10 +66,15 @@ async def process_ask_async(hass, query):
     image_url = None
     if G_GKS_KEY is None:
         try:
-            json_ws_resp = await aisCloud.async_key("kgsearch")
+            ws_resp = aisCloud.key("kgsearch")
+            json_ws_resp = ws_resp.json()
             G_GKS_KEY = json_ws_resp["key"]
-        except Exception as e:
-            _LOGGER.error("kgsearch error: " + str(e))
+        except:
+            yield from hass.services.async_call(
+                "ais_ai_service",
+                "say_it",
+                {"text": "Nie udało się wykonać, sprawdź połączenie z Intenetem"},
+            )
             return
 
     req = requests.get(
@@ -104,7 +108,7 @@ async def process_ask_async(hass, query):
     except Exception:
         full_message = "Brak wyników"
 
-    await hass.services.async_call(
+    yield from hass.services.async_call(
         "ais_ai_service", "say_it", {"text": full_message, "img": image_url}
     )
 
