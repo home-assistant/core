@@ -32,6 +32,7 @@ ZONE_SENSORS = {
         "overlay",
         "early start",
         "open window",
+        "open window detected",
     ],
     TYPE_AIR_CONDITIONING: [
         "temperature",
@@ -224,6 +225,9 @@ class TadoZoneSensor(TadoZoneEntity, Entity):
         elif self.zone_variable == "open window":
             self._state = self._tado_zone_data.open_window
             self._state_attributes = self._tado_zone_data.open_window_attr
+
+        elif self.zone_variable == "open window detected":
+            self._state = self._tado_zone_data.open_window_detected
 
 
 class TadoDeviceSensor(Entity):
