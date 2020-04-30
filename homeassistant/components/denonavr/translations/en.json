@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Denon AVR Network Receivers",
+        "description": "Connect to your receiver, if the IP adress is not set, auto-discovery is used",
+        "data": {
+          "host": "IP adress",
+          "show_all_sources": "Show all sources",
+          "timeout": "Timeout in seconds",
+          "zone2": "Set up Zone 2",
+          "zone3": "Set up Zone 3"
+        }
+      }
+    },
+    "error": {
+      "connect_error": "Failed to connect, please try again"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}
