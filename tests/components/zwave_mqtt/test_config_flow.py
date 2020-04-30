@@ -5,6 +5,8 @@ from homeassistant import config_entries, setup
 from homeassistant.components.zwave_mqtt.config_flow import TITLE
 from homeassistant.components.zwave_mqtt.const import DOMAIN
 
+from tests.common import MockConfigEntry
+
 
 async def test_user_create_entry(hass):
     """Test the user step creates an entry."""
@@ -29,3 +31,24 @@ async def test_user_create_entry(hass):
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_mqtt_not_setup(hass):
+    """Test that mqtt is required."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "mqtt_required"
+
+
+async def test_one_instance_allowed(hass):
+    """Test that only one instance is allowed."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, title=TITLE)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "one_instance_allowed"
