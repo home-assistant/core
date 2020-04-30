@@ -9,7 +9,7 @@ import threading
 import time
 from typing import Any, Dict, Optional
 
-from sqlalchemy import create_engine, event, exc, select
+from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.pool import StaticPool
 import voluptuous as vol
@@ -516,7 +516,7 @@ class Recorder(threading.Thread):
 
         self.engine = create_engine(self.db_url, **kwargs)
 
-        event.listen(self.engine, "connect", setup_recorder_connection)
+        sqlalchemy_event.listen(self.engine, "connect", setup_recorder_connection)
 
         Base.metadata.create_all(self.engine)
         self.get_session = scoped_session(sessionmaker(bind=self.engine))
