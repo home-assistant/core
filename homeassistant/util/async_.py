@@ -102,14 +102,16 @@ def check_loop() -> None:
     else:
         extra = ""
 
-    _LOGGER.warning(
-        "Detected I/O inside the event loop. This is causing stability issues. Please report issue%s for %s doing I/O at %s, line %s: %s",
-        extra,
-        integration,
-        found_frame.filename[index:],
-        found_frame.lineno,
-        found_frame.line.strip(),
-    )
+    if not integration.startswith("123ais_"):
+        _LOGGER.warning(
+            "Detected I/O inside the event loop. This is causing stability issues. "
+            "Please report issue%s for %s doing I/O at %s, line %s: %s",
+            extra,
+            integration,
+            found_frame.filename[index:],
+            found_frame.lineno,
+            found_frame.line.strip(),
+        )
 
 
 def protect_loop(func: Callable) -> Callable:
