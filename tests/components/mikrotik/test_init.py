@@ -1,11 +1,10 @@
 """Test Mikrotik setup process."""
-from asynctest import CoroutineMock, Mock, patch
-
 from homeassistant.components import mikrotik
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_DATA
 
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -25,7 +24,7 @@ async def test_successful_config_entry(hass):
         "homeassistant.helpers.device_registry.async_get_registry",
         return_value=mock_registry,
     ):
-        mock_hub.return_value.async_setup = CoroutineMock(return_value=True)
+        mock_hub.return_value.async_setup = AsyncMock(return_value=True)
         mock_hub.return_value.serial_num = "12345678"
         mock_hub.return_value.model = "RB750"
         mock_hub.return_value.hostname = "mikrotik"
@@ -55,7 +54,7 @@ async def test_hub_fail_setup(hass):
     entry.add_to_hass(hass)
 
     with patch.object(mikrotik, "MikrotikHub") as mock_hub:
-        mock_hub.return_value.async_setup = CoroutineMock(return_value=False)
+        mock_hub.return_value.async_setup = AsyncMock(return_value=False)
         assert await mikrotik.async_setup_entry(hass, entry) is False
 
     assert mikrotik.DOMAIN not in hass.data
@@ -69,7 +68,7 @@ async def test_unload_entry(hass):
     with patch.object(mikrotik, "MikrotikHub") as mock_hub, patch(
         "homeassistant.helpers.device_registry.async_get_registry", return_value=Mock(),
     ):
-        mock_hub.return_value.async_setup = CoroutineMock(return_value=True)
+        mock_hub.return_value.async_setup = AsyncMock(return_value=True)
         mock_hub.return_value.serial_num = "12345678"
         mock_hub.return_value.model = "RB750"
         mock_hub.return_value.hostname = "mikrotik"

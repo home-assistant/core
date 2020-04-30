@@ -1,8 +1,6 @@
 """The tests for the GeoNet NZ Quakes Feed integration."""
 import datetime
 
-from asynctest import patch
-
 from homeassistant.components import geonetnz_quakes
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.geonetnz_quakes import DEFAULT_SCAN_INTERVAL, DOMAIN, FEED
@@ -31,6 +29,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
+from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 from tests.components.geonetnz_quakes import _generate_mock_feed_entry
 

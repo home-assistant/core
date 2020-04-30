@@ -23,12 +23,8 @@ from homeassistant.helpers.device_registry import async_get_registry as get_dev_
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.setup import setup_component
 
-from tests.common import (
-    async_fire_time_changed,
-    get_test_home_assistant,
-    mock_coro,
-    mock_registry,
-)
+from tests.async_mock import AsyncMock
+from tests.common import async_fire_time_changed, get_test_home_assistant, mock_registry
 from tests.mock.zwave import MockEntityValues, MockNetwork, MockNode, MockValue
 
 
@@ -873,7 +869,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, "discovery")
     def test_entity_discovery(self, discovery, import_module):
         """Test the creation of a new entity."""
-        discovery.async_load_platform.return_value = mock_coro()
+        discovery.async_load_platform = AsyncMock(return_value=None)
         mock_platform = MagicMock()
         import_module.return_value = mock_platform
         mock_device = MagicMock()
@@ -935,7 +931,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, "discovery")
     def test_entity_existing_values(self, discovery, import_module):
         """Test the loading of already discovered values."""
-        discovery.async_load_platform.return_value = mock_coro()
+        discovery.async_load_platform = AsyncMock(return_value=None)
         mock_platform = MagicMock()
         import_module.return_value = mock_platform
         mock_device = MagicMock()
@@ -1003,7 +999,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, "discovery")
     def test_entity_workaround_component(self, discovery, import_module):
         """Test component workaround."""
-        discovery.async_load_platform.return_value = mock_coro()
+        discovery.async_load_platform = AsyncMock(return_value=None)
         mock_platform = MagicMock()
         import_module.return_value = mock_platform
         mock_device = MagicMock()

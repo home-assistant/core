@@ -1,12 +1,11 @@
 """Test the Vilfo Router config flow."""
-from asynctest.mock import patch
 import vilfo
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.vilfo.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_ID, CONF_MAC
 
-from tests.common import mock_coro
+from tests.async_mock import patch
 
 
 async def test_form(hass):
@@ -22,7 +21,7 @@ async def test_form(hass):
     with patch("vilfo.Client.ping", return_value=None), patch(
         "vilfo.Client.get_board_information", return_value=None
     ), patch("vilfo.Client.resolve_mac_address", return_value=mock_mac), patch(
-        "homeassistant.components.vilfo.async_setup", return_value=mock_coro(True)
+        "homeassistant.components.vilfo.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.vilfo.async_setup_entry"
     ) as mock_setup_entry:
