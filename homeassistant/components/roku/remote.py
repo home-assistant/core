@@ -84,7 +84,7 @@ class RokuRemote(RemoteEntity):
 
     def send_command(self, command, **kwargs):
         """Send a command to one device."""
-        num_repeats = kwargs.get(ATTR_NUM_REPEATS)
+        num_repeats = kwargs[ATTR_NUM_REPEATS]
         
         for _ in range(num_repeats):
             for single_command in command:
