@@ -3,7 +3,7 @@
 from homeassistant.components.ipma import config_flow
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 
-from tests.async_mock import AsyncMock, Mock, patch
+from tests.async_mock import Mock, patch
 
 
 async def test_show_config_form():
@@ -79,7 +79,7 @@ async def test_flow_entry_created_from_user_input():
     with patch(
         "homeassistant.components.ipma.config_flow.IpmaFlowHandler._show_config_form"
     ) as config_form, patch.object(
-        flow.hass.config_entries, "async_entries", AsyncMock(return_value=None),
+        flow.hass.config_entries, "async_entries", return_value=[],
     ) as config_entries:
 
         result = await flow.async_step_user(user_input=test_data)
