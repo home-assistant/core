@@ -1,5 +1,6 @@
 """Test Home Assistant processor util methods."""
 from datetime import timedelta
+import time
 
 from asynctest import CoroutineMock
 import pytest
@@ -7,7 +8,11 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
-from homeassistant.util.processor import async_add_entities_retry, async_map_retry
+from homeassistant.util.processor import (
+    async_background_add_entities_retry,
+    async_background_map_retry,
+    async_foreground_retry,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -60,7 +65,7 @@ MAP_FUNCTION_SIDE_EFFECTS = (
 )
 
 
-async def test_async_add_entities_retry(hass: HomeAssistant) -> None:
+async def test_async_background_add_entities_retry(hass: HomeAssistant) -> None:
     """Test adding entities with retry map."""
 
     async def map_function(hass: HomeAssistant, original_object: str) -> Entity:
@@ -68,8 +73,8 @@ async def test_async_add_entities_retry(hass: HomeAssistant) -> None:
 
     async_add_entities = CoroutineMock()
 
-    cancel_function = await async_add_entities_retry(
-        hass, ORIGINAL_OBJECTS, map_function, async_add_entities
+    cancel_function = await async_background_add_entities_retry(
+        hass, ORIGINAL_OBJECTS, map_function, async_add_entities, timeout_attempts=0
     )
     assert hasattr(cancel_function, "__call__")
     await hass.async_block_till_done()
@@ -93,11 +98,12 @@ async def test_async_map_retry_map_with_errors(
     now = dt_util.utcnow()
 
     # Attempt 1
-    await async_map_retry(
+    await async_background_map_retry(
         hass,
         ORIGINAL_OBJECTS,
         map_function,
         process_function,
+        timeout_attempts=0,  # Run forever
         run_in_parallel=run_in_parallel,
     )
     await hass.async_block_till_done()
@@ -150,8 +156,8 @@ async def test_async_map_retry_map_with_cancel(hass: HomeAssistant) -> None:
     now = dt_util.utcnow()
 
     # Attempt 1
-    cancel_function = await async_map_retry(
-        hass, ORIGINAL_OBJECTS, map_function, process_function
+    cancel_function = await async_background_map_retry(
+        hass, ORIGINAL_OBJECTS, map_function, process_function, timeout_attempts=0
     )
     assert hasattr(cancel_function, "__call__")
     await hass.async_block_till_done()
@@ -186,7 +192,7 @@ async def test_async_map_retry_map_with_timeout(hass: HomeAssistant) -> None:
     now = dt_util.utcnow()
 
     # Attempt 1
-    cancel_function = await async_map_retry(
+    cancel_function = await async_background_map_retry(
         hass, ORIGINAL_OBJECTS, map_function, process_function, timeout_attempts=2
     )
     assert hasattr(cancel_function, "__call__")
@@ -220,3 +226,30 @@ async def test_async_map_retry_map_with_timeout(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert map_function.await_count == 0
     assert process_function.await_count == 0
+
+
+async def test_async_foreground_retry_success(hass: HomeAssistant) -> None:
+    """Test foreground function returns process_function value."""
+    process_function = CoroutineMock(side_effect=[Exception("Fail1"), True])
+
+    start_time = time.time()
+    assert await async_foreground_retry(hass, process_function) is True
+    elapsed_time = time.time() - start_time
+    assert elapsed_time >= 0.3 < 0.4
+    assert process_function.await_count == 2
+
+
+async def test_async_foreground_retry_fail(hass: HomeAssistant) -> None:
+    """Test foreground function raises the correct exception."""
+    process_function = CoroutineMock(
+        side_effect=[Exception("Fail1"), Exception("Fail2"), Exception("Fail3")]
+    )
+
+    start_time = time.time()
+    with pytest.raises(Exception) as excinfo:
+        await async_foreground_retry(hass, process_function)
+
+    elapsed_time = time.time() - start_time
+    assert elapsed_time >= 0.6 < 0.7
+    assert process_function.await_count == 3
+    assert str(excinfo.value) == "Fail3"

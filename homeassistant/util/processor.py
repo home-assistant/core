@@ -7,24 +7,33 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-OriginalObjectType = TypeVar("OriginalObjectType")
-NewObjectType = TypeVar("NewObjectType")
+DEFAULT_BACKGROUND_RETRY_INTERVAL = timedelta(minutes=5)
+DEFAULT_BACKGROUND_TIMEOUT_ATTEMPTS = 3
+DEFAULT_BACKGROUND_RUN_IN_PARALLEL = True
+DEFAULT_FOREGROUND_RETRY_INTERVAL = timedelta(milliseconds=300)
+DEFAULT_FOREGROUND_TIMEOUT_ATTEMPTS = 3
 
-ObjectsType = Iterable[OriginalObjectType]
-MapFunctionType = Callable[
-    [HomeAssistant, OriginalObjectType], Awaitable[NewObjectType]
+BgOriginalObjectType = TypeVar("BgOriginalObjectType")
+BgNewObjectType = TypeVar("BgNewObjectType")
+BgProcessFunctionReturnType = TypeVar("BgProcessFunctionReturnType")
+
+BgObjectsType = Iterable[BgOriginalObjectType]
+BgMapFunctionType = Callable[
+    [HomeAssistant, BgOriginalObjectType], Awaitable[BgNewObjectType]
 ]
-ProcessFunctionType = Callable[[HomeAssistant, NewObjectType], Awaitable]
-CancelFunctionType = Callable[[], None]
+BgProcessFunctionType = Callable[[HomeAssistant, BgNewObjectType], Awaitable[None]]
+BgCancelFunctionType = Callable[[], None]
+
+FgProcessFunctionReturnType = TypeVar("FgProcessFunctionReturnType")
 
 
-class MapObjectResult(Generic[OriginalObjectType, NewObjectType]):
-    """The result of processing an object in async_add_entities_retry."""
+class MapObjectResult(Generic[BgOriginalObjectType, BgNewObjectType]):
+    """The result of processing an object in async_background_add_entities_retry."""
 
     def __init__(
         self,
-        original_object: OriginalObjectType,
-        new_object: NewObjectType,
+        original_object: BgOriginalObjectType,
+        new_object: BgNewObjectType,
         success: bool,
     ) -> None:
         """Initialize the object."""
@@ -33,12 +42,12 @@ class MapObjectResult(Generic[OriginalObjectType, NewObjectType]):
         self._success = success
 
     @property
-    def original_object(self) -> OriginalObjectType:
+    def original_object(self) -> BgOriginalObjectType:
         """Return the original object value."""
         return self._original_object
 
     @property
-    def new_object(self) -> NewObjectType:
+    def new_object(self) -> BgNewObjectType:
         """Return the new object value."""
         return self._new_object
 
@@ -48,21 +57,16 @@ class MapObjectResult(Generic[OriginalObjectType, NewObjectType]):
         return self._success
 
 
-DEFAULT_RETRY_INTERVAL = timedelta(minutes=5)
-DEFAULT_TIMEOUT_ATTEMPTS = 0
-DEFAULT_RUN_IN_PARALLEL = True
-
-
-async def async_add_entities_retry(
+async def async_background_add_entities_retry(
     hass: HomeAssistant,
-    objects: ObjectsType,
-    map_function: MapFunctionType,
+    objects: BgObjectsType,
+    map_function: BgMapFunctionType,
     async_add_entities: Callable[..., Awaitable[None]],
-    retry_interval: timedelta = DEFAULT_RETRY_INTERVAL,
-    timeout_attempts: int = DEFAULT_TIMEOUT_ATTEMPTS,
-    run_in_parallel: bool = DEFAULT_RUN_IN_PARALLEL,
+    retry_interval: timedelta = DEFAULT_BACKGROUND_RETRY_INTERVAL,
+    timeout_attempts: int = DEFAULT_BACKGROUND_TIMEOUT_ATTEMPTS,
+    run_in_parallel: bool = DEFAULT_BACKGROUND_RUN_IN_PARALLEL,
     update_before_add: Optional[bool] = None,
-) -> CancelFunctionType:
+) -> BgCancelFunctionType:
     """Asynchronously create and add entities with retries.
 
     :param hass: The current home assistant instance.
@@ -79,7 +83,7 @@ async def async_add_entities_retry(
     async def async_process_entity(hass: HomeAssistant, entity: Entity) -> None:
         await async_add_entities([entity], update_before_add=update_before_add)
 
-    return await async_map_retry(
+    return await async_background_map_retry(
         hass,
         objects,
         map_function,
@@ -90,15 +94,15 @@ async def async_add_entities_retry(
     )
 
 
-async def async_map_retry(
+async def async_background_map_retry(
     hass: HomeAssistant,
-    objects: ObjectsType,
-    map_function: MapFunctionType,
-    process_function: ProcessFunctionType,
-    retry_interval: timedelta = DEFAULT_RETRY_INTERVAL,
-    timeout_attempts: int = DEFAULT_TIMEOUT_ATTEMPTS,
-    run_in_parallel: bool = DEFAULT_RUN_IN_PARALLEL,
-) -> CancelFunctionType:
+    objects: BgObjectsType,
+    map_function: BgMapFunctionType,
+    process_function: BgProcessFunctionType,
+    retry_interval: timedelta = DEFAULT_BACKGROUND_RETRY_INTERVAL,
+    timeout_attempts: int = DEFAULT_BACKGROUND_TIMEOUT_ATTEMPTS,
+    run_in_parallel: bool = DEFAULT_BACKGROUND_RUN_IN_PARALLEL,
+) -> BgCancelFunctionType:
     """Asynchronously map and process objects with retries.
 
     :param hass: The current home assistant instance.
@@ -119,7 +123,7 @@ async def async_map_retry(
         nonlocal cancel_func1
         cancel_func1()
 
-    async def map_object(original_object: OriginalObjectType) -> MapObjectResult:
+    async def map_object(original_object: BgOriginalObjectType) -> MapObjectResult:
         try:
             new_object = await map_function(hass, original_object)
             if new_object is None:
@@ -172,3 +176,29 @@ async def async_map_retry(
     await map_objects()
 
     return cancel
+
+
+async def async_foreground_retry(
+    hass: HomeAssistant,
+    process_function: Callable[..., FgProcessFunctionReturnType],
+    timeout_attempts: int = DEFAULT_FOREGROUND_TIMEOUT_ATTEMPTS,
+    retry_interval: timedelta = DEFAULT_FOREGROUND_RETRY_INTERVAL,
+) -> FgProcessFunctionReturnType:
+    """Call a function with a retry in the event it failed.
+
+    This is a wrapper for process_function to allow the process_function to be
+    re-ran if it raised an exception. If process_function fails consistently,
+    the last exception raised by process_function will be raised. If
+    process_function does not raise an exception, it's return value will be
+    immediately returned.
+    """
+    last_exception: Exception = cast(Exception, None)
+    for attempt in range(1, timeout_attempts + 1):
+        try:
+            return await hass.async_add_executor_job(process_function)
+        except Exception as ex:  # pylint: disable=broad-except
+            last_exception = ex
+            if attempt < timeout_attempts:
+                await asyncio.sleep(retry_interval.total_seconds())
+
+    raise last_exception
