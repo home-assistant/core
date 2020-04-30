@@ -99,6 +99,9 @@ class HomeAccessory(Accessory):
         self.entity_id = entity_id
         self.hass = hass
         self.debounce = {}
+        self._char_battery = None
+        self._char_charging = None
+        self._char_low_battery = None
         self.linked_battery_sensor = self.config.get(CONF_LINKED_BATTERY_SENSOR)
         self.linked_battery_charging_sensor = self.config.get(
             CONF_LINKED_BATTERY_CHARGING_SENSOR
@@ -247,6 +250,10 @@ class HomeAccessory(Accessory):
 
         Only call this function if self._support_battery_level is True.
         """
+        if not self._char_battery:
+            # Battery appeared after homekit was started
+            return
+
         battery_level = convert_to_float(battery_level)
         if battery_level is not None:
             if self._char_battery.value != battery_level:
@@ -258,7 +265,8 @@ class HomeAccessory(Accessory):
                     "%s: Updated battery level to %d", self.entity_id, battery_level
                 )
 
-        if battery_charging is None:
+        # Charging state can appear after homekit was started
+        if battery_charging is None or not self._char_charging:
             return
 
         hk_charging = HK_CHARGING if battery_charging else HK_NOT_CHARGING
