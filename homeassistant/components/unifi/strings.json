@@ -52,8 +52,8 @@
           "track_devices": "Track network devices (Ubiquiti devices)",
           "block_client": "Network access controlled clients"
         },
-        "description": "Configure statistics sensors",
-        "title": "UniFi options 3/3"
+        "description": "Configure UniFi integration",
+        "title": "UniFi options"
       },
       "statistics_sensors": {
         "data": {
