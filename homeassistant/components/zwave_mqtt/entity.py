@@ -88,7 +88,9 @@ class ZWaveDeviceEntityValues:
 
             # If the entity has already been created, notify it of the new value.
             if self._entity_created:
-                async_dispatcher_send(self._hass, f"{self.values_id}_value_added")
+                async_dispatcher_send(
+                    self._hass, f"{DOMAIN}_{self.values_id}_value_added"
+                )
 
             # Check if entity has all required values and create the entity if needed.
             self._check_entity_ready()
@@ -127,7 +129,7 @@ class ZWaveDeviceEntityValues:
         self._entity_created = True
 
         if component in PLATFORMS:
-            async_dispatcher_send(self._hass, f"zwave_new_{component}", self)
+            async_dispatcher_send(self._hass, f"{DOMAIN}_new_{component}", self)
 
     @property
     def values_id(self):
@@ -163,7 +165,9 @@ class ZWaveDeviceEntity(Entity):
         )
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, f"{self.values.values_id}_value_added", self._value_added
+                self.hass,
+                f"{DOMAIN}_{self.values.values_id}_value_added",
+                self._value_added,
             )
         )
 

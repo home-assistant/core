@@ -1,7 +1,9 @@
 """Constants for the zwave_mqtt integration."""
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+
 DOMAIN = "zwave_mqtt"
 DATA_UNSUBSCRIBE = "unsubscribe"
-PLATFORMS = ["switch"]
+PLATFORMS = [SWITCH_DOMAIN]
 
 # MQTT Topics
 TOPIC_OPENZWAVE = "OpenZWave"
