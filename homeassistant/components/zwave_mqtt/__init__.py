@@ -39,6 +39,9 @@ DATA_DEVICES = "zwave-mqtt-devices"
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Initialize basic config of zwave_mqtt component."""
+    if "mqtt" not in hass.config.components:
+        _LOGGER.error("MQTT integration is not set up")
+        return False
     hass.data[DOMAIN] = {}
     return True
 

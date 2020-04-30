@@ -6,7 +6,7 @@
   "requirements": [
     "python-openzwave-mqtt==0.0.9"
   ],
-  "dependencies": [
+  "after_dependencies": [
     "mqtt"
   ],
   "codeowners": [
