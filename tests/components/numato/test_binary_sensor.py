@@ -44,7 +44,7 @@ async def test_hass_binary_sensor_notification(hass, numato_fixture):
     assert (
         hass.states.get("binary_sensor.numato_binary_sensor_mock_port2").state == "on"
     )
-    hass.async_add_executor_job(numato_fixture.devices[0].callbacks[2], 2, False)
+    await hass.async_add_executor_job(numato_fixture.devices[0].callbacks[2], 2, False)
     await hass.async_block_till_done()
     assert (
         hass.states.get("binary_sensor.numato_binary_sensor_mock_port2").state == "off"
