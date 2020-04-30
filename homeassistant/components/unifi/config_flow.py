@@ -175,10 +175,11 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the UniFi options."""
         self.controller = self.hass.data[UNIFI_DOMAIN][self.config_entry.entry_id]
         self.options[CONF_BLOCK_CLIENT] = self.controller.option_block_clients
+
         if self.show_advanced_options:
             return await self.async_step_device_tracker()
-        else:
-            return await self.async_step_simple_options()
+
+        return await self.async_step_simple_options()
 
     async def async_step_simple_options(self, user_input=None):
         """For simple Jack."""
