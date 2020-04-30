@@ -492,7 +492,7 @@ class Recorder(threading.Thread):
             # We do not import sqlite3 here so mysql/other
             # users do not have to pay for it to be loaded in
             # memory
-            if self.db_url.startswith("sqlite://") or ":memory:" in self.db_url:
+            if self.db_url.startswith("sqlite://"):
                 old_isolation = dbapi_connection.isolation_level
                 dbapi_connection.isolation_level = None
                 cursor = dbapi_connection.cursor()
