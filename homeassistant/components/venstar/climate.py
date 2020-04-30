@@ -4,7 +4,7 @@ import logging
 from venstarcolortouch import VenstarColorTouch
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -82,10 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     timeout = config.get(CONF_TIMEOUT)
     humidifier = config.get(CONF_HUMIDIFIER)
 
-    if config.get(CONF_SSL):
-        proto = "https"
-    else:
-        proto = "http"
+    protocol = "https" if config[CONF_SSL] else "http"
 
     client = VenstarColorTouch(
         addr=host,
@@ -93,13 +90,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         user=username,
         password=password,
         pin=pin,
-        proto=proto,
+        proto=protocol,
     )
 
     add_entities([VenstarThermostat(client, humidifier)], True)
 
 
-class VenstarThermostat(ClimateDevice):
+class VenstarThermostat(ClimateEntity):
     """Representation of a Venstar thermostat."""
 
     def __init__(self, client, humidifier):

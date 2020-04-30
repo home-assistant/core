@@ -3,7 +3,7 @@ import functools
 import logging
 from typing import List
 
-from zigpy.exceptions import DeliveryError
+from zigpy.exceptions import ZigbeeException
 import zigpy.zcl.clusters.hvac as hvac
 
 from homeassistant.components.fan import (
@@ -177,7 +177,7 @@ class FanGroup(BaseFan, ZhaGroupEntity):
             """Set the speed of the fan."""
             try:
                 await self._fan_channel.write_attributes({"fan_mode": value})
-            except DeliveryError as ex:
+            except ZigbeeException as ex:
                 self.error("Could not set speed: %s", ex)
                 return
 

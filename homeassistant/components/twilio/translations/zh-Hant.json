@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Home Assistant \u7269\u4ef6\u5fc5\u9808\u80fd\u5920\u7531\u7db2\u969b\u7db2\u8def\u5b58\u53d6\uff0c\u65b9\u80fd\u63a5\u53d7 Twilio \u8a0a\u606f\u3002",
+            "one_instance_allowed": "\u50c5\u9700\u8a2d\u5b9a\u4e00\u7d44\u7269\u4ef6\u5373\u53ef\u3002"
+        },
+        "create_entry": {
+            "default": "\u6b32\u50b3\u9001\u4e8b\u4ef6\u81f3 Home Assistant\uff0c\u5c07\u9700\u8a2d\u5b9a [Webhooks with Twilio]({twilio_url})\u3002\n\n\u8acb\u586b\u5beb\u4e0b\u5217\u8cc7\u8a0a\uff1a\n\n- URL: `{webhook_url}`\n- Method: POST\n- Content Type: application/x-www-form-urlencoded\n\n\u95dc\u65bc\u5982\u4f55\u50b3\u5165\u8cc7\u6599\u81ea\u52d5\u5316\u8a2d\u5b9a\uff0c\u8acb\u53c3\u95b1[\u6587\u4ef6]({docs_url})\u4ee5\u9032\u884c\u4e86\u89e3\u3002"
+        },
+        "step": {
+            "user": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Twilio\uff1f",
+                "title": "\u8a2d\u5b9a Twilio Webhook"
+            }
+        }
+    }
+}

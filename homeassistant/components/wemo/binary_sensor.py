@@ -4,7 +4,7 @@ import logging
 
 import async_timeout
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DOMAIN as WEMO_DOMAIN
@@ -29,7 +29,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class WemoBinarySensor(BinarySensorDevice):
+class WemoBinarySensor(BinarySensorEntity):
     """Representation a WeMo binary sensor."""
 
     def __init__(self, device):

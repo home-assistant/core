@@ -79,15 +79,15 @@ async def async_setup(hass, config):
         if not cfg:
             cfg = {}
 
-        name = cfg.get(CONF_NAME)
-        watched_entity_id = cfg.get(CONF_ENTITY_ID)
-        alert_state = cfg.get(CONF_STATE)
-        repeat = cfg.get(CONF_REPEAT)
-        skip_first = cfg.get(CONF_SKIP_FIRST)
+        name = cfg[CONF_NAME]
+        watched_entity_id = cfg[CONF_ENTITY_ID]
+        alert_state = cfg[CONF_STATE]
+        repeat = cfg[CONF_REPEAT]
+        skip_first = cfg[CONF_SKIP_FIRST]
         message_template = cfg.get(CONF_ALERT_MESSAGE)
         done_message_template = cfg.get(CONF_DONE_MESSAGE)
-        notifiers = cfg.get(CONF_NOTIFIERS)
-        can_ack = cfg.get(CONF_CAN_ACK)
+        notifiers = cfg[CONF_NOTIFIERS]
+        can_ack = cfg[CONF_CAN_ACK]
         title_template = cfg.get(CONF_TITLE)
         data = cfg.get(CONF_DATA)
 

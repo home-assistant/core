@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Ingen Hisense AEH-W4A1-enheder fundet p\u00e5 netv\u00e6rket.",
+            "single_instance_allowed": "Kun en enkelt konfiguration af Hisense AEH-W4A1 er mulig."
+        },
+        "step": {
+            "confirm": {
+                "description": "Vil du konfigurere Hisense AEH-W4A1?",
+                "title": "Hisense AEH-W4A1"
+            }
+        }
+    }
+}

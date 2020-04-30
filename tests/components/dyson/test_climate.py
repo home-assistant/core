@@ -3,7 +3,7 @@ import unittest
 from unittest import mock
 
 import asynctest
-from libpurecool.const import FocusMode, HeatMode, HeatState, HeatTarget, TiltState
+from libpurecool.const import FocusMode, HeatMode, HeatState, HeatTarget
 from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
 from libpurecool.dyson_pure_state import DysonPureHotCoolState
 
@@ -11,6 +11,8 @@ from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.dyson import climate as dyson
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
+
+from .common import load_mock_device
 
 from tests.common import get_test_home_assistant
 
@@ -41,7 +43,7 @@ def _get_config():
 def _get_device_with_no_state():
     """Return a device with no state."""
     device = mock.Mock(spec=DysonPureHotCoolLink)
-    device.name = "Device_name"
+    load_mock_device(device)
     device.state = None
     device.environmental_state = None
     return device
@@ -50,16 +52,14 @@ def _get_device_with_no_state():
 def _get_device_off():
     """Return a device with state off."""
     device = mock.Mock(spec=DysonPureHotCoolLink)
-    device.name = "Device_name"
-    device.state = mock.Mock()
-    device.environmental_state = mock.Mock()
+    load_mock_device(device)
     return device
 
 
 def _get_device_focus():
     """Return a device with fan state of focus mode."""
     device = mock.Mock(spec=DysonPureHotCoolLink)
-    device.name = "Device_name"
+    load_mock_device(device)
     device.state.focus_mode = FocusMode.FOCUS_ON.value
     return device
 
@@ -67,7 +67,7 @@ def _get_device_focus():
 def _get_device_diffuse():
     """Return a device with fan state of diffuse mode."""
     device = mock.Mock(spec=DysonPureHotCoolLink)
-    device.name = "Device_name"
+    load_mock_device(device)
     device.state.focus_mode = FocusMode.FOCUS_OFF.value
     return device
 
@@ -75,41 +75,28 @@ def _get_device_diffuse():
 def _get_device_cool():
     """Return a device with state of cooling."""
     device = mock.Mock(spec=DysonPureHotCoolLink)
-    device.name = "Device_name"
-    device.serial = "XX-XXXXX-XX"
-    device.state.tilt = TiltState.TILT_FALSE.value
+    load_mock_device(device)
     device.state.focus_mode = FocusMode.FOCUS_OFF.value
     device.state.heat_target = HeatTarget.celsius(12)
     device.state.heat_mode = HeatMode.HEAT_OFF.value
     device.state.heat_state = HeatState.HEAT_STATE_OFF.value
-    device.environmental_state.temperature = 288
-    device.environmental_state.humidity = 53
     return device
 
 
 def _get_device_heat_off():
     """Return a device with state of heat reached target."""
     device = mock.Mock(spec=DysonPureHotCoolLink)
-    device.name = "Device_name"
-    device.state = mock.Mock()
-    device.state.tilt = TiltState.TILT_FALSE.value
-    device.state.focus_mode = FocusMode.FOCUS_ON.value
-    device.state.heat_target = HeatTarget.celsius(20)
+    load_mock_device(device)
     device.state.heat_mode = HeatMode.HEAT_ON.value
     device.state.heat_state = HeatState.HEAT_STATE_OFF.value
-    device.environmental_state.temperature = 293
-    device.environmental_state.humidity = 53
     return device
 
 
 def _get_device_heat_on():
     """Return a device with state of heating."""
     device = mock.Mock(spec=DysonPureHotCoolLink)
-    device.name = "Device_name"
+    load_mock_device(device)
     device.serial = "YY-YYYYY-YY"
-    device.state = mock.Mock()
-    device.state.tilt = TiltState.TILT_FALSE.value
-    device.state.focus_mode = FocusMode.FOCUS_ON.value
     device.state.heat_target = HeatTarget.celsius(23)
     device.state.heat_mode = HeatMode.HEAT_ON.value
     device.state.heat_state = HeatState.HEAT_STATE_ON.value

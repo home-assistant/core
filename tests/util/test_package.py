@@ -4,8 +4,8 @@ import logging
 import os
 from subprocess import PIPE
 import sys
-from unittest.mock import MagicMock, call, patch
 
+from asynctest import MagicMock, call, patch
 import pkg_resources
 import pytest
 

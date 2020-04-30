@@ -47,7 +47,6 @@ class MockConfig(config.AbstractConfig):
 
     async def async_accept_grant(self, code):
         """Accept a grant."""
-        pass
 
 
 DEFAULT_CONFIG = MockConfig(None)

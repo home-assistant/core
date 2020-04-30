@@ -20,10 +20,8 @@ from .const import DOMAIN
 def configured_instances(hass):
     """Return a set of configured OpenUV instances."""
     return {
-        "{}, {}".format(
-            entry.data.get(CONF_LATITUDE, hass.config.latitude),
-            entry.data.get(CONF_LONGITUDE, hass.config.longitude),
-        )
+        f"{entry.data.get(CONF_LATITUDE, hass.config.latitude)}, "
+        f"{entry.data.get(CONF_LONGITUDE, hass.config.longitude)}"
         for entry in hass.config_entries.async_entries(DOMAIN)
     }
 
@@ -60,9 +58,9 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
         if not user_input:
             return await self._show_form()
 
-        identifier = "{}, {}".format(
-            user_input.get(CONF_LATITUDE, self.hass.config.latitude),
-            user_input.get(CONF_LONGITUDE, self.hass.config.longitude),
+        identifier = (
+            f"{user_input.get(CONF_LATITUDE, self.hass.config.latitude)}, "
+            f"{user_input.get(CONF_LONGITUDE, self.hass.config.longitude)}"
         )
         if identifier in configured_instances(self.hass):
             return await self._show_form({CONF_LATITUDE: "identifier_exists"})

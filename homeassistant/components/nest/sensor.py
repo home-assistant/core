@@ -203,6 +203,6 @@ class NestTempSensor(NestSensorDevice):
 
         if isinstance(temp, tuple):
             low, high = temp
-            self._state = "{}-{}".format(int(low), int(high))
+            self._state = f"{int(low)}-{int(high)}"
         else:
             self._state = round(temp, 1)

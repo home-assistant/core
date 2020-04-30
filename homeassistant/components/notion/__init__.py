@@ -7,7 +7,12 @@ from aionotion.errors import InvalidCredentialsError, NotionError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -57,7 +62,7 @@ BINARY_SENSOR_TYPES = {
     SENSOR_WINDOW_HINGED_HORIZONTAL: ("Hinged Window", "window"),
     SENSOR_WINDOW_HINGED_VERTICAL: ("Hinged Window", "window"),
 }
-SENSOR_TYPES = {SENSOR_TEMPERATURE: ("Temperature", "temperature", "°C")}
+SENSOR_TYPES = {SENSOR_TEMPERATURE: ("Temperature", "temperature", TEMP_CELSIUS)}
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -254,9 +259,7 @@ class NotionEntity(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{}: {}".format(
-            self._notion.sensors[self._sensor_id]["name"], self._name
-        )
+        return f"{self._notion.sensors[self._sensor_id]['name']}: {self._name}"
 
     @property
     def should_poll(self):
@@ -267,7 +270,7 @@ class NotionEntity(Entity):
     def unique_id(self):
         """Return a unique, unchanging string that represents this sensor."""
         task = self._notion.tasks[self._task_id]
-        return "{}_{}".format(self._sensor_id, task["task_type"])
+        return f"{self._sensor_id}_{task['task_type']}"
 
     async def _update_bridge_id(self):
         """Update the entity's bridge ID if it has changed.

@@ -118,7 +118,7 @@ def run(script_args: List) -> int:
                 if domain == ERROR_STR:
                     continue
                 print(" ", color(C_HEAD, domain + ":"))
-                dump_dict(res["components"].get(domain, None))
+                dump_dict(res["components"].get(domain))
 
     if args.secrets:
         flatsecret: Dict[str, str] = {}

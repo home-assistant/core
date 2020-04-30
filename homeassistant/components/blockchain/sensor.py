@@ -33,8 +33,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Blockchain.com sensors."""
 
-    addresses = config.get(CONF_ADDRESSES)
-    name = config.get(CONF_NAME)
+    addresses = config[CONF_ADDRESSES]
+    name = config[CONF_NAME]
 
     for address in addresses:
         if not validate_address(address):

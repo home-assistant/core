@@ -17,6 +17,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     UNIT_PERCENTAGE,
+    VOLT,
 )
 
 from . import SmartThingsEntity
@@ -40,7 +41,7 @@ CAPABILITY_TO_SENSORS = {
         Map(Attribute.battery, "Battery", UNIT_PERCENTAGE, DEVICE_CLASS_BATTERY)
     ],
     Capability.body_mass_index_measurement: [
-        Map(Attribute.bmi_measurement, "Body Mass Index", "kg/m^2", None)
+        Map(Attribute.bmi_measurement, "Body Mass Index", f"{MASS_KILOGRAMS}/m^2", None)
     ],
     Capability.body_weight_measurement: [
         Map(Attribute.body_weight_measurement, "Body Weight", MASS_KILOGRAMS, None)
@@ -233,7 +234,7 @@ CAPABILITY_TO_SENSORS = {
         Map(Attribute.ultraviolet_index, "Ultraviolet Index", None, None)
     ],
     Capability.voltage_measurement: [
-        Map(Attribute.voltage, "Voltage Measurement", "V", None)
+        Map(Attribute.voltage, "Voltage Measurement", VOLT, None)
     ],
     Capability.washer_mode: [Map(Attribute.washer_mode, "Washer Mode", None, None)],
     Capability.washer_operating_state: [

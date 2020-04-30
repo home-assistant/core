@@ -5,7 +5,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_DISKS,
-    CONF_NAME,
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
     TEMP_CELSIUS,
@@ -16,6 +15,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from . import SynoApi
 from .const import (
+    BASE_NAME,
     CONF_VOLUMES,
     DOMAIN,
     STORAGE_DISK_SENSORS,
@@ -31,12 +31,11 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the Synology NAS Sensor."""
-    name = entry.data[CONF_NAME]
 
     api = hass.data[DOMAIN][entry.unique_id]
 
     sensors = [
-        SynoNasUtilSensor(api, name, sensor_type, UTILISATION_SENSORS[sensor_type])
+        SynoNasUtilSensor(api, sensor_type, UTILISATION_SENSORS[sensor_type])
         for sensor_type in UTILISATION_SENSORS
     ]
 
@@ -45,7 +44,7 @@ async def async_setup_entry(
         for volume in entry.data.get(CONF_VOLUMES, api.storage.volumes_ids):
             sensors += [
                 SynoNasStorageSensor(
-                    api, name, sensor_type, STORAGE_VOL_SENSORS[sensor_type], volume
+                    api, sensor_type, STORAGE_VOL_SENSORS[sensor_type], volume
                 )
                 for sensor_type in STORAGE_VOL_SENSORS
             ]
@@ -55,7 +54,7 @@ async def async_setup_entry(
         for disk in entry.data.get(CONF_DISKS, api.storage.disks_ids):
             sensors += [
                 SynoNasStorageSensor(
-                    api, name, sensor_type, STORAGE_DISK_SENSORS[sensor_type], disk
+                    api, sensor_type, STORAGE_DISK_SENSORS[sensor_type], disk
                 )
                 for sensor_type in STORAGE_DISK_SENSORS
             ]
@@ -69,7 +68,6 @@ class SynoNasSensor(Entity):
     def __init__(
         self,
         api: SynoApi,
-        name: str,
         sensor_type: str,
         sensor_info: Dict[str, str],
         monitored_device: str = None,
@@ -77,15 +75,15 @@ class SynoNasSensor(Entity):
         """Initialize the sensor."""
         self._api = api
         self.sensor_type = sensor_type
-        self._name = f"{name} {sensor_info[0]}"
+        self._name = f"{BASE_NAME} {sensor_info[0]}"
         self._unit = sensor_info[1]
         self._icon = sensor_info[2]
         self.monitored_device = monitored_device
+        self._unique_id = f"{self._api.information.serial}_{sensor_info[0]}"
 
         if self.monitored_device:
-            self._name = f"{self._name} ({self.monitored_device})"
-
-        self._unique_id = f"{self._api.information.serial} {self._name}"
+            self._name += f" ({self.monitored_device})"
+            self._unique_id += f"_{self.monitored_device}"
 
         self._unsub_dispatcher = None
 

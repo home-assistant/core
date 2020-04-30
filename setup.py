@@ -37,9 +37,9 @@ REQUIRES = [
     "async_timeout==3.0.1",
     "attrs==19.3.0",
     "bcrypt==3.1.7",
-    "certifi>=2019.11.28",
+    "certifi>=2020.4.5.1",
     "ciso8601==2.1.3",
-    "importlib-metadata==1.5.0",
+    "importlib-metadata==1.6.0",
     "jinja2>=2.11.1",
     "PyJWT==1.7.1",
     # PyJWT has loose dependency. We want the latest one.

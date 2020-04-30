@@ -3,12 +3,18 @@ from binascii import hexlify
 import logging
 
 import voluptuous as vol
+from xbee_helper.exceptions import ZigBeeException, ZigBeeTxFailure
 
-from homeassistant.components import zigbee
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
-from . import PLATFORM_SCHEMA
+from . import (
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    ZigBeeAnalogIn,
+    ZigBeeAnalogInConfig,
+    ZigBeeConfig,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     Uses the 'type' config value to work out which type of Zigbee sensor we're
     dealing with and instantiates the relevant classes to handle it.
     """
+    zigbee_device = hass.data[DOMAIN]
     typ = config.get(CONF_TYPE)
 
     try:
@@ -40,15 +47,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.exception("Unknown Zigbee sensor type: %s", typ)
         return
 
-    add_entities([sensor_class(hass, config_class(config))], True)
+    add_entities([sensor_class(config_class(config), zigbee_device)], True)
 
 
 class ZigBeeTemperatureSensor(Entity):
     """Representation of XBee Pro temperature sensor."""
 
-    def __init__(self, hass, config):
+    def __init__(self, config, device):
         """Initialize the sensor."""
         self._config = config
+        self._device = device
         self._temp = None
 
     @property
@@ -69,19 +77,19 @@ class ZigBeeTemperatureSensor(Entity):
     def update(self):
         """Get the latest data."""
         try:
-            self._temp = zigbee.DEVICE.get_temperature(self._config.address)
-        except zigbee.ZIGBEE_TX_FAILURE:
+            self._temp = self._device.get_temperature(self._config.address)
+        except ZigBeeTxFailure:
             _LOGGER.warning(
                 "Transmission failure when attempting to get sample from "
                 "Zigbee device at address: %s",
                 hexlify(self._config.address),
             )
-        except zigbee.ZIGBEE_EXCEPTION as exc:
+        except ZigBeeException as exc:
             _LOGGER.exception("Unable to get sample from Zigbee device: %s", exc)
 
 
 # This must be below the classes to which it refers.
 TYPE_CLASSES = {
-    "temperature": (ZigBeeTemperatureSensor, zigbee.ZigBeeConfig),
-    "analog": (zigbee.ZigBeeAnalogIn, zigbee.ZigBeeAnalogInConfig),
+    "temperature": (ZigBeeTemperatureSensor, ZigBeeConfig),
+    "analog": (ZigBeeAnalogIn, ZigBeeAnalogInConfig),
 }

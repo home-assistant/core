@@ -25,7 +25,7 @@ from buienradar.constants import (
 )
 from buienradar.urls import JSON_FEED_URL, json_precipitation_forecast_url
 
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, HTTP_OK
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
@@ -92,7 +92,7 @@ class BrData:
 
                 result[STATUS_CODE] = resp.status
                 result[CONTENT] = await resp.text()
-                if resp.status == 200:
+                if resp.status == HTTP_OK:
                     result[SUCCESS] = True
                 else:
                     result[MESSAGE] = "Got http statuscode: %d" % (resp.status)

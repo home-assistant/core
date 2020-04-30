@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Nome j\u00e1 existe",
+            "wrong_location": "Localiza\u00e7\u00e3o apenas na Su\u00e9cia"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "name": "Nome"
+                },
+                "title": "Localiza\u00e7\u00e3o na Su\u00e9cia"
+            }
+        }
+    }
+}

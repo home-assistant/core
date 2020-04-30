@@ -11,7 +11,7 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, HTTP_OK
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
@@ -214,7 +214,7 @@ def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
         return
 
-    if res.status_code == 200:
+    if res.status_code == HTTP_OK:
         response = res.json()
         if "error" in response:
             if (

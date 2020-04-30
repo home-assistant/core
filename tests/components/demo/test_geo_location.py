@@ -4,10 +4,10 @@ from unittest.mock import patch
 
 from homeassistant.components import geo_location
 from homeassistant.components.demo.geo_location import (
-    DEFAULT_UNIT_OF_MEASUREMENT,
     DEFAULT_UPDATE_INTERVAL,
     NUMBER_OF_DEMO_DEVICES,
 )
+from homeassistant.const import LENGTH_KILOMETERS
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
@@ -60,10 +60,7 @@ class TestDemoPlatform(unittest.TestCase):
                     abs(state.attributes["longitude"] - self.hass.config.longitude)
                     < 1.0
                 )
-                assert (
-                    state.attributes["unit_of_measurement"]
-                    == DEFAULT_UNIT_OF_MEASUREMENT
-                )
+                assert state.attributes["unit_of_measurement"] == LENGTH_KILOMETERS
 
             # Update (replaces 1 device).
             fire_time_changed(self.hass, utcnow + DEFAULT_UPDATE_INTERVAL)

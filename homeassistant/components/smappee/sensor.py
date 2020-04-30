@@ -3,9 +3,11 @@ from datetime import timedelta
 import logging
 
 from homeassistant.const import (
+    DEGREE,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
     UNIT_PERCENTAGE,
+    VOLT,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.helpers.entity import Entity
@@ -25,7 +27,7 @@ SENSOR_TYPES = {
         "active_power",
     ],
     "current": ["Current", "mdi:gauge", "local", "A", "current"],
-    "voltage": ["Voltage", "mdi:gauge", "local", "V", "voltage"],
+    "voltage": ["Voltage", "mdi:gauge", "local", VOLT, "voltage"],
     "active_cosfi": [
         "Power Factor",
         "mdi:gauge",
@@ -72,7 +74,7 @@ SENSOR_TYPES = {
         "Water Sensor Temperature",
         "mdi:temperature-celsius",
         "water",
-        "°",
+        DEGREE,
         "temperature",
     ],
     "water_sensor_humidity": [

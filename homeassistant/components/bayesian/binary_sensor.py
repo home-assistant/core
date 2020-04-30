@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -97,10 +97,10 @@ def update_probability(prior, prob_given_true, prob_given_false):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Bayesian Binary sensor."""
-    name = config.get(CONF_NAME)
-    observations = config.get(CONF_OBSERVATIONS)
-    prior = config.get(CONF_PRIOR)
-    probability_threshold = config.get(CONF_PROBABILITY_THRESHOLD)
+    name = config[CONF_NAME]
+    observations = config[CONF_OBSERVATIONS]
+    prior = config[CONF_PRIOR]
+    probability_threshold = config[CONF_PROBABILITY_THRESHOLD]
     device_class = config.get(CONF_DEVICE_CLASS)
 
     async_add_entities(
@@ -113,7 +113,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class BayesianBinarySensor(BinarySensorDevice):
+class BayesianBinarySensor(BinarySensorEntity):
     """Representation of a Bayesian sensor."""
 
     def __init__(self, name, prior, observations, probability_threshold, device_class):
@@ -298,10 +298,16 @@ class BayesianBinarySensor(BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        print(self.current_observations)
-        print(self.observations_by_entity)
+
+        attr_observations_list = list(
+            obs.copy() for obs in self.current_observations.values() if obs is not None
+        )
+
+        for item in attr_observations_list:
+            item.pop("value_template", None)
+
         return {
-            ATTR_OBSERVATIONS: list(self.current_observations.values()),
+            ATTR_OBSERVATIONS: attr_observations_list,
             ATTR_OCCURRED_OBSERVATION_ENTITIES: list(
                 {
                     obs.get("entity_id")

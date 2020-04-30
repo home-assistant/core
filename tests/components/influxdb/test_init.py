@@ -666,7 +666,7 @@ class TestInfluxDB(unittest.TestCase):
             state = mock.MagicMock(
                 state=1,
                 domain=comp["domain"],
-                entity_id=comp["domain"] + "." + comp["id"],
+                entity_id=f"{comp['domain']}.{comp['id']}",
                 object_id=comp["id"],
                 attributes={},
             )

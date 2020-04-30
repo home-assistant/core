@@ -15,4 +15,4 @@ def pytest_runtest_makereport(item, call):
 
     # set a report attribute for each phase of a call, which can
     # be "setup", "call", "teardown"
-    setattr(item, "rep_" + rep.when, rep)
+    setattr(item, f"rep_{rep.when}", rep)

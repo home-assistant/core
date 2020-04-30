@@ -12,6 +12,7 @@ from homeassistant.components.alexa import (
     smart_home as alexa_sh,
 )
 from homeassistant.components.google_assistant import const as gc, smart_home as ga
+from homeassistant.const import HTTP_OK
 from homeassistant.core import Context, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
@@ -174,7 +175,7 @@ class CloudClient(Interface):
                 break
 
         if found is None:
-            return {"status": 200}
+            return {"status": HTTP_OK}
 
         request = MockRequest(
             content=payload["body"].encode("utf-8"),

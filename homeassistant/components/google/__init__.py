@@ -234,7 +234,7 @@ def setup_services(hass, hass_config, track_new_found_calendars, calendar_servic
     def _found_calendar(call):
         """Check if we know about a calendar and generate PLATFORM_DISCOVER."""
         calendar = get_calendar_info(hass, call.data)
-        if hass.data[DATA_INDEX].get(calendar[CONF_CAL_ID], None) is not None:
+        if hass.data[DATA_INDEX].get(calendar[CONF_CAL_ID]) is not None:
             return
 
         hass.data[DATA_INDEX].update({calendar[CONF_CAL_ID]: calendar})

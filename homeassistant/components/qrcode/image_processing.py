@@ -34,7 +34,7 @@ class QrEntity(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "QR {}".format(split_entity_id(camera_entity)[1])
+            self._name = f"QR {split_entity_id(camera_entity)[1]}"
         self._state = None
 
     @property

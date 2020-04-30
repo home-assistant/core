@@ -392,3 +392,12 @@ async def test_device_override(hass, zigpy_device_mock, setup_zha, override, ent
     await zha_gateway.async_device_initialized(zigpy_device)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id) is not None
+
+
+async def test_group_probe_cleanup_called(hass, setup_zha, config_entry):
+    """Test cleanup happens when zha is unloaded."""
+    await setup_zha()
+    disc.GROUP_PROBE.cleanup = mock.Mock(wraps=disc.GROUP_PROBE.cleanup)
+    await config_entry.async_unload(hass)
+    await hass.async_block_till_done()
+    disc.GROUP_PROBE.cleanup.assert_called()

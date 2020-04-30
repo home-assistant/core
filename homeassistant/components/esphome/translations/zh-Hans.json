@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "ESP \u5df2\u914d\u7f6e\u5b8c\u6210"
+        },
+        "error": {
+            "connection_error": "\u65e0\u6cd5\u8fde\u63a5\u5230 ESP\u3002\u8bf7\u786e\u8ba4\u60a8\u7684 YAML \u6587\u4ef6\u4e2d\u5305\u542b 'api:' \u884c\u3002",
+            "invalid_password": "\u65e0\u6548\u7684\u5bc6\u7801\uff01",
+            "resolve_error": "\u65e0\u6cd5\u89e3\u6790 ESP \u7684\u5730\u5740\u3002\u5982\u679c\u6b64\u9519\u8bef\u6301\u7eed\u5b58\u5728\uff0c\u8bf7\u8bbe\u7f6e\u9759\u6001IP\u5730\u5740\uff1ahttps://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+        },
+        "flow_title": "ESPHome: {name}",
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "\u5bc6\u7801"
+                },
+                "description": "\u8bf7\u8f93\u5165\u60a8\u5728\u914d\u7f6e\u4e2d\u4e3a\u201c{name}\u201d\u8bbe\u7f6e\u7684\u5bc6\u7801\u3002",
+                "title": "\u8f93\u5165\u5bc6\u7801"
+            },
+            "discovery_confirm": {
+                "description": "\u662f\u5426\u8981\u5c06 ESPHome \u8282\u70b9 `{name}` \u6dfb\u52a0\u5230 Home Assistant\uff1f",
+                "title": "\u53d1\u73b0\u4e86 ESPHome \u8282\u70b9"
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u673a",
+                    "port": "\u7aef\u53e3"
+                },
+                "description": "\u8bf7\u8f93\u5165\u60a8\u7684 [ESPHome](https://esphomelib.com/) \u8282\u70b9\u7684\u8fde\u63a5\u8bbe\u7f6e\u3002",
+                "title": "[%key:component::esphome::title%]"
+            }
+        }
+    }
+}

@@ -3,9 +3,8 @@ from datetime import datetime, timedelta
 import json
 import logging
 import os
-from unittest.mock import Mock, call
 
-from asynctest import patch
+from asynctest import Mock, call, patch
 import pytest
 
 from homeassistant.components import zone

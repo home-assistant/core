@@ -17,6 +17,11 @@ SSDP = {
             "manufacturer": "DIRECTV"
         }
     ],
+    "fritzbox": [
+        {
+            "st": "urn:schemas-upnp-org:device:fritzbox:1"
+        }
+    ],
     "harmony": [
         {
             "deviceType": "urn:myharmony-com:device:harmony:1",
@@ -68,6 +73,12 @@ SSDP = {
     "sonos": [
         {
             "st": "urn:schemas-upnp-org:device:ZonePlayer:1"
+        }
+    ],
+    "synology_dsm": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+            "manufacturer": "Synology"
         }
     ],
     "wemo": [

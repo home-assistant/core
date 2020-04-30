@@ -2,6 +2,7 @@
 from defusedxml import ElementTree
 import pytest
 
+from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
 
@@ -29,7 +30,7 @@ def mock_http_client(loop, hass, hass_client):
 async def test_get_nonexistant_feed(mock_http_client):
     """Test if we can retrieve the correct rss feed."""
     resp = await mock_http_client.get("/api/rss_template/otherfeed")
-    assert resp.status == 404
+    assert resp.status == HTTP_NOT_FOUND
 
 
 async def test_get_rss_feed(mock_http_client, hass):

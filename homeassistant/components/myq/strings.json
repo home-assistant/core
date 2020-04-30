@@ -1,13 +1,9 @@
 {
   "config": {
-    "title": "MyQ",
     "step": {
       "user": {
         "title": "Connect to the MyQ Gateway",
-        "data": {
-          "username": "Username",
-          "password": "Password"
-        }
+        "data": { "username": "Username", "password": "Password" }
       }
     },
     "error": {
@@ -15,8 +11,6 @@
       "invalid_auth": "Invalid authentication",
       "unknown": "Unexpected error"
     },
-    "abort": {
-      "already_configured": "MyQ is already configured"
-    }
+    "abort": { "already_configured": "MyQ is already configured" }
   }
 }

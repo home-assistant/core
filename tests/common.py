@@ -11,10 +11,10 @@ import logging
 import os
 import sys
 import threading
-from unittest.mock import MagicMock, Mock, patch
 import uuid
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa
+from asynctest import MagicMock, Mock, patch
 
 from homeassistant import auth, config_entries, core as ha, loader
 from homeassistant.auth import (

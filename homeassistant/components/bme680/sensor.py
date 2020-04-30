@@ -109,7 +109,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the BME680 sensor."""
     SENSOR_TYPES[SENSOR_TEMP][1] = hass.config.units.temperature_unit
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
 
     sensor_handler = await hass.async_add_job(_setup_bme680, config)
     if sensor_handler is None:
@@ -132,8 +132,8 @@ def _setup_bme680(config):
     sensor = None
     try:
         # pylint: disable=no-member
-        i2c_address = config.get(CONF_I2C_ADDRESS)
-        bus = SMBus(config.get(CONF_I2C_BUS))
+        i2c_address = config[CONF_I2C_ADDRESS]
+        bus = SMBus(config[CONF_I2C_BUS])
         sensor = bme680.BME680(i2c_address, bus)
 
         # Configure Oversampling
@@ -145,10 +145,10 @@ def _setup_bme680(config):
             8: bme680.OS_8X,
             16: bme680.OS_16X,
         }
-        sensor.set_temperature_oversample(os_lookup[config.get(CONF_OVERSAMPLING_TEMP)])
-        sensor.set_temp_offset(config.get(CONF_TEMP_OFFSET))
-        sensor.set_humidity_oversample(os_lookup[config.get(CONF_OVERSAMPLING_HUM)])
-        sensor.set_pressure_oversample(os_lookup[config.get(CONF_OVERSAMPLING_PRES)])
+        sensor.set_temperature_oversample(os_lookup[config[CONF_OVERSAMPLING_TEMP]])
+        sensor.set_temp_offset(config[CONF_TEMP_OFFSET])
+        sensor.set_humidity_oversample(os_lookup[config[CONF_OVERSAMPLING_HUM]])
+        sensor.set_pressure_oversample(os_lookup[config[CONF_OVERSAMPLING_PRES]])
 
         # Configure IIR Filter
         filter_lookup = {
@@ -161,7 +161,7 @@ def _setup_bme680(config):
             63: bme680.FILTER_SIZE_63,
             127: bme680.FILTER_SIZE_127,
         }
-        sensor.set_filter(filter_lookup[config.get(CONF_FILTER_SIZE)])
+        sensor.set_filter(filter_lookup[config[CONF_FILTER_SIZE]])
 
         # Configure the Gas Heater
         if (

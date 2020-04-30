@@ -69,7 +69,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     entity_id = config.get(CONF_ENTITY_ID)
     name = config.get(CONF_NAME)
     sampling_size = config.get(CONF_SAMPLING_SIZE)
-    max_age = config.get(CONF_MAX_AGE, None)
+    max_age = config.get(CONF_MAX_AGE)
     precision = config.get(CONF_PRECISION)
 
     async_add_entities(

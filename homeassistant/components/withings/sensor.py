@@ -6,9 +6,7 @@ from withings_api.common import (
     MeasureGetMeasResponse,
     MeasureGroupAttribs,
     MeasureType,
-    SleepGetResponse,
     SleepGetSummaryResponse,
-    SleepState,
     get_measure_value,
 )
 
@@ -71,16 +69,6 @@ class WithingsAttribute:
 
 class WithingsMeasureAttribute(WithingsAttribute):
     """Model measure attributes."""
-
-
-class WithingsSleepStateAttribute(WithingsAttribute):
-    """Model sleep data attributes."""
-
-    def __init__(
-        self, measurement: str, friendly_name: str, unit_of_measurement: str, icon: str
-    ) -> None:
-        """Initialize sleep state attribute."""
-        super().__init__(measurement, None, friendly_name, unit_of_measurement, icon)
 
 
 class WithingsSleepSummaryAttribute(WithingsAttribute):
@@ -195,9 +183,6 @@ WITHINGS_ATTRIBUTES = [
         "Pulse Wave Velocity",
         SPEED_METERS_PER_SECOND,
         None,
-    ),
-    WithingsSleepStateAttribute(
-        const.MEAS_SLEEP_STATE, "Sleep state", None, "mdi:sleep"
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_WAKEUP_DURATION_SECONDS,
@@ -359,11 +344,6 @@ class WithingsHealthSensor(Entity):
             await self._data_manager.update_measures()
             await self.async_update_measure(self._data_manager.measures)
 
-        elif isinstance(self._attribute, WithingsSleepStateAttribute):
-            _LOGGER.debug("Updating sleep state")
-            await self._data_manager.update_sleep()
-            await self.async_update_sleep_state(self._data_manager.sleep)
-
         elif isinstance(self._attribute, WithingsSleepSummaryAttribute):
             _LOGGER.debug("Updating sleep summary state")
             await self._data_manager.update_sleep_summary()
@@ -385,27 +365,6 @@ class WithingsHealthSensor(Entity):
             return
 
         self._state = round(value, 2)
-
-    async def async_update_sleep_state(self, data: SleepGetResponse) -> None:
-        """Update the sleep state data."""
-        if not data.series:
-            _LOGGER.debug("No sleep data, setting state to %s", None)
-            self._state = None
-            return
-
-        sorted_series = sorted(data.series, key=lambda serie: serie.startdate)
-        serie = sorted_series[len(sorted_series) - 1]
-        state = None
-        if serie.state == SleepState.AWAKE:
-            state = const.STATE_AWAKE
-        elif serie.state == SleepState.LIGHT:
-            state = const.STATE_LIGHT
-        elif serie.state == SleepState.DEEP:
-            state = const.STATE_DEEP
-        elif serie.state == SleepState.REM:
-            state = const.STATE_REM
-
-        self._state = state
 
     async def async_update_sleep_summary(self, data: SleepGetSummaryResponse) -> None:
         """Update the sleep summary data."""

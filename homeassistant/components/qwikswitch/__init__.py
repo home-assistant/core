@@ -75,7 +75,7 @@ class QSEntity(Entity):
         return self._name
 
     @property
-    def poll(self):
+    def should_poll(self):
         """QS sensors gets packets in update_packet."""
         return False
 
@@ -103,7 +103,7 @@ class QSToggleEntity(QSEntity):
 
     Implemented:
      - QSLight extends QSToggleEntity and Light[2] (ToggleEntity[1])
-     - QSSwitch extends QSToggleEntity and SwitchDevice[3] (ToggleEntity[1])
+     - QSSwitch extends QSToggleEntity and SwitchEntity[3] (ToggleEntity[1])
 
     [1] /helpers/entity.py
     [2] /components/light/__init__.py
@@ -165,9 +165,9 @@ async def async_setup(hass, config):
 
     comps = {"switch": [], "light": [], "sensor": [], "binary_sensor": []}
 
-    try:
-        sensor_ids = []
-        for sens in sensors:
+    sensor_ids = []
+    for sens in sensors:
+        try:
             _, _type = SENSORS[sens["type"]]
             sensor_ids.append(sens["id"])
             if _type is bool:
@@ -179,9 +179,12 @@ async def async_setup(hass, config):
                     _LOGGER.warning(
                         "%s should only be used for binary_sensors: %s", _key, sens
                     )
-
-    except KeyError:
-        _LOGGER.warning("Sensor validation failed")
+        except KeyError:
+            _LOGGER.warning(
+                "Sensor validation failed for sensor id=%s type=%s",
+                sens["id"],
+                sens["type"],
+            )
 
     for qsid, dev in qsusb.devices.items():
         if qsid in switches:
@@ -205,9 +208,7 @@ async def async_setup(hass, config):
         # If button pressed, fire a hass event
         if QS_ID in qspacket:
             if qspacket.get(QS_CMD, "") in cmd_buttons:
-                hass.bus.async_fire(
-                    "qwikswitch.button.{}".format(qspacket[QS_ID]), qspacket
-                )
+                hass.bus.async_fire(f"qwikswitch.button.{qspacket[QS_ID]}", qspacket)
                 return
 
             if qspacket[QS_ID] in sensor_ids:

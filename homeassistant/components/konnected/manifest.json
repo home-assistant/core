@@ -1,6 +1,6 @@
 {
   "domain": "konnected",
-  "name": "Konnected",
+  "name": "Konnected.io",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/konnected",
   "requirements": ["konnected==1.1.0"],

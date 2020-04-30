@@ -53,7 +53,7 @@ def repr_helper(inp: Any) -> str:
     """Help creating a more readable string representation of objects."""
     if isinstance(inp, (dict, MappingProxyType)):
         return ", ".join(
-            repr_helper(key) + "=" + repr_helper(item) for key, item in inp.items()
+            f"{repr_helper(key)}={repr_helper(item)}" for key, item in inp.items()
         )
     if isinstance(inp, datetime):
         return as_local(inp).isoformat()

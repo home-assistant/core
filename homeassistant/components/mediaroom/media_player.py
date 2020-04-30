@@ -4,7 +4,7 @@ import logging
 from pymediaroom import PyMediaroomError, Remote, State, install_mediaroom_protocol
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -70,7 +70,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     known_hosts = hass.data.get(DATA_MEDIAROOM)
     if known_hosts is None:
         known_hosts = hass.data[DATA_MEDIAROOM] = []
-    host = config.get(CONF_HOST, None)
+    host = config.get(CONF_HOST)
     if host:
         async_add_entities(
             [
@@ -101,7 +101,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     if not config[CONF_OPTIMISTIC]:
 
-        already_installed = hass.data.get(DISCOVERY_MEDIAROOM, None)
+        already_installed = hass.data.get(DISCOVERY_MEDIAROOM)
         if not already_installed:
             hass.data[DISCOVERY_MEDIAROOM] = await install_mediaroom_protocol(
                 responses_callback=callback_notify
@@ -118,7 +118,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             _LOGGER.debug("Auto discovery installed")
 
 
-class MediaroomDevice(MediaPlayerDevice):
+class MediaroomDevice(MediaPlayerEntity):
     """Representation of a Mediaroom set-up-box on the network."""
 
     def set_state(self, mediaroom_state):

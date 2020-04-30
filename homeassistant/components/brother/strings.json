@@ -1,10 +1,8 @@
 {
   "config": {
-    "title": "Brother Printer",
     "flow_title": "Brother Printer: {model} {serial_number}",
     "step": {
       "user": {
-        "title": "Brother Printer",
         "description": "Set up Brother printer integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/brother",
         "data": {
           "host": "Printer hostname or IP address",
@@ -14,9 +12,7 @@
       "zeroconf_confirm": {
         "description": "Do you want to add the Brother Printer {model} with serial number `{serial_number}` to Home Assistant?",
         "title": "Discovered Brother Printer",
-        "data": {
-          "type": "Type of the printer"
-        }
+        "data": { "type": "Type of the printer" }
       }
     },
     "error": {

@@ -15,8 +15,6 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONTROLLER = None
-
 CONF_COMM_TYPE = "comm_type"
 
 DOMAIN = "mochad"
@@ -42,22 +40,22 @@ def setup(hass, config):
     host = conf.get(CONF_HOST)
     port = conf.get(CONF_PORT)
 
-    global CONTROLLER  # pylint: disable=global-statement
     try:
-        CONTROLLER = MochadCtrl(host, port)
+        mochad_controller = MochadCtrl(host, port)
     except exceptions.ConfigurationError:
         _LOGGER.exception()
         return False
 
     def stop_mochad(event):
         """Stop the Mochad service."""
-        CONTROLLER.disconnect()
+        mochad_controller.disconnect()
 
     def start_mochad(event):
         """Start the Mochad service."""
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_mochad)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_mochad)
+    hass.data[DOMAIN] = mochad_controller
 
     return True
 

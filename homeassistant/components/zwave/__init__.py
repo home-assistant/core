@@ -297,7 +297,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if discovery_info is None or DATA_NETWORK not in hass.data:
         return False
 
-    device = hass.data[DATA_DEVICES].get(discovery_info[const.DISCOVERY_DEVICE], None)
+    device = hass.data[DATA_DEVICES].get(discovery_info[const.DISCOVERY_DEVICE])
     if device is None:
         return False
 

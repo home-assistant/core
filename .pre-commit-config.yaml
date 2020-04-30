@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.1.0
+    rev: v2.2.1
     hooks:
       - id: pyupgrade
         args: [--py37-plus]
@@ -46,6 +46,7 @@ repos:
     rev: v2.4.0
     hooks:
       - id: check-executables-have-shebangs
+        stages: [manual]
       - id: check-json
       - id: no-commit-to-branch
         args:
@@ -53,13 +54,14 @@ repos:
           - --branch=master
           - --branch=rc
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.21.0
+    rev: v1.23.0
     hooks:
       - id: yamllint
   - repo: https://github.com/prettier/prettier
-    rev: 2.0.2
+    rev: 2.0.4
     hooks:
       - id: prettier
+        stages: [manual]
   - repo: local
     hooks:
       # Run mypy through our wrapper script in order to get the possible
@@ -86,4 +88,4 @@ repos:
         pass_filenames: false
         language: script
         types: [json]
-        files: ^homeassistant/.+/manifest\.json$
+        files: ^homeassistant/.+/(manifest|strings)\.json$

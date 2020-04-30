@@ -37,8 +37,8 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Use config values to set up a function enabling status retrieval."""
     conf = config[DOMAIN]
-    host = conf.get(CONF_HOST)
-    port = conf.get(CONF_PORT)
+    host = conf[CONF_HOST]
+    port = conf[CONF_PORT]
 
     apcups_data = APCUPSdData(host, port)
     hass.data[DOMAIN] = apcups_data

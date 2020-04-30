@@ -113,7 +113,7 @@ class Dominos:
 
     def handle_order(self, call):
         """Handle ordering pizza."""
-        entity_ids = call.data.get(ATTR_ORDER_ENTITY, None)
+        entity_ids = call.data.get(ATTR_ORDER_ENTITY)
 
         target_orders = [
             order

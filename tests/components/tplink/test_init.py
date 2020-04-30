@@ -71,6 +71,8 @@ async def test_configuring_device_types(hass, name, cls, platform, count):
         "homeassistant.components.tplink.common.Discover.discover"
     ) as discover, patch(
         "homeassistant.components.tplink.common.SmartDevice._query_helper"
+    ), patch(
+        "homeassistant.components.tplink.light.async_setup_entry", return_value=True,
     ):
         discovery_data = {
             f"123.123.123.{c}": cls("123.123.123.123") for c in range(count)
@@ -116,6 +118,8 @@ async def test_configuring_devices_from_multiple_sources(hass):
         "homeassistant.components.tplink.common.Discover.discover"
     ) as discover, patch(
         "homeassistant.components.tplink.common.SmartDevice._query_helper"
+    ), patch(
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup"
     ):
         discover_device_fail = SmartPlug("123.123.123.123")
         discover_device_fail.get_sysinfo = MagicMock(side_effect=SmartDeviceException())

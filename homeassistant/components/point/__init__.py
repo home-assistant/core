@@ -309,7 +309,7 @@ class MinutPointEntity(Entity):
             "connections": {("mac", device["device_mac"])},
             "identifieres": device["device_id"],
             "manufacturer": "Minut",
-            "model": "Point v{}".format(device["hardware_version"]),
+            "model": f"Point v{device['hardware_version']}",
             "name": device["description"],
             "sw_version": device["firmware"]["installed"],
             "via_device": (DOMAIN, device["home"]),

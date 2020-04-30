@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "ESP \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "connection_error": "Kan inte ansluta till ESP. Se till att din YAML-fil inneh\u00e5ller en 'api:' line.",
+            "invalid_password": "Ogiltigt l\u00f6senord!",
+            "resolve_error": "Det g\u00e5r inte att hitta IP-adressen f\u00f6r ESP med DNS-namnet. Om det h\u00e4r felet kvarst\u00e5r anger du en statisk IP-adress: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+        },
+        "flow_title": "ESPHome: {name}",
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "L\u00f6senord"
+                },
+                "description": "Ange det l\u00f6senord du angett i din konfiguration f\u00f6r {name}.",
+                "title": "Ange l\u00f6senord"
+            },
+            "discovery_confirm": {
+                "description": "Vill du l\u00e4gga till ESPHome noden ` {name} ` till Home Assistant?",
+                "title": "Uppt\u00e4ckt ESPHome-nod"
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rddatorn",
+                    "port": "Port"
+                },
+                "description": "Ange anslutningsinst\u00e4llningarna f\u00f6r noden [ESPHome](https://esphomelib.com/).",
+                "title": "[%key:component::esphome::title%]"
+            }
+        }
+    }
+}

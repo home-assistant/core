@@ -158,7 +158,7 @@ async def async_setup(hass, config):
             return
 
         # Lookup entities who registered this device id as device id or alias
-        event_id = event.get(EVENT_KEY_ID, None)
+        event_id = event.get(EVENT_KEY_ID)
 
         is_group_event = (
             event_type == EVENT_KEY_COMMAND
