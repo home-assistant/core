@@ -234,7 +234,7 @@ async def test_loading_race_condition(hass):
     ) as mock_ent_registry, patch(
         "homeassistant.helpers.device_registry.async_get_registry"
     ) as mock_dev_registry, patch(
-        "homeassistant.helpers.storage.Store.async_load"
+        "homeassistant.helpers.storage.Store.async_load", return_value=None
     ) as mock_load:
         results = await asyncio.gather(store.async_get_users(), store.async_get_users())
 

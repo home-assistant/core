@@ -29,7 +29,7 @@ from .test_common import (
 )
 
 from tests.async_mock import patch
-from tests.common import async_fire_mqtt_message, async_mock_mqtt_component, mock_coro
+from tests.common import async_fire_mqtt_message, async_mock_mqtt_component
 from tests.components.switch import common
 
 DEFAULT_CONFIG = {
@@ -81,7 +81,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mock_publish):
 
     with patch(
         "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=mock_coro(fake_state),
+        return_value=fake_state,
     ):
         assert await async_setup_component(
             hass,

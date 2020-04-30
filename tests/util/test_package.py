@@ -71,13 +71,11 @@ def mock_venv():
         yield mock
 
 
-@asyncio.coroutine
 def mock_async_subprocess():
     """Return an async Popen mock."""
     async_popen = MagicMock()
 
-    @asyncio.coroutine
-    def communicate(input=None):
+    async def communicate(input=None):
         """Communicate mock."""
         stdout = bytes("/deps_dir/lib_dir", "utf-8")
         return (stdout, None)

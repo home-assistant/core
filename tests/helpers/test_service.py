@@ -39,7 +39,9 @@ from tests.common import (
 @pytest.fixture
 def mock_handle_entity_call():
     """Mock service platform call."""
-    with patch("homeassistant.helpers.service._handle_entity_call") as mock_call:
+    with patch(
+        "homeassistant.helpers.service._handle_entity_call", return_value=None,
+    ) as mock_call:
         yield mock_call
 
 
@@ -321,7 +323,7 @@ async def test_call_with_required_features(hass, mock_entities):
 
 async def test_call_with_sync_func(hass, mock_entities):
     """Test invoking sync service calls."""
-    test_service_mock = Mock()
+    test_service_mock = Mock(return_value=None)
     await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
@@ -333,7 +335,7 @@ async def test_call_with_sync_func(hass, mock_entities):
 
 async def test_call_with_sync_attr(hass, mock_entities):
     """Test invoking sync service calls."""
-    mock_method = mock_entities["light.kitchen"].sync_method = Mock()
+    mock_method = mock_entities["light.kitchen"].sync_method = Mock(return_value=None)
     await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],

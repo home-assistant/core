@@ -9,7 +9,7 @@ from tests.common import assert_setup_component, get_test_home_assistant, load_f
 from tests.components.image_processing import common
 
 
-async def mock_async_subprocess():
+def mock_async_subprocess():
     """Get a Popen mock back."""
     async_popen = MagicMock()
 

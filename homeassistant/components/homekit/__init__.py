@@ -484,7 +484,7 @@ class HomeKit:
             )
 
         _LOGGER.debug("Driver start")
-        self.hass.async_add_executor_job(self.driver.start)
+        self.hass.add_job(self.driver.start)
         self.status = STATUS_RUNNING
 
     async def async_stop(self, *args):

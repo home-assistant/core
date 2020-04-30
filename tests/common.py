@@ -160,20 +160,37 @@ async def async_test_home_assistant(loop):
 
     def async_add_job(target, *args):
         """Add job."""
-        if isinstance(target, Mock):
-            return AsyncMock(return_value=target(*args))()
+        check_target = target
+        while isinstance(check_target, ft.partial):
+            check_target = check_target.func
+
+        if isinstance(check_target, Mock) and not isinstance(target, AsyncMock):
+            fut = asyncio.Future()
+            fut.set_result(target(*args))
+            return fut
+
         return orig_async_add_job(target, *args)
 
     def async_add_executor_job(target, *args):
         """Add executor job."""
-        if isinstance(target, Mock):
-            return AsyncMock(return_value=target(*args))()
+        check_target = target
+        while isinstance(check_target, ft.partial):
+            check_target = check_target.func
+
+        if isinstance(check_target, Mock):
+            fut = asyncio.Future()
+            fut.set_result(target(*args))
+            return fut
+
         return orig_async_add_executor_job(target, *args)
 
     def async_create_task(coroutine):
         """Create task."""
-        if isinstance(coroutine, Mock):
-            return AsyncMock(return_value=None)()
+        if isinstance(coroutine, Mock) and not isinstance(coroutine, AsyncMock):
+            fut = asyncio.Future()
+            fut.set_result(None)
+            return fut
+
         return orig_async_create_task(coroutine)
 
     hass.async_add_job = async_add_job
@@ -563,7 +580,7 @@ class MockPlatform:
             self.async_setup_entry = async_setup_entry
 
         if setup_platform is None and async_setup_platform is None:
-            self.async_setup_platform = AsyncMock()
+            self.async_setup_platform = AsyncMock(return_value=None)
 
 
 class MockEntityPlatform(entity_platform.EntityPlatform):

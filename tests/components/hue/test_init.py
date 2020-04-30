@@ -101,7 +101,7 @@ async def test_config_passed_to_config_entry(hass):
     mock_registry = Mock()
     with patch.object(hue, "HueBridge") as mock_bridge, patch(
         "homeassistant.helpers.device_registry.async_get_registry",
-        return_value=mock_coro(mock_registry),
+        return_value=mock_registry,
     ):
         mock_bridge.return_value.async_setup = AsyncMock(return_value=True)
         mock_bridge.return_value.api.config = Mock(

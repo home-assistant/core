@@ -7,12 +7,7 @@ from homeassistant.core import callback
 from homeassistant.setup import setup_component
 
 from tests.async_mock import PropertyMock, patch
-from tests.common import (
-    assert_setup_component,
-    get_test_home_assistant,
-    load_fixture,
-    mock_coro,
-)
+from tests.common import assert_setup_component, get_test_home_assistant, load_fixture
 from tests.components.image_processing import common
 
 
@@ -145,7 +140,7 @@ class TestOpenAlprCloud:
 
         with patch(
             "homeassistant.components.camera.async_get_image",
-            return_value=mock_coro(camera.Image("image/jpeg", b"image")),
+            return_value=camera.Image("image/jpeg", b"image"),
         ):
             common.scan(self.hass, entity_id="image_processing.test_local")
             self.hass.block_till_done()
@@ -178,7 +173,7 @@ class TestOpenAlprCloud:
 
         with patch(
             "homeassistant.components.camera.async_get_image",
-            return_value=mock_coro(camera.Image("image/jpeg", b"image")),
+            return_value=camera.Image("image/jpeg", b"image"),
         ):
             common.scan(self.hass, entity_id="image_processing.test_local")
             self.hass.block_till_done()
@@ -194,7 +189,7 @@ class TestOpenAlprCloud:
 
         with patch(
             "homeassistant.components.camera.async_get_image",
-            return_value=mock_coro(camera.Image("image/jpeg", b"image")),
+            return_value=camera.Image("image/jpeg", b"image"),
         ):
             common.scan(self.hass, entity_id="image_processing.test_local")
             self.hass.block_till_done()

@@ -7,7 +7,7 @@ from homeassistant.components.almond.const import DOMAIN
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.async_mock import patch
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 CLIENT_ID_VALUE = "1234"
 CLIENT_SECRET_VALUE = "5678"
@@ -15,7 +15,7 @@ CLIENT_SECRET_VALUE = "5678"
 
 async def test_import(hass):
     """Test that we can import a config entry."""
-    with patch("pyalmond.WebAlmondAPI.async_list_apps", side_effect=mock_coro):
+    with patch("pyalmond.WebAlmondAPI.async_list_apps"):
         assert await setup.async_setup_component(
             hass,
             "almond",

@@ -15,14 +15,13 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import Mock, patch
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockEntity,
     MockModule,
     MockPlatform,
     async_fire_time_changed,
-    mock_coro,
     mock_entity_platform,
     mock_integration,
 )
@@ -289,7 +288,7 @@ async def test_setup_dependencies_platform(hass):
 
 async def test_setup_entry(hass):
     """Test setup entry calls async_setup_entry on platform."""
-    mock_setup_entry = Mock(return_value=mock_coro(True))
+    mock_setup_entry = AsyncMock(return_value=True)
     mock_entity_platform(
         hass,
         "test_domain.entry_domain",
@@ -320,7 +319,7 @@ async def test_setup_entry_platform_not_exist(hass):
 
 async def test_setup_entry_fails_duplicate(hass):
     """Test we don't allow setting up a config entry twice."""
-    mock_setup_entry = Mock(return_value=mock_coro(True))
+    mock_setup_entry = AsyncMock(return_value=True)
     mock_entity_platform(
         hass,
         "test_domain.entry_domain",
@@ -338,7 +337,7 @@ async def test_setup_entry_fails_duplicate(hass):
 
 async def test_unload_entry_resets_platform(hass):
     """Test unloading an entry removes all entities."""
-    mock_setup_entry = Mock(return_value=mock_coro(True))
+    mock_setup_entry = AsyncMock(return_value=True)
     mock_entity_platform(
         hass,
         "test_domain.entry_domain",
@@ -374,7 +373,7 @@ async def test_update_entity(hass):
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     entity = MockEntity()
     entity.async_write_ha_state = Mock()
-    entity.async_update_ha_state = Mock(return_value=mock_coro())
+    entity.async_update_ha_state = AsyncMock(return_value=None)
     await component.async_add_entities([entity])
 
     # Called as part of async_add_entities

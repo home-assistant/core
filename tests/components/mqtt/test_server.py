@@ -30,7 +30,7 @@ class TestMQTT:
     @patch("passlib.apps.custom_app_context", Mock(return_value=""))
     @patch("tempfile.NamedTemporaryFile", Mock(return_value=MagicMock()))
     @patch("hbmqtt.broker.Broker", Mock(return_value=MagicMock(start=AsyncMock())))
-    @patch("hbmqtt.broker.Broker.start", Mock(return_value=mock_coro()))
+    @patch("hbmqtt.broker.Broker.start", AsyncMock(return_value=None))
     @patch("homeassistant.components.mqtt.MQTT")
     def test_creating_config_with_pass_and_no_http_pass(self, mock_mqtt):
         """Test if the MQTT server gets started with password.
@@ -52,7 +52,7 @@ class TestMQTT:
     @patch("passlib.apps.custom_app_context", Mock(return_value=""))
     @patch("tempfile.NamedTemporaryFile", Mock(return_value=MagicMock()))
     @patch("hbmqtt.broker.Broker", Mock(return_value=MagicMock(start=AsyncMock())))
-    @patch("hbmqtt.broker.Broker.start", Mock(return_value=mock_coro()))
+    @patch("hbmqtt.broker.Broker.start", AsyncMock(return_value=None))
     @patch("homeassistant.components.mqtt.MQTT")
     def test_creating_config_with_pass_and_http_pass(self, mock_mqtt):
         """Test if the MQTT server gets started with password.

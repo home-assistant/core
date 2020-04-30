@@ -6,7 +6,6 @@ from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
-from tests.common import mock_coro
 
 
 async def test_get_image(hass, hass_ws_client, caplog):
@@ -20,7 +19,7 @@ async def test_get_image(hass, hass_ws_client, caplog):
     with patch(
         "homeassistant.components.media_player.MediaPlayerEntity."
         "async_get_media_image",
-        return_value=mock_coro((b"image", "image/jpeg")),
+        return_value=(b"image", "image/jpeg"),
     ):
         await client.send_json(
             {

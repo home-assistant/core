@@ -342,8 +342,8 @@ async def test_entry_created_with_cloudhook(
     installed_app_id = str(uuid4())
     refresh_token = str(uuid4())
     smartthings_mock.apps.return_value = []
-    smartthings_mock.create_app.return_value = (app, app_oauth_client)
-    smartthings_mock.locations.return_value = [location]
+    smartthings_mock.create_app = AsyncMock(return_value=(app, app_oauth_client))
+    smartthings_mock.locations = AsyncMock(return_value=[location])
     request = Mock()
     request.installed_app_id = installed_app_id
     request.auth_token = token
@@ -351,7 +351,7 @@ async def test_entry_created_with_cloudhook(
     request.refresh_token = refresh_token
 
     with patch.object(
-        hass.components.cloud, "async_active_subscription", AsyncMock(return_value=True)
+        hass.components.cloud, "async_active_subscription", Mock(return_value=True)
     ), patch.object(
         hass.components.cloud,
         "async_create_cloudhook",
