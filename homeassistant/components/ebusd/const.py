@@ -40,6 +40,7 @@ SENSOR_TYPES = {
         ],
         "HolidayTemperature": ["HolidayTemp", TEMP_CELSIUS, "mdi:thermometer", 0],
         "HWTemperatureDesired": ["HwcTempDesired", TEMP_CELSIUS, "mdi:thermometer", 0],
+        "HWActualTemperature": ["HwcStorageTemp", TEMP_CELSIUS, "mdi:thermometer", 0],
         "HWTimerMonday": ["hwcTimer.Monday", None, "mdi:timer", 1],
         "HWTimerTuesday": ["hwcTimer.Tuesday", None, "mdi:timer", 1],
         "HWTimerWednesday": ["hwcTimer.Wednesday", None, "mdi:timer", 1],
