@@ -2,11 +2,12 @@
 Search the audio on YT
 """
 import asyncio
-import logging
-import requests
 import json
-from homeassistant.components import ais_cloud
-from homeassistant.components import ais_updater
+import logging
+
+import requests
+
+from homeassistant.components import ais_cloud, ais_updater
 from homeassistant.components.ais_dom import ais_global
 
 aisCloud = ais_cloud.AisCloudWS()
@@ -18,31 +19,24 @@ SERVICE_SEARCH = "search"
 ATTR_QUERY = "query"
 ATTR_NAME = "name"
 
-G_YT_KEY = None
 _LOGGER = logging.getLogger(__name__)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Register the service."""
-    config = config.get(DOMAIN, {})
     data = hass.data[DOMAIN] = YouTubeData(hass)
-    yield from data.get_key_async()
+    await data.async_get_key()
 
-    @asyncio.coroutine
-    def search(service):
+    async def async_search(service):
         """search service about audio"""
-        _LOGGER.debug("search")
-        yield from data.process_search_async(service)
+        await data.async_process_search(service)
 
-    # @asyncio.coroutine
     def select_track_uri(service):
         """select track uri"""
-        _LOGGER.debug("select_track_uri")
         data.process_select_track_uri(service)
 
     # register services
-    hass.services.async_register(DOMAIN, SERVICE_SEARCH, search)
+    hass.services.async_register(DOMAIN, SERVICE_SEARCH, async_search)
     hass.services.async_register(DOMAIN, "select_track_uri", select_track_uri)
 
     return True
@@ -54,34 +48,26 @@ class YouTubeData:
     def __init__(self, hass):
         """Initialize the radio stations."""
         self.hass = hass
+        self.yt_key = None
 
-    @asyncio.coroutine
-    def get_key_async(self):
-        def load():
-            global G_YT_KEY
-            try:
-                ws_resp = aisCloud.key("ytsearch")
-                json_ws_resp = ws_resp.json()
-                G_YT_KEY = json_ws_resp["key"]
-            except:
-                ais_global.G_OFFLINE_MODE = True
-
-        yield from self.hass.async_add_job(load)
-
-    @asyncio.coroutine
-    def get_new_key(self, old_key, query, prev_page_token, next_page_token):
-        global G_YT_KEY
+    async def async_get_key(self):
         try:
-            ws_resp = aisCloud.new_key("ytsearch", old_key)
-            json_ws_resp = ws_resp.json()
-            G_YT_KEY = json_ws_resp["key"]
+            json_ws_resp = await aisCloud.async_key("ytsearch")
+            self.yt_key = json_ws_resp["key"]
+        except:
+            ais_global.G_OFFLINE_MODE = True
+
+    async def async_get_new_key(self, old_key, query, prev_page_token, next_page_token):
+        try:
+            json_ws_resp = await aisCloud.async_new_key("ytsearch", old_key)
+            self.yt_key = json_ws_resp["key"]
         except Exception as e:
             _LOGGER.error("YouTube " + str(e))
 
         # check if new key is new (different from old one)
-        if G_YT_KEY != old_key:
+        if self.yt_key != old_key:
             # call the service again
-            yield from self.hass.services.async_call(
+            await self.hass.services.async_call(
                 "ais_yt_service",
                 "search",
                 {
@@ -91,10 +77,8 @@ class YouTubeData:
                 },
             )
 
-    @asyncio.coroutine
-    def process_search_async(self, call):
+    async def async_process_search(self, call):
         """Search in service."""
-        global G_YT_KEY
         query = None
         prev_page_token = None
         next_page_token = None
@@ -120,21 +104,21 @@ class YouTubeData:
             and next_page_token is None
         ):
             # get tracks from favorites
-            yield from self.hass.services.async_call(
+            await self.hass.services.async_call(
                 "ais_bookmarks",
                 "get_favorites",
                 {"audio_source": ais_global.G_AN_MUSIC},
             )
             return
 
-        if G_YT_KEY is None:
+        if self.yt_key is None:
             try:
                 ws_resp = aisCloud.key("ytsearch")
                 json_ws_resp = ws_resp.json()
-                G_YT_KEY = json_ws_resp["key"]
+                self.yt_key = json_ws_resp["key"]
             except Exception as e:
                 ais_global.G_OFFLINE_MODE = True
-                yield from self.hass.services.async_call(
+                await self.hass.services.async_call(
                     "ais_ai_service",
                     "say_it",
                     {"text": "Brak odpowiedzi, sprawdź połączenie z Intenetem"},
@@ -145,7 +129,7 @@ class YouTubeData:
         params = dict(
             order="relevance",
             part="snippet",
-            key=G_YT_KEY,
+            key=self.yt_key,
             maxResults=10,
             type="video",
             fields="items/id/videoId, items/snippet/title, items/snippet/thumbnails/medium/url, "
@@ -163,8 +147,8 @@ class YouTubeData:
             for error in data["error"]["errors"]:
                 if error["reason"] == "quotaExceeded":
                     # get the new token and try again
-                    yield from self.get_new_key(
-                        G_YT_KEY, query, prev_page_token, next_page_token
+                    await self.get_new_key(
+                        self.yt_key, query, prev_page_token, next_page_token
                     )
                     return
 
@@ -172,7 +156,7 @@ class YouTubeData:
                     text = error["message"]
                 else:
                     text = text + " " + error["message"]
-            yield from self.hass.services.async_call(
+            await self.hass.services.async_call(
                 "ais_ai_service", "say_it", {"text": text}
             )
             return
@@ -245,11 +229,10 @@ class YouTubeData:
                 )
             else:
                 if next_page_token is None and prev_page_token is None:
-                    text = "Znaleziono: %s, włączam pierwszy: %s" % (
-                        str(total_results),
-                        list_info[0]["title"],
+                    text = "Znaleziono: {}, włączam pierwszy: {}".format(
+                        str(total_results), list_info[0]["title"],
                     )
-                    yield from self.hass.services.async_call(
+                    await self.hass.services.async_call(
                         "ais_yt_service", "select_track_uri", {"id": 0}
                     )
 
@@ -259,7 +242,7 @@ class YouTubeData:
                             "Pobrano następną stronę wyników, włączam pierwszy: %s"
                             % (list_info[1]["title"])
                         )
-                        yield from self.hass.services.async_call(
+                        await self.hass.services.async_call(
                             "ais_yt_service", "select_track_uri", {"id": 1}
                         )
                     elif prev_page_token is not None and ais_ai.CURR_BUTTON_CODE == 21:
@@ -267,7 +250,7 @@ class YouTubeData:
                             "Pobrano poprzednią stronę wyników, włączam ostatni: %s"
                             % (list_info[len(list_info) - 2]["title"])
                         )
-                        yield from self.hass.services.async_call(
+                        await self.hass.services.async_call(
                             "ais_yt_service",
                             "select_track_uri",
                             {"id": len(list_info) - 2},
@@ -277,12 +260,12 @@ class YouTubeData:
             text = "Brak wnyników na YouTube dla zapytania %s" % query
         # info to user
         if text is not None:
-            yield from self.hass.services.async_call(
+            await self.hass.services.async_call(
                 "ais_ai_service", "say_it", {"text": text}
             )
 
     def process_select_track_uri(self, call):
-        _LOGGER.info("process_select_track_uri")
+        _LOGGER.debug("process_select_track_uri")
         # """play track by id on sensor list."""
         call_id = call.data["id"]
         list_sensor = "sensor.youtubelist"
@@ -326,8 +309,6 @@ class YouTubeData:
                 url + track["uri"], local_extractor_version
             )
             json_ws_resp = ws_resp.json()
-            _LOGGER.info(str(json_ws_resp))
-            #
             cloud_extractor_version = json_ws_resp["extractor_version"]
             if "youtube_dl==" + cloud_extractor_version != local_extractor_version:
                 self.hass.services.call(
