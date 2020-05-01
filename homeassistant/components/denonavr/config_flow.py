@@ -7,6 +7,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_TIMEOUT
 
+from .receiver import ConnectDenonAVR
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "denonavr"
@@ -63,7 +65,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_connect()
 
             # discovery using denonavr library
-            self.d_receivers = denonavr.discover()
+            self.d_receivers = await self.hass.async_add_executor_job(denonavr.discover())
             # More than one receiver could be discovered by that method
             if len(self.d_receivers) == 1:
                 self.host = self.d_receivers[0]["host"]
@@ -99,24 +101,13 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_connect(self, user_input=None):
         """Connect to the receiver."""
-        zones = {}
-        if self.zone2:
-            zones["Zone2"] = None
-        if self.zone3:
-            zones["Zone3"] = None
-
-        receiver = denonavr.DenonAVR(
-            host=self.host,
-            show_all_inputs=self.show_all_sources,
-            timeout=self.timeout,
-            add_zones=zones,
-        )
+        connect_denonavr = ConnectDenonAVR(self.hass)
+        await connect_denonavr.async_connect_receiver(self.host, self.timeout, self.show_all_sources, self.zone2, self.zone3)
+        receiver = connect_denonavr.receiver
 
         unique_id = f"{receiver.model_name}-{receiver.serial_number}"
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
-
-        _LOGGER.info("Denon receiver at host %s configured", self.host)
 
         return self.async_create_entry(
             title=receiver.name,
