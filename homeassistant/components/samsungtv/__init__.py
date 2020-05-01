@@ -9,6 +9,8 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_ON_ACTION, DEFAULT_NAME, DOMAIN
 
+UNDO_UPDATE_LISTENER = "update_update_listener"
+
 
 def ensure_unique_hosts(value):
     """Validate that all configs have a unique host."""
@@ -62,8 +64,33 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up the Samsung TV platform."""
+    undo_listener = entry.add_update_listener(_update_listener)
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        UNDO_UPDATE_LISTENER: undo_listener,
+    }
+
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, MP_DOMAIN)
     )
 
     return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    unload_ok = await hass.async_create_task(
+        hass.config_entries.async_forward_entry_unload(entry, MP_DOMAIN)
+    )
+
+    if unload_ok:
+        hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok
+
+
+async def _update_listener(hass, entry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
