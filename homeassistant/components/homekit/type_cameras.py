@@ -135,6 +135,7 @@ class Camera(HomeAccessory, PyhapCamera):
             "video": video_options,
             "audio": audio_options,
             "address": stream_address,
+            "srtp": True,
         }
 
         super().__init__(
