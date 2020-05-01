@@ -1,36 +1,47 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Mikrotik is already configured"
-        },
-        "error": {
-            "cannot_connect": "Connection Unsuccessful",
-            "name_exists": "Name exists",
-            "wrong_credentials": "Wrong Credentials"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "host": "Host",
-                    "name": "Name",
-                    "password": "Password",
-                    "port": "Port",
-                    "username": "Username",
-                    "verify_ssl": "Use ssl"
-                },
-                "title": "Set up Mikrotik Router"
-            }
+  "title": "Set up Mikrotik integration",
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "Name",
+          "num_hubs": "Number of Hubs"
         }
+      },
+      "hub": {
+        "title": "Setup Mikrotik Hub",
+        "description": "Please enter the configuration for hub {index}",
+        "data": {
+          "host": "Host",
+          "username": "Username",
+          "password": "Password",
+          "port": "Port",
+          "verify_ssl": "Use ssl"
+        }
+      }
     },
-    "options": {
-        "step": {
-            "device_tracker": {
-                "data": {
-                    "arp_ping": "Enable ARP ping",
-                    "detection_time": "Consider home interval",
-                    "force_dhcp": "Force scanning using DHCP"
-                }
-            }
-        }
+    "error": {
+      "hub_exists": "Hub is already configured",
+      "cannot_connect": "Connection Unsuccessful",
+      "wrong_credentials": "Wrong Credentials"
+    },
+    "abort": {
+      "already_configured": "Host is already configured in anothe entry."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "arp_ping": "Enable ARP ping",
+          "force_dhcp": "Force scanning using DHCP",
+          "detection_time": "Consider home interval",
+          "scan_interval": "Scan interval"
+        }
+      }
+    },
+    "error": {
+      "value_error": "Scan interval must be less than Home interval"
+    }
+  }
 }

@@ -1,8 +1,8 @@
 {
+  "title": "Set up Mikrotik integration",
   "config": {
     "step": {
       "user": {
-        "title": "Set up Mikrotik integration",
         "data": {
           "name": "Name",
           "num_hubs": "Number of Hubs"
@@ -23,9 +23,12 @@
     "error": {
       "hub_exists": "Hub is already configured",
       "cannot_connect": "Connection Unsuccessful",
-      "wrong_credentials": "Wrong Credentials"
+      "wrong_credentials": "Wrong Credentials",
+      "value_error": "Scan interval must be less than or equal Detection time"
     },
-    "abort": { "already_configured": "Mikrotik is already configured" }
+    "abort": {
+      "already_configured": "Host is already configured in anothe entry."
+    }
   },
   "options": {
     "step": {
@@ -33,9 +36,13 @@
         "data": {
           "arp_ping": "Enable ARP ping",
           "force_dhcp": "Force scanning using DHCP",
-          "detection_time": "Consider home interval"
+          "detection_time": "Consider home interval",
+          "scan_interval": "Scan interval"
         }
       }
+    },
+    "error": {
+      "value_error": "Scan interval must be less than Home interval"
     }
   }
 }

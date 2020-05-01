@@ -34,7 +34,9 @@ async def test_old_config_entry(hass, api):
 async def test_config_fail_setup(hass, api):
     """Test that a failed setup will not store the config."""
     with patch.object(mikrotik, "Mikrotik") as mock_integration:
-        mock_integration.return_value.async_setup.return_value = CoroutineMock(False)
+        mock_integration.return_value.async_setup.return_value = CoroutineMock(
+            return_value=False
+        )
 
         config_entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=dict(ENTRY_DATA))
         config_entry.add_to_hass(hass)

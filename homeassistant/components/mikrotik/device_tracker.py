@@ -7,7 +7,6 @@ from homeassistant.components.device_tracker.const import (
     SOURCE_TYPE_ROUTER,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr, entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
@@ -23,10 +22,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     tracked = {}
 
-    registry = await entity_registry.async_get_registry(hass)
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     # Restore clients that is not a part of active clients list.
-    for entity in registry.entities.values():
+    for entity in entity_registry.entities.values():
 
         if (
             entity.config_entry_id == config_entry.entry_id
@@ -41,7 +40,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Update the status of the device."""
         update_items(mikrotik, async_add_entities, tracked)
 
-    async_dispatcher_connect(hass, mikrotik.signal_update, update_hub)
+    mikrotik.listeners.append(
+        async_dispatcher_connect(hass, mikrotik.signal_data_update, update_hub)
+    )
 
     update_hub()
 
@@ -69,7 +70,7 @@ class MikrotikHubTracker(ScannerEntity):
         self.hub_id = self.device.hub_id
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Return true if the client is connected to the network."""
         if (
             self.device.last_seen
@@ -80,7 +81,7 @@ class MikrotikHubTracker(ScannerEntity):
         return False
 
     @property
-    def source_type(self):
+    def source_type(self) -> str:
         """Return the source type of the client."""
         return SOURCE_TYPE_ROUTER
 
@@ -100,11 +101,14 @@ class MikrotikHubTracker(ScannerEntity):
         return self.mikrotik.available
 
     @property
-    def device_state_attributes(self):
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
+
+    @property
+    def device_state_attributes(self) -> dict:
         """Return the device state attributes."""
-        if self.is_connected:
-            return self.device.attrs
-        return None
+        return self.device.attrs
 
     @property
     def device_info(self):
@@ -125,7 +129,7 @@ class MikrotikHubTracker(ScannerEntity):
             return
 
         self.hub_id = self.device.hub_id
-        device_registry = await dr.async_get_registry(self.hass)
+        device_registry = await self.hass.helpers.device_registry.async_get_registry()
         hub_device = device_registry.async_get_device({(DOMAIN, self.hub_id)}, set())
         this_device = device_registry.async_get_device(
             {(DOMAIN, self.device.mac)}, set()
@@ -139,21 +143,41 @@ class MikrotikHubTracker(ScannerEntity):
     async def async_added_to_hass(self):
         """Client entity created."""
         _LOGGER.debug("New network device tracker %s (%s)", self.name, self.unique_id)
+
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, self.mikrotik.signal_update, self._async_update_state
+                self.hass,
+                self.mikrotik.signal_update_clients,
+                self._async_update_state,
             )
         )
 
-    async def async_update(self):
-        """Synchronize state with hub."""
-        _LOGGER.debug(
-            "Updating Mikrotik tracked client %s (%s)", self.entity_id, self.unique_id
-        )
-        await self.mikrotik.request_update()
+    # @callback
+    # async def _async_set_update_interval(self):
+    #     """Set device update interval."""
+
+    #     async def async_update(event_time=None):
+    #         """Update client state."""
+    #         await self._async_update_state()
+
+    #     if self.unsub_timer is not None:
+    #         self.unsub_timer()
+    #     self.unsub_timer = async_track_time_interval(
+    #         self.hass, async_update, self.mikrotik.option_detection_time
+    #     )
+
+    #     await async_update()
 
     @callback
     async def _async_update_state(self):
         """Update device state and related hub_id."""
+        _LOGGER.debug(
+            "Updating Mikrotik tracked client %s (%s)", self.entity_id, self.unique_id,
+        )
         await self.async_update_hub_id()
         self.async_write_ha_state()
+
+    # async def async_will_remove_from_hass(self):
+    #     """Remove device if no other linked entities exist."""
+    #     if self.unsub_timer:
+    #         self.unsub_timer()

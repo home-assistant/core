@@ -7,6 +7,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -21,8 +22,8 @@ from .const import (
     DEFAULT_API_PORT,
     DEFAULT_DETECTION_TIME,
     DEFAULT_NAME,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    MAX_NUM_HUBS,
 )
 from .errors import CannotConnect, LoginError
 from .hub import get_api
@@ -100,7 +101,7 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def check_hub_exists(self, host):
-        """Check if hub is already configured."""
+        """Check if hub is already configured in an existing entry."""
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if host in entry.data[CONF_HUBS]:
                 return True
@@ -118,30 +119,30 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors[CONF_PASSWORD] = "wrong_credentials"
         return errors
 
-    async def async_step_import(self, import_config):
-        """Import Miktortik from config."""
-        hubs = import_config.pop(CONF_HUBS)
+    # async def async_step_import(self, import_config):
+    #     """Import Miktortik from config."""
+    #     hubs = import_config.pop(CONF_HUBS)
 
-        if len(hubs) > MAX_NUM_HUBS:
-            return self.async_abort(reason="config_error")
+    #     if len(hubs) > MAX_NUM_HUBS:
+    #         return self.async_abort(reason="config_error")
 
-        import_config[CONF_HUBS] = {}
-        for entry in hubs:
-            if (
-                await self.check_hub_exists(entry[CONF_HOST])
-                or entry[CONF_HOST] in import_config[CONF_HUBS]
-            ):
-                return self.async_abort(reason="already_configured")
+    #     import_config[CONF_HUBS] = {}
+    #     for entry in hubs:
+    #         if (
+    #             await self.check_hub_exists(entry[CONF_HOST])
+    #             or entry[CONF_HOST] in import_config[CONF_HUBS]
+    #         ):
+    #             return self.async_abort(reason="already_configured")
 
-            if await self.errors_connecting_to_hub(entry):
-                return self.async_abort(reason="conn_error")
+    #         if await self.errors_connecting_to_hub(entry):
+    #             return self.async_abort(reason="conn_error")
 
-            import_config[CONF_HUBS][entry[CONF_HOST]] = entry
+    #         import_config[CONF_HUBS][entry[CONF_HOST]] = entry
 
-        import_config[CONF_DETECTION_TIME] = import_config[CONF_DETECTION_TIME].seconds
-        return self.async_create_entry(
-            title=import_config[CONF_NAME], data=import_config
-        )
+    #     import_config[CONF_DETECTION_TIME] = import_config[CONF_DETECTION_TIME].seconds
+    #     return self.async_create_entry(
+    #         title=import_config[CONF_NAME], data=import_config
+    #     )
 
 
 class MikrotikOptionsFlowHandler(config_entries.OptionsFlow):
@@ -153,8 +154,13 @@ class MikrotikOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the Mikrotik options."""
+        errors = {}
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            if user_input[CONF_SCAN_INTERVAL] >= user_input[CONF_DETECTION_TIME]:
+                errors[CONF_SCAN_INTERVAL] = "value_error"
+
+            if not errors:
+                return self.async_create_entry(title="", data=user_input)
 
         options = {
             vol.Optional(
@@ -171,6 +177,14 @@ class MikrotikOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
                 ),
             ): int,
+            vol.Optional(
+                CONF_SCAN_INTERVAL,
+                default=self.config_entry.options.get(
+                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                ),
+            ): int,
         }
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(
+            step_id="init", data_schema=vol.Schema(options), errors=errors
+        )

@@ -70,11 +70,13 @@ class MikrotikClient:
     @property
     def attrs(self):
         """Return client attributes."""
-        attr_data = self._wireless_params if self._wireless_params else self._params
+        attr_data = self._wireless_params or self._params
         for attr in ATTR_DEVICE_TRACKER:
             if attr in attr_data:
                 self._attrs[slugify(attr)] = attr_data[attr]
-        self._attrs["ip_address"] = self._params.get("active-address")
+        self._attrs["ip_address"] = self._params.get(
+            "active-address", self._wireless_params.get("last-ip")
+        )
         return self._attrs
 
     def update(self, wireless_params=None, params=None, active=False, hub_id=None):
@@ -136,12 +138,12 @@ class MikrotikHub:
     @property
     def arp_enabled(self):
         """Return arp_ping option setting."""
-        return self.config_entry.options[CONF_ARP_PING]
+        return self.config_entry.options.get(CONF_ARP_PING, False)
 
     @property
     def force_dhcp(self):
         """Return force_dhcp option setting."""
-        return self.config_entry.options[CONF_FORCE_DHCP]
+        return self.config_entry.options.get(CONF_FORCE_DHCP, False)
 
     @staticmethod
     def load_mac(devices=None):
