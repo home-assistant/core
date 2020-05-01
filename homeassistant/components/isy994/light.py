@@ -30,6 +30,7 @@ class ISYLightDevice(ISYDevice, LightEntity, RestoreEntity):
     def __init__(self, node) -> None:
         """Initialize the ISY994 light device."""
         super().__init__(node)
+        self._last_brightness = None
 
     @property
     def is_on(self) -> bool:
