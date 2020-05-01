@@ -15,12 +15,12 @@ class ZWaveServices:
         self._manager = manager
 
     @callback
-    def register(self):
+    def async_register(self):
         """Register all our services."""
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_ADD_NODE,
-            self.add_node,
+            self.async_add_node,
             schema=vol.Schema(
                 {
                     vol.Optional(const.ATTR_INSTANCE_ID, default=1): vol.Coerce(int),
@@ -31,14 +31,14 @@ class ZWaveServices:
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_REMOVE_NODE,
-            self.remove_node,
+            self.async_remove_node,
             schema=vol.Schema(
                 {vol.Optional(const.ATTR_INSTANCE_ID, default=1): vol.Coerce(int)}
             ),
         )
 
     @callback
-    def add_node(self, service):
+    def async_add_node(self, service):
         """Enter inclusion mode on the controller."""
         instance_id = service.data[const.ATTR_INSTANCE_ID]
         secure = service.data[const.ATTR_SECURE]
@@ -46,7 +46,7 @@ class ZWaveServices:
         instance.add_node(secure)
 
     @callback
-    def remove_node(self, service):
+    def async_remove_node(self, service):
         """Enter exclusion mode on the controller."""
         instance_id = service.data[const.ATTR_INSTANCE_ID]
         instance = self._manager.get_instance(instance_id)

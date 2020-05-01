@@ -102,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         data_nodes[node.id] = node
         # notify devices about the node change
         if node.id not in removed_nodes:
-            hass.async_create_task(handle_node_update(hass, node))
+            hass.async_create_task(async_handle_node_update(hass, node))
 
     @callback
     def async_node_removed(node):
@@ -112,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         # cleanup device/entity registry if we know this node is permanently deleted
         # entities itself are removed by the values logic
         if node.id in removed_nodes:
-            hass.async_create_task(handle_remove_node(hass, node))
+            hass.async_create_task(async_handle_remove_node(hass, node))
             removed_nodes.remove(node.id)
 
     @callback
@@ -152,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         # Check if this value should be tracked by an existing entity
         value_unique_id = create_value_id(value)
         for values in node_data_values:
-            values.check_value(value)
+            values.async_check_value(value)
             if values.values_id == value_unique_id:
                 return  # this value already has an entity
 
@@ -166,7 +166,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 continue
 
             values = ZWaveDeviceEntityValues(hass, options, schema, value)
-            values.setup()
+            values.async_setup()
 
             # We create a new list and update the reference here so that
             # the list can be safely iterated over in the main thread
@@ -189,7 +189,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             CommandClass.SCENE_ACTIVATION,
             CommandClass.CENTRAL_SCENE,
         ]:
-            handle_scene_activated(hass, value)
+            async_handle_scene_activated(hass, value)
             return
 
     @callback
@@ -222,7 +222,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Register Services
     services = ZWaveServices(hass, manager)
-    services.register()
+    services.async_register()
 
     return True
 
@@ -250,7 +250,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def handle_remove_node(hass: HomeAssistant, node: OZWNode):
+async def async_handle_remove_node(hass: HomeAssistant, node: OZWNode):
     """Handle the removal of a Z-Wave node, removing all traces in device/entity registry."""
     dev_registry = await get_dev_reg(hass)
     # grab device in device registry attached to this node
@@ -269,7 +269,7 @@ async def handle_remove_node(hass: HomeAssistant, node: OZWNode):
         dev_registry.async_remove_device(dev_id)
 
 
-async def handle_node_update(hass: HomeAssistant, node: OZWNode):
+async def async_handle_node_update(hass: HomeAssistant, node: OZWNode):
     """
     Handle a node updated event from OZW.
 
@@ -298,7 +298,7 @@ async def handle_node_update(hass: HomeAssistant, node: OZWNode):
 
 
 @callback
-def handle_scene_activated(hass: HomeAssistant, scene_value: OZWValue):
+def async_handle_scene_activated(hass: HomeAssistant, scene_value: OZWValue):
     """Handle a (central) scene activation message."""
     node_id = scene_value.node.id
     scene_id = scene_value.index

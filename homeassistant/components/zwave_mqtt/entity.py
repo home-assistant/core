@@ -42,16 +42,16 @@ class ZWaveDeviceEntityValues:
         self._node = primary_value.node
         self._schema[const.DISC_NODE_ID] = [self._node.node_id]
 
-    def setup(self):
+    def async_setup(self):
         """Set up values instance."""
         # Check values that have already been discovered for node
         # and see if they match the schema and need added to the entity.
         for value in self._node.values():
-            self.check_value(value)
+            self.async_check_value(value)
 
         # Check if all the _required_ values in the schema are present and
         # create the entity.
-        self._check_entity_ready()
+        self._async_check_entity_ready()
 
     def __getattr__(self, name):
         """Get the specified value for this entity."""
@@ -66,7 +66,7 @@ class ZWaveDeviceEntityValues:
         return name in self._values
 
     @callback
-    def check_value(self, value):
+    def async_check_value(self, value):
         """Check if the new value matches a missing value for this entity.
 
         If a match is found, it is added to the values mapping.
@@ -94,10 +94,10 @@ class ZWaveDeviceEntityValues:
                 )
 
             # Check if entity has all required values and create the entity if needed.
-            self._check_entity_ready()
+            self._async_check_entity_ready()
 
     @callback
-    def _check_entity_ready(self):
+    def _async_check_entity_ready(self):
         """Check if all required values are discovered and create entity."""
         # Abort if the entity has already been created
         if self._entity_created:
