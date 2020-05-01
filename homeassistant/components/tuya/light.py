@@ -7,7 +7,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    Light,
+    LightEntity,
 )
 from homeassistant.util import color as colorutil
 
@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class TuyaLight(TuyaDevice, Light):
+class TuyaLight(TuyaDevice, LightEntity):
     """Tuya light device."""
 
     def __init__(self, tuya):

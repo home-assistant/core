@@ -6,7 +6,7 @@
             "already_in_progress": "S\u2019est\u00e0 configurant Plex",
             "invalid_import": "La configuraci\u00f3 importada \u00e9s inv\u00e0lida",
             "non-interactive": "Importaci\u00f3 no interactiva",
-            "token_request_timeout": "S'ha acabat el temps d'espera durant l'obtenci\u00f3 del testimoni.",
+            "token_request_timeout": "S'ha acabat el temps d'espera durant l'obtenci\u00f3 del token.",
             "unknown": "Ha fallat per motiu desconegut"
         },
         "error": {

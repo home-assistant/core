@@ -1,11 +1,12 @@
 """Test Zeroconf component setup process."""
-from asynctest import patch
 import pytest
 from zeroconf import ServiceInfo, ServiceStateChange
 
 from homeassistant.components import zeroconf
 from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import patch
 
 NON_UTF8_VALUE = b"ABCDEF\x8a"
 NON_ASCII_KEY = b"non-ascii-key\x8a"

@@ -1,7 +1,6 @@
 """Tests for the Roku integration."""
 from socket import gaierror as SocketGIAError
 
-from asynctest import patch
 from requests.exceptions import RequestException
 from requests_mock import Mocker
 from roku import RokuException
@@ -14,6 +13,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
+from tests.async_mock import patch
 from tests.components.roku import setup_integration
 
 

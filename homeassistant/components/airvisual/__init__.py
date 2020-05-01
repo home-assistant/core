@@ -169,7 +169,7 @@ async def async_setup_entry(hass, config_entry):
         _standardize_geography_config_entry(hass, config_entry)
         airvisual = AirVisualGeographyData(
             hass,
-            Client(websession, api_key=config_entry.data[CONF_API_KEY]),
+            Client(api_key=config_entry.data[CONF_API_KEY], session=websession),
             config_entry,
         )
 
@@ -177,7 +177,7 @@ async def async_setup_entry(hass, config_entry):
         config_entry.add_update_listener(async_update_options)
     else:
         _standardize_node_pro_config_entry(hass, config_entry)
-        airvisual = AirVisualNodeProData(hass, Client(websession), config_entry)
+        airvisual = AirVisualNodeProData(hass, Client(session=websession), config_entry)
 
     await airvisual.async_update()
 

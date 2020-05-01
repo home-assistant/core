@@ -103,7 +103,7 @@ class QSToggleEntity(QSEntity):
 
     Implemented:
      - QSLight extends QSToggleEntity and Light[2] (ToggleEntity[1])
-     - QSSwitch extends QSToggleEntity and SwitchDevice[3] (ToggleEntity[1])
+     - QSSwitch extends QSToggleEntity and SwitchEntity[3] (ToggleEntity[1])
 
     [1] /helpers/entity.py
     [2] /components/light/__init__.py

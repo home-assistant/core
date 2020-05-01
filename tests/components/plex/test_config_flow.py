@@ -1,7 +1,6 @@
 """Tests for Plex config flow."""
 import copy
 
-from asynctest import patch
 import plexapi.exceptions
 import requests.exceptions
 
@@ -26,6 +25,7 @@ from homeassistant.setup import async_setup_component
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
 from .mock_classes import MockPlexAccount, MockPlexServer
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

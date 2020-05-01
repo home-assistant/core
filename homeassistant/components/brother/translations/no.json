@@ -23,8 +23,8 @@
                 "data": {
                     "type": "Type skriver"
                 },
-                "description": "Vil du legge til Brother-skriveren {Model} med serienummeret {serial_number} til Home Assistant?",
-                "title": "Oppdaget Brother-Skriveren"
+                "description": "Vil du legge til Brother-skriveren {model} med serienummeret `{serial_number}` til Home Assistant?",
+                "title": "Oppdaget Brother Skriver"
             }
         }
     }

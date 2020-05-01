@@ -2,13 +2,13 @@
 import asyncio
 from unittest.mock import patch
 
-import asynctest
 import pytest
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, callback, valid_entity_id
 from homeassistant.helpers import entity_registry
 
+import tests.async_mock
 from tests.common import MockConfigEntry, flush_store, mock_registry
 
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
@@ -401,7 +401,7 @@ async def test_loading_invalid_entity_id(hass, hass_storage):
 
 async def test_loading_race_condition(hass):
     """Test only one storage load called when concurrent loading occurred ."""
-    with asynctest.patch(
+    with tests.async_mock.patch(
         "homeassistant.helpers.entity_registry.EntityRegistry.async_load"
     ) as mock_load:
         results = await asyncio.gather(

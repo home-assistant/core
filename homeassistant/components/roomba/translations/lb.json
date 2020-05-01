@@ -14,6 +14,7 @@
                     "host": "Host Numm oder IP Adresse",
                     "password": "Passwuert"
                 },
+                "description": "De Prozess fir BLID an Passwuert opzeruffen ass fir de Moment manuell. Folleg w.e.g. de Schr\u00ebtt d\u00e9i an der Dokumentatioun op https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials beschriwwe sinn.",
                 "title": "Mam Apparat verbannen"
             }
         }

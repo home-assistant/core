@@ -6,7 +6,7 @@
         "step": {
             "user": {
                 "data": {
-                    "radius": "Radius"
+                    "radius": ""
                 },
                 "title": "Fyll ut filterdetaljene."
             }

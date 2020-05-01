@@ -309,7 +309,6 @@ class OnkyoAVR(MediaPlayerDevice):
                 self._attributes.pop(ATTR_VIDEO_INFORMATION, None)
                 self._attributes.pop(ATTR_PRESET, None)
                 self._attributes.pop(ATTR_VIDEO_OUT, None)
-
         elif command in ["volume", "master-volume"]:
             self._supports_volume = True
             self._volume = min(value / self._max_volume, 1)
@@ -325,6 +324,19 @@ class OnkyoAVR(MediaPlayerDevice):
                 self._source = "_".join(sources)
         elif command == "hdmi-output-selector":
             self._attributes[ATTR_VIDEO_OUT] = ",".join(value)
+            # eiscp can return string or tuple. Make everything tuples.
+            if isinstance(value, str):
+                current_source_tuples = (command, (value,))
+            else:
+                current_source_tuples = (command, value)
+
+            for source in current_source_tuples[1]:
+                if source in self._source_mapping:
+                    self._source = self._source_mapping[source]
+                    break
+                self._source = "_".join(current_source_tuples[1])
+        elif command == "hdmi-output-selector":
+            self._attributes["video_out"] = ",".join(value)
         elif command == "preset":
             if not (self._source is None) and self._source.lower() == "radio":
                 self._attributes[ATTR_PRESET] = value
@@ -351,7 +363,6 @@ class OnkyoAVR(MediaPlayerDevice):
                 self._query_timer.cancel()
             self._query_timer = self.hass.loop.call_later(10, self._query_av_info)
 
-
     def backfill_state(self):
         """Get the receiver to send all the info we care about.
 
@@ -368,7 +379,6 @@ class OnkyoAVR(MediaPlayerDevice):
             self._query_avr("listening-mode")
             self._query_avr("audio-information")
             self._query_avr("video-information")
-
 
     @property
     def supported_features(self):
@@ -441,7 +451,6 @@ class OnkyoAVR(MediaPlayerDevice):
             sound_mode = SOUND_MODE_MAPPING[sound_mode][0]
         self._update_avr("listening-mode", sound_mode)
 
-
     async def async_turn_off(self):
         """Turn AVR power off."""
         self._update_avr("power", "off")
@@ -477,14 +486,6 @@ class OnkyoAVR(MediaPlayerDevice):
         """Set hdmi-out."""
         self._update_avr("hdmi-output-selector", output)
 
-    def _update_avr(self, propname, value):
-        """Update a property in the AVR."""
-        self.avr.send(f"{self._zone}.{propname}={value}")
-
-    def _query_avr(self, propname):
-        """Cause the AVR to send an update about propname."""
-        self.avr.send(f"{self._zone}.{propname}=query")
-        
     @callback
     def _parse_audio_inforamtion(self, audio_information_raw):
         values = _parse_onkyo_tuple(audio_information_raw)
@@ -523,3 +524,11 @@ class OnkyoAVR(MediaPlayerDevice):
         self._query_avr("listening-mode")
         self._query_avr("audio-information")
         self._query_avr("video-information")
+
+    def _update_avr(self, propname, value):
+        """Update a property in the AVR."""
+        self.avr.send(f"{self._zone}.{propname}={value}")
+
+    def _query_avr(self, propname):
+        """Cause the AVR to send an update about propname."""
+        self.avr.send(f"{self._zone}.{propname}=query")

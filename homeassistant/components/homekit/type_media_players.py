@@ -37,8 +37,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 
-from . import TYPES
-from .accessories import HomeAccessory
+from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_ACTIVE,
     CHAR_ACTIVE_IDENTIFIER,

@@ -327,27 +327,17 @@ def find_frontend_states():
 def run():
     """Migrate translations."""
     # Import new common keys
-    # migrate_project_keys_translations(
-    #     FRONTEND_PROJECT_ID,
-    #     CORE_PROJECT_ID,
-    #     {
-    #         "state::default::off": "common::state::off",
-    #         "state::default::on": "common::state::on",
-    #         "state::cover::open": "common::state::open",
-    #         "state::cover::closed": "common::state::closed",
-    #         "state::binary_sensor::connectivity::on": "common::state::connected",
-    #         "state::binary_sensor::connectivity::off": "common::state::disconnected",
-    #         "state::lock::locked": "common::state::locked",
-    #         "state::lock::unlocked": "common::state::unlocked",
-    #         "state::timer::active": "common::state::active",
-    #         "state::camera::idle": "common::state::idle",
-    #         "state::media_player::standby": "common::state::standby",
-    #         "state::media_player::paused": "common::state::paused",
-    #         "state::device_tracker::home": "common::state::home",
-    #         "state::device_tracker::not_home": "common::state::not_home",
-    #     },
-    # )
+    migrate_project_keys_translations(
+        CORE_PROJECT_ID,
+        FRONTEND_PROJECT_ID,
+        {
+            "common::state::off": "state::default::off",
+            "common::state::on": "state::default::on",
+        },
+    )
 
-    find_frontend_states()
+    # find_frontend_states()
+
+    # find_different_languages()
 
     return 0

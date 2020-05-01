@@ -32,6 +32,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utc_from_timestamp
 
@@ -93,7 +94,14 @@ def spotify_exception_handler(func):
 class SpotifyMediaPlayer(MediaPlayerEntity):
     """Representation of a Spotify controller."""
 
-    def __init__(self, session, spotify: Spotify, me: dict, user_id: str, name: str):
+    def __init__(
+        self,
+        session: OAuth2Session,
+        spotify: Spotify,
+        me: dict,
+        user_id: str,
+        name: str,
+    ):
         """Initialize."""
         self._id = user_id
         self._me = me

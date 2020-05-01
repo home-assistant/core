@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.homekit
-HAP-python==2.8.2
+HAP-python==2.8.3
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
@@ -22,6 +22,9 @@ PyTransportNSW==0.1.1
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
+
+# homeassistant.components.onvif
+WSDiscovery==2.0.0
 
 # homeassistant.components.yessssms
 YesssSMS==0.4.1
@@ -85,6 +88,9 @@ aiohue==2.1.0
 # homeassistant.components.notion
 aionotion==1.1.0
 
+# homeassistant.components.hunterdouglas_powerview
+aiopvapi==1.6.14
+
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==1.0.2
 
@@ -119,7 +125,7 @@ apprise==0.8.5
 aprslib==0.6.46
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==0.4.3
+arcam-fmj==0.4.4
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.upnp
@@ -147,7 +153,7 @@ bravia-tv==1.0.2
 broadlink==0.13.2
 
 # homeassistant.components.brother
-brother==0.1.13
+brother==0.1.14
 
 # homeassistant.components.buienradar
 buienradar==1.0.4
@@ -291,7 +297,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200424.0
+home-assistant-frontend==20200427.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -366,13 +372,16 @@ nessclient==0.9.15
 netdisco==2.6.0
 
 # homeassistant.components.nexia
-nexia==0.9.2
+nexia==0.9.3
 
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.0.10
 
 # homeassistant.components.nuheat
 nuheat==0.3.0
+
+# homeassistant.components.numato
+numato-gpio==0.7.1
 
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
@@ -382,6 +391,9 @@ numpy==1.18.2
 
 # homeassistant.components.google
 oauth2client==4.0.0
+
+# homeassistant.components.onvif
+onvif-zeep-async==0.2.0
 
 # homeassistant.components.openerz
 openerz-api==0.1.0
@@ -408,7 +420,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==7.1.1
+pillow==7.1.2
 
 # homeassistant.components.plex
 plexapi==3.4.0
@@ -470,7 +482,7 @@ py_nextbusnext==0.1.4
 pyaehw4a1==0.3.4
 
 # homeassistant.components.airvisual
-pyairvisual==4.3.0
+pyairvisual==4.4.0
 
 # homeassistant.components.almond
 pyalmond==0.0.2
@@ -479,7 +491,7 @@ pyalmond==0.0.2
 pyarlo==0.2.3
 
 # homeassistant.components.atag
-pyatag==0.2.18
+pyatag==0.2.19
 
 # homeassistant.components.netatmo
 pyatmo==3.3.0
@@ -564,7 +576,7 @@ pylitejet==0.1
 pymailgunner==1.4
 
 # homeassistant.components.melcloud
-pymelcloud==2.4.1
+pymelcloud==2.5.2
 
 # homeassistant.components.somfy
 pymfy==0.7.1
@@ -650,7 +662,7 @@ python-miio==0.5.0.1
 python-nest==4.1.0
 
 # homeassistant.components.synology_dsm
-python-synology==0.7.0
+python-synology==0.7.3
 
 # homeassistant.components.tado
 python-tado==0.8.1
@@ -722,7 +734,7 @@ sentry-sdk==0.13.5
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.1.0
+simplisafe-python==9.2.0
 
 # homeassistant.components.sleepiq
 sleepyq==0.7

@@ -1,7 +1,7 @@
 """Support for Dynalite channels as lights."""
 from typing import Callable
 
-from homeassistant.components.light import SUPPORT_BRIGHTNESS, Light
+from homeassistant.components.light import SUPPORT_BRIGHTNESS, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -18,7 +18,7 @@ async def async_setup_entry(
     )
 
 
-class DynaliteLight(DynaliteBase, Light):
+class DynaliteLight(DynaliteBase, LightEntity):
     """Representation of a Dynalite Channel as a Home Assistant Light."""
 
     @property

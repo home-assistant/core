@@ -1,0 +1,29 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Xiaomi Miio",
+        "description": "Select to which device you want to connect.",
+        "data": {
+          "gateway": "Connect to a Xiaomi Gateway"
+        }
+      },
+      "gateway": {
+        "title": "Connect to a Xiaomi Gateway",
+        "description": "You will need the API Token, see https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token for instructions.",
+        "data": {
+          "host": "IP adress",
+          "token": "API Token",
+          "name": "Name of the Gateway"
+        }
+      }
+    },
+    "error": {
+      "connect_error": "Failed to connect, please try again",
+      "no_device_selected": "No device selected, please select one device."
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}

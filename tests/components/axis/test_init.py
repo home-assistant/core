@@ -6,7 +6,8 @@ from homeassistant.setup import async_setup_component
 
 from .test_device import MAC, setup_axis_integration
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.async_mock import AsyncMock
+from tests.common import MockConfigEntry
 
 
 async def test_setup_no_config(hass):
@@ -30,7 +31,7 @@ async def test_setup_entry_fails(hass):
     config_entry.add_to_hass(hass)
 
     mock_device = Mock()
-    mock_device.async_setup.return_value = mock_coro(False)
+    mock_device.async_setup = AsyncMock(return_value=False)
 
     with patch.object(axis, "AxisNetworkDevice") as mock_device_class:
         mock_device_class.return_value = mock_device

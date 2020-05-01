@@ -1,6 +1,8 @@
 {
     "state": {
         "_": {
+            "dead": "\u092e\u0943\u0924",
+            "initializing": "\u0906\u0930\u0902\u092d",
             "ready": "\u0924\u0948\u092f\u093e\u0930",
             "sleeping": "\u0938\u094b\u092f\u093e \u0939\u0941\u0906"
         },
