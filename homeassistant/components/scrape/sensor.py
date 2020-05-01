@@ -132,7 +132,11 @@ class ScrapeSensor(Entity):
             if self._attr is not None:
                 value = raw_data.select(self._select)[self._index][self._attr]
             else:
-                value = raw_data.select(self._select)[self._index].text
+                tag = raw_data.select(self._select)[self._index]
+                if tag.name in ("style", "script", "template"):
+                    value = tag.string
+                else:
+                    value = tag.text
             _LOGGER.debug(value)
         except IndexError:
             _LOGGER.error("Unable to extract data from HTML")
