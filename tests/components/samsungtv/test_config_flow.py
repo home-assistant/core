@@ -1,5 +1,6 @@
 """Tests for Samsung TV config flow."""
 import socket
+
 import pytest
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
 from samsungtvws.exceptions import ConnectionFailure
@@ -26,9 +27,8 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 
-from tests.common import MockConfigEntry
-
 from tests.async_mock import DEFAULT as DEFAULT_MOCK, Mock, PropertyMock, call, patch
+from tests.common import MockConfigEntry
 
 MOCK_USER_DATA = {CONF_HOST: "fake_host", CONF_NAME: "fake_name"}
 MOCK_SSDP_DATA = {
@@ -604,7 +604,7 @@ async def test_options_with_obtained_mac(hass, remote):
     )
 
     assert result["type"] == "create_entry"
-    assert config_entry.options[CONF_MAC] == "11:11:11"
+    assert config_entry.options.get(CONF_MAC) is None
 
     # override the auto-obtained mac address
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -639,7 +639,6 @@ async def test_options_without_obtained_mac(hass, remote):
     assert result["type"] == "create_entry"
     assert config_entry.options.get(CONF_MAC) is None
 
-    # override the auto-obtained mac address
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     result = await hass.config_entries.options.async_configure(

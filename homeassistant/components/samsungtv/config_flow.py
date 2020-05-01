@@ -195,7 +195,7 @@ class SamsungTVOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
-            if user_input[CONF_MAC].strip() == "":
+            if CONF_MAC not in user_input or user_input[CONF_MAC].strip() == "":
                 user_input.pop(CONF_MAC, None)
             return self.async_create_entry(title="", data=user_input)
 
@@ -211,5 +211,7 @@ class SamsungTVOptionsFlowHandler(config_entries.OptionsFlow):
                 LOGGER.info("Could not find mac address for %s", hostname)
                 current_mac = ""
 
-        schema = {vol.Optional(CONF_MAC, default=current_mac): str}
+        schema = {
+            vol.Optional(CONF_MAC, description={"suggested_value": current_mac}): str
+        }
         return self.async_show_form(step_id="init", data_schema=vol.Schema(schema))
