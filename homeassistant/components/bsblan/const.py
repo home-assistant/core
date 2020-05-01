@@ -17,6 +17,10 @@ ATTR_OUTSIDE_TEMPERATURE = "outside_temperature"
 ATTR_STATE_ON = "on"
 ATTR_STATE_OFF = "off"
 
-CONF_DEVICE_IDENT = "device_identification="
+CONF_DEVICE_IDENT = "device_identification"
+CONF_CONTROLLER_FAM = "controller_family"
+CONF_CONTROLLER_VARI = "controller_variant"
 
 SENSOR_TYPE_TEMPERATURE = "temperature"
+
+CONF_PASSKEY = "passkey"
