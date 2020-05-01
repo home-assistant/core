@@ -36,8 +36,7 @@
 		  "user" : {
 			 "data" : {
 				"auto_start" : "Autostart (disable if using Z-Wave or other delayed start system)",
-				"include_domains" : "Domains to include",
-				"port" : "Bridge Port"
+				"include_domains" : "Domains to include"
 			 },
 			 "description" : "A HomeKit Bridge will allow you to access your Home Assistant entities in HomeKit. HomeKit Bridges are limited to 150 accessories per instance including the bridge itself. If you wish to bridge more than the maximum number of accessories, it is recommended that you use multiple HomeKit bridges for different domains. Detailed entity configuration is only available via YAML for the primary bridge.",
 			 "title" : "Activate HomeKit Bridge"
