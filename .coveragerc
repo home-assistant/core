@@ -531,7 +531,6 @@ omit =
     homeassistant/components/osramlightify/light.py
     homeassistant/components/otp/sensor.py
     homeassistant/components/panasonic_bluray/media_player.py
-    homeassistant/components/panasonic_viera/__init__.py
     homeassistant/components/panasonic_viera/media_player.py
     homeassistant/components/pandora/media_player.py
     homeassistant/components/pcal9535a/*
