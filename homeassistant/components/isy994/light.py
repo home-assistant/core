@@ -30,7 +30,6 @@ class ISYLightDevice(ISYDevice, LightEntity, RestoreEntity):
     def __init__(self, node) -> None:
         """Initialize the ISY994 light device."""
         super().__init__(node)
-        self._last_brightness = self.brightness
 
     @property
     def is_on(self) -> bool:
@@ -78,6 +77,7 @@ class ISYLightDevice(ISYDevice, LightEntity, RestoreEntity):
         """Restore last_brightness on restart."""
         await super().async_added_to_hass()
 
+        self._last_brightness = self.brightness
         last_state = await self.async_get_last_state()
         if not last_state:
             return
