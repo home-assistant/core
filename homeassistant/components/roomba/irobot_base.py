@@ -3,6 +3,7 @@ import asyncio
 import logging
 
 from homeassistant.components.vacuum import (
+    ATTR_STATUS,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
@@ -16,6 +17,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_SEND_COMMAND,
     SUPPORT_START,
     SUPPORT_STATE,
+    SUPPORT_STATUS,
     SUPPORT_STOP,
     StateVacuumDevice,
 )
@@ -40,6 +42,7 @@ SUPPORT_IROBOT = (
     | SUPPORT_SEND_COMMAND
     | SUPPORT_START
     | SUPPORT_STATE
+    | SUPPORT_STATUS
     | SUPPORT_STOP
     | SUPPORT_LOCATE
 )
@@ -143,7 +146,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumDevice):
             state = STATE_MAP[phase]
         except KeyError:
             return STATE_ERROR
-        if cycle != "none" and state != STATE_CLEANING and state != STATE_RETURNING:
+        if cycle != "none" and state in (STATE_IDLE, STATE_DOCKED):
             state = STATE_PAUSED
         return state
 
@@ -172,6 +175,9 @@ class IRobotVacuum(IRobotEntity, StateVacuumDevice):
 
         # Set properties that are to appear in the GUI
         state_attrs = {ATTR_SOFTWARE_VERSION: software_version}
+
+        # Set legacy status to avoid break changes
+        state_attrs[ATTR_STATUS] = self.vacuum.current_state
 
         # Only add cleaning time and cleaned area attrs when the vacuum is
         # currently on

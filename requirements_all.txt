@@ -365,7 +365,7 @@ bravia-tv==1.0.2
 broadlink==0.13.2
 
 # homeassistant.components.brother
-brother==0.1.13
+brother==0.1.14
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
