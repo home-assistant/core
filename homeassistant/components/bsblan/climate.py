@@ -8,6 +8,7 @@ from bsblan import BSBLan, BSBLanError, Info, State
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
+    ATTR_PRESET_MODE,
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
@@ -55,25 +56,18 @@ PRESET_MODES = [
 
 HA_STATE_TO_BSBLAN = {
     HVAC_MODE_AUTO: "1",
-    PRESET_ECO: "2",
     HVAC_MODE_HEAT: "3",
     HVAC_MODE_OFF: "0",
 }
 
-HA_ATTR_TO_BSBLAN = {
-    ATTR_HVAC_MODE: "hvac_modes",
-    ATTR_TARGET_TEMPERATURE: "target_temperature",
-}
+BSBLAN_TO_HA_STATE = {value: key for key, value in HA_STATE_TO_BSBLAN.items()}
 
 HA_PRESET_TO_BSBLAN = {
     PRESET_ECO: "2",
 }
 
-BSBLAN_TO_HA_STATE = {
-    "1": HVAC_MODE_AUTO,
-    "2": PRESET_ECO,
-    "3": HVAC_MODE_HEAT,
-    "0": HVAC_MODE_OFF,
+BSBLAN_TO_HA_PRESET = {
+    2: PRESET_ECO,
 }
 
 
@@ -101,11 +95,10 @@ class BSBLanClimate(ClimateDevice):
         self._target_temperature: Optional[float] = None
         self._info: Info = info
         self.bsblan = bsblan
-        self._hvac_modes = HVAC_MODES
-        self._preset_modes = PRESET_MODES
         self._temperature_unit = None
         self._hvac_mode = None
         self._preset_mode = None
+        self._store_hvac_mode = None
 
     @property
     def name(self) -> str:
@@ -149,7 +142,7 @@ class BSBLanClimate(ClimateDevice):
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        return self._hvac_modes
+        return HVAC_MODES
 
     @property
     def target_temperature(self):
@@ -159,18 +152,29 @@ class BSBLanClimate(ClimateDevice):
     @property
     def preset_modes(self):
         """List of available preset modes."""
-        return self._preset_modes
+        return PRESET_MODES
 
     @property
     def preset_mode(self):
         """Return the preset_mode."""
-        if self._current_hvac_mode == 2:
-            return PRESET_ECO
-        return PRESET_NONE
+        return self._preset_mode
+
+    async def async_set_preset_mode(self, preset_mode):
+        """Set preset mode."""
+        _LOGGER.debug("Setting preset mode to: %s", preset_mode)
+        if preset_mode == PRESET_NONE:
+            # restore previous hvac mode
+            self._current_hvac_mode = self._store_hvac_mode
+        else:
+            # Store hvac mode.
+            self._store_hvac_mode = self._current_hvac_mode
+            await self.async_set_data(preset_mode=preset_mode)
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set HVAC mode."""
-        _LOGGER.info("Setting HVAC mode to: %s", hvac_mode)
+        _LOGGER.debug("Setting HVAC mode to: %s", hvac_mode)
+        # preset should be none when hvac mode is set
+        self._preset_mode = PRESET_NONE
         await self.async_set_data(hvac_mode=hvac_mode)
 
     async def async_set_temperature(self, **kwargs):
@@ -183,16 +187,20 @@ class BSBLanClimate(ClimateDevice):
 
         if ATTR_TEMPERATURE in kwargs:
             data[ATTR_TARGET_TEMPERATURE] = kwargs[ATTR_TEMPERATURE]
-            _LOGGER.info("data = %s", data)
+            _LOGGER.debug("Set temperature data = %s", data)
 
         if ATTR_HVAC_MODE in kwargs:
             data[ATTR_HVAC_MODE] = HA_STATE_TO_BSBLAN[kwargs[ATTR_HVAC_MODE]]
-            _LOGGER.info("data hvac mode = %s", data)
+            _LOGGER.debug("Set hvac mode data = %s", data)
+
+        if ATTR_PRESET_MODE in kwargs:
+            # for now we set the preset as hvac_mode as the api expect this
+            data[ATTR_HVAC_MODE] = HA_PRESET_TO_BSBLAN[kwargs[ATTR_PRESET_MODE]]
 
         try:
             await self.bsblan.thermostat(**data)
         except BSBLanError:
-            _LOGGER.error("An error occurred while updating the BSBLan Device")
+            _LOGGER.error("An error occurred while updating the BSBLan device.")
             self._available = False
 
     async def async_update(self) -> None:
@@ -210,12 +218,13 @@ class BSBLanClimate(ClimateDevice):
         self._current_temperature = float(state.current_temperature)
         self._target_temperature = float(state.target_temperature)
 
-        # check if preset is active
-        if BSBLAN_TO_HA_STATE[state.current_hvac_mode] == 2:
-            self._current_hvac_mode = None
-            self._preset_modes = HA_PRESET_TO_BSBLAN[state.current_hvac_mode]
+        # check if preset is active else get hvac mode
+        _LOGGER.debug("state hvac/preset mode: %s", state.current_hvac_mode)
+        if state.current_hvac_mode == "2":
+            self._preset_mode = PRESET_ECO
         else:
             self._current_hvac_mode = BSBLAN_TO_HA_STATE[state.current_hvac_mode]
+            self._preset_mode = PRESET_NONE
 
         self._temperature_unit = state.temperature_unit
 
