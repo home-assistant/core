@@ -9,8 +9,13 @@ from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.helpers import ConfigType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import CONF_DEVICE_IDENT, DOMAIN  # pylint:disable=unused-import
+from .const import (  # pylint:disable=unused-import
+    CONF_DEVICE_IDENT,
+    CONF_PASSKEY,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +35,9 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             info = await self._get_bsblan_info(
-                user_input[CONF_HOST], user_input[CONF_PORT]
+                host=user_input[CONF_HOST],
+                port=user_input[CONF_PORT],
+                passkey=user_input[CONF_PASSKEY],
             )
         except BSBLanError:
             return self._show_setup_form({"base": "connection_error"})
@@ -44,21 +51,22 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_PORT: user_input[CONF_PORT],
+                CONF_PASSKEY: user_input[CONF_PASSKEY],
                 CONF_DEVICE_IDENT: info.device_identification,
             },
         )
 
     async def async_step_zeroconf(
-        self, user_input: Optional[ConfigType] = None
+        # self, user_input: Optional[ConfigType] = None
+        self,
+        discovery_info: DiscoveryInfoType,
     ) -> Dict[str, Any]:
         """Handle zeroconf discovery."""
-        if user_input is None:
-            return self.async_abort(reason="connection_error")
 
         # Hostname is format: my-ke.local.
-        host = user_input["hostname"].rstrip(".")
+        host = discovery_info["hostname"].rstrip(".")
         try:
-            info = await self._get_bsblan_info(host, user_input[CONF_PORT])
+            info = await self._get_bsblan_info(host, discovery_info[CONF_PORT])
         except BSBLanError:
             return self.async_abort(reason="connection_error")
 
@@ -70,7 +78,8 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 CONF_HOST: host,
-                CONF_PORT: user_input[CONF_PORT],
+                CONF_PORT: discovery_info[CONF_PORT],
+                CONF_PASSKEY: discovery_info[CONF_PASSKEY],
                 CONF_DEVICE_IDENT: info.device_identification,
                 "title_placeholders": {"device_ident": info.device_identification},
             }
@@ -84,12 +93,11 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: ConfigType = None
     ) -> Dict[str, Any]:
         """Handle a flow initiated by zeroconf."""
-        if user_input is None:
-            return self._show_confirm_dialog()
-
         try:
             info = await self._get_bsblan_info(
-                self.context.get(CONF_HOST), self.context.get(CONF_PORT)
+                self.context.get(CONF_HOST),
+                self.context.get(CONF_PORT),
+                self.context.get(CONF_PASSKEY),
             )
         except BSBLanError:
             return self.async_abort(reason="connection_error")
@@ -103,6 +111,7 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: self.context.get(CONF_HOST),
                 CONF_PORT: self.context.get(CONF_PORT),
+                CONF_PASSKEY: self.context.get(CONF_PASSKEY),
                 CONF_DEVICE_IDENT: self.context.get(CONF_DEVICE_IDENT),
             },
         )
@@ -115,6 +124,7 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST): str,
                     vol.Optional(CONF_PORT, default=80): int,
+                    vol.Optional(CONF_PASSKEY, default=""): str,
                 }
             ),
             errors=errors or {},
@@ -130,8 +140,15 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def _get_bsblan_info(self, host: str, port: int) -> Info:
+    async def _get_bsblan_info(
+        self, host: str, passkey: Optional[str], port: int
+    ) -> Info:
         """Get device information from an BSBLan device."""
         session = async_get_clientsession(self.hass)
-        bsblan = BSBLan(host, port=port, session=session,)
+        _LOGGER.debug("request bsblan.info:")
+        bsblan = BSBLan(
+            host, passkey=passkey, port=port, session=session, loop=self.hass.loop
+        )
+        test = await bsblan.info()
+        _LOGGER.debug("get bsblan.info: %s", test)
         return await bsblan.info()
