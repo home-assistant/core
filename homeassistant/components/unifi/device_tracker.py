@@ -101,7 +101,7 @@ def add_entities(controller, async_add_entities):
 
             if tracker_class is UniFiClientTracker:
 
-                if item.is_wired:
+                if mac not in controller.wireless_clients:
                     if not controller.option_track_wired_clients:
                         continue
                 else:

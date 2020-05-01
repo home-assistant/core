@@ -200,7 +200,7 @@ class HomeKitSpeedMapping:
         if speed is None:
             return None
         speed_range = self.speed_ranges[speed]
-        return speed_range.target
+        return round(speed_range.target)
 
     def speed_to_states(self, speed):
         """Map HomeKit speed to Home Assistant speed state."""
