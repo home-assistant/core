@@ -3,12 +3,10 @@
 import asyncio
 import logging
 
-import voluptuous as vol
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -22,28 +20,11 @@ from .data import MetOfficeData
 
 _LOGGER = logging.getLogger(__name__)
 
-_METOFFICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Inclusive(
-            CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.latitude,
-        vol.Inclusive(
-            CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.longitude,
-        vol.Required(CONF_NAME): cv.string,
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [_METOFFICE_SCHEMA])}, extra=vol.ALLOW_EXTRA,
-)
-
 PLATFORMS = ["weather", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the National Weather Service (NWS) component."""
+    """Set up the Met Office weather component."""
     return True
 
 
@@ -53,15 +34,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
     api_key = entry.data[CONF_API_KEY]
-    name = entry.data[CONF_NAME]
+    site_name = entry.data[CONF_NAME]
 
     metoffice_data = MetOfficeData(hass, api_key, latitude, longitude)
     await metoffice_data.async_update_site()
+    if metoffice_data.site_name is None:
+        raise ConfigEntryNotReady()
 
     metoffice_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name=f"MetOffice Coordinator for {metoffice_data.site_name}",
+        name=f"MetOffice Coordinator for {site_name}",
         update_method=metoffice_data.async_update,
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
@@ -70,16 +53,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     metoffice_hass_data[entry.entry_id] = {
         METOFFICE_DATA: metoffice_data,
         METOFFICE_COORDINATOR: metoffice_coordinator,
-        METOFFICE_NAME: name,
+        METOFFICE_NAME: site_name,
     }
 
     # Fetch initial data so we have data when entities subscribe
     await metoffice_coordinator.async_refresh()
-
-    if not entry.unique_id:
-        hass.config_entries.async_update_entry(
-            entry, unique_id=f"{entry.data[CONF_LATITUDE]}_{entry.data[CONF_LONGITUDE]}"
-        )
+    if metoffice_data.now is None:
+        raise ConfigEntryNotReady()
 
     for component in PLATFORMS:
         hass.async_create_task(

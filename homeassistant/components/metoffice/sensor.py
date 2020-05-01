@@ -32,29 +32,35 @@ ATTR_SENSOR_ID = "sensor_id"
 ATTR_SITE_ID = "site_id"
 ATTR_SITE_NAME = "site_name"
 
-# Sensor types are defined like: variable -> title, units
-# Sensor types are defined as: name -> title, units, icon
+# Sensor types are defined as: variable -> title, units, icon, enabled by default
 SENSOR_TYPES = {
-    "name": ["Station Name", None, "mdi:label-outline"],
-    "weather": ["Weather", None, "mdi:weather-sunny"],  # will adapt to the weather
-    "temperature": ["Temperature", TEMP_CELSIUS, "mdi:thermometer"],
+    "name": ["Station Name", None, "mdi:label-outline", False],
+    "weather": [
+        "Weather",
+        None,
+        "mdi:weather-sunny",  # but will adapt to current conditions
+        True,
+    ],
+    "temperature": ["Temperature", TEMP_CELSIUS, "mdi:thermometer", True],
     "feels_like_temperature": [
         "Feels Like Temperature",
         TEMP_CELSIUS,
         "mdi:thermometer",
+        False,
     ],
-    "wind_speed": ["Wind Speed", SPEED_MILES_PER_HOUR, "mdi:weather-windy"],
-    "wind_direction": ["Wind Direction", None, "mdi:compass-outline"],
-    "wind_gust": ["Wind Gust", SPEED_MILES_PER_HOUR, "mdi:weather-windy"],
-    "visibility": ["Visibility", None, "mdi:eye"],
-    "visibility_distance": ["Visibility Distance", LENGTH_KILOMETERS, "mdi:eye"],
-    "uv": ["UV Index", UV_INDEX, "mdi:weather-sunny-alert"],
+    "wind_speed": ["Wind Speed", SPEED_MILES_PER_HOUR, "mdi:weather-windy", True],
+    "wind_direction": ["Wind Direction", None, "mdi:compass-outline", False],
+    "wind_gust": ["Wind Gust", SPEED_MILES_PER_HOUR, "mdi:weather-windy", False],
+    "visibility": ["Visibility", None, "mdi:eye", False],
+    "visibility_distance": ["Visibility Distance", LENGTH_KILOMETERS, "mdi:eye", False],
+    "uv": ["UV Index", UV_INDEX, "mdi:weather-sunny-alert", True],
     "precipitation": [
         "Probability of Precipitation",
         UNIT_PERCENTAGE,
         "mdi:weather-rainy",
+        True,
     ],
-    "humidity": ["Humidity", UNIT_PERCENTAGE, "mdi:water-percent"],
+    "humidity": ["Humidity", UNIT_PERCENTAGE, "mdi:water-percent", False],
 }
 
 
@@ -176,3 +182,13 @@ class MetOfficeCurrentSensor(Entity):
     def should_poll(self) -> bool:
         """Entities do not individually poll."""
         return False
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return SENSOR_TYPES[self._type][3]
+
+    @property
+    def available(self):
+        """Return if state is available."""
+        return self.metoffice_site_id is not None and self.metoffice_now is not None

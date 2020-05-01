@@ -99,7 +99,6 @@ async def test_one_sensor_site_running(hass, requests_mock):
 
     # all metoffice test data encapsulated in here
     mock_json = json.loads(load_fixture("metoffice.json"))
-
     all_sites = json.dumps(mock_json["all_sites"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
 
@@ -119,18 +118,23 @@ async def test_one_sensor_site_running(hass, requests_mock):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    for sensor_id in WAVERTREE_SENSOR_RESULTS:
+    running_sensor_ids = hass.states.async_entity_ids("sensor")
+    assert len(running_sensor_ids) > 0
+    for running_id in running_sensor_ids:
+        sensor = hass.states.get(running_id)
+        _LOGGER.info(
+            f"{sensor.attributes.get('sensor_id')} / {sensor.attributes.get('sensor_name')} currently {sensor.state}"
+        )
+
+        sensor_id = sensor.attributes.get("sensor_id")
         sensor_name, sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
         _LOGGER.info(f"{sensor_id} / {sensor_name} expecting {sensor_value}")
-        sensor = hass.states.get(f"sensor.wavertree_{sensor_name}")
-        assert sensor is not None
 
         assert sensor.state == sensor_value
         assert (
             sensor.attributes.get("last_update").strftime(DATETIME_FORMAT)
             == "2020-04-25 12:00:00+0000"
         )
-        assert sensor.attributes.get("sensor_id") == sensor_id
         assert sensor.attributes.get("site_id") == "354107"
         assert sensor.attributes.get("site_name") == TEST_SITE_NAME_WAVERTREE
         assert sensor.attributes.get("attribution") == ATTRIBUTION
@@ -249,34 +253,35 @@ async def test_two_sensor_sites_running(hass, requests_mock):
     await hass.config_entries.async_setup(entry2.entry_id)
     await hass.async_block_till_done()
 
-    for sensor_id in WAVERTREE_SENSOR_RESULTS:
-        sensor_name, sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
-        _LOGGER.info(f"{sensor_id} / {sensor_name} expecting {sensor_value}")
-        sensor = hass.states.get(f"sensor.wavertree_{sensor_name}")
-        assert sensor is not None
-
-        assert sensor.state == sensor_value
-        assert (
-            sensor.attributes.get("last_update").strftime(DATETIME_FORMAT)
-            == "2020-04-25 12:00:00+0000"
+    running_sensor_ids = hass.states.async_entity_ids("sensor")
+    assert len(running_sensor_ids) > 0
+    for running_id in running_sensor_ids:
+        sensor = hass.states.get(running_id)
+        _LOGGER.info(
+            f"{sensor.attributes.get('sensor_id')} / {sensor.attributes.get('sensor_name')} currently {sensor.state}"
         )
-        assert sensor.attributes.get("sensor_id") == sensor_id
-        assert sensor.attributes.get("site_id") == "354107"
-        assert sensor.attributes.get("site_name") == TEST_SITE_NAME_WAVERTREE
-        assert sensor.attributes.get("attribution") == ATTRIBUTION
 
-    for sensor_id in KINGSLYNN_SENSOR_RESULTS:
-        sensor_name, sensor_value = KINGSLYNN_SENSOR_RESULTS[sensor_id]
-        _LOGGER.info(f"{sensor_id} / {sensor_name} expecting {sensor_value}")
-        sensor = hass.states.get(f"sensor.king_s_lynn_{sensor_name}")
-        assert sensor is not None
+        sensor_id = sensor.attributes.get("sensor_id")
+        if sensor.attributes.get("site_id") == "354107":
+            sensor_name, sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
+            assert sensor.state == sensor_value
+            assert (
+                sensor.attributes.get("last_update").strftime(DATETIME_FORMAT)
+                == "2020-04-25 12:00:00+0000"
+            )
+            assert sensor.attributes.get("sensor_id") == sensor_id
+            assert sensor.attributes.get("site_id") == "354107"
+            assert sensor.attributes.get("site_name") == TEST_SITE_NAME_WAVERTREE
+            assert sensor.attributes.get("attribution") == ATTRIBUTION
 
-        assert sensor.state == sensor_value
-        assert (
-            sensor.attributes.get("last_update").strftime(DATETIME_FORMAT)
-            == "2020-04-25 12:00:00+0000"
-        )
-        assert sensor.attributes.get("sensor_id") == sensor_id
-        assert sensor.attributes.get("site_id") == "322380"
-        assert sensor.attributes.get("site_name") == TEST_SITE_NAME_KINGSLYNN
-        assert sensor.attributes.get("attribution") == ATTRIBUTION
+        else:
+            sensor_name, sensor_value = KINGSLYNN_SENSOR_RESULTS[sensor_id]
+            assert sensor.state == sensor_value
+            assert (
+                sensor.attributes.get("last_update").strftime(DATETIME_FORMAT)
+                == "2020-04-25 12:00:00+0000"
+            )
+            assert sensor.attributes.get("sensor_id") == sensor_id
+            assert sensor.attributes.get("site_id") == "322380"
+            assert sensor.attributes.get("site_name") == TEST_SITE_NAME_KINGSLYNN
+            assert sensor.attributes.get("attribution") == ATTRIBUTION
