@@ -1,5 +1,5 @@
 """Test the Z-Wave over MQTT config flow."""
-from asynctest import patch
+from tests.async_mock import patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.zwave_mqtt.config_flow import TITLE

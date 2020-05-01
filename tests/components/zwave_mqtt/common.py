@@ -1,7 +1,7 @@
 """Helpers for tests."""
 import json
 
-from asynctest import Mock, patch
+from tests.async_mock import Mock, patch
 
 from homeassistant import config_entries, core as ha
 from homeassistant.components.zwave_mqtt.const import DOMAIN
@@ -23,7 +23,7 @@ async def setup_zwave(hass, entry=None, fixture=None):
         entry.add_to_hass(hass)
 
     with patch("homeassistant.components.mqtt.async_subscribe") as mock_subscribe:
-        await hass.config_entries.async_setup(entry.entry_id)
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert "zwave_mqtt" in hass.config.components
