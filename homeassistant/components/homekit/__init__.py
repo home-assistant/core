@@ -344,13 +344,12 @@ def _async_register_events_and_services(hass: HomeAssistant):
 
         value_msg = f" to {value}" if value else ""
         message = f"send command {data[ATTR_SERVICE]}{value_msg} for {data[ATTR_DISPLAY_NAME]}"
-        
+
         return {
             "name": "HomeKit",
             "message": message,
             "entity_id": entity_id,
         }
-
 
     hass.components.logbook.async_describe_event(
         DOMAIN, EVENT_HOMEKIT_CHANGED, async_describe_logbook_event
