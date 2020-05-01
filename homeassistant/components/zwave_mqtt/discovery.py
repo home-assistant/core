@@ -3,10 +3,10 @@ from openzwavemqtt.const import CommandClass, ValueGenre, ValueType
 
 from . import const
 
-DISCOVERY_SCHEMAS = [
+DISCOVERY_SCHEMAS = (
     {  # Switch platform
         const.DISC_COMPONENT: "switch",
-        const.DISC_GENERIC_DEVICE_CLASS: [
+        const.DISC_GENERIC_DEVICE_CLASS: (
             const.GENERIC_TYPE_METER,
             const.GENERIC_TYPE_SENSOR_ALARM,
             const.GENERIC_TYPE_SENSOR_BINARY,
@@ -19,16 +19,16 @@ DISCOVERY_SCHEMAS = [
             const.GENERIC_TYPE_REPEATER_SLAVE,
             const.GENERIC_TYPE_THERMOSTAT,
             const.GENERIC_TYPE_WALL_CONTROLLER,
-        ],
+        ),
         const.DISC_VALUES: {
             const.DISC_PRIMARY: {
-                const.DISC_COMMAND_CLASS: [CommandClass.SWITCH_BINARY],
+                const.DISC_COMMAND_CLASS: (CommandClass.SWITCH_BINARY,),
                 const.DISC_TYPE: ValueType.BOOL,
                 const.DISC_GENRE: ValueGenre.USER,
             }
         },
     },
-]
+)
 
 
 def check_node_schema(node, schema):
@@ -38,13 +38,13 @@ def check_node_schema(node, schema):
     if (
         const.DISC_GENERIC_DEVICE_CLASS in schema
         and node.node_generic
-        not in ensure_list(schema[const.DISC_GENERIC_DEVICE_CLASS])
+        not in ensure_tuple(schema[const.DISC_GENERIC_DEVICE_CLASS])
     ):
         return False
     if (
         const.DISC_SPECIFIC_DEVICE_CLASS in schema
         and node.node_specific
-        not in ensure_list(schema[const.DISC_SPECIFIC_DEVICE_CLASS])
+        not in ensure_tuple(schema[const.DISC_SPECIFIC_DEVICE_CLASS])
     ):
         return False
     return True
@@ -57,19 +57,19 @@ def check_value_schema(value, schema):
         and value.parent.command_class_id not in schema[const.DISC_COMMAND_CLASS]
     ):
         return False
-    if const.DISC_TYPE in schema and value.type not in ensure_list(
+    if const.DISC_TYPE in schema and value.type not in ensure_tuple(
         schema[const.DISC_TYPE]
     ):
         return False
-    if const.DISC_GENRE in schema and value.genre not in ensure_list(
+    if const.DISC_GENRE in schema and value.genre not in ensure_tuple(
         schema[const.DISC_GENRE]
     ):
         return False
-    if const.DISC_INDEX in schema and value.index not in ensure_list(
+    if const.DISC_INDEX in schema and value.index not in ensure_tuple(
         schema[const.DISC_INDEX]
     ):
         return False
-    if const.DISC_INSTANCE in schema and value.instance not in ensure_list(
+    if const.DISC_INSTANCE in schema and value.instance not in ensure_tuple(
         schema[const.DISC_INSTANCE]
     ):
         return False
@@ -83,8 +83,8 @@ def check_value_schema(value, schema):
     return True
 
 
-def ensure_list(value):
-    """Convert a value to a list if needed."""
-    if isinstance(value, list):
+def ensure_tuple(value):
+    """Convert a value to a tuple if needed."""
+    if isinstance(value, tuple):
         return value
-    return [value]
+    return (value,)
