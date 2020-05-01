@@ -77,7 +77,7 @@ class ISYLightDevice(ISYDevice, LightEntity, RestoreEntity):
         """Restore last_brightness on restart."""
         await super().async_added_to_hass()
 
-        self._last_brightness = self.brightness
+        self._last_brightness = self.brightness or 255
         last_state = await self.async_get_last_state()
         if not last_state:
             return
