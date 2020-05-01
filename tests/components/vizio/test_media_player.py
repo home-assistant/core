@@ -621,3 +621,26 @@ async def test_setup_with_no_running_app(
         assert attr["source"] == "CAST"
         assert "app_id" not in attr
         assert "app_name" not in attr
+
+
+async def test_setup_tv_without_mute(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_update: pytest.fixture,
+) -> None:
+    """Test Vizio TV entity setup when mute property isn't returned by Vizio API."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=vol.Schema(VIZIO_SCHEMA)(MOCK_USER_VALID_TV_CONFIG),
+        unique_id=UNIQUE_ID,
+    )
+
+    async with _cm_for_test_setup_without_apps(
+        {"volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2)}, STATE_ON,
+    ):
+        await _add_config_entry_to_hass(hass, config_entry)
+
+        attr = _get_attr_and_assert_base_attr(hass, DEVICE_CLASS_TV, STATE_ON)
+        _assert_sources_and_volume(attr, VIZIO_DEVICE_CLASS_TV)
+        assert "sound_mode" not in attr
+        assert "is_volume_muted" not in attr
