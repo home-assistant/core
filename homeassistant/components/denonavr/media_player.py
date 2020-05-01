@@ -60,7 +60,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     receiver = hass.data[DOMAIN][config_entry.entry_id]
     for receiver_zone in receiver.zones.values():
-        entities.append(DenonDevice(receiver_zone))
+        receiver_device_id = config_entry.data["receiver_id"]
+        unique_id = f"{receiver_device_id}-{receiver_zone.zone}"
+        entities.append(DenonDevice(receiver_zone, receiver_device_id, unique_id))
     _LOGGER.info(
         "%s receiver at host %s initialized", receiver.manufacturer, receiver.host
     )
@@ -70,10 +72,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon Media Player Device."""
 
-    def __init__(self, receiver):
+    def __init__(self, receiver, receiver_device_id, unique_id):
         """Initialize the device."""
         self._receiver = receiver
         self._name = self._receiver.name
+        self._unique_id = unique_id
+        self._receiver_device_id = receiver_device_id
         self._muted = self._receiver.muted
         self._volume = self._receiver.volume
         self._current_source = self._receiver.input_func
@@ -144,6 +148,23 @@ class DenonDevice(MediaPlayerEntity):
         if self._sound_mode_support:
             self._sound_mode = self._receiver.sound_mode
             self._sound_mode_raw = self._receiver.sound_mode_raw
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the zone."""
+        return self._unique_id
+
+    @property
+    def device_id(self):
+        """Return the device id of the receiver."""
+        return self._receiver_device_id
+
+    @property
+    def device_info(self):
+        """Return the device info of the receiver."""
+        return {
+            "identifiers": {(DOMAIN, self._receiver_device_id)},
+        }
 
     @property
     def name(self):
