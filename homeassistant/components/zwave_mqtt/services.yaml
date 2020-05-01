@@ -7,42 +7,8 @@ add_node:
     instance_id:
       description: (Optional) The OZW Instance/Controller to use, defaults to 1.
 
-cancel_command:
-  description: Cancel a running Z-Wave controller command. Use this to exit add_node, if you weren't going to use it but activated it.
-  fields:
-    instance_id:
-      description: (Optional) The OZW Instance/Controller to use, defaults to 1.
-
 remove_node:
   description: Remove a node from the Z-Wave network. Will set the controller into exclusion mode.
   fields:
     instance_id:
       description: (Optional) The OZW Instance/Controller to use, defaults to 1.
-
-remove_failed_node:
-  description: This command will remove a failed node from the network. The node should be on the controller's failed nodes list, otherwise this command will fail. Refer to OZW_Log.txt for progress.
-  fields:
-    node_id:
-      description: Node id of the device to remove (integer).
-      example: 10
-    instance_id:
-      description: (Optional) The OZW Instance/Controller to use, defaults to 1.
-
-replace_failed_node:
-  description: Replace a failed node with another. If the node is not in the controller's failed nodes list, or the node responds, this command will fail. Refer to OZW_Log.txt for progress.
-  fields:
-    node_id:
-      description: Node id of the device to replace (integer).
-      example: 10
-    instance_id:
-      description: (Optional) The OZW Instance/Controller to use, defaults to 1.
-
-set_config_parameter:
-  description: Set a config parameter to a node on the Z-Wave network.
-  fields:
-    node_id:
-      description: Node id of the device to set config parameter to (integer).
-    parameter:
-      description: Parameter index to set (integer).
-    value:
-      description: Value to set for parameter. (String value for list and bool parameters, integer for others).
