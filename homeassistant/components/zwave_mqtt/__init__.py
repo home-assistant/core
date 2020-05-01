@@ -221,7 +221,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     options.listen(EVENT_INSTANCE_EVENT, async_instance_event)
 
     # Register Services
-    services = ZWaveServices(hass, manager, data_nodes)
+    services = ZWaveServices(hass, manager)
     services.register()
 
     return True
