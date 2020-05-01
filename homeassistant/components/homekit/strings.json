@@ -8,7 +8,7 @@
 		  },
 		  "init" : {
 			 "data" : {
-				"include_domains" : "Domains to include"
+				"include_domains" : "[%key:component::homekit::config::step::user::data::include_domains%]"
 			 },
 			 "description" : "Entities in the “Domains to include” will be bridged to HomeKit. You will be able to select which entities to exclude from this list on the next screen.",            
 			 "title" : "Select domains to bridge."
