@@ -1411,7 +1411,7 @@ pymailgunner==1.4
 pymediaroom==0.6.4
 
 # homeassistant.components.melcloud
-pymelcloud==2.4.1
+pymelcloud==2.5.2
 
 # homeassistant.components.somfy
 pymfy==0.7.1
