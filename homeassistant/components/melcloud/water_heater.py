@@ -18,7 +18,7 @@ from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import DOMAIN, MelCloudDevice
-from .const import ATTR_STATUS, TEMP_UNIT_LOOKUP
+from .const import ATTR_STATUS
 
 
 async def async_setup_entry(
@@ -80,7 +80,7 @@ class AtwWaterHeater(WaterHeaterDevice):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
-        return TEMP_UNIT_LOOKUP.get(self._device.temp_unit, TEMP_CELSIUS)
+        return TEMP_CELSIUS
 
     @property
     def current_operation(self) -> Optional[str]:
