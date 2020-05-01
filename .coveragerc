@@ -534,6 +534,7 @@ omit =
     homeassistant/components/otp/sensor.py
     homeassistant/components/panasonic_bluray/media_player.py
     homeassistant/components/panasonic_viera/media_player.py
+    homeassistant/components/panasonic_viera/remote.py
     homeassistant/components/pandora/media_player.py
     homeassistant/components/pcal9535a/*
     homeassistant/components/pencom/switch.py
