@@ -1,5 +1,4 @@
 {
-   "title" : "HomeKit Bridge",
    "options" : {
       "step" : {
          "yaml" : {
@@ -45,8 +44,8 @@
          "pairing": {
             "title": "Pair HomeKit Bridge",
             "description": "As soon as the {name} bridge is ready, pairing will be available in “Notifications” as “HomeKit Bridge Setup”."
-         }    
-      },      
+         }
+      },
       "abort" : {
          "port_name_in_use" : "A bridge with the same name or port is already configured."
       }
