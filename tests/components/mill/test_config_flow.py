@@ -38,7 +38,7 @@ async def test_create_entry(hass):
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == f"mill_{test_data[CONF_USERNAME]}"
+    assert result["title"] == test_data[CONF_USERNAME]
     assert result["data"] == test_data
 
 
@@ -51,7 +51,7 @@ async def test_flow_entry_already_exists(hass):
     }
 
     first_entry = MockConfigEntry(
-        domain="mill", data=test_data, unique_id=f"mill_{test_data[CONF_USERNAME]}",
+        domain="mill", data=test_data, unique_id=test_data[CONF_USERNAME],
     )
     first_entry.add_to_hass(hass)
 

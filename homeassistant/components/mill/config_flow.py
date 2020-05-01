@@ -40,17 +40,15 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if not await mill_data_connection.connect():
             errors["connection_error"] = "connection_error"
-            print(errors)
             return self.async_show_form(
                 step_id="user", data_schema=DATA_SCHEMA, errors=errors,
             )
 
-        unique_id = f"mill_{username}"
+        unique_id = username
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
-        print("here")
         return self.async_create_entry(
             title=unique_id, data={CONF_USERNAME: username, CONF_PASSWORD: password},
         )
