@@ -4,7 +4,6 @@ import logging
 
 from haffmpeg.core import HAFFmpeg
 from pyhap.camera import (
-    AUDIO_CODEC_TYPES,
     VIDEO_CODEC_PARAM_LEVEL_TYPES,
     VIDEO_CODEC_PARAM_PROFILE_ID_TYPES,
     Camera as PyhapCamera,
@@ -121,12 +120,7 @@ class Camera(HomeAccessory, PyhapCamera):
             },
             "resolutions": resolutions,
         }
-        audio_options = {
-            "codecs": [
-                {"type": "OPUS", "samplerate": 24},
-                {"type": "AAC-eld", "samplerate": 16},
-            ]
-        }
+        audio_options = {"codecs": [{"type": "OPUS", "samplerate": 24}]}
 
         stream_address = config_w_defaults.get(CONF_STREAM_ADDRESS, get_local_ip())
 
@@ -197,16 +191,13 @@ class Camera(HomeAccessory, PyhapCamera):
                 "a_bufsize": stream_config["a_max_bitrate"] * 2,
                 "a_map": self.config[CONF_AUDIO_MAP],
                 "a_pkt_size": self.config[CONF_AUDIO_PACKET_SIZE],
-                "a_encoder": (
-                    AUDIO_ENCODER_OPUS
-                    if stream_config["a_codec"] == AUDIO_CODEC_TYPES["OPUS"]
-                    else AUDIO_ENCODER_AAC
-                ),
+                "a_encoder": AUDIO_ENCODER_OPUS,
             }
         )
         output = VIDEO_OUTPUT.format(**output_vars)
         if self.config[CONF_SUPPORT_AUDIO]:
             output = output + " " + AUDIO_OUTPUT.format(**output_vars)
+        _LOGGER.debug("FFmpeg output settings: %s", output)
 
         stream = HAFFmpeg(self._ffmpeg.binary, loop=self.driver.loop)
         opened = await stream.open(
