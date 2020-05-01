@@ -2,7 +2,7 @@
   "domain": "onkyo",
   "name": "Onkyo",
   "documentation": "https://www.home-assistant.io/integrations/onkyo",
-  "requirements": ["pyeiscp==0.0.1"],
+  "requirements": ["pyeiscp==0.0.2"],
   "dependencies": [],
   "codeowners": ["@winterscar"]
 }

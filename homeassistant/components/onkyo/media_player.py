@@ -248,14 +248,24 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             active_zones[zone].process_update(message)
             active_zones[zone].async_write_ha_state()
 
+    active_zones = {}
+
+    @callback
+    def async_onkyo_connect_callback():
+        """Receiver (re)connected"""
+        _LOGGER.debug("AVR (re)connected:")
+        for zone in active_zones.values():
+            zone.backfill_state()
+
     try:
         avr = await pyeiscp.Connection.create(
-            host=host, port=port, update_callback=async_onkyo_update_callback
+            host=host,
+            port=port,
+            update_callback=async_onkyo_update_callback,
+            connect_callback=async_onkyo_connect_callback,
         )
     except Exception:
         raise PlatformNotReady
-
-    active_zones = {}
 
     for zone in ["main"] + zones:
         active_zones[zone] = OnkyoAVR(avr, name, sources, zone, max_volume)
@@ -267,6 +277,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_avr)
 
+    # We can't rely on the initial connect_callback here
+    # because it may execute _before_ our zones are set up...
     for zone in active_zones.values():
         zone.backfill_state()
 
