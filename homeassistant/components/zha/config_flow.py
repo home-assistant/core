@@ -29,9 +29,11 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        ports = serial.tools.list_ports.comports()
+        ports = serial.tools.list_ports.comports(include_links=False)
         list_of_ports = [
-            f"{p}, s/n: {p.serial_number} - {p.manufacturer}" for p in ports
+            f"{p}, s/n: {p.serial_number or 'n/a'}"
+            + (f" - {p.manufacturer}" if p.manufacturer else "")
+            for p in ports
         ]
         list_of_ports.append(CONF_MANUAL_PATH)
 
