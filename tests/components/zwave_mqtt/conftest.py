@@ -1,20 +1,18 @@
 """Helpers for tests."""
 import json
 
-from tests.async_mock import patch
 import pytest
 
 from .common import MQTTMessage
 
+from tests.async_mock import patch
 from tests.common import load_fixture
 
 
-@pytest.fixture(name="generic_data")
-async def generic_data_fixture(hass):
+@pytest.fixture(name="generic_data", scope="session")
+def generic_data_fixture():
     """Load generic MQTT data and return it."""
-    return await hass.async_add_executor_job(
-        load_fixture, f"zwave_mqtt/generic_network_dump.csv"
-    )
+    return load_fixture(f"zwave_mqtt/generic_network_dump.csv")
 
 
 @pytest.fixture(name="sent_messages")
