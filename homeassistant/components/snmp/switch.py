@@ -241,10 +241,10 @@ class SnmpSwitch(SwitchDevice):
         # User set vartype Null, command must be an empty string
         elif self._vartype == "Null":
             await self._set(Null)("")
-        # user did not set vartype but command is digit: defaulting to Integer32
+        # user did not set vartype but command is digit: defaulting to Integer
         # or user did set vartype
         else:
-            await self._set(MAP_SNMP_VARTYPES[self._vartype, Integer32](command))
+            await self._set(MAP_SNMP_VARTYPES[self._vartype, Integer](command))
 
     async def async_update(self):
         """Update the state."""
