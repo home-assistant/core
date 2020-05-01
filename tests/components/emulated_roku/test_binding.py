@@ -14,7 +14,7 @@ from homeassistant.components.emulated_roku.binding import (
     EmulatedRoku,
 )
 
-from tests.common import mock_coro_func
+from tests.async_mock import AsyncMock
 
 
 async def test_events_fired_properly(hass):
@@ -39,7 +39,7 @@ async def test_events_fired_properly(hass):
         nonlocal roku_event_handler
         roku_event_handler = handler
 
-        return Mock(start=mock_coro_func(), close=mock_coro_func())
+        return Mock(start=AsyncMock(), close=AsyncMock())
 
     def listener(event):
         events.append(event)

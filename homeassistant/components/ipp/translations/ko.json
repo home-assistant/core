@@ -23,7 +23,7 @@
                     "verify_ssl": "\ud504\ub9b0\ud130\ub294 \uc62c\ubc14\ub978 SSL \uc778\uc99d\uc11c\ub97c \uc0ac\uc6a9\ud558\uace0 \uc788\uc2b5\ub2c8\ub2e4"
                 },
                 "description": "\uc778\ud130\ub137 \uc778\uc1c4 \ud504\ub85c\ud1a0\ucf5c (IPP) \ub97c \ud1b5\ud574 \ud504\ub9b0\ud130\ub97c \uc124\uc815\ud558\uc5ec Home Assistant \uc640 \uc5f0\ub3d9\ud569\ub2c8\ub2e4.",
-                "title": "\ud504\ub9b0\ud130 \uc5f0\uacb0"
+                "title": "\ud504\ub9b0\ud130 \uc5f0\uacb0\ud558\uae30"
             },
             "zeroconf_confirm": {
                 "description": "Home Assistant \uc5d0 `{name}` \ud504\ub9b0\ud130\ub97c \ucd94\uac00\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",

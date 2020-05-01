@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.exceptions import PlatformNotReady
@@ -59,7 +59,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([MyStromLight(bulb, name, mac)], True)
 
 
-class MyStromLight(Light):
+class MyStromLight(LightEntity):
     """Representation of the myStrom WiFi bulb."""
 
     def __init__(self, bulb, name, mac):

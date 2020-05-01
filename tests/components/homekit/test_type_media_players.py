@@ -348,6 +348,7 @@ async def test_media_player_television_basic(hass, hk_driver, events, caplog):
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.chars_tv == []
     assert acc.chars_speaker == []

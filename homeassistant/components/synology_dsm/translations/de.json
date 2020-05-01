@@ -4,6 +4,7 @@
             "already_configured": "Host bereits konfiguriert"
         },
         "error": {
+            "connection": "Verbindungsfehler: Bitte \u00fcberpr\u00fcfe Host, Port und SSL",
             "login": "Login-Fehler: Bitte \u00fcberpr\u00fcfen Sie Ihren Benutzernamen & Passwort",
             "missing_data": "Fehlende Daten: Bitte versuchen Sie es sp\u00e4ter noch einmal oder eine andere Konfiguration",
             "otp_failed": "Die zweistufige Authentifizierung ist fehlgeschlagen. Versuchen Sie es erneut mit einem neuen Code",

@@ -4,7 +4,6 @@ import logging
 import os
 from unittest.mock import Mock
 
-from asynctest import patch
 import pytest
 
 from homeassistant import bootstrap
@@ -12,6 +11,7 @@ import homeassistant.config as config_util
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import (
     MockConfigEntry,
     MockModule,

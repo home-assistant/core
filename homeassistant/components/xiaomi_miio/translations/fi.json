@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Laite on jo m\u00e4\u00e4ritetty"
+        },
+        "error": {
+            "connect_error": "Yhteyden muodostaminen ep\u00e4onnistui. Yrit\u00e4 uudelleen",
+            "no_device_selected": "Ei valittuja laitteita. Ole hyv\u00e4 ja valitse yksi."
+        },
+        "step": {
+            "gateway": {
+                "data": {
+                    "host": "IP-osoite",
+                    "name": "Yhdysk\u00e4yt\u00e4v\u00e4n nimi",
+                    "token": "API-tunnus"
+                },
+                "title": "Yhdist\u00e4 Xiaomi Gatewayhin"
+            },
+            "user": {
+                "data": {
+                    "gateway": "Yhdist\u00e4 Xiaomi Gatewayhin"
+                },
+                "description": "Valitse laite, johon haluat muodostaa yhteyden.",
+                "title": "Xiaomi Miio"
+            }
+        }
+    }
+}

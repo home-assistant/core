@@ -2,7 +2,6 @@
 from datetime import datetime, timedelta
 
 from aioasuswrt.asuswrt import Device
-from asynctest import CoroutineMock, patch
 
 from homeassistant.components import sensor
 from homeassistant.components.asuswrt import (
@@ -20,6 +19,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.dt import utcnow
 
+from tests.async_mock import AsyncMock, patch
 from tests.common import async_fire_time_changed
 
 VALID_CONFIG_ROUTER_SSH = {
@@ -54,10 +54,10 @@ MOCK_CURRENT_TRANSFER_RATES = [20000000, 10000000]
 async def test_sensors(hass: HomeAssistant):
     """Test creating an AsusWRT sensor."""
     with patch("homeassistant.components.asuswrt.AsusWrt") as AsusWrt:
-        AsusWrt().connection.async_connect = CoroutineMock()
-        AsusWrt().async_get_connected_devices = CoroutineMock(return_value=MOCK_DEVICES)
-        AsusWrt().async_get_bytes_total = CoroutineMock(return_value=MOCK_BYTES_TOTAL)
-        AsusWrt().async_get_current_transfer_rates = CoroutineMock(
+        AsusWrt().connection.async_connect = AsyncMock()
+        AsusWrt().async_get_connected_devices = AsyncMock(return_value=MOCK_DEVICES)
+        AsusWrt().async_get_bytes_total = AsyncMock(return_value=MOCK_BYTES_TOTAL)
+        AsusWrt().async_get_current_transfer_rates = AsyncMock(
             return_value=MOCK_CURRENT_TRANSFER_RATES
         )
 

@@ -23,17 +23,17 @@
                 "title": "Emparellament completat"
             },
             "pairing_complete_import": {
-                "description": "El dispositiu Vizio SmartCast est\u00e0 connectat a Home Assistant.\n\nEl teu testimoni d'acc\u00e9s (access token) \u00e9s '**{access_token}**'.",
+                "description": "El dispositiu Vizio SmartCast est\u00e0 connectat a Home Assistant.\n\nEl teu token d'acc\u00e9s \u00e9s '**{access_token}**'.",
                 "title": "Emparellament completat"
             },
             "user": {
                 "data": {
-                    "access_token": "Testimoni d'acc\u00e9s",
+                    "access_token": "Token d'acc\u00e9s",
                     "device_class": "Tipus de dispositiu",
                     "host": "<Amfitri\u00f3/IP>:<Port>",
                     "name": "Nom"
                 },
-                "description": "Nom\u00e9s es necessita testimoni d'acc\u00e9s per als televisors. Si est\u00e0s configurant un televisor i encara no tens un testimoni d'acc\u00e9s, deixa-ho en blanc per poder fer el proc\u00e9s d'emparellament.",
+                "description": "Nom\u00e9s es necessita el token per als televisors. Si est\u00e0s configurant un televisor i encara no tens un token d'acc\u00e9s, deixa-ho en blanc per poder fer el proc\u00e9s d'emparellament.",
                 "title": "Configuraci\u00f3 del client de Vizio SmartCast"
             }
         }

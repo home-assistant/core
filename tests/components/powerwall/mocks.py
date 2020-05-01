@@ -3,7 +3,6 @@
 import json
 import os
 
-from asynctest import MagicMock, Mock
 from tesla_powerwall import (
     DeviceType,
     GridStatus,
@@ -17,6 +16,7 @@ from tesla_powerwall import (
 from homeassistant.components.powerwall.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 
+from tests.async_mock import MagicMock, Mock
 from tests.common import load_fixture
 
 

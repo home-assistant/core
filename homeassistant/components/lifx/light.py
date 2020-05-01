@@ -32,7 +32,7 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     VALID_BRIGHTNESS,
     VALID_BRIGHTNESS_PCT,
-    Light,
+    LightEntity,
     preprocess_turn_on_alternatives,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, EVENT_HOMEASSISTANT_STOP
@@ -438,7 +438,7 @@ def convert_16_to_8(value):
     return value >> 8
 
 
-class LIFXLight(Light):
+class LIFXLight(LightEntity):
     """Representation of a LIFX light."""
 
     def __init__(self, bulb, effects_conductor):

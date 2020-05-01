@@ -30,6 +30,7 @@ from homeassistant.util.json import load_json
 from .const import (
     ATTR_MANUFACTURER,
     BRAVIA_CONFIG_FILE,
+    BRAVIARC,
     CLIENTID_PREFIX,
     CONF_IGNORED_SOURCES,
     DEFAULT_NAME,
@@ -103,7 +104,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         "model": config_entry.title,
     }
 
-    braviarc = hass.data[DOMAIN][config_entry.entry_id]
+    braviarc = hass.data[DOMAIN][config_entry.entry_id][BRAVIARC]
 
     ignored_sources = config_entry.options.get(CONF_IGNORED_SOURCES, [])
 
