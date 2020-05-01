@@ -478,8 +478,6 @@ omit =
     homeassistant/components/meteo_france/sensor.py
     homeassistant/components/meteo_france/weather.py
     homeassistant/components/meteoalarm/*
-    homeassistant/components/metoffice/sensor.py
-    homeassistant/components/metoffice/weather.py
     homeassistant/components/microsoft/tts.py
     homeassistant/components/miflora/sensor.py
     homeassistant/components/mikrotik/hub.py
