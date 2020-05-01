@@ -1,6 +1,6 @@
 {
     "config": {
-        "flow_title": "{name} ({host})",
+        "flow_title": "UPnP/IGD: {name}",
         "abort": {
             "already_configured": "UPnP/IGD is already configured",
             "no_devices_discovered": "No UPnP/IGDs discovered",
@@ -11,15 +11,12 @@
                 "title": "UPnP/IGD"
             },
             "ssdp_confirm": {
-                "data": {
-                    "name": "Name"
-                },
                 "title": "UPnP/IGD",
                 "description": "Do you want to set up this UPnP/IGD device?"
             },
             "user": {
                 "data": {
-                    "unique_id": "Host"
+                    "usn": "Device"
                 },
                 "title": "Configuration options"
             }

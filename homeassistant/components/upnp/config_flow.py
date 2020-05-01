@@ -1,6 +1,5 @@
 """Config flow for UPNP."""
 from typing import Mapping, Optional
-from urllib.parse import urlparse
 
 import voluptuous as vol
 
@@ -39,14 +38,14 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
         _LOGGER.debug("async_step_user: user_input: %s", user_input)
-        # This uses DISCOVERY_USN as the unique_id for user input.
+        # This uses DISCOVERY_USN as the identifier for the device.
 
         if user_input is not None:
             # Ensure wanted device was discovered.
             matching_discoveries = [
                 discovery
                 for discovery in self._discoveries
-                if discovery[DISCOVERY_USN] == user_input["unique_id"]
+                if discovery[DISCOVERY_USN] == user_input["usn"]
             ]
             if not matching_discoveries:
                 return self.async_abort(reason="no_devices_discovered")
@@ -60,14 +59,15 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Discover devices.
         discoveries = await Device.async_discover(self.hass)
 
-        # Filter discoveries which are already configured.
-        current_unique_ids = {
-            entry.unique_id for entry in self._async_current_entries()
-        }
+        # Store discoveries which have not been configured, add name for each discovery.
+        current_usns = {entry.unique_id for entry in self._async_current_entries()}
         self._discoveries = [
-            discovery
+            {
+                **discovery,
+                DISCOVERY_NAME: await self._async_get_name_for_discovery(discovery),
+            }
             for discovery in discoveries
-            if discovery[DISCOVERY_USN] not in current_unique_ids
+            if discovery[DISCOVERY_USN] not in current_usns
         ]
 
         # Ensure anything to add.
@@ -76,11 +76,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Required("unique_id"): vol.In(
+                vol.Required("usn"): vol.In(
                     {
-                        discovery[DISCOVERY_USN]: urlparse(
-                            discovery[DISCOVERY_LOCATION]
-                        ).hostname
+                        discovery[DISCOVERY_USN]: discovery[DISCOVERY_NAME]
                         for discovery in self._discoveries
                     }
                 ),
@@ -148,11 +146,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._discoveries = [discovery]
 
         # Ensure user recognizable.
-        location = discovery_info[ssdp.ATTR_SSDP_LOCATION]
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             "name": name,
-            "host": urlparse(location).hostname,
         }
 
         return await self.async_step_ssdp_confirm()
@@ -170,10 +166,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Create an entry from own _data."""
         # Get name from device, if not found already.
         if DISCOVERY_NAME not in discovery and DISCOVERY_LOCATION in discovery:
-            device = await Device.async_create_device(
-                self.hass, discovery[DISCOVERY_LOCATION]
+            discovery[DISCOVERY_NAME] = await self._async_get_name_for_discovery(
+                discovery
             )
-            discovery[DISCOVERY_NAME] = device.name
 
         title = discovery.get(DISCOVERY_NAME, "")
         data = {
@@ -181,3 +176,10 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONFIG_ENTRY_ST: discovery[DISCOVERY_ST],
         }
         return self.async_create_entry(title=title, data=data)
+
+    async def _async_get_name_for_discovery(self, discovery):
+        """Get the name of the device from a discovery."""
+        device = await Device.async_create_device(
+            self.hass, discovery[DISCOVERY_LOCATION]
+        )
+        return device.name
