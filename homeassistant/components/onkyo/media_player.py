@@ -324,19 +324,6 @@ class OnkyoAVR(MediaPlayerDevice):
                 self._source = "_".join(sources)
         elif command == "hdmi-output-selector":
             self._attributes[ATTR_VIDEO_OUT] = ",".join(value)
-            # eiscp can return string or tuple. Make everything tuples.
-            if isinstance(value, str):
-                current_source_tuples = (command, (value,))
-            else:
-                current_source_tuples = (command, value)
-
-            for source in current_source_tuples[1]:
-                if source in self._source_mapping:
-                    self._source = self._source_mapping[source]
-                    break
-                self._source = "_".join(current_source_tuples[1])
-        elif command == "hdmi-output-selector":
-            self._attributes["video_out"] = ",".join(value)
         elif command == "preset":
             if not (self._source is None) and self._source.lower() == "radio":
                 self._attributes[ATTR_PRESET] = value
