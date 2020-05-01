@@ -129,7 +129,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     def find_entities(device_type):
         """Find all entities."""
-        all_module_infos = data_handler.data[device_type].getModules()
+        all_module_infos = data_handler.data.get(device_type).getModules()
         entities = []
         for module in all_module_infos.values():
             _LOGGER.debug("Adding module %s %s", module["module_name"], module["id"])

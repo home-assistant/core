@@ -71,12 +71,15 @@ class NetatmoDataHandler:
 
         async def async_update(event_time):
             """Update device."""
-            results = await asyncio.gather(
-                *[
-                    self.hass.async_add_executor_job(data_class, self._auth)
-                    for data_class in self._data_classes
-                ]
-            )
+            try:
+                results = await asyncio.gather(
+                    *[
+                        self.hass.async_add_executor_job(data_class, self._auth)
+                        for data_class in self._data_classes
+                    ]
+                )
+            except pyatmo.NoDevice as err:
+                _LOGGER.debug(err)
 
             for data_class, result in zip(self._data_classes, results):
                 self.data[data_class.__name__] = result

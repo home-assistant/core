@@ -7,7 +7,7 @@ import pyatmo
 import requests
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -33,7 +33,7 @@ from homeassistant.util import Throttle
 from .const import (
     ATTR_HOME_NAME,
     ATTR_SCHEDULE_NAME,
-    AUTH,
+    DATA_HANDLER,
     DOMAIN,
     MANUFACTURER,
     MODELS,
@@ -108,9 +108,9 @@ SCHEMA_SERVICE_SETSCHEDULE = vol.Schema(
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo energy platform."""
-    auth = hass.data[DOMAIN][entry.entry_id][AUTH]
+    data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    home_data = HomeData(auth)
+    home_data = data_handler.data.get("HomeData")
 
     def get_entities():
         """Retrieve Netatmo entities."""
@@ -124,7 +124,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         for home_id in home_ids:
             _LOGGER.debug("Setting up home %s ...", home_id)
             try:
-                room_data = ThermostatData(auth, home_id)
+                room_data = ThermostatData(home_id)
             except pyatmo.NoDevice:
                 continue
             for room_id in room_data.get_room_ids():
@@ -156,7 +156,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return
 
 
-class NetatmoThermostat(ClimateEntity):
+class NetatmoThermostat(ClimateDevice):
     """Representation a Netatmo thermostat."""
 
     def __init__(self, data, room_id):
