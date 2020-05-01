@@ -125,21 +125,20 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         discovery = await async_discovery(self.hass)
         for device in discovery:
-            configured = False
-            for entry in self._async_current_entries():
-                if entry.unique_id == device[CONF_DEVICE_ID]:
-                    configured = True
-                    break
+            configured = any(
+                entry.unique_id == device[CONF_DEVICE_ID]
+                for entry in self._async_current_entries()
+            )
+
             if not configured:
                 self.devices.append(device)
 
         LOGGER.debug("Discovered ONVIF devices %s", pformat(self.devices))
 
         if self.devices:
-            names = []
-
-            for device in self.devices:
-                names.append(f"{device[CONF_NAME]} ({device[CONF_HOST]})")
+            names = [
+                f"{device[CONF_NAME]} ({device[CONF_HOST]})" for device in self.devices
+            ]
 
             names.append(CONF_MANUAL_INPUT)
 
@@ -299,7 +298,7 @@ def get_device(hass, host, port, username, password) -> ONVIFCamera:
     """Get ONVIFCamera instance."""
     session = async_get_clientsession(hass)
     transport = AsyncTransport(None, session=session)
-    device = ONVIFCamera(
+    return ONVIFCamera(
         host,
         port,
         username,
@@ -307,5 +306,3 @@ def get_device(hass, host, port, username, password) -> ONVIFCamera:
         f"{os.path.dirname(onvif.__file__)}/wsdl/",
         transport=transport,
     )
-
-    return device
