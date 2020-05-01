@@ -46,7 +46,7 @@ async def test_show_zerconf_form(
         headers={"Content-Type": "application/json"},
     )
 
-    flow = config_flow.ElgatoFlowHandler()
+    flow = config_flow.BSBLanFlowHandler()
     flow.hass = hass
     flow.context = {"source": SOURCE_ZEROCONF}
     result = await flow.async_step_zeroconf({"hostname": "example.local.", "port": 80})
@@ -79,7 +79,7 @@ async def test_connection_error(
 async def test_zeroconf_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test we abort zeroconf flow on Elgato Key Light connection error."""
+    """Test we abort zeroconf flow on BSBLan connection error."""
     aioclient_mock.get("http://example.local/JQ", exc=aiohttp.ClientError)
 
     result = await hass.config_entries.flow.async_init(
@@ -95,10 +95,10 @@ async def test_zeroconf_connection_error(
 async def test_zeroconf_confirm_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test we abort zeroconf flow on Elgato Key Light connection error."""
+    """Test we abort zeroconf flow on BSBLan connection error."""
     aioclient_mock.get("http://example.local/JQ", exc=aiohttp.ClientError)
 
-    flow = config_flow.ElgatoFlowHandler()
+    flow = config_flow.BSBLanFlowHandler()
     flow.hass = hass
     flow.context = {
         "source": SOURCE_ZEROCONF,
