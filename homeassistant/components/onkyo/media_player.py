@@ -309,19 +309,15 @@ class OnkyoAVR(MediaPlayerDevice):
                 self._attributes.pop(ATTR_VIDEO_INFORMATION, None)
                 self._attributes.pop(ATTR_PRESET, None)
                 self._attributes.pop(ATTR_VIDEO_OUT, None)
+
         elif command in ["volume", "master-volume"]:
             self._supports_volume = True
             self._volume = min(value / self._max_volume, 1)
         elif command == "audio-muting":
             self._muted = bool(value == "on")
         elif command == "input-selector":
-            sources = _parse_onkyo_tuple(value)
-
-            for source in sources:
-                if source in self._source_mapping:
-                    self._source = self._source_mapping[source]
-                    break
-                self._source = "_".join(sources)
+            self._parse_source(value)
+            self._query_delayed_av_info()
         elif command == "hdmi-output-selector":
             self._attributes[ATTR_VIDEO_OUT] = ",".join(value)
         elif command == "preset":
@@ -330,25 +326,14 @@ class OnkyoAVR(MediaPlayerDevice):
             elif ATTR_PRESET in self._attributes:
                 del self._attributes[ATTR_PRESET]
         elif command == "listening-mode":
-            sounds_modes = _parse_onkyo_tuple(value)
-
-            # If the selected sound mode is not available, N/A is returned
-            # so only update the sound mode when it is not N/A
-            if "N/A" not in sounds_modes:
-                for sound_mode in sounds_modes:
-                    if sound_mode in SOUND_MODE_REVERSE_MAPPING:
-                        self._sound_mode = SOUND_MODE_REVERSE_MAPPING[sound_mode]
-                        self._supports_sound_mode = True
-                        break
-                    self._sound_mode = "_".join(sounds_modes)
+            self._supports_sound_mode = True
+            self._parse_sound_mode(value)
         elif command == "audio-information":
             self._parse_audio_inforamtion(value)
         elif command == "video-information":
             self._parse_video_inforamtion(value)
         elif command == "fl-display-information":
-            if self._query_timer:
-                self._query_timer.cancel()
-            self._query_timer = self.hass.loop.call_later(10, self._query_av_info)
+            self._query_delayed_av_info()
 
     def backfill_state(self):
         """Get the receiver to send all the info we care about.
@@ -474,9 +459,32 @@ class OnkyoAVR(MediaPlayerDevice):
         self._update_avr("hdmi-output-selector", output)
 
     @callback
+    def _parse_source(self, source_raw):
+        values = _parse_onkyo_tuple(source_raw)
+
+        for source in values:
+            if source in self._source_mapping:
+                self._source = self._source_mapping[source]
+                break
+            self._source = "_".join(values)
+
+    @callback
+    def _parse_sound_mode(self, sound_mode_raw):
+        values = _parse_onkyo_tuple(sound_mode_raw)
+
+        # If the selected sound mode is not available, N/A is returned
+        # so only update the sound mode when it is not N/A
+        if "N/A" not in values:
+            for sound_mode in values:
+                if sound_mode in SOUND_MODE_REVERSE_MAPPING:
+                    self._sound_mode = SOUND_MODE_REVERSE_MAPPING[sound_mode]
+                    break
+                self._sound_mode = "_".join(values)
+
+    @callback
     def _parse_audio_inforamtion(self, audio_information_raw):
         values = _parse_onkyo_tuple(audio_information_raw)
-        if values and values[0] != "N/A":
+        if "N/A" not in values:
             info = {
                 "format": _tuple_get(values, 1),
                 "input_frequency": _tuple_get(values, 2),
@@ -492,7 +500,7 @@ class OnkyoAVR(MediaPlayerDevice):
     @callback
     def _parse_video_inforamtion(self, video_information_raw):
         values = _parse_onkyo_tuple(video_information_raw)
-        if values and values[0] != "N/A":
+        if "N/A" not in values:
             info = {
                 "input_resolution": _tuple_get(values, 1),
                 "input_color_schema": _tuple_get(values, 2),
@@ -506,11 +514,15 @@ class OnkyoAVR(MediaPlayerDevice):
         else:
             self._attributes.pop(ATTR_VIDEO_INFORMATION, None)
 
+    def _query_delayed_av_info(self):
+        if not self._query_timer:
+            self._query_timer = self.hass.loop.call_later(10, self._query_av_info)
+
     @callback
     def _query_av_info(self):
-        self._query_avr("listening-mode")
         self._query_avr("audio-information")
         self._query_avr("video-information")
+        self._query_timer = None
 
     def _update_avr(self, propname, value):
         """Update a property in the AVR."""
