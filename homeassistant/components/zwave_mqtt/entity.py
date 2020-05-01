@@ -5,6 +5,7 @@ import logging
 
 from openzwavemqtt.const import EVENT_INSTANCE_STATUS_CHANGED, EVENT_VALUE_CHANGED
 from openzwavemqtt.models.node import OZWNode
+from openzwavemqtt.models.value import OZWValue
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
@@ -134,7 +135,7 @@ class ZWaveDeviceEntityValues:
     @property
     def values_id(self):
         """Identification for this values collection."""
-        return f"{self.primary.node.id}-{self.primary.value_id_key}"
+        return create_value_id(self.primary)
 
 
 class ZWaveDeviceEntity(Entity):
@@ -274,3 +275,9 @@ def create_device_id(node: OZWNode, node_instance: int = 1):
     ozw_instance = node.parent.id
     dev_id = f"{ozw_instance}.{node.node_id}.{node_instance}"
     return dev_id
+
+
+def create_value_id(value: OZWValue):
+    """Generate unique value_id from an OZWValue."""
+    # [OZW_INSTANCE_ID]-[NODE_ID]-[VALUE_ID_KEY]
+    return f"{value.node.parent.id}-{value.node.id}-{value.value_id_key}"

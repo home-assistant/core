@@ -28,7 +28,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from . import const
 from .const import DATA_UNSUBSCRIBE, DOMAIN, PLATFORMS, TOPIC_OPENZWAVE
 from .discovery import DISCOVERY_SCHEMAS, check_node_schema, check_value_schema
-from .entity import ZWaveDeviceEntityValues, create_device_id
+from .entity import ZWaveDeviceEntityValues, create_device_id, create_value_id
 from .services import ZWaveServices
 
 _LOGGER = logging.getLogger(__name__)
@@ -150,7 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         node_data_values = data_values[node_id]
 
         # Check if this value should be tracked by an existing entity
-        value_unique_id = f"{value.node.id}-{value.value_id_key}"
+        value_unique_id = create_value_id(value)
         for values in node_data_values:
             values.check_value(value)
             if values.values_id == value_unique_id:
@@ -203,7 +203,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             value.command_class,
         )
         # signal all entities using this value for removal
-        value_unique_id = f"{value.node.id}-{value.value_id_key}"
+        value_unique_id = create_value_id(value)
         async_dispatcher_send(hass, const.SIGNAL_DELETE_ENTITY, value_unique_id)
         # remove value from our local list
         node_data_values = data_values[value.node.id]
