@@ -53,29 +53,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up zwave_mqtt from a config entry."""
-
-    @callback
-    def async_receive_message(msg):
-        manager.receive_message(msg.topic, msg.payload)
-
-    platforms_loaded = []
-
-    async def mark_platform_loaded(platform):
-        platforms_loaded.append(platform)
-
-        if len(platforms_loaded) != len(PLATFORMS):
-            return
-
-        hass.data[DOMAIN][entry.entry_id][DATA_UNSUBSCRIBE].append(
-            await mqtt.async_subscribe(
-                hass, f"{TOPIC_OPENZWAVE}/#", async_receive_message
-            )
-        )
-
-    hass.data[DOMAIN][entry.entry_id] = {
-        "mark_platform_loaded": mark_platform_loaded,
-        DATA_UNSUBSCRIBE: [],
-    }
+    zwave_mqtt_data = hass.data[DOMAIN][entry.entry_id] = {}
+    zwave_mqtt_data[DATA_UNSUBSCRIBE] = []
 
     data_nodes = {}
     data_values = {}
@@ -87,11 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     options = OZWOptions(send_message=send_message, topic_prefix=f"{TOPIC_OPENZWAVE}/")
     manager = OZWManager(options)
-
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
 
     @callback
     def async_node_added(node):
@@ -228,6 +202,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Register Services
     services = ZWaveServices(hass, manager)
     services.async_register()
+
+    @callback
+    def async_receive_message(msg):
+        manager.receive_message(msg.topic, msg.payload)
+
+    async def start_platforms():
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_setup(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+        zwave_mqtt_data[DATA_UNSUBSCRIBE].append(
+            await mqtt.async_subscribe(
+                hass, f"{TOPIC_OPENZWAVE}/#", async_receive_message
+            )
+        )
+
+    hass.async_create_task(start_platforms())
 
     return True
 
