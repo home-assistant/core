@@ -1,40 +1,84 @@
 """Tests for ZHA config flow."""
+
 from unittest import mock
 
+import serial.tools.list_ports
+import zigpy.config
+
 from homeassistant.components.zha import config_flow
-from homeassistant.components.zha.core.const import CONTROLLER, DOMAIN
-import homeassistant.components.zha.core.registries
+from homeassistant.components.zha.core.const import CONF_RADIO_TYPE, CONTROLLER, DOMAIN
 
 import tests.async_mock
 from tests.common import MockConfigEntry
 
 
+def com_port():
+    """Mock of a serial port."""
+    port = serial.tools.list_ports_common.ListPortInfo()
+    port.serial_number = "1234"
+    port.manufacturer = "Virtual serial port"
+    port.device = "/dev/ttyUSB1"
+    port.description = "Some serial port"
+
+    return port
+
+
+@mock.patch(
+    "serial.tools.list_ports.comports", mock.MagicMock(return_value=[com_port()])
+)
 async def test_user_flow(hass):
-    """Test that config flow works."""
+    """Test user flow."""
     flow = config_flow.ZhaFlowHandler()
     flow.hass = hass
 
-    with tests.async_mock.patch(
-        "homeassistant.components.zha.config_flow.check_zigpy_connection",
-        return_value=False,
+    port = com_port()
+    port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
+
+    with mock.patch.object(
+        flow, "detect_radios", return_value=mock.sentinel.data,
     ):
         result = await flow.async_step_user(
-            user_input={"usb_path": "/dev/ttyUSB1", "radio_type": "ezsp"}
+            user_input={zigpy.config.CONF_DEVICE_PATH: port_select}
         )
-
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    with tests.async_mock.patch(
-        "homeassistant.components.zha.config_flow.check_zigpy_connection",
-        return_value=True,
-    ):
-        result = await flow.async_step_user(
-            user_input={"usb_path": "/dev/ttyUSB1", "radio_type": "ezsp"}
-        )
-
     assert result["type"] == "create_entry"
-    assert result["title"] == "/dev/ttyUSB1"
-    assert result["data"] == {"usb_path": "/dev/ttyUSB1", "radio_type": "ezsp"}
+    assert result["title"].startswith(port.device)
+    assert result["data"] is mock.sentinel.data
+
+    with mock.patch.object(
+        flow, "detect_radios", return_value=None,
+    ):
+        result = await flow.async_step_user(
+            user_input={zigpy.config.CONF_DEVICE_PATH: port_select}
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "pick_radio"
+
+    await flow.async_step_user()
+
+
+async def test_user_flow_manual(hass):
+    """Test user flow manual entry."""
+    flow = config_flow.ZhaFlowHandler()
+    flow.hass = hass
+
+    result = await flow.async_step_user(
+        user_input={zigpy.config.CONF_DEVICE_PATH: config_flow.CONF_MANUAL_PATH}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "pick_radio"
+
+
+async def test_pick_radio_flow(hass):
+    """Test radio picker."""
+    flow = config_flow.ZhaFlowHandler()
+    flow.hass = hass
+
+    result = await flow.async_step_pick_radio({CONF_RADIO_TYPE: "ezsp"})
+    assert result["type"] == "form"
+    assert result["step_id"] == "port_config"
+
+    await flow.async_step_pick_radio()
 
 
 async def test_user_flow_existing_config_entry(hass):
@@ -48,76 +92,53 @@ async def test_user_flow_existing_config_entry(hass):
     assert result["type"] == "abort"
 
 
-async def test_import_flow(hass):
-    """Test import from configuration.yaml ."""
+async def test_probe_radios(hass):
+    """Test detect radios."""
+    app_ctrl_cls = mock.MagicMock()
+    app_ctrl_cls.SCHEMA_DEVICE = zigpy.config.SCHEMA_DEVICE
+    app_ctrl_cls.probe = tests.async_mock.AsyncMock(side_effect=(True, False))
+
     flow = config_flow.ZhaFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_import(
-        {"usb_path": "/dev/ttyUSB1", "radio_type": "xbee"}
-    )
+    with mock.patch.dict(config_flow.RADIO_TYPES, {"ezsp": {CONTROLLER: app_ctrl_cls}}):
+        res = await flow.detect_radios("/dev/null")
+        assert app_ctrl_cls.probe.await_count == 1
+        assert res[CONF_RADIO_TYPE] == "ezsp"
+        assert zigpy.config.CONF_DEVICE in res
+        assert (
+            res[zigpy.config.CONF_DEVICE][zigpy.config.CONF_DEVICE_PATH] == "/dev/null"
+        )
 
-    assert result["type"] == "create_entry"
-    assert result["title"] == "/dev/ttyUSB1"
-    assert result["data"] == {"usb_path": "/dev/ttyUSB1", "radio_type": "xbee"}
+        res = await flow.detect_radios("/dev/null")
+        assert res is None
 
 
-async def test_import_flow_existing_config_entry(hass):
-    """Test import from configuration.yaml ."""
-    MockConfigEntry(domain=DOMAIN, data={"usb_path": "/dev/ttyUSB1"}).add_to_hass(hass)
+async def test_user_port_config_fail(hass):
+    """Test port config flow."""
+    app_ctrl_cls = mock.MagicMock()
+    app_ctrl_cls.SCHEMA_DEVICE = zigpy.config.SCHEMA_DEVICE
+    app_ctrl_cls.probe = tests.async_mock.AsyncMock(side_effect=(False, True))
+
     flow = config_flow.ZhaFlowHandler()
     flow.hass = hass
+    await flow.async_step_pick_radio(user_input={CONF_RADIO_TYPE: "ezsp"})
 
-    result = await flow.async_step_import(
-        {"usb_path": "/dev/ttyUSB1", "radio_type": "xbee"}
-    )
-
-    assert result["type"] == "abort"
-
-
-async def test_check_zigpy_connection():
-    """Test config flow validator."""
-
-    mock_radio = tests.async_mock.MagicMock()
-    mock_radio.connect = tests.async_mock.AsyncMock()
-
-    bad_radio = tests.async_mock.MagicMock()
-    bad_radio.connect = tests.async_mock.AsyncMock(side_effect=Exception)
-
-    mock_ctrl = tests.async_mock.MagicMock()
-    mock_ctrl.startup = tests.async_mock.AsyncMock()
-    mock_ctrl.shutdown = tests.async_mock.AsyncMock()
-    ctrl_cls = tests.async_mock.MagicMock(return_value=mock_ctrl)
-    new_radios = {
-        mock.sentinel.radio: {CONTROLLER: ctrl_cls},
-        mock.sentinel.bad_radio: {CONTROLLER: ctrl_cls},
-    }
-
-    with mock.patch.dict(
-        homeassistant.components.zha.core.registries.RADIO_TYPES, new_radios, clear=True
-    ):
-        assert not await config_flow.check_zigpy_connection(
-            mock.sentinel.usb_path, mock.sentinel.unk_radio, mock.sentinel.zigbee_db
+    with mock.patch.dict(config_flow.RADIO_TYPES, {"ezsp": {CONTROLLER: app_ctrl_cls}}):
+        result = await flow.async_step_port_config(
+            {zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"}
         )
-        assert mock_radio.connect.call_count == 0
-        assert bad_radio.connect.call_count == 0
-        assert mock_ctrl.startup.call_count == 0
-        assert mock_ctrl.shutdown.call_count == 0
+        assert result["type"] == "form"
+        assert result["step_id"] == "port_config"
+        assert result["errors"]["base"] == "cannot_connect"
 
-        # unsuccessful radio connect
-        assert not await config_flow.check_zigpy_connection(
-            mock.sentinel.usb_path, mock.sentinel.bad_radio, mock.sentinel.zigbee_db
+        result = await flow.async_step_port_config(
+            {zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"}
         )
-        assert mock_radio.connect.call_count == 0
-        assert bad_radio.connect.call_count == 1
-        assert mock_ctrl.startup.call_count == 0
-        assert mock_ctrl.shutdown.call_count == 0
-
-        # successful radio connect
-        assert await config_flow.check_zigpy_connection(
-            mock.sentinel.usb_path, mock.sentinel.radio, mock.sentinel.zigbee_db
+        assert result["type"] == "create_entry"
+        assert result["title"].startswith("/dev/ttyUSB33")
+        assert (
+            result["data"][zigpy.config.CONF_DEVICE][zigpy.config.CONF_DEVICE_PATH]
+            == "/dev/ttyUSB33"
         )
-        assert mock_radio.connect.call_count == 1
-        assert bad_radio.connect.call_count == 1
-        assert mock_ctrl.startup.call_count == 1
-        assert mock_ctrl.shutdown.call_count == 1
+        assert result["data"][CONF_RADIO_TYPE] == "ezsp"
