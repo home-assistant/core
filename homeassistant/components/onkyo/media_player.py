@@ -252,7 +252,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     @callback
     def async_onkyo_connect_callback():
-        """Receiver (re)connected"""
+        """Receiver (re)connected."""
         _LOGGER.debug("AVR (re)connected:")
         for zone in active_zones.values():
             zone.backfill_state()
