@@ -80,8 +80,7 @@ class NetatmoOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize Netatmo options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
-        if CONF_WEATHER_AREAS not in self.options:
-            self.options[CONF_WEATHER_AREAS] = {}
+        self.options.setdefault(CONF_WEATHER_AREAS, {})
 
     async def async_step_init(self, user_input=None):
         """Manage the Netatmo options."""

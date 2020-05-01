@@ -174,36 +174,19 @@ async def async_setup_entry(
                 lon_sw=area[CONF_LON_SW],
             )
             for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
-                entities.append(
-                    NetatmoPublicSensor(
-                        area[CONF_AREA_NAME],
-                        data,
-                        sensor_type,
-                        area[CONF_PUBLIC_MODE],
-                        area[CONF_SHOW_ON_MAP],
-                    )
-                )
+                entities.append(NetatmoPublicSensor(area, data, sensor_type,))
 
         for device in async_entries_for_config_entry(device_registry, entry.entry_id):
             if device.model == "Public Weather stations":
                 device_registry.async_remove_device(device.id)
 
-        add_entities(entities, async_add_entities, hass)
+        async_add_entities(entities)
 
-    listeners = []
-    listeners.append(
-        async_dispatcher_connect(hass, "signal_update", add_public_entities)
-    )
+    async_dispatcher_connect(hass, "signal_update", add_public_entities)
 
     entry.add_update_listener(async_config_entry_updated)
 
     add_public_entities()
-
-
-@callback
-def add_entities(entities, async_add_entities, hass):
-    """Add new sensor entities."""
-    async_add_entities(entities)
 
 
 async def async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -496,18 +479,18 @@ class NetatmoData:
 class NetatmoPublicSensor(Entity):
     """Represent a single sensor in a Netatmo."""
 
-    def __init__(self, area_name, data, sensor_type, mode, show_on_map):
+    def __init__(self, area, data, sensor_type):
         """Initialize the sensor."""
         self.netatmo_data = data
         self.type = sensor_type
-        self._mode = mode
-        self._name = f"{MANUFACTURER} {area_name} {SENSOR_TYPES[self.type][0]}"
-        self._area_name = area_name
+        self._mode = area[CONF_PUBLIC_MODE]
+        self._area_name = area[CONF_AREA_NAME]
+        self._name = f"{MANUFACTURER} {self._area_name} {SENSOR_TYPES[self.type][0]}"
         self._state = None
         self._device_class = SENSOR_TYPES[self.type][3]
         self._icon = SENSOR_TYPES[self.type][2]
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
-        self._show_on_map = show_on_map
+        self._show_on_map = area[CONF_SHOW_ON_MAP]
         self._unique_id = f"{self._name.replace(' ', '-')}"
         self._module_type = PUBLIC
 
