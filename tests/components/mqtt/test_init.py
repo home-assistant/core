@@ -1378,7 +1378,7 @@ async def test_debug_info_same_topic(hass, mqtt_mock):
     ]
 
     start_dt = datetime(2019, 1, 1, 0, 0, 0)
-    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+    with mock.patch("homeassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = start_dt
         async_fire_mqtt_message(hass, "sensor/status", "123", qos=0, retain=False)
 
@@ -1396,6 +1396,6 @@ async def test_debug_info_same_topic(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     start_dt = datetime(2019, 1, 1, 0, 0, 0)
-    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+    with mock.patch("homeassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = start_dt
         async_fire_mqtt_message(hass, "sensor/status", "123", qos=0, retain=False)
