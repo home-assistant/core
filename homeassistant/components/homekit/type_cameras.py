@@ -46,8 +46,6 @@ VIDEO_OUTPUT = (
 
 AUDIO_ENCODER_OPUS = "libopus -application lowdelay"
 
-AUDIO_ENCODER_AAC = "libfdk_aac -profile:a aac_eld -flags +global_header"
-
 AUDIO_OUTPUT = (
     "-map {a_map} -vn "
     "-c:a {a_encoder} "
