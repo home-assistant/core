@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 import json
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components import binary_sensor, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import (
@@ -548,6 +550,7 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer",' '  "off_delay": -1 }'
