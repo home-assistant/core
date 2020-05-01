@@ -100,7 +100,8 @@ def add_device_entities(controller, async_add_entities, devices):
         if mac in controller.entities[DOMAIN][UniFiDeviceTracker.TYPE]:
             continue
 
-        trackers.append(UniFiDeviceTracker(controller.api.devices[mac], controller))
+        device = controller.api.devices[mac]
+        trackers.append(UniFiDeviceTracker(device, controller))
 
     if trackers:
         async_add_entities(trackers)

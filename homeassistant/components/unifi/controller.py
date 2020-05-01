@@ -60,6 +60,17 @@ from .errors import AuthenticationRequired, CannotConnect
 RETRY_TIMER = 15
 SUPPORTED_PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
+CLIENT_CONNECTED = (
+    WIRED_CLIENT_CONNECTED,
+    WIRELESS_CLIENT_CONNECTED,
+    WIRELESS_GUEST_CONNECTED,
+)
+DEVICE_CONNECTED = (
+    ACCESS_POINT_CONNECTED,
+    GATEWAY_CONNECTED,
+    SWITCH_CONNECTED,
+)
+
 
 class UniFiController:
     """Manages a single UniFi Controller."""
@@ -200,11 +211,8 @@ class UniFiController:
                 wireless_clients_connected = False
 
                 for event in data[DATA_EVENT]:
-                    if event.event in (
-                        WIRED_CLIENT_CONNECTED,
-                        WIRELESS_CLIENT_CONNECTED,
-                        WIRELESS_GUEST_CONNECTED,
-                    ):
+
+                    if event.event in CLIENT_CONNECTED:
                         clients_connected.add(event.mac)
 
                         if not wireless_clients_connected and event.event in (
@@ -212,22 +220,18 @@ class UniFiController:
                             WIRELESS_GUEST_CONNECTED,
                         ):
                             wireless_clients_connected = True
-                    elif event.event in (
-                        ACCESS_POINT_CONNECTED,
-                        GATEWAY_CONNECTED,
-                        SWITCH_CONNECTED,
-                    ):
+
+                    elif event.event in DEVICE_CONNECTED:
                         devices_connected.add(event.mac)
 
-                if clients_connected:
-                    if wireless_clients_connected:
-                        self.update_wireless_clients()
+                if wireless_clients_connected:
+                    self.update_wireless_clients()
+                if clients_connected or devices_connected:
                     async_dispatcher_send(
-                        self.hass, self.signal_update, clients_connected, []
-                    )
-                elif devices_connected:
-                    async_dispatcher_send(
-                        self.hass, self.signal_update, [], devices_connected
+                        self.hass,
+                        self.signal_update,
+                        clients_connected,
+                        devices_connected,
                     )
 
             elif DATA_CLIENT_REMOVED in data:

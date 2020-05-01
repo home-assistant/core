@@ -79,7 +79,8 @@ def add_block_entities(controller, async_add_entities, clients):
         if mac in controller.entities[DOMAIN][BLOCK_SWITCH] or mac not in clients:
             continue
 
-        switches.append(UniFiBlockClientSwitch(controller.api.clients[mac], controller))
+        client = controller.api.clients[mac]
+        switches.append(UniFiBlockClientSwitch(client, controller))
 
     if switches:
         async_add_entities(switches)

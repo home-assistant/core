@@ -48,7 +48,8 @@ def add_entities(controller, async_add_entities, clients):
             if mac in controller.entities[DOMAIN][sensor_class.TYPE]:
                 continue
 
-            sensors.append(sensor_class(controller.api.clients[mac], controller))
+            client = controller.api.clients[mac]
+            sensors.append(sensor_class(client, controller))
 
     if sensors:
         async_add_entities(sensors)
