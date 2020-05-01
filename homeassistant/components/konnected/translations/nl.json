@@ -8,6 +8,10 @@
             "confirm": {
                 "title": "Konnected Apparaat Klaar"
             },
+            "import_confirm": {
+                "description": "Er is een Konnected Alarmpaneel met ID {id} ontdekt in configuration.yaml. Met deze flow kunt u deze importeren in een configuratie-item.",
+                "title": "Konnected apparaat importeren"
+            },
             "user": {
                 "data": {
                     "host": "IP-adres van Konnected apparaat",
@@ -23,6 +27,7 @@
             "not_konn_panel": "Geen herkend Konnected.io apparaat"
         },
         "error": {
+            "bad_host": "Ongeldige URL voor overschrijven API-host",
             "one": "Leeg",
             "other": "Leeg"
         },
@@ -58,13 +63,19 @@
                     "11": "Zone 11",
                     "12": "Zone 12",
                     "8": "Zone 8",
-                    "9": "Zone 9"
+                    "9": "Zone 9",
+                    "alarm1": "ALARM1",
+                    "alarm2_out2": "OUT2 / ALARM2",
+                    "out1": "OUT1"
                 }
             },
             "options_misc": {
                 "data": {
-                    "api_host": "API host-URL overschrijven (optioneel)"
-                }
+                    "api_host": "API host-URL overschrijven (optioneel)",
+                    "override_api_host": "Overschrijf standaard Home Assistant API hostpaneel-URL"
+                },
+                "description": "Selecteer het gewenste gedrag voor uw paneel",
+                "title": "Configureer Misc"
             },
             "options_switch": {
                 "data": {

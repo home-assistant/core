@@ -11,7 +11,8 @@
                 "data": {
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
-                }
+                },
+                "title": "Total Connect"
             }
         }
     }

@@ -20,7 +20,18 @@
                 "data": {
                     "host": "Hostnaam of IP-adres van tv"
                 },
-                "description": "Stel Sony Bravia TV-integratie in. Als je problemen hebt met de configuratie ga dan naar: https://www.home-assistant.io/integrations/braviatv \n\nZorg ervoor dat uw tv is ingeschakeld."
+                "description": "Stel Sony Bravia TV-integratie in. Als je problemen hebt met de configuratie ga dan naar: https://www.home-assistant.io/integrations/braviatv \n\nZorg ervoor dat uw tv is ingeschakeld.",
+                "title": "Sony Bravia TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "ignored_sources": "Lijst met genegeerde bronnen"
+                },
+                "title": "Opties voor Sony Bravia TV"
             }
         }
     }
