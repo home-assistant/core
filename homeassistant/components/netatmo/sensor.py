@@ -180,7 +180,8 @@ async def async_setup_entry(
             if device.model == "Public Weather stations":
                 device_registry.async_remove_device(device.id)
 
-        async_add_entities(entities)
+        if entities:
+            async_add_entities(entities)
 
     async_dispatcher_connect(hass, "signal_update", add_public_entities)
 
