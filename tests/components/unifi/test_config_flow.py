@@ -264,14 +264,14 @@ async def test_flow_fails_unknown_problem(hass, aioclient_mock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
-async def test_option_flow(hass):
-    """Test config flow options."""
+async def test_advanced_option_flow(hass):
+    """Test advanced config flow options."""
     controller = await setup_unifi_integration(
         hass, clients_response=CLIENTS, wlans_response=WLANS
     )
 
     result = await hass.config_entries.options.async_init(
-        controller.config_entry.entry_id
+        controller.config_entry.entry_id, context={"show_advanced_options": True}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -314,4 +314,34 @@ async def test_option_flow(hass):
         CONF_POE_CLIENTS: False,
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
+    }
+
+
+async def test_simple_option_flow(hass):
+    """Test simple config flow options."""
+    controller = await setup_unifi_integration(
+        hass, clients_response=CLIENTS, wlans_response=WLANS
+    )
+
+    result = await hass.config_entries.options.async_init(
+        controller.config_entry.entry_id, context={"show_advanced_options": False}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "simple_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TRACK_CLIENTS: False,
+            CONF_TRACK_DEVICES: False,
+            CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == {
+        CONF_TRACK_CLIENTS: False,
+        CONF_TRACK_DEVICES: False,
+        CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
     }
