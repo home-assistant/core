@@ -77,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     metoffice_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name=f"MetOffice Coordinator for {metoffice_data.site_name}",
+        name=f"MetOffice Coordinator for {site_name}",
         update_method=metoffice_data.async_update,
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
