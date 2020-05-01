@@ -32,12 +32,10 @@ from .const import (
     EVENT_GROUP_ON,
     EVENT_GROUP_ON_FAST,
     ON_OFF_EVENTS,
-    SIGNAL_ADD_DEFAULT_LINKS,
     SIGNAL_LOAD_ALDB,
     SIGNAL_PRINT_ALDB,
     SIGNAL_SAVE_DEVICES,
     SRV_ADD_ALL_LINK,
-    SRV_ADD_DEFAULT_LINKS,
     SRV_ALL_LINK_GROUP,
     SRV_ALL_LINK_MODE,
     SRV_CONTROLLER,
@@ -222,14 +220,6 @@ def async_register_services(hass):
         """Trigger an INSTEON scene ON."""
         group = service.data.get(SRV_ALL_LINK_GROUP)
         hass.async_add_job(async_trigger_scene_off, group)
-
-    def add_default_links(service):
-        """Add the default All-Link entries to a device."""
-        # For now this sends logs to the log file.
-        # Future direction is to create an INSTEON control panel.
-        entity_id = service.data[CONF_ENTITY_ID]
-        signal = f"{entity_id}_{SIGNAL_ADD_DEFAULT_LINKS}"
-        dispatcher_send(hass, signal)
 
     hass.services.async_register(
         DOMAIN, SRV_ADD_ALL_LINK, add_all_link, schema=ADD_ALL_LINK_SCHEMA

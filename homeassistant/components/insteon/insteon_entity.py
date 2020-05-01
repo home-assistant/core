@@ -93,10 +93,6 @@ class InsteonEntity(Entity):
         )
         print_signal = f"{self.entity_id}_{SIGNAL_PRINT_ALDB}"
         async_dispatcher_connect(self.hass, print_signal, self._print_aldb)
-        default_links_signal = f"{self.entity_id}_{SIGNAL_ADD_DEFAULT_LINKS}"
-        async_dispatcher_connect(
-            self.hass, default_links_signal, self._async_add_default_links
-        )
 
     def _load_aldb(self, async_add_job, reload=False):
         """Load the device All-Link Database."""

@@ -27,7 +27,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
     DOMAIN,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 
 from .insteon_entity import InsteonEntity

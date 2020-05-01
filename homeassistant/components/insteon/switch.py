@@ -1,7 +1,7 @@
 """Support for INSTEON dimmers via PowerLinc Modem."""
 import logging
 
-from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.components.switch import DOMAIN, SwitchEntity
 
 from .insteon_entity import InsteonEntity
 from .utils import async_add_insteon_entities

@@ -5,7 +5,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     DOMAIN,
     SUPPORT_BRIGHTNESS,
-    Light,
+    LightEntity,
 )
 
 from .insteon_entity import InsteonEntity
