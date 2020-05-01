@@ -6,6 +6,12 @@ To update, run python3 -m script.hassfest
 # fmt: off
 
 SSDP = {
+    "arcam_fmj": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "ARCAM"
+        }
+    ],
     "deconz": [
         {
             "manufacturer": "Royal Philips Electronics"
