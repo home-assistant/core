@@ -458,14 +458,6 @@ class OnkyoAVR(MediaPlayerDevice):
         """Set hdmi-out."""
         self._update_avr("hdmi-output-selector", output)
 
-    def _update_avr(self, propname, value):
-        """Update a property in the AVR."""
-        self.avr.send(f"{self._zone}.{propname}={value}")
-
-    def _query_avr(self, propname):
-        """Cause the AVR to send an update about propname."""
-        self.avr.send(f"{self._zone}.{propname}=query")
-
     @callback
     def _parse_source(self, source_raw):
         values = _parse_onkyo_tuple(source_raw)
@@ -531,3 +523,11 @@ class OnkyoAVR(MediaPlayerDevice):
         self._query_avr("audio-information")
         self._query_avr("video-information")
         self._query_timer = None
+
+    def _update_avr(self, propname, value):
+        """Update a property in the AVR."""
+        self.avr.send(f"{self._zone}.{propname}={value}")
+
+    def _query_avr(self, propname):
+        """Cause the AVR to send an update about propname."""
+        self.avr.send(f"{self._zone}.{propname}=query")
