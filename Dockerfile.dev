@@ -8,12 +8,19 @@ ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-ENV PATH="/home/$USERNAME/.local/bin:${PATH}"
-
 RUN \
     groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
-    && apt-get update && apt-get install -y --no-install-recommends \
+    && apt-get update && apt-get install -y --no-install-recommends sudo \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+ENV PATH="/home/$USERNAME/.local/bin:${PATH}"
+
+RUN \
+    apt-get update && apt-get install -y --no-install-recommends \
         libudev-dev \
         libavformat-dev \
         libavcodec-dev \
@@ -23,11 +30,8 @@ RUN \
         libswresample-dev \
         libavfilter-dev \
         git \
-        sudo \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
-    && chmod 0440 /etc/sudoers.d/$USERNAME
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src
 
