@@ -160,7 +160,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class SnmpSwitch(SwitchDevice):
+class SnmpSwitch(SwitchEntity):
     """Representation of a SNMP switch."""
 
     def __init__(
