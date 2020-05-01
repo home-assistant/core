@@ -1291,7 +1291,15 @@ async def test_debug_info_wildcard(hass, mqtt_mock):
     assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
     assert {
         "topic": "sensor/#",
-        "messages": [{"topic": "sensor/abc", "payload": "123", "time": start_dt}],
+        "messages": [
+            {
+                "payload": "123",
+                "qos": 0,
+                "retain": False,
+                "time": start_dt,
+                "topic": "sensor/abc",
+            }
+        ],
     } in debug_info_data["entities"][0]["subscriptions"]
 
 
@@ -1338,8 +1346,20 @@ async def test_debug_info_filter_same(hass, mqtt_mock):
     assert {
         "topic": "sensor/#",
         "messages": [
-            {"payload": "123", "time": dt1, "topic": "sensor/abc"},
-            {"payload": "123", "time": dt2, "topic": "sensor/abc"},
+            {
+                "payload": "123",
+                "qos": 0,
+                "retain": False,
+                "time": dt1,
+                "topic": "sensor/abc",
+            },
+            {
+                "payload": "123",
+                "qos": 0,
+                "retain": False,
+                "time": dt2,
+                "topic": "sensor/abc",
+            },
         ],
     } == debug_info_data["entities"][0]["subscriptions"][0]
 
@@ -1382,6 +1402,8 @@ async def test_debug_info_same_topic(hass, mqtt_mock):
     assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert {
         "payload": "123",
+        "qos": 0,
+        "retain": False,
         "time": start_dt,
         "topic": "sensor/status",
     } in debug_info_data["entities"][0]["subscriptions"][0]["messages"]
@@ -1395,3 +1417,63 @@ async def test_debug_info_same_topic(hass, mqtt_mock):
     with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
         dt_utcnow.return_value = start_dt
         async_fire_mqtt_message(hass, "sensor/status", "123", qos=0, retain=False)
+
+
+async def test_debug_info_qos_retain(hass, mqtt_mock):
+    """Test debug info."""
+    config = {
+        "device": {"identifiers": ["helloworld"]},
+        "platform": "mqtt",
+        "name": "test",
+        "state_topic": "sensor/#",
+        "unique_id": "veryunique",
+    }
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    assert device is not None
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
+    assert {"topic": "sensor/#", "messages": []} in debug_info_data["entities"][0][
+        "subscriptions"
+    ]
+
+    start_dt = datetime(2019, 1, 1, 0, 0, 0)
+    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+        dt_utcnow.return_value = start_dt
+        async_fire_mqtt_message(hass, "sensor/abc", "123", qos=0, retain=False)
+        async_fire_mqtt_message(hass, "sensor/abc", "123", qos=1, retain=True)
+        async_fire_mqtt_message(hass, "sensor/abc", "123", qos=2, retain=False)
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
+    assert {
+        "payload": "123",
+        "qos": 0,
+        "retain": False,
+        "time": start_dt,
+        "topic": "sensor/abc",
+    } in debug_info_data["entities"][0]["subscriptions"][0]["messages"]
+    assert {
+        "payload": "123",
+        "qos": 1,
+        "retain": True,
+        "time": start_dt,
+        "topic": "sensor/abc",
+    } in debug_info_data["entities"][0]["subscriptions"][0]["messages"]
+    assert {
+        "payload": "123",
+        "qos": 2,
+        "retain": False,
+        "time": start_dt,
+        "topic": "sensor/abc",
+    } in debug_info_data["entities"][0]["subscriptions"][0]["messages"]
