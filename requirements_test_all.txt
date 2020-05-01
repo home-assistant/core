@@ -131,7 +131,7 @@ apprise==0.8.5
 aprslib==0.6.46
 
 # homeassistant.components.arcam_fmj
-arcam-fmj==0.4.4
+arcam-fmj==0.4.6
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.upnp
