@@ -62,6 +62,8 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
         discovery_info: DiscoveryInfoType,
     ) -> Dict[str, Any]:
         """Handle zeroconf discovery."""
+        if discovery_info is None:
+            return self.async_abort(reason="connection_error")
 
         # Hostname is format: my-ke.local.
         host = discovery_info["hostname"].rstrip(".")
