@@ -244,7 +244,7 @@ class SnmpSwitch(SwitchEntity):
         # user did not set vartype but command is digit: defaulting to Integer
         # or user did set vartype
         else:
-            await self._set(MAP_SNMP_VARTYPES[self._vartype, Integer](command))
+            await self._set(MAP_SNMP_VARTYPES.get(self._vartype, Integer)(command))
 
     async def async_update(self):
         """Update the state."""
