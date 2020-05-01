@@ -22,7 +22,7 @@
          },
          "advanced" : {
             "data" : {
-               "auto_start" : "Autostart (disable if using Z-Wave or other delayed start system)",
+               "auto_start" : "[%key:component::homekit::config::step::user::data::auto_start%]",
                "safe_mode" : "Safe Mode (enable only if pairing fails)",
                "zeroconf_default_interface" : "Use default zeroconf interface (enable if the bridge cannot be found in the Home app)"
             },
