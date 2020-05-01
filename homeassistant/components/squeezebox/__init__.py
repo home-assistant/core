@@ -33,8 +33,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Logitech Squeezebox component."""
     conf = config.get(DOMAIN)
 
-    hass.data[DOMAIN] = conf or {}
-
     if conf is not None:
         hass.async_create_task(
             hass.config_entries.flow.async_init(

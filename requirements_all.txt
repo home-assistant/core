@@ -1637,7 +1637,11 @@ pysonos==0.0.31
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
+<<<<<<< HEAD
 pysqueezebox==0.2.1
+=======
+pysqueezebox==0.1.5
+>>>>>>> Fixes to config flow
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2

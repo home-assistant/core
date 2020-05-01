@@ -38,7 +38,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.dt import utcnow
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_PORT
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
@@ -94,20 +94,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Squeezebox from a config entry."""
-    known_servers = hass.data.get(KNOWN_SERVERS)
-    if known_servers is None:
-        hass.data[KNOWN_SERVERS] = known_servers = set()
-
-    if DATA_SQUEEZEBOX not in hass.data:
-        hass.data[DATA_SQUEEZEBOX] = []
-
-    config = hass.data[DOMAIN].get("media_player", {})
+    config = config_entry.data
     _LOGGER.debug("Reached async_setup_entry, config=%s", config)
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
+
+    known_servers = hass.data.get(KNOWN_SERVERS)
+    if known_servers is None:
+        hass.data[KNOWN_SERVERS] = known_servers = set()
+
+    if DATA_SQUEEZEBOX not in hass.data:
+        hass.data[DATA_SQUEEZEBOX] = []
 
     # In case the port is not discovered
     if port is None:
@@ -130,14 +130,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def _discovery(now=None):
         """Discover squeezebox players by polling server."""
 
-        def _discovered_player(player):
+        async def _discovered_player(player):
             """Handle a (re)discovered player."""
             _LOGGER.debug("Reached _discovered_player, player=%s", player)
             entity = next(
                 (
                     known
                     for known in hass.data[DATA_SQUEEZEBOX]
-                    if known["player_id"] == player.player_id
+                    if known.unique_id == player.player_id
                 ),
                 None,
             )
@@ -147,13 +147,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 _LOGGER.debug("Adding new entity")
                 entity = SqueezeBoxEntity(player)
                 hass.data[DATA_SQUEEZEBOX].append(entity)
-                hass.async_create_task(async_add_entities(entity))
+                async_add_entities([entity])
 
         players = await lms.async_get_players()
         for player in players:
-            _discovered_player(player)
+            await _discovered_player(player)
 
-        hass.helpers.event.call_later(DISCOVERY_INTERVAL, _discovery)
+        hass.helpers.event.async_call_later(DISCOVERY_INTERVAL, _discovery)
 
     _LOGGER.debug("Adding discovery job")
     hass.async_add_job(_discovery)
@@ -203,7 +203,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         self._player = player
         self._last_update = None
         self._query_result = {}
-        self.available = True
+        self._available = True
 
     @property
     def device_state_attributes(self):
@@ -227,6 +227,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         return self._player.player_id
 
     @property
+    def available(self):
+        """Return True if device connected to LMS server."""
+        return self._available
+
+    @property
     def state(self):
         """Return the state of the device."""
         if self._player.power is not None and not self._player.power:
@@ -238,7 +243,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     async def async_update(self):
         """Update the Player() object."""
         # only update available players
-        if self.available:
+        if self._available:
             last_media_position = self.media_position
             await self._player.async_update()
             if self.media_position != last_media_position:
@@ -248,7 +253,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
                 self._last_update = utcnow()
             if self._player.power is None:
                 _LOGGER.info("Player %s is not available", self.name)
-                self.available = False
+                self._available = False
 
     @property
     def volume_level(self):
