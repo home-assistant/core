@@ -32,7 +32,6 @@ SERVICE_FREEBOX = "freebox"
 SERVICE_HASS_IOS_APP = "hass_ios"
 SERVICE_HASSIO = "hassio"
 SERVICE_HEOS = "heos"
-SERVICE_IGD = "igd"
 SERVICE_KONNECTED = "konnected"
 SERVICE_MOBILE_APP = "hass_mobile_app"
 SERVICE_NETGEAR = "netgear_router"
@@ -90,7 +89,6 @@ MIGRATED_SERVICE_HANDLERS = [
     SERVICE_HEOS,
     "harmony",
     "homekit",
-    SERVICE_IGD,
     "ikea_tradfri",
     "philips_hue",
     "sonos",
