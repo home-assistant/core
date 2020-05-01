@@ -29,7 +29,7 @@ from pysnmp.proto.rfc1902 import (
 )
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -70,6 +70,22 @@ CONF_COMMAND_PAYLOAD_ON = "command_payload_on"
 DEFAULT_COMMUNITY = "private"
 DEFAULT_PAYLOAD_OFF = 0
 DEFAULT_PAYLOAD_ON = 1
+
+MAP_SNMP_VARTYPES = {
+    "Counter32": Counter32,
+    "Counter64": Counter64,
+    "Gauge32": Gauge32,
+    "Integer32": Integer32,
+    "Integer": Integer,
+    "IpAddress": IpAddress,
+    "Null": Null,
+    # some work todo to support tuple ObjectIdentifier, this just supports str
+    "ObjectIdentifier": ObjectIdentifier,
+    "OctetString": OctetString,
+    "Opaque": Opaque,
+    "TimeTicks": TimeTicks,
+    "Unsigned32": Unsigned32,
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -144,7 +160,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class SnmpSwitch(SwitchEntity):
+class SnmpSwitch(SwitchDevice):
     """Representation of a SNMP switch."""
 
     def __init__(
@@ -219,37 +235,16 @@ class SnmpSwitch(SwitchEntity):
         await self._execute_command(self._command_payload_off)
 
     async def _execute_command(self, command):
-        if self._vartype == "Null":
-            await self._set(Null(""))
-        elif self._vartype == "Integer32":
-            await self._set(Integer32(command))
-        elif self._vartype == "Integer":
-            await self._set(Integer(command))
-        elif self._vartype == "OctetString":
-            await self._set(OctetString(command))
-        elif self._vartype == "IpAddress":
-            await self._set(IpAddress(command))
-        # some work todo to support tuple ObjectIdentifier, this just supports str
-        elif self._vartype == "ObjectIdentifier":
-            await self._set(ObjectIdentifier(command))
-        elif self._vartype == "Counter32":
-            await self._set(Counter32(command))
-        elif self._vartype == "Gauge32":
-            await self._set(Gauge32(command))
-        elif self._vartype == "Unsigned32":
-            await self._set(Unsigned32(command))
-        elif self._vartype == "TimeTicks":
-            await self._set(TimeTicks(command))
-        elif self._vartype == "Opaque":
-            await self._set(Opaque(command))
-        elif self._vartype == "Counter64":
-            await self._set(Counter64(command))
-        # all other cases failed, vartype not set. Last try to make an integer, else use the NULL type
+        # User did not set vartype and command is not a digit
+        if self._vartype == "none" and not self._command_payload_on.isdigit():
+            await self._set(command)
+        # User set vartype Null, command must be an empty string
+        elif self._vartype == "Null":
+            await self._set(Null)("")
+        # user did not set vartype but command is digit: defaulting to Integer32
+        # or user did set vartype
         else:
-            if self._command_payload_on.isdigit():
-                await self._set(Integer(command))
-            else:
-                await self._set(command)
+            await self._set(MAP_SNMP_VARTYPES[self._vartype, Integer32](command))
 
     async def async_update(self):
         """Update the state."""
