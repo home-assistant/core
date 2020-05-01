@@ -65,23 +65,32 @@ class ArduinoBoard:
         self._port = port
         self._board = PyMata(self._port, verbose=False)
 
-    def set_mode(self, pin, direction, mode):
+    def set_mode(self, pin, direction, mode, call_back=None):
         """Set the mode and the direction of a given pin."""
         if mode == "analog" and direction == "in":
-            self._board.set_pin_mode(pin, self._board.INPUT, self._board.ANALOG)
+            self._board.set_pin_mode(
+                pin, self._board.INPUT, self._board.ANALOG, call_back
+            )
         elif mode == "analog" and direction == "out":
             self._board.set_pin_mode(pin, self._board.OUTPUT, self._board.ANALOG)
         elif mode == "digital" and direction == "in":
-            self._board.set_pin_mode(pin, self._board.INPUT, self._board.DIGITAL)
+            self._board.set_pin_mode(
+                pin, self._board.INPUT, self._board.DIGITAL, call_back
+            )
         elif mode == "digital" and direction == "out":
             self._board.set_pin_mode(pin, self._board.OUTPUT, self._board.DIGITAL)
         elif mode == "pwm":
             self._board.set_pin_mode(pin, self._board.OUTPUT, self._board.PWM)
 
     def get_analog_inputs(self):
-        """Get the values from the pins."""
+        """Get the analog values from the pins."""
         self._board.capability_query()
         return self._board.get_analog_response_table()
+
+    def get_digital_inputs(self):
+        """Get the digital values from the pins."""
+        self._board.capability_query()
+        return self._board.get_digital_response_table()
 
     def set_digital_out_high(self, pin):
         """Set a given digital pin to high."""
