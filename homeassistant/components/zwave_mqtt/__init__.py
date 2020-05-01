@@ -244,7 +244,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     # unsubscribe all listeners
     for unsubscribe_listener in hass.data[DOMAIN][entry.entry_id][DATA_UNSUBSCRIBE]:
         unsubscribe_listener()
-    hass.data[DOMAIN][entry.entry_id][DATA_UNSUBSCRIBE].clear()
     hass.data[DOMAIN].pop(entry.entry_id)
 
     return True
