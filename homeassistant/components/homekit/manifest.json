@@ -2,7 +2,7 @@
   "domain": "homekit",
   "name": "HomeKit",
   "documentation": "https://www.home-assistant.io/integrations/homekit",
-  "requirements": ["HAP-python==2.8.2","fnvhash==0.1.0","PyQRCode==1.2.1","base36==0.1.1"],
+  "requirements": ["HAP-python==2.8.3","fnvhash==0.1.0","PyQRCode==1.2.1","base36==0.1.1"],
   "dependencies": ["http"],
   "after_dependencies": ["logbook"],
   "codeowners": ["@bdraco"],
