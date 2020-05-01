@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_BSBLAN_CLIENT, DOMAIN
+from .const import CONF_PASSKEY, DATA_BSBLAN_CLIENT, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -30,6 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = async_get_clientsession(hass)
     bsblan = BSBLan(
         entry.data[CONF_HOST],
+        passkey=entry.data[CONF_PASSKEY],
         loop=hass.loop,
         port=entry.data[CONF_PORT],
         session=session,
