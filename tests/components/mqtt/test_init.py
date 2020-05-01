@@ -1340,20 +1340,8 @@ async def test_debug_info_filter_same(hass, mqtt_mock):
     assert {
         "topic": "sensor/#",
         "messages": [
-            {
-                "payload": "123",
-                "qos": 0,
-                "retain": False,
-                "time": dt1,
-                "topic": "sensor/abc",
-            },
-            {
-                "payload": "123",
-                "qos": 0,
-                "retain": False,
-                "time": dt2,
-                "topic": "sensor/abc",
-            },
+            {"payload": "123", "time": dt1, "topic": "sensor/abc"},
+            {"payload": "123", "time": dt2, "topic": "sensor/abc"},
         ],
     } == debug_info_data["entities"][0]["subscriptions"][0]
 
