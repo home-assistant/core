@@ -1,4 +1,5 @@
 """Map Z-Wave nodes and values to Home Assistant entities."""
+import openzwavemqtt.const as const_ozw
 from openzwavemqtt.const import CommandClass, ValueGenre, ValueType
 
 from . import const
@@ -7,18 +8,18 @@ DISCOVERY_SCHEMAS = (
     {  # Switch platform
         const.DISC_COMPONENT: "switch",
         const.DISC_GENERIC_DEVICE_CLASS: (
-            const.GENERIC_TYPE_METER,
-            const.GENERIC_TYPE_SENSOR_ALARM,
-            const.GENERIC_TYPE_SENSOR_BINARY,
-            const.GENERIC_TYPE_SWITCH_BINARY,
-            const.GENERIC_TYPE_ENTRY_CONTROL,
-            const.GENERIC_TYPE_SENSOR_MULTILEVEL,
-            const.GENERIC_TYPE_SWITCH_MULTILEVEL,
-            const.GENERIC_TYPE_GENERIC_CONTROLLER,
-            const.GENERIC_TYPE_SWITCH_REMOTE,
-            const.GENERIC_TYPE_REPEATER_SLAVE,
-            const.GENERIC_TYPE_THERMOSTAT,
-            const.GENERIC_TYPE_WALL_CONTROLLER,
+            const_ozw.GENERIC_TYPE_METER,
+            const_ozw.GENERIC_TYPE_SENSOR_ALARM,
+            const_ozw.GENERIC_TYPE_SENSOR_BINARY,
+            const_ozw.GENERIC_TYPE_SWITCH_BINARY,
+            const_ozw.GENERIC_TYPE_ENTRY_CONTROL,
+            const_ozw.GENERIC_TYPE_SENSOR_MULTILEVEL,
+            const_ozw.GENERIC_TYPE_SWITCH_MULTILEVEL,
+            const_ozw.GENERIC_TYPE_GENERIC_CONTROLLER,
+            const_ozw.GENERIC_TYPE_SWITCH_REMOTE,
+            const_ozw.GENERIC_TYPE_REPEATER_SLAVE,
+            const_ozw.GENERIC_TYPE_THERMOSTAT,
+            const_ozw.GENERIC_TYPE_WALL_CONTROLLER,
         ),
         const.DISC_VALUES: {
             const.DISC_PRIMARY: {
