@@ -1,7 +1,10 @@
 """Support for INSTEON fans via PowerLinc Modem."""
 import logging
 
+from pyinsteon.constants import FanSpeed
+
 from homeassistant.components.fan import (
+    DOMAIN,
     SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
@@ -9,34 +12,18 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
-from homeassistant.const import STATE_OFF
 
 from .insteon_entity import InsteonEntity
+from .utils import async_add_insteon_entities
 
 _LOGGER = logging.getLogger(__name__)
-
-SPEED_TO_HEX = {SPEED_OFF: 0x00, SPEED_LOW: 0x3F, SPEED_MEDIUM: 0xBE, SPEED_HIGH: 0xFF}
-
-FAN_SPEEDS = [STATE_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the INSTEON device class for the hass platform."""
-    insteon_modem = hass.data["insteon"].get("modem")
-
-    address = discovery_info["address"]
-    device = insteon_modem.devices[address]
-    state_key = discovery_info["state_key"]
-
-    _LOGGER.debug(
-        "Adding device %s entity %s to Fan platform",
-        device.address.hex,
-        device.states[state_key].name,
+    async_add_insteon_entities(
+        hass, DOMAIN, InsteonFan, async_add_entities, discovery_info
     )
-
-    new_entity = InsteonFan(device, state_key)
-
-    async_add_entities([new_entity])
 
 
 class InsteonFan(InsteonEntity, FanEntity):
@@ -45,12 +32,18 @@ class InsteonFan(InsteonEntity, FanEntity):
     @property
     def speed(self) -> str:
         """Return the current speed."""
-        return self._hex_to_speed(self._insteon_device_state.value)
+        if self._insteon_device_group.value == FanSpeed.HIGH:
+            return SPEED_HIGH
+        if self._insteon_device_group.value == FanSpeed.MEDIUM:
+            return SPEED_MEDIUM
+        if self._insteon_device_group.value == FanSpeed.LOW:
+            return SPEED_LOW
+        return SPEED_OFF
 
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        return FAN_SPEEDS
+        return [str(speed) for speed in FanSpeed]
 
     @property
     def supported_features(self) -> int:
@@ -60,28 +53,17 @@ class InsteonFan(InsteonEntity, FanEntity):
     async def async_turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the entity."""
         if speed is None:
-            speed = SPEED_MEDIUM
+            speed = str(FanSpeed.MEDIUM)
         await self.async_set_speed(speed)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off the entity."""
-        await self.async_set_speed(SPEED_OFF)
+        await self.async_set_speed(str(FanSpeed.OFF))
 
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
-        fan_speed = SPEED_TO_HEX[speed]
-        if fan_speed == 0x00:
-            self._insteon_device_state.off()
+        fan_speed = getattr(FanSpeed, speed.upper())
+        if fan_speed == FanSpeed.OFF:
+            self._insteon_device.fan_off()
         else:
-            self._insteon_device_state.set_level(fan_speed)
-
-    @staticmethod
-    def _hex_to_speed(speed: int):
-        hex_speed = SPEED_OFF
-        if speed > 0xFE:
-            hex_speed = SPEED_HIGH
-        elif speed > 0x7F:
-            hex_speed = SPEED_MEDIUM
-        elif speed > 0:
-            hex_speed = SPEED_LOW
-        return hex_speed
+            self._insteon_device.fan_on(on_level=fan_speed)
