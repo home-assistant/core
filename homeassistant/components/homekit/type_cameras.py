@@ -91,12 +91,11 @@ class Camera(HomeAccessory, PyhapCamera):
         """Initialize a Camera accessory object."""
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._camera = hass.data[DOMAIN_CAMERA]
+        config_w_defaults = CAMERA_SCHEMA(config)
 
-        self.config = CAMERA_SCHEMA(config)
-
-        max_fps = self.config[CONF_MAX_FPS]
-        max_width = self.config[CONF_MAX_WIDTH]
-        max_height = self.config[CONF_MAX_HEIGHT]
+        max_fps = config_w_defaults[CONF_MAX_FPS]
+        max_width = config_w_defaults[CONF_MAX_WIDTH]
+        max_height = config_w_defaults[CONF_MAX_HEIGHT]
         resolutions = [
             (w, h, fps)
             for w, h, fps in SLOW_RESOLUTIONS
@@ -129,7 +128,7 @@ class Camera(HomeAccessory, PyhapCamera):
             ]
         }
 
-        stream_address = self.config.get(CONF_STREAM_ADDRESS) or get_local_ip()
+        stream_address = config_w_defaults.get(CONF_STREAM_ADDRESS, get_local_ip())
 
         options = {
             "video": video_options,
@@ -144,7 +143,7 @@ class Camera(HomeAccessory, PyhapCamera):
             name,
             entity_id,
             aid,
-            config,
+            config_w_defaults,
             category=CATEGORY_CAMERA,
             options=options,
         )
@@ -231,10 +230,17 @@ class Camera(HomeAccessory, PyhapCamera):
         stream = session_info.get("stream")
         if stream:
             _LOGGER.info("[%s] Stopping stream.", session_id)
+            close_ok = False
             try:
                 await stream.close()
+                close_ok = True
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Failed to cleanly close stream.")
+            if not close_ok:
+                try:
+                    await stream.kill()
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception("Failed to forcefully close stream.")
             _LOGGER.debug("Stream process stopped.")
         else:
             _LOGGER.debug("No stream for session ID %s", session_id)
