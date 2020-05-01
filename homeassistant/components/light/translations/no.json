@@ -3,7 +3,7 @@
         "action_type": {
             "brightness_decrease": "Reduser lysstyrken p\u00e5 {entity_name}",
             "brightness_increase": "\u00d8k lysstyrken p\u00e5 {entity_name}",
-            "flash": "Flash {entity_name}",
+            "flash": "",
             "toggle": "Veksle {entity_name}",
             "turn_off": "Sl\u00e5 av {entity_name}",
             "turn_on": "Sl\u00e5 p\u00e5 {entity_name}"
@@ -15,6 +15,12 @@
         "trigger_type": {
             "turned_off": "{entity_name} sl\u00e5tt av",
             "turned_on": "{entity_name} sl\u00e5tt p\u00e5"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Av",
+            "on": "P\u00e5"
         }
     },
     "title": "Lys"

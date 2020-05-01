@@ -24,8 +24,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 
-from . import TYPES
-from .accessories import HomeAccessory
+from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_BRIGHTNESS,
     CHAR_COLOR_TEMPERATURE,

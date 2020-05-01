@@ -1,5 +1,4 @@
 """Define tests for the OpenUV config flow."""
-from asynctest import patch
 from regenmaschine.errors import RainMachineError
 
 from homeassistant import data_entry_flow
@@ -13,7 +12,8 @@ from homeassistant.const import (
     CONF_SSL,
 )
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 
 async def test_duplicate_error(hass):
@@ -51,7 +51,7 @@ async def test_invalid_password(hass):
 
     with patch(
         "homeassistant.components.rainmachine.config_flow.login",
-        return_value=mock_coro(exception=RainMachineError),
+        side_effect=RainMachineError,
     ):
         result = await flow.async_step_user(user_input=conf)
         assert result["errors"] == {CONF_PASSWORD: "invalid_credentials"}
@@ -84,8 +84,7 @@ async def test_step_import(hass):
     flow.context = {"source": SOURCE_USER}
 
     with patch(
-        "homeassistant.components.rainmachine.config_flow.login",
-        return_value=mock_coro(True),
+        "homeassistant.components.rainmachine.config_flow.login", return_value=True,
     ):
         result = await flow.async_step_import(import_config=conf)
 
@@ -116,8 +115,7 @@ async def test_step_user(hass):
     flow.context = {"source": SOURCE_USER}
 
     with patch(
-        "homeassistant.components.rainmachine.config_flow.login",
-        return_value=mock_coro(True),
+        "homeassistant.components.rainmachine.config_flow.login", return_value=True,
     ):
         result = await flow.async_step_user(user_input=conf)
 

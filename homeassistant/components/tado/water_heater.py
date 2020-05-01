@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    WaterHeaterDevice,
+    WaterHeaterEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -98,7 +98,7 @@ def create_water_heater_entity(tado, name: str, zone_id: int, zone: str):
     return entity
 
 
-class TadoWaterHeater(TadoZoneEntity, WaterHeaterDevice):
+class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
     """Representation of a Tado water heater."""
 
     def __init__(

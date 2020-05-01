@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen"
+        },
+        "step": {
+            "ssdp_confirm": {
+                "description": "Do vill du konfigurera {name}?"
+            },
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd eller IP-adress"
+                }
+            }
+        }
+    }
+}

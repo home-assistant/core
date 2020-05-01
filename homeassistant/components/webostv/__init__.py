@@ -145,7 +145,7 @@ async def async_setup_tv_finalize(hass, config, conf, client):
 
         if client.connection is None:
             async_call_later(hass, 60, async_load_platforms)
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "No connection could be made with host %s, retrying in 60 seconds",
                 conf.get(CONF_HOST),
             )

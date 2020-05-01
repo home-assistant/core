@@ -139,7 +139,7 @@ async def test_remove_older_logs(hass, hass_client):
 
 def log_msg(nr=2):
     """Log an error at same line."""
-    _LOGGER.error(f"error message %s", nr)
+    _LOGGER.error("error message %s", nr)
 
 
 async def test_dedup_logs(hass, hass_client):

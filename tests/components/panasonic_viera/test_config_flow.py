@@ -1,7 +1,6 @@
 """Test the Panasonic Viera config flow."""
 from unittest.mock import Mock
 
-from asynctest import patch
 from panasonic_viera import TV_TYPE_ENCRYPTED, TV_TYPE_NONENCRYPTED, SOAPError
 import pytest
 
@@ -20,6 +19,7 @@ from homeassistant.components.panasonic_viera.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
