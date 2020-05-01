@@ -23,7 +23,7 @@ def log_messages(hass: HomeAssistantType, entity_id: str) -> MessageCallbackType
         debug_info = hass.data[DATA_MQTT_DEBUG_INFO]
         messages = debug_info["entities"][entity_id]["subscriptions"][
             msg.subscribed_topic
-        ]
+        ]["messages"]
         if msg not in messages:
             messages.append(msg)
 
@@ -50,16 +50,27 @@ def add_subscription(hass, message_callback, subscription):
         entity_info = debug_info["entities"].setdefault(
             entity_id, {"subscriptions": {}, "discovery_data": {}}
         )
-        entity_info["subscriptions"][subscription] = deque([], STORED_MESSAGES)
+        if subscription not in entity_info["subscriptions"]:
+            entity_info["subscriptions"][subscription] = {
+                "count": 0,
+                "messages": deque([], STORED_MESSAGES),
+            }
+        entity_info["subscriptions"][subscription]["count"] += 1
 
 
 def remove_subscription(hass, message_callback, subscription):
-    """Remove debug data for subscription."""
+    """Remove debug data for subscription if it exists."""
     entity_id = getattr(message_callback, "__entity_id", None)
     if entity_id and entity_id in hass.data[DATA_MQTT_DEBUG_INFO]["entities"]:
-        hass.data[DATA_MQTT_DEBUG_INFO]["entities"][entity_id]["subscriptions"].pop(
+        hass.data[DATA_MQTT_DEBUG_INFO]["entities"][entity_id]["subscriptions"][
             subscription
-        )
+        ]["count"] -= 1
+        if not hass.data[DATA_MQTT_DEBUG_INFO]["entities"][entity_id]["subscriptions"][
+            subscription
+        ]["count"]:
+            hass.data[DATA_MQTT_DEBUG_INFO]["entities"][entity_id]["subscriptions"].pop(
+                subscription
+            )
 
 
 def add_entity_discovery_data(hass, discovery_data, entity_id):
@@ -127,10 +138,10 @@ async def info_for_device(hass, device_id):
                 "topic": topic,
                 "messages": [
                     {"payload": msg.payload, "time": msg.timestamp, "topic": msg.topic}
-                    for msg in list(messages)
+                    for msg in list(subscription["messages"])
                 ],
             }
-            for topic, messages in entity_info["subscriptions"].items()
+            for topic, subscription in entity_info["subscriptions"].items()
         ]
         discovery_data = {
             "topic": entity_info["discovery_data"].get(ATTR_DISCOVERY_TOPIC, ""),
