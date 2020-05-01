@@ -94,8 +94,8 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors = {"base": "cannot_connect"}
             except CannotDisconnect:
                 errors = {"base": "cannot_disconnect"}
-            except Exception as e:  # pylint: disable=broad-except
-                _LOGGER.error("An unknown error occurred: %s", e)
+            except Exception as error:  # pylint: disable=broad-except
+                _LOGGER.error("An unknown error occurred: %s", error)
                 errors = {"base": "unknown"}
 
             if "base" not in errors:
