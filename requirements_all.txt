@@ -101,6 +101,9 @@ TwitterAPI==2.5.11
 # homeassistant.components.tof
 # VL53L1X2==0.1.5
 
+# homeassistant.components.onvif
+WSDiscovery==2.0.0
+
 # homeassistant.components.waze_travel_time
 WazeRouteCalculator==0.12
 
