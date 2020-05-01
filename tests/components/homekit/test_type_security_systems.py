@@ -28,6 +28,7 @@ async def test_switch_set_state(hass, hk_driver, events):
     await hass.async_block_till_done()
     acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, config)
     await acc.run_handler()
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 11  # AlarmSystem

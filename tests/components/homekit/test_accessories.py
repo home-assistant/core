@@ -453,7 +453,9 @@ def test_home_driver():
     pin = b"123-45-678"
 
     with patch("pyhap.accessory_driver.AccessoryDriver.__init__") as mock_driver:
-        driver = HomeDriver("hass", address=ip_address, port=port, persist_file=path)
+        driver = HomeDriver(
+            "hass", "entry_id", "name", address=ip_address, port=port, persist_file=path
+        )
 
     mock_driver.assert_called_with(address=ip_address, port=port, persist_file=path)
     driver.state = Mock(pincode=pin)
@@ -467,7 +469,7 @@ def test_home_driver():
         driver.pair("client_uuid", "client_public")
 
     mock_pair.assert_called_with("client_uuid", "client_public")
-    mock_dissmiss_msg.assert_called_with("hass")
+    mock_dissmiss_msg.assert_called_with("hass", "entry_id")
 
     # unpair
     with patch("pyhap.accessory_driver.AccessoryDriver.unpair") as mock_unpair, patch(
@@ -476,4 +478,4 @@ def test_home_driver():
         driver.unpair("client_uuid")
 
     mock_unpair.assert_called_with("client_uuid")
-    mock_show_msg.assert_called_with("hass", pin, "X-HM://0")
+    mock_show_msg.assert_called_with("hass", "entry_id", "name", pin, "X-HM://0")

@@ -1,0 +1,54 @@
+{
+	"title" : "HomeKit Bridge",
+	"options" : {
+	   "step" : {
+		  "yaml" : {
+			 "title" : "Adjust HomeKit Bridge Options",
+			 "description" : "This entry is controlled via YAML"
+		  },
+		  "init" : {
+			 "data" : {
+				"include_domains" : "[%key:component::homekit::config::step::user::data::include_domains%]"
+			 },
+			 "description" : "Entities in the “Domains to include” will be bridged to HomeKit. You will be able to select which entities to exclude from this list on the next screen.",            
+			 "title" : "Select domains to bridge."
+		  },
+		  "exclude" : {
+			 "data" : {
+				"exclude_entities" : "Entities to exclude"
+			 },
+			 "description" : "Choose the entities that you do NOT want to be bridged.",
+			 "title" : "Exclude entities in selected domains from bridge"
+		  },
+		  "advanced" : {
+			 "data" : {
+				"auto_start" : "[%key:component::homekit::config::step::user::data::auto_start%]",
+				"safe_mode" : "Safe Mode (enable only if pairing fails)",
+				"zeroconf_default_interface" : "Use default zeroconf interface (enable if the bridge cannot be found in the Home app)"
+			 },
+			 "description" : "These settings only need to be adjusted if the HomeKit bridge is not functional.",
+			 "title" : "Advanced Configuration"
+		  }                    
+	   }
+	},
+	"config" : {
+	   "step" : {
+		  "user" : {
+			 "data" : {
+				"auto_start" : "Autostart (disable if using Z-Wave or other delayed start system)",
+				"include_domains" : "Domains to include"
+			 },
+			 "description" : "A HomeKit Bridge will allow you to access your Home Assistant entities in HomeKit. HomeKit Bridges are limited to 150 accessories per instance including the bridge itself. If you wish to bridge more than the maximum number of accessories, it is recommended that you use multiple HomeKit bridges for different domains. Detailed entity configuration is only available via YAML for the primary bridge.",
+			 "title" : "Activate HomeKit Bridge"
+		  },
+		  "pairing": {
+			 "title": "Pair HomeKit Bridge",
+			 "description": "As soon as the {name} bridge is ready, pairing will be available in “Notifications” as “HomeKit Bridge Setup”."
+		  }
+	   },
+	   "abort" : {
+		  "port_name_in_use" : "A bridge with the same name or port is already configured."
+	   }
+	}
+ }
+ 
