@@ -321,7 +321,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
                     "HomeKit is not running. Either it is waiting to be "
                     "started or has been stopped."
                 )
-                return
+                continue
 
             entity_ids = service.data.get("entity_id")
             homekit.reset_accessories(entity_ids)
@@ -364,7 +364,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
                     "HomeKit is not ready. Either it is already running or has "
                     "been stopped."
                 )
-                return
+                continue
             await homekit.async_start()
 
     hass.services.async_register(
