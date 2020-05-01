@@ -2,55 +2,14 @@
 from typing import List
 from unittest.mock import MagicMock
 
-import pytest
-import voluptuous as vol
-
 from homeassistant.components.humidifier import (
-    ATTR_HUMIDITY,
     OPERATION_MODE_HUMIDIFY,
     OPERATION_MODE_OFF,
-    HumidifierDevice,
-)
-from homeassistant.helpers.config_validation import make_entity_service_schema
-
-from tests.common import async_mock_service
-
-SET_HUMIDITY_SCHEMA = make_entity_service_schema(
-    {vol.Required(ATTR_HUMIDITY): vol.Coerce(int)}
+    HumidifierEntity,
 )
 
 
-async def test_set_hum_schema_no_req(hass, caplog):
-    """Test the set humidity schema with missing required data."""
-    domain = "humidifier"
-    service = "test_set_humidity"
-    schema = SET_HUMIDITY_SCHEMA
-    calls = async_mock_service(hass, domain, service, schema)
-
-    data = {"entity_id": ["humidifier.test_id"]}
-    with pytest.raises(vol.Invalid):
-        await hass.services.async_call(domain, service, data)
-    await hass.async_block_till_done()
-
-    assert len(calls) == 0
-
-
-async def test_set_hum_schema(hass, caplog):
-    """Test the set humidity schema with ok required data."""
-    domain = "humidifier"
-    service = "test_set_humidity"
-    schema = SET_HUMIDITY_SCHEMA
-    calls = async_mock_service(hass, domain, service, schema)
-
-    data = {"humidity": 50, "entity_id": ["humidifier.test_id"]}
-    await hass.services.async_call(domain, service, data)
-    await hass.async_block_till_done()
-
-    assert len(calls) == 1
-    assert calls[-1].data == data
-
-
-class MockHumidifierDevice(HumidifierDevice):
+class MockHumidifierEntity(HumidifierEntity):
     """Mock Humidifier device to use in tests."""
 
     @property
@@ -71,7 +30,7 @@ class MockHumidifierDevice(HumidifierDevice):
 
 async def test_sync_turn_on(hass):
     """Test if async turn_on calls sync turn_on."""
-    humidifier = MockHumidifierDevice()
+    humidifier = MockHumidifierEntity()
     humidifier.hass = hass
 
     humidifier.turn_on = MagicMock()
@@ -82,7 +41,7 @@ async def test_sync_turn_on(hass):
 
 async def test_sync_turn_off(hass):
     """Test if async turn_off calls sync turn_off."""
-    humidifier = MockHumidifierDevice()
+    humidifier = MockHumidifierEntity()
     humidifier.hass = hass
 
     humidifier.turn_off = MagicMock()

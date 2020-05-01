@@ -54,24 +54,24 @@ def test_setup_params(hass):
     """Test the initial parameters."""
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.state == OPERATION_MODE_DRY
-    assert "On High" == state.attributes.get(ATTR_FAN_MODE)
-    assert 54 == state.attributes.get(ATTR_HUMIDITY)
-    assert 67 == state.attributes.get(ATTR_CURRENT_HUMIDITY)
-    assert 25 == state.attributes.get(ATTR_CURRENT_TEMPERATURE)
+    assert state.attributes.get(ATTR_FAN_MODE) == "On High"
+    assert state.attributes.get(ATTR_HUMIDITY) == 54
+    assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 67
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 25
     assert state.attributes.get(ATTR_OPERATION_MODES) == ["dry", "off"]
 
 
 def test_default_setup_params(hass):
     """Test the setup with default parameters."""
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert 0 == state.attributes.get(ATTR_MIN_HUMIDITY)
-    assert 100 == state.attributes.get(ATTR_MAX_HUMIDITY)
+    assert state.attributes.get(ATTR_MIN_HUMIDITY) == 0
+    assert state.attributes.get(ATTR_MAX_HUMIDITY) == 100
 
 
 async def test_set_target_humidity_bad_attr(hass):
     """Test setting the target humidity without required attribute."""
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert 54 == state.attributes.get(ATTR_HUMIDITY)
+    assert state.attributes.get(ATTR_HUMIDITY) == 54
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
@@ -83,13 +83,13 @@ async def test_set_target_humidity_bad_attr(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert 54 == state.attributes.get(ATTR_HUMIDITY)
+    assert state.attributes.get(ATTR_HUMIDITY) == 54
 
 
 async def test_set_target_humidity(hass):
     """Test the setting of the target humidity."""
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert 54 == state.attributes.get(ATTR_HUMIDITY)
+    assert state.attributes.get(ATTR_HUMIDITY) == 54
 
     await hass.services.async_call(
         DOMAIN,
@@ -100,13 +100,13 @@ async def test_set_target_humidity(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert 64 == state.attributes.get(ATTR_HUMIDITY)
+    assert state.attributes.get(ATTR_HUMIDITY) == 64
 
 
 async def test_set_fan_mode_bad_attr(hass):
     """Test setting fan mode without required attribute."""
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert "On High" == state.attributes.get(ATTR_FAN_MODE)
+    assert state.attributes.get(ATTR_FAN_MODE) == "On High"
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
@@ -118,13 +118,13 @@ async def test_set_fan_mode_bad_attr(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert "On High" == state.attributes.get(ATTR_FAN_MODE)
+    assert state.attributes.get(ATTR_FAN_MODE) == "On High"
 
 
 async def test_set_fan_mode(hass):
     """Test setting of new fan mode."""
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert "On High" == state.attributes.get(ATTR_FAN_MODE)
+    assert state.attributes.get(ATTR_FAN_MODE) == "On High"
 
     await hass.services.async_call(
         DOMAIN,
@@ -135,7 +135,7 @@ async def test_set_fan_mode(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert "On Low" == state.attributes.get(ATTR_FAN_MODE)
+    assert state.attributes.get(ATTR_FAN_MODE) == "On Low"
 
 
 async def test_set_operation_bad_attr_and_state(hass):

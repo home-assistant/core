@@ -1,5 +1,5 @@
 """Demo platform that offers a fake humidifier device."""
-from homeassistant.components.humidifier import HumidifierDevice
+from homeassistant.components.humidifier import HumidifierEntity
 from homeassistant.components.humidifier.const import (
     CURRENT_HUMIDIFIER_DRY,
     CURRENT_HUMIDIFIER_HUMIDIFY,
@@ -10,9 +10,8 @@ from homeassistant.components.humidifier.const import (
     SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
-    SUPPORT_TEMPERATURE,
-    SUPPORT_WATER_LEVEL,
 )
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 SUPPORT_FLAGS = 0
 
@@ -53,6 +52,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 aux=None,
                 target_humidity=50,
                 current_humidity=49,
+                current_temperature=73,
+                unit_of_measurement=TEMP_FAHRENHEIT,
                 operation_mode=OPERATION_MODE_HUMIDIFY_DRY,
                 humidifier_action=None,
                 operation_modes=[
@@ -65,7 +66,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class DemoHumidifier(HumidifierDevice):
+class DemoHumidifier(HumidifierEntity):
     """Representation of a demo humidifier device."""
 
     def __init__(
@@ -80,6 +81,7 @@ class DemoHumidifier(HumidifierDevice):
         humidifier_action,
         operation_modes,
         current_temperature=None,
+        unit_of_measurement=TEMP_CELSIUS,
         preset_modes=None,
         water_level=None,
     ):
@@ -90,10 +92,6 @@ class DemoHumidifier(HumidifierDevice):
             self._support_flags = self._support_flags | SUPPORT_PRESET_MODE
         if fan_mode is not None:
             self._support_flags = self._support_flags | SUPPORT_FAN_MODE
-        if current_temperature is not None:
-            self._support_flags = self._support_flags | SUPPORT_TEMPERATURE
-        if water_level is not None:
-            self._support_flags = self._support_flags | SUPPORT_WATER_LEVEL
         if aux is not None:
             self._support_flags = self._support_flags | SUPPORT_AUX_HEAT
         self._target_humidity = target_humidity
@@ -101,6 +99,7 @@ class DemoHumidifier(HumidifierDevice):
         self._preset_modes = preset_modes
         self._current_humidity = current_humidity
         self._current_temperature = current_temperature
+        self._unit_of_measurement = unit_of_measurement
         self._current_fan_mode = fan_mode
         self._fan_modes = ["On Low", "On High", "Auto Low", "Auto High", "Off"]
         self._aux = aux
@@ -130,14 +129,19 @@ class DemoHumidifier(HumidifierDevice):
         return self._current_humidity
 
     @property
+    def target_humidity(self):
+        """Return the humidity we try to reach."""
+        return self._target_humidity
+
+    @property
     def current_temperature(self):
         """Return the current temperature."""
         return self._current_temperature
 
     @property
-    def target_humidity(self):
-        """Return the humidity we try to reach."""
-        return self._target_humidity
+    def temperature_unit(self):
+        """Return the unit of measurement."""
+        return self._unit_of_measurement
 
     @property
     def humidifier_action(self):

@@ -6,7 +6,15 @@ from typing import Any, Dict, List, Optional
 
 import voluptuous as vol
 
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    TEMP_CELSIUS,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -15,6 +23,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
 
 from .const import (
@@ -48,8 +57,6 @@ from .const import (
     SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
-    SUPPORT_TEMPERATURE,
-    SUPPORT_WATER_LEVEL,
 )
 
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -89,6 +96,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         SERVICE_SET_AUX_HEAT,
         make_entity_service_schema({vol.Required(ATTR_AUX_HEAT): cv.boolean}),
         async_service_aux_heat,
+        [SUPPORT_AUX_HEAT],
     )
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,
@@ -99,17 +107,17 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry):
+async def async_setup_entry(hass: HomeAssistantType, entry) -> bool:
     """Set up a config entry."""
     return await hass.data[DOMAIN].async_setup_entry(entry)
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry):
+async def async_unload_entry(hass: HomeAssistantType, entry) -> bool:
     """Unload a config entry."""
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class HumidifierDevice(Entity):
+class HumidifierEntity(Entity):
     """Representation of a humidifier device."""
 
     @property
@@ -118,14 +126,21 @@ class HumidifierDevice(Entity):
         return self.operation_mode
 
     @property
-    def capability_attributes(self):
-        """Return capability attributes."""
-        data = {}
-        supported_features = self.supported_features
+    def precision(self) -> float:
+        """Return the precision of the system."""
+        if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
+            return PRECISION_TENTHS
+        return PRECISION_WHOLE
 
-        data[ATTR_MIN_HUMIDITY] = self.min_humidity
-        data[ATTR_MAX_HUMIDITY] = self.max_humidity
-        data[ATTR_OPERATION_MODES] = self.operation_modes
+    @property
+    def capability_attributes(self) -> Dict[str, Any]:
+        """Return capability attributes."""
+        supported_features = self.supported_features
+        data = {
+            ATTR_MIN_HUMIDITY: self.min_humidity,
+            ATTR_MAX_HUMIDITY: self.max_humidity,
+            ATTR_OPERATION_MODES: self.operation_modes,
+        }
 
         if supported_features & SUPPORT_FAN_MODE:
             data[ATTR_FAN_MODES] = self.fan_modes
@@ -138,11 +153,11 @@ class HumidifierDevice(Entity):
     @property
     def state_attributes(self) -> Dict[str, Any]:
         """Return the optional state attributes."""
-        data = {}
         supported_features = self.supported_features
-
-        data[ATTR_HUMIDITY] = self.target_humidity
-        data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
+        data = {
+            ATTR_HUMIDITY: self.target_humidity,
+            ATTR_CURRENT_HUMIDITY: self.current_humidity,
+        }
 
         if supported_features & SUPPORT_FAN_MODE:
             data[ATTR_FAN_MODE] = self.fan_mode
@@ -150,17 +165,22 @@ class HumidifierDevice(Entity):
         if supported_features & SUPPORT_PRESET_MODE:
             data[ATTR_PRESET_MODE] = self.preset_mode
 
-        if supported_features & SUPPORT_TEMPERATURE:
-            data[ATTR_CURRENT_TEMPERATURE] = self.current_temperature
-
-        if self.humidifier_action:
-            data[ATTR_HUMIDIFIER_ACTION] = self.humidifier_action
-
-        if supported_features & SUPPORT_WATER_LEVEL:
-            data[ATTR_WATER_LEVEL] = self.water_level
-
         if supported_features & SUPPORT_AUX_HEAT:
             data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
+
+        if self.humidifier_action is not None:
+            data[ATTR_HUMIDIFIER_ACTION] = self.humidifier_action
+
+        if self.current_temperature is not None:
+            data[ATTR_CURRENT_TEMPERATURE] = show_temp(
+                self.hass,
+                self.current_temperature,
+                self.temperature_unit,
+                self.precision,
+            )
+
+        if self.water_level is not None:
+            data[ATTR_WATER_LEVEL] = self.water_level
 
         return data
 
@@ -347,7 +367,7 @@ class HumidifierDevice(Entity):
 
 
 async def async_service_aux_heat(
-    entity: HumidifierDevice, service: ServiceDataType
+    entity: HumidifierEntity, service: ServiceDataType
 ) -> None:
     """Handle aux heat service."""
     if service.data[ATTR_AUX_HEAT]:
