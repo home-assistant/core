@@ -103,7 +103,7 @@ class MillHeater(ClimateEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._heater.device_id
+        return f"{self._heater.device_id}_heater"
 
     @property
     def name(self):
@@ -219,7 +219,7 @@ class MillHeater(ClimateEntity):
     @property
     def device_id(self):
         """Return the ID of the physical device this sensor is part of."""
-        return self.unique_id
+        return self._heater.device_id
 
     @property
     def device_info(self):
