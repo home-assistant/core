@@ -143,7 +143,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
             state = STATE_MAP[phase]
         except KeyError:
             return STATE_ERROR
-        if cycle != "none" and state != STATE_CLEANING and state != STATE_RETURNING:
+        if cycle != "none" and (state == STATE_IDLE or state == STATE_DOCKED):
             state = STATE_PAUSED
         return state
 
