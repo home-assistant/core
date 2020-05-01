@@ -1,5 +1,6 @@
 """Tests for ZHA config flow."""
 
+import os
 from unittest import mock
 
 import serial.tools.list_ports
@@ -17,7 +18,7 @@ def com_port():
     port = serial.tools.list_ports_common.ListPortInfo()
     port.serial_number = "1234"
     port.manufacturer = "Virtual serial port"
-    port.device = "/dev/ttyUSB1"
+    port.device = "/dev/ttyUSB1234"
     port.description = "Some serial port"
 
     return port
@@ -41,7 +42,7 @@ async def test_user_flow(hass):
             user_input={zigpy.config.CONF_DEVICE_PATH: port_select}
         )
     assert result["type"] == "create_entry"
-    assert result["title"].startswith(port.device)
+    assert result["title"].startswith(port.description)
     assert result["data"] is mock.sentinel.data
 
     with mock.patch.object(
@@ -142,3 +143,50 @@ async def test_user_port_config_fail(hass):
             == "/dev/ttyUSB33"
         )
         assert result["data"][CONF_RADIO_TYPE] == "ezsp"
+
+
+def test_get_serial_by_id_no_dir():
+    """Test serial by id conversion if there's no /dev/serial/by-id."""
+    p1 = mock.patch("os.path.isdir", mock.MagicMock(return_value=False))
+    p2 = mock.patch("os.scandir")
+    with p1 as is_dir_mock, p2 as scan_mock:
+        res = config_flow.get_serial_by_id(mock.sentinel.path)
+        assert res is mock.sentinel.path
+        assert is_dir_mock.call_count == 1
+        assert scan_mock.call_count == 0
+
+
+def test_get_serial_by_id():
+    """Test serial by id conversion."""
+    p1 = mock.patch("os.path.isdir", mock.MagicMock(return_value=True))
+    p2 = mock.patch("os.scandir")
+
+    def _realpath(path):
+        if path is mock.sentinel.matched_link:
+            return mock.sentinel.path
+        return mock.sentinel.serial_link_path
+
+    p3 = mock.patch("os.path.realpath", side_effect=_realpath)
+    with p1 as is_dir_mock, p2 as scan_mock, p3:
+        res = config_flow.get_serial_by_id(mock.sentinel.path)
+        assert res is mock.sentinel.path
+        assert is_dir_mock.call_count == 1
+        assert scan_mock.call_count == 1
+
+        entry1 = mock.MagicMock(spec_set=os.DirEntry)
+        entry1.is_symlink.return_value = True
+        entry1.path = mock.sentinel.some_path
+
+        entry2 = mock.MagicMock(spec_set=os.DirEntry)
+        entry2.is_symlink.return_value = False
+        entry2.path = mock.sentinel.other_path
+
+        entry3 = mock.MagicMock(spec_set=os.DirEntry)
+        entry3.is_symlink.return_value = True
+        entry3.path = mock.sentinel.matched_link
+
+        scan_mock.return_value = [entry1, entry2, entry3]
+        res = config_flow.get_serial_by_id(mock.sentinel.path)
+        assert res is mock.sentinel.matched_link
+        assert is_dir_mock.call_count == 2
+        assert scan_mock.call_count == 2

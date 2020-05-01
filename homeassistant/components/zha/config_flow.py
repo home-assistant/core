@@ -1,4 +1,5 @@
 """Config flow for ZHA."""
+import os
 from typing import Any, Dict, Optional
 
 import serial.tools.list_ports
@@ -42,12 +43,13 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if user_selection == CONF_MANUAL_PATH:
                 return await self.async_step_pick_radio()
 
-            dev_path = ports[list_of_ports.index(user_selection)].device
+            port = ports[list_of_ports.index(user_selection)]
+            dev_path = get_serial_by_id(port.device)
             auto_detected_data = await self.detect_radios(dev_path)
             if auto_detected_data is not None:
-                return self.async_create_entry(
-                    title=user_selection, data=auto_detected_data,
-                )
+                title = f"{port.description}, s/n: {port.serial_number or 'n/a'}"
+                title += f" - {port.manufacturer}" if port.manufacturer else ""
+                return self.async_create_entry(title=title, data=auto_detected_data,)
 
             # did not detect anything
             self._device_path = dev_path
@@ -76,6 +78,8 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._device_path = user_input.get(CONF_DEVICE_PATH)
             if await app_cls.probe(user_input):
+                serial_by_id = get_serial_by_id(user_input[CONF_DEVICE_PATH])
+                user_input[CONF_DEVICE_PATH] = serial_by_id
                 return self.async_create_entry(
                     title=user_input[CONF_DEVICE_PATH],
                     data={CONF_DEVICE: user_input, CONF_RADIO_TYPE: self._radio_type},
@@ -103,3 +107,15 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return {CONF_RADIO_TYPE: radio, CONF_DEVICE: dev_config}
 
         return None
+
+
+def get_serial_by_id(dev_path: str) -> str:
+    """Return a /dev/serial/by-id match for given device if available."""
+    by_id = "/dev/serial/by-id"
+    if not os.path.isdir(by_id):
+        return dev_path
+
+    for path in (entry.path for entry in os.scandir(by_id) if entry.is_symlink()):
+        if os.path.realpath(path) == dev_path:
+            return path
+    return dev_path
