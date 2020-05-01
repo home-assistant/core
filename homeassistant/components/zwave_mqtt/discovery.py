@@ -35,16 +35,12 @@ def check_node_schema(node, schema):
     """Check if node matches the passed node schema."""
     if const.DISC_NODE_ID in schema and node.node_id not in schema[const.DISC_NODE_ID]:
         return False
-    if (
-        const.DISC_GENERIC_DEVICE_CLASS in schema
-        and node.node_generic
-        not in ensure_tuple(schema[const.DISC_GENERIC_DEVICE_CLASS])
+    if const.DISC_GENERIC_DEVICE_CLASS in schema and not eq_or_in(
+        node.node_generic, schema[const.DISC_GENERIC_DEVICE_CLASS]
     ):
         return False
-    if (
-        const.DISC_SPECIFIC_DEVICE_CLASS in schema
-        and node.node_specific
-        not in ensure_tuple(schema[const.DISC_SPECIFIC_DEVICE_CLASS])
+    if const.DISC_SPECIFIC_DEVICE_CLASS in schema and not eq_or_in(
+        node.node_specific, schema[const.DISC_SPECIFIC_DEVICE_CLASS]
     ):
         return False
     return True
@@ -57,20 +53,18 @@ def check_value_schema(value, schema):
         and value.parent.command_class_id not in schema[const.DISC_COMMAND_CLASS]
     ):
         return False
-    if const.DISC_TYPE in schema and value.type not in ensure_tuple(
-        schema[const.DISC_TYPE]
+    if const.DISC_TYPE in schema and not eq_or_in(value.type, schema[const.DISC_TYPE]):
+        return False
+    if const.DISC_GENRE in schema and not eq_or_in(
+        value.genre, schema[const.DISC_GENRE]
     ):
         return False
-    if const.DISC_GENRE in schema and value.genre not in ensure_tuple(
-        schema[const.DISC_GENRE]
+    if const.DISC_INDEX in schema and not eq_or_in(
+        value.index, schema[const.DISC_INDEX]
     ):
         return False
-    if const.DISC_INDEX in schema and value.index not in ensure_tuple(
-        schema[const.DISC_INDEX]
-    ):
-        return False
-    if const.DISC_INSTANCE in schema and value.instance not in ensure_tuple(
-        schema[const.DISC_INSTANCE]
+    if const.DISC_INSTANCE in schema and not eq_or_in(
+        value.instance, schema[const.DISC_INSTANCE]
     ):
         return False
     if const.DISC_SCHEMAS in schema:
@@ -83,8 +77,6 @@ def check_value_schema(value, schema):
     return True
 
 
-def ensure_tuple(value):
-    """Convert a value to a tuple if needed."""
-    if isinstance(value, tuple):
-        return value
-    return (value,)
+def eq_or_in(val, options):
+    """Return True if options contains value or if value is equal to options."""
+    return val in options if isinstance(options, tuple) else val == options
