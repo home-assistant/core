@@ -29,19 +29,18 @@ RUN \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
-# Set the default user.
-USER $USERNAME
-
-WORKDIR /home/$USERNAME
-
-# Install Python dependencies from requirements
-COPY --chown=${USERNAME}:${USERNAME} requirements_test.txt requirements_test_pre_commit.txt homeassistant/package_constraints.txt ./
-RUN pip3 install -r requirements_test.txt -c package_constraints.txt \
-    && rm -f requirements_test.txt package_constraints.txt requirements_test_pre_commit.txt
+WORKDIR /usr/src
 
 # Setup hass-release
 RUN git clone --depth 1 https://github.com/home-assistant/hass-release \
     && pip3 install -e hass-release/
+
+WORKDIR /workspaces
+
+# Install Python dependencies from requirements
+COPY requirements_test.txt requirements_test_pre_commit.txt homeassistant/package_constraints.txt ./
+RUN pip3 install -r requirements_test.txt -c package_constraints.txt \
+    && rm -f requirements_test.txt package_constraints.txt requirements_test_pre_commit.txt
 
 # Set the default shell to bash instead of sh
 ENV SHELL /bin/bash
