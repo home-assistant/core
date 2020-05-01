@@ -1,8 +1,7 @@
 """Provide a way to connect entities belonging to one device."""
-from asyncio import Event
 from collections import OrderedDict
 import logging
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional
 import uuid
 
 import attr
@@ -10,6 +9,7 @@ import attr
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
+from .singleton import singleton
 from .typing import HomeAssistantType
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
@@ -356,26 +356,12 @@ class DeviceRegistry:
 
 
 @bind_hass
+@singleton(DATA_REGISTRY)
 async def async_get_registry(hass: HomeAssistantType) -> DeviceRegistry:
-    """Return device registry instance."""
-    reg_or_evt = hass.data.get(DATA_REGISTRY)
-
-    if not reg_or_evt:
-        evt = hass.data[DATA_REGISTRY] = Event()
-
-        reg = DeviceRegistry(hass)
-        await reg.async_load()
-
-        hass.data[DATA_REGISTRY] = reg
-        evt.set()
-        return reg
-
-    if isinstance(reg_or_evt, Event):
-        evt = reg_or_evt
-        await evt.wait()
-        return cast(DeviceRegistry, hass.data.get(DATA_REGISTRY))
-
-    return cast(DeviceRegistry, reg_or_evt)
+    """Create entity registry."""
+    reg = DeviceRegistry(hass)
+    await reg.async_load()
+    return reg
 
 
 @callback

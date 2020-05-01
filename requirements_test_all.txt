@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.homekit
-HAP-python==2.8.2
+HAP-python==2.8.3
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
@@ -22,6 +22,9 @@ PyTransportNSW==0.1.1
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
+
+# homeassistant.components.onvif
+WSDiscovery==2.0.0
 
 # homeassistant.components.yessssms
 YesssSMS==0.4.1
@@ -389,6 +392,9 @@ numpy==1.18.2
 # homeassistant.components.google
 oauth2client==4.0.0
 
+# homeassistant.components.onvif
+onvif-zeep-async==0.2.0
+
 # homeassistant.components.openerz
 openerz-api==0.1.0
 
@@ -570,7 +576,7 @@ pylitejet==0.1
 pymailgunner==1.4
 
 # homeassistant.components.melcloud
-pymelcloud==2.4.1
+pymelcloud==2.5.2
 
 # homeassistant.components.somfy
 pymfy==0.7.1

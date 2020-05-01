@@ -2,8 +2,6 @@
 
 from ipaddress import IPv4Address
 
-from asynctest import patch
-
 from homeassistant.components import upnp
 from homeassistant.components.upnp.const import (
     DISCOVERY_LOCATION,
@@ -14,6 +12,7 @@ from homeassistant.components.upnp.device import Device
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, mock_coro
 
 
@@ -97,8 +96,8 @@ async def test_async_setup_entry_default(hass):
                 DISCOVERY_LOCATION: "http://192.168.1.1/desc.xml",
             }
         ]
-        create_device.return_value = mock_coro(return_value=mock_device)
-        async_discover.return_value = mock_coro(return_value=discovery_infos)
+        create_device.return_value = mock_device
+        async_discover.return_value = discovery_infos
 
         assert await upnp.async_setup_entry(hass, entry) is True
 
@@ -145,8 +144,8 @@ async def test_async_setup_entry_port_mapping(hass):
                 DISCOVERY_LOCATION: "http://192.168.1.1/desc.xml",
             }
         ]
-        create_device.return_value = mock_coro(return_value=mock_device)
-        async_discover.return_value = mock_coro(return_value=discovery_infos)
+        create_device.return_value = mock_device
+        async_discover.return_value = discovery_infos
 
         assert await upnp.async_setup_entry(hass, entry) is True
 

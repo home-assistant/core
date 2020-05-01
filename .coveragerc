@@ -313,6 +313,7 @@ omit =
     homeassistant/components/hue/light.py
     homeassistant/components/hunterdouglas_powerview/__init__.py
     homeassistant/components/hunterdouglas_powerview/scene.py
+    homeassistant/components/hunterdouglas_powerview/sensor.py
     homeassistant/components/hunterdouglas_powerview/cover.py
     homeassistant/components/hunterdouglas_powerview/entity.py
     homeassistant/components/hydrawise/*
@@ -506,6 +507,7 @@ omit =
     homeassistant/components/ombi/*
     homeassistant/components/onewire/sensor.py
     homeassistant/components/onkyo/media_player.py
+    homeassistant/components/onvif/__init__.py
     homeassistant/components/onvif/camera.py
     homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
@@ -531,7 +533,6 @@ omit =
     homeassistant/components/osramlightify/light.py
     homeassistant/components/otp/sensor.py
     homeassistant/components/panasonic_bluray/media_player.py
-    homeassistant/components/panasonic_viera/__init__.py
     homeassistant/components/panasonic_viera/media_player.py
     homeassistant/components/pandora/media_player.py
     homeassistant/components/pcal9535a/*

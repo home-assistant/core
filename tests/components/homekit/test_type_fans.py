@@ -304,6 +304,7 @@ async def test_fan_speed(hass, hk_driver, cls, events):
     call_set_speed = async_mock_service(hass, DOMAIN, "set_speed")
 
     char_speed_iid = acc.char_speed.to_HAP()[HAP_REPR_IID]
+    char_active_iid = acc.char_active.to_HAP()[HAP_REPR_IID]
 
     hk_driver.set_characteristics(
         {
@@ -320,11 +321,36 @@ async def test_fan_speed(hass, hk_driver, cls, events):
     await hass.async_add_executor_job(acc.char_speed.client_update_value, 42)
     await hass.async_block_till_done()
     acc.speed_mapping.speed_to_states.assert_called_with(42)
+    assert acc.char_speed.value == 42
+    assert acc.char_active.value == 1
+
     assert call_set_speed[0]
     assert call_set_speed[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_speed[0].data[ATTR_SPEED] == "ludicrous"
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == "ludicrous"
+
+    # Verify speed is preserved from off to on
+    hass.states.async_set(entity_id, STATE_OFF, {ATTR_SPEED: SPEED_OFF})
+    await hass.async_block_till_done()
+    assert acc.char_speed.value == 42
+    assert acc.char_active.value == 0
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_active_iid,
+                    HAP_REPR_VALUE: 1,
+                },
+            ]
+        },
+        "mock_addr",
+    )
+    await hass.async_block_till_done()
+    assert acc.char_speed.value == 42
+    assert acc.char_active.value == 1
 
 
 async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):

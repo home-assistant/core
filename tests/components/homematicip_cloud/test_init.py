@@ -1,6 +1,5 @@
 """Test HomematicIP Cloud setup process."""
 
-from asynctest import CoroutineMock, Mock, patch
 from homematicip.base.base_connection import HmipConnectionError
 
 from homeassistant.components.homematicip_cloud.const import (
@@ -21,6 +20,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_NAME
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -139,12 +139,12 @@ async def test_unload_entry(hass):
 
     with patch("homeassistant.components.homematicip_cloud.HomematicipHAP") as mock_hap:
         instance = mock_hap.return_value
-        instance.async_setup = CoroutineMock(return_value=True)
+        instance.async_setup = AsyncMock(return_value=True)
         instance.home.id = "1"
         instance.home.modelType = "mock-type"
         instance.home.name = "mock-name"
         instance.home.currentAPVersion = "mock-ap-version"
-        instance.async_reset = CoroutineMock(return_value=True)
+        instance.async_reset = AsyncMock(return_value=True)
 
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})
 
@@ -181,12 +181,12 @@ async def test_setup_services_and_unload_services(hass):
 
     with patch("homeassistant.components.homematicip_cloud.HomematicipHAP") as mock_hap:
         instance = mock_hap.return_value
-        instance.async_setup = CoroutineMock(return_value=True)
+        instance.async_setup = AsyncMock(return_value=True)
         instance.home.id = "1"
         instance.home.modelType = "mock-type"
         instance.home.name = "mock-name"
         instance.home.currentAPVersion = "mock-ap-version"
-        instance.async_reset = CoroutineMock(return_value=True)
+        instance.async_reset = AsyncMock(return_value=True)
 
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})
 
@@ -214,12 +214,12 @@ async def test_setup_two_haps_unload_one_by_one(hass):
 
     with patch("homeassistant.components.homematicip_cloud.HomematicipHAP") as mock_hap:
         instance = mock_hap.return_value
-        instance.async_setup = CoroutineMock(return_value=True)
+        instance.async_setup = AsyncMock(return_value=True)
         instance.home.id = "1"
         instance.home.modelType = "mock-type"
         instance.home.name = "mock-name"
         instance.home.currentAPVersion = "mock-ap-version"
-        instance.async_reset = CoroutineMock(return_value=True)
+        instance.async_reset = AsyncMock(return_value=True)
 
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})
 

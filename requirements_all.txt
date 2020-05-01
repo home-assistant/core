@@ -35,7 +35,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==2.8.2
+HAP-python==2.8.3
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -100,6 +100,9 @@ TwitterAPI==2.5.11
 
 # homeassistant.components.tof
 # VL53L1X2==0.1.5
+
+# homeassistant.components.onvif
+WSDiscovery==2.0.0
 
 # homeassistant.components.waze_travel_time
 WazeRouteCalculator==0.12
@@ -1102,6 +1105,9 @@ ptvsd==4.2.8
 # homeassistant.components.wink
 pubnubsub-handler==1.0.8
 
+# homeassistant.components.pulseaudio_loopback
+pulsectl==20.2.4
+
 # homeassistant.components.androidtv
 pure-python-adb==0.2.2.dev0
 
@@ -1408,7 +1414,7 @@ pymailgunner==1.4
 pymediaroom==0.6.4
 
 # homeassistant.components.melcloud
-pymelcloud==2.4.1
+pymelcloud==2.5.2
 
 # homeassistant.components.somfy
 pymfy==0.7.1

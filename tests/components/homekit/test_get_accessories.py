@@ -5,7 +5,7 @@ import pytest
 
 import homeassistant.components.climate as climate
 import homeassistant.components.cover as cover
-from homeassistant.components.homekit import TYPES, get_accessory
+from homeassistant.components.homekit.accessories import TYPES, get_accessory
 from homeassistant.components.homekit.const import (
     CONF_FEATURE_LIST,
     FEATURE_ON_OFF,
@@ -17,6 +17,7 @@ from homeassistant.components.homekit.const import (
     TYPE_VALVE,
 )
 import homeassistant.components.media_player.const as media_player_c
+import homeassistant.components.vacuum as vacuum
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_CLASS,
@@ -238,4 +239,28 @@ def test_type_switches(type_name, entity_id, state, attrs, config):
     with patch.dict(TYPES, {type_name: mock_type}):
         entity_state = State(entity_id, state, attrs)
         get_accessory(None, None, entity_state, 2, config)
+    assert mock_type.called
+
+
+@pytest.mark.parametrize(
+    "type_name, entity_id, state, attrs",
+    [
+        (
+            "DockVacuum",
+            "vacuum.dock_vacuum",
+            "docked",
+            {
+                ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_START
+                | vacuum.SUPPORT_RETURN_HOME
+            },
+        ),
+        ("Switch", "vacuum.basic_vacuum", "off", {},),
+    ],
+)
+def test_type_vacuum(type_name, entity_id, state, attrs):
+    """Test if vacuum types are associated correctly."""
+    mock_type = Mock()
+    with patch.dict(TYPES, {type_name: mock_type}):
+        entity_state = State(entity_id, state, attrs)
+        get_accessory(None, None, entity_state, 2, {})
     assert mock_type.called

@@ -1,13 +1,17 @@
 """Constants used be the HomeKit component."""
+
 # #### Misc ####
 DEBOUNCE_TIMEOUT = 0.5
 DEVICE_PRECISION_LEEWAY = 6
 DOMAIN = "homekit"
 HOMEKIT_FILE = ".homekit.state"
-HOMEKIT_NOTIFY_ID = 4663548
 AID_STORAGE = "homekit-aid-allocations"
 HOMEKIT_PAIRING_QR = "homekit-pairing-qr"
 HOMEKIT_PAIRING_QR_SECRET = "homekit-pairing-qr-secret"
+HOMEKIT = "homekit"
+UNDO_UPDATE_LISTENER = "undo_update_listener"
+SHUTDOWN_TIMEOUT = 30
+CONF_ENTRY_INDEX = "index"
 
 # #### Attributes ####
 ATTR_DISPLAY_NAME = "display_name"
@@ -30,6 +34,7 @@ CONF_ZEROCONF_DEFAULT_INTERFACE = "zeroconf_default_interface"
 DEFAULT_AUTO_START = True
 DEFAULT_LOW_BATTERY_THRESHOLD = 20
 DEFAULT_PORT = 51827
+DEFAULT_CONFIG_FLOW_PORT = 51828
 DEFAULT_SAFE_MODE = False
 DEFAULT_ZEROCONF_DEFAULT_INTERFACE = False
 
@@ -49,6 +54,7 @@ SERVICE_HOMEKIT_RESET_ACCESSORY = "reset_accessory"
 # #### String Constants ####
 BRIDGE_MODEL = "Bridge"
 BRIDGE_NAME = "Home Assistant Bridge"
+SHORT_BRIDGE_NAME = "HASS Bridge"
 BRIDGE_SERIAL_NUMBER = "homekit.bridge"
 MANUFACTURER = "Home Assistant"
 
@@ -203,3 +209,11 @@ HK_POSITION_STOPPED = 2
 HK_NOT_CHARGING = 0
 HK_CHARGING = 1
 HK_NOT_CHARGABLE = 2
+
+# ### Config Options ###
+CONFIG_OPTIONS = [
+    CONF_FILTER,
+    CONF_AUTO_START,
+    CONF_ZEROCONF_DEFAULT_INTERFACE,
+    CONF_SAFE_MODE,
+]
