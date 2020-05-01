@@ -25,8 +25,6 @@ CONF_BRIDGES = "bridges"
 
 DATA_CONFIGS = "hue_configs"
 
-PHUE_CONFIG_FILE = "phue.conf"
-
 BRIDGE_CONFIG_SCHEMA = vol.Schema(
     {
         # Validate as IP address and then convert back to a string.
