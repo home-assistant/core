@@ -1,5 +1,4 @@
 """Vera tests."""
-from asynctest import MagicMock
 import pyvera as pv
 from requests.exceptions import RequestException
 
@@ -9,6 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from .common import ComponentFactory, new_simple_controller_config
 
+from tests.async_mock import MagicMock
 from tests.common import MockConfigEntry
 
 

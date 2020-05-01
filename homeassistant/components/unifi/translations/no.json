@@ -46,6 +46,12 @@
                 "description": "Konfigurere enhetssporing",
                 "title": "UniFi-alternativ 1/3"
             },
+            "init": {
+                "data": {
+                    "one": "Tom",
+                    "other": "Tomme"
+                }
+            },
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "B\u00e5ndbreddebrukssensorer for nettverksklienter"

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "To konto jest ju\u017c skonfigurowane."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie.",
+            "invalid_auth": "Niepoprawne uwierzytelnienie.",
+            "unknown": "Niespodziewany b\u0142\u0105d."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "Identyfikator klienta",
+                    "client_secret": "Has\u0142o klienta",
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Aby uzyska\u0107 dost\u0119p do API Flume, musisz poprosi\u0107 o 'ID klienta\u201d i 'klucz tajny klienta' na stronie https://portal.flumetech.com/settings#token",
+                "title": "Po\u0142\u0105cz z kontem Flume"
+            }
+        }
+    }
+}

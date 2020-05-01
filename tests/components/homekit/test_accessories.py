@@ -363,9 +363,30 @@ async def test_missing_linked_battery_sensor(hass, hk_driver, caplog):
     await hass.async_block_till_done()
 
     assert not acc.linked_battery_sensor
-    assert not hasattr(acc, "_char_battery")
-    assert not hasattr(acc, "_char_low_battery")
-    assert not hasattr(acc, "_char_charging")
+    assert acc._char_battery is None
+    assert acc._char_low_battery is None
+    assert acc._char_charging is None
+
+
+async def test_battery_appears_after_startup(hass, hk_driver, caplog):
+    """Test battery level appears after homekit is started."""
+    entity_id = "homekit.accessory"
+    hass.states.async_set(entity_id, None, {})
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory(
+        hass, hk_driver, "Accessory without battery", entity_id, 2, None
+    )
+    acc.update_state = lambda x: None
+    assert acc._char_battery is None
+
+    await acc.run_handler()
+    await hass.async_block_till_done()
+    assert acc._char_battery is None
+
+    hass.states.async_set(entity_id, None, {ATTR_BATTERY_LEVEL: 15})
+    await hass.async_block_till_done()
+    assert acc._char_battery is None
 
 
 async def test_call_service(hass, hk_driver, events):
@@ -432,7 +453,9 @@ def test_home_driver():
     pin = b"123-45-678"
 
     with patch("pyhap.accessory_driver.AccessoryDriver.__init__") as mock_driver:
-        driver = HomeDriver("hass", address=ip_address, port=port, persist_file=path)
+        driver = HomeDriver(
+            "hass", "entry_id", "name", address=ip_address, port=port, persist_file=path
+        )
 
     mock_driver.assert_called_with(address=ip_address, port=port, persist_file=path)
     driver.state = Mock(pincode=pin)
@@ -446,7 +469,7 @@ def test_home_driver():
         driver.pair("client_uuid", "client_public")
 
     mock_pair.assert_called_with("client_uuid", "client_public")
-    mock_dissmiss_msg.assert_called_with("hass")
+    mock_dissmiss_msg.assert_called_with("hass", "entry_id")
 
     # unpair
     with patch("pyhap.accessory_driver.AccessoryDriver.unpair") as mock_unpair, patch(
@@ -455,4 +478,4 @@ def test_home_driver():
         driver.unpair("client_uuid")
 
     mock_unpair.assert_called_with("client_uuid")
-    mock_show_msg.assert_called_with("hass", pin, "X-HM://0")
+    mock_show_msg.assert_called_with("hass", "entry_id", "name", pin, "X-HM://0")

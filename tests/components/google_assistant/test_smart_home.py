@@ -1,5 +1,4 @@
 """Test Google Smart Home."""
-from asynctest import Mock, patch
 import pytest
 
 from homeassistant.components import camera
@@ -28,6 +27,7 @@ from homeassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
 
+from tests.async_mock import Mock, patch
 from tests.common import mock_area_registry, mock_device_registry, mock_registry
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"

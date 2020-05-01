@@ -8,7 +8,7 @@
             "invalid_password": "Ugyldig passord!",
             "resolve_error": "Kan ikke l\u00f8se adressen til ESP. Hvis denne feilen vedvarer, m\u00e5 du [angi en statisk IP-adresse](https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips)"
         },
-        "flow_title": "ESPHome: {name}",
+        "flow_title": "",
         "step": {
             "authenticate": {
                 "data": {

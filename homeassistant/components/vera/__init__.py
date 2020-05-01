@@ -90,8 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     controller.start()
 
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP,
-        lambda event: hass.async_add_executor_job(controller.stop),
+        EVENT_HOMEASSISTANT_STOP, lambda event: controller.stop()
     )
 
     try:

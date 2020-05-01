@@ -6,8 +6,7 @@ from pyhap.const import CATEGORY_DOOR_LOCK
 from homeassistant.components.lock import DOMAIN, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, STATE_UNKNOWN
 
-from . import TYPES
-from .accessories import HomeAccessory
+from .accessories import TYPES, HomeAccessory
 from .const import CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE, SERV_LOCK
 
 _LOGGER = logging.getLogger(__name__)

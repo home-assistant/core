@@ -18,8 +18,8 @@
                 "data": {
                     "captcha_code": "Kode fra bilde"
                 },
-                "description": "{captcha_img}",
-                "title": "Captcha"
+                "description": "",
+                "title": ""
             },
             "auth_mfa": {
                 "data": {

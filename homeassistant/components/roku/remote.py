@@ -7,7 +7,7 @@ from requests.exceptions import (
 )
 from roku import RokuException
 
-from homeassistant.components.remote import RemoteDevice
+from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -24,7 +24,7 @@ async def async_setup_entry(
     async_add_entities([RokuRemote(roku)], True)
 
 
-class RokuRemote(RemoteDevice):
+class RokuRemote(RemoteEntity):
     """Device that sends commands to an Roku."""
 
     def __init__(self, roku):
@@ -84,8 +84,11 @@ class RokuRemote(RemoteDevice):
 
     def send_command(self, command, **kwargs):
         """Send a command to one device."""
-        for single_command in command:
-            if not hasattr(self.roku, single_command):
-                continue
+        num_repeats = kwargs[ATTR_NUM_REPEATS]
 
-            getattr(self.roku, single_command)()
+        for _ in range(num_repeats):
+            for single_command in command:
+                if not hasattr(self.roku, single_command):
+                    continue
+
+                getattr(self.roku, single_command)()
