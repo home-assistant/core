@@ -129,7 +129,7 @@ class Remote:
         self._app_id = app_id
         self._encryption_key = encryption_key
 
-        self.state = None
+        self.state = STATE_OFF
         self.available = False
         self.volume = 0
         self.muted = False
