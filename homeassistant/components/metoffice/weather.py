@@ -154,3 +154,8 @@ class MetOfficeWeather(WeatherEntity):
     def should_poll(self) -> bool:
         """Entities do not individually poll."""
         return False
+
+    @property
+    def available(self):
+        """Return if state is available."""
+        return self.metoffice_now
