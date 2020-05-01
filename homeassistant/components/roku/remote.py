@@ -7,7 +7,7 @@ from requests.exceptions import (
 )
 from roku import RokuException
 
-from homeassistant.components.remote import RemoteDevice
+from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -84,8 +84,11 @@ class RokuRemote(RemoteDevice):
 
     def send_command(self, command, **kwargs):
         """Send a command to one device."""
-        for single_command in command:
-            if not hasattr(self.roku, single_command):
-                continue
+        num_repeats = kwargs[ATTR_NUM_REPEATS]
 
-            getattr(self.roku, single_command)()
+        for _ in range(num_repeats):
+            for single_command in command:
+                if not hasattr(self.roku, single_command):
+                    continue
+
+                getattr(self.roku, single_command)()
