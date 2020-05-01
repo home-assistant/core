@@ -231,7 +231,10 @@ class Camera(HomeAccessory, PyhapCamera):
         stream = session_info.get("stream")
         if stream:
             _LOGGER.info("[%s] Stopping stream.", session_id)
-            await stream.close()
+            try:
+                await stream.close()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Failed to cleanly close stream.")
             _LOGGER.debug("Stream process stopped.")
         else:
             _LOGGER.debug("No stream for session ID %s", session_id)
