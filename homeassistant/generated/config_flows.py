@@ -147,6 +147,7 @@ FLOWS = [
     "sonos",
     "speedtestdotnet",
     "spotify",
+    "squeezebox",
     "starline",
     "synology_dsm",
     "tado",
