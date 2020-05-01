@@ -1639,6 +1639,7 @@ pyspcwebgw==0.4.0
 # homeassistant.components.squeezebox
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 pysqueezebox==0.2.1
 =======
 pysqueezebox==0.1.5
@@ -1646,6 +1647,9 @@ pysqueezebox==0.1.5
 =======
 pysqueezebox==0.1.6
 >>>>>>> Unavailable player detection and recovery
+=======
+pysqueezebox==0.1.7
+>>>>>>> Improved error message for auth failure
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2

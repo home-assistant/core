@@ -5,10 +5,16 @@ from pysqueezebox import Server
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_PORT, DOMAIN  # pylint:disable=unused-import
+from .const import DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +43,8 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     status = await server.async_query("serverstatus")
     if not status:
+        if server.http_status == HTTP_UNAUTHORIZED:
+            raise InvalidAuth
         raise CannotConnect
 
     return status

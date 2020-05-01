@@ -88,8 +88,8 @@ SQUEEZEBOX_MODE = {
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the squeezebox platform."""
-    _LOGGER.error(
-        "Loading Squeezebox by media_player platform configuration is no longer supported"
+    _LOGGER.info(
+        "Setting up squeezebox platform in configuration.yaml is deprecated. Consider using config flow in frontend."
     )
 
 
