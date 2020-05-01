@@ -1,7 +1,7 @@
 """Helpers for tests."""
 import json
 
-from asynctest import patch
+from tests.async_mock import patch
 import pytest
 
 from .common import MQTTMessage

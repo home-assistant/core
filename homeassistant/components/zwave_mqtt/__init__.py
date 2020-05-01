@@ -277,7 +277,7 @@ async def async_handle_node_update(hass: HomeAssistant, node: OZWNode):
     """
     dev_registry = await get_dev_reg(hass)
     # grab device in device registry attached to this node
-    device = dev_registry.async_get_device([(DOMAIN, node.id)], [])
+    device = dev_registry.async_get_device({(DOMAIN, node.id)}, set())
     if not device:
         return
     # update device in device registry with (updated) info
