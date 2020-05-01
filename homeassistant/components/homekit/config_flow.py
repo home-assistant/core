@@ -199,14 +199,24 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             del self.homekit_options[CONF_INCLUDE_DOMAINS]
             return self.async_create_entry(title="", data=self.homekit_options)
 
-        data_schema = vol.Schema(
-            {
+        schema_base = {}
+
+        if self.show_advanced_options:
+            schema_base[
                 vol.Optional(
                     CONF_AUTO_START,
                     default=self.homekit_options.get(
                         CONF_AUTO_START, DEFAULT_AUTO_START
                     ),
-                ): bool,
+                )
+            ] = bool
+        else:
+            self.homekit_options[CONF_AUTO_START] = self.homekit_options.get(
+                CONF_AUTO_START, DEFAULT_AUTO_START
+            )
+
+        schema_base.update(
+            {
                 vol.Optional(
                     CONF_SAFE_MODE,
                     default=self.homekit_options.get(CONF_SAFE_MODE, DEFAULT_SAFE_MODE),
@@ -220,7 +230,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ): bool,
             }
         )
-        return self.async_show_form(step_id="advanced", data_schema=data_schema)
+
+        return self.async_show_form(
+            step_id="advanced", data_schema=vol.Schema(schema_base)
+        )
 
     async def async_step_exclude(self, user_input=None):
         """Choose entities to exclude from the domain."""

@@ -9,6 +9,29 @@ from homeassistant.const import CONF_NAME, CONF_PORT
 from tests.common import MockConfigEntry
 
 
+def _mock_config_entry_with_options_populated():
+    """Create a mock config entry with options populated."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        options={
+            "filter": {
+                "include_domains": [
+                    "fan",
+                    "vacuum",
+                    "media_player",
+                    "climate",
+                    "alarm_control_panel",
+                ],
+                "exclude_entities": ["climate.front_gate"],
+            },
+            "auto_start": False,
+            "safe_mode": False,
+            "zeroconf_default_interface": True,
+        },
+    )
+
+
 async def test_user_form(hass):
     """Test we can setup a new instance."""
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -95,34 +118,18 @@ async def test_import(hass):
     assert len(mock_setup_entry.mock_calls) == 2
 
 
-async def test_options_flow(hass):
+async def test_options_flow_advanced(hass):
     """Test config flow options."""
 
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
-        options={
-            "filter": {
-                "include_domains": [
-                    "fan",
-                    "vacuum",
-                    "media_player",
-                    "climate",
-                    "alarm_control_panel",
-                ],
-                "exclude_entities": ["climate.front_gate"],
-            },
-            "auto_start": True,
-            "safe_mode": False,
-            "zeroconf_default_interface": True,
-        },
-    )
+    config_entry = _mock_config_entry_with_options_populated()
     config_entry.add_to_hass(hass)
 
     hass.states.async_set("climate.old", "off")
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": True}
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
@@ -144,10 +151,59 @@ async def test_options_flow(hass):
         result3 = await hass.config_entries.options.async_configure(
             result2["flow_id"],
             user_input={
-                "auto_start": False,
+                "auto_start": True,
                 "safe_mode": True,
                 "zeroconf_default_interface": False,
             },
+        )
+
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {
+        "auto_start": True,
+        "filter": {
+            "exclude_domains": [],
+            "exclude_entities": ["climate.old"],
+            "include_domains": ["fan", "vacuum", "climate"],
+            "include_entities": [],
+        },
+        "safe_mode": True,
+        "zeroconf_default_interface": False,
+    }
+
+
+async def test_options_flow_basic(hass):
+    """Test config flow options."""
+
+    config_entry = _mock_config_entry_with_options_populated()
+    config_entry.add_to_hass(hass)
+
+    hass.states.async_set("climate.old", "off")
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"include_domains": ["fan", "vacuum", "climate"]},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "exclude"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"exclude_entities": ["climate.old"]},
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "advanced"
+
+    with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
+        result3 = await hass.config_entries.options.async_configure(
+            result2["flow_id"],
+            user_input={"safe_mode": True, "zeroconf_default_interface": False},
         )
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
