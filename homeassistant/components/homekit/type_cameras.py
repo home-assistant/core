@@ -15,8 +15,7 @@ from homeassistant.components.camera.const import DOMAIN as DOMAIN_CAMERA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.util import get_local_ip
 
-from . import TYPES
-from .accessories import HomeAccessory
+from .accessories import TYPES, HomeAccessory
 from .const import (
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
