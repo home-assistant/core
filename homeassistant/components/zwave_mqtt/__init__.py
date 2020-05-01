@@ -28,7 +28,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from . import const
 from .const import DATA_UNSUBSCRIBE, DOMAIN, PLATFORMS, TOPIC_OPENZWAVE
 from .discovery import DISCOVERY_SCHEMAS, check_node_schema, check_value_schema
-from .entity import ZWaveDeviceEntityValues, create_device_id, create_value_id
+from .entity import (
+    ZWaveDeviceEntityValues,
+    create_device_id,
+    create_device_name,
+    create_value_id,
+)
 from .services import ZWaveServices
 
 _LOGGER = logging.getLogger(__name__)
@@ -277,17 +282,15 @@ async def async_handle_node_update(hass: HomeAssistant, node: OZWNode):
     """
     dev_registry = await get_dev_reg(hass)
     # grab device in device registry attached to this node
-    device = dev_registry.async_get_device({(DOMAIN, node.id)}, set())
+    dev_id = create_device_id(node)
+    device = dev_registry.async_get_device({(DOMAIN, dev_id)}, set())
     if not device:
         return
     # update device in device registry with (updated) info
     for item in dev_registry.devices.values():
         if item.id != device.id and item.via_device_id != device.id:
             continue
-        if node.meta_data.get("Name"):
-            dev_name = node.meta_data["Name"]
-        else:
-            dev_name = node.node_product_name
+        dev_name = create_device_name(node)
         dev_registry.async_update_device(
             item.id,
             manufacturer=node.node_manufacturer_name,

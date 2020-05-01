@@ -264,9 +264,14 @@ class ZWaveDeviceEntity(Entity):
 def create_device_name(node: OZWNode):
     """Generate sensible (short) default device name from a OZWNode."""
     if node.meta_data["Name"]:
-        return node.meta_data["Name"]
-
-    return node.node_product_name
+        dev_name = node.meta_data["Name"]
+    elif node.node_product_name:
+        dev_name = node.node_product_name
+    elif node.node_device_type_string:
+        dev_name = node.node_device_type_string
+    else:
+        dev_name = node.specific_string
+    return dev_name
 
 
 def create_device_id(node: OZWNode, node_instance: int = 1):
