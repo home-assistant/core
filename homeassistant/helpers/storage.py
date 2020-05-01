@@ -39,13 +39,16 @@ async def async_migrator(
 
         if old_conf_load_func is not None:
             return old_conf_load_func(old_path)
-        else:
-            return json_util.load_json(old_path)
+
+        return json_util.load_json(old_path)
 
     config = await hass.async_add_executor_job(load_old_config)
 
     if config is None:
         return None
+
+    if old_conf_migrate_func is not None:
+        config = await old_conf_migrate_func(config)
 
     await store.async_save(config)
     await hass.async_add_executor_job(os.remove, old_path)
