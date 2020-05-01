@@ -1,21 +1,24 @@
 """The tests for the Met Office weather component."""
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import logging
 
 from asynctest import patch
 
 from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.util import utcnow
 
 from .const import (
     DATETIME_FORMAT,
     METOFFICE_CONFIG_KINGSLYNN,
     METOFFICE_CONFIG_WAVERTREE,
+    TEST_DATETIME_STRING,
     TEST_SITE_NAME_KINGSLYNN,
     TEST_SITE_NAME_WAVERTREE,
 )
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,7 +136,7 @@ async def test_one_sensor_site_running(hass, requests_mock):
         assert sensor.state == sensor_value
         assert (
             sensor.attributes.get("last_update").strftime(DATETIME_FORMAT)
-            == "2020-04-25 12:00:00+0000"
+            == TEST_DATETIME_STRING
         )
         assert sensor.attributes.get("site_id") == "354107"
         assert sensor.attributes.get("site_name") == TEST_SITE_NAME_WAVERTREE
@@ -152,18 +155,55 @@ async def test_site_cannot_connect(hass, requests_mock):
 
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text="")
     requests_mock.get("/public/data/val/wxfcs/all/json/354107?res=3hourly", text="")
-    requests_mock.get("/public/data/val/wxfcs/all/json/322380?res=3hourly", text="")
 
     entry = MockConfigEntry(domain=DOMAIN, data=METOFFICE_CONFIG_WAVERTREE,)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("weather.met_office_kingslynn") is None
+    assert hass.states.get("weather.met_office_wavertree") is None
     for sensor_id in WAVERTREE_SENSOR_RESULTS:
         sensor_name, sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
-        sensor = hass.states.get(f"sensor.kingslynn_{sensor_name}")
+        sensor = hass.states.get(f"sensor.wavertree_{sensor_name}")
         assert sensor is None
+
+
+@patch("datetime.datetime", MockDateTime)
+async def test_site_cannot_update(hass, requests_mock):
+    """Test we handle cannot connect error."""
+
+    from datetime import datetime, timezone
+
+    MockDateTime.now = classmethod(
+        lambda *args, **kwargs: datetime(2020, 4, 25, 12, tzinfo=timezone.utc)
+    )
+
+    # all metoffice test data encapsulated in here
+    mock_json = json.loads(load_fixture("metoffice.json"))
+    all_sites = json.dumps(mock_json["all_sites"])
+    wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
+
+    requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
+    requests_mock.get(
+        "/public/data/val/wxfcs/all/json/354107?res=3hourly", text=wavertree_hourly
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data=METOFFICE_CONFIG_WAVERTREE,)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity = hass.states.get("weather.met_office_wavertree")
+    assert entity
+
+    requests_mock.get("/public/data/val/wxfcs/all/json/354107?res=3hourly", text="")
+
+    future_time = utcnow() + timedelta(minutes=20)
+    async_fire_time_changed(hass, future_time)
+    await hass.async_block_till_done()
+
+    entity = hass.states.get("weather.met_office_wavertree")
+    assert entity.state == STATE_UNAVAILABLE
 
 
 @patch("datetime.datetime", MockDateTime)
@@ -267,7 +307,7 @@ async def test_two_sensor_sites_running(hass, requests_mock):
             assert sensor.state == sensor_value
             assert (
                 sensor.attributes.get("last_update").strftime(DATETIME_FORMAT)
-                == "2020-04-25 12:00:00+0000"
+                == TEST_DATETIME_STRING
             )
             assert sensor.attributes.get("sensor_id") == sensor_id
             assert sensor.attributes.get("site_id") == "354107"
@@ -279,7 +319,7 @@ async def test_two_sensor_sites_running(hass, requests_mock):
             assert sensor.state == sensor_value
             assert (
                 sensor.attributes.get("last_update").strftime(DATETIME_FORMAT)
-                == "2020-04-25 12:00:00+0000"
+                == TEST_DATETIME_STRING
             )
             assert sensor.attributes.get("sensor_id") == sensor_id
             assert sensor.attributes.get("site_id") == "322380"
