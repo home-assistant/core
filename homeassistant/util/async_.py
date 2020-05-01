@@ -102,7 +102,7 @@ def check_loop() -> None:
     else:
         extra = ""
 
-    if not integration.startswith("123ais_"):
+    if not integration.startswith("ais_"):
         _LOGGER.warning(
             "Detected I/O inside the event loop. This is causing stability issues. "
             "Please report issue%s for %s doing I/O at %s, line %s: %s",
