@@ -8,7 +8,8 @@
         "description": "Set up you BSB-Lan device to integrate with Home Assistant.",
         "data": {
           "host": "Host or IP address",
-          "port": "Port number"
+          "port": "Port number",
+          "passkey": "Passkey"
         }
       }
     },
