@@ -158,4 +158,4 @@ class MetOfficeWeather(WeatherEntity):
     @property
     def available(self):
         """Return if state is available."""
-        return self.metoffice_now
+        return self.metoffice_now is not None
