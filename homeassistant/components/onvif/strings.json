@@ -1,5 +1,4 @@
 {
-  "title": "ONVIF",
   "config": {
     "abort": {
       "already_configured": "ONVIF device is already configured.",

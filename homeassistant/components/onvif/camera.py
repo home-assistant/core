@@ -444,6 +444,8 @@ class ONVIFHassCamera(Camera):
             if "Bad Request" in err.reason:
                 self._ptz_service = None
                 LOGGER.debug("Camera '%s' doesn't support PTZ.", self._name)
+            else:
+                LOGGER.error(f"Error trying to perform PTZ action: {err}")
 
     async def async_added_to_hass(self):
         """Handle entity addition to hass."""

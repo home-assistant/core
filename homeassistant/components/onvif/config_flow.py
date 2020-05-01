@@ -211,7 +211,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if self.device_id is None:
                 return self.async_abort(reason="no_mac")
 
-            await self.async_set_unique_id(self.device_id)
+            await self.async_set_unique_id(self.device_id, raise_on_progress=False)
             self._abort_if_unique_id_configured(
                 updates={
                     CONF_HOST: self.onvif_config[CONF_HOST],
