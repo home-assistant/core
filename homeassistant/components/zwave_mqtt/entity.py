@@ -3,7 +3,11 @@
 import copy
 import logging
 
-from openzwavemqtt.const import EVENT_INSTANCE_STATUS_CHANGED, EVENT_VALUE_CHANGED
+from openzwavemqtt.const import (
+    EVENT_INSTANCE_STATUS_CHANGED,
+    EVENT_VALUE_CHANGED,
+    OZW_READY_STATES,
+)
 from openzwavemqtt.models.node import OZWNode
 from openzwavemqtt.models.value import OZWValue
 
@@ -212,11 +216,9 @@ class ZWaveDeviceEntity(Entity):
         """Return entity availability."""
         # Use OZW Daemon status for availability.
         instance_status = self.values.primary.ozw_instance.get_status()
-        return instance_status and instance_status.status in [
-            "driverAllNodesQueriedSomeDead",
-            "driverAllNodesQueried",
-            "driverAwakeNodesQueried",
-        ]
+        return instance_status and instance_status.status in (
+            state.value for state in OZW_READY_STATES
+        )
 
     @callback
     def _value_changed(self, value):
