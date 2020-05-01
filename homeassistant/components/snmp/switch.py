@@ -29,7 +29,7 @@ from pysnmp.proto.rfc1902 import (
 )
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
