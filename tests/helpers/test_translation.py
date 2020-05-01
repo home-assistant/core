@@ -265,3 +265,11 @@ async def test_caching(hass):
 
         await translation.async_get_translations(hass, "en", "state")
         assert len(mock_merge.mock_calls) == 2
+
+
+async def test_custom_component_translations(hass):
+    """Test getting translation from custom components."""
+    hass.config.components.add("test_standalone")
+    hass.config.components.add("test_embedded")
+    hass.config.components.add("test_package")
+    assert await translation.async_get_translations(hass, "en", "state") == {}
