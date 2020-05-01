@@ -1638,10 +1638,14 @@ pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
 <<<<<<< HEAD
+<<<<<<< HEAD
 pysqueezebox==0.2.1
 =======
 pysqueezebox==0.1.5
 >>>>>>> Fixes to config flow
+=======
+pysqueezebox==0.1.6
+>>>>>>> Unavailable player detection and recovery
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2

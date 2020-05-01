@@ -32,6 +32,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -132,7 +133,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         async def _discovered_player(player):
             """Handle a (re)discovered player."""
-            _LOGGER.debug("Reached _discovered_player, player=%s", player)
             entity = next(
                 (
                     known
@@ -141,17 +141,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 ),
                 None,
             )
-            if entity:
-                entity.available = True
+            if entity and not entity.available:
+                # check if previously unavailable player has connected
+                await player.async_update()
+                entity.available = player.available
             if not entity:
-                _LOGGER.debug("Adding new entity")
+                _LOGGER.debug("Adding new entity: %s", player)
                 entity = SqueezeBoxEntity(player)
                 hass.data[DATA_SQUEEZEBOX].append(entity)
                 async_add_entities([entity])
 
         players = await lms.async_get_players()
         for player in players:
-            await _discovered_player(player)
+            hass.async_create_task(_discovered_player(player))
 
         hass.helpers.event.async_call_later(DISCOVERY_INTERVAL, _discovery)
 
@@ -231,10 +233,17 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """Return True if device connected to LMS server."""
         return self._available
 
+    @available.setter
+    def available(self, val):
+        """Set available to True or False."""
+        self._available = bool(val)
+
     @property
     def state(self):
         """Return the state of the device."""
-        if self._player.power is not None and not self._player.power:
+        if not self.available:
+            return STATE_UNAVAILABLE
+        if not self._player.power:
             return STATE_OFF
         if self._player.mode:
             return SQUEEZEBOX_MODE.get(self._player.mode)
@@ -242,7 +251,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
 
     async def async_update(self):
         """Update the Player() object."""
-        # only update available players
+        # only update available players, newly available players will be rediscovered and marked available
         if self._available:
             last_media_position = self.media_position
             await self._player.async_update()
@@ -251,7 +260,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
                     "Media position updated for %s: %s", self, self.media_position
                 )
                 self._last_update = utcnow()
-            if self._player.power is None:
+            if self._player.connected is False:
                 _LOGGER.info("Player %s is not available", self.name)
                 self._available = False
 
