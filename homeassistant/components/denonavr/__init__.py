@@ -8,6 +8,7 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .config_flow import CONF_SHOW_ALL_SOURCES, CONF_ZONE2, CONF_ZONE3, DOMAIN
+from .receiver import ConnectDenonAVR
 
 SERVICE_GET_COMMAND = "get_command"
 ATTR_COMMAND = "command"
@@ -42,22 +43,13 @@ def setup(hass: core.HomeAssistant, config: dict):
 async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
-    """Set up the Xiaomi Miio components from a config entry."""
+    """Set up the denonavr components from a config entry."""
     hass.data[DOMAIN] = {}
 
-    zones = {}
-    if entry.data[CONF_ZONE2]:
-        zones["Zone2"] = None
-    if entry.data[CONF_ZONE3]:
-        zones["Zone3"] = None
-
     # Connect to receiver
-    receiver = denonavr.DenonAVR(
-        host=entry.data[CONF_HOST],
-        show_all_inputs=entry.data[CONF_SHOW_ALL_SOURCES],
-        timeout=entry.data[CONF_TIMEOUT],
-        add_zones=zones,
-    )
+    connect_denonavr = ConnectDenonAVR(hass)
+    await connect_denonavr.async_connect_receiver(entry.data[CONF_HOST], entry.data[CONF_TIMEOUT], entry.data[CONF_SHOW_ALL_SOURCES], entry.data[CONF_ZONE2], entry.data[CONF_ZONE3])
+    receiver = connect_denonavr.receiver
 
     hass.data[DOMAIN][entry.entry_id] = receiver
 
