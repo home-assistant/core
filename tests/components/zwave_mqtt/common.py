@@ -1,11 +1,10 @@
 """Helpers for tests."""
 import json
 
-from tests.async_mock import Mock, patch
-
-from homeassistant import config_entries, core as ha
+from homeassistant import config_entries
 from homeassistant.components.zwave_mqtt.const import DOMAIN
 
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -23,6 +22,7 @@ async def setup_zwave(hass, entry=None, fixture=None):
         entry.add_to_hass(hass)
 
     with patch("homeassistant.components.mqtt.async_subscribe") as mock_subscribe:
+        mock_subscribe.return_value = Mock()
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -38,19 +38,6 @@ async def setup_zwave(hass, entry=None, fixture=None):
         await hass.async_block_till_done()
 
     return receive_message
-
-
-def async_capture_events(hass, event_name):
-    """Create a helper that captures events."""
-    events = []
-
-    @ha.callback
-    def capture_events(event):
-        events.append(event)
-
-    hass.bus.async_listen(event_name, capture_events)
-
-    return events
 
 
 class MQTTMessage:

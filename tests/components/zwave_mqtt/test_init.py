@@ -20,10 +20,6 @@ async def test_init_entry(hass, generic_data):
     # Verify services registered
     assert hass.services.has_service(DOMAIN, const.SERVICE_ADD_NODE)
     assert hass.services.has_service(DOMAIN, const.SERVICE_REMOVE_NODE)
-    assert hass.services.has_service(DOMAIN, const.SERVICE_REMOVE_FAILED_NODE)
-    assert hass.services.has_service(DOMAIN, const.SERVICE_REPLACE_FAILED_NODE)
-    assert hass.services.has_service(DOMAIN, const.SERVICE_CANCEL_COMMAND)
-    assert hass.services.has_service(DOMAIN, const.SERVICE_SET_CONFIG_PARAMETER)
 
 
 async def test_unload_entry(hass, generic_data, switch_msg, caplog):

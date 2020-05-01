@@ -3,7 +3,9 @@ import asyncio
 import json
 from unittest.mock import Mock
 
-from .common import async_capture_events, setup_zwave
+from .common import setup_zwave
+
+from tests.common import async_capture_events
 
 
 async def test_scenes(hass, generic_data, sent_messages):
