@@ -5,15 +5,23 @@ import voluptuous as vol
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_per_platform
 
 from .const import (
-    CONF_PROFILE,
     CONF_RTSP_TRANSPORT,
     DEFAULT_ARGUMENTS,
-    DEFAULT_PROFILE,
+    DEFAULT_NAME,
+    DEFAULT_PASSWORD,
+    DEFAULT_PORT,
+    DEFAULT_USERNAME,
     DOMAIN,
     RTSP_TRANS_PROTOCOLS,
 )
@@ -32,12 +40,14 @@ async def async_setup(hass: HomeAssistant, config: dict):
             continue
 
         config = p_config.copy()
-        profile = config.get(CONF_PROFILE, DEFAULT_PROFILE)
         if config[CONF_HOST] not in configs.keys():
-            configs[config[CONF_HOST]] = config
-            configs[config[CONF_HOST]][CONF_PROFILE] = [profile]
-        else:
-            configs[config[CONF_HOST]][CONF_PROFILE].append(profile)
+            configs[config[CONF_HOST]] = {
+                CONF_HOST: config[CONF_HOST],
+                CONF_NAME: config.get(CONF_NAME, DEFAULT_NAME),
+                CONF_PASSWORD: config.get(CONF_PASSWORD, DEFAULT_PASSWORD),
+                CONF_PORT: config.get(CONF_PORT, DEFAULT_PORT),
+                CONF_USERNAME: config.get(CONF_USERNAME, DEFAULT_USERNAME),
+            }
 
     for conf in configs.values():
         hass.async_create_task(
@@ -64,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
+    return all(
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, component)
@@ -72,8 +82,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
-
-    return unload_ok
 
 
 async def async_populate_options(hass, entry):
