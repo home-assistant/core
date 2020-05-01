@@ -2,7 +2,6 @@
 import asyncio
 from datetime import timedelta
 import json
-from unittest.mock import Mock, patch
 
 import pytest
 
@@ -14,7 +13,8 @@ from homeassistant.core import CoreState
 from homeassistant.helpers import storage
 from homeassistant.util import dt
 
-from tests.common import async_fire_time_changed, mock_coro
+from tests.async_mock import Mock, patch
+from tests.common import async_fire_time_changed
 
 MOCK_VERSION = 1
 MOCK_KEY = "storage-test"
@@ -189,7 +189,7 @@ async def test_writing_while_writing_delay(hass, store, hass_storage):
 async def test_migrator_no_existing_config(hass, store, hass_storage):
     """Test migrator with no existing config."""
     with patch("os.path.isfile", return_value=False), patch.object(
-        store, "async_load", return_value=mock_coro({"cur": "config"})
+        store, "async_load", return_value={"cur": "config"}
     ):
         data = await storage.async_migrator(hass, "old-path", store)
 

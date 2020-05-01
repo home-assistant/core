@@ -1,10 +1,24 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
         "error": {
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
             "unknown": "Onverwachte fout"
         },
         "step": {
+            "resources": {
+                "data": {
+                    "resources": "Bronnen"
+                },
+                "title": "Kies de te controleren bronnen"
+            },
             "ups": {
+                "data": {
+                    "alias": "Alias",
+                    "resources": "Bronnen"
+                },
                 "title": "Kies een UPS om uit te lezen"
             },
             "user": {
@@ -22,8 +36,10 @@
         "step": {
             "init": {
                 "data": {
-                    "resources": "Bronnen"
-                }
+                    "resources": "Bronnen",
+                    "scan_interval": "Scaninterval (seconden)"
+                },
+                "description": "Kies Sensorbronnen."
             }
         }
     }

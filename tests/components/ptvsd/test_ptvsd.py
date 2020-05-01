@@ -2,12 +2,13 @@
 
 from unittest.mock import patch
 
-from asynctest import CoroutineMock
 from pytest import mark
 
 from homeassistant.bootstrap import _async_set_up_integrations
 import homeassistant.components.ptvsd as ptvsd_component
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import AsyncMock
 
 
 @mark.skip("causes code cover to fail")
@@ -42,9 +43,7 @@ async def test_ptvsd_bootstrap(hass):
     """Test loading ptvsd component with wait."""
     config = {ptvsd_component.DOMAIN: {ptvsd_component.CONF_WAIT: True}}
 
-    with patch(
-        "homeassistant.components.ptvsd.async_setup", CoroutineMock()
-    ) as setup_mock:
+    with patch("homeassistant.components.ptvsd.async_setup", AsyncMock()) as setup_mock:
         setup_mock.return_value = True
         await _async_set_up_integrations(hass, config)
 

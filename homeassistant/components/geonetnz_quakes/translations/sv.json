@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Plats \u00e4r redan konfigurerad."
+        },
         "step": {
             "user": {
                 "data": {

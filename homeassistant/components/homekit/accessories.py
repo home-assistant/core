@@ -99,6 +99,9 @@ class HomeAccessory(Accessory):
         self.entity_id = entity_id
         self.hass = hass
         self.debounce = {}
+        self._char_battery = None
+        self._char_charging = None
+        self._char_low_battery = None
         self.linked_battery_sensor = self.config.get(CONF_LINKED_BATTERY_SENSOR)
         self.linked_battery_charging_sensor = self.config.get(
             CONF_LINKED_BATTERY_CHARGING_SENSOR
@@ -162,8 +165,10 @@ class HomeAccessory(Accessory):
         Run inside the Home Assistant event loop.
         """
         state = self.hass.states.get(self.entity_id)
-        self.hass.async_add_executor_job(self.update_state_callback, None, None, state)
-        async_track_state_change(self.hass, self.entity_id, self.update_state_callback)
+        await self.async_update_state_callback(None, None, state)
+        async_track_state_change(
+            self.hass, self.entity_id, self.async_update_state_callback
+        )
 
         battery_charging_state = None
         battery_state = None
@@ -176,7 +181,7 @@ class HomeAccessory(Accessory):
                 ATTR_BATTERY_CHARGING
             )
             async_track_state_change(
-                self.hass, self.linked_battery_sensor, self.update_linked_battery
+                self.hass, self.linked_battery_sensor, self.async_update_linked_battery
             )
         else:
             battery_state = state.attributes.get(ATTR_BATTERY_LEVEL)
@@ -188,7 +193,7 @@ class HomeAccessory(Accessory):
             async_track_state_change(
                 self.hass,
                 self.linked_battery_charging_sensor,
-                self.update_linked_battery_charging,
+                self.async_update_linked_battery_charging,
             )
         elif battery_charging_state is None:
             battery_charging_state = state.attributes.get(ATTR_BATTERY_CHARGING)
@@ -198,8 +203,9 @@ class HomeAccessory(Accessory):
                 self.update_battery, battery_state, battery_charging_state
             )
 
-    @ha_callback
-    def update_state_callback(self, entity_id=None, old_state=None, new_state=None):
+    async def async_update_state_callback(
+        self, entity_id=None, old_state=None, new_state=None
+    ):
         """Handle state change listener callback."""
         _LOGGER.debug("New_state: %s", new_state)
         if new_state is None:
@@ -217,28 +223,28 @@ class HomeAccessory(Accessory):
         ):
             battery_charging_state = new_state.attributes.get(ATTR_BATTERY_CHARGING)
         if battery_state is not None or battery_charging_state is not None:
-            self.hass.async_add_executor_job(
+            await self.hass.async_add_executor_job(
                 self.update_battery, battery_state, battery_charging_state
             )
-        self.hass.async_add_executor_job(self.update_state, new_state)
+        await self.hass.async_add_executor_job(self.update_state, new_state)
 
-    @ha_callback
-    def update_linked_battery(self, entity_id=None, old_state=None, new_state=None):
+    async def async_update_linked_battery(
+        self, entity_id=None, old_state=None, new_state=None
+    ):
         """Handle linked battery sensor state change listener callback."""
         if self.linked_battery_charging_sensor:
             battery_charging_state = None
         else:
             battery_charging_state = new_state.attributes.get(ATTR_BATTERY_CHARGING)
-        self.hass.async_add_executor_job(
+        await self.hass.async_add_executor_job(
             self.update_battery, new_state.state, battery_charging_state,
         )
 
-    @ha_callback
-    def update_linked_battery_charging(
+    async def async_update_linked_battery_charging(
         self, entity_id=None, old_state=None, new_state=None
     ):
         """Handle linked battery charging sensor state change listener callback."""
-        self.hass.async_add_executor_job(
+        await self.hass.async_add_executor_job(
             self.update_battery, None, new_state.state == STATE_ON
         )
 
@@ -247,6 +253,10 @@ class HomeAccessory(Accessory):
 
         Only call this function if self._support_battery_level is True.
         """
+        if not self._char_battery:
+            # Battery appeared after homekit was started
+            return
+
         battery_level = convert_to_float(battery_level)
         if battery_level is not None:
             if self._char_battery.value != battery_level:
@@ -258,7 +268,8 @@ class HomeAccessory(Accessory):
                     "%s: Updated battery level to %d", self.entity_id, battery_level
                 )
 
-        if battery_charging is None:
+        # Charging state can appear after homekit was started
+        if battery_charging is None or not self._char_charging:
             return
 
         hk_charging = HK_CHARGING if battery_charging else HK_NOT_CHARGING

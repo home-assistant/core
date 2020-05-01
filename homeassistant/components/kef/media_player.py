@@ -23,7 +23,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
-    MediaPlayerDevice,
+    MediaPlayerEntity,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -174,7 +174,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     add_service(SERVICE_SUB_DB, "sub_db", "db_value")
 
 
-class KefMediaPlayer(MediaPlayerDevice):
+class KefMediaPlayer(MediaPlayerEntity):
     """Kef Player Object."""
 
     def __init__(

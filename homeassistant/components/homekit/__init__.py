@@ -484,7 +484,7 @@ class HomeKit:
             )
 
         _LOGGER.debug("Driver start")
-        self.hass.async_add_executor_job(self.driver.start)
+        self.hass.add_job(self.driver.start)
         self.status = STATUS_RUNNING
 
     async def async_stop(self, *args):
@@ -494,7 +494,7 @@ class HomeKit:
         self.status = STATUS_STOPPED
 
         _LOGGER.debug("Driver stop")
-        self.hass.async_add_executor_job(self.driver.stop)
+        self.hass.add_job(self.driver.stop)
 
     @callback
     def _async_configure_linked_battery_sensors(self, ent_reg, device_lookup, state):

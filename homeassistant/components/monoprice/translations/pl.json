@@ -21,5 +21,20 @@
                 "title": "Po\u0142\u0105cz z urz\u0105dzeniem"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source_1": "Nazwa \u017ar\u00f3d\u0142a #1",
+                    "source_2": "Nazwa \u017ar\u00f3d\u0142a #2",
+                    "source_3": "Nazwa \u017ar\u00f3d\u0142a #3",
+                    "source_4": "Nazwa \u017ar\u00f3d\u0142a #4",
+                    "source_5": "Nazwa \u017ar\u00f3d\u0142a #5",
+                    "source_6": "Nazwa \u017ar\u00f3d\u0142a #6"
+                },
+                "title": "Konfiguruj \u017ar\u00f3d\u0142a"
+            }
+        }
     }
 }

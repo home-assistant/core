@@ -1,3 +1,11 @@
 {
+    "state": {
+        "_": {
+            "off": "Av",
+            "ok": "",
+            "on": "P\u00e5",
+            "problem": ""
+        }
+    },
     "title": "Gruppe"
 }

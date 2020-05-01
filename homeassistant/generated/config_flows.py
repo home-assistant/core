@@ -54,6 +54,7 @@ FLOWS = [
     "homematicip_cloud",
     "huawei_lte",
     "hue",
+    "hunterdouglas_powerview",
     "iaqualink",
     "icloud",
     "ifttt",
@@ -142,6 +143,7 @@ FLOWS = [
     "withings",
     "wled",
     "wwlln",
+    "xiaomi_miio",
     "zha",
     "zwave"
 ]

@@ -29,6 +29,12 @@
                     "host": "H\u00f4te",
                     "port": "Port"
                 }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "port": "Port"
+                }
             }
         }
     },

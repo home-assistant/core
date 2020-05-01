@@ -9,7 +9,7 @@ from maxcube.device import (
     MAX_DEVICE_MODE_VACATION,
 )
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -72,11 +72,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities(devices)
 
 
-class MaxCubeClimate(ClimateDevice):
-    """MAX! Cube ClimateDevice."""
+class MaxCubeClimate(ClimateEntity):
+    """MAX! Cube ClimateEntity."""
 
     def __init__(self, handler, name, rf_address):
-        """Initialize MAX! Cube ClimateDevice."""
+        """Initialize MAX! Cube ClimateEntity."""
         self._name = name
         self._rf_address = rf_address
         self._cubehandle = handler

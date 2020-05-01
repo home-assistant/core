@@ -4,7 +4,7 @@ import logging
 from serial import SerialException
 
 from homeassistant import core
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -107,7 +107,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class MonopriceZone(MediaPlayerDevice):
+class MonopriceZone(MediaPlayerEntity):
     """Representation of a Monoprice amplifier zone."""
 
     def __init__(self, monoprice, sources, namespace, zone_id):

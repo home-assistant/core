@@ -19,7 +19,7 @@
                     "username": "\uc0ac\uc6a9\uc790 \uc774\ub984",
                     "verify_ssl": "\uc62c\ubc14\ub978 \uc778\uc99d\uc11c\ub97c \uc0ac\uc6a9\ud558\ub294 \ucee8\ud2b8\ub864\ub7ec"
                 },
-                "title": "UniFi \ucee8\ud2b8\ub864\ub7ec \uc124\uc815"
+                "title": "UniFi \ucee8\ud2b8\ub864\ub7ec \uc124\uc815\ud558\uae30"
             }
         }
     },
@@ -37,6 +37,7 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "\ub9c8\uc9c0\ub9c9\uc73c\ub85c \ud655\uc778\ub41c \uc2dc\uac04\ubd80\ud130 \uc678\ucd9c \uc0c1\ud0dc\ub85c \uac04\uc8fc\ub418\ub294 \uc2dc\uac04 (\ucd08)",
+                    "ignore_wired_bug": "UniFi \uc720\uc120 \ubc84\uadf8 \ub85c\uc9c1 \ube44\ud65c\uc131\ud654",
                     "ssid_filter": "\ubb34\uc120 \ud074\ub77c\uc774\uc5b8\ud2b8\ub97c \ucd94\uc801\ud558\ub824\uba74 SSID\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694",
                     "track_clients": "\ub124\ud2b8\uc6cc\ud06c \ud074\ub77c\uc774\uc5b8\ud2b8 \ucd94\uc801 \ub300\uc0c1",
                     "track_devices": "\ub124\ud2b8\uc6cc\ud06c \uae30\uae30 \ucd94\uc801 (Ubiquiti \uae30\uae30)",

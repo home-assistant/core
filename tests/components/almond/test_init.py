@@ -1,6 +1,5 @@
 """Tests for Almond set up."""
 from time import time
-from unittest.mock import patch
 
 import pytest
 
@@ -10,7 +9,8 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry, async_fire_time_changed, mock_coro
+from tests.async_mock import patch
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)
@@ -34,7 +34,6 @@ async def test_set_up_oauth_remote_url(hass, aioclient_mock):
 
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-        return_value=mock_coro(),
     ):
         assert await async_setup_component(hass, "almond", {})
 
@@ -43,9 +42,7 @@ async def test_set_up_oauth_remote_url(hass, aioclient_mock):
     with patch("homeassistant.components.almond.ALMOND_SETUP_DELAY", 0), patch(
         "homeassistant.helpers.network.async_get_external_url",
         return_value="https://example.nabu.casa",
-    ), patch(
-        "pyalmond.WebAlmondAPI.async_create_device", return_value=mock_coro()
-    ) as mock_create_device:
+    ), patch("pyalmond.WebAlmondAPI.async_create_device") as mock_create_device:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
         async_fire_time_changed(hass, utcnow())
@@ -69,7 +66,6 @@ async def test_set_up_oauth_no_external_url(hass, aioclient_mock):
 
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-        return_value=mock_coro(),
     ), patch("pyalmond.WebAlmondAPI.async_create_device") as mock_create_device:
         assert await async_setup_component(hass, "almond", {})
 
@@ -104,9 +100,7 @@ async def test_set_up_local(hass, aioclient_mock):
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "pyalmond.WebAlmondAPI.async_create_device", return_value=mock_coro()
-    ) as mock_create_device:
+    with patch("pyalmond.WebAlmondAPI.async_create_device") as mock_create_device:
         assert await async_setup_component(hass, "almond", {})
 
     assert entry.state == config_entries.ENTRY_STATE_LOADED

@@ -30,7 +30,7 @@
       }
     },
     "error": {
-      "connection": "Connection error: please check your host, password & ssl",
+      "connection": "Connection error: please check your host, port & ssl",
       "login": "Login error: please check your username & password",
       "missing_data": "Missing data: please retry later or an other configuration",
       "otp_failed": "Two-step authentication failed, retry with a new pass code",

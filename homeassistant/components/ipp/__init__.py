@@ -128,23 +128,19 @@ class IPPEntity(Entity):
         self,
         *,
         entry_id: str,
+        device_id: str,
         coordinator: IPPDataUpdateCoordinator,
         name: str,
         icon: str,
         enabled_default: bool = True,
     ) -> None:
         """Initialize the IPP entity."""
-        self._device_id = None
+        self._device_id = device_id
         self._enabled_default = enabled_default
         self._entry_id = entry_id
         self._icon = icon
         self._name = name
         self.coordinator = coordinator
-
-        if coordinator.data.info.uuid is not None:
-            self._device_id = coordinator.data.info.uuid
-        elif coordinator.data.info.serial is not None:
-            self._device_id = coordinator.data.info.serial
 
     @property
     def name(self) -> str:

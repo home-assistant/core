@@ -10,6 +10,7 @@ from homeassistant.components.climate import (
     HVAC_MODE_OFF,
     SET_TEMPERATURE_SCHEMA,
     ClimateDevice,
+    ClimateEntity,
 )
 
 from tests.common import async_mock_service
@@ -45,7 +46,7 @@ async def test_set_temp_schema(hass, caplog):
     assert calls[-1].data == data
 
 
-class MockClimateDevice(ClimateDevice):
+class MockClimateEntity(ClimateEntity):
     """Mock Climate device to use in tests."""
 
     @property
@@ -67,7 +68,7 @@ class MockClimateDevice(ClimateDevice):
 
 async def test_sync_turn_on(hass):
     """Test if async turn_on calls sync turn_on."""
-    climate = MockClimateDevice()
+    climate = MockClimateEntity()
     climate.hass = hass
 
     climate.turn_on = MagicMock()
@@ -78,10 +79,24 @@ async def test_sync_turn_on(hass):
 
 async def test_sync_turn_off(hass):
     """Test if async turn_off calls sync turn_off."""
-    climate = MockClimateDevice()
+    climate = MockClimateEntity()
     climate.hass = hass
 
     climate.turn_off = MagicMock()
     await climate.async_turn_off()
 
     assert climate.turn_off.called
+
+
+def test_deprecated_base_class(caplog):
+    """Test deprecated base class."""
+
+    class CustomClimate(ClimateDevice):
+        def hvac_mode(self):
+            pass
+
+        def hvac_modes(self):
+            pass
+
+    CustomClimate()
+    assert "ClimateDevice is deprecated, modify CustomClimate" in caplog.text
