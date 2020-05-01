@@ -190,8 +190,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     if CONF_ENTRY_INDEX in conf and conf[CONF_ENTRY_INDEX] == 0:
         _LOGGER.debug("Migrating legacy HomeKit data for %s", name)
-        migrate_filesystem_state_data_for_primary_imported_entry_id(
-            hass, entry.entry_id
+        hass.async_add_executor_job(
+            migrate_filesystem_state_data_for_primary_imported_entry_id,
+            hass,
+            entry.entry_id,
         )
 
     aid_storage = AccessoryAidStorage(hass, entry.entry_id)
