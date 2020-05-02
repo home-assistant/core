@@ -242,3 +242,15 @@ def hass_ws_client(aiohttp_client, hass_access_token, hass):
         return websocket
 
     return create_client
+
+
+@pytest.fixture(autouse=True)
+def fail_on_log_exception(request, monkeypatch):
+    """Fixture to fail if a callback wrapped by catch_log_exception or coroutine wrapped by async_create_catching_coro throws."""
+    if "no_fail_on_log_exception" in request.keywords:
+        return
+
+    def log_exception(format_err, *args):
+        raise
+
+    monkeypatch.setattr("homeassistant.util.logging.log_exception", log_exception)
