@@ -1,6 +1,5 @@
 """BleBox devices setup tests."""
 
-from asynctest import call, mock, patch
 import blebox_uniapi
 import pytest
 
@@ -9,6 +8,8 @@ from homeassistant.components.blebox.const import DOMAIN
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .conftest import mock_config, patch_product_identify
+
+from tests.async_mock import ANY, call, patch
 
 
 async def test_setup_failure(hass):
@@ -23,7 +24,7 @@ async def test_setup_failure(hass):
             await async_setup_entry(hass, config)
 
         error.assert_has_calls(
-            [call("Identify failed at %s:%d (%s)", "172.100.123.4", 80, mock.ANY,)]
+            [call("Identify failed at %s:%d (%s)", "172.100.123.4", 80, ANY,)]
         )
         assert isinstance(error.call_args[0][3], blebox_uniapi.error.ClientError)
 
@@ -40,7 +41,7 @@ async def test_setup_failure_on_connection(hass):
             await async_setup_entry(hass, config)
 
         error.assert_has_calls(
-            [call("Identify failed at %s:%d (%s)", "172.100.123.4", 80, mock.ANY,)]
+            [call("Identify failed at %s:%d (%s)", "172.100.123.4", 80, ANY,)]
         )
         assert isinstance(error.call_args[0][3], blebox_uniapi.error.ConnectionError)
 

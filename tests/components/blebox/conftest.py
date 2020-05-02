@@ -2,12 +2,12 @@
 
 from unittest import mock
 
-from asynctest import CoroutineMock, PropertyMock, patch
 import blebox_uniapi
 
 from homeassistant.components.blebox import const
 from homeassistant.const import CONF_HOST, CONF_PORT
 
+from tests.async_mock import AsyncMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
 
@@ -18,7 +18,7 @@ def patch_product_identify(path=None, **kwargs):
 
     patcher = patch(path, mock.DEFAULT, blebox_uniapi.products.Products, True, True)
     products_class = patcher.start()
-    products_class.async_from_host = CoroutineMock(**kwargs)
+    products_class.async_from_host = AsyncMock(**kwargs)
     return products_class
 
 

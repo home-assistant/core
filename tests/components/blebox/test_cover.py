@@ -1,6 +1,5 @@
 """BleBox cover entities tests."""
 
-from asynctest import CoroutineMock, PropertyMock, call, mock, patch
 import blebox_uniapi
 import pytest
 
@@ -21,6 +20,8 @@ from homeassistant.components.cover import (
 )
 
 from .conftest import BleBoxTestHelper, mock_feature
+
+from tests.async_mock import ANY, AsyncMock, PropertyMock, call, patch
 
 
 class CoverTestHelper(BleBoxTestHelper):
@@ -251,8 +252,8 @@ async def test_open(all_cover_types, hass):
     def open_gate():
         feature_mock.state = 1  # opening
 
-    feature_mock.async_update = CoroutineMock(side_effect=update)
-    feature_mock.async_open = CoroutineMock(side_effect=open_gate)
+    feature_mock.async_update = AsyncMock(side_effect=update)
+    feature_mock.async_open = AsyncMock(side_effect=open_gate)
 
     entity = await data.async_updated_entity(hass, 0)
 
@@ -273,8 +274,8 @@ async def test_close(all_cover_types, hass):
     def close():
         feature_mock.state = 0  # closing
 
-    feature_mock.async_update = CoroutineMock(side_effect=update)
-    feature_mock.async_close = CoroutineMock(side_effect=close)
+    feature_mock.async_update = AsyncMock(side_effect=update)
+    feature_mock.async_close = AsyncMock(side_effect=close)
 
     entity = await data.async_updated_entity(hass, 0)
 
@@ -293,8 +294,8 @@ def opening_to_stop_feature_mock(data):
     def stop():
         feature_mock.state = 2  # manually stopped
 
-    feature_mock.async_update = CoroutineMock(side_effect=update)
-    feature_mock.async_stop = CoroutineMock(side_effect=stop)
+    feature_mock.async_update = AsyncMock(side_effect=update)
+    feature_mock.async_stop = AsyncMock(side_effect=stop)
 
 
 async def test_stop(all_cover_types, hass):
@@ -320,7 +321,7 @@ async def test_update(all_cover_types, hass):
         feature_mock.current = 29  # inverted
         feature_mock.state = 2  # manually stopped
 
-    feature_mock.async_update = CoroutineMock(side_effect=update)
+    feature_mock.async_update = AsyncMock(side_effect=update)
 
     entity = await data.async_updated_entity(hass, 0)
 
@@ -340,8 +341,8 @@ def closed_to_position_almost_closed_feature_mock(data):
         feature_mock.state = 1  # opening
         # feature_mock.current = position
 
-    feature_mock.async_update = CoroutineMock(side_effect=update)
-    feature_mock.async_set_position = CoroutineMock(side_effect=set_position)
+    feature_mock.async_update = AsyncMock(side_effect=update)
+    feature_mock.async_set_position = AsyncMock(side_effect=set_position)
 
 
 async def test_set_position(all_sliders, hass):
@@ -367,7 +368,7 @@ async def test_unknown_position(shutterbox, hass):
         feature_mock.state = 4  # opening
         feature_mock.current = -1
 
-    feature_mock.async_update = CoroutineMock(side_effect=update)
+    feature_mock.async_update = AsyncMock(side_effect=update)
 
     entity = await data.async_updated_entity(hass, 0)
     assert_state(entity, STATE_OPEN)
@@ -412,13 +413,11 @@ async def test_update_failure(all_types, hass):
 
     data = all_types
     feature_mock = data.default_mock()
-    feature_mock.async_update = CoroutineMock(
-        side_effect=blebox_uniapi.error.ClientError
-    )
+    feature_mock.async_update = AsyncMock(side_effect=blebox_uniapi.error.ClientError)
     name = feature_mock.full_name
 
     with patch("homeassistant.components.blebox._LOGGER.error") as error:
         await data.async_updated_entity(hass, 0)
 
-        error.assert_has_calls([call("Updating '%s' failed: %s", name, mock.ANY)])
+        error.assert_has_calls([call("Updating '%s' failed: %s", name, ANY)])
         assert isinstance(error.call_args[0][2], blebox_uniapi.error.ClientError)

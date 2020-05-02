@@ -1,6 +1,5 @@
 """Test Home Assistant config flow for BleBox devices."""
 
-from asynctest import CoroutineMock, PropertyMock, mock, patch
 import blebox_uniapi
 import pytest
 
@@ -9,6 +8,8 @@ from homeassistant.components.blebox import config_flow
 from homeassistant.setup import async_setup_component
 
 from .conftest import mock_config, mock_only_feature, setup_product_mock
+
+from tests.async_mock import DEFAULT, AsyncMock, PropertyMock, patch
 
 
 async def empty_config_flow_from_user(hass):
@@ -35,7 +36,7 @@ def create_valid_feature_mock(path="homeassistant.components.blebox.Products"):
         full_name="gateBox-0.position",
         device_class="gate",
         state=0,
-        async_update=CoroutineMock(),
+        async_update=AsyncMock(),
         current=None,
     )
 
@@ -85,14 +86,14 @@ async def test_flow_works(hass, flow_feature_mock):
 def product_class_mock():
     """Return a mocked feature."""
     path = "homeassistant.components.blebox.config_flow.Products"
-    patcher = patch(path, mock.DEFAULT, blebox_uniapi.products.Products, True, True)
+    patcher = patch(path, DEFAULT, blebox_uniapi.products.Products, True, True)
     yield patcher
 
 
 async def test_flow_with_connection_failure(hass, product_class_mock):
     """Test that config flow works."""
     with product_class_mock as products_class:
-        products_class.async_from_host = CoroutineMock(
+        products_class.async_from_host = AsyncMock(
             side_effect=blebox_uniapi.error.ConnectionError
         )
 
@@ -103,7 +104,7 @@ async def test_flow_with_connection_failure(hass, product_class_mock):
 async def test_flow_with_api_failure(hass, product_class_mock):
     """Test that config flow works."""
     with product_class_mock as products_class:
-        products_class.async_from_host = CoroutineMock(
+        products_class.async_from_host = AsyncMock(
             side_effect=blebox_uniapi.error.Error
         )
 
@@ -114,7 +115,7 @@ async def test_flow_with_api_failure(hass, product_class_mock):
 async def test_flow_with_unknown_failure(hass, product_class_mock):
     """Test that config flow works."""
     with product_class_mock as products_class:
-        products_class.async_from_host = CoroutineMock(side_effect=RuntimeError)
+        products_class.async_from_host = AsyncMock(side_effect=RuntimeError)
         result = await user_entered_host_and_port(hass)
         assert result["errors"] == {"base": "unknown"}
 
@@ -122,7 +123,7 @@ async def test_flow_with_unknown_failure(hass, product_class_mock):
 async def test_flow_with_unsupported_version(hass, product_class_mock):
     """Test that config flow works."""
     with product_class_mock as products_class:
-        products_class.async_from_host = CoroutineMock(
+        products_class.async_from_host = AsyncMock(
             side_effect=blebox_uniapi.error.UnsupportedBoxVersion
         )
 
