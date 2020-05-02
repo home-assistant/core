@@ -121,7 +121,7 @@ async def test_flow_user(hass):
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
-        assert result["errors"] == {}
+        assert result["errors"] is None
         _flow_next(hass, result["flow_id"])
 
         result = await hass.config_entries.flow.async_configure(

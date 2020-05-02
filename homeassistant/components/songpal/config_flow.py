@@ -35,24 +35,13 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the flow."""
         self.conf: Optional[SongpalConfig] = None
 
-    async def _show_setup_form(self, user_input=None, errors=None):
-        user_input = user_input or {}
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_ENDPOINT, default=user_input.get(CONF_ENDPOINT, "")
-                    ): str,
-                }
-            ),
-            errors=errors or {},
-        )
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         if user_input is None:
-            return await self._show_setup_form()
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema({vol.Required(CONF_ENDPOINT): str}),
+            )
 
         # Validate input
         endpoint = user_input[CONF_ENDPOINT]
@@ -66,7 +55,17 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             name = interface_info.modelName
         except SongpalException as ex:
             _LOGGER.debug("Connection failed: %s", ex)
-            return await self._show_setup_form(user_input, {"base": "connection"})
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_ENDPOINT, default=user_input.get(CONF_ENDPOINT, "")
+                        ): str,
+                    }
+                ),
+                errors={"base": "connection"},
+            )
 
         self.conf = SongpalConfig(name, parsed_url.hostname, endpoint)
 
