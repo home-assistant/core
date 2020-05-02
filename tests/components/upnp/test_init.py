@@ -23,7 +23,7 @@ async def test_async_setup_entry_default(hass):
     udn = "uuid:device_1"
     mock_device = MockDevice(udn)
     entry = MockConfigEntry(
-        domain=upnp.DOMAIN, data={"udn": udn, "st": mock_device.device_type}
+        domain=upnp.DOMAIN, data={"udn": mock_device.udn, "st": mock_device.device_type}
     )
 
     config = {
@@ -45,8 +45,8 @@ async def test_async_setup_entry_default(hass):
                 DISCOVERY_LOCATION: "http://192.168.1.1/desc.xml",
             }
         ]
-        create_device.return_value = mock_device
-        async_discover.return_value = discovery_infos
+        create_device.return_value = mock_coro(return_value=mock_device)
+        async_discover.return_value = mock_coro(return_value=discovery_infos)
 
         assert await upnp.async_setup_entry(hass, entry) is True
 
@@ -67,7 +67,7 @@ async def test_async_setup_entry_port_mapping(hass):
     udn = "uuid:device_1"
     mock_device = MockDevice(udn)
     entry = MockConfigEntry(
-        domain=upnp.DOMAIN, data={"udn": udn, "st": mock_device.device_type}
+        domain=upnp.DOMAIN, data={"udn": mock_device.udn, "st": mock_device.device_type}
     )
 
     config = {
@@ -94,8 +94,8 @@ async def test_async_setup_entry_port_mapping(hass):
                 DISCOVERY_LOCATION: "http://192.168.1.1/desc.xml",
             }
         ]
-        create_device.return_value = mock_device
-        async_discover.return_value = discovery_infos
+        create_device.return_value = mock_coro(return_value=mock_device)
+        async_discover.return_value = mock_coro(return_value=discovery_infos)
 
         assert await upnp.async_setup_entry(hass, entry) is True
 

@@ -1,6 +1,16 @@
 """Mock device for testing purposes."""
 
+from typing import Mapping
+
+from homeassistant.components.upnp.const import (
+    BYTES_RECEIVED,
+    BYTES_SENT,
+    PACKETS_RECEIVED,
+    PACKETS_SENT,
+    TIMESTAMP,
+)
 from homeassistant.components.upnp.device import Device
+import homeassistant.util.dt as dt_util
 
 
 class MockDevice(Device):
@@ -55,3 +65,13 @@ class MockDevice(Device):
         """Remove a port mapping."""
         entry = external_port
         self.removed_port_mappings.append(entry)
+
+    async def async_get_traffic_data(self) -> Mapping[str, any]:
+        """Get traffic data."""
+        return {
+            TIMESTAMP: dt_util.utcnow(),
+            BYTES_RECEIVED: 0,
+            BYTES_SENT: 0,
+            PACKETS_RECEIVED: 0,
+            PACKETS_SENT: 0,
+        }
