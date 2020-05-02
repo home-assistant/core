@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Controller site is already configured",
+            "no_local_user": "No local user found, configure a local account on controller and try again",
             "user_privilege": "User needs to be administrator"
         },
         "error": {
