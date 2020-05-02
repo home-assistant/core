@@ -1,7 +1,5 @@
 """BleBox cover entity."""
 
-import logging
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
     STATE_CLOSED,
@@ -21,8 +19,6 @@ from .const import (
     DOMAIN,
     PRODUCT,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add):
@@ -59,10 +55,6 @@ class BleBoxCoverEntity(BleBoxEntity, CoverEntity):
         """Return the current cover position."""
         position = self._feature.current
         if position == -1:  # possible for shutterBox
-            name = self.name
-            _LOGGER.warning(
-                "Position for %s is unknown. Try calibrating the device.", name
-            )
             return None
 
         return None if position is None else 100 - position

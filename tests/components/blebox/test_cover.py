@@ -382,18 +382,9 @@ async def test_unknown_position(shutterbox, hass):
 
     feature_mock.async_update = CoroutineMock(side_effect=update)
 
-    with patch("homeassistant.components.blebox.cover._LOGGER.warning") as warn:
-        entity = await data.async_updated_entity(hass, 0)
-        assert_state(entity, STATE_OPEN)
-        assert entity.current_cover_position is None
-        warn.assert_has_calls(
-            [
-                call(
-                    "Position for %s is unknown. Try calibrating the device.",
-                    "shutterBox-position",
-                )
-            ]
-        )
+    entity = await data.async_updated_entity(hass, 0)
+    assert_state(entity, STATE_OPEN)
+    assert entity.current_cover_position is None
 
 
 async def test_with_stop(gatebox, hass):
