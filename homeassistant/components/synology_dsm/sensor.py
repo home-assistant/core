@@ -13,6 +13,7 @@ from homeassistant.const import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util.temperature import celsius_to_fahrenheit
 
 from . import SynoApi
 from .const import (
@@ -156,7 +157,7 @@ class SynoNasUtilSensor(SynoNasSensor):
 
         # Data (RAM)
         if self._unit == DATA_MEGABYTES:
-            return round(attr / 1024.0 / 1024.0, 1)
+            return round(attr / 1024.0 ** 2, 1)
 
         # Network
         if self._unit == DATA_RATE_KILOBYTES_PER_SECOND:
@@ -177,13 +178,15 @@ class SynoNasStorageSensor(SynoNasSensor):
 
         # Data (disk space)
         if self._unit == DATA_TERABYTES:
-            return round(attr / 1024.0 / 1024.0 / 1024.0 / 1024.0, 2)
+            return round(attr / 1024.0 ** 4, 2)
 
         # Temperature
         if self._api.temp_unit == TEMP_CELSIUS:
+            # Celsius
             return attr
         if self.sensor_type in TEMP_SENSORS_KEYS:
-            return round(attr * 1.8 + 32.0, 1)
+            # Fahrenheit
+            return celsius_to_fahrenheit(attr)
 
         return attr
 
