@@ -208,7 +208,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def _host_already_configured(self, hostname):
         """See if we already have a host matching user input configured."""
         existing_hosts = {
-            entry.data[CONF_HOST] for entry in self._async_current_entries()
+            entry.data.get(CONF_HOST) for entry in self._async_current_entries()
         }
         return hostname in existing_hosts
 
