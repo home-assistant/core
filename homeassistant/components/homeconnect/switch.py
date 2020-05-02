@@ -4,7 +4,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/integrations/switch.homeconnect/
 """
 import logging
-import re
 
 from homeconnect.api import HomeConnectError
 
@@ -86,15 +85,6 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
         _LOGGER.debug("Updated, new state: %s", self._state)
 
 
-def convert_to_snake(camel):
-    """Convert from CamelCase to snake_case.
-
-    Taken from https://stackoverflow.com/questions/1175208/elegant-python-function-to-convert-camelcase-to-snake-case
-    """
-    snake = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", camel)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", snake).lower()
-
-
 class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     """Power switch class for Home Connect."""
 
@@ -170,20 +160,3 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         else:
             self._state = None
         _LOGGER.debug("Updated, new state: %s", self._state)
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        status = self.device.appliance.status
-        attributes = {}
-        for key, val in status.items():
-            # e.g. `BSH.Something.SomeValue` -> `some_value`
-            newkey = convert_to_snake(key.split(".")[-1])
-            if isinstance(val, str):
-                newval = convert_to_snake(val.split(".")[-1])
-            elif isinstance(val, (dict, int)):
-                newval = val
-            else:
-                raise ValueError("Unexpected type for value")
-            attributes[newkey] = newval
-        return attributes
