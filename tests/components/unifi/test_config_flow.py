@@ -32,7 +32,10 @@ from tests.common import MockConfigEntry
 
 CLIENTS = [{"mac": "00:00:00:00:00:01"}]
 
-WLANS = [{"name": "SSID 1"}, {"name": "SSID 2"}]
+WLANS = [
+    {"name": "SSID 1"},
+    {"name": "SSID 2", "name_combine_enabled": False, "name_combine_suffix": "_IOT"},
+]
 
 
 async def test_flow_works(hass, aioclient_mock, mock_discovery):
@@ -331,7 +334,7 @@ async def test_option_flow(hass):
             CONF_TRACK_CLIENTS: False,
             CONF_TRACK_WIRED_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
-            CONF_SSID_FILTER: ["SSID 1"],
+            CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT"],
             CONF_DETECTION_TIME: 100,
         },
     )
@@ -356,7 +359,7 @@ async def test_option_flow(hass):
         CONF_TRACK_CLIENTS: False,
         CONF_TRACK_WIRED_CLIENTS: False,
         CONF_TRACK_DEVICES: False,
-        CONF_SSID_FILTER: ["SSID 1"],
+        CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT"],
         CONF_DETECTION_TIME: 100,
         CONF_IGNORE_WIRED_BUG: False,
         CONF_POE_CLIENTS: False,

@@ -199,7 +199,12 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             self.options.update(user_input)
             return await self.async_step_client_control()
 
-        ssid_filter = {wlan: wlan for wlan in self.controller.api.wlans}
+        ssids = list(self.controller.api.wlans) + [
+            f"{wlan.name}{wlan.name_combine_suffix}"
+            for wlan in self.controller.api.wlans.values()
+            if not wlan.name_combine_enabled
+        ]
+        ssid_filter = {ssid: ssid for ssid in sorted(ssids)}
 
         return self.async_show_form(
             step_id="device_tracker",
