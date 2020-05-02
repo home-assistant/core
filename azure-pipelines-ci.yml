@@ -177,7 +177,8 @@ stages:
               set -e
               . venv/bin/activate
 
-              source_branch="$(pull/${System.PullRequest.PullRequestNumber}/head)"
+              pr_id="$(System.PullRequest.PullRequestNumber)"
+              source_branch="$(pull/${pr_id}/head)"
               target_branch="$(System.PullRequest.TargetBranch)"
 
               test_suite="$(python3 script/determine_pr_tests.py ${source_branch} ${target_branch} test)"
@@ -193,7 +194,8 @@ stages:
 
               . venv/bin/activate
 
-              source_branch="$(pull/${System.PullRequest.PullRequestNumber}/head)"
+              pr_id="$(System.PullRequest.PullRequestNumber)"
+              source_branch="$(pull/${pr_id}/head)"
               target_branch="$(System.PullRequest.TargetBranch)"
 
               test_suite="$(python3 script/determine_pr_tests.py ${source_branch} ${target_branch} test)"
