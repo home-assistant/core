@@ -7,8 +7,8 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-from .api import HomeConnectEntity
 from .const import DOMAIN
+from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
 

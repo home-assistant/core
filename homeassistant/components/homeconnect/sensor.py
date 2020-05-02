@@ -10,8 +10,8 @@ import logging
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 import homeassistant.util.dt as dt_util
 
-from .api import HomeConnectEntity
 from .const import DOMAIN
+from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
 

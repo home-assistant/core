@@ -10,8 +10,8 @@ from homeconnect.api import HomeConnectError
 
 from homeassistant.components.switch import SwitchEntity
 
-from .api import HomeConnectEntity
 from .const import DOMAIN
+from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
 
