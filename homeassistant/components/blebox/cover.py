@@ -11,7 +11,7 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
-    CoverDevice,
+    CoverEntity,
 )
 
 from . import BleBoxEntity, create_blebox_entities
@@ -33,7 +33,7 @@ async def async_setup_entry(hass, config_entry, async_add):
     return True
 
 
-class BleBoxCoverEntity(BleBoxEntity, CoverDevice):
+class BleBoxCoverEntity(BleBoxEntity, CoverEntity):
     """Representation of a BleBox cover feature."""
 
     @property
