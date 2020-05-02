@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Home Connect",
     "step": {
       "pick_implementation": {
         "title": "Pick Authentication Method"
