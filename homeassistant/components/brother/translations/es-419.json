@@ -7,6 +7,23 @@
         "error": {
             "connection_error": "Error de conexi\u00f3n.",
             "snmp_error": "El servidor SNMP est\u00e1 apagado o la impresora no es compatible."
+        },
+        "flow_title": "Impresora Brother: {model} {serial_number}",
+        "step": {
+            "user": {
+                "data": {
+                    "type": "Tipo de impresora"
+                },
+                "description": "Configure la integraci\u00f3n de la impresora Brother. Si tiene problemas con la configuraci\u00f3n, vaya a: https://www.home-assistant.io/integrations/brother",
+                "title": "Impresora Brother"
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "type": "Tipo de impresora"
+                },
+                "description": "\u00bfDesea agregar la Impresora Brother {model} con el n\u00famero de serie `{serial_number}` a Home Assistant?",
+                "title": "Impresora Brother descubierta"
+            }
         }
     }
 }

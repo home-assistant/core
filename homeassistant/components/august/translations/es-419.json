@@ -1,6 +1,10 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "La cuenta ya est\u00e1 configurada"
+        },
         "error": {
+            "cannot_connect": "No se pudo conectar, intente nuevamente",
             "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
             "unknown": "Error inesperado"
         },
@@ -12,7 +16,8 @@
                     "timeout": "Tiempo de espera (segundos)",
                     "username": "Nombre de usuario"
                 },
-                "description": "Si el M\u00e9todo de inicio de sesi\u00f3n es 'correo electr\u00f3nico', Nombre de usuario es la direcci\u00f3n de correo electr\u00f3nico. Si el M\u00e9todo de inicio de sesi\u00f3n es 'tel\u00e9fono', Nombre de usuario es el n\u00famero de tel\u00e9fono en el formato '+NNNNNNNNN'."
+                "description": "Si el M\u00e9todo de inicio de sesi\u00f3n es 'correo electr\u00f3nico', Nombre de usuario es la direcci\u00f3n de correo electr\u00f3nico. Si el M\u00e9todo de inicio de sesi\u00f3n es 'tel\u00e9fono', Nombre de usuario es el n\u00famero de tel\u00e9fono en el formato '+NNNNNNNNN'.",
+                "title": "Configurar una cuenta de August"
             },
             "validation": {
                 "data": {

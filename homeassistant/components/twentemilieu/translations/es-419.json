@@ -2,6 +2,10 @@
     "config": {
         "step": {
             "user": {
+                "data": {
+                    "house_number": "N\u00famero de casa",
+                    "post_code": "C\u00f3digo postal"
+                },
                 "title": "Twente Milieu"
             }
         }
