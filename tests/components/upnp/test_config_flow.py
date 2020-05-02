@@ -2,7 +2,7 @@
 
 from asynctest import patch
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.upnp.const import (
     DISCOVERY_LOCATION,
@@ -21,35 +21,35 @@ from tests.common import mock_coro
 
 async def test_flow_ssdp_discovery(hass: HomeAssistantType):
     """Test config flow: discovered + configured through ssdp."""
-    # Discovered via step ssdp.
     udn = "uuid:device_1"
     mock_device = MockDevice(udn)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": "ssdp"},
-        data={
-            ssdp.ATTR_SSDP_ST: mock_device.device_type,
-            ssdp.ATTR_UPNP_UDN: mock_device.udn,
-            "friendlyName": mock_device.name,
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "ssdp_confirm"
+    discovery_infos = [
+        {
+            DISCOVERY_ST: mock_device.device_type,
+            DISCOVERY_UDN: mock_device.udn,
+            DISCOVERY_LOCATION: "dummy",
+        }
+    ]
 
-    # Confirm via step ssdp_confirm.
     with patch.object(Device, "async_create_device") as create_device, patch.object(
         Device, "async_discover"
     ) as async_discover:
-        create_device.return_value = mock_coro(return_value=mock_device)
-        async_discover.return_value = mock_coro(
-            return_value=[
-                {
-                    DISCOVERY_ST: mock_device.device_type,
-                    DISCOVERY_UDN: mock_device.udn,
-                    DISCOVERY_LOCATION: "dummy",
-                }
-            ]
+        # Discovered via step ssdp.
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data={
+                ssdp.ATTR_SSDP_ST: mock_device.device_type,
+                ssdp.ATTR_UPNP_UDN: mock_device.udn,
+                "friendlyName": mock_device.name,
+            },
         )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "ssdp_confirm"
+
+        # Confirm via step ssdp_confirm.
+        create_device.return_value = mock_coro(return_value=mock_device)
+        async_discover.return_value = mock_coro(return_value=discovery_infos)
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={},
@@ -68,25 +68,24 @@ async def test_flow_user(hass: HomeAssistantType):
     udn = "uuid:device_1"
     mock_device = MockDevice(udn)
     usn = f"{mock_device.udn}::{mock_device.device_type}"
+    discovery_infos = [
+        {
+            DISCOVERY_USN: usn,
+            DISCOVERY_ST: mock_device.device_type,
+            DISCOVERY_UDN: mock_device.udn,
+            DISCOVERY_LOCATION: "dummy",
+        }
+    ]
 
     with patch.object(Device, "async_create_device") as create_device, patch.object(
         Device, "async_discover"
     ) as async_discover:
         # Discovered via step user.
-        async_discover.return_value = mock_coro(
-            return_value=[
-                {
-                    DISCOVERY_USN: usn,
-                    DISCOVERY_ST: mock_device.device_type,
-                    DISCOVERY_UDN: mock_device.udn,
-                    DISCOVERY_LOCATION: "dummy",
-                }
-            ]
-        )
+        async_discover.return_value = mock_coro(return_value=discovery_infos)
         create_device.return_value = mock_coro(return_value=mock_device)
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
@@ -109,25 +108,24 @@ async def test_flow_config(hass: HomeAssistantType):
     udn = "uuid:device_1"
     mock_device = MockDevice(udn)
     usn = f"{mock_device.udn}::{mock_device.device_type}"
+    discovery_infos = [
+        {
+            DISCOVERY_USN: usn,
+            DISCOVERY_ST: mock_device.device_type,
+            DISCOVERY_UDN: mock_device.udn,
+            DISCOVERY_LOCATION: "dummy",
+        }
+    ]
 
     with patch.object(Device, "async_create_device") as create_device, patch.object(
         Device, "async_discover"
     ) as async_discover:
         # Discovered via step import.
-        async_discover.return_value = mock_coro(
-            return_value=[
-                {
-                    DISCOVERY_USN: usn,
-                    DISCOVERY_ST: mock_device.device_type,
-                    DISCOVERY_UDN: mock_device.udn,
-                    DISCOVERY_LOCATION: "dummy",
-                }
-            ]
-        )
+        async_discover.return_value = mock_coro(return_value=discovery_infos)
         create_device.return_value = mock_coro(return_value=mock_device)
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "import"}
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

@@ -95,6 +95,7 @@ async def async_discover_and_construct(
     """Discovery devices and construct a Device for one."""
     # pylint: disable=invalid-name
     discovery_infos = await Device.async_discover(hass)
+    _LOGGER.debug("Discovered devices: %s", discovery_infos)
     if not discovery_infos:
         _LOGGER.info("No UPnP/IGD devices discovered")
         return None
