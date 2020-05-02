@@ -19,6 +19,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
 from tests.async_mock import patch
+from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 
 pytest.register_assert_rewrite("tests.common")
 
@@ -95,6 +96,11 @@ def hass(loop, hass_storage, request):
 
     loop.run_until_complete(hass.async_stop(force=True))
     for ex in exceptions:
+        if (
+            request.module.__name__,
+            request.function.__name__,
+        ) in IGNORE_UNCAUGHT_EXCEPTIONS:
+            continue
         if isinstance(ex, ServiceNotFound):
             continue
         raise ex
