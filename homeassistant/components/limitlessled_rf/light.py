@@ -165,11 +165,13 @@ def _format_entity_name(remote_id, zone_id, remote_format, zone_format):
             zone_str = zone_format.format(zone_id)
         except Exception as failure:
             zone_str = DEFAULT_ZONE_FORMAT.format(zone_id)
+            failure = failure.copy()
 
     try:
         name = remote_format.format(remote_id, zone_str)
     except Exception as failure:
         name = DEFAULT_REMOTE_FORMAT.format(remote_id, zone_str)
+        failure = failure.copy()
 
     return name
 
