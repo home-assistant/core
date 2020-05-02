@@ -92,7 +92,7 @@ CAST_APP_SCHEMA = {
         {
             vol.Required("media_id"): cv.string,
             vol.Optional("media_type"): cv.string,
-            vol.Optional("enqueue", default=False): cv.boolean,
+            vol.Optional("enqueue"): cv.boolean,
             vol.Optional("index"): cv.string,
             vol.Optional("extra1"): cv.string,
             vol.Optional("extra2"): cv.string,
