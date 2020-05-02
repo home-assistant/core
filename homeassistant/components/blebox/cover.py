@@ -29,7 +29,8 @@ async def async_setup_entry(hass, config_entry, async_add):
     """Set up a BleBox entry."""
 
     product = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
-    return create_blebox_entities(product, async_add, BleBoxCoverEntity, "covers")
+    create_blebox_entities(product, async_add, BleBoxCoverEntity, "covers")
+    return True
 
 
 class BleBoxCoverEntity(BleBoxEntity, CoverDevice):

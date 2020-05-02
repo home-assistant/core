@@ -81,7 +81,6 @@ def create_blebox_entities(product, async_add, entity_klass, entity_type):
         entities.append(entity_klass(feature))
 
     async_add(entities, True)
-    return True
 
 
 class BleBoxEntity:
