@@ -368,6 +368,26 @@ async def test_media_player_television_basic(hass, hk_driver, events, caplog):
     assert not caplog.messages or "Error" not in caplog.messages[-1]
 
 
+async def test_media_player_television_supports_source_select_no_sources(
+    hass, hk_driver, events, caplog
+):
+    """Test if basic tv that supports source select but is missing a source list."""
+    entity_id = "media_player.television"
+
+    # Supports turn_on', 'turn_off'
+    hass.states.async_set(
+        entity_id,
+        None,
+        {ATTR_DEVICE_CLASS: DEVICE_CLASS_TV, ATTR_SUPPORTED_FEATURES: 3469},
+    )
+    await hass.async_block_till_done()
+    acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
+    await acc.run_handler()
+    await hass.async_block_till_done()
+
+    assert acc.support_select_source is False
+
+
 async def test_tv_restore(hass, hk_driver, events):
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
