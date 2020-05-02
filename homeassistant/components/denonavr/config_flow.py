@@ -65,7 +65,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_connect()
 
             # discovery using denonavr library
-            self.d_receivers = await self.hass.async_add_executor_job(denonavr.discover())
+            self.d_receivers = await self.hass.async_add_executor_job(denonavr.discover)
             # More than one receiver could be discovered by that method
             if len(self.d_receivers) == 1:
                 self.host = self.d_receivers[0]["host"]
@@ -101,8 +101,9 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_connect(self, user_input=None):
         """Connect to the receiver."""
-        connect_denonavr = ConnectDenonAVR(self.hass)
-        await connect_denonavr.async_connect_receiver(self.host, self.timeout, self.show_all_sources, self.zone2, self.zone3)
+        connect_denonavr = ConnectDenonAVR(self.hass, self.host, self.timeout, self.show_all_sources, self.zone2, self.zone3)
+        if not await connect_denonavr.async_connect_receiver():
+            return self.async_abort(reason="connection_error")
         receiver = connect_denonavr.receiver
 
         unique_id = f"{receiver.model_name}-{receiver.serial_number}"

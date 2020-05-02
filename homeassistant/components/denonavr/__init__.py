@@ -47,8 +47,9 @@ async def async_setup_entry(
     hass.data[DOMAIN] = {}
 
     # Connect to receiver
-    connect_denonavr = ConnectDenonAVR(hass)
-    await connect_denonavr.async_connect_receiver(entry.data[CONF_HOST], entry.data[CONF_TIMEOUT], entry.data[CONF_SHOW_ALL_SOURCES], entry.data[CONF_ZONE2], entry.data[CONF_ZONE3])
+    connect_denonavr = ConnectDenonAVR(hass, entry.data[CONF_HOST], entry.data[CONF_TIMEOUT], entry.data[CONF_SHOW_ALL_SOURCES], entry.data[CONF_ZONE2], entry.data[CONF_ZONE3])
+    if not await connect_denonavr.async_connect_receiver():
+        return False
     receiver = connect_denonavr.receiver
 
     hass.data[DOMAIN][entry.entry_id] = receiver
@@ -59,7 +60,7 @@ async def async_setup_entry(
         identifiers={(DOMAIN, entry.data["receiver_id"])},
         manufacturer=receiver.manufacturer,
         name=receiver.name,
-        model=receiver.model_name,
+        model=f"{receiver.model_name}-{receiver.receiver_type}",
     )
 
     hass.async_create_task(
