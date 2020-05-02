@@ -63,7 +63,7 @@ async def raise_for_status(response: ClientResponse) -> None:
         raise InvalidAuthError(data) from standard
 
 
-WANTED_SCOPES = set(["openid", "email", "profile"])
+WANTED_SCOPES = {"openid", "email", "profile"}
 
 
 @AUTH_PROVIDERS.register("openid")
