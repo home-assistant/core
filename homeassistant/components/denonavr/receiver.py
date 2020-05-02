@@ -9,38 +9,28 @@ _LOGGER = logging.getLogger(__name__)
 class ConnectDenonAVR:
     """Class to async connect to a DenonAVR receiver."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, host, timeout, show_all_inputs, zone2, zone3):
         """Initialize the class."""
         self._hass = hass
         self._receiver = None
+        self._host = host
+        self._show_all_inputs = show_all_inputs
+        self._timeout = timeout
+
+        self._zones = {}
+        if zone2:
+            self._zones["Zone2"] = None
+        if zone3:
+            self._zones["Zone3"] = None
 
     @property
     def receiver(self):
         """Return the class containing all connections to the receiver."""
         return self._receiver
 
-    async def async_connect_receiver(self, host_in, timeout_in, show_all_inputs_in, zone2, zone3):
+    async def async_connect_receiver(self):
         """Connect to the DenonAVR receiver."""
-        zones = {}
-        if zone2:
-            zones["Zone2"] = None
-        if zone3:
-            zones["Zone3"] = None
-
-        # Connect to receiver
-        try:
-            self._receiver = await self._hass.async_add_executor_job(
-                denonavr.DenonAVR(
-                    host=host_in,
-                    show_all_inputs=show_all_inputs_in,
-                    timeout=timeout_in,
-                    add_zones=zones,
-                )
-            )
-        except ConnectionError:
-            _LOGGER.error(
-                "ConnectionError during setup of denonavr with host %s", host_in
-            )
+        if not await self._hass.async_add_executor_job(self.init_receiver_class):
             return False
 
         _LOGGER.debug(
@@ -53,3 +43,21 @@ class ConnectDenonAVR:
         )
 
         return True
+
+    def init_receiver_class(self):
+        """Initilize the DenonAVR class in a way that can called by async_add_executor_job."""
+        try:
+            self._receiver = denonavr.DenonAVR(
+                host=self._host,
+                show_all_inputs=self._show_all_inputs,
+                timeout=self._timeout,
+                add_zones=self._zones,
+            )
+        except ConnectionError:
+            _LOGGER.error(
+                "ConnectionError during setup of denonavr with host %s", self._host
+            )
+            return False
+
+        return True
+        
