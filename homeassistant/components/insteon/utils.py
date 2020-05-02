@@ -261,11 +261,9 @@ def print_aldb_to_log(aldb):
     orig_log_level = _LOGGER.level
     if orig_log_level > logging.INFO:
         _LOGGER.setLevel(logging.INFO)
-    _LOGGER.info("ALDB load status is %s", aldb.status.name)
+    _LOGGER.info("%s ALDB load status is %s", aldb.address, aldb.status.name)
     if aldb.status not in [ALDBStatus.LOADED, ALDBStatus.PARTIAL]:
-        _LOGGER.warning("Device All-Link database not loaded")
-        _LOGGER.warning("Use service insteon.load_aldb first")
-        return
+        _LOGGER.warning("All-Link database not loaded")
 
     _LOGGER.info("RecID In Use Mode HWM Group Address  Data 1 Data 2 Data 3")
     _LOGGER.info("----- ------ ---- --- ----- -------- ------ ------ ------")
