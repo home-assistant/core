@@ -177,11 +177,9 @@ stages:
               set -e
               . venv/bin/activate
 
-              pr_id="$(System.PullRequest.PullRequestNumber)"
-              source_branch="$(pull/${pr_id}/head)"
               target_branch="$(System.PullRequest.TargetBranch)"
 
-              test_suite="$(python3 script/determine_pr_tests.py ${source_branch} ${target_branch} test)"
+              test_suite="$(python3 script/determine_pr_tests.py HEAD ${target_branch} test)"
 
               echo "Test suite:" ${test_suite}
 
@@ -194,11 +192,9 @@ stages:
 
               . venv/bin/activate
 
-              pr_id="$(System.PullRequest.PullRequestNumber)"
-              source_branch="$(pull/${pr_id}/head)"
               target_branch="$(System.PullRequest.TargetBranch)"
 
-              test_suite="$(python3 script/determine_pr_tests.py ${source_branch} ${target_branch} test)"
+              test_suite="$(python3 script/determine_pr_tests.py HEAD ${target_branch} test)"
 
               echo "Test suite:" ${test_suite}
 
