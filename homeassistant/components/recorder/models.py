@@ -1,6 +1,6 @@
 """Models for SQLAlchemy."""
 from datetime import datetime
-import json
+import simplejson as json
 import logging
 
 from sqlalchemy import (
