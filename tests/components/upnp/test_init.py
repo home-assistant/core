@@ -14,67 +14,14 @@ from homeassistant.setup import async_setup_component
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry, mock_coro
-
-
-class MockDevice(Device):
-    """Mock device for Device."""
-
-    def __init__(self, udn):
-        """Initialize mock device."""
-        igd_device = object()
-        super().__init__(igd_device)
-        self._udn = udn
-        self.added_port_mappings = []
-        self.removed_port_mappings = []
-
-    @classmethod
-    async def async_create_device(cls, hass, ssdp_location):
-        """Return self."""
-        return cls("UDN")
-
-    @property
-    def udn(self) -> str:
-        """Get the UDN."""
-        return self._udn
-
-    @property
-    def manufacturer(self) -> str:
-        """Get manufacturer."""
-        return "mock-manufacturer"
-
-    @property
-    def name(self) -> str:
-        """Get name."""
-        return "mock-name"
-
-    @property
-    def model_name(self) -> str:
-        """Get the model name."""
-        return "mock-model-name"
-
-    @property
-    def device_type(self) -> str:
-        """Get the device type."""
-        return "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
-
-    async def _async_add_port_mapping(
-        self, external_port: int, local_ip: str, internal_port: int
-    ) -> None:
-        """Add a port mapping."""
-        entry = [external_port, local_ip, internal_port]
-        self.added_port_mappings.append(entry)
-
-    async def _async_delete_port_mapping(self, external_port: int) -> None:
-        """Remove a port mapping."""
-        entry = external_port
-        self.removed_port_mappings.append(entry)
+from .mock_device import MockDevice
 
 
 async def test_async_setup_entry_default(hass):
     """Test async_setup_entry."""
     udn = "uuid:device_1"
-    st = MockDevice.device_type
-    entry = MockConfigEntry(domain=upnp.DOMAIN, data={"udn": udn, "st": st})
+    mock_device = MockDevice(udn)
+    entry = MockConfigEntry(domain=upnp.DOMAIN, data={"udn": udn, "st": mock_device.device_type})
 
     config = {
         # no upnp
@@ -88,11 +35,10 @@ async def test_async_setup_entry_default(hass):
         await hass.async_block_till_done()
 
         # mock homeassistant.components.upnp.device.Device
-        mock_device = MockDevice(udn)
         discovery_infos = [
             {
-                DISCOVERY_UDN: udn,
-                DISCOVERY_ST: st,
+                DISCOVERY_UDN: mock_device.udn,
+                DISCOVERY_ST: mock_device.device_type,
                 DISCOVERY_LOCATION: "http://192.168.1.1/desc.xml",
             }
         ]
@@ -116,8 +62,8 @@ async def test_async_setup_entry_port_mapping(hass):
     """Test async_setup_entry."""
     # pylint: disable=invalid-name
     udn = "uuid:device_1"
-    st = MockDevice.device_type
-    entry = MockConfigEntry(domain=upnp.DOMAIN, data={"udn": udn, "st": st})
+    mock_device = MockDevice(udn)
+    entry = MockConfigEntry(domain=upnp.DOMAIN, data={"udn": udn, "st": mock_device.device_type})
 
     config = {
         "http": {},
@@ -136,11 +82,10 @@ async def test_async_setup_entry_port_mapping(hass):
         await async_setup_component(hass, "upnp", config)
         await hass.async_block_till_done()
 
-        mock_device = MockDevice(udn)
         discovery_infos = [
             {
-                DISCOVERY_UDN: udn,
-                DISCOVERY_ST: st,
+                DISCOVERY_UDN: mock_device.udn,
+                DISCOVERY_ST: mock_device.device_type,
                 DISCOVERY_LOCATION: "http://192.168.1.1/desc.xml",
             }
         ]

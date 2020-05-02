@@ -35,7 +35,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the UPnP/IGD config flow."""
         self._discoveries: Mapping = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input: Optional[Mapping] = None):
         """Handle a flow start."""
         _LOGGER.debug("async_step_user: user_input: %s", user_input)
         # This uses DISCOVERY_USN as the identifier for the device.
@@ -153,7 +153,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_ssdp_confirm()
 
-    async def async_step_ssdp_confirm(self, user_input=None):
+    async def async_step_ssdp_confirm(self, user_input: Optional[Mapping] = None):
         """Confirm integration via SSDP."""
         _LOGGER.debug("async_step_ssdp_confirm: user_input: %s", user_input)
         if user_input is None:
@@ -162,8 +162,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         discovery = self._discoveries[0]
         return await self._async_create_entry_from_data(discovery)
 
-    async def _async_create_entry_from_data(self, discovery):
+    async def _async_create_entry_from_data(self, discovery: Mapping):
         """Create an entry from own _data."""
+        _LOGGER.debug("_async_create_entry_from_data: discovery: %s", discovery)
         # Get name from device, if not found already.
         if DISCOVERY_NAME not in discovery and DISCOVERY_LOCATION in discovery:
             discovery[DISCOVERY_NAME] = await self._async_get_name_for_discovery(
@@ -177,8 +178,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return self.async_create_entry(title=title, data=data)
 
-    async def _async_get_name_for_discovery(self, discovery):
+    async def _async_get_name_for_discovery(self, discovery: Mapping):
         """Get the name of the device from a discovery."""
+        _LOGGER.debug('_async_get_name_for_discovery: discovery: %s', discovery)
         device = await Device.async_create_device(
             self.hass, discovery[DISCOVERY_LOCATION]
         )

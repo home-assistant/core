@@ -3,17 +3,14 @@
     "flow_title": "UPnP/IGD: {name}",
     "step": {
       "init": {
-        "title": "UPnP/IGD"
       },
       "ssdp_confirm": {
-        "title": "UPnP/IGD",
         "description": "Do you want to set up this UPnP/IGD device?"
       },
       "user": {
         "data": {
           "usn": "Device"
-        },
-        "title": "Configuration options"
+        }
       }
     },
     "abort": {
