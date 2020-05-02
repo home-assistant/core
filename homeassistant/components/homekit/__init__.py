@@ -275,13 +275,12 @@ def get_accessory(hass, driver, state, aid, config):
 
     elif state.domain == "media_player":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        feature_list = config.get(CONF_FEATURE_LIST)
+        feature_list = config.get(CONF_FEATURE_LIST, [])
 
         if device_class == DEVICE_CLASS_TV:
             a_type = "TelevisionMediaPlayer"
-        else:
-            if feature_list and validate_media_player_features(state, feature_list):
-                a_type = "MediaPlayer"
+        elif validate_media_player_features(state, feature_list):
+            a_type = "MediaPlayer"
 
     elif state.domain == "sensor":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
