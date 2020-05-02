@@ -80,7 +80,9 @@
             "smoke": "{entity_name} comenz\u00f3 a detectar humo",
             "sound": "{entity_name} comenz\u00f3 a detectar sonido",
             "turned_off": "{entity_name} apagado",
-            "turned_on": "{entity_name} encendido"
+            "turned_on": "{entity_name} encendido",
+            "unsafe": "{entity_name} se volvi\u00f3 inseguro",
+            "vibration": "{entity_name} comenz\u00f3 a detectar vibraciones"
         }
     },
     "state": {

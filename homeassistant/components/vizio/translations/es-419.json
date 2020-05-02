@@ -1,0 +1,24 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "device_class": "Tipo de dispositivo",
+                    "name": "Nombre"
+                },
+                "title": "Configurar el dispositivo VIZIO SmartCast"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "apps_to_include_or_exclude": "Aplicaciones para incluir o excluir",
+                    "include_or_exclude": "\u00bfIncluir o excluir aplicaciones?"
+                },
+                "title": "Actualizar las opciones de VIZIO SmartCast"
+            }
+        }
+    }
+}
