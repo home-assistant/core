@@ -8,7 +8,6 @@ import logging
 import re
 import warnings
 
-import aiohttp
 from aiohttp.web import json_response
 import requests
 import voluptuous as vol
@@ -2945,10 +2944,8 @@ async def _publish_command_to_frame(hass, key, val, ip):
     else:
         requests_json = {key: val, "ip": ip}
     try:
-        async with aiohttp.ClientSession() as session:
-            await session.get(url + "/command", json=requests_json, timeout=2)
+        requests.post(url + "/command", json=requests_json, timeout=2)
     except Exception as e:
-        # not on gate
         pass
 
 
@@ -3730,10 +3727,7 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
                                     if match:
                                         # we have a match
                                         found_intent = intent_type
-                                        (
-                                            m,
-                                            s,
-                                        ) = await hass.helpers.intent.async_handle(
+                                        (m, s) = await hass.helpers.intent.async_handle(
                                             DOMAIN,
                                             intent_type,
                                             {
@@ -3820,9 +3814,7 @@ class TurnOnIntent(intent.IntentHandler):
                         assumed_state = True
                 if assumed_state:
                     await hass.services.async_call(
-                        core.DOMAIN,
-                        SERVICE_TURN_ON,
-                        {ATTR_ENTITY_ID: entity.entity_id},
+                        core.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity.entity_id}
                     )
                     message = f"OK, włączono {entity.name}"
                 success = True
@@ -4261,7 +4253,7 @@ class GetDateIntent(intent.IntentHandler):
 
     intent_type = INTENT_GET_DATE
 
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         import babel.dates
 
@@ -4431,7 +4423,7 @@ class AisSceneActive(intent.IntentHandler):
             # check if we can open on this device
             if entity.entity_id.startswith("scene."):
                 await hass.services.async_call(
-                    "scene", "turn_on", {ATTR_ENTITY_ID: entity.entity_id},
+                    "scene", "turn_on", {ATTR_ENTITY_ID: entity.entity_id}
                 )
                 message = f"OK, aktywuję {entity.name}"
                 success = True

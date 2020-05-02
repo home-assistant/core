@@ -379,21 +379,27 @@ class AisCloudWS:
         self.setCloudToken()
         rest_url = self.url + "key?service=" + service
         ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
-        return ws_resp
+        return ws_resp.json()
 
-    async def async_key(self, service):
-        self.setCloudToken()
-        rest_url = self.url + "key?service=" + service
-        async with aiohttp.ClientSession() as session:
-            ws_resp = await session.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
-            return await ws_resp.json()
-
-    async def async_new_key(self, service, old_key):
+    def new_key(self, service, old_key):
         self.setCloudToken()
         rest_url = self.url + "new_key?service=" + service + "&old_key=" + old_key
-        async with aiohttp.ClientSession() as session:
-            ws_resp = await session.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
-            return await ws_resp.json()
+        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
+        return ws_resp.json()
+
+    # async def async_key(self, service):
+    #     self.setCloudToken()
+    #     rest_url = self.url + "key?service=" + service
+    #     async with aiohttp.ClientSession() as session:
+    #         ws_resp = await session.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
+    #         return await ws_resp.json()
+
+    # async def async_new_key(self, service, old_key):
+    #     self.setCloudToken()
+    #     rest_url = self.url + "new_key?service=" + service + "&old_key=" + old_key
+    #     async with aiohttp.ClientSession() as session:
+    #         ws_resp = await session.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
+    #         return await ws_resp.json()
 
     def extract_media(self, url, local_extractor_version):
         self.setCloudToken()

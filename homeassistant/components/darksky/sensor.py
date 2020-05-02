@@ -814,8 +814,7 @@ class DarkSkyData:
                 from homeassistant.components import ais_cloud
 
                 aiscloud = ais_cloud.AisCloudWS()
-                ws_resp = aiscloud.key("darksky_sensor")
-                json_ws_resp = ws_resp.json()
+                json_ws_resp = aiscloud.key("darksky_sensor")
                 self._api_key = json_ws_resp["key"]
             except Exception as error:
                 _LOGGER.error(

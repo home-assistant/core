@@ -964,9 +964,9 @@ class LocalData:
 
         # set client and secret
         try:
-            json_ws_resp = await aisCloud.async_key("gdrive_client_id")
+            json_ws_resp = aisCloud.key("gdrive_client_id")
             G_DRIVE_CLIENT_ID = json_ws_resp["key"]
-            json_ws_resp = await aisCloud.async_key("gdrive_secret")
+            json_ws_resp = aisCloud.key("gdrive_secret")
             G_DRIVE_SECRET = json_ws_resp["key"]
         except Exception as e:
             _LOGGER.error("Error " + str(e))

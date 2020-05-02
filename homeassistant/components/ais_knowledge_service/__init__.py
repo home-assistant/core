@@ -63,7 +63,7 @@ async def async_process_ask(hass, query):
     image_url = None
     if G_GKS_KEY is None:
         try:
-            json_ws_resp = await aisCloud.async_key("kgsearch")
+            json_ws_resp = aisCloud.key("kgsearch")
             G_GKS_KEY = json_ws_resp["key"]
         except Exception as e:
             _LOGGER.error("search error: " + str(e))
@@ -137,7 +137,7 @@ async def async_process_ask_wiki(hass, query):
 async def async_get_key(hass):
     global G_GKS_KEY
     try:
-        json_ws_resp = await aisCloud.async_key("kgsearch")
+        json_ws_resp = aisCloud.key("kgsearch")
         G_GKS_KEY = json_ws_resp["key"]
     except:
         ais_global.G_OFFLINE_MODE = True

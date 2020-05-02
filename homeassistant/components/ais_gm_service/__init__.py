@@ -59,12 +59,12 @@ async def async_setup(hass, config):
 async def async_get_keys(hass):
     global GM_DEV_KEY, GM_USER, GM_PASS
     try:
-        json_ws_resp = await aisCloud.async_key("gm_user_key")
+        json_ws_resp = aisCloud.key("gm_user_key")
         GM_USER = json_ws_resp["key"]
-        json_ws_resp = await aisCloud.async_key("gm_pass_key")
+        json_ws_resp = aisCloud.key("gm_pass_key")
         GM_PASS = json_ws_resp["key"]
         try:
-            json_ws_resp = await aisCloud.async_key("gm_dev_key")
+            json_ws_resp = aisCloud.key("gm_dev_key")
             GM_DEV_KEY = json_ws_resp["key"]
         except:
             GM_DEV_KEY = None

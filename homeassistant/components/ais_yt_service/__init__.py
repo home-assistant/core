@@ -52,14 +52,14 @@ class YouTubeData:
 
     async def async_get_key(self):
         try:
-            json_ws_resp = await aisCloud.async_key("ytsearch")
+            json_ws_resp = aisCloud.key("ytsearch")
             self.yt_key = json_ws_resp["key"]
         except:
             ais_global.G_OFFLINE_MODE = True
 
     async def async_get_new_key(self, old_key, query, prev_page_token, next_page_token):
         try:
-            json_ws_resp = await aisCloud.async_new_key("ytsearch", old_key)
+            json_ws_resp = aisCloud.new_key("ytsearch", old_key)
             self.yt_key = json_ws_resp["key"]
         except Exception as e:
             _LOGGER.error("YouTube " + str(e))
@@ -113,7 +113,7 @@ class YouTubeData:
 
         if self.yt_key is None:
             try:
-                json_ws_resp = await aisCloud.async_key("ytsearch")
+                json_ws_resp = aisCloud.key("ytsearch")
                 self.yt_key = json_ws_resp["key"]
             except Exception as e:
                 ais_global.G_OFFLINE_MODE = True

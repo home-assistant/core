@@ -261,8 +261,7 @@ class WeatherData:
                 from homeassistant.components import ais_cloud
 
                 aiscloud = ais_cloud.AisCloudWS()
-                ws_resp = aiscloud.key("openweathermap_weather")
-                json_ws_resp = ws_resp.json()
+                json_ws_resp = aiscloud.key("openweathermap_weather")
                 try:
                     self.owm = pyowm.OWM(json_ws_resp["key"])
                 except pyowm.exceptions.api_call_error.APICallError:

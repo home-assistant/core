@@ -2,10 +2,13 @@
 input_text:
   zigbee2mqtt_old_name:
     name: Stara Nazwa Encji
+    initial: " "
   zigbee2mqtt_new_name:
     name: Nowa Nazwa Encji
+    initial: " "
   zigbee2mqtt_remove:
     name: Encja do Usunięcia
+    initial: " "
 
 # Scripts for renaming & removing devices
 script:

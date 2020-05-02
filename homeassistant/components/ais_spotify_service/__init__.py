@@ -57,13 +57,13 @@ async def async_setup(hass, config):
         await hass.async_block_till_done()
 
     try:
-        json_ws_resp = await aisCloud.async_key("spotify_oauth")
+        json_ws_resp = aisCloud.key("spotify_oauth")
         spotify_redirect_url = json_ws_resp["SPOTIFY_REDIRECT_URL"]
         spotify_client_id = json_ws_resp["SPOTIFY_CLIENT_ID"]
         spotify_client_secret = json_ws_resp["SPOTIFY_CLIENT_SECRET"]
         spotify_scope = json_ws_resp["SPOTIFY_SCOPE"]
         try:
-            json_ws_resp = await aisCloud.async_key("spotify_token")
+            json_ws_resp = aisCloud.key("spotify_token")
             key = json_ws_resp["key"]
             AIS_SPOTIFY_TOKEN = json.loads(key)
         except:
