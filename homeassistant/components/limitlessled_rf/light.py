@@ -6,11 +6,9 @@ import limitlessled_rf
 import lt8900_spi
 import gpiozero
 import voluptuous
-import threading
 import time
 
 import homeassistant.helpers.config_validation as config_validation
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util.color import (
     color_hs_to_RGB,
     color_RGB_to_hs,
@@ -20,21 +18,13 @@ from homeassistant.util.color import (
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
-    ATTR_EFFECT,
-    ATTR_FLASH,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
-    EFFECT_COLORLOOP,
-    EFFECT_WHITE,
-    FLASH_LONG,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
     Light,
 )
 
