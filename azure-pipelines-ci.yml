@@ -192,7 +192,8 @@ stages:
               . venv/bin/activate
 
               target_branch="$(System.PullRequest.TargetBranch)"
-              test_suite="$(python3 script/determine_pr_tests.py HEAD ${target_branch} test)"
+              target_ref="refs/remotes/origin/${target_branch}"
+              test_suite="$(python3 script/determine_pr_tests.py HEAD ${target_ref} test)"
               echo "Test suite:" ${test_suite}
 
               pytest --timeout=9 --durations=10 -n auto --dist=loadfile --cov homeassistant --cov-report html -qq -o console_output_style=count -p no:sugar ${test_suite}
