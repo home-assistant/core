@@ -357,19 +357,6 @@ async def test_set_position(all_sliders, hass):
     assert_state(entity, STATE_OPENING)
 
 
-async def test_fail_to_set_position(not_sliders, hass):
-    """Test cover position setting."""
-
-    data = not_sliders
-    closed_to_position_almost_closed_feature_mock(data)
-
-    entity = await data.async_updated_entity(hass, 0)
-
-    assert_state(entity, STATE_CLOSED)
-    with pytest.raises(NotImplementedError):
-        await entity.async_set_cover_position(**{ATTR_POSITION: 1})  # almost closed
-
-
 async def test_unknown_position(shutterbox, hass):
     """Test cover position setting."""
 
