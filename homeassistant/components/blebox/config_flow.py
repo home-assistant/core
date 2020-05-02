@@ -76,14 +76,6 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"address": f"{host}:{port}"},
         )
 
-    def abort_because_configured(self, host, port):
-        """Return abort flow response for when already configured."""
-
-        return self.async_abort(
-            reason=ALREADY_CONFIGURED,
-            description_placeholders={"address": f"{host}:{port}"},
-        )
-
     async def async_step_user(self, user_input=None):
         """Handle initial user-triggered config step."""
 
@@ -102,7 +94,11 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         for entry in hass.config_entries.async_entries(DOMAIN):
             if addr == host_port(entry.data):
-                return self.abort_because_configured(*addr)
+                host, port = addr
+                return self.async_abort(
+                    reason=ALREADY_CONFIGURED,
+                    description_placeholders={"address": f"{host}:{port}"},
+                )
 
         websession = async_get_clientsession(hass)
         api_host = ApiHost(*addr, DEFAULT_SETUP_TIMEOUT, websession, hass.loop, _LOGGER)
