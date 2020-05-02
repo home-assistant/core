@@ -37,6 +37,13 @@ logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
 
+def pytest_configure(config):
+    """Register marker for tests that log exceptions."""
+    config.addinivalue_line(
+        "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
+    )
+
+
 def check_real(func):
     """Force a function to require a keyword _test_real to be passed in."""
 
