@@ -17,6 +17,7 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
+    DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.const import (
     CONF_HOST,
