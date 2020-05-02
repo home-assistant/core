@@ -10,6 +10,8 @@ from homeassistant import config_entries, core
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP, TIME_SECONDS, UNIT_PERCENTAGE
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from .const import BSH_ACTIVE_PROGRAM, BSH_POWER_OFF, BSH_POWER_STANDBY
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -71,9 +73,9 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
 class HomeConnectDevice:
     """Generic Home Connect device."""
 
-    # for some devices, this is instead 'BSH.Common.EnumType.PowerState.Standby'
+    # for some devices, this is instead BSH_POWER_STANDBY
     # see https://developer.home-connect.com/docs/settings/power_state
-    power_off_state = "BSH.Common.EnumType.PowerState.Off"
+    power_off_state = BSH_POWER_OFF
 
     def __init__(self, appliance):
         """Initialize the device class."""
@@ -96,9 +98,7 @@ class HomeConnectDevice:
             _LOGGER.debug("Unable to fetch active programs. Probably offline.")
             program_active = None
         if program_active and "key" in program_active:
-            self.appliance.status["BSH.Common.Root.ActiveProgram"] = {
-                "value": program_active["key"]
-            }
+            self.appliance.status[BSH_ACTIVE_PROGRAM] = {"value": program_active["key"]}
         self.appliance.listen_events(callback=self.event_callback)
 
     def event_callback(self, appliance):
@@ -249,7 +249,7 @@ class Oven(DeviceWithDoor, DeviceWithPrograms):
         {"name": "Cooking.Oven.Program.Microwave.600Watt"},
     ]
 
-    power_off_state = "BSH.Common.EnumType.PowerState.Standby"
+    power_off_state = BSH_POWER_STANDBY
 
     def get_entities(self):
         """Get a dictionary with infos about the associated entities."""
@@ -322,7 +322,7 @@ class CoffeeMaker(DeviceWithPrograms):
         {"name": "ConsumerProducts.CoffeeMaker.Program.CoffeeWorld.Cortado"},
     ]
 
-    power_off_state = "BSH.Common.EnumType.PowerState.Standby"
+    power_off_state = BSH_POWER_STANDBY
 
     def get_entities(self):
         """Get a dictionary with infos about the associated entities."""

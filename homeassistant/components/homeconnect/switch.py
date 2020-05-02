@@ -9,7 +9,13 @@ from homeconnect.api import HomeConnectError
 
 from homeassistant.components.switch import SwitchEntity
 
-from .const import DOMAIN
+from .const import (
+    BSH_ACTIVE_PROGRAM,
+    BSH_OPERATION_STATE,
+    BSH_POWER_ON,
+    BSH_POWER_STATE,
+    DOMAIN,
+)
 from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,7 +85,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
 
     def update(self):
         """Update the switch's status."""
-        state = self.device.appliance.status.get("BSH.Common.Root.ActiveProgram", {})
+        state = self.device.appliance.status.get(BSH_ACTIVE_PROGRAM, {})
         if state.get("value", None) == self.program_name:
             self._state = True
         else:
@@ -105,9 +111,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         _LOGGER.debug("Tried to switch on %s", self.name)
         try:
             await self.hass.async_add_executor_job(
-                self.device.appliance.set_setting,
-                "BSH.Common.Setting.PowerState",
-                "BSH.Common.EnumType.PowerState.On",
+                self.device.appliance.set_setting, BSH_POWER_STATE, BSH_POWER_ON,
             )
         except HomeConnectError as err:
             _LOGGER.error("Error while trying to turn on device: %s", err)
@@ -120,7 +124,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         try:
             await self.hass.async_add_executor_job(
                 self.device.appliance.set_setting,
-                "BSH.Common.Setting.PowerState",
+                BSH_POWER_STATE,
                 self.device.power_off_state,
             )
         except HomeConnectError as err:
@@ -131,22 +135,18 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     def update(self):
         """Update the switch's status."""
         if (
-            self.device.appliance.status.get("BSH.Common.Setting.PowerState", {}).get(
-                "value", None
-            )
-            == "BSH.Common.EnumType.PowerState.On"
+            self.device.appliance.status.get(BSH_POWER_STATE, {}).get("value", None)
+            == BSH_POWER_ON
         ):
             self._state = True
         elif (
-            self.device.appliance.status.get("BSH.Common.Setting.PowerState", {}).get(
-                "value", None
-            )
+            self.device.appliance.status.get(BSH_POWER_STATE, {}).get("value", None)
             == self.device.power_off_state
         ):
             self._state = False
-        elif self.device.appliance.status.get(
-            "BSH.Common.Status.OperationState", {}
-        ).get("value", None) in [
+        elif self.device.appliance.status.get(BSH_OPERATION_STATE, {}).get(
+            "value", None
+        ) in [
             "BSH.Common.EnumType.OperationState.Ready",
             "BSH.Common.EnumType.OperationState.DelayedStart",
             "BSH.Common.EnumType.OperationState.Run",
@@ -157,9 +157,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         ]:
             self._state = True
         elif (
-            self.device.appliance.status.get(
-                "BSH.Common.Status.OperationState", {}
-            ).get("value", None)
+            self.device.appliance.status.get(BSH_OPERATION_STATE, {}).get("value", None)
             == "BSH.Common.EnumType.OperationState.Inactive"
         ):
             self._state = False

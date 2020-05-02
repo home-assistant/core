@@ -7,7 +7,7 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-from .const import DOMAIN
+from .const import BSH_DOOR_STATE, DOMAIN
 from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorDevice):
 
     def update(self):
         """Update the binary sensor's status."""
-        state = self.device.appliance.status.get("BSH.Common.Status.DoorState", {})
+        state = self.device.appliance.status.get(BSH_DOOR_STATE, {})
         if not state:
             self._state = None
         elif state.get("value", None) in [
