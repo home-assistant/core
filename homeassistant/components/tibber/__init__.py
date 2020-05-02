@@ -91,7 +91,7 @@ async def async_setup_entry(hass, entry, retry_delay=FIRST_RETRY_TIME):
     # have to use discovery to load platform.
     hass.async_create_task(
         discovery.async_load_platform(
-            hass, "notify", DOMAIN, {CONF_NAME: DOMAIN}, hass.data.get(DATA_HASS_CONFIG)
+            hass, "notify", DOMAIN, {CONF_NAME: DOMAIN}, hass.data[DATA_HASS_CONFIG]
         )
     )
     return True
