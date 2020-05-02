@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 class HomeConnectEntity(Entity):
     """Generic Home Connect entity (base class)."""
 
-    def __init__(self, device: HomeConnectDevice, name: str):
+    def __init__(self, device: HomeConnectDevice, name: str) -> None:
         """Initialize the entity."""
         self.device = device
         self._name = name
