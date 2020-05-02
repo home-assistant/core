@@ -1,5 +1,6 @@
 """Determine tests to run."""
 import argparse
+import json
 import pathlib
 import subprocess
 import sys
@@ -90,6 +91,23 @@ def output_tests(components):
     return " ".join(f"tests/components/{domain}" for domain in components)
 
 
+def output_requirements(components):
+    """Get requirements output."""
+    if components is None:
+        return "-r requirements_test_all.txt"
+
+    parts = ["-r requirements_test.txt"]
+
+    for component in components:
+        manifest = json.loads(
+            (INTEGRATION_DIR / component / "manifest.json").read_text()
+        )
+        for req in manifest.get("requirements", []):
+            parts.append(req)
+
+    return " ".join(parts)
+
+
 def main():
     """Determine PR to run."""
     args = get_args()
@@ -99,6 +117,10 @@ def main():
 
     if args.output == "test":
         print(output_tests(components))
+        return
+
+    if args.output == "requirements":
+        print(output_requirements(components))
         return
 
     raise RuntimeError(f"Output {args.output} not implemented!")
