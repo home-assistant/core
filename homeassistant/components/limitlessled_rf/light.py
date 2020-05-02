@@ -8,13 +8,6 @@ import gpiozero
 import voluptuous
 import time
 
-import homeassistant.helpers.config_validation as config_validation
-from homeassistant.util.color import (
-    color_hs_to_RGB,
-    color_RGB_to_hs,
-    color_temperature_mired_to_kelvin,
-    color_temperature_kelvin_to_mired,
-)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -25,6 +18,13 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     Light,
+)
+import homeassistant.helpers.config_validation as config_validation
+from homeassistant.util.color import (
+    color_hs_to_RGB,
+    color_RGB_to_hs,
+    color_temperature_mired_to_kelvin,
+    color_temperature_kelvin_to_mired,
 )
 
 _LOGGER = logging.getLogger(__name__)
