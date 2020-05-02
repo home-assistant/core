@@ -41,11 +41,18 @@
       "client_control": {
         "data": {
           "block_client": "Network access controlled clients",
-          "new_client": "Add new client for network access control",
           "poe_clients": "Allow POE control of clients"
         },
         "description": "Configure client controls\n\nCreate switches for serial numbers you want to control network access for.",
         "title": "UniFi options 2/3"
+      },
+      "simple_options": {
+        "data": {
+          "track_clients": "[%key:component::unifi::options::step::device_tracker::data::track_clients%]",
+          "track_devices": "[%key:component::unifi::options::step::device_tracker::data::track_devices%]",
+          "block_client": "[%key:component::unifi::options::step::client_control::data::block_client%]"
+        },
+        "description": "Configure UniFi integration"
       },
       "statistics_sensors": {
         "data": {

@@ -1,7 +1,7 @@
 """Support for AVM Fritz!Box smarthome switch devices."""
 import requests
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_DEVICES,
@@ -37,7 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class FritzboxSwitch(SwitchDevice):
+class FritzboxSwitch(SwitchEntity):
     """The switch class for Fritzbox switches."""
 
     def __init__(self, device, fritz):

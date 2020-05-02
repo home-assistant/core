@@ -3,7 +3,6 @@ import copy
 import unittest
 from unittest.mock import patch
 
-from homeassistant.components.reddit import sensor as reddit_sensor
 from homeassistant.components.reddit.sensor import (
     ATTR_BODY,
     ATTR_COMMENTS_NUMBER,
@@ -20,7 +19,7 @@ from homeassistant.components.reddit.sensor import (
 from homeassistant.const import CONF_MAXIMUM, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import setup_component
 
-from tests.common import MockDependency, get_test_home_assistant
+from tests.common import get_test_home_assistant
 
 VALID_CONFIG = {
     "sensor": {
@@ -157,12 +156,10 @@ class TestRedditSetup(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @MockDependency("praw")
     @patch("praw.Reddit", new=MockPraw)
-    def test_setup_with_valid_config(self, mock_praw):
+    def test_setup_with_valid_config(self):
         """Test the platform setup with Reddit configuration."""
-        with patch.object(reddit_sensor, "praw", mock_praw):
-            setup_component(self.hass, "sensor", VALID_CONFIG)
+        setup_component(self.hass, "sensor", VALID_CONFIG)
 
         state = self.hass.states.get("sensor.reddit_worldnews")
         assert int(state.state) == MOCK_RESULTS_LENGTH
@@ -184,9 +181,8 @@ class TestRedditSetup(unittest.TestCase):
 
         assert state.attributes[CONF_SORT_BY] == "hot"
 
-    @MockDependency("praw")
     @patch("praw.Reddit", new=MockPraw)
-    def test_setup_with_invalid_config(self, mock_praw):
+    def test_setup_with_invalid_config(self):
         """Test the platform setup with invalid Reddit configuration."""
         setup_component(self.hass, "sensor", INVALID_SORT_BY_CONFIG)
         assert not self.hass.states.get("sensor.reddit_worldnews")

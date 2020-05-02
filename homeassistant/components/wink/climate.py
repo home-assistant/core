@@ -3,7 +3,7 @@ import logging
 
 import pywink
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -80,7 +80,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             add_entities([WinkAC(climate, hass)])
 
 
-class WinkThermostat(WinkDevice, ClimateDevice):
+class WinkThermostat(WinkDevice, ClimateEntity):
     """Representation of a Wink thermostat."""
 
     @property
@@ -381,7 +381,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         return return_value
 
 
-class WinkAC(WinkDevice, ClimateDevice):
+class WinkAC(WinkDevice, ClimateEntity):
     """Representation of a Wink air conditioner."""
 
     @property

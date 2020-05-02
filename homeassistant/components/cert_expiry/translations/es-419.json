@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "import_failed": "La importaci\u00f3n desde la configuraci\u00f3n fall\u00f3"
+        },
+        "error": {
+            "connection_timeout": "Tiempo de espera al conectarse a este host",
+            "resolve_failed": "Este host no puede resolverse"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "El nombre de host del certificado",
+                    "name": "El nombre del certificado",
+                    "port": "El puerto del certificado"
+                },
+                "title": "Definir el certificado para probar"
+            }
+        }
+    },
+    "title": "Expiraci\u00f3n del certificado"
+}

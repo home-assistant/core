@@ -115,7 +115,7 @@ async def test_state_with_context(hass):
 
     context = Context()
 
-    await async_reproduce_states(hass, [State(ENTITY_1, "on")], context)
+    await async_reproduce_states(hass, [State(ENTITY_1, "on")], context=context)
 
     await hass.async_block_till_done()
 

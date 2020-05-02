@@ -918,6 +918,27 @@ def random_every_time(context, values):
     return random.choice(values)
 
 
+def relative_time(value):
+    """
+    Take a datetime and return its "age" as a string.
+
+    The age can be in second, minute, hour, day, month or year. Only the
+    biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
+    be returned.
+    Make sure date is not in the future, or else it will return None.
+
+    If the input are not a datetime object the input will be returned unmodified.
+    """
+
+    if not isinstance(value, datetime):
+        return value
+    if not value.tzinfo:
+        value = dt_util.as_local(value)
+    if dt_util.now() < value:
+        return value
+    return dt_util.get_age(value)
+
+
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
 
@@ -972,7 +993,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["now"] = dt_util.now
         self.globals["utcnow"] = dt_util.utcnow
         self.globals["as_timestamp"] = forgiving_as_timestamp
-        self.globals["relative_time"] = dt_util.get_age
+        self.globals["relative_time"] = relative_time
         self.globals["strptime"] = strptime
         if hass is None:
             return

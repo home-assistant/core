@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.1.0
+    rev: v2.2.1
     hooks:
       - id: pyupgrade
         args: [--py37-plus]

@@ -53,7 +53,6 @@ def base_unique_id(latitude, longitude):
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the National Weather Service (NWS) component."""
-    hass.data.setdefault(DOMAIN, {})
     return True
 
 
@@ -93,8 +92,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_method=nws_data.update_forecast_hourly,
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
-
-    hass.data[DOMAIN][entry.entry_id] = {
+    nws_hass_data = hass.data.setdefault(DOMAIN, {})
+    nws_hass_data[entry.entry_id] = {
         NWS_DATA: nws_data,
         COORDINATOR_OBSERVATION: coordinator_observation,
         COORDINATOR_FORECAST: coordinator_forecast,

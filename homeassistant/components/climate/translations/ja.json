@@ -1,0 +1,12 @@
+{
+    "state": {
+        "_": {
+            "auto": "\u30aa\u30fc\u30c8",
+            "cool": "\u51b7\u623f",
+            "dry": "\u30c9\u30e9\u30a4",
+            "fan_only": "\u30d5\u30a1\u30f3\u306e\u307f",
+            "heat": "\u6696\u623f",
+            "off": "\u30aa\u30d5"
+        }
+    }
+}

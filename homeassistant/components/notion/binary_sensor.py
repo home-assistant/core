@@ -1,7 +1,7 @@
 """Support for Notion binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 
 from . import (
@@ -50,7 +50,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensor_list, True)
 
 
-class NotionBinarySensor(NotionEntity, BinarySensorDevice):
+class NotionBinarySensor(NotionEntity, BinarySensorEntity):
     """Define a Notion sensor."""
 
     @property

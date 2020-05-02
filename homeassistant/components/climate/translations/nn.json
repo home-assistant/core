@@ -1,0 +1,14 @@
+{
+    "state": {
+        "_": {
+            "auto": "Auto",
+            "cool": "Kj\u00f8le",
+            "dry": "T\u00f8rr",
+            "fan_only": "Berre vifte",
+            "heat": "Varme",
+            "heat_cool": "Oppvarming/Nedkj\u00f8ling",
+            "off": "Av"
+        }
+    },
+    "title": "Klima"
+}

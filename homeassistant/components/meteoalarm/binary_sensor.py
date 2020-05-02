@@ -5,7 +5,7 @@ import logging
 from meteoalertapi import Meteoalert
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -42,14 +42,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         api = Meteoalert(country, province, language)
-    except KeyError():
+    except KeyError:
         _LOGGER.error("Wrong country digits or province name")
         return
 
     add_entities([MeteoAlertBinarySensor(api, name)], True)
 
 
-class MeteoAlertBinarySensor(BinarySensorDevice):
+class MeteoAlertBinarySensor(BinarySensorEntity):
     """Representation of a MeteoAlert binary sensor."""
 
     def __init__(self, api, name):

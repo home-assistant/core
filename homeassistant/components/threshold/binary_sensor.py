@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -75,7 +75,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class ThresholdSensor(BinarySensorDevice):
+class ThresholdSensor(BinarySensorEntity):
     """Representation of a Threshold sensor."""
 
     def __init__(self, hass, entity_id, name, lower, upper, hysteresis, device_class):

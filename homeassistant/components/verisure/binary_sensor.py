@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 
 from . import CONF_DOOR_WINDOW, HUB as hub
@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class VerisureDoorWindowSensor(BinarySensorDevice):
+class VerisureDoorWindowSensor(BinarySensorEntity):
     """Representation of a Verisure door window sensor."""
 
     def __init__(self, device_label):
@@ -73,7 +73,7 @@ class VerisureDoorWindowSensor(BinarySensorDevice):
         hub.update_overview()
 
 
-class VerisureEthernetStatus(BinarySensorDevice):
+class VerisureEthernetStatus(BinarySensorEntity):
     """Representation of a Verisure VBOX internet status."""
 
     @property

@@ -21,6 +21,7 @@ omit =
     homeassistant/components/airly/sensor.py
     homeassistant/components/airly/const.py
     homeassistant/components/airvisual/__init__.py
+    homeassistant/components/airvisual/air_quality.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/aladdin_connect/cover.py
     homeassistant/components/alarmdecoder/*
@@ -50,6 +51,10 @@ omit =
     homeassistant/components/arwn/sensor.py
     homeassistant/components/asterisk_cdr/mailbox.py
     homeassistant/components/asterisk_mbox/*
+    homeassistant/components/atag/__init__.py
+    homeassistant/components/atag/climate.py
+    homeassistant/components/atag/sensor.py
+    homeassistant/components/atag/water_heater.py
     homeassistant/components/aten_pe/*
     homeassistant/components/atome/*
     homeassistant/components/aurora_abb_powerone/sensor.py
@@ -306,7 +311,11 @@ omit =
     homeassistant/components/huawei_lte/*
     homeassistant/components/huawei_router/device_tracker.py
     homeassistant/components/hue/light.py
+    homeassistant/components/hunterdouglas_powerview/__init__.py
     homeassistant/components/hunterdouglas_powerview/scene.py
+    homeassistant/components/hunterdouglas_powerview/sensor.py
+    homeassistant/components/hunterdouglas_powerview/cover.py
+    homeassistant/components/hunterdouglas_powerview/entity.py
     homeassistant/components/hydrawise/*
     homeassistant/components/hyperion/light.py
     homeassistant/components/ialarm/alarm_control_panel.py
@@ -498,6 +507,7 @@ omit =
     homeassistant/components/ombi/*
     homeassistant/components/onewire/sensor.py
     homeassistant/components/onkyo/media_player.py
+    homeassistant/components/onvif/__init__.py
     homeassistant/components/onvif/camera.py
     homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
@@ -523,7 +533,6 @@ omit =
     homeassistant/components/osramlightify/light.py
     homeassistant/components/otp/sensor.py
     homeassistant/components/panasonic_bluray/media_player.py
-    homeassistant/components/panasonic_viera/__init__.py
     homeassistant/components/panasonic_viera/media_player.py
     homeassistant/components/pandora/media_player.py
     homeassistant/components/pcal9535a/*
@@ -556,7 +565,6 @@ omit =
     homeassistant/components/pulseaudio_loopback/switch.py
     homeassistant/components/pushbullet/notify.py
     homeassistant/components/pushbullet/sensor.py
-    homeassistant/components/pushetta/notify.py
     homeassistant/components/pushover/notify.py
     homeassistant/components/pushsafer/notify.py
     homeassistant/components/pvoutput/sensor.py
@@ -566,7 +574,6 @@ omit =
     homeassistant/components/qrcode/image_processing.py
     homeassistant/components/quantum_gateway/device_tracker.py
     homeassistant/components/qvr_pro/*
-    homeassistant/components/qwikswitch/*
     homeassistant/components/rachio/*
     homeassistant/components/radarr/sensor.py
     homeassistant/components/radiotherm/climate.py
@@ -605,7 +612,7 @@ omit =
     homeassistant/components/roomba/vacuum.py
     homeassistant/components/route53/*
     homeassistant/components/rova/sensor.py
-    homeassistant/components/rpi_camera/camera.py
+    homeassistant/components/rpi_camera/*
     homeassistant/components/rpi_gpio/*
     homeassistant/components/rpi_gpio/cover.py
     homeassistant/components/rpi_gpio_pwm/light.py
@@ -826,7 +833,17 @@ omit =
     homeassistant/components/xfinity/device_tracker.py
     homeassistant/components/xiaomi/camera.py
     homeassistant/components/xiaomi_aqara/*
-    homeassistant/components/xiaomi_miio/*
+    homeassistant/components/xiaomi_miio/__init__.py
+    homeassistant/components/xiaomi_miio/air_quality.py
+    homeassistant/components/xiaomi_miio/alarm_control_panel.py
+    homeassistant/components/xiaomi_miio/device_tracker.py
+    homeassistant/components/xiaomi_miio/fan.py
+    homeassistant/components/xiaomi_miio/gateway.py
+    homeassistant/components/xiaomi_miio/light.py
+    homeassistant/components/xiaomi_miio/remote.py
+    homeassistant/components/xiaomi_miio/sensor.py
+    homeassistant/components/xiaomi_miio/switch.py
+    homeassistant/components/xiaomi_miio/vacuum.py
     homeassistant/components/xiaomi_tv/media_player.py
     homeassistant/components/xmpp/notify.py
     homeassistant/components/xs1/*

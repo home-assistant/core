@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Esta televisi\u00f3n ya est\u00e1 configurada."
+        },
+        "error": {
+            "unsupported_model": "Su modelo de televisi\u00f3n no es compatible."
+        },
+        "step": {
+            "authorize": {
+                "data": {
+                    "pin": "C\u00f3digo PIN"
+                },
+                "title": "Autorizar Sony Bravia TV"
+            },
+            "user": {
+                "title": "Sony Bravia TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "ignored_sources": "Lista de fuentes ignoradas"
+                },
+                "title": "Opciones para Sony Bravia TV"
+            }
+        }
+    }
+}

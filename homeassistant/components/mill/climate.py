@@ -4,7 +4,7 @@ import logging
 from mill import Mill
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -85,7 +85,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class MillHeater(ClimateDevice):
+class MillHeater(ClimateEntity):
     """Representation of a Mill Thermostat device."""
 
     def __init__(self, heater, mill_data_connection):

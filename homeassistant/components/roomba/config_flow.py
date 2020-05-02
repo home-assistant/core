@@ -86,8 +86,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors = {"base": "cannot_connect"}
-            except Exception:  # pylint: disable=broad-except
-                errors = {"base": "unknown"}
 
             if "base" not in errors:
                 await async_disconnect_or_timeout(self.hass, info[ROOMBA_SESSION])

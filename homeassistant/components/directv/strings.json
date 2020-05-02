@@ -4,11 +4,9 @@
     "step": {
       "ssdp_confirm": {
         "data": {},
-        "description": "Do you want to set up {name}?",
-        "title": "Connect to the DirecTV receiver"
+        "description": "Do you want to set up {name}?"
       },
       "user": {
-        "title": "Connect to the DirecTV receiver",
         "data": { "host": "Host or IP address" }
       }
     },

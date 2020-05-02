@@ -1,5 +1,4 @@
 """Test for smart home alexa support."""
-from unittest.mock import patch
 
 import pytest
 
@@ -39,7 +38,8 @@ from . import (
     reported_properties,
 )
 
-from tests.common import async_mock_service, mock_coro
+from tests.async_mock import patch
+from tests.common import async_mock_service
 
 
 @pytest.fixture
@@ -3802,9 +3802,9 @@ async def test_camera_discovery_without_stream(hass):
     "url,result",
     [
         ("http://nohttpswrongport.org:8123", 2),
-        ("https://httpswrongport.org:8123", 2),
         ("http://nohttpsport443.org:443", 2),
         ("tls://nohttpsport443.org:443", 2),
+        ("https://httpsnnonstandport.org:8123", 3),
         ("https://correctschemaandport.org:443", 3),
         ("https://correctschemaandport.org", 3),
     ],
@@ -3831,7 +3831,7 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
-        return_value=mock_coro("rtsp://example.local"),
+        return_value="rtsp://example.local",
     ), patch(
         "homeassistant.helpers.network.async_get_external_url",
         return_value="https://mycamerastream.test",

@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "otp_failed": "Kaksivaiheinen todennus ep\u00e4onnistui, yrit\u00e4 uudelleen uudella salasanalla."
+        },
+        "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Koodi"
+                }
+            }
+        }
+    }
+}

@@ -3,7 +3,6 @@ import asyncio
 import json
 from unittest.mock import MagicMock
 
-from asynctest import call, patch
 import pytest
 
 from homeassistant.components.minio import (
@@ -20,6 +19,7 @@ from homeassistant.components.minio import (
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import call, patch
 from tests.components.minio.common import TEST_EVENT
 
 
