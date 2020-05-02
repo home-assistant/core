@@ -7,6 +7,7 @@ from songpal.containers import InterfaceInfo
 
 from homeassistant.components import ssdp
 from homeassistant.components.songpal.const import CONF_ENDPOINT, DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -92,7 +93,7 @@ def _flow_next(hass, flow_id):
 async def test_flow_ssdp(hass):
     """Test working ssdp flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "ssdp"}, data=SSDP_DATA,
+        DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DATA,
     )
     assert result["type"] == "form"
     assert result["step_id"] == "init"
@@ -117,7 +118,7 @@ async def test_flow_user(hass):
 
     with _patch_config_flow_device(mocked_device):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"},
+            DOMAIN, context={"source": SOURCE_USER},
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
@@ -140,12 +141,18 @@ async def test_flow_user(hass):
 
 async def test_flow_import(hass):
     """Test working import flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "import"}, data=CONF_DATA
-    )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == FRIENDLY_NAME
-    assert result["data"] == CONF_DATA
+    mocked_device = _create_mocked_device()
+
+    with _patch_config_flow_device(mocked_device):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=CONF_DATA
+        )
+        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == FRIENDLY_NAME
+        assert result["data"] == CONF_DATA
+
+    mocked_device.get_supported_methods.assert_called_once()
+    mocked_device.get_interface_information.assert_not_called()
 
 
 def _create_mock_config_entry(hass):
@@ -161,7 +168,7 @@ async def test_ssdp_bravia(hass):
         "X_ScalarWebAPI_ServiceType"
     ].append("videoScreen")
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "ssdp"}, data=ssdp_data,
+        DOMAIN, context={"source": SOURCE_SSDP}, data=ssdp_data,
     )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "not_songpal_device"
@@ -171,7 +178,7 @@ async def test_sddp_exist(hass):
     """Test discovering existed device."""
     _create_mock_config_entry(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "ssdp"}, data=SSDP_DATA,
+        DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DATA,
     )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
@@ -184,7 +191,7 @@ async def test_user_exist(hass):
 
     with _patch_config_flow_device(mocked_device):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=CONF_DATA
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
         )
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
@@ -195,13 +202,18 @@ async def test_user_exist(hass):
 
 async def test_import_exist(hass):
     """Test importing existed device."""
+    mocked_device = _create_mocked_device()
     _create_mock_config_entry(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "import"}, data=CONF_DATA
-    )
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+    with _patch_config_flow_device(mocked_device):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=CONF_DATA
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
+
+    mocked_device.get_supported_methods.assert_called_once()
+    mocked_device.get_interface_information.assert_not_called()
 
 
 async def test_user_invalid(hass):
@@ -211,11 +223,27 @@ async def test_user_invalid(hass):
 
     with _patch_config_flow_device(mocked_device):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=CONF_DATA
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "connection"}
+
+    mocked_device.get_supported_methods.assert_called_once()
+    mocked_device.get_interface_information.assert_not_called()
+
+
+async def test_import_invalid(hass):
+    """Test importing invalid config."""
+    mocked_device = _create_mocked_device(True)
+    _create_mock_config_entry(hass)
+
+    with _patch_config_flow_device(mocked_device):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=CONF_DATA
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "connection"
 
     mocked_device.get_supported_methods.assert_called_once()
     mocked_device.get_interface_information.assert_not_called()

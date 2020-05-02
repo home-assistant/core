@@ -13,7 +13,7 @@ from songpal import (
 )
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -22,7 +22,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_NAME,
@@ -50,10 +50,6 @@ SUPPORT_SONGPAL = (
     | SUPPORT_TURN_OFF
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_NAME): cv.string, vol.Required(CONF_ENDPOINT): cv.string}
-)
-
 SET_SOUND_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
@@ -66,11 +62,9 @@ SET_SOUND_SCHEMA = vol.Schema(
 async def async_setup_platform(
     hass: HomeAssistantType, config: dict, async_add_entities, discovery_info=None
 ) -> None:
-    """Support legacy configuration file."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
+    """Set up from legacy configuration file. Obsolete."""
+    _LOGGER.error(
+        "Configuring Songpal through media_player platform is no longer supported. Convert to songpal platform or UI configuration."
     )
 
 

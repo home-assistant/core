@@ -128,6 +128,19 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         name = user_input.get(CONF_NAME)
         endpoint = user_input.get(CONF_ENDPOINT)
         parsed_url = urlparse(endpoint)
+
+        # Try to connect to test the endpoint
+        try:
+            device = Device(endpoint)
+            await device.get_supported_methods()
+            # Get name
+            if name is None:
+                interface_info = await device.get_interface_information()
+                name = interface_info.modelName
+        except SongpalException as ex:
+            _LOGGER.error("Import from yaml configuration failed: %s", ex)
+            return self.async_abort(reason="connection")
+
         self.conf = SongpalConfig(name, parsed_url.hostname, endpoint)
 
         return await self.async_step_init(user_input)
