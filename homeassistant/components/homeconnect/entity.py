@@ -29,9 +29,9 @@ class HomeConnectEntity(Entity):
         )
 
     @callback
-    def _update_callback(self, haId):
+    def _update_callback(self, ha_id):
         """Update data."""
-        if haId == self.device.appliance.haId:
+        if ha_id == self.device.appliance.haId:
             self.async_entity_update()
 
     @property
