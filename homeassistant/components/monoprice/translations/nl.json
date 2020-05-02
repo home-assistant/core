@@ -10,7 +10,13 @@
         "step": {
             "user": {
                 "data": {
-                    "port": "Seri\u00eble poort"
+                    "port": "Seri\u00eble poort",
+                    "source_1": "Naam van bron #1",
+                    "source_2": "Naam van bron #2",
+                    "source_3": "Naam van bron #3",
+                    "source_4": "Naam van bron #4",
+                    "source_5": "Naam van bron #5",
+                    "source_6": "Naam van bron #6"
                 },
                 "title": "Verbinding maken met het apparaat"
             }

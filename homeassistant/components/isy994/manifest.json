@@ -3,5 +3,5 @@
   "name": "Universal Devices ISY994",
   "documentation": "https://www.home-assistant.io/integrations/isy994",
   "requirements": ["PyISY==1.1.2"],
-  "codeowners": []
+  "codeowners": ["@bdraco"]
 }

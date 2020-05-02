@@ -1,8 +1,29 @@
 """Test the condition helper."""
 from unittest.mock import patch
 
+import pytest
+
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition
 from homeassistant.util import dt
+
+
+async def test_invalid_condition(hass):
+    """Test if invalid condition raises."""
+    with pytest.raises(HomeAssistantError):
+        await condition.async_from_config(
+            hass,
+            {
+                "condition": "invalid",
+                "conditions": [
+                    {
+                        "condition": "state",
+                        "entity_id": "sensor.temperature",
+                        "state": "100",
+                    },
+                ],
+            },
+        )
 
 
 async def test_and_condition(hass):
@@ -261,9 +282,46 @@ async def test_extract_entities():
                     "entity_id": "sensor.temperature_2",
                     "below": 110,
                 },
+                {
+                    "condition": "not",
+                    "conditions": [
+                        {
+                            "condition": "state",
+                            "entity_id": "sensor.temperature_3",
+                            "state": "100",
+                        },
+                        {
+                            "condition": "numeric_state",
+                            "entity_id": "sensor.temperature_4",
+                            "below": 110,
+                        },
+                    ],
+                },
+                {
+                    "condition": "or",
+                    "conditions": [
+                        {
+                            "condition": "state",
+                            "entity_id": "sensor.temperature_5",
+                            "state": "100",
+                        },
+                        {
+                            "condition": "numeric_state",
+                            "entity_id": "sensor.temperature_6",
+                            "below": 110,
+                        },
+                    ],
+                },
             ],
         }
-    ) == {"sensor.temperature", "sensor.temperature_2"}
+    ) == {
+        "sensor.temperature",
+        "sensor.temperature_2",
+        "sensor.temperature_3",
+        "sensor.temperature_4",
+        "sensor.temperature_5",
+        "sensor.temperature_6",
+    }
 
 
 async def test_extract_devices():
@@ -274,6 +332,41 @@ async def test_extract_devices():
             "conditions": [
                 {"condition": "device", "device_id": "abcd", "domain": "light"},
                 {"condition": "device", "device_id": "qwer", "domain": "switch"},
+                {
+                    "condition": "state",
+                    "entity_id": "sensor.not_a_device",
+                    "state": "100",
+                },
+                {
+                    "condition": "not",
+                    "conditions": [
+                        {
+                            "condition": "device",
+                            "device_id": "abcd_not",
+                            "domain": "light",
+                        },
+                        {
+                            "condition": "device",
+                            "device_id": "qwer_not",
+                            "domain": "switch",
+                        },
+                    ],
+                },
+                {
+                    "condition": "or",
+                    "conditions": [
+                        {
+                            "condition": "device",
+                            "device_id": "abcd_or",
+                            "domain": "light",
+                        },
+                        {
+                            "condition": "device",
+                            "device_id": "qwer_or",
+                            "domain": "switch",
+                        },
+                    ],
+                },
             ],
         }
-    ) == {"abcd", "qwer"}
+    ) == {"abcd", "qwer", "abcd_not", "qwer_not", "abcd_or", "qwer_or"}

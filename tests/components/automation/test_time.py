@@ -49,8 +49,8 @@ async def test_if_fires_using_at(hass, calls):
     async_fire_time_changed(hass, dt_util.utcnow().replace(hour=5, minute=0, second=0))
 
     await hass.async_block_till_done()
-    assert 1 == len(calls)
-    assert "time - 5" == calls[0].data["some"]
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "time - 5"
 
 
 async def test_if_not_fires_using_wrong_at(hass, calls):
@@ -77,7 +77,7 @@ async def test_if_not_fires_using_wrong_at(hass, calls):
     async_fire_time_changed(hass, dt_util.utcnow().replace(hour=1, minute=0, second=5))
 
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_action_before(hass, calls):
@@ -101,13 +101,13 @@ async def test_if_action_before(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
     with patch("homeassistant.helpers.condition.dt_util.now", return_value=after_10):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_action_after(hass, calls):
@@ -131,13 +131,13 @@ async def test_if_action_after(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
     with patch("homeassistant.helpers.condition.dt_util.now", return_value=after_10):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_action_one_weekday(hass, calls):
@@ -162,13 +162,13 @@ async def test_if_action_one_weekday(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
     with patch("homeassistant.helpers.condition.dt_util.now", return_value=tuesday):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_action_list_weekday(hass, calls):
@@ -194,16 +194,16 @@ async def test_if_action_list_weekday(hass, calls):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
     with patch("homeassistant.helpers.condition.dt_util.now", return_value=tuesday):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert 2 == len(calls)
+    assert len(calls) == 2
 
     with patch("homeassistant.helpers.condition.dt_util.now", return_value=wednesday):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert 2 == len(calls)
+    assert len(calls) == 2

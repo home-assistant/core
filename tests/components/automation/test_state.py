@@ -65,15 +65,15 @@ async def test_if_fires_on_entity_change(hass, calls):
 
     hass.states.async_set("test.entity", "world", context=context)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
-    assert "state - test.entity - hello - world - None" == calls[0].data["some"]
+    assert calls[0].data["some"] == "state - test.entity - hello - world - None"
 
     await common.async_turn_off(hass)
     await hass.async_block_till_done()
     hass.states.async_set("test.entity", "planet")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_entity_change_with_from_filter(hass, calls):
@@ -96,7 +96,7 @@ async def test_if_fires_on_entity_change_with_from_filter(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_entity_change_with_to_filter(hass, calls):
@@ -119,7 +119,7 @@ async def test_if_fires_on_entity_change_with_to_filter(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_attribute_change_with_to_filter(hass, calls):
@@ -143,7 +143,7 @@ async def test_if_fires_on_attribute_change_with_to_filter(hass, calls):
     hass.states.async_set("test.entity", "world", {"test_attribute": 11})
     hass.states.async_set("test.entity", "world", {"test_attribute": 12})
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_entity_change_with_both_filters(hass, calls):
@@ -167,7 +167,7 @@ async def test_if_fires_on_entity_change_with_both_filters(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_not_fires_if_to_filter_not_match(hass, calls):
@@ -191,7 +191,7 @@ async def test_if_not_fires_if_to_filter_not_match(hass, calls):
 
     hass.states.async_set("test.entity", "moon")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_not_fires_if_from_filter_not_match(hass, calls):
@@ -217,7 +217,7 @@ async def test_if_not_fires_if_from_filter_not_match(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_not_fires_if_entity_not_match(hass, calls):
@@ -236,7 +236,7 @@ async def test_if_not_fires_if_entity_not_match(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_action(hass, calls):
@@ -262,13 +262,13 @@ async def test_if_action(hass, calls):
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
     hass.states.async_set(entity_id, test_state + "something")
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fails_setup_if_to_boolean_value(hass, calls):
@@ -377,7 +377,7 @@ async def test_if_not_fires_on_entity_change_with_for(hass, calls):
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_if_not_fires_on_entities_change_with_for_after_stop(hass, calls):
@@ -404,7 +404,7 @@ async def test_if_not_fires_on_entities_change_with_for_after_stop(hass, calls):
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 2 == len(calls)
+    assert len(calls) == 2
 
     hass.states.async_set("test.entity_1", "world_no")
     hass.states.async_set("test.entity_2", "world_no")
@@ -417,7 +417,7 @@ async def test_if_not_fires_on_entities_change_with_for_after_stop(hass, calls):
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 2 == len(calls)
+    assert len(calls) == 2
 
 
 async def test_if_fires_on_entity_change_with_for_attribute_change(hass, calls):
@@ -450,11 +450,11 @@ async def test_if_fires_on_entity_change_with_for_attribute_change(hass, calls):
             "test.entity", "world", attributes={"mock_attr": "attr_change"}
         )
         await hass.async_block_till_done()
-        assert 0 == len(calls)
+        assert len(calls) == 0
         mock_utcnow.return_value += timedelta(seconds=4)
         async_fire_time_changed(hass, mock_utcnow.return_value)
         await hass.async_block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
 
 async def test_if_fires_on_entity_change_with_for_multiple_force_update(hass, calls):
@@ -481,16 +481,16 @@ async def test_if_fires_on_entity_change_with_for_multiple_force_update(hass, ca
         mock_utcnow.return_value = utcnow
         hass.states.async_set("test.force_entity", "world", None, True)
         await hass.async_block_till_done()
-        for _ in range(0, 4):
+        for _ in range(4):
             mock_utcnow.return_value += timedelta(seconds=1)
             async_fire_time_changed(hass, mock_utcnow.return_value)
             hass.states.async_set("test.force_entity", "world", None, True)
             await hass.async_block_till_done()
-        assert 0 == len(calls)
+        assert len(calls) == 0
         mock_utcnow.return_value += timedelta(seconds=4)
         async_fire_time_changed(hass, mock_utcnow.return_value)
         await hass.async_block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
 
 async def test_if_fires_on_entity_change_with_for(hass, calls):
@@ -539,7 +539,7 @@ async def test_if_fires_on_entity_removal(hass, calls):
 
     assert hass.states.async_remove("test.entity", context=context)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
 
 
@@ -571,13 +571,13 @@ async def test_if_fires_on_for_condition(hass, calls):
         # not enough time has passed
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert 0 == len(calls)
+        assert len(calls) == 0
 
         # Time travel 10 secs into the future
         mock_utcnow.return_value = point2
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
 
 async def test_if_fires_on_for_condition_attribute_change(hass, calls):
@@ -609,7 +609,7 @@ async def test_if_fires_on_for_condition_attribute_change(hass, calls):
         # not enough time has passed
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert 0 == len(calls)
+        assert len(calls) == 0
 
         # Still not enough time has passed, but an attribute is changed
         mock_utcnow.return_value = point2
@@ -618,13 +618,13 @@ async def test_if_fires_on_for_condition_attribute_change(hass, calls):
         )
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert 0 == len(calls)
+        assert len(calls) == 0
 
         # Enough time has now passed
         mock_utcnow.return_value = point3
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
 
 async def test_if_fails_setup_for_without_time(hass, calls):
@@ -707,8 +707,8 @@ async def test_wait_template_with_trigger(hass, calls):
     await hass.async_block_till_done()
     hass.states.async_set("test.entity", "hello")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
-    assert "state - test.entity - hello - world" == calls[0].data["some"]
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "state - test.entity - hello - world"
 
 
 async def test_if_fires_on_entities_change_no_overlap(hass, calls):
@@ -741,16 +741,16 @@ async def test_if_fires_on_entities_change_no_overlap(hass, calls):
         mock_utcnow.return_value += timedelta(seconds=10)
         async_fire_time_changed(hass, mock_utcnow.return_value)
         await hass.async_block_till_done()
-        assert 1 == len(calls)
-        assert "test.entity_1" == calls[0].data["some"]
+        assert len(calls) == 1
+        assert calls[0].data["some"] == "test.entity_1"
 
         hass.states.async_set("test.entity_2", "world")
         await hass.async_block_till_done()
         mock_utcnow.return_value += timedelta(seconds=10)
         async_fire_time_changed(hass, mock_utcnow.return_value)
         await hass.async_block_till_done()
-        assert 2 == len(calls)
-        assert "test.entity_2" == calls[1].data["some"]
+        assert len(calls) == 2
+        assert calls[1].data["some"] == "test.entity_2"
 
 
 async def test_if_fires_on_entities_change_overlap(hass, calls):
@@ -792,18 +792,18 @@ async def test_if_fires_on_entities_change_overlap(hass, calls):
         async_fire_time_changed(hass, mock_utcnow.return_value)
         hass.states.async_set("test.entity_2", "world")
         await hass.async_block_till_done()
-        assert 0 == len(calls)
+        assert len(calls) == 0
         mock_utcnow.return_value += timedelta(seconds=3)
         async_fire_time_changed(hass, mock_utcnow.return_value)
         await hass.async_block_till_done()
-        assert 1 == len(calls)
-        assert "test.entity_1" == calls[0].data["some"]
+        assert len(calls) == 1
+        assert calls[0].data["some"] == "test.entity_1"
 
         mock_utcnow.return_value += timedelta(seconds=3)
         async_fire_time_changed(hass, mock_utcnow.return_value)
         await hass.async_block_till_done()
-        assert 2 == len(calls)
-        assert "test.entity_2" == calls[1].data["some"]
+        assert len(calls) == 2
+        assert calls[1].data["some"] == "test.entity_2"
 
 
 async def test_if_fires_on_change_with_for_template_1(hass, calls):
@@ -826,10 +826,10 @@ async def test_if_fires_on_change_with_for_template_1(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_change_with_for_template_2(hass, calls):
@@ -852,10 +852,10 @@ async def test_if_fires_on_change_with_for_template_2(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_change_with_for_template_3(hass, calls):
@@ -878,10 +878,10 @@ async def test_if_fires_on_change_with_for_template_3(hass, calls):
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_invalid_for_template_1(hass, calls):
@@ -950,19 +950,19 @@ async def test_if_fires_on_entities_change_overlap_for_template(hass, calls):
         async_fire_time_changed(hass, mock_utcnow.return_value)
         hass.states.async_set("test.entity_2", "world")
         await hass.async_block_till_done()
-        assert 0 == len(calls)
+        assert len(calls) == 0
         mock_utcnow.return_value += timedelta(seconds=3)
         async_fire_time_changed(hass, mock_utcnow.return_value)
         await hass.async_block_till_done()
-        assert 1 == len(calls)
-        assert "test.entity_1 - 0:00:05" == calls[0].data["some"]
+        assert len(calls) == 1
+        assert calls[0].data["some"] == "test.entity_1 - 0:00:05"
 
         mock_utcnow.return_value += timedelta(seconds=3)
         async_fire_time_changed(hass, mock_utcnow.return_value)
         await hass.async_block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
         mock_utcnow.return_value += timedelta(seconds=5)
         async_fire_time_changed(hass, mock_utcnow.return_value)
         await hass.async_block_till_done()
-        assert 2 == len(calls)
-        assert "test.entity_2 - 0:00:10" == calls[1].data["some"]
+        assert len(calls) == 2
+        assert calls[1].data["some"] == "test.entity_2 - 0:00:10"

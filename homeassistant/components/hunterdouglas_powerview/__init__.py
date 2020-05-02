@@ -69,7 +69,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-PLATFORMS = ["cover", "scene"]
+PLATFORMS = ["cover", "scene", "sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 

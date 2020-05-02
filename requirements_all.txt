@@ -35,7 +35,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==2.8.2
+HAP-python==2.8.3
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -100,6 +100,9 @@ TwitterAPI==2.5.11
 
 # homeassistant.components.tof
 # VL53L1X2==0.1.5
+
+# homeassistant.components.onvif
+WSDiscovery==2.0.0
 
 # homeassistant.components.waze_travel_time
 WazeRouteCalculator==0.12
@@ -365,7 +368,7 @@ bravia-tv==1.0.2
 broadlink==0.13.2
 
 # homeassistant.components.brother
-brother==0.1.13
+brother==0.1.14
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -683,7 +686,7 @@ habitipy==0.2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.34.1
+hass-nabucasa==0.34.2
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.5
@@ -951,6 +954,9 @@ nsw-fuel-api-client==1.0.10
 # homeassistant.components.nuheat
 nuheat==0.3.0
 
+# homeassistant.components.numato
+numato-gpio==0.7.1
+
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
@@ -1098,6 +1104,9 @@ ptvsd==4.2.8
 
 # homeassistant.components.wink
 pubnubsub-handler==1.0.8
+
+# homeassistant.components.pulseaudio_loopback
+pulsectl==20.2.4
 
 # homeassistant.components.androidtv
 pure-python-adb==0.2.2.dev0
@@ -1405,7 +1414,7 @@ pymailgunner==1.4
 pymediaroom==0.6.4
 
 # homeassistant.components.melcloud
-pymelcloud==2.4.1
+pymelcloud==2.5.2
 
 # homeassistant.components.somfy
 pymfy==0.7.1
@@ -1683,7 +1692,7 @@ python-sochain-api==0.0.2
 python-songpal==0.11.2
 
 # homeassistant.components.synology_dsm
-python-synology==0.7.3
+python-synology==0.7.4
 
 # homeassistant.components.tado
 python-tado==0.8.1

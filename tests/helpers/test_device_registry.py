@@ -2,12 +2,12 @@
 import asyncio
 from unittest.mock import patch
 
-import asynctest
 import pytest
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry
 
+import tests.async_mock
 from tests.common import flush_store, mock_device_registry
 
 
@@ -474,7 +474,7 @@ async def test_update_remove_config_entries(hass, registry, update_events):
 
 async def test_loading_race_condition(hass):
     """Test only one storage load called when concurrent loading occurred ."""
-    with asynctest.patch(
+    with tests.async_mock.patch(
         "homeassistant.helpers.device_registry.DeviceRegistry.async_load"
     ) as mock_load:
         results = await asyncio.gather(

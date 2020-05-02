@@ -11,10 +11,12 @@
         "step": {
             "user": {
                 "data": {
+                    "client_id": "Client-id",
                     "client_secret": "Client Secret",
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
                 },
+                "description": "Om toegang te krijgen tot de Flume Personal API, moet je een 'Client ID' en 'Client Secret' aanvragen op https://portal.flumetech.com/settings#token",
                 "title": "Verbind met uw Flume account"
             }
         }

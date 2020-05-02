@@ -3,10 +3,11 @@ from datetime import datetime
 import logging
 
 import aioautomatic
-from asynctest import MagicMock, patch
 
 from homeassistant.components.automatic.device_tracker import async_setup_scanner
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import MagicMock, patch
 
 _LOGGER = logging.getLogger(__name__)
 

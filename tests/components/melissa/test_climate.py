@@ -16,7 +16,8 @@ from homeassistant.components.melissa import DATA_MELISSA, climate as melissa
 from homeassistant.components.melissa.climate import MelissaClimate
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
-from tests.common import load_fixture, mock_coro_func
+from tests.async_mock import AsyncMock
+from tests.common import load_fixture
 
 _SERIAL = "12345678"
 
@@ -24,17 +25,17 @@ _SERIAL = "12345678"
 def melissa_mock():
     """Use this to mock the melissa api."""
     api = Mock()
-    api.async_fetch_devices = mock_coro_func(
+    api.async_fetch_devices = AsyncMock(
         return_value=json.loads(load_fixture("melissa_fetch_devices.json"))
     )
-    api.async_status = mock_coro_func(
+    api.async_status = AsyncMock(
         return_value=json.loads(load_fixture("melissa_status.json"))
     )
-    api.async_cur_settings = mock_coro_func(
+    api.async_cur_settings = AsyncMock(
         return_value=json.loads(load_fixture("melissa_cur_settings.json"))
     )
 
-    api.async_send = mock_coro_func(return_value=True)
+    api.async_send = AsyncMock(return_value=True)
 
     api.STATE_OFF = 0
     api.STATE_ON = 1
@@ -276,7 +277,7 @@ async def test_send(hass):
         await thermostat.async_send({"fan": api.FAN_MEDIUM})
         await hass.async_block_till_done()
         assert SPEED_MEDIUM == thermostat.fan_mode
-        api.async_send.return_value = mock_coro_func(return_value=False)
+        api.async_send.return_value = AsyncMock(return_value=False)
         thermostat._cur_settings = None
         await thermostat.async_send({"fan": api.FAN_LOW})
         await hass.async_block_till_done()
@@ -296,7 +297,7 @@ async def test_update(hass):
             await thermostat.async_update()
             assert SPEED_LOW == thermostat.fan_mode
             assert HVAC_MODE_HEAT == thermostat.state
-            api.async_status = mock_coro_func(exception=KeyError("boom"))
+            api.async_status = AsyncMock(side_effect=KeyError("boom"))
             await thermostat.async_update()
             mocked_warning.assert_called_once_with(
                 "Unable to update entity %s", thermostat.entity_id

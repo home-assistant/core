@@ -5,7 +5,6 @@ import logging
 from aiopvapi.helpers.constants import ATTR_POSITION1, ATTR_POSITION_DATA
 from aiopvapi.resources.shade import (
     ATTR_POSKIND1,
-    ATTR_TYPE,
     MAX_POSITION,
     MIN_POSITION,
     factory as PvShade,
@@ -28,13 +27,7 @@ from .const import (
     COORDINATOR,
     DEVICE_INFO,
     DEVICE_MODEL,
-    DEVICE_SERIAL_NUMBER,
     DOMAIN,
-    FIRMWARE_BUILD,
-    FIRMWARE_IN_SHADE,
-    FIRMWARE_REVISION,
-    FIRMWARE_SUB_REVISION,
-    MANUFACTURER,
     PV_API,
     PV_ROOM_DATA,
     PV_SHADE_DATA,
@@ -43,7 +36,7 @@ from .const import (
     SHADE_RESPONSE,
     STATE_ATTRIBUTE_ROOM_NAME,
 )
-from .entity import HDEntity
+from .entity import ShadeEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,21 +86,19 @@ def hass_position_to_hd(hass_positon):
     return int(hass_positon / 100 * MAX_POSITION)
 
 
-class PowerViewShade(HDEntity, CoverEntity):
+class PowerViewShade(ShadeEntity, CoverEntity):
     """Representation of a powerview shade."""
 
     def __init__(self, shade, name, room_data, coordinator, device_info):
         """Initialize the shade."""
         room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
-        super().__init__(coordinator, device_info, shade.id)
+        super().__init__(coordinator, device_info, shade, name)
         self._shade = shade
         self._device_info = device_info
         self._is_opening = False
         self._is_closing = False
-        self._room_name = None
         self._last_action_timestamp = 0
         self._scheduled_transition_update = None
-        self._name = name
         self._room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
         self._current_cover_position = MIN_POSITION
         self._coordinator = coordinator
@@ -153,7 +144,7 @@ class PowerViewShade(HDEntity, CoverEntity):
     @property
     def name(self):
         """Return the name of the shade."""
-        return self._name
+        return self._shade_name
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
@@ -267,26 +258,6 @@ class PowerViewShade(HDEntity, CoverEntity):
         await self._shade.refresh()
         self._async_update_current_cover_position()
         self.async_write_ha_state()
-
-    @property
-    def device_info(self):
-        """Return the device_info of the device."""
-        firmware = self._shade.raw_data[FIRMWARE_IN_SHADE]
-        sw_version = f"{firmware[FIRMWARE_REVISION]}.{firmware[FIRMWARE_SUB_REVISION]}.{firmware[FIRMWARE_BUILD]}"
-        model = self._shade.raw_data[ATTR_TYPE]
-        for shade in self._shade.shade_types:
-            if shade.shade_type == model:
-                model = shade.description
-                break
-
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "model": str(model),
-            "sw_version": sw_version,
-            "manufacturer": MANUFACTURER,
-            "via_device": (DOMAIN, self._device_info[DEVICE_SERIAL_NUMBER]),
-        }
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""

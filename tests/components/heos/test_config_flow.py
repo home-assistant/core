@@ -1,7 +1,6 @@
 """Tests for the Heos config flow module."""
 from urllib.parse import urlparse
 
-from asynctest import patch
 from pyheos import HeosError
 
 from homeassistant import data_entry_flow
@@ -9,6 +8,8 @@ from homeassistant.components import heos, ssdp
 from homeassistant.components.heos.config_flow import HeosFlowHandler
 from homeassistant.components.heos.const import DATA_DISCOVERED_HOSTS
 from homeassistant.const import CONF_HOST
+
+from tests.async_mock import patch
 
 
 async def test_flow_aborts_already_setup(hass, config_entry):
