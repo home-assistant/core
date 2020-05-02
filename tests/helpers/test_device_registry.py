@@ -149,6 +149,7 @@ async def test_loading_from_storage(hass, hass_storage):
                     "model": "model",
                     "name": "name",
                     "sw_version": "version",
+                    "entry_type": "service",
                     "area_id": "12345A",
                     "name_by_user": "Test Friendly Name",
                 }
@@ -168,6 +169,7 @@ async def test_loading_from_storage(hass, hass_storage):
     assert entry.id == "abcdefghijklm"
     assert entry.area_id == "12345A"
     assert entry.name_by_user == "Test Friendly Name"
+    assert entry.entry_type == "service"
     assert isinstance(entry.config_entries, set)
 
 
@@ -304,6 +306,9 @@ async def test_loading_saving_data(hass, registry):
         identifiers={("hue", "0123")},
         manufacturer="manufacturer",
         model="via",
+        name="Original Name",
+        sw_version="Orig SW 1",
+        entry_type="device",
     )
 
     orig_light = registry.async_get_or_create(
@@ -316,6 +321,10 @@ async def test_loading_saving_data(hass, registry):
     )
 
     assert len(registry.devices) == 2
+
+    orig_via = registry.async_update_device(
+        orig_via.id, area_id="mock-area-id", name_by_user="mock-name-by-user"
+    )
 
     # Now load written data in new registry
     registry2 = device_registry.DeviceRegistry(hass)
