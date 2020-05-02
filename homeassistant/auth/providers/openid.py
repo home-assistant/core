@@ -25,16 +25,14 @@ REQUIREMENTS = ["python-jose==3.1.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ISSUER = "issuer"
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
-CONF_TOKEN_URI = "token_uri"
-CONF_AUTHORIZATION_URI = "authorization_uri"
+CONF_CONFIGURATION = "configuration"
 CONF_EMAILS = "emails"
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     {
-        vol.Required(CONF_ISSUER): str,
+        vol.Required(CONF_CONFIGURATION): str,
         vol.Required(CONF_CLIENT_ID): str,
         vol.Required(CONF_CLIENT_SECRET): str,
         vol.Required(CONF_EMAILS): [str],
@@ -42,7 +40,21 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     extra=vol.PREVENT_EXTRA,
 )
 
-OPENID_CONFIGURATION_PATH = ".well-known/openid-configuration"
+OPENID_CONFIGURATION_SCHEMA = vol.Schema(
+    {
+        vol.Required("issuer"): str,
+        vol.Required("jwks_uri"): str,
+        vol.Required("id_token_signing_alg_values_supported"): list,
+        vol.Optional("scopes_supported"): list,
+        vol.Required("token_endpoint"): str,
+        vol.Required("authorization_endpoint"): str,
+        vol.Required("response_types_supported"): vol.Contains("code"),
+        vol.Required("token_endpoint_auth_methods_supported"): vol.Contains(
+            "client_secret_post"
+        ),
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 class InvalidAuthError(HomeAssistantError):
@@ -72,18 +84,20 @@ class OpenIdAuthProvider(AuthProvider):
 
     DEFAULT_TITLE = "OpenId Connect"
 
-    _discovery_document: Dict[str, Any]
+    _configuration: Dict[str, Any]
     _jwks: Dict[str, Any]
 
-    async def async_get_discovery_document(self) -> None:
+    async def async_get_configuration(self) -> None:
         """Cache discovery document for openid."""
-        if hasattr(self, "._discovery_document"):
+        if hasattr(self, "._configuration"):
             return
 
         session = async_get_clientsession(self.hass)
-        async with session.get(self.discovery_url) as response:
+        async with session.get(self.config[CONF_CONFIGURATION]) as response:
             await raise_for_status(response)
-            self._discovery_document = cast(Dict[str, Any], await response.json())
+            data = await response.json()
+
+        self._configuration = OPENID_CONFIGURATION_SCHEMA(data)
 
     async def async_get_jwks(self) -> None:
         """Cache the keys for id verification."""
@@ -91,14 +105,9 @@ class OpenIdAuthProvider(AuthProvider):
             return
 
         session = async_get_clientsession(self.hass)
-        async with session.get(self._discovery_document["jwks_uri"]) as response:
+        async with session.get(self._configuration["jwks_uri"]) as response:
             await raise_for_status(response)
             self._jwks = cast(Dict[str, Any], await response.json())
-
-    @property
-    def discovery_url(self) -> str:
-        """Construct discovery url based on config."""
-        return str(URL(self.config[CONF_ISSUER]).with_path(OPENID_CONFIGURATION_PATH))
 
     @property
     def redirect_uri(self) -> str:
@@ -108,7 +117,7 @@ class OpenIdAuthProvider(AuthProvider):
     async def async_login_flow(self, context: Optional[Dict]) -> LoginFlow:
         """Return a flow to login."""
 
-        await self.async_get_discovery_document()
+        await self.async_get_configuration()
         await self.async_get_jwks()
 
         async_register_view(self.hass)
@@ -128,7 +137,7 @@ class OpenIdAuthProvider(AuthProvider):
 
         session = async_get_clientsession(self.hass)
         async with session.post(
-            self._discovery_document["token_endpoint"], data=payload
+            self._configuration["token_endpoint"], data=payload
         ) as response:
             await raise_for_status(response)
             return cast(Dict[str, Any], await response.json())
@@ -139,8 +148,8 @@ class OpenIdAuthProvider(AuthProvider):
         """Validate a token."""
         from jose import jwt
 
-        algorithms = self._discovery_document["id_token_signing_alg_values_supported"]
-        issuer = self._discovery_document["issuer"]
+        algorithms = self._configuration["id_token_signing_alg_values_supported"]
+        issuer = self._configuration["issuer"]
 
         id_token = cast(
             Dict[str, Any],
@@ -162,9 +171,7 @@ class OpenIdAuthProvider(AuthProvider):
 
     async def async_generate_authorize_url(self, flow_id: str, nonce: str) -> str:
         """Generate a authorization url for a given flow."""
-        scopes = WANTED_SCOPES.intersection(
-            self._discovery_document["scopes_supported"]
-        )
+        scopes = WANTED_SCOPES.intersection(self._configuration["scopes_supported"])
 
         query = {
             "response_type": "code",
@@ -175,9 +182,7 @@ class OpenIdAuthProvider(AuthProvider):
             "nonce": nonce,
         }
 
-        return str(
-            URL(self._discovery_document["authorization_endpoint"]).with_query(query)
-        )
+        return str(URL(self._configuration["authorization_endpoint"]).with_query(query))
 
     @property
     def support_mfa(self) -> bool:
