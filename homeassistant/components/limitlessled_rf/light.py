@@ -214,7 +214,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if radio_type == "lt8900":
         radio = _init_radio_lt8900(radio_config)
     else:
-        raise "Unsupported radio type {}".format(radio_type)
+        raise f"Unsupported radio type {radio_type}"
 
     # For each remote, create backing objects
     for remote_config in config.get(CONF_REMOTES_SECTION, []):
@@ -322,11 +322,11 @@ class LimitlessLED_RF_HASS(Light):
         return None
 
     def _debug_log(self, message):
-        _debug_log("HASS", "{}: {}".format(self._name, message))
+        _debug_log("HASS", f"{self._name}: {message}")
         return None
 
     def _info_log(self, message):
-        _info_log("HASS", "{}: {}".format(self._name, message))
+        _info_log("HASS", f"{self._name}: {message}")
         return None
 
     def handle_pair(self):
@@ -484,7 +484,7 @@ class LimitlessLED_RF_HASS(Light):
     # pylint: disable=arguments-differ
     def turn_on(self, **kwargs):
         """Turn on and additionally modify some attributes of a bulb."""
-        self._debug_log("Turning on with args = {}".format(kwargs))
+        self._debug_log(f"Turning on with args = {kwargs}")
         self._state_on = True
         attrs_to_copy = ["state_on"]
 
