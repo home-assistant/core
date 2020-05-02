@@ -21,6 +21,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity import Entity
 
 from . import roomba_reported_state
@@ -59,6 +60,8 @@ STATE_MAP = {
     "stuck": STATE_ERROR,
 }
 
+UPDATE_DEBOUNCER_COOLDOWN = 5
+
 
 class IRobotEntity(Entity):
     """Base class for iRobot Entities."""
@@ -71,6 +74,7 @@ class IRobotEntity(Entity):
         self._name = vacuum_state.get("name")
         self._version = vacuum_state.get("softwareVer")
         self._sku = vacuum_state.get("sku")
+        self.debouncer = None
 
     @property
     def should_poll(self):
@@ -99,10 +103,27 @@ class IRobotEntity(Entity):
         }
 
     async def async_added_to_hass(self):
-        """Register callback function."""
-        self.vacuum.register_on_message_callback(self.on_message)
+        """Set up when added to hass."""
+        self.debouncer = Debouncer(
+            self.hass,
+            _LOGGER,
+            cooldown=UPDATE_DEBOUNCER_COOLDOWN,
+            immediate=False,
+            function=self.async_on_message,
+        )
 
-    def on_message(self, json_data):
+        def _on_message(json_data):
+            asyncio.run_coroutine_threadsafe(
+                self.debouncer.async_call(), self.hass.loop
+            ).result()
+
+        self.vacuum.register_on_message_callback(_on_message)
+
+    async def async_will_remove_from_hass(self):
+        """Clean up when removed from hass."""
+        self.debouncer.async_cancel()
+
+    async def async_on_message(self):
         """Update state on message change."""
         self.schedule_update_ha_state()
 
@@ -210,9 +231,8 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
 
         return state_attrs
 
-    def on_message(self, json_data):
+    async def async_on_message(self):
         """Update state on message change."""
-        _LOGGER.debug("Got new state from the vacuum: %s", json_data)
         self.vacuum_state = roomba_reported_state(self.vacuum)
         self.schedule_update_ha_state()
 
