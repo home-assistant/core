@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "not_doorbird_device": "Este dispositivo no es un DoorBird"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar, intente nuevamente",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nombre del dispositivo",
+                    "password": "Contrase\u00f1a",
+                    "username": "Nombre de usuario"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "events": "Lista de eventos separados por comas."
+                },
+                "description": "Agregue un nombre de evento separado por comas para cada evento que desee rastrear. Despu\u00e9s de ingresarlos aqu\u00ed, use la aplicaci\u00f3n DoorBird para asignarlos a un evento espec\u00edfico. Consulte la documentaci\u00f3n en https://www.home-assistant.io/integrations/doorbird/#events. Ejemplo: somebody_pressed_the_button, motion"
+            }
+        }
+    }
+}
