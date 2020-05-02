@@ -199,9 +199,7 @@ def _unpair_bulb(remotes_zones, event):
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Configure Home Assistant to be aware of all entities specified in the
-       configuration file
-    """
+    """Configure Home Assistant to be aware of all entities specified in the configuration file."""
     remotes_zones = []
 
     # Initialize the radio
@@ -297,9 +295,7 @@ class LimitlessLED_RF_HASS(Light):
     """HomeAssistant Representation of a LimitessLED (remote, zone)."""
 
     def __init__(self, name, remote, zone, child_zones=[]):
-        """Create a new LimitlessLED (remote, zone) or remote tuple for
-           Home Assistant to interact with.
-        """
+        """Create a new LimitlessLED (remote, zone) or remote tuple for Home Assistant to interact with."""
         self._name = name
         self._remote = remote
         self._zone = zone
@@ -334,7 +330,7 @@ class LimitlessLED_RF_HASS(Light):
         return None
 
     def handle_pair(self):
-        """Handle bulb-type specific pairing into this (remote, zone), used by event handler"""
+        """Handle bulb-type specific pairing into this (remote, zone), used by event handler."""
         if self._zone is None:
             return None
         self._debug_log("Asked to pair")
@@ -342,7 +338,7 @@ class LimitlessLED_RF_HASS(Light):
         return None
 
     def handle_unpair(self):
-        """Handle bulb-type specific unpairing, used by event handler"""
+        """Handle bulb-type specific unpairing, used by event handler."""
         if self._zone is None:
             return None
         self._debug_log("Asked to unpair")
@@ -351,12 +347,12 @@ class LimitlessLED_RF_HASS(Light):
 
     @property
     def name(self):
-        """Return the unique name of this (remote, zone) object"""
+        """Return the unique name of this (remote, zone) object."""
         return self._name
 
     @property
     def supported_features(self):
-        """Return which features this bulb-type supports"""
+        """Return which features this bulb-type supports."""
         if self._remote.get_type() == "rgbw":
             features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
         elif self._remote.get_type() == "cct":
@@ -366,13 +362,15 @@ class LimitlessLED_RF_HASS(Light):
 
     @property
     def is_on(self):
-        """Returns whether the bulb is recorded as being on or not"""
+        """Return whether the bulb is recorded as being on or not."""
         return self._state_on
 
     def propagate_copy(self, other, attrs_to_copy):
-        """When the whole remote is acted upon, filter the change
-           applied to every bulb that is paired with any zone on that
-           remote
+        """Copy changes to zones on a remote.
+
+        When the whole remote is acted upon, filter the change
+        applied to every bulb that is paired with any zone on that
+        remote.
         """
         self._debug_log(
             "Copying state ({}) from parent (parent is {})".format(
@@ -392,7 +390,7 @@ class LimitlessLED_RF_HASS(Light):
 
     @property
     def brightness(self):
-        """Get the brightness recorded for this bulb"""
+        """Get the brightness recorded for this bulb."""
         return self._brightness
 
     @property
@@ -425,7 +423,7 @@ class LimitlessLED_RF_HASS(Light):
 
     @property
     def hs_color(self):
-        """Get the current recorded color of the bulb as a (float(h), float(s)) tuple"""
+        """Get the current recorded color of the bulb as a (float(h), float(s)) tuple."""
         # HS color as an array of 2 floats
         r = (self._color >> 16) & 0xFF
         g = (self._color >> 8) & 0xFF
@@ -434,7 +432,7 @@ class LimitlessLED_RF_HASS(Light):
 
     @property
     def rgb_color(self):
-        """Get the current recorded color of the bulb as a (int(r), int(g), int(b)) tuple"""
+        """Get the current recorded color of the bulb as a (int(r), int(g), int(b)) tuple."""
         # RGB as an array of 3 ints
         r = (self._color >> 16) & 0xFF
         g = (self._color >> 8) & 0xFF
@@ -443,23 +441,23 @@ class LimitlessLED_RF_HASS(Light):
 
     @property
     def color_temp(self):
-        """Get the current recorded color temperature of the bulb"""
+        """Get the current recorded color temperature of the bulb."""
         # Color temperature in mired
         return color_temperature_kelvin_to_mired(self._temperature)
 
     @property
     def effect(self):
-        """Stub: Incomplete: Get the current recorded effect"""
+        """Stub: Incomplete: Get the current recorded effect."""
         return None
 
     @property
     def effect_list(self):
-        """Stub: Incomplete: Get the list of effects supported by this bulb type"""
+        """Stub: Incomplete: Get the list of effects supported by this bulb type."""
         return []
 
     # pylint: disable=arguments-differ
     def turn_off(self, **kwargs):
-        """Turn off a bulb"""
+        """Turn off a bulb."""
         attrs_to_copy = ["state_on"]
 
         # If we already think the light state is off, don't bother
@@ -485,7 +483,7 @@ class LimitlessLED_RF_HASS(Light):
 
     # pylint: disable=arguments-differ
     def turn_on(self, **kwargs):
-        """Turn on and additionally modify some attributes of a bulb"""
+        """Turn on and additionally modify some attributes of a bulb."""
         self._debug_log("Turning on with args = {}".format(kwargs))
         self._state_on = True
         attrs_to_copy = ["state_on"]
@@ -545,9 +543,11 @@ class LimitlessLED_RF_HASS(Light):
         return None
 
     def update(self):
-        """Update attributes for this bulb
-           This only really makes the whole-remote entity on or off depending
-           on whether any bulbs in any zones are recorded as being on/off"""
+        """Update attributes for this bulb.
+
+        This only really makes the whole-remote entity on or off depending
+        on whether any bulbs in any zones are recorded as being on/off.
+        """
         if self._zone is None:
             child_zone_on = False
             for child_zone in self._child_zones:
