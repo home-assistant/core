@@ -1,7 +1,7 @@
 """Determine tests to run."""
+import argparse
+import subprocess
 import sys
-
-import requests
 
 IGNORE = {
     "script/determine_pr_tests.py",
@@ -10,17 +10,47 @@ IGNORE = {
 }
 
 
-def determine(pr_id):
-    """Check changed files in a PR."""
-    files = requests.get(
-        f"https://api.github.com/repos/home-assistant/core/pulls/{pr_id}/files"
-    ).json()
+def get_args():
+    """Get cmdline args."""
+    parser = argparse.ArgumentParser(description="Determine branch testing needs")
+    parser.add_argument(
+        "source_branch", type=str,
+    )
+    parser.add_argument(
+        "target_branch", type=str,
+    )
+    parser.add_argument(
+        "output", type=str, choices=["test", "requirements"],
+    )
+    return parser.parse_args()
 
+
+def changed_files(source_branch, target_branch):
+    """Get changed files."""
+    run = subprocess.run(
+        [
+            "git",
+            "whatchanged",
+            "--name-only",
+            "--pretty=",
+            f"{target_branch}..{source_branch}",
+        ],
+        capture_output=True,
+    )
+
+    if run.returncode != 0:
+        raise RuntimeError(
+            f"Error getting changed files - {run.returncode}: {run.stderr.decode()}"
+        )
+
+    return run.stdout.decode().strip().split("\n")
+
+
+def determine_components(filenames):
+    """Check changed files in a PR."""
     components = set()
 
-    for changed_file in files:
-        filename = changed_file["filename"]
-
+    for filename in filenames:
         if filename in IGNORE:
             continue
 
@@ -37,20 +67,29 @@ def determine(pr_id):
     if not components:
         return None
 
+    return components
+
+
+def output_tests(components):
+    """Get test output."""
+    if components is None:
+        return "tests"
+
     return " ".join(f"tests/components/{domain}" for domain in components)
 
 
 def main():
     """Determine PR to run."""
-    if len(sys.argv) != 2:
-        print("tests")
+    args = get_args()
+    components = determine_components(
+        changed_files(args.source_branch, args.target_branch)
+    )
+
+    if args.output == "test":
+        print(output_tests(components))
         return
 
-    pr_id = sys.argv[-1]
-
-    test_suite = determine(pr_id)
-
-    print(test_suite or "tests")
+    raise RuntimeError(f"Output {args.output} not implemented!")
 
 
 if __name__ == "__main__":
