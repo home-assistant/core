@@ -159,6 +159,7 @@ ABBREVIATIONS = {
     "temp_lo_stat_t": "temperature_low_state_topic",
     "temp_stat_tpl": "temperature_state_template",
     "temp_stat_t": "temperature_state_topic",
+    "temp_unit": "temperature_unit",
     "tilt_clsd_val": "tilt_closed_value",
     "tilt_cmd_t": "tilt_command_topic",
     "tilt_inv_stat": "tilt_invert_state",
