@@ -22,7 +22,7 @@
                 }
             },
             "passwd": {
-                "description": "Aby dołączyć zdalny dysk [MEGA](https://mega.nz/) do Asystenta domowego: \n 1. Załóż konto / zaloguj się u dostawcy dysku \n 2. Wpisz swoją nazwę użytkownika oraz hasło a następnie kliknij **SUBMIT**. \n\n ![AIS logo](/static/icons/favicon-100x100.png)",
+                "description": "Aby dołączyć zdalny dysk [MEGA](https://mega.nz/) do Asystenta domowego: \n 1. Załóż konto / zaloguj się u dostawcy dysku \n 2. Wpisz swoją nazwę użytkownika oraz hasło a następnie kliknij **ZATWIERDŹ**. \n\n ![AIS logo](/static/icons/favicon-100x100.png)",
                 "title": "Uwierzytelnienie dysku",
                 "data": {
                     "email": "login - email",
