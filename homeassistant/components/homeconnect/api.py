@@ -9,8 +9,14 @@ from homeconnect.api import HomeConnectError
 from homeassistant import config_entries, core
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP, TIME_SECONDS, UNIT_PERCENTAGE
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import BSH_ACTIVE_PROGRAM, BSH_POWER_OFF, BSH_POWER_STANDBY
+from .const import (
+    BSH_ACTIVE_PROGRAM,
+    BSH_POWER_OFF,
+    BSH_POWER_STANDBY,
+    SIGNAL_UPDATE_ENTITIES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,21 +53,21 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
         devices = []
         for app in appl:
             if app.type == "Dryer":
-                device = Dryer(app)
+                device = Dryer(self.hass, app)
             elif app.type == "Washer":
-                device = Washer(app)
+                device = Washer(self.hass, app)
             elif app.type == "Dishwasher":
-                device = Dishwasher(app)
+                device = Dishwasher(self.hass, app)
             elif app.type == "FridgeFreezer":
-                device = FridgeFreezer(app)
+                device = FridgeFreezer(self.hass, app)
             elif app.type == "Oven":
-                device = Oven(app)
+                device = Oven(self.hass, app)
             elif app.type == "CoffeeMaker":
-                device = CoffeeMaker(app)
+                device = CoffeeMaker(self.hass, app)
             elif app.type == "Hood":
-                device = Hood(app)
+                device = Hood(self.hass, app)
             elif app.type == "Hob":
-                device = Hob(app)
+                device = Hob(self.hass, app)
             else:
                 _LOGGER.warning("Appliance type %s not implemented.", app.type)
                 continue
@@ -77,10 +83,10 @@ class HomeConnectDevice:
     # see https://developer.home-connect.com/docs/settings/power_state
     power_off_state = BSH_POWER_OFF
 
-    def __init__(self, appliance):
+    def __init__(self, hass, appliance):
         """Initialize the device class."""
+        self.hass = hass
         self.appliance = appliance
-        self.entities = []
 
     def initialize(self):
         """Fetch the info needed to initialize the device."""
@@ -104,10 +110,8 @@ class HomeConnectDevice:
     def event_callback(self, appliance):
         """Handle event."""
         _LOGGER.debug("Update triggered on %s", appliance.name)
-        _LOGGER.debug(self.entities)
         _LOGGER.debug(self.appliance.status)
-        for entity in self.entities:
-            entity.async_entity_update()
+        dispatcher_send(self.hass, SIGNAL_UPDATE_ENTITIES, appliance.haId)
 
 
 class DeviceWithPrograms(HomeConnectDevice):

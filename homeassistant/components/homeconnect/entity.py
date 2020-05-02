@@ -3,10 +3,11 @@
 import logging
 
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .api import HomeConnectDevice
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_UPDATE_ENTITIES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,6 +19,18 @@ class HomeConnectEntity(Entity):
         """Initialize the entity."""
         self.device = device
         self._name = name
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_ENTITIES, self._update_callback
+        )
+
+    @callback
+    def _update_callback(self, haId):
+        """Update data."""
+        if haId == self.device.appliance.haId:
+            self.async_entity_update()
 
     @property
     def should_poll(self):

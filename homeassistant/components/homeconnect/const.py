@@ -12,3 +12,5 @@ BSH_POWER_STANDBY = "BSH.Common.EnumType.PowerState.Standby"
 BSH_ACTIVE_PROGRAM = "BSH.Common.Root.ActiveProgram"
 BSH_OPERATION_STATE = "BSH.Common.Status.OperationState"
 BSH_DOOR_STATE = "BSH.Common.Status.DoorState"
+
+SIGNAL_UPDATE_ENTITIES = "homeconnect.update_entities"
