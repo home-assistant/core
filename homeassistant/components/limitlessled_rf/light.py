@@ -1,4 +1,4 @@
-"""Support for LimitlessLED bulbs directly via SPI-connected LT8900"""
+"""Support for LimitlessLED bulbs directly via SPI-connected LT8900."""
 
 import logging
 
@@ -302,6 +302,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LimitlessLED_RF_HASS(Light):
     """HomeAssistant Representation of a LimitessLED (remote, zone)."""
 
+    """Create a new LimitlessLED (remote, zone) or remote tuple for
+       Home Assistant to interact with.
+    """
     def __init__(self, name, remote, zone, child_zones=[]):
         self._name = name
         self._remote = remote
@@ -336,6 +339,7 @@ class LimitlessLED_RF_HASS(Light):
         _info_log("HASS", "{}: {}".format(self._name, message))
         return None
 
+    """Handle bulb-type specific pairing into this (remote, zone), used by event handler"""
     def handle_pair(self):
         if self._zone is None:
             return None
@@ -343,6 +347,7 @@ class LimitlessLED_RF_HASS(Light):
         self._remote.pair(self._zone)
         return None
 
+    """Handle bulb-type specific unpairing, used by event handler"""
     def handle_unpair(self):
         if self._zone is None:
             return None
@@ -350,10 +355,12 @@ class LimitlessLED_RF_HASS(Light):
         self._remote.unpair(self._zone)
         return None
 
+    """Return the unique name of this (remote, zone) object"""
     @property
     def name(self):
         return self._name
 
+    """Return which features this bulb-type supports"""
     @property
     def supported_features(self):
         if self._remote.get_type() == "rgbw":
@@ -363,10 +370,15 @@ class LimitlessLED_RF_HASS(Light):
 
         return features
 
+    """Returns whether the bulb is recorded as being on or not"""
     @property
     def is_on(self):
         return self._state_on
 
+    """When the whole remote is acted upon, filter the change
+       applied to every bulb that is paired with any zone on that
+       remote
+    """
     def propagate_copy(self, other, attrs_to_copy):
         self._debug_log(
             "Copying state ({}) from parent (parent is {})".format(
@@ -384,10 +396,12 @@ class LimitlessLED_RF_HASS(Light):
 
         return None
 
+    """Get the brightness recorded for this bulb"""
     @property
     def brightness(self):
         return self._brightness
 
+    """Get the coldest color temperature supported by this kind of bulb."""
     @property
     def min_mireds(self):
         warmest_color_temp_kelvins = self._remote.get_temperature_range()[1]
@@ -401,6 +415,7 @@ class LimitlessLED_RF_HASS(Light):
         min_color_temp_mired = min(warmest_color_temp_mired, coolest_color_temp_mired)
         return min_color_temp_mired
 
+    """Get the warmest color temperature supported by this kind of bulb."""
     @property
     def max_mireds(self):
         warmest_color_temp_kelvins = self._remote.get_temperature_range()[1]
@@ -414,6 +429,7 @@ class LimitlessLED_RF_HASS(Light):
         max_color_temp_mired = max(warmest_color_temp_mired, coolest_color_temp_mired)
         return max_color_temp_mired
 
+    """Get the current recorded color of the bulb as a (float(h), float(s)) tuple"""
     @property
     def hs_color(self):
         # HS color as an array of 2 floats
@@ -422,6 +438,7 @@ class LimitlessLED_RF_HASS(Light):
         b = self._color & 0xFF
         return color_RGB_to_hs(r, g, b)
 
+    """Get the current recorded color of the bulb as a (int(r), int(g), int(b)) tuple"""
     @property
     def rgb_color(self):
         # RGB as an array of 3 ints
@@ -430,19 +447,23 @@ class LimitlessLED_RF_HASS(Light):
         b = self._color & 0xFF
         return [r, g, b]
 
+    """Get the current recorded color temperature of the bulb"""
     @property
     def color_temp(self):
         # Color temperature in mired
         return color_temperature_kelvin_to_mired(self._temperature)
 
+    """Stub: Incomplete: Get the current recorded effect"""
     @property
     def effect(self):
         return None
 
+    """Stub: Incomplete: Get the list of effects supported by this bulb type"""
     @property
     def effect_list(self):
         return []
 
+    """Turn off a bulb"""
     # pylint: disable=arguments-differ
     def turn_off(self, **kwargs):
         attrs_to_copy = ["state_on"]
@@ -468,6 +489,7 @@ class LimitlessLED_RF_HASS(Light):
         self._remote.off(self._zone, dim=should_dim)
         return None
 
+    """Turn on and additionally modify some attributes of a bulb"""
     # pylint: disable=arguments-differ
     def turn_on(self, **kwargs):
         self._debug_log("Turning on with args = {}".format(kwargs))
@@ -528,6 +550,9 @@ class LimitlessLED_RF_HASS(Light):
 
         return None
 
+    """Update attributes for this bulb
+       This only really makes the whole-remote entity on or off depending
+       on whether any bulbs in any zones are recorded as being on/off"""
     def update(self):
         if self._zone is None:
             child_zone_on = False
