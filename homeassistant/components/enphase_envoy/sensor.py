@@ -70,7 +70,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     for condition in monitored_conditions:
         if condition == "inverters":
             try:
-                inverters = await envoy_reader.inverters_production()
+                inverters = await hass.async_add_executor_job(
+                    envoy_reader.inverters_production
+                )
             except requests.exceptions.HTTPError:
                 _LOGGER.warning(
                     "Authentication for Inverter data failed during setup: %s",
@@ -153,7 +155,9 @@ class Envoy(Entity):
 
         elif self._type == "inverters":
             try:
-                inverters = await (self._envoy_reader.inverters_production())
+                inverters = await self.hass.async_add_executor_job(
+                    self._envoy_reader.inverters_production
+                )
             except requests.exceptions.HTTPError:
                 _LOGGER.warning(
                     "Authentication for Inverter data failed during update: %s",
