@@ -1,13 +1,8 @@
-"""
-Support for BSH Home Connect appliances.
+"""Support for BSH Home Connect appliances."""
 
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/homeconnect/
-"""
 import asyncio
 from datetime import timedelta
 import logging
-import os
 
 from requests import HTTPError
 import voluptuous as vol
@@ -20,8 +15,6 @@ from homeassistant.util import Throttle
 
 from . import api, config_flow
 from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
-
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict, add_entities=None):
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up Home Connect component."""
     hass.data[DOMAIN] = {}
 
@@ -64,7 +57,7 @@ async def async_setup(hass: HomeAssistant, config: dict, add_entities=None):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Home Connect from a config entry."""
     implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
         hass, entry
@@ -84,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(

@@ -8,7 +8,7 @@ import re
 
 from homeconnect.api import HomeConnectError
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from .api import HomeConnectEntity
 from .const import DOMAIN
@@ -37,7 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(await hass.async_add_executor_job(get_entities), True)
 
 
-class HomeConnectProgramSwitch(HomeConnectEntity, SwitchDevice):
+class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
     """Switch class for Home Connect."""
 
     def __init__(self, device, program_name):
@@ -60,7 +60,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Start the program."""
-        _LOGGER.debug("tried to turn on program %s", self.program_name)
+        _LOGGER.debug("Tried to turn on program %s", self.program_name)
         try:
             self.device.appliance.start_program(self.program_name)
         except HomeConnectError as err:
@@ -69,7 +69,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchDevice):
 
     def turn_off(self, **kwargs):
         """Stop the program."""
-        _LOGGER.debug("tried to stop program %s", self.program_name)
+        _LOGGER.debug("Tried to stop program %s", self.program_name)
         try:
             self.device.appliance.stop_program()
         except HomeConnectError as err:
@@ -95,7 +95,7 @@ def convert_to_snake(camel):
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", snake).lower()
 
 
-class HomeConnectPowerSwitch(HomeConnectEntity, SwitchDevice):
+class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     """Power switch class for Home Connect."""
 
     def __init__(self, device):
@@ -110,7 +110,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Switch the device on."""
-        _LOGGER.debug("tried to switch on %s", self.name)
+        _LOGGER.debug("Tried to switch on %s", self.name)
         try:
             self.device.appliance.set_setting(
                 "BSH.Common.Setting.PowerState", "BSH.Common.EnumType.PowerState.On"
