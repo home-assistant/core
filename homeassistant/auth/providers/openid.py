@@ -45,13 +45,16 @@ OPENID_CONFIGURATION_SCHEMA = vol.Schema(
         vol.Required("issuer"): str,
         vol.Required("jwks_uri"): str,
         vol.Required("id_token_signing_alg_values_supported"): list,
-        vol.Optional("scopes_supported"): list,
+        vol.Optional("scopes_supported"): vol.Contains("openid"),
         vol.Required("token_endpoint"): str,
         vol.Required("authorization_endpoint"): str,
         vol.Required("response_types_supported"): vol.Contains("code"),
-        vol.Required("token_endpoint_auth_methods_supported"): vol.Contains(
-            "client_secret_post"
-        ),
+        vol.Optional(
+            "token_endpoint_auth_methods_supported", default=["client_secret_basic"]
+        ): vol.Contains("client_secret_post"),
+        vol.Optional(
+            "grant_types_supported", default=["authorization_code", "implicit"]
+        ): vol.Contains("authorization_code"),
     },
     extra=vol.ALLOW_EXTRA,
 )
