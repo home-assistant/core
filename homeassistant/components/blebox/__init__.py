@@ -11,6 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import Entity
 
 from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCT
 
@@ -83,7 +84,7 @@ def create_blebox_entities(product, async_add, entity_klass, entity_type):
     async_add(entities, True)
 
 
-class BleBoxEntity:
+class BleBoxEntity(Entity):
     """Implements a common class for entities representing a BleBox feature."""
 
     def __init__(self, feature):
