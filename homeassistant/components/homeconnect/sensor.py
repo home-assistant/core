@@ -66,7 +66,11 @@ class HomeConnectSensor(HomeConnectEntity):
             if self.device_class == DEVICE_CLASS_TIMESTAMP:
                 if "value" not in status[self._key]:
                     self._state = None
-                elif self._sign == 1 and self._state < dt_util.utcnow():
+                elif (
+                    self._state is not None
+                    and self._sign == 1
+                    and self._state < dt_util.utcnow()
+                ):
                     # if the date is supposed to be in the future but we're
                     # already past it, set state to None.
                     self._state = None
