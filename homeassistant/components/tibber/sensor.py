@@ -151,7 +151,7 @@ class TibberSensorElPrice(TibberSensor):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"{self.device_id}_el_price"
+        return self.device_id
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def _fetch_data(self):
