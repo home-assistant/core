@@ -615,6 +615,7 @@ googlemaps==2.5.1
 # homeassistant.components.slide
 goslide-api==0.5.1
 
+# homeassistant.components.limitlessled_rf
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.5.1
 
@@ -798,6 +799,9 @@ lightwave==0.17
 # homeassistant.components.limitlessled
 limitlessled==1.1.3
 
+# homeassistant.components.limitlessled_rf
+limitlessled_rf==0.10
+
 # homeassistant.components.linode
 linode-api==4.1.9b1
 
@@ -815,6 +819,9 @@ logi_circle==0.2.2
 
 # homeassistant.components.london_underground
 london-tube-status==0.2
+
+# homeassistant.components.limitlessled_rf
+lt8900_spi==2.3
 
 # homeassistant.components.luftdaten
 luftdaten==0.6.3
