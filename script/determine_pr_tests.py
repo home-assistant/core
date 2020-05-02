@@ -40,7 +40,7 @@ def changed_files(source_branch, target_branch):
 
     if run.returncode != 0:
         raise RuntimeError(
-            f"Error getting changed files - {run.returncode}: {run.stderr.decode()}"
+            f"Error getting changed files between {target_branch}..{source_branch} ({run.returncode}): {run.stderr.decode()}"
         )
 
     return run.stdout.decode().strip().split("\n")
