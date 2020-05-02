@@ -8,7 +8,7 @@ from blebox_uniapi.session import ApiHost
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -72,7 +72,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-async def async_create_blebox_entities(product, async_add, entity_klass, entity_type):
+@callback
+def create_blebox_entities(product, async_add, entity_klass, entity_type):
     """Create entities from a BleBox product's features."""
 
     entities = []
