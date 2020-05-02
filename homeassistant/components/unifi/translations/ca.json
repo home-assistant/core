@@ -28,7 +28,7 @@
             "client_control": {
                 "data": {
                     "block_client": "Clients controlats amb acc\u00e9s a la xarxa",
-                    "new_client": "Afegeix un client nou per al control d\u2019acc\u00e9s a la xarxa",
+                    "new_client": "Afegeix un client nou per al control d'acc\u00e9s a la xarxa",
                     "poe_clients": "Permet control POE dels clients"
                 },
                 "description": "Configura els controls del client \n\nConfigura interruptors per als n\u00fameros de s\u00e8rie als quals vulguis controlar l'acc\u00e9s a la xarxa.",
@@ -45,11 +45,19 @@
                 "description": "Configuraci\u00f3 de seguiment de dispositius",
                 "title": "Opcions d'UniFi"
             },
+            "simple_options": {
+                "data": {
+                    "block_client": "[%key::component::unifi::options::step::client_control::data::block_client%]",
+                    "track_clients": "[%key::component::unifi::options::step::device_tracker::data::track_clients%]",
+                    "track_devices": "[%key::component::unifi::options::step::device_tracker::data::track_devices%]"
+                },
+                "description": "Configura la integraci\u00f3 d'UniFi"
+            },
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "Crea sensors d'\u00fas d'ample de banda per a clients de la xarxa"
                 },
-                "description": "Configuraci\u00f3 dels sensors d\u2019estad\u00edstiques",
+                "description": "Configuraci\u00f3 dels sensors d'estad\u00edstiques",
                 "title": "Opcions d'UniFi"
             }
         }

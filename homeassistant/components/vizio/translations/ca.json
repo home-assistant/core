@@ -5,7 +5,7 @@
             "updated_entry": "Aquesta entrada ja s'ha configurat per\u00f2 el nom i les opcions definides a la configuraci\u00f3 no coincideixen amb els valors importats anteriorment, en conseq\u00fc\u00e8ncia, s'han actualitzat."
         },
         "error": {
-            "cant_connect": "No s'ha pogut connectar amb el dispositiu. [Comprova la documentaci\u00f3](https://www.home-assistant.io/integrations/vizio/) i torna a verificar que: \n - El dispositiu est\u00e0 engegat \n - El dispositiu est\u00e0 connectat a la xarxa \n - Els valors que has intridu\u00eft s\u00f3n correctes\n   abans d\u2019intentar tornar a presentar.",
+            "cant_connect": "No s'ha pogut connectar amb el dispositiu. [Comprova la documentaci\u00f3](https://www.home-assistant.io/integrations/vizio/) i torna a verificar que: \n - El dispositiu est\u00e0 engegat \n - El dispositiu est\u00e0 connectat a la xarxa \n - Els valors que has intridu\u00eft s\u00f3n correctes\n   abans d'intentar tornar a enviar.",
             "complete_pairing failed": "No s'ha pogut completar l'emparellament. Verifica que el PIN proporcionat sigui el correcte i que el televisor segueix connectat a la xarxa abans de provar-ho de nou.",
             "host_exists": "Dispositiu Vizio amb aquest nom d'amfitri\u00f3 ja configurat.",
             "name_exists": "Dispositiu Vizio amb aquest nom ja configurat."

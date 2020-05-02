@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "import_failed": "La importaci\u00f3n desde la configuraci\u00f3n fall\u00f3"
+        },
         "error": {
             "connection_timeout": "Tiempo de espera al conectarse a este host",
             "resolve_failed": "Este host no puede resolverse"
