@@ -240,7 +240,7 @@ homeassistant/components/minecraft_server/* @elmurato
 homeassistant/components/minio/* @tkislan
 homeassistant/components/mobile_app/* @robbiet480
 homeassistant/components/modbus/* @adamchengtkc @janiversen
-homeassistant/components/monoprice/* @etsinko
+homeassistant/components/monoprice/* @etsinko @OnFreund
 homeassistant/components/moon/* @fabaff
 homeassistant/components/mpd/* @fabaff
 homeassistant/components/mqtt/* @home-assistant/core @emontnemery
