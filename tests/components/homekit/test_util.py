@@ -23,6 +23,7 @@ from homeassistant.components.homekit.const import (
 from homeassistant.components.homekit.util import (
     HomeKitSpeedMapping,
     SpeedRange,
+    cleanup_name_for_homekit,
     convert_to_float,
     density_to_air_quality,
     dismiss_setup_message,
@@ -175,6 +176,19 @@ def test_convert_to_float():
     assert convert_to_float(12.4) == 12.4
     assert convert_to_float(STATE_UNKNOWN) is None
     assert convert_to_float(None) is None
+
+
+def test_cleanup_name_for_homekit():
+    """Ensure name sanitize works as expected."""
+
+    assert cleanup_name_for_homekit("abc") == "abc"
+    assert cleanup_name_for_homekit("a b c") == "a b c"
+    assert cleanup_name_for_homekit("ab_c") == "ab c"
+    assert (
+        cleanup_name_for_homekit('ab!@#$%^&*()-=":.,><?//\\ frog')
+        == "ab--#---&----- -.,------ frog"
+    )
+    assert cleanup_name_for_homekit("の日本_語文字セット") == "の日本 語文字セット"
 
 
 def test_temperature_to_homekit():
