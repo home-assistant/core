@@ -139,10 +139,18 @@ class OpenIdAuthProvider(AuthProvider):
         """Validate a token."""
         from jose import jwt
 
+        algorithms = self._discovery_document.get(
+            "id_token_signing_alg_values_supported", ["RS256"]
+        )
+
+        issuer = self._discovery_document.get("issuer", None)
+
         id_token = cast(
             Dict[str, Any],
             jwt.decode(
                 token["id_token"],
+                algorithms=algorithms,
+                issuer=issuer,
                 key=self._jwks,
                 audience=self.config[CONF_CLIENT_ID],
                 access_token=token["access_token"],
