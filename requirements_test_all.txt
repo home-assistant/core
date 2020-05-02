@@ -95,7 +95,7 @@ aiopylgtv==0.3.3
 aioswitcher==1.1.0
 
 # homeassistant.components.unifi
-aiounifi==18
+aiounifi==20
 
 # homeassistant.components.wwlln
 aiowwlln==2.0.2
@@ -141,7 +141,7 @@ bellows-homeassistant==0.15.2
 bomradarloop==0.1.4
 
 # homeassistant.components.braviatv
-bravia-tv==1.0.2
+bravia-tv==1.0.3
 
 # homeassistant.components.broadlink
 broadlink==0.13.2
@@ -273,7 +273,7 @@ ha-ffmpeg==2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.34.1
+hass-nabucasa==0.34.2
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.5
@@ -291,7 +291,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200427.1
+home-assistant-frontend==20200427.2
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -650,7 +650,7 @@ python-miio==0.5.0.1
 python-nest==4.1.0
 
 # homeassistant.components.synology_dsm
-python-synology==0.7.3
+python-synology==0.8.0
 
 # homeassistant.components.tado
 python-tado==0.8.1
@@ -701,7 +701,7 @@ ring_doorbell==0.6.0
 roku==4.1.0
 
 # homeassistant.components.roomba
-roombapy==1.5.1
+roombapy==1.5.2
 
 # homeassistant.components.yamaha
 rxv==0.6.0

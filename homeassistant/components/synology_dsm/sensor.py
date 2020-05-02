@@ -7,11 +7,13 @@ from homeassistant.const import (
     CONF_DISKS,
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
+    DATA_TERABYTES,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util.temperature import celsius_to_fahrenheit
 
 from . import SynoApi
 from .const import (
@@ -63,7 +65,7 @@ async def async_setup_entry(
 
 
 class SynoNasSensor(Entity):
-    """Representation of a Synology NAS Sensor."""
+    """Representation of a Synology NAS sensor."""
 
     def __init__(
         self,
@@ -142,47 +144,51 @@ class SynoNasSensor(Entity):
 
 
 class SynoNasUtilSensor(SynoNasSensor):
-    """Representation a Synology Utilisation Sensor."""
+    """Representation a Synology Utilisation sensor."""
 
     @property
     def state(self):
         """Return the state."""
-        if self._unit == DATA_RATE_KILOBYTES_PER_SECOND or self._unit == DATA_MEGABYTES:
-            attr = getattr(self._api.utilisation, self.sensor_type)(False)
+        attr = getattr(self._api.utilisation, self.sensor_type)
+        if callable(attr):
+            attr = attr()
+        if not attr:
+            return None
 
-            if attr is None:
-                return None
+        # Data (RAM)
+        if self._unit == DATA_MEGABYTES:
+            return round(attr / 1024.0 ** 2, 1)
 
-            if self._unit == DATA_RATE_KILOBYTES_PER_SECOND:
-                return round(attr / 1024.0, 1)
-            if self._unit == DATA_MEGABYTES:
-                return round(attr / 1024.0 / 1024.0, 1)
-        else:
-            return getattr(self._api.utilisation, self.sensor_type)
+        # Network
+        if self._unit == DATA_RATE_KILOBYTES_PER_SECOND:
+            return round(attr / 1024.0, 1)
+
+        return attr
 
 
 class SynoNasStorageSensor(SynoNasSensor):
-    """Representation a Synology Storage Sensor."""
+    """Representation a Synology Storage sensor."""
 
     @property
     def state(self):
         """Return the state."""
-        if self.monitored_device:
-            if self.sensor_type in TEMP_SENSORS_KEYS:
-                attr = getattr(self._api.storage, self.sensor_type)(
-                    self.monitored_device
-                )
+        attr = getattr(self._api.storage, self.sensor_type)(self.monitored_device)
+        if not attr:
+            return None
 
-                if attr is None:
-                    return None
+        # Data (disk space)
+        if self._unit == DATA_TERABYTES:
+            return round(attr / 1024.0 ** 4, 2)
 
-                if self._api.temp_unit == TEMP_CELSIUS:
-                    return attr
+        # Temperature
+        if self._api.temp_unit == TEMP_CELSIUS:
+            # Celsius
+            return attr
+        if self.sensor_type in TEMP_SENSORS_KEYS:
+            # Fahrenheit
+            return celsius_to_fahrenheit(attr)
 
-                return round(attr * 1.8 + 32.0, 1)
-
-            return getattr(self._api.storage, self.sensor_type)(self.monitored_device)
-        return None
+        return attr
 
     @property
     def device_info(self) -> Dict[str, any]:
