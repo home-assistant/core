@@ -1,7 +1,10 @@
 """Determine tests to run."""
 import argparse
+import pathlib
 import subprocess
 import sys
+
+INTEGRATION_DIR = pathlib.Path("homeassistant/components")
 
 IGNORE = {
     "script/determine_pr_tests.py",
@@ -74,6 +77,15 @@ def output_tests(components):
     """Get test output."""
     if components is None:
         return "tests"
+
+    for component in components:
+        # If it's an entity component, we need to test integration that has a platform.
+        # We don't implement that logic right now and force a full test run.
+        if (
+            "EntityComponent"
+            in (INTEGRATION_DIR / component / "__init__.py").read_text()
+        ):
+            return "tests"
 
     return " ".join(f"tests/components/{domain}" for domain in components)
 
