@@ -1,7 +1,7 @@
 """Config flow for Vera."""
 import logging
 import re
-from typing import Any, List, cast
+from typing import Any, List
 
 import pyvera as pv
 from requests.exceptions import RequestException
@@ -24,9 +24,6 @@ def fix_device_id_list(data: List[Any]) -> List[int]:
 
 def str_to_int_list(data: str) -> List[int]:
     """Convert a string to an int list."""
-    if isinstance(str, list):
-        return cast(List[int], data)
-
     return [int(s) for s in LIST_REGEX.split(data) if len(s) > 0]
 
 
