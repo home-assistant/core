@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
-    ALREADY_CONFIGURED,
+    ADDRESS_ALREADY_CONFIGURED,
     CANNOT_CONNECT,
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -96,7 +96,7 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if addr == host_port(entry.data):
                 host, port = addr
                 return self.async_abort(
-                    reason=ALREADY_CONFIGURED,
+                    reason=ADDRESS_ALREADY_CONFIGURED,
                     description_placeholders={"address": f"{host}:{port}"},
                 )
 

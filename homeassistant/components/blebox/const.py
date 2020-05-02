@@ -16,7 +16,7 @@ PRODUCT = "product"
 DEFAULT_SETUP_TIMEOUT = 3
 
 # translation strings
-ALREADY_CONFIGURED = "address_already_configured"
+ADDRESS_ALREADY_CONFIGURED = "address_already_configured"
 CANNOT_CONNECT = "cannot_connect"
 UNSUPPORTED_VERSION = "unsupported_version"
 UNKNOWN = "unknown"
