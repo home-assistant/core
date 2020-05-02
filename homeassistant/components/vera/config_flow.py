@@ -29,8 +29,10 @@ def fix_device_id_list(data: List[Any]) -> List[int]:
 
 def str_to_int_list(data: str) -> List[int]:
     """Convert a string to an int list."""
-    return [int(s) for s in LIST_REGEX.split(data) if len(s) > 0]
+    if isinstance(str, list):
+        return cast(List[int], data)
 
+    return [int(s) for s in LIST_REGEX.split(data) if len(s) > 0]
 
 def list_to_str(data: List[Any]) -> str:
     """Convert an int list to a string."""
