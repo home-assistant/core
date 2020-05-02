@@ -55,5 +55,3 @@ class MockDevice(Device):
         """Remove a port mapping."""
         entry = external_port
         self.removed_port_mappings.append(entry)
-
-

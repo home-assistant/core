@@ -180,7 +180,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_name_for_discovery(self, discovery: Mapping):
         """Get the name of the device from a discovery."""
-        _LOGGER.debug('_async_get_name_for_discovery: discovery: %s', discovery)
+        _LOGGER.debug("_async_get_name_for_discovery: discovery: %s", discovery)
         device = await Device.async_create_device(
             self.hass, discovery[DISCOVERY_LOCATION]
         )

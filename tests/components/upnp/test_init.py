@@ -12,16 +12,19 @@ from homeassistant.components.upnp.device import Device
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.setup import async_setup_component
 
+from .mock_device import MockDevice
+
 from tests.async_mock import patch
 from tests.common import MockConfigEntry, mock_coro
-from .mock_device import MockDevice
 
 
 async def test_async_setup_entry_default(hass):
     """Test async_setup_entry."""
     udn = "uuid:device_1"
     mock_device = MockDevice(udn)
-    entry = MockConfigEntry(domain=upnp.DOMAIN, data={"udn": udn, "st": mock_device.device_type})
+    entry = MockConfigEntry(
+        domain=upnp.DOMAIN, data={"udn": udn, "st": mock_device.device_type}
+    )
 
     config = {
         # no upnp
@@ -63,7 +66,9 @@ async def test_async_setup_entry_port_mapping(hass):
     # pylint: disable=invalid-name
     udn = "uuid:device_1"
     mock_device = MockDevice(udn)
-    entry = MockConfigEntry(domain=upnp.DOMAIN, data={"udn": udn, "st": mock_device.device_type})
+    entry = MockConfigEntry(
+        domain=upnp.DOMAIN, data={"udn": udn, "st": mock_device.device_type}
+    )
 
     config = {
         "http": {},
