@@ -5,7 +5,6 @@ import requests
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_POWER,
-    DEVICE_CLASS_PROBLEM,
     BinarySensorDevice,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
@@ -25,7 +24,6 @@ CONF_GETTER = "getter"
 
 SENSOR_CIRCULATION_PUMP_ACTIVE = "circulationpump_active"
 SENSOR_BURNER_ACTIVE = "burner_active"
-SENSOR_ACTIVE_ERROR = "active_error"
 SENSOR_COMPRESSOR_ACTIVE = "compressor_active"
 
 SENSOR_TYPES = {
@@ -33,11 +31,6 @@ SENSOR_TYPES = {
         CONF_NAME: "Circulation pump active",
         CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
         CONF_GETTER: lambda api: api.getCirculationPumpActive(),
-    },
-    SENSOR_ACTIVE_ERROR: {
-        CONF_NAME: "Active error",
-        CONF_DEVICE_CLASS: DEVICE_CLASS_PROBLEM,
-        CONF_GETTER: lambda api: api.getActiveError(),
     },
     SENSOR_BURNER_ACTIVE: {
         CONF_NAME: "Burner active",
@@ -51,7 +44,7 @@ SENSOR_TYPES = {
     },
 }
 
-SENSORS_GENERIC = [SENSOR_CIRCULATION_PUMP_ACTIVE, SENSOR_ACTIVE_ERROR]
+SENSORS_GENERIC = [SENSOR_CIRCULATION_PUMP_ACTIVE]
 
 SENSORS_BY_HEATINGTYPE = {
     HeatingType.gas: [SENSOR_BURNER_ACTIVE],
