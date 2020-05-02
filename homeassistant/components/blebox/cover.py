@@ -86,8 +86,7 @@ class BleBoxCoverEntity(BleBoxEntity, CoverEntity):
         """Set the cover position."""
 
         position = kwargs[ATTR_POSITION]
-        if position is not None:
-            await self._feature.async_set_position(100 - position)
+        await self._feature.async_set_position(100 - position)
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
