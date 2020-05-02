@@ -25,20 +25,38 @@ import homeassistant.util.dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by DWD"
+ATTR_REGION_NAME = "region_name"
+ATTR_REGION_ID = "region_id"
+ATTR_LAST_UPDATE = "last_update"
+ATTR_WARNING_COUNT = "warning_count"
+
+API_ATTR_WARNING_NAME = "event"
+API_ATTR_WARNING_TYPE = "event_code"
+API_ATTR_WARNING_LEVEL = "level"
+API_ATTR_WARNING_HEADLINE = "headline"
+API_ATTR_WARNING_DESCRIPTION = "description"
+API_ATTR_WARNING_INSTRUCTION = "instruction"
+API_ATTR_WARNING_START = "start_time"
+API_ATTR_WARNING_END = "end_time"
+API_ATTR_WARNING_PARAMETERS = "parameters"
+API_ATTR_WARNING_COLOR = "color"
 
 DEFAULT_NAME = "DWD-Weather-Warnings"
 
 CONF_REGION_NAME = "region_name"
 
+CURRENT_WARNING_SENSOR = "current_warning_level"
+ADVANCE_WARNING_SENSOR = "advance_warning_level"
+
 SCAN_INTERVAL = timedelta(minutes=15)
 
 MONITORED_CONDITIONS = {
-    "current_warning_level": [
+    CURRENT_WARNING_SENSOR: [
         "Current Warning Level",
         None,
         "mdi:close-octagon-outline",
     ],
-    "advance_warning_level": [
+    ADVANCE_WARNING_SENSOR: [
         "Advance Warning Level",
         None,
         "mdi:close-octagon-outline",
@@ -101,55 +119,57 @@ class DwdWeatherWarningsSensor(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._sensor_type == "current_warning_level":
-            warning_level = self._api.current_warning_level
-        else:
-            warning_level = self._api.expected_warning_level
-        return warning_level
+        if self._sensor_type == CURRENT_WARNING_SENSOR:
+            return self._api.current_warning_level
+        return self._api.expected_warning_level
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the DWD-Weather-Warnings."""
-        data = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        data = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_REGION_NAME: self._api.warncell_name,
+            ATTR_REGION_ID: self._api.warncell_id,
+        }
 
-        data["region_name"] = self._api.warncell_name
-        data["region_id"] = self._api.warncell_id
-        data["region_state"] = "N/A"  # Not available via new API
         if self._api.last_update is not None:
-            data["last_update"] = dt_util.as_local(self._api.last_update)
+            data[ATTR_LAST_UPDATE] = dt_util.as_local(self._api.last_update)
         else:
-            data["last_update"] = None
+            data[ATTR_LAST_UPDATE] = None
 
-        if self._sensor_type == "current_warning_level":
+        if self._sensor_type == CURRENT_WARNING_SENSOR:
             searched_warnings = self._api.current_warnings
         else:
             searched_warnings = self._api.expected_warnings
 
-        data["warning_count"] = len(searched_warnings)
-        i = 0
-        for warning in searched_warnings:
-            i = i + 1
-            data[f"warning_{i}_name"] = warning["event"]
-            data[f"warning_{i}_type"] = warning["event_code"]
-            data[f"warning_{i}_level"] = warning["level"]
-            data[f"warning_{i}_headline"] = warning["headline"]
-            data[f"warning_{i}_description"] = warning["description"]
-            data[f"warning_{i}_instruction"] = warning["instruction"]
-            if warning["start_time"] is not None:
-                data[f"warning_{i}_start"] = dt_util.as_local(warning["start_time"])
+        data[ATTR_WARNING_COUNT] = len(searched_warnings)
+
+        for i, warning in enumerate(searched_warnings, 1):
+            data[f"warning_{i}_name"] = warning[API_ATTR_WARNING_NAME]
+            data[f"warning_{i}_type"] = warning[API_ATTR_WARNING_TYPE]
+            data[f"warning_{i}_level"] = warning[API_ATTR_WARNING_LEVEL]
+            data[f"warning_{i}_headline"] = warning[API_ATTR_WARNING_HEADLINE]
+            data[f"warning_{i}_description"] = warning[API_ATTR_WARNING_DESCRIPTION]
+            data[f"warning_{i}_instruction"] = warning[API_ATTR_WARNING_INSTRUCTION]
+            if warning[API_ATTR_WARNING_START] is not None:
+                data[f"warning_{i}_start"] = dt_util.as_local(
+                    warning[API_ATTR_WARNING_START]
+                )
             else:
                 data[f"warning_{i}_start"] = None
-            if warning["end_time"] is not None:
-                data[f"warning_{i}_end"] = dt_util.as_local(warning["end_time"])
+            if warning[API_ATTR_WARNING_END] is not None:
+                data[f"warning_{i}_end"] = dt_util.as_local(
+                    warning[API_ATTR_WARNING_END]
+                )
             else:
                 data[f"warning_{i}_end"] = None
-            data[f"warning_{i}_parameters"] = warning["parameters"]
-            data[f"warning_{i}_color"] = warning["color"]
+            data[f"warning_{i}_parameters"] = warning[API_ATTR_WARNING_PARAMETERS]
+            data[f"warning_{i}_color"] = warning[API_ATTR_WARNING_COLOR]
 
             # Dictionary for the attribute containing the complete warning
             warning_copy = warning.copy()
-            warning_copy["start_time"] = data[f"warning_{i}_start"]
-            warning_copy["end_time"] = data[f"warning_{i}_end"]
+            warning_copy[API_ATTR_WARNING_START] = data[f"warning_{i}_start"]
+            warning_copy[API_ATTR_WARNING_END] = data[f"warning_{i}_end"]
             data[f"warning_{i}"] = warning_copy
 
         return data
