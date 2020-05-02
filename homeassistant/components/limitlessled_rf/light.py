@@ -199,6 +199,9 @@ def _unpair_bulb(remotes_zones, event):
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Configure Home Assistant to be aware of all entities specified in the
+       configuration file
+    """
     remotes_zones = []
 
     # Initialize the radio
@@ -293,10 +296,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LimitlessLED_RF_HASS(Light):
     """HomeAssistant Representation of a LimitessLED (remote, zone)."""
 
-    """Create a new LimitlessLED (remote, zone) or remote tuple for
-       Home Assistant to interact with.
-    """
     def __init__(self, name, remote, zone, child_zones=[]):
+        """Create a new LimitlessLED (remote, zone) or remote tuple for
+           Home Assistant to interact with.
+        """
         self._name = name
         self._remote = remote
         self._zone = zone
@@ -330,30 +333,30 @@ class LimitlessLED_RF_HASS(Light):
         _info_log("HASS", "{}: {}".format(self._name, message))
         return None
 
-    """Handle bulb-type specific pairing into this (remote, zone), used by event handler"""
     def handle_pair(self):
+        """Handle bulb-type specific pairing into this (remote, zone), used by event handler"""
         if self._zone is None:
             return None
         self._debug_log("Asked to pair")
         self._remote.pair(self._zone)
         return None
 
-    """Handle bulb-type specific unpairing, used by event handler"""
     def handle_unpair(self):
+        """Handle bulb-type specific unpairing, used by event handler"""
         if self._zone is None:
             return None
         self._debug_log("Asked to unpair")
         self._remote.unpair(self._zone)
         return None
 
-    """Return the unique name of this (remote, zone) object"""
     @property
     def name(self):
+        """Return the unique name of this (remote, zone) object"""
         return self._name
 
-    """Return which features this bulb-type supports"""
     @property
     def supported_features(self):
+        """Return which features this bulb-type supports"""
         if self._remote.get_type() == "rgbw":
             features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
         elif self._remote.get_type() == "cct":
@@ -361,16 +364,16 @@ class LimitlessLED_RF_HASS(Light):
 
         return features
 
-    """Returns whether the bulb is recorded as being on or not"""
     @property
     def is_on(self):
+        """Returns whether the bulb is recorded as being on or not"""
         return self._state_on
 
-    """When the whole remote is acted upon, filter the change
-       applied to every bulb that is paired with any zone on that
-       remote
-    """
     def propagate_copy(self, other, attrs_to_copy):
+        """When the whole remote is acted upon, filter the change
+           applied to every bulb that is paired with any zone on that
+           remote
+        """
         self._debug_log(
             "Copying state ({}) from parent (parent is {})".format(
                 attrs_to_copy, other.name
@@ -387,14 +390,14 @@ class LimitlessLED_RF_HASS(Light):
 
         return None
 
-    """Get the brightness recorded for this bulb"""
     @property
     def brightness(self):
+        """Get the brightness recorded for this bulb"""
         return self._brightness
 
-    """Get the coldest color temperature supported by this kind of bulb."""
     @property
     def min_mireds(self):
+        """Get the coldest color temperature supported by this kind of bulb."""
         warmest_color_temp_kelvins = self._remote.get_temperature_range()[1]
         coolest_color_temp_kelvins = self._remote.get_temperature_range()[0]
         warmest_color_temp_mired = color_temperature_kelvin_to_mired(
@@ -406,9 +409,9 @@ class LimitlessLED_RF_HASS(Light):
         min_color_temp_mired = min(warmest_color_temp_mired, coolest_color_temp_mired)
         return min_color_temp_mired
 
-    """Get the warmest color temperature supported by this kind of bulb."""
     @property
     def max_mireds(self):
+        """Get the warmest color temperature supported by this kind of bulb."""
         warmest_color_temp_kelvins = self._remote.get_temperature_range()[1]
         coolest_color_temp_kelvins = self._remote.get_temperature_range()[0]
         warmest_color_temp_mired = color_temperature_kelvin_to_mired(
@@ -420,43 +423,43 @@ class LimitlessLED_RF_HASS(Light):
         max_color_temp_mired = max(warmest_color_temp_mired, coolest_color_temp_mired)
         return max_color_temp_mired
 
-    """Get the current recorded color of the bulb as a (float(h), float(s)) tuple"""
     @property
     def hs_color(self):
+        """Get the current recorded color of the bulb as a (float(h), float(s)) tuple"""
         # HS color as an array of 2 floats
         r = (self._color >> 16) & 0xFF
         g = (self._color >> 8) & 0xFF
         b = self._color & 0xFF
         return color_RGB_to_hs(r, g, b)
 
-    """Get the current recorded color of the bulb as a (int(r), int(g), int(b)) tuple"""
     @property
     def rgb_color(self):
+        """Get the current recorded color of the bulb as a (int(r), int(g), int(b)) tuple"""
         # RGB as an array of 3 ints
         r = (self._color >> 16) & 0xFF
         g = (self._color >> 8) & 0xFF
         b = self._color & 0xFF
         return [r, g, b]
 
-    """Get the current recorded color temperature of the bulb"""
     @property
     def color_temp(self):
+        """Get the current recorded color temperature of the bulb"""
         # Color temperature in mired
         return color_temperature_kelvin_to_mired(self._temperature)
 
-    """Stub: Incomplete: Get the current recorded effect"""
     @property
     def effect(self):
+        """Stub: Incomplete: Get the current recorded effect"""
         return None
 
-    """Stub: Incomplete: Get the list of effects supported by this bulb type"""
     @property
     def effect_list(self):
+        """Stub: Incomplete: Get the list of effects supported by this bulb type"""
         return []
 
-    """Turn off a bulb"""
     # pylint: disable=arguments-differ
     def turn_off(self, **kwargs):
+        """Turn off a bulb"""
         attrs_to_copy = ["state_on"]
 
         # If we already think the light state is off, don't bother
@@ -480,9 +483,9 @@ class LimitlessLED_RF_HASS(Light):
         self._remote.off(self._zone, dim=should_dim)
         return None
 
-    """Turn on and additionally modify some attributes of a bulb"""
     # pylint: disable=arguments-differ
     def turn_on(self, **kwargs):
+        """Turn on and additionally modify some attributes of a bulb"""
         self._debug_log("Turning on with args = {}".format(kwargs))
         self._state_on = True
         attrs_to_copy = ["state_on"]
@@ -541,10 +544,10 @@ class LimitlessLED_RF_HASS(Light):
 
         return None
 
-    """Update attributes for this bulb
-       This only really makes the whole-remote entity on or off depending
-       on whether any bulbs in any zones are recorded as being on/off"""
     def update(self):
+        """Update attributes for this bulb
+           This only really makes the whole-remote entity on or off depending
+           on whether any bulbs in any zones are recorded as being on/off"""
         if self._zone is None:
             child_zone_on = False
             for child_zone in self._child_zones:
