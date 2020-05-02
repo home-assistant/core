@@ -179,7 +179,6 @@ class DeviceWithPrograms(HomeConnectDevice):
         """
         sensors = {
             "Remaining Program Time": (None, None, DEVICE_CLASS_TIMESTAMP, 1),
-            "Elapsed Program Time": (None, None, DEVICE_CLASS_TIMESTAMP, -1),
             "Duration": (TIME_SECONDS, "mdi:update", None, 1),
             "Program Progress": (UNIT_PERCENTAGE, "mdi:progress-clock", None, 1),
         }
