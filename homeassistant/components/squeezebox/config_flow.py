@@ -63,7 +63,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(self.hass, user_input)
                 if "uuid" in info:
-                    self.async_set_unique_id(info["uuid"])
+                    await self.async_set_unique_id(info["uuid"])
                     self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info.get("ip"), data=user_input)
             except CannotConnect:

@@ -16,8 +16,8 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.squeezebox.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
+        "homeassistant.components.squeezebox.config_flow.validate_input",
+        return_value={"uuid": "test-uuid", "ip": "1.1.1.1"},
     ), patch(
         "homeassistant.components.squeezebox.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -25,19 +25,15 @@ async def test_form(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            {"host": "1.1.1.1", "port": 9000, "username": "", "password": ""},
         )
-
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "1.1.1.1"
     assert result2["data"] == {
         "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+        "port": 9000,
+        "username": "",
+        "password": "",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -51,7 +47,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.squeezebox.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.squeezebox.config_flow.validate_input",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -74,7 +70,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.squeezebox.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.squeezebox.config_flow.validate_input",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
