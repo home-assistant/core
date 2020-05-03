@@ -186,6 +186,7 @@ class WindowCoveringBase(HomeAccessory):
 
         self.call_service(DOMAIN, SERVICE_SET_COVER_TILT_POSITION, params, value)
 
+    @callback
     def async_update_state(self, new_state):
         """Update cover position and tilt after state changed."""
         # update tilt
