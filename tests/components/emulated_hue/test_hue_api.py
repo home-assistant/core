@@ -54,6 +54,26 @@ BRIDGE_SERVER_PORT = get_test_instance_port()
 BRIDGE_URL_BASE = f"http://127.0.0.1:{BRIDGE_SERVER_PORT}" + "{}"
 JSON_HEADERS = {CONTENT_TYPE: const.CONTENT_TYPE_JSON}
 
+ENTITY_IDS_BY_NUMBER = {
+    "1": "light.ceiling_lights",
+    "2": "light.bed_light",
+    "3": "script.set_kitchen_light",
+    "4": "light.kitchen_lights",
+    "5": "media_player.living_room",
+    "6": "media_player.bedroom",
+    "7": "media_player.walkman",
+    "8": "media_player.lounge_room",
+    "9": "fan.living_room_fan",
+    "10": "fan.ceiling_fan",
+    "11": "cover.living_room_window",
+    "12": "climate.hvac",
+    "13": "climate.heatpump",
+    "14": "climate.ecobee",
+    "15": "light.no_brightness",
+}
+
+ENTITY_NUMBERS_BY_ID = {v: k for k, v in ENTITY_IDS_BY_NUMBER.items()}
+
 
 @pytest.fixture
 def hass_hue(loop, hass):
@@ -144,7 +164,6 @@ def hue_client(loop, hass_hue, aiohttp_client):
     config = Config(
         None,
         {
-            emulated_hue.CONF_TYPE: emulated_hue.TYPE_ALEXA,
             emulated_hue.CONF_ENTITIES: {
                 "light.bed_light": {emulated_hue.CONF_ENTITY_HIDDEN: True},
                 # Kitchen light is explicitly excluded from being exposed
@@ -162,6 +181,7 @@ def hue_client(loop, hass_hue, aiohttp_client):
             },
         },
     )
+    config.numbers = ENTITY_IDS_BY_NUMBER
 
     HueUsernameView().register(web_app, web_app.router)
     HueAllLightsStateView(config).register(web_app, web_app.router)
@@ -359,8 +379,13 @@ async def test_get_light_state(hass_hue, hue_client):
 
     result_json = await result.json()
 
-    assert "light.ceiling_lights" in result_json
-    assert result_json["light.ceiling_lights"]["state"][HUE_API_STATE_BRI] == 127
+    assert ENTITY_NUMBERS_BY_ID["light.ceiling_lights"] in result_json
+    assert (
+        result_json[ENTITY_NUMBERS_BY_ID["light.ceiling_lights"]]["state"][
+            HUE_API_STATE_BRI
+        ]
+        == 127
+    )
 
     # Turn office light off
     await hass_hue.services.async_call(
@@ -487,9 +512,9 @@ async def test_put_light_state(hass, hass_hue, hue_client):
 
     # Make sure we can't change the kitchen light state
     kitchen_result = await perform_put_light_state(
-        hass_hue, hue_client, "light.kitchen_light", True
+        hass_hue, hue_client, "light.kitchen_lights", True
     )
-    assert kitchen_result.status == HTTP_NOT_FOUND
+    assert kitchen_result.status == 401
 
 
 async def test_put_light_state_script(hass, hass_hue, hue_client):
@@ -624,6 +649,7 @@ async def test_close_cover(hass_hue, hue_client):
 async def test_set_position_cover(hass_hue, hue_client):
     """Test setting position cover ."""
     cover_id = "cover.living_room_window"
+    cover_number = ENTITY_NUMBERS_BY_ID[cover_id]
     # Turn the office light off first
     await hass_hue.services.async_call(
         cover.DOMAIN,
@@ -657,13 +683,8 @@ async def test_set_position_cover(hass_hue, hue_client):
     cover_result_json = await cover_result.json()
 
     assert len(cover_result_json) == 2
-    assert True, cover_result_json[0]["success"][
-        "/lights/cover.living_room_window/state/on"
-    ]
-    assert (
-        cover_result_json[1]["success"]["/lights/cover.living_room_window/state/bri"]
-        == level
-    )
+    assert True, cover_result_json[0]["success"][f"/lights/{cover_number}/state/on"]
+    assert cover_result_json[1]["success"][f"/lights/{cover_number}/state/bri"] == level
 
     for _ in range(100):
         future = dt_util.utcnow() + timedelta(seconds=1)
@@ -707,6 +728,7 @@ async def test_put_light_state_fan(hass_hue, hue_client):
 # pylint: disable=invalid-name
 async def test_put_with_form_urlencoded_content_type(hass_hue, hue_client):
     """Test the form with urlencoded content."""
+    entity_number = ENTITY_NUMBERS_BY_ID["light.ceiling_lights"]
     # Needed for Alexa
     await perform_put_test_on_ceiling_lights(
         hass_hue, hue_client, "application/x-www-form-urlencoded"
@@ -715,7 +737,7 @@ async def test_put_with_form_urlencoded_content_type(hass_hue, hue_client):
     # Make sure we fail gracefully when we can't parse the data
     data = {"key1": "value1", "key2": "value2"}
     result = await hue_client.put(
-        "/api/username/lights/light.ceiling_lights/state",
+        f"/api/username/lights/{entity_number}/state",
         headers={"content-type": "application/x-www-form-urlencoded"},
         data=data,
     )
@@ -725,22 +747,26 @@ async def test_put_with_form_urlencoded_content_type(hass_hue, hue_client):
 
 async def test_entity_not_found(hue_client):
     """Test for entity which are not found."""
-    result = await hue_client.get("/api/username/lights/not.existant_entity")
+    result = await hue_client.get("/api/username/lights/98")
 
     assert result.status == HTTP_NOT_FOUND
 
-    result = await hue_client.put("/api/username/lights/not.existant_entity/state")
+    result = await hue_client.put("/api/username/lights/98/state")
 
     assert result.status == HTTP_NOT_FOUND
 
 
 async def test_allowed_methods(hue_client):
     """Test the allowed methods."""
-    result = await hue_client.get("/api/username/lights/light.ceiling_lights/state")
+    result = await hue_client.get(
+        "/api/username/lights/ENTITY_NUMBERS_BY_ID[light.ceiling_lights]/state"
+    )
 
     assert result.status == 405
 
-    result = await hue_client.put("/api/username/lights/light.ceiling_lights")
+    result = await hue_client.put(
+        "/api/username/lights/ENTITY_NUMBERS_BY_ID[light.ceiling_lights]"
+    )
 
     assert result.status == 405
 
@@ -753,7 +779,9 @@ async def test_proper_put_state_request(hue_client):
     """Test the request to set the state."""
     # Test proper on value parsing
     result = await hue_client.put(
-        "/api/username/lights/{}/state".format("light.ceiling_lights"),
+        "/api/username/lights/{}/state".format(
+            ENTITY_NUMBERS_BY_ID["light.ceiling_lights"]
+        ),
         data=json.dumps({HUE_API_STATE_ON: 1234}),
     )
 
@@ -761,7 +789,9 @@ async def test_proper_put_state_request(hue_client):
 
     # Test proper brightness value parsing
     result = await hue_client.put(
-        "/api/username/lights/{}/state".format("light.ceiling_lights"),
+        "/api/username/lights/{}/state".format(
+            ENTITY_NUMBERS_BY_ID["light.ceiling_lights"]
+        ),
         data=json.dumps({HUE_API_STATE_ON: True, HUE_API_STATE_BRI: "Hello world!"}),
     )
 
@@ -816,7 +846,8 @@ async def perform_put_test_on_ceiling_lights(
 
 async def perform_get_light_state(client, entity_id, expected_status):
     """Test the getting of a light state."""
-    result = await client.get(f"/api/username/lights/{entity_id}")
+    entity_number = ENTITY_NUMBERS_BY_ID[entity_id]
+    result = await client.get(f"/api/username/lights/{entity_number}")
 
     assert result.status == expected_status
 
@@ -850,8 +881,9 @@ async def perform_put_light_state(
     if saturation is not None:
         data[HUE_API_STATE_SAT] = saturation
 
+    entity_number = ENTITY_NUMBERS_BY_ID[entity_id]
     result = await client.put(
-        f"/api/username/lights/{entity_id}/state",
+        f"/api/username/lights/{entity_number}/state",
         headers=req_headers,
         data=json.dumps(data).encode(),
     )

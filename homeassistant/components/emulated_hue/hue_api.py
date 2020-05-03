@@ -506,7 +506,9 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # Create success responses for all received keys
         json_response = [
-            create_hue_success_response(entity_id, HUE_API_STATE_ON, parsed[STATE_ON])
+            create_hue_success_response(
+                entity_number, HUE_API_STATE_ON, parsed[STATE_ON]
+            )
         ]
 
         for (key, val) in (
@@ -517,7 +519,7 @@ class HueOneLightChangeView(HomeAssistantView):
         ):
             if parsed[key] is not None:
                 json_response.append(
-                    create_hue_success_response(entity_id, val, parsed[key])
+                    create_hue_success_response(entity_number, val, parsed[key])
                 )
 
         return self.json(json_response)
