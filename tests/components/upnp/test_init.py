@@ -14,8 +14,8 @@ from homeassistant.setup import async_setup_component
 
 from .mock_device import MockDevice
 
-from tests.async_mock import patch
-from tests.common import MockConfigEntry, mock_coro
+from tests.async_mock import AsyncMock, patch
+from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry_default(hass):
@@ -36,17 +36,16 @@ async def test_async_setup_entry_default(hass):
     config = {
         # no upnp
     }
-    with patch.object(Device, "async_create_device") as create_device, patch.object(
-        Device, "async_discover"
-    ) as async_discover:
+    async_discover = AsyncMock(return_value=[])
+    with patch.object(
+        Device, "async_create_device", AsyncMock(return_value=mock_device)
+    ), patch.object(Device, "async_discover", async_discover):
         # initialisation of component, no device discovered
-        async_discover.return_value = mock_coro(return_value=[])
         await async_setup_component(hass, "upnp", config)
         await hass.async_block_till_done()
 
         # loading of config_entry, device discovered
-        create_device.return_value = mock_coro(return_value=mock_device)
-        async_discover.return_value = mock_coro(return_value=discovery_infos)
+        async_discover.return_value = discovery_infos
         assert await upnp.async_setup_entry(hass, entry) is True
 
         # ensure device is stored/used
@@ -84,18 +83,17 @@ async def test_async_setup_entry_port_mapping(hass):
             "ports": {"hass": "hass"},
         },
     }
-    with patch.object(Device, "async_create_device") as create_device, patch.object(
-        Device, "async_discover"
-    ) as async_discover:
+    async_discover = AsyncMock(return_value=[])
+    with patch.object(
+        Device, "async_create_device", AsyncMock(return_value=mock_device)
+    ), patch.object(Device, "async_discover", async_discover):
         # initialisation of component, no device discovered
-        async_discover.return_value = mock_coro(return_value=[])
         await async_setup_component(hass, "http", config)
         await async_setup_component(hass, "upnp", config)
         await hass.async_block_till_done()
 
         # loading of config_entry, device discovered
-        create_device.return_value = mock_coro(return_value=mock_device)
-        async_discover.return_value = mock_coro(return_value=discovery_infos)
+        async_discover.return_value = discovery_infos
         assert await upnp.async_setup_entry(hass, entry) is True
 
         # ensure device is stored/used
