@@ -1,7 +1,4 @@
 """The tests for the Recorder component."""
-# pylint: disable=protected-access
-from unittest.mock import call, patch
-
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
@@ -9,6 +6,8 @@ from sqlalchemy.pool import StaticPool
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.recorder import const, migration, models
 
+# pylint: disable=protected-access
+from tests.async_mock import call, patch
 from tests.components.recorder import models_original
 
 
@@ -26,7 +25,10 @@ async def test_schema_update_calls(hass):
     """Test that schema migrations occur in correct order."""
     with patch(
         "homeassistant.components.recorder.create_engine", new=create_engine_test
-    ), patch("homeassistant.components.recorder.migration._apply_update") as update:
+    ), patch(
+        "homeassistant.components.recorder.migration._apply_update",
+        wraps=migration._apply_update,
+    ) as update:
         await async_setup_component(
             hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
         )

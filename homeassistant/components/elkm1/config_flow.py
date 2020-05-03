@@ -13,6 +13,8 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_TEMPERATURE_UNIT,
     CONF_USERNAME,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
 from homeassistant.util import slugify
 
@@ -33,7 +35,9 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_USERNAME, default=""): str,
         vol.Optional(CONF_PASSWORD, default=""): str,
         vol.Optional(CONF_PREFIX, default=""): str,
-        vol.Optional(CONF_TEMPERATURE_UNIT, default="F"): vol.In(["F", "C"]),
+        vol.Optional(CONF_TEMPERATURE_UNIT, default=TEMP_FAHRENHEIT): vol.In(
+            [TEMP_FAHRENHEIT, TEMP_CELSIUS]
+        ),
     }
 )
 
@@ -64,8 +68,9 @@ async def validate_input(data):
     timed_out = False
     if not await async_wait_for_elk_to_sync(elk, VALIDATE_TIMEOUT):
         _LOGGER.error(
-            "Timed out after %d seconds while trying to sync with elkm1",
+            "Timed out after %d seconds while trying to sync with ElkM1 at %s",
             VALIDATE_TIMEOUT,
+            url,
         )
         timed_out = True
 

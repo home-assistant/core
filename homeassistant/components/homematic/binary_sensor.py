@@ -7,7 +7,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_PRESENCE,
     DEVICE_CLASS_SMOKE,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 
 from .const import ATTR_DISCOVER_DEVICES, ATTR_DISCOVERY_TYPE, DISCOVER_BATTERY
@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class HMBinarySensor(HMDevice, BinarySensorDevice):
+class HMBinarySensor(HMDevice, BinarySensorEntity):
     """Representation of a binary HomeMatic device."""
 
     @property
@@ -73,7 +73,7 @@ class HMBinarySensor(HMDevice, BinarySensorDevice):
             self._data.update({self._state: None})
 
 
-class HMBatterySensor(HMDevice, BinarySensorDevice):
+class HMBatterySensor(HMDevice, BinarySensorEntity):
     """Representation of an HomeMatic low battery sensor."""
 
     @property

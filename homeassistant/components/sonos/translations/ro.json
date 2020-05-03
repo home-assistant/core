@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nu exist\u0103 dispozitive Sonos g\u0103site \u00een re\u021bea.",
+            "single_instance_allowed": "Este necesar\u0103 o singur\u0103 configurare a Sonos."
+        },
+        "step": {
+            "confirm": {
+                "description": "Dori\u021bi s\u0103 configura\u021bi Sonos?",
+                "title": "Sonos"
+            }
+        }
+    }
+}

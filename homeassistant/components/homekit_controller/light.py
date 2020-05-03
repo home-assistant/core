@@ -10,7 +10,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    Light,
+    LightEntity,
 )
 from homeassistant.core import callback
 
@@ -35,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn.add_listener(async_add_service)
 
 
-class HomeKitLight(HomeKitEntity, Light):
+class HomeKitLight(HomeKitEntity, LightEntity):
     """Representation of a Homekit light."""
 
     def get_characteristic_types(self):

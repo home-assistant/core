@@ -1,8 +1,7 @@
 {
+  "title": "Emulated Roku",
   "config": {
-    "abort": {
-      "name_exists": "Name already exists"
-    },
+    "abort": { "name_exists": "Name already exists" },
     "step": {
       "user": {
         "data": {
@@ -15,7 +14,6 @@
         },
         "title": "Define server configuration"
       }
-    },
-    "title": "EmulatedRoku"
+    }
   }
 }

@@ -14,7 +14,7 @@ from homeassistant.components.water_heater import (
     SUPPORT_AWAY_MODE,
     SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    WaterHeaterDevice,
+    WaterHeaterEntity,
 )
 from homeassistant.const import STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS
 
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             add_entities([WinkWaterHeater(water_heater, hass)])
 
 
-class WinkWaterHeater(WinkDevice, WaterHeaterDevice):
+class WinkWaterHeater(WinkDevice, WaterHeaterEntity):
     """Representation of a Wink water heater."""
 
     @property

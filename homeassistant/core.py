@@ -36,7 +36,7 @@ from async_timeout import timeout
 import attr
 import voluptuous as vol
 
-from homeassistant import loader, util
+from homeassistant import block_async_io, loader, util
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -50,6 +50,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
@@ -70,6 +71,7 @@ from homeassistant.exceptions import (
 from homeassistant.util import location
 from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
 import homeassistant.util.dt as dt_util
+from homeassistant.util.thread import fix_threading_exception_logging
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 # Typing imports that create a circular dependency
@@ -77,8 +79,12 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntries
     from homeassistant.components.http import HomeAssistantHTTP
 
-# pylint: disable=invalid-name
+
+block_async_io.enable()
+fix_threading_exception_logging()
+
 T = TypeVar("T")
+# pylint: disable=invalid-name
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
 CALLBACK_TYPE = Callable[[], None]
 # pylint: enable=invalid-name
@@ -276,6 +282,7 @@ class HomeAssistant:
 
         self.state = CoreState.running
         _async_create_timer(self)
+        self.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 
     def add_job(self, target: Callable[..., Any], *args: Any) -> None:
         """Add job to the executor pool.
@@ -361,7 +368,9 @@ class HomeAssistant:
         self._track_task = False
 
     @callback
-    def async_run_job(self, target: Callable[..., None], *args: Any) -> None:
+    def async_run_job(
+        self, target: Callable[..., Union[None, Awaitable]], *args: Any
+    ) -> None:
         """Run a job from within the event loop.
 
         This method must be run in the event loop.
@@ -481,7 +490,7 @@ class Event:
     def __init__(
         self,
         event_type: str,
-        data: Optional[Dict] = None,
+        data: Optional[Dict[str, Any]] = None,
         origin: EventOrigin = EventOrigin.local,
         time_fired: Optional[int] = None,
         context: Optional[Context] = None,
@@ -545,9 +554,7 @@ class EventBus:
     @property
     def listeners(self) -> Dict[str, int]:
         """Return dictionary with events and the number of listeners."""
-        return run_callback_threadsafe(  # type: ignore
-            self._hass.loop, self.async_listeners
-        ).result()
+        return run_callback_threadsafe(self._hass.loop, self.async_listeners).result()
 
     def fire(
         self,
@@ -847,7 +854,7 @@ class StateMachine:
         future = run_callback_threadsafe(
             self._loop, self.async_entity_ids, domain_filter
         )
-        return future.result()  # type: ignore
+        return future.result()
 
     @callback
     def async_entity_ids(self, domain_filter: Optional[str] = None) -> List[str]:
@@ -868,9 +875,7 @@ class StateMachine:
 
     def all(self) -> List[State]:
         """Create a list of all states."""
-        return run_callback_threadsafe(  # type: ignore
-            self._loop, self.async_all
-        ).result()
+        return run_callback_threadsafe(self._loop, self.async_all).result()
 
     @callback
     def async_all(self) -> List[State]:
@@ -900,7 +905,7 @@ class StateMachine:
 
         Returns boolean to indicate if an entity was removed.
         """
-        return run_callback_threadsafe(  # type: ignore
+        return run_callback_threadsafe(
             self._loop, self.async_remove, entity_id
         ).result()
 
@@ -1059,9 +1064,7 @@ class ServiceRegistry:
     @property
     def services(self) -> Dict[str, Dict[str, Service]]:
         """Return dictionary with per domain a list of available services."""
-        return run_callback_threadsafe(  # type: ignore
-            self._hass.loop, self.async_services
-        ).result()
+        return run_callback_threadsafe(self._hass.loop, self.async_services).result()
 
     @callback
     def async_services(self) -> Dict[str, Dict[str, Service]]:

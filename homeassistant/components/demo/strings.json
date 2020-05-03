@@ -1,7 +1,5 @@
 {
-  "config": {
-    "title": "Demo"
-  },
+  "title": "Demo",
   "options": {
     "step": {
       "init": {

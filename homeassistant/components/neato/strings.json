@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "Neato",
     "step": {
       "user": {
         "title": "Neato Account Info",
@@ -16,9 +15,7 @@
       "invalid_credentials": "Invalid credentials",
       "unexpected_error": "Unexpected error"
     },
-    "create_entry": {
-      "default": "See [Neato documentation]({docs_url})."
-    },
+    "create_entry": { "default": "See [Neato documentation]({docs_url})." },
     "abort": {
       "already_configured": "Already configured",
       "invalid_credentials": "Invalid credentials"

@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import STATE_OFF
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class UpCloudSwitch(UpCloudServerEntity, SwitchDevice):
+class UpCloudSwitch(UpCloudServerEntity, SwitchEntity):
     """Representation of an UpCloud server switch."""
 
     def turn_on(self, **kwargs):

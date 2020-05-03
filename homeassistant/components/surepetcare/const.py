@@ -23,6 +23,9 @@ SURE_IDS = "sure_ids"
 # platforms
 TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
+# sure petcare api
+SURE_API_TIMEOUT = 15
+
 # flap
 BATTERY_ICON = "mdi:battery"
 SURE_BATT_VOLTAGE_FULL = 1.6  # voltage

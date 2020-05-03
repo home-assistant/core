@@ -2,7 +2,6 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
-from asynctest import patch
 from pytest import fixture
 
 from homeassistant.components.directv.media_player import (
@@ -13,6 +12,8 @@ from homeassistant.components.directv.media_player import (
 )
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_ALBUM_NAME,
+    ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_CHANNEL,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -24,6 +25,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_TITLE,
     DOMAIN as MP_DOMAIN,
     MEDIA_TYPE_MOVIE,
+    MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
     SERVICE_PLAY_MEDIA,
     SUPPORT_NEXT_TRACK,
@@ -44,6 +46,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
@@ -51,12 +54,16 @@ from homeassistant.const import (
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
+from tests.async_mock import patch
 from tests.components.directv import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 ATTR_UNIQUE_ID = "unique_id"
 CLIENT_ENTITY_ID = f"{MP_DOMAIN}.client"
 MAIN_ENTITY_ID = f"{MP_DOMAIN}.host"
+MUSIC_ENTITY_ID = f"{MP_DOMAIN}.music_client"
+RESTRICTED_ENTITY_ID = f"{MP_DOMAIN}.restricted_client"
+STANDBY_ENTITY_ID = f"{MP_DOMAIN}.standby_client"
 UNAVAILABLE_ENTITY_ID = f"{MP_DOMAIN}.unavailable_client"
 
 # pylint: disable=redefined-outer-name
@@ -249,6 +256,63 @@ async def test_check_attributes(
     assert state.attributes.get(ATTR_MEDIA_START_TIME) == datetime(
         2010, 7, 5, 15, 0, 8, tzinfo=dt_util.UTC
     )
+
+    state = hass.states.get(MUSIC_ENTITY_ID)
+    assert state.state == STATE_PLAYING
+
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) == "76917562"
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_MUSIC
+    assert state.attributes.get(ATTR_MEDIA_DURATION) == 86400
+    assert state.attributes.get(ATTR_MEDIA_POSITION) == 15050
+    assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT)
+    assert state.attributes.get(ATTR_MEDIA_TITLE) == "Sparkle In Your Eyes"
+    assert state.attributes.get(ATTR_MEDIA_ARTIST) == "Gerald Albright"
+    assert state.attributes.get(ATTR_MEDIA_ALBUM_NAME) == "Slam Dunk (2014)"
+    assert state.attributes.get(ATTR_MEDIA_SERIES_TITLE) is None
+    assert state.attributes.get(ATTR_MEDIA_CHANNEL) == "{} ({})".format("MCSJ", "851")
+    assert state.attributes.get(ATTR_INPUT_SOURCE) == "851"
+    assert not state.attributes.get(ATTR_MEDIA_CURRENTLY_RECORDING)
+    assert state.attributes.get(ATTR_MEDIA_RATING) == "TV-PG"
+    assert not state.attributes.get(ATTR_MEDIA_RECORDED)
+    assert state.attributes.get(ATTR_MEDIA_START_TIME) == datetime(
+        2020, 3, 21, 10, 0, 0, tzinfo=dt_util.UTC
+    )
+
+    state = hass.states.get(STANDBY_ENTITY_ID)
+    assert state.state == STATE_OFF
+
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) is None
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) is None
+    assert state.attributes.get(ATTR_MEDIA_DURATION) is None
+    assert state.attributes.get(ATTR_MEDIA_POSITION) is None
+    assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT) is None
+    assert state.attributes.get(ATTR_MEDIA_TITLE) is None
+    assert state.attributes.get(ATTR_MEDIA_ARTIST) is None
+    assert state.attributes.get(ATTR_MEDIA_ALBUM_NAME) is None
+    assert state.attributes.get(ATTR_MEDIA_SERIES_TITLE) is None
+    assert state.attributes.get(ATTR_MEDIA_CHANNEL) is None
+    assert state.attributes.get(ATTR_INPUT_SOURCE) is None
+    assert not state.attributes.get(ATTR_MEDIA_CURRENTLY_RECORDING)
+    assert state.attributes.get(ATTR_MEDIA_RATING) is None
+    assert not state.attributes.get(ATTR_MEDIA_RECORDED)
+
+    state = hass.states.get(RESTRICTED_ENTITY_ID)
+    assert state.state == STATE_PLAYING
+
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) is None
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) is None
+    assert state.attributes.get(ATTR_MEDIA_DURATION) is None
+    assert state.attributes.get(ATTR_MEDIA_POSITION) is None
+    assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT) is None
+    assert state.attributes.get(ATTR_MEDIA_TITLE) is None
+    assert state.attributes.get(ATTR_MEDIA_ARTIST) is None
+    assert state.attributes.get(ATTR_MEDIA_ALBUM_NAME) is None
+    assert state.attributes.get(ATTR_MEDIA_SERIES_TITLE) is None
+    assert state.attributes.get(ATTR_MEDIA_CHANNEL) is None
+    assert state.attributes.get(ATTR_INPUT_SOURCE) is None
+    assert not state.attributes.get(ATTR_MEDIA_CURRENTLY_RECORDING)
+    assert state.attributes.get(ATTR_MEDIA_RATING) is None
+    assert not state.attributes.get(ATTR_MEDIA_RECORDED)
 
     state = hass.states.get(UNAVAILABLE_ENTITY_ID)
     assert state.state == STATE_UNAVAILABLE

@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the CPU speed sensor."""
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
 
     add_entities([CpuSpeedSensor(name)], True)
 

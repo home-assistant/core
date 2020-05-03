@@ -12,7 +12,7 @@ from aioswitcher.consts import (
     WAITING_TEXT,
 )
 
-from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchDevice
+from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -53,7 +53,7 @@ async def async_setup_platform(
     async_add_entities([SwitcherControl(hass.data[DOMAIN][DATA_DEVICE])])
 
 
-class SwitcherControl(SwitchDevice):
+class SwitcherControl(SwitchEntity):
     """Home Assistant switch entity."""
 
     def __init__(self, device_data: "SwitcherV2Device") -> None:

@@ -3,7 +3,6 @@
 This includes tests for all mock object types.
 """
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
 
 import pytest
 
@@ -24,6 +23,7 @@ from homeassistant.components.homekit.const import (
     CHAR_MODEL,
     CHAR_NAME,
     CHAR_SERIAL_NUMBER,
+    CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     MANUFACTURER,
@@ -36,10 +36,13 @@ from homeassistant.const import (
     ATTR_NOW,
     ATTR_SERVICE,
     EVENT_TIME_CHANGED,
+    STATE_OFF,
+    STATE_ON,
     __version__,
 )
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import Mock, patch
 from tests.common import async_mock_service
 
 
@@ -245,6 +248,99 @@ async def test_linked_battery_sensor(hass, hk_driver, caplog):
     assert acc._char_charging.value == 0
 
 
+async def test_linked_battery_charging_sensor(hass, hk_driver, caplog):
+    """Test battery service with linked_battery_charging_sensor."""
+    entity_id = "homekit.accessory"
+    linked_battery_charging_sensor = "binary_sensor.battery_charging"
+    hass.states.async_set(entity_id, "open", {ATTR_BATTERY_LEVEL: 100})
+    hass.states.async_set(linked_battery_charging_sensor, STATE_ON, None)
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory(
+        hass,
+        hk_driver,
+        "Battery Service",
+        entity_id,
+        2,
+        {CONF_LINKED_BATTERY_CHARGING_SENSOR: linked_battery_charging_sensor},
+    )
+    acc.update_state = lambda x: None
+    assert acc.linked_battery_charging_sensor == linked_battery_charging_sensor
+
+    await acc.run_handler()
+    await hass.async_block_till_done()
+    assert acc._char_battery.value == 100
+    assert acc._char_low_battery.value == 0
+    assert acc._char_charging.value == 1
+
+    hass.states.async_set(linked_battery_charging_sensor, STATE_OFF, None)
+    await acc.run_handler()
+    await hass.async_block_till_done()
+    assert acc._char_charging.value == 0
+
+    hass.states.async_set(linked_battery_charging_sensor, STATE_ON, None)
+    await acc.run_handler()
+    await hass.async_block_till_done()
+    assert acc._char_charging.value == 1
+
+
+async def test_linked_battery_sensor_and_linked_battery_charging_sensor(
+    hass, hk_driver, caplog
+):
+    """Test battery service with linked_battery_sensor and a linked_battery_charging_sensor."""
+    entity_id = "homekit.accessory"
+    linked_battery = "sensor.battery"
+    linked_battery_charging_sensor = "binary_sensor.battery_charging"
+    hass.states.async_set(entity_id, "open", {ATTR_BATTERY_LEVEL: 100})
+    hass.states.async_set(linked_battery, 50, None)
+    hass.states.async_set(linked_battery_charging_sensor, STATE_ON, None)
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory(
+        hass,
+        hk_driver,
+        "Battery Service",
+        entity_id,
+        2,
+        {
+            CONF_LINKED_BATTERY_SENSOR: linked_battery,
+            CONF_LINKED_BATTERY_CHARGING_SENSOR: linked_battery_charging_sensor,
+        },
+    )
+    acc.update_state = lambda x: None
+    assert acc.linked_battery_sensor == linked_battery
+
+    await acc.run_handler()
+    await hass.async_block_till_done()
+    assert acc._char_battery.value == 50
+    assert acc._char_low_battery.value == 0
+    assert acc._char_charging.value == 1
+
+    hass.states.async_set(linked_battery_charging_sensor, STATE_OFF, None)
+    await hass.async_block_till_done()
+    assert acc._char_battery.value == 50
+    assert acc._char_low_battery.value == 0
+    assert acc._char_charging.value == 0
+
+
+async def test_missing_linked_battery_charging_sensor(hass, hk_driver, caplog):
+    """Test battery service with linked_battery_charging_sensor that is mapping to a missing entity."""
+    entity_id = "homekit.accessory"
+    linked_battery_charging_sensor = "binary_sensor.battery_charging"
+    hass.states.async_set(entity_id, "open", {ATTR_BATTERY_LEVEL: 100})
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory(
+        hass,
+        hk_driver,
+        "Battery Service",
+        entity_id,
+        2,
+        {CONF_LINKED_BATTERY_CHARGING_SENSOR: linked_battery_charging_sensor},
+    )
+    assert acc.linked_battery_charging_sensor is None
+
+
 async def test_missing_linked_battery_sensor(hass, hk_driver, caplog):
     """Test battery service with missing linked_battery_sensor."""
     entity_id = "homekit.accessory"
@@ -267,9 +363,30 @@ async def test_missing_linked_battery_sensor(hass, hk_driver, caplog):
     await hass.async_block_till_done()
 
     assert not acc.linked_battery_sensor
-    assert not hasattr(acc, "_char_battery")
-    assert not hasattr(acc, "_char_low_battery")
-    assert not hasattr(acc, "_char_charging")
+    assert acc._char_battery is None
+    assert acc._char_low_battery is None
+    assert acc._char_charging is None
+
+
+async def test_battery_appears_after_startup(hass, hk_driver, caplog):
+    """Test battery level appears after homekit is started."""
+    entity_id = "homekit.accessory"
+    hass.states.async_set(entity_id, None, {})
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory(
+        hass, hk_driver, "Accessory without battery", entity_id, 2, None
+    )
+    acc.update_state = lambda x: None
+    assert acc._char_battery is None
+
+    await acc.run_handler()
+    await hass.async_block_till_done()
+    assert acc._char_battery is None
+
+    hass.states.async_set(entity_id, None, {ATTR_BATTERY_LEVEL: 15})
+    await hass.async_block_till_done()
+    assert acc._char_battery is None
 
 
 async def test_call_service(hass, hk_driver, events):
@@ -336,10 +453,14 @@ def test_home_driver():
     pin = b"123-45-678"
 
     with patch("pyhap.accessory_driver.AccessoryDriver.__init__") as mock_driver:
-        driver = HomeDriver("hass", address=ip_address, port=port, persist_file=path)
+        driver = HomeDriver(
+            "hass", "entry_id", "name", address=ip_address, port=port, persist_file=path
+        )
 
     mock_driver.assert_called_with(address=ip_address, port=port, persist_file=path)
     driver.state = Mock(pincode=pin)
+    xhm_uri_mock = Mock(return_value="X-HM://0")
+    driver.accessory = Mock(xhm_uri=xhm_uri_mock)
 
     # pair
     with patch("pyhap.accessory_driver.AccessoryDriver.pair") as mock_pair, patch(
@@ -348,7 +469,7 @@ def test_home_driver():
         driver.pair("client_uuid", "client_public")
 
     mock_pair.assert_called_with("client_uuid", "client_public")
-    mock_dissmiss_msg.assert_called_with("hass")
+    mock_dissmiss_msg.assert_called_with("hass", "entry_id")
 
     # unpair
     with patch("pyhap.accessory_driver.AccessoryDriver.unpair") as mock_unpair, patch(
@@ -357,4 +478,4 @@ def test_home_driver():
         driver.unpair("client_uuid")
 
     mock_unpair.assert_called_with("client_uuid")
-    mock_show_msg.assert_called_with("hass", pin)
+    mock_show_msg.assert_called_with("hass", "entry_id", "name", pin, "X-HM://0")

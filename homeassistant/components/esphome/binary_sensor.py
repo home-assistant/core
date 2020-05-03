@@ -3,7 +3,7 @@ from typing import Optional
 
 from aioesphomeapi import BinarySensorInfo, BinarySensorState
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import EsphomeEntity, platform_async_setup_entry
 
@@ -21,7 +21,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class EsphomeBinarySensor(EsphomeEntity, BinarySensorDevice):
+class EsphomeBinarySensor(EsphomeEntity, BinarySensorEntity):
     """A binary sensor implementation for ESPHome."""
 
     @property

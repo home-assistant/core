@@ -1,13 +1,10 @@
 {
   "config": {
-    "title": "Minut Point",
     "step": {
       "user": {
         "title": "Authentication Provider",
         "description": "Pick via which authentication provider you want to authenticate with Point.",
-        "data": {
-          "flow_impl": "Provider"
-        }
+        "data": { "flow_impl": "Provider" }
       },
       "auth": {
         "title": "Authenticate Point",

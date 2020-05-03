@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ra\u010dun \u017ee nastavljen",
+            "no_device": "V nobeni od va\u0161ih naprav ni aktiviran \u00bbFind my iPhone\u00ab"
+        },
+        "error": {
+            "login": "Napaka pri prijavi: preverite svoj e-po\u0161tni naslov in geslo",
+            "send_verification_code": "Kode za preverjanje ni bilo mogo\u010de poslati",
+            "validate_verification_code": "Kode za preverjanje ni bilo mogo\u010de preveriti, izberi napravo za zaupanje in znova za\u017eeni preverjanje"
+        },
+        "step": {
+            "trusted_device": {
+                "data": {
+                    "trusted_device": "Zaupanja vredna naprava"
+                },
+                "description": "Izberite svojo zaupanja vredno napravo",
+                "title": "iCloud zaupanja vredna naprava"
+            },
+            "user": {
+                "data": {
+                    "password": "Geslo",
+                    "username": "E-po\u0161tni naslov",
+                    "with_family": "Z dru\u017eino"
+                },
+                "description": "Vnesite svoje poverilnice",
+                "title": "iCloud poverilnice"
+            },
+            "verification_code": {
+                "data": {
+                    "verification_code": "Koda za preverjanje"
+                },
+                "description": "Prosimo, vnesite kodo za preverjanje, ki ste jo pravkar prejeli od iCloud",
+                "title": "iCloud koda za preverjanje"
+            }
+        }
+    }
+}

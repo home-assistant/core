@@ -23,7 +23,7 @@ ATTR_IMAGES = "images"
 
 def get_service(hass, config, discovery_info=None):
     """Get the Discord notification service."""
-    token = config.get(CONF_TOKEN)
+    token = config[CONF_TOKEN]
     return DiscordNotificationService(hass, token)
 
 
@@ -65,6 +65,7 @@ class DiscordNotificationService(BaseNotificationService):
                     images.append(image)
                 else:
                     _LOGGER.warning("Image not found: %s", image)
+
         # pylint: disable=unused-variable
         @discord_bot.event
         async def on_ready():

@@ -20,7 +20,7 @@ download:
       example: "/storage/emulated/0/Download/example.txt"
     local_path:
       description: The filepath on your Home Assistant instance.
-      example: "/config/example.txt"
+      example: "/config/www/example.txt"
 upload:
   description: Upload a file from your Home Assistant instance to an Android TV / Fire TV device.
   fields:
@@ -32,4 +32,4 @@ upload:
       example: "/storage/emulated/0/Download/example.txt"
     local_path:
       description: The filepath on your Home Assistant instance.
-      example: "/config/example.txt"
+      example: "/config/www/example.txt"

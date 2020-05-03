@@ -1,6 +1,4 @@
 """Tests for the Spotify config flow."""
-from unittest.mock import patch
-
 from spotipy import SpotifyException
 
 from homeassistant import data_entry_flow, setup
@@ -12,6 +10,7 @@ from homeassistant.components.spotify.const import (
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

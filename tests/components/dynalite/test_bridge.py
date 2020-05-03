@@ -1,11 +1,9 @@
 """Test Dynalite bridge."""
 
-from asynctest import CoroutineMock, Mock, patch
-from dynalite_devices_lib.const import CONF_ALL
-
 from homeassistant.components import dynalite
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -17,7 +15,7 @@ async def test_update_device(hass):
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices"
     ) as mock_dyn_dev:
-        mock_dyn_dev().async_setup = CoroutineMock(return_value=True)
+        mock_dyn_dev().async_setup = AsyncMock(return_value=True)
         assert await hass.config_entries.async_setup(entry.entry_id)
         # Not waiting so it add the devices before registration
         update_device_func = mock_dyn_dev.mock_calls[1][2]["update_device_func"]
@@ -29,7 +27,7 @@ async def test_update_device(hass):
     async_dispatcher_connect(
         hass, f"dynalite-update-{host}-{device.unique_id}", specific_func
     )
-    update_device_func(CONF_ALL)
+    update_device_func()
     await hass.async_block_till_done()
     wide_func.assert_called_once()
     specific_func.assert_not_called()
@@ -47,7 +45,7 @@ async def test_add_devices_then_register(hass):
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices"
     ) as mock_dyn_dev:
-        mock_dyn_dev().async_setup = CoroutineMock(return_value=True)
+        mock_dyn_dev().async_setup = AsyncMock(return_value=True)
         assert await hass.config_entries.async_setup(entry.entry_id)
         # Not waiting so it add the devices before registration
         new_device_func = mock_dyn_dev.mock_calls[1][2]["new_device_func"]
@@ -80,7 +78,7 @@ async def test_register_then_add_devices(hass):
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices"
     ) as mock_dyn_dev:
-        mock_dyn_dev().async_setup = CoroutineMock(return_value=True)
+        mock_dyn_dev().async_setup = AsyncMock(return_value=True)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         new_device_func = mock_dyn_dev.mock_calls[1][2]["new_device_func"]

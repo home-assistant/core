@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Kann sech net mam Server verbannen.",
+            "name_exists": "Numm g\u00ebtt et schonn",
+            "wrong_credentials": "Falsche Benotzernumm oder Passwuert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Server",
+                    "name": "Numm",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "username": "Benotzernumm"
+                },
+                "title": "Transmission Client ariichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Intervalle vun de Mise \u00e0 jour"
+                },
+                "title": "Optioune fir Transmission konfigur\u00e9ieren"
+            }
+        }
+    }
+}

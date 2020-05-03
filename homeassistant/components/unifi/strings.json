@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "UniFi Controller",
     "step": {
       "user": {
         "title": "Set up UniFi Controller",
@@ -21,17 +20,17 @@
     },
     "abort": {
       "already_configured": "Controller site is already configured",
+      "no_local_user": "No local user found, configure a local account on controller and try again",
       "user_privilege": "User needs to be administrator"
     }
   },
   "options": {
     "step": {
-      "init": {
-        "data": {}
-      },
+      "init": { "data": {} },
       "device_tracker": {
         "data": {
           "detection_time": "Time in seconds from last seen until considered away",
+          "ignore_wired_bug": "Disable UniFi wired bug logic",
           "ssid_filter": "Select SSIDs to track wireless clients on",
           "track_clients": "Track network clients",
           "track_devices": "Track network devices (Ubiquiti devices)",
@@ -43,11 +42,18 @@
       "client_control": {
         "data": {
           "block_client": "Network access controlled clients",
-          "new_client": "Add new client for network access control",
           "poe_clients": "Allow POE control of clients"
         },
         "description": "Configure client controls\n\nCreate switches for serial numbers you want to control network access for.",
         "title": "UniFi options 2/3"
+      },
+      "simple_options": {
+        "data": {
+          "track_clients": "[%key:component::unifi::options::step::device_tracker::data::track_clients%]",
+          "track_devices": "[%key:component::unifi::options::step::device_tracker::data::track_devices%]",
+          "block_client": "[%key:component::unifi::options::step::client_control::data::block_client%]"
+        },
+        "description": "Configure UniFi integration"
       },
       "statistics_sensors": {
         "data": {
@@ -57,8 +63,5 @@
         "title": "UniFi options 3/3"
       }
     }
-  },
-  "error": {
-    "unknown_client_mac": "No client available in UniFi on that MAC address"
   }
 }

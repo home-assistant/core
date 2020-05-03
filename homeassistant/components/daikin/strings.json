@@ -1,13 +1,10 @@
 {
   "config": {
-    "title": "Daikin AC",
     "step": {
       "user": {
         "title": "Configure Daikin AC",
         "description": "Enter IP address of your Daikin AC.",
-        "data": {
-          "host": "Host"
-        }
+        "data": { "host": "Host" }
       }
     },
     "abort": {
