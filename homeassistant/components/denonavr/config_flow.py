@@ -57,7 +57,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            # check if IP adress is set manually
+            # check if IP address is set manually
             host = user_input.get(CONF_HOST)
             if host:
                 self.host = host
