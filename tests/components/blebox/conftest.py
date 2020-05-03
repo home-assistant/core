@@ -51,6 +51,7 @@ def mock_only_feature(spec, **kwargs):
 def mock_feature(category, spec, **kwargs):
     """Mock a feature along with whole product setup."""
     feature_mock = mock_only_feature(spec, **kwargs)
+    feature_mock.async_update = AsyncMock()
     product = setup_product_mock(category, [feature_mock])
 
     type(feature_mock.product).name = PropertyMock(return_value="Some name")
