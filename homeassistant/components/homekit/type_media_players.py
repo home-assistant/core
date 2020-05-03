@@ -36,6 +36,7 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNKNOWN,
 )
+from homeassistant.core import callback
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -143,7 +144,7 @@ class MediaPlayer(HomeAccessory):
             self.chars[FEATURE_TOGGLE_MUTE] = serv_toggle_mute.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_toggle_mute
             )
-        self.update_state(state)
+        self.async_update_state(state)
 
     def generate_service_name(self, mode):
         """Generate name for individual service."""
@@ -182,7 +183,8 @@ class MediaPlayer(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_MEDIA_VOLUME_MUTED: value}
         self.call_service(DOMAIN, SERVICE_VOLUME_MUTE, params)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update switch state after state changed."""
         current_state = new_state.state
 
@@ -319,7 +321,7 @@ class TelevisionMediaPlayer(HomeAccessory):
                 serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE, value=False)
                 _LOGGER.debug("%s: Added source %s.", self.entity_id, source)
 
-        self.update_state(state)
+        self.async_update_state(state)
 
     def set_on_off(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -373,7 +375,8 @@ class TelevisionMediaPlayer(HomeAccessory):
             params = {ATTR_ENTITY_ID: self.entity_id}
             self.call_service(DOMAIN, service, params)
 
-    def update_state(self, new_state):
+    @callback
+    def async_update_state(self, new_state):
         """Update Television state after state changed."""
         current_state = new_state.state
 
