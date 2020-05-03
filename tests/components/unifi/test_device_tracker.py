@@ -84,6 +84,7 @@ DEVICE_1 = {
     "mac": "00:00:00:00:01:01",
     "model": "US16P150",
     "name": "device_1",
+    "next_interval": 20,
     "overheating": True,
     "state": 1,
     "type": "usw",
@@ -94,10 +95,11 @@ DEVICE_2 = {
     "board_rev": 3,
     "device_id": "mock-id",
     "has_fan": True,
-    "ip": "10.0.1.1",
-    "mac": "00:00:00:00:01:01",
+    "ip": "10.0.1.2",
+    "mac": "00:00:00:00:01:02",
     "model": "US16P150",
-    "name": "device_1",
+    "name": "device_2",
+    "next_interval": 20,
     "state": 0,
     "type": "usw",
     "version": "4.0.42.10433",
@@ -216,9 +218,9 @@ async def test_tracked_devices(hass):
         options={CONF_SSID_FILTER: ["ssid"]},
         clients_response=[CLIENT_1, CLIENT_2, CLIENT_3, CLIENT_5, client_4_copy],
         devices_response=[DEVICE_1, DEVICE_2],
-        known_wireless_clients=(CLIENT_4["mac"],),
+        known_wireless_clients=([CLIENT_4["mac"]]),
     )
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 5
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 6
 
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1 is not None
@@ -244,7 +246,7 @@ async def test_tracked_devices(hass):
 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1 is not None
-    assert device_1.state == "not_home"
+    assert device_1.state == "home"
 
     # State change signalling works
     client_1_copy = copy(CLIENT_1)
@@ -262,6 +264,12 @@ async def test_tracked_devices(hass):
 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1.state == "home"
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=40))
+    await hass.async_block_till_done()
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1.state == "not_home"
 
     # Disabled device is unavailable
     device_1_copy = copy(DEVICE_1)
@@ -330,7 +338,7 @@ async def test_controller_state_change(hass):
     assert client_1.state == "not_home"
 
     device_1 = hass.states.get("device_tracker.device_1")
-    assert device_1.state == "not_home"
+    assert device_1.state == "home"
 
 
 async def test_option_track_clients(hass):
@@ -648,7 +656,7 @@ async def test_dont_track_clients(hass):
 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1 is not None
-    assert device_1.state == "not_home"
+    assert device_1.state == "home"
 
 
 async def test_dont_track_devices(hass):
