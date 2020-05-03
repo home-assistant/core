@@ -2,7 +2,6 @@
 import logging
 from typing import Any, Dict, List
 
-
 from surepy import (
     SurePetcare,
     SurePetcareAuthenticationError,
