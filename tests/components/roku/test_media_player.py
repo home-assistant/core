@@ -65,9 +65,10 @@ async def test_setup(
     await setup_integration(hass, aioclient_mock)
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
-
     main = entity_registry.async_get(MAIN_ENTITY_ID)
+
     assert hass.states.get(MAIN_ENTITY_ID)
+    assert main
     assert main.unique_id == UPNP_SERIAL
 
 
@@ -95,9 +96,10 @@ async def test_tv_setup(
     )
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
-
     tv = entity_registry.async_get(TV_ENTITY_ID)
+
     assert hass.states.get(TV_ENTITY_ID)
+    assert tv
     assert tv.unique_id == TV_SERIAL
 
 
@@ -368,4 +370,4 @@ async def test_tv_services(
             blocking=True,
         )
 
-        tune_mock.assert_called_once("55")
+        tune_mock.assert_called_once_with("55")
