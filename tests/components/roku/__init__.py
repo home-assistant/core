@@ -55,7 +55,11 @@ def mock_connection(
     if not power:
         info_fixture = f"roku/{device}-device-info-power-off.xml"
 
-    aioclient_mock.get(f"{roku_url}/query/device-info", text=load_fixture(info_fixture))
+    aioclient_mock.get(
+        f"{roku_url}/query/device-info",
+        text=load_fixture(info_fixture),
+        headers={"Content-Type": "application/xml"},
+    )
 
     apps_fixture = "roku/apps.xml"
     if device == "rokutv":
