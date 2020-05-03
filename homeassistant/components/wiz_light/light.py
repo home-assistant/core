@@ -1,27 +1,26 @@
 """WiZ Light integration."""
 import logging
-import voluptuous as vol
-from pywizlight import wizlight, PilotBuilder
-from pywizlight import SCENES
 
-import homeassistant.util.color as color_utils
-import homeassistant.helpers.config_validation as cv
+from pywizlight import SCENES, PilotBuilder, wizlight
+import voluptuous as vol
 
 # Import the device class from the component
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
-    Light,
-    ATTR_RGB_COLOR,
-    SUPPORT_COLOR,
-    SUPPORT_BRIGHTNESS,
     ATTR_COLOR_TEMP,
-    SUPPORT_COLOR_TEMP,
-    ATTR_HS_COLOR,
-    SUPPORT_EFFECT,
     ATTR_EFFECT,
+    ATTR_HS_COLOR,
+    ATTR_RGB_COLOR,
+    PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT,
+    Light,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_utils
 
 _LOGGER = logging.getLogger(__name__)
 
