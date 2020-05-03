@@ -2,7 +2,6 @@
 from datetime import timedelta
 from ipaddress import ip_address
 import json
-from unittest.mock import patch
 
 from aiohttp.hdrs import CONTENT_TYPE
 import pytest
@@ -42,6 +41,7 @@ from homeassistant.const import (
 )
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import (
     async_fire_time_changed,
     async_mock_service,
