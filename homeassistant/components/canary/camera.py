@@ -81,7 +81,7 @@ class CanaryCamera(Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        self.renew_live_stream_session()
+        await self.hass.async_add_executor_job(self.renew_live_stream_session)
 
         ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
         image = await asyncio.shield(
