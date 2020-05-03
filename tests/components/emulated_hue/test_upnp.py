@@ -1,7 +1,6 @@
 """The tests for the emulated Hue component."""
 import json
 import unittest
-from unittest.mock import patch
 
 from aiohttp.hdrs import CONTENT_TYPE
 import defusedxml.ElementTree as ET
@@ -10,6 +9,7 @@ import requests
 from homeassistant import const, setup
 from homeassistant.components import emulated_hue
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, get_test_instance_port
 
 HTTP_SERVER_PORT = get_test_instance_port()

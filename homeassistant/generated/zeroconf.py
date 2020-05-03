@@ -49,6 +49,7 @@ HOMEKIT = {
     "Healty Home Coach": "netatmo",
     "LIFX": "lifx",
     "Netatmo Relay": "netatmo",
+    "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",
     "Rachio": "rachio",
     "TRADFRI": "tradfri",

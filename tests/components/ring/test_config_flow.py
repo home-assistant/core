@@ -1,11 +1,9 @@
 """Test the Ring config flow."""
-from asynctest import Mock, patch
-
 from homeassistant import config_entries, setup
 from homeassistant.components.ring import DOMAIN
 from homeassistant.components.ring.config_flow import InvalidAuth
 
-from tests.common import mock_coro
+from tests.async_mock import Mock, patch
 
 
 async def test_form(hass):
@@ -23,9 +21,9 @@ async def test_form(hass):
             fetch_token=Mock(return_value={"access_token": "mock-token"})
         ),
     ), patch(
-        "homeassistant.components.ring.async_setup", return_value=mock_coro(True)
+        "homeassistant.components.ring.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.ring.async_setup_entry", return_value=mock_coro(True),
+        "homeassistant.components.ring.async_setup_entry", return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

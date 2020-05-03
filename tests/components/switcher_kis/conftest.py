@@ -4,7 +4,6 @@ from asyncio import Queue
 from datetime import datetime
 from typing import Any, Generator, Optional
 
-from asynctest import CoroutineMock, patch
 from pytest import fixture
 
 from .consts import (
@@ -19,6 +18,8 @@ from .consts import (
     DUMMY_POWER_CONSUMPTION,
     DUMMY_REMAINING_TIME,
 )
+
+from tests.async_mock import AsyncMock, patch
 
 
 @patch("aioswitcher.devices.SwitcherV2Device")
@@ -100,7 +101,7 @@ def mock_bridge_fixture() -> Generator[None, Any, None]:
         await queue.put(MockSwitcherV2Device())
         return await queue.get()
 
-    mock_bridge = CoroutineMock()
+    mock_bridge = AsyncMock()
 
     patchers = [
         patch(
@@ -163,9 +164,9 @@ def mock_failed_bridge_fixture() -> Generator[None, Any, None]:
 
 
 @fixture(name="mock_api")
-def mock_api_fixture() -> Generator[CoroutineMock, Any, None]:
+def mock_api_fixture() -> Generator[AsyncMock, Any, None]:
     """Fixture for mocking aioswitcher.api.SwitcherV2Api."""
-    mock_api = CoroutineMock()
+    mock_api = AsyncMock()
 
     patchers = [
         patch(

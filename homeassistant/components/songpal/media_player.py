@@ -164,7 +164,7 @@ class SongpalDevice(MediaPlayerEntity):
         async def _source_changed(content: ContentChange):
             _LOGGER.debug("Source changed: %s", content)
             if content.is_input:
-                self._active_source = self._sources[content.source]
+                self._active_source = self._sources[content.uri]
                 _LOGGER.debug("New active source: %s", self._active_source)
                 self.async_write_ha_state()
             else:

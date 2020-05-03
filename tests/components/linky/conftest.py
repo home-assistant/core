@@ -1,7 +1,7 @@
 """Linky generic test utils."""
-from unittest.mock import patch
-
 import pytest
+
+from tests.async_mock import patch
 
 
 @pytest.fixture(autouse=True)

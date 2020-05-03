@@ -9,20 +9,20 @@
             "set_tilt_position": "Angi {entity_name} tilt posisjon"
         },
         "condition_type": {
-            "is_closed": "{entity_name} er stengt",
-            "is_closing": "{entity_name} stenges",
+            "is_closed": "{entity_name} er lukket",
+            "is_closing": "{entity_name} lukker",
             "is_open": "{entity_name} er \u00e5pen",
-            "is_opening": "{entity_name} \u00e5pnes",
-            "is_position": "{entity_name}-posisjonen er",
-            "is_tilt_position": "{entity_name} vippeposisjon er"
+            "is_opening": "{entity_name} \u00e5pner",
+            "is_position": "N\u00e5v\u00e6rende {entity_name} posisjon er",
+            "is_tilt_position": "N\u00e5v\u00e6rende {entity_name} tilt posisjon er"
         },
         "trigger_type": {
             "closed": "{entity_name} lukket",
-            "closing": "{entity_name} lukkes",
+            "closing": "{entity_name} lukker",
             "opened": "{entity_name} \u00e5pnet",
-            "opening": "{entity_name} \u00e5pning",
+            "opening": "{entity_name} \u00e5pner",
             "position": "{entity_name} posisjon endringer",
-            "tilt_position": "{entity_name} endringer i vippeposisjon"
+            "tilt_position": "{entity_name} tilt posisjon endringer"
         }
     },
     "state": {

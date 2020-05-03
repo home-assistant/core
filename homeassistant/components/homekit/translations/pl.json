@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "Mostek o okre\u015blonej nazwie lub adresie IP jest ju\u017c skonfigurowany."
+        },
+        "step": {
+            "pairing": {
+                "title": "Sparuj z mostkiem HomeKit"
+            },
+            "user": {
+                "data": {
+                    "include_domains": "Domeny do uwzgl\u0119dnienia"
+                },
+                "title": "Aktywowanie mostka HomeKit"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "data": {
+                    "safe_mode": "Tryb awaryjny (w\u0142\u0105cz tylko wtedy, gdy parowanie nie powiedzie si\u0119)"
+                }
+            },
+            "init": {
+                "title": "Domeny do uwzgl\u0119dnienia."
+            },
+            "yaml": {
+                "description": "Ten wpis jest kontrolowany przez YAML",
+                "title": "Dostosowywanie opcji mostka HomeKit"
+            }
+        }
+    },
+    "title": "Mostek HomeKit"
+}

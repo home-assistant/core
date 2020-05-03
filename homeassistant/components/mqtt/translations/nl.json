@@ -26,5 +26,16 @@
                 "title": "MQTTT Broker via Hass.io add-on"
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Eerste knop",
+            "button_2": "Tweede knop",
+            "button_3": "Derde knop",
+            "button_4": "Vierde knop",
+            "button_5": "Vijfde knop",
+            "button_6": "Zesde knop",
+            "turn_off": "Uitschakelen"
+        }
     }
 }

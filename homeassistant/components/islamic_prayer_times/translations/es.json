@@ -14,7 +14,7 @@
         "step": {
             "init": {
                 "data": {
-                    "calc_method": "M\u00e9todo de c\u00e1lculo de la oraci\u00f3n"
+                    "calculation_method": "M\u00e9todo de c\u00e1lculo de la oraci\u00f3n"
                 }
             }
         }

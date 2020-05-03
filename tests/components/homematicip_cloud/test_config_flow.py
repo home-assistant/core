@@ -1,6 +1,4 @@
 """Tests for HomematicIP Cloud config flow."""
-from asynctest import patch
-
 from homeassistant.components.homematicip_cloud.const import (
     DOMAIN as HMIPC_DOMAIN,
     HMIPC_AUTHTOKEN,
@@ -9,6 +7,7 @@ from homeassistant.components.homematicip_cloud.const import (
     HMIPC_PIN,
 )
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 DEFAULT_CONFIG = {HMIPC_HAPID: "ABC123", HMIPC_PIN: "123", HMIPC_NAME: "hmip"}

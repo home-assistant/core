@@ -4,7 +4,9 @@
             "already_configured": "Cette cl\u00e9 API est d\u00e9j\u00e0 utilis\u00e9e."
         },
         "error": {
-            "invalid_api_key": "Cl\u00e9 API invalide"
+            "general_error": "Une erreur inconnue est survenue.",
+            "invalid_api_key": "Cl\u00e9 API invalide",
+            "unable_to_connect": "Impossible de se connecter \u00e0 l'unit\u00e9 Node / Pro."
         },
         "step": {
             "geography": {
@@ -12,13 +14,25 @@
                     "api_key": "Cl\u00e9 d'API",
                     "latitude": "Latitude",
                     "longitude": "Longitude"
-                }
+                },
+                "title": "Configurer une g\u00e9ographie"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "Adresse IP / nom d'h\u00f4te de l'unit\u00e9",
+                    "password": "Mot de passe de l'unit\u00e9"
+                },
+                "description": "Surveillez une unit\u00e9 AirVisual personnelle. Le mot de passe peut \u00eatre r\u00e9cup\u00e9r\u00e9 dans l'interface utilisateur de l'unit\u00e9.",
+                "title": "Configurer un AirVisual Node/Pro"
             },
             "user": {
                 "data": {
                     "api_key": "Cl\u00e9 API",
+                    "cloud_api": "Localisation g\u00e9ographique",
                     "latitude": "Latitude",
-                    "longitude": "Longitude"
+                    "longitude": "Longitude",
+                    "node_pro": "AirVisual Node Pro",
+                    "type": "Type d'int\u00e9gration"
                 },
                 "description": "Surveiller la qualit\u00e9 de l\u2019air dans un emplacement g\u00e9ographique.",
                 "title": "Configurer AirVisual"

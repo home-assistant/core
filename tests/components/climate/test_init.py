@@ -1,6 +1,5 @@
 """The tests for the climate component."""
 from typing import List
-from unittest.mock import MagicMock
 
 import pytest
 import voluptuous as vol
@@ -13,6 +12,7 @@ from homeassistant.components.climate import (
     ClimateEntity,
 )
 
+from tests.async_mock import MagicMock
 from tests.common import async_mock_service
 
 

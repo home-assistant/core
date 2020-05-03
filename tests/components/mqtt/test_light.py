@@ -153,8 +153,6 @@ light:
   payload_off: "off"
 
 """
-from asynctest import call, patch
-
 from homeassistant.components import light, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON
@@ -183,6 +181,7 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
+from tests.async_mock import call, patch
 from tests.common import (
     MockConfigEntry,
     assert_setup_component,

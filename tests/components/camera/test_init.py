@@ -2,9 +2,7 @@
 import asyncio
 import base64
 import io
-from unittest.mock import PropertyMock, mock_open
 
-from asynctest import patch
 import pytest
 
 from homeassistant.components import camera
@@ -15,6 +13,7 @@ from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import PropertyMock, mock_open, patch
 from tests.components.camera import common
 
 
