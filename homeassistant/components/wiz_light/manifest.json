@@ -1,0 +1,8 @@
+{
+    "domain": "wiz_light",
+    "name": "WiZ Light integration",
+    "documentation": "https://github.com/sbidy/wiz_light",
+    "dependencies": [],
+    "codeowners": ["@sbidy", "@angadsingh"],
+    "requirements": ["pywizlight==0.3.2"]
+  }
