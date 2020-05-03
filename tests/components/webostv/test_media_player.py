@@ -9,7 +9,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_MUTED,
     SERVICE_SELECT_SOURCE,
 )
-from homeassistant.components.webostv import (
+from homeassistant.components.webostv.const import (
     ATTR_BUTTON,
     ATTR_COMMAND,
     DOMAIN,
@@ -25,9 +25,9 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 if sys.version_info >= (3, 8, 0):
-    from unittest.mock import patch
+    from tests.async_mock import patch
 else:
-    from asynctest import patch
+    from tests.async_mock import patch
 
 
 NAME = "fake"
@@ -40,7 +40,10 @@ def client_fixture():
     with patch(
         "homeassistant.components.webostv.WebOsClient", autospec=True
     ) as mock_client_class:
-        yield mock_client_class.return_value
+        client = mock_client_class.return_value
+        client.connection = True
+        client.software_info = {"device_id": "a1:b1:c1:d1:e1:f1"}
+        yield client
 
 
 async def setup_webostv(hass):

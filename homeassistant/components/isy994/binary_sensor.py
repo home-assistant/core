@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 from typing import Callable
 
-from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
+from homeassistant.components.binary_sensor import DOMAIN, BinarySensorEntity
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -31,7 +31,7 @@ def setup_platform(
 
     for node in hass.data[ISY994_NODES][DOMAIN]:
         if node.parent_node is None:
-            device = ISYBinarySensorDevice(node)
+            device = ISYBinarySensorEntity(node)
             devices.append(device)
             devices_by_nid[node.nid] = device
         else:
@@ -66,7 +66,7 @@ def setup_platform(
             else:
                 # We don't yet have any special logic for other sensor types,
                 # so add the nodes as individual devices
-                device = ISYBinarySensorDevice(node)
+                device = ISYBinarySensorEntity(node)
                 devices.append(device)
 
     for name, status, _ in hass.data[ISY994_PROGRAMS][DOMAIN]:
@@ -95,7 +95,7 @@ def _is_val_unknown(val):
     return val == -1 * float("inf")
 
 
-class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
+class ISYBinarySensorEntity(ISYDevice, BinarySensorEntity):
     """Representation of an ISY994 binary sensor device.
 
     Often times, a single device is represented by multiple nodes in the ISY,
@@ -253,7 +253,7 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
         return self._device_class_from_type
 
 
-class ISYBinarySensorHeartbeat(ISYDevice, BinarySensorDevice):
+class ISYBinarySensorHeartbeat(ISYDevice, BinarySensorEntity):
     """Representation of the battery state of an ISY994 sensor."""
 
     def __init__(self, node, parent_device) -> None:
@@ -353,7 +353,7 @@ class ISYBinarySensorHeartbeat(ISYDevice, BinarySensorDevice):
         return attr
 
 
-class ISYBinarySensorProgram(ISYDevice, BinarySensorDevice):
+class ISYBinarySensorProgram(ISYDevice, BinarySensorEntity):
     """Representation of an ISY994 binary sensor program.
 
     This does not need all of the subnode logic in the device version of binary

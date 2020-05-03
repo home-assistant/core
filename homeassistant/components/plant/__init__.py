@@ -10,6 +10,7 @@ from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONDUCTIVITY,
     CONF_SENSORS,
     PERCENTAGE,
     STATE_OK,
@@ -17,7 +18,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
+<<<<<<< HEAD
     UNIT_CONDUCTIVITY,
+=======
+    PERCENTAGE,
+>>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -148,7 +153,7 @@ class Plant(Entity):
             "max": CONF_MAX_MOISTURE,
         },
         READING_CONDUCTIVITY: {
-            ATTR_UNIT_OF_MEASUREMENT: UNIT_CONDUCTIVITY,
+            ATTR_UNIT_OF_MEASUREMENT: CONDUCTIVITY,
             "min": CONF_MIN_CONDUCTIVITY,
             "max": CONF_MAX_CONDUCTIVITY,
         },

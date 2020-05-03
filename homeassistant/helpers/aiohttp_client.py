@@ -64,10 +64,7 @@ def async_create_clientsession(
     connector = _async_get_connector(hass, verify_ssl)
 
     clientsession = aiohttp.ClientSession(
-        loop=hass.loop,
-        connector=connector,
-        headers={USER_AGENT: SERVER_SOFTWARE},
-        **kwargs,
+        connector=connector, headers={USER_AGENT: SERVER_SOFTWARE}, **kwargs,
     )
 
     if auto_cleanup:
@@ -174,9 +171,7 @@ def _async_get_connector(
     else:
         ssl_context = False
 
-    connector = aiohttp.TCPConnector(
-        loop=hass.loop, enable_cleanup_closed=True, ssl=ssl_context
-    )
+    connector = aiohttp.TCPConnector(enable_cleanup_closed=True, ssl=ssl_context)
     hass.data[key] = connector
 
     async def _async_close_connector(event: Event) -> None:

@@ -21,6 +21,8 @@ from .const import (
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
+    KEY_STATUS,
+    KEY_STATUS_DISPLAY,
     SENSOR_NAME,
     SENSOR_TYPES,
 )
@@ -52,6 +54,11 @@ def _resource_schema_base(available_resources, selected_resources):
         for sensor_id, sensor in SENSOR_TYPES.items()
         if sensor_id in available_resources
     }
+
+    if KEY_STATUS in known_available_resources:
+        known_available_resources[KEY_STATUS_DISPLAY] = SENSOR_TYPES[
+            KEY_STATUS_DISPLAY
+        ][SENSOR_NAME]
 
     return {
         vol.Required(CONF_RESOURCES, default=selected_resources): cv.multi_select(

@@ -32,9 +32,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DTE energy bridge sensor."""
-    name = config.get(CONF_NAME)
-    ip_address = config.get(CONF_IP_ADDRESS)
-    version = config.get(CONF_VERSION, 1)
+    name = config[CONF_NAME]
+    ip_address = config[CONF_IP_ADDRESS]
+    version = config[CONF_VERSION]
 
     add_entities([DteEnergyBridgeSensor(ip_address, name, version)], True)
 

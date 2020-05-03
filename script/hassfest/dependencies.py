@@ -249,6 +249,9 @@ def validate(integrations: Dict[str, Integration], config):
 
         validate_dependencies(integrations, integration)
 
+        if config.specific_integrations:
+            continue
+
         # check that all referenced dependencies exist
         for dep in integration.manifest.get("dependencies", []):
             if dep not in integrations:

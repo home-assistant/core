@@ -4,7 +4,7 @@ from typing import Callable
 import pysesame2
 import voluptuous as vol
 
-from homeassistant.components.lock import PLATFORM_SCHEMA, LockDevice
+from homeassistant.components.lock import PLATFORM_SCHEMA, LockEntity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     CONF_API_KEY,
@@ -32,7 +32,7 @@ def setup_platform(
     )
 
 
-class SesameDevice(LockDevice):
+class SesameDevice(LockEntity):
     """Representation of a Sesame device."""
 
     def __init__(self, sesame: object) -> None:

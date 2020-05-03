@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEGREE,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
@@ -25,7 +26,11 @@ from homeassistant.const import (
     PRESSURE_HPA,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
+<<<<<<< HEAD
     UNIT_DEGREE,
+=======
+    PERCENTAGE,
+>>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -48,6 +53,7 @@ SENSOR_TYPES = {
     "windSpeed": ["Wind speed", SPEED_METERS_PER_SECOND, None],
     "windGust": ["Wind gust", SPEED_METERS_PER_SECOND, None],
     "pressure": ["Pressure", PRESSURE_HPA, DEVICE_CLASS_PRESSURE],
+<<<<<<< HEAD
     "windDirection": ["Wind direction", UNIT_DEGREE, None],
     "humidity": ["Humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
     "fog": ["Fog", PERCENTAGE, None],
@@ -55,6 +61,15 @@ SENSOR_TYPES = {
     "lowClouds": ["Low clouds", PERCENTAGE, None],
     "mediumClouds": ["Medium clouds", PERCENTAGE, None],
     "highClouds": ["High clouds", PERCENTAGE, None],
+=======
+    "windDirection": ["Wind direction", DEGREE, None],
+    "humidity": ["Humidity", PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+    "fog": ["Fog", PERCENTAGE, None],
+    "cloudiness": ["Cloudiness", PERCENTAGE, None],
+    "lowClouds": ["Low clouds", PERCENTAGE, None],
+    "mediumClouds": ["Medium clouds", PERCENTAGE, None],
+    "highClouds": ["High clouds", PERCENTAGE, None],
+>>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
     "dewpointTemperature": [
         "Dewpoint temperature",
         TEMP_CELSIUS,

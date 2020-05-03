@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "not_supported": "Connect\u00e9 \u00e0 AVM FRITZ! Box mais impossible de contr\u00f4ler les appareils Smart Home."
+        },
+        "error": {
+            "auth_failed": "Le nom d'utilisateur et / ou le mot de passe sont incorrects."
+        },
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Voulez-vous configurer {name} ?"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te ou adresse IP",
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    }
+}

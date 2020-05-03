@@ -21,9 +21,7 @@ def main():
     args = get_arguments()
 
     module = importlib.import_module(f".{args.action}", "script.translations")
-    module.run()
-
-    return 0
+    return module.run()
 
 
 if __name__ == "__main__":

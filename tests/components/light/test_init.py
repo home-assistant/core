@@ -3,7 +3,6 @@
 from io import StringIO
 import os
 import unittest
-import unittest.mock as mock
 
 import pytest
 
@@ -21,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component, setup_component
 
+import tests.async_mock as mock
 from tests.common import get_test_home_assistant, mock_service, mock_storage
 from tests.components.light import common
 
@@ -495,4 +495,66 @@ async def test_light_brightness_step(hass):
     )
 
     _, data = entity.last_call("turn_on")
-    assert data["brightness"] == 125, data
+    assert data["brightness"] == 126, data
+
+
+async def test_light_brightness_pct_conversion(hass):
+    """Test that light brightness percent conversion."""
+    platform = getattr(hass.components, "test.light")
+    platform.init()
+    entity = platform.ENTITIES[0]
+    entity.supported_features = light.SUPPORT_BRIGHTNESS
+    entity.brightness = 100
+    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.attributes["brightness"] == 100
+
+    await hass.services.async_call(
+        "light", "turn_on", {"entity_id": entity.entity_id, "brightness_pct": 1}, True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 3, data
+
+    await hass.services.async_call(
+        "light", "turn_on", {"entity_id": entity.entity_id, "brightness_pct": 2}, True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 5, data
+
+    await hass.services.async_call(
+        "light", "turn_on", {"entity_id": entity.entity_id, "brightness_pct": 50}, True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 128, data
+
+    await hass.services.async_call(
+        "light", "turn_on", {"entity_id": entity.entity_id, "brightness_pct": 99}, True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 252, data
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, "brightness_pct": 100},
+        True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 255, data
+
+
+def test_deprecated_base_class(caplog):
+    """Test deprecated base class."""
+
+    class CustomLight(light.Light):
+        pass
+
+    CustomLight()
+    assert "Light is deprecated, modify CustomLight" in caplog.text

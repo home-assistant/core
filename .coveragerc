@@ -21,6 +21,7 @@ omit =
     homeassistant/components/airly/sensor.py
     homeassistant/components/airly/const.py
     homeassistant/components/airvisual/__init__.py
+    homeassistant/components/airvisual/air_quality.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/aladdin_connect/cover.py
     homeassistant/components/alarmdecoder/*
@@ -45,10 +46,15 @@ omit =
     homeassistant/components/arest/sensor.py
     homeassistant/components/arest/switch.py
     homeassistant/components/arlo/*
+    homeassistant/components/arris_tg2492lg/*
     homeassistant/components/aruba/device_tracker.py
     homeassistant/components/arwn/sensor.py
     homeassistant/components/asterisk_cdr/mailbox.py
     homeassistant/components/asterisk_mbox/*
+    homeassistant/components/atag/__init__.py
+    homeassistant/components/atag/climate.py
+    homeassistant/components/atag/sensor.py
+    homeassistant/components/atag/water_heater.py
     homeassistant/components/aten_pe/*
     homeassistant/components/atome/*
     homeassistant/components/aurora_abb_powerone/sensor.py
@@ -80,7 +86,10 @@ omit =
     homeassistant/components/bom/camera.py
     homeassistant/components/bom/sensor.py
     homeassistant/components/bom/weather.py
+    homeassistant/components/braviatv/__init__.py
+    homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/media_player.py
+    homeassistant/components/broadlink/const.py
     homeassistant/components/broadlink/remote.py
     homeassistant/components/broadlink/sensor.py
     homeassistant/components/broadlink/switch.py
@@ -237,7 +246,6 @@ omit =
     homeassistant/components/freebox/sensor.py
     homeassistant/components/freebox/switch.py
     homeassistant/components/fritz/device_tracker.py
-    homeassistant/components/fritzbox/*
     homeassistant/components/fritzbox_callmonitor/sensor.py
     homeassistant/components/fritzbox_netmonitor/sensor.py
     homeassistant/components/fronius/sensor.py
@@ -303,7 +311,11 @@ omit =
     homeassistant/components/huawei_lte/*
     homeassistant/components/huawei_router/device_tracker.py
     homeassistant/components/hue/light.py
+    homeassistant/components/hunterdouglas_powerview/__init__.py
     homeassistant/components/hunterdouglas_powerview/scene.py
+    homeassistant/components/hunterdouglas_powerview/sensor.py
+    homeassistant/components/hunterdouglas_powerview/cover.py
+    homeassistant/components/hunterdouglas_powerview/entity.py
     homeassistant/components/hydrawise/*
     homeassistant/components/hyperion/light.py
     homeassistant/components/ialarm/alarm_control_panel.py
@@ -495,6 +507,7 @@ omit =
     homeassistant/components/ombi/*
     homeassistant/components/onewire/sensor.py
     homeassistant/components/onkyo/media_player.py
+    homeassistant/components/onvif/__init__.py
     homeassistant/components/onvif/camera.py
     homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
@@ -552,7 +565,6 @@ omit =
     homeassistant/components/pulseaudio_loopback/switch.py
     homeassistant/components/pushbullet/notify.py
     homeassistant/components/pushbullet/sensor.py
-    homeassistant/components/pushetta/notify.py
     homeassistant/components/pushover/notify.py
     homeassistant/components/pushsafer/notify.py
     homeassistant/components/pvoutput/sensor.py
@@ -562,7 +574,6 @@ omit =
     homeassistant/components/qrcode/image_processing.py
     homeassistant/components/quantum_gateway/device_tracker.py
     homeassistant/components/qvr_pro/*
-    homeassistant/components/qwikswitch/*
     homeassistant/components/rachio/*
     homeassistant/components/radarr/sensor.py
     homeassistant/components/radiotherm/climate.py
@@ -592,13 +603,16 @@ omit =
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
     homeassistant/components/rocketchat/notify.py
-    homeassistant/components/roku/__init__.py
-    homeassistant/components/roku/media_player.py
     homeassistant/components/roku/remote.py
+    homeassistant/components/roomba/binary_sensor.py
+    homeassistant/components/roomba/braava.py
+    homeassistant/components/roomba/irobot_base.py
+    homeassistant/components/roomba/roomba.py
+    homeassistant/components/roomba/sensor.py
     homeassistant/components/roomba/vacuum.py
     homeassistant/components/route53/*
     homeassistant/components/rova/sensor.py
-    homeassistant/components/rpi_camera/camera.py
+    homeassistant/components/rpi_camera/*
     homeassistant/components/rpi_gpio/*
     homeassistant/components/rpi_gpio/cover.py
     homeassistant/components/rpi_gpio_pwm/light.py
@@ -648,7 +662,7 @@ omit =
     homeassistant/components/smarthab/*
     homeassistant/components/sms/*
     homeassistant/components/smtp/notify.py
-    homeassistant/components/snapcast/media_player.py
+    homeassistant/components/snapcast/*
     homeassistant/components/snmp/*
     homeassistant/components/sochain/sensor.py
     homeassistant/components/socialblade/sensor.py
@@ -819,7 +833,17 @@ omit =
     homeassistant/components/xfinity/device_tracker.py
     homeassistant/components/xiaomi/camera.py
     homeassistant/components/xiaomi_aqara/*
-    homeassistant/components/xiaomi_miio/*
+    homeassistant/components/xiaomi_miio/__init__.py
+    homeassistant/components/xiaomi_miio/air_quality.py
+    homeassistant/components/xiaomi_miio/alarm_control_panel.py
+    homeassistant/components/xiaomi_miio/device_tracker.py
+    homeassistant/components/xiaomi_miio/fan.py
+    homeassistant/components/xiaomi_miio/gateway.py
+    homeassistant/components/xiaomi_miio/light.py
+    homeassistant/components/xiaomi_miio/remote.py
+    homeassistant/components/xiaomi_miio/sensor.py
+    homeassistant/components/xiaomi_miio/switch.py
+    homeassistant/components/xiaomi_miio/vacuum.py
     homeassistant/components/xiaomi_tv/media_player.py
     homeassistant/components/xmpp/notify.py
     homeassistant/components/xs1/*
@@ -854,6 +878,10 @@ omit =
     homeassistant/components/zoneminder/*
     homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
+    homeassistant/components/zwave_mqtt/__init__.py
+    homeassistant/components/zwave_mqtt/discovery.py
+    homeassistant/components/zwave_mqtt/entity.py
+    homeassistant/components/zwave_mqtt/services.py
 
 [report]
 # Regexes for lines to exclude from consideration

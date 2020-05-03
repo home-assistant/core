@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.kodi import SERVICE_CALL_METHOD
 from homeassistant.components.kodi.const import DOMAIN
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
@@ -248,7 +248,7 @@ def cmd(func):
     return wrapper
 
 
-class KodiDevice(MediaPlayerDevice):
+class KodiDevice(MediaPlayerEntity):
     """Representation of a XBMC/Kodi device."""
 
     def __init__(

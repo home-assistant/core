@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "manual_input": {
+                "data": {
+                    "host": "Vert",
+                    "port": ""
+                }
+            }
+        }
+    }
+}

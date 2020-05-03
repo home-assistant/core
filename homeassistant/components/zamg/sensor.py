@@ -17,11 +17,16 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEGREE,
     LENGTH_METERS,
     PERCENTAGE,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
+<<<<<<< HEAD
     UNIT_DEGREE,
+=======
+    PERCENTAGE,
+>>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
     __version__,
 )
 import homeassistant.helpers.config_validation as cv
@@ -50,15 +55,20 @@ SENSOR_TYPES = {
         f"WG {SPEED_KILOMETERS_PER_HOUR}",
         float,
     ),
-    "wind_bearing": ("Wind Bearing", UNIT_DEGREE, f"WR {UNIT_DEGREE}", int),
+    "wind_bearing": ("Wind Bearing", DEGREE, f"WR {DEGREE}", int),
     "wind_max_speed": (
         "Top Wind Speed",
         SPEED_KILOMETERS_PER_HOUR,
         f"WSG {SPEED_KILOMETERS_PER_HOUR}",
         float,
     ),
+<<<<<<< HEAD
     "wind_max_bearing": ("Top Wind Bearing", UNIT_DEGREE, f"WSR {UNIT_DEGREE}", int),
     "sun_last_hour": ("Sun Last Hour", PERCENTAGE, f"SO {PERCENTAGE}", int),
+=======
+    "wind_max_bearing": ("Top Wind Bearing", DEGREE, f"WSR {DEGREE}", int),
+    "sun_last_hour": ("Sun Last Hour", PERCENTAGE, f"SO {PERCENTAGE}", int),
+>>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
     "temperature": ("Temperature", TEMP_CELSIUS, f"T {TEMP_CELSIUS}", float),
     "precipitation": ("Precipitation", "l/m²", "N l/m²", float),
     "dewpoint": ("Dew Point", TEMP_CELSIUS, f"TP {TEMP_CELSIUS}", float),

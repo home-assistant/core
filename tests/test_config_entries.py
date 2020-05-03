@@ -1,7 +1,6 @@
 """Test the config manager."""
 import asyncio
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -11,6 +10,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
+from tests.async_mock import AsyncMock, patch
 from tests.common import (
     MockConfigEntry,
     MockEntity,
@@ -54,8 +54,8 @@ async def test_call_setup_entry(hass):
     entry = MockConfigEntry(domain="comp")
     entry.add_to_hass(hass)
 
-    mock_setup_entry = MagicMock(return_value=mock_coro(True))
-    mock_migrate_entry = MagicMock(return_value=mock_coro(True))
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_migrate_entry = AsyncMock(return_value=True)
 
     mock_integration(
         hass,
@@ -80,8 +80,8 @@ async def test_call_async_migrate_entry(hass):
     entry.version = 2
     entry.add_to_hass(hass)
 
-    mock_migrate_entry = MagicMock(return_value=mock_coro(True))
-    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_migrate_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=True)
 
     mock_integration(
         hass,
@@ -106,8 +106,8 @@ async def test_call_async_migrate_entry_failure_false(hass):
     entry.version = 2
     entry.add_to_hass(hass)
 
-    mock_migrate_entry = MagicMock(return_value=mock_coro(False))
-    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_migrate_entry = AsyncMock(return_value=False)
+    mock_setup_entry = AsyncMock(return_value=True)
 
     mock_integration(
         hass,
@@ -132,8 +132,8 @@ async def test_call_async_migrate_entry_failure_exception(hass):
     entry.version = 2
     entry.add_to_hass(hass)
 
-    mock_migrate_entry = MagicMock(return_value=mock_coro(exception=Exception))
-    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_migrate_entry = AsyncMock(side_effect=Exception)
+    mock_setup_entry = AsyncMock(return_value=True)
 
     mock_integration(
         hass,
@@ -158,8 +158,8 @@ async def test_call_async_migrate_entry_failure_not_bool(hass):
     entry.version = 2
     entry.add_to_hass(hass)
 
-    mock_migrate_entry = MagicMock(return_value=mock_coro())
-    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_migrate_entry = AsyncMock(return_value=None)
+    mock_setup_entry = AsyncMock(return_value=True)
 
     mock_integration(
         hass,
@@ -184,7 +184,7 @@ async def test_call_async_migrate_entry_failure_not_supported(hass):
     entry.version = 2
     entry.add_to_hass(hass)
 
-    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_setup_entry = AsyncMock(return_value=True)
 
     mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
     mock_entity_platform(hass, "config_flow.comp", None)
@@ -211,7 +211,7 @@ async def test_remove_entry(hass, manager):
         assert result
         return result
 
-    mock_remove_entry = MagicMock(side_effect=lambda *args, **kwargs: mock_coro())
+    mock_remove_entry = AsyncMock(return_value=None)
 
     entity = MockEntity(unique_id="1234", name="Test Entity")
 
@@ -283,9 +283,9 @@ async def test_remove_entry(hass, manager):
 
 async def test_remove_entry_handles_callback_error(hass, manager):
     """Test that exceptions in the remove callback are handled."""
-    mock_setup_entry = MagicMock(return_value=mock_coro(True))
-    mock_unload_entry = MagicMock(return_value=mock_coro(True))
-    mock_remove_entry = MagicMock(side_effect=lambda *args, **kwargs: mock_coro())
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_unload_entry = AsyncMock(return_value=True)
+    mock_remove_entry = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(
@@ -343,7 +343,7 @@ async def test_remove_entry_raises(hass, manager):
 
 async def test_remove_entry_if_not_loaded(hass, manager):
     """Test that we can remove an entry that is not loaded."""
-    mock_unload_entry = MagicMock(return_value=mock_coro(True))
+    mock_unload_entry = AsyncMock(return_value=True)
 
     mock_integration(hass, MockModule("comp", async_unload_entry=mock_unload_entry))
 
@@ -367,7 +367,7 @@ async def test_remove_entry_if_not_loaded(hass, manager):
 
 async def test_add_entry_calls_setup_entry(hass, manager):
     """Test we call setup_config_entry."""
-    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_setup_entry = AsyncMock(return_value=True)
 
     mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
     mock_entity_platform(hass, "config_flow.comp", None)
@@ -486,12 +486,12 @@ async def test_forward_entry_sets_up_component(hass):
     """Test we setup the component entry is forwarded to."""
     entry = MockConfigEntry(domain="original")
 
-    mock_original_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_original_setup_entry = AsyncMock(return_value=True)
     mock_integration(
         hass, MockModule("original", async_setup_entry=mock_original_setup_entry)
     )
 
-    mock_forwarded_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_forwarded_setup_entry = AsyncMock(return_value=True)
     mock_integration(
         hass, MockModule("forwarded", async_setup_entry=mock_forwarded_setup_entry)
     )
@@ -505,8 +505,8 @@ async def test_forward_entry_does_not_setup_entry_if_setup_fails(hass):
     """Test we do not set up entry if component setup fails."""
     entry = MockConfigEntry(domain="original")
 
-    mock_setup = MagicMock(return_value=mock_coro(False))
-    mock_setup_entry = MagicMock()
+    mock_setup = AsyncMock(return_value=False)
+    mock_setup_entry = AsyncMock()
     mock_integration(
         hass,
         MockModule(
@@ -643,7 +643,7 @@ async def test_setup_raise_not_ready(hass, caplog):
     """Test a setup raising not ready."""
     entry = MockConfigEntry(domain="test")
 
-    mock_setup_entry = MagicMock(side_effect=ConfigEntryNotReady)
+    mock_setup_entry = AsyncMock(side_effect=ConfigEntryNotReady)
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_entity_platform(hass, "config_flow.test", None)
 
@@ -659,7 +659,7 @@ async def test_setup_raise_not_ready(hass, caplog):
     assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
 
     mock_setup_entry.side_effect = None
-    mock_setup_entry.return_value = mock_coro(True)
+    mock_setup_entry.return_value = True
 
     await p_setup(None)
     assert entry.state == config_entries.ENTRY_STATE_LOADED
@@ -669,7 +669,7 @@ async def test_setup_retrying_during_unload(hass):
     """Test if we unload an entry that is in retry mode."""
     entry = MockConfigEntry(domain="test")
 
-    mock_setup_entry = MagicMock(side_effect=ConfigEntryNotReady)
+    mock_setup_entry = AsyncMock(side_effect=ConfigEntryNotReady)
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
     mock_entity_platform(hass, "config_flow.test", None)
 
@@ -721,8 +721,8 @@ async def test_entry_setup_succeed(hass, manager):
     entry = MockConfigEntry(domain="comp", state=config_entries.ENTRY_STATE_NOT_LOADED)
     entry.add_to_hass(hass)
 
-    mock_setup = MagicMock(return_value=mock_coro(True))
-    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_setup = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=True)
 
     mock_integration(
         hass,
@@ -751,8 +751,8 @@ async def test_entry_setup_invalid_state(hass, manager, state):
     entry = MockConfigEntry(domain="comp", state=state)
     entry.add_to_hass(hass)
 
-    mock_setup = MagicMock(return_value=mock_coro(True))
-    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_setup = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=True)
 
     mock_integration(
         hass,
@@ -772,7 +772,7 @@ async def test_entry_unload_succeed(hass, manager):
     entry = MockConfigEntry(domain="comp", state=config_entries.ENTRY_STATE_LOADED)
     entry.add_to_hass(hass)
 
-    async_unload_entry = MagicMock(return_value=mock_coro(True))
+    async_unload_entry = AsyncMock(return_value=True)
 
     mock_integration(hass, MockModule("comp", async_unload_entry=async_unload_entry))
 
@@ -794,7 +794,7 @@ async def test_entry_unload_failed_to_load(hass, manager, state):
     entry = MockConfigEntry(domain="comp", state=state)
     entry.add_to_hass(hass)
 
-    async_unload_entry = MagicMock(return_value=mock_coro(True))
+    async_unload_entry = AsyncMock(return_value=True)
 
     mock_integration(hass, MockModule("comp", async_unload_entry=async_unload_entry))
 
@@ -815,7 +815,7 @@ async def test_entry_unload_invalid_state(hass, manager, state):
     entry = MockConfigEntry(domain="comp", state=state)
     entry.add_to_hass(hass)
 
-    async_unload_entry = MagicMock(return_value=mock_coro(True))
+    async_unload_entry = AsyncMock(return_value=True)
 
     mock_integration(hass, MockModule("comp", async_unload_entry=async_unload_entry))
 
@@ -831,9 +831,9 @@ async def test_entry_reload_succeed(hass, manager):
     entry = MockConfigEntry(domain="comp", state=config_entries.ENTRY_STATE_LOADED)
     entry.add_to_hass(hass)
 
-    async_setup = MagicMock(return_value=mock_coro(True))
-    async_setup_entry = MagicMock(return_value=mock_coro(True))
-    async_unload_entry = MagicMock(return_value=mock_coro(True))
+    async_setup = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=True)
+    async_unload_entry = AsyncMock(return_value=True)
 
     mock_integration(
         hass,
@@ -866,9 +866,9 @@ async def test_entry_reload_not_loaded(hass, manager, state):
     entry = MockConfigEntry(domain="comp", state=state)
     entry.add_to_hass(hass)
 
-    async_setup = MagicMock(return_value=mock_coro(True))
-    async_setup_entry = MagicMock(return_value=mock_coro(True))
-    async_unload_entry = MagicMock(return_value=mock_coro(True))
+    async_setup = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=True)
+    async_unload_entry = AsyncMock(return_value=True)
 
     mock_integration(
         hass,
@@ -900,9 +900,9 @@ async def test_entry_reload_error(hass, manager, state):
     entry = MockConfigEntry(domain="comp", state=state)
     entry.add_to_hass(hass)
 
-    async_setup = MagicMock(return_value=mock_coro(True))
-    async_setup_entry = MagicMock(return_value=mock_coro(True))
-    async_unload_entry = MagicMock(return_value=mock_coro(True))
+    async_setup = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=True)
+    async_unload_entry = AsyncMock(return_value=True)
 
     mock_integration(
         hass,
@@ -934,8 +934,7 @@ async def test_init_custom_integration(hass):
     )
     with pytest.raises(data_entry_flow.UnknownHandler):
         with patch(
-            "homeassistant.loader.async_get_integration",
-            return_value=mock_coro(integration),
+            "homeassistant.loader.async_get_integration", return_value=integration,
         ):
             await hass.config_entries.flow.async_init("bla")
 
@@ -969,8 +968,8 @@ async def test_reload_entry_entity_registry_works(hass):
         domain="comp", state=config_entries.ENTRY_STATE_LOADED
     )
     config_entry.add_to_hass(hass)
-    mock_setup_entry = MagicMock(return_value=mock_coro(True))
-    mock_unload_entry = MagicMock(return_value=mock_coro(True))
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_unload_entry = AsyncMock(return_value=True)
     mock_integration(
         hass,
         MockModule(
@@ -1017,7 +1016,7 @@ async def test_reload_entry_entity_registry_works(hass):
 
 async def test_unqiue_id_persisted(hass, manager):
     """Test that a unique ID is stored in the config entry."""
-    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_setup_entry = AsyncMock(return_value=True)
 
     mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
     mock_entity_platform(hass, "config_flow.comp", None)
@@ -1053,9 +1052,9 @@ async def test_unique_id_existing_entry(hass, manager):
         unique_id="mock-unique-id",
     ).add_to_hass(hass)
 
-    async_setup_entry = MagicMock(side_effect=lambda _, _2: mock_coro(True))
-    async_unload_entry = MagicMock(side_effect=lambda _, _2: mock_coro(True))
-    async_remove_entry = MagicMock(side_effect=lambda _, _2: mock_coro(True))
+    async_setup_entry = AsyncMock(return_value=True)
+    async_unload_entry = AsyncMock(return_value=True)
+    async_remove_entry = AsyncMock(return_value=True)
 
     mock_integration(
         hass,
@@ -1206,8 +1205,7 @@ async def test_unique_id_in_progress(hass, manager):
 async def test_finish_flow_aborts_progress(hass, manager):
     """Test that when finishing a flow, we abort other flows in progress with unique ID."""
     mock_integration(
-        hass,
-        MockModule("comp", async_setup_entry=MagicMock(return_value=mock_coro(True))),
+        hass, MockModule("comp", async_setup_entry=AsyncMock(return_value=True)),
     )
     mock_entity_platform(hass, "config_flow.comp", None)
 
@@ -1244,7 +1242,7 @@ async def test_finish_flow_aborts_progress(hass, manager):
 
 async def test_unique_id_ignore(hass, manager):
     """Test that we can ignore flows that are in progress and have a unique ID."""
-    async_setup_entry = MagicMock(return_value=mock_coro(False))
+    async_setup_entry = AsyncMock(return_value=False)
     mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
     mock_entity_platform(hass, "config_flow.comp", None)
 
@@ -1286,7 +1284,7 @@ async def test_unique_id_ignore(hass, manager):
 
 async def test_unignore_step_form(hass, manager):
     """Test that we can ignore flows that are in progress and have a unique ID, then rediscover them."""
-    async_setup_entry = MagicMock(return_value=mock_coro(True))
+    async_setup_entry = AsyncMock(return_value=True)
     mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
     mock_entity_platform(hass, "config_flow.comp", None)
 
@@ -1330,7 +1328,7 @@ async def test_unignore_step_form(hass, manager):
 
 async def test_unignore_create_entry(hass, manager):
     """Test that we can ignore flows that are in progress and have a unique ID, then rediscover them."""
-    async_setup_entry = MagicMock(return_value=mock_coro(True))
+    async_setup_entry = AsyncMock(return_value=True)
     mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
     mock_entity_platform(hass, "config_flow.comp", None)
 
@@ -1377,7 +1375,7 @@ async def test_unignore_create_entry(hass, manager):
 
 async def test_unignore_default_impl(hass, manager):
     """Test that resdicovery is a no-op by default."""
-    async_setup_entry = MagicMock(return_value=mock_coro(True))
+    async_setup_entry = AsyncMock(return_value=True)
     mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
     mock_entity_platform(hass, "config_flow.comp", None)
 
@@ -1408,7 +1406,7 @@ async def test_unignore_default_impl(hass, manager):
 
 async def test_partial_flows_hidden(hass, manager):
     """Test that flows that don't have a cur_step and haven't finished initing are hidden."""
-    async_setup_entry = MagicMock(return_value=mock_coro(True))
+    async_setup_entry = AsyncMock(return_value=True)
     mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
     mock_entity_platform(hass, "config_flow.comp", None)
     await async_setup_component(hass, "persistent_notification", {})
@@ -1463,3 +1461,97 @@ async def test_partial_flows_hidden(hass, manager):
         await hass.async_block_till_done()
         state = hass.states.get("persistent_notification.config_entry_discovery")
         assert state is not None
+
+
+async def test_async_setup_init_entry(hass):
+    """Test a config entry being initialized during integration setup."""
+
+    async def mock_async_setup(hass, config):
+        """Mock setup."""
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                "comp", context={"source": config_entries.SOURCE_IMPORT}, data={},
+            )
+        )
+        return True
+
+    async_setup_entry = AsyncMock(return_value=True)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp", async_setup=mock_async_setup, async_setup_entry=async_setup_entry
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+    await async_setup_component(hass, "persistent_notification", {})
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_import(self, user_input):
+            """Test import step creating entry."""
+            return self.async_create_entry(title="title", data={})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        assert await async_setup_component(hass, "comp", {})
+
+        await hass.async_block_till_done()
+
+        assert len(async_setup_entry.mock_calls) == 1
+
+        entries = hass.config_entries.async_entries("comp")
+        assert len(entries) == 1
+        assert entries[0].state == config_entries.ENTRY_STATE_LOADED
+
+
+async def test_async_setup_update_entry(hass):
+    """Test a config entry being updated during integration setup."""
+    entry = MockConfigEntry(domain="comp", data={"value": "initial"})
+    entry.add_to_hass(hass)
+
+    async def mock_async_setup(hass, config):
+        """Mock setup."""
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                "comp", context={"source": config_entries.SOURCE_IMPORT}, data={},
+            )
+        )
+        return True
+
+    async def mock_async_setup_entry(hass, entry):
+        """Mock setting up an entry."""
+        assert entry.data["value"] == "updated"
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=mock_async_setup,
+            async_setup_entry=mock_async_setup_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+    await async_setup_component(hass, "persistent_notification", {})
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_import(self, user_input):
+            """Test import step updating existing entry."""
+            self.hass.config_entries.async_update_entry(
+                entry, data={"value": "updated"}
+            )
+            return self.async_abort(reason="yo")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        assert await async_setup_component(hass, "comp", {})
+
+        entries = hass.config_entries.async_entries("comp")
+        assert len(entries) == 1
+        assert entries[0].state == config_entries.ENTRY_STATE_LOADED
+        assert entries[0].data == {"value": "updated"}

@@ -1,0 +1,22 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Feeler beim verbanne mat der CoolMasterNet Instanz. Iwwerpr\u00e9ift w.e.g. \u00e4ren Apparat.",
+            "no_units": "Konnt keng HVAC Eenheeten am CoolMasterNet Apparat fannen."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "cool": "\u00cbnnerst\u00ebtzt KillModus",
+                    "dry": "\u00cbnnerst\u00ebtzt Dr\u00e9che Modus",
+                    "fan_only": "\u00cbnnerst\u00ebtzt n\u00ebmmen Ventilatiouns Modus",
+                    "heat": "\u00cbnnerst\u00ebtzt H\u00ebtzt Modus",
+                    "heat_cool": "\u00cbnnerst\u00ebtzt automateschen H\u00ebtzt/Kill Modus",
+                    "host": "Apparat",
+                    "off": "Kann ausgeschalt ginn"
+                },
+                "title": "CoolMasterNet Verbindungs Detailer ariichten"
+            }
+        }
+    }
+}

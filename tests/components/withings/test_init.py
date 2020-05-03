@@ -2,7 +2,6 @@
 import re
 import time
 
-from asynctest import MagicMock
 import requests_mock
 import voluptuous as vol
 from withings_api import AbstractWithingsApi
@@ -31,6 +30,8 @@ from .common import (
     configure_integration,
     setup_hass,
 )
+
+from tests.async_mock import MagicMock
 
 
 def config_schema_validate(withings_config) -> None:

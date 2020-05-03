@@ -13,7 +13,12 @@ from homeassistant.const import (
     CONF_PORT,
     PERCENTAGE,
     TEMP_CELSIUS,
+<<<<<<< HEAD
     UNIT_VOLT,
+=======
+    PERCENTAGE,
+    VOLT,
+>>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -81,9 +86,9 @@ SENSOR_TYPES = {
     "counter_a": ["counter", "count"],
     "counter_b": ["counter", "count"],
     "HobbyBoard": ["none", "none"],
-    "voltage": ["voltage", UNIT_VOLT],
-    "voltage_VAD": ["voltage", UNIT_VOLT],
-    "voltage_VDD": ["voltage", UNIT_VOLT],
+    "voltage": ["voltage", VOLT],
+    "voltage_VAD": ["voltage", VOLT],
+    "voltage_VDD": ["voltage", VOLT],
     "current": ["current", "A"],
 }
 

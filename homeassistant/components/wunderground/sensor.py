@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
+    DEGREE,
     IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_FEET,
     LENGTH_INCHES,
@@ -27,7 +28,11 @@ from homeassistant.const import (
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+<<<<<<< HEAD
     UNIT_DEGREE,
+=======
+    PERCENTAGE,
+>>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -457,7 +462,7 @@ SENSOR_TYPES = {
     ),
     "weather": WUCurrentConditionsSensorConfig("Weather Summary", "weather", None),
     "wind_degrees": WUCurrentConditionsSensorConfig(
-        "Wind Degrees", "wind_degrees", "mdi:weather-windy", UNIT_DEGREE
+        "Wind Degrees", "wind_degrees", "mdi:weather-windy", DEGREE
     ),
     "wind_dir": WUCurrentConditionsSensorConfig(
         "Wind Direction", "wind_dir", "mdi:weather-windy"

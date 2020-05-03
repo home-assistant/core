@@ -1,13 +1,10 @@
 {
   "config": {
-    "title": "Logi Circle",
     "step": {
       "user": {
         "title": "Authentication Provider",
         "description": "Pick via which authentication provider you want to authenticate with Logi Circle.",
-        "data": {
-          "flow_impl": "Provider"
-        }
+        "data": { "flow_impl": "Provider" }
       },
       "auth": {
         "title": "Authenticate with Logi Circle",

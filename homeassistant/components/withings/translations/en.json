@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Timeout generating authorize url.",
+            "missing_configuration": "The Withings integration is not configured. Please follow the documentation."
+        },
+        "create_entry": {
+            "default": "Successfully authenticated with Withings."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Pick Authentication Method"
+            },
+            "profile": {
+                "data": {
+                    "profile": "Profile"
+                },
+                "description": "Which profile did you select on the Withings website? It's important the profiles match, otherwise data will be mis-labeled.",
+                "title": "User Profile."
+            }
+        }
+    }
+}

@@ -17,7 +17,12 @@ from homeassistant.const import (
     PERCENTAGE,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
+<<<<<<< HEAD
     UNIT_UV_INDEX,
+=======
+    PERCENTAGE,
+    UV_INDEX,
+>>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -73,9 +78,15 @@ SENSOR_TYPES = {
     "wind_gust": ["Wind Gust", SPEED_MILES_PER_HOUR],
     "visibility": ["Visibility", None],
     "visibility_distance": ["Visibility Distance", LENGTH_KILOMETERS],
+<<<<<<< HEAD
     "uv": ["UV", UNIT_UV_INDEX],
     "precipitation": ["Probability of Precipitation", PERCENTAGE],
     "humidity": ["Humidity", PERCENTAGE],
+=======
+    "uv": ["UV", UV_INDEX],
+    "precipitation": ["Probability of Precipitation", PERCENTAGE],
+    "humidity": ["Humidity", PERCENTAGE],
+>>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

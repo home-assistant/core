@@ -1,0 +1,91 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "moist": "{entity_name} se navlh\u010dil",
+            "not_opened": "{entity_name} uzav\u0159eno"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Neaktivn\u00ed",
+            "on": "Aktivn\u00ed"
+        },
+        "battery": {
+            "off": "Norm\u00e1ln\u00ed",
+            "on": "N\u00edzk\u00fd stav"
+        },
+        "cold": {
+            "off": "Norm\u00e1ln\u00ed",
+            "on": "Chladn\u00e9"
+        },
+        "connectivity": {
+            "off": "Odpojeno",
+            "on": "P\u0159ipojeno"
+        },
+        "door": {
+            "off": "Zav\u0159eno",
+            "on": "Otev\u0159eno"
+        },
+        "garage_door": {
+            "off": "Zav\u0159eno",
+            "on": "Otev\u0159eno"
+        },
+        "gas": {
+            "off": "\u017d\u00e1dn\u00fd plyn",
+            "on": "Zji\u0161t\u011bn plyn"
+        },
+        "heat": {
+            "off": "Norm\u00e1ln\u00ed",
+            "on": "Hork\u00e9"
+        },
+        "lock": {
+            "off": "Zam\u010deno",
+            "on": "Odem\u010deno"
+        },
+        "moisture": {
+            "off": "Sucho",
+            "on": "Vlhko"
+        },
+        "motion": {
+            "off": "Bez pohybu",
+            "on": "Zaznamen\u00e1n pohyb"
+        },
+        "occupancy": {
+            "off": "Volno",
+            "on": "Obsazeno"
+        },
+        "opening": {
+            "off": "Zav\u0159eno",
+            "on": "Otev\u0159eno"
+        },
+        "presence": {
+            "off": "Pry\u010d",
+            "on": "Doma"
+        },
+        "problem": {
+            "off": "V po\u0159\u00e1dku",
+            "on": "Probl\u00e9m"
+        },
+        "safety": {
+            "off": "Zaji\u0161t\u011bno",
+            "on": "Nezaji\u0161t\u011bno"
+        },
+        "smoke": {
+            "off": "\u017d\u00e1dn\u00fd d\u00fdm",
+            "on": "Zji\u0161t\u011bn d\u00fdm"
+        },
+        "sound": {
+            "off": "Ticho",
+            "on": "Zachycen zvuk"
+        },
+        "vibration": {
+            "off": "Klid",
+            "on": "Zji\u0161t\u011bny vibrace"
+        },
+        "window": {
+            "off": "Zav\u0159eno",
+            "on": "Otev\u0159eno"
+        }
+    },
+    "title": "Bin\u00e1rn\u00ed senzor"
+}

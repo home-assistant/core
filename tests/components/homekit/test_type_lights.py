@@ -1,8 +1,6 @@
 """Test different accessory types: Lights."""
 from collections import namedtuple
 
-from asynctest import patch
-from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
 import pytest
 
@@ -33,15 +31,6 @@ from tests.common import async_mock_service
 from tests.components.homekit.common import patch_debounce
 
 
-@pytest.fixture
-def driver():
-    """Patch AccessoryDriver without zeroconf or HAPServer."""
-    with patch("pyhap.accessory_driver.HAPServer"), patch(
-        "pyhap.accessory_driver.Zeroconf"
-    ), patch("pyhap.accessory_driver.AccessoryDriver.persist"):
-        yield AccessoryDriver()
-
-
 @pytest.fixture(scope="module")
 def cls():
     """Patch debounce decorator during import of type_lights."""
@@ -55,14 +44,14 @@ def cls():
     patcher.stop()
 
 
-async def test_light_basic(hass, hk_driver, cls, events, driver):
+async def test_light_basic(hass, hk_driver, cls, events):
     """Test light with char state."""
     entity_id = "light.demo"
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_SUPPORTED_FEATURES: 0})
     await hass.async_block_till_done()
     acc = cls.light(hass, hk_driver, "Light", entity_id, 1, None)
-    driver.add_accessory(acc)
+    hk_driver.add_accessory(acc)
 
     assert acc.aid == 1
     assert acc.category == 5  # Lightbulb
@@ -90,7 +79,7 @@ async def test_light_basic(hass, hk_driver, cls, events, driver):
 
     char_on_iid = acc.char_on.to_HAP()[HAP_REPR_IID]
 
-    driver.set_characteristics(
+    hk_driver.set_characteristics(
         {
             HAP_REPR_CHARS: [
                 {HAP_REPR_AID: acc.aid, HAP_REPR_IID: char_on_iid, HAP_REPR_VALUE: 1}
@@ -109,7 +98,7 @@ async def test_light_basic(hass, hk_driver, cls, events, driver):
     hass.states.async_set(entity_id, STATE_ON)
     await hass.async_block_till_done()
 
-    driver.set_characteristics(
+    hk_driver.set_characteristics(
         {
             HAP_REPR_CHARS: [
                 {HAP_REPR_AID: acc.aid, HAP_REPR_IID: char_on_iid, HAP_REPR_VALUE: 0}
@@ -124,7 +113,7 @@ async def test_light_basic(hass, hk_driver, cls, events, driver):
     assert events[-1].data[ATTR_VALUE] == "Set state to 0"
 
 
-async def test_light_brightness(hass, hk_driver, cls, events, driver):
+async def test_light_brightness(hass, hk_driver, cls, events):
     """Test light with brightness."""
     entity_id = "light.demo"
 
@@ -135,7 +124,7 @@ async def test_light_brightness(hass, hk_driver, cls, events, driver):
     )
     await hass.async_block_till_done()
     acc = cls.light(hass, hk_driver, "Light", entity_id, 1, None)
-    driver.add_accessory(acc)
+    hk_driver.add_accessory(acc)
 
     # Initial value can be anything but 0. If it is 0, it might cause HomeKit to set the
     # brightness to 100 when turning on a light on a freshly booted up server.
@@ -155,7 +144,7 @@ async def test_light_brightness(hass, hk_driver, cls, events, driver):
     call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
     call_turn_off = async_mock_service(hass, DOMAIN, "turn_off")
 
-    driver.set_characteristics(
+    hk_driver.set_characteristics(
         {
             HAP_REPR_CHARS: [
                 {HAP_REPR_AID: acc.aid, HAP_REPR_IID: char_on_iid, HAP_REPR_VALUE: 1},
@@ -177,7 +166,7 @@ async def test_light_brightness(hass, hk_driver, cls, events, driver):
         events[-1].data[ATTR_VALUE] == f"Set state to 1, brightness at 20{PERCENTAGE}"
     )
 
-    driver.set_characteristics(
+    hk_driver.set_characteristics(
         {
             HAP_REPR_CHARS: [
                 {HAP_REPR_AID: acc.aid, HAP_REPR_IID: char_on_iid, HAP_REPR_VALUE: 1},
@@ -199,7 +188,7 @@ async def test_light_brightness(hass, hk_driver, cls, events, driver):
         events[-1].data[ATTR_VALUE] == f"Set state to 1, brightness at 40{PERCENTAGE}"
     )
 
-    driver.set_characteristics(
+    hk_driver.set_characteristics(
         {
             HAP_REPR_CHARS: [
                 {HAP_REPR_AID: acc.aid, HAP_REPR_IID: char_on_iid, HAP_REPR_VALUE: 1},
@@ -242,7 +231,7 @@ async def test_light_brightness(hass, hk_driver, cls, events, driver):
     assert acc.char_brightness.value == 1
 
 
-async def test_light_color_temperature(hass, hk_driver, cls, events, driver):
+async def test_light_color_temperature(hass, hk_driver, cls, events):
     """Test light with color temperature."""
     entity_id = "light.demo"
 
@@ -253,7 +242,7 @@ async def test_light_color_temperature(hass, hk_driver, cls, events, driver):
     )
     await hass.async_block_till_done()
     acc = cls.light(hass, hk_driver, "Light", entity_id, 1, None)
-    driver.add_accessory(acc)
+    hk_driver.add_accessory(acc)
 
     assert acc.char_color_temperature.value == 190
 
@@ -266,7 +255,7 @@ async def test_light_color_temperature(hass, hk_driver, cls, events, driver):
 
     char_color_temperature_iid = acc.char_color_temperature.to_HAP()[HAP_REPR_IID]
 
-    driver.set_characteristics(
+    hk_driver.set_characteristics(
         {
             HAP_REPR_CHARS: [
                 {
@@ -308,7 +297,7 @@ async def test_light_color_temperature_and_rgb_color(hass, hk_driver, cls, event
     assert not hasattr(acc, "char_color_temperature")
 
 
-async def test_light_rgb_color(hass, hk_driver, cls, events, driver):
+async def test_light_rgb_color(hass, hk_driver, cls, events):
     """Test light with rgb_color."""
     entity_id = "light.demo"
 
@@ -319,7 +308,7 @@ async def test_light_rgb_color(hass, hk_driver, cls, events, driver):
     )
     await hass.async_block_till_done()
     acc = cls.light(hass, hk_driver, "Light", entity_id, 1, None)
-    driver.add_accessory(acc)
+    hk_driver.add_accessory(acc)
 
     assert acc.char_hue.value == 260
     assert acc.char_saturation.value == 90
@@ -335,7 +324,7 @@ async def test_light_rgb_color(hass, hk_driver, cls, events, driver):
     char_hue_iid = acc.char_hue.to_HAP()[HAP_REPR_IID]
     char_saturation_iid = acc.char_saturation.to_HAP()[HAP_REPR_IID]
 
-    driver.set_characteristics(
+    hk_driver.set_characteristics(
         {
             HAP_REPR_CHARS: [
                 {
@@ -360,7 +349,7 @@ async def test_light_rgb_color(hass, hk_driver, cls, events, driver):
     assert events[-1].data[ATTR_VALUE] == "set color at (145, 75)"
 
 
-async def test_light_restore(hass, hk_driver, cls, events, driver):
+async def test_light_restore(hass, hk_driver, cls, events):
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
@@ -381,7 +370,7 @@ async def test_light_restore(hass, hk_driver, cls, events, driver):
     await hass.async_block_till_done()
 
     acc = cls.light(hass, hk_driver, "Light", "light.simple", 1, None)
-    driver.add_accessory(acc)
+    hk_driver.add_accessory(acc)
 
     assert acc.category == 5  # Lightbulb
     assert acc.chars == []
@@ -393,7 +382,7 @@ async def test_light_restore(hass, hk_driver, cls, events, driver):
     assert acc.char_on.value == 0
 
 
-async def test_light_set_brightness_and_color(hass, hk_driver, cls, events, driver):
+async def test_light_set_brightness_and_color(hass, hk_driver, cls, events):
     """Test light with all chars in one go."""
     entity_id = "light.demo"
 
@@ -407,7 +396,7 @@ async def test_light_set_brightness_and_color(hass, hk_driver, cls, events, driv
     )
     await hass.async_block_till_done()
     acc = cls.light(hass, hk_driver, "Light", entity_id, 1, None)
-    driver.add_accessory(acc)
+    hk_driver.add_accessory(acc)
 
     # Initial value can be anything but 0. If it is 0, it might cause HomeKit to set the
     # brightness to 100 when turning on a light on a freshly booted up server.
@@ -433,7 +422,7 @@ async def test_light_set_brightness_and_color(hass, hk_driver, cls, events, driv
     # Set from HomeKit
     call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
 
-    driver.set_characteristics(
+    hk_driver.set_characteristics(
         {
             HAP_REPR_CHARS: [
                 {HAP_REPR_AID: acc.aid, HAP_REPR_IID: char_on_iid, HAP_REPR_VALUE: 1},
@@ -469,9 +458,7 @@ async def test_light_set_brightness_and_color(hass, hk_driver, cls, events, driv
     )
 
 
-async def test_light_set_brightness_and_color_temp(
-    hass, hk_driver, cls, events, driver
-):
+async def test_light_set_brightness_and_color_temp(hass, hk_driver, cls, events):
     """Test light with all chars in one go."""
     entity_id = "light.demo"
 
@@ -485,7 +472,7 @@ async def test_light_set_brightness_and_color_temp(
     )
     await hass.async_block_till_done()
     acc = cls.light(hass, hk_driver, "Light", entity_id, 1, None)
-    driver.add_accessory(acc)
+    hk_driver.add_accessory(acc)
 
     # Initial value can be anything but 0. If it is 0, it might cause HomeKit to set the
     # brightness to 100 when turning on a light on a freshly booted up server.
@@ -509,7 +496,7 @@ async def test_light_set_brightness_and_color_temp(
     # Set from HomeKit
     call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
 
-    driver.set_characteristics(
+    hk_driver.set_characteristics(
         {
             HAP_REPR_CHARS: [
                 {HAP_REPR_AID: acc.aid, HAP_REPR_IID: char_on_iid, HAP_REPR_VALUE: 1},

@@ -19,7 +19,12 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
+<<<<<<< HEAD
     UNIT_UV_INDEX,
+=======
+    PERCENTAGE,
+    UV_INDEX,
+>>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -58,7 +63,7 @@ DATA_TYPES = OrderedDict(
         ("Sound", ""),
         ("Sensor Status", ""),
         ("Counter value", ""),
-        ("UV", UNIT_UV_INDEX),
+        ("UV", UV_INDEX),
         ("Humidity status", ""),
         ("Forecast", ""),
         ("Forecast numeric", ""),
@@ -131,7 +136,7 @@ def setup(hass, config):
 
     if dummy_connection:
         rfx_object = rfxtrxmod.Connect(
-            device, None, debug=debug, transport_protocol=rfxtrxmod.DummyTransport2
+            device, None, debug=debug, transport_protocol=rfxtrxmod.DummyTransport2,
         )
     elif port is not None:
         # If port is set then we create a TCP connection
@@ -215,7 +220,7 @@ def get_pt2262_device(device_id):
             and device.masked_id == get_pt2262_deviceid(device_id, device.data_bits)
         ):
             _LOGGER.debug(
-                "rfxtrx: found matching device %s for %s", device_id, device.masked_id
+                "rfxtrx: found matching device %s for %s", device_id, device.masked_id,
             )
             return device
     return None
@@ -307,13 +312,32 @@ def apply_received_command(event):
         return
 
     _LOGGER.debug(
-        "Device_id: %s device_update. Command: %s", device_id, event.values["Command"]
+        "Device_id: %s device_update. Command: %s", device_id, event.values["Command"],
     )
 
-    if event.values["Command"] == "On" or event.values["Command"] == "Off":
+    if event.values["Command"] in [
+        "On",
+        "Off",
+        "Up",
+        "Down",
+        "Stop",
+        "Open (inline relay)",
+        "Close (inline relay)",
+        "Stop (inline relay)",
+    ]:
 
         # Update the rfxtrx device state
-        is_on = event.values["Command"] == "On"
+        command = event.values["Command"]
+        if command in [
+            "On",
+            "Up",
+            "Stop",
+            "Open (inline relay)",
+            "Stop (inline relay)",
+        ]:
+            is_on = True
+        elif command in ["Off", "Down", "Close (inline relay)"]:
+            is_on = False
         RFX_DEVICES[device_id].update_state(is_on)
 
     elif (
@@ -425,14 +449,17 @@ class RfxtrxDevice(Entity):
         elif command == "roll_up":
             for _ in range(self.signal_repetitions):
                 self._event.device.send_open(rfx_object.transport)
+            self._state = True
 
         elif command == "roll_down":
             for _ in range(self.signal_repetitions):
                 self._event.device.send_close(rfx_object.transport)
+            self._state = False
 
         elif command == "stop_roll":
             for _ in range(self.signal_repetitions):
                 self._event.device.send_stop(rfx_object.transport)
+            self._state = True
 
         if self.added_to_hass:
             self.schedule_update_ha_state()

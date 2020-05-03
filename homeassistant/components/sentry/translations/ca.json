@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Sentry ja est\u00e0 configurat"
+        },
+        "error": {
+            "bad_dsn": "DSN inv\u00e0lid",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "description": "Introdueix el DSN de Sentry",
+                "title": "Sentry"
+            }
+        }
+    }
+}

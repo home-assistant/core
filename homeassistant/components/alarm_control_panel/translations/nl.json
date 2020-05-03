@@ -1,0 +1,40 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "Inschakelen {entity_name} afwezig",
+            "arm_home": "Inschakelen {entity_name} thuis",
+            "arm_night": "Inschakelen {entity_name} nacht",
+            "disarm": "Uitschakelen {entity_name}",
+            "trigger": "Trigger {entity_name}"
+        },
+        "condition_type": {
+            "is_armed_away": "{entity_name}  afwezig ingeschakeld",
+            "is_armed_home": "{entity_name} thuis ingeschakeld",
+            "is_armed_night": "{entity_name}  nachtstand ingeschakeld",
+            "is_disarmed": "{entity_name} is uitgeschakeld",
+            "is_triggered": "{entity_name} wordt geactiveerd"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name}  afwezig ingeschakeld",
+            "armed_home": "{entity_name} thuis ingeschakeld",
+            "armed_night": "{entity_name}  nachtstand ingeschakeld",
+            "disarmed": "{entity_name} uitgeschakeld",
+            "triggered": "{entity_name} geactiveerd"
+        }
+    },
+    "state": {
+        "_": {
+            "armed": "Ingeschakeld",
+            "armed_away": "Afwezig Ingeschakeld",
+            "armed_custom_bypass": "Ingeschakeld met overbrugging(en)",
+            "armed_home": "Ingeschakeld thuis",
+            "armed_night": "Ingeschakeld nacht",
+            "arming": "Schakelt in",
+            "disarmed": "Uitgeschakeld",
+            "disarming": "Schakelt uit",
+            "pending": "In wacht",
+            "triggered": "Geactiveerd"
+        }
+    },
+    "title": "Alarm bedieningspaneel"
+}

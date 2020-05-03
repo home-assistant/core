@@ -29,7 +29,7 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_HOST, CONF_NAME
 from homeassistant.core import callback
@@ -141,6 +141,7 @@ MODEL_TO_DEVICE_TYPE = {
     "ceiling2": BulbType.WhiteTemp,
     "ceiling3": BulbType.WhiteTemp,
     "ceiling4": BulbType.WhiteTempMood,
+    "ceiling10": BulbType.WhiteTempMood,
     "ceiling13": BulbType.WhiteTemp,
 }
 
@@ -426,7 +427,7 @@ def setup_services(hass):
     )
 
 
-class YeelightGenericLight(Light):
+class YeelightGenericLight(LightEntity):
     """Representation of a Yeelight generic light."""
 
     def __init__(self, device, custom_effects=None):

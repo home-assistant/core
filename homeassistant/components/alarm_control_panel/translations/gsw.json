@@ -1,0 +1,15 @@
+{
+    "state": {
+        "_": {
+            "armed": "Scharf",
+            "armed_away": "Scharf usswerts",
+            "armed_home": "Scharf dihei",
+            "armed_night": "Scharf Nacht",
+            "arming": "Scharf stel\u00e4",
+            "disarmed": "Nid scharf",
+            "disarming": "Entsperr\u00e4",
+            "pending": "Usstehehnd",
+            "triggered": "Usgl\u00f6sst"
+        }
+    }
+}

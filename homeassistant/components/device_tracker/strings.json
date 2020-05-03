@@ -1,8 +1,15 @@
 {
+  "title": "Device tracker",
   "device_automation": {
     "condition_type": {
       "is_home": "{entity_name} is home",
       "is_not_home": "{entity_name} is not home"
+    }
+  },
+  "state": {
+    "_": {
+      "home": "[%key:common::state::home%]",
+      "not_home": "[%key:common::state::not_home%]"
     }
   }
 }

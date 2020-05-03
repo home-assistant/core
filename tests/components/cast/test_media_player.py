@@ -1,7 +1,6 @@
 """The tests for the Cast Media player platform."""
 # pylint: disable=protected-access
 from typing import Optional
-from unittest.mock import MagicMock, Mock, patch
 from uuid import UUID
 
 import attr
@@ -14,7 +13,8 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.async_mock import MagicMock, Mock, patch
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -114,7 +114,7 @@ async def async_setup_media_player_cast(hass: HomeAssistantType, info: Chromecas
     cast.CastStatusListener = MagicMock()
 
     with patch(
-        "homeassistant.components.cast.discovery.pychromecast._get_chromecast_from_service",
+        "homeassistant.components.cast.discovery.pychromecast.get_chromecast_from_service",
         return_value=chromecast,
     ) as get_chromecast, patch(
         "homeassistant.components.cast.discovery.pychromecast.start_discovery",
@@ -468,7 +468,6 @@ async def test_entry_setup_no_config(hass: HomeAssistantType):
 
     with patch(
         "homeassistant.components.cast.media_player._async_setup_platform",
-        return_value=mock_coro(),
     ) as mock_setup:
         await cast.async_setup_entry(hass, MockConfigEntry(), None)
 
@@ -484,7 +483,6 @@ async def test_entry_setup_single_config(hass: HomeAssistantType):
 
     with patch(
         "homeassistant.components.cast.media_player._async_setup_platform",
-        return_value=mock_coro(),
     ) as mock_setup:
         await cast.async_setup_entry(hass, MockConfigEntry(), None)
 
@@ -500,7 +498,6 @@ async def test_entry_setup_list_config(hass: HomeAssistantType):
 
     with patch(
         "homeassistant.components.cast.media_player._async_setup_platform",
-        return_value=mock_coro(),
     ) as mock_setup:
         await cast.async_setup_entry(hass, MockConfigEntry(), None)
 
@@ -517,7 +514,7 @@ async def test_entry_setup_platform_not_ready(hass: HomeAssistantType):
 
     with patch(
         "homeassistant.components.cast.media_player._async_setup_platform",
-        return_value=mock_coro(exception=Exception),
+        side_effect=Exception,
     ) as mock_setup:
         with pytest.raises(PlatformNotReady):
             await cast.async_setup_entry(hass, MockConfigEntry(), None)

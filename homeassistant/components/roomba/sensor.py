@@ -1,11 +1,16 @@
 """Sensor for checking the battery level of Roomba."""
 import logging
 
+<<<<<<< HEAD
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.helpers.entity import Entity
+=======
+from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
+>>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 
 from . import roomba_reported_state
 from .const import BLID, DOMAIN, ROOMBA_SESSION
+from .irobot_base import IRobotEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,17 +24,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([roomba_vac], True)
 
 
-class RoombaBattery(Entity):
+class RoombaBattery(IRobotEntity):
     """Class to hold Roomba Sensor basic info."""
-
-    def __init__(self, roomba, blid):
-        """Initialize the sensor object."""
-        self.vacuum = roomba
-        self.vacuum_state = roomba_reported_state(roomba)
-        self._blid = blid
-        self._name = self.vacuum_state.get("name")
-        self._identifier = f"roomba_{self._blid}"
-        self._battery_level = None
 
     @property
     def name(self):
@@ -54,6 +50,7 @@ class RoombaBattery(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
+<<<<<<< HEAD
         return self._battery_level
 
     @property
@@ -71,3 +68,6 @@ class RoombaBattery(Entity):
         _LOGGER.debug(
             "Update battery level status from the vacuum: %s", self._battery_level
         )
+=======
+        return roomba_reported_state(self.vacuum).get("batPct")
+>>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4

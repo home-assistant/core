@@ -6,7 +6,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    Light,
+    LightEntity,
 )
 import homeassistant.util.color as color_util
 
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devs)
 
 
-class HiveDeviceLight(HiveEntity, Light):
+class HiveDeviceLight(HiveEntity, LightEntity):
     """Hive Active Light Device."""
 
     def __init__(self, hive_session, hive_device):

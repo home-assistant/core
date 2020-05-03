@@ -1,6 +1,4 @@
 """Tests for Home Assistant View."""
-from unittest.mock import Mock
-
 from aiohttp.web_exceptions import (
     HTTPBadRequest,
     HTTPInternalServerError,
@@ -15,7 +13,7 @@ from homeassistant.components.http.view import (
 )
 from homeassistant.exceptions import ServiceNotFound, Unauthorized
 
-from tests.common import mock_coro_func
+from tests.async_mock import AsyncMock, Mock
 
 
 @pytest.fixture
@@ -38,7 +36,7 @@ async def test_handling_unauthorized(mock_request):
     """Test handling unauth exceptions."""
     with pytest.raises(HTTPUnauthorized):
         await request_handler_factory(
-            Mock(requires_auth=False), mock_coro_func(exception=Unauthorized)
+            Mock(requires_auth=False), AsyncMock(side_effect=Unauthorized)
         )(mock_request)
 
 
@@ -46,7 +44,7 @@ async def test_handling_invalid_data(mock_request):
     """Test handling unauth exceptions."""
     with pytest.raises(HTTPBadRequest):
         await request_handler_factory(
-            Mock(requires_auth=False), mock_coro_func(exception=vol.Invalid("yo"))
+            Mock(requires_auth=False), AsyncMock(side_effect=vol.Invalid("yo"))
         )(mock_request)
 
 
@@ -55,5 +53,5 @@ async def test_handling_service_not_found(mock_request):
     with pytest.raises(HTTPInternalServerError):
         await request_handler_factory(
             Mock(requires_auth=False),
-            mock_coro_func(exception=ServiceNotFound("test", "test")),
+            AsyncMock(side_effect=ServiceNotFound("test", "test")),
         )(mock_request)

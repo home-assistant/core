@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No Sonos devices found on the network.",
+            "single_instance_allowed": "Only a single configuration of Sonos is necessary."
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to set up Sonos?",
+                "title": "Sonos"
+            }
+        }
+    }
+}

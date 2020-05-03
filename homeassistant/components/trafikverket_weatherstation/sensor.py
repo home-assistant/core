@@ -14,12 +14,17 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    DEGREE,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
+<<<<<<< HEAD
     UNIT_DEGREE,
+=======
+    PERCENTAGE,
+>>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -62,7 +67,7 @@ SENSOR_TYPES = {
     ],
     "wind_direction": [
         "Wind direction",
-        UNIT_DEGREE,
+        DEGREE,
         "winddirection",
         "mdi:flag-triangle",
         None,

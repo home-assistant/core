@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from . import (
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_COLD,
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_DOOR,
@@ -44,6 +45,8 @@ DEVICE_CLASS_NONE = "none"
 
 CONF_BAT_LOW = "bat_low"
 CONF_NOT_BAT_LOW = "not_bat_low"
+CONF_CHARGING = "charging"
+CONF_NOT_CHARGING = "not_charging"
 CONF_COLD = "cold"
 CONF_NOT_COLD = "not_cold"
 CONF_CONNECTED = "connected"
@@ -135,6 +138,10 @@ TURNED_OFF = [
 
 ENTITY_TRIGGERS = {
     DEVICE_CLASS_BATTERY: [{CONF_TYPE: CONF_BAT_LOW}, {CONF_TYPE: CONF_NOT_BAT_LOW}],
+    DEVICE_CLASS_BATTERY_CHARGING: [
+        {CONF_TYPE: CONF_CHARGING},
+        {CONF_TYPE: CONF_NOT_CHARGING},
+    ],
     DEVICE_CLASS_COLD: [{CONF_TYPE: CONF_COLD}, {CONF_TYPE: CONF_NOT_COLD}],
     DEVICE_CLASS_CONNECTIVITY: [
         {CONF_TYPE: CONF_CONNECTED},

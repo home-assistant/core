@@ -1,6 +1,5 @@
 {
   "config": {
-    "title": "World Wide Lightning Location Network (WWLLN)",
     "step": {
       "user": {
         "title": "Fill in your location information.",
@@ -11,8 +10,6 @@
         }
       }
     },
-    "abort": {
-      "already_configured": "This location is already registered."
-    }
+    "abort": { "already_configured": "This location is already registered." }
   }
 }

@@ -1,4 +1,5 @@
 """Allow to set up simple automation rules via the config file."""
+import asyncio
 import importlib
 import logging
 from typing import Any, Awaitable, Callable, List, Optional, Set
@@ -14,7 +15,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_ZONE,
     EVENT_AUTOMATION_TRIGGERED,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -54,6 +55,7 @@ CONF_SKIP_CONDITION = "skip_condition"
 
 CONDITION_USE_TRIGGER_VALUES = "use_trigger_values"
 CONDITION_TYPE_AND = "and"
+CONDITION_TYPE_NOT = "not"
 CONDITION_TYPE_OR = "or"
 
 DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
@@ -126,13 +128,11 @@ def automations_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
 
     component = hass.data[DOMAIN]
 
-    results = []
-
-    for automation_entity in component.entities:
-        if entity_id in automation_entity.referenced_entities:
-            results.append(automation_entity.entity_id)
-
-    return results
+    return [
+        automation_entity.entity_id
+        for automation_entity in component.entities
+        if entity_id in automation_entity.referenced_entities
+    ]
 
 
 @callback
@@ -159,13 +159,11 @@ def automations_with_device(hass: HomeAssistant, device_id: str) -> List[str]:
 
     component = hass.data[DOMAIN]
 
-    results = []
-
-    for automation_entity in component.entities:
-        if device_id in automation_entity.referenced_devices:
-            results.append(automation_entity.entity_id)
-
-    return results
+    return [
+        automation_entity.entity_id
+        for automation_entity in component.entities
+        if device_id in automation_entity.referenced_devices
+    ]
 
 
 @callback
@@ -408,7 +406,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
         # HomeAssistant is starting up
         if self.hass.state != CoreState.not_running:
-            self._async_detach_triggers = await self._async_attach_triggers()
+            self._async_detach_triggers = await self._async_attach_triggers(False)
             self.async_write_ha_state()
             return
 
@@ -418,10 +416,10 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             if not self._is_enabled or self._async_detach_triggers is not None:
                 return
 
-            self._async_detach_triggers = await self._async_attach_triggers()
+            self._async_detach_triggers = await self._async_attach_triggers(True)
 
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, async_enable_automation
+            EVENT_HOMEASSISTANT_STARTED, async_enable_automation
         )
         self.async_write_ha_state()
 
@@ -438,27 +436,32 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
         self.async_write_ha_state()
 
-    async def _async_attach_triggers(self):
+    async def _async_attach_triggers(
+        self, home_assistant_start: bool
+    ) -> Optional[Callable[[], None]]:
         """Set up the triggers."""
-        removes = []
-        info = {"name": self._name}
+        info = {"name": self._name, "home_assistant_start": home_assistant_start}
 
+        triggers = []
         for conf in self._trigger_config:
             platform = importlib.import_module(f".{conf[CONF_PLATFORM]}", __name__)
 
-            remove = await platform.async_attach_trigger(
-                self.hass, conf, self.async_trigger, info
+            triggers.append(
+                platform.async_attach_trigger(  # type: ignore
+                    self.hass, conf, self.async_trigger, info
+                )
             )
 
-            if not remove:
-                _LOGGER.error("Error setting up trigger %s", self._name)
-                continue
+        results = await asyncio.gather(*triggers)
 
-            _LOGGER.info("Initialized trigger %s", self._name)
-            removes.append(remove)
+        if None in results:
+            _LOGGER.error("Error setting up trigger %s", self._name)
 
+        removes = [remove for remove in results if remove is not None]
         if not removes:
             return None
+
+        _LOGGER.info("Initialized trigger %s", self._name)
 
         @callback
         def remove_triggers():

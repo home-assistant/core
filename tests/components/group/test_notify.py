@@ -1,13 +1,13 @@
 """The tests for the notify.group platform."""
 import asyncio
 import unittest
-from unittest.mock import MagicMock, patch
 
 import homeassistant.components.demo.notify as demo
 import homeassistant.components.group.notify as group
 import homeassistant.components.notify as notify
 from homeassistant.setup import setup_component
 
+from tests.async_mock import MagicMock, patch
 from tests.common import assert_setup_component, get_test_home_assistant
 
 
