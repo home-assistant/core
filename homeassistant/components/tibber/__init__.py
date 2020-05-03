@@ -8,15 +8,14 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
 from .const import DATA_HASS_CONFIG, DOMAIN
 
-FIRST_RETRY_TIME = 60
 PLATFORMS = [
     "sensor",
 ]
@@ -48,7 +47,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry, retry_delay=FIRST_RETRY_TIME):
+async def async_setup_entry(hass, entry):
     """Set up a config entry."""
 
     tibber_connection = tibber.Tibber(
@@ -66,15 +65,7 @@ async def async_setup_entry(hass, entry, retry_delay=FIRST_RETRY_TIME):
     try:
         await tibber_connection.update_info()
     except asyncio.TimeoutError:
-        _LOGGER.warning("Timeout connecting to Tibber. Will retry in %ss", retry_delay)
-
-        async def retry_setup(now):
-            """Retry setup if a timeout happens on Tibber API."""
-            await async_setup_entry(hass, entry, retry_delay=min(2 * retry_delay, 900))
-
-        async_call_later(hass, entry, retry_setup)
-
-        return True
+        raise ConfigEntryNotReady
     except aiohttp.ClientError as err:
         _LOGGER.error("Error connecting to Tibber: %s ", err)
         return False

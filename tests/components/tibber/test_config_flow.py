@@ -1,17 +1,19 @@
 """Tests for Tibber config flow."""
-from asynctest import CoroutineMock, MagicMock, PropertyMock, patch
 import pytest
 
 from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
 
+import tests.async_mock
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="tibber_setup", autouse=True)
 def tibber_setup_fixture():
     """Patch tibber setup entry."""
-    with patch("homeassistant.components.tibber.async_setup_entry", return_value=True):
+    with tests.async_mock.patch(
+        "homeassistant.components.tibber.async_setup_entry", return_value=True
+    ):
         yield
 
 
@@ -32,14 +34,16 @@ async def test_create_entry(hass):
     }
 
     unique_user_id = "unique_user_id"
-    title = "tilte"
+    title = "title"
 
-    tibber_mock = MagicMock()
-    type(tibber_mock).update_info = CoroutineMock(return_value=True)
-    type(tibber_mock).user_id = PropertyMock(return_value=unique_user_id)
-    type(tibber_mock).name = PropertyMock(return_value=title)
+    tibber_mock = tests.async_mock.MagicMock()
+    type(tibber_mock).update_info = tests.async_mock.CoroutineMock(return_value=True)
+    type(tibber_mock).user_id = tests.async_mock.PropertyMock(
+        return_value=unique_user_id
+    )
+    type(tibber_mock).name = tests.async_mock.PropertyMock(return_value=title)
 
-    with patch("tibber.Tibber", return_value=tibber_mock):
+    with tests.async_mock.patch("tibber.Tibber", return_value=tibber_mock):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}, data=test_data
         )
@@ -60,7 +64,7 @@ async def test_flow_entry_already_exists(hass):
         CONF_ACCESS_TOKEN: "valid",
     }
 
-    with patch("tibber.Tibber.update_info", return_value=None):
+    with tests.async_mock.patch("tibber.Tibber.update_info", return_value=None):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}, data=test_data
         )
