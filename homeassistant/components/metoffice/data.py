@@ -51,6 +51,20 @@ class MetOfficeData:
         """Return the stored longitude value."""
         return self._longitude
 
+    @property
+    def mode(self):
+        """Return the stored API retrieval mode value."""
+        return self._mode
+
+    @mode.setter
+    def mode(self, new_mode):
+        """Update the mode for retrieving data from DataPoint."""
+        new_api_mode = make_api_mode(new_mode)
+        if self._mode != new_api_mode:
+            self._mode = new_api_mode
+            self.now = None
+            self.all = None
+
     async def async_update_site(self):
         """Async wrapper for getting the DataPoint site."""
         return await self._hass.async_add_executor_job(self._update_site)
