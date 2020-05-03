@@ -109,7 +109,7 @@ class TestPilight(unittest.TestCase):
 
     @patch("pilight.pilight.Client", PilightDaemonSim)
     @patch("homeassistant.core._LOGGER.error")
-    @patch("tests.components.test_pilight._LOGGER.error")
+    @patch("homeassistant.components.pilight._LOGGER.error")
     def test_send_code_no_protocol(self, mock_pilight_error, mock_error):
         """Try to send data without protocol information, should give error."""
         with assert_setup_component(4):
@@ -127,7 +127,7 @@ class TestPilight(unittest.TestCase):
             assert "required key not provided @ data['protocol']" in str(error_log_call)
 
     @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("tests.components.test_pilight._LOGGER.error")
+    @patch("homeassistant.components.pilight._LOGGER.error")
     def test_send_code(self, mock_pilight_error):
         """Try to send proper data."""
         with assert_setup_component(4):
@@ -167,7 +167,7 @@ class TestPilight(unittest.TestCase):
                 assert "Pilight send failed" in str(error_log_call)
 
     @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("tests.components.test_pilight._LOGGER.error")
+    @patch("homeassistant.components.pilight._LOGGER.error")
     def test_send_code_delay(self, mock_pilight_error):
         """Try to send proper data with delay afterwards."""
         with assert_setup_component(4):
@@ -207,7 +207,7 @@ class TestPilight(unittest.TestCase):
             assert str(service_data2) in str(error_log_call)
 
     @patch("pilight.pilight.Client", PilightDaemonSim)
-    @patch("tests.components.test_pilight._LOGGER.error")
+    @patch("homeassistant.components.pilight._LOGGER.error")
     def test_start_stop(self, mock_pilight_error):
         """Check correct startup and stop of pilight daemon."""
         with assert_setup_component(4):
