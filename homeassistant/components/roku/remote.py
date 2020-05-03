@@ -42,4 +42,4 @@ class RokuRemote(RokuEntity, RemoteEntity):
 
         for _ in range(num_repeats):
             for single_command in command:
-                await self.coordinator.roku.remote(command)
+                await self.coordinator.roku.remote(single_command)
