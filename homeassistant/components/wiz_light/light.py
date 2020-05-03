@@ -224,9 +224,7 @@ class WizBulb(Light):
         except Exception as ex:
             _LOGGER.error(ex)
             await self.update_state_unavailable()
-        _LOGGER.debug(
-            f"[wizlight {self._light.ip}] updated state: {self._state}"
-        )
+        _LOGGER.debug(f"[wizlight {self._light.ip}] updated state: {self._state}")
 
     def update_brightness(self):
         """Update the brightness."""
