@@ -81,7 +81,6 @@ MANUFACTURER = "Universal Devices, Inc"
 
 CONF_IGNORE_STRING = "ignore_string"
 CONF_SENSOR_STRING = "sensor_string"
-CONF_ENABLE_CLIMATE = "enable_climate"
 CONF_TLS_VER = "tls"
 
 DEFAULT_IGNORE_STRING = "{IGNORE ME}"
@@ -89,8 +88,6 @@ DEFAULT_SENSOR_STRING = "sensor"
 DEFAULT_TLS_VERSION = 1.1
 
 KEY_ACTIONS = "actions"
-KEY_FOLDER = "folder"
-KEY_MY_PROGRAMS = "My Programs"
 KEY_STATUS = "status"
 
 SUPPORTED_PLATFORMS = [BINARY_SENSOR, SENSOR, LOCK, FAN, COVER, LIGHT, SWITCH]
@@ -104,7 +101,6 @@ ISY_GROUP_PLATFORM = SWITCH
 
 ISY994_ISY = "isy"
 ISY994_NODES = "isy994_nodes"
-ISY994_WEATHER = "isy994_weather"
 ISY994_PROGRAMS = "isy994_programs"
 
 # Do not use the Home Assistant consts for the states here - we're matching exact API
@@ -474,6 +470,3 @@ ISY_BIN_SENS_DEVICE_TYPES = {
     "motion": ["16.1.", "16.4.", "16.5.", "16.3.", "16.22."],
     "climate": ["5.11.", "5.10."],
 }
-
-# TEMPORARY CONSTANTS -- REMOVE AFTER PyISYv2 IS AVAILABLE
-ISY_VALUE_UNKNOWN = -1 * float("inf")
