@@ -26,9 +26,7 @@
       }
     },
     "error": {
-      "connection": "Connection error: please check your host, password & ssl",
-      "login": "Login error: please check your username & password",
-      "unknown": "Unknown error: please check logs to get more details"
+      "config": "Connection or login error: please check your configuration"
     },
     "abort": {
       "already_configured": "Host already configured"

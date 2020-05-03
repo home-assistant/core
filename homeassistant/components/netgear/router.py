@@ -1,6 +1,5 @@
 """Represent the Netgear router and its devices."""
 from datetime import timedelta
-import logging
 from typing import Dict
 
 from pynetgear import Netgear
@@ -13,16 +12,14 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
+    CONF_URL,
     CONF_USERNAME,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -33,6 +30,7 @@ class NetgearRouter:
     def __init__(self, hass: HomeAssistantType, entry: ConfigEntry) -> None:
         """Initialize a Netgear router."""
         self.hass = hass
+        self._url = entry.data.get(CONF_URL)
         self._host = entry.data.get(CONF_HOST)
         self._port = entry.data.get(CONF_PORT)
         self._ssl = entry.data.get(CONF_SSL)
@@ -52,14 +50,16 @@ class NetgearRouter:
     async def setup(self) -> None:
         """Set up a Netgear router."""
         self._api = await self.hass.async_add_executor_job(
-            Netgear, self._password, self._host, self._username, self._port, self._ssl
+            Netgear,
+            self._password,
+            self._host,
+            self._username,
+            self._port,
+            self._ssl,
+            self._url,
         )
 
-        try:
-            await self.hass.async_add_executor_job(self._api.login)
-        except OSError:
-            _LOGGER.exception("Failed to connect to Netgear")
-            return ConfigEntryNotReady
+        await self.hass.async_add_executor_job(self._api.login)
 
         await self.update_devices()
         self._unsub_dispatcher = async_track_time_interval(
@@ -108,7 +108,6 @@ class NetgearRouter:
 
             self.devices[device_mac] = ntg_device._asdict()
             self.devices[device_mac]["active"] = True
-            _LOGGER.warning(self.devices[device_mac])
 
         async_dispatcher_send(self.hass, self.signal_device_update)
 
