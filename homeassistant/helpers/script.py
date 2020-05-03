@@ -311,6 +311,9 @@ class _ScriptRunBase(ABC):
         check = config(self._hass, self._variables)
         self._log("Test condition %s: %s", self._script.last_action, check)
         if not check:
+            if self._action.get("else", False):
+                for _, self._action in enumerate(self._action.get("else")):
+                    await self._async_step(log_exceptions=False)
             raise _StopScript
 
     def _log(self, msg, *args, level=logging.INFO):
