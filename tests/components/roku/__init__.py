@@ -63,26 +63,26 @@ def mock_connection(
 
     aioclient_mock.get(
         f"{roku_url}/query/apps",
-        headers={"Content-Type": "application/xml"},
         text=load_fixture(apps_fixture),
+        headers={"Content-Type": "application/xml"},
     )
 
     aioclient_mock.get(
         f"{roku_url}/query/active-app",
-        headers={"Content-Type": "application/xml"},
         text=load_fixture(f"roku/active-app-{app}.xml"),
+        headers={"Content-Type": "application/xml"},
     )
 
     aioclient_mock.get(
         f"{roku_url}/query/tv-active-channel",
-        headers={"Content-Type": "application/xml"},
         text=load_fixture("roku/rokutv-tv-active-channel.xml"),
+        headers={"Content-Type": "application/xml"},
     )
 
     aioclient_mock.get(
         f"{roku_url}/query/tv-channels",
-        headers={"Content-Type": "application/xml"},
         text=load_fixture("roku/rokutv-tv-channels.xml"),
+        headers={"Content-Type": "application/xml"},
     )
 
     aioclient_mock.post(
