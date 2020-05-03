@@ -712,9 +712,9 @@ def entity_to_json(config, entity):
     return retval
 
 
-def create_hue_success_response(entity_id, attr, value):
+def create_hue_success_response(entity_number, attr, value):
     """Create a success response for an attribute set on a light."""
-    success_key = f"/lights/{entity_id}/state/{attr}"
+    success_key = f"/lights/{entity_number}/state/{attr}"
     return {"success": {success_key: value}}
 
 
