@@ -1,7 +1,6 @@
 """The tests for the Dialogflow component."""
 import copy
 import json
-from unittest.mock import Mock
 
 import pytest
 
@@ -9,6 +8,8 @@ from homeassistant import data_entry_flow
 from homeassistant.components import dialogflow, intent_script
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import Mock
 
 SESSION_ID = "a9b84cec-46b6-484e-8f31-f65dba03ae6d"
 INTENT_ID = "c6a74079-a8f0-46cd-b372-5a934d23591c"

@@ -1,9 +1,20 @@
 """Find translation keys that are in Lokalise but no longer defined in source."""
+import argparse
 import json
 
-from .const import INTEGRATIONS_DIR, PROJECT_ID
-from .lokalise import Lokalise
-from .util import get_lokalise_token
+from .const import CORE_PROJECT_ID, FRONTEND_DIR, FRONTEND_PROJECT_ID, INTEGRATIONS_DIR
+from .error import ExitApp
+from .lokalise import get_api
+from .util import get_base_arg_parser
+
+
+def get_arguments() -> argparse.Namespace:
+    """Get parsed passed in arguments."""
+    parser = get_base_arg_parser()
+    parser.add_argument(
+        "--target", type=str, default="core", choices=["core", "frontend"],
+    )
+    return parser.parse_args()
 
 
 def find_extra(base, translations, path_prefix, missing_keys):
@@ -20,8 +31,8 @@ def find_extra(base, translations, path_prefix, missing_keys):
             missing_keys.append(cur_path)
 
 
-def find():
-    """Find all missing keys."""
+def find_core():
+    """Find all missing keys in core."""
     missing_keys = []
 
     for int_dir in INTEGRATIONS_DIR.iterdir():
@@ -30,7 +41,7 @@ def find():
         if not strings.is_file():
             continue
 
-        translations = int_dir / ".translations" / "en.json"
+        translations = int_dir / "translations" / "en.json"
 
         strings_json = json.loads(strings.read_text())
         translations_json = json.loads(translations.read_text())
@@ -42,30 +53,54 @@ def find():
     return missing_keys
 
 
+def find_frontend():
+    """Find all missing keys in frontend."""
+    if not FRONTEND_DIR.is_dir():
+        raise ExitApp(f"Unable to find frontend at {FRONTEND_DIR}")
+
+    source = FRONTEND_DIR / "src/translations/en.json"
+    translated = FRONTEND_DIR / "translations/en.json"
+
+    missing_keys = []
+    find_extra(
+        json.loads(source.read_text()),
+        json.loads(translated.read_text()),
+        "",
+        missing_keys,
+    )
+    return missing_keys
+
+
 def run():
     """Clean translations."""
-    missing_keys = find()
+    args = get_arguments()
+    if args.target == "frontend":
+        missing_keys = find_frontend()
+        lokalise = get_api(FRONTEND_PROJECT_ID)
+    else:
+        missing_keys = find_core()
+        lokalise = get_api(CORE_PROJECT_ID)
 
     if not missing_keys:
         print("No missing translations!")
-        return
+        return 0
 
-    lokalise = Lokalise(PROJECT_ID, get_lokalise_token())
+    key_data = lokalise.keys_list(
+        {"filter_keys": ",".join(missing_keys), "limit": 1000}
+    )
+    if len(key_data) != len(missing_keys):
+        print(
+            f"Lookin up key in Lokalise returns {len(key_data)} results, expected {len(missing_keys)}"
+        )
+        return 1
 
-    to_delete = []
-
+    print(f"Deleting {len(missing_keys)} keys:")
     for key in missing_keys:
-        print("Processing", key)
-        key_data = lokalise.keys_list({"filter_keys": key})
-        if len(key_data) != 1:
-            print(
-                f"Lookin up key in Lokalise returns {len(key_data)} results, expected 1"
-            )
-            continue
-        to_delete.append(key_data[0]["key_id"])
-
+        print(" -", key)
+    print()
     while input("Type YES to delete these keys: ") != "YES":
         pass
 
-    print("Deleting keys:", ", ".join(map(str, to_delete)))
-    print(lokalise.keys_delete_multiple(to_delete))
+    print(lokalise.keys_delete_multiple([key["key_id"] for key in key_data]))
+
+    return 0

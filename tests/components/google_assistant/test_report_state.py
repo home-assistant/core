@@ -1,12 +1,11 @@
 """Test Google report state."""
-from unittest.mock import patch
-
 from homeassistant.components.google_assistant import error, report_state
 from homeassistant.util.dt import utcnow
 
 from . import BASIC_CONFIG
 
-from tests.common import async_fire_time_changed, mock_coro
+from tests.async_mock import AsyncMock, patch
+from tests.common import async_fire_time_changed
 
 
 async def test_report_state(hass, caplog):
@@ -15,7 +14,7 @@ async def test_report_state(hass, caplog):
     hass.states.async_set("switch.ac", "on")
 
     with patch.object(
-        BASIC_CONFIG, "async_report_state_all", side_effect=mock_coro
+        BASIC_CONFIG, "async_report_state_all", AsyncMock()
     ) as mock_report, patch.object(report_state, "INITIAL_REPORT_DELAY", 0):
         unsub = report_state.async_enable_report_state(hass, BASIC_CONFIG)
 
@@ -34,7 +33,7 @@ async def test_report_state(hass, caplog):
     }
 
     with patch.object(
-        BASIC_CONFIG, "async_report_state_all", side_effect=mock_coro
+        BASIC_CONFIG, "async_report_state_all", AsyncMock()
     ) as mock_report:
         hass.states.async_set("light.kitchen", "on")
         await hass.async_block_till_done()
@@ -47,7 +46,7 @@ async def test_report_state(hass, caplog):
     # Test that state changes that change something that Google doesn't care about
     # do not trigger a state report.
     with patch.object(
-        BASIC_CONFIG, "async_report_state_all", side_effect=mock_coro
+        BASIC_CONFIG, "async_report_state_all", AsyncMock()
     ) as mock_report:
         hass.states.async_set(
             "light.kitchen", "on", {"irrelevant": "should_be_ignored"}
@@ -58,7 +57,7 @@ async def test_report_state(hass, caplog):
 
     # Test that entities that we can't query don't report a state
     with patch.object(
-        BASIC_CONFIG, "async_report_state_all", side_effect=mock_coro
+        BASIC_CONFIG, "async_report_state_all", AsyncMock()
     ) as mock_report, patch(
         "homeassistant.components.google_assistant.report_state.GoogleEntity.query_serialize",
         side_effect=error.SmartHomeError("mock-error", "mock-msg"),
@@ -72,7 +71,7 @@ async def test_report_state(hass, caplog):
     unsub()
 
     with patch.object(
-        BASIC_CONFIG, "async_report_state_all", side_effect=mock_coro
+        BASIC_CONFIG, "async_report_state_all", AsyncMock()
     ) as mock_report:
         hass.states.async_set("light.kitchen", "on")
         await hass.async_block_till_done()

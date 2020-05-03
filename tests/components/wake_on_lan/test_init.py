@@ -2,20 +2,17 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import wake_on_lan
 from homeassistant.components.wake_on_lan import DOMAIN, SERVICE_SEND_MAGIC_PACKET
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockDependency
+from tests.async_mock import patch
 
 
 async def test_send_magic_packet(hass):
     """Test of send magic packet service call."""
-    with MockDependency("wakeonlan") as mocked_wakeonlan:
+    with patch("homeassistant.components.wake_on_lan.wakeonlan") as mocked_wakeonlan:
         mac = "aa:bb:cc:dd:ee:ff"
         bc_ip = "192.168.255.255"
-
-        wake_on_lan.wakeonlan = mocked_wakeonlan
 
         await async_setup_component(hass, DOMAIN, {})
 

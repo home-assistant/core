@@ -559,12 +559,23 @@ def _log_pkg_error(package: str, component: str, config: Dict, message: str) -> 
 
 def _identify_config_schema(module: ModuleType) -> Optional[str]:
     """Extract the schema and identify list or dict based."""
-    try:
-        key = next(k for k in module.CONFIG_SCHEMA.schema if k == module.DOMAIN)  # type: ignore
-    except (AttributeError, StopIteration):
-        return None
+    schema = module.CONFIG_SCHEMA.schema  # type: ignore
 
-    schema = module.CONFIG_SCHEMA.schema[key]  # type: ignore
+    if isinstance(schema, vol.All):
+        for subschema in schema.validators:
+            if isinstance(subschema, dict):
+                schema = subschema
+                break
+        else:
+            return None
+
+    try:
+        key = next(k for k in schema if k == module.DOMAIN)  # type: ignore
+    except (TypeError, AttributeError, StopIteration):
+        return None
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Unexpected error identifying config schema")
+        return None
 
     if hasattr(key, "default") and not isinstance(
         key.default, vol.schema_builder.Undefined
@@ -581,7 +592,9 @@ def _identify_config_schema(module: ModuleType) -> Optional[str]:
 
         return None
 
-    t_schema = str(schema)
+    domain_schema = schema[key]
+
+    t_schema = str(domain_schema)
     if t_schema.startswith("{") or "schema_with_slug_keys" in t_schema:
         return "dict"
     if t_schema.startswith(("[", "All(<function ensure_list")):

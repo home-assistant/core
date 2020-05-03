@@ -4,11 +4,11 @@ import logging
 
 from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
+    DEGREE,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
-    UNIT_DEGREE,
     UNIT_PERCENTAGE,
-    UNIT_VOLT,
+    VOLT,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.helpers.entity import Entity
@@ -28,7 +28,7 @@ SENSOR_TYPES = {
         "active_power",
     ],
     "current": ["Current", "mdi:gauge", "local", ELECTRICAL_CURRENT_AMPERE, "current"],
-    "voltage": ["Voltage", "mdi:gauge", "local", UNIT_VOLT, "voltage"],
+    "voltage": ["Voltage", "mdi:gauge", "local", VOLT, "voltage"],
     "active_cosfi": [
         "Power Factor",
         "mdi:gauge",
@@ -75,7 +75,7 @@ SENSOR_TYPES = {
         "Water Sensor Temperature",
         "mdi:temperature-celsius",
         "water",
-        UNIT_DEGREE,
+        DEGREE,
         "temperature",
     ],
     "water_sensor_humidity": [

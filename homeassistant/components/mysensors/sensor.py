@@ -4,6 +4,8 @@ from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
     ELECTRICAL_VOLT_AMPERE,
+    CONDUCTIVITY,
+    DEGREE,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     LENGTH_METERS,
@@ -11,10 +13,8 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_CONDUCTIVITY,
-    UNIT_DEGREE,
     UNIT_PERCENTAGE,
-    UNIT_VOLT,
+    VOLT,
 )
 
 SENSORS = {
@@ -28,7 +28,7 @@ SENSORS = {
     "V_RAINRATE": [None, "mdi:weather-rainy"],
     "V_WIND": [None, "mdi:weather-windy"],
     "V_GUST": [None, "mdi:weather-windy"],
-    "V_DIRECTION": [UNIT_DEGREE, "mdi:compass"],
+    "V_DIRECTION": [DEGREE, "mdi:compass"],
     "V_WEIGHT": [MASS_KILOGRAMS, "mdi:weight-kilogram"],
     "V_DISTANCE": [LENGTH_METERS, "mdi:ruler"],
     "V_IMPEDANCE": ["ohm", None],
@@ -42,11 +42,11 @@ SENSORS = {
         "S_VIBRATION": [FREQUENCY_HERTZ, None],
         "S_LIGHT_LEVEL": ["lx", "mdi:white-balance-sunny"],
     },
-    "V_VOLTAGE": [UNIT_VOLT, "mdi:flash"],
+    "V_VOLTAGE": [VOLT, "mdi:flash"],
     "V_CURRENT": [ELECTRICAL_CURRENT_AMPERE, "mdi:flash-auto"],
     "V_PH": ["pH", None],
     "V_ORP": ["mV", None],
-    "V_EC": [UNIT_CONDUCTIVITY, None],
+    "V_EC": [CONDUCTIVITY, None],
     "V_VAR": ["var", None],
     "V_VA": [ELECTRICAL_VOLT_AMPERE, None],
 }

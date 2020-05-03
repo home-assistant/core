@@ -2,11 +2,12 @@
 from ipaddress import ip_network
 import logging
 import unittest
-from unittest.mock import patch
 
 import homeassistant.components.http as http
 from homeassistant.setup import async_setup_component
 from homeassistant.util.ssl import server_context_intermediate, server_context_modern
+
+from tests.async_mock import patch
 
 
 class TestView(http.HomeAssistantView):

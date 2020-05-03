@@ -1,10 +1,10 @@
 """Test for smart home alexa support."""
-from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.alexa import messages, smart_home
 import homeassistant.components.camera as camera
+from homeassistant.components.cover import DEVICE_CLASS_GATE
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -39,7 +39,8 @@ from . import (
     reported_properties,
 )
 
-from tests.common import async_mock_service, mock_coro
+from tests.async_mock import patch
+from tests.common import async_mock_service
 
 
 @pytest.fixture
@@ -2630,6 +2631,28 @@ async def test_cover_garage_door(hass):
     )
 
 
+async def test_cover_gate(hass):
+    """Test gate cover discovery."""
+    device = (
+        "cover.test_gate",
+        "off",
+        {
+            "friendly_name": "Test cover gate",
+            "supported_features": 3,
+            "device_class": DEVICE_CLASS_GATE,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "cover#test_gate"
+    assert appliance["displayCategories"][0] == "GARAGE_DOOR"
+    assert appliance["friendlyName"] == "Test cover gate"
+
+    assert_endpoint_capabilities(
+        appliance, "Alexa.ModeController", "Alexa.EndpointHealth", "Alexa"
+    )
+
+
 async def test_cover_position_mode(hass):
     """Test cover discovery and position using modeController."""
     device = (
@@ -3802,9 +3825,9 @@ async def test_camera_discovery_without_stream(hass):
     "url,result",
     [
         ("http://nohttpswrongport.org:8123", 2),
-        ("https://httpswrongport.org:8123", 2),
         ("http://nohttpsport443.org:443", 2),
         ("tls://nohttpsport443.org:443", 2),
+        ("https://httpsnnonstandport.org:8123", 3),
         ("https://correctschemaandport.org:443", 3),
         ("https://correctschemaandport.org", 3),
     ],
@@ -3831,7 +3854,7 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
-        return_value=mock_coro("rtsp://example.local"),
+        return_value="rtsp://example.local",
     ), patch(
         "homeassistant.helpers.network.async_get_external_url",
         return_value="https://mycamerastream.test",

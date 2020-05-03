@@ -2,7 +2,6 @@
 from copy import copy
 import socket
 import unittest
-from unittest.mock import Mock, patch
 from uuid import uuid4
 
 import homeassistant.components.tcp.sensor as tcp
@@ -10,6 +9,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.template import Template
 from homeassistant.setup import setup_component
 
+from tests.async_mock import Mock, patch
 from tests.common import assert_setup_component, get_test_home_assistant
 
 TEST_CONFIG = {

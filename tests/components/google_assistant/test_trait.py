@@ -1,6 +1,5 @@
 """Tests for the Google Assistant traits."""
 import logging
-from unittest.mock import Mock, patch
 
 import pytest
 
@@ -45,7 +44,8 @@ from homeassistant.util import color
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.common import async_mock_service, mock_coro
+from tests.async_mock import Mock, patch
+from tests.common import async_mock_service
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,7 +117,7 @@ async def test_camera_stream(hass):
 
     with patch(
         "homeassistant.components.camera.async_request_stream",
-        return_value=mock_coro("/api/streams/bla"),
+        return_value="/api/streams/bla",
     ):
         await trt.execute(trait.COMMAND_GET_CAMERA_STREAM, BASIC_DATA, {}, {})
 
@@ -845,10 +845,8 @@ async def test_lock_unlock_unlock(hass):
     assert err.value.code == const.ERR_CHALLENGE_NOT_SETUP
 
     # Test with 2FA override
-    with patch(
-        "homeassistant.components.google_assistant.helpers"
-        ".AbstractConfig.should_2fa",
-        return_value=False,
+    with patch.object(
+        BASIC_CONFIG, "should_2fa", return_value=False,
     ):
         await trt.execute(trait.COMMAND_LOCKUNLOCK, BASIC_DATA, {"lock": False}, {})
     assert len(calls) == 2

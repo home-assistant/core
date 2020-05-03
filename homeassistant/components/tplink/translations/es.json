@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No se han encontrado dispositivos TP-Link en la red.",
+            "single_instance_allowed": "S\u00f3lo es necesaria una configuraci\u00f3n."
+        },
+        "step": {
+            "confirm": {
+                "description": "\u00bfQuieres configurar dispositivos inteligentes de TP-Link?",
+                "title": "TP-Link Smart Home"
+            }
+        }
+    }
+}

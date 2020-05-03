@@ -8,12 +8,6 @@ from sqlalchemy.exc import SQLAlchemyError
 import voluptuous as vol
 
 from homeassistant.components import sun
-from homeassistant.components.homekit.const import (
-    ATTR_DISPLAY_NAME,
-    ATTR_VALUE,
-    DOMAIN as DOMAIN_HOMEKIT,
-    EVENT_HOMEKIT_CHANGED,
-)
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder.models import Events, States
 from homeassistant.components.recorder.util import (
@@ -26,7 +20,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_HIDDEN,
     ATTR_NAME,
-    ATTR_SERVICE,
     CONF_EXCLUDE,
     CONF_INCLUDE,
     EVENT_AUTOMATION_TRIGGERED,
@@ -89,7 +82,6 @@ ALL_EVENT_TYPES = [
     EVENT_LOGBOOK_ENTRY,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEKIT_CHANGED,
     EVENT_AUTOMATION_TRIGGERED,
     EVENT_SCRIPT_STARTED,
 ]
@@ -324,24 +316,6 @@ def humanify(hass, events):
                     "context_user_id": event.context.user_id,
                 }
 
-            elif event.event_type == EVENT_HOMEKIT_CHANGED:
-                data = event.data
-                entity_id = data.get(ATTR_ENTITY_ID)
-                value = data.get(ATTR_VALUE)
-
-                value_msg = f" to {value}" if value else ""
-                message = f"send command {data[ATTR_SERVICE]}{value_msg} for {data[ATTR_DISPLAY_NAME]}"
-
-                yield {
-                    "when": event.time_fired,
-                    "name": "HomeKit",
-                    "message": message,
-                    "domain": DOMAIN_HOMEKIT,
-                    "entity_id": entity_id,
-                    "context_id": event.context.id,
-                    "context_user_id": event.context.user_id,
-                }
-
             elif event.event_type == EVENT_AUTOMATION_TRIGGERED:
                 yield {
                     "when": event.time_fired,
@@ -497,9 +471,6 @@ def _keep_event(hass, event, entities_filter):
 
     elif event.event_type in hass.data.get(DOMAIN, {}):
         domain = hass.data[DOMAIN][event.event_type][0]
-
-    elif event.event_type == EVENT_HOMEKIT_CHANGED:
-        domain = DOMAIN_HOMEKIT
 
     if not entity_id and domain:
         entity_id = f"{domain}."

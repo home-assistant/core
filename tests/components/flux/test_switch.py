@@ -1,9 +1,9 @@
 """The tests for the Flux switch platform."""
-from asynctest.mock import patch
 import pytest
 
 from homeassistant.components import light, switch
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_PLATFORM,
     SERVICE_TURN_ON,
     STATE_ON,
@@ -13,13 +13,13 @@ from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
     async_mock_service,
     mock_restore_cache,
 )
-from tests.components.light import common as common_light
 from tests.components.switch import common
 
 
@@ -897,9 +897,13 @@ async def test_flux_with_multiple_lights(hass):
     )
 
     ent1, ent2, ent3 = platform.ENTITIES
-    common_light.turn_on(hass, entity_id=ent2.entity_id)
-    await hass.async_block_till_done()
-    common_light.turn_on(hass, entity_id=ent3.entity_id)
+
+    await hass.services.async_call(
+        light.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ent2.entity_id}, blocking=True
+    )
+    await hass.services.async_call(
+        light.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ent3.entity_id}, blocking=True
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get(ent1.entity_id)

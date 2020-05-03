@@ -1,8 +1,8 @@
 """Test network helper."""
-from unittest.mock import Mock, patch
-
 from homeassistant.components import cloud
 from homeassistant.helpers import network
+
+from tests.async_mock import Mock, patch
 
 
 async def test_get_external_url(hass):

@@ -59,9 +59,9 @@ def due_in_minutes(timestamp):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dublin public transport sensor."""
-    name = config.get(CONF_NAME)
-    stop = config.get(CONF_STOP_ID)
-    route = config.get(CONF_ROUTE)
+    name = config[CONF_NAME]
+    stop = config[CONF_STOP_ID]
+    route = config[CONF_ROUTE]
 
     data = PublicTransportData(stop, route)
     add_entities([DublinPublicTransportSensor(data, stop, route, name)], True)

@@ -1,7 +1,7 @@
 """Support for monitoring juicenet/juicepoint/juicebox based EVSE switches."""
 import logging
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
 from . import DOMAIN, JuicenetDevice
 
@@ -19,7 +19,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devs)
 
 
-class JuicenetChargeNowSwitch(JuicenetDevice, SwitchDevice):
+class JuicenetChargeNowSwitch(JuicenetDevice, SwitchEntity):
     """Implementation of a Juicenet switch."""
 
     def __init__(self, device, hass):

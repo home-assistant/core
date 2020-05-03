@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Mikrotik ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung net erfollegr\u00e4ich",
+            "name_exists": "Numm g\u00ebtt et schonn",
+            "wrong_credentials": "Falsh Login Informatiounen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Apparat",
+                    "name": "Numm",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "username": "Benotzernumm",
+                    "verify_ssl": "SSL benotzen"
+                },
+                "title": "Mikrotik Router ariichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "arp_ping": "ARP ping aktiv\u00e9ieren",
+                    "detection_time": "Home Intervall betruechten",
+                    "force_dhcp": "Scannen erzw\u00e9ngen mat DHCP"
+                }
+            }
+        }
+    }
+}

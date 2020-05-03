@@ -153,9 +153,6 @@ light:
   payload_off: "off"
 
 """
-from unittest import mock
-from unittest.mock import patch
-
 from homeassistant.components import light, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON
@@ -184,11 +181,11 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
+from tests.async_mock import call, patch
 from tests.common import (
     MockConfigEntry,
     assert_setup_component,
     async_fire_mqtt_message,
-    mock_coro,
 )
 from tests.components.light import common
 
@@ -673,7 +670,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     )
     with patch(
         "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=mock_coro(fake_state),
+        return_value=fake_state,
     ):
         with assert_setup_component(1, light.DOMAIN):
             assert await async_setup_component(hass, light.DOMAIN, config)
@@ -716,12 +713,12 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            mock.call("test_light_rgb/set", "on", 2, False),
-            mock.call("test_light_rgb/rgb/set", "255,128,0", 2, False),
-            mock.call("test_light_rgb/brightness/set", 50, 2, False),
-            mock.call("test_light_rgb/hs/set", "359.0,78.0", 2, False),
-            mock.call("test_light_rgb/white_value/set", 80, 2, False),
-            mock.call("test_light_rgb/xy/set", "0.14,0.131", 2, False),
+            call("test_light_rgb/set", "on", 2, False),
+            call("test_light_rgb/rgb/set", "255,128,0", 2, False),
+            call("test_light_rgb/brightness/set", 50, 2, False),
+            call("test_light_rgb/hs/set", "359.0,78.0", 2, False),
+            call("test_light_rgb/white_value/set", 80, 2, False),
+            call("test_light_rgb/xy/set", "0.14,0.131", 2, False),
         ],
         any_order=True,
     )
@@ -760,8 +757,8 @@ async def test_sending_mqtt_rgb_command_with_template(hass, mqtt_mock):
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            mock.call("test_light_rgb/set", "on", 0, False),
-            mock.call("test_light_rgb/rgb/set", "#ff803f", 0, False),
+            call("test_light_rgb/set", "on", 0, False),
+            call("test_light_rgb/rgb/set", "#ff803f", 0, False),
         ],
         any_order=True,
     )
@@ -795,8 +792,8 @@ async def test_sending_mqtt_color_temp_command_with_template(hass, mqtt_mock):
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            mock.call("test_light_color_temp/set", "on", 0, False),
-            mock.call("test_light_color_temp/color_temp/set", "10", 0, False),
+            call("test_light_color_temp/set", "on", 0, False),
+            call("test_light_color_temp/color_temp/set", "10", 0, False),
         ],
         any_order=True,
     )
@@ -980,8 +977,8 @@ async def test_on_command_first(hass, mqtt_mock):
     #    test_light/bright: 50
     mqtt_mock.async_publish.assert_has_calls(
         [
-            mock.call("test_light/set", "ON", 0, False),
-            mock.call("test_light/bright", 50, 0, False),
+            call("test_light/set", "ON", 0, False),
+            call("test_light/bright", 50, 0, False),
         ],
         any_order=True,
     )
@@ -1015,8 +1012,8 @@ async def test_on_command_last(hass, mqtt_mock):
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            mock.call("test_light/bright", 50, 0, False),
-            mock.call("test_light/set", "ON", 0, False),
+            call("test_light/bright", 50, 0, False),
+            call("test_light/set", "ON", 0, False),
         ],
         any_order=True,
     )
@@ -1072,8 +1069,8 @@ async def test_on_command_brightness(hass, mqtt_mock):
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            mock.call("test_light/rgb", "255,128,0", 0, False),
-            mock.call("test_light/bright", 50, 0, False),
+            call("test_light/rgb", "255,128,0", 0, False),
+            call("test_light/bright", 50, 0, False),
         ],
         any_order=True,
     )
@@ -1102,8 +1099,8 @@ async def test_on_command_rgb(hass, mqtt_mock):
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            mock.call("test_light/rgb", "127,127,127", 0, False),
-            mock.call("test_light/set", "ON", 0, False),
+            call("test_light/rgb", "127,127,127", 0, False),
+            call("test_light/set", "ON", 0, False),
         ],
         any_order=True,
     )
@@ -1138,8 +1135,8 @@ async def test_on_command_rgb_template(hass, mqtt_mock):
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            mock.call("test_light/rgb", "127/127/127", 0, False),
-            mock.call("test_light/set", "ON", 0, False),
+            call("test_light/rgb", "127/127/127", 0, False),
+            call("test_light/set", "ON", 0, False),
         ],
         any_order=True,
     )
@@ -1174,8 +1171,8 @@ async def test_effect(hass, mqtt_mock):
     #    test_light/set: 'ON'
     mqtt_mock.async_publish.assert_has_calls(
         [
-            mock.call("test_light/effect/set", "rainbow", 0, False),
-            mock.call("test_light/set", "ON", 0, False),
+            call("test_light/effect/set", "rainbow", 0, False),
+            call("test_light/set", "ON", 0, False),
         ],
         any_order=True,
     )

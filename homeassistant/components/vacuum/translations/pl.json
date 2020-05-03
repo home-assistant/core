@@ -1,0 +1,29 @@
+{
+    "device_automation": {
+        "action_type": {
+            "clean": "niech {entity_name} sprz\u0105ta",
+            "dock": "niech {entity_name} wr\u00f3ci do bazy"
+        },
+        "condition_type": {
+            "is_cleaning": "{entity_name} sprz\u0105ta",
+            "is_docked": "{entity_name} jest w bazie"
+        },
+        "trigger_type": {
+            "cleaning": "{entity_name} zacznie sprz\u0105ta\u0107",
+            "docked": "{entity_name} wr\u00f3ci do bazy"
+        }
+    },
+    "state": {
+        "_": {
+            "cleaning": "sprz\u0105tanie",
+            "docked": "w stacji dokuj\u0105cej",
+            "error": "b\u0142\u0105d",
+            "idle": "nieaktywny",
+            "off": "wy\u0142\u0105czony",
+            "on": "w\u0142\u0105czony",
+            "paused": "wstrzymany",
+            "returning": "powr\u00f3t do stacji dokuj\u0105cej"
+        }
+    },
+    "title": "Odkurzacz"
+}

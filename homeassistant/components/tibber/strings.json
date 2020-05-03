@@ -1,0 +1,22 @@
+{
+  "title": "Tibber",
+  "config": {
+    "abort": {
+      "already_configured": "A Tibber account is already configured."
+    },
+    "error": {
+      "timeout": "Timeout connecting to Tibber",
+      "connection_error": "Error connecting to Tibber",
+      "invalid_access_token": "Invalid access token"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "access_token": "Access token"
+        },
+        "description": "Enter your access token from https://developer.tibber.com/settings/accesstoken",
+        "title": "Tibber"
+      }
+    }
+  }
+}

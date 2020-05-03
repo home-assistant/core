@@ -1,6 +1,5 @@
 """Tests for light platform."""
 from typing import Callable, NamedTuple
-from unittest.mock import Mock, PropertyMock, patch
 
 from pyHS100 import SmartDeviceException
 import pytest
@@ -29,6 +28,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import Mock, PropertyMock, patch
 
 
 class LightMockData(NamedTuple):
@@ -287,7 +288,7 @@ async def test_smartswitch(
 
     state = hass.states.get("light.dimmer1")
     assert state.state == "on"
-    assert state.attributes["brightness"] == 48.45
+    assert state.attributes["brightness"] == 51
     assert sys_info["relay_state"] == 1
 
     await hass.services.async_call(
@@ -301,8 +302,8 @@ async def test_smartswitch(
 
     state = hass.states.get("light.dimmer1")
     assert state.state == "on"
-    assert state.attributes["brightness"] == 53.55
-    assert sys_info["brightness"] == 21
+    assert state.attributes["brightness"] == 56
+    assert sys_info["brightness"] == 22
 
     sys_info["relay_state"] = 0
     sys_info["brightness"] = 66
@@ -327,7 +328,7 @@ async def test_smartswitch(
 
     state = hass.states.get("light.dimmer1")
     assert state.state == "on"
-    assert state.attributes["brightness"] == 168.3
+    assert state.attributes["brightness"] == 168
     assert sys_info["brightness"] == 66
 
 
@@ -373,7 +374,7 @@ async def test_light(hass: HomeAssistant, light_mock_data: LightMockData) -> Non
 
     state = hass.states.get("light.light1")
     assert state.state == "on"
-    assert state.attributes["brightness"] == 48.45
+    assert state.attributes["brightness"] == 51
     assert state.attributes["hs_color"] == (110, 90)
     assert state.attributes["color_temp"] == 222
     assert light_state["on_off"] == 1
@@ -389,9 +390,9 @@ async def test_light(hass: HomeAssistant, light_mock_data: LightMockData) -> Non
 
     state = hass.states.get("light.light1")
     assert state.state == "on"
-    assert state.attributes["brightness"] == 53.55
+    assert state.attributes["brightness"] == 56
     assert state.attributes["hs_color"] == (23, 27)
-    assert light_state["brightness"] == 21
+    assert light_state["brightness"] == 22
     assert light_state["hue"] == 23
     assert light_state["saturation"] == 27
 
@@ -423,7 +424,7 @@ async def test_light(hass: HomeAssistant, light_mock_data: LightMockData) -> Non
 
     state = hass.states.get("light.light1")
     assert state.state == "on"
-    assert state.attributes["brightness"] == 168.3
+    assert state.attributes["brightness"] == 168
     assert state.attributes["hs_color"] == (77, 78)
     assert state.attributes["color_temp"] == 156
     assert light_state["brightness"] == 66
@@ -434,7 +435,7 @@ async def test_light(hass: HomeAssistant, light_mock_data: LightMockData) -> Non
     await update_entity(hass, "light.light1")
 
     state = hass.states.get("light.light1")
-    assert state.attributes["brightness"] == 232.05
+    assert state.attributes["brightness"] == 232
 
 
 async def test_get_light_state_retry(

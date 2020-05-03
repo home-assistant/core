@@ -1,6 +1,4 @@
 """The tests the for GPSLogger device tracker platform."""
-from unittest.mock import Mock, patch
-
 import pytest
 
 from homeassistant import data_entry_flow
@@ -15,6 +13,8 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import Mock, patch
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811

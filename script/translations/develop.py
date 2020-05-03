@@ -61,3 +61,5 @@ def run():
     )
 
     download.write_integration_translations()
+
+    return 0

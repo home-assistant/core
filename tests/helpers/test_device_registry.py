@@ -1,13 +1,13 @@
 """Tests for the Device Registry."""
 import asyncio
-from unittest.mock import patch
 
-import asynctest
 import pytest
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry
 
+import tests.async_mock
+from tests.async_mock import patch
 from tests.common import flush_store, mock_device_registry
 
 
@@ -149,6 +149,7 @@ async def test_loading_from_storage(hass, hass_storage):
                     "model": "model",
                     "name": "name",
                     "sw_version": "version",
+                    "entry_type": "service",
                     "area_id": "12345A",
                     "name_by_user": "Test Friendly Name",
                 }
@@ -168,6 +169,7 @@ async def test_loading_from_storage(hass, hass_storage):
     assert entry.id == "abcdefghijklm"
     assert entry.area_id == "12345A"
     assert entry.name_by_user == "Test Friendly Name"
+    assert entry.entry_type == "service"
     assert isinstance(entry.config_entries, set)
 
 
@@ -304,6 +306,9 @@ async def test_loading_saving_data(hass, registry):
         identifiers={("hue", "0123")},
         manufacturer="manufacturer",
         model="via",
+        name="Original Name",
+        sw_version="Orig SW 1",
+        entry_type="device",
     )
 
     orig_light = registry.async_get_or_create(
@@ -316,6 +321,10 @@ async def test_loading_saving_data(hass, registry):
     )
 
     assert len(registry.devices) == 2
+
+    orig_via = registry.async_update_device(
+        orig_via.id, area_id="mock-area-id", name_by_user="mock-name-by-user"
+    )
 
     # Now load written data in new registry
     registry2 = device_registry.DeviceRegistry(hass)
@@ -397,6 +406,8 @@ async def test_update(registry):
         updated_entry = registry.async_update_device(
             entry.id,
             area_id="12345A",
+            manufacturer="Test Producer",
+            model="Test Model",
             name_by_user="Test Friendly Name",
             new_identifiers=new_identifiers,
             via_device_id="98765B",
@@ -405,6 +416,8 @@ async def test_update(registry):
     assert mock_save.call_count == 1
     assert updated_entry != entry
     assert updated_entry.area_id == "12345A"
+    assert updated_entry.manufacturer == "Test Producer"
+    assert updated_entry.model == "Test Model"
     assert updated_entry.name_by_user == "Test Friendly Name"
     assert updated_entry.identifiers == new_identifiers
     assert updated_entry.via_device_id == "98765B"
@@ -470,7 +483,7 @@ async def test_update_remove_config_entries(hass, registry, update_events):
 
 async def test_loading_race_condition(hass):
     """Test only one storage load called when concurrent loading occurred ."""
-    with asynctest.patch(
+    with tests.async_mock.patch(
         "homeassistant.helpers.device_registry.DeviceRegistry.async_load"
     ) as mock_load:
         results = await asyncio.gather(
