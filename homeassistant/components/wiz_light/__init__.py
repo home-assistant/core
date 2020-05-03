@@ -1,2 +1,1 @@
-'''WiZ Light integration '''
-''' Version 1.0 '''
+"""WiZ Light integration """
