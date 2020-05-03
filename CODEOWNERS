@@ -441,6 +441,7 @@ homeassistant/components/webostv/* @bendavid
 homeassistant/components/websocket_api/* @home-assistant/core
 homeassistant/components/wemo/* @sqldiablo
 homeassistant/components/withings/* @vangorra
+homeassistant/components/wiz_light/* @sbidy @angadsingh
 homeassistant/components/wled/* @frenck
 homeassistant/components/workday/* @fabaff
 homeassistant/components/worldclock/* @fabaff
