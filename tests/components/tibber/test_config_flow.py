@@ -37,7 +37,7 @@ async def test_create_entry(hass):
     title = "title"
 
     tibber_mock = tests.async_mock.MagicMock()
-    type(tibber_mock).update_info = tests.async_mock.CoroutineMock(return_value=True)
+    type(tibber_mock).update_info = tests.async_mock.AsyncMock(return_value=True)
     type(tibber_mock).user_id = tests.async_mock.PropertyMock(
         return_value=unique_user_id
     )
