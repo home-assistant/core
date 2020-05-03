@@ -1224,7 +1224,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-https://github.com/Eerovil/pychromecast/archive/quick-play.zip
+pychromecast==5.0.0
 
 # homeassistant.components.cmus
 pycmus==0.1.1
