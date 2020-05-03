@@ -92,7 +92,6 @@ class WizBulb(Light):
 
     async def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-
         rgb = None
         if ATTR_RGB_COLOR in kwargs:
             rgb = kwargs.get(ATTR_RGB_COLOR)
