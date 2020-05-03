@@ -6,7 +6,7 @@ from pyheos import HeosError
 from homeassistant import data_entry_flow
 from homeassistant.components import heos, ssdp
 from homeassistant.components.heos.config_flow import HeosFlowHandler
-from homeassistant.components.heos.const import DATA_DISCOVERED_HOSTS
+from homeassistant.components.heos.const import DATA_DISCOVERED_HOSTS, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP
 from homeassistant.const import CONF_HOST
 
@@ -56,7 +56,7 @@ async def test_create_entry_when_host_valid(hass, controller):
             heos.DOMAIN, context={"source": "user"}, data=data
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["result"].unique_id == "1"
+        assert result["result"].unique_id == DOMAIN
         assert result["title"] == "Controller (127.0.0.1)"
         assert result["data"] == data
         assert controller.connect.call_count == 1
@@ -72,7 +72,7 @@ async def test_create_entry_when_friendly_name_valid(hass, controller):
             heos.DOMAIN, context={"source": "user"}, data=data
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["result"].unique_id == "1"
+        assert result["result"].unique_id == DOMAIN
         assert result["title"] == "Controller (127.0.0.1)"
         assert result["data"] == {CONF_HOST: "127.0.0.1"}
         assert controller.connect.call_count == 1
@@ -88,7 +88,7 @@ async def test_discovery_shows_create_form(hass, controller, discovery_data):
     )
     await hass.async_block_till_done()
     flows_in_progress = hass.config_entries.flow.async_progress()
-    assert flows_in_progress[0]["context"]["unique_id"] == "1"
+    assert flows_in_progress[0]["context"]["unique_id"] == DOMAIN
     assert len(flows_in_progress) == 1
     assert hass.data[DATA_DISCOVERED_HOSTS] == {"Office (127.0.0.1)": "127.0.0.1"}
 
@@ -101,7 +101,7 @@ async def test_discovery_shows_create_form(hass, controller, discovery_data):
     )
     await hass.async_block_till_done()
     flows_in_progress = hass.config_entries.flow.async_progress()
-    assert flows_in_progress[0]["context"]["unique_id"] == "1"
+    assert flows_in_progress[0]["context"]["unique_id"] == DOMAIN
     assert len(flows_in_progress) == 1
     assert hass.data[DATA_DISCOVERED_HOSTS] == {
         "Office (127.0.0.1)": "127.0.0.1",
@@ -109,8 +109,20 @@ async def test_discovery_shows_create_form(hass, controller, discovery_data):
     }
 
 
-async def test_discovery_finds_correct_player_id(hass, controller, discovery_data):
-    """Test discovery finds the correct player id for the given host."""
+async def test_discovery_flow_aborts_already_setup(
+    hass, controller, discovery_data, config_entry
+):
+    """Test discovery flow aborts when entry already setup."""
+    config_entry.add_to_hass(hass)
+    flow = HeosFlowHandler()
+    flow.hass = hass
+    result = await flow.async_step_ssdp(discovery_data)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_setup"
+
+
+async def test_discovery_sets_the_unique_id(hass, controller, discovery_data):
+    """Test discovery sets the unique id."""
 
     port = urlparse(discovery_data[ssdp.ATTR_SSDP_LOCATION]).port
     discovery_data[ssdp.ATTR_SSDP_LOCATION] = f"http://127.0.0.2:{port}/"
@@ -121,13 +133,13 @@ async def test_discovery_finds_correct_player_id(hass, controller, discovery_dat
     )
     await hass.async_block_till_done()
     flows_in_progress = hass.config_entries.flow.async_progress()
-    assert flows_in_progress[0]["context"]["unique_id"] == "2"
+    assert flows_in_progress[0]["context"]["unique_id"] == DOMAIN
     assert len(flows_in_progress) == 1
     assert hass.data[DATA_DISCOVERED_HOSTS] == {"Bedroom (127.0.0.2)": "127.0.0.2"}
 
 
-async def test_import_finds_correct_player_id(hass, controller):
-    """Test import finds the correct player id for the given host."""
+async def test_import_sets_the_unique_id(hass, controller):
+    """Test import sets the unique id."""
 
     with patch("homeassistant.components.heos.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
@@ -137,16 +149,4 @@ async def test_import_finds_correct_player_id(hass, controller):
         )
     await hass.async_block_till_done()
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == "2"
-
-
-async def test_disovery_flow_aborts_already_setup(
-    hass, controller, discovery_data, config_entry
-):
-    """Test discovery flow aborts when entry already setup."""
-    config_entry.add_to_hass(hass)
-    flow = HeosFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_ssdp(discovery_data)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["result"].unique_id == DOMAIN
