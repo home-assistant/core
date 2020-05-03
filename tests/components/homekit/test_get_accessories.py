@@ -264,3 +264,15 @@ def test_type_vacuum(type_name, entity_id, state, attrs):
         entity_state = State(entity_id, state, attrs)
         get_accessory(None, None, entity_state, 2, {})
     assert mock_type.called
+
+
+@pytest.mark.parametrize(
+    "type_name, entity_id, state, attrs", [("Camera", "camera.basic", "on", {})],
+)
+def test_type_camera(type_name, entity_id, state, attrs):
+    """Test if camera types are associated correctly."""
+    mock_type = Mock()
+    with patch.dict(TYPES, {type_name: mock_type}):
+        entity_state = State(entity_id, state, attrs)
+        get_accessory(None, None, entity_state, 2, {})
+    assert mock_type.called
