@@ -11,6 +11,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_DISKS,
     CONF_HOST,
+    CONF_MAC,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -77,6 +78,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.unique_id] = api
 
+    # For SSDP compat
+    if not entry.data.get(CONF_MAC):
+        network = await hass.async_add_executor_job(getattr, api.dsm, "network")
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_MAC: network.macs}
+        )
+
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")
     )
@@ -115,7 +123,7 @@ class SynoApi:
         self._device_token = device_token
         self.temp_unit = temp_unit
 
-        self._dsm: SynologyDSM = None
+        self.dsm: SynologyDSM = None
         self.information: SynoDSMInformation = None
         self.utilisation: SynoCoreUtilization = None
         self.storage: SynoStorage = None
@@ -129,7 +137,7 @@ class SynoApi:
 
     async def async_setup(self):
         """Start interacting with the NAS."""
-        self._dsm = SynologyDSM(
+        self.dsm = SynologyDSM(
             self._host,
             self._port,
             self._username,
@@ -147,9 +155,9 @@ class SynoApi:
 
     def _fetch_device_configuration(self):
         """Fetch initial device config."""
-        self.information = self._dsm.information
-        self.utilisation = self._dsm.utilisation
-        self.storage = self._dsm.storage
+        self.information = self.dsm.information
+        self.utilisation = self.dsm.utilisation
+        self.storage = self.dsm.storage
 
     async def async_unload(self):
         """Stop interacting with the NAS and prepare for removal from hass."""
@@ -157,5 +165,5 @@ class SynoApi:
 
     async def update(self, now=None):
         """Update function for updating API information."""
-        await self._hass.async_add_executor_job(self._dsm.update)
+        await self._hass.async_add_executor_job(self.dsm.update)
         async_dispatcher_send(self._hass, self.signal_sensor_update)
