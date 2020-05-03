@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_TYPE,
     DATA_GIBIBYTES,
     DATA_MEBIBYTES,
-    DATA_RATE_MEGABYTES_PER_SECOND,
+    DATA_RATE_MEGABITS_PER_SECOND,
     STATE_OFF,
     STATE_ON,
     UNIT_PERCENTAGE,
@@ -46,13 +46,13 @@ SENSOR_TYPES = {
     "packets_out": ["Packets out", " ", "mdi:server-network", None],
     "throughput_network_in": [
         "Network throughput in",
-        DATA_RATE_MEGABYTES_PER_SECOND,
+        DATA_RATE_MEGABITS_PER_SECOND,
         "mdi:server-network",
         None,
     ],
     "throughput_network_out": [
         "Network throughput out",
-        DATA_RATE_MEGABYTES_PER_SECOND,
+        DATA_RATE_MEGABITS_PER_SECOND,
         "mdi:server-network",
         None,
     ],
@@ -203,7 +203,7 @@ class SystemMonitorSensor(Entity):
                 if self._last_value and self._last_value < counter:
                     self._state = round(
                         (counter - self._last_value)
-                        / 1000 ** 2
+                        / 1000 ** 2 * 8
                         / (now - self._last_update_time).seconds,
                         3,
                     )
