@@ -1779,6 +1779,9 @@ pywebpush==1.9.2
 # homeassistant.components.wemo
 pywemo==0.4.34
 
+# homeassistant.components.wiz_light
+pywizlight==0.3.2
+
 # homeassistant.components.xeoma
 pyxeoma==1.4.1
 
