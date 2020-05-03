@@ -505,18 +505,18 @@ class CastDevice(MediaPlayerEntity):
     def cast_app(self, app_name, data, **kwargs):
         """Launch an application and start playing media."""
         try:
-            quick_play(self._chromecast, app_name, data)
-            return
-        except NotImplementedError:
-            _LOGGER.info("Trying to import cast extensions")
-        try:
             from importlib import import_module
 
             extended_quick_play = import_module("castextensions").quick_play
             extended_quick_play(self._chromecast, app_name, data)
+            return
         except ImportError:
             _LOGGER.info("Cast extensions not installed")
-            _LOGGER.error("App %s not supported", app_name)
+        except NotImplementedError:
+            pass
+        try:
+            quick_play(self._chromecast, app_name, data)
+            return
         except NotImplementedError:
             _LOGGER.error("App %s not supported", app_name)
 
