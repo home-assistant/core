@@ -230,6 +230,12 @@ class EmailContentSensor(Entity):
         email_message = self._email_reader.read_next()
 
         if email_message is None:
+            self._message = "unknown"
+            self._state_attributes = {
+                ATTR_FROM: "unknown",
+                ATTR_SUBJECT: "unknown",
+                ATTR_BODY: "unknown",
+            }
             return
 
         if self.sender_allowed(email_message):
