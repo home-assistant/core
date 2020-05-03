@@ -20,6 +20,7 @@ class PulseHub:
         self.api: Optional[aiopulse.Hub] = None
         self.tasks = []
         self.current_rollers = {}
+        self.cleanup_callbacks = []
 
     @property
     def title(self):
@@ -46,6 +47,9 @@ class PulseHub:
 
     async def async_reset(self):
         """Reset this hub to default state."""
+
+        for cleanup_callback in self.cleanup_callbacks:
+            cleanup_callback()
 
         # If not setup
         if self.api is None:

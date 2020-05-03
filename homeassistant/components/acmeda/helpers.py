@@ -15,7 +15,7 @@ async def add_entities(hass, entity_class, config_entry, current, async_add_enti
     for unique_id, roller in api.items():
         if unique_id not in current:
             LOGGER.info("New %s %s", entity_class.__name__, unique_id)
-            new_item = entity_class(hass, roller)
+            new_item = entity_class(roller)
             current.add(unique_id)
             new_items.append(new_item)
 

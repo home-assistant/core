@@ -50,16 +50,7 @@ async def async_setup(hass: core.HomeAssistant, config: dict):
 
     hubs = conf[CONF_HUBS]
 
-    configured_hubs = {
-        entry.data["host"] for entry in hass.config_entries.async_entries(DOMAIN)
-    }
-
     for hub_conf in hubs:
-        host = hub_conf[CONF_HOST]
-
-        if host in configured_hubs:
-            continue
-
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,

@@ -13,9 +13,8 @@ from .const import ACMEDA_ENTITY_REMOVE, DOMAIN, LOGGER
 class AcmedaBase(entity.Entity):
     """Base representation of an Acmeda roller."""
 
-    def __init__(self, hass, roller: aiopulse.Roller):
+    def __init__(self, roller: aiopulse.Roller):
         """Initialize the roller."""
-        self.hass = hass
         self.roller = roller
 
     async def async_remove_and_unregister(self):
@@ -49,7 +48,7 @@ class AcmedaBase(entity.Entity):
             )
         )
 
-    async def async_reset(self):
+    async def async_will_remove_from_hass(self):
         """Entity being removed from hass."""
         self.roller.callback_unsubscribe(self.notify_update)
 
@@ -72,7 +71,7 @@ class AcmedaBase(entity.Entity):
     @property
     def device_id(self):
         """Return the ID of this roller."""
-        return self.unique_id
+        return self.roller.id
 
     @property
     def name(self):
@@ -83,7 +82,7 @@ class AcmedaBase(entity.Entity):
     def device_info(self):
         """Return the device info."""
         return {
-            "identifiers": {(DOMAIN, self.roller.id)},
+            "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.roller.name,
             "manufacturer": "Rollease Acmeda",
             "via_device": (DOMAIN, self.roller.hub.id),
