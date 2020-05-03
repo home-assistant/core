@@ -463,6 +463,7 @@ homeassistant/components/zha/* @dmulcahey @adminiuga
 homeassistant/components/zone/* @home-assistant/core
 homeassistant/components/zoneminder/* @rohankapoorcom
 homeassistant/components/zwave/* @home-assistant/z-wave
+homeassistant/components/zwave_mqtt/* @cgarwood @marcelveldt @MartinHjelmare
 
 # Individual files
 homeassistant/components/demo/weather @fabaff
