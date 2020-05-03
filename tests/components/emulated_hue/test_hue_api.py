@@ -916,6 +916,7 @@ async def test_external_ip_blocked(hue_client):
     getUrls = [
         "/api/username/groups",
         "/api/username",
+        "/api/username/config",
         "/api/username/lights",
         "/api/username/lights/light.ceiling_lights",
     ]
