@@ -208,39 +208,6 @@ class WizBulb(Light):
     def effect_list(self):
         """
             Return the list of supported effects.
-            0:"Ocean",
-            1:"Romance",
-            2:"Sunset",
-            3:"Party",
-            4:"Fireplace",
-            5:"Cozy",
-            6:"Forest",
-            7:"Pastel Colors",
-            8:"Wake up",
-            9:"Bedtime",
-            10:"Warm White",
-            11:"Daylight",
-            12:"Cool white",
-            13:"Night light",
-            14:"Focus",
-            15:"Relax",
-            16:"True colors",
-            17:"TV time",
-            18:"Plantgrowth",
-            19:"Spring",
-            20:"Summer",
-            21:"Fall",
-            22:"Deepdive",
-            23:"Jungle",
-            24:"Mojito",
-            25:"Club",
-            26:"Christmas",
-            27:"Halloween",
-            28:"Candlelight",
-            29:"Golden white",
-            30:"Pulse",
-            31:"Steampunk",
-            1000:"Rhythm"
         """
         # Special filament bulb type
         if self._bulbType == "ESP56_SHTW3_01":
@@ -264,7 +231,7 @@ class WizBulb(Light):
         """
         await self.update_state()
 
-        if self._state is not None and self._state != False:
+        if self._state is not None and self._state is not False:
             await self.get_bulb_type()
             self.update_brightness()
             self.update_temperature()
@@ -292,7 +259,7 @@ class WizBulb(Light):
             else:
                 await self.update_state_available()
         except Exception as ex:
-            _LOGGER.error("Bulb not available or can't be reached!")
+            _LOGGER.error(ex)
             await self.update_state_unavailable()
         _LOGGER.debug(
             "[wizlight {}] updated state: {}".format(self._light.ip, self._state)

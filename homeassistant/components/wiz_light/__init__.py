@@ -1,1 +1,1 @@
-"""WiZ Light integration """
+"""WiZ Light integration"""
