@@ -2,7 +2,7 @@
 import logging
 from typing import Callable
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 
 from . import OpensprinklerBinarySensor
@@ -31,17 +31,17 @@ def _create_entities(hass: HomeAssistant, config: dict, discovery_info: dict):
     device = hass.data[DOMAIN][DATA_DEVICES][name]
     entities.append(DeviceSwitch(name, device))
 
-    for program in device.getPrograms():
+    for program in device.programs:
         entities.append(ProgramSwitch(program, device))
 
     default_seconds = discovery_info["default_seconds"]
-    for station in device.getStations():
+    for station in device.stations:
         entities.append(StationSwitch(station, device, default_seconds))
 
     return entities
 
 
-class DeviceSwitch(OpensprinklerBinarySensor, SwitchDevice):
+class DeviceSwitch(OpensprinklerBinarySensor, SwitchEntity):
     """Represent a switch that reflects whether device is enabled."""
 
     def __init__(self, name, device):
@@ -57,18 +57,18 @@ class DeviceSwitch(OpensprinklerBinarySensor, SwitchDevice):
 
     def _get_state(self) -> bool:
         """Retrieve latest state."""
-        return bool(self._device.device.getOperationEnabled())
+        return bool(self._device.device.operation_enabled)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Disable device operation."""
-        self._device.device.disable()
+        await self.hass.async_add_executor_job(self._device.device.disable)
 
     async def async_turn_on(self, **kwargs) -> None:
         """Enable device operation."""
-        self._device.device.enable()
+        await self.hass.async_add_executor_job(self._device.device.enable)
 
 
-class ProgramSwitch(OpensprinklerBinarySensor, SwitchDevice):
+class ProgramSwitch(OpensprinklerBinarySensor, SwitchEntity):
     """Represent a switch that reflects whether program is enabled."""
 
     def __init__(self, program, device):
@@ -84,18 +84,18 @@ class ProgramSwitch(OpensprinklerBinarySensor, SwitchDevice):
 
     def _get_state(self) -> bool:
         """Retrieve latest state."""
-        return bool(self._program.getEnabled())
+        return bool(self._program.enabled)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Disable program."""
-        self._program.disable()
+        await self.hass.async_add_executor_job(self._program.disable)
 
     async def async_turn_on(self, **kwargs) -> None:
         """Enable program."""
-        self._program.enable()
+        await self.hass.async_add_executor_job(self._program.enable)
 
 
-class StationSwitch(OpensprinklerBinarySensor, SwitchDevice):
+class StationSwitch(OpensprinklerBinarySensor, SwitchEntity):
     """Represent a switch that reflects whether station is running."""
 
     def __init__(self, station, device, default_seconds):
@@ -112,12 +112,12 @@ class StationSwitch(OpensprinklerBinarySensor, SwitchDevice):
 
     def _get_state(self) -> bool:
         """Retrieve latest state."""
-        return bool(self._station.getIsRunning())
+        return bool(self._station.is_running)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Stop station."""
-        self._station.stop()
+        await self.hass.async_add_executor_job(self._station.stop)
 
     async def async_turn_on(self, **kwargs) -> None:
         """Run station."""
-        self._station.run(self._default_seconds)
+        await self.hass.async_add_executor_job(self._station.run, self._default_seconds)

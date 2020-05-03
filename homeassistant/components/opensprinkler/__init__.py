@@ -103,7 +103,7 @@ class OpensprinklerEntity(RestoreEntity):
     @Throttle(SCAN_INTERVAL)
     async def async_update(self) -> None:
         """Update latest state."""
-        self._state = self._get_state()
+        self._state = await self.hass.async_add_executor_job(self._get_state)
         self.async_write_ha_state()
 
 

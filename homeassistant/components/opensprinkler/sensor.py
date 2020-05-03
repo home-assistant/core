@@ -38,7 +38,7 @@ def _create_entities(hass: HomeAssistant, config: dict, discovery_info: dict):
     entities.append(RainDelayStopTimeSensor(name, device))
     entities.append(WaterLevelSensor(name, device))
 
-    for station in device.getStations():
+    for station in device.stations:
         entities.append(StationSensor(station, device))
 
     return entities
@@ -70,7 +70,7 @@ class WaterLevelSensor(OpensprinklerSensor, Entity):
 
     def _get_state(self) -> int:
         """Retrieve latest state."""
-        return self._device.device.getWaterLevel()
+        return self._device.device.water_level
 
 
 class LastRunSensor(OpensprinklerSensor, Entity):
@@ -94,7 +94,7 @@ class LastRunSensor(OpensprinklerSensor, Entity):
 
     def _get_state(self):
         """Retrieve latest state."""
-        last_run = self._device.device.getLastRun()
+        last_run = self._device.device.last_run
         utc_time = datetime.fromtimestamp(last_run, UTC_TZ)
         return utc_time.strftime("%d/%m %H:%M")
 
@@ -120,7 +120,7 @@ class RainDelayStopTimeSensor(OpensprinklerSensor, Entity):
 
     def _get_state(self):
         """Retrieve latest state."""
-        rdst = self._device.device.getRainDelayStopTime()
+        rdst = self._device.device.rain_delay_stop_time
         if rdst == 0:
             return "Not in effect"
 
@@ -144,4 +144,4 @@ class StationSensor(OpensprinklerSensor, Entity):
 
     def _get_state(self) -> bool:
         """Retrieve latest state."""
-        return self._station.getStatus()
+        return self._station.status

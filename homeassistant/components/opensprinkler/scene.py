@@ -29,7 +29,7 @@ def _create_entities(hass: HomeAssistant, config: dict, discovery_info: dict):
     name = discovery_info["name"]
     device = hass.data[DOMAIN][DATA_DEVICES][name]
 
-    for program in device.getPrograms():
+    for program in device.programs:
         entities.append(ProgramScene(program, device))
 
     return entities
@@ -55,4 +55,4 @@ class ProgramScene(Scene):
 
     async def async_activate(self) -> None:
         """Run the program."""
-        self._program.run()
+        await self.hass.async_add_executor_job(self._program.run)
