@@ -1,6 +1,7 @@
 """Home Connect entity base class."""
 
 import logging
+from typing import Optional
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -15,10 +16,14 @@ _LOGGER = logging.getLogger(__name__)
 class HomeConnectEntity(Entity):
     """Generic Home Connect entity (base class)."""
 
-    def __init__(self, device: HomeConnectDevice, name: str) -> None:
+    def __init__(self, device: HomeConnectDevice, desc: Optional[str]) -> None:
         """Initialize the entity."""
         self.device = device
-        self._name = name
+        self.desc = desc
+        if desc is None:
+            self._name = self.device.appliance.name
+        else:
+            self._name = f"{self.device.appliance.name} {desc}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -47,7 +52,7 @@ class HomeConnectEntity(Entity):
     @property
     def unique_id(self):
         """Return the unique id base on the id returned by Home Connect and the entity name."""
-        return f"{self.device.appliance.haId}-{self.name}"
+        return f"{self.device.appliance.haId}-{self.desc}"
 
     @property
     def device_info(self):

@@ -145,14 +145,14 @@ class DeviceWithPrograms(HomeConnectDevice):
         return [
             {
                 "device": self,
-                "name": " ".join((self.appliance.name, name)),
+                "desc": k,
                 "unit": unit,
-                "key": "BSH.Common.Option.{}".format(name.replace(" ", "")),
+                "key": "BSH.Common.Option.{}".format(k.replace(" ", "")),
                 "icon": icon,
                 "device_class": device_class,
                 "sign": sign,
             }
-            for name, (unit, icon, device_class, sign) in sensors.items()
+            for k, (unit, icon, device_class, sign) in sensors.items()
         ]
 
 
@@ -163,7 +163,7 @@ class DeviceWithDoor(HomeConnectDevice):
         """Get a dictionary with info about the door binary sensor."""
         return {
             "device": self,
-            "name": self.appliance.name + " Door",
+            "desc": "Door",
             "device_class": "door",
         }
 

@@ -37,9 +37,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class HomeConnectSensor(HomeConnectEntity):
     """Sensor class for Home Connect."""
 
-    def __init__(self, device, name, key, unit, icon, device_class, sign=1):
+    def __init__(self, device, desc, key, unit, icon, device_class, sign=1):
         """Initialize the entity."""
-        super().__init__(device, name)
+        super().__init__(device, desc)
         self._state = None
         self._key = key
         self._unit = unit
