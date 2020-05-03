@@ -17,7 +17,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import SurePetcareAPI
 from .const import DATA_SURE_PETCARE, SPC, TOPIC_UPDATE
 
-
 _LOGGER = logging.getLogger(__name__)
 
 

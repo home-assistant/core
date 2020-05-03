@@ -1,7 +1,6 @@
 """Constants for the Sure Petcare component."""
 from datetime import timedelta
 
-
 DOMAIN = "surepetcare"
 DEFAULT_DEVICE_CLASS = "lock"
 DEFAULT_ICON = "mdi:cat"

@@ -37,7 +37,6 @@ from .const import (
     TOPIC_UPDATE,
 )
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
