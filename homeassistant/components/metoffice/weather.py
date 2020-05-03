@@ -2,7 +2,15 @@
 
 import logging
 
-from homeassistant.components.weather import WeatherEntity
+from homeassistant.components.weather import (
+    ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TIME,
+    ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED,
+    WeatherEntity,
+)
 from homeassistant.const import LENGTH_KILOMETERS, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -45,6 +53,7 @@ class MetOfficeWeather(WeatherEntity):
         self._unique_id = f"{self._data.latitude}_{self._data.longitude}"
 
         self.metoffice_now = None
+        self.metoffice_all = None
 
     @property
     def name(self):
@@ -137,6 +146,37 @@ class MetOfficeWeather(WeatherEntity):
         """Return the attribution."""
         return ATTRIBUTION
 
+    @property
+    def forecast(self):
+        """Return the forecast array."""
+        data = [
+            {
+                ATTR_FORECAST_CONDITION: [
+                    k
+                    for k, v in CONDITION_CLASSES.items()
+                    if timestep.weather.value in v
+                ][0]
+                if timestep.weather
+                else None,
+                ATTR_FORECAST_PRECIPITATION: timestep.precipitation.value
+                if timestep.precipitation
+                else None,
+                ATTR_FORECAST_TEMP: timestep.temperature.value
+                if timestep.temperature
+                else None,
+                ATTR_FORECAST_TIME: timestep.date,
+                ATTR_FORECAST_WIND_BEARING: timestep.wind_direction.value
+                if timestep.wind_direction
+                else None,
+                ATTR_FORECAST_WIND_SPEED: timestep.wind_speed.value
+                if timestep.wind_speed
+                else None,
+            }
+            for timestep in self.metoffice_all
+        ]
+
+        return data
+
     async def async_added_to_hass(self) -> None:
         """Set up a listener and load data."""
         self.async_on_remove(
@@ -148,6 +188,7 @@ class MetOfficeWeather(WeatherEntity):
     def _update_callback(self) -> None:
         """Load data from integration."""
         self.metoffice_now = self._data.now
+        self.metoffice_all = self._data.all
         self.async_write_ha_state()
 
     @property
@@ -158,4 +199,4 @@ class MetOfficeWeather(WeatherEntity):
     @property
     def available(self):
         """Return if state is available."""
-        return self.metoffice_now is not None
+        return self.metoffice_now is not None and self.metoffice_all is not None

@@ -4,7 +4,13 @@ import asyncio
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_MODE,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -14,13 +20,26 @@ from .const import (
     DOMAIN,
     METOFFICE_COORDINATOR,
     METOFFICE_DATA,
+    METOFFICE_LISTENER,
     METOFFICE_NAME,
+    MODE_3HOURLY,
 )
 from .data import MetOfficeData
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor", "weather"]
+
+
+async def metoffice_data_update_listener(hass, entry):
+    """Handle options update."""
+    _LOGGER.debug(
+        "Updating %s update mode to %s", entry.data[CONF_NAME], entry.options[CONF_MODE]
+    )
+    hass_data = hass.data[DOMAIN][entry.entry_id]
+    if entry.options[CONF_MODE] != hass_data[METOFFICE_DATA].mode:
+        hass_data[METOFFICE_DATA].mode = entry.options[CONF_MODE]
+        await hass_data[METOFFICE_COORDINATOR].async_refresh()
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -31,12 +50,18 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up a Met Office entry."""
 
+    # migrate previous versions to set a 3-hourly update
+    if CONF_MODE not in entry.data:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_MODE: MODE_3HOURLY}
+        )
+
+    api_key = entry.data[CONF_API_KEY]
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
-    api_key = entry.data[CONF_API_KEY]
-    site_name = entry.data[CONF_NAME]
+    mode = entry.data[CONF_MODE]
 
-    metoffice_data = MetOfficeData(hass, api_key, latitude, longitude)
+    metoffice_data = MetOfficeData(hass, api_key, latitude, longitude, mode)
     await metoffice_data.async_update_site()
     if metoffice_data.site_name is None:
         raise ConfigEntryNotReady()
@@ -44,16 +69,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     metoffice_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name=f"MetOffice Coordinator for {site_name}",
+        name=f"MetOffice Coordinator for {metoffice_data.site_name}",
         update_method=metoffice_data.async_update,
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
+
+    remove_listener = entry.add_update_listener(metoffice_data_update_listener)
 
     metoffice_hass_data = hass.data.setdefault(DOMAIN, {})
     metoffice_hass_data[entry.entry_id] = {
         METOFFICE_DATA: metoffice_data,
         METOFFICE_COORDINATOR: metoffice_coordinator,
-        METOFFICE_NAME: site_name,
+        METOFFICE_NAME: metoffice_data.site_name,
+        METOFFICE_LISTENER: remove_listener,
     }
 
     # Fetch initial data so we have data when entities subscribe
@@ -80,6 +108,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
+        hass.data[DOMAIN][entry.entry_id][
+            METOFFICE_LISTENER
+        ]()  # remove the API mode listener
         hass.data[DOMAIN].pop(entry.entry_id)
         if not hass.data[DOMAIN]:
             hass.data.pop(DOMAIN)

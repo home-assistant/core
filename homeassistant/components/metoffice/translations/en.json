@@ -13,11 +13,23 @@
                     "api_key": "Met Office DataPoint API key",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
+                    "mode": "Update frequency",
                     "name": "Friendly name"
                 },
                 "description": "The latitude and longitude will be used to find the closest weather station.",
-                "title": "Connect to the UK Met Office"
+                "title": "Connect to the Met Office"
             }
         }
-    }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "mode": "Update frequency"
+                },
+                "title": "Met Office Options"
+            }
+        }
+    },
+    "title": "UK Met Office"
 }
