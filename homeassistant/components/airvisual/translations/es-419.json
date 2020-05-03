@@ -4,7 +4,9 @@
             "already_configured": "Estas coordenadas ya han sido registradas."
         },
         "error": {
-            "invalid_api_key": "Clave de API inv\u00e1lida"
+            "general_error": "Se ha producido un error desconocido.",
+            "invalid_api_key": "Clave de API inv\u00e1lida",
+            "unable_to_connect": "No se puede conectar a la unidad Node/Pro."
         },
         "step": {
             "geography": {
@@ -13,12 +15,15 @@
                     "latitude": "Latitud",
                     "longitude": "Longitud"
                 },
+                "description": "Use la API de AirVisual para monitorear una ubicaci\u00f3n geogr\u00e1fica.",
                 "title": "Configurar una geograf\u00eda"
             },
             "node_pro": {
                 "data": {
+                    "ip_address": "Direcci\u00f3n IP/nombre de host de la unidad",
                     "password": "Contrase\u00f1a de la unidad"
                 },
+                "description": "Monitoree una unidad AirVisual personal. La contrase\u00f1a se puede recuperar de la interfaz de usuario de la unidad.",
                 "title": "Configurar un AirVisual Node/Pro"
             },
             "user": {
