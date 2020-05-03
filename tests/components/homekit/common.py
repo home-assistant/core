@@ -1,5 +1,5 @@
 """Collection of fixtures and functions for the HomeKit tests."""
-from unittest.mock import patch
+from tests.async_mock import patch
 
 
 def patch_debounce():
