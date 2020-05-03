@@ -41,8 +41,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the WiZ Light platform."""
     # Assign configuration variables.
     # The configuration check takes care they are present.
-    ip = config[CONF_HOST]
-    bulb = wizlight(ip)
+    ip_address = config[CONF_HOST]
+    bulb = wizlight(ip_address)
 
     # Add devices
     async_add_entities([WizBulb(bulb, config[CONF_NAME])])
@@ -63,7 +63,7 @@ class WizBulb(Light):
         self._available = None
         self._effect = None
         self._scenes = []
-        self._bulbType = None
+        self._bulbtype = None
 
     @property
     def brightness(self):
@@ -92,11 +92,10 @@ class WizBulb(Light):
 
     async def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-        # TODO: change this to set state using a single UDP call
 
         rgb = None
         if ATTR_RGB_COLOR in kwargs:
-            rgb = kwargs[ATTR_RGB_COLOR]
+            rgb = kwargs.get(ATTR_RGB_COLOR)
         if ATTR_HS_COLOR in kwargs:
             rgb = color_utils.color_hs_to_RGB(
                 kwargs[ATTR_HS_COLOR][0], kwargs[ATTR_HS_COLOR][1]
@@ -104,7 +103,7 @@ class WizBulb(Light):
 
         brightness = None
         if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS]
+            brightness = kwargs.get(ATTR_BRIGHTNESS)
 
         colortemp = None
         if ATTR_COLOR_TEMP in kwargs:
@@ -149,20 +148,19 @@ class WizBulb(Light):
     def supported_features(self) -> int:
         """Flag supported features."""
         # only dimmer - not tested
-        if self._bulbType == "ESP01_SHDW_01" or self._bulbType == "ESP01_SHDW1_31":
+        if self._bulbtype == "ESP01_SHDW_01" or self._bulbtype == "ESP01_SHDW1_31":
             return SUPPORT_BRIGHTNESS
         # Support dimmer and effects
-        if self._bulbType == "ESP06_SHDW9_01":
+        if self._bulbtype == "ESP06_SHDW9_01":
             return SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
         # Color Temp and dimmer - not tested
-        if self._bulbType == "ESP01_SHTW1C_31":
+        if self._bulbtype == "ESP01_SHTW1C_31":
             return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
         # Firlament bulbs support only dimmer (tested)
-        if self._bulbType == "ESP56_SHTW3_01":
+        if self._bulbtype == "ESP56_SHTW3_01":
             return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
         # Full feature support (color) - not tested
-        # TODO: Maybe switch to "contains RGB"
-        if self._bulbType == "ESP01_SHRGB1C_31" or self._bulbType == "ESP01_SHRGB_03":
+        if self._bulbtype == "ESP01_SHRGB1C_31" or self._bulbtype == "ESP01_SHRGB_03":
             return (
                 SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
             )
@@ -178,10 +176,10 @@ class WizBulb(Light):
     def effect_list(self):
         """Return the list of supported effects."""
         # Special filament bulb type
-        if self._bulbType == "ESP56_SHTW3_01":
+        if self._bulbtype == "ESP56_SHTW3_01":
             return [self._scenes[key] for key in [8, 9, 14, 15, 17, 28, 29, 31]]
         # Filament bulb without white color led
-        if self._bulbType == "ESP06_SHDW9_01":
+        if self._bulbtype == "ESP06_SHDW9_01":
             return [self._scenes[key] for key in [8, 9, 13, 28, 30, 29, 31]]
         return self._scenes
 
@@ -215,16 +213,17 @@ class WizBulb(Light):
     async def update_state(self):
         """Update the state."""
         try:
-            _LOGGER.debug(f"[wizlight {self._light.ip}] updating state")
+            _LOGGER.debug("[wizlight %s] updating state", self._light.ip)
             await self._light.updateState()
             if self._light.state is None:
                 await self.update_state_unavailable()
             else:
                 await self.update_state_available()
+        # pylint: disable=broad-except
         except Exception as ex:
             _LOGGER.error(ex)
             await self.update_state_unavailable()
-        _LOGGER.debug(f"[wizlight {self._light.ip}] updated state: {self._state}")
+        _LOGGER.debug("[wizlight %s] updated state: %s", self._light.ip, self._state)
 
     def update_brightness(self):
         """Update the brightness."""
@@ -239,6 +238,7 @@ class WizBulb(Light):
                     "Received invalid brightness : %s. Expected: 0-255", brightness
                 )
                 self._brightness = None
+        # pylint: disable=broad-except
         except Exception as ex:
             _LOGGER.error(ex)
             self._state = None
@@ -252,6 +252,8 @@ class WizBulb(Light):
                 self._light.state.get_colortemp()
             )
             self._temperature = temperature
+
+        # pylint: disable=broad-except
         except Exception:
             _LOGGER.error("Cannot evaluate temperature", exc_info=True)
             self._temperature = None
@@ -261,17 +263,18 @@ class WizBulb(Light):
         if self._light.state.get_rgb() is None:
             return
         try:
-            r, g, b = self._light.state.get_rgb()
-            if r is None:
+            red, green, blue = self._light.state.get_rgb()
+            if red is None:
                 # this is the case if the temperature was changed - no information was return form the lamp.
                 # do nothing until the RGB color was changed
                 return
-            color = color_utils.color_RGB_to_hs(r, g, b)
+            color = color_utils.color_RGB_to_hs(red, green, blue)
             if color is not None:
                 self._hscolor = color
             else:
                 _LOGGER.error("Received invalid HS color : %s", color)
                 self._hscolor = None
+        # pylint: disable=broad-except
         except Exception:
             _LOGGER.error("Cannot evaluate color", exc_info=True)
             self._hscolor = None
@@ -282,15 +285,14 @@ class WizBulb(Light):
 
     async def get_bulb_type(self):
         """Get the bulb type."""
-        if self._bulbType is None:
+        if self._bulbtype is None:
             bulb_config = await self._light.getBulbConfig()
             if "moduleName" in bulb_config["result"]:
-                self._bulbType = bulb_config["result"]["moduleName"]
-                _LOGGER.info("Initiate the WiZ bulb as %s", self._bulbType)
+                self._bulbtype = bulb_config["result"]["moduleName"]
+                _LOGGER.info("Initiate the WiZ bulb as %s", self._bulbtype)
 
-    # TODO: this should be improved :-)
     def update_scene_list(self):
         """Update the scene list."""
         self._scenes = []
-        for id in SCENES:
-            self._scenes.append(SCENES[id])
+        for number in SCENES:
+            self._scenes.append(SCENES[number])
