@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    DOMAIN as SENSOR_DOMAIN,
 )
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
@@ -42,7 +43,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities([sensor])
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
-        async_dispatcher_connect(hass, "zwave_new_sensor", async_add_sensor)
+        async_dispatcher_connect(
+            hass, f"{DOMAIN}_new_{SENSOR_DOMAIN}", async_add_sensor
+        )
     )
 
 
