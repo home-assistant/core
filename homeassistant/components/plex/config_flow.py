@@ -114,7 +114,10 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Optional(CONF_HOST): str,
+                vol.Optional(
+                    CONF_HOST,
+                    description={"suggested_value": previous_input.get(CONF_HOST)},
+                ): str,
                 vol.Required(
                     CONF_PORT, default=previous_input.get(CONF_PORT, DEFAULT_PORT)
                 ): int,
@@ -125,7 +128,10 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_VERIFY_SSL,
                     default=previous_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
                 ): bool,
-                vol.Optional(CONF_TOKEN): str,
+                vol.Optional(
+                    CONF_TOKEN,
+                    description={"suggested_value": previous_input.get(CONF_TOKEN)},
+                ): str,
             }
         )
         return self.async_show_form(
