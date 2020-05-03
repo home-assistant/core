@@ -6,12 +6,7 @@ import blebox_uniapi
 import pytest
 
 from homeassistant.components.blebox.const import DOMAIN
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_SUPPORTED_FEATURES,
-    CONF_HOST,
-    CONF_PORT,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.setup import async_setup_component
 
 from tests.async_mock import AsyncMock, PropertyMock, patch
@@ -81,81 +76,12 @@ def wrapper(request):
     return request.getfixturevalue(request.param)
 
 
-class Wrapper:
-    """Convenience wrapper for testing entities and their states."""
+async def async_setup_entity(hass, config, entity_id):
+    """Return a configured entity with the given entity_id."""
+    config_entry = mock_config()
+    config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
-    def __init__(self, feature_mock, entity_id):
-        """Set the mock object."""
-        self._feature_mock = feature_mock
-        self._entity_id = entity_id
-        self._hass = None
-        self._entity = None
-
-    async def setup(self, hass, config):
-        """Return a registered entity."""
-        self._hass = hass
-
-        config_entry = mock_config()
-        config_entry.add_to_hass(hass)
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
-
-        entity_registry = await hass.helpers.entity_registry.async_get_registry()
-        self._entity = entity_registry.async_get(self._entity_id)
-        return self._entity
-
-    async def service(self, domain, service_name, **kwargs):
-        """Call the given serice with parameters."""
-        hass = self._hass
-        entity = self._entity
-        self._feature_mock.async_update = AsyncMock(side_effect=None)
-        await hass.services.async_call(
-            domain,
-            service_name,
-            {"entity_id": entity.entity_id, **kwargs},
-            blocking=True,
-        )
-
-    @property
-    def feature_mock(self):
-        """Return the mock needed by test helpers."""
-        return self._feature_mock
-
-    @property
-    def state(self):
-        """Return the state for the current entity."""
-        return self._hass.states.get(self._entity.entity_id)
-
-    @property
-    async def device(self):
-        """Return the device info for the current entity."""
-        hass = self._hass
-        entity = self._entity
-
-        device_registry = await hass.helpers.device_registry.async_get_registry()
-        return device_registry.async_get(entity.device_id)
-
-    @property
-    def state_value(self):
-        """Return the state value."""
-        return self.state.state
-
-    @property
-    def unique_id(self):
-        """Return the entity unique id."""
-        return self._entity.unique_id
-
-    @property
-    def attributes(self):
-        """Return the state attributes."""
-        return self.state.attributes
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self.attributes[ATTR_DEVICE_CLASS]
-
-    @property
-    def supported_features(self):
-        """Return the supported features."""
-        return self.attributes[ATTR_SUPPORTED_FEATURES]
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    return entity_registry.async_get(entity_id)
