@@ -17,5 +17,17 @@
       "already_configured": "Z-Wave is already configured",
       "one_instance_only": "Component only supports one Z-Wave instance"
     }
+  },
+  "state": {
+    "query_stage": {
+      "initializing": "[%key:component::zwave::state::_::initializing%]",
+      "dead": "[%key:component::zwave::state::_::dead%]"
+    },
+    "_": {
+      "initializing": "Initializing",
+      "dead": "Dead",
+      "sleeping": "Sleeping",
+      "ready": "Ready"
+    }
   }
 }

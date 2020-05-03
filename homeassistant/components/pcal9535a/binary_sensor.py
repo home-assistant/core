@@ -4,7 +4,7 @@ import logging
 from pcal9535a import PCAL9535A
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(binary_sensors, True)
 
 
-class PCAL9535ABinarySensor(BinarySensorDevice):
+class PCAL9535ABinarySensor(BinarySensorEntity):
     """Represent a binary sensor that uses PCAL9535A."""
 
     def __init__(self, name, pin, pull_mode, invert_logic):

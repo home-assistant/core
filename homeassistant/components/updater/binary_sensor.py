@@ -1,6 +1,6 @@
 """Support for Home Assistant Updater binary sensors."""
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import ATTR_NEWEST_VERSION, ATTR_RELEASE_NOTES, DOMAIN as UPDATER_DOMAIN
 
@@ -13,7 +13,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([UpdaterBinary(hass.data[UPDATER_DOMAIN])])
 
 
-class UpdaterBinary(BinarySensorDevice):
+class UpdaterBinary(BinarySensorEntity):
     """Representation of an updater binary sensor."""
 
     def __init__(self, coordinator):

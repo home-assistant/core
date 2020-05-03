@@ -2,7 +2,6 @@
 # pylint: disable=protected-access
 from datetime import datetime, timedelta
 import unittest
-from unittest.mock import patch
 
 import pytest
 import pytz
@@ -14,6 +13,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, init_recorder_component
 
 

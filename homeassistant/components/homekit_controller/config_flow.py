@@ -1,11 +1,8 @@
 """Config flow to configure homekit_controller."""
-import json
 import logging
-import os
 import re
 
 import aiohomekit
-from aiohomekit.controller.ip import IpPairing
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -21,32 +18,6 @@ PAIRING_FILE = "pairing.json"
 PIN_FORMAT = re.compile(r"^(\d{3})-{0,1}(\d{2})-{0,1}(\d{3})$")
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def load_old_pairings(hass):
-    """Load any old pairings from on-disk json fragments."""
-    old_pairings = {}
-
-    data_dir = os.path.join(hass.config.path(), HOMEKIT_DIR)
-    pairing_file = os.path.join(data_dir, PAIRING_FILE)
-
-    # Find any pairings created with in HA 0.85 / 0.86
-    if os.path.exists(pairing_file):
-        with open(pairing_file) as pairing_file:
-            old_pairings.update(json.load(pairing_file))
-
-    # Find any pairings created in HA <= 0.84
-    if os.path.exists(data_dir):
-        for device in os.listdir(data_dir):
-            if not device.startswith("hk-"):
-                continue
-            alias = device[3:]
-            if alias in old_pairings:
-                continue
-            with open(os.path.join(data_dir, device)) as pairing_data_fp:
-                old_pairings[alias] = json.load(pairing_data_fp)
-
-    return old_pairings
 
 
 def normalize_hkid(hkid):
@@ -218,15 +189,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         self.context["title_placeholders"] = {"name": name}
 
         if paired:
-            old_pairings = await self.hass.async_add_executor_job(
-                load_old_pairings, self.hass
-            )
-
-            if hkid in old_pairings:
-                return await self.async_import_legacy_pairing(
-                    properties, old_pairings[hkid]
-                )
-
             # Device is paired but not to us - ignore it
             _LOGGER.debug("HomeKit device %s ignored as already paired", hkid)
             return self.async_abort(reason="already_paired")
@@ -244,23 +206,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         # directly as it has side effects (will ask the device to show a
         # pairing code)
         return self._async_step_pair_show_form()
-
-    async def async_import_legacy_pairing(self, discovery_props, pairing_data):
-        """Migrate a legacy pairing to config entries."""
-
-        hkid = discovery_props["id"]
-
-        _LOGGER.info(
-            (
-                "Legacy configuration %s for homekit"
-                "accessory migrated to configuration entries"
-            ),
-            hkid,
-        )
-
-        pairing = IpPairing(pairing_data)
-
-        return await self._entry_from_accessory(pairing)
 
     async def async_step_pair(self, pair_info=None):
         """Pair with a new HomeKit accessory."""

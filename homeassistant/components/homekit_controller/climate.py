@@ -11,7 +11,7 @@ from aiohomekit.utils import clamp_enum_to_char
 from homeassistant.components.climate import (
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
-    ClimateDevice,
+    ClimateEntity,
 )
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
@@ -59,13 +59,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if service["stype"] != "thermostat":
             return False
         info = {"aid": aid, "iid": service["iid"]}
-        async_add_entities([HomeKitClimateDevice(conn, info)], True)
+        async_add_entities([HomeKitClimateEntity(conn, info)], True)
         return True
 
     conn.add_listener(async_add_service)
 
 
-class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
+class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
     """Representation of a Homekit climate device."""
 
     def get_characteristic_types(self):

@@ -9,6 +9,7 @@ from . import (
     config_flow,
     coverage,
     dependencies,
+    json,
     manifest,
     services,
     ssdp,
@@ -18,6 +19,7 @@ from . import (
 from .model import Config, Integration
 
 INTEGRATION_PLUGINS = [
+    json,
     codeowners,
     config_flow,
     dependencies,

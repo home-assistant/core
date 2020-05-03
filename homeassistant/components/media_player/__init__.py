@@ -337,8 +337,8 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class MediaPlayerDevice(Entity):
-    """ABC for media player devices."""
+class MediaPlayerEntity(Entity):
+    """ABC for media player entities."""
 
     _access_token: Optional[str] = None
 
@@ -924,3 +924,15 @@ async def websocket_handle_thumbnail(hass, connection, msg):
             "content": base64.b64encode(data).decode("utf-8"),
         },
     )
+
+
+class MediaPlayerDevice(MediaPlayerEntity):
+    """ABC for media player devices (for backwards compatibility)."""
+
+    def __init_subclass__(cls, **kwargs):
+        """Print deprecation warning."""
+        super().__init_subclass__(**kwargs)
+        _LOGGER.warning(
+            "MediaPlayerDevice is deprecated, modify %s to extend MediaPlayerEntity",
+            cls.__name__,
+        )

@@ -1,6 +1,5 @@
 """Tests the Home Assistant workday binary sensor."""
 from datetime import date
-from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -8,6 +7,7 @@ import voluptuous as vol
 import homeassistant.components.workday.binary_sensor as binary_sensor
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant
 
 FUNCTION_PATH = "homeassistant.components.workday.binary_sensor.get_date"

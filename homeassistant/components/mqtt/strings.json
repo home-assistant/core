@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "broker": {
-        "title": "MQTT",
         "description": "Please enter the connection information of your MQTT broker.",
         "data": {
           "broker": "Broker",
