@@ -4,11 +4,16 @@ from datetime import timedelta
 from rokuecp import RokuError
 
 from homeassistant.components.media_player.const import (
+    ATTR_APP_ID,
+    ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_CHANNEL,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
+    MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
@@ -33,6 +38,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
     STATE_HOME,
+    STATE_IDLE,
     STATE_PLAYING,
     STATE_STANDBY,
     STATE_UNAVAILABLE,
@@ -180,6 +186,38 @@ async def test_attributes(
     assert state.state == STATE_HOME
 
     assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) is None
+    assert state.attributes.get(ATTR_APP_ID) is None
+    assert state.attributes.get(ATTR_APP_NAME) == "Roku"
+    assert state.attributes.get(ATTR_INPUT_SOURCE) == "Roku"
+
+
+async def test_attributes_app(
+    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test attributes for app."""
+    await setup_integration(hass, aioclient_mock, app="netflix")
+
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.state == STATE_PLAYING
+
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
+    assert state.attributes.get(ATTR_APP_ID) == "12"
+    assert state.attributes.get(ATTR_APP_NAME) == "Netflix"
+    assert state.attributes.get(ATTR_INPUT_SOURCE) == "Netflix"
+
+
+async def test_attributes_screensaver(
+    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test attributes for app with screensaver."""
+    await setup_integration(hass, aioclient_mock, app="screensaver")
+
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.state == STATE_IDLE
+
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
+    assert state.attributes.get(ATTR_APP_ID) is None
+    assert state.attributes.get(ATTR_APP_NAME) == "Roku"
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Roku"
 
 
@@ -199,8 +237,12 @@ async def test_tv_attributes(
     state = hass.states.get(TV_ENTITY_ID)
     assert state.state == STATE_PLAYING
 
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_CHANNEL
+    assert state.attributes.get(ATTR_APP_ID) == "tvinput.dtv"
+    assert state.attributes.get(ATTR_APP_NAME) == "Antenna TV"
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Antenna TV"
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_CHANNEL
+    assert state.attributes.get(ATTR_MEDIA_CHANNEL) == "getTV (14.3)"
+    assert state.attributes.get(ATTR_MEDIA_TITLE) == "Airwolf"
 
 
 async def test_services(
