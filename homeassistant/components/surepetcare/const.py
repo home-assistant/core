@@ -1,6 +1,7 @@
 """Constants for the Sure Petcare component."""
 from datetime import timedelta
 
+
 DOMAIN = "surepetcare"
 DEFAULT_DEVICE_CLASS = "lock"
 DEFAULT_ICON = "mdi:cat"
@@ -22,6 +23,9 @@ SURE_IDS = "sure_ids"
 
 # platforms
 TOPIC_UPDATE = f"{DOMAIN}_data_update"
+
+# sure petcare api
+SURE_API_TIMEOUT = 15
 
 # flap
 BATTERY_ICON = "mdi:battery"
