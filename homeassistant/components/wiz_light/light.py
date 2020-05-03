@@ -343,7 +343,7 @@ class WizBulb(Light):
         try:
             r, g, b = self._light.state.get_rgb()
             if r is None:
-                # this is the case if the temperature was changed - no infomation was return form the lamp.
+                # this is the case if the temperature was changed - no information was return form the lamp.
                 # do nothing until the RGB color was changed
                 return
             color = color_utils.color_RGB_to_hs(r, g, b)
