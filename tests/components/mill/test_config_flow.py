@@ -8,9 +8,9 @@ from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(name="tibber_setup", autouse=True)
-def tibber_setup_fixture():
-    """Patch tibber setup entry."""
+@pytest.fixture(name="mill_setup", autouse=True)
+def mill_setup_fixture():
+    """Patch mill setup entry."""
     with patch("homeassistant.components.mill.async_setup_entry", return_value=True):
         yield
 
