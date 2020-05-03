@@ -9,8 +9,9 @@ from homeassistant.components.light import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from . import ISY994_NODES, ISYDevice
+from . import ISY994_NODES
 from .const import _LOGGER
+from .entity import ISYNodeEntity
 
 ATTR_LAST_BRIGHTNESS = "last_brightness"
 
@@ -21,12 +22,12 @@ def setup_platform(
     """Set up the ISY994 light platform."""
     devices = []
     for node in hass.data[ISY994_NODES][LIGHT]:
-        devices.append(ISYLightDevice(node))
+        devices.append(ISYLightEntity(node))
 
     add_entities(devices)
 
 
-class ISYLightDevice(ISYDevice, LightEntity, RestoreEntity):
+class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
     """Representation of an ISY994 light device."""
 
     def __init__(self, node) -> None:

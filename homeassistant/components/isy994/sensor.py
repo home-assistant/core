@@ -5,8 +5,9 @@ from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.typing import ConfigType
 
-from . import ISY994_NODES, ISY994_WEATHER, ISYDevice
+from . import ISY994_NODES, ISY994_WEATHER
 from .const import _LOGGER, UOM_FRIENDLY_NAME, UOM_TO_STATES
+from .entity import ISYEntity, ISYNodeEntity
 
 
 def setup_platform(
@@ -17,7 +18,7 @@ def setup_platform(
 
     for node in hass.data[ISY994_NODES][SENSOR]:
         _LOGGER.debug("Loading %s", node.name)
-        devices.append(ISYSensorDevice(node))
+        devices.append(ISYSensorEntity(node))
 
     for node in hass.data[ISY994_WEATHER]:
         devices.append(ISYWeatherDevice(node))
@@ -25,7 +26,7 @@ def setup_platform(
     add_entities(devices)
 
 
-class ISYSensorDevice(ISYDevice):
+class ISYSensorEntity(ISYNodeEntity):
     """Representation of an ISY994 sensor device."""
 
     @property
@@ -77,7 +78,8 @@ class ISYSensorDevice(ISYDevice):
         return raw_units
 
 
-class ISYWeatherDevice(ISYDevice):
+# Depreciated, not renaming. Will be removed in next PR.
+class ISYWeatherDevice(ISYEntity):
     """Representation of an ISY994 weather device."""
 
     @property
