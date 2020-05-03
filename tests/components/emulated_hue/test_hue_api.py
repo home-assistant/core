@@ -36,6 +36,7 @@ from homeassistant.components.emulated_hue.hue_api import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     HTTP_NOT_FOUND,
+    HTTP_OK,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -937,3 +938,17 @@ async def test_external_ip_blocked(hue_client):
         for putUrl in putUrls:
             result = await hue_client.put(putUrl)
             assert result.status == 401
+
+
+async def test_unauthorized_user_blocked(hue_client):
+    """Test unauthorized_user blocked."""
+    getUrls = [
+        "/api/wronguser",
+        "/api/wronguser/config",
+    ]
+    for getUrl in getUrls:
+        result = await hue_client.get(getUrl)
+        assert result.status == HTTP_OK
+
+        result_json = await result.json()
+        assert result_json[0]["error"]["description"] == "unauthorized user"
