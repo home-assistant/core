@@ -110,7 +110,8 @@ class SonosData:
         self.entities = []
         self.discovered = []
         self.topology_condition = asyncio.Condition()
-        self.stopped = False
+        self.discovery_thread = None
+        self.hosts_heartbeat = None
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -132,9 +133,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if advertise_addr:
         pysonos.config.EVENT_ADVERTISE_IP = advertise_addr
 
-    @callback
     def _stop_discovery(event):
-        hass.data[DATA_SONOS].stopped = True
+        data = hass.data[DATA_SONOS]
+        if data.discovery_thread:
+            data.discovery_thread.stop()
+            data.discovery_thread = None
+        if data.hosts_heartbeat:
+            data.hosts_heartbeat()
+            data.hosts_heartbeat = None
 
     def _discovery(now=None):
         """Discover players from network or configuration."""
@@ -144,10 +150,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             """Handle a (re)discovered player."""
             try:
                 _LOGGER.debug("Reached _discovered_player, soco=%s", soco)
-
-                # Avoid adding jobs when the event loop is closed
-                if hass.data[DATA_SONOS].stopped:
-                    return
 
                 if soco not in hass.data[DATA_SONOS].discovered:
                     _LOGGER.debug("Adding new entity")
@@ -177,10 +179,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         _LOGGER.warning("Failed to initialize '%s'", host)
 
             _LOGGER.debug("Tested all hosts")
-            hass.helpers.event.call_later(DISCOVERY_INTERVAL, _discovery)
+            hass.data[DATA_SONOS].hosts_heartbeat = hass.helpers.event.call_later(
+                DISCOVERY_INTERVAL, _discovery
+            )
         else:
             _LOGGER.debug("Starting discovery thread")
-            pysonos.discover_thread(
+            hass.data[DATA_SONOS].discovery_thread = pysonos.discover_thread(
                 _discovered_player,
                 interval=DISCOVERY_INTERVAL,
                 interface_addr=config.get(CONF_INTERFACE_ADDR),
