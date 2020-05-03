@@ -125,6 +125,7 @@ NODE_FILTERS = {
             "7.13.",
             "16.",
         ],  # Does a startswith() match; include the dot
+        "zwave_cat": (["104", "112", "138"] + list(map(str, range(148, 180)))),
     },
     SENSOR: {
         # This is just a more-readable way of including MOST uoms between 1-100
@@ -141,24 +142,28 @@ NODE_FILTERS = {
         "states": [],
         "node_def_id": ["IMETER_SOLO", "EZIO2x4_Input_ADV"],
         "insteon_type": ["9.0.", "9.7."],
+        "zwave_cat": (["118", "143"] + list(map(str, range(180, 185)))),
     },
     LOCK: {
         "uom": ["11"],
         "states": ["locked", "unlocked"],
         "node_def_id": ["DoorLock"],
         "insteon_type": ["15.", "4.64."],
+        "zwave_cat": ["111"],
     },
     FAN: {
         "uom": [],
         "states": ["off", "low", "med", "high"],
         "node_def_id": ["FanLincMotor"],
         "insteon_type": ["1.46."],
+        "zwave_cat": [],
     },
     COVER: {
         "uom": ["97"],
         "states": ["open", "closed", "closing", "opening", "stopped"],
         "node_def_id": [],
         "insteon_type": [],
+        "zwave_cat": [],
     },
     LIGHT: {
         "uom": ["51"],
@@ -175,6 +180,7 @@ NODE_FILTERS = {
             "KeypadDimmer_ADV",
         ],
         "insteon_type": ["1."],
+        "zwave_cat": ["109", "119"],
     },
     SWITCH: {
         "uom": ["2", "78"],
@@ -202,6 +208,7 @@ NODE_FILTERS = {
             "X10",
         ],
         "insteon_type": ["0.16.", "2.", "7.3.255.", "9.10.", "9.11.", "113."],
+        "zwave_cat": ["121", "122", "123", "137", "141", "147"],
     },
 }
 
@@ -499,4 +506,19 @@ ISY_BIN_SENS_DEVICE_TYPES = {
     "opening": ["16.9.", "16.6.", "16.7.", "16.2.", "16.17.", "16.20.", "16.21."],
     "motion": ["16.1.", "16.4.", "16.5.", "16.3.", "16.22."],
     "climate": ["5.11.", "5.10."],
+}
+
+ZWAVE_BIN_SENS_DEVICE_TYPES = {
+    "safety": ["137", "172", "176", "177", "178"],
+    "smoke": ["138", "156"],
+    "problem": ["148", "149", "157", "158", "164", "174", "175"],
+    "gas": ["150", "151"],
+    "sound": ["153"],
+    "cold": ["152", "168"],
+    "heat": ["154", "166", "167"],
+    "moisture": ["159", "169"],
+    "door": ["160"],
+    "battery": ["162"],
+    "motion": ["155"],
+    "vibration": ["173"],
 }
