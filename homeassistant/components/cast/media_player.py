@@ -5,9 +5,9 @@ import logging
 from typing import Optional
 
 import pychromecast
-from pychromecast.controllers import quick_play
 from pychromecast.controllers.homeassistant import HomeAssistantController
 from pychromecast.controllers.multizone import MultizoneManager
+from pychromecast.quick_play import quick_play
 from pychromecast.socket_client import (
     CONNECTION_STATUS_CONNECTED,
     CONNECTION_STATUS_DISCONNECTED,
