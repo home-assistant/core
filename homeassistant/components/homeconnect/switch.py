@@ -98,7 +98,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
 
     def __init__(self, device):
         """Inititialize the entity."""
-        super().__init__(device, desc=None)
+        super().__init__(device, "Power")
         self._state = None
 
     @property

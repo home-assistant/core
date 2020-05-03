@@ -1,7 +1,6 @@
 """Home Connect entity base class."""
 
 import logging
-from typing import Optional
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -16,14 +15,11 @@ _LOGGER = logging.getLogger(__name__)
 class HomeConnectEntity(Entity):
     """Generic Home Connect entity (base class)."""
 
-    def __init__(self, device: HomeConnectDevice, desc: Optional[str]) -> None:
+    def __init__(self, device: HomeConnectDevice, desc: str) -> None:
         """Initialize the entity."""
         self.device = device
         self.desc = desc
-        if desc is None:
-            self._name = self.device.appliance.name
-        else:
-            self._name = f"{self.device.appliance.name} {desc}"
+        self._name = f"{self.device.appliance.name} {desc}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""
