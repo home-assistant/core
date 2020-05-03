@@ -4,5 +4,19 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/denonavr",
   "requirements": ["denonavr==0.8.1"],
-  "codeowners": ["@scarface-4711", "@starkillerOG"]
+  "codeowners": ["@scarface-4711", "@starkillerOG"],
+  "ssdp": [
+    {
+      "manufacturer": "Denon",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+    },
+    {
+      "manufacturer": "DENON",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+    },
+    {
+      "manufacturer": "Marantz",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+    }
+  ]
 }

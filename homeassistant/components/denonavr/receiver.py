@@ -39,7 +39,7 @@ class ConnectDenonAVR:
             self._receiver.name,
             self._receiver.host,
             self._receiver.model_name,
-            self._receiver.serial_number
+            self._receiver.serial_number,
         )
 
         return True
@@ -60,4 +60,3 @@ class ConnectDenonAVR:
             return False
 
         return True
-        

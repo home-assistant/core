@@ -1,5 +1,4 @@
 """The denonavr component."""
-import denonavr
 import voluptuous as vol
 
 from homeassistant import config_entries, core
@@ -33,9 +32,7 @@ def setup(hass: core.HomeAssistant, config: dict):
 
     for service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[service]["schema"]
-        hass.services.register(
-            DOMAIN, service, service_handler, schema=schema
-        )
+        hass.services.register(DOMAIN, service, service_handler, schema=schema)
 
     return True
 
@@ -47,7 +44,14 @@ async def async_setup_entry(
     hass.data[DOMAIN] = {}
 
     # Connect to receiver
-    connect_denonavr = ConnectDenonAVR(hass, entry.data[CONF_HOST], entry.data[CONF_TIMEOUT], entry.data[CONF_SHOW_ALL_SOURCES], entry.data[CONF_ZONE2], entry.data[CONF_ZONE3])
+    connect_denonavr = ConnectDenonAVR(
+        hass,
+        entry.data[CONF_HOST],
+        entry.data[CONF_TIMEOUT],
+        entry.data[CONF_SHOW_ALL_SOURCES],
+        entry.data[CONF_ZONE2],
+        entry.data[CONF_ZONE3],
+    )
     if not await connect_denonavr.async_connect_receiver():
         return False
     receiver = connect_denonavr.receiver
