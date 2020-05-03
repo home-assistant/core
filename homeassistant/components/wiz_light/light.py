@@ -1,3 +1,4 @@
+"""WiZ Light integration."""
 import logging
 import voluptuous as vol
 from pywizlight import wizlight, PilotBuilder
@@ -38,9 +39,7 @@ SUPPORT_FEATURES_WHITE = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """
-        Set up the WiZ Light platform.
-    """
+    """Set up the WiZ Light platform."""
     # Assign configuration variables.
     # The configuration check takes care they are present.
     ip = config[CONF_HOST]
@@ -51,14 +50,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 class WizBulb(Light):
-    """
-        Representation of WiZ Light bulb
-    """
+    """Representation of WiZ Light bulb."""
 
     def __init__(self, light, name):
-        """
-            Initialize an WiZLight.
-        """
+        """Initialize an WiZLight."""
         self._light = light
         self._state = None
         self._brightness = None
@@ -73,16 +68,12 @@ class WizBulb(Light):
 
     @property
     def brightness(self):
-        """
-            Return the brightness of the light.
-        """
+        """Return the brightness of the light."""
         return self._brightness
 
     @property
     def rgb_color(self):
-        """
-            Return the color property.
-        """
+        """Return the color property."""
         return self._rgb_color
 
     @property
@@ -92,24 +83,17 @@ class WizBulb(Light):
 
     @property
     def name(self):
-        """
-            Return the ip as name of the device if any.
-        """
+        """Return the ip as name of the device if any."""
         return self._name
 
     @property
     def is_on(self):
-        """
-            Return true if light is on.
-        """
+        """Return true if light is on."""
         return self._state
 
     async def async_turn_on(self, **kwargs):
-        """
-            Instruct the light to turn on.
-        """
+        """Instruct the light to turn on."""
         # TODO: change this to set state using a single UDP call
-        #
 
         rgb = None
         if ATTR_RGB_COLOR in kwargs:
@@ -144,38 +128,27 @@ class WizBulb(Light):
         await self._light.turn_on(pilot)
 
     async def async_turn_off(self, **kwargs):
-        """
-            Instruct the light to turn off.
-        """
+        """Instruct the light to turn off."""
         await self._light.turn_off()
 
     @property
     def color_temp(self):
-        """
-            Return the CT color value in mireds.
-        """
+        """Return the CT color value in mireds."""
         return self._temperature
 
     @property
     def min_mireds(self):
-        """
-            Return the coldest color_temp that this light supports.
-        """
+        """Return the coldest color_temp that this light supports."""
         return color_utils.color_temperature_kelvin_to_mired(6500)
 
     @property
     def max_mireds(self):
-        """
-            Return the warmest color_temp that this light supports.
-        """
+        """Return the warmest color_temp that this light supports."""
         return color_utils.color_temperature_kelvin_to_mired(2500)
 
     @property
     def supported_features(self) -> int:
-        """
-            Flag supported features.
-            TODO: Should be updated and maybe moved to a seperatea function
-        """
+        """Flag supported features."""
         # only dimmer - not tested
         if self._bulbType == "ESP01_SHDW_01" or self._bulbType == "ESP01_SHDW1_31":
             return SUPPORT_BRIGHTNESS
@@ -199,16 +172,12 @@ class WizBulb(Light):
 
     @property
     def effect(self):
-        """
-            Return the current effect.
-        """
+        """Return the current effect."""
         return self._effect
 
     @property
     def effect_list(self):
-        """
-            Return the list of supported effects.
-        """
+        """Return the list of supported effects."""
         # Special filament bulb type
         if self._bulbType == "ESP56_SHTW3_01":
             return [self._scenes[key] for key in [8, 9, 14, 15, 17, 28, 29, 31]]
@@ -219,16 +188,11 @@ class WizBulb(Light):
 
     @property
     def available(self):
-        """
-            Return if light is available.
-        """
+        """Return if light is available."""
         return self._available
 
     async def async_update(self):
-        """
-            Fetch new state data for this light.
-            This is the only method that should fetch new data for Home Assistant.
-        """
+        """Fetch new state data for this light."""
         await self.update_state()
 
         if self._state is not None and self._state is not False:
@@ -240,17 +204,17 @@ class WizBulb(Light):
             self.update_scene_list()
 
     async def update_state_available(self):
+        """Update the state if bulb is available."""
         self._state = self._light.status
         self._available = True
 
     async def update_state_unavailable(self):
+        """Update the state if bulb is unavailable."""
         self._state = False
         self._available = False
 
     async def update_state(self):
-        """
-            Update the state
-        """
+        """Update the state."""
         try:
             _LOGGER.debug("[wizlight {}] updating state".format(self._light.ip))
             await self._light.updateState()
@@ -266,9 +230,7 @@ class WizBulb(Light):
         )
 
     def update_brightness(self):
-        """
-            Update the brightness.
-        """
+        """Update the brightness."""
         if self._light.state.get_brightness() is None:
             return
         try:
@@ -285,9 +247,7 @@ class WizBulb(Light):
             self._state = None
 
     def update_temperature(self):
-        """
-            Update the temperature
-        """
+        """Update the temperature."""
         if self._light.state.get_colortemp() is None:
             return
         try:
@@ -300,9 +260,7 @@ class WizBulb(Light):
             self._temperature = None
 
     def update_color(self):
-        """
-            Update the hs color
-        """
+        """Update the hs color."""
         if self._light.state.get_rgb() is None:
             return
         try:
@@ -322,15 +280,11 @@ class WizBulb(Light):
             self._hscolor = None
 
     def update_effect(self):
-        """
-            update the bulb scene
-        """
+        """Update the bulb scene."""
         self._effect = self._light.state.get_scene()
 
     async def get_bulb_type(self):
-        """
-            get the bulb type
-        """
+        """Get the bulb type."""
         if self._bulbType is None:
             bulb_config = await self._light.getBulbConfig()
             if "moduleName" in bulb_config["result"]:
@@ -339,6 +293,7 @@ class WizBulb(Light):
 
     # TODO: this should be improved :-)
     def update_scene_list(self):
+        """Funktion to update the scene list."""
         self._scenes = []
         for id in SCENES:
             self._scenes.append(SCENES[id])
