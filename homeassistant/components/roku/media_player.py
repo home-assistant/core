@@ -150,7 +150,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def source_list(self) -> List:
         """List of available input sources."""
-        return return ["Home"] + sorted(app.name for app in self.coordinator.data.apps)
+        return ["Home"] + sorted(app.name for app in self.coordinator.data.apps)
 
     async def async_turn_on(self) -> None:
         """Turn on the Roku."""
