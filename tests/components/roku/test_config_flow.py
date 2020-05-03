@@ -77,10 +77,11 @@ async def test_form(
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == HOST
+    assert result["title"] == UPNP_FRIENDLY_NAME
 
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_NAME] == UPNP_FRIENDLY_NAME
 
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -143,10 +144,11 @@ async def test_import(
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == HOST
+    assert result["title"] == UPNP_FRIENDLY_NAME
 
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_NAME] == UPNP_FRIENDLY_NAME
 
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
