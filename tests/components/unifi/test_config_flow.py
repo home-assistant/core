@@ -17,6 +17,7 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
+    DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -32,7 +33,10 @@ from tests.common import MockConfigEntry
 
 CLIENTS = [{"mac": "00:00:00:00:00:01"}]
 
-WLANS = [{"name": "SSID 1"}, {"name": "SSID 2"}]
+WLANS = [
+    {"name": "SSID 1"},
+    {"name": "SSID 2", "name_combine_enabled": False, "name_combine_suffix": "_IOT"},
+]
 
 
 async def test_flow_works(hass, aioclient_mock, mock_discovery):
@@ -183,6 +187,53 @@ async def test_flow_fails_site_already_configured(hass, aioclient_mock):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_flow_fails_site_has_no_local_user(hass, aioclient_mock):
+    """Test config flow."""
+    entry = MockConfigEntry(
+        domain=UNIFI_DOMAIN, data={"controller": {"host": "1.2.3.4", "site": "site_id"}}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        UNIFI_DOMAIN, context={"source": "user"}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    aioclient_mock.get("https://1.2.3.4:1234", status=302)
+
+    aioclient_mock.post(
+        "https://1.2.3.4:1234/api/login",
+        json={"data": "login successful", "meta": {"rc": "ok"}},
+        headers={"content-type": "application/json"},
+    )
+
+    aioclient_mock.get(
+        "https://1.2.3.4:1234/api/self/sites",
+        json={
+            "data": [{"desc": "Site name", "name": "site_id"}],
+            "meta": {"rc": "ok"},
+        },
+        headers={"content-type": "application/json"},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "username",
+            CONF_PASSWORD: "password",
+            CONF_PORT: 1234,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "no_local_user"
 
 
 async def test_flow_fails_user_credentials_faulty(hass, aioclient_mock):
@@ -284,7 +335,7 @@ async def test_option_flow(hass):
             CONF_TRACK_CLIENTS: False,
             CONF_TRACK_WIRED_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
-            CONF_SSID_FILTER: ["SSID 1"],
+            CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT"],
             CONF_DETECTION_TIME: 100,
         },
     )
@@ -309,7 +360,7 @@ async def test_option_flow(hass):
         CONF_TRACK_CLIENTS: False,
         CONF_TRACK_WIRED_CLIENTS: False,
         CONF_TRACK_DEVICES: False,
-        CONF_SSID_FILTER: ["SSID 1"],
+        CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT"],
         CONF_DETECTION_TIME: 100,
         CONF_IGNORE_WIRED_BUG: False,
         CONF_POE_CLIENTS: False,
