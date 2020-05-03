@@ -107,7 +107,6 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await validate_input(self.hass, self.discovery_info)
-            return self.async_create_entry(title=name, data=self.discovery_info)
         except RokuError:
             _LOGGER.debug("Roku Error", exc_info=True)
             return self.async_abort(reason=ERROR_CANNOT_CONNECT)
