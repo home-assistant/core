@@ -66,7 +66,7 @@ def setup_zha(hass, config_entry, zigpy_app_controller, zigpy_radio):
     """Set up ZHA component."""
     zha_config = {zha_const.CONF_ENABLE_QUIRKS: False}
     app_ctrl = mock.MagicMock()
-    app_ctrl.new = CoroutineMock(return_value=zigpy_app_controller)
+    app_ctrl.new = tests.async_mock.AsyncMock(return_value=zigpy_app_controller)
     app_ctrl.SCHEMA = zigpy.config.CONFIG_SCHEMA
     app_ctrl.SCHEMA_DEVICE = zigpy.config.SCHEMA_DEVICE
 
