@@ -8,7 +8,8 @@
         "error": {
             "invalid_pin": "PIN no v\u00e1lido, por favor intente de nuevo.",
             "press_the_button": "Por favor, presione el bot\u00f3n azul.",
-            "register_failed": "No se pudo registrar, por favor intente de nuevo."
+            "register_failed": "No se pudo registrar, por favor intente de nuevo.",
+            "timeout_button": "Tiempo de espera del bot\u00f3n azul, intente nuevamente."
         },
         "step": {
             "init": {
@@ -20,7 +21,8 @@
                 "title": "Elija el punto de acceso HomematicIP"
             },
             "link": {
-                "description": "Presione el bot\u00f3n azul en el punto de acceso y el bot\u00f3n enviar para registrar HomematicIP con Home Assistant. \n\n ! [Ubicaci\u00f3n del bot\u00f3n en el puente] (/static/images/config_flows/config_homematicip_cloud.png)"
+                "description": "Presione el bot\u00f3n azul en el punto de acceso y el bot\u00f3n enviar para registrar HomematicIP con Home Assistant. \n\n ! [Ubicaci\u00f3n del bot\u00f3n en el puente] (/static/images/config_flows/config_homematicip_cloud.png)",
+                "title": "Enlazar Punto de acceso"
             }
         }
     }

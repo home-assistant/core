@@ -52,6 +52,14 @@
                     "other": "altri"
                 }
             },
+            "simple_options": {
+                "data": {
+                    "block_client": "Accesso alla rete dei client controllati",
+                    "track_clients": "Traccia i client di rete",
+                    "track_devices": "Traccia i dispositivi di rete (dispositivi Ubiquiti)"
+                },
+                "description": "Configurare l'integrazione UniFi"
+            },
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "Sensori di utilizzo della larghezza di banda per i client di rete"
