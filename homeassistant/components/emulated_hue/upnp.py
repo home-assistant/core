@@ -74,9 +74,8 @@ class UPNPResponderThread(threading.Thread):
         # Note that the double newline at the end of
         # this string is required per the SSDP spec
         resp_template = f"""HTTP/1.1 200 OK
-HOST: 239.255.255.250:1900
-EXT:
 CACHE-CONTROL: max-age=60
+EXT:
 LOCATION: http://{advertise_ip}:{advertise_port}/description.xml
 SERVER: FreeRTOS/6.0.5, UPnP/1.0, IpBridge/1.16.0
 hue-bridgeid: 001788FFFE23BFC2
