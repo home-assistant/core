@@ -1,8 +1,8 @@
 """Tests for ZHA config flow."""
 
 import os
-from unittest import mock
 
+from asynctest import mock
 import serial.tools.list_ports
 import zigpy.config
 
