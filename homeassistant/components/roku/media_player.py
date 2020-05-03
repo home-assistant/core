@@ -54,6 +54,13 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             device_id=unique_id,
         )
 
+        self._unique_id = unique_id
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID for this entity."""
+        return self._unique_id
+
     @property
     def state(self) -> str:
         """Return the state of the device."""
