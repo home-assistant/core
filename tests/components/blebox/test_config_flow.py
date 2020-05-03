@@ -12,22 +12,6 @@ from .conftest import mock_config, mock_only_feature, setup_product_mock
 from tests.async_mock import DEFAULT, AsyncMock, PropertyMock, patch
 
 
-async def empty_config_flow_from_user(hass):
-    """Simulate empty integration config."""
-    return await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-
-async def user_entered_host_and_port(hass):
-    """Simulate user accepting new integration config."""
-    return await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
-    )
-
-
 def create_valid_feature_mock(path="homeassistant.components.blebox.Products"):
     """Return a valid, complete BleBox feature mock."""
     feature = mock_only_feature(
@@ -69,11 +53,19 @@ def flow_feature_mock():
 async def test_flow_works(hass, flow_feature_mock):
     """Test that config flow works."""
 
-    result = await empty_config_flow_from_user(hass)
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
     assert result["type"] == "form"
     assert result["step_id"] == "user"
 
-    result = await user_entered_host_and_port(hass)
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+    )
+
     assert result["type"] == "create_entry"
     assert result["title"] == "My gate controller"
     assert result["data"] == {
@@ -97,7 +89,11 @@ async def test_flow_with_connection_failure(hass, product_class_mock):
             side_effect=blebox_uniapi.error.ConnectionError
         )
 
-        result = await user_entered_host_and_port(hass)
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        )
         assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -108,7 +104,11 @@ async def test_flow_with_api_failure(hass, product_class_mock):
             side_effect=blebox_uniapi.error.Error
         )
 
-        result = await user_entered_host_and_port(hass)
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        )
         assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -116,7 +116,11 @@ async def test_flow_with_unknown_failure(hass, product_class_mock):
     """Test that config flow works."""
     with product_class_mock as products_class:
         products_class.async_from_host = AsyncMock(side_effect=RuntimeError)
-        result = await user_entered_host_and_port(hass)
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        )
         assert result["errors"] == {"base": "unknown"}
 
 
@@ -127,7 +131,11 @@ async def test_flow_with_unsupported_version(hass, product_class_mock):
             side_effect=blebox_uniapi.error.UnsupportedBoxVersion
         )
 
-        result = await user_entered_host_and_port(hass)
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        )
         assert result["errors"] == {"base": "unsupported_version"}
 
 
@@ -146,7 +154,11 @@ async def test_already_configured(hass, valid_feature_mock):
     await hass.config_entries.async_setup(config.entry_id)
     await hass.async_block_till_done()
 
-    result = await user_entered_host_and_port(hass)
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "address_already_configured"
 
