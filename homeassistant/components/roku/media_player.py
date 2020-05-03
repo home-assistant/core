@@ -68,7 +68,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
         if (
             self.coordinator.data.app.name == "Power Saver"
-            or self.roku.device.app.screensaver
+            or self.coordinator.data.app.screensaver
         ):
             return STATE_IDLE
 
@@ -88,10 +88,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def media_content_type(self) -> str:
         """Content type of current playing media."""
-        if self.coordinator.data.app is None or self.coordinator.data.app.name in (
-            "Power Saver",
-            "Roku",
-        ):
+        if self.app_id is None or self.app_name in ("Power Saver", "Roku"):
             return None
 
         return MEDIA_TYPE_CHANNEL
@@ -99,16 +96,10 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def media_image_url(self) -> str:
         """Image url of current playing media."""
-        if self.coordinator.data.app is None or self.coordinator.data.app.name in (
-            "Power Saver",
-            "Roku",
-        ):
+        if self.app_id is None or self.app_name in ("Power Saver", "Roku"):
             return None
 
-        if self.coordinator.data.app.id is None:
-            return None
-
-        return self.coordinator.roku.app_icon_url(self.coordinator.data.app.id)
+        return self.coordinator.roku.app_icon_url(self.app_id)
 
     @property
     def app_name(self) -> str:
