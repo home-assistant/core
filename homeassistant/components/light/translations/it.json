@@ -1,0 +1,27 @@
+{
+    "device_automation": {
+        "action_type": {
+            "brightness_decrease": "Riduci la luminosit\u00e0 di {entity_name}",
+            "brightness_increase": "Aumenta la luminosit\u00e0 di {entity_name}",
+            "flash": "Flash {entity_name}",
+            "toggle": "Commuta {entity_name}",
+            "turn_off": "Spegnere {entity_name}",
+            "turn_on": "Accendere {entity_name}"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} \u00e8 disattivato",
+            "is_on": "{entity_name} \u00e8 attivo"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} disattivato",
+            "turned_on": "{entity_name} attivato"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Spenta",
+            "on": "Accesa"
+        }
+    },
+    "title": "Luce"
+}

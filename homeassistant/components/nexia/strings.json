@@ -1,13 +1,9 @@
 {
-  "title": "Nexia",
   "config": {
     "step": {
       "user": {
         "title": "Connect to mynexia.com",
-        "data": {
-          "username": "Username",
-          "password": "Password"
-        }
+        "data": { "username": "Username", "password": "Password" }
       }
     },
     "error": {
@@ -15,8 +11,6 @@
       "invalid_auth": "Invalid authentication",
       "unknown": "Unexpected error"
     },
-    "abort": {
-      "already_configured": "This nexia home is already configured"
-    }
+    "abort": { "already_configured": "This nexia home is already configured" }
   }
 }

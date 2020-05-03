@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Termostaten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "invalid_auth": "Ugyldig godkjenning",
+            "invalid_thermostat": "Termostatens serienummer er ugyldig.",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "serial_number": "Termostatenes serienummer.",
+                    "username": "Brukernavn"
+                },
+                "description": "Du m\u00e5 skaffe termostats numeriske serienummer eller ID ved \u00e5 logge inn p\u00e5 https://MyNuHeat.com og velge termostaten (e).",
+                "title": "Koble til NuHeat"
+            }
+        }
+    }
+}

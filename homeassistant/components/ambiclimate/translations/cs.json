@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "follow_link": "N\u00e1sledujte odkaz a prove\u010fte ov\u011b\u0159en\u00ed p\u0159ed stisknut\u00edm tla\u010d\u00edtka Odeslat.",
+            "no_token": "Nen\u00ed ov\u011b\u0159en s Ambiclimate"
+        },
+        "step": {
+            "auth": {
+                "description": "N\u00e1sledujte tento [odkaz]({authorization_url}) a <b> Povolit </b> p\u0159\u00edstup k va\u0161emu \u00fa\u010dtu Ambiclimate, pot\u00e9 se vra\u0165te a stiskn\u011bte <b> Odeslat </b> n\u00ed\u017ee. \n (Ujist\u011bte se, \u017ee zadan\u00e1 adresa URL zp\u011btn\u00e9ho vol\u00e1n\u00ed je {cb_url} )",
+                "title": "Ov\u011b\u0159it Ambiclimate"
+            }
+        }
+    }
+}

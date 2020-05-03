@@ -1,5 +1,4 @@
 {
-  "title": "iRobot Roomba",
   "config": {
     "step": {
       "user": {
@@ -16,18 +15,12 @@
       }
     },
     "error": {
-      "unknown": "Unexpected error",
       "cannot_connect": "Failed to connect, please try again"
     }
   },
   "options": {
     "step": {
-      "init": {
-        "data": {
-          "continuous": "Continuous",
-          "delay": "Delay"
-        }
-      }
+      "init": { "data": { "continuous": "Continuous", "delay": "Delay" } }
     }
   }
 }

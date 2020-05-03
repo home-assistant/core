@@ -1,8 +1,5 @@
 """Support for NWS weather service."""
-import asyncio
 import logging
-
-import aiohttp
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -25,21 +22,25 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 from homeassistant.util.temperature import convert as convert_temperature
 
-from . import base_unique_id, signal_unique_id
+from . import base_unique_id
 from .const import (
     ATTR_FORECAST_DAYTIME,
     ATTR_FORECAST_DETAILED_DESCRIPTION,
     ATTR_FORECAST_PRECIP_PROB,
     ATTRIBUTION,
     CONDITION_CLASSES,
-    CONF_STATION,
+    COORDINATOR_FORECAST,
+    COORDINATOR_FORECAST_HOURLY,
+    COORDINATOR_OBSERVATION,
+    DAYNIGHT,
     DOMAIN,
+    HOURLY,
+    NWS_DATA,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,28 +74,16 @@ def convert_condition(time, weather):
     return cond, max(prec_probs)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigType, async_add_entities
+) -> None:
     """Set up the NWS weather platform."""
-    if discovery_info is None:
-        return
-    latitude = discovery_info.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = discovery_info.get(CONF_LONGITUDE, hass.config.longitude)
-    station = discovery_info.get(CONF_STATION)
-
-    nws_data = hass.data[DOMAIN][base_unique_id(latitude, longitude)]
-
-    try:
-        await nws_data.async_set_station(station)
-    except (aiohttp.ClientError, asyncio.TimeoutError) as err:
-        _LOGGER.error("Error automatically setting station: %s", str(err))
-        raise PlatformNotReady
-
-    await nws_data.async_update()
+    hass_data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
-            NWSWeather(nws_data, "daynight", hass.config.units),
-            NWSWeather(nws_data, "hourly", hass.config.units),
+            NWSWeather(entry.data, hass_data, DAYNIGHT, hass.config.units),
+            NWSWeather(entry.data, hass_data, HOURLY, hass.config.units),
         ],
         False,
     )
@@ -103,12 +92,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class NWSWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, nws, mode, units):
+    def __init__(self, entry_data, hass_data, mode, units):
         """Initialise the platform with a data instance and station name."""
-        self.nws = nws
-        self.station = nws.station
-        self.latitude = nws.latitude
-        self.longitude = nws.longitude
+        self.nws = hass_data[NWS_DATA]
+        self.latitude = entry_data[CONF_LATITUDE]
+        self.longitude = entry_data[CONF_LONGITUDE]
+        self.coordinator_observation = hass_data[COORDINATOR_OBSERVATION]
+        if mode == DAYNIGHT:
+            self.coordinator_forecast = hass_data[COORDINATOR_FORECAST]
+        else:
+            self.coordinator_forecast = hass_data[COORDINATOR_FORECAST_HOURLY]
+        self.station = self.nws.station
 
         self.is_metric = units.is_metric
         self.mode = mode
@@ -119,11 +113,10 @@ class NWSWeather(WeatherEntity):
     async def async_added_to_hass(self) -> None:
         """Set up a listener and load data."""
         self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                signal_unique_id(self.latitude, self.longitude),
-                self._update_callback,
-            )
+            self.coordinator_observation.async_add_listener(self._update_callback)
+        )
+        self.async_on_remove(
+            self.coordinator_forecast.async_add_listener(self._update_callback)
         )
         self._update_callback()
 
@@ -131,7 +124,7 @@ class NWSWeather(WeatherEntity):
     def _update_callback(self) -> None:
         """Load data from integration."""
         self.observation = self.nws.observation
-        if self.mode == "daynight":
+        if self.mode == DAYNIGHT:
             self._forecast = self.nws.forecast
         else:
             self._forecast = self.nws.forecast_hourly
@@ -259,7 +252,7 @@ class NWSWeather(WeatherEntity):
                 ATTR_FORECAST_TIME: forecast_entry.get("startTime"),
             }
 
-            if self.mode == "daynight":
+            if self.mode == DAYNIGHT:
                 data[ATTR_FORECAST_DAYTIME] = forecast_entry.get("isDaytime")
             time = forecast_entry.get("iconTime")
             weather = forecast_entry.get("iconWeather")
@@ -292,11 +285,7 @@ class NWSWeather(WeatherEntity):
     @property
     def available(self):
         """Return if state is available."""
-        if self.mode == "daynight":
-            return (
-                self.nws.update_observation_success and self.nws.update_forecast_success
-            )
         return (
-            self.nws.update_observation_success
-            and self.nws.update_forecast_hourly_success
+            self.coordinator_observation.last_update_success
+            and self.coordinator_forecast.last_update_success
         )

@@ -384,7 +384,7 @@ async def test_get_light_state(hass_hue, hue_client):
     await perform_get_light_state(hue_client, "light.kitchen_lights", 401)
 
 
-async def test_put_light_state(hass_hue, hue_client):
+async def test_put_light_state(hass, hass_hue, hue_client):
     """Test the setting of light states."""
     await perform_put_test_on_ceiling_lights(hass_hue, hue_client)
 
@@ -408,7 +408,26 @@ async def test_put_light_state(hass_hue, hue_client):
         True,
         hue=4369,
         saturation=127,
+        brightness=128,
+    )
+
+    assert (
+        hass.states.get("light.ceiling_lights").attributes[light.ATTR_BRIGHTNESS] == 129
+    )
+
+    # update light state through api
+    await perform_put_light_state(
+        hass_hue,
+        hue_client,
+        "light.ceiling_lights",
+        True,
+        hue=4369,
+        saturation=127,
         brightness=123,
+    )
+
+    assert (
+        hass.states.get("light.ceiling_lights").attributes[light.ATTR_BRIGHTNESS] == 123
     )
 
     # go through api to get the state back
@@ -416,6 +435,25 @@ async def test_put_light_state(hass_hue, hue_client):
         hue_client, "light.ceiling_lights", 200
     )
     assert ceiling_json["state"][HUE_API_STATE_BRI] == 123
+    assert ceiling_json["state"][HUE_API_STATE_HUE] == 4369
+    assert ceiling_json["state"][HUE_API_STATE_SAT] == 127
+
+    # update light state through api
+    await perform_put_light_state(
+        hass_hue,
+        hue_client,
+        "light.ceiling_lights",
+        True,
+        hue=4369,
+        saturation=127,
+        brightness=255,
+    )
+
+    # go through api to get the state back
+    ceiling_json = await perform_get_light_state(
+        hue_client, "light.ceiling_lights", 200
+    )
+    assert ceiling_json["state"][HUE_API_STATE_BRI] == 254
     assert ceiling_json["state"][HUE_API_STATE_HUE] == 4369
     assert ceiling_json["state"][HUE_API_STATE_SAT] == 127
 
@@ -454,7 +492,7 @@ async def test_put_light_state(hass_hue, hue_client):
     assert kitchen_result.status == HTTP_NOT_FOUND
 
 
-async def test_put_light_state_script(hass_hue, hue_client):
+async def test_put_light_state_script(hass, hass_hue, hue_client):
     """Test the setting of script variables."""
     # Turn the kitchen light off first
     await hass_hue.services.async_call(
@@ -464,9 +502,9 @@ async def test_put_light_state_script(hass_hue, hue_client):
         blocking=True,
     )
 
-    # Emulated hue converts 0-100% to 0-255.
+    # Emulated hue converts 0-100% to 0-254.
     level = 23
-    brightness = round(level * 255 / 100)
+    brightness = round(level * 254 / 100)
 
     script_result = await perform_put_light_state(
         hass_hue, hue_client, "script.set_kitchen_light", True, brightness
@@ -481,11 +519,15 @@ async def test_put_light_state_script(hass_hue, hue_client):
     assert kitchen_light.state == "on"
     assert kitchen_light.attributes[light.ATTR_BRIGHTNESS] == level
 
+    assert (
+        hass.states.get("light.kitchen_lights").attributes[light.ATTR_BRIGHTNESS] == 23
+    )
+
 
 async def test_put_light_state_climate_set_temperature(hass_hue, hue_client):
     """Test setting climate temperature."""
     brightness = 19
-    temperature = round(brightness / 255 * 100)
+    temperature = round(brightness / 254 * 100)
 
     hvac_result = await perform_put_light_state(
         hass_hue, hue_client, "climate.hvac", True, brightness
@@ -517,9 +559,9 @@ async def test_put_light_state_media_player(hass_hue, hue_client):
         blocking=True,
     )
 
-    # Emulated hue converts 0.0-1.0 to 0-255.
+    # Emulated hue converts 0.0-1.0 to 0-254.
     level = 0.25
-    brightness = round(level * 255)
+    brightness = round(level * 254)
 
     mp_result = await perform_put_light_state(
         hass_hue, hue_client, "media_player.walkman", True, brightness
@@ -602,7 +644,7 @@ async def test_set_position_cover(hass_hue, hue_client):
     assert cover_test.state == "closed"
 
     level = 20
-    brightness = round(level / 100 * 255)
+    brightness = round(level / 100 * 254)
 
     # Go through the API to open
     cover_result = await perform_put_light_state(
@@ -644,9 +686,9 @@ async def test_put_light_state_fan(hass_hue, hue_client):
         blocking=True,
     )
 
-    # Emulated hue converts 0-100% to 0-255.
+    # Emulated hue converts 0-100% to 0-254.
     level = 43
-    brightness = round(level * 255 / 100)
+    brightness = round(level * 254 / 100)
 
     fan_result = await perform_put_light_state(
         hass_hue, hue_client, "fan.living_room_fan", True, brightness

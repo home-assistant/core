@@ -1,7 +1,7 @@
 """Support for Blink Alarm Control Panel."""
 import logging
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import SUPPORT_ALARM_ARM_AWAY
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sync_modules, True)
 
 
-class BlinkSyncModule(AlarmControlPanel):
+class BlinkSyncModule(AlarmControlPanelEntity):
     """Representation of a Blink Alarm Control Panel."""
 
     def __init__(self, data, name, sync):

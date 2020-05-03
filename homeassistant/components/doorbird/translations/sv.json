@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen",
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd (IP-adress)",
+                    "name": "Enhetsnamn",
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    }
+}

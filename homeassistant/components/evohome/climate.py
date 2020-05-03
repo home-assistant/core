@@ -3,7 +3,7 @@ from datetime import datetime as dt
 import logging
 from typing import List, Optional
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -122,7 +122,7 @@ async def async_setup_platform(
     async_add_entities([controller] + zones, update_before_add=True)
 
 
-class EvoClimateDevice(EvoDevice, ClimateDevice):
+class EvoClimateEntity(EvoDevice, ClimateEntity):
     """Base for an evohome Climate device."""
 
     def __init__(self, evo_broker, evo_device) -> None:
@@ -142,7 +142,7 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
         return self._preset_modes
 
 
-class EvoZone(EvoChild, EvoClimateDevice):
+class EvoZone(EvoChild, EvoClimateEntity):
     """Base for a Honeywell TCC Zone."""
 
     def __init__(self, evo_broker, evo_device) -> None:
@@ -315,7 +315,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
             self._device_state_attrs[attr] = getattr(self._evo_device, attr)
 
 
-class EvoController(EvoClimateDevice):
+class EvoController(EvoClimateEntity):
     """Base for a Honeywell TCC Controller/Location.
 
     The Controller (aka TCS, temperature control system) is the parent of all the child

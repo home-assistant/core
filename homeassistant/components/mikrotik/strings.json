@@ -1,5 +1,4 @@
 {
-  "title": "Mikrotik",
   "config": {
     "step": {
       "user": {
@@ -19,9 +18,7 @@
       "cannot_connect": "Connection Unsuccessful",
       "wrong_credentials": "Wrong Credentials"
     },
-    "abort": {
-      "already_configured": "Mikrotik is already configured"
-    }
+    "abort": { "already_configured": "Mikrotik is already configured" }
   },
   "options": {
     "step": {

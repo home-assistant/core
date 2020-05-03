@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Laite on jo m\u00e4\u00e4ritetty"
+        },
+        "error": {
+            "cannot_connect": "Yhteyden muodostaminen ep\u00e4onnistui. Yrit\u00e4 uudelleen",
+            "unknown": "Odottamaton virhe"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP-osoite"
+                },
+                "title": "Yhdist\u00e4 PowerView-keskittimeen"
+            }
+        }
+    },
+    "title": "Hunter Douglas PowerView"
+}

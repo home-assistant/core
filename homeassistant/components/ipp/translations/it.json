@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Questa stampante \u00e8 gi\u00e0 configurata.",
+            "connection_error": "Impossibile connettersi alla stampante.",
+            "connection_upgrade": "Impossibile connettersi alla stampante a causa della necessit\u00e0 dell'aggiornamento della connessione.",
+            "ipp_error": "Si \u00e8 verificato un errore IPP.",
+            "ipp_version_error": "Versione IPP non supportata dalla stampante.",
+            "parse_error": "Impossibile analizzare la risposta dalla stampante."
+        },
+        "error": {
+            "connection_error": "Impossibile connettersi alla stampante.",
+            "connection_upgrade": "Impossibile connettersi alla stampante. Riprovare selezionando l'opzione SSL/TLS."
+        },
+        "flow_title": "Stampante: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "base_path": "Percorso relativo alla stampante",
+                    "host": "Host o indirizzo IP",
+                    "port": "Porta",
+                    "ssl": "La stampante supporta la comunicazione su SSL/TLS",
+                    "verify_ssl": "La stampante utilizza un certificato SSL adeguato"
+                },
+                "description": "Configurare la stampante tramite Internet Printing Protocol (IPP) per l'integrazione con Home Assistant.",
+                "title": "Collegare la stampante"
+            },
+            "zeroconf_confirm": {
+                "description": "Vuoi aggiungere la stampante denominata `{name}` a Home Assistant?",
+                "title": "Stampante rilevata"
+            }
+        }
+    }
+}

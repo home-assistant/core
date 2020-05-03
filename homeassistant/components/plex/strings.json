@@ -1,13 +1,10 @@
 {
-  "title": "Plex",
   "config": {
     "step": {
       "select_server": {
         "title": "Select Plex server",
         "description": "Multiple servers available, select one:",
-        "data": {
-          "server": "Server"
-        }
+        "data": { "server": "Server" }
       },
       "start_website_auth": {
         "title": "Connect Plex server",

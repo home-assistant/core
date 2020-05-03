@@ -11,7 +11,7 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -78,7 +78,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class AdsCover(AdsEntity, CoverDevice):
+class AdsCover(AdsEntity, CoverEntity):
     """Representation of ADS cover."""
 
     def __init__(

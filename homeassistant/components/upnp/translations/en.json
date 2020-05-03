@@ -1,0 +1,22 @@
+{
+    "config": {
+        "flow_title": "UPnP/IGD: {name}",
+        "abort": {
+            "already_configured": "UPnP/IGD is already configured",
+            "no_devices_discovered": "No UPnP/IGDs discovered",
+            "no_devices_found": "No UPnP/IGD devices found on the network."
+        },
+        "step": {
+            "init": {
+            },
+            "ssdp_confirm": {
+                "description": "Do you want to set up this UPnP/IGD device?"
+            },
+            "user": {
+                "data": {
+                    "usn": "Device"
+                }
+            }
+        }
+    }
+}

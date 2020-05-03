@@ -1,27 +1,18 @@
 {
-  "title": "ZHA",
   "config": {
     "step": {
       "user": {
         "title": "ZHA",
-        "data": {
-          "radio_type": "Radio Type",
-          "usb_path": "USB Device Path"
-        }
+        "data": { "radio_type": "Radio Type", "usb_path": "USB Device Path" }
       }
     },
-    "error": {
-      "cannot_connect": "Unable to connect to ZHA device."
-    },
+    "error": { "cannot_connect": "Unable to connect to ZHA device." },
     "abort": {
       "single_instance_allowed": "Only a single configuration of ZHA is allowed."
     }
   },
   "device_automation": {
-    "action_type": {
-      "squawk": "Squawk",
-      "warn": "Warn"
-    },
+    "action_type": { "squawk": "Squawk", "warn": "Warn" },
     "trigger_type": {
       "remote_button_short_press": "\"{subtype}\" button pressed",
       "remote_button_short_release": "\"{subtype}\" button released",

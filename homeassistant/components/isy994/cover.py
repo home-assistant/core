@@ -2,7 +2,7 @@
 import logging
 from typing import Callable
 
-from homeassistant.components.cover import DOMAIN, CoverDevice
+from homeassistant.components.cover import DOMAIN, CoverEntity
 from homeassistant.const import (
     STATE_CLOSED,
     STATE_CLOSING,
@@ -31,7 +31,7 @@ def setup_platform(
     """Set up the ISY994 cover platform."""
     devices = []
     for node in hass.data[ISY994_NODES][DOMAIN]:
-        devices.append(ISYCoverDevice(node))
+        devices.append(ISYCoverEntity(node))
 
     for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
         devices.append(ISYCoverProgram(name, status, actions))
@@ -39,7 +39,7 @@ def setup_platform(
     add_entities(devices)
 
 
-class ISYCoverDevice(ISYDevice, CoverDevice):
+class ISYCoverEntity(ISYDevice, CoverEntity):
     """Representation of an ISY994 cover device."""
 
     @property
@@ -72,7 +72,7 @@ class ISYCoverDevice(ISYDevice, CoverDevice):
             _LOGGER.error("Unable to close the cover")
 
 
-class ISYCoverProgram(ISYCoverDevice):
+class ISYCoverProgram(ISYCoverEntity):
     """Representation of an ISY994 cover program."""
 
     def __init__(self, name: str, node: object, actions: object) -> None:

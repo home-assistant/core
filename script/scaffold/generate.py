@@ -133,10 +133,7 @@ def _custom_tasks(template, info) -> None:
             title=info.name,
             config={
                 "step": {
-                    "confirm": {
-                        "title": info.name,
-                        "description": f"Do you want to set up {info.name}?",
-                    }
+                    "confirm": {"description": f"Do you want to set up {info.name}?"}
                 },
                 "abort": {
                     "single_instance_allowed": f"Only a single configuration of {info.name} is possible.",

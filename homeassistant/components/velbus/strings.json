@@ -1,5 +1,4 @@
 {
-  "title": "Velbus interface",
   "config": {
     "step": {
       "user": {
@@ -14,8 +13,6 @@
       "port_exists": "This port is already configured",
       "connection_failed": "The velbus connection failed"
     },
-    "abort": {
-      "port_exists": "This port is already configured"
-    }
+    "abort": { "port_exists": "This port is already configured" }
   }
 }

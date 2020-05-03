@@ -2,7 +2,7 @@
 import logging
 from typing import Callable
 
-from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.helpers.typing import ConfigType
 
 from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
@@ -25,7 +25,7 @@ def setup_platform(
     add_entities(devices)
 
 
-class ISYSwitchDevice(ISYDevice, SwitchDevice):
+class ISYSwitchDevice(ISYDevice, SwitchEntity):
     """Representation of an ISY994 switch device."""
 
     @property

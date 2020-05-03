@@ -1,6 +1,4 @@
 """Define tests for the Notion config flow."""
-from unittest.mock import patch
-
 import aionotion
 import pytest
 
@@ -9,20 +7,21 @@ from homeassistant.components.notion import DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.async_mock import AsyncMock, patch
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_client_coro():
+def mock_client():
     """Define a fixture for a client creation coroutine."""
-    return mock_coro()
+    return AsyncMock(return_value=None)
 
 
 @pytest.fixture
-def mock_aionotion(mock_client_coro):
+def mock_aionotion(mock_client):
     """Mock the aionotion library."""
     with patch("homeassistant.components.notion.config_flow.async_get_client") as mock_:
-        mock_.return_value = mock_client_coro
+        mock_.side_effect = mock_client
         yield mock_
 
 
@@ -43,7 +42,7 @@ async def test_duplicate_error(hass):
 
 
 @pytest.mark.parametrize(
-    "mock_client_coro", [mock_coro(exception=aionotion.errors.NotionError)]
+    "mock_client", [AsyncMock(side_effect=aionotion.errors.NotionError)]
 )
 async def test_invalid_credentials(hass, mock_aionotion):
     """Test that an invalid API/App Key throws an error."""

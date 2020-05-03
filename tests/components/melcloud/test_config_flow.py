@@ -2,7 +2,6 @@
 import asyncio
 
 from aiohttp import ClientError, ClientResponseError
-from asynctest import patch
 import pymelcloud
 import pytest
 
@@ -10,6 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components.melcloud.const import DOMAIN
 from homeassistant.const import HTTP_FORBIDDEN, HTTP_INTERNAL_SERVER_ERROR
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

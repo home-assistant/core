@@ -1,0 +1,12 @@
+{
+    "state": {
+        "_": {
+            "idle": "L\u00e4\u00e4rlauf",
+            "off": "Us",
+            "on": "Ah",
+            "paused": "Pousi\u00e4r\u00e4",
+            "playing": "Am spil\u00e4",
+            "standby": "Standby"
+        }
+    }
+}

@@ -4,7 +4,7 @@ import logging
 from pydaikin import appliance
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
@@ -86,7 +86,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([DaikinClimate(daikin_api)], update_before_add=True)
 
 
-class DaikinClimate(ClimateDevice):
+class DaikinClimate(ClimateEntity):
     """Representation of a Daikin HVAC."""
 
     def __init__(self, api):

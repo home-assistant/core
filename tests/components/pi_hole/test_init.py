@@ -2,10 +2,9 @@
 
 from unittest.mock import patch
 
-from asynctest import CoroutineMock
-
 from homeassistant.components import pi_hole
 
+from tests.async_mock import AsyncMock
 from tests.common import async_setup_component
 
 ZERO_DATA = {
@@ -25,7 +24,7 @@ ZERO_DATA = {
 async def test_setup_minimal_config(hass):
     """Tests component setup with minimal config."""
     with patch("homeassistant.components.pi_hole.Hole") as _hole:
-        _hole.return_value.get_data = CoroutineMock(return_value=None)
+        _hole.return_value.get_data = AsyncMock(return_value=None)
         _hole.return_value.data = ZERO_DATA
 
         assert await async_setup_component(
@@ -82,7 +81,7 @@ async def test_setup_minimal_config(hass):
 async def test_setup_name_config(hass):
     """Tests component setup with a custom name."""
     with patch("homeassistant.components.pi_hole.Hole") as _hole:
-        _hole.return_value.get_data = CoroutineMock(return_value=None)
+        _hole.return_value.get_data = AsyncMock(return_value=None)
         _hole.return_value.data = ZERO_DATA
 
         assert await async_setup_component(
@@ -102,9 +101,9 @@ async def test_setup_name_config(hass):
 async def test_disable_service_call(hass):
     """Test disable service call with no Pi-hole named."""
     with patch("homeassistant.components.pi_hole.Hole") as _hole:
-        mock_disable = CoroutineMock(return_value=None)
+        mock_disable = AsyncMock(return_value=None)
         _hole.return_value.disable = mock_disable
-        _hole.return_value.get_data = CoroutineMock(return_value=None)
+        _hole.return_value.get_data = AsyncMock(return_value=None)
         _hole.return_value.data = ZERO_DATA
 
         assert await async_setup_component(
@@ -135,9 +134,9 @@ async def test_disable_service_call(hass):
 async def test_enable_service_call(hass):
     """Test enable service call with no Pi-hole named."""
     with patch("homeassistant.components.pi_hole.Hole") as _hole:
-        mock_enable = CoroutineMock(return_value=None)
+        mock_enable = AsyncMock(return_value=None)
         _hole.return_value.enable = mock_enable
-        _hole.return_value.get_data = CoroutineMock(return_value=None)
+        _hole.return_value.get_data = AsyncMock(return_value=None)
         _hole.return_value.data = ZERO_DATA
 
         assert await async_setup_component(

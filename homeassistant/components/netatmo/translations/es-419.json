@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Solo puede configurar una cuenta de Netatmo.",
+            "authorize_url_timeout": "Tiempo de espera agotado para generar la URL de autorizaci\u00f3n.",
+            "missing_configuration": "El componente Netatmo no est\u00e1 configurado. Por favor, siga la documentaci\u00f3n."
+        },
+        "create_entry": {
+            "default": "Autenticado con \u00e9xito con Netatmo."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Seleccione el m\u00e9todo de autenticaci\u00f3n"
+            }
+        }
+    }
+}

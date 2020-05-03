@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     UNIT_PERCENTAGE,
-    UNIT_VOLT,
+    VOLT,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -281,7 +281,7 @@ class WirelessTagBaseSensor(Entity):
         """Return the state attributes."""
         return {
             ATTR_BATTERY_LEVEL: int(self._tag.battery_remaining * 100),
-            ATTR_VOLTAGE: f"{self._tag.battery_volts:.2f}{UNIT_VOLT}",
+            ATTR_VOLTAGE: f"{self._tag.battery_volts:.2f}{VOLT}",
             ATTR_TAG_SIGNAL_STRENGTH: f"{self._tag.signal_strength}dBm",
             ATTR_TAG_OUT_OF_RANGE: not self._tag.is_in_range,
             ATTR_TAG_POWER_CONSUMPTION: f"{self._tag.power_consumption:.2f}{UNIT_PERCENTAGE}",

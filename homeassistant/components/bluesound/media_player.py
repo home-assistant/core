@@ -12,7 +12,7 @@ import async_timeout
 import voluptuous as vol
 import xmltodict
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_MUSIC,
@@ -200,7 +200,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
 
-class BluesoundPlayer(MediaPlayerDevice):
+class BluesoundPlayer(MediaPlayerEntity):
     """Representation of a Bluesound Player."""
 
     def __init__(self, hass, host, port=None, name=None, init_callback=None):

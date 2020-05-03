@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "If a METAR station code is not specified, the latitude and longitude will be used to find the closest station.",
+        "title": "Connect to the National Weather Service",
+        "data": {
+          "api_key": "API key (email)",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "station": "METAR station code"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "unknown": "Unexpected error"
+    },
+    "abort": { "already_configured": "Device is already configured" }
+  }
+}

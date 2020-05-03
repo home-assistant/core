@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Une seule configuration de MQTT est autoris\u00e9e."
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter au broker."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "discovery": "Activer la d\u00e9couverte",
+                    "password": "Mot de passe",
+                    "port": "Port",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Veuillez entrer les informations de connexion de votre broker MQTT.",
+                "title": "MQTT"
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Activer la d\u00e9couverte"
+                },
+                "description": "Vous voulez configurer Home Assistant pour vous connecter au broker MQTT fourni par l\u2019Add-on hass.io {addon} ?",
+                "title": "MQTT Broker via le module compl\u00e9mentaire Hass.io"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Premier bouton",
+            "button_2": "Deuxi\u00e8me bouton",
+            "button_3": "Troisi\u00e8me bouton",
+            "button_4": "Quatri\u00e8me bouton",
+            "button_5": "Cinqui\u00e8me bouton",
+            "button_6": "Sixi\u00e8me bouton",
+            "turn_off": "\u00c9teindre",
+            "turn_on": "Allumer"
+        },
+        "trigger_type": {
+            "button_short_press": "\" {subtype} \" press\u00e9"
+        }
+    }
+}

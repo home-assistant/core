@@ -1,6 +1,6 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 109
+MINOR_VERSION = 110
 PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
@@ -34,6 +34,7 @@ CONF_AFTER = "after"
 CONF_ALIAS = "alias"
 CONF_API_KEY = "api_key"
 CONF_API_VERSION = "api_version"
+CONF_ARMING_TIME = "arming_time"
 CONF_AT = "at"
 CONF_AUTH_MFA_MODULES = "auth_mfa_modules"
 CONF_AUTH_PROVIDERS = "auth_providers"
@@ -183,6 +184,7 @@ EVENT_COMPONENT_LOADED = "component_loaded"
 EVENT_CORE_CONFIG_UPDATE = "core_config_updated"
 EVENT_HOMEASSISTANT_CLOSE = "homeassistant_close"
 EVENT_HOMEASSISTANT_START = "homeassistant_start"
+EVENT_HOMEASSISTANT_STARTED = "homeassistant_started"
 EVENT_HOMEASSISTANT_STOP = "homeassistant_stop"
 EVENT_HOMEASSISTANT_FINAL_WRITE = "homeassistant_final_write"
 EVENT_LOGBOOK_ENTRY = "logbook_entry"
@@ -346,19 +348,19 @@ ATTR_TEMPERATURE = "temperature"
 POWER_WATT = "W"
 
 # Voltage units
-UNIT_VOLT = "V"
+VOLT = "V"
 
 # Energy units
 ENERGY_WATT_HOUR = f"{POWER_WATT}h"
 ENERGY_KILO_WATT_HOUR = f"k{ENERGY_WATT_HOUR}"
 
 # Degree units
-UNIT_DEGREE = "°"
+DEGREE = "°"
 
 # Temperature units
-TEMP_CELSIUS = f"{UNIT_DEGREE}C"
-TEMP_FAHRENHEIT = f"{UNIT_DEGREE}F"
-TEMP_KELVIN = f"{UNIT_DEGREE}K"
+TEMP_CELSIUS = f"{DEGREE}C"
+TEMP_FAHRENHEIT = f"{DEGREE}F"
+TEMP_KELVIN = f"{DEGREE}K"
 
 # Time units
 TIME_MICROSECONDS = "μs"
@@ -414,10 +416,10 @@ MASS_OUNCES: str = "oz"
 MASS_POUNDS: str = "lb"
 
 # Conductivity units
-UNIT_CONDUCTIVITY: str = f"µS/{LENGTH_CENTIMETERS}"
+CONDUCTIVITY: str = f"µS/{LENGTH_CENTIMETERS}"
 
 # UV Index units
-UNIT_UV_INDEX: str = "UV index"
+UV_INDEX: str = "UV index"
 
 # Percentage units
 UNIT_PERCENTAGE = "%"
