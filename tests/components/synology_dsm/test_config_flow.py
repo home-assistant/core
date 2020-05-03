@@ -49,8 +49,6 @@ PASSWORD = "password"
 DEVICE_TOKEN = "Dév!cè_T0k€ñ"
 
 MACS = ["00-11-32-XX-XX-59", "00-11-32-XX-XX-5A"]
-CONFIGURED_MAC = "00-11-32-XX-XX-59"
-NOT_CONFIGURED_MAC = "00-11-32-XX-XX-11"
 
 
 @pytest.fixture(name="service")
@@ -357,7 +355,7 @@ async def test_form_ssdp_already_configured(
         data={
             ssdp.ATTR_SSDP_LOCATION: "http://192.168.1.5:5000",
             ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-            ssdp.ATTR_UPNP_SERIAL: CONFIGURED_MAC,
+            ssdp.ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -373,7 +371,7 @@ async def test_form_ssdp(hass: HomeAssistantType, service: MagicMock):
         data={
             ssdp.ATTR_SSDP_LOCATION: "http://192.168.1.5:5000",
             ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-            ssdp.ATTR_UPNP_SERIAL: NOT_CONFIGURED_MAC,
+            ssdp.ATTR_UPNP_SERIAL: "001132XXXX99",  # MAC address, but SSDP does not have `-`
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

@@ -205,7 +205,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def _mac_already_configured(self, mac):
         """See if we already have configured a NAS with this MAC address."""
         existing_macs = [
-            mac
+            mac.replace("-", "")
             for entry in self._async_current_entries()
             for mac in entry.data.get(CONF_MAC, [])
         ]

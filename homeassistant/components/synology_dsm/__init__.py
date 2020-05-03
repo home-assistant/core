@@ -80,20 +80,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     # For SSDP compat
     if not entry.data.get(CONF_MAC):
-        hass.async_create_task(_add_macs_to_entry(hass, entry, api))
+        network = await hass.async_add_executor_job(getattr, api.dsm, "network")
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_MAC: network.macs}
+        )
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")
     )
 
     return True
-
-
-async def _add_macs_to_entry(hass, entry, api):
-    network = api.dsm.network
-    hass.config_entries.async_update_entry(
-        entry, data={**entry.data, CONF_MAC: network.macs}
-    )
 
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
