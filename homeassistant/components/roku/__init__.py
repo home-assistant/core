@@ -1,7 +1,7 @@
 """Support for Roku."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 from typing import Any, Dict
 
 from rokuecp import Roku, RokuError
