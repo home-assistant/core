@@ -89,7 +89,7 @@ class MetOfficeCurrentSensor(Entity):
 
         self._type = sensor_type
         self._name = f"{hass_data[METOFFICE_NAME]} {SENSOR_TYPES[self._type][0]}"
-        self._unique_id = f"{hass_data[METOFFICE_NAME]}_{SENSOR_TYPES[self._type][0]}_{self._data.latitude}_{self._data.longitude}"
+        self._unique_id = f"{DOMAIN}_{self._data.latitude}_{self._data.longitude}_{SENSOR_TYPES[self._type][0]}"
 
         self.metoffice_site_id = None
         self.metoffice_site_name = None

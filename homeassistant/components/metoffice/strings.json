@@ -1,22 +1,33 @@
 {
-    "config": {
-      "step": {
-        "user": {
-          "description": "The latitude and longitude will be used to find the closest weather station.",
-          "title": "Connect to the UK Met Office",
-          "data": {
-            "api_key": "Met Office DataPoint API key",
-            "latitude": "Latitude",
-            "longitude": "Longitude",
-            "name": "Friendly name"
-          }
+  "title": "UK Met Office",
+  "config": {
+    "step": {
+      "user": {
+        "description": "The latitude and longitude will be used to find the closest weather station.",
+        "title": "Connect to the Met Office",
+        "data": {
+          "api_key": "Met Office DataPoint API key",
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "name": "Friendly name",
+          "mode": "Update frequency"
         }
-      },
-      "error": {
-        "cannot_connect": "Failed to connect, please try again",
-        "unknown": "Unexpected error"
-      },
-      "abort": { "already_configured": "Device is already configured" }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "unknown": "Unexpected error"
+    },
+    "abort": { "already_configured": "Device is already configured" }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "Met Office Options",
+        "data": {
+          "mode": "Update frequency"
+        }
+      }
     }
   }
-  
+}

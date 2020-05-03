@@ -10,10 +10,11 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=15)
 
 METOFFICE_DATA = "metoffice_data"
 METOFFICE_COORDINATOR = "metoffice_coordinator"
-METOFFICE_MONITORED_CONDITIONS = "metoffice_monitored_conditions"
+METOFFICE_LISTENER = "metoffice_listener"
 METOFFICE_NAME = "metoffice_name"
 
-MODE_3HOURLY = "3hourly"
+MODE_3HOURLY = "3 Hourly"
+MODE_DAILY = "Daily"
 
 CONDITION_CLASSES = {
     "cloudy": ["7", "8"],
