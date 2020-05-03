@@ -11,13 +11,8 @@ from homeassistant.const import (
     ATTR_VOLTAGE,
     CONF_PASSWORD,
     CONF_USERNAME,
-<<<<<<< HEAD
-    PERCENTAGE,
-    UNIT_VOLT,
-=======
     PERCENTAGE,
     VOLT,
->>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send

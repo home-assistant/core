@@ -8,18 +8,7 @@ from pyownet import protocol
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    PERCENTAGE,
-    TEMP_CELSIUS,
-<<<<<<< HEAD
-    UNIT_VOLT,
-=======
-    PERCENTAGE,
-    VOLT,
->>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, PERCENTAGE, TEMP_CELSIUS, VOLT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 

@@ -21,9 +21,6 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
-    PERCENTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, Unauthorized

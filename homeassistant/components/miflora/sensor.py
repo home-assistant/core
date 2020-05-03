@@ -20,11 +20,6 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-<<<<<<< HEAD
-    UNIT_CONDUCTIVITY,
-=======
-    PERCENTAGE,
->>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -59,15 +54,9 @@ ATTR_LAST_SUCCESSFUL_UPDATE = "last_successful_update"
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_CELSIUS, "mdi:thermometer"],
     "light": ["Light intensity", "lx", "mdi:white-balance-sunny"],
-<<<<<<< HEAD
-    "moisture": ["Moisture", PERCENTAGE, "mdi:water-percent"],
-    "conductivity": ["Conductivity", UNIT_CONDUCTIVITY, "mdi:flash-circle"],
-    "battery": ["Battery", PERCENTAGE, "mdi:battery-charging"],
-=======
     "moisture": ["Moisture", PERCENTAGE, "mdi:water-percent"],
     "conductivity": ["Conductivity", CONDUCTIVITY, "mdi:flash-circle"],
     "battery": ["Battery", PERCENTAGE, "mdi:battery-charging"],
->>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

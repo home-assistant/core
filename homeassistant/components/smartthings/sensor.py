@@ -17,12 +17,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-<<<<<<< HEAD
-    UNIT_VOLT,
-=======
-    PERCENTAGE,
     VOLT,
->>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 )
 
 from . import SmartThingsEntity

@@ -11,12 +11,7 @@ from homeassistant.const import (
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     TIME_HOURS,
-<<<<<<< HEAD
-    UNIT_UV_INDEX,
-=======
-    PERCENTAGE,
     UV_INDEX,
->>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 

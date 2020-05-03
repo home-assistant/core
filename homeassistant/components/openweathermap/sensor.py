@@ -12,19 +12,11 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-<<<<<<< HEAD
-    PERCENTAGE,
-    SPEED_METERS_PER_SECOND,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    UNIT_DEGREE,
-=======
     DEGREE,
+    PERCENTAGE,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    PERCENTAGE,
->>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -45,13 +37,8 @@ SENSOR_TYPES = {
     "weather": ["Condition", None],
     "temperature": ["Temperature", None],
     "wind_speed": ["Wind speed", SPEED_METERS_PER_SECOND],
-<<<<<<< HEAD
-    "wind_bearing": ["Wind bearing", UNIT_DEGREE],
-    "humidity": ["Humidity", PERCENTAGE],
-=======
     "wind_bearing": ["Wind bearing", DEGREE],
     "humidity": ["Humidity", PERCENTAGE],
->>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
     "pressure": ["Pressure", "mbar"],
     "clouds": ["Cloud coverage", PERCENTAGE],
     "rain": ["Rain", "mm"],

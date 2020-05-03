@@ -24,10 +24,10 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     STATE_ON,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    PERCENTAGE,
     __version__,
 )
 from homeassistant.core import callback as ha_callback, split_entity_id

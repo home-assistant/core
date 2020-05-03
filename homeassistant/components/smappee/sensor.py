@@ -7,13 +7,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
-<<<<<<< HEAD
-    UNIT_DEGREE,
-    UNIT_VOLT,
-=======
-    PERCENTAGE,
     VOLT,
->>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.helpers.entity import Entity
@@ -33,19 +27,8 @@ SENSOR_TYPES = {
         "active_power",
     ],
     "current": ["Current", "mdi:gauge", "local", "A", "current"],
-<<<<<<< HEAD
-    "voltage": ["Voltage", "mdi:gauge", "local", UNIT_VOLT, "voltage"],
-    "active_cosfi": ["Power Factor", "mdi:gauge", "local", PERCENTAGE, "active_cosfi"],
-=======
     "voltage": ["Voltage", "mdi:gauge", "local", VOLT, "voltage"],
-    "active_cosfi": [
-        "Power Factor",
-        "mdi:gauge",
-        "local",
-        PERCENTAGE,
-        "active_cosfi",
-    ],
->>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
+    "active_cosfi": ["Power Factor", "mdi:gauge", "local", PERCENTAGE, "active_cosfi"],
     "alwayson_today": [
         "Always On Today",
         "mdi:gauge",

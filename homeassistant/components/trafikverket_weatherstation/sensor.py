@@ -20,11 +20,6 @@ from homeassistant.const import (
     PERCENTAGE,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
-<<<<<<< HEAD
-    UNIT_DEGREE,
-=======
-    PERCENTAGE,
->>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv

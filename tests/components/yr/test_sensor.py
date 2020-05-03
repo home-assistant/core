@@ -2,11 +2,7 @@
 from datetime import datetime
 
 from homeassistant.bootstrap import async_setup_component
-<<<<<<< HEAD
-from homeassistant.const import PERCENTAGE, SPEED_METERS_PER_SECOND, UNIT_DEGREE
-=======
-from homeassistant.const import DEGREE, SPEED_METERS_PER_SECOND, PERCENTAGE
->>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
+from homeassistant.const import DEGREE, PERCENTAGE, SPEED_METERS_PER_SECOND
 import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch

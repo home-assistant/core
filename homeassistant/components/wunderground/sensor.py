@@ -28,11 +28,6 @@ from homeassistant.const import (
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-<<<<<<< HEAD
-    UNIT_DEGREE,
-=======
-    PERCENTAGE,
->>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession

@@ -2,12 +2,8 @@
 from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
-<<<<<<< HEAD
-    PERCENTAGE,
-=======
     DATA_TERABYTES,
     PERCENTAGE,
->>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 )
 
 DOMAIN = "synology_dsm"
@@ -39,15 +35,9 @@ UTILISATION_SENSORS = {
 STORAGE_VOL_SENSORS = {
     "volume_status": ["Status", None, "mdi:checkbox-marked-circle-outline"],
     "volume_device_type": ["Type", None, "mdi:harddisk"],
-<<<<<<< HEAD
-    "volume_size_total": ["Total Size", None, "mdi:chart-pie"],
-    "volume_size_used": ["Used Space", None, "mdi:chart-pie"],
-    "volume_percentage_used": ["Volume Used", PERCENTAGE, "mdi:chart-pie"],
-=======
     "volume_size_total": ["Total Size", DATA_TERABYTES, "mdi:chart-pie"],
     "volume_size_used": ["Used Space", DATA_TERABYTES, "mdi:chart-pie"],
     "volume_percentage_used": ["Volume Used", PERCENTAGE, "mdi:chart-pie"],
->>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
     "volume_disk_temp_avg": ["Average Disk Temp", None, "mdi:thermometer"],
     "volume_disk_temp_max": ["Maximum Disk Temp", None, "mdi:thermometer"],
 }

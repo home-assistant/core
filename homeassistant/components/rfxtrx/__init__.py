@@ -19,12 +19,7 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
-<<<<<<< HEAD
-    UNIT_UV_INDEX,
-=======
-    PERCENTAGE,
     UV_INDEX,
->>>>>>> 6f6c670b3b0efdd2e98a3a3ce39b234b1dd4b1d4
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
