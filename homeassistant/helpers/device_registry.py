@@ -1,7 +1,7 @@
 """Provide a way to connect entities belonging to one device."""
 from collections import OrderedDict
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set, Tuple
 import uuid
 
 import attr
@@ -32,19 +32,24 @@ CONNECTION_ZIGBEE = "zigbee"
 class DeviceEntry:
     """Device Registry Entry."""
 
-    config_entries = attr.ib(type=set, converter=set, default=attr.Factory(set))
-    connections = attr.ib(type=set, converter=set, default=attr.Factory(set))
-    identifiers = attr.ib(type=set, converter=set, default=attr.Factory(set))
-    manufacturer = attr.ib(type=str, default=None)
-    model = attr.ib(type=str, default=None)
-    name = attr.ib(type=str, default=None)
-    sw_version = attr.ib(type=str, default=None)
-    via_device_id = attr.ib(type=str, default=None)
-    area_id = attr.ib(type=str, default=None)
-    name_by_user = attr.ib(type=str, default=None)
-    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    config_entries: Set[str] = attr.ib(converter=set, default=attr.Factory(set))
+    connections: Set[Tuple[str, str]] = attr.ib(
+        converter=set, default=attr.Factory(set)
+    )
+    identifiers: Set[Tuple[str, str]] = attr.ib(
+        converter=set, default=attr.Factory(set)
+    )
+    manufacturer: str = attr.ib(default=None)
+    model: str = attr.ib(default=None)
+    name: str = attr.ib(default=None)
+    sw_version: str = attr.ib(default=None)
+    via_device_id: str = attr.ib(default=None)
+    area_id: str = attr.ib(default=None)
+    name_by_user: str = attr.ib(default=None)
+    entry_type: str = attr.ib(default=None)
+    id: str = attr.ib(default=attr.Factory(lambda: uuid.uuid4().hex))
     # This value is not stored, just used to keep track of events to fire.
-    is_new = attr.ib(type=bool, default=False)
+    is_new: bool = attr.ib(default=False)
 
 
 def format_mac(mac: str) -> str:
@@ -105,6 +110,7 @@ class DeviceRegistry:
         model=_UNDEF,
         name=_UNDEF,
         sw_version=_UNDEF,
+        entry_type=_UNDEF,
         via_device=None,
     ):
         """Get device. Create if it doesn't exist."""
@@ -144,6 +150,7 @@ class DeviceRegistry:
             model=model,
             name=name,
             sw_version=sw_version,
+            entry_type=entry_type,
         )
 
     @callback
@@ -189,6 +196,7 @@ class DeviceRegistry:
         model=_UNDEF,
         name=_UNDEF,
         sw_version=_UNDEF,
+        entry_type=_UNDEF,
         via_device_id=_UNDEF,
         area_id=_UNDEF,
         name_by_user=_UNDEF,
@@ -236,6 +244,7 @@ class DeviceRegistry:
             ("model", model),
             ("name", name),
             ("sw_version", sw_version),
+            ("entry_type", entry_type),
             ("via_device_id", via_device_id),
         ):
             if value is not _UNDEF and value != getattr(old, attr_name):
@@ -291,6 +300,8 @@ class DeviceRegistry:
                     model=device["model"],
                     name=device["name"],
                     sw_version=device["sw_version"],
+                    # Introduced in 0.110
+                    entry_type=device.get("entry_type"),
                     id=device["id"],
                     # Introduced in 0.79
                     # renamed in 0.95
@@ -323,6 +334,7 @@ class DeviceRegistry:
                 "model": entry.model,
                 "name": entry.name,
                 "sw_version": entry.sw_version,
+                "entry_type": entry.entry_type,
                 "id": entry.id,
                 "via_device_id": entry.via_device_id,
                 "area_id": entry.area_id,
