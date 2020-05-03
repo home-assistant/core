@@ -1,6 +1,4 @@
 """The tests for the Group Light platform."""
-from unittest.mock import MagicMock
-
 from homeassistant.components.group import DOMAIN
 import homeassistant.components.group.light as group
 from homeassistant.components.light import (
@@ -31,6 +29,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 import tests.async_mock
+from tests.async_mock import MagicMock
 
 
 async def test_default_state(hass):

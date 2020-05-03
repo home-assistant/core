@@ -3,7 +3,6 @@
 This includes tests for all mock object types.
 """
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
 
 import pytest
 
@@ -43,6 +42,7 @@ from homeassistant.const import (
 )
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import Mock, patch
 from tests.common import async_mock_service
 
 

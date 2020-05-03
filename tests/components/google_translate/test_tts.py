@@ -2,7 +2,6 @@
 import asyncio
 import os
 import shutil
-from unittest.mock import patch
 
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
@@ -12,6 +11,7 @@ from homeassistant.components.media_player.const import (
 import homeassistant.components.tts as tts
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant, mock_service
 from tests.components.tts.test_init import mutagen_mock  # noqa: F401
 

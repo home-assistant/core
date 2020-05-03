@@ -1,7 +1,6 @@
 """Tests for the HomeKit component."""
 import os
 from typing import Dict
-from unittest.mock import ANY, Mock, patch
 
 import pytest
 from zeroconf import InterfaceChoice
@@ -55,7 +54,7 @@ from homeassistant.util import json as json_util
 
 from .util import PATH_HOMEKIT, async_init_entry, async_init_integration
 
-from tests.async_mock import AsyncMock
+from tests.async_mock import ANY, AsyncMock, Mock, patch
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 from tests.components.homekit.common import patch_debounce
 

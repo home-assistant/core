@@ -2,7 +2,6 @@
 from datetime import timedelta
 import re
 import unittest
-from unittest.mock import MagicMock, patch
 
 import forecastio
 from requests.exceptions import HTTPError
@@ -11,6 +10,7 @@ import requests_mock
 from homeassistant.components.darksky import sensor as darksky
 from homeassistant.setup import setup_component
 
+from tests.async_mock import MagicMock, patch
 from tests.common import get_test_home_assistant, load_fixture
 
 VALID_CONFIG_MINIMAL = {

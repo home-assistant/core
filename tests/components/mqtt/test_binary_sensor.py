@@ -2,7 +2,6 @@
 import copy
 from datetime import datetime, timedelta
 import json
-from unittest.mock import patch
 
 from homeassistant.components import binary_sensor, mqtt
 from homeassistant.components.mqtt.discovery import async_start
@@ -38,6 +37,7 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
+from tests.async_mock import patch
 from tests.common import (
     MockConfigEntry,
     async_fire_mqtt_message,

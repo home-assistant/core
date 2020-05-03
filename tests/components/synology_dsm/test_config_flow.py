@@ -1,6 +1,5 @@
 """Tests for the Synology DSM config flow."""
 import logging
-from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from synology_dsm.exceptions import (
@@ -32,6 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
+from tests.async_mock import MagicMock, Mock, patch
 from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)

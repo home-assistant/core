@@ -1,6 +1,4 @@
 """Test the Soundtouch component."""
-from unittest.mock import call
-
 from libsoundtouch.device import (
     Config,
     Preset,
@@ -27,7 +25,7 @@ from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
+from tests.async_mock import call, patch
 
 # pylint: disable=super-init-not-called
 

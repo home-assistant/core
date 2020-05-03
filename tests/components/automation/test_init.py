@@ -1,6 +1,5 @@
 """The tests for the automation component."""
 from datetime import timedelta
-from unittest.mock import Mock, patch
 
 import pytest
 
@@ -19,6 +18,7 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.async_mock import Mock, patch
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
