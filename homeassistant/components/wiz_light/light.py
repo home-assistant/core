@@ -215,7 +215,7 @@ class WizBulb(Light):
     async def update_state(self):
         """Update the state."""
         try:
-            _LOGGER.debug("[wizlight {}] updating state".format(self._light.ip))
+            _LOGGER.debug(f"[wizlight {self._light.ip}] updating state")
             await self._light.updateState()
             if self._light.state is None:
                 await self.update_state_unavailable()
@@ -225,7 +225,7 @@ class WizBulb(Light):
             _LOGGER.error(ex)
             await self.update_state_unavailable()
         _LOGGER.debug(
-            "[wizlight {}] updated state: {}".format(self._light.ip, self._state)
+            f"[wizlight {self._light.ip}] updated state: {self._state}"
         )
 
     def update_brightness(self):
