@@ -1,16 +1,14 @@
 import logging
 import voluptuous as vol
-from pywizlight import wizlight, PilotBuilder, PilotParser
+from pywizlight import wizlight, PilotBuilder, PilotPar
 from pywizlight import SCENES
 from homeassistant.exceptions import InvalidStateError
 from homeassistant.core import callback
 
-from homeassistant.const import STATE_OFF, STATE_ON
-
 import homeassistant.util.color as color_utils
 import homeassistant.helpers.config_validation as cv
 
-# Import the device class from the component that you want to support
+# Import the device class from the component
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
@@ -25,19 +23,21 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
- 
+
 _LOGGER = logging.getLogger(__name__)
 
 # Validation of the user's configuration
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_NAME): cv.string}
+    {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_NAME): cv.string}
 )
 
-SUPPORT_FEATURES_RGB = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT)
-SUPPORT_FEATURES_DIM = (SUPPORT_BRIGHTNESS)
-SUPPORT_FEATURES_WHITE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP)
+SUPPORT_FEATURES_RGB = (
+    SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
+)
+SUPPORT_FEATURES_DIM = SUPPORT_BRIGHTNESS
+SUPPORT_FEATURES_WHITE = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """
@@ -47,7 +47,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # The configuration check takes care they are present.
     ip = config[CONF_HOST]
     bulb = wizlight(ip)
-    
+
     # Add devices
     async_add_entities([WizBulb(bulb, config[CONF_NAME])])
 
@@ -179,21 +179,23 @@ class WizBulb(Light):
             TODO: Should be updated and maybe moved to a seperatea function
         """
         # only dimmer - not tested
-        if self._bulbType == 'ESP01_SHDW_01' or self._bulbType == 'ESP01_SHDW1_31':
+        if self._bulbType == "ESP01_SHDW_01" or self._bulbType == "ESP01_SHDW1_31":
             return SUPPORT_BRIGHTNESS
         # Support dimmer and effects
-        if self._bulbType == 'ESP06_SHDW9_01':
+        if self._bulbType == "ESP06_SHDW9_01":
             return SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
         # Color Temp and dimmer - not tested
-        if self._bulbType == 'ESP01_SHTW1C_31':
+        if self._bulbType == "ESP01_SHTW1C_31":
             return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
         # Firlament bulbs support only dimmer (tested)
-        if self._bulbType == 'ESP56_SHTW3_01':
+        if self._bulbType == "ESP56_SHTW3_01":
             return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
         # Full feature support (color) - not tested
         # TODO: Maybe switch to "contains RGB"
-        if self._bulbType == 'ESP01_SHRGB1C_31' or self._bulbType == 'ESP01_SHRGB_03':
-            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
+        if self._bulbType == "ESP01_SHRGB1C_31" or self._bulbType == "ESP01_SHRGB_03":
+            return (
+                SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
+            )
         # fall back
         return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
 
@@ -243,11 +245,11 @@ class WizBulb(Light):
             1000:"Rhythm"
         """
         # Special filament bulb type
-        if self._bulbType == 'ESP56_SHTW3_01':
-            return [self._scenes[key] for key in [8,9,14,15,17,28,29,31]]
+        if self._bulbType == "ESP56_SHTW3_01":
+            return [self._scenes[key] for key in [8, 9, 14, 15, 17, 28, 29, 31]]
         # Filament bulb without white color led
-        if self._bulbType == 'ESP06_SHDW9_01':
-             return [self._scenes[key] for key in [8,9,13,28,30,29,31]]
+        if self._bulbType == "ESP06_SHDW9_01":
+            return [self._scenes[key] for key in [8, 9, 13, 28, 30, 29, 31]]
         return self._scenes
 
     @property
@@ -341,7 +343,7 @@ class WizBulb(Light):
         try:
             r, g, b = self._light.state.get_rgb()
             if r is None:
-                # this is the case if the temperature was changed - no information was return form the lamp.
+                # this is the case if the temperature was changed - no infomation was return form the lamp.
                 # do nothing until the RGB color was changed
                 return
             color = color_utils.color_RGB_to_hs(r, g, b)
@@ -366,8 +368,8 @@ class WizBulb(Light):
         """
         if self._bulbType is None:
             bulb_config = await self._light.getBulbConfig()
-            if 'moduleName' in bulb_config['result']:
-                self._bulbType = bulb_config['result']['moduleName']
+            if "moduleName" in bulb_config["result"]:
+                self._bulbType = bulb_config["result"]["moduleName"]
                 _LOGGER.info("Initiate the WiZ bulb as %s", self._bulbType)
 
     # TODO: this should be improved :-)
@@ -375,4 +377,3 @@ class WizBulb(Light):
         self._scenes = []
         for id in SCENES:
             self._scenes.append(SCENES[id])
-
