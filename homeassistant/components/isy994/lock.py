@@ -1,14 +1,12 @@
 """Support for ISY994 locks."""
-import logging
 from typing import Callable
 
-from homeassistant.components.lock import DOMAIN, LockEntity
+from homeassistant.components.lock import DOMAIN as LOCK, LockEntity
 from homeassistant.const import STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED
 from homeassistant.helpers.typing import ConfigType
 
 from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
-
-_LOGGER = logging.getLogger(__name__)
+from .const import _LOGGER
 
 VALUE_TO_STATE = {0: STATE_UNLOCKED, 100: STATE_LOCKED}
 
@@ -18,10 +16,10 @@ def setup_platform(
 ):
     """Set up the ISY994 lock platform."""
     devices = []
-    for node in hass.data[ISY994_NODES][DOMAIN]:
+    for node in hass.data[ISY994_NODES][LOCK]:
         devices.append(ISYLockDevice(node))
 
-    for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
+    for name, status, actions in hass.data[ISY994_PROGRAMS][LOCK]:
         devices.append(ISYLockProgram(name, status, actions))
 
     add_entities(devices)
