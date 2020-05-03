@@ -4,6 +4,7 @@ from typing import List
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_APP,
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PLAY,
@@ -52,11 +53,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             name=coordinator.data.info.name,
             device_id=unique_id,
         )
-
-    def get_source_list(self) -> List:
-        """Get the list of applications to be used as sources."""
-        return ["Home"] + sorted(app.name for app in self.coordinator.data.apps)
-
+ 
     @property
     def state(self) -> str:
         """Return the state of the device."""
@@ -91,7 +88,10 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         if self.app_id is None or self.app_name in ("Power Saver", "Roku"):
             return None
 
-        return MEDIA_TYPE_CHANNEL
+        if self.app_id == "tvinput.dtv" and self.coordinator.data.channel is not None:
+            return MEDIA_TYPE_CHANNEL
+
+        return MEDIA_TYPE_APP
 
     @property
     def media_image_url(self) -> str:
@@ -113,7 +113,29 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     def app_id(self) -> str:
         """Return the ID of the current running app."""
         if self.coordinator.data.app is not None:
-            return self.coordinator.data.app.id
+            return self.coordinator.data.app.app_id
+
+        return None
+
+    @property
+    def media_channel(self):
+        """Return the TV channel currently tuned."""
+        if self.app_id != "tvinput.dtv" or self.coordinator.data.channel is None:
+            return None
+
+        if self.coordinator.data.channel.name is not None:
+            return f"{self.coordinator.data.channel.name} ({self.coordinator.data.channel.number})"
+
+        return self.coordinator.data.channel.number
+
+    @property
+    def media_title(self):
+        """Return the title of current playing media."""
+        if self.app_id != "tvinput.dtv" or self.coordinator.data.channel is None:
+            return None
+
+        if self.coordinator.data.channel.program_title is not None:
+            return self.coordinator.data.channel.program_title
 
         return None
 
@@ -128,7 +150,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @property
     def source_list(self) -> List:
         """List of available input sources."""
-        return self.get_source_list()
+        return return ["Home"] + sorted(app.name for app in self.coordinator.data.apps)
 
     async def async_turn_on(self) -> None:
         """Turn on the Roku."""
