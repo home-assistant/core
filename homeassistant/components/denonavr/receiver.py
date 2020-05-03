@@ -45,7 +45,7 @@ class ConnectDenonAVR:
         return True
 
     def init_receiver_class(self):
-        """Initilize the DenonAVR class in a way that can called by async_add_executor_job."""
+        """Initialize the DenonAVR class in a way that can called by async_add_executor_job."""
         try:
             self._receiver = denonavr.DenonAVR(
                 host=self._host,
