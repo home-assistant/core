@@ -3,8 +3,8 @@
 import blebox_uniapi
 import pytest
 
-from homeassistant.components.blebox import cover
 from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
     ATTR_POSITION,
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_GATE,
@@ -18,20 +18,33 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
 )
+from homeassistant.const import (
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_SET_COVER_POSITION,
+    SERVICE_STOP_COVER,
+    STATE_UNKNOWN,
+)
 
-from .conftest import BleBoxTestHelper, mock_feature
+from .conftest import Wrapper, mock_feature
 
 from tests.async_mock import ANY, AsyncMock, PropertyMock, call, patch
 
-
-class CoverTestHelper(BleBoxTestHelper):
-    """Shared test helpers for Cover tests."""
-
-    HASS_TYPE = cover
+ALL_COVER_FIXTURES = ["gatecontroller", "shutterbox", "gatebox"]
 
 
-def shutterbox_data():
-    """Return a default cover entity mock."""
+class CoverWrapper(Wrapper):
+    """Wrapper for cover entities and their states."""
+
+    @property
+    def current_cover_position(self):
+        """Return the attribute for the current position."""
+        return self.attributes[ATTR_CURRENT_POSITION]
+
+
+@pytest.fixture(name="shutterbox")
+def shutterbox_fixture():
+    """Return a shutterBox fixture."""
     feature = mock_feature(
         "covers",
         blebox_uniapi.cover.Cover,
@@ -46,11 +59,12 @@ def shutterbox_data():
     product = feature.product
     type(product).name = PropertyMock(return_value="My shutter")
     type(product).model = PropertyMock(return_value="shutterBox")
-    return CoverTestHelper(feature)
+    return CoverWrapper(feature, "cover.shutterbox_position")
 
 
-def gatebox_data():
-    """Return a default gatebox cover entity mock."""
+@pytest.fixture(name="gatebox")
+def gatebox_fixture():
+    """Return a gateBox fixture."""
     feature = mock_feature(
         "covers",
         blebox_uniapi.cover.Cover,
@@ -65,11 +79,12 @@ def gatebox_data():
     product = feature.product
     type(product).name = PropertyMock(return_value="My gatebox")
     type(product).model = PropertyMock(return_value="gateBox")
-    return CoverTestHelper(feature)
+    return CoverWrapper(feature, "cover.gatebox_position")
 
 
-def gatecontroller_data():
-    """Return a default gateController cover entity mock."""
+@pytest.fixture(name="gatecontroller")
+def gate_fixture():
+    """Return a gateController fixture."""
     feature = mock_feature(
         "covers",
         blebox_uniapi.cover.Cover,
@@ -84,69 +99,16 @@ def gatecontroller_data():
     product = feature.product
     type(product).name = PropertyMock(return_value="My gate controller")
     type(product).model = PropertyMock(return_value="gateController")
-    return CoverTestHelper(feature)
+    return CoverWrapper(feature, "cover.gatecontroller_position")
 
 
-@pytest.fixture
-def shutterbox():
-    """Return a shutterBox fixture."""
-    return shutterbox_data()
-
-
-@pytest.fixture
-def gatebox():
-    """Return a gateBox fixture."""
-    return gatebox_data()
-
-
-@pytest.fixture
-def gatecontroller():
-    """Return a gateController fixture."""
-    return gatecontroller_data()
-
-
-@pytest.fixture(params=[gatecontroller_data, gatebox_data, shutterbox_data])
-def all_cover_types(request):
-    """Return a fixture using all cover types."""
-    return request.param()
-
-
-@pytest.fixture(params=[gatecontroller_data, shutterbox_data])
-def all_sliders(request):
-    """Return a fixture using all positionable types."""
-    return request.param()
-
-
-@pytest.fixture(params=[gatebox_data])
-def not_sliders(request):
-    """Return a fixture using all non-positionable types."""
-    return request.param()
-
-
-def assert_state(entity, state):
-    """Assert that cover state is correct."""
-    assert entity.state == state
-
-    opening, closing, closed = {
-        None: [None, None, None],
-        STATE_OPEN: [False, False, False],
-        STATE_OPENING: [True, False, False],
-        STATE_CLOSING: [False, True, False],
-        STATE_CLOSED: [False, False, True],
-    }[state]
-
-    assert entity.is_opening is opening
-    assert entity.is_closing is closing
-    assert entity.is_closed is closed
-
-
-async def test_init_gatecontroller(gatecontroller, hass):
+async def test_init_gatecontroller(gatecontroller, hass, config):
     """Test gateController default state."""
 
-    data = gatecontroller
-    entity = (await data.async_mock_entities(hass))[0]
+    entity = gatecontroller
+    await entity.setup(hass, config)
 
-    assert entity.name == "gateController-position"
+    assert entity.state.name == "gateController-position"
     assert entity.unique_id == "BleBox-gateController-2bee34e750b8-position"
 
     assert entity.device_class == DEVICE_CLASS_GATE
@@ -156,17 +118,24 @@ async def test_init_gatecontroller(gatecontroller, hass):
     assert entity.supported_features & SUPPORT_STOP
 
     assert entity.supported_features & SUPPORT_SET_POSITION
-    assert entity.current_cover_position is None
-    assert_state(entity, None)
+    assert ATTR_CURRENT_POSITION not in entity.attributes
+    assert entity.state_value == STATE_UNKNOWN
+
+    device = await entity.device
+    assert device.name == "My gate controller"
+    assert device.identifiers == {("blebox", "abcd0123ef5678")}
+    assert device.manufacturer == "BleBox"
+    assert device.model == "gateController"
+    assert device.sw_version == "1.23"
 
 
-async def test_init_shutterbox(shutterbox, hass):
+async def test_init_shutterbox(shutterbox, hass, config):
     """Test gateBox default state."""
 
-    data = shutterbox
-    entity = (await data.async_mock_entities(hass))[0]
+    entity = shutterbox
+    await entity.setup(hass, config)
 
-    assert entity.name == "shutterBox-position"
+    assert entity.state.name == "shutterBox-position"
     assert entity.unique_id == "BleBox-shutterBox-2bee34e750b8-position"
 
     assert entity.device_class == DEVICE_CLASS_SHUTTER
@@ -176,18 +145,24 @@ async def test_init_shutterbox(shutterbox, hass):
     assert entity.supported_features & SUPPORT_STOP
 
     assert entity.supported_features & SUPPORT_SET_POSITION
-    assert entity.current_cover_position is None
+    assert ATTR_CURRENT_POSITION not in entity.attributes
+    assert entity.state_value == STATE_UNKNOWN
 
-    assert_state(entity, None)
+    device = await entity.device
+    assert device.name == "My shutter"
+    assert device.identifiers == {("blebox", "abcd0123ef5678")}
+    assert device.manufacturer == "BleBox"
+    assert device.model == "shutterBox"
+    assert device.sw_version == "1.23"
 
 
-async def test_init_gatebox(gatebox, hass):
+async def test_init_gatebox(gatebox, hass, config):
     """Test cover default state."""
 
-    data = gatebox
-    entity = (await data.async_mock_entities(hass))[0]
+    entity = gatebox
+    await entity.setup(hass, config)
 
-    assert entity.name == "gateBox-position"
+    assert entity.state.name == "gateBox-position"
     assert entity.unique_id == "BleBox-gateBox-1afe34db9437-position"
     assert entity.device_class == DEVICE_CLASS_DOOR
     assert entity.supported_features & SUPPORT_OPEN
@@ -197,227 +172,175 @@ async def test_init_gatebox(gatebox, hass):
     assert not entity.supported_features & SUPPORT_STOP
 
     assert not entity.supported_features & SUPPORT_SET_POSITION
-    assert entity.current_cover_position is None
-    assert_state(entity, None)
+    assert ATTR_CURRENT_POSITION not in entity.attributes
+    assert entity.state_value == STATE_UNKNOWN
+
+    device = await entity.device
+    assert device.name == "My gatebox"
+    assert device.identifiers == {("blebox", "abcd0123ef5678")}
+    assert device.manufacturer == "BleBox"
+    assert device.model == "gateBox"
+    assert device.sw_version == "1.23"
 
 
-async def test_shutterbox_device_info(shutterbox, hass):
-    """Test device info."""
-
-    data = shutterbox
-    entity = (await data.async_mock_entities(hass))[0]
-    info = entity.device_info
-    assert info["name"] == "My shutter"
-    assert info["identifiers"] == {("blebox", "abcd0123ef5678")}
-    assert info["manufacturer"] == "BleBox"
-    assert info["model"] == "shutterBox"
-    assert info["sw_version"] == "1.23"
-
-
-async def test_gatebox_device_info(gatebox, hass):
-    """Test device info."""
-
-    data = gatebox
-    entity = (await data.async_mock_entities(hass))[0]
-    info = entity.device_info
-    assert info["name"] == "My gatebox"
-    assert info["identifiers"] == {("blebox", "abcd0123ef5678")}
-    assert info["manufacturer"] == "BleBox"
-    assert info["model"] == "gateBox"
-    assert info["sw_version"] == "1.23"
-
-
-async def test_gate_device_info(gatecontroller, hass):
-    """Test device info."""
-
-    data = gatecontroller
-    entity = (await data.async_mock_entities(hass))[0]
-    info = entity.device_info
-    assert info["name"] == "My gate controller"
-    assert info["identifiers"] == {("blebox", "abcd0123ef5678")}
-    assert info["manufacturer"] == "BleBox"
-    assert info["model"] == "gateController"
-    assert info["sw_version"] == "1.23"
-
-
-async def test_open(all_cover_types, hass):
+@pytest.mark.parametrize("wrapper", ALL_COVER_FIXTURES, indirect=["wrapper"])
+async def test_open(wrapper, hass, config):
     """Test cover opening."""
 
-    data = all_cover_types
-    feature_mock = data.default_mock()
-
-    def update():
-        feature_mock.state = 3  # manually stopped
+    def initial_update():
+        wrapper.feature_mock.state = 3  # manually stopped
 
     def open_gate():
-        feature_mock.state = 1  # opening
+        wrapper.feature_mock.state = 1  # opening
 
-    feature_mock.async_update = AsyncMock(side_effect=update)
-    feature_mock.async_open = AsyncMock(side_effect=open_gate)
+    wrapper.feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    wrapper.feature_mock.async_open = AsyncMock(side_effect=open_gate)
 
-    entity = await data.async_updated_entity(hass, 0)
+    await wrapper.setup(hass, config)
+    assert wrapper.state_value == STATE_CLOSED
+    await wrapper.service("cover", SERVICE_OPEN_COVER)
+    assert wrapper.state_value == STATE_OPENING
 
-    assert_state(entity, STATE_CLOSED)
-    await entity.async_open_cover()
-    assert_state(entity, STATE_OPENING)
 
-
-async def test_close(all_cover_types, hass):
+@pytest.mark.parametrize("wrapper", ALL_COVER_FIXTURES, indirect=["wrapper"])
+async def test_close(wrapper, hass, config):
     """Test cover closing."""
 
-    data = all_cover_types
-    feature_mock = data.default_mock()
-
-    def update():
-        feature_mock.state = 4  # open
+    def initial_update():
+        wrapper.feature_mock.state = 4  # open
 
     def close():
-        feature_mock.state = 0  # closing
+        wrapper.feature_mock.state = 0  # closing
 
-    feature_mock.async_update = AsyncMock(side_effect=update)
-    feature_mock.async_close = AsyncMock(side_effect=close)
+    wrapper.feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    wrapper.feature_mock.async_close = AsyncMock(side_effect=close)
 
-    entity = await data.async_updated_entity(hass, 0)
+    await wrapper.setup(hass, config)
+    assert wrapper.state_value == STATE_OPEN
+    await wrapper.service("cover", SERVICE_CLOSE_COVER)
+    assert wrapper.state_value == STATE_CLOSING
 
-    assert_state(entity, STATE_OPEN)
-    await entity.async_close_cover()
-    assert_state(entity, STATE_CLOSING)
 
-
-def opening_to_stop_feature_mock(data):
+def opening_to_stop_feature_mock(wrapper):
     """Return an mocked feature which can be updated and stopped."""
-    feature_mock = data.default_mock()
 
-    def update():
-        feature_mock.state = 1  # opening
+    def initial_update():
+        wrapper.feature_mock.state = 1  # opening
 
     def stop():
-        feature_mock.state = 2  # manually stopped
+        wrapper.feature_mock.state = 2  # manually stopped
 
-    feature_mock.async_update = AsyncMock(side_effect=update)
-    feature_mock.async_stop = AsyncMock(side_effect=stop)
+    wrapper.feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    wrapper.feature_mock.async_stop = AsyncMock(side_effect=stop)
 
 
-async def test_stop(all_cover_types, hass):
+@pytest.mark.parametrize("wrapper", ALL_COVER_FIXTURES, indirect=["wrapper"])
+async def test_stop(wrapper, hass, config):
     """Test cover stopping."""
 
-    data = all_cover_types
-    opening_to_stop_feature_mock(data)
+    opening_to_stop_feature_mock(wrapper)
 
-    entity = await data.async_updated_entity(hass, 0)
-
-    assert_state(entity, STATE_OPENING)
-    await entity.async_stop_cover()
-    assert_state(entity, STATE_OPEN)
+    await wrapper.setup(hass, config)
+    assert wrapper.state_value == STATE_OPENING
+    await wrapper.service("cover", SERVICE_STOP_COVER)
+    assert wrapper.state_value == STATE_OPEN
 
 
-async def test_update(all_cover_types, hass):
+@pytest.mark.parametrize("wrapper", ALL_COVER_FIXTURES, indirect=["wrapper"])
+async def test_update(wrapper, hass, config):
     """Test cover updating."""
 
-    data = all_cover_types
-    feature_mock = data.default_mock()
+    def initial_update():
+        wrapper.feature_mock.current = 29  # inverted
+        wrapper.feature_mock.state = 2  # manually stopped
 
-    def update():
-        feature_mock.current = 29  # inverted
-        feature_mock.state = 2  # manually stopped
+    wrapper.feature_mock.async_update = AsyncMock(side_effect=initial_update)
 
-    feature_mock.async_update = AsyncMock(side_effect=update)
-
-    entity = await data.async_updated_entity(hass, 0)
-
-    assert entity.current_cover_position == 71  # 100 - 29
-    assert_state(entity, STATE_OPEN)
+    await wrapper.setup(hass, config)
+    assert wrapper.current_cover_position == 71  # 100 - 29
+    assert wrapper.state_value == STATE_OPEN
 
 
-def closed_to_position_almost_closed_feature_mock(data):
+def closed_to_position_almost_closed_feature_mock(wrapper):
     """Return an mocked feature which can be updated and controlled."""
-    feature_mock = data.default_mock()
 
-    def update():
-        feature_mock.state = 3  # closed
+    def initial_update():
+        wrapper.feature_mock.state = 3  # closed
 
     def set_position(position):
         assert position == 99  # inverted
-        feature_mock.state = 1  # opening
+        wrapper.feature_mock.state = 1  # opening
         # feature_mock.current = position
 
-    feature_mock.async_update = AsyncMock(side_effect=update)
-    feature_mock.async_set_position = AsyncMock(side_effect=set_position)
+    wrapper.feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    wrapper.feature_mock.async_set_position = AsyncMock(side_effect=set_position)
 
 
-async def test_set_position(all_sliders, hass):
+@pytest.mark.parametrize(
+    "wrapper", ["gatecontroller", "shutterbox"], indirect=["wrapper"]
+)
+async def test_set_position(wrapper, hass, config):
     """Test cover position setting."""
 
-    data = all_sliders
-    closed_to_position_almost_closed_feature_mock(data)
+    closed_to_position_almost_closed_feature_mock(wrapper)
 
-    entity = await data.async_updated_entity(hass, 0)
+    await wrapper.setup(hass, config)
+    assert wrapper.state_value == STATE_CLOSED
+    await wrapper.service(
+        "cover", SERVICE_SET_COVER_POSITION, **{ATTR_POSITION: 1}
+    )  # almost closed
+    assert wrapper.state_value == STATE_OPENING
 
-    assert_state(entity, STATE_CLOSED)
-    await entity.async_set_cover_position(**{ATTR_POSITION: 1})  # almost closed
-    assert_state(entity, STATE_OPENING)
 
-
-async def test_unknown_position(shutterbox, hass):
+async def test_unknown_position(shutterbox, hass, config):
     """Test cover position setting."""
 
-    data = shutterbox
-    feature_mock = data.default_mock()
+    wrapper = shutterbox
 
-    def update():
-        feature_mock.state = 4  # opening
-        feature_mock.current = -1
+    def initial_update():
+        wrapper.feature_mock.state = 4  # opening
+        wrapper.feature_mock.current = -1
 
-    feature_mock.async_update = AsyncMock(side_effect=update)
+    wrapper.feature_mock.async_update = AsyncMock(side_effect=initial_update)
 
-    entity = await data.async_updated_entity(hass, 0)
-    assert_state(entity, STATE_OPEN)
-    assert entity.current_cover_position is None
+    await wrapper.setup(hass, config)
+    assert wrapper.state_value == STATE_OPEN
+    assert ATTR_CURRENT_POSITION not in wrapper.attributes
 
 
-async def test_with_stop(gatebox, hass):
+async def test_with_stop(gatebox, hass, config):
     """Test stop capability is available."""
 
-    data = gatebox
-    opening_to_stop_feature_mock(data)
-    feature_mock = data.default_mock()
-    feature_mock.has_stop = True
+    wrapper = gatebox
+    opening_to_stop_feature_mock(wrapper)
+    wrapper.feature_mock.has_stop = True
 
-    entity = await data.async_updated_entity(hass, 0)
-    assert entity.supported_features & SUPPORT_STOP
+    await wrapper.setup(hass, config)
+    assert wrapper.supported_features & SUPPORT_STOP
 
 
-async def test_with_no_stop(gatebox, hass):
+async def test_with_no_stop(gatebox, hass, config):
     """Test stop capability is not available."""
 
-    data = gatebox
-    opening_to_stop_feature_mock(data)
-    feature_mock = data.default_mock()
-    feature_mock.has_stop = False
+    wrapper = gatebox
+    opening_to_stop_feature_mock(wrapper)
+    wrapper.feature_mock.has_stop = False
 
-    entity = await data.async_updated_entity(hass, 0)
-    assert not entity.supported_features & SUPPORT_STOP
-
-
-# pylint: disable=fixme
-
-# TODO: the tests below should be shared among all BleBox platforms
-@pytest.fixture(params=[gatecontroller_data, gatebox_data, shutterbox_data])
-def all_types(request):
-    """Return a fixture using all cover types."""
-    return request.param()
+    await wrapper.setup(hass, config)
+    assert not wrapper.supported_features & SUPPORT_STOP
 
 
-async def test_update_failure(all_types, hass):
+@pytest.mark.parametrize("wrapper", ALL_COVER_FIXTURES, indirect=["wrapper"])
+async def test_update_failure(wrapper, hass, config):
     """Test that update failures are logged."""
 
-    data = all_types
-    feature_mock = data.default_mock()
-    feature_mock.async_update = AsyncMock(side_effect=blebox_uniapi.error.ClientError)
-    name = feature_mock.full_name
+    wrapper.feature_mock.async_update = AsyncMock(
+        side_effect=blebox_uniapi.error.ClientError
+    )
+    name = wrapper.feature_mock.full_name
 
     with patch("homeassistant.components.blebox._LOGGER.error") as error:
-        await data.async_updated_entity(hass, 0)
+        await wrapper.setup(hass, config)
 
         error.assert_has_calls([call("Updating '%s' failed: %s", name, ANY)])
         assert isinstance(error.call_args[0][2], blebox_uniapi.error.ClientError)
