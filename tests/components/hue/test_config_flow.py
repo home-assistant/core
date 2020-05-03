@@ -1,6 +1,5 @@
 """Tests for Philips Hue config flow."""
 import asyncio
-from unittest.mock import Mock
 
 from aiohttp import client_exceptions
 import aiohue
@@ -12,7 +11,7 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.hue import config_flow, const
 
-from tests.async_mock import AsyncMock, patch
+from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 

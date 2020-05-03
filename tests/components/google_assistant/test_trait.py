@@ -1,6 +1,5 @@
 """Tests for the Google Assistant traits."""
 import logging
-from unittest.mock import Mock
 
 import pytest
 
@@ -45,7 +44,7 @@ from homeassistant.util import color
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.async_mock import patch
+from tests.async_mock import Mock, patch
 from tests.common import async_mock_service
 
 _LOGGER = logging.getLogger(__name__)
