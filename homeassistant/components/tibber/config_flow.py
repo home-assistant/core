@@ -29,10 +29,11 @@ class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
 
         if user_input is not None:
+            if self._async_current_entries():
+                return self.async_abort(reason="already_configured")
+
             access_token = user_input[CONF_ACCESS_TOKEN].replace(" ", "")
 
             tibber_connection = tibber.Tibber(
