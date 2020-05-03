@@ -26,7 +26,7 @@
             "step": {
                 "init": {
                     "description": "For \u00e5 aktivere tofaktorautentisering ved hjelp av tidsbaserte engangspassord, skann QR-koden med autentiseringsappen din. Hvis du ikke har en, kan vi anbefale enten [Google Authenticator](https://support.google.com/accounts/answer/1066447) eller [Authy](https://authy.com/). \n\n {qr_code} \n \nEtter at du har skannet koden, skriver du inn den seks-sifrede koden fra appen din for \u00e5 kontrollere oppsettet. Dersom du har problemer med \u00e5 skanne QR-koden kan du taste inn f\u00f8lgende kode manuelt: **`{code}`**.",
-                    "title": "Konfigurer tofaktorautentisering ved hjelp av TOTP"
+                    "title": "Sett opp tofaktorautentisering ved hjelp av TOTP"
                 }
             },
             "title": "TOTP"

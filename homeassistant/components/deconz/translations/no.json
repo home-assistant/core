@@ -11,7 +11,7 @@
         "error": {
             "no_key": "Kunne ikke f\u00e5 en API-n\u00f8kkel"
         },
-        "flow_title": "",
+        "flow_title": "deCONZ Zigbee gateway ({host})",
         "step": {
             "hassio_confirm": {
                 "description": "Vil du konfigurere Home Assistant til \u00e5 koble seg til deCONZ-gateway levert av Hass.io-tillegget {addon} ?",
