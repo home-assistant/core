@@ -234,10 +234,6 @@ class Camera(HomeAccessory, PyhapCamera):
         else:
             _LOGGER.debug("No stream for session ID %s", session_id)
 
-    async def reconfigure_stream(self, session_info, stream_config):
-        """Reconfigure the stream so that it uses the given ``stream_config``."""
-        return True
-
     def get_snapshot(self, image_size):
         """Return a jpeg of a snapshot from the camera."""
         return (
