@@ -53,7 +53,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             name=coordinator.data.info.name,
             device_id=unique_id,
         )
- 
+
     @property
     def state(self) -> str:
         """Return the state of the device."""
