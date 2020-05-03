@@ -1,9 +1,7 @@
 import logging
 import voluptuous as vol
-from pywizlight import wizlight, PilotBuilder, PilotPar
+from pywizlight import wizlight, PilotBuilder
 from pywizlight import SCENES
-from homeassistant.exceptions import InvalidStateError
-from homeassistant.core import callback
 
 import homeassistant.util.color as color_utils
 import homeassistant.helpers.config_validation as cv
@@ -266,7 +264,7 @@ class WizBulb(Light):
         """
         await self.update_state()
 
-        if self._state != None and self._state != False:
+        if self._state is not None and self._state != False:
             await self.get_bulb_type()
             self.update_brightness()
             self.update_temperature()
@@ -289,7 +287,7 @@ class WizBulb(Light):
         try:
             _LOGGER.debug("[wizlight {}] updating state".format(self._light.ip))
             await self._light.updateState()
-            if self._light.state == None:
+            if self._light.state is None:
                 await self.update_state_unavailable()
             else:
                 await self.update_state_available()
