@@ -2,10 +2,10 @@
 from homeassistant.components import mysensors
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
-    ELECTRICAL_CURRENT_AMPERE,
-    ELECTRICAL_VOLT_AMPERE,
     CONDUCTIVITY,
     DEGREE,
+    ELECTRICAL_CURRENT_AMPERE,
+    ELECTRICAL_VOLT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     LENGTH_METERS,
