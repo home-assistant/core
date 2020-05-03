@@ -59,7 +59,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 
-from tests.common import MockConfigEntry, patch
+from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 TEST_MASTER_ENTITY_NAME = "media_player.forked_daapd_server"
 TEST_ZONE_ENTITY_NAMES = [
@@ -332,11 +333,11 @@ def test_master_state(hass, mock_api_object):
 
 
 async def _service_call(
-    myhass, entity_name, service, additional_service_data=None, blocking=True
+    hass, entity_name, service, additional_service_data=None, blocking=True
 ):
     if additional_service_data is None:
         additional_service_data = {}
-    return await myhass.services.async_call(
+    return await hass.services.async_call(
         MP_DOMAIN,
         service,
         service_data={ATTR_ENTITY_ID: entity_name, **additional_service_data},
