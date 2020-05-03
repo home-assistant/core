@@ -1,17 +1,19 @@
 """Tests for Mill config flow."""
-from asynctest import patch
 import pytest
 
 from homeassistant.components.mill.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
+import tests.async_mock
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="tibber_setup", autouse=True)
 def tibber_setup_fixture():
     """Patch tibber setup entry."""
-    with patch("homeassistant.components.mill.async_setup_entry", return_value=True):
+    with tests.async_mock.patch(
+        "homeassistant.components.mill.async_setup_entry", return_value=True
+    ):
         yield
 
 
@@ -32,7 +34,7 @@ async def test_create_entry(hass):
         CONF_PASSWORD: "pswd",
     }
 
-    with patch("mill.Mill.connect", return_value=True):
+    with tests.async_mock.patch("mill.Mill.connect", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}, data=test_data
         )
@@ -55,7 +57,7 @@ async def test_flow_entry_already_exists(hass):
     )
     first_entry.add_to_hass(hass)
 
-    with patch("mill.Mill.connect", return_value=True):
+    with tests.async_mock.patch("mill.Mill.connect", return_value=True):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}, data=test_data
         )
