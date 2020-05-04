@@ -572,6 +572,9 @@ pyipp==0.10.1
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
 
+# homeassistant.components.isy994
+pyisy==2.0.2
+
 # homeassistant.components.kira
 pykira==0.1.1
 
