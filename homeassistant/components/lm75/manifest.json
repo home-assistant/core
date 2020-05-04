@@ -2,7 +2,6 @@
   "domain": "lm75",
   "name": "LM75",
   "documentation": "https://www.home-assistant.io/integrations/lm75",
-  "dependencies": [],
   "codeowners": ["@KarlKl"],
   "requirements": ["smbus-cffi==0.5.1"],
   "config_flow": true
