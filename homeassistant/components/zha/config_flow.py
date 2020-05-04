@@ -8,7 +8,12 @@ from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant import config_entries
 
-from .core.const import CONF_RADIO_TYPE, CONTROLLER, DOMAIN, RadioType
+from .core.const import (  # pylint:disable=unused-import
+    CONF_RADIO_TYPE,
+    CONTROLLER,
+    DOMAIN,
+    RadioType,
+)
 from .core.registries import RADIO_TYPES
 
 CONF_MANUAL_PATH = "Enter Manually"
