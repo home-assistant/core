@@ -4,11 +4,7 @@ import logging
 
 from homeassistant.const import TIME_SECONDS
 
-CONF_ENABLE_PORT_MAPPING = "port_mapping"
-CONF_ENABLE_SENSORS = "sensors"
-CONF_HASS = "hass"
 CONF_LOCAL_IP = "local_ip"
-CONF_PORTS = "ports"
 DOMAIN = "upnp"
 LOGGER = logging.getLogger(__package__)
 BYTES_RECEIVED = "bytes_received"
