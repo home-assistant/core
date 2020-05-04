@@ -89,7 +89,7 @@ HUE_API_STATE_SAT_MAX = 254
 HUE_API_STATE_CT_MIN = 153  # Color temp
 HUE_API_STATE_CT_MAX = 500
 
-HUE_API_USERNAME = "12345678901234567890"
+HUE_API_USERNAME = "nouser"
 UNAUTHORIZED_USER = [
     {"error": {"address": "/", "description": "unauthorized user", "type": "1"}}
 ]
@@ -226,9 +226,42 @@ class HueFullStateView(HomeAssistantView):
             "config": {
                 "mac": "00:00:00:00:00:00",
                 "swversion": "01003542",
+                "apiversion": "1.17.0",
                 "whitelist": {HUE_API_USERNAME: {"name": "HASS BRIDGE"}},
                 "ipaddress": f"{self.config.advertise_ip}:{self.config.advertise_port}",
+                "linkbutton": True,
             },
+        }
+
+        return self.json(json_response)
+
+
+class HueConfigView(HomeAssistantView):
+    """Return config view of emulated hue."""
+
+    url = "/api/{username}/config"
+    name = "emulated_hue:username:config"
+    requires_auth = False
+
+    def __init__(self, config):
+        """Initialize the instance of the view."""
+        self.config = config
+
+    @core.callback
+    def get(self, request, username):
+        """Process a request to get the configuration."""
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message("only local IPs allowed", HTTP_UNAUTHORIZED)
+        if username != HUE_API_USERNAME:
+            return self.json(UNAUTHORIZED_USER)
+
+        json_response = {
+            "mac": "00:00:00:00:00:00",
+            "swversion": "01003542",
+            "apiversion": "1.17.0",
+            "whitelist": {HUE_API_USERNAME: {"name": "HASS BRIDGE"}},
+            "ipaddress": f"{self.config.advertise_ip}:{self.config.advertise_port}",
+            "linkbutton": True,
         }
 
         return self.json(json_response)
