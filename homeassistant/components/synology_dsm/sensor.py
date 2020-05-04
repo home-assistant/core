@@ -156,7 +156,7 @@ class SynoNasUtilSensor(SynoNasSensor):
         attr = getattr(self._api.utilisation, self.sensor_type)
         if callable(attr):
             attr = attr()
-        if not attr:
+        if attr is None:
             return None
 
         # Data (RAM)
@@ -177,7 +177,7 @@ class SynoNasStorageSensor(SynoNasSensor):
     def state(self):
         """Return the state."""
         attr = getattr(self._api.storage, self.sensor_type)(self.monitored_device)
-        if not attr:
+        if attr is None:
             return None
 
         # Data (disk space)
