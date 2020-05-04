@@ -701,7 +701,7 @@ ring_doorbell==0.6.0
 roku==4.1.0
 
 # homeassistant.components.roomba
-roombapy==1.5.2
+roombapy==1.5.3
 
 # homeassistant.components.yamaha
 rxv==0.6.0
