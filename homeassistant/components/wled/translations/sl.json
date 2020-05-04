@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ta naprava WLED je \u017ee konfigurirana.",
+            "already_configured": "Ta naprava WLED je že konfigurirana.",
             "connection_error": "Povezava z napravo WLED ni uspela."
         },
         "error": {
@@ -14,10 +14,10 @@
                     "host": "Gostitelj ali IP naslov"
                 },
                 "description": "Nastavite svoj WLED za integracijo s Home Assistant.",
-                "title": "Pove\u017eite svoj WLED"
+                "title": "Povežite svoj WLED"
             },
             "zeroconf_confirm": {
-                "description": "Ali \u017eelite dodati WLED z imenom `{name}` v Home Assistant?",
+                "description": "Ali želite dodati WLED z imenom `{name}` v Home Assistant?",
                 "title": "Odkrite WLED naprave"
             }
         }

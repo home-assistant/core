@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquest dispositiu WLED ja est\u00e0 configurat.",
+            "already_configured": "Aquest dispositiu WLED ja està configurat.",
             "connection_error": "No s'ha pogut connectar amb el dispositiu WLED."
         },
         "error": {
@@ -11,10 +11,10 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Amfitri\u00f3 o adre\u00e7a IP"
+                    "host": "Amfitrió o adreça IP"
                 },
                 "description": "Configura el teu WLED per integrar-lo amb Home Assistant.",
-                "title": "Enlla\u00e7 amb WLED"
+                "title": "Enllaç amb WLED"
             },
             "zeroconf_confirm": {
                 "description": "Vols afegir el WLED `{name}` a Home Assistant?",

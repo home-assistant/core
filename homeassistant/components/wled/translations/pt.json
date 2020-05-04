@@ -1,24 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
-            "connection_error": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
+            "connection_error": "Falha ao ligar ao dispositivo WLED"
         },
         "error": {
-            "connection_error": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
+            "connection_error": "Falha ao ligar ao dispositivo WLED"
         },
-        "flow_title": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
         "step": {
             "user": {
                 "data": {
-                    "host": "Nome servidor ou endere\u00e7o IP"
+                    "host": "Nome servidor ou endereço IP"
                 },
-                "description": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
-                "title": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
+                "title": "Associar WLED"
             },
             "zeroconf_confirm": {
-                "description": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
-                "title": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
+                "title": "Dispositivo WLED descoberto"
             }
         }
     }

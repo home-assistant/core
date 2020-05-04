@@ -1,24 +1,24 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
-            "connection_error": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
+            "already_configured": "Este dispositivo WLED ya está configurado.",
+            "connection_error": "No se ha podido conectar al dispositivo WLED."
         },
         "error": {
-            "connection_error": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
+            "connection_error": "No se ha podido conectar al dispositivo WLED."
         },
-        "flow_title": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
+        "flow_title": "WLED: {name}",
         "step": {
             "user": {
                 "data": {
-                    "host": "Host o direcci\u00f3n IP"
+                    "host": "Host o dirección IP"
                 },
-                "description": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
-                "title": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
+                "description": "Configure su WLED para integrarse con Home Assistant.",
+                "title": "Vincula tu WLED"
             },
             "zeroconf_confirm": {
-                "description": "Wykryto urz\u0105dzenie [%key:component::wled::title%]",
-                "title": "Wykryto urz\u0105dzenie [%key:component::wled::title%]"
+                "description": "¿Quieres añadir el WLED llamado `{name}` a Home Assistant?",
+                "title": "Descubierto dispositivo WLED"
             }
         }
     }

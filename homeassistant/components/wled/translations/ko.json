@@ -1,24 +1,24 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uc774 WLED \uae30\uae30\ub294 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
-            "connection_error": "WLED \uae30\uae30\uc5d0 \uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4."
+            "already_configured": "WLED 기기가 이미 구성되었습니다.",
+            "connection_error": "WLED 기기에 연결할 수 없습니다."
         },
         "error": {
-            "connection_error": "WLED \uae30\uae30\uc5d0 \uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4."
+            "connection_error": "WLED 기기에 연결할 수 없습니다."
         },
         "flow_title": "WLED: {name}",
         "step": {
             "user": {
                 "data": {
-                    "host": "\ud638\uc2a4\ud2b8 \ub610\ub294 IP \uc8fc\uc18c"
+                    "host": "호스트 또는 IP 주소"
                 },
-                "description": "Home Assistant \uc5d0 WLED \uc5f0\ub3d9\uc744 \uad6c\uc131\ud569\ub2c8\ub2e4.",
-                "title": "WLED \uc5f0\uacb0\ud558\uae30"
+                "description": "Home Assistant 에 WLED 통합 구성요소를 설정합니다.",
+                "title": "WLED 연결"
             },
             "zeroconf_confirm": {
-                "description": "Home Assistant \uc5d0 WLED `{name}` \uc744(\ub97c) \ucd94\uac00\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
-                "title": "\ubc1c\uacac\ub41c WLED \uae30\uae30"
+                "description": "Home Assistant 에 WLED `{name}` 을(를) 추가하시겠습니까?",
+                "title": "발견된 WLED 기기"
             }
         }
     }

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "D\u00ebsen WLED Apparat ass scho konfigur\u00e9iert.",
+            "already_configured": "Dësen WLED Apparat ass scho konfiguréiert.",
             "connection_error": "Feeler beim verbannen mam WLED Apparat."
         },
         "error": {
@@ -13,11 +13,11 @@
                 "data": {
                     "host": "Numm oder IP Adresse"
                 },
-                "description": "D\u00e4in WLED als Integratioun mam Home Assistant ariichten.",
-                "title": "D\u00e4in WLED verbannen"
+                "description": "Ären WLED als Integratioun mam Home Assistant ariichten.",
+                "title": "Ären WLED verbannen"
             },
             "zeroconf_confirm": {
-                "description": "Soll de WLED mam Numm `{name}` am Home Assistant dob\u00e4i gesaat ginn?",
+                "description": "Wëllt dir den WLED  mam Numm `{name}` am Home Assistant dobäisetzen?",
                 "title": "Entdeckten WLED Apparat"
             }
         }
