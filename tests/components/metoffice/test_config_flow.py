@@ -1,15 +1,18 @@
 """Test the Met Office weather integration config flow."""
 import json
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.metoffice.const import DOMAIN
+from homeassistant.const import CONF_MODE
 
 from .const import (
-    METOFFICE_CONFIG_WAVERTREE,
+    CONFIG_WAVERTREE_3HOURLY,
+    CONFIG_WAVERTREE_DAILY,
     TEST_API_KEY,
     TEST_LATITUDE_WAVERTREE,
     TEST_LONGITUDE_WAVERTREE,
     TEST_MODE_3HOURLY,
+    TEST_MODE_DAILY,
     TEST_SITE_NAME_WAVERTREE,
 )
 
@@ -75,13 +78,13 @@ async def test_form_already_configured(hass, requests_mock):
     MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{TEST_LATITUDE_WAVERTREE}_{TEST_LONGITUDE_WAVERTREE}",
-        data=METOFFICE_CONFIG_WAVERTREE,
+        data=CONFIG_WAVERTREE_3HOURLY,
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data=METOFFICE_CONFIG_WAVERTREE,
+        data=CONFIG_WAVERTREE_3HOURLY,
     )
 
     assert result["type"] == "abort"
@@ -122,3 +125,40 @@ async def test_form_unknown_error(hass, managerfail_mock):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_options_flow(hass, requests_mock):
+    """Test we handle changing the data update mode."""
+
+    # all metoffice test data encapsulated in here
+    mock_json = json.loads(load_fixture("metoffice.json"))
+    all_sites = json.dumps(mock_json["all_sites"])
+    wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
+    wavertree_daily = json.dumps(mock_json["wavertree_daily"])
+    requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
+    requests_mock.get(
+        "/public/data/val/wxfcs/all/json/354107?res=3hourly", text=wavertree_hourly,
+    )
+    requests_mock.get(
+        "/public/data/val/wxfcs/all/json/354107?res=daily", text=wavertree_daily,
+    )
+
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_WAVERTREE_3HOURLY,)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not entry.options
+
+    result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_MODE: TEST_MODE_DAILY}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "Complete"
+    assert result["data"][CONF_MODE] == TEST_MODE_DAILY

@@ -108,10 +108,10 @@ class MetOfficeOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title=None, data=user_input)
+            return self.async_create_entry(title="Complete", data=user_input)
 
         return self.async_show_form(
-            step_id="user",
+            step_id="init",
             data_schema=vol.Schema(
                 {
                     vol.Required(

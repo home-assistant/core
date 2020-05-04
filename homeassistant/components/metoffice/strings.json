@@ -17,6 +17,16 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "options": {
+      "step": {
+        "init": {
+          "title": "Met Office Options",
+          "data": {
+            "mode": "Update frequency"
+          }
+        }
+      }
     }
   }
 }

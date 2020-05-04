@@ -146,7 +146,7 @@ class MetOfficeCurrentSensor(Entity):
         elif hasattr(self.metoffice_now, self._type):
             value = getattr(self.metoffice_now, self._type)
 
-            if not isinstance(value, int):
+            if value is not None and not isinstance(value, int):
                 value = value.value
 
         return value
