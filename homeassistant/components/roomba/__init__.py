@@ -40,15 +40,18 @@ def _has_all_unique_bilds(value):
     return value
 
 
-DEVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_BLID): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_CERT, default=DEFAULT_CERT): str,
-        vol.Optional(CONF_CONTINUOUS, default=DEFAULT_CONTINUOUS): bool,
-        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): int,
-    },
+DEVICE_SCHEMA = vol.All(
+    cv.deprecated(CONF_CERT),
+    vol.Schema(
+        {
+            vol.Required(CONF_HOST): str,
+            vol.Required(CONF_BLID): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Optional(CONF_CERT, default=DEFAULT_CERT): str,
+            vol.Optional(CONF_CONTINUOUS, default=DEFAULT_CONTINUOUS): bool,
+            vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): int,
+        },
+    ),
 )
 
 
@@ -92,7 +95,6 @@ async def async_setup_entry(hass, config_entry):
         address=config_entry.data[CONF_HOST],
         blid=config_entry.data[CONF_BLID],
         password=config_entry.data[CONF_PASSWORD],
-        cert_name=config_entry.data[CONF_CERT],
         continuous=config_entry.options[CONF_CONTINUOUS],
         delay=config_entry.options[CONF_DELAY],
     )
