@@ -87,7 +87,6 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(info["serial_number"])
         self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
 
-        user_input[CONF_NAME] = info["title"]
         return self.async_create_entry(title=info["title"], data=user_input)
 
     async def async_step_ssdp(
