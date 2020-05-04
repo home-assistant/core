@@ -1,6 +1,11 @@
 """Test Z-Wave Sensors."""
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PRESSURE,
+    DOMAIN as SENSOR_DOMAIN,
+)
 from homeassistant.components.zwave_mqtt.const import DOMAIN
+from homeassistant.const import ATTR_DEVICE_CLASS
 
 from .common import setup_zwave
 
@@ -14,6 +19,12 @@ async def test_sensor(hass, generic_data):
     assert state is not None
     assert state.state == "123.9"
     assert state.attributes["unit_of_measurement"] == "V"
+
+    # Test device classes
+    state = hass.states.get("sensor.trisensor_relative_humidity")
+    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_HUMIDITY
+    state = hass.states.get("sensor.trisensor_pressure")
+    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_PRESSURE
 
     # Test ZWaveListSensor disabled by default
     registry = await hass.helpers.entity_registry.async_get_registry()
