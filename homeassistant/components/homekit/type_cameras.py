@@ -33,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 VIDEO_OUTPUT = (
     "-map {v_map} -an "
-    "-c:v libx264 -profile:v {v_profile} -tune zerolatency -pix_fmt yuv420p "
+    "-c:v libx264 -profile:v {v_profile} -pix_fmt yuv420p "
     "-r {fps} "
     "-b:v {v_max_bitrate}k -bufsize {v_bufsize}k -maxrate {v_max_bitrate}k "
     "-payload_type 99 "
@@ -224,6 +224,10 @@ class Camera(HomeAccessory, PyhapCamera):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Failed to forcefully close stream.")
         _LOGGER.debug("Stream process stopped forcefully.")
+
+    async def reconfigure_stream(self, session_info, stream_config):
+        """Reconfigure the stream so that it uses the given ``stream_config``."""
+        return True
 
     def get_snapshot(self, image_size):
         """Return a jpeg of a snapshot from the camera."""
