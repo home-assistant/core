@@ -186,7 +186,7 @@ class NetatmoCamera(Camera):
         """Return true if on."""
         return self.is_streaming
 
-    async def stream_source(self):
+    def stream_source(self):
         """Return the stream source."""
         url = "{0}/live/files/{1}/index.m3u8"
         if self._localurl:

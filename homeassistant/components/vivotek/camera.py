@@ -101,7 +101,7 @@ class VivotekCam(Camera):
         """Return the name of this device."""
         return self._name
 
-    async def stream_source(self):
+    def stream_source(self):
         """Return the source of the stream."""
         return self._stream_source
 

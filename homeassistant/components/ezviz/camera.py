@@ -223,7 +223,7 @@ class HassEzvizCamera(Camera):
         )
         return image
 
-    async def stream_source(self):
+    def stream_source(self):
         """Return the stream source."""
         if self._local_rtsp_port:
             rtsp_stream_source = (

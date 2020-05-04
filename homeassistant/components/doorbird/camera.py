@@ -82,7 +82,7 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         self._last_update = datetime.datetime.min
         self._unique_id = f"{self._mac_addr}_{camera_id}"
 
-    async def stream_source(self):
+    def stream_source(self):
         """Return the stream source."""
         return self._stream_url
 

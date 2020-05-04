@@ -99,7 +99,7 @@ class QVRProCamera(Camera):
 
         return self._client.get_snapshot(self.guid)
 
-    async def stream_source(self):
+    def stream_source(self):
         """Get stream source."""
         return self._stream_source
 

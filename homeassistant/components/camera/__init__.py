@@ -129,7 +129,7 @@ async def async_request_stream(hass, entity_id, fmt):
     camera_prefs = hass.data[DATA_CAMERA_PREFS].get(entity_id)
 
     async with async_timeout.timeout(10):
-        source = await camera.stream_source()
+        source = await camera.async_stream_source()
 
     if not source:
         raise HomeAssistantError(
@@ -257,7 +257,7 @@ async def async_setup(hass, config):
                 continue
 
             async with async_timeout.timeout(10):
-                source = await camera.stream_source()
+                source = await camera.async_stream_source()
 
             if not source:
                 continue
@@ -363,9 +363,13 @@ class Camera(Entity):
         """Return the interval between frames of the mjpeg stream."""
         return 0.5
 
-    async def stream_source(self):
+    def stream_source(self):
         """Return the source of the stream."""
         return None
+
+    async def async_stream_source(self):
+        """Return bytes of camera image."""
+        return await self.hass.async_add_executor_job(self.stream_source)
 
     def camera_image(self):
         """Return bytes of camera image."""
@@ -577,7 +581,7 @@ async def ws_camera_stream(hass, connection, msg):
         camera_prefs = hass.data[DATA_CAMERA_PREFS].get(entity_id)
 
         async with async_timeout.timeout(10):
-            source = await camera.stream_source()
+            source = await camera.async_stream_source()
 
         if not source:
             raise HomeAssistantError(
@@ -663,7 +667,7 @@ async def async_handle_snapshot_service(camera, service):
 async def async_handle_play_stream_service(camera, service_call):
     """Handle play stream services calls."""
     async with async_timeout.timeout(10):
-        source = await camera.stream_source()
+        source = await camera.async_stream_source()
 
     if not source:
         raise HomeAssistantError(
@@ -696,7 +700,7 @@ async def async_handle_play_stream_service(camera, service_call):
 async def async_handle_record_service(camera, call):
     """Handle stream recording service calls."""
     async with async_timeout.timeout(10):
-        source = await camera.stream_source()
+        source = await camera.async_stream_source()
 
     if not source:
         raise HomeAssistantError(f"{camera.entity_id} does not support record service")

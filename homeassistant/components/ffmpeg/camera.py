@@ -49,7 +49,7 @@ class FFmpegCamera(Camera):
         """Return supported features."""
         return SUPPORT_STREAM
 
-    async def stream_source(self):
+    def stream_source(self):
         """Return the stream source."""
         return self._input.split(" ")[-1]
 

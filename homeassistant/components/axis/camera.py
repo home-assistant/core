@@ -70,7 +70,7 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
         """Return supported features."""
         return SUPPORT_STREAM
 
-    async def stream_source(self):
+    def stream_source(self):
         """Return the stream source."""
         return AXIS_STREAM.format(
             user=self.device.config_entry.data[CONF_USERNAME],
