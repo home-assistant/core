@@ -1,10 +1,8 @@
 """Test the devolo_home_control config flow."""
-from unittest.mock import patch
-
 from homeassistant import config_entries, setup
 from homeassistant.components.devolo_home_control.const import DOMAIN
 
-from tests.common import mock_coro
+from tests.async_mock import patch
 
 
 async def test_form(hass):
@@ -17,11 +15,10 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.devolo_home_control.async_setup",
-        return_value=mock_coro(True),
+        "homeassistant.components.devolo_home_control.async_setup", return_value=True,
     ) as mock_setup, patch(
         "homeassistant.components.devolo_home_control.async_setup_entry",
-        return_value=mock_coro(True),
+        return_value=True,
     ) as mock_setup_entry, patch(
         "homeassistant.components.devolo_home_control.config_flow.Mydevolo.credentials_valid",
         return_value=True,
