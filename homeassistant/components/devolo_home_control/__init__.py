@@ -39,10 +39,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     if not credentials_valid:
         return False
 
-    if mydevolo.maintenance():
+    if await hass.async_add_executor_job(mydevolo.maintenance):
         raise ConfigEntryNotReady
 
-    gateway_id = mydevolo.get_gateway_ids()[0]
+    gateway_ids = await hass.async_add_executor_job(mydevolo.get_gateway_ids)
+    gateway_id = gateway_ids[0]
     mprm_url = mydevolo.mprm
 
     try:

@@ -54,7 +54,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not credentials_valid:
             return self._show_form({"base": "invalid_credentials"})
         _LOGGER.debug("Credentials valid")
-        await self.async_set_unique_id(mydevolo.get_gateway_ids()[0])
+        await self.async_set_unique_id(await mydevolo.get_gateway_ids()[0])
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
