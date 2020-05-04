@@ -1,49 +1,41 @@
 """BleBox devices setup tests."""
 
-import blebox_uniapi
-import pytest
+import logging
 
-from homeassistant.components.blebox import async_setup_entry
+import blebox_uniapi
+
 from homeassistant.components.blebox.const import DOMAIN
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .conftest import mock_config, patch_product_identify
 
-from tests.async_mock import ANY, call, patch
 
-
-async def test_setup_failure(hass):
+async def test_setup_failure(hass, caplog):
     """Test that setup failure is handled and logged."""
 
     patch_product_identify(None, side_effect=blebox_uniapi.error.ClientError)
 
-    with patch("homeassistant.components.blebox._LOGGER.error") as error:
-        with pytest.raises(ConfigEntryNotReady):
-            config = mock_config()
-            config.add_to_hass(hass)
-            await async_setup_entry(hass, config)
+    entry = mock_config()
+    entry.add_to_hass(hass)
 
-        error.assert_has_calls(
-            [call("Identify failed at %s:%d (%s)", "172.100.123.4", 80, ANY,)]
-        )
-        assert isinstance(error.call_args[0][3], blebox_uniapi.error.ClientError)
+    caplog.set_level(logging.ERROR)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "Identify failed at 172.100.123.4:80 ()" in caplog.text
 
 
-async def test_setup_failure_on_connection(hass):
+async def test_setup_failure_on_connection(hass, caplog):
     """Test that setup failure is handled and logged."""
 
     patch_product_identify(None, side_effect=blebox_uniapi.error.ConnectionError)
 
-    with patch("homeassistant.components.blebox._LOGGER.error") as error:
-        with pytest.raises(ConfigEntryNotReady):
-            config = mock_config()
-            config.add_to_hass(hass)
-            await async_setup_entry(hass, config)
+    entry = mock_config()
+    entry.add_to_hass(hass)
 
-        error.assert_has_calls(
-            [call("Identify failed at %s:%d (%s)", "172.100.123.4", 80, ANY,)]
-        )
-        assert isinstance(error.call_args[0][3], blebox_uniapi.error.ConnectionError)
+    caplog.set_level(logging.ERROR)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert "Identify failed at 172.100.123.4:80 ()" in caplog.text
 
 
 async def test_unload_config_entry(hass):
@@ -51,7 +43,6 @@ async def test_unload_config_entry(hass):
     patch_product_identify(None)
 
     entry = mock_config()
-
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
