@@ -22,7 +22,7 @@
   },
   "options": {
     "step": {
-      "user": {
+      "init": {
         "title": "Met Office Options",
         "data": {
           "mode": "Update frequency"

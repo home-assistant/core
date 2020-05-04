@@ -23,7 +23,7 @@
     },
     "options": {
         "step": {
-            "user": {
+            "init": {
                 "data": {
                     "mode": "Update frequency"
                 },
