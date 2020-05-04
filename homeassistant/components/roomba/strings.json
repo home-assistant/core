@@ -8,7 +8,6 @@
           "host": "Hostname or IP Address",
           "blid": "BLID",
           "password": "Password",
-          "certificate": "Certificate",
           "continuous": "Continuous",
           "delay": "Delay"
         }
