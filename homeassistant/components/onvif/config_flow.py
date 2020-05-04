@@ -1,16 +1,13 @@
 """Config flow for ONVIF."""
-import os
 from pprint import pformat
 from typing import List
 from urllib.parse import urlparse
 
-import onvif
-from onvif import ONVIFCamera, exceptions
+from onvif.exceptions import ONVIFError
 import voluptuous as vol
 from wsdiscovery.discovery import ThreadedWSDiscovery as WSDiscovery
 from wsdiscovery.scope import Scope
 from wsdiscovery.service import Service
-from zeep.asyncio import AsyncTransport
 from zeep.exceptions import Fault
 
 from homeassistant import config_entries
@@ -23,7 +20,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 # pylint: disable=unused-import
 from .const import (
@@ -36,6 +32,7 @@ from .const import (
     LOGGER,
     RTSP_TRANS_PROTOCOLS,
 )
+from .device import get_device
 
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
@@ -210,7 +207,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if self.device_id is None:
                 return self.async_abort(reason="no_mac")
 
-            await self.async_set_unique_id(self.device_id, raise_on_progress=False)
+            await self.async_set_unique_id(self.device_id)
             self._abort_if_unique_id_configured(
                 updates={
                     CONF_HOST: self.onvif_config[CONF_HOST],
@@ -235,7 +232,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             title = f"{self.onvif_config[CONF_NAME]} - {self.device_id}"
             return self.async_create_entry(title=title, data=self.onvif_config)
 
-        except exceptions.ONVIFError as err:
+        except ONVIFError as err:
             LOGGER.error(
                 "Couldn't setup ONVIF device '%s'. Error: %s",
                 self.onvif_config[CONF_NAME],
@@ -251,6 +248,8 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input):
         """Handle import."""
         self.onvif_config = user_input
+        if not self.onvif_config[CONF_NAME]:
+            self.onvif_config[CONF_NAME] = "ONVIF Camera"
         return await self.async_step_profiles()
 
 
@@ -292,17 +291,3 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
                 }
             ),
         )
-
-
-def get_device(hass, host, port, username, password) -> ONVIFCamera:
-    """Get ONVIFCamera instance."""
-    session = async_get_clientsession(hass)
-    transport = AsyncTransport(None, session=session)
-    return ONVIFCamera(
-        host,
-        port,
-        username,
-        password,
-        f"{os.path.dirname(onvif.__file__)}/wsdl/",
-        transport=transport,
-    )

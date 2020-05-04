@@ -36,10 +36,10 @@ DISCOVERY = [
 ]
 
 
-def setup_mock_onvif_device(
-    mock_device, with_h264=True, two_profiles=False, with_interfaces=True
+def setup_mock_onvif_camera(
+    mock_onvif_camera, with_h264=True, two_profiles=False, with_interfaces=True
 ):
-    """Prepare mock ONVIF device."""
+    """Prepare mock onvif.ONVIFCamera."""
     devicemgmt = MagicMock()
 
     interface = MagicMock()
@@ -61,10 +61,10 @@ def setup_mock_onvif_device(
     media_service.GetProfiles.return_value = Future()
     media_service.GetProfiles.return_value.set_result([profile1, profile2])
 
-    mock_device.update_xaddrs.return_value = Future()
-    mock_device.update_xaddrs.return_value.set_result(True)
-    mock_device.create_devicemgmt_service = MagicMock(return_value=devicemgmt)
-    mock_device.create_media_service = MagicMock(return_value=media_service)
+    mock_onvif_camera.update_xaddrs.return_value = Future()
+    mock_onvif_camera.update_xaddrs.return_value.set_result(True)
+    mock_onvif_camera.create_devicemgmt_service = MagicMock(return_value=devicemgmt)
+    mock_onvif_camera.create_media_service = MagicMock(return_value=media_service)
 
     def mock_constructor(
         host,
@@ -78,9 +78,9 @@ def setup_mock_onvif_device(
         transport=None,
     ):
         """Fake the controller constructor."""
-        return mock_device
+        return mock_onvif_camera
 
-    mock_device.side_effect = mock_constructor
+    mock_onvif_camera.side_effect = mock_constructor
 
 
 def setup_mock_discovery(
@@ -114,16 +114,16 @@ def setup_mock_discovery(
     mock_discovery.return_value = services
 
 
-def setup_mock_camera(mock_camera):
-    """Prepare mock HASS camera."""
-    mock_camera.async_initialize.return_value = Future()
-    mock_camera.async_initialize.return_value.set_result(True)
+def setup_mock_device(mock_device):
+    """Prepare mock ONVIFDevice."""
+    mock_device.async_setup.return_value = Future()
+    mock_device.async_setup.return_value.set_result(True)
 
     def mock_constructor(hass, config):
         """Fake the controller constructor."""
-        return mock_camera
+        return mock_device
 
-    mock_camera.side_effect = mock_constructor
+    mock_device.side_effect = mock_constructor
 
 
 async def setup_onvif_integration(
@@ -153,15 +153,15 @@ async def setup_onvif_integration(
 
     with patch(
         "homeassistant.components.onvif.config_flow.get_device"
-    ) as mock_device, patch(
+    ) as mock_onvif_camera, patch(
         "homeassistant.components.onvif.config_flow.wsdiscovery"
     ) as mock_discovery, patch(
-        "homeassistant.components.onvif.camera.ONVIFHassCamera"
-    ) as mock_camera:
-        setup_mock_onvif_device(mock_device, two_profiles=True)
+        "homeassistant.components.onvif.ONVIFDevice"
+    ) as mock_device:
+        setup_mock_onvif_camera(mock_onvif_camera, two_profiles=True)
         # no discovery
         mock_discovery.return_value = []
-        setup_mock_camera(mock_camera)
+        setup_mock_device(mock_device)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
     return config_entry
@@ -179,14 +179,14 @@ async def test_flow_discovered_devices(hass):
 
     with patch(
         "homeassistant.components.onvif.config_flow.get_device"
-    ) as mock_device, patch(
+    ) as mock_onvif_camera, patch(
         "homeassistant.components.onvif.config_flow.wsdiscovery"
     ) as mock_discovery, patch(
-        "homeassistant.components.onvif.camera.ONVIFHassCamera"
-    ) as mock_camera:
-        setup_mock_onvif_device(mock_device)
+        "homeassistant.components.onvif.ONVIFDevice"
+    ) as mock_device:
+        setup_mock_onvif_camera(mock_onvif_camera)
         setup_mock_discovery(mock_discovery)
-        setup_mock_camera(mock_camera)
+        setup_mock_device(mock_device)
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -238,14 +238,14 @@ async def test_flow_discovered_devices_ignore_configured_manual_input(hass):
 
     with patch(
         "homeassistant.components.onvif.config_flow.get_device"
-    ) as mock_device, patch(
+    ) as mock_onvif_camera, patch(
         "homeassistant.components.onvif.config_flow.wsdiscovery"
     ) as mock_discovery, patch(
-        "homeassistant.components.onvif.camera.ONVIFHassCamera"
-    ) as mock_camera:
-        setup_mock_onvif_device(mock_device)
+        "homeassistant.components.onvif.ONVIFDevice"
+    ) as mock_device:
+        setup_mock_onvif_camera(mock_onvif_camera)
         setup_mock_discovery(mock_discovery, with_mac=True)
-        setup_mock_camera(mock_camera)
+        setup_mock_device(mock_device)
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -289,14 +289,14 @@ async def test_flow_discovery_ignore_existing_and_abort(hass):
 
     with patch(
         "homeassistant.components.onvif.config_flow.get_device"
-    ) as mock_device, patch(
+    ) as mock_onvif_camera, patch(
         "homeassistant.components.onvif.config_flow.wsdiscovery"
     ) as mock_discovery, patch(
-        "homeassistant.components.onvif.camera.ONVIFHassCamera"
-    ) as mock_camera:
-        setup_mock_onvif_device(mock_device)
+        "homeassistant.components.onvif.ONVIFDevice"
+    ) as mock_device:
+        setup_mock_onvif_camera(mock_onvif_camera)
         setup_mock_discovery(mock_discovery, with_name=True, with_mac=True)
-        setup_mock_camera(mock_camera)
+        setup_mock_device(mock_device)
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -341,15 +341,15 @@ async def test_flow_manual_entry(hass):
 
     with patch(
         "homeassistant.components.onvif.config_flow.get_device"
-    ) as mock_device, patch(
+    ) as mock_onvif_camera, patch(
         "homeassistant.components.onvif.config_flow.wsdiscovery"
     ) as mock_discovery, patch(
-        "homeassistant.components.onvif.camera.ONVIFHassCamera"
-    ) as mock_camera:
-        setup_mock_onvif_device(mock_device, two_profiles=True)
+        "homeassistant.components.onvif.ONVIFDevice"
+    ) as mock_device:
+        setup_mock_onvif_camera(mock_onvif_camera, two_profiles=True)
         # no discovery
         mock_discovery.return_value = []
-        setup_mock_camera(mock_camera)
+        setup_mock_device(mock_device)
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={},
@@ -394,8 +394,10 @@ async def test_flow_manual_entry(hass):
 
 async def test_flow_import_no_mac(hass):
     """Test that config flow fails when no MAC available."""
-    with patch("homeassistant.components.onvif.config_flow.get_device") as mock_device:
-        setup_mock_onvif_device(mock_device, with_interfaces=False)
+    with patch(
+        "homeassistant.components.onvif.config_flow.get_device"
+    ) as mock_onvif_camera:
+        setup_mock_onvif_camera(mock_onvif_camera, with_interfaces=False)
 
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
@@ -416,8 +418,10 @@ async def test_flow_import_no_mac(hass):
 
 async def test_flow_import_no_h264(hass):
     """Test that config flow fails when no MAC available."""
-    with patch("homeassistant.components.onvif.config_flow.get_device") as mock_device:
-        setup_mock_onvif_device(mock_device, with_h264=False)
+    with patch(
+        "homeassistant.components.onvif.config_flow.get_device"
+    ) as mock_onvif_camera:
+        setup_mock_onvif_camera(mock_onvif_camera, with_h264=False)
 
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
@@ -437,9 +441,11 @@ async def test_flow_import_no_h264(hass):
 
 async def test_flow_import_onvif_api_error(hass):
     """Test that config flow fails when ONVIF API fails."""
-    with patch("homeassistant.components.onvif.config_flow.get_device") as mock_device:
-        setup_mock_onvif_device(mock_device)
-        mock_device.create_devicemgmt_service = MagicMock(
+    with patch(
+        "homeassistant.components.onvif.config_flow.get_device"
+    ) as mock_onvif_camera:
+        setup_mock_onvif_camera(mock_onvif_camera)
+        mock_onvif_camera.create_devicemgmt_service = MagicMock(
             side_effect=ONVIFError("Could not get device mgmt service")
         )
 
@@ -461,9 +467,11 @@ async def test_flow_import_onvif_api_error(hass):
 
 async def test_flow_import_onvif_auth_error(hass):
     """Test that config flow fails when ONVIF API fails."""
-    with patch("homeassistant.components.onvif.config_flow.get_device") as mock_device:
-        setup_mock_onvif_device(mock_device)
-        mock_device.create_devicemgmt_service = MagicMock(
+    with patch(
+        "homeassistant.components.onvif.config_flow.get_device"
+    ) as mock_onvif_camera:
+        setup_mock_onvif_camera(mock_onvif_camera)
+        mock_onvif_camera.create_devicemgmt_service = MagicMock(
             side_effect=Fault("Auth Error")
         )
 

@@ -510,6 +510,7 @@ omit =
     homeassistant/components/onkyo/media_player.py
     homeassistant/components/onvif/__init__.py
     homeassistant/components/onvif/camera.py
+    homeassistant/components/onvif/device.py
     homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
     homeassistant/components/openexchangerates/sensor.py
