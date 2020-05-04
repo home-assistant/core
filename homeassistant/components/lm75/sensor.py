@@ -66,7 +66,7 @@ class LM75(Entity):
 
     def update(self):
         """Get the latest data from the sensor."""
-        temp_celsius = self.__read_temperature()
+        temp_celsius = self._read_temperature()
         if temp_celsius is not None:
             self._state = display_temp(
                 self.hass, temp_celsius, TEMP_CELSIUS, PRECISION_TENTHS
