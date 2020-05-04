@@ -72,7 +72,9 @@ class HomeConnectSensor(HomeConnectEntity):
                     self._state = None
                 else:
                     seconds = self._sign * float(status[self._key]["value"])
-                    self._state = dt_util.utcnow() + timedelta(seconds=seconds)
+                    self._state = (
+                        dt_util.utcnow() + timedelta(seconds=seconds)
+                    ).isoformat()
             else:
                 self._state = status[self._key].get("value", None)
         _LOGGER.debug("Updated, new state: %s", self._state)
