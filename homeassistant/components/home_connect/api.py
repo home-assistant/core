@@ -230,7 +230,7 @@ class Dishwasher(DeviceWithDoor, DeviceWithPrograms):
         {"name": "Dishcare.Dishwasher.Program.MaximumCleaning"},
     ]
 
-    def get_entit(self):
+    def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
         program_sensors = self.get_program_sensors()
