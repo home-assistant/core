@@ -159,12 +159,6 @@ class Camera(HomeAccessory, PyhapCamera):
 
     async def start_stream(self, session_info, stream_config):
         """Start a new stream with the given configuration."""
-        _LOGGER.debug(
-            "[%s] Starting stream with the following parameters: %s",
-            session_info["id"],
-            stream_config,
-        )
-
         input_source = await self._async_get_stream_source()
         if not input_source:
             _LOGGER.error("Camera has no stream source")
@@ -201,7 +195,7 @@ class Camera(HomeAccessory, PyhapCamera):
         # unclean shutdown they cannot resume streaming
         # again until restart
         try:
-            await super().stop_stream(session_info)
+            return await super().stop_stream(session_info)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Failed to cleanly close stream.")
 
