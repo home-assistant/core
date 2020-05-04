@@ -209,30 +209,30 @@ def _categorize_programs(hass: HomeAssistantType, programs: dict) -> None:
         try:
             folder = programs[KEY_MY_PROGRAMS][f"HA.{platform}"]
         except KeyError:
-            pass
-        else:
-            for dtype, _, node_id in folder.children:
-                if dtype != KEY_FOLDER:
-                    continue
-                entity_folder = folder[node_id]
-                try:
-                    status = entity_folder[KEY_STATUS]
-                    assert status.dtype == "program", "Not a program"
-                    if platform != BINARY_SENSOR:
-                        actions = entity_folder[KEY_ACTIONS]
-                        assert actions.dtype == "program", "Not a program"
-                    else:
-                        actions = None
-                except (AttributeError, KeyError, AssertionError):
-                    _LOGGER.warning(
-                        "Program entity '%s' not loaded due "
-                        "to invalid folder structure.",
-                        entity_folder.name,
-                    )
-                    continue
+            continue
+        for dtype, _, node_id in folder.children:
+            if dtype != KEY_FOLDER:
+                continue
+            entity_folder = folder[node_id]
+            # TODO: Fix clean-up this method using PyISYv2 functions/properties.
+            try:
+                status = entity_folder[KEY_STATUS]
+                assert status.dtype == "program", "Not a program"
+                if platform != BINARY_SENSOR:
+                    actions = entity_folder[KEY_ACTIONS]
+                    assert actions.dtype == "program", "Not a program"
+                else:
+                    actions = None
+            except (AttributeError, KeyError, AssertionError):
+                _LOGGER.warning(
+                    "Program entity '%s' not loaded due "
+                    "to invalid folder structure.",
+                    entity_folder.name,
+                )
+                continue
 
-                entity = (entity_folder.name, status, actions)
-                hass.data[ISY994_PROGRAMS][platform].append(entity)
+            entity = (entity_folder.name, status, actions)
+            hass.data[ISY994_PROGRAMS][platform].append(entity)
 
 
 def _categorize_weather(hass: HomeAssistantType, climate) -> None:
