@@ -10,6 +10,18 @@
             "name_exists": "Vizio apparaat met opgegeven naam al geconfigureerd."
         },
         "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "title": "Voltooi het koppelingsproces"
+            },
+            "pairing_complete": {
+                "title": "Koppelen voltooid"
+            },
+            "pairing_complete_import": {
+                "title": "Koppelen voltooid"
+            },
             "user": {
                 "data": {
                     "access_token": "Toegangstoken",
@@ -17,6 +29,7 @@
                     "host": "<Host/IP>:<Port>",
                     "name": "Naam"
                 },
+                "description": "Een toegangstoken is alleen nodig voor tv's. Als u een TV configureert en nog geen toegangstoken heeft, laat dit dan leeg en doorloop het koppelingsproces.",
                 "title": "Vizio SmartCast Client instellen"
             }
         }
@@ -25,8 +38,11 @@
         "step": {
             "init": {
                 "data": {
+                    "apps_to_include_or_exclude": "Apps om op te nemen of uit te sluiten",
+                    "include_or_exclude": "Apps opnemen of uitsluiten?",
                     "volume_step": "Volume Stapgrootte"
                 },
+                "description": "Als je een Smart TV hebt, kun je optioneel je bronnenlijst filteren door te kiezen welke apps je in je bronnenlijst wilt opnemen of uitsluiten.",
                 "title": "Update Vizo SmartCast Opties"
             }
         }

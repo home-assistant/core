@@ -16,7 +16,13 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import CONF_PORT, STATE_OFF, STATE_ON
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 
-from .const import CONF_SOURCES, DOMAIN, SERVICE_RESTORE, SERVICE_SNAPSHOT
+from .const import (
+    CONF_SOURCES,
+    DOMAIN,
+    MONOPRICE_OBJECT,
+    SERVICE_RESTORE,
+    SERVICE_SNAPSHOT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +64,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Monoprice 6-zone amplifier platform."""
     port = config_entry.data[CONF_PORT]
 
-    monoprice = hass.data[DOMAIN][config_entry.entry_id]
+    monoprice = hass.data[DOMAIN][config_entry.entry_id][MONOPRICE_OBJECT]
 
     sources = _get_sources(config_entry)
 

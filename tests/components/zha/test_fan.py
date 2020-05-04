@@ -1,6 +1,4 @@
 """Test zha fan."""
-from unittest.mock import call
-
 import pytest
 import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
@@ -34,6 +32,8 @@ from .common import (
     get_zha_gateway,
     send_attributes_report,
 )
+
+from tests.async_mock import call
 
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"

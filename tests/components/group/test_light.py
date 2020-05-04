@@ -1,8 +1,4 @@
 """The tests for the Group Light platform."""
-from unittest.mock import MagicMock
-
-import asynctest
-
 from homeassistant.components.group import DOMAIN
 import homeassistant.components.group.light as group
 from homeassistant.components.light import (
@@ -31,6 +27,9 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.setup import async_setup_component
+
+import tests.async_mock
+from tests.async_mock import MagicMock
 
 
 async def test_default_state(hass):
@@ -559,7 +558,7 @@ async def test_invalid_service_calls(hass):
     grouped_light = add_entities.call_args[0][0][0]
     grouped_light.hass = hass
 
-    with asynctest.patch.object(hass.services, "async_call") as mock_call:
+    with tests.async_mock.patch.object(hass.services, "async_call") as mock_call:
         await grouped_light.async_turn_on(brightness=150, four_oh_four="404")
         data = {ATTR_ENTITY_ID: ["light.test1", "light.test2"], ATTR_BRIGHTNESS: 150}
         mock_call.assert_called_once_with(

@@ -32,7 +32,6 @@ SERVICE_FREEBOX = "freebox"
 SERVICE_HASS_IOS_APP = "hass_ios"
 SERVICE_HASSIO = "hassio"
 SERVICE_HEOS = "heos"
-SERVICE_IGD = "igd"
 SERVICE_KONNECTED = "konnected"
 SERVICE_MOBILE_APP = "hass_mobile_app"
 SERVICE_NETGEAR = "netgear_router"
@@ -48,7 +47,6 @@ SERVICE_XIAOMI_GW = "xiaomi_gw"
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DAIKIN: "daikin",
     SERVICE_TELLDUSLIVE: "tellduslive",
-    SERVICE_IGD: "upnp",
 }
 
 SERVICE_HANDLERS = {
@@ -66,7 +64,6 @@ SERVICE_HANDLERS = {
     SERVICE_OCTOPRINT: ("octoprint", None),
     SERVICE_FREEBOX: ("freebox", None),
     SERVICE_YEELIGHT: ("yeelight", None),
-    "panasonic_viera": ("media_player", "panasonic_viera"),
     "yamaha": ("media_player", "yamaha"),
     "logitech_mediaserver": ("media_player", "squeezebox"),
     "denonavr": ("media_player", "denonavr"),

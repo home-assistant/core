@@ -47,10 +47,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
             return
 
         zone_state = hass.states.get(zone_entity_id)
-        if from_s:
-            from_match = condition.zone(hass, zone_state, from_s)
-        else:
-            from_match = False
+        from_match = condition.zone(hass, zone_state, from_s) if from_s else False
         to_match = condition.zone(hass, zone_state, to_s)
 
         if (

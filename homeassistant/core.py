@@ -83,8 +83,8 @@ if TYPE_CHECKING:
 block_async_io.enable()
 fix_threading_exception_logging()
 
-# pylint: disable=invalid-name
 T = TypeVar("T")
+# pylint: disable=invalid-name
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
 CALLBACK_TYPE = Callable[[], None]
 # pylint: enable=invalid-name

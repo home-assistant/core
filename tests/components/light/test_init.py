@@ -3,7 +3,6 @@
 from io import StringIO
 import os
 import unittest
-import unittest.mock as mock
 
 import pytest
 
@@ -21,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component, setup_component
 
+import tests.async_mock as mock
 from tests.common import get_test_home_assistant, mock_service, mock_storage
 from tests.components.light import common
 

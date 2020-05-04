@@ -1,10 +1,10 @@
 """Tests for Konnected Alarm Panel config flow."""
-from asynctest import patch
 import pytest
 
 from homeassistant.components import konnected
 from homeassistant.components.konnected import config_flow
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

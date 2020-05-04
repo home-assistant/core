@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Este AVM FRITZ!Box ya est\u00e1 configurado.",
             "already_in_progress": "La configuraci\u00f3n del AVM FRITZ!Box ya est\u00e1 en progreso.",
-            "not_found": "No se encontr\u00f3 ning\u00fan AVM FRITZ!Box compatible en la red."
+            "not_found": "No se encontr\u00f3 ning\u00fan AVM FRITZ!Box compatible en la red.",
+            "not_supported": "Conectado a AVM FRITZ!Box pero no es capaz de controlar dispositivos Smart Home."
         },
         "error": {
             "auth_failed": "Usuario y/o contrase\u00f1a incorrectos."

@@ -49,7 +49,7 @@ class AtagWaterHeater(AtagEntity, WaterHeaterDevice):
         """List of available operation modes."""
         return OPERATION_LIST
 
-    async def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         if await self.coordinator.atag.dhw_set_temp(kwargs.get(ATTR_TEMPERATURE)):
             self.async_write_ha_state()

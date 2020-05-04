@@ -1,13 +1,13 @@
 """The tests for the MQTT component embedded server."""
 from unittest.mock import MagicMock, Mock
 
-from asynctest import CoroutineMock, patch
 import pytest
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.setup import setup_component
 
+from tests.async_mock import AsyncMock, patch
 from tests.common import get_test_home_assistant, mock_coro
 
 
@@ -29,15 +29,15 @@ class TestMQTT:
 
     @patch("passlib.apps.custom_app_context", Mock(return_value=""))
     @patch("tempfile.NamedTemporaryFile", Mock(return_value=MagicMock()))
-    @patch("hbmqtt.broker.Broker", Mock(return_value=MagicMock(start=CoroutineMock())))
-    @patch("hbmqtt.broker.Broker.start", Mock(return_value=mock_coro()))
+    @patch("hbmqtt.broker.Broker", Mock(return_value=MagicMock(start=AsyncMock())))
+    @patch("hbmqtt.broker.Broker.start", AsyncMock(return_value=None))
     @patch("homeassistant.components.mqtt.MQTT")
     def test_creating_config_with_pass_and_no_http_pass(self, mock_mqtt):
         """Test if the MQTT server gets started with password.
 
         Since 0.77, MQTT server has to set up its own password.
         """
-        mock_mqtt().async_connect.return_value = mock_coro(True)
+        mock_mqtt().async_connect = AsyncMock(return_value=True)
         self.hass.bus.listen_once = MagicMock()
         password = "mqtt_secret"
 
@@ -51,15 +51,15 @@ class TestMQTT:
 
     @patch("passlib.apps.custom_app_context", Mock(return_value=""))
     @patch("tempfile.NamedTemporaryFile", Mock(return_value=MagicMock()))
-    @patch("hbmqtt.broker.Broker", Mock(return_value=MagicMock(start=CoroutineMock())))
-    @patch("hbmqtt.broker.Broker.start", Mock(return_value=mock_coro()))
+    @patch("hbmqtt.broker.Broker", Mock(return_value=MagicMock(start=AsyncMock())))
+    @patch("hbmqtt.broker.Broker.start", AsyncMock(return_value=None))
     @patch("homeassistant.components.mqtt.MQTT")
     def test_creating_config_with_pass_and_http_pass(self, mock_mqtt):
         """Test if the MQTT server gets started with password.
 
         Since 0.77, MQTT server has to set up its own password.
         """
-        mock_mqtt().async_connect.return_value = mock_coro(True)
+        mock_mqtt().async_connect = AsyncMock(return_value=True)
         self.hass.bus.listen_once = MagicMock()
         password = "mqtt_secret"
 

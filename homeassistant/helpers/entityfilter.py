@@ -12,7 +12,8 @@ CONF_EXCLUDE_DOMAINS = "exclude_domains"
 CONF_EXCLUDE_ENTITIES = "exclude_entities"
 
 
-def _convert_filter(config: Dict[str, List[str]]) -> Callable[[str], bool]:
+def convert_filter(config: Dict[str, List[str]]) -> Callable[[str], bool]:
+    """Convert the filter schema into a filter."""
     filt = generate_filter(
         config[CONF_INCLUDE_DOMAINS],
         config[CONF_INCLUDE_ENTITIES],
@@ -24,21 +25,20 @@ def _convert_filter(config: Dict[str, List[str]]) -> Callable[[str], bool]:
     return filt
 
 
-FILTER_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Optional(CONF_EXCLUDE_DOMAINS, default=[]): vol.All(
-                cv.ensure_list, [cv.string]
-            ),
-            vol.Optional(CONF_EXCLUDE_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_INCLUDE_DOMAINS, default=[]): vol.All(
-                cv.ensure_list, [cv.string]
-            ),
-            vol.Optional(CONF_INCLUDE_ENTITIES, default=[]): cv.entity_ids,
-        }
-    ),
-    _convert_filter,
+BASE_FILTER_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_EXCLUDE_DOMAINS, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+        vol.Optional(CONF_EXCLUDE_ENTITIES, default=[]): cv.entity_ids,
+        vol.Optional(CONF_INCLUDE_DOMAINS, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+        vol.Optional(CONF_INCLUDE_ENTITIES, default=[]): cv.entity_ids,
+    }
 )
+
+FILTER_SCHEMA = vol.All(BASE_FILTER_SCHEMA, convert_filter)
 
 
 def generate_filter(

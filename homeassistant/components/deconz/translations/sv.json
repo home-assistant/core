@@ -29,6 +29,12 @@
                     "host": "V\u00e4rd",
                     "port": "Port (standardv\u00e4rde: '80')"
                 }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "port": "Port"
+                }
             }
         }
     },

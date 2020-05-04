@@ -1,7 +1,6 @@
 """Test the init file of Mailgun."""
 import hashlib
 import hmac
-from unittest.mock import Mock
 
 import pytest
 
@@ -10,6 +9,8 @@ from homeassistant.components import mailgun, webhook
 from homeassistant.const import CONF_API_KEY, CONF_DOMAIN
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import Mock
 
 API_KEY = "abc123"
 

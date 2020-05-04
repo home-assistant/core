@@ -1,8 +1,6 @@
 """The tests for the GDACS Feed integration."""
 import datetime
 
-from asynctest import patch
-
 from homeassistant.components import gdacs
 from homeassistant.components.gdacs import DEFAULT_SCAN_INTERVAL, DOMAIN, FEED
 from homeassistant.components.gdacs.geo_location import (
@@ -35,6 +33,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
+from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 from tests.components.gdacs import _generate_mock_feed_entry
 
