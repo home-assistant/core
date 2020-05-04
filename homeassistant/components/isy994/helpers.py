@@ -214,7 +214,6 @@ def _categorize_programs(hass: HomeAssistantType, programs: dict) -> None:
             if dtype != KEY_FOLDER:
                 continue
             entity_folder = folder[node_id]
-            # TODO: Fix clean-up this method using PyISYv2 functions/properties.
             try:
                 status = entity_folder[KEY_STATUS]
                 assert status.dtype == "program", "Not a program"
