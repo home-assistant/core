@@ -1,6 +1,4 @@
 """Tests for the Agent DVR config flow."""
-from unittest.mock import patch
-
 from homeassistant import data_entry_flow
 from homeassistant.components.agent_dvr import config_flow
 from homeassistant.components.agent_dvr.const import SERVER_URL
@@ -62,6 +60,12 @@ async def test_full_user_flow_implementation(
         headers={"Content-Type": "application/json"},
     )
 
+    aioclient_mock.get(
+        "http://example.local:8090/command.cgi?cmd=getObjects",
+        text=load_fixture("agent_dvr/objects.json"),
+        headers={"Content-Type": "application/json"},
+    )
+
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": SOURCE_USER},
     )
@@ -69,14 +73,9 @@ async def test_full_user_flow_implementation(
     assert result["step_id"] == "user"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-    with patch(
-        "homeassistant.components.agent_dvr.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.agent_dvr.async_setup_entry", return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_HOST: "example.local", CONF_PORT: 8090}
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "example.local", CONF_PORT: 8090}
+    )
 
     assert result["data"][CONF_HOST] == "example.local"
     assert result["data"][CONF_PORT] == 8090
@@ -86,5 +85,3 @@ async def test_full_user_flow_implementation(
 
     entries = hass.config_entries.async_entries(config_flow.DOMAIN)
     assert entries[0].unique_id == "c0715bba-c2d0-48ef-9e3e-bc81c9ea4447"
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
