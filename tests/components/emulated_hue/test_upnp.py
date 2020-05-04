@@ -8,6 +8,7 @@ import requests
 
 from homeassistant import const, setup
 from homeassistant.components import emulated_hue
+from homeassistant.const import HTTP_OK
 
 from tests.async_mock import patch
 from tests.common import get_test_home_assistant, get_test_instance_port
@@ -51,7 +52,7 @@ class TestEmulatedHue(unittest.TestCase):
         """Test the description."""
         result = requests.get(BRIDGE_URL_BASE.format("/description.xml"), timeout=5)
 
-        assert result.status_code == 200
+        assert result.status_code == HTTP_OK
         assert "text/xml" in result.headers["content-type"]
 
         # Make sure the XML is parsable
@@ -68,7 +69,7 @@ class TestEmulatedHue(unittest.TestCase):
             BRIDGE_URL_BASE.format("/api"), data=json.dumps(request_json), timeout=5
         )
 
-        assert result.status_code == 200
+        assert result.status_code == HTTP_OK
         assert "application/json" in result.headers["content-type"]
 
         resp_json = result.json()
@@ -87,7 +88,7 @@ class TestEmulatedHue(unittest.TestCase):
             timeout=5,
         )
 
-        assert result.status_code == 200
+        assert result.status_code == HTTP_OK
         assert "application/json" in result.headers["content-type"]
 
         resp_json = result.json()
