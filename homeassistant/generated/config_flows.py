@@ -50,7 +50,7 @@ FLOWS = [
     "harmony",
     "heos",
     "hisense_aehw4a1",
-    "homeconnect",
+    "home_connect",
     "homekit",
     "homekit_controller",
     "homematicip_cloud",

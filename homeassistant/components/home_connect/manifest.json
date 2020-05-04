@@ -1,7 +1,7 @@
 {
-  "domain": "homeconnect",
+  "domain": "home_connect",
   "name": "Home Connect",
-  "documentation": "https://www.home-assistant.io/integrations/homeconnect",
+  "documentation": "https://www.home-assistant.io/integrations/home_connect",
   "dependencies": ["http"],
   "codeowners": ["@DavidMStraub"],
   "requirements": ["homeconnect==0.5"],

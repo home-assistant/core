@@ -1,6 +1,6 @@
 """Constants for the Home Connect integration."""
 
-DOMAIN = "homeconnect"
+DOMAIN = "home_connect"
 
 OAUTH2_AUTHORIZE = "https://api.home-connect.com/security/oauth/authorize"
 OAUTH2_TOKEN = "https://api.home-connect.com/security/oauth/token"
@@ -13,4 +13,4 @@ BSH_ACTIVE_PROGRAM = "BSH.Common.Root.ActiveProgram"
 BSH_OPERATION_STATE = "BSH.Common.Status.OperationState"
 BSH_DOOR_STATE = "BSH.Common.Status.DoorState"
 
-SIGNAL_UPDATE_ENTITIES = "homeconnect.update_entities"
+SIGNAL_UPDATE_ENTITIES = "home_connect.update_entities"

@@ -1,6 +1,6 @@
 """Test the Home Connect config flow."""
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.homeconnect.const import (
+from homeassistant.components.home_connect.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
@@ -15,15 +15,15 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
-        "homeconnect",
+        "home_connect",
         {
-            "homeconnect": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
+            "home_connect": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
             "http": {"base_url": "https://example.com"},
         },
     )
 
     result = await hass.config_entries.flow.async_init(
-        "homeconnect", context={"source": config_entries.SOURCE_USER}
+        "home_connect", context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
 

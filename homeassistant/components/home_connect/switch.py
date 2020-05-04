@@ -1,8 +1,4 @@
-"""Provides a switch for Home Connect.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/integrations/switch.homeconnect/
-"""
+"""Provides a switch for Home Connect."""
 import logging
 
 from homeconnect.api import HomeConnectError

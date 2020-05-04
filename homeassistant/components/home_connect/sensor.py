@@ -1,8 +1,4 @@
-"""Provides a sensor for Home Connect.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/integrations/sensor.homeconnect/
-"""
+"""Provides a sensor for Home Connect."""
 
 from datetime import timedelta
 import logging

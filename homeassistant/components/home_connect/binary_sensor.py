@@ -1,8 +1,4 @@
-"""Provides a binary sensor for Home Connect.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/integrations/binary_sensor.homeconnect/
-"""
+"""Provides a binary sensor for Home Connect."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
