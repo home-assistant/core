@@ -7,6 +7,7 @@ from pyhap.accessory_driver import AccessoryDriver
 import pytest
 
 from homeassistant.components import camera, ffmpeg
+from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
@@ -50,6 +51,8 @@ async def test_camera_stream_source_configured(hass, run_driver, events):
         2,
         {CONF_STREAM_SOURCE: "/dev/null", CONF_SUPPORT_AUDIO: True},
     )
+    bridge = HomeBridge("hass", run_driver, "Test Bridge")
+    bridge.add_accessory(acc)
     await acc.run_handler()
 
     assert acc.aid == 2
@@ -96,6 +99,7 @@ async def test_camera_stream_source_configured(hass, run_driver, events):
         await hass.async_block_till_done()
 
     assert await hass.async_add_executor_job(acc.get_snapshot, 1024)
+    assert await hass.async_add_executor_job(bridge.get_snapshot, {"aid": 2})
 
 
 async def test_camera_stream_source_found(hass, run_driver, events):
