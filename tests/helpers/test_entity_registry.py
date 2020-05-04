@@ -1,6 +1,5 @@
 """Tests for the Entity Registry."""
 import asyncio
-from unittest.mock import patch
 
 import pytest
 
@@ -9,6 +8,7 @@ from homeassistant.core import CoreState, callback, valid_entity_id
 from homeassistant.helpers import entity_registry
 
 import tests.async_mock
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, flush_store, mock_registry
 
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"

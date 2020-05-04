@@ -61,7 +61,7 @@ async def async_setup_entry(
                 for sensor_type in STORAGE_DISK_SENSORS
             ]
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class SynoNasSensor(Entity):
@@ -131,6 +131,10 @@ class SynoNasSensor(Entity):
     def should_poll(self) -> bool:
         """No polling needed."""
         return False
+
+    async def async_update(self):
+        """Only used by the generic entity update service."""
+        await self._api.update()
 
     async def async_added_to_hass(self):
         """Register state update callback."""

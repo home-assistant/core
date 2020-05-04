@@ -3,13 +3,13 @@ import copy
 from datetime import datetime
 import json
 from unittest import mock
-from unittest.mock import ANY
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
 
+from tests.async_mock import ANY
 from tests.common import (
     MockConfigEntry,
     async_fire_mqtt_message,
