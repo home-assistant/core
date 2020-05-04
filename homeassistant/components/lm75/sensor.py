@@ -79,7 +79,7 @@ class LM75(Entity):
         """Convert raw sensor data to temperature."""
         return (regdata / 32.0) / 8.0
 
-    def __read_temperature(self):
+    def _read_temperature(self):
         """Read raw data from the SMBus and convert it to human readable temperature."""
         raw = self._bus.read_word_data(self._address, self._register) & 0xFFFF
         raw = ((raw << 8) & 0xFF00) + (raw >> 8)
