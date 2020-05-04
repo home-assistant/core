@@ -37,8 +37,11 @@ async def test_user_device_exists_abort(
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
-async def test_connection_error(hass: HomeAssistant) -> None:
+async def test_connection_error(hass: HomeAssistant, aioclient_mock) -> None:
     """Test we show user form on Agent connection error."""
+
+    aioclient_mock.get("http://example.local:8090/command.cgi?cmd=getStatus", text="")
+
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         context={"source": SOURCE_USER},

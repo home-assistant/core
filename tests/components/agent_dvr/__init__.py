@@ -18,6 +18,11 @@ async def init_integration(
         text=load_fixture("agent_dvr/status.json"),
         headers={"Content-Type": "application/json"},
     )
+    aioclient_mock.get(
+        "http://example.local:8090/command.cgi?cmd=getObjects",
+        text=load_fixture("agent_dvr/objects.json"),
+        headers={"Content-Type": "application/json"},
+    )
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="c0715bba-c2d0-48ef-9e3e-bc81c9ea4447",

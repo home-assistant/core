@@ -1,7 +1,7 @@
 """Config flow to configure Agent devices."""
 import logging
 
-from agent import AgentConnectionError
+from agent import AgentConnectionError, AgentError
 from agent.a import Agent
 import voluptuous as vol
 
@@ -37,6 +37,8 @@ class AgentFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await agent_client.update()
             except AgentConnectionError:
+                pass
+            except AgentError:
                 pass
 
             await agent_client.close()
