@@ -149,6 +149,9 @@ class FMIBestConditionSensor(Entity):
             else:
                 source_data = self.fmi_object.hourly.forecasts[0]
 
+        if source_data is None:
+            return
+
         if self.type == "forecast_time":
             self._state = source_data.time.astimezone(tz.tzlocal())
             self._icon = "mdi:av-timer"
