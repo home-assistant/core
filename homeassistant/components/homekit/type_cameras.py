@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 VIDEO_OUTPUT = (
     "-map {v_map} -an "
-    "-vcodec {v_codec} "
+    "-c:v {v_codec} "
     "{v_profile}"
     "-tune zerolatency -pix_fmt yuv420p "
     "-r {fps} "
