@@ -49,7 +49,7 @@ class MikrotikClient:
         self._params = params
         self._last_seen = None
         self._attrs = {}
-        self._wireless_params = None
+        self._wireless_params = {}
         self.hub_id = hub_id
 
     @property
@@ -97,18 +97,15 @@ class MikrotikHub:
     def __init__(self, hass, config_entry, hub, clients):
         """Initialize the Mikrotik hub."""
         self.hass = hass
-        self.data = config_entry.data[CONF_HUBS][hub]
         self.config_entry = config_entry
+        self.data = config_entry.data[CONF_HUBS][hub]
         self.api = None
-        self.all_clients = {}
         self.clients = clients
-        self.available = False
-        self.support_capsman = False
-        self.support_wireless = False
+        self.available = True
+        self._support_capsman = False
+        self._support_wireless = False
         self._hostname = None
-        self._model = None
-        self._firmware = None
-        self._serial_number = None
+        self._hub_info = {}
 
     @property
     def host(self):
@@ -123,17 +120,17 @@ class MikrotikHub:
     @property
     def model(self):
         """Return the model of the hub."""
-        return self._model
+        return self._hub_info.get(ATTR_MODEL)
 
     @property
     def firmware(self):
         """Return the firmware of the hub."""
-        return self._firmware
+        return self._hub_info.get(ATTR_FIRMWARE)
 
     @property
     def serial_number(self):
         """Return the serial number of the hub."""
-        return self._serial_number
+        return self._hub_info.get(ATTR_SERIAL_NUMBER)
 
     @property
     def arp_enabled(self):
@@ -170,24 +167,20 @@ class MikrotikHub:
     def get_hub_details(self):
         """Get hub info."""
         self._hostname = self.get_info(IDENTITY).get(NAME)
-        info = self.get_info(INFO)
-        self._model = info.get(ATTR_MODEL)
-        self._firmware = info.get(ATTR_FIRMWARE)
-        self._serial_number = info.get(ATTR_SERIAL_NUMBER)
-        self.support_capsman = bool(self.command(MIKROTIK_SERVICES[IS_CAPSMAN]))
-        self.support_wireless = bool(self.command(MIKROTIK_SERVICES[IS_WIRELESS]))
+        self._hub_info = self.get_info(INFO)
+        self._support_capsman = bool(self.get_info(IS_CAPSMAN))
+        self._support_wireless = bool(self.get_info(IS_WIRELESS))
 
     def connect_to_hub(self):
         """Connect to hub."""
         try:
             self.api = get_api(self.hass, self.data)
-            self.get_hub_details()
             self.available = True
-        except CannotConnect:
+        except (CannotConnect, LoginError) as err:
             self.available = False
-        except LoginError:
-            self.available = False
-            return False
+            raise err
+
+        self.get_hub_details()
         return True
 
     def do_arp_ping(self, ip_address, interface):
@@ -216,12 +209,10 @@ class MikrotikHub:
 
     def command(self, cmd, params=None):
         """Retrieve data from Mikrotik API."""
+        _LOGGER.debug("Running command %s", cmd)
+        params = params or {}
         try:
-            _LOGGER.debug("Running command %s", cmd)
-            if params:
-                response = list(self.api(cmd=cmd, **params))
-            else:
-                response = list(self.api(cmd=cmd))
+            response = list(self.api(cmd=cmd, **params))
         except (
             librouteros.exceptions.ConnectionClosed,
             OSError,
@@ -237,40 +228,36 @@ class MikrotikHub:
                 api_error,
             )
             return None
-
-        return response if response else None
+        return response
 
     def update_clients(self):
         """Update clients with latest status."""
         if not self.available or not self.api:
-            self.connect_to_hub()
-            if not self.available:
+            try:
+                self.connect_to_hub()
+            except (CannotConnect, LoginError):
                 return
 
         _LOGGER.debug("updating network clients for host: %s", self.host)
-        arp_devices = {}
-        client_list = {}
-        wireless_devices = {}
 
         try:
-            self.all_clients = self.get_list_from_interface(DHCP)
-            if self.support_capsman:
-                _LOGGER.debug("Hub is a CAPSman manager")
+            all_clients = self.get_list_from_interface(DHCP)
+            if self._support_capsman:
+                _LOGGER.debug("Hub is a CAPSMAN Manager")
                 client_list = wireless_devices = self.get_list_from_interface(CAPSMAN)
-            elif self.support_wireless:
-                _LOGGER.debug("Hub supports wireless Interface")
+            elif self._support_wireless:
+                _LOGGER.debug("Hub supports WIRELESS Interface")
                 client_list = wireless_devices = self.get_list_from_interface(WIRELESS)
             else:
-                _LOGGER.debug("Hub doesn't support wireless/capsman Interface")
-                client_list = self.all_clients
+                _LOGGER.debug("Hub doesn't support WIRELESS/CAPSMAN Interface")
+                client_list = all_clients
 
             if self.force_dhcp:
-                client_list = self.all_clients
-                _LOGGER.debug(client_list)
+                client_list = all_clients
                 _LOGGER.debug("using DHCP for scanning devices")
 
             if self.arp_enabled:
-                _LOGGER.debug("Using arp-ping to check devices")
+                _LOGGER.debug("Getting ARP device list")
                 arp_devices = self.get_list_from_interface(ARP)
 
         except (CannotConnect, socket.timeout, OSError):
@@ -284,14 +271,14 @@ class MikrotikHub:
 
             if mac not in self.clients:
                 self.clients[mac] = MikrotikClient(
-                    mac, self.all_clients.get(mac, {}), self.serial_number
+                    mac, all_clients.get(mac, {}), self.serial_number
                 )
             else:
                 self.clients[mac].update(
-                    params=self.all_clients.get(mac, {}), hub_id=self.serial_number
+                    params=all_clients.get(mac, {}), hub_id=self.serial_number
                 )
 
-            if mac in wireless_devices:
+            if wireless_devices and mac in wireless_devices:
                 # if wireless is supported then wireless_params are params
                 self.clients[mac].update(
                     wireless_params=wireless_devices[mac], active=True
@@ -311,7 +298,11 @@ class MikrotikHub:
 
     async def async_setup(self):
         """Set up the Mikrotik hub."""
-        if not await self.hass.async_add_executor_job(self.connect_to_hub):
+        try:
+            await self.hass.async_add_executor_job(self.connect_to_hub)
+        except CannotConnect:
+            pass
+        except LoginError:
             return False
 
         return True

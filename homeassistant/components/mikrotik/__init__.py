@@ -127,7 +127,7 @@ class Mikrotik:
     @property
     def signal_update_clients(self):
         """Signal update clients."""
-        return f"{DOMAIN}-{self.config_entry.entry_id}-update-cliens"
+        return f"{DOMAIN}-{self.config_entry.entry_id}-update-clients"
 
     @property
     def signal_options_update(self):
@@ -179,7 +179,8 @@ class Mikrotik:
             hub_device = device_registry.async_get_device(
                 {(DOMAIN, self.hubs[hub].serial_number)}, set()
             )
-            device_registry.async_remove_device(hub_device.id)
+            if hub_device:
+                device_registry.async_remove_device(hub_device.id)
 
     # async def async_add_options(self):
     #     """Populate default options for Mikrotik."""
