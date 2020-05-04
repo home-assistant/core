@@ -71,7 +71,7 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
             else:
                 _LOGGER.warning("Appliance type %s not implemented.", app.type)
                 continue
-            devices.append({"device": device, "entities": device.get_entities()})
+            devices.append({"device": device, "entities": device.get_entity_info()})
         self.devices = devices
         return devices
 
@@ -190,7 +190,7 @@ class Dryer(DeviceWithDoor, DeviceWithPrograms):
         {"name": "LaundryCare.Dryer.Program.AntiShrink"},
     ]
 
-    def get_entities(self):
+    def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
         program_sensors = self.get_program_sensors()
@@ -230,7 +230,7 @@ class Dishwasher(DeviceWithDoor, DeviceWithPrograms):
         {"name": "Dishcare.Dishwasher.Program.MaximumCleaning"},
     ]
 
-    def get_entities(self):
+    def get_entit(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
         program_sensors = self.get_program_sensors()
@@ -255,7 +255,7 @@ class Oven(DeviceWithDoor, DeviceWithPrograms):
 
     power_off_state = BSH_POWER_STANDBY
 
-    def get_entities(self):
+    def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
         program_sensors = self.get_program_sensors()
@@ -294,7 +294,7 @@ class Washer(DeviceWithDoor, DeviceWithPrograms):
         {"name": "LaundryCare.Washer.Program.WaterProof"},
     ]
 
-    def get_entities(self):
+    def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
         program_sensors = self.get_program_sensors()
@@ -328,7 +328,7 @@ class CoffeeMaker(DeviceWithPrograms):
 
     power_off_state = BSH_POWER_STANDBY
 
-    def get_entities(self):
+    def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
@@ -344,7 +344,7 @@ class Hood(DeviceWithPrograms):
         {"name": "Cooking.Common.Program.Hood.DelayedShutOff"},
     ]
 
-    def get_entities(self):
+    def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
@@ -354,7 +354,7 @@ class Hood(DeviceWithPrograms):
 class FridgeFreezer(DeviceWithDoor):
     """Fridge/Freezer class."""
 
-    def get_entities(self):
+    def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
         return {"binary_sensor": [door_entity]}
@@ -365,7 +365,7 @@ class Hob(DeviceWithPrograms):
 
     _programs = [{"name": "Cooking.Hob.Program.PowerLevelMode"}]
 
-    def get_entities(self):
+    def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
