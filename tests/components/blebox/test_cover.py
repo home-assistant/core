@@ -99,8 +99,8 @@ async def test_init_gatecontroller(gatecontroller, hass, config):
     """Test gateController default state."""
 
     feature_mock, entity_id = gatecontroller
-    entity = await async_setup_entity(hass, config, entity_id)
-    assert entity.unique_id == "BleBox-gateController-2bee34e750b8-position"
+    entry = await async_setup_entity(hass, config, entity_id)
+    assert entry.unique_id == "BleBox-gateController-2bee34e750b8-position"
 
     state = hass.states.get(entity_id)
     assert state.name == "gateController-position"
@@ -116,7 +116,7 @@ async def test_init_gatecontroller(gatecontroller, hass, config):
     assert state.state == STATE_UNKNOWN
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
-    device = device_registry.async_get(entity.device_id)
+    device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My gate controller"
     assert device.identifiers == {("blebox", "abcd0123ef5678")}
@@ -129,12 +129,12 @@ async def test_init_shutterbox(shutterbox, hass, config):
     """Test gateBox default state."""
 
     feature_mock, entity_id = shutterbox
-    entity = await async_setup_entity(hass, config, entity_id)
-    assert entity.unique_id == "BleBox-shutterBox-2bee34e750b8-position"
+    entry = await async_setup_entity(hass, config, entity_id)
+    assert entry.unique_id == "BleBox-shutterBox-2bee34e750b8-position"
 
     state = hass.states.get(entity_id)
     assert state.name == "shutterBox-position"
-    assert entity.device_class == DEVICE_CLASS_SHUTTER
+    assert entry.device_class == DEVICE_CLASS_SHUTTER
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
     assert supported_features & SUPPORT_OPEN
@@ -146,7 +146,7 @@ async def test_init_shutterbox(shutterbox, hass, config):
     assert state.state == STATE_UNKNOWN
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
-    device = device_registry.async_get(entity.device_id)
+    device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My shutter"
     assert device.identifiers == {("blebox", "abcd0123ef5678")}
@@ -159,8 +159,8 @@ async def test_init_gatebox(gatebox, hass, config):
     """Test cover default state."""
 
     feature_mock, entity_id = gatebox
-    entity = await async_setup_entity(hass, config, entity_id)
-    assert entity.unique_id == "BleBox-gateBox-1afe34db9437-position"
+    entry = await async_setup_entity(hass, config, entity_id)
+    assert entry.unique_id == "BleBox-gateBox-1afe34db9437-position"
 
     state = hass.states.get(entity_id)
     assert state.name == "gateBox-position"
@@ -178,7 +178,7 @@ async def test_init_gatebox(gatebox, hass, config):
     assert state.state == STATE_UNKNOWN
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
-    device = device_registry.async_get(entity.device_id)
+    device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My gatebox"
     assert device.identifiers == {("blebox", "abcd0123ef5678")}
