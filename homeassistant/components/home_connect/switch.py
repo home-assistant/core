@@ -16,8 +16,6 @@ from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ["homeconnect"]
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Home Connect switch."""
