@@ -230,7 +230,7 @@ aladdin_connect==0.3
 alarmdecoder==1.13.2
 
 # homeassistant.components.alpha_vantage
-alpha_vantage==2.1.3
+alpha_vantage==2.2.0
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
