@@ -117,11 +117,11 @@ class HomeConnectDevice:
 class DeviceWithPrograms(HomeConnectDevice):
     """Device with programs."""
 
-    _programs = []
+    PROGRAMS = []
 
     def get_programs_available(self):
         """Get the available programs."""
-        return self._programs
+        return self.PROGRAMS
 
     def get_program_switches(self):
         """Get a dictionary with info about program switches.
@@ -171,7 +171,7 @@ class DeviceWithDoor(HomeConnectDevice):
 class Dryer(DeviceWithDoor, DeviceWithPrograms):
     """Dryer class."""
 
-    _programs = [
+    PROGRAMS = [
         {"name": "LaundryCare.Dryer.Program.Cotton"},
         {"name": "LaundryCare.Dryer.Program.Synthetic"},
         {"name": "LaundryCare.Dryer.Program.Mix"},
@@ -205,7 +205,7 @@ class Dryer(DeviceWithDoor, DeviceWithPrograms):
 class Dishwasher(DeviceWithDoor, DeviceWithPrograms):
     """Dishwasher class."""
 
-    _programs = [
+    PROGRAMS = [
         {"name": "Dishcare.Dishwasher.Program.Auto1"},
         {"name": "Dishcare.Dishwasher.Program.Auto2"},
         {"name": "Dishcare.Dishwasher.Program.Auto3"},
@@ -245,7 +245,7 @@ class Dishwasher(DeviceWithDoor, DeviceWithPrograms):
 class Oven(DeviceWithDoor, DeviceWithPrograms):
     """Oven class."""
 
-    _programs = [
+    PROGRAMS = [
         {"name": "Cooking.Oven.Program.HeatingMode.PreHeating"},
         {"name": "Cooking.Oven.Program.HeatingMode.HotAir"},
         {"name": "Cooking.Oven.Program.HeatingMode.TopBottomHeating"},
@@ -270,7 +270,7 @@ class Oven(DeviceWithDoor, DeviceWithPrograms):
 class Washer(DeviceWithDoor, DeviceWithPrograms):
     """Washer class."""
 
-    _programs = [
+    PROGRAMS = [
         {"name": "LaundryCare.Washer.Program.Cotton"},
         {"name": "LaundryCare.Washer.Program.Cotton.CottonEco"},
         {"name": "LaundryCare.Washer.Program.EasyCare"},
@@ -309,7 +309,7 @@ class Washer(DeviceWithDoor, DeviceWithPrograms):
 class CoffeeMaker(DeviceWithPrograms):
     """Coffee maker class."""
 
-    _programs = [
+    PROGRAMS = [
         {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.Espresso"},
         {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.EspressoMacchiato"},
         {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.Coffee"},
@@ -338,7 +338,7 @@ class CoffeeMaker(DeviceWithPrograms):
 class Hood(DeviceWithPrograms):
     """Hood class."""
 
-    _programs = [
+    PROGRAMS = [
         {"name": "Cooking.Common.Program.Hood.Automatic"},
         {"name": "Cooking.Common.Program.Hood.Venting"},
         {"name": "Cooking.Common.Program.Hood.DelayedShutOff"},
@@ -363,7 +363,7 @@ class FridgeFreezer(DeviceWithDoor):
 class Hob(DeviceWithPrograms):
     """Hob class."""
 
-    _programs = [{"name": "Cooking.Hob.Program.PowerLevelMode"}]
+    PROGRAMS = [{"name": "Cooking.Hob.Program.PowerLevelMode"}]
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
