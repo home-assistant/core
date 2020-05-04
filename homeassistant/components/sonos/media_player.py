@@ -31,7 +31,13 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.const import ATTR_TIME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import (
+    ATTR_TIME,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.util.dt import utcnow
@@ -99,11 +105,13 @@ UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 class SonosData:
     """Storage class for platform global data."""
 
-    def __init__(self, hass):
+    def __init__(self):
         """Initialize the data."""
         self.entities = []
         self.discovered = []
         self.topology_condition = asyncio.Condition()
+        self.discovery_thread = None
+        self.hosts_heartbeat = None
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -116,7 +124,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
     if DATA_SONOS not in hass.data:
-        hass.data[DATA_SONOS] = SonosData(hass)
+        hass.data[DATA_SONOS] = SonosData()
 
     config = hass.data[SONOS_DOMAIN].get("media_player", {})
     _LOGGER.debug("Reached async_setup_entry, config=%s", config)
@@ -124,6 +132,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     advertise_addr = config.get(CONF_ADVERTISE_ADDR)
     if advertise_addr:
         pysonos.config.EVENT_ADVERTISE_IP = advertise_addr
+
+    def _stop_discovery(event):
+        data = hass.data[DATA_SONOS]
+        if data.discovery_thread:
+            data.discovery_thread.stop()
+            data.discovery_thread = None
+        if data.hosts_heartbeat:
+            data.hosts_heartbeat()
+            data.hosts_heartbeat = None
 
     def _discovery(now=None):
         """Discover players from network or configuration."""
@@ -162,10 +179,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         _LOGGER.warning("Failed to initialize '%s'", host)
 
             _LOGGER.debug("Tested all hosts")
-            hass.helpers.event.call_later(DISCOVERY_INTERVAL, _discovery)
+            hass.data[DATA_SONOS].hosts_heartbeat = hass.helpers.event.call_later(
+                DISCOVERY_INTERVAL, _discovery
+            )
         else:
             _LOGGER.debug("Starting discovery thread")
-            pysonos.discover_thread(
+            hass.data[DATA_SONOS].discovery_thread = pysonos.discover_thread(
                 _discovered_player,
                 interval=DISCOVERY_INTERVAL,
                 interface_addr=config.get(CONF_INTERFACE_ADDR),
@@ -173,6 +192,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     _LOGGER.debug("Adding discovery job")
     hass.async_add_executor_job(_discovery)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_discovery)
 
     platform = entity_platform.current_platform.get()
 
@@ -639,17 +659,14 @@ class SonosEntity(MediaPlayerEntity):
     def update_media_music(self, update_media_position, track_info):
         """Update state when playing music tracks."""
         self._media_duration = _timespan_secs(track_info.get("duration"))
-
-        position_info = self.soco.avTransport.GetPositionInfo(
-            [("InstanceID", 0), ("Channel", "Master")]
-        )
-        rel_time = _timespan_secs(position_info.get("RelTime"))
+        current_position = _timespan_secs(track_info.get("position"))
 
         # player started reporting position?
-        update_media_position |= rel_time is not None and self._media_position is None
+        if current_position is not None and self._media_position is None:
+            update_media_position = True
 
         # position jumped?
-        if rel_time is not None and self._media_position is not None:
+        if current_position is not None and self._media_position is not None:
             if self.state == STATE_PLAYING:
                 time_diff = utcnow() - self._media_position_updated_at
                 time_diff = time_diff.total_seconds()
@@ -658,12 +675,13 @@ class SonosEntity(MediaPlayerEntity):
 
             calculated_position = self._media_position + time_diff
 
-            update_media_position |= abs(calculated_position - rel_time) > 1.5
+            if abs(calculated_position - current_position) > 1.5:
+                update_media_position = True
 
-        if rel_time is None:
+        if current_position is None:
             self._clear_media_position()
         elif update_media_position:
-            self._media_position = rel_time
+            self._media_position = current_position
             self._media_position_updated_at = utcnow()
 
         self._media_image_url = track_info.get("album_art")
