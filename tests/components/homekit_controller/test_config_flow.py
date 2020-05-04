@@ -5,12 +5,12 @@ import aiohomekit
 from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
-import asynctest
-from asynctest import patch
 import pytest
 
 from homeassistant.components.homekit_controller import config_flow
 
+import tests.async_mock
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 PAIRING_START_FORM_ERRORS = [
@@ -63,15 +63,15 @@ def _setup_flow_handler(hass, pairing=None):
     flow.hass = hass
     flow.context = {}
 
-    finish_pairing = asynctest.CoroutineMock(return_value=pairing)
+    finish_pairing = tests.async_mock.AsyncMock(return_value=pairing)
 
     discovery = mock.Mock()
     discovery.device_id = "00:00:00:00:00:00"
-    discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
+    discovery.start_pairing = tests.async_mock.AsyncMock(return_value=finish_pairing)
 
     flow.controller = mock.Mock()
     flow.controller.pairings = {}
-    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+    flow.controller.find_ip_by_device_id = tests.async_mock.AsyncMock(
         return_value=discovery
     )
 
@@ -368,7 +368,7 @@ async def test_pair_abort_errors_on_finish(hass, controller, exception, expected
 
     # User initiates pairing - this triggers the device to show a pairing code
     # and then HA to show a pairing form
-    finish_pairing = asynctest.CoroutineMock(side_effect=exception("error"))
+    finish_pairing = tests.async_mock.AsyncMock(side_effect=exception("error"))
     with patch.object(device, "start_pairing", return_value=finish_pairing):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -408,7 +408,7 @@ async def test_pair_form_errors_on_finish(hass, controller, exception, expected)
 
     # User initiates pairing - this triggers the device to show a pairing code
     # and then HA to show a pairing form
-    finish_pairing = asynctest.CoroutineMock(side_effect=exception("error"))
+    finish_pairing = tests.async_mock.AsyncMock(side_effect=exception("error"))
     with patch.object(device, "start_pairing", return_value=finish_pairing):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 

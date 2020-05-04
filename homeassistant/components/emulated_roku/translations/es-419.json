@@ -7,7 +7,9 @@
             "user": {
                 "data": {
                     "host_ip": "IP del host",
-                    "name": "Nombre"
+                    "listen_port": "Puerto de escucha",
+                    "name": "Nombre",
+                    "upnp_bind_multicast": "Enlazar multidifusi\u00f3n (verdadero/falso)"
                 },
                 "title": "Definir la configuraci\u00f3n del servidor."
             }

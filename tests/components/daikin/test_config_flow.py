@@ -1,7 +1,6 @@
 # pylint: disable=redefined-outer-name
 """Tests for the Daikin config flow."""
 import asyncio
-from unittest.mock import patch
 
 import pytest
 
@@ -10,6 +9,7 @@ from homeassistant.components.daikin import config_flow
 from homeassistant.components.daikin.const import KEY_IP, KEY_MAC
 from homeassistant.const import CONF_HOST
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 MAC = "AABBCCDDEEFF"

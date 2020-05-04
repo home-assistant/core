@@ -190,7 +190,7 @@ class UniFiController:
         elif signal == SIGNAL_DATA and data:
 
             if DATA_EVENT in data:
-                if data[DATA_EVENT].event in (
+                if next(iter(data[DATA_EVENT])).event in (
                     WIRELESS_CLIENT_CONNECTED,
                     WIRELESS_GUEST_CONNECTED,
                 ):

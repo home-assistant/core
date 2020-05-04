@@ -15,7 +15,6 @@ from .const import (
     KEY_STATUS,
     KEY_SUBTYPE,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
-    STATUS_OFFLINE,
     STATUS_ONLINE,
 )
 from .entity import RachioDevice
@@ -41,13 +40,10 @@ def _create_entities(hass, config_entry):
 class RachioControllerBinarySensor(RachioDevice, BinarySensorEntity):
     """Represent a binary sensor that reflects a Rachio state."""
 
-    def __init__(self, controller, poll=True):
+    def __init__(self, controller):
         """Set up a new Rachio controller binary sensor."""
         super().__init__(controller)
-        if poll:
-            self._state = self._poll_update()
-        else:
-            self._state = None
+        self._state = None
 
     @property
     def is_on(self) -> bool:
@@ -63,10 +59,6 @@ class RachioControllerBinarySensor(RachioDevice, BinarySensorEntity):
 
         # For this device
         self._async_handle_update(args, kwargs)
-
-    @abstractmethod
-    def _poll_update(self, data=None) -> bool:
-        """Request the state from the API."""
 
     @abstractmethod
     def _async_handle_update(self, *args, **kwargs) -> None:
@@ -85,11 +77,6 @@ class RachioControllerBinarySensor(RachioDevice, BinarySensorEntity):
 
 class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
     """Represent a binary sensor that reflects if the controller is online."""
-
-    def __init__(self, controller):
-        """Set up a new Rachio controller online binary sensor."""
-        super().__init__(controller, poll=False)
-        self._state = self._poll_update(controller.init_data)
 
     @property
     def name(self) -> str:
@@ -111,18 +98,10 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
         """Return the name of an icon for this sensor."""
         return "mdi:wifi-strength-4" if self.is_on else "mdi:wifi-strength-off-outline"
 
-    def _poll_update(self, data=None) -> bool:
-        """Request the state from the API."""
-        if data is None:
-            data = self._controller.rachio.device.get(self._controller.controller_id)[1]
-
-        if data[KEY_STATUS] == STATUS_ONLINE:
-            return True
-        if data[KEY_STATUS] == STATUS_OFFLINE:
-            return False
-        _LOGGER.warning(
-            '"%s" reported in unknown state "%s"', self.name, data[KEY_STATUS]
-        )
+    async def async_added_to_hass(self):
+        """Get initial state."""
+        self._state = self._controller.init_data[KEY_STATUS] == STATUS_ONLINE
+        await super().async_added_to_hass()
 
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:

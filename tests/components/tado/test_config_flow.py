@@ -1,11 +1,11 @@
 """Test the Tado config flow."""
-from asynctest import MagicMock, patch
 import requests
 
 from homeassistant import config_entries, setup
 from homeassistant.components.tado.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
+from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 

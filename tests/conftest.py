@@ -2,7 +2,6 @@
 import functools
 import logging
 
-from asynctest import patch
 import pytest
 import requests_mock as _requests_mock
 
@@ -18,6 +17,8 @@ from homeassistant.components.websocket_api.http import URL
 from homeassistant.exceptions import ServiceNotFound
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
+
+from tests.async_mock import patch
 
 pytest.register_assert_rewrite("tests.common")
 

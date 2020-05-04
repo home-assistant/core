@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.homekit
-HAP-python==2.8.2
+HAP-python==2.8.3
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
@@ -22,6 +22,9 @@ PyTransportNSW==0.1.1
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
+
+# homeassistant.components.onvif
+WSDiscovery==2.0.0
 
 # homeassistant.components.yessssms
 YesssSMS==0.4.1
@@ -85,6 +88,9 @@ aiohue==2.1.0
 # homeassistant.components.notion
 aionotion==1.1.0
 
+# homeassistant.components.hunterdouglas_powerview
+aiopvapi==1.6.14
+
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==1.0.2
 
@@ -95,7 +101,7 @@ aiopylgtv==0.3.3
 aioswitcher==1.1.0
 
 # homeassistant.components.unifi
-aiounifi==18
+aiounifi==20
 
 # homeassistant.components.wwlln
 aiowwlln==2.0.2
@@ -141,13 +147,13 @@ bellows-homeassistant==0.15.2
 bomradarloop==0.1.4
 
 # homeassistant.components.braviatv
-bravia-tv==1.0.2
+bravia-tv==1.0.3
 
 # homeassistant.components.broadlink
 broadlink==0.13.2
 
 # homeassistant.components.brother
-brother==0.1.13
+brother==0.1.14
 
 # homeassistant.components.buienradar
 buienradar==1.0.4
@@ -273,7 +279,7 @@ ha-ffmpeg==2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.34.1
+hass-nabucasa==0.34.2
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.5
@@ -291,7 +297,7 @@ hole==0.5.1
 holidays==0.10.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200427.1
+home-assistant-frontend==20200427.2
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -366,7 +372,7 @@ nessclient==0.9.15
 netdisco==2.6.0
 
 # homeassistant.components.nexia
-nexia==0.9.2
+nexia==0.9.3
 
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.0.10
@@ -374,14 +380,20 @@ nsw-fuel-api-client==1.0.10
 # homeassistant.components.nuheat
 nuheat==0.3.0
 
+# homeassistant.components.numato
+numato-gpio==0.7.1
+
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.18.2
+numpy==1.18.4
 
 # homeassistant.components.google
 oauth2client==4.0.0
+
+# homeassistant.components.onvif
+onvif-zeep-async==0.2.0
 
 # homeassistant.components.openerz
 openerz-api==0.1.0
@@ -463,6 +475,9 @@ pyMetno==0.4.6
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.25
 
+# homeassistant.components.tibber
+pyTibber==0.14.0
+
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.4
 
@@ -537,7 +552,7 @@ pyheos==0.6.0
 pyhomematic==0.1.66
 
 # homeassistant.components.icloud
-pyicloud==0.9.6.1
+pyicloud==0.9.7
 
 # homeassistant.components.ipma
 pyipma==2.0.5
@@ -564,7 +579,7 @@ pylitejet==0.1
 pymailgunner==1.4
 
 # homeassistant.components.melcloud
-pymelcloud==2.4.1
+pymelcloud==2.5.2
 
 # homeassistant.components.somfy
 pymfy==0.7.1
@@ -649,8 +664,11 @@ python-miio==0.5.0.1
 # homeassistant.components.nest
 python-nest==4.1.0
 
+# homeassistant.components.zwave_mqtt
+python-openzwave-mqtt==1.0.1
+
 # homeassistant.components.synology_dsm
-python-synology==0.7.3
+python-synology==0.8.0
 
 # homeassistant.components.tado
 python-tado==0.8.1
@@ -701,7 +719,7 @@ ring_doorbell==0.6.0
 roku==4.1.0
 
 # homeassistant.components.roomba
-roombapy==1.5.1
+roombapy==1.5.2
 
 # homeassistant.components.yamaha
 rxv==0.6.0
@@ -740,7 +758,7 @@ somecomfort==0.5.2
 speak2mary==1.4.0
 
 # homeassistant.components.spotify
-spotipy==2.11.1
+spotipy==2.12.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql

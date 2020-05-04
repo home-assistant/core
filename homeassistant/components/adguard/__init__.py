@@ -206,4 +206,5 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
             "name": "AdGuard Home",
             "manufacturer": "AdGuard Team",
             "sw_version": self.hass.data[DOMAIN].get(DATA_ADGUARD_VERION),
+            "type": "service",
         }

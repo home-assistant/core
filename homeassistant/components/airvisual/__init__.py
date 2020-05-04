@@ -19,29 +19,22 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_CITY,
     CONF_COUNTRY,
     CONF_GEOGRAPHIES,
     CONF_INTEGRATION_TYPE,
-    DATA_CLIENT,
+    DATA_COORDINATOR,
     DOMAIN,
     INTEGRATION_TYPE_GEOGRAPHY,
     INTEGRATION_TYPE_NODE_PRO,
     LOGGER,
-    TOPIC_UPDATE,
 )
 
 PLATFORMS = ["air_quality", "sensor"]
-
-DATA_LISTENER = "listener"
 
 DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
 DEFAULT_GEOGRAPHY_SCAN_INTERVAL = timedelta(minutes=10)
@@ -97,7 +90,7 @@ def async_get_geography_id(geography_dict):
 
 async def async_setup(hass, config):
     """Set up the AirVisual component."""
-    hass.data[DOMAIN] = {DATA_CLIENT: {}, DATA_LISTENER: {}}
+    hass.data[DOMAIN] = {DATA_COORDINATOR: {}}
 
     if DOMAIN not in config:
         return True
@@ -167,34 +160,70 @@ async def async_setup_entry(hass, config_entry):
 
     if CONF_API_KEY in config_entry.data:
         _standardize_geography_config_entry(hass, config_entry)
-        airvisual = AirVisualGeographyData(
+
+        client = Client(api_key=config_entry.data[CONF_API_KEY], session=websession)
+
+        async def async_update_data():
+            """Get new data from the API."""
+            if CONF_CITY in config_entry.data:
+                api_coro = client.api.city(
+                    config_entry.data[CONF_CITY],
+                    config_entry.data[CONF_STATE],
+                    config_entry.data[CONF_COUNTRY],
+                )
+            else:
+                api_coro = client.api.nearest_city(
+                    config_entry.data[CONF_LATITUDE], config_entry.data[CONF_LONGITUDE],
+                )
+
+            try:
+                return await api_coro
+            except AirVisualError as err:
+                raise UpdateFailed(f"Error while retrieving data: {err}")
+
+        coordinator = DataUpdateCoordinator(
             hass,
-            Client(api_key=config_entry.data[CONF_API_KEY], session=websession),
-            config_entry,
+            LOGGER,
+            name="geography data",
+            update_interval=DEFAULT_GEOGRAPHY_SCAN_INTERVAL,
+            update_method=async_update_data,
         )
 
         # Only geography-based entries have options:
         config_entry.add_update_listener(async_update_options)
     else:
         _standardize_node_pro_config_entry(hass, config_entry)
-        airvisual = AirVisualNodeProData(hass, Client(session=websession), config_entry)
 
-    await airvisual.async_update()
+        client = Client(session=websession)
 
-    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = airvisual
+        async def async_update_data():
+            """Get new data from the API."""
+            try:
+                return await client.node.from_samba(
+                    config_entry.data[CONF_IP_ADDRESS],
+                    config_entry.data[CONF_PASSWORD],
+                    include_history=False,
+                    include_trends=False,
+                )
+            except NodeProError as err:
+                raise UpdateFailed(f"Error while retrieving data: {err}")
+
+        coordinator = DataUpdateCoordinator(
+            hass,
+            LOGGER,
+            name="Node/Pro data",
+            update_interval=DEFAULT_NODE_PRO_SCAN_INTERVAL,
+            update_method=async_update_data,
+        )
+
+    await coordinator.async_refresh()
+
+    hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id] = coordinator
 
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
-
-    async def refresh(event_time):
-        """Refresh data from AirVisual."""
-        await airvisual.async_update()
-
-    hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = async_track_time_interval(
-        hass, refresh, airvisual.scan_interval
-    )
 
     return True
 
@@ -248,28 +277,31 @@ async def async_unload_entry(hass, config_entry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
-        remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(config_entry.entry_id)
-        remove_listener()
+        hass.data[DOMAIN][DATA_COORDINATOR].pop(config_entry.entry_id)
 
     return unload_ok
 
 
 async def async_update_options(hass, config_entry):
     """Handle an options update."""
-    airvisual = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
-    airvisual.async_update_options(config_entry.options)
+    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
+    await coordinator.async_request_refresh()
 
 
 class AirVisualEntity(Entity):
     """Define a generic AirVisual entity."""
 
-    def __init__(self, airvisual):
+    def __init__(self, coordinator):
         """Initialize."""
-        self._airvisual = airvisual
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._icon = None
         self._unit = None
+        self.coordinator = coordinator
+
+    @property
+    def available(self):
+        """Return if entity is available."""
+        return self.coordinator.last_update_success
 
     @property
     def device_state_attributes(self):
@@ -295,9 +327,7 @@ class AirVisualEntity(Entity):
             self.update_from_latest_data()
             self.async_write_ha_state()
 
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, self._airvisual.topic_update, update)
-        )
+        self.async_on_remove(self.coordinator.async_add_listener(update))
 
         self.update_from_latest_data()
 
@@ -305,76 +335,3 @@ class AirVisualEntity(Entity):
     def update_from_latest_data(self):
         """Update the entity from the latest data."""
         raise NotImplementedError
-
-
-class AirVisualGeographyData:
-    """Define a class to manage data from the AirVisual cloud API."""
-
-    def __init__(self, hass, client, config_entry):
-        """Initialize."""
-        self._client = client
-        self._hass = hass
-        self.data = {}
-        self.geography_data = config_entry.data
-        self.geography_id = config_entry.unique_id
-        self.integration_type = INTEGRATION_TYPE_GEOGRAPHY
-        self.options = config_entry.options
-        self.scan_interval = DEFAULT_GEOGRAPHY_SCAN_INTERVAL
-        self.topic_update = TOPIC_UPDATE.format(config_entry.unique_id)
-
-    async def async_update(self):
-        """Get new data for all locations from the AirVisual cloud API."""
-        if CONF_CITY in self.geography_data:
-            api_coro = self._client.api.city(
-                self.geography_data[CONF_CITY],
-                self.geography_data[CONF_STATE],
-                self.geography_data[CONF_COUNTRY],
-            )
-        else:
-            api_coro = self._client.api.nearest_city(
-                self.geography_data[CONF_LATITUDE], self.geography_data[CONF_LONGITUDE],
-            )
-
-        try:
-            self.data[self.geography_id] = await api_coro
-        except AirVisualError as err:
-            LOGGER.error("Error while retrieving data: %s", err)
-            self.data[self.geography_id] = {}
-
-        LOGGER.debug("Received new geography data")
-        async_dispatcher_send(self._hass, self.topic_update)
-
-    @callback
-    def async_update_options(self, options):
-        """Update the data manager's options."""
-        self.options = options
-        async_dispatcher_send(self._hass, self.topic_update)
-
-
-class AirVisualNodeProData:
-    """Define a class to manage data from an AirVisual Node/Pro."""
-
-    def __init__(self, hass, client, config_entry):
-        """Initialize."""
-        self._client = client
-        self._hass = hass
-        self._password = config_entry.data[CONF_PASSWORD]
-        self.data = {}
-        self.integration_type = INTEGRATION_TYPE_NODE_PRO
-        self.ip_address = config_entry.data[CONF_IP_ADDRESS]
-        self.scan_interval = DEFAULT_NODE_PRO_SCAN_INTERVAL
-        self.topic_update = TOPIC_UPDATE.format(config_entry.data[CONF_IP_ADDRESS])
-
-    async def async_update(self):
-        """Get new data from the Node/Pro."""
-        try:
-            self.data = await self._client.node.from_samba(
-                self.ip_address, self._password, include_history=False
-            )
-        except NodeProError as err:
-            LOGGER.error("Error while retrieving Node/Pro data: %s", err)
-            self.data = {}
-            return
-
-        LOGGER.debug("Received new Node/Pro data")
-        async_dispatcher_send(self._hass, self.topic_update)

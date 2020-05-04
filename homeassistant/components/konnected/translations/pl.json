@@ -33,6 +33,7 @@
             "not_konn_panel": "Nie rozpoznano urz\u0105dzenia Konnected.io"
         },
         "error": {
+            "bad_host": "Nieprawid\u0142owy adres URL hosta zast\u0119puj\u0105cego dla interfejsu API",
             "few": "kilka",
             "many": "wiele",
             "one": "jeden",
@@ -87,7 +88,9 @@
             },
             "options_misc": {
                 "data": {
-                    "blink": "Miganie diody LED panelu podczas wysy\u0142ania zmiany stanu"
+                    "api_host": "Zast\u0119powanie adresu URL hosta API (opcjonalnie)",
+                    "blink": "Miganie diody LED panelu podczas wysy\u0142ania zmiany stanu",
+                    "override_api_host": "Zast\u0105p domy\u015blny adres URL API Home Assistant'a"
                 },
                 "description": "Wybierz po\u017c\u0105dane zachowanie dla swojego panelu",
                 "title": "R\u00f3\u017cne opcje"

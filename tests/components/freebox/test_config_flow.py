@@ -4,7 +4,6 @@ from aiofreepybox.exceptions import (
     HttpRequestError,
     InvalidTokenError,
 )
-from asynctest import CoroutineMock, patch
 import pytest
 
 from homeassistant import data_entry_flow
@@ -12,6 +11,7 @@ from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 
+from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 HOST = "myrouter.freeboxos.fr"
@@ -22,17 +22,17 @@ PORT = 1234
 def mock_controller_connect():
     """Mock a successful connection."""
     with patch("homeassistant.components.freebox.router.Freepybox") as service_mock:
-        service_mock.return_value.open = CoroutineMock()
-        service_mock.return_value.system.get_config = CoroutineMock(
+        service_mock.return_value.open = AsyncMock()
+        service_mock.return_value.system.get_config = AsyncMock(
             return_value={
                 "mac": "abcd",
                 "model_info": {"pretty_name": "Pretty Model"},
                 "firmware_version": "123",
             }
         )
-        service_mock.return_value.lan.get_hosts_list = CoroutineMock()
-        service_mock.return_value.connection.get_status = CoroutineMock()
-        service_mock.return_value.close = CoroutineMock()
+        service_mock.return_value.lan.get_hosts_list = AsyncMock()
+        service_mock.return_value.connection.get_status = AsyncMock()
+        service_mock.return_value.close = AsyncMock()
         yield service_mock
 
 

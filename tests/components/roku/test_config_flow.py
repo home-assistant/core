@@ -1,7 +1,6 @@
 """Test the Roku config flow."""
 from socket import gaierror as SocketGIAError
 
-from asynctest import patch
 from requests.exceptions import RequestException
 from requests_mock import Mocker
 from roku import RokuException
@@ -22,6 +21,7 @@ from homeassistant.data_entry_flow import (
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.components.roku import (
     HOST,
     SSDP_LOCATION,

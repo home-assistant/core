@@ -1,7 +1,6 @@
 """The tests for the Dark Sky weather component."""
 import re
 import unittest
-from unittest.mock import patch
 
 import forecastio
 from requests.exceptions import ConnectionError
@@ -11,6 +10,7 @@ from homeassistant.components import weather
 from homeassistant.setup import setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant, load_fixture
 
 
