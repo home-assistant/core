@@ -98,7 +98,7 @@ def gate_fixture():
 async def test_init_gatecontroller(gatecontroller, hass, config):
     """Test gateController default state."""
 
-    feature_mock, entity_id = gatecontroller
+    _, entity_id = gatecontroller
     entry = await async_setup_entity(hass, config, entity_id)
     assert entry.unique_id == "BleBox-gateController-2bee34e750b8-position"
 
@@ -128,7 +128,7 @@ async def test_init_gatecontroller(gatecontroller, hass, config):
 async def test_init_shutterbox(shutterbox, hass, config):
     """Test gateBox default state."""
 
-    feature_mock, entity_id = shutterbox
+    _, entity_id = shutterbox
     entry = await async_setup_entity(hass, config, entity_id)
     assert entry.unique_id == "BleBox-shutterBox-2bee34e750b8-position"
 
@@ -158,7 +158,7 @@ async def test_init_shutterbox(shutterbox, hass, config):
 async def test_init_gatebox(gatebox, hass, config):
     """Test cover default state."""
 
-    feature_mock, entity_id = gatebox
+    _, entity_id = gatebox
     entry = await async_setup_entity(hass, config, entity_id)
     assert entry.unique_id == "BleBox-gateBox-1afe34db9437-position"
 
