@@ -41,7 +41,7 @@ def _has_all_unique_bilds(value):
 
 
 DEVICE_SCHEMA = vol.All(
-    cv.deprecated(CONF_CERT, invalidation_version="0.113"),
+    cv.deprecated(CONF_CERT),
     vol.Schema(
         {
             vol.Required(CONF_HOST): str,
