@@ -8,8 +8,12 @@ import sys
 from typing import Optional
 from urllib.parse import urlparse
 
-from importlib_metadata import PackageNotFoundError, version
 import pkg_resources
+
+if sys.version_info >= (3, 8):
+    from importlib import metadata as importlib_metadata
+else:
+    import importlib_metadata
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +45,8 @@ def is_installed(package: str) -> bool:
         req = pkg_resources.Requirement.parse(urlparse(package).fragment)
 
     try:
-        return version(req.project_name) in req
-    except PackageNotFoundError:
+        return importlib_metadata.version(req.project_name) in req
+    except importlib_metadata.PackageNotFoundError:
         return False
 
 
