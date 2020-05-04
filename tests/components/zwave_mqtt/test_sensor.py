@@ -1,4 +1,7 @@
 """Test Z-Wave Sensors."""
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.zwave_mqtt.const import DOMAIN
+
 from .common import setup_zwave
 
 
@@ -29,3 +32,27 @@ async def test_sensor(hass, generic_data):
     )
     assert updated_entry != entry
     assert updated_entry.disabled is False
+
+
+async def test_sensor_enabled(hass, generic_data, sensor_msg):
+    """Test enabling an advanced sensor."""
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
+    entry = registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "1-36-1407375493578772",
+        suggested_object_id="water_sensor_6_instance_1_water",
+        disabled_by=None,
+    )
+    assert entry.disabled is False
+
+    receive_msg = await setup_zwave(hass, fixture=generic_data)
+    receive_msg(sensor_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entry.entity_id)
+    assert state is not None
+    assert state.state == "0"
+    assert state.attributes["label"] == "Clear"
