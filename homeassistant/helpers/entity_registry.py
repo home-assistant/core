@@ -34,7 +34,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, callback, split_entity_id, valid_entity_id
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
-from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 from homeassistant.util.yaml import load_yaml
 
@@ -491,7 +490,6 @@ class EntityRegistry:
             self.async_remove(entity_id)
 
 
-@bind_hass
 @singleton(DATA_REGISTRY)
 async def async_get_registry(hass: HomeAssistantType) -> EntityRegistry:
     """Create entity registry."""
