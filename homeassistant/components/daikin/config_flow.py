@@ -45,11 +45,14 @@ class FlowHandler(config_entries.ConfigFlow):
         """Create device."""
 
         # BRP07Cxx devices needs uuid together with key
-        if key is not None and not "":
+        if key is not None and key != "":
             uuid = str(uuid4())
         else:
             uuid = None
             key = None
+
+        if password == "":
+            password = None
 
         try:
             with timeout(TIMEOUT):
