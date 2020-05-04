@@ -26,6 +26,7 @@ from pyinsteon.groups import (
     ON_OFF_SWITCH_H,
     ON_OFF_SWITCH_MAIN,
     OPEN_CLOSE_SENSOR,
+    RELAY,
     SENSOR_MALFUNCTION,
     SMOKE_SENSOR,
     TEST_SENSOR,
@@ -136,4 +137,5 @@ STATE_NAME_LABEL_MAP = {
     ON_OFF_OUTLET_TOP: "Top",
     ON_OFF_OUTLET_BOTTOM: "Bottom",
     COVER: "Cover",
+    RELAY: "Relay",
 }
