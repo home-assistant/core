@@ -24,6 +24,3 @@ SIGNAL_CAST_REMOVED = "cast_removed"
 
 # Dispatcher signal fired when a Chromecast should show a Home Assistant Cast view.
 SIGNAL_HASS_CAST_SHOW_VIEW = "cast_show_view"
-
-# Cast media using a native Chromecast app
-SERVICE_CAST_APP = "cast_app"

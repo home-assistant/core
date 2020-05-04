@@ -10,16 +10,3 @@ show_lovelace_view:
     view_path:
       description: The path of the Lovelace view to show.
       example: downstairs
-
-cast_app:
-  description: Quickly cast media to a Chromecast using a native cast app
-  fields:
-    entity_id:
-      description: Chromecast entity to cast to.
-      example: "media_player.my_chromecast"
-    app_name:
-      description: Application name. One of <youtube|yleareena|supla>. More supported applications in the CastExtensions project.
-      example: youtube
-    data:
-      description: Data to cast. Must include a media_id at the least. Check the documentation for more info.
-      example: "{\"media_id\": \"dQw4w9WgXcQ\"}"

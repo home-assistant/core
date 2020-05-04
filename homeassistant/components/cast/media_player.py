@@ -1,6 +1,6 @@
 """Provide functionality to interact with Cast devices on the network."""
 import asyncio
-import functools as ft
+import json
 import logging
 from typing import Optional
 
@@ -41,7 +41,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -54,7 +53,6 @@ from .const import (
     DEFAULT_PORT,
     DOMAIN as CAST_DOMAIN,
     KNOWN_CHROMECAST_INFO_KEY,
-    SERVICE_CAST_APP,
     SIGNAL_CAST_DISCOVERED,
     SIGNAL_CAST_REMOVED,
     SIGNAL_HASS_CAST_SHOW_VIEW,
@@ -85,20 +83,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_IGNORE_CEC, default=[]): vol.All(cv.ensure_list, [cv.string]),
     }
 )
-
-CAST_APP_SCHEMA = {
-    vol.Required("app_name", default=""): cv.string,
-    vol.Required("data"): vol.Schema(
-        {
-            vol.Required("media_id"): cv.string,
-            vol.Optional("media_type"): cv.string,
-            vol.Optional("enqueue"): cv.boolean,
-            vol.Optional("index"): cv.string,
-            vol.Optional("extra1"): cv.string,
-            vol.Optional("extra2"): cv.string,
-        }
-    ),
-}
 
 
 @callback
@@ -142,11 +126,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     config = hass.data[CAST_DOMAIN].get("media_player", {})
     if not isinstance(config, list):
         config = [config]
-
-    platform = entity_platform.current_platform.get()
-    platform.async_register_entity_service(
-        SERVICE_CAST_APP, CAST_APP_SCHEMA, "async_cast_app",
-    )
 
     # no pending task
     done, _ = await asyncio.wait(
@@ -363,6 +342,24 @@ class CastDevice(MediaPlayerEntity):
             self._status_listener.invalidate()
             self._status_listener = None
 
+    def _cast_app(self, app_name, data, **kwargs):
+        """Launch an application and start playing media."""
+        try:
+            from importlib import import_module
+
+            extended_quick_play = import_module("castextensions").quick_play
+            extended_quick_play(self._chromecast, app_name, data)
+            return
+        except ImportError:
+            _LOGGER.info("Cast extensions not installed")
+        except NotImplementedError:
+            pass
+        try:
+            quick_play(self._chromecast, app_name, data)
+            return
+        except NotImplementedError:
+            _LOGGER.error("App %s not supported", app_name)
+
     # ========== Callbacks ==========
     def new_cast_status(self, cast_status):
         """Handle updates of the cast status."""
@@ -499,32 +496,13 @@ class CastDevice(MediaPlayerEntity):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL."""
-        # We do not want this to be forwarded to a group
-        self._chromecast.media_controller.play_media(media_id, media_type)
-
-    def cast_app(self, app_name, data, **kwargs):
-        """Launch an application and start playing media."""
-        try:
-            from importlib import import_module
-
-            extended_quick_play = import_module("castextensions").quick_play
-            extended_quick_play(self._chromecast, app_name, data)
-            return
-        except ImportError:
-            _LOGGER.info("Cast extensions not installed")
-        except NotImplementedError:
-            pass
-        try:
-            quick_play(self._chromecast, app_name, data)
-            return
-        except NotImplementedError:
-            _LOGGER.error("App %s not supported", app_name)
-
-    async def async_cast_app(self, app_name, data, **kwargs):
-        """Launch an application and start playing media."""
-        await self.hass.async_add_job(
-            ft.partial(self.cast_app, app_name, data, **kwargs)
-        )
+        if media_type == CAST_DOMAIN:
+            app_data = json.loads(media_id)
+            app_name = app_data.pop("app_name")
+            self._cast_app(app_name, app_data)
+        else:
+            # We do not want this to be forwarded to a group
+            self._chromecast.media_controller.play_media(media_id, media_type)
 
     # ========== Properties ==========
     @property
