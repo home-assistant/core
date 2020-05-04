@@ -212,18 +212,18 @@ class Camera(HomeAccessory, PyhapCamera):
         if not stream:
             _LOGGER.debug("No stream for session ID %s", session_id)
         _LOGGER.info("[%s] Stopping stream.", session_id)
-        close_ok = False
+
         try:
             await stream.close()
-            close_ok = True
+            return
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Failed to cleanly close stream.")
-        if not close_ok:
-            try:
-                await stream.kill()
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Failed to forcefully close stream.")
-        _LOGGER.debug("Stream process stopped.")
+            _LOGGER.exception("Failed to gracefully close stream.")
+
+        try:
+            await stream.kill()
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Failed to forcefully close stream.")
+        _LOGGER.debug("Stream process stopped forcefully.")
 
     def get_snapshot(self, image_size):
         """Return a jpeg of a snapshot from the camera."""

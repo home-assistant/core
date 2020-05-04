@@ -100,6 +100,8 @@ async def test_camera_stream_source_configured(hass, run_driver, events):
             "ARUCAQEBEDMD1QMXzEaatnKSQ2pxovYCNAEBAAIJAQECAgECAwEAAwsBAgAFAgLQAgMBHgQXAQFjAgQ768/RAwIrAQQEAAAAPwUCYgUDLAEBAwIMAQEBAgEAAwECBAEUAxYBAW4CBCzq28sDAhgABAQAAKBABgENBAEA"
         )
         await acc.stop_stream(session_info)
+        # Calling a second time should not throw
+        await acc.stop_stream(session_info)
         await hass.async_block_till_done()
 
     assert await hass.async_add_executor_job(acc.get_snapshot, 1024)
