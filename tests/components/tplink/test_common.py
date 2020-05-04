@@ -1,11 +1,12 @@
 """Common code tests."""
 from datetime import timedelta
-from unittest.mock import MagicMock
 
 from pyHS100 import SmartDeviceException
 
 from homeassistant.components.tplink.common import async_add_entities_retry
 from homeassistant.helpers.typing import HomeAssistantType
+
+from tests.async_mock import MagicMock
 
 
 async def test_async_add_entities_retry(hass: HomeAssistantType):

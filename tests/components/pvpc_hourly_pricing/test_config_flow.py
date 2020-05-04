@@ -1,6 +1,5 @@
 """Tests for the pvpc_hourly_pricing config_flow."""
 from datetime import datetime
-from unittest.mock import patch
 
 from pytz import timezone
 
@@ -11,6 +10,7 @@ from homeassistant.helpers import entity_registry
 
 from .conftest import check_valid_state
 
+from tests.async_mock import patch
 from tests.common import date_util
 from tests.test_util.aiohttp import AiohttpClientMocker
 

@@ -16,6 +16,7 @@
             },
             "user": {
                 "data": {
+                    "host": "Host",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
                     "ssl": "AdGuard Home utiliza un certificado SSL",

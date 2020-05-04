@@ -2,11 +2,11 @@
 import asyncio
 from datetime import timedelta
 import unittest
-from unittest.mock import patch
 
 from homeassistant.components.uptime.sensor import UptimeSensor
 from homeassistant.setup import setup_component
 
+from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 

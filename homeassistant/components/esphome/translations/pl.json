@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP jest ju\u017c skonfigurowane."
+            "already_configured": "ESP jest ju\u017c skonfigurowane.",
+            "already_in_progress": "Konfiguracja ESP jest ju\u017c w toku."
         },
         "error": {
             "connection_error": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z ESP. Upewnij si\u0119, \u017ce Tw\u00f3j plik YAML zawiera lini\u0119 'api:'.",

@@ -52,8 +52,7 @@ from homeassistant.const import (
     UNIT_PERCENTAGE,
 )
 
-from . import TYPES
-from .accessories import HomeAccessory
+from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_COOLING_THRESHOLD_TEMPERATURE,
     CHAR_CURRENT_HEATING_COOLING,

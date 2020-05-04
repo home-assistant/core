@@ -6,7 +6,8 @@
         },
         "error": {
             "faulty_credentials": "Credenciales de usuario incorrectas",
-            "service_unavailable": "No hay servicio disponible"
+            "service_unavailable": "No hay servicio disponible",
+            "unknown_client_mac": "Ning\u00fan cliente disponible en esa direcci\u00f3n MAC"
         },
         "step": {
             "user": {
@@ -19,6 +20,46 @@
                     "verify_ssl": "Controlador usando el certificado apropiado"
                 },
                 "title": "Configurar el controlador UniFi"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "client_control": {
+                "data": {
+                    "block_client": "Acceso controlado a la red de clientes",
+                    "new_client": "Agregar nuevo cliente para control de acceso a la red",
+                    "poe_clients": "Permitir control POE de clientes"
+                },
+                "description": "Configurar controles de cliente \n\nCree conmutadores para los n\u00fameros de serie para los que desea controlar el acceso a la red.",
+                "title": "Opciones UniFi 2/3"
+            },
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Tiempo en segundos desde la \u00faltima vez que se vio hasta que se consider\u00f3",
+                    "ignore_wired_bug": "Deshabilitar la l\u00f3gica de error con cable UniFi",
+                    "ssid_filter": "Seleccione SSID para rastrear clientes inal\u00e1mbricos en",
+                    "track_clients": "Rastree clientes de red",
+                    "track_devices": "Dispositivos de red de seguimiento (dispositivos Ubiquiti)",
+                    "track_wired_clients": "Incluir clientes de red cableada"
+                },
+                "description": "Configurar el seguimiento del dispositivo",
+                "title": "Opciones UniFi 1/3"
+            },
+            "simple_options": {
+                "data": {
+                    "block_client": "Acceso controlado a la red de clientes",
+                    "track_clients": "Rastree clientes en la red",
+                    "track_devices": "Rastree dispositivos de red (dispositivos Ubiquiti)"
+                },
+                "description": "Configurar la integraci\u00f3n de UniFi"
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Sensores de uso de ancho de banda para clientes de red"
+                },
+                "description": "Configurar sensores de estad\u00edsticas",
+                "title": "Opciones UniFi 3/3"
             }
         }
     }

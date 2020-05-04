@@ -12,6 +12,4 @@ CONF_COUNTRY = "country"
 CONF_GEOGRAPHIES = "geographies"
 CONF_INTEGRATION_TYPE = "integration_type"
 
-DATA_CLIENT = "client"
-
-TOPIC_UPDATE = f"airvisual_update_{0}"
+DATA_COORDINATOR = "coordinator"

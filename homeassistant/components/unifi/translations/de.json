@@ -51,6 +51,9 @@
                     "other": "andere"
                 }
             },
+            "simple_options": {
+                "description": "Konfigurieren Sie die UniFi-Integration"
+            },
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "Bandbreitennutzungssensoren f\u00fcr Netzwerkclients"

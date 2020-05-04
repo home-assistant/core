@@ -50,6 +50,7 @@ FLOWS = [
     "harmony",
     "heos",
     "hisense_aehw4a1",
+    "homekit",
     "homekit_controller",
     "homematicip_cloud",
     "huawei_lte",
@@ -90,6 +91,7 @@ FLOWS = [
     "nuheat",
     "nut",
     "nws",
+    "onvif",
     "opentherm_gw",
     "openuv",
     "owntracks",
@@ -123,6 +125,7 @@ FLOWS = [
     "tado",
     "tellduslive",
     "tesla",
+    "tibber",
     "toon",
     "totalconnect",
     "tplink",
@@ -144,5 +147,6 @@ FLOWS = [
     "wwlln",
     "xiaomi_miio",
     "zha",
-    "zwave"
+    "zwave",
+    "zwave_mqtt"
 ]

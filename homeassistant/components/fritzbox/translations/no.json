@@ -9,7 +9,7 @@
         "error": {
             "auth_failed": "Brukernavn og/eller passord er feil."
         },
-        "flow_title": "",
+        "flow_title": "AVM FRITZ!Box: {name}",
         "step": {
             "confirm": {
                 "data": {

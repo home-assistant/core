@@ -1,7 +1,4 @@
 """The tests for the Geofency device tracker platform."""
-# pylint: disable=redefined-outer-name
-from unittest.mock import Mock, patch
-
 import pytest
 
 from homeassistant import data_entry_flow
@@ -15,6 +12,9 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
+
+# pylint: disable=redefined-outer-name
+from tests.async_mock import Mock, patch
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811

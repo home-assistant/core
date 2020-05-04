@@ -428,9 +428,7 @@ class MqttLightJson(
                 if self._brightness is not None:
                     brightness = 255
                 else:
-                    brightness = kwargs.get(
-                        ATTR_BRIGHTNESS, self._brightness if self._brightness else 255
-                    )
+                    brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
                 rgb = color_util.color_hsv_to_RGB(
                     hs_color[0], hs_color[1], brightness / 255 * 100
                 )

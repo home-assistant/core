@@ -507,6 +507,7 @@ omit =
     homeassistant/components/ombi/*
     homeassistant/components/onewire/sensor.py
     homeassistant/components/onkyo/media_player.py
+    homeassistant/components/onvif/__init__.py
     homeassistant/components/onvif/camera.py
     homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
@@ -877,6 +878,10 @@ omit =
     homeassistant/components/zoneminder/*
     homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
+    homeassistant/components/zwave_mqtt/__init__.py
+    homeassistant/components/zwave_mqtt/discovery.py
+    homeassistant/components/zwave_mqtt/entity.py
+    homeassistant/components/zwave_mqtt/services.py
 
 [report]
 # Regexes for lines to exclude from consideration
