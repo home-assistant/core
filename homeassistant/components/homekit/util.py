@@ -36,6 +36,7 @@ from .const import (
     CONF_STREAM_ADDRESS,
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
+    CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
     DEFAULT_AUDIO_MAP,
@@ -44,6 +45,7 @@ from .const import (
     DEFAULT_MAX_FPS,
     DEFAULT_MAX_HEIGHT,
     DEFAULT_MAX_WIDTH,
+    DEFAULT_VIDEO_CODEC,
     DEFAULT_VIDEO_MAP,
     DEFAULT_VIDEO_PACKET_SIZE,
     DOMAIN,
@@ -90,6 +92,7 @@ CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
         vol.Optional(CONF_MAX_FPS, default=DEFAULT_MAX_FPS): cv.positive_int,
         vol.Optional(CONF_AUDIO_MAP, default=DEFAULT_AUDIO_MAP): cv.string,
         vol.Optional(CONF_VIDEO_MAP, default=DEFAULT_VIDEO_MAP): cv.string,
+        vol.Optional(CONF_VIDEO_CODEC, default=DEFAULT_VIDEO_CODEC): cv.string,
         vol.Optional(
             CONF_AUDIO_PACKET_SIZE, default=DEFAULT_AUDIO_PACKET_SIZE
         ): cv.positive_int,

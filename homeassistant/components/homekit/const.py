@@ -39,6 +39,7 @@ CONF_STREAM_SOURCE = "stream_source"
 CONF_SUPPORT_AUDIO = "support_audio"
 CONF_VIDEO_MAP = "video_map"
 CONF_VIDEO_PACKET_SIZE = "video_packet_size"
+CONF_VIDEO_CODEC = "video_codec"
 
 # #### Config Defaults ####
 DEFAULT_AUDIO_MAP = "0:a:0"
@@ -54,6 +55,7 @@ DEFAULT_SAFE_MODE = False
 DEFAULT_ZEROCONF_DEFAULT_INTERFACE = False
 DEFAULT_VIDEO_MAP = "0:v:0"
 DEFAULT_VIDEO_PACKET_SIZE = 1316
+DEFAULT_VIDEO_CODEC = "libx264"
 
 # #### Features ####
 FEATURE_ON_OFF = "on_off"

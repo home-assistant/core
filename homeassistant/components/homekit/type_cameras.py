@@ -24,6 +24,7 @@ from .const import (
     CONF_STREAM_ADDRESS,
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
+    CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
 )
@@ -33,7 +34,9 @@ _LOGGER = logging.getLogger(__name__)
 
 VIDEO_OUTPUT = (
     "-map {v_map} -an "
-    "-c:v libx264 -profile:v {v_profile} -tune zerolatency -pix_fmt yuv420p "
+    "-vcodec {v_codec} "
+    "{v_profile}"
+    "-tune zerolatency -pix_fmt yuv420p "
     "-r {fps} "
     "-b:v {v_max_bitrate}k -bufsize {v_bufsize}k -maxrate {v_max_bitrate}k "
     "-payload_type 99 "
@@ -171,15 +174,23 @@ class Camera(HomeAccessory, PyhapCamera):
             return False
         if "-i " not in input_source:
             input_source = "-i " + input_source
+        video_profile = ""
+        if self.config[CONF_VIDEO_CODEC] != "copy":
+            video_profile = (
+                "-profile:v "
+                + VIDEO_PROFILE_NAMES[
+                    int.from_bytes(stream_config["v_profile_id"], byteorder="big")
+                ]
+                + " "
+            )
         output_vars = stream_config.copy()
         output_vars.update(
             {
-                "v_profile": VIDEO_PROFILE_NAMES[
-                    int.from_bytes(stream_config["v_profile_id"], byteorder="big")
-                ],
+                "v_profile": video_profile,
                 "v_bufsize": stream_config["v_max_bitrate"] * 2,
                 "v_map": self.config[CONF_VIDEO_MAP],
                 "v_pkt_size": self.config[CONF_VIDEO_PACKET_SIZE],
+                "v_codec": self.config[CONF_VIDEO_CODEC],
                 "a_bufsize": stream_config["a_max_bitrate"] * 2,
                 "a_map": self.config[CONF_AUDIO_MAP],
                 "a_pkt_size": self.config[CONF_AUDIO_PACKET_SIZE],
