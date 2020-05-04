@@ -15,9 +15,11 @@ from .const import (
     BLID,
     COMPONENTS,
     CONF_BLID,
+    CONF_CERT,
     CONF_CONTINUOUS,
     CONF_DELAY,
     CONF_NAME,
+    DEFAULT_CERT,
     DEFAULT_CONTINUOUS,
     DEFAULT_DELAY,
     DOMAIN,
@@ -38,14 +40,18 @@ def _has_all_unique_bilds(value):
     return value
 
 
-DEVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_BLID): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_CONTINUOUS, default=DEFAULT_CONTINUOUS): bool,
-        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): int,
-    },
+DEVICE_SCHEMA = vol.All(
+    cv.deprecated(CONF_CERT, invalidation_version="0.113"),
+    vol.Schema(
+        {
+            vol.Required(CONF_HOST): str,
+            vol.Required(CONF_BLID): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Optional(CONF_CERT, default=DEFAULT_CERT): str,
+            vol.Optional(CONF_CONTINUOUS, default=DEFAULT_CONTINUOUS): bool,
+            vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): int,
+        },
+    ),
 )
 
 
