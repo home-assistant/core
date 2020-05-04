@@ -132,7 +132,7 @@ class EsphomeFan(EsphomeEntity, FanEntity):
         """Return the current fan direction."""
         if not self._static_info.supports_direction:
             return None
-        return self._state.direction
+        return _fan_directions.from_esphome(self._state.direction)
 
     @property
     def speed_list(self) -> Optional[List[str]]:
