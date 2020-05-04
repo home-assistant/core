@@ -1,4 +1,4 @@
-"""Test the National Weather Service (NWS) config flow."""
+"""Test the Met Office weather integration config flow."""
 import json
 
 from homeassistant import config_entries, setup
@@ -9,6 +9,7 @@ from .const import (
     TEST_API_KEY,
     TEST_LATITUDE_WAVERTREE,
     TEST_LONGITUDE_WAVERTREE,
+    TEST_MODE_3HOURLY,
     TEST_SITE_NAME_WAVERTREE,
 )
 
@@ -48,6 +49,7 @@ async def test_form(hass, requests_mock):
         "api_key": TEST_API_KEY,
         "latitude": TEST_LATITUDE_WAVERTREE,
         "longitude": TEST_LONGITUDE_WAVERTREE,
+        "mode": TEST_MODE_3HOURLY,
         "name": TEST_SITE_NAME_WAVERTREE,
     }
     await hass.async_block_till_done()
@@ -105,9 +107,9 @@ async def test_form_cannot_connect(hass, requests_mock):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknown_error(hass, mock_simple_manager_fail):
+async def test_form_unknown_error(hass, managerfail_mock):
     """Test we handle unknown error."""
-    mock_instance = mock_simple_manager_fail.return_value
+    mock_instance = managerfail_mock.return_value
     mock_instance.get_nearest_forecast_site.side_effect = ValueError
 
     result = await hass.config_entries.flow.async_init(
