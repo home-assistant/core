@@ -12,6 +12,7 @@ from pyisy.nodes import Group, Node, Nodes
 from pyisy.programs import Programs
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.climate.const import DOMAIN as CLIMATE
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.sensor import DOMAIN as SENSOR
@@ -105,6 +106,11 @@ def _check_for_insteon_type(
             # FanLinc, which has a light module as one of its nodes.
             if platform == FAN and subnode_id == SUBNODE_FANLINC_LIGHT:
                 hass_isy_data[ISY994_NODES][LIGHT].append(node)
+                return True
+
+            # Thermostats, which has a "Heat" and "Cool" sub-node on address 2 and 3
+            if platform == CLIMATE and str(node.address[-1]) in ["2", "3"]:
+                hass_isy_data[ISY994_NODES][BINARY_SENSOR].append(node)
                 return True
 
             # IOLincs which have a sensor and relay on 2 different nodes

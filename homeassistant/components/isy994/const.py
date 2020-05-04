@@ -22,6 +22,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_FAN,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    DOMAIN as CLIMATE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_MEDIUM,
@@ -109,7 +110,7 @@ DEFAULT_PROGRAM_STRING = "HA."
 KEY_ACTIONS = "actions"
 KEY_STATUS = "status"
 
-SUPPORTED_PLATFORMS = [BINARY_SENSOR, SENSOR, LOCK, FAN, COVER, LIGHT, SWITCH]
+SUPPORTED_PLATFORMS = [BINARY_SENSOR, SENSOR, LOCK, FAN, COVER, LIGHT, SWITCH, CLIMATE]
 SUPPORTED_PROGRAM_PLATFORMS = [BINARY_SENSOR, LOCK, FAN, COVER, SWITCH]
 
 SUPPORTED_BIN_SENS_CLASSES = ["moisture", "opening", "motion", "climate"]
@@ -260,6 +261,13 @@ NODE_FILTERS = {
             TYPE_CATEGORY_X10,
         ],
         FILTER_ZWAVE_CAT: ["121", "122", "123", "137", "141", "147"],
+    },
+    CLIMATE: {
+        FILTER_UOM: ["2"],
+        FILTER_STATES: ["heating", "cooling", "idle", "fan_only", "off"],
+        FILTER_NODE_DEF_ID: ["TempLinc", "Thermostat"],
+        FILTER_INSTEON_TYPE: ["4.8", TYPE_CATEGORY_CLIMATE],
+        FILTER_ZWAVE_CAT: ["140"],
     },
 }
 
@@ -551,6 +559,26 @@ UOM_TO_STATES = {
         12: "5x press off",
     },
 }
+
+ISY_HVAC_MODES = [
+    HVAC_MODE_OFF,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_FAN_ONLY,
+]
+
+HA_HVAC_TO_ISY = {
+    HVAC_MODE_OFF: "off",
+    HVAC_MODE_HEAT: "heat",
+    HVAC_MODE_COOL: "cool",
+    HVAC_MODE_HEAT_COOL: "auto",
+    HVAC_MODE_FAN_ONLY: "fan_only",
+    HVAC_MODE_AUTO: "program_auto",
+}
+
+HA_FAN_TO_ISY = {FAN_ON: "on", FAN_AUTO: "auto"}
 
 BINARY_SENSOR_DEVICE_TYPES_ISY = {
     DEVICE_CLASS_MOISTURE: ["16.8.", "16.13.", "16.14."],
