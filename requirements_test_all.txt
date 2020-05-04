@@ -38,6 +38,9 @@ adb-shell==0.1.3
 # homeassistant.components.adguard
 adguardhome==0.4.2
 
+# homeassistant.components.agent_dvr
+agent-py==0.0.20
+
 # homeassistant.components.geonetnz_quakes
 aio_geojson_geonetnz_quakes==0.12
 
