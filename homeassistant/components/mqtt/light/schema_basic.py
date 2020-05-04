@@ -732,11 +732,13 @@ class MqttLight(
             ATTR_BRIGHTNESS in kwargs
             and self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None
         ):
-            percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
+            brightness_normalized = kwargs[ATTR_BRIGHTNESS] / 255
             brightness_scale = self._config[CONF_BRIGHTNESS_SCALE]
             device_brightness = min(
-                round(percent_bright * brightness_scale), brightness_scale
+                round(brightness_normalized * brightness_scale), brightness_scale
             )
+            # Make sure the brightness is not rounded down to 0
+            device_brightness = max(device_brightness, 1)
             mqtt.async_publish(
                 self.hass,
                 self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC],
