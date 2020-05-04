@@ -83,8 +83,8 @@ async def test_full_user_flow_implementation(
     assert result["data"][SERVER_URL] == "http://example.local:8090/"
     assert result["title"] == "DESKTOP"
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
     entries = hass.config_entries.async_entries(config_flow.DOMAIN)
     assert entries[0].unique_id == "c0715bba-c2d0-48ef-9e3e-bc81c9ea4447"
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
