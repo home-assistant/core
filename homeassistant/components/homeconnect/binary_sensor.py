@@ -54,12 +54,12 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
         state = self.device.appliance.status.get(BSH_DOOR_STATE, {})
         if not state:
             self._state = None
-        elif state.get("value", None) in [
+        elif state.get("value") in [
             "BSH.Common.EnumType.DoorState.Closed",
             "BSH.Common.EnumType.DoorState.Locked",
         ]:
             self._state = False
-        elif state.get("value", None) == "BSH.Common.EnumType.DoorState.Open":
+        elif state.get("value") == "BSH.Common.EnumType.DoorState.Open":
             self._state = True
         else:
             _LOGGER.warning("Unexpected value for HomeConnect door state: %s", state)
