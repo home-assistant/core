@@ -72,7 +72,7 @@ class LM75(Entity):
                 self.hass, temp_celsius, TEMP_CELSIUS, PRECISION_TENTHS
             )
         else:
-            _LOGGER.warning("Problem reading temperature from sensor.")
+            _LOGGER.warning("Problem reading temperature from sensor")
 
     @staticmethod
     def regdata_to_float(regdata):
