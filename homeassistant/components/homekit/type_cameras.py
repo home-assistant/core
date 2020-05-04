@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from haffmpeg.core import HAFFmpeg
 from pyhap.camera import (
     VIDEO_CODEC_PARAM_LEVEL_TYPES,
     VIDEO_CODEC_PARAM_PROFILE_ID_TYPES,
@@ -159,14 +160,17 @@ class Camera(HomeAccessory, PyhapCamera):
 
     async def start_stream(self, session_info, stream_config):
         """Start a new stream with the given configuration."""
+        _LOGGER.debug(
+            "[%s] Starting stream with the following parameters: %s",
+            session_info["id"],
+            stream_config,
+        )
         input_source = await self._async_get_stream_source()
         if not input_source:
             _LOGGER.error("Camera has no stream source")
             return False
-
         if "-i " not in input_source:
             input_source = "-i " + input_source
-
         output_vars = stream_config.copy()
         output_vars.update(
             {
@@ -182,22 +186,44 @@ class Camera(HomeAccessory, PyhapCamera):
                 "a_encoder": AUDIO_ENCODER_OPUS,
             }
         )
-
-        self.start_stream_cmd = f"{self._ffmpeg.binary} {input_source} {VIDEO_OUTPUT}"
+        output = VIDEO_OUTPUT.format(**output_vars)
         if self.config[CONF_SUPPORT_AUDIO]:
-            self.start_stream_cmd += " " + AUDIO_OUTPUT
-
-        return await super().start_stream(session_info, output_vars)
+            output = output + " " + AUDIO_OUTPUT.format(**output_vars)
+        _LOGGER.debug("FFmpeg output settings: %s", output)
+        stream = HAFFmpeg(self._ffmpeg.binary, loop=self.driver.loop)
+        opened = await stream.open(
+            cmd=[], input_source=input_source, output=output, stdout_pipe=False
+        )
+        if not opened:
+            _LOGGER.error("Failed to open ffmpeg stream")
+            return False
+        session_info["stream"] = stream
+        _LOGGER.info(
+            "[%s] Started stream process - PID %d",
+            session_info["id"],
+            stream.process.pid,
+        )
+        return True
 
     async def stop_stream(self, session_info):
         """Stop the stream for the given ``session_id``."""
-        # If we do not trap the exception from an
-        # unclean shutdown they cannot resume streaming
-        # again until restart
+        session_id = session_info["id"]
+        stream = session_info.get("stream")
+        if not stream:
+            _LOGGER.debug("No stream for session ID %s", session_id)
+        _LOGGER.info("[%s] Stopping stream.", session_id)
+        close_ok = False
         try:
-            return await super().stop_stream(session_info)
+            await stream.close()
+            close_ok = True
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Failed to cleanly close stream.")
+        if not close_ok:
+            try:
+                await stream.kill()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Failed to forcefully close stream.")
+        _LOGGER.debug("Stream process stopped.")
 
     def get_snapshot(self, image_size):
         """Return a jpeg of a snapshot from the camera."""
