@@ -57,7 +57,9 @@ class TestEmulatedHue(unittest.TestCase):
 
         # Make sure the XML is parsable
         try:
-            ET.fromstring(result.text)
+            root = ET.fromstring(result.text)
+            ns = {"s": "urn:schemas-upnp-org:device-1-0"}
+            assert root.find("./s:device/s:serialNumber", ns).text == "001788FFFE23BFC2"
         except:  # noqa: E722 pylint: disable=bare-except
             self.fail("description.xml is not valid XML!")
 
