@@ -33,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 VIDEO_OUTPUT = (
     "-map {v_map} -an "
-    "-c:v libx264 -profile:v {v_profile} -pix_fmt yuv420p "
+    "-c:v libx264 -profile:v {v_profile} -tune zerolatency -pix_fmt yuv420p "
     "-r {fps} "
     "-b:v {v_max_bitrate}k -bufsize {v_bufsize}k -maxrate {v_max_bitrate}k "
     "-payload_type 99 "
