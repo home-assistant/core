@@ -217,7 +217,7 @@ async def test_attributes_screensaver(
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state.state == STATE_IDLE
 
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_APP
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) is None
     assert state.attributes.get(ATTR_APP_ID) is None
     assert state.attributes.get(ATTR_APP_NAME) == "Roku"
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "Roku"
