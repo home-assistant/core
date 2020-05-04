@@ -21,10 +21,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hc_api = hass.data[DOMAIN][config_entry.entry_id]
         for device_dict in hc_api.devices:
             entity_dicts = device_dict.get("entities", {}).get("sensor", [])
-            entity_list = [HomeConnectSensor(**d) for d in entity_dicts]
-            device = device_dict["device"]
-            device.entities += entity_list
-            entities += entity_list
+            entities += [HomeConnectSensor(**d) for d in entity_dicts]
         return entities
 
     async_add_entities(await hass.async_add_executor_job(get_entities), True)
