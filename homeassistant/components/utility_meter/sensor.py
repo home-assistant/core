@@ -222,7 +222,7 @@ class UtilityMeterSensor(RestoreEntity):
     async def async_calibrate(self, value):
         """Calibrate the Utility Meter with a given value."""
         _LOGGER.debug("Calibrate %s = %s", self._name, value)
-        self._state = Decimal(value)
+        self._state = Decimal(value).quantize(self._state)
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):
