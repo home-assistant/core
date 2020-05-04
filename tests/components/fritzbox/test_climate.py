@@ -1,6 +1,5 @@
 """Tests for AVM Fritz!Box climate component."""
 from datetime import timedelta
-from unittest.mock import Mock, call
 
 from requests.exceptions import HTTPError
 
@@ -42,6 +41,7 @@ import homeassistant.util.dt as dt_util
 
 from . import MOCK_CONFIG, FritzDeviceClimateMock
 
+from tests.async_mock import Mock, call
 from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake_name"

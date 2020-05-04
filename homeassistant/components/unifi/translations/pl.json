@@ -54,6 +54,9 @@
                     "other": "Inne"
                 }
             },
+            "simple_options": {
+                "description": "Konfigurowanie integracji z UniFi"
+            },
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "Stw\u00f3rz sensory wykorzystania przepustowo\u015bci przez klient\u00f3w sieciowych"

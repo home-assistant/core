@@ -11,8 +11,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
-from . import TYPES
-from .accessories import HomeAccessory
+from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_AIR_PARTICULATE_DENSITY,
     CHAR_AIR_QUALITY,

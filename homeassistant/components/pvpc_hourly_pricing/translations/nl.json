@@ -1,10 +1,16 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Integratie is al geconfigureerd met een bestaande sensor met dat tarief"
+        },
         "step": {
             "user": {
                 "data": {
-                    "name": "Sensornaam"
-                }
+                    "name": "Sensornaam",
+                    "tariff": "Gecontracteerd tarief (1, 2 of 3 periodes)"
+                },
+                "description": "Deze sensor gebruikt de offici\u00eble API om [uurtarief voor elektriciteit (PVPC)] (https://www.esios.ree.es/es/pvpc) in Spanje te krijgen. \n Bezoek voor een meer precieze uitleg de [integratiedocumenten] (https://www.home-assistant.io/integrations/pvpc_hourly_pricing/). \n\n Selecteer het gecontracteerde tarief op basis van het aantal factureringsperioden per dag: \n - 1 periode: normaal \n - 2 periodes: discriminatie (nachttarief) \n - 3 periodes: elektrische auto (nachttarief van 3 periodes)",
+                "title": "Tariefselectie"
             }
         }
     }

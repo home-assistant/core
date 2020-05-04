@@ -1,5 +1,6 @@
 """Template helper methods for rendering strings with Home Assistant data."""
 import base64
+import collections.abc
 from datetime import datetime
 from functools import wraps
 import json
@@ -503,7 +504,7 @@ def expand(hass: HomeAssistantType, *args: Any) -> Iterable[State]:
                 continue
         elif isinstance(entity, State):
             entity_id = entity.entity_id
-        elif isinstance(entity, Iterable):
+        elif isinstance(entity, collections.abc.Iterable):
             search += entity
             continue
         else:

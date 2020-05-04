@@ -1,10 +1,10 @@
 """Tests for the Google Hangouts config flow."""
 
-from unittest.mock import patch
-
 from homeassistant import data_entry_flow
 from homeassistant.components.hangouts import config_flow
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+
+from tests.async_mock import patch
 
 EMAIL = "test@test.com"
 PASSWORD = "1232456"

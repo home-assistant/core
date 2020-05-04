@@ -1,6 +1,4 @@
 """The tests the for Locative device tracker platform."""
-from unittest.mock import Mock, patch
-
 import pytest
 
 from homeassistant import data_entry_flow
@@ -10,6 +8,8 @@ from homeassistant.components.locative import DOMAIN, TRACKER_UPDATE
 from homeassistant.const import HTTP_OK, HTTP_UNPROCESSABLE_ENTITY
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import Mock, patch
 
 # pylint: disable=redefined-outer-name
 

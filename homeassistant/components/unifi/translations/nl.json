@@ -6,7 +6,8 @@
         },
         "error": {
             "faulty_credentials": "Foutieve gebruikersgegevens",
-            "service_unavailable": "Geen service beschikbaar"
+            "service_unavailable": "Geen service beschikbaar",
+            "unknown_client_mac": "Geen client beschikbaar op dat MAC-adres"
         },
         "step": {
             "user": {
@@ -26,8 +27,12 @@
         "step": {
             "client_control": {
                 "data": {
+                    "block_client": "Cli\u00ebnten met netwerktoegang",
+                    "new_client": "Voeg een nieuwe client toe voor netwerktoegangsbeheer",
                     "poe_clients": "Sta POE-controle van gebruikers toe"
-                }
+                },
+                "description": "Configureer clientbesturingen \n\n Maak schakelaars voor serienummers waarvoor u de netwerktoegang wilt beheren.",
+                "title": "UniFi-opties 2/3"
             },
             "device_tracker": {
                 "data": {
@@ -36,7 +41,9 @@
                     "track_clients": "Volg netwerkclients",
                     "track_devices": "Netwerkapparaten volgen (Ubiquiti-apparaten)",
                     "track_wired_clients": "Inclusief bedrade netwerkcli\u00ebnten"
-                }
+                },
+                "description": "Apparaattracking configureren",
+                "title": "UniFi-opties 1/3"
             },
             "init": {
                 "data": {
@@ -47,7 +54,8 @@
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "Maak bandbreedtegebruiksensoren voor netwerkclients"
-                }
+                },
+                "title": "UniFi-opties 3/3"
             }
         }
     }

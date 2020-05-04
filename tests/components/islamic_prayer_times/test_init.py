@@ -1,7 +1,6 @@
 """Tests for Islamic Prayer Times init."""
 
 from datetime import timedelta
-from unittest.mock import patch
 
 from prayer_times_calculator.exceptions import InvalidResponseError
 
@@ -17,6 +16,7 @@ from . import (
     PRAYER_TIMES_TIMESTAMPS,
 )
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 

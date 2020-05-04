@@ -1,7 +1,7 @@
 """Test Mikrotik setup process."""
 from datetime import timedelta
 
-from asynctest import CoroutineMock, patch
+from asynctest import CoroutineMock
 
 from homeassistant import config_entries
 from homeassistant.components import mikrotik
@@ -10,6 +10,7 @@ from homeassistant.setup import async_setup_component
 from . import ENTRY_DATA, OLD_ENTRY_CONFIG
 from .test_hub import setup_mikrotik_integration
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

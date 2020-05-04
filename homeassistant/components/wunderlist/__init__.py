@@ -85,7 +85,7 @@ class Wunderlist:
     def _list_by_name(self, name):
         """Return a list ID by name."""
         lists = self._client.get_lists()
-        tmp = [l for l in lists if l["title"] == name]
+        tmp = [lst for lst in lists if lst["title"] == name]
         if tmp:
             return tmp[0]["id"]
         return None

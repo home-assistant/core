@@ -1,6 +1,4 @@
 """The test for the NuHeat thermostat module."""
-from asynctest.mock import patch
-
 from homeassistant.components.nuheat.const import DOMAIN
 from homeassistant.setup import async_setup_component
 
@@ -12,6 +10,8 @@ from .mocks import (
     _get_mock_thermostat_schedule_temporary_hold,
     _mock_get_config,
 )
+
+from tests.async_mock import patch
 
 
 async def test_climate_thermostat_run(hass):

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Ett ov\u00e4ntat fel intr\u00e4ffade. Kontrollera loggarna f\u00f6r mer information."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP-adress",
+                    "name": "Namn"
+                }
+            }
+        }
+    }
+}

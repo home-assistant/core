@@ -19,7 +19,7 @@
                 "title": "Fullf\u00f8r Sammenkoblings Prosessen"
             },
             "pairing_complete": {
-                "description": "Din VIZIO SmartCast enheten er n\u00e5 koblet til Hjemme-Assistent.",
+                "description": "Din VIZIO SmartCast enheten er n\u00e5 koblet til Home Assistant.",
                 "title": "Sammenkoblingen Er Fullf\u00f8rt"
             },
             "pairing_complete_import": {

@@ -18,8 +18,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 
-from . import TYPES
-from .accessories import HomeAccessory
+from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_CURRENT_SECURITY_STATE,
     CHAR_TARGET_SECURITY_STATE,

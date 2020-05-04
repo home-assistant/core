@@ -2,7 +2,6 @@
 # from copy import copy
 import itertools
 
-from asynctest import patch
 import librouteros
 import pytest
 
@@ -29,6 +28,7 @@ from . import (
     MOCK_OPTIONS,
 )
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 DATA_RETURN = {

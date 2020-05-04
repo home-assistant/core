@@ -4,7 +4,6 @@ from datetime import timedelta
 
 from aiounifi.controller import MESSAGE_CLIENT_REMOVED, SIGNAL_CONNECTION_STATE
 from aiounifi.websocket import SIGNAL_DATA, STATE_DISCONNECTED, STATE_RUNNING
-from asynctest import patch
 
 from homeassistant import config_entries
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
@@ -23,6 +22,8 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .test_controller import ENTRY_CONFIG, setup_unifi_integration
+
+from tests.async_mock import patch
 
 CLIENT_1 = {
     "essid": "ssid",
