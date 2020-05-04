@@ -1702,7 +1702,7 @@ class AisColudData:
                     + home_dir
                     + "zigbee2mqtt/data/."
                 )
-                _LOGGER.error("c: " + c)
+                _LOGGER.debug("c: " + c)
                 ret = subprocess.check_output(
                     "7za a -mmt=2 "
                     + password

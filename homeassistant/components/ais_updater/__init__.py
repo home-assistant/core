@@ -16,8 +16,8 @@ import sys
 
 import aiohttp
 import async_timeout
-import voluptuous as vol
 import requests
+import voluptuous as vol
 
 from homeassistant.components import ais_cloud
 from homeassistant.components.ais_dom import ais_global
@@ -327,7 +327,7 @@ def get_current_android_apk_version():
     try:
         apk_dom_version = subprocess.check_output(
             'su -c "dumpsys package pl.sviete.dom | grep versionName"',
-            shell=True,
+            shell=True,  # nosec
             timeout=15,
         )
         apk_dom_version = (
@@ -339,7 +339,7 @@ def get_current_android_apk_version():
 
         apk_launcher_version = subprocess.check_output(
             'su -c "dumpsys package launcher.sviete.pl.domlauncherapp | grep versionName"',
-            shell=True,
+            shell=True,  # nosec
             timeout=15,
         )
         apk_launcher_version = (
@@ -351,7 +351,7 @@ def get_current_android_apk_version():
 
         apk_tts_version = subprocess.check_output(
             'su -c "dumpsys package com.google.android.tts | grep versionName"',
-            shell=True,
+            shell=True,  # nosec
             timeout=15,
         )
         apk_tts_version = (
@@ -363,7 +363,7 @@ def get_current_android_apk_version():
 
         apk_stt_version = subprocess.check_output(
             'su -c "dumpsys package com.google.android.googlequicksearchbox | grep versionName"',
-            shell=True,
+            shell=True,  # nosec
             timeout=15,
         )
         apk_stt_version = (
@@ -644,7 +644,7 @@ def get_package_version(package) -> str:
             )
             + "/manifest.json"
         )
-        with open(path, "r") as f:
+        with open(path) as f:
             manifest = json.load(f)
         _LOGGER.info(str(manifest["requirements"][0]))
         return manifest["requirements"][0]
@@ -792,25 +792,25 @@ def grant_write_to_sdcard():
     try:
         ret_output = subprocess.check_output(
             'su -c "pm grant launcher.sviete.pl.domlauncherapp android.permission.READ_EXTERNAL_STORAGE"',
-            shell=True,
+            shell=True,  # nosec
             timeout=15,
         )
         _LOGGER.info(str(ret_output.decode("utf-8")))
         ret_output = subprocess.check_output(
             'su -c "pm grant launcher.sviete.pl.domlauncherapp android.permission.WRITE_EXTERNAL_STORAGE"',
-            shell=True,
+            shell=True,  # nosec
             timeout=15,
         )
         _LOGGER.info(str(ret_output.decode("utf-8")))
         ret_output = subprocess.check_output(
             'su -c "pm grant pl.sviete.dom android.permission.READ_EXTERNAL_STORAGE"',
-            shell=True,
+            shell=True,  # nosec
             timeout=15,
         )
         _LOGGER.info(str(ret_output.decode("utf-8")))
         ret_output = subprocess.check_output(
             'su -c "pm grant pl.sviete.dom android.permission.WRITE_EXTERNAL_STORAGE"',
-            shell=True,
+            shell=True,  # nosec
             timeout=15,
         )
         _LOGGER.info(str(ret_output.decode("utf-8")))
@@ -928,7 +928,7 @@ def do_install_upgrade(hass, call):
             file_script = str(os.path.dirname(__file__))
             file_script += "/scripts/release_script.sh"
             apt_process = subprocess.Popen(
-                file_script, shell=True, stdout=None, stderr=None
+                file_script, shell=True, stdout=None, stderr=None  # nosec
             )
             apt_process.wait()
             _LOGGER.info("release_script, return: " + str(apt_process.returncode))
@@ -957,7 +957,8 @@ def do_install_upgrade(hass, call):
             )
             # rm current zigbee
             ret = subprocess.check_output(
-                "rm -rf " + ais_global.G_AIS_HOME_DIR + "/zigbee2mqtt", shell=True
+                "rm -rf " + ais_global.G_AIS_HOME_DIR + "/zigbee2mqtt",
+                shell=True,  # nosec
             )  # nosec
 
             # unzip zigbee
@@ -991,7 +992,8 @@ def do_install_upgrade(hass, call):
 
             # delete config backup
             ret = subprocess.check_output(
-                "rm -rf " + ais_global.G_AIS_HOME_DIR + "/data-backup", shell=True
+                "rm -rf " + ais_global.G_AIS_HOME_DIR + "/data-backup",
+                shell=True,  # nosec
             )  # nosec
 
             # the update was OK set the version info
@@ -1010,7 +1012,9 @@ def do_install_upgrade(hass, call):
     # pip
     update_dir = hass.config.path(UPDATER_DOWNLOAD_FOLDER)
     if reinstall_dom_app:
-        # install
+        # update pip
+        run_shell_command(["pip", "install", "pip", "-U"])
+        # install via pip
         run_shell_command(
             [
                 "pip",
@@ -1089,7 +1093,7 @@ def do_applay_the_fix(hass, call):
             try:
                 do_fix_scripts_permissions()
                 fix_process = subprocess.Popen(
-                    file_script, shell=True, stdout=None, stderr=None
+                    file_script, shell=True, stdout=None, stderr=None  # nosec
                 )
                 fix_process.wait()
                 _LOGGER.info("fix_script, return: " + str(fix_process.returncode))
