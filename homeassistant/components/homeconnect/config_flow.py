@@ -9,8 +9,9 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class OAuth2FlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
+class OAuth2FlowHandler(
+    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
+):
     """Config flow to handle Home Connect OAuth2 authentication."""
 
     DOMAIN = DOMAIN
