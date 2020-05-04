@@ -11,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -26,6 +27,7 @@ from .const import (
     ISY994_ISY,
     ISY994_NODES,
     ISY994_PROGRAMS,
+    MANUFACTURER,
     SUPPORTED_PLATFORMS,
     SUPPORTED_PROGRAM_PLATFORMS,
     UNDO_UPDATE_LISTENER,
@@ -156,6 +158,7 @@ async def async_setup_entry(
     _LOGGER.info(repr(isy.clock))
 
     hass_isy_data[ISY994_ISY] = isy
+    await _async_get_or_create_isy_device_in_registry(hass, entry, isy)
 
     # Load platforms for the devices in the ISY controller that we support.
     for platform in SUPPORTED_PLATFORMS:
@@ -201,6 +204,22 @@ def _async_import_options_from_data_if_missing(
 
     if modified:
         hass.config_entries.async_update_entry(entry, options=options)
+
+
+async def _async_get_or_create_isy_device_in_registry(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry, isy
+) -> None:
+    device_registry = await dr.async_get_registry(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, isy.configuration["uuid"])},
+        identifiers={(DOMAIN, isy.configuration["uuid"])},
+        manufacturer=MANUFACTURER,
+        name=isy.configuration["name"],
+        model=isy.configuration["model"],
+        sw_version=isy.configuration["firmware"],
+    )
 
 
 async def async_unload_entry(
