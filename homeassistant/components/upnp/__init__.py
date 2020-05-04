@@ -1,24 +1,18 @@
 """Open ports in your router for Home Assistant and provide statistics."""
 from ipaddress import ip_address
 from operator import itemgetter
-from typing import Mapping
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import get_local_ip
 
 from .const import (
-    CONF_ENABLE_PORT_MAPPING,
-    CONF_ENABLE_SENSORS,
-    CONF_HASS,
     CONF_LOCAL_IP,
-    CONF_PORTS,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
     DISCOVERY_LOCATION,
@@ -34,59 +28,9 @@ NOTIFICATION_ID = "upnp_notification"
 NOTIFICATION_TITLE = "UPnP/IGD Setup"
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_ENABLE_PORT_MAPPING, default=False): cv.boolean,
-                vol.Optional(CONF_ENABLE_SENSORS, default=True): cv.boolean,
-                vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
-                vol.Optional(CONF_PORTS, default={}): vol.Schema(
-                    {vol.Any(CONF_HASS, cv.port): vol.Any(CONF_HASS, cv.port)}
-                ),
-            }
-        )
-    },
+    {DOMAIN: vol.Schema({vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string)})},
     extra=vol.ALLOW_EXTRA,
 )
-
-
-def _substitute_hass_ports(ports: Mapping, hass_port: int = None) -> Mapping:
-    """
-    Substitute 'hass' for the hass_port.
-
-    This triggers a warning when hass_port is None.
-    """
-    ports = ports.copy()
-
-    # substitute 'hass' for hass_port, both keys and values
-    if CONF_HASS in ports:
-        if hass_port is None:
-            _LOGGER.warning(
-                "Could not determine Home Assistant http port, "
-                "not setting up port mapping from %s to %s. "
-                "Enable the http-component.",
-                CONF_HASS,
-                ports[CONF_HASS],
-            )
-        else:
-            ports[hass_port] = ports[CONF_HASS]
-        del ports[CONF_HASS]
-
-    for port in ports:
-        if ports[port] == CONF_HASS:
-            if hass_port is None:
-                _LOGGER.warning(
-                    "Could not determine Home Assistant http port, "
-                    "not setting up port mapping from %s to %s. "
-                    "Enable the http-component.",
-                    port,
-                    ports[port],
-                )
-                del ports[port]
-            else:
-                ports[port] = hass_port
-
-    return ports
 
 
 async def async_discover_and_construct(
@@ -137,7 +81,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         "config": conf,
         "devices": {},
         "local_ip": conf.get(CONF_LOCAL_IP, local_ip),
-        "ports": conf.get(CONF_PORTS),
     }
 
     # Only start if set up via configuration.yaml.
@@ -154,8 +97,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
     """Set up UPnP/IGD device from a config entry."""
     _LOGGER.debug("async_setup_entry, config_entry: %s", config_entry.data)
-    domain_data = hass.data[DOMAIN]
-    conf = domain_data["config"]
 
     # discover and construct
     udn = config_entry.data.get(CONFIG_ENTRY_UDN)
@@ -165,7 +106,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         _LOGGER.info("Unable to create UPnP/IGD, aborting")
         raise ConfigEntryNotReady
 
-    # 'register'/save device
+    # Save device
     hass.data[DOMAIN]["devices"][device.udn] = device
 
     # Ensure entry has proper unique_id.
@@ -174,7 +115,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
             entry=config_entry, unique_id=device.unique_id,
         )
 
-    # create device registry entry
+    # Create device registry entry.
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -185,35 +126,11 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         model=device.model_name,
     )
 
-    # set up sensors
-    if conf.get(CONF_ENABLE_SENSORS):
-        _LOGGER.debug("Enabling sensors")
-
-        # register sensor setup handlers
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-        )
-
-    # set up port mapping
-    if conf.get(CONF_ENABLE_PORT_MAPPING):
-        _LOGGER.debug("Enabling port mapping")
-        local_ip = domain_data[CONF_LOCAL_IP]
-        ports = conf.get(CONF_PORTS, {})
-
-        hass_port = None
-        if hasattr(hass, "http"):
-            hass_port = hass.http.server_port
-
-        ports = _substitute_hass_ports(ports, hass_port=hass_port)
-        await device.async_add_port_mappings(ports, local_ip)
-
-    # set up port mapping deletion on stop-hook
-    async def delete_port_mapping(event):
-        """Delete port mapping on quit."""
-        _LOGGER.debug("Deleting port mappings")
-        await device.async_delete_port_mappings()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, delete_port_mapping)
+    # Create sensors.
+    _LOGGER.debug("Enabling sensors")
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
+    )
 
     return True
 
@@ -222,13 +139,5 @@ async def async_unload_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry
 ) -> bool:
     """Unload a UPnP/IGD device from a config entry."""
-    udn = config_entry.data[CONFIG_ENTRY_UDN]
-    device = hass.data[DOMAIN]["devices"][udn]
-
-    # remove port mapping
-    _LOGGER.debug("Deleting port mappings")
-    await device.async_delete_port_mappings()
-
-    # remove sensors
     _LOGGER.debug("Deleting sensors")
     return await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
