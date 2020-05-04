@@ -449,19 +449,19 @@ async def async_test_flash_from_hass(hass, cluster, entity_id, flash):
 
 @patch(
     "zigpy.zcl.clusters.lighting.Color.request",
-    new=CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+    new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
 @patch(
     "zigpy.zcl.clusters.general.Identify.request",
-    new=CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+    new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
 @patch(
     "zigpy.zcl.clusters.general.LevelControl.request",
-    new=CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+    new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
 @patch(
     "zigpy.zcl.clusters.general.OnOff.request",
-    new=CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+    new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
 async def test_zha_group_light_entity(
     hass, device_light_1, device_light_2, device_light_3, coordinator
