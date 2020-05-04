@@ -8,7 +8,6 @@ import attr
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, callback
-from homeassistant.loader import bind_hass
 
 from .debounce import Debouncer
 from .singleton import singleton
@@ -422,7 +421,7 @@ def async_cleanup(
 @callback
 def async_setup_cleanup(hass: HomeAssistantType, dev_reg: DeviceRegistry) -> None:
     """Clean up device registry when entities removed."""
-    from . import entity_registry
+    from . import entity_registry  # pylint: disable=import-outside-toplevel
 
     async def cleanup():
         """Cleanup."""
