@@ -35,7 +35,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        ports = serial.tools.list_ports.comports(include_links=False)
+        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
         list_of_ports = [
             f"{p}, s/n: {p.serial_number or 'n/a'}"
             + (f" - {p.manufacturer}" if p.manufacturer else "")
@@ -49,7 +49,9 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_pick_radio()
 
             port = ports[list_of_ports.index(user_selection)]
-            dev_path = get_serial_by_id(port.device)
+            dev_path = await self.hass.async_add_executor_job(
+                get_serial_by_id, port.device
+            )
             auto_detected_data = await self.detect_radios(dev_path)
             if auto_detected_data is not None:
                 title = f"{port.description}, s/n: {port.serial_number or 'n/a'}"
@@ -83,7 +85,9 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._device_path = user_input.get(CONF_DEVICE_PATH)
             if await app_cls.probe(user_input):
-                serial_by_id = get_serial_by_id(user_input[CONF_DEVICE_PATH])
+                serial_by_id = await self.hass.async_add_executor_job(
+                    get_serial_by_id, user_input[CONF_DEVICE_PATH]
+                )
                 user_input[CONF_DEVICE_PATH] = serial_by_id
                 return self.async_create_entry(
                     title=user_input[CONF_DEVICE_PATH],
