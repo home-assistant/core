@@ -48,7 +48,11 @@ class IslamicPrayerTimeSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.client.prayer_times_info.get(self.sensor_type).isoformat()
+        return (
+            self.client.prayer_times_info.get(self.sensor_type)
+            .astimezone(self.hass.config.time_zone)
+            .isoformat()
+        )
 
     @property
     def should_poll(self):

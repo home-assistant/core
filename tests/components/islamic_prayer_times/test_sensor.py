@@ -25,5 +25,7 @@ async def test_islamic_prayer_times_sensors(hass):
                 hass.states.get(
                     f"sensor.{prayer}_{islamic_prayer_times.const.SENSOR_TYPES[prayer]}"
                 ).state
-                == PRAYER_TIMES_TIMESTAMPS[prayer].isoformat()
+                == PRAYER_TIMES_TIMESTAMPS[prayer]
+                .astimezone(hass.config.time_zone)
+                .isoformat()
             )
