@@ -56,12 +56,14 @@ async def test_service_show_view_dashboard(hass):
 async def test_use_cloud_url(hass):
     """Test that we fall back to cloud url."""
     hass.config.api = Mock(base_url="http://example.com")
+    hass.config.components.add("cloud")
+
     await home_assistant_cast.async_setup_ha_cast(hass, MockConfigEntry())
     calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
 
     with patch(
         "homeassistant.components.cloud.async_remote_ui_url",
-        return_value="https://something.nabu.acas",
+        return_value="https://something.nabu.casa",
     ):
         await hass.services.async_call(
             "cast",
@@ -72,4 +74,4 @@ async def test_use_cloud_url(hass):
 
     assert len(calls) == 1
     controller = calls[0][0]
-    assert controller.hass_url == "https://something.nabu.acas"
+    assert controller.hass_url == "https://something.nabu.casa"
