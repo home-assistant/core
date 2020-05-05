@@ -30,7 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .config_flow import DOMAIN
+from .config_flow import CONF_RECEIVER_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     receiver = hass.data[DOMAIN][config_entry.entry_id]
     for receiver_zone in receiver.zones.values():
-        receiver_device_id = config_entry.data["receiver_id"]
+        receiver_device_id = config_entry.data[CONF_RECEIVER_ID]
         unique_id = f"{receiver_device_id}-{receiver_zone.zone}"
         entities.append(DenonDevice(receiver_zone, receiver_device_id, unique_id))
     _LOGGER.info(

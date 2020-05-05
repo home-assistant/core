@@ -6,7 +6,7 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_TIMEOUT
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .config_flow import CONF_SHOW_ALL_SOURCES, CONF_ZONE2, CONF_ZONE3, DOMAIN
+from .config_flow import CONF_RECEIVER_ID, CONF_SHOW_ALL_SOURCES, CONF_ZONE2, CONF_ZONE3, DOMAIN
 from .receiver import ConnectDenonAVR
 
 SERVICE_GET_COMMAND = "get_command"
@@ -61,7 +61,7 @@ async def async_setup_entry(
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.data["receiver_id"])},
+        identifiers={(DOMAIN, entry.data[CONF_RECEIVER_ID])},
         manufacturer=receiver.manufacturer,
         name=receiver.name,
         model=f"{receiver.model_name}-{receiver.receiver_type}",
