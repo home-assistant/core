@@ -167,6 +167,11 @@ class FanEntity(ToggleEntity):
         return None
 
     @property
+    def oscillating(self):
+        """Return whether or not the fan is currently oscillating."""
+        return None
+
+    @property
     def capability_attributes(self):
         """Return capability attributes."""
         if self.supported_features & SUPPORT_SET_SPEED:
