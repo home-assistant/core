@@ -1,18 +1,29 @@
 """The tests for the denonavr media player platform."""
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components import media_player
 from homeassistant.components.denonavr import ATTR_COMMAND, SERVICE_GET_COMMAND
-from homeassistant.components.denonavr.config_flow import DOMAIN, CONF_SHOW_ALL_SOURCES, CONF_ZONE2, CONF_ZONE3
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_TIMEOUT, CONF_PLATFORM
-from homeassistant.setup import async_setup_component
+from homeassistant.components.denonavr.config_flow import (
+    CONF_RECEIVER_ID,
+    CONF_SHOW_ALL_SOURCES,
+    CONF_ZONE2,
+    CONF_ZONE3,
+    DOMAIN,
+)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_TIMEOUT
 
-TEST_NAME = "fake"
-TEST_RECEIVER_ID = "model-serialnumeber123"
+from tests.common import MockConfigEntry
+
 TEST_HOST = "1.2.3.4"
+TEST_NAME = "Test_Receiver"
+TEST_MODEL = "model5"
+TEST_SERIALNUMBER = "123456789"
+TEST_MANAFACTURER = "Denon"
+TEST_RECEIVER_TYPE = "avr-x"
+TEST_ZONE = "Main"
+TEST_UNIQUE_ID = f"{TEST_MODEL}-{TEST_SERIALNUMBER}"
 TEST_TIMEOUT = 2
 TEST_SHOW_ALL_SOURCES = False
 TEST_ZONE2 = False
@@ -20,38 +31,27 @@ TEST_ZONE3 = False
 ENTITY_ID = f"{media_player.DOMAIN}.{TEST_NAME}"
 
 
-#@pytest.fixture(name="client")
-#def client_fixture():
-#    """Patch of client library for tests."""
-#    with patch(
-#        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR",
-#        autospec=True,
-#    ) as mock_client_class, patch(
-#        "homeassistant.components.denonavr.receiver.denonavr.discover"
-#    ):
-#        mock_client_class.return_value.name = TEST_NAME
-#        mock_client_class.return_value.zones = {"Main": mock_client_class.return_value}
-#        yield mock_client_class.return_value
+@pytest.fixture(name="client")
+def client_fixture():
+    """Patch of client library for tests."""
+    with patch(
+        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR", autospec=True,
+    ) as mock_client_class, patch(
+        "homeassistant.components.denonavr.receiver.denonavr.discover"
+    ):
+        mock_client_class.return_value.name = TEST_NAME
+        mock_client_class.return_value.model_name = TEST_MODEL
+        mock_client_class.return_value.serial_number = TEST_SERIALNUMBER
+        mock_client_class.return_value.manufacturer = TEST_MANAFACTURER
+        mock_client_class.return_value.receiver_type = TEST_RECEIVER_TYPE
+        mock_client_class.return_value.zone = TEST_ZONE
+        mock_client_class.return_value.input_func_list = []
+        mock_client_class.return_value.sound_mode_list = []
+        mock_client_class.return_value.zones = {"Main": mock_client_class.return_value}
+        yield mock_client_class.return_value
 
-def get_mock_receiver():
-    """Return a mock receiver instance."""
-    receiver = Mock()
-    zone_main = Mock()
-    
-    zone_main.name = TEST_NAME
-    zone_main.netaudio_func_list = []
-    zone_main.sound_mode_list = []
-    zone_main.input_func_list = []
-    zone_main.playing_func_list = []
-    zone_main.volume = 20
-    zone_main.send_get_command = MagicMock()
-    
-    receiver.name = TEST_NAME
-    receiver.zones = {"Main": zone_main}
 
-    return receiver
-
-async def setup_denonavr(hass, mock_receiver):
+async def setup_denonavr(hass):
     """Initialize media_player for tests."""
     entry_data = {
         CONF_HOST: TEST_HOST,
@@ -59,37 +59,33 @@ async def setup_denonavr(hass, mock_receiver):
         CONF_SHOW_ALL_SOURCES: TEST_SHOW_ALL_SOURCES,
         CONF_ZONE2: TEST_ZONE2,
         CONF_ZONE3: TEST_ZONE3,
-        "receiver_id": TEST_RECEIVER_ID,
+        CONF_RECEIVER_ID: TEST_UNIQUE_ID,
     }
-    
-    config_entry = config_entries.ConfigEntry(
-        1,
-        DOMAIN,
-        "Mock Title",
-        entry_data,
-        TEST_NAME,
-        config_entries.CONN_CLASS_LOCAL_POLL,
-        system_options={},
-    )
-    
-    assert await async_setup_component(hass, DOMAIN, {}) is True
 
-    hass.data[DOMAIN] = {config_entry.entry_id: mock_receiver}
-    await hass.config_entries.async_forward_entry_setup(config_entry, "media_player")
-    # To flush out the service call to update the group
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=TEST_UNIQUE_ID, data=entry_data,
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
+    state = hass.states.get(ENTITY_ID)
 
-async def test_get_command(hass):
+    assert state
+    assert state.name == TEST_NAME
+
+
+async def test_get_command(hass, client):
     """Test generic command functionality."""
-    mock_receiver = get_mock_receiver()
-    await setup_denonavr(hass, mock_receiver)
+    await setup_denonavr(hass)
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_COMMAND: "test",
+        ATTR_COMMAND: "test_command",
     }
     await hass.services.async_call(DOMAIN, SERVICE_GET_COMMAND, data)
     await hass.async_block_till_done()
 
-    mock_receiver.send_get_command.assert_called_with("test")
+    client.send_get_command.assert_called_with("test_command")
