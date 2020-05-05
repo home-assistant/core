@@ -1551,7 +1551,7 @@ pysensibo==1.0.3
 pyserial-asyncio==0.4
 
 # homeassistant.components.acer_projector
-pyserial==3.1.1
+pyserial==3.4
 
 # homeassistant.components.sesame
 pysesame2==1.0.1
