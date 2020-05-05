@@ -76,12 +76,12 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             entry, data={**entry.data, CONF_MAC: network.macs}
         )
 
+    if not entry.update_listeners:
+        entry.add_update_listener(_async_update_listener)
+
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")
     )
-
-    if not entry.update_listeners:
-        entry.add_update_listener(_async_update_listener)
 
     return True
 
