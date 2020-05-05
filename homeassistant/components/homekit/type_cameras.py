@@ -190,7 +190,7 @@ class Camera(HomeAccessory, PyhapCamera):
         output_vars.update(
             {
                 "v_profile": video_profile,
-                "v_bufsize": stream_config["v_max_bitrate"] * 2,
+                "v_bufsize": stream_config["v_max_bitrate"] * 4,
                 "v_map": self.config[CONF_VIDEO_MAP],
                 "v_pkt_size": self.config[CONF_VIDEO_PACKET_SIZE],
                 "v_codec": self.config[CONF_VIDEO_CODEC],
