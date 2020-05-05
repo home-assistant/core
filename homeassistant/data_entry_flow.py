@@ -98,7 +98,7 @@ class FlowManager(abc.ABC):
                 "flow_id": flow.flow_id,
                 "handler": flow.handler,
                 "context": flow.context,
-                "step": flow.cur_step["step_id"],
+                "step_id": flow.cur_step["step_id"],
             }
             for flow in self._progress.values()
             if flow.cur_step is not None

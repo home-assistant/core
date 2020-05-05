@@ -393,7 +393,7 @@ async def test_get_progress_index(hass, hass_ws_client):
         {
             "flow_id": form["flow_id"],
             "handler": "test",
-            "step": "account",
+            "step_id": "account",
             "context": {"source": "hassio"},
         }
     ]
