@@ -429,7 +429,7 @@ class EntityRegistry:
         if data is not None:
             for entity in data["entities"]:
                 # Some old installations can have some bad entities.
-                # Filter htem out as they cause errors down the line.
+                # Filter them out as they cause errors down the line.
                 # Can be removed in Jan 2021
                 if not valid_entity_id(entity["entity_id"]):
                     continue
