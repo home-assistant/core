@@ -116,14 +116,22 @@ def _custom_tasks(template, info) -> None:
             title=info.name,
             config={
                 "step": {
-                    "user": {"title": "Connect to the device", "data": {"host": "Host"}}
+                    "user": {
+                        "data": {
+                            "host": "[%key:common::config_flow::data::host%]",
+                            "username": "[%key:common::config_flow::data::username%]",
+                            "password": "[%key:common::config_flow::data::password%]",
+                        },
+                    }
                 },
                 "error": {
-                    "cannot_connect": "Failed to connect, please try again",
-                    "invalid_auth": "Invalid authentication",
-                    "unknown": "Unexpected error",
+                    "cannot_connect": "[%key:common::config_flow::abort::cannot_connect%]",
+                    "invalid_auth": "[%key:common::config_flow::abort::invalid_auth%]",
+                    "unknown": "[%key:common::config_flow::abort::unknown%]",
                 },
-                "abort": {"already_configured": "Device is already configured"},
+                "abort": {
+                    "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+                },
             },
         )
 
@@ -133,11 +141,13 @@ def _custom_tasks(template, info) -> None:
             title=info.name,
             config={
                 "step": {
-                    "confirm": {"description": f"Do you want to set up {info.name}?"}
+                    "confirm": {
+                        "description": "[%key:common::config_flow::description::confirm_setup%]",
+                    }
                 },
                 "abort": {
-                    "single_instance_allowed": f"Only a single configuration of {info.name} is possible.",
-                    "no_devices_found": f"No {info.name} devices found on the network.",
+                    "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+                    "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
                 },
             },
         )
@@ -148,13 +158,16 @@ def _custom_tasks(template, info) -> None:
             title=info.name,
             config={
                 "step": {
-                    "pick_implementation": {"title": "Pick Authentication Method"}
+                    "pick_implementation": {
+                        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+                    }
                 },
                 "abort": {
-                    "missing_configuration": "The {info.name} component is not configured. Please follow the documentation."
+                    "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+                    "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
                 },
                 "create_entry": {
-                    "default": f"Successfully authenticated with {info.name}."
+                    "default": "[%key:common::config_flow::create_entry::authenticated%]"
                 },
             },
         )

@@ -7,7 +7,7 @@
     "error": {
       "timeout": "Timeout connecting to Tibber",
       "connection_error": "Error connecting to Tibber",
-      "invalid_access_token": "Invalid access token"
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]"
     },
     "step": {
       "user": {
