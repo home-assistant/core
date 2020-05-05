@@ -1,5 +1,5 @@
 """Test the DenonAVR config flow."""
-from unittest.mock import patch
+from tests.async_mock import patch
 
 import pytest
 

@@ -1,5 +1,5 @@
 """The tests for the denonavr media player platform."""
-from unittest.mock import patch
+from tests.async_mock import patch
 
 import pytest
 
