@@ -119,6 +119,17 @@ async def test_state(hass):
     assert state is not None
     assert state.state == "100"
 
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CALIBRATE_METER,
+        {ATTR_ENTITY_ID: "sensor.energy_bill_midpeak", ATTR_VALUE: "0.123"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.energy_bill_midpeak")
+    assert state is not None
+    assert state.state == "0.123"
+
 
 async def test_net_consumption(hass):
     """Test utility sensor state."""

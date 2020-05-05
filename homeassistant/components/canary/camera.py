@@ -29,6 +29,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Canary sensors."""
+    if discovery_info is not None:
+        return
+
     data = hass.data[DATA_CANARY]
     devices = []
 

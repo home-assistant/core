@@ -1342,7 +1342,7 @@ pyhomeworks==0.0.6
 pyialarm==0.3
 
 # homeassistant.components.icloud
-pyicloud==0.9.6.1
+pyicloud==0.9.7
 
 # homeassistant.components.intesishome
 pyintesishome==1.7.4
@@ -1825,7 +1825,7 @@ rocketchat-API==0.6.1
 roku==4.1.0
 
 # homeassistant.components.roomba
-roombapy==1.5.2
+roombapy==1.5.3
 
 # homeassistant.components.rova
 rova==0.1.0
