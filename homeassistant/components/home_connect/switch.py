@@ -132,7 +132,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         ):
             self._state = True
         elif (
-            self.device.appliance.status.get(BSH_POWER_STATE, {}).get("value", None)
+            self.device.appliance.status.get(BSH_POWER_STATE, {}).get("value")
             == self.device.power_off_state
         ):
             self._state = False
