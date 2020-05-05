@@ -78,7 +78,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
     def update(self):
         """Update the switch's status."""
         state = self.device.appliance.status.get(BSH_ACTIVE_PROGRAM, {})
-        if state.get("value", None) == self.program_name:
+        if state.get("value") == self.program_name:
             self._state = True
         else:
             self._state = False
