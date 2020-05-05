@@ -43,7 +43,7 @@ CONF_VIDEO_MAP = "video_map"
 CONF_VIDEO_PACKET_SIZE = "video_packet_size"
 
 # #### Config Defaults ####
-DEFAULT_AUDIO_CODEC = "libopus -application lowdelay"
+DEFAULT_AUDIO_CODEC = "libopus"
 DEFAULT_AUDIO_MAP = "0:a:0"
 DEFAULT_AUDIO_PACKET_SIZE = 188
 DEFAULT_AUTO_START = True

@@ -50,6 +50,7 @@ VIDEO_OUTPUT = (
 AUDIO_OUTPUT = (
     "-map {a_map} -vn "
     "-c:a {a_encoder} "
+    "{a_application}"
     "-ac 1 -ar {a_sample_rate}k "
     "-b:a {a_max_bitrate}k -bufsize {a_bufsize}k "
     "-payload_type 110 "
@@ -182,6 +183,9 @@ class Camera(HomeAccessory, PyhapCamera):
                 ]
                 + " "
             )
+        audio_application = ""
+        if self.config[CONF_AUDIO_CODEC] == "libopus":
+            audio_application = "-application lowdelay "
         output_vars = stream_config.copy()
         output_vars.update(
             {
@@ -194,6 +198,7 @@ class Camera(HomeAccessory, PyhapCamera):
                 "a_map": self.config[CONF_AUDIO_MAP],
                 "a_pkt_size": self.config[CONF_AUDIO_PACKET_SIZE],
                 "a_encoder": self.config[CONF_AUDIO_CODEC],
+                "a_application": audio_application,
             }
         )
         output = VIDEO_OUTPUT.format(**output_vars)

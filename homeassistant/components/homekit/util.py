@@ -69,6 +69,8 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 MAX_PORT = 65535
+VALID_VIDEO_CODECS = ["libx264", "h264_omx", "copy"]
+VALID_AUDIO_CODECS = ["libopus", "copy"]
 
 BASIC_INFO_SCHEMA = vol.Schema(
     {
@@ -88,14 +90,18 @@ CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
         vol.Optional(CONF_STREAM_ADDRESS): vol.All(ipaddress.ip_address, cv.string),
         vol.Optional(CONF_STREAM_SOURCE): cv.string,
-        vol.Optional(CONF_AUDIO_CODEC, default=DEFAULT_AUDIO_CODEC): cv.string,
+        vol.Optional(CONF_AUDIO_CODEC, default=DEFAULT_AUDIO_CODEC): vol.In(
+            VALID_AUDIO_CODECS
+        ),
         vol.Optional(CONF_SUPPORT_AUDIO, default=False): cv.boolean,
         vol.Optional(CONF_MAX_WIDTH, default=DEFAULT_MAX_WIDTH): cv.positive_int,
         vol.Optional(CONF_MAX_HEIGHT, default=DEFAULT_MAX_HEIGHT): cv.positive_int,
         vol.Optional(CONF_MAX_FPS, default=DEFAULT_MAX_FPS): cv.positive_int,
         vol.Optional(CONF_AUDIO_MAP, default=DEFAULT_AUDIO_MAP): cv.string,
         vol.Optional(CONF_VIDEO_MAP, default=DEFAULT_VIDEO_MAP): cv.string,
-        vol.Optional(CONF_VIDEO_CODEC, default=DEFAULT_VIDEO_CODEC): cv.string,
+        vol.Optional(CONF_VIDEO_CODEC, default=DEFAULT_VIDEO_CODEC): vol.In(
+            VALID_VIDEO_CODECS
+        ),
         vol.Optional(
             CONF_AUDIO_PACKET_SIZE, default=DEFAULT_AUDIO_PACKET_SIZE
         ): cv.positive_int,
