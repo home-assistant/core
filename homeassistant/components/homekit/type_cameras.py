@@ -194,7 +194,7 @@ class Camera(HomeAccessory, PyhapCamera):
                 "v_map": self.config[CONF_VIDEO_MAP],
                 "v_pkt_size": self.config[CONF_VIDEO_PACKET_SIZE],
                 "v_codec": self.config[CONF_VIDEO_CODEC],
-                "a_bufsize": stream_config["a_max_bitrate"] * 2,
+                "a_bufsize": stream_config["a_max_bitrate"] * 4,
                 "a_map": self.config[CONF_AUDIO_MAP],
                 "a_pkt_size": self.config[CONF_AUDIO_PACKET_SIZE],
                 "a_encoder": self.config[CONF_AUDIO_CODEC],
