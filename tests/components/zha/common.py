@@ -32,7 +32,7 @@ class FakeEndpoint:
         self.model = model
         self.profile_id = zigpy.profiles.zha.PROFILE_ID
         self.device_type = None
-        self.request = AsyncMock()
+        self.request = AsyncMock(return_value=[0])
 
     def add_input_cluster(self, cluster_id):
         """Add an input cluster."""
@@ -60,6 +60,7 @@ class FakeEndpoint:
 
 
 FakeEndpoint.add_to_group = zigpy_ep.add_to_group
+FakeEndpoint.remove_from_group = zigpy_ep.remove_from_group
 
 
 def patch_cluster(cluster):

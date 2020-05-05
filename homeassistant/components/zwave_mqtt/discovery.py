@@ -5,6 +5,30 @@ from openzwavemqtt.const import CommandClass, ValueGenre, ValueType
 from . import const
 
 DISCOVERY_SCHEMAS = (
+    {  # All other text/numeric sensors
+        const.DISC_COMPONENT: "sensor",
+        const.DISC_VALUES: {
+            const.DISC_PRIMARY: {
+                const.DISC_COMMAND_CLASS: (
+                    CommandClass.SENSOR_MULTILEVEL,
+                    CommandClass.METER,
+                    CommandClass.ALARM,
+                    CommandClass.SENSOR_ALARM,
+                    CommandClass.INDICATOR,
+                    CommandClass.BATTERY,
+                    CommandClass.NOTIFICATION,
+                    CommandClass.BASIC,
+                ),
+                const.DISC_TYPE: (
+                    ValueType.DECIMAL,
+                    ValueType.INT,
+                    ValueType.STRING,
+                    ValueType.BYTE,
+                    ValueType.LIST,
+                ),
+            }
+        },
+    },
     {  # Switch platform
         const.DISC_COMPONENT: "switch",
         const.DISC_GENERIC_DEVICE_CLASS: (
