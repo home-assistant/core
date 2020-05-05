@@ -20,9 +20,12 @@ SUPPORTED_MANUFACTURERS = ["Denon", "DENON", "Marantz"]
 CONF_SHOW_ALL_SOURCES = "show_all_sources"
 CONF_ZONE2 = "zone2"
 CONF_ZONE3 = "zone3"
+CONF_RECEIVER_ID = "receiver_id"
 
 DEFAULT_SHOW_SOURCES = False
 DEFAULT_TIMEOUT = 2
+DEFAULT_ZONE2 = False
+DEFAULT_ZONE3 = False
 
 CONFIG_SCHEMA = vol.Schema({vol.Optional(CONF_HOST): str})
 
@@ -32,8 +35,8 @@ SETTINGS_SCHEMA = vol.Schema(
             int, vol.Range(min=1)
         ),
         vol.Optional(CONF_SHOW_ALL_SOURCES, default=DEFAULT_SHOW_SOURCES): bool,
-        vol.Optional(CONF_ZONE2, default=False): bool,
-        vol.Optional(CONF_ZONE3, default=False): bool,
+        vol.Optional(CONF_ZONE2, default=DEFAULT_ZONE2): bool,
+        vol.Optional(CONF_ZONE3, default=DEFAULT_ZONE3): bool,
     }
 )
 
@@ -49,8 +52,8 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.host = None
         self.timeout = DEFAULT_TIMEOUT
         self.show_all_sources = DEFAULT_SHOW_SOURCES
-        self.zone2 = False
-        self.zone3 = False
+        self.zone2 = DEFAULT_ZONE2
+        self.zone3 = DEFAULT_ZONE3
         self.d_receivers = []
 
     async def async_step_user(self, user_input=None):
@@ -139,7 +142,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_SHOW_ALL_SOURCES: self.show_all_sources,
                 CONF_ZONE2: self.zone2,
                 CONF_ZONE3: self.zone3,
-                "receiver_id": unique_id,
+                CONF_RECEIVER_ID: unique_id,
             },
         )
 
