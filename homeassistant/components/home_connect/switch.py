@@ -149,7 +149,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         ]:
             self._state = True
         elif (
-            self.device.appliance.status.get(BSH_OPERATION_STATE, {}).get("value", None)
+            self.device.appliance.status.get(BSH_OPERATION_STATE, {}).get("value")
             == "BSH.Common.EnumType.OperationState.Inactive"
         ):
             self._state = False
