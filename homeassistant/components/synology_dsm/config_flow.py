@@ -29,10 +29,12 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    CONF_SECURITY,
     CONF_VOLUMES,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SECURITY,
     DEFAULT_SSL,
 )
 from .const import DOMAIN  # pylint: disable=unused-import
@@ -250,7 +252,13 @@ class SynologyDSMOptionsFlowHandler(config_entries.OptionsFlow):
                     default=self.config_entry.options.get(
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
-                ): cv.positive_int
+                ): cv.positive_int,
+                vol.Optional(
+                    CONF_SECURITY,
+                    default=self.config_entry.options.get(
+                        CONF_SECURITY, DEFAULT_SECURITY
+                    ),
+                ): bool,
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)
