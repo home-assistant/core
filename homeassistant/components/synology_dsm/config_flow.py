@@ -236,10 +236,6 @@ class SynologyDSMOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
         if user_input is not None:
-            entry = self.config_entry
-            entry.options = user_input
-            api = self.hass.data[DOMAIN][entry.unique_id]
-            await api.async_update_entry(entry)
             return self.async_create_entry(title="", data=user_input)
 
         data_schema = vol.Schema(

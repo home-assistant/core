@@ -34,7 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import AsyncMock, MagicMock, Mock, patch
+from tests.async_mock import MagicMock, Mock, patch
 from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -410,10 +410,6 @@ async def test_options_flow(hass: HomeAssistantType, service: MagicMock):
         unique_id=SERIAL,
     )
     config_entry.add_to_hass(hass)
-    hass.data.setdefault(DOMAIN, {})
-    syno_api_mock = AsyncMock()
-    syno_api_mock.async_update_entry = AsyncMock()
-    hass.data[DOMAIN][config_entry.unique_id] = syno_api_mock
 
     assert config_entry.options == {}
 

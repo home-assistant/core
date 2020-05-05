@@ -80,13 +80,22 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         hass.config_entries.async_forward_entry_setup(entry, "sensor")
     )
 
+    if not entry.update_listeners:
+        entry.add_update_listener(_async_update_listener)
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload Synology DSM sensors."""
     api = hass.data[DOMAIN][entry.unique_id]
-    return await api.async_unload()
+    await api.async_unload()
+    return await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+
+
+async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class SynoApi:
@@ -144,19 +153,6 @@ class SynoApi:
     async def async_unload(self):
         """Stop interacting with the NAS and prepare for removal from hass."""
         self._unsub_dispatcher()
-        return await self._hass.config_entries.async_forward_entry_unload(
-            self._entry, "sensor"
-        )
-
-    async def async_update_entry(self, entry: ConfigEntry):
-        """Update the API wrapper with the new entry."""
-        self._entry = entry
-        await self.async_unload()
-
-        await self.async_setup()
-        self._hass.async_create_task(
-            self._hass.config_entries.async_forward_entry_setup(entry, "sensor")
-        )
 
     async def update(self, now=None):
         """Update function for updating API information."""
