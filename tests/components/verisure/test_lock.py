@@ -1,7 +1,6 @@
 """Tests for the Verisure platform."""
 
 from contextlib import contextmanager
-from unittest.mock import call, patch
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
@@ -11,6 +10,8 @@ from homeassistant.components.lock import (
 from homeassistant.components.verisure import DOMAIN as VERISURE_DOMAIN
 from homeassistant.const import STATE_UNLOCKED
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import call, patch
 
 NO_DEFAULT_LOCK_CODE_CONFIG = {
     "verisure": {

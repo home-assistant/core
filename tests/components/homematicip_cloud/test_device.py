@@ -1,5 +1,4 @@
 """Common tests for HomematicIP devices."""
-from asynctest import patch
 from homematicip.base.enums import EventType
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
@@ -13,6 +12,8 @@ from .helper import (
     async_manipulate_test_data,
     get_and_check_entity_basics,
 )
+
+from tests.async_mock import patch
 
 
 async def test_hmip_load_all_supported_devices(hass, default_mock_hap_factory):

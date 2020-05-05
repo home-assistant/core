@@ -22,6 +22,10 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "fallback": "W\u0142\u0105cz tryb awaryjny."
+                },
+                "description": "Tryb rezerwowy prze\u0142\u0105czy si\u0119 na inteligentny harmonogram przy nast\u0119pnym prze\u0142\u0105czeniu z harmonogramu po r\u0119cznym dostosowaniu strefy.",
                 "title": "Dostosuj opcje Tado"
             }
         }

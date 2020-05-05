@@ -1,13 +1,19 @@
 """Support for ISY994 lights."""
-import logging
 from typing import Callable
 
-from homeassistant.components.light import DOMAIN, SUPPORT_BRIGHTNESS, LightEntity
+from homeassistant.components.light import (
+    DOMAIN as LIGHT,
+    SUPPORT_BRIGHTNESS,
+    LightEntity,
+)
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from . import ISY994_NODES, ISYDevice
+from . import ISY994_NODES
+from .const import _LOGGER
+from .entity import ISYNodeEntity
 
-_LOGGER = logging.getLogger(__name__)
+ATTR_LAST_BRIGHTNESS = "last_brightness"
 
 
 def setup_platform(
@@ -15,19 +21,19 @@ def setup_platform(
 ):
     """Set up the ISY994 light platform."""
     devices = []
-    for node in hass.data[ISY994_NODES][DOMAIN]:
-        devices.append(ISYLightDevice(node))
+    for node in hass.data[ISY994_NODES][LIGHT]:
+        devices.append(ISYLightEntity(node))
 
     add_entities(devices)
 
 
-class ISYLightDevice(ISYDevice, LightEntity):
+class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
     """Representation of an ISY994 light device."""
 
     def __init__(self, node) -> None:
         """Initialize the ISY994 light device."""
         super().__init__(node)
-        self._last_brightness = self.brightness
+        self._last_brightness = None
 
     @property
     def is_on(self) -> bool:
@@ -56,7 +62,7 @@ class ISYLightDevice(ISYDevice, LightEntity):
     # pylint: disable=arguments-differ
     def turn_on(self, brightness=None, **kwargs) -> None:
         """Send the turn on command to the ISY994 light device."""
-        if brightness is None and self._last_brightness is not None:
+        if brightness is None and self._last_brightness:
             brightness = self._last_brightness
         if not self._node.on(val=brightness):
             _LOGGER.debug("Unable to turn on light")
@@ -65,3 +71,23 @@ class ISYLightDevice(ISYDevice, LightEntity):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS
+
+    @property
+    def device_state_attributes(self):
+        """Return the light attributes."""
+        return {ATTR_LAST_BRIGHTNESS: self._last_brightness}
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last_brightness on restart."""
+        await super().async_added_to_hass()
+
+        self._last_brightness = self.brightness or 255
+        last_state = await self.async_get_last_state()
+        if not last_state:
+            return
+
+        if (
+            ATTR_LAST_BRIGHTNESS in last_state.attributes
+            and last_state.attributes[ATTR_LAST_BRIGHTNESS]
+        ):
+            self._last_brightness = last_state.attributes[ATTR_LAST_BRIGHTNESS]

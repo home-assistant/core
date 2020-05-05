@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Questo AVM FRITZ!Box \u00e8 gi\u00e0 configurato.",
             "already_in_progress": "La configurazione di AVM FRITZ!Box \u00e8 gi\u00e0 in corso.",
-            "not_found": "Nessun AVM FRITZ!Box supportato trovato sulla rete."
+            "not_found": "Nessun AVM FRITZ!Box supportato trovato sulla rete.",
+            "not_supported": "Collegato a AVM FRITZ!Box ma non \u00e8 in grado di controllare i dispositivi Smart Home."
         },
         "error": {
             "auth_failed": "Nome utente e/o password non sono corretti."

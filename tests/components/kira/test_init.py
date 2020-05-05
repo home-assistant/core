@@ -4,11 +4,11 @@ import os
 import shutil
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch
 
 import homeassistant.components.kira as kira
 from homeassistant.setup import setup_component
 
+from tests.async_mock import MagicMock, patch
 from tests.common import get_test_home_assistant
 
 TEST_CONFIG = {

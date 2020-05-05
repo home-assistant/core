@@ -1,5 +1,4 @@
 """Test Konnected setup process."""
-from asynctest import patch
 import pytest
 
 from homeassistant.components import konnected
@@ -7,6 +6,7 @@ from homeassistant.components.konnected import config_flow
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

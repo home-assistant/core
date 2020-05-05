@@ -1,6 +1,4 @@
 """Vera tests."""
-from unittest.mock import MagicMock
-
 from mock import patch
 from requests.exceptions import RequestException
 
@@ -14,6 +12,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
+from tests.async_mock import MagicMock
 from tests.common import MockConfigEntry
 
 
@@ -44,8 +43,8 @@ async def test_async_step_user_success(hass: HomeAssistant) -> None:
         assert result["data"] == {
             CONF_CONTROLLER: "http://127.0.0.1:123",
             CONF_SOURCE: config_entries.SOURCE_USER,
-            CONF_LIGHTS: ["12", "13"],
-            CONF_EXCLUDE: ["14", "15"],
+            CONF_LIGHTS: [12, 13],
+            CONF_EXCLUDE: [14, 15],
         }
         assert result["result"].unique_id == controller.serial_number
 
@@ -154,6 +153,6 @@ async def test_options(hass):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
-        CONF_LIGHTS: ["1", "2", "3", "4", "5", "6", "7"],
-        CONF_EXCLUDE: ["8", "9", "10", "11", "12", "13", "14"],
+        CONF_LIGHTS: [1, 2, 3, 4, 5, 6, 7],
+        CONF_EXCLUDE: [8, 9, 10, 11, 12, 13, 14],
     }

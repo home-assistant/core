@@ -12,6 +12,7 @@ from aiounifi.events import (
     WIRELESS_CLIENT_CONNECTED,
     WIRELESS_CLIENT_DISCONNECTED,
     WIRELESS_CLIENT_ROAM,
+    WIRELESS_CLIENT_ROAMRADIO,
     WIRELESS_CLIENT_UNBLOCKED,
 )
 
@@ -25,7 +26,6 @@ LOGGER = logging.getLogger(__name__)
 CLIENT_BLOCKED = (WIRED_CLIENT_BLOCKED, WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (WIRED_CLIENT_UNBLOCKED, WIRELESS_CLIENT_UNBLOCKED)
 WIRED_CLIENT = (WIRED_CLIENT_CONNECTED, WIRED_CLIENT_DISCONNECTED)
-WIRELESS_CLIENT_ROAMRADIO = "EVT_WU_RoamRadio"
 WIRELESS_CLIENT = (
     WIRELESS_CLIENT_CONNECTED,
     WIRELESS_CLIENT_DISCONNECTED,
@@ -55,7 +55,6 @@ class UniFiClient(UniFiBase):
     async def async_added_to_hass(self) -> None:
         """Client entity created."""
         await super().async_added_to_hass()
-        LOGGER.debug("New client %s (%s)", self.entity_id, self.client.mac)
         self.client.register_callback(self.async_update_callback)
 
     async def async_will_remove_from_hass(self) -> None:
