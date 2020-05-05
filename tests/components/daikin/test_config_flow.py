@@ -33,7 +33,7 @@ def mock_daikin():
 
     with patch("homeassistant.components.daikin.config_flow.Appliance") as Appliance:
         type(Appliance).mac = PropertyMock(return_value="AABBCCDDEEFF")
-        Appliance.factory = mock_daikin_factory
+        Appliance.factory.side_effect = mock_daikin_factory
         yield Appliance
 
 
