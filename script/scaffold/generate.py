@@ -116,7 +116,13 @@ def _custom_tasks(template, info) -> None:
             title=info.name,
             config={
                 "step": {
-                    "user": {"title": "Connect to the device", "data": {"host": "Host"}}
+                    "user": {
+                        "data": {
+                            "host": "[%key:common::config_flow::data::host%]",
+                            "username": "[%key:common::config_flow::data::username%]",
+                            "password": "[%key:common::config_flow::data::password%]",
+                        },
+                    }
                 },
                 "error": {
                     "cannot_connect": "[%key:common::config_flow::abort::cannot_connect%]",
@@ -157,7 +163,8 @@ def _custom_tasks(template, info) -> None:
                     }
                 },
                 "abort": {
-                    "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]"
+                    "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+                    "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
                 },
                 "create_entry": {
                     "default": "[%key:common::config_flow::create_entry::authenticated%]"
