@@ -66,7 +66,7 @@ def denonavr_connect_fixture():
 
 
 async def test_config_flow_manual_host_success(hass):
-    """Test a successful config flow manualy initialized by the user with the host specified."""
+    """Test a successful config flow manually initialized by the user with the host specified."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -97,7 +97,7 @@ async def test_config_flow_manual_host_success(hass):
 
 
 async def test_config_flow_manual_discover_1_success(hass):
-    """Test a successful config flow manualy initialized by the user without the host specified and 1 receiver discovered."""
+    """Test a successful config flow manually initialized by the user without the host specified and 1 receiver discovered."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -130,7 +130,7 @@ async def test_config_flow_manual_discover_1_success(hass):
 
 
 async def test_config_flow_manual_discover_2_success(hass):
-    """Test a successful config flow manualy initialized by the user without the host specified and 2 receivers discovered."""
+    """Test a successful config flow manually initialized by the user without the host specified and 2 receivers discovered."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -171,7 +171,7 @@ async def test_config_flow_manual_discover_2_success(hass):
 
 
 async def test_config_flow_manual_discover_error(hass):
-    """Test a failed config flow manualy initialized by the user without the host specified and no receivers discovered."""
+    """Test a failed config flow manually initialized by the user without the host specified and no receivers discovered."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -192,7 +192,7 @@ async def test_config_flow_manual_discover_error(hass):
 
 
 async def test_config_flow_settings(hass):
-    """Test a succesfull config flow manualy initialized by the user with the host specified and non default settings specified."""
+    """Test a successful config flow manually initialized by the user with the host specified and non default settings specified."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -231,7 +231,7 @@ async def test_config_flow_settings(hass):
 
 
 async def test_config_flow_manual_host_connection_error(hass):
-    """Test a failed config flow manualy initialized by the user with the host specified and a connection error."""
+    """Test a failed config flow manually initialized by the user with the host specified and a connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -258,7 +258,7 @@ async def test_config_flow_manual_host_connection_error(hass):
 
 
 async def test_config_flow_ssdp(hass):
-    """Test a succesfull config flow initialized by ssdp discovery."""
+    """Test a successful config flow initialized by ssdp discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
