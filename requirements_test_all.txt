@@ -561,7 +561,7 @@ pyfttt==0.3
 pygatt[GATTTOOL]==4.0.5
 
 # homeassistant.components.gogogate2
-pygogogate2==0.1.1
+pygogogate2==0.2.6
 
 # homeassistant.components.version
 pyhaversion==3.3.0
