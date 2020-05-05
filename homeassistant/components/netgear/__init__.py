@@ -6,8 +6,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    CONF_DEVICES,
-    CONF_EXCLUDE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -29,8 +27,6 @@ NETGEAR_SCHEMA = vol.Schema(
         vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_DEVICES, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_EXCLUDE, default=[]): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 

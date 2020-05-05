@@ -6,8 +6,6 @@ from pynetgear import Netgear
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_DEVICES,
-    CONF_EXCLUDE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -36,8 +34,6 @@ class NetgearRouter:
         self._ssl = entry.data.get(CONF_SSL)
         self._username = entry.data.get(CONF_USERNAME)
         self._password = entry.data[CONF_PASSWORD]
-        self._tracked_devices = entry.data.get(CONF_DEVICES)
-        self._excluded_devices = entry.data.get(CONF_EXCLUDE)
 
         self._api: Netgear = None
         self._attrs = {}
@@ -85,22 +81,6 @@ class NetgearRouter:
             device_mac = ntg_device.mac
 
             if not ntg_device.link_rate:
-                continue
-
-            tracked = (
-                not self._tracked_devices
-                or ntg_device.mac in self._tracked_devices
-                or ntg_device.name in self._tracked_devices
-            )
-            tracked = tracked and (
-                not self._excluded_devices
-                or not (
-                    ntg_device.mac in self._excluded_devices
-                    or ntg_device.name in self._excluded_devices
-                )
-            )
-
-            if not tracked:
                 continue
 
             if not self.devices.get(device_mac):
