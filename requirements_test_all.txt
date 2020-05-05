@@ -302,6 +302,9 @@ home-assistant-frontend==20200427.2
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
 
+# homeassistant.components.home_connect
+homeconnect==0.5
+
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.17
 
