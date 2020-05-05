@@ -1,6 +1,8 @@
 {
   "config": {
-    "abort": { "already_configured": "This account is already configured." },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
     "error": {
       "cannot_connect": "Failed to connect, please try again.",
       "invalid_auth": "Invalid authentication.",
