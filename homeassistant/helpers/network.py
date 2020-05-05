@@ -23,7 +23,7 @@ def async_get_url(
     require_ssl: bool = False,
     require_standard_port: bool = False,
     allow_local: bool = True,
-) -> Optional[str]:
+) -> str:
     """Get a URL to this instance."""
     # Return internal URL when available and matches requested citeria
     if allow_local and hass.config.internal_url:
