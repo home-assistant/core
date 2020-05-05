@@ -33,6 +33,7 @@ from .conftest import async_setup_entity, mock_feature
 from tests.async_mock import ANY, AsyncMock, PropertyMock, call, patch
 
 ALL_COVER_FIXTURES = ["gatecontroller", "shutterbox", "gatebox"]
+FIXTURES_SUPPORTING_STOP = ["gatecontroller", "shutterbox"]
 
 
 @pytest.fixture(name="shutterbox")
@@ -250,7 +251,7 @@ def opening_to_stop_feature_mock(feature_mock):
     feature_mock.async_stop = AsyncMock(side_effect=stop)
 
 
-@pytest.mark.parametrize("wrapper", ALL_COVER_FIXTURES, indirect=["wrapper"])
+@pytest.mark.parametrize("wrapper", FIXTURES_SUPPORTING_STOP, indirect=["wrapper"])
 async def test_stop(wrapper, hass, config):
     """Test cover stopping."""
 
