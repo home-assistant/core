@@ -44,15 +44,15 @@ def add_entities(router, async_add_entities, tracked):
         if mac in tracked:
             continue
 
-        new_tracked.append(NetgearDevice(router, device))
+        new_tracked.append(NetgearDeviceEntity(router, device))
         tracked.add(mac)
 
     if new_tracked:
         async_add_entities(new_tracked, True)
 
 
-class NetgearDevice(ScannerEntity):
-    """Representation of a Netgear device."""
+class NetgearDeviceEntity(ScannerEntity):
+    """Representation of a device connected to a Netgear router."""
 
     def __init__(self, router: NetgearRouter, device: Dict[str, any]) -> None:
         """Initialize a Netgear device."""
@@ -88,7 +88,7 @@ class NetgearDevice(ScannerEntity):
 
     @property
     def is_connected(self):
-        """Return true if the device is connected to the network."""
+        """Return true if the device is connected to the router."""
         return self._active
 
     @property
