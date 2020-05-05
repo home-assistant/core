@@ -176,7 +176,7 @@ coronavirus==1.1.0
 datadog==0.15.0
 
 # homeassistant.components.metoffice
-datapoint==0.9.5
+datapoint==0.9.6
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
