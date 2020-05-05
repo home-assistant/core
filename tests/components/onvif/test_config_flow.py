@@ -137,7 +137,6 @@ async def setup_onvif_integration(
             config_flow.CONF_PORT: PORT,
             config_flow.CONF_USERNAME: USERNAME,
             config_flow.CONF_PASSWORD: PASSWORD,
-            config_flow.CONF_PROFILE: [0],
         }
 
     config_entry = MockConfigEntry(
@@ -221,7 +220,6 @@ async def test_flow_discovered_devices(hass):
             config_flow.CONF_PORT: PORT,
             config_flow.CONF_USERNAME: USERNAME,
             config_flow.CONF_PASSWORD: PASSWORD,
-            config_flow.CONF_PROFILE: [0],
         }
 
 
@@ -388,7 +386,6 @@ async def test_flow_manual_entry(hass):
             config_flow.CONF_PORT: PORT,
             config_flow.CONF_USERNAME: USERNAME,
             config_flow.CONF_PASSWORD: PASSWORD,
-            config_flow.CONF_PROFILE: [0, 1],
         }
 
 
@@ -408,7 +405,6 @@ async def test_flow_import_no_mac(hass):
                 config_flow.CONF_PORT: PORT,
                 config_flow.CONF_USERNAME: USERNAME,
                 config_flow.CONF_PASSWORD: PASSWORD,
-                config_flow.CONF_PROFILE: [0],
             },
         )
 

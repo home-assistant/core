@@ -24,7 +24,6 @@ from homeassistant.core import callback
 # pylint: disable=unused-import
 from .const import (
     CONF_DEVICE_ID,
-    CONF_PROFILE,
     CONF_RTSP_TRANSPORT,
     DEFAULT_ARGUMENTS,
     DEFAULT_PORT,
@@ -207,7 +206,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if self.device_id is None:
                 return self.async_abort(reason="no_mac")
 
-            await self.async_set_unique_id(self.device_id)
+            await self.async_set_unique_id(self.device_id, raise_on_progress=False)
             self._abort_if_unique_id_configured(
                 updates={
                     CONF_HOST: self.onvif_config[CONF_HOST],
@@ -216,17 +215,15 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             )
 
-            if not self.onvif_config.get(CONF_PROFILE):
-                self.onvif_config[CONF_PROFILE] = []
-                media_service = device.create_media_service()
-                profiles = await media_service.GetProfiles()
-                LOGGER.debug("Media Profiles %s", pformat(profiles))
-                for key, profile in enumerate(profiles):
-                    if profile.VideoEncoderConfiguration.Encoding != "H264":
-                        continue
-                    self.onvif_config[CONF_PROFILE].append(key)
+            # Verify there is an H264 profile
+            media_service = device.create_media_service()
+            profiles = await media_service.GetProfiles()
+            h264 = any(
+                profile.VideoEncoderConfiguration.Encoding == "H264"
+                for profile in profiles
+            )
 
-            if not self.onvif_config[CONF_PROFILE]:
+            if not h264:
                 return self.async_abort(reason="no_h264")
 
             title = f"{self.onvif_config[CONF_NAME]} - {self.device_id}"
@@ -248,8 +245,6 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input):
         """Handle import."""
         self.onvif_config = user_input
-        if not self.onvif_config[CONF_NAME]:
-            self.onvif_config[CONF_NAME] = "ONVIF Camera"
         return await self.async_step_profiles()
 
 
