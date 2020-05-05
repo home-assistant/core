@@ -50,11 +50,16 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up a Met Office entry."""
 
-    # migrate previous versions to set a 3-hourly update
-    if CONF_MODE not in entry.data:
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_MODE: MODE_3HOURLY}
-        )
+    # need to migrate previous versions to have a mode, but also
+    # ensure options set after the initial setup is preserved
+    if CONF_MODE in entry.options:
+        mode = entry.options[CONF_MODE]
+    elif CONF_MODE in entry.data:
+        mode = entry.data[CONF_MODE]
+    else:
+        mode = MODE_3HOURLY
+
+    hass.config_entries.async_update_entry(entry, data={**entry.data, CONF_MODE: mode})
 
     api_key = entry.data[CONF_API_KEY]
     latitude = entry.data[CONF_LATITUDE]

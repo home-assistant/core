@@ -160,5 +160,5 @@ async def test_form_options_flow(hass, requests_mock):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Complete"
+    assert result["title"] == ""
     assert result["data"][CONF_MODE] == TEST_MODE_DAILY
