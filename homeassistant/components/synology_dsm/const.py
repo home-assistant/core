@@ -14,11 +14,14 @@ SYNO_API = "syno_api"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 # Configuration
+CONF_SECURITY = "security"
 CONF_VOLUMES = "volumes"
+
 DEFAULT_SSL = True
 DEFAULT_PORT = 5000
 DEFAULT_PORT_SSL = 5001
 # Options
+DEFAULT_SECURITY = True
 DEFAULT_SCAN_INTERVAL = 15  # min
 
 UTILISATION_SENSORS = {
@@ -56,6 +59,10 @@ STORAGE_DISK_SENSORS = {
     "disk_exceed_bad_sector_thr": ["Exceeded Max Bad Sectors", None, "mdi:test-tube"],
     "disk_below_remain_life_thr": ["Below Min Remaining Life", None, "mdi:test-tube"],
     "disk_temp": ["Temperature", None, "mdi:thermometer"],
+}
+
+SECURITY_SENSORS = {
+    "status": ["Security status", None, "mdi:checkbox-marked-circle-outline"],
 }
 
 

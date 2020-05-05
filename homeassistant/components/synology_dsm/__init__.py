@@ -2,6 +2,7 @@
 from datetime import timedelta
 
 from synology_dsm import SynologyDSM
+from synology_dsm.api.core.security import SynoCoreSecurity
 from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.storage.storage import SynoStorage
@@ -24,8 +25,10 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
+    CONF_SECURITY,
     CONF_VOLUMES,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SECURITY,
     DEFAULT_SSL,
     DOMAIN,
     SYNO_API,
@@ -124,6 +127,7 @@ class SynoApi:
         self.dsm: SynologyDSM = None
         self.information: SynoDSMInformation = None
         self.utilisation: SynoCoreUtilization = None
+        self.security: SynoCoreSecurity = None
         self.storage: SynoStorage = None
 
         self._unsub_dispatcher = None
@@ -145,11 +149,11 @@ class SynoApi:
         )
 
         await self._hass.async_add_executor_job(self._fetch_device_configuration)
-        await self.update()
+        await self.async_update()
 
         self._unsub_dispatcher = async_track_time_interval(
             self._hass,
-            self.update,
+            self.async_update,
             timedelta(
                 minutes=self._entry.options.get(
                     CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
@@ -161,13 +165,15 @@ class SynoApi:
         """Fetch initial device config."""
         self.information = self.dsm.information
         self.utilisation = self.dsm.utilisation
+        if self._entry.options.get(CONF_SECURITY, DEFAULT_SECURITY):
+            self.security = self.dsm.security
         self.storage = self.dsm.storage
 
     async def async_unload(self):
         """Stop interacting with the NAS and prepare for removal from hass."""
         self._unsub_dispatcher()
 
-    async def update(self, now=None):
+    async def async_update(self, now=None):
         """Update function for updating API information."""
         await self._hass.async_add_executor_job(self.dsm.update)
         async_dispatcher_send(self._hass, self.signal_sensor_update)

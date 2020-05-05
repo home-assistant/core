@@ -13,6 +13,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.temperature import display_temp
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -21,6 +22,7 @@ from .const import (
     BASE_NAME,
     CONF_VOLUMES,
     DOMAIN,
+    SECURITY_SENSORS,
     STORAGE_DISK_SENSORS,
     STORAGE_VOL_SENSORS,
     SYNO_API,
@@ -42,6 +44,12 @@ async def async_setup_entry(
         SynoNasUtilSensor(api, sensor_type, UTILISATION_SENSORS[sensor_type])
         for sensor_type in UTILISATION_SENSORS
     ]
+
+    if api.security:
+        sensors += [
+            SynoNasSecuritySensor(api, sensor_type, SECURITY_SENSORS[sensor_type])
+            for sensor_type in SECURITY_SENSORS
+        ]
 
     # Handle all volumes
     if api.storage.volumes_ids:
@@ -205,3 +213,42 @@ class SynoNasStorageSensor(SynoNasSensor):
             "sw_version": self._api.information.version_string,
             "via_device": (DOMAIN, self._api.information.serial),
         }
+
+
+class SynoNasSecuritySensor(SynoNasSensor):
+    """Representation a Synology Security sensor."""
+
+    @property
+    def state(self):
+        """Return the state."""
+        return getattr(self._api.security, self.sensor_type)
+
+    async def options_updated(self):
+        """Config entry options are updated, remove entity if option is disabled."""
+        await self.async_remove()
+
+    async def async_remove(self):
+        """Clean up when removing entity.
+
+        Remove entity if no entry in entity registry exist.
+        Remove entity registry entry if no entry in device registry exist.
+        Remove device registry entry if there is only one linked entity (this entity).
+        Remove entity registry entry if there are more than one entity linked to the device registry entry.
+        """
+        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        entity_entry = entity_registry.async_get(self.entity_id)
+        if not entity_entry:
+            await super().async_remove()
+            return
+
+        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device_entry = device_registry.async_get(entity_entry.device_id)
+        if not device_entry:
+            entity_registry.async_remove(self.entity_id)
+            return
+
+        if len(async_entries_for_device(entity_registry, entity_entry.device_id)) == 1:
+            device_registry.async_remove_device(device_entry.id)
+            return
+
+        entity_registry.async_remove(self.entity_id)

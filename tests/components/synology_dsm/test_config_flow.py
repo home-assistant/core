@@ -14,10 +14,12 @@ from homeassistant import data_entry_flow, setup
 from homeassistant.components import ssdp
 from homeassistant.components.synology_dsm.config_flow import CONF_OTP_CODE
 from homeassistant.components.synology_dsm.const import (
+    CONF_SECURITY,
     CONF_VOLUMES,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SECURITY,
     DEFAULT_SSL,
     DOMAIN,
 )
@@ -425,11 +427,13 @@ async def test_options_flow(hass: HomeAssistantType, service: MagicMock):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options[CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
+    assert config_entry.options[CONF_SECURITY] == DEFAULT_SECURITY
 
     # Manual
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_SCAN_INTERVAL: 2},
+        result["flow_id"], user_input={CONF_SCAN_INTERVAL: 2, CONF_SECURITY: False},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options[CONF_SCAN_INTERVAL] == 2
+    assert not config_entry.options[CONF_SECURITY]
