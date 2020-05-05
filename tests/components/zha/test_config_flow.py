@@ -29,9 +29,6 @@ def com_port():
 )
 async def test_user_flow(hass):
     """Test user flow."""
-    flow = config_flow.ZhaFlowHandler()
-    flow.hass = hass
-
     port = com_port()
     port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
 
