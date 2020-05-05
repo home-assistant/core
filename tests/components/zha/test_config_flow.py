@@ -92,14 +92,12 @@ async def test_user_flow_manual(hass):
 
 async def test_pick_radio_flow(hass):
     """Test radio picker."""
-    flow = config_flow.ZhaFlowHandler()
-    flow.hass = hass
 
-    result = await flow.async_step_pick_radio({CONF_RADIO_TYPE: "ezsp"})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: "pick_radio"}, data={CONF_RADIO_TYPE: "ezsp"}
+    )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "port_config"
-
-    await flow.async_step_pick_radio()
 
 
 async def test_user_flow_existing_config_entry(hass):
@@ -136,23 +134,38 @@ async def test_user_port_config_fail(hass):
     """Test port config flow."""
     app_ctrl_cls = MagicMock()
     app_ctrl_cls.SCHEMA_DEVICE = zigpy.config.SCHEMA_DEVICE
-    app_ctrl_cls.probe = AsyncMock(side_effect=(False, True))
+    app_ctrl_cls.probe = AsyncMock(return_value=False)
 
-    flow = config_flow.ZhaFlowHandler()
-    flow.hass = hass
-    await flow.async_step_pick_radio(user_input={CONF_RADIO_TYPE: "ezsp"})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: "pick_radio"}, data={CONF_RADIO_TYPE: "ezsp"}
+    )
 
     with patch.dict(config_flow.RADIO_TYPES, {"ezsp": {CONTROLLER: app_ctrl_cls}}):
-        result = await flow.async_step_port_config(
-            {zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"},
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "port_config"
         assert result["errors"]["base"] == "cannot_connect"
 
-        result = await flow.async_step_port_config(
-            {zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"}
+
+async def test_user_port_config(hass):
+    """Test port config."""
+    app_ctrl_cls = MagicMock()
+    app_ctrl_cls.SCHEMA_DEVICE = zigpy.config.SCHEMA_DEVICE
+    app_ctrl_cls.probe = AsyncMock(return_value=True)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: "pick_radio"}, data={CONF_RADIO_TYPE: "ezsp"}
+    )
+
+    with patch.dict(config_flow.RADIO_TYPES, {"ezsp": {CONTROLLER: app_ctrl_cls}}):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"},
         )
+
         assert result["type"] == "create_entry"
         assert result["title"].startswith("/dev/ttyUSB33")
         assert (
