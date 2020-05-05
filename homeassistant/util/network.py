@@ -1,5 +1,5 @@
 """Network utilities."""
-from ipaddress import IPv4Address, IPv6Address, ip_network
+from ipaddress import IPv4Address, IPv6Address, ip_address, ip_network
 from typing import Union
 
 # RFC6890 - IP addresses of loopback interfaces
@@ -39,3 +39,13 @@ def is_link_local(address: Union[IPv4Address, IPv6Address]) -> bool:
 def is_local(address: Union[IPv4Address, IPv6Address]) -> bool:
     """Check if an address is loopback or private."""
     return is_loopback(address) or is_private(address)
+
+
+def is_ip_address(address: str) -> bool:
+    """Check if a given string is an IP address."""
+    try:
+        ip_address(address)
+    except ValueError:
+        return False
+
+    return True

@@ -29,6 +29,7 @@ from typing import (
     Set,
     TypeVar,
     Union,
+    cast,
 )
 import uuid
 
@@ -84,6 +85,7 @@ block_async_io.enable()
 fix_threading_exception_logging()
 
 T = TypeVar("T")
+_UNDEF: dict = {}
 # pylint: disable=invalid-name
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
 CALLBACK_TYPE = Callable[[], None]
@@ -426,7 +428,7 @@ class HomeAssistant:
             # regardless of the state of the loop.
             if self.state == CoreState.not_running:  # just ignore
                 return
-            if self.state == CoreState.stopping or self.state == CoreState.final_write:
+            if self.state in [CoreState.stopping, CoreState.final_write]:
                 _LOGGER.info("async_stop called twice: ignored")
                 return
             if self.state == CoreState.starting:
@@ -1301,6 +1303,8 @@ class Config:
         self.location_name: str = "Home"
         self.time_zone: datetime.tzinfo = dt_util.UTC
         self.units: UnitSystem = METRIC_SYSTEM
+        self.internal_url: Optional[str] = None
+        self.external_url: Optional[str] = None
 
         self.config_source: str = "default"
 
@@ -1385,6 +1389,8 @@ class Config:
             "version": __version__,
             "config_source": self.config_source,
             "safe_mode": self.safe_mode,
+            "external_url": self.external_url,
+            "internal_url": self.internal_url,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:
@@ -1408,6 +1414,8 @@ class Config:
         unit_system: Optional[str] = None,
         location_name: Optional[str] = None,
         time_zone: Optional[str] = None,
+        external_url: Optional[Union[str, dict]] = _UNDEF,
+        internal_url: Optional[Union[str, dict]] = _UNDEF,
     ) -> None:
         """Update the configuration from a dictionary."""
         self.config_source = source
@@ -1426,6 +1434,10 @@ class Config:
             self.location_name = location_name
         if time_zone is not None:
             self.set_time_zone(time_zone)
+        if external_url is not _UNDEF:
+            self.external_url = cast(Optional[str], external_url)
+        if internal_url is not _UNDEF:
+            self.internal_url = cast(Optional[str], internal_url)
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
@@ -1457,6 +1469,8 @@ class Config:
             "unit_system": self.units.name,
             "location_name": self.location_name,
             "time_zone": time_zone,
+            "external_url": self.external_url,
+            "internal_url": self.internal_url,
         }
 
         store = self.hass.helpers.storage.Store(

@@ -63,29 +63,32 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 
-HTTP_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
-        vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
-        vol.Optional(CONF_BASE_URL): cv.string,
-        vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
-        vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
-        vol.Optional(CONF_SSL_KEY): cv.isfile,
-        vol.Optional(CONF_CORS_ORIGINS, default=[DEFAULT_CORS]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-        vol.Inclusive(CONF_USE_X_FORWARDED_FOR, "proxy"): cv.boolean,
-        vol.Inclusive(CONF_TRUSTED_PROXIES, "proxy"): vol.All(
-            cv.ensure_list, [ip_network]
-        ),
-        vol.Optional(
-            CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
-        ): vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
-        vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
-        vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): vol.In(
-            [SSL_INTERMEDIATE, SSL_MODERN]
-        ),
-    }
+HTTP_SCHEMA = vol.All(
+    cv.deprecated(CONF_BASE_URL),
+    vol.Schema(
+        {
+            vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
+            vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
+            vol.Optional(CONF_BASE_URL): cv.string,
+            vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
+            vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
+            vol.Optional(CONF_SSL_KEY): cv.isfile,
+            vol.Optional(CONF_CORS_ORIGINS, default=[DEFAULT_CORS]): vol.All(
+                cv.ensure_list, [cv.string]
+            ),
+            vol.Inclusive(CONF_USE_X_FORWARDED_FOR, "proxy"): cv.boolean,
+            vol.Inclusive(CONF_TRUSTED_PROXIES, "proxy"): vol.All(
+                cv.ensure_list, [ip_network]
+            ),
+            vol.Optional(
+                CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
+            ): vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
+            vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
+            vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN): vol.In(
+                [SSL_INTERMEDIATE, SSL_MODERN]
+            ),
+        }
+    ),
 )
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: HTTP_SCHEMA}, extra=vol.ALLOW_EXTRA)
