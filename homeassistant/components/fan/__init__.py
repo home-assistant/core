@@ -45,12 +45,6 @@ ATTR_SPEED_LIST = "speed_list"
 ATTR_OSCILLATING = "oscillating"
 ATTR_DIRECTION = "direction"
 
-PROP_TO_ATTR = {
-    "speed": ATTR_SPEED,
-    "oscillating": ATTR_OSCILLATING,
-    "current_direction": ATTR_DIRECTION,
-}
-
 
 @bind_hass
 def is_on(hass, entity_id: str) -> bool:
