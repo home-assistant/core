@@ -127,7 +127,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     def update(self):
         """Update the switch's status."""
         if (
-            self.device.appliance.status.get(BSH_POWER_STATE, {}).get("value", None)
+            self.device.appliance.status.get(BSH_POWER_STATE, {}).get("value")
             == BSH_POWER_ON
         ):
             self._state = True
