@@ -52,7 +52,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             dev_path = await self.hass.async_add_executor_job(
                 get_serial_by_id, port.device
             )
-            auto_detected_data = await self.detect_radios(dev_path)
+            auto_detected_data = await detect_radios(dev_path)
             if auto_detected_data is not None:
                 title = f"{port.description}, s/n: {port.serial_number or 'n/a'}"
                 title += f" - {port.manufacturer}" if port.manufacturer else ""
@@ -106,16 +106,16 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    @staticmethod
-    async def detect_radios(dev_path: str) -> Optional[Dict[str, Any]]:
-        """Probe all radio types on the device port."""
-        for radio in RadioType.list():
-            app_cls = RADIO_TYPES[radio][CONTROLLER]
-            dev_config = app_cls.SCHEMA_DEVICE({CONF_DEVICE_PATH: dev_path})
-            if await app_cls.probe(dev_config):
-                return {CONF_RADIO_TYPE: radio, CONF_DEVICE: dev_config}
 
-        return None
+async def detect_radios(dev_path: str) -> Optional[Dict[str, Any]]:
+    """Probe all radio types on the device port."""
+    for radio in RadioType.list():
+        app_cls = RADIO_TYPES[radio][CONTROLLER]
+        dev_config = app_cls.SCHEMA_DEVICE({CONF_DEVICE_PATH: dev_path})
+        if await app_cls.probe(dev_config):
+            return {CONF_RADIO_TYPE: radio, CONF_DEVICE: dev_config}
+
+    return None
 
 
 def get_serial_by_id(dev_path: str) -> str:
