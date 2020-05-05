@@ -1,15 +1,20 @@
 """Provide a way to connect entities belonging to one device."""
 from collections import OrderedDict
 import logging
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
 import uuid
 
 import attr
 
-from homeassistant.core import callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import Event, callback
 
+from .debounce import Debouncer
 from .singleton import singleton
 from .typing import HomeAssistantType
+
+if TYPE_CHECKING:
+    from . import entity_registry
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -21,6 +26,7 @@ EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
+CLEANUP_DELAY = 10
 
 CONNECTION_NETWORK_MAC = "mac"
 CONNECTION_UPNP = "upnp"
@@ -285,6 +291,8 @@ class DeviceRegistry:
 
     async def async_load(self):
         """Load the device registry."""
+        async_setup_cleanup(self.hass, self)
+
         data = await self._store.async_load()
 
         devices = OrderedDict()
@@ -347,16 +355,8 @@ class DeviceRegistry:
     @callback
     def async_clear_config_entry(self, config_entry_id: str) -> None:
         """Clear config entry from registry entries."""
-        remove = []
-        for dev_id, device in self.devices.items():
-            if device.config_entries == {config_entry_id}:
-                remove.append(dev_id)
-            else:
-                self._async_update_device(
-                    dev_id, remove_config_entry_id=config_entry_id
-                )
-        for dev_id in remove:
-            self.async_remove_device(dev_id)
+        for device in list(self.devices.values()):
+            self._async_update_device(device.id, remove_config_entry_id=config_entry_id)
 
     @callback
     def async_clear_area_id(self, area_id: str) -> None:
@@ -390,3 +390,69 @@ def async_entries_for_config_entry(
         for device in registry.devices.values()
         if config_entry_id in device.config_entries
     ]
+
+
+@callback
+def async_cleanup(
+    hass: HomeAssistantType,
+    dev_reg: DeviceRegistry,
+    ent_reg: "entity_registry.EntityRegistry",
+) -> None:
+    """Clean up device registry."""
+    # Find all devices that are no longer referenced in the entity registry.
+    referenced = {entry.device_id for entry in ent_reg.entities.values()}
+    orphan = set(dev_reg.devices) - referenced
+
+    for dev_id in orphan:
+        dev_reg.async_remove_device(dev_id)
+
+    # Find all referenced config entries that no longer exist
+    # This shouldn't happen but have not been able to track down the bug :(
+    config_entry_ids = {entry.entry_id for entry in hass.config_entries.async_entries()}
+
+    for device in list(dev_reg.devices.values()):
+        for config_entry_id in device.config_entries:
+            if config_entry_id not in config_entry_ids:
+                dev_reg.async_update_device(
+                    device.id, remove_config_entry_id=config_entry_id
+                )
+
+
+@callback
+def async_setup_cleanup(hass: HomeAssistantType, dev_reg: DeviceRegistry) -> None:
+    """Clean up device registry when entities removed."""
+    from . import entity_registry  # pylint: disable=import-outside-toplevel
+
+    async def cleanup():
+        """Cleanup."""
+        ent_reg = await entity_registry.async_get_registry(hass)
+        async_cleanup(hass, dev_reg, ent_reg)
+
+    debounced_cleanup = Debouncer(
+        hass, _LOGGER, cooldown=CLEANUP_DELAY, immediate=False, function=cleanup
+    )
+
+    async def entity_registry_changed(event: Event) -> None:
+        """Handle entity updated or removed."""
+        if (
+            event.data["action"] == "update"
+            and "device_id" not in event.data["changes"]
+        ) or event.data["action"] == "create":
+            return
+
+        await debounced_cleanup.async_call()
+
+    if hass.is_running:
+        hass.bus.async_listen(
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, entity_registry_changed
+        )
+        return
+
+    async def startup_clean(event: Event) -> None:
+        """Clean up on startup."""
+        hass.bus.async_listen(
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, entity_registry_changed
+        )
+        await debounced_cleanup.async_call()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, startup_clean)
