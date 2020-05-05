@@ -24,6 +24,8 @@ from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.util.temperature as temp_util
 
 from .const import (
+    AUDIO_CODEC_COPY,
+    AUDIO_CODEC_OPUS,
     CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
@@ -64,13 +66,16 @@ from .const import (
     TYPE_SPRINKLER,
     TYPE_SWITCH,
     TYPE_VALVE,
+    VIDEO_CODEC_COPY,
+    VIDEO_CODEC_H264_OMX,
+    VIDEO_CODEC_LIBX264,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 MAX_PORT = 65535
-VALID_VIDEO_CODECS = ["libx264", "h264_omx", "copy"]
-VALID_AUDIO_CODECS = ["libopus", "copy"]
+VALID_VIDEO_CODECS = [VIDEO_CODEC_LIBX264, VIDEO_CODEC_H264_OMX, AUDIO_CODEC_COPY]
+VALID_AUDIO_CODECS = [AUDIO_CODEC_OPUS, VIDEO_CODEC_COPY]
 
 BASIC_INFO_SCHEMA = vol.Schema(
     {
