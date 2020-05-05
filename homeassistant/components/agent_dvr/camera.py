@@ -207,7 +207,7 @@ class AgentCamera(MjpegCamera):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this agent object."""
-        return f"{self._unique_id}"
+        return self._unique_id
 
     async def async_enable_alerts(self):
         """Enable alerts."""
