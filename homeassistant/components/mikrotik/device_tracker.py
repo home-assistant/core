@@ -40,8 +40,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Update the status of the device."""
         update_items(mikrotik, async_add_entities, tracked)
 
-    mikrotik.listeners.append(
-        async_dispatcher_connect(hass, mikrotik.signal_data_update, update_hub)
+    mikrotik.unsub_listener = async_dispatcher_connect(
+        hass, mikrotik.signal_data_update, update_hub
     )
 
     update_hub()

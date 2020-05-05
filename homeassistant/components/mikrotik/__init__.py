@@ -61,13 +61,10 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
+    await hass.config_entries.async_forward_entry_unload(config_entry, "device_tracker")
 
     mikrotik = hass.data[DOMAIN].pop(config_entry.entry_id)
-    await mikrotik.async_remove_hub_devices()
-    for unsub_dispatcher in mikrotik.listeners:
-        unsub_dispatcher()
-
-    await hass.config_entries.async_forward_entry_unload(config_entry, "device_tracker")
+    await mikrotik.async_cleanup()
 
     return True
 
@@ -81,9 +78,8 @@ class Mikrotik:
         self.config_entry = config_entry
         self.hubs = {}
         self.clients = {}
-        self.unsub_timer = None
-        self.unsub_update = None
-        self.listeners = []
+        self.unsub_timers = []
+        self.unsub_listener = None
 
     @property
     def signal_data_update(self):
@@ -138,23 +134,13 @@ class Mikrotik:
             sw_version=hub.firmware,
         )
 
-    async def async_remove_hub_devices(self):
-        """Remove hub devices."""
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
-        for hub in self.hubs:
-            hub_device = device_registry.async_get_device(
-                {(DOMAIN, self.hubs[hub].serial_number)}, set()
-            )
-            if hub_device:
-                device_registry.async_remove_device(hub_device.id)
-
     async def async_update(self):
         """Update clients."""
-        old_clients = len(self.clients)
+        len_old_clients = len(self.clients)
         for hub in self.hubs:
             await self.hass.async_add_executor_job(self.hubs[hub].update_clients)
 
-        if old_clients != len(self.clients):
+        if len_old_clients != len(self.clients):
             _LOGGER.debug("New clients detected")
             async_dispatcher_send(self.hass, self.signal_data_update)
 
@@ -175,45 +161,55 @@ class Mikrotik:
 
         await self.async_update()
 
-        await self.async_set_scan_interval()
-        await self.async_set_signal_update_clients()
+        await self.async_update_intervals()
         self.config_entry.add_update_listener(self.async_options_updated)
 
         return True
 
-    async def async_set_scan_interval(self):
+    async def async_cleanup(self):
+        """Remove hub devices and update signals."""
+        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        for hub in self.hubs:
+            hub_device = device_registry.async_get_device(
+                {(DOMAIN, self.hubs[hub].serial_number)}, set()
+            )
+            if hub_device:
+                device_registry.async_remove_device(hub_device.id)
+
+        while self.unsub_timers:
+            self.unsub_timers.pop()()
+
+        # pylint: disable=not-callable
+        if self.unsub_listener:
+            self.unsub_listener()
+
+    async def async_update_intervals(self):
         """Update scan interval."""
 
         async def async_update_data(event_time):
             """Get the latest data from Mikrotik."""
             await self.async_update()
 
-        if self.unsub_timer is not None:
-            self.unsub_timer()
-        self.unsub_timer = async_track_time_interval(
-            self.hass, async_update_data, self.option_scan_interval
-        )
-        self.listeners.append(self.unsub_timer)
-
-    async def async_set_signal_update_clients(self):
-        """Update scan interval."""
-
         async def async_signal_update_clients(event_time):
             """Get the latest data from Mikrotik."""
             async_dispatcher_send(self.hass, self.signal_update_clients)
 
-        if self.unsub_update is not None:
-            self.unsub_update()
-        self.unsub_update = async_track_time_interval(
-            self.hass, async_signal_update_clients, self.option_detection_time
-        )
-        self.listeners.append(self.unsub_update)
+        while self.unsub_timers:
+            self.unsub_timers.pop()()
+
+        for method, interval in (
+            (async_update_data, self.option_scan_interval),
+            (async_signal_update_clients, self.option_detection_time),
+        ):
+            self.unsub_timers.append(
+                async_track_time_interval(self.hass, method, interval)
+            )
 
     @staticmethod
     async def async_options_updated(hass, entry):
         """Triggered by config entry options updates."""
-        await hass.data[DOMAIN][entry.entry_id].async_set_scan_interval()
-        await hass.data[DOMAIN][entry.entry_id].async_set_signal_update_clients()
+        await hass.data[DOMAIN][entry.entry_id].async_update_intervals()
+        # await hass.data[DOMAIN][entry.entry_id].async_set_signal_update_clients()
 
     def restore_client(self, mac):
         """Restore a missing device after restart."""
