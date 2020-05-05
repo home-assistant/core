@@ -92,7 +92,6 @@ class AgentCamera(MjpegCamera):
         }
         self.device = device
         self._removed = False
-        self._unsub_dispatcher = []
         self._name = f"{self._servername} {device.name}"
         self._stream_url = f"{self.server_url}{device.mp4_url}"
         self._unique_id = f"{device._client.unique}_{device.typeID}_{device.id}"
