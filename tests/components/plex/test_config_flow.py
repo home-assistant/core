@@ -8,12 +8,14 @@ import requests.exceptions
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.plex import config_flow
 from homeassistant.components.plex.const import (
+    AUTOMATIC_SETUP_STRING,
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_MONITORED_USERS,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
     CONF_USE_EPISODE_ART,
     DOMAIN,
+    MANUAL_SETUP_STRING,
     PLEX_SERVER_CONFIG,
     PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
@@ -549,17 +551,33 @@ async def test_manual_config(hass):
     assert result["data_schema"] is None
     hass.config_entries.flow.async_abort(result["flow_id"])
 
-    # Advanced mode
+    # Advanced automatic
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": "user", "show_advanced_options": True}
     )
 
     assert result["data_schema"] is not None
     assert result["type"] == "form"
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "user_advanced"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"manual_setup": True}
+        result["flow_id"], user_input={"setup_method": AUTOMATIC_SETUP_STRING}
+    )
+
+    assert result["type"] == "external"
+    hass.config_entries.flow.async_abort(result["flow_id"])
+
+    # Advanced manual
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user", "show_advanced_options": True}
+    )
+
+    assert result["data_schema"] is not None
+    assert result["type"] == "form"
+    assert result["step_id"] == "user_advanced"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"setup_method": MANUAL_SETUP_STRING}
     )
 
     assert result["type"] == "form"
@@ -642,14 +660,14 @@ async def test_manual_config_with_token(hass):
     """Test creating via manual configuration with only token."""
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        config_flow.DOMAIN, context={"source": "user", "show_advanced_options": True}
     )
 
     assert result["type"] == "form"
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "user_advanced"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"manual_setup": True}
+        result["flow_id"], user_input={"setup_method": MANUAL_SETUP_STRING}
     )
 
     assert result["type"] == "form"

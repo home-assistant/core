@@ -3,9 +3,12 @@
     "step": {
       "user": {
         "title": "Plex Media Server",
-        "description": "Continue to <a href=\"https://plex.tv\" target=\"_blank\">plex.tv</a> to link a Plex server.",
+        "description": "Continue to [plex.tv](https://plex.tv) to link a Plex server."
+      },
+      "user_advanced": {
+        "title": "Plex Media Server",
         "data": {
-          "manual_setup": "Manual setup"
+          "setup_method": "Setup method"
         }
       },
       "manual_setup": {

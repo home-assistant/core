@@ -26,6 +26,7 @@ import homeassistant.helpers.config_validation as cv
 from .const import (  # pylint: disable=unused-import
     AUTH_CALLBACK_NAME,
     AUTH_CALLBACK_PATH,
+    AUTOMATIC_SETUP_STRING,
     CONF_CLIENT_IDENTIFIER,
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_MONITORED_USERS,
@@ -36,6 +37,7 @@ from .const import (  # pylint: disable=unused-import
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    MANUAL_SETUP_STRING,
     PLEX_SERVER_CONFIG,
     SERVERS,
     X_PLEX_DEVICE_NAME,
@@ -79,21 +81,32 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.client_id = None
         self._manual = False
 
-    @callback
-    def user_schema(self):
-        """Return the form schema for user step."""
-        if self.show_advanced_options:
-            return vol.Schema({vol.Required("manual_setup", default=False): bool})
-        return None
-
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None, errors=None):
         """Handle a flow initialized by the user."""
         if user_input is not None:
-            if user_input.get("manual_setup"):
+            return await self.async_step_plex_website_auth()
+        if self.show_advanced_options:
+            return await self.async_step_user_advanced(errors=errors)
+        return self.async_show_form(step_id="user", errors=errors)
+
+    async def async_step_user_advanced(self, user_input=None, errors=None):
+        """Handle an advanced mode flow initialized by the user."""
+        if user_input is not None:
+            if user_input.get("setup_method") == MANUAL_SETUP_STRING:
                 self._manual = True
                 return await self.async_step_manual_setup()
             return await self.async_step_plex_website_auth()
-        return self.async_show_form(step_id="user", data_schema=self.user_schema())
+
+        data_schema = vol.Schema(
+            {
+                vol.Required("setup_method", default=AUTOMATIC_SETUP_STRING): vol.In(
+                    [AUTOMATIC_SETUP_STRING, MANUAL_SETUP_STRING]
+                )
+            }
+        )
+        return self.async_show_form(
+            step_id="user_advanced", data_schema=data_schema, errors=errors
+        )
 
     async def async_step_manual_setup(self, user_input=None, errors=None):
         """Begin manual configuration."""
@@ -187,9 +200,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_manual_setup(
                     user_input=server_config, errors=errors
                 )
-            return self.async_show_form(
-                step_id="user", data_schema=self.user_schema(), errors=errors
-            )
+            return await self.async_step_user(errors=errors)
 
         server_id = plex_server.machine_identifier
 
