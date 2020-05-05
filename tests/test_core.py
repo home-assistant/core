@@ -913,6 +913,8 @@ class TestConfig(unittest.TestCase):
             "version": __version__,
             "config_source": "default",
             "safe_mode": False,
+            "external_url": None,
+            "internal_url": None,
         }
 
         assert expected == self.config.as_dict()
