@@ -16,6 +16,7 @@ FLOWS = [
     "atag",
     "august",
     "axis",
+    "blebox",
     "braviatv",
     "brother",
     "cast",
