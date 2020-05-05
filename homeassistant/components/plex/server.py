@@ -131,6 +131,8 @@ class PlexServer:
                         )
                         _update_plexdirect_hostname()
                         config_entry_update_needed = True
+                    else:
+                        raise
                 else:
                     raise
         else:
