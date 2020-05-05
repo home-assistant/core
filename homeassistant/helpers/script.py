@@ -297,24 +297,33 @@ class _ScriptRunBase(ABC):
             self._action[CONF_EVENT], event_data, context=self._context
         )
 
-    async def _async_condition_step(self):
-        """Test if condition is matching."""
-        config_cache_key = frozenset((k, str(v)) for k, v in self._action.items())
+    async def _check_condition(self, cond):
+        config_cache_key = frozenset((k, str(v)) for k, v in cond.items())
         config = self._config_cache.get(config_cache_key)
         if not config:
-            config = await condition.async_from_config(self._hass, self._action, False)
+            config = await condition.async_from_config(self._hass, cond, False)
             self._config_cache[config_cache_key] = config
 
+        return config(self._hass, self._variables)
+
+    async def _async_condition_step(self):
+        """Test if condition is matching."""
         self._script.last_action = self._action.get(
             CONF_ALIAS, self._action[CONF_CONDITION]
         )
-        check = config(self._hass, self._variables)
+        check = await self._check_condition(self._action)
         self._log("Test condition %s: %s", self._script.last_action, check)
         if not check:
-            if self._action.get("else", False):
-                for _, self._action in enumerate(self._action.get("else")):
-                    await self._async_step(log_exceptions=False)
             raise _StopScript
+
+    async def _async_branch_step(self):
+        branches = self._action.get("branch", [])
+        for b in branches:
+            condition = b.get("if")
+            if not condition or await self._check_condition(condition):
+                for _, self._action in enumerate(b.get("sequence", {})):
+                    await self._async_step(log_exceptions=False)
+                break
 
     def _log(self, msg, *args, level=logging.INFO):
         self._script._log(msg, *args, level=level)  # pylint: disable=protected-access

@@ -961,16 +961,16 @@ CONDITION_SCHEMA: vol.Schema = key_value_schemas(
     },
 )
 
-def with_else(value):
-    v = dict(value)
-    if 'else' in v:
-        del v['else']
-    v2 = CONDITION_SCHEMA(v)
-    if 'else' in value:
-        v2['else'] = SCRIPT_SCHEMA(value['else'])
-    return v2
-
-CONDITION_SCHEMA_WITH_ELSE: vol.Schema = with_else
+BRANCH_SCHEMA = vol.Schema({
+        vol.Optional(CONF_ALIAS): string,
+        vol.Required("branch"): vol.All(
+            ensure_list, [{
+                vol.Optional("if"): CONDITION_SCHEMA,
+                vol.Required("sequence"): lambda v: SCRIPT_SCHEMA(v),
+                }]
+            ),
+    }
+)
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
     {
@@ -1027,6 +1027,9 @@ def determine_script_action(action: dict) -> str:
     if CONF_SCENE in action:
         return SCRIPT_ACTION_ACTIVATE_SCENE
 
+    if "branch" in action:
+        return "branch"
+
     return SCRIPT_ACTION_CALL_SERVICE
 
 
@@ -1035,9 +1038,10 @@ ACTION_TYPE_SCHEMAS: Dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_DELAY: _SCRIPT_DELAY_SCHEMA,
     SCRIPT_ACTION_WAIT_TEMPLATE: _SCRIPT_WAIT_TEMPLATE_SCHEMA,
     SCRIPT_ACTION_FIRE_EVENT: EVENT_SCHEMA,
-    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_SCHEMA_WITH_ELSE,
+    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_SCHEMA,
     SCRIPT_ACTION_DEVICE_AUTOMATION: DEVICE_ACTION_SCHEMA,
     SCRIPT_ACTION_ACTIVATE_SCENE: _SCRIPT_SCENE_SCHEMA,
+    "branch": BRANCH_SCHEMA,
 }
 
 
