@@ -22,7 +22,7 @@
         "via_hassio_addon": "{name} via Home Assistant add-on"
       },
       "description": {
-        "confirm_setup": "Do you want to set up {name}?"
+        "confirm_setup": "Do you want to start set up?"
       },
       "data": {
         "username": "Username",
