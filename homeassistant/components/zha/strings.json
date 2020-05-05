@@ -3,7 +3,10 @@
     "step": {
       "user": {
         "title": "ZHA",
-        "data": { "radio_type": "Radio Type", "usb_path": "USB Device Path" }
+        "data": {
+          "radio_type": "Radio Type",
+          "usb_path": "[%key:common::config_flow::data::usb_path%]"
+        }
       }
     },
     "error": { "cannot_connect": "Unable to connect to ZHA device." },

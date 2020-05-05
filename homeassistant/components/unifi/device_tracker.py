@@ -48,10 +48,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     controller.entities[DOMAIN] = {CLIENT_TRACKER: set(), DEVICE_TRACKER: set()}
 
     @callback
-    def items_added():
+    def items_added(
+        clients: set = controller.api.clients, devices: set = controller.api.devices
+    ) -> None:
         """Update the values of the controller."""
-        if controller.option_track_clients or controller.option_track_devices:
-            add_entities(controller, async_add_entities)
+        if controller.option_track_clients:
+            add_client_entities(controller, async_add_entities, clients)
+
+        if controller.option_track_devices:
+            add_device_entities(controller, async_add_entities, devices)
 
     for signal in (controller.signal_update, controller.signal_options_update):
         controller.listeners.append(async_dispatcher_connect(hass, signal, items_added))
@@ -60,38 +65,43 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 @callback
-def add_entities(controller, async_add_entities):
-    """Add new tracker entities from the controller."""
+def add_client_entities(controller, async_add_entities, clients):
+    """Add new client tracker entities from the controller."""
     trackers = []
 
-    for items, tracker_class, track in (
-        (controller.api.clients, UniFiClientTracker, controller.option_track_clients),
-        (controller.api.devices, UniFiDeviceTracker, controller.option_track_devices),
-    ):
-        if not track:
+    for mac in clients:
+        if mac in controller.entities[DOMAIN][UniFiClientTracker.TYPE]:
             continue
 
-        for mac in items:
+        client = controller.api.clients[mac]
 
-            if mac in controller.entities[DOMAIN][tracker_class.TYPE]:
+        if mac not in controller.wireless_clients:
+            if not controller.option_track_wired_clients:
                 continue
+        elif (
+            client.essid
+            and controller.option_ssid_filter
+            and client.essid not in controller.option_ssid_filter
+        ):
+            continue
 
-            item = items[mac]
+        trackers.append(UniFiClientTracker(client, controller))
 
-            if tracker_class is UniFiClientTracker:
+    if trackers:
+        async_add_entities(trackers)
 
-                if mac not in controller.wireless_clients:
-                    if not controller.option_track_wired_clients:
-                        continue
-                else:
-                    if (
-                        item.essid
-                        and controller.option_ssid_filter
-                        and item.essid not in controller.option_ssid_filter
-                    ):
-                        continue
 
-            trackers.append(tracker_class(item, controller))
+@callback
+def add_device_entities(controller, async_add_entities, devices):
+    """Add new device tracker entities from the controller."""
+    trackers = []
+
+    for mac in devices:
+        if mac in controller.entities[DOMAIN][UniFiDeviceTracker.TYPE]:
+            continue
+
+        device = controller.api.devices[mac]
+        trackers.append(UniFiDeviceTracker(device, controller))
 
     if trackers:
         async_add_entities(trackers)
@@ -147,6 +157,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
                     dt_util.utcnow() + self.controller.option_detection_time,
                 )
 
+        # SSID filter
         if (
             not self.is_wired
             and self.client.essid
@@ -154,6 +165,10 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             and self.client.essid not in self.controller.option_ssid_filter
             and not self.cancel_scheduled_update
         ):
+            return False
+
+        # A client that has never been seen cannot be connected.
+        if self.client.last_seen is None:
             return False
 
         if self.is_disconnected is not None:
@@ -166,10 +181,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
         else:
             self.wired_bug = None
-
-            # A client that has never been seen cannot be connected.
-            if self.client.last_seen is None:
-                return False
 
             since_last_seen = dt_util.utcnow() - dt_util.utc_from_timestamp(
                 float(self.client.last_seen)
@@ -240,7 +251,6 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
     async def async_added_to_hass(self):
         """Subscribe to device events."""
         await super().async_added_to_hass()
-        LOGGER.debug("New device %s (%s)", self.entity_id, self.device.mac)
         self.device.register_callback(self.async_update_callback)
 
     async def async_will_remove_from_hass(self) -> None:

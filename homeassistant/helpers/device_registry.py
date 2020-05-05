@@ -7,7 +7,6 @@ import uuid
 import attr
 
 from homeassistant.core import callback
-from homeassistant.loader import bind_hass
 
 from .singleton import singleton
 from .typing import HomeAssistantType
@@ -367,7 +366,6 @@ class DeviceRegistry:
                 self._async_update_device(dev_id, area_id=None)
 
 
-@bind_hass
 @singleton(DATA_REGISTRY)
 async def async_get_registry(hass: HomeAssistantType) -> DeviceRegistry:
     """Create entity registry."""

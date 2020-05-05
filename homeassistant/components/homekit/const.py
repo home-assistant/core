@@ -19,6 +19,8 @@ ATTR_VALUE = "value"
 
 # #### Config ####
 CONF_ADVERTISE_IP = "advertise_ip"
+CONF_AUDIO_MAP = "audio_map"
+CONF_AUDIO_PACKET_SIZE = "audio_packet_size"
 CONF_AUTO_START = "auto_start"
 CONF_ENTITY_CONFIG = "entity_config"
 CONF_FEATURE = "feature"
@@ -27,16 +29,31 @@ CONF_FILTER = "filter"
 CONF_LINKED_BATTERY_SENSOR = "linked_battery_sensor"
 CONF_LINKED_BATTERY_CHARGING_SENSOR = "linked_battery_charging_sensor"
 CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
+CONF_MAX_FPS = "max_fps"
+CONF_MAX_HEIGHT = "max_height"
+CONF_MAX_WIDTH = "max_width"
 CONF_SAFE_MODE = "safe_mode"
 CONF_ZEROCONF_DEFAULT_INTERFACE = "zeroconf_default_interface"
+CONF_STREAM_ADDRESS = "stream_address"
+CONF_STREAM_SOURCE = "stream_source"
+CONF_SUPPORT_AUDIO = "support_audio"
+CONF_VIDEO_MAP = "video_map"
+CONF_VIDEO_PACKET_SIZE = "video_packet_size"
 
 # #### Config Defaults ####
+DEFAULT_AUDIO_MAP = "0:a:0"
+DEFAULT_AUDIO_PACKET_SIZE = 188
 DEFAULT_AUTO_START = True
 DEFAULT_LOW_BATTERY_THRESHOLD = 20
+DEFAULT_MAX_FPS = 30
+DEFAULT_MAX_HEIGHT = 1080
+DEFAULT_MAX_WIDTH = 1920
 DEFAULT_PORT = 51827
 DEFAULT_CONFIG_FLOW_PORT = 51828
 DEFAULT_SAFE_MODE = False
 DEFAULT_ZEROCONF_DEFAULT_INTERFACE = False
+DEFAULT_VIDEO_MAP = "0:v:0"
+DEFAULT_VIDEO_PACKET_SIZE = 1316
 
 # #### Features ####
 FEATURE_ON_OFF = "on_off"

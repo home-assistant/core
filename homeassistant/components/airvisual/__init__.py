@@ -331,6 +331,13 @@ class AirVisualEntity(Entity):
 
         self.update_from_latest_data()
 
+    async def async_update(self):
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self.coordinator.async_request_refresh()
+
     @callback
     def update_from_latest_data(self):
         """Update the entity from the latest data."""

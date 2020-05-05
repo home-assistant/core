@@ -6,14 +6,19 @@ import ssl
 from aiohttp import CookieJar
 import aiounifi
 from aiounifi.controller import (
-    DATA_CLIENT,
     DATA_CLIENT_REMOVED,
-    DATA_DEVICE,
     DATA_EVENT,
     SIGNAL_CONNECTION_STATE,
     SIGNAL_DATA,
 )
-from aiounifi.events import WIRELESS_CLIENT_CONNECTED, WIRELESS_GUEST_CONNECTED
+from aiounifi.events import (
+    ACCESS_POINT_CONNECTED,
+    GATEWAY_CONNECTED,
+    SWITCH_CONNECTED,
+    WIRED_CLIENT_CONNECTED,
+    WIRELESS_CLIENT_CONNECTED,
+    WIRELESS_GUEST_CONNECTED,
+)
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 import async_timeout
 
@@ -54,6 +59,17 @@ from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
 SUPPORTED_PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
+
+CLIENT_CONNECTED = (
+    WIRED_CLIENT_CONNECTED,
+    WIRELESS_CLIENT_CONNECTED,
+    WIRELESS_GUEST_CONNECTED,
+)
+DEVICE_CONNECTED = (
+    ACCESS_POINT_CONNECTED,
+    GATEWAY_CONNECTED,
+    SWITCH_CONNECTED,
+)
 
 
 class UniFiController:
@@ -190,14 +206,33 @@ class UniFiController:
         elif signal == SIGNAL_DATA and data:
 
             if DATA_EVENT in data:
-                if next(iter(data[DATA_EVENT])).event in (
-                    WIRELESS_CLIENT_CONNECTED,
-                    WIRELESS_GUEST_CONNECTED,
-                ):
-                    self.update_wireless_clients()
+                clients_connected = set()
+                devices_connected = set()
+                wireless_clients_connected = False
 
-            elif DATA_CLIENT in data or DATA_DEVICE in data:
-                async_dispatcher_send(self.hass, self.signal_update)
+                for event in data[DATA_EVENT]:
+
+                    if event.event in CLIENT_CONNECTED:
+                        clients_connected.add(event.mac)
+
+                        if not wireless_clients_connected and event.event in (
+                            WIRELESS_CLIENT_CONNECTED,
+                            WIRELESS_GUEST_CONNECTED,
+                        ):
+                            wireless_clients_connected = True
+
+                    elif event.event in DEVICE_CONNECTED:
+                        devices_connected.add(event.mac)
+
+                if wireless_clients_connected:
+                    self.update_wireless_clients()
+                if clients_connected or devices_connected:
+                    async_dispatcher_send(
+                        self.hass,
+                        self.signal_update,
+                        clients_connected,
+                        devices_connected,
+                    )
 
             elif DATA_CLIENT_REMOVED in data:
                 async_dispatcher_send(
