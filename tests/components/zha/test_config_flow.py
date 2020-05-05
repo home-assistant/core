@@ -9,7 +9,7 @@ import zigpy.config
 from homeassistant.components.zha import config_flow
 from homeassistant.components.zha.core.const import CONF_RADIO_TYPE, CONTROLLER, DOMAIN
 
-import tests.async_mock
+from tests.async_mock import AsyncMock, MagicMock, patch, sentinel
 from tests.common import MockConfigEntry
 
 
