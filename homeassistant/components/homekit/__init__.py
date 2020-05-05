@@ -527,6 +527,7 @@ class HomeKit:
 
     def _start(self, bridged_states):
         from . import (  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel
+            type_cameras,
             type_covers,
             type_fans,
             type_lights,
