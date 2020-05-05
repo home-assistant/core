@@ -246,10 +246,10 @@ async def test_get_url_cloud(hass: HomeAssistant):
         "async_remote_ui_url",
         side_effect=cloud.CloudNotAvailable,
     ):
-        with pytest.raises(Exception):
+        with pytest.raises(NoURLAvailableError):
             async_get_url(hass, allow_local=False)
 
-        with pytest.raises(Exception):
+        with pytest.raises(NoURLAvailableError):
             async_get_url(hass, require_ssl=True)
 
 
@@ -274,11 +274,11 @@ async def test_get_url_fallback(hass: HomeAssistant):
         hass, {"internal_url": "http://example.local:8123"},
     )
     assert async_get_url(hass) == "http://example.local:8123"
-    with pytest.raises(Exception):
+    with pytest.raises(NoURLAvailableError):
         async_get_url(hass, require_ssl=True)
 
     hass.config.api = Mock(use_ssl=False, port=8123, base_url=None)
-    with pytest.raises(Exception):
+    with pytest.raises(NoURLAvailableError):
         async_get_url(hass, require_standard_port=True)
 
     # Test falling back to external URL
@@ -295,7 +295,7 @@ async def test_get_url_fallback(hass: HomeAssistant):
     assert async_get_url(hass) == "http://example.local:8123"
     assert async_get_url(hass, require_ssl=True) == "https://www.example.com:8123"
 
-    with pytest.raises(Exception):
+    with pytest.raises(NoURLAvailableError):
         async_get_url(hass, require_standard_port=True)
 
     await config_util.async_process_ha_core_config(
