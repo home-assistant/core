@@ -2,7 +2,6 @@
 
 import os
 
-from asynctest import mock
 import serial.tools.list_ports
 import zigpy.config
 
@@ -24,25 +23,27 @@ def com_port():
     return port
 
 
-@patch(
-    "serial.tools.list_ports.comports", return_value=[com_port()]
-)
+@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 async def test_user_flow(hass):
     """Test user flow."""
+
+    flow = config_flow.ZhaFlowHandler()
+    flow.hass = hass
+
     port = com_port()
     port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
 
-    with mock.patch.object(
-        flow, "detect_radios", return_value=mock.sentinel.data,
+    with patch.object(
+        flow, "detect_radios", return_value=sentinel.data,
     ):
         result = await flow.async_step_user(
             user_input={zigpy.config.CONF_DEVICE_PATH: port_select}
         )
     assert result["type"] == "create_entry"
     assert result["title"].startswith(port.description)
-    assert result["data"] is mock.sentinel.data
+    assert result["data"] is sentinel.data
 
-    with mock.patch.object(
+    with patch.object(
         flow, "detect_radios", return_value=None,
     ):
         result = await flow.async_step_user(
@@ -92,14 +93,14 @@ async def test_user_flow_existing_config_entry(hass):
 
 async def test_probe_radios(hass):
     """Test detect radios."""
-    app_ctrl_cls = mock.MagicMock()
+    app_ctrl_cls = MagicMock()
     app_ctrl_cls.SCHEMA_DEVICE = zigpy.config.SCHEMA_DEVICE
-    app_ctrl_cls.probe = tests.async_mock.AsyncMock(side_effect=(True, False))
+    app_ctrl_cls.probe = AsyncMock(side_effect=(True, False))
 
     flow = config_flow.ZhaFlowHandler()
     flow.hass = hass
 
-    with mock.patch.dict(config_flow.RADIO_TYPES, {"ezsp": {CONTROLLER: app_ctrl_cls}}):
+    with patch.dict(config_flow.RADIO_TYPES, {"ezsp": {CONTROLLER: app_ctrl_cls}}):
         res = await flow.detect_radios("/dev/null")
         assert app_ctrl_cls.probe.await_count == 1
         assert res[CONF_RADIO_TYPE] == "ezsp"
@@ -114,15 +115,15 @@ async def test_probe_radios(hass):
 
 async def test_user_port_config_fail(hass):
     """Test port config flow."""
-    app_ctrl_cls = mock.MagicMock()
+    app_ctrl_cls = MagicMock()
     app_ctrl_cls.SCHEMA_DEVICE = zigpy.config.SCHEMA_DEVICE
-    app_ctrl_cls.probe = tests.async_mock.AsyncMock(side_effect=(False, True))
+    app_ctrl_cls.probe = AsyncMock(side_effect=(False, True))
 
     flow = config_flow.ZhaFlowHandler()
     flow.hass = hass
     await flow.async_step_pick_radio(user_input={CONF_RADIO_TYPE: "ezsp"})
 
-    with mock.patch.dict(config_flow.RADIO_TYPES, {"ezsp": {CONTROLLER: app_ctrl_cls}}):
+    with patch.dict(config_flow.RADIO_TYPES, {"ezsp": {CONTROLLER: app_ctrl_cls}}):
         result = await flow.async_step_port_config(
             {zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"}
         )
@@ -144,46 +145,46 @@ async def test_user_port_config_fail(hass):
 
 def test_get_serial_by_id_no_dir():
     """Test serial by id conversion if there's no /dev/serial/by-id."""
-    p1 = mock.patch("os.path.isdir", mock.MagicMock(return_value=False))
-    p2 = mock.patch("os.scandir")
+    p1 = patch("os.path.isdir", MagicMock(return_value=False))
+    p2 = patch("os.scandir")
     with p1 as is_dir_mock, p2 as scan_mock:
-        res = config_flow.get_serial_by_id(mock.sentinel.path)
-        assert res is mock.sentinel.path
+        res = config_flow.get_serial_by_id(sentinel.path)
+        assert res is sentinel.path
         assert is_dir_mock.call_count == 1
         assert scan_mock.call_count == 0
 
 
 def test_get_serial_by_id():
     """Test serial by id conversion."""
-    p1 = mock.patch("os.path.isdir", mock.MagicMock(return_value=True))
-    p2 = mock.patch("os.scandir")
+    p1 = patch("os.path.isdir", MagicMock(return_value=True))
+    p2 = patch("os.scandir")
 
     def _realpath(path):
-        if path is mock.sentinel.matched_link:
-            return mock.sentinel.path
-        return mock.sentinel.serial_link_path
+        if path is sentinel.matched_link:
+            return sentinel.path
+        return sentinel.serial_link_path
 
-    p3 = mock.patch("os.path.realpath", side_effect=_realpath)
+    p3 = patch("os.path.realpath", side_effect=_realpath)
     with p1 as is_dir_mock, p2 as scan_mock, p3:
-        res = config_flow.get_serial_by_id(mock.sentinel.path)
-        assert res is mock.sentinel.path
+        res = config_flow.get_serial_by_id(sentinel.path)
+        assert res is sentinel.path
         assert is_dir_mock.call_count == 1
         assert scan_mock.call_count == 1
 
-        entry1 = mock.MagicMock(spec_set=os.DirEntry)
+        entry1 = MagicMock(spec_set=os.DirEntry)
         entry1.is_symlink.return_value = True
-        entry1.path = mock.sentinel.some_path
+        entry1.path = sentinel.some_path
 
-        entry2 = mock.MagicMock(spec_set=os.DirEntry)
+        entry2 = MagicMock(spec_set=os.DirEntry)
         entry2.is_symlink.return_value = False
-        entry2.path = mock.sentinel.other_path
+        entry2.path = sentinel.other_path
 
-        entry3 = mock.MagicMock(spec_set=os.DirEntry)
+        entry3 = MagicMock(spec_set=os.DirEntry)
         entry3.is_symlink.return_value = True
-        entry3.path = mock.sentinel.matched_link
+        entry3.path = sentinel.matched_link
 
         scan_mock.return_value = [entry1, entry2, entry3]
-        res = config_flow.get_serial_by_id(mock.sentinel.path)
-        assert res is mock.sentinel.matched_link
+        res = config_flow.get_serial_by_id(sentinel.path)
+        assert res is sentinel.matched_link
         assert is_dir_mock.call_count == 2
         assert scan_mock.call_count == 2
