@@ -169,20 +169,24 @@ class FanEntity(ToggleEntity):
     @property
     def capability_attributes(self):
         """Return capability attributes."""
-        return {ATTR_SPEED_LIST: self.speed_list}
+        if self.supported_features & SUPPORT_SET_SPEED:
+            return {ATTR_SPEED_LIST: self.speed_list}
+        return {}
 
     @property
     def state_attributes(self) -> dict:
         """Return optional state attributes."""
         data = {}
+        supported_features = self.supported_features
 
-        for prop, attr in PROP_TO_ATTR.items():
-            if not hasattr(self, prop):
-                continue
+        if supported_features & SUPPORT_DIRECTION:
+            data[ATTR_DIRECTION] = self.current_direction
 
-            value = getattr(self, prop)
-            if value is not None:
-                data[attr] = value
+        if supported_features & SUPPORT_OSCILLATE:
+            data[ATTR_OSCILLATING] = self.oscillating
+
+        if supported_features & SUPPORT_SET_SPEED:
+            data[ATTR_SPEED] = self.speed
 
         return data
 
