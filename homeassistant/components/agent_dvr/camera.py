@@ -259,15 +259,10 @@ class AgentCamera(MjpegCamera):
 
     async def async_added_to_hass(self):
         """Subscribe to signals and add camera to list."""
-        self._unsub_dispatcher.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 service_signal(SERVICE_UPDATE, self._unique_id),
                 self.async_on_demand_update,
             )
         )
-
-    async def async_will_remove_from_hass(self):
-        """Remove camera from list and disconnect from signals."""
-        for unsub_dispatcher in self._unsub_dispatcher:
-            unsub_dispatcher()
