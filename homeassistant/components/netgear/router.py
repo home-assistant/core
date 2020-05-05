@@ -43,7 +43,7 @@ class NetgearRouter:
         self._unsub_dispatcher = None
         self.listeners = []
 
-    async def setup(self) -> None:
+    async def async_setup(self) -> None:
         """Set up a Netgear router."""
         self._api = await self.hass.async_add_executor_job(
             Netgear,
@@ -57,17 +57,17 @@ class NetgearRouter:
 
         await self.hass.async_add_executor_job(self._api.login)
 
-        await self.update_devices()
+        await self.async_update_devices()
         self._unsub_dispatcher = async_track_time_interval(
-            self.hass, self.update_devices, SCAN_INTERVAL
+            self.hass, self.async_update_devices, SCAN_INTERVAL
         )
 
-    def unload(self) -> None:
+    async def async_unload(self) -> None:
         """Unload a Netgear router."""
         self._unsub_dispatcher()
         self._unsub_dispatcher = None
 
-    async def update_devices(self, now=None) -> None:
+    async def async_update_devices(self, now=None) -> None:
         """Update Netgear devices."""
         new_device = False
         ntg_devices: Dict[str, any] = await self.hass.async_add_executor_job(

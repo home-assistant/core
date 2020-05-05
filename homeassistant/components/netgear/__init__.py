@@ -56,7 +56,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Netgear component."""
     router = NetgearRouter(hass, entry)
-    await router.setup()
+    await router.async_setup()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.unique_id] = router
@@ -80,7 +80,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN][entry.unique_id].unload()
+        await hass.data[DOMAIN][entry.unique_id].async_unload()
         hass.data[DOMAIN].pop(entry.unique_id)
 
     return unload_ok
