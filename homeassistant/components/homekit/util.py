@@ -24,6 +24,7 @@ from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.util.temperature as temp_util
 
 from .const import (
+    CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
@@ -36,14 +37,17 @@ from .const import (
     CONF_STREAM_ADDRESS,
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
+    CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
+    DEFAULT_AUDIO_CODEC,
     DEFAULT_AUDIO_MAP,
     DEFAULT_AUDIO_PACKET_SIZE,
     DEFAULT_LOW_BATTERY_THRESHOLD,
     DEFAULT_MAX_FPS,
     DEFAULT_MAX_HEIGHT,
     DEFAULT_MAX_WIDTH,
+    DEFAULT_VIDEO_CODEC,
     DEFAULT_VIDEO_MAP,
     DEFAULT_VIDEO_PACKET_SIZE,
     DOMAIN,
@@ -84,12 +88,14 @@ CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
         vol.Optional(CONF_STREAM_ADDRESS): vol.All(ipaddress.ip_address, cv.string),
         vol.Optional(CONF_STREAM_SOURCE): cv.string,
+        vol.Optional(CONF_AUDIO_CODEC, default=DEFAULT_AUDIO_CODEC): cv.string,
         vol.Optional(CONF_SUPPORT_AUDIO, default=False): cv.boolean,
         vol.Optional(CONF_MAX_WIDTH, default=DEFAULT_MAX_WIDTH): cv.positive_int,
         vol.Optional(CONF_MAX_HEIGHT, default=DEFAULT_MAX_HEIGHT): cv.positive_int,
         vol.Optional(CONF_MAX_FPS, default=DEFAULT_MAX_FPS): cv.positive_int,
         vol.Optional(CONF_AUDIO_MAP, default=DEFAULT_AUDIO_MAP): cv.string,
         vol.Optional(CONF_VIDEO_MAP, default=DEFAULT_VIDEO_MAP): cv.string,
+        vol.Optional(CONF_VIDEO_CODEC, default=DEFAULT_VIDEO_CODEC): cv.string,
         vol.Optional(
             CONF_AUDIO_PACKET_SIZE, default=DEFAULT_AUDIO_PACKET_SIZE
         ): cv.positive_int,
