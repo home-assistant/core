@@ -192,11 +192,7 @@ class UnifiVideoCamera(Camera):
 
     def set_motion_detection(self, mode):
         """Set motion detection on or off."""
-
-        if mode is True:
-            set_mode = "motion"
-        else:
-            set_mode = "none"
+        set_mode = "motion" if mode is True else "none"
 
         try:
             self._nvr.set_recordmode(self._uuid, set_mode)
@@ -215,9 +211,7 @@ class UnifiVideoCamera(Camera):
 
     async def stream_source(self):
         """Return the source of the stream."""
-        caminfo = self._nvr.get_camera(self._uuid)
-        channels = caminfo["channels"]
-        for channel in channels:
+        for channel in self._caminfo["channels"]:
             if channel["isRtspEnabled"]:
                 return channel["rtspUris"][0]
 
