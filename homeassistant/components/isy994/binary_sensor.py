@@ -1,9 +1,11 @@
 """Support for ISY994 binary sensors."""
 from datetime import timedelta
-import logging
 from typing import Callable
 
-from homeassistant.components.binary_sensor import DOMAIN, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR,
+    BinarySensorEntity,
+)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -11,14 +13,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
-
-_LOGGER = logging.getLogger(__name__)
-
-ISY_DEVICE_TYPES = {
-    "moisture": ["16.8", "16.13", "16.14"],
-    "opening": ["16.9", "16.6", "16.7", "16.2", "16.17", "16.20", "16.21"],
-    "motion": ["16.1", "16.4", "16.5", "16.3"],
-}
+from .const import _LOGGER, ISY_BIN_SENS_DEVICE_TYPES
 
 
 def setup_platform(
@@ -29,7 +24,7 @@ def setup_platform(
     devices_by_nid = {}
     child_nodes = []
 
-    for node in hass.data[ISY994_NODES][DOMAIN]:
+    for node in hass.data[ISY994_NODES][BINARY_SENSOR]:
         if node.parent_node is None:
             device = ISYBinarySensorEntity(node)
             devices.append(device)
@@ -69,7 +64,7 @@ def setup_platform(
                 device = ISYBinarySensorEntity(node)
                 devices.append(device)
 
-    for name, status, _ in hass.data[ISY994_PROGRAMS][DOMAIN]:
+    for name, status, _ in hass.data[ISY994_PROGRAMS][BINARY_SENSOR]:
         devices.append(ISYBinarySensorProgram(name, status))
 
     add_entities(devices)
@@ -83,7 +78,7 @@ def _detect_device_type(node) -> str:
         return None
 
     split_type = device_type.split(".")
-    for device_class, ids in ISY_DEVICE_TYPES.items():
+    for device_class, ids in ISY_BIN_SENS_DEVICE_TYPES.items():
         if f"{split_type[0]}.{split_type[1]}" in ids:
             return device_class
 

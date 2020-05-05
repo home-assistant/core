@@ -1,9 +1,8 @@
 """Support for ISY994 fans."""
-import logging
 from typing import Callable
 
 from homeassistant.components.fan import (
-    DOMAIN,
+    DOMAIN as FAN,
     SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
@@ -14,8 +13,7 @@ from homeassistant.components.fan import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
-
-_LOGGER = logging.getLogger(__name__)
+from .const import _LOGGER
 
 VALUE_TO_STATE = {
     0: SPEED_OFF,
@@ -37,10 +35,10 @@ def setup_platform(
     """Set up the ISY994 fan platform."""
     devices = []
 
-    for node in hass.data[ISY994_NODES][DOMAIN]:
+    for node in hass.data[ISY994_NODES][FAN]:
         devices.append(ISYFanDevice(node))
 
-    for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
+    for name, status, actions in hass.data[ISY994_PROGRAMS][FAN]:
         devices.append(ISYFanProgram(name, status, actions))
 
     add_entities(devices)

@@ -1,28 +1,12 @@
 """Support for ISY994 covers."""
-import logging
 from typing import Callable
 
-from homeassistant.components.cover import DOMAIN, CoverEntity
-from homeassistant.const import (
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-    STATE_UNKNOWN,
-)
+from homeassistant.components.cover import DOMAIN as COVER, CoverEntity
+from homeassistant.const import STATE_CLOSED, STATE_OPEN
 from homeassistant.helpers.typing import ConfigType
 
 from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
-
-_LOGGER = logging.getLogger(__name__)
-
-VALUE_TO_STATE = {
-    0: STATE_CLOSED,
-    101: STATE_UNKNOWN,
-    102: "stopped",
-    103: STATE_CLOSING,
-    104: STATE_OPENING,
-}
+from .const import _LOGGER, UOM_TO_STATES
 
 
 def setup_platform(
@@ -30,10 +14,10 @@ def setup_platform(
 ):
     """Set up the ISY994 cover platform."""
     devices = []
-    for node in hass.data[ISY994_NODES][DOMAIN]:
+    for node in hass.data[ISY994_NODES][COVER]:
         devices.append(ISYCoverEntity(node))
 
-    for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
+    for name, status, actions in hass.data[ISY994_PROGRAMS][COVER]:
         devices.append(ISYCoverProgram(name, status, actions))
 
     add_entities(devices)
@@ -59,7 +43,8 @@ class ISYCoverEntity(ISYDevice, CoverEntity):
         """Get the state of the ISY994 cover device."""
         if self.is_unknown():
             return None
-        return VALUE_TO_STATE.get(self.value, STATE_OPEN)
+        # TEMPORARY: Cast value to int until PyISYv2.
+        return UOM_TO_STATES["97"].get(int(self.value), STATE_OPEN)
 
     def open_cover(self, **kwargs) -> None:
         """Send the open cover command to the ISY994 cover device."""
