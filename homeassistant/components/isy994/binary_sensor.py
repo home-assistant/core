@@ -12,8 +12,9 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
+from . import ISY994_NODES, ISY994_PROGRAMS
 from .const import _LOGGER, ISY_BIN_SENS_DEVICE_TYPES
+from .entity import ISYNodeEntity, ISYProgramEntity
 
 
 def setup_platform(
@@ -65,7 +66,7 @@ def setup_platform(
                 devices.append(device)
 
     for name, status, _ in hass.data[ISY994_PROGRAMS][BINARY_SENSOR]:
-        devices.append(ISYBinarySensorProgram(name, status))
+        devices.append(ISYBinarySensorProgramEntity(name, status))
 
     add_entities(devices)
 
@@ -90,7 +91,7 @@ def _is_val_unknown(val):
     return val == -1 * float("inf")
 
 
-class ISYBinarySensorEntity(ISYDevice, BinarySensorEntity):
+class ISYBinarySensorEntity(ISYNodeEntity, BinarySensorEntity):
     """Representation of an ISY994 binary sensor device.
 
     Often times, a single device is represented by multiple nodes in the ISY,
@@ -248,7 +249,7 @@ class ISYBinarySensorEntity(ISYDevice, BinarySensorEntity):
         return self._device_class_from_type
 
 
-class ISYBinarySensorHeartbeat(ISYDevice, BinarySensorEntity):
+class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity):
     """Representation of the battery state of an ISY994 sensor."""
 
     def __init__(self, node, parent_device) -> None:
@@ -348,17 +349,12 @@ class ISYBinarySensorHeartbeat(ISYDevice, BinarySensorEntity):
         return attr
 
 
-class ISYBinarySensorProgram(ISYDevice, BinarySensorEntity):
+class ISYBinarySensorProgramEntity(ISYProgramEntity, BinarySensorEntity):
     """Representation of an ISY994 binary sensor program.
 
     This does not need all of the subnode logic in the device version of binary
     sensors.
     """
-
-    def __init__(self, name, node) -> None:
-        """Initialize the ISY994 binary sensor program."""
-        super().__init__(node)
-        self._name = name
 
     @property
     def is_on(self) -> bool:
