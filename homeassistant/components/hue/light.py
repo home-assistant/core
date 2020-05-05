@@ -259,6 +259,9 @@ class HueLight(Light):
         else:
             bri = self.light.state.get("bri")
 
+        if bri is None:
+            return bri
+
         return hue_brightness_to_hass(bri)
 
     @property
