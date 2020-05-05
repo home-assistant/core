@@ -5,8 +5,9 @@ from homeassistant.components.cover import DOMAIN as COVER, CoverEntity
 from homeassistant.const import STATE_CLOSED, STATE_OPEN
 from homeassistant.helpers.typing import ConfigType
 
-from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
+from . import ISY994_NODES, ISY994_PROGRAMS
 from .const import _LOGGER, UOM_TO_STATES
+from .entity import ISYNodeEntity, ISYProgramEntity
 
 
 def setup_platform(
@@ -18,12 +19,12 @@ def setup_platform(
         devices.append(ISYCoverEntity(node))
 
     for name, status, actions in hass.data[ISY994_PROGRAMS][COVER]:
-        devices.append(ISYCoverProgram(name, status, actions))
+        devices.append(ISYCoverProgramEntity(name, status, actions))
 
     add_entities(devices)
 
 
-class ISYCoverEntity(ISYDevice, CoverEntity):
+class ISYCoverEntity(ISYNodeEntity, CoverEntity):
     """Representation of an ISY994 cover device."""
 
     @property
@@ -57,14 +58,8 @@ class ISYCoverEntity(ISYDevice, CoverEntity):
             _LOGGER.error("Unable to close the cover")
 
 
-class ISYCoverProgram(ISYCoverEntity):
+class ISYCoverProgramEntity(ISYProgramEntity, CoverEntity):
     """Representation of an ISY994 cover program."""
-
-    def __init__(self, name: str, node: object, actions: object) -> None:
-        """Initialize the ISY994 cover program."""
-        super().__init__(node)
-        self._name = name
-        self._actions = actions
 
     @property
     def state(self) -> str:

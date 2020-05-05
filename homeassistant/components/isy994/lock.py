@@ -5,8 +5,9 @@ from homeassistant.components.lock import DOMAIN as LOCK, LockEntity
 from homeassistant.const import STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED
 from homeassistant.helpers.typing import ConfigType
 
-from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
+from . import ISY994_NODES, ISY994_PROGRAMS
 from .const import _LOGGER
+from .entity import ISYNodeEntity, ISYProgramEntity
 
 VALUE_TO_STATE = {0: STATE_UNLOCKED, 100: STATE_LOCKED}
 
@@ -17,15 +18,15 @@ def setup_platform(
     """Set up the ISY994 lock platform."""
     devices = []
     for node in hass.data[ISY994_NODES][LOCK]:
-        devices.append(ISYLockDevice(node))
+        devices.append(ISYLockEntity(node))
 
     for name, status, actions in hass.data[ISY994_PROGRAMS][LOCK]:
-        devices.append(ISYLockProgram(name, status, actions))
+        devices.append(ISYLockProgramEntity(name, status, actions))
 
     add_entities(devices)
 
 
-class ISYLockDevice(ISYDevice, LockEntity):
+class ISYLockEntity(ISYNodeEntity, LockEntity):
     """Representation of an ISY994 lock device."""
 
     def __init__(self, node) -> None:
@@ -68,14 +69,8 @@ class ISYLockDevice(ISYDevice, LockEntity):
         self._node.update(0.5)
 
 
-class ISYLockProgram(ISYLockDevice):
+class ISYLockProgramEntity(ISYProgramEntity, LockEntity):
     """Representation of a ISY lock program."""
-
-    def __init__(self, name: str, node, actions) -> None:
-        """Initialize the lock."""
-        super().__init__(node)
-        self._name = name
-        self._actions = actions
 
     @property
     def is_locked(self) -> bool:
