@@ -4,6 +4,7 @@ from asynctest import patch
 from homeassistant.components.panasonic_viera.const import (
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
+    CONF_LISTEN_PORT,
     CONF_ON_ACTION,
     DEFAULT_NAME,
     DEFAULT_PORT,
@@ -20,6 +21,7 @@ MOCK_CONFIG_DATA = {
     CONF_HOST: "0.0.0.0",
     CONF_NAME: DEFAULT_NAME,
     CONF_PORT: DEFAULT_PORT,
+    CONF_LISTEN_PORT: DEFAULT_PORT,
     CONF_ON_ACTION: None,
 }
 
@@ -118,5 +120,4 @@ async def test_setup_unload_entry(hass):
     assert mock_entry.state == ENTRY_STATE_NOT_LOADED
 
     state = hass.states.get("media_player.panasonic_viera_tv")
-
     assert state is None

@@ -9,7 +9,14 @@ import voluptuous as vol
 
 from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_OFF,
+    STATE_ON,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 
@@ -17,6 +24,7 @@ from .const import (
     ATTR_REMOTE,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
+    CONF_LISTEN_PORT,
     CONF_ON_ACTION,
     DEFAULT_NAME,
     DEFAULT_PORT,
@@ -35,6 +43,7 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Required(CONF_HOST): cv.string,
                         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                        vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_PORT): cv.port,
                         vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
                     }
                 )
@@ -45,6 +54,13 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [MEDIA_PLAYER_DOMAIN]
+
+URL_EVENT_0_DMR = "dmr/event_0"
+URL_EVENT_0_NRC = "nrc/event_0"
+
+UPNP_EVENTS = [URL_EVENT_0_DMR, URL_EVENT_0_NRC]
+
+MAP_APP_NAME = {"platinum": "Browser", "Amazon": "Prime Video"}
 
 
 async def async_setup(hass, config):
@@ -72,6 +88,10 @@ async def async_setup_entry(hass, config_entry):
     host = config[CONF_HOST]
     port = config[CONF_PORT]
 
+    _LOGGER.error(config)
+
+    listen_port = config[CONF_LISTEN_PORT]
+
     on_action = config[CONF_ON_ACTION]
     if on_action is not None:
         on_action = Script(hass, on_action)
@@ -81,7 +101,7 @@ async def async_setup_entry(hass, config_entry):
         params["app_id"] = config[CONF_APP_ID]
         params["encryption_key"] = config[CONF_ENCRYPTION_KEY]
 
-    remote = Remote(hass, host, port, on_action, **params)
+    remote = Remote(hass, host, port, listen_port, on_action, **params)
     await remote.async_create_remote_control(during_setup=True)
 
     panasonic_viera_data[config_entry.entry_id] = {ATTR_REMOTE: remote}
@@ -90,6 +110,8 @@ async def async_setup_entry(hass, config_entry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, remote._shutdown)
 
     return True
 
@@ -115,7 +137,14 @@ class Remote:
     """The Remote class. It stores the TV properties and the remote control connection itself."""
 
     def __init__(
-        self, hass, host, port, on_action=None, app_id=None, encryption_key=None,
+        self,
+        hass,
+        host,
+        port,
+        listen_port=DEFAULT_PORT,
+        on_action=None,
+        app_id=None,
+        encryption_key=None,
     ):
         """Initialize the Remote class."""
         self._hass = hass
@@ -123,63 +152,84 @@ class Remote:
         self._host = host
         self._port = port
 
+        self._listen_port = listen_port
+
         self._on_action = on_action
 
         self._app_id = app_id
         self._encryption_key = encryption_key
 
-        self.state = None
         self.available = False
-        self.volume = 0
-        self.muted = False
-        self.playing = True
+        self.connected = False
+
+        self._state = STATE_OFF
+        self._app_info = None
+        self._volume = "0"
+        self._mute = "0"
+
+        self.playing = False
 
         self._control = None
+        self._timeout = 5
 
     async def async_create_remote_control(self, during_setup=False):
         """Create remote control."""
-        control_existed = self._control is not None
         try:
             params = {}
             if self._app_id and self._encryption_key:
                 params["app_id"] = self._app_id
                 params["encryption_key"] = self._encryption_key
 
-            self._control = await self._hass.async_add_executor_job(
-                partial(RemoteControl, self._host, self._port, **params)
+            control = await self._hass.async_add_executor_job(
+                partial(
+                    RemoteControl,
+                    self._host,
+                    self._port,
+                    listen_port=self._listen_port,
+                    **params,
+                )
             )
 
-            self.state = STATE_ON
-            self.available = True
-        except (TimeoutError, URLError, SOAPError, OSError) as err:
-            if control_existed or during_setup:
-                _LOGGER.debug("Could not establish remote connection: %s", err)
+            await control.async_start_server()
+            control.on_event = self.on_event
 
-            self._control = None
-            self.state = STATE_OFF
+            for event in UPNP_EVENTS:
+                await self._hass.async_add_executor_job(
+                    partial(control.upnp_service_subscribe, event)
+                )
+
+            self._control = control
+
+            self.available = True
+            self.connected = True
+        except (TimeoutError, URLError, SOAPError, OSError) as err:
+            if during_setup:
+                _LOGGER.error("Could not establish remote connection: %s", err)
+
             self.available = self._on_action is not None
+            self.connected = False
         except Exception as err:  # pylint: disable=broad-except
-            if control_existed or during_setup:
-                _LOGGER.exception("An unknown error occurred: %s", err)
-                self._control = None
-                self.state = STATE_OFF
-                self.available = self._on_action is not None
+            _LOGGER.exception("An unknown error occurred: %s", err)
+            self.available = self._on_action is not None
+            self.connected = False
 
     async def async_update(self):
         """Update device data."""
-        if self._control is None:
+        if not self.connected:
             await self.async_create_remote_control()
             return
 
         await self._handle_errors(self._update)
 
     def _update(self):
-        """Retrieve the latest data."""
-        self.muted = self._control.get_mute()
-        self.volume = self._control.get_volume() / 100
+        for event in UPNP_EVENTS:
+            self._control.upnp_service_resubscribe(event, self._timeout)
 
-        self.state = STATE_ON
+        self._volume = self._control.get_volume()
+        self._mute = self._control.get_mute()
+
         self.available = True
+        self.connected = True
 
     async def async_send_key(self, key):
         """Send a key to the TV and handle exceptions."""
@@ -194,16 +244,13 @@ class Remote:
         """Turn on the TV."""
         if self._on_action is not None:
             await self._on_action.async_run()
-            self.state = STATE_ON
         elif self.state != STATE_ON:
             await self.async_send_key(Keys.power)
-            self.state = STATE_ON
 
     async def async_turn_off(self):
         """Turn off the TV."""
         if self.state != STATE_OFF:
             await self.async_send_key(Keys.power)
-            self.state = STATE_OFF
             await self.async_update()
 
     async def async_set_mute(self, enable):
@@ -216,7 +263,7 @@ class Remote:
         await self._handle_errors(self._control.set_volume, volume)
 
     async def async_play_media(self, media_type, media_id):
-        """Play media."""
+        """Open webpage."""
         _LOGGER.debug("Play media: %s (%s)", media_id, media_type)
         await self._handle_errors(self._control.open_webpage, media_id)
 
@@ -228,11 +275,83 @@ class Remote:
             _LOGGER.error(
                 "The connection couldn't be encrypted. Please reconfigure your TV"
             )
-        except (TimeoutError, URLError, SOAPError, OSError):
-            self.state = STATE_OFF
+        except (TimeoutError, URLError, SOAPError, OSError) as err:
+            _LOGGER.error("Could not establish remote connection: %s", err)
+            if self._control is not None:
+                await self._shutdown()
             self.available = self._on_action is not None
-            await self.async_create_remote_control()
+            self.connected = False
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("An unknown error occurred: %s", err)
-            self.state = STATE_OFF
+            if self._control is not None:
+                await self._shutdown()
             self.available = self._on_action is not None
+            self.connected = False
+
+    async def on_event(self, service, properties):
+        """Parse and store received properties."""
+        if service is URL_EVENT_0_DMR:
+            if "Volume" in properties:
+                self._volume = properties["Volume"]["@val"]
+            if "Mute" in properties:
+                self._mute = properties["Mute"]["@val"]
+            return
+
+        if service is URL_EVENT_0_NRC:
+            if "X_ScreenState" in properties:
+                self._state = properties["X_ScreenState"]
+                return
+            if "X_AppInfo" in properties:
+                self._app_info = properties["X_AppInfo"]
+                return
+
+            self._state = properties[2]["X_ScreenState"]
+            self._app_info = properties[3]["X_AppInfo"]
+
+    async def _shutdown(self, *args):
+        if self._control is not None:
+            try:
+                await self._control.async_stop_server()
+            except OSError:
+                _LOGGER.debug("Could not stop HTTP server")
+            for event in UPNP_EVENTS:
+                try:
+                    return await self._hass.async_add_executor_job(
+                        partial(self._control.upnp_service_unsubscribe, event)
+                    )
+                except (TimeoutError, URLError, OSError):
+                    _LOGGER.debug("Could not unsubscribe from service %s", event)
+
+    @property
+    def state(self):
+        """Return TV state."""
+        if self._control is not None:
+            return self._state
+
+    @property
+    def app_name(self):
+        """Return name of open app."""
+        if self._app_info is not None:
+            app_name = self._app_info.split(":")[3]
+            if app_name == "null":
+                return None
+            elif app_name in MAP_APP_NAME:
+                return MAP_APP_NAME[app_name]
+            else:
+                return app_name
+
+    @property
+    def app_id(self):
+        """Return ID of open app."""
+        if self._app_info is not None:
+            return self._app_info.split(":")[2].split("=")[1]
+
+    @property
+    def volume(self):
+        """Return current volume level."""
+        return int(self._volume) / 100
+
+    @property
+    def muted(self):
+        """Return if TV is muted."""
+        return self._mute == "1"

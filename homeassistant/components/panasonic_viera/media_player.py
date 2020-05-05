@@ -3,7 +3,7 @@ import logging
 
 from panasonic_viera import Keys
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_URL,
     SUPPORT_NEXT_TRACK,
@@ -47,8 +47,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     remote = hass.data[DOMAIN][config_entry.entry_id][ATTR_REMOTE]
     name = config[CONF_NAME]
 
-    tv_device = PanasonicVieraTVEntity(remote, name)
-    async_add_entities([tv_device])
+    tv_entity = PanasonicVieraTVEntity(remote, name)
+    async_add_entities([tv_entity])
 
 
 class PanasonicVieraTVEntity(MediaPlayerEntity):
@@ -71,6 +71,11 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         return self._name
 
     @property
+    def device_class(self):
+        """Return the device class of the device."""
+        return DEVICE_CLASS_TV
+
+    @property
     def state(self):
         """Return the state of the device."""
         return self._remote.state
@@ -89,6 +94,23 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._remote.muted
+
+    @property
+    def app_name(self):
+        """Return name of current app."""
+        return self._remote.app_name
+
+    @property
+    def app_id(self):
+        """Return ID of current app."""
+        return self._remote.app_id
+
+    @property
+    def media_image_url(self):
+        """Image URL of current app."""
+        if self._remote.app_id:
+            return f"http://{self._remote._host}:{self._remote._port}/nrc/app_icon/{self._remote.app_id}"
+        return None
 
     @property
     def supported_features(self):
