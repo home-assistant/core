@@ -24,8 +24,8 @@ def com_port():
     return port
 
 
-@mock.patch(
-    "serial.tools.list_ports.comports", mock.MagicMock(return_value=[com_port()])
+@patch(
+    "serial.tools.list_ports.comports", return_value=[com_port()]
 )
 async def test_user_flow(hass):
     """Test user flow."""
