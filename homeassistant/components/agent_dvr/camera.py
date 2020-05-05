@@ -19,13 +19,16 @@ from homeassistant.components.mjpeg.camera import (
 )
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     ATTRIBUTION,
     CAMERA_SCAN_INTERVAL_SECS,
     CONNECTION,
     DOMAIN as AGENT_DOMAIN,
+    SERVICE_UPDATE,
 )
+from .helpers import service_signal
 
 SCAN_INTERVAL = timedelta(seconds=CAMERA_SCAN_INTERVAL_SECS)
 
@@ -88,13 +91,18 @@ class AgentCamera(MjpegCamera):
             CONF_STILL_IMAGE_URL: f"{self.server_url}{device.still_image_url}&size=640x480",
         }
         self.device = device
-        self._should_poll = True
         self._removed = False
+        self._unsub_dispatcher = []
         self._name = f"{self._servername} {device.name}"
         self._stream_url = f"{self.server_url}{device.mp4_url}"
         self._unique_id = f"{device._client.unique}_{device.typeID}_{device.id}"
         self._enabled_default = enabled_default
         super().__init__(device_info)
+
+    @property
+    def should_poll(self) -> bool:
+        """Update the state periodically."""
+        return True
 
     @property
     def device_info(self):
@@ -243,3 +251,24 @@ class AgentCamera(MjpegCamera):
     async def async_turn_off(self):
         """Disable the camera."""
         await self.device.disable()
+
+    # Other Entity method overrides
+
+    async def async_on_demand_update(self):
+        """Update state."""
+        self.async_schedule_update_ha_state(True)
+
+    async def async_added_to_hass(self):
+        """Subscribe to signals and add camera to list."""
+        self._unsub_dispatcher.append(
+            async_dispatcher_connect(
+                self.hass,
+                service_signal(SERVICE_UPDATE, self._unique_id),
+                self.async_on_demand_update,
+            )
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Remove camera from list and disconnect from signals."""
+        for unsub_dispatcher in self._unsub_dispatcher:
+            unsub_dispatcher()
