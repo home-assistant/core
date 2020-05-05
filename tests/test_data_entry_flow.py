@@ -58,7 +58,9 @@ async def test_configure_reuses_handler_instance(manager):
     assert form["errors"]["base"] == "1"
     form = await manager.async_configure(form["flow_id"])
     assert form["errors"]["base"] == "2"
-    assert len(manager.async_progress()) == 1
+    assert manager.async_progress() == [
+        {"flow_id": form["flow_id"], "handler": "test", "step": "init", "context": {}}
+    ]
     assert len(manager.mock_created_entries) == 0
 
 
