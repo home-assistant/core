@@ -1,10 +1,10 @@
-"""The Mikrotik router class."""
+"""Mikrotik Hub class."""
 import logging
 import socket
 import ssl
 
 import librouteros
-from librouteros.login import plain as login_plain, token as login_token
+from librouteros.login import plain, token
 
 from homeassistant.const import (
     CONF_HOST,
@@ -13,12 +13,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.util import slugify
-import homeassistant.util.dt as dt_util
 
 from .const import (
     ARP,
-    ATTR_DEVICE_TRACKER,
     ATTR_FIRMWARE,
     ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
@@ -36,59 +33,9 @@ from .const import (
     WIRELESS,
 )
 from .errors import CannotConnect, LoginError
+from .mikrotik_client import MikrotikClient
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class MikrotikClient:
-    """Represents a network client."""
-
-    def __init__(self, mac, params, hub_id):
-        """Initialize the client."""
-        self._mac = mac
-        self._params = params
-        self._last_seen = None
-        self._attrs = {}
-        self._wireless_params = {}
-        self.hub_id = hub_id
-
-    @property
-    def name(self):
-        """Return client name."""
-        return self._params.get("host-name", self.mac)
-
-    @property
-    def mac(self):
-        """Return client mac."""
-        return self._mac
-
-    @property
-    def last_seen(self):
-        """Return client last seen."""
-        return self._last_seen
-
-    @property
-    def attrs(self):
-        """Return client attributes."""
-        attr_data = self._wireless_params or self._params
-        for attr in ATTR_DEVICE_TRACKER:
-            if attr in attr_data:
-                self._attrs[slugify(attr)] = attr_data[attr]
-        self._attrs["ip_address"] = self._params.get(
-            "active-address", self._wireless_params.get("last-ip")
-        )
-        return self._attrs
-
-    def update(self, wireless_params=None, params=None, active=False, hub_id=None):
-        """Update client params."""
-        if hub_id:
-            self.hub_id = hub_id
-        if wireless_params:
-            self._wireless_params = wireless_params
-        if params:
-            self._params = params
-        if active:
-            self._last_seen = dt_util.utcnow()
 
 
 class MikrotikHub:
@@ -168,8 +115,8 @@ class MikrotikHub:
         """Get hub info."""
         self._hostname = self.get_info(IDENTITY).get(NAME)
         self._hub_info = self.get_info(INFO)
-        self._support_capsman = bool(self.get_info(IS_CAPSMAN))
-        self._support_wireless = bool(self.get_info(IS_WIRELESS))
+        self._support_capsman = self.command(MIKROTIK_SERVICES[IS_CAPSMAN])
+        self._support_wireless = self.command(MIKROTIK_SERVICES[IS_WIRELESS])
 
     def connect_to_hub(self):
         """Connect to hub."""
@@ -239,15 +186,16 @@ class MikrotikHub:
                 return
 
         _LOGGER.debug("updating network clients for host: %s", self.host)
+        wireless_clients = arp_clients = all_clients = {}
 
         try:
             all_clients = self.get_list_from_interface(DHCP)
             if self._support_capsman:
                 _LOGGER.debug("Hub is a CAPSMAN Manager")
-                client_list = wireless_devices = self.get_list_from_interface(CAPSMAN)
+                client_list = wireless_clients = self.get_list_from_interface(CAPSMAN)
             elif self._support_wireless:
                 _LOGGER.debug("Hub supports WIRELESS Interface")
-                client_list = wireless_devices = self.get_list_from_interface(WIRELESS)
+                client_list = wireless_clients = self.get_list_from_interface(WIRELESS)
             else:
                 _LOGGER.debug("Hub doesn't support WIRELESS/CAPSMAN Interface")
                 client_list = all_clients
@@ -258,7 +206,7 @@ class MikrotikHub:
 
             if self.arp_enabled:
                 _LOGGER.debug("Getting ARP device list")
-                arp_devices = self.get_list_from_interface(ARP)
+                arp_clients = self.get_list_from_interface(ARP)
 
         except (CannotConnect, socket.timeout, OSError):
             self.available = False
@@ -278,10 +226,10 @@ class MikrotikHub:
                     params=all_clients.get(mac, {}), hub_id=self.serial_number
                 )
 
-            if wireless_devices and mac in wireless_devices:
+            if wireless_clients and mac in wireless_clients:
                 # if wireless is supported then wireless_params are params
                 self.clients[mac].update(
-                    wireless_params=wireless_devices[mac], active=True
+                    wireless_params=wireless_clients[mac], active=True
                 )
                 continue
             # for wired devices or when forcing dhcp check for active-address
@@ -290,9 +238,9 @@ class MikrotikHub:
                 continue
             # ping check the rest of active devices if arp ping is enabled
             active = True
-            if self.arp_enabled and mac in arp_devices:
+            if self.arp_enabled and mac in arp_clients:
                 active = self.do_arp_ping(
-                    params.get("active-address"), arp_devices[mac].get("interface")
+                    params.get("active-address"), arp_clients[mac].get("interface")
                 )
             self.clients[mac].update(active=active)
 
@@ -312,7 +260,7 @@ def get_api(hass, entry):
     """Connect to Mikrotik hub."""
     _LOGGER.debug("Connecting to Mikrotik hub [%s]", entry[CONF_HOST])
 
-    _login_method = (login_plain, login_token)
+    _login_method = (plain, token)
     kwargs = {"login_methods": _login_method, "port": entry[CONF_PORT]}
 
     if entry[CONF_VERIFY_SSL]:

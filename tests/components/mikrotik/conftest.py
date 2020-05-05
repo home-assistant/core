@@ -1,7 +1,7 @@
 """Fixtures for Mikrotik methods."""
-from unittest.mock import patch
-
 import pytest
+
+from tests.async_mock import patch
 
 
 @pytest.fixture(name="api")

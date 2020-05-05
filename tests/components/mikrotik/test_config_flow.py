@@ -3,7 +3,6 @@ from datetime import timedelta
 
 import librouteros
 
-# from homeassistant.components.mikrotik import const
 from homeassistant import data_entry_flow
 from homeassistant.components import mikrotik
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
@@ -17,8 +16,8 @@ DEMO_CONFIG = {
     CONF_NAME: "Home router",
     mikrotik.const.CONF_HUBS: [MOCK_HUB1, MOCK_HUB2],
     mikrotik.const.CONF_FORCE_DHCP: False,
-    mikrotik.CONF_ARP_PING: False,
-    mikrotik.CONF_DETECTION_TIME: timedelta(seconds=30),
+    mikrotik.const.CONF_ARP_PING: False,
+    mikrotik.const.CONF_DETECTION_TIME: timedelta(seconds=30),
 }
 
 DEMO_CONFIG_ENTRY = {
@@ -31,53 +30,6 @@ DEMO_CONFIG_ENTRY = {
     mikrotik.const.CONF_ARP_PING: False,
     mikrotik.const.CONF_DETECTION_TIME: 30,
 }
-
-
-async def test_import_conn_error(hass, api):
-    """Import fails in case of connection error."""
-    api.side_effect = librouteros.exceptions.LibRouterosError
-
-    result = await hass.config_entries.flow.async_init(
-        mikrotik.DOMAIN, context={"source": "import"}, data={**DEMO_CONFIG}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "conn_error"
-
-
-async def test_import_successfull(hass, api):
-    """Test import step."""
-    result = await hass.config_entries.flow.async_init(
-        mikrotik.DOMAIN, context={"source": "import"}, data={**DEMO_CONFIG}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Home router"
-    assert result["data"][CONF_NAME] == "Home router"
-    assert result["data"][mikrotik.const.CONF_HUBS][MOCK_HUB1[CONF_HOST]] == MOCK_HUB1
-    assert result["data"][mikrotik.const.CONF_HUBS][MOCK_HUB2[CONF_HOST]] == MOCK_HUB2
-
-
-async def test_import_existing_host(hass, api):
-    """Test importing existing hosts fails."""
-    # if same host is mentioned the import fails
-    config = {**DEMO_CONFIG, mikrotik.const.CONF_HUBS: [MOCK_HUB1, MOCK_HUB1]}
-
-    result = await hass.config_entries.flow.async_init(
-        mikrotik.DOMAIN, context={"source": "import"}, data=config
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
-    # if host is configured in a different entry then abort
-    entry = MockConfigEntry(domain=mikrotik.DOMAIN, data={**DEMO_CONFIG_ENTRY})
-    entry.add_to_hass(hass)
-
-    config = {**DEMO_CONFIG, mikrotik.const.CONF_HUBS: [MOCK_HUB1]}
-    result = await hass.config_entries.flow.async_init(
-        mikrotik.DOMAIN, context={"source": "import"}, data=config
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
 
 
 async def test_flow_works(hass, api):
@@ -266,15 +218,41 @@ async def test_options(hass, api):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            mikrotik.CONF_DETECTION_TIME: 30,
-            mikrotik.CONF_ARP_PING: True,
+            mikrotik.const.CONF_DETECTION_TIME: 30,
+            mikrotik.CONF_SCAN_INTERVAL: 10,
+            mikrotik.const.CONF_ARP_PING: True,
             mikrotik.const.CONF_FORCE_DHCP: False,
         },
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
-        mikrotik.CONF_DETECTION_TIME: 30,
-        mikrotik.CONF_ARP_PING: True,
+        mikrotik.const.CONF_DETECTION_TIME: 30,
+        mikrotik.CONF_SCAN_INTERVAL: 10,
+        mikrotik.const.CONF_ARP_PING: True,
         mikrotik.const.CONF_FORCE_DHCP: False,
     }
+
+
+async def test_options_error(hass, api):
+    """Test updating options with not allowed value."""
+    mikrotik_mock = await setup_mikrotik_integration(hass)
+    result = await hass.config_entries.options.async_init(
+        mikrotik_mock.config_entry.entry_id
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            mikrotik.const.CONF_DETECTION_TIME: 30,
+            mikrotik.CONF_SCAN_INTERVAL: 60,
+            mikrotik.const.CONF_ARP_PING: True,
+            mikrotik.const.CONF_FORCE_DHCP: False,
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {mikrotik.CONF_SCAN_INTERVAL: "value_error"}

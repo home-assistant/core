@@ -1,43 +1,54 @@
 """Tests for the Mikrotik component."""
-from homeassistant.components import mikrotik
+from homeassistant.components.mikrotik.const import (
+    CONF_ARP_PING,
+    CONF_DETECTION_TIME,
+    CONF_FORCE_DHCP,
+    CONF_HUBS,
+    DEFAULT_DETECTION_TIME,
+)
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 
 MOCK_HUB1 = {
-    mikrotik.CONF_HOST: "0.0.0.1",
-    mikrotik.CONF_USERNAME: "user",
-    mikrotik.CONF_PASSWORD: "pass",
-    mikrotik.CONF_PORT: 8278,
-    mikrotik.CONF_VERIFY_SSL: False,
+    CONF_HOST: "0.0.0.1",
+    CONF_USERNAME: "user",
+    CONF_PASSWORD: "pass",
+    CONF_PORT: 8278,
+    CONF_VERIFY_SSL: False,
 }
 
 MOCK_HUB2 = {
-    mikrotik.CONF_HOST: "0.0.0.2",
-    mikrotik.CONF_USERNAME: "user",
-    mikrotik.CONF_PASSWORD: "pass",
-    mikrotik.CONF_PORT: 8278,
-    mikrotik.CONF_VERIFY_SSL: False,
+    CONF_HOST: "0.0.0.2",
+    CONF_USERNAME: "user",
+    CONF_PASSWORD: "pass",
+    CONF_PORT: 8278,
+    CONF_VERIFY_SSL: False,
 }
 
 ENTRY_DATA = {
-    mikrotik.CONF_NAME: "Mikrotik",
-    mikrotik.CONF_HUBS: {
-        MOCK_HUB1[mikrotik.CONF_HOST]: MOCK_HUB1,
-        MOCK_HUB2[mikrotik.CONF_HOST]: MOCK_HUB2,
-    },
+    CONF_NAME: "Mikrotik",
+    CONF_HUBS: {MOCK_HUB1[CONF_HOST]: MOCK_HUB1, MOCK_HUB2[CONF_HOST]: MOCK_HUB2},
 }
 
 OLD_ENTRY_CONFIG = {
-    mikrotik.CONF_NAME: "Mikrotik",
-    mikrotik.CONF_HOST: "0.0.0.1",
-    mikrotik.CONF_USERNAME: "user",
-    mikrotik.CONF_PASSWORD: "pass",
-    mikrotik.CONF_PORT: 8278,
-    mikrotik.CONF_VERIFY_SSL: False,
+    CONF_NAME: "Mikrotik",
+    CONF_HOST: "0.0.0.1",
+    CONF_USERNAME: "user",
+    CONF_PASSWORD: "pass",
+    CONF_PORT: 8278,
+    CONF_VERIFY_SSL: False,
 }
 
 MOCK_OPTIONS = {
-    mikrotik.CONF_ARP_PING: False,
-    mikrotik.const.CONF_FORCE_DHCP: False,
-    mikrotik.CONF_DETECTION_TIME: mikrotik.DEFAULT_DETECTION_TIME,
+    CONF_ARP_PING: False,
+    CONF_FORCE_DHCP: False,
+    CONF_DETECTION_TIME: DEFAULT_DETECTION_TIME,
 }
 
 

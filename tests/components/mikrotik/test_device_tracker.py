@@ -75,14 +75,16 @@ async def test_device_trackers(hass, api):
 
         device_3 = hass.states.get("device_tracker.device_3")
         assert device_3 is not None
-        assert device_2.state == "home"
+        assert device_3.state == "home"
 
         # test state remains home if last_seen < consider_home_interval
         del HUB1_WIRELESS_DATA[1]  # device_3 is removed from wireless list
         mikrotik_mock.clients[
             "00:00:00:00:00:03"
         ]._last_seen = dt_util.utcnow() - timedelta(minutes=4)
-        await mikrotik_mock.async_update()
+        hass.helpers.dispatcher.async_dispatcher_send(
+            mikrotik_mock.signal_update_clients
+        )
         await hass.async_block_till_done()
 
         device_3 = hass.states.get("device_tracker.device_3")
@@ -92,7 +94,9 @@ async def test_device_trackers(hass, api):
         mikrotik_mock.clients[
             "00:00:00:00:00:03"
         ]._last_seen = dt_util.utcnow() - timedelta(minutes=5)
-        await mikrotik_mock.async_update()
+        hass.helpers.dispatcher.async_dispatcher_send(
+            mikrotik_mock.signal_update_clients
+        )
         await hass.async_block_till_done()
 
         device_3 = hass.states.get("device_tracker.device_3")
@@ -134,6 +138,9 @@ async def test_device_tracker_switching_hubs(hass, api):
     with patch.object(mikrotik.hub.MikrotikHub, "command", new=mock_command):
         # device_1 is still connected connected to HUB1 after update
         await mikrotik_mock.async_update()
+        hass.helpers.dispatcher.async_dispatcher_send(
+            mikrotik_mock.signal_update_clients
+        )
         await hass.async_block_till_done()
         this_device = device_registry.async_get_device(
             {(mikrotik.DOMAIN, "00:00:00:00:00:01")}, set()
@@ -145,6 +152,9 @@ async def test_device_tracker_switching_hubs(hass, api):
         HUB2_WIRELESS_DATA.append(DEVICE_1_WIRELESS)
 
         await mikrotik_mock.async_update()
+        hass.helpers.dispatcher.async_dispatcher_send(
+            mikrotik_mock.signal_update_clients
+        )
         await hass.async_block_till_done()
         this_device = device_registry.async_get_device(
             {(mikrotik.DOMAIN, "00:00:00:00:00:01")}, set()

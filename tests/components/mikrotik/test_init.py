@@ -1,16 +1,15 @@
 """Test Mikrotik setup process."""
 from datetime import timedelta
-
-from asynctest import CoroutineMock
+from itertools import cycle
 
 from homeassistant import config_entries
 from homeassistant.components import mikrotik
 from homeassistant.setup import async_setup_component
 
-from . import ENTRY_DATA, OLD_ENTRY_CONFIG
-from .test_hub import setup_mikrotik_integration
+from . import DEVICE_3_WIRELESS, ENTRY_DATA, HUB1_WIRELESS_DATA, OLD_ENTRY_CONFIG
+from .test_hub import DATA_RETURN, setup_mikrotik_integration
 
-from tests.async_mock import patch
+from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 
@@ -35,7 +34,7 @@ async def test_old_config_entry(hass, api):
 async def test_config_fail_setup(hass, api):
     """Test that a failed setup will not store the config."""
     with patch.object(mikrotik, "Mikrotik") as mock_integration:
-        mock_integration.return_value.async_setup.return_value = CoroutineMock(
+        mock_integration.return_value.async_setup.return_value = AsyncMock(
             return_value=False
         )
 
@@ -45,6 +44,15 @@ async def test_config_fail_setup(hass, api):
         await setup_mikrotik_integration(hass, config_entry=config_entry)
 
     assert config_entry.state == config_entries.ENTRY_STATE_SETUP_ERROR
+
+
+async def test_unload_entry(hass, api):
+    """Test being able to unload an entry."""
+    mikrotik_mock = await setup_mikrotik_integration(hass)
+    assert mikrotik_mock.config_entry.state == config_entries.ENTRY_STATE_LOADED
+
+    assert await hass.config_entries.async_unload(mikrotik_mock.config_entry.entry_id)
+    assert mikrotik_mock.config_entry.state == config_entries.ENTRY_STATE_NOT_LOADED
 
 
 async def test_successfull_integration_setup(hass, api):
@@ -65,15 +73,57 @@ async def test_successfull_integration_setup(hass, api):
             seconds=mikrotik.DEFAULT_DETECTION_TIME
         )
         assert (
-            mikrotik_mock.signal_update
+            mikrotik_mock.signal_data_update
             == f"{mikrotik.DOMAIN}-{mikrotik_mock.config_entry.entry_id}-data-updated"
+        )
+        assert (
+            mikrotik_mock.signal_update_clients
+            == f"{mikrotik.DOMAIN}-{mikrotik_mock.config_entry.entry_id}-update-clients"
+        )
+        assert (
+            mikrotik_mock.signal_options_update
+            == f"{mikrotik.DOMAIN}-{mikrotik_mock.config_entry.entry_id}-options-updated"
         )
 
 
-async def test_unload_entry(hass, api):
-    """Test being able to unload an entry."""
-    mikrotik_mock = await setup_mikrotik_integration(hass)
-    assert mikrotik_mock.config_entry.state == config_entries.ENTRY_STATE_LOADED
+async def test_updating_clients(hass, api):
+    """Test scheduled update for all clients."""
+    i = cycle([0, 1])
+    hub_index = 0
 
-    assert await hass.config_entries.async_unload(mikrotik_mock.config_entry.entry_id)
-    assert mikrotik_mock.config_entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    def mock_command(self, cmd, params=None):
+        nonlocal i
+        nonlocal hub_index
+
+        # check for first cmd by each hub and set hub_index accordingly
+        if cmd in [
+            mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IDENTITY],
+            mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.DHCP],
+        ]:
+            hub_index = next(i)
+        return DATA_RETURN[cmd][hub_index]
+
+    with patch.object(mikrotik.hub.MikrotikHub, "command", new=mock_command), patch(
+        "homeassistant.components.mikrotik.async_dispatcher_send"
+    ) as mock_disptacher:
+
+        mikrotik_mock = await setup_mikrotik_integration(hass, support_wireless=True)
+        assert len(mock_disptacher.mock_calls) == 1
+
+        # no signal is sent if no new device is detected
+        assert len(mikrotik_mock.clients) == 2
+        await mikrotik_mock.async_update()
+        await hass.async_block_till_done()
+
+        assert len(mikrotik_mock.clients) == 2
+        assert len(mock_disptacher.mock_calls) == 1
+
+        # signal is sent if new device is detected
+        HUB1_WIRELESS_DATA.append(DEVICE_3_WIRELESS)
+        await mikrotik_mock.async_update()
+        await hass.async_block_till_done()
+        assert len(mikrotik_mock.clients) == 3
+        assert len(mock_disptacher.mock_calls) == 2
+
+    # revert the changes made for this test
+    del HUB1_WIRELESS_DATA[1]

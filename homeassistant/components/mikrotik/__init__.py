@@ -1,5 +1,6 @@
 """The Mikrotik component."""
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
@@ -23,46 +24,11 @@ CONFIG_SCHEMA = vol.Schema(
     cv.deprecated(DOMAIN, invalidation_version="0.110"), {DOMAIN: cv.match_all},
 )
 
-# HOST_SCHEMA = vol.Schema(
-#     {
-#         vol.Required(CONF_HOST): cv.string,
-#         vol.Required(CONF_USERNAME): cv.string,
-#         vol.Required(CONF_PASSWORD): cv.string,
-#         vol.Optional(CONF_PORT, default=DEFAULT_API_PORT): cv.port,
-#         vol.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
-#     }
-# )
-
-
-# MIKROTIK_SCHEMA = vol.All(
-#     vol.Schema(
-#         {
-#             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-#             vol.Required(CONF_HUBS): vol.All(cv.ensure_list, [HOST_SCHEMA]),
-#             vol.Optional(CONF_ARP_PING, default=False): cv.boolean,
-#             vol.Optional(CONF_FORCE_DHCP, default=False): cv.boolean,
-#             vol.Optional(
-#                 CONF_DETECTION_TIME, default=DEFAULT_DETECTION_TIME
-#             ): cv.time_period,
-#         }
-#     )
-# )
-
-# CONFIG_SCHEMA = vol.Schema(
-#     {DOMAIN: vol.All(cv.ensure_list, [MIKROTIK_SCHEMA])}, extra=vol.ALLOW_EXTRA
-# )
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):
     """Integration doesn't support configuration through configuration.yaml."""
-
-    # if DOMAIN in config:
-    #     for entry in config[DOMAIN]:
-    #         hass.async_create_task(
-    #             hass.config_entries.flow.async_init(
-    #                 DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
-    #             )
-    #         )
 
     return True
 
@@ -182,43 +148,18 @@ class Mikrotik:
             if hub_device:
                 device_registry.async_remove_device(hub_device.id)
 
-    # async def async_add_options(self):
-    #     """Populate default options for Mikrotik."""
-    #     if not self.config_entry.options:
-    #         data = dict(self.config_entry.data)
-    #         options = {
-    #             CONF_ARP_PING: data.pop(CONF_ARP_PING, False),
-    #             CONF_FORCE_DHCP: data.pop(CONF_FORCE_DHCP, False),
-    #             CONF_DETECTION_TIME: data.pop(
-    #                 CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
-    #             ),
-    #         }
-
-    #         self.hass.config_entries.async_update_entry(
-    #             self.config_entry, data=data, options=options
-    #         )
-
-    # async def request_update(self):
-    #     """Request an update."""
-    #     if self.progress is not None:
-    #         await self.progress
-    #         return
-
-    #     self.progress = self.hass.async_create_task(self.async_update())
-    #     await self.progress
-
-    #     self.progress = None
-
     async def async_update(self):
         """Update clients."""
+        old_clients = len(self.clients)
         for hub in self.hubs:
             await self.hass.async_add_executor_job(self.hubs[hub].update_clients)
-        async_dispatcher_send(self.hass, self.signal_data_update)
+
+        if old_clients != len(self.clients):
+            _LOGGER.debug("New clients detected")
+            async_dispatcher_send(self.hass, self.signal_data_update)
 
     async def async_setup(self):
         """Set up a new Mikrotik integration."""
-
-        # await self.async_add_options()
 
         for hub in self.config_entry.data[CONF_HUBS]:
             new_hub = MikrotikHub(self.hass, self.config_entry, hub, self.clients)
@@ -243,28 +184,28 @@ class Mikrotik:
     async def async_set_scan_interval(self):
         """Update scan interval."""
 
-        async def update(event_time):
+        async def async_update_data(event_time):
             """Get the latest data from Mikrotik."""
             await self.async_update()
 
         if self.unsub_timer is not None:
             self.unsub_timer()
         self.unsub_timer = async_track_time_interval(
-            self.hass, update, self.option_scan_interval
+            self.hass, async_update_data, self.option_scan_interval
         )
         self.listeners.append(self.unsub_timer)
 
     async def async_set_signal_update_clients(self):
         """Update scan interval."""
 
-        async def signal_update(event_time):
+        async def async_signal_update_clients(event_time):
             """Get the latest data from Mikrotik."""
             async_dispatcher_send(self.hass, self.signal_update_clients)
 
         if self.unsub_update is not None:
             self.unsub_update()
         self.unsub_update = async_track_time_interval(
-            self.hass, signal_update, self.option_detection_time
+            self.hass, async_signal_update_clients, self.option_detection_time
         )
         self.listeners.append(self.unsub_update)
 
