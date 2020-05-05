@@ -8,7 +8,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.util import get_local_ip
-from homeassistant.util.network import is_ip_address, is_local, is_loopback
+from homeassistant.util.network import (
+    is_ip_address,
+    is_local,
+    is_loopback,
+    normalize_url,
+)
 
 
 class NoURLAvailableError(HomeAssistantError):
@@ -27,15 +32,11 @@ def async_get_url(
     """Get a URL to this instance."""
     # Return internal URL when available and matches requested citeria
     if allow_local and hass.config.internal_url:
-        internal_url = yarl.URL(hass.config.internal_url.rstrip("/"))
+        internal_url = yarl.URL(hass.config.internal_url)
         if (not require_ssl or internal_url.scheme == "https") and (
             not require_standard_port or internal_url.is_default_port()
         ):
-            return (
-                str(internal_url)
-                if not internal_url.is_default_port()
-                else str(internal_url.with_port(None))
-            )
+            return normalize_url(str(internal_url))
 
     # Return IP if local is allowed and it matches citeria requested.
     # This cannot be used if SSL is required, as IP based will always result
@@ -52,15 +53,11 @@ def async_get_url(
         if not is_loopback(ip_address(ip_url.host)) and (
             not require_standard_port or ip_url.is_default_port()
         ):
-            return (
-                str(ip_url)
-                if not ip_url.is_default_port()
-                else str(ip_url.with_port(None))
-            )
+            return normalize_url(str(ip_url))
 
     # Return user set external URL if it matches the requested citeria
     if hass.config.external_url:
-        external_url = yarl.URL(hass.config.external_url.rstrip("/"))
+        external_url = yarl.URL(hass.config.external_url)
         if (not require_standard_port or external_url.is_default_port()) and (
             not require_ssl
             or (
@@ -68,16 +65,12 @@ def async_get_url(
                 and not is_ip_address(str(external_url.host))
             )
         ):
-            return (
-                str(external_url)
-                if not external_url.is_default_port()
-                else str(external_url.with_port(None))
-            )
+            return normalize_url(str(external_url))
 
     # Fall back to the good old, deprecated `base_url`, with sanity
     # This if statement can be removed after `base_url` is removed.
     if hass.config.api is not None and hass.config.api.base_url:
-        base_url = yarl.URL(hass.config.api.base_url.rstrip("/"))
+        base_url = yarl.URL(hass.config.api.base_url)
         if (
             (
                 not is_ip_address(str(base_url.host))
@@ -102,11 +95,7 @@ def async_get_url(
                 )
             )
         ):
-            return (
-                str(base_url)
-                if not base_url.is_default_port()
-                else str(base_url.with_port(None))
-            )
+            return normalize_url(str(base_url))
 
     # Fallback to cloud as the last resort
     if "cloud" in hass.config.components:
@@ -119,11 +108,7 @@ def async_get_url(
     # without sanity, for full backward compatibility
     # This if statement can be removed after `base_url` is removed.
     if hass.config.api is not None and hass.config.api.base_url:
-        return (
-            str(base_url)
-            if not base_url.is_default_port()
-            else str(base_url.with_port(None))
-        )
+        return normalize_url(str(base_url))
 
     # We have to be honest now, we have no viable option available
     raise NoURLAvailableError

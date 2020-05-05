@@ -2,6 +2,8 @@
 from ipaddress import IPv4Address, IPv6Address, ip_address, ip_network
 from typing import Union
 
+import yarl
+
 # RFC6890 - IP addresses of loopback interfaces
 LOOPBACK_NETWORKS = (
     ip_network("127.0.0.0/8"),
@@ -49,3 +51,11 @@ def is_ip_address(address: str) -> bool:
         return False
 
     return True
+
+
+def normalize_url(address: str) -> str:
+    """Normalize a given URL."""
+    url = yarl.URL(address.rstrip("/"))
+    if url.is_default_port():
+        return str(url.with_port(None))
+    return str(url)
