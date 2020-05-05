@@ -2,6 +2,7 @@
 Support for functionality to have conversations with AI-Speaker.
 
 """
+import asyncio
 import datetime
 import json
 import logging
@@ -9,6 +10,7 @@ import re
 import warnings
 
 from aiohttp.web import json_response
+import async_timeout
 import requests
 import voluptuous as vol
 
@@ -18,6 +20,14 @@ import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.components.conversation.default_agent import (
     DefaultAgent,
     async_register,
+)
+from homeassistant.components.mobile_app.const import (
+    ATTR_APP_DATA,
+    ATTR_APP_ID,
+    ATTR_APP_VERSION,
+    ATTR_OS_VERSION,
+    ATTR_PUSH_TOKEN,
+    ATTR_PUSH_URL,
 )
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
@@ -57,6 +67,7 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.helpers import config_validation as cv, event, intent
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 
@@ -2482,6 +2493,70 @@ async def async_setup(hass, config):
                         },
                     )
 
+    async def async_mob_notify(service):
+        session = async_get_clientsession(hass)
+
+        device_id = service.data["device_id"]
+        entry_data = None
+        data = {"message": service.data["message"]}
+        if "title" in service.data:
+            data["title"] = service.data["title"]
+        else:
+            data["title"] = "Powiadomienie z AI-Speaker"
+        if "image" in service.data:
+            data["image"] = service.data["image"]
+        if "data" in service.data:
+            data["data"] = service.data["data"]
+        else:
+            data["data"] = {}
+
+        # entry = hass.data["mobile_app"]["config_entries"]
+        # entry = hass.config_entries.async_entries("mobile_app")[device_id]
+        for entry in hass.config_entries.async_entries("mobile_app"):
+            if entry.data["device_name"] == device_id:
+                entry_data = entry.data
+
+        if entry_data is None:
+            _LOGGER.error("No mob id from " + device_id)
+            return
+
+        app_data = entry_data[ATTR_APP_DATA]
+        push_token = app_data[ATTR_PUSH_TOKEN]
+        push_url = app_data[ATTR_PUSH_URL]
+
+        data[ATTR_PUSH_TOKEN] = push_token
+
+        reg_info = {
+            ATTR_APP_ID: entry_data[ATTR_APP_ID],
+            ATTR_APP_VERSION: entry_data[ATTR_APP_VERSION],
+        }
+        if ATTR_OS_VERSION in entry_data:
+            reg_info[ATTR_OS_VERSION] = entry_data[ATTR_OS_VERSION]
+
+        data["registration_info"] = reg_info
+
+        try:
+            with async_timeout.timeout(10):
+                response = await session.post(push_url, json=data)
+                result = await response.json()
+
+            if response.status in [200, 201, 202]:
+                return
+
+            fallback_error = result.get("errorMessage", "Unknown error")
+            fallback_message = (
+                f"Internal server error, please try again later: {fallback_error}"
+            )
+            message = result.get("message", fallback_message)
+            _LOGGER.error(message)
+
+        except asyncio.TimeoutError:
+            _LOGGER.error("Timeout sending notification to %s", push_url)
+
+        # await hass.services.async_call(
+        #     "notify", device_id, {"message": message, "title": title, "data": data}
+        # )
+
     async def check_night_mode(service):
         # check the night / quiet mode
         timer = False
@@ -2620,6 +2695,7 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "check_local_ip", check_local_ip)
     hass.services.async_register(DOMAIN, "switch_ui", switch_ui)
     hass.services.async_register(DOMAIN, "check_night_mode", check_night_mode)
+    hass.services.async_register(DOMAIN, "mob_notify", async_mob_notify)
 
     # register intents
     hass.helpers.intent.async_register(GetTimeIntent())
