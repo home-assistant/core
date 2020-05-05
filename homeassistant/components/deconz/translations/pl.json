@@ -26,15 +26,29 @@
             },
             "manual_confirm": {
                 "data": {
-                    "host": "Host",
+                    "host": "Nazwa hosta lub adres IP",
                     "port": "Port"
                 }
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port"
+                },
+                "title": "Konfiguracja bramki deCONZ"
+            },
+            "user": {
+                "data": {
+                    "host": "Wybierz znalezion\u0105 bramk\u0119 deCONZ"
+                },
+                "title": "Wybierz bramk\u0119 deCONZ"
             }
         }
     },
     "device_automation": {
         "trigger_subtype": {
             "both_buttons": "oba przyciski",
+            "bottom_buttons": "Dolne przyciski",
             "button_1": "pierwszy przycisk",
             "button_2": "drugi przycisk",
             "button_3": "trzeci przycisk",
@@ -51,6 +65,7 @@
             "side_4": "strona 4",
             "side_5": "strona 5",
             "side_6": "strona 6",
+            "top_buttons": "G\u00f3rne przyciski",
             "turn_off": "nast\u0105pi wy\u0142\u0105czenie",
             "turn_on": "nast\u0105pi w\u0142\u0105czenie"
         },

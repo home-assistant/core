@@ -4,7 +4,7 @@ import logging
 from pygogogate2 import Gogogate2API as pygogogate2
 import voluptuous as vol
 
-from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN, CoverDevice
+from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN, CoverEntity
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
 
 
-class MyGogogate2Device(CoverDevice):
+class MyGogogate2Device(CoverEntity):
     """Representation of a Gogogate2 cover."""
 
     def __init__(self, mygogogate2, device, name):

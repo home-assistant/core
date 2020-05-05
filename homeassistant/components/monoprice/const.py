@@ -13,3 +13,6 @@ CONF_SOURCE_6 = "source_6"
 
 SERVICE_SNAPSHOT = "snapshot"
 SERVICE_RESTORE = "restore"
+
+MONOPRICE_OBJECT = "monoprice_object"
+UNDO_UPDATE_LISTENER = "update_update_listener"

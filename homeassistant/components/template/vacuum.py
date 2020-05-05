@@ -28,7 +28,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_START,
     SUPPORT_STATE,
     SUPPORT_STOP,
-    StateVacuumDevice,
+    StateVacuumEntity,
 )
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -144,7 +144,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(vacuums)
 
 
-class TemplateVacuum(StateVacuumDevice):
+class TemplateVacuum(StateVacuumEntity):
     """A template vacuum component."""
 
     def __init__(

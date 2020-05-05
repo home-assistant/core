@@ -10,7 +10,7 @@
             "user": {
                 "data": {
                     "host": "Vert",
-                    "port": "Port (10000)"
+                    "port": ""
                 },
                 "title": "Koble til enheten"
             }

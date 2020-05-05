@@ -3,7 +3,6 @@
 from io import StringIO
 import os
 import unittest
-import unittest.mock as mock
 
 import pytest
 
@@ -21,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component, setup_component
 
+import tests.async_mock as mock
 from tests.common import get_test_home_assistant, mock_service, mock_storage
 from tests.components.light import common
 
@@ -548,3 +548,13 @@ async def test_light_brightness_pct_conversion(hass):
 
     _, data = entity.last_call("turn_on")
     assert data["brightness"] == 255, data
+
+
+def test_deprecated_base_class(caplog):
+    """Test deprecated base class."""
+
+    class CustomLight(light.Light):
+        pass
+
+    CustomLight()
+    assert "Light is deprecated, modify CustomLight" in caplog.text

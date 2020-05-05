@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     DEVICE_CLASS_TV,
     PLATFORM_SCHEMA,
-    MediaPlayerDevice,
+    MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
@@ -30,6 +30,7 @@ from homeassistant.util.json import load_json
 from .const import (
     ATTR_MANUFACTURER,
     BRAVIA_CONFIG_FILE,
+    BRAVIARC,
     CLIENTID_PREFIX,
     CONF_IGNORED_SOURCES,
     DEFAULT_NAME,
@@ -103,7 +104,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         "model": config_entry.title,
     }
 
-    braviarc = hass.data[DOMAIN][config_entry.entry_id]
+    braviarc = hass.data[DOMAIN][config_entry.entry_id][BRAVIARC]
 
     ignored_sources = config_entry.options.get(CONF_IGNORED_SOURCES, [])
 
@@ -116,7 +117,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class BraviaTVDevice(MediaPlayerDevice):
+class BraviaTVDevice(MediaPlayerEntity):
     """Representation of a Bravia TV."""
 
     def __init__(self, client, name, pin, unique_id, device_info, ignored_sources):

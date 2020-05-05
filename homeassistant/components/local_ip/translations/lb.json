@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "single_instance_allowed": "N\u00ebmmen eng eenzeg Konfiguratioun vun Local IP ass erlaabt."
+        },
         "step": {
             "user": {
                 "data": {

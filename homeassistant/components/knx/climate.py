@@ -5,7 +5,7 @@ import voluptuous as vol
 from xknx.devices import Climate as XknxClimate, ClimateMode as XknxClimateMode
 from xknx.knx import HVACOperationMode
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
@@ -192,7 +192,7 @@ def async_add_entities_config(hass, config, async_add_entities):
     async_add_entities([KNXClimate(climate)])
 
 
-class KNXClimate(ClimateDevice):
+class KNXClimate(ClimateEntity):
     """Representation of a KNX climate device."""
 
     def __init__(self, device):

@@ -27,8 +27,7 @@ from homeassistant.const import (
 from homeassistant.core import split_entity_id
 from homeassistant.helpers.event import call_later
 
-from . import TYPES
-from .accessories import HomeAccessory
+from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_ACTIVE,
     CHAR_IN_USE,

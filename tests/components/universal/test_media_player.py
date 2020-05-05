@@ -22,7 +22,7 @@ def validate_config(config):
     return validated_config
 
 
-class MockMediaPlayer(media_player.MediaPlayerDevice):
+class MockMediaPlayer(media_player.MediaPlayerEntity):
     """Mock media player for testing."""
 
     def __init__(self, hass, name):

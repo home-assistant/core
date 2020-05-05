@@ -10,7 +10,7 @@ from homeassistant.components.cover import (
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
@@ -80,7 +80,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class MyQDevice(CoverDevice):
+class MyQDevice(CoverEntity):
     """Representation of a MyQ cover."""
 
     def __init__(self, coordinator, device):

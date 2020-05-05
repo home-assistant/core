@@ -1,6 +1,4 @@
 """Tests for the Linky config flow."""
-from unittest.mock import Mock, patch
-
 from pylinky.exceptions import (
     PyLinkyAccessException,
     PyLinkyEnedisException,
@@ -15,6 +13,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.helpers.typing import HomeAssistantType
 
+from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 USERNAME = "username@hotmail.fr"

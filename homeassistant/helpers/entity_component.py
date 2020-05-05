@@ -201,7 +201,7 @@ class EntityComponent:
         name: str,
         schema: Union[Dict[str, Any], vol.Schema],
         func: str,
-        required_features: Optional[int] = None,
+        required_features: Optional[List[int]] = None,
     ) -> None:
         """Register an entity service."""
         if isinstance(schema, dict):
@@ -270,9 +270,15 @@ class EntityComponent:
 
     async def async_remove_entity(self, entity_id: str) -> None:
         """Remove an entity managed by one of the platforms."""
+        found = None
+
         for platform in self._platforms.values():
             if entity_id in platform.entities:
-                await platform.async_remove_entity(entity_id)
+                found = platform
+                break
+
+        if found:
+            await found.async_remove_entity(entity_id)
 
     async def async_prepare_reload(self, *, skip_reset: bool = False) -> Optional[dict]:
         """Prepare reloading this entity component.

@@ -8,6 +8,16 @@
             "webhook_error": "SmartThings n'a pas pu valider le point de terminaison configur\u00e9 en \u00ab\u00a0base_url\u00a0\u00bb. Veuillez consulter les exigences du composant."
         },
         "step": {
+            "pat": {
+                "data": {
+                    "access_token": "Jeton d'acc\u00e8s"
+                }
+            },
+            "select_location": {
+                "data": {
+                    "location_id": "Emplacement"
+                }
+            },
             "user": {
                 "description": "Veuillez entrer un [jeton d'acc\u00e8s personnel SmartThings] ( {token_url} ) cr\u00e9\u00e9 selon les [instructions] ( {component_url} ).",
                 "title": "Entrer un jeton d'acc\u00e8s personnel"

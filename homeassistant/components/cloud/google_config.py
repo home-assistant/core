@@ -6,7 +6,12 @@ from hass_nabucasa import cloud_api
 from hass_nabucasa.google_report_state import ErrorResponse
 
 from homeassistant.components.google_assistant.helpers import AbstractConfig
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_OK
+from homeassistant.const import (
+    CLOUD_NEVER_EXPOSED_ENTITIES,
+    EVENT_HOMEASSISTANT_STARTED,
+    HTTP_OK,
+)
+from homeassistant.core import CoreState, callback
 from homeassistant.helpers import entity_registry
 
 from .const import (
@@ -32,6 +37,7 @@ class CloudGoogleConfig(AbstractConfig):
         self._cloud = cloud
         self._cur_entity_prefs = self._prefs.google_entity_configs
         self._sync_entities_lock = asyncio.Lock()
+        self._sync_on_started = False
 
     @property
     def enabled(self):
@@ -169,6 +175,21 @@ class CloudGoogleConfig(AbstractConfig):
 
         entity_id = event.data["entity_id"]
 
-        # Schedule a sync if a change was made to an entity that Google knows about
-        if self._should_expose_entity_id(entity_id):
+        if not self._should_expose_entity_id(entity_id):
+            return
+
+        if self.hass.state == CoreState.running:
             self.async_schedule_google_sync_all()
+            return
+
+        if self._sync_on_started:
+            return
+
+        self._sync_on_started = True
+
+        @callback
+        async def sync_google(_):
+            """Sync entities to Google."""
+            await self.async_sync_entities_all()
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, sync_google)

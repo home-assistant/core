@@ -4,7 +4,7 @@ import logging
 from pi4ioe5v9xxxx import pi4ioe5v9xxxx  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(switches)
 
 
-class Pi4ioe5v9Switch(SwitchDevice):
+class Pi4ioe5v9Switch(SwitchEntity):
     """Representation of a  pi4ioe5v9 IO expansion IO."""
 
     def __init__(self, name, pin, invert_logic):

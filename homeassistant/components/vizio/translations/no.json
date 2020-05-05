@@ -19,21 +19,21 @@
                 "title": "Fullf\u00f8r Sammenkoblings Prosessen"
             },
             "pairing_complete": {
-                "description": "Din VIZIO SmartCast enheten er n\u00e5 koblet til Hjemme-Assistent.",
+                "description": "Din VIZIO SmartCast enheten er n\u00e5 koblet til Home Assistant.",
                 "title": "Sammenkoblingen Er Fullf\u00f8rt"
             },
             "pairing_complete_import": {
-                "description": "VIZIO SmartCast TV er n\u00e5 koblet til Hjemmeassistent.\n\nTilgangstokenet er **{access_token}**.",
+                "description": "VIZIO SmartCast TV er n\u00e5 koblet til Home Assistant\n\nTilgangstokenet er '**{access_token}**'.",
                 "title": "Sammenkoblingen Er Fullf\u00f8rt"
             },
             "user": {
                 "data": {
                     "access_token": "Tilgangstoken",
                     "device_class": "Enhetstype",
-                    "host": "<Host/IP>:<Port>",
+                    "host": "<Vert/IP>:<Port>",
                     "name": "Navn"
                 },
-                "description": "En tilgangstoken er bare n\u00f8dvendig for TV-er. Hvis du konfigurerer en TV og ikke har tilgangstoken enn\u00e5, m\u00e5 du la den st\u00e5 tom for \u00e5 g\u00e5 gjennom en sammenkoblingsprosess.",
+                "description": "En tilgangstoken er bare n\u00f8dvendig for TV-er. Hvis du konfigurerer en TV og ikke har tilgangstoken enda, m\u00e5 du la den st\u00e5 tom for \u00e5 g\u00e5 gjennom en sammenkoblingsprosess.",
                 "title": "Konfigurer VIZIO SmartCast-enhet"
             }
         }

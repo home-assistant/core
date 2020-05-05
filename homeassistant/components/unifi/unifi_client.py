@@ -12,6 +12,7 @@ from aiounifi.events import (
     WIRELESS_CLIENT_CONNECTED,
     WIRELESS_CLIENT_DISCONNECTED,
     WIRELESS_CLIENT_ROAM,
+    WIRELESS_CLIENT_ROAMRADIO,
     WIRELESS_CLIENT_UNBLOCKED,
 )
 
@@ -29,6 +30,7 @@ WIRELESS_CLIENT = (
     WIRELESS_CLIENT_CONNECTED,
     WIRELESS_CLIENT_DISCONNECTED,
     WIRELESS_CLIENT_ROAM,
+    WIRELESS_CLIENT_ROAMRADIO,
 )
 
 
@@ -53,7 +55,6 @@ class UniFiClient(UniFiBase):
     async def async_added_to_hass(self) -> None:
         """Client entity created."""
         await super().async_added_to_hass()
-        LOGGER.debug("New client %s (%s)", self.entity_id, self.client.mac)
         self.client.register_callback(self.async_update_callback)
 
     async def async_will_remove_from_hass(self) -> None:
@@ -72,6 +73,7 @@ class UniFiClient(UniFiBase):
                 self.wireless_connection = self.client.event.event in (
                     WIRELESS_CLIENT_CONNECTED,
                     WIRELESS_CLIENT_ROAM,
+                    WIRELESS_CLIENT_ROAMRADIO,
                 )
 
             elif self.client.event.event in WIRED_CLIENT:

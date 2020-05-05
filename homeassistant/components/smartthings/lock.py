@@ -3,7 +3,7 @@ from typing import Optional, Sequence
 
 from pysmartthings import Attribute, Capability
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -38,7 +38,7 @@ def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     return None
 
 
-class SmartThingsLock(SmartThingsEntity, LockDevice):
+class SmartThingsLock(SmartThingsEntity, LockEntity):
     """Define a SmartThings lock."""
 
     async def async_lock(self, **kwargs):

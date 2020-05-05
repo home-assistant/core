@@ -1,9 +1,8 @@
 """Support for ISY994 fans."""
-import logging
 from typing import Callable
 
 from homeassistant.components.fan import (
-    DOMAIN,
+    DOMAIN as FAN,
     SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
@@ -13,9 +12,9 @@ from homeassistant.components.fan import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
-
-_LOGGER = logging.getLogger(__name__)
+from . import ISY994_NODES, ISY994_PROGRAMS
+from .const import _LOGGER
+from .entity import ISYNodeEntity, ISYProgramEntity
 
 VALUE_TO_STATE = {
     0: SPEED_OFF,
@@ -37,16 +36,16 @@ def setup_platform(
     """Set up the ISY994 fan platform."""
     devices = []
 
-    for node in hass.data[ISY994_NODES][DOMAIN]:
-        devices.append(ISYFanDevice(node))
+    for node in hass.data[ISY994_NODES][FAN]:
+        devices.append(ISYFanEntity(node))
 
-    for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
-        devices.append(ISYFanProgram(name, status, actions))
+    for name, status, actions in hass.data[ISY994_PROGRAMS][FAN]:
+        devices.append(ISYFanProgramEntity(name, status, actions))
 
     add_entities(devices)
 
 
-class ISYFanDevice(ISYDevice, FanEntity):
+class ISYFanEntity(ISYNodeEntity, FanEntity):
     """Representation of an ISY994 fan device."""
 
     @property
@@ -82,14 +81,20 @@ class ISYFanDevice(ISYDevice, FanEntity):
         return SUPPORT_SET_SPEED
 
 
-class ISYFanProgram(ISYFanDevice):
+class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
     """Representation of an ISY994 fan program."""
 
-    def __init__(self, name: str, node, actions) -> None:
-        """Initialize the ISY994 fan program."""
-        super().__init__(node)
-        self._name = name
-        self._actions = actions
+    @property
+    def speed(self) -> str:
+        """Return the current speed."""
+        # TEMPORARY: Cast value to int until PyISYv2.
+        return VALUE_TO_STATE.get(int(self.value))
+
+    @property
+    def is_on(self) -> bool:
+        """Get if the fan is on."""
+        # TEMPORARY: Cast value to int until PyISYv2.
+        return int(self.value) != 0
 
     def turn_off(self, **kwargs) -> None:
         """Send the turn on command to ISY994 fan program."""
@@ -100,8 +105,3 @@ class ISYFanProgram(ISYFanDevice):
         """Send the turn off command to ISY994 fan program."""
         if not self._actions.runElse():
             _LOGGER.error("Unable to turn on the fan")
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return 0

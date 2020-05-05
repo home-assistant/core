@@ -101,7 +101,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
-        client = Client(websession, api_key=user_input[CONF_API_KEY])
+        client = Client(session=websession, api_key=user_input[CONF_API_KEY])
 
         # If this is the first (and only the first) time we've seen this API key, check
         # that it's valid:
@@ -142,11 +142,14 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self._async_set_unique_id(user_input[CONF_IP_ADDRESS])
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
-        client = Client(websession)
+        client = Client(session=websession)
 
         try:
             await client.node.from_samba(
-                user_input[CONF_IP_ADDRESS], user_input[CONF_PASSWORD]
+                user_input[CONF_IP_ADDRESS],
+                user_input[CONF_PASSWORD],
+                include_history=False,
+                include_trends=False,
             )
         except NodeProError as err:
             LOGGER.error("Error connecting to Node/Pro unit: %s", err)
