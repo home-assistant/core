@@ -145,7 +145,6 @@ class PyLoadAPI:
 
     def post(self):
         """Send a POST request and return the response as a dict."""
-        
         try:
             response = requests.post(
                 f"{self.api_url}statusServer",
