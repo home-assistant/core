@@ -316,10 +316,8 @@ async def test_camera_stream_source_configured_and_copy_codec(hass, run_driver, 
             CONF_AUDIO_CODEC: AUDIO_CODEC_COPY,
         },
     )
-    not_camera_acc = Switch(hass, run_driver, "Switch", entity_id, 4, {},)
     bridge = HomeBridge("hass", run_driver, "Test Bridge")
     bridge.add_accessory(acc)
-    bridge.add_accessory(not_camera_acc)
 
     await acc.run_handler()
 
