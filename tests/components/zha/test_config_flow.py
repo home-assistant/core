@@ -5,6 +5,7 @@ import os
 import serial.tools.list_ports
 import zigpy.config
 
+from homeassistant import setup
 from homeassistant.components.zha import config_flow
 from homeassistant.components.zha.core.const import CONF_RADIO_TYPE, CONTROLLER, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -27,12 +28,11 @@ def com_port():
 
 
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
-@patch.object(
-    config_flow,
-    "detect_radios",
-    AsyncMock(return_value={CONF_RADIO_TYPE: "test_radio"}),
+@patch(
+    "homeassistant.components.zha.config_flow.detect_radios",
+    return_value={CONF_RADIO_TYPE: "test_radio"},
 )
-async def test_user_flow(hass):
+async def test_user_flow(detect_mock, hass):
     """Test user flow -- radio detected."""
 
     port = com_port()
@@ -46,13 +46,15 @@ async def test_user_flow(hass):
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"].startswith(port.description)
     assert result["data"] == {CONF_RADIO_TYPE: "test_radio"}
+    assert detect_mock.await_count == 1
+    assert detect_mock.await_args[0][0] == port.device
 
 
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
-@patch.object(
-    config_flow, "detect_radios", AsyncMock(return_value=None),
+@patch(
+    "homeassistant.components.zha.config_flow.detect_radios", return_value=None,
 )
-async def test_user_flow_not_detected(hass):
+async def test_user_flow_not_detected(detect_mock, hass):
     """Test user flow, radio not detected."""
 
     port = com_port()
@@ -66,6 +68,8 @@ async def test_user_flow_not_detected(hass):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "pick_radio"
+    assert detect_mock.await_count == 1
+    assert detect_mock.await_args[0][0] == port.device
 
 
 async def test_user_flow_show_form(hass):
@@ -103,10 +107,10 @@ async def test_pick_radio_flow(hass):
 async def test_user_flow_existing_config_entry(hass):
     """Test if config entry already exists."""
     MockConfigEntry(domain=DOMAIN, data={"usb_path": "/dev/ttyUSB1"}).add_to_hass(hass)
-    flow = config_flow.ZhaFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user()
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
 
     assert result["type"] == "abort"
 

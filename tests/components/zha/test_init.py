@@ -3,7 +3,6 @@
 import pytest
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
-import homeassistant.components.zha
 from homeassistant.components.zha.core.const import (
     CONF_BAUDRATE,
     CONF_RADIO_TYPE,
@@ -12,6 +11,7 @@ from homeassistant.components.zha.core.const import (
 )
 from homeassistant.setup import async_setup_component
 
+from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 DATA_RADIO_TYPE = "deconz"
@@ -29,10 +29,11 @@ def config_entry_v1(hass):
 
 
 @pytest.mark.parametrize("config", ({}, {DOMAIN: {}}))
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_migration_from_v1_no_baudrate(hass, config_entry_v1, config):
     """Test migration of config entry from v1."""
+    config_entry_v1.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, config)
-    await homeassistant.components.zha.async_migrate_entry(hass, config_entry_v1)
 
     assert config_entry_v1.data[CONF_RADIO_TYPE] == DATA_RADIO_TYPE
     assert CONF_DEVICE in config_entry_v1.data
@@ -42,10 +43,11 @@ async def test_migration_from_v1_no_baudrate(hass, config_entry_v1, config):
     assert config_entry_v1.version == 2
 
 
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_migration_from_v1_with_baudrate(hass, config_entry_v1):
     """Test migration of config entry from v1 with baudrate in config."""
+    config_entry_v1.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_BAUDRATE: 115200}})
-    await homeassistant.components.zha.async_migrate_entry(hass, config_entry_v1)
 
     assert config_entry_v1.data[CONF_RADIO_TYPE] == DATA_RADIO_TYPE
     assert CONF_DEVICE in config_entry_v1.data
@@ -56,10 +58,11 @@ async def test_migration_from_v1_with_baudrate(hass, config_entry_v1):
     assert config_entry_v1.version == 2
 
 
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_migration_from_v1_wrong_baudrate(hass, config_entry_v1):
     """Test migration of config entry from v1 with wrong baudrate."""
+    config_entry_v1.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_BAUDRATE: 115222}})
-    await homeassistant.components.zha.async_migrate_entry(hass, config_entry_v1)
 
     assert config_entry_v1.data[CONF_RADIO_TYPE] == DATA_RADIO_TYPE
     assert CONF_DEVICE in config_entry_v1.data
