@@ -75,7 +75,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
             _LOGGER.error("Error while trying to stop program: %s", err)
         self.async_entity_update()
 
-    def update(self):
+    async def async_update(self):
         """Update the switch's status."""
         state = self.device.appliance.status.get(BSH_ACTIVE_PROGRAM, {})
         if state.get("value") == self.program_name:
@@ -124,7 +124,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             self._state = True
         self.async_entity_update()
 
-    def update(self):
+    async def async_update(self):
         """Update the switch's status."""
         if (
             self.device.appliance.status.get(BSH_POWER_STATE, {}).get("value")
