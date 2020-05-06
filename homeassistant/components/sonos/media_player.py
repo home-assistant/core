@@ -930,7 +930,7 @@ class SonosEntity(MediaPlayerEntity):
             sources += [SOURCE_LINEIN]
         elif "PLAYBAR" in model:
             sources += [SOURCE_LINEIN, SOURCE_TV]
-        elif "BEAM" in model:
+        elif "BEAM" in model or "PLAYBASE" in model:
             sources += [SOURCE_TV]
 
         return sources
