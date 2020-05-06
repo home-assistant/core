@@ -483,16 +483,15 @@ class CastDevice(MediaPlayerEntity):
                 app_data = json.loads(media_id)
             except json.JSONDecodeError:
                 _LOGGER.error("Invalid JSON in media_content_id")
-            else:
-                app_name = app_data.pop("app_name")
-                try:
-                    quick_play(self._chromecast, app_name, app_data)
-                    return
-                except NotImplementedError:
-                    _LOGGER.error("App %s not supported", app_name)
-
-        # We do not want this to be forwarded to a group
-        self._chromecast.media_controller.play_media(media_id, media_type)
+                raise
+            app_name = app_data.pop("app_name")
+            try:
+                quick_play(self._chromecast, app_name, app_data)
+            except NotImplementedError:
+                _LOGGER.error("App %s not supported", app_name)
+        else:
+            # We do not want this to be forwarded to a group
+            self._chromecast.media_controller.play_media(media_id, media_type)
 
     # ========== Properties ==========
     @property
