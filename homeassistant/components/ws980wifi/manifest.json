@@ -1,0 +1,8 @@
+{
+  "domain": "ws980wifi",
+  "name": "ELV WS980WiFi ",
+  "documentation": "https://www.home-assistant.io/integrations/ws980wifi",
+  "dependencies": [],
+  "codeowners": ["@eXtgmA"],
+  "requirements": []
+}
