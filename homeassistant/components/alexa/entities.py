@@ -800,7 +800,11 @@ class CameraCapabilities(AlexaEntity):
 
         try:
             network.async_get_url(
-                self.hass, allow_internal=False, prefer_cloud=True, require_ssl=True
+                self.hass,
+                allow_internal=False,
+                allow_ip=False,
+                require_ssl=True,
+                require_standard_port=True,
             )
         except network.NoURLAvailableError:
             _LOGGER.debug(

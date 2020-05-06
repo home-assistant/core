@@ -3833,7 +3833,7 @@ async def test_camera_discovery_without_stream(hass):
     [
         ("http://nohttpswrongport.org:8123", 2),
         ("http://nohttpsport443.org:443", 2),
-        ("https://httpsnnonstandport.org:8123", 3),
+        ("https://httpsnnonstandport.org:8123", 2),
         ("https://correctschemaandport.org:443", 3),
         ("https://correctschemaandport.org", 3),
     ],

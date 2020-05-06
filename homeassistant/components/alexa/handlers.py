@@ -1536,7 +1536,11 @@ async def async_api_initialize_camera_stream(hass, config, directive, context):
 
     try:
         external_url = network.async_get_url(
-            hass, allow_internal=False, prefer_cloud=True, require_ssl=True
+            hass,
+            allow_internal=False,
+            allow_ip=False,
+            require_ssl=True,
+            require_standard_port=True,
         )
     except network.NoURLAvailableError:
         external_url = None
