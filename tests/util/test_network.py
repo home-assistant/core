@@ -45,6 +45,7 @@ def test_is_ip_address():
     assert network_util.is_ip_address("192.168.0.1")
     assert network_util.is_ip_address("8.8.8.8")
     assert network_util.is_ip_address("::ffff:127.0.0.0")
+    assert not network_util.is_ip_address(None)
     assert not network_util.is_ip_address("192.168.0.999")
     assert not network_util.is_ip_address("192.168.0.0/24")
     assert not network_util.is_ip_address("example.com")
