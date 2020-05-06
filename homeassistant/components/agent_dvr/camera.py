@@ -125,6 +125,11 @@ class AgentCamera(MjpegCamera):
         }
 
     @property
+    def should_poll(self) -> bool:
+        """Update the state periodically."""
+        return True
+
+    @property
     def is_recording(self) -> bool:
         """Return whether the monitor is recording."""
         return self.device.recording
