@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from bsblan import BSBLan, BSBLanError, Info, State
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
@@ -82,7 +82,7 @@ async def async_setup_entry(
     async_add_entities([BSBLanClimate(entry.entry_id, bsblan, info)], True)
 
 
-class BSBLanClimate(ClimateDevice):
+class BSBLanClimate(ClimateEntity):
     """Defines a BSBLan climate device."""
 
     def __init__(
