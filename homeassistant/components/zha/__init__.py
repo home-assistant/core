@@ -54,7 +54,6 @@ CONFIG_SCHEMA = vol.Schema(
                 cv.deprecated(CONF_RADIO_TYPE, invalidation_version="0.112"),
                 ZHA_CONFIG_SCHEMA,
             ),
-            extra=vol.ALLOW_EXTRA,
         ),
     },
     extra=vol.ALLOW_EXTRA,
