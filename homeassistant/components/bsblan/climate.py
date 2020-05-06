@@ -200,7 +200,7 @@ class BSBLanClimate(ClimateEntity):
         try:
             await self.bsblan.thermostat(**data)
         except BSBLanError:
-            _LOGGER.error("An error occurred while updating the BSBLan device.")
+            _LOGGER.error("An error occurred while updating the BSBLan device")
             self._available = False
 
     async def async_update(self) -> None:
