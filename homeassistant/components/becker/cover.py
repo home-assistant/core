@@ -5,7 +5,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverDevice,
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
@@ -19,12 +18,11 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     CONF_DEVICE,
     CONF_COVERS,
-    EVENT_HOMEASSISTANT_START,
     STATE_CLOSED,
     STATE_OPEN,
 )
 
-from .const import DOMAIN, CONF_CHANNEL, DEVICE_CLASS
+from .const import CONF_CHANNEL, DEVICE_CLASS
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -67,7 +65,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     stick_path = config.get(CONF_DEVICE)
     PyBecker.setup(stick_path)
 
-    # To be sure the connexion is well established send 3 commands
+    """ To be sure the connexion is well established send 3 commands """
     for x in range(0, 2):
         PyBecker.becker.stop("1")
 
@@ -175,7 +173,6 @@ class BeckerDevice(CoverDevice, RestoreEntity):
         await self._becker.stop(self._channel)
 
     async def async_update(self):
-        # await super().async_update()
         if self._template is not None:
             try:
                 state = self._template.async_render().lower()
