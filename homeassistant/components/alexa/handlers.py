@@ -1533,7 +1533,14 @@ async def async_api_initialize_camera_stream(hass, config, directive, context):
     entity = directive.entity
     stream_source = await camera.async_request_stream(hass, entity.entity_id, fmt="hls")
     camera_image = hass.states.get(entity.entity_id).attributes["entity_picture"]
-    external_url = network.async_get_external_url(hass)
+
+    try:
+        external_url = network.async_get_url(
+            hass, allow_internal=False, prefer_cloud=True, require_ssl=True
+        )
+    except network.NoURLAvailableError:
+        external_url = None
+
     payload = {
         "cameraStreams": [
             {

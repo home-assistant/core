@@ -1,7 +1,6 @@
 """Alexa entity adapters."""
 import logging
 from typing import List
-from urllib.parse import urlparse
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -799,8 +798,11 @@ class CameraCapabilities(AlexaEntity):
             )
             return False
 
-        url = urlparse(network.async_get_external_url(self.hass))
-        if url.scheme != "https":
+        try:
+            network.async_get_url(
+                self.hass, allow_internal=False, prefer_cloud=True, require_ssl=True
+            )
+        except network.NoURLAvailableError:
             _LOGGER.debug(
                 "%s requires HTTPS for AlexaCameraStreamController", self.entity_id
             )
