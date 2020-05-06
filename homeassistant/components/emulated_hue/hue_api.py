@@ -556,10 +556,8 @@ class HueOneLightChangeView(HomeAssistantView):
                     create_hue_success_response(entity_number, val, parsed[key])
                 )
 
-        """
-        Echo will fetch the state immediately after the PUT method returns.
-        Waiting a short while to allow for the changes to propagate.
-        """
+        # Echo fetchs the state immediately after the PUT method returns.
+        # Waiting here a short while to allow for the changes to propagate.
         await asyncio.sleep(0.1)
             
         return self.json(json_response)
