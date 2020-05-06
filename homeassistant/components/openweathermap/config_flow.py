@@ -61,7 +61,6 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             api_key_valid = _validate_api_key(user_input[CONF_API_KEY])
 
-            _LOGGER.error(user_input)
             monitored_conditions_valid = _validate_monitored_conditions(
                 user_input.get(CONF_MONITORED_CONDITIONS, None)
             )

@@ -2,7 +2,7 @@
 DOMAIN = "openweathermap"
 DEFAULT_NAME = "OpenWeatherMap"
 DEFAULT_LANGUAGE = "en"
-DEFAULT_FORECAST_MODE = "hourly"
+DEFAULT_FORECAST_MODE = "freedaily"
 ATTRIBUTION = "Data provided by OpenWeatherMap"
 CONF_LANGUAGE = "language"
 ENTRY_NAME = "name"
