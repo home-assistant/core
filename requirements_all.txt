@@ -323,9 +323,6 @@ batinfo==0.4.2
 # homeassistant.components.scrape
 beautifulsoup4==4.9.0
 
-# homeassistant.components.becker
-pybecker==1.0.3
-
 # homeassistant.components.beewi_smartclim
 beewi_smartclim==0.0.7
 
@@ -1213,6 +1210,9 @@ pyatv==0.3.13
 
 # homeassistant.components.bbox
 pybbox==0.0.5-alpha
+
+# homeassistant.components.becker
+pybecker==1.0.3
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
