@@ -7,9 +7,9 @@ https://www.ai-speaker.com
 import asyncio
 import logging
 import os
+import platform
 import re
 import subprocess
-import platform
 
 import pyinotify
 
@@ -227,7 +227,6 @@ async def async_setup(hass, config):
                                             hass.bus.async_fire("ais_stop_logs_event")
                                 # 2. check the if recorder db file exists, if not then stop recorder
                                 if ais_global.G_DB_SETTINGS_INFO is not None:
-                                    db_url = ais_global.G_DB_SETTINGS_INFO["dbUrl"]
                                     if (
                                         "dbUrl" in ais_global.G_DB_SETTINGS_INFO
                                         and ais_global.G_REMOTE_DRIVES_DOM_PATH
@@ -350,7 +349,7 @@ async def async_setup(hass, config):
 
 def _lsusb():
     device_re = re.compile(
-        "Bus\s+(?P<bus>\d+)\s+Device\s+(?P<device>\d+).+ID\s(?P<id>\w+:\w+)", re.I
+        r"Bus\s+(?P<bus>\d+)\s+Device\s+(?P<device>\d+).+ID\s(?P<id>\w+:\w+)", re.I
     )
     df = subprocess.check_output("lsusb")
     devices = []
@@ -362,7 +361,7 @@ def _lsusb():
                 if dinfo["id"] not in G_AIS_INTERNAL_DEVICES_ID:
                     devices.append(dinfo)
 
-    di = subprocess.check_output("ls /sys/bus/usb/devices", shell=True)
+    di = subprocess.check_output("ls /sys/bus/usb/devices", shell=True)  # nosec
     for d in di.decode("utf-8").split("\n"):
         manufacturer = ""
         product = ""
@@ -371,14 +370,16 @@ def _lsusb():
             try:
                 id_vendor = (
                     subprocess.check_output(
-                        "cat /sys/bus/usb/devices/" + d + "/idVendor", shell=True
+                        "cat /sys/bus/usb/devices/" + d + "/idVendor",
+                        shell=True,  # nosec
                     )
                     .decode("utf-8")
                     .strip()
                 )
                 id_product = (
                     subprocess.check_output(
-                        "cat /sys/bus/usb/devices/" + d + "/idProduct", shell=True
+                        "cat /sys/bus/usb/devices/" + d + "/idProduct",
+                        shell=True,  # nosec
                     )
                     .decode("utf-8")
                     .strip()
@@ -394,7 +395,8 @@ def _lsusb():
                     ]:
                         product = (
                             subprocess.check_output(
-                                "cat /sys/bus/usb/devices/" + d + "/product", shell=True
+                                "cat /sys/bus/usb/devices/" + d + "/product",
+                                shell=True,  # nosec
                             )
                             .decode("utf-8")
                             .strip()
@@ -405,7 +407,7 @@ def _lsusb():
                             manufacturer = (
                                 subprocess.check_output(
                                     "cat /sys/bus/usb/devices/" + d + "/manufacturer",
-                                    shell=True,
+                                    shell=True,  # nosec
                                 )
                                 .decode("utf-8")
                                 .strip()

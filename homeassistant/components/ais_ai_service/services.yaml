@@ -1,4 +1,20 @@
 # Describes the format for available ADS services
+mob_notify:
+   description: 'Wysłanie powiadomienia push do aplikacji mobilnej.'
+   fields:
+     device_id:
+       description: 'Identyfikator urządzenia.'
+       example: 'mobile_ais_'
+     message:
+       description: 'Tekst wiadomości'
+       example: 'Dzwonek do drzwi.'
+     title:
+       description: 'Tytuł powiadomienia'
+       example: 'Powiadomienie z AI-Speaker.'
+     image:
+       description: 'URL zdjęcia do wyświetlenia w powiadomieniu'
+       example: 'http://ai-speaker.com/images/doorbell.jpg'
+
 check_local_ip:
   description: 'Sprawdzenie lokalnego IP bramki i ustawienie go jako wartość encji sensor.internal_ip_address. Ta usługa wykonaywana jest automatycznie przy starcie urządzenia.'
 
