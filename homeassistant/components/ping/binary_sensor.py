@@ -10,9 +10,11 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.process import kill_subprocess
 
+from homeassistant.util.process import kill_subprocess
 from .const import PING_TIMEOUT
+import asyncio
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,13 +133,13 @@ class PingData:
                 self._ip_address,
             ]
 
-    def ping(self):
+    async def async_ping(self):
         """Send ICMP echo request and return details if success."""
-        pinger = subprocess.Popen(
+        pinger = await asyncio.create_subprocess_shell(
             self._ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         try:
-            out = pinger.communicate(timeout=self._count + PING_TIMEOUT)
+            out = await pinger.communicate(timeout=self._count + PING_TIMEOUT)
             _LOGGER.debug("Output is %s", str(out))
             if sys.platform == "win32":
                 match = WIN32_PING_MATCHER.search(str(out).split("\n")[-1])
@@ -156,7 +158,7 @@ class PingData:
         except (subprocess.CalledProcessError, AttributeError):
             return False
 
-    def update(self):
+    async def async_update(self):
         """Retrieve the latest details from the host."""
-        self.data = self.ping()
+        self.data = await self.ping()
         self.available = bool(self.data)
