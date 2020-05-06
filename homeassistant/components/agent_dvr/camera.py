@@ -99,11 +99,6 @@ class AgentCamera(MjpegCamera):
         super().__init__(device_info)
 
     @property
-    def should_poll(self) -> bool:
-        """Update the state periodically."""
-        return True
-
-    @property
     def device_info(self):
         """Return the device info for adding the entity to the agent object."""
         return {
