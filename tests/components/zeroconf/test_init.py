@@ -1,8 +1,9 @@
 """Test Zeroconf component setup process."""
 import pytest
-from zeroconf import ServiceInfo, ServiceStateChange
+from zeroconf import InterfaceChoice, ServiceInfo, ServiceStateChange
 
 from homeassistant.components import zeroconf
+from homeassistant.components.zeroconf import CONF_DEFAULT_INTERFACE
 from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.setup import async_setup_component
 
@@ -76,6 +77,19 @@ async def test_setup(hass, mock_zeroconf):
     for matching_components in zc_gen.ZEROCONF.values():
         expected_flow_calls += len(matching_components)
     assert len(mock_config_flow.mock_calls) == expected_flow_calls
+
+
+async def test_setup_with_default_interface(hass, mock_zeroconf):
+    """Test default interface config."""
+    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
+        zeroconf, "ServiceBrowser", side_effect=service_update_mock
+    ):
+        mock_zeroconf.get_service_info.side_effect = get_service_info_mock
+        assert await async_setup_component(
+            hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_DEFAULT_INTERFACE: True}}
+        )
+
+    assert mock_zeroconf.called_with(interface_choice=InterfaceChoice.Default)
 
 
 async def test_homekit_match_partial_space(hass, mock_zeroconf):
