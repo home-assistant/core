@@ -4,13 +4,7 @@ import logging
 
 from agent import AgentError
 
-from homeassistant.components.camera import (
-    STATE_IDLE,
-    STATE_RECORDING,
-    STATE_STREAMING,
-    SUPPORT_ON_OFF,
-    SUPPORT_STREAM,
-)
+from homeassistant.components.camera import SUPPORT_ON_OFF, SUPPORT_STREAM
 from homeassistant.components.mjpeg.camera import (
     CONF_MJPEG_URL,
     CONF_STILL_IMAGE_URL,
@@ -19,16 +13,13 @@ from homeassistant.components.mjpeg.camera import (
 )
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     ATTRIBUTION,
     CAMERA_SCAN_INTERVAL_SECS,
     CONNECTION,
     DOMAIN as AGENT_DOMAIN,
-    SERVICE_UPDATE,
 )
-from .helpers import service_signal
 
 SCAN_INTERVAL = timedelta(seconds=CAMERA_SCAN_INTERVAL_SECS)
 
@@ -57,7 +48,6 @@ async def async_setup_entry(
     cameras = []
 
     server = hass.data[AGENT_DOMAIN][config_entry.entry_id][CONNECTION]
-    server.cameras = []
     if not server.deviceList:
         _LOGGER.warning("Could not fetch cameras from Agent server")
         return
@@ -66,15 +56,12 @@ async def async_setup_entry(
         if device.typeID == 2:
             camera = AgentCamera(device)
             cameras.append(camera)
-            server.cameras.append(camera)
 
     async_add_entities(cameras)
 
     platform = entity_platform.current_platform.get()
     for service, method in CAMERA_SERVICES.items():
         platform.async_register_entity_service(service, {}, method)
-
-    return True
 
 
 class AgentCamera(MjpegCamera):
@@ -114,7 +101,7 @@ class AgentCamera(MjpegCamera):
         try:
             await self.device.update()
             if self._removed:
-                _LOGGER.error("%s reacquired", self._name)
+                _LOGGER.debug("%s reacquired", self._name)
             self._removed = False
         except AgentError:
             if self.device.client.is_available:  # server still available - camera error
@@ -123,7 +110,7 @@ class AgentCamera(MjpegCamera):
                     self._removed = True
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the Agent DVR camera state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -134,7 +121,6 @@ class AgentCamera(MjpegCamera):
             "alerted": self.is_alerted,
             "recording": self.is_recording,
             "has_ptz": self.device.has_ptz,
-            "motion_detection_enabled": self.device.detector_active,
             "alerts_enabled": self.device.alerts_active,
         }
 
@@ -164,11 +150,6 @@ class AgentCamera(MjpegCamera):
         return self.device.connected
 
     @property
-    def enabled(self) -> bool:
-        """Return True if entity is enabled."""
-        return self.device.online
-
-    @property
     def supported_features(self) -> int:
         """Return supported features."""
         return SUPPORT_ON_OFF | SUPPORT_STREAM
@@ -184,15 +165,6 @@ class AgentCamera(MjpegCamera):
         if self.enabled:
             return "mdi:camcorder"
         return "mdi:camcorder-off"
-
-    @property
-    def state(self):
-        """Return the camera state."""
-        if self.device.recording:
-            return STATE_RECORDING
-        if self.device.online:
-            return STATE_STREAMING
-        return STATE_IDLE
 
     async def stream_source(self) -> str:
         """Return the mp4 stream source."""
@@ -231,13 +203,6 @@ class AgentCamera(MjpegCamera):
         """Enable the camera."""
         await self.device.enable()
 
-    async def async_toggle(self):
-        """Enable/disable the camera."""
-        if self.device.online:
-            await self.device.disable()
-        else:
-            await self.device.enable()
-
     async def async_snapshot(self):
         """Take a snapshot."""
         await self.device.snapshot()
@@ -245,19 +210,3 @@ class AgentCamera(MjpegCamera):
     async def async_turn_off(self):
         """Disable the camera."""
         await self.device.disable()
-
-    # Other Entity method overrides
-
-    async def async_on_demand_update(self):
-        """Update state."""
-        self.async_schedule_update_ha_state(True)
-
-    async def async_added_to_hass(self):
-        """Subscribe to signals and add camera to list."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                service_signal(SERVICE_UPDATE, self._unique_id),
-                self.async_on_demand_update,
-            )
-        )
