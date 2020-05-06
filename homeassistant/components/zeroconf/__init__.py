@@ -5,6 +5,7 @@ import socket
 
 import voluptuous as vol
 from zeroconf import (
+    InterfaceChoice,
     NonUniqueNameException,
     ServiceBrowser,
     ServiceInfo,
@@ -20,6 +21,7 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,12 +36,29 @@ ATTR_PROPERTIES = "properties"
 ZEROCONF_TYPE = "_home-assistant._tcp.local."
 HOMEKIT_TYPE = "_hap._tcp.local."
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+CONF_DEFAULT_INTERFACE = "default_interface"
+DEFAULT_DEFAULT_INTERFACE = False
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(
+                    CONF_DEFAULT_INTERFACE, default=DEFAULT_DEFAULT_INTERFACE
+                ): cv.boolean
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
-    zeroconf = Zeroconf()
+    if config.get(CONF_DEFAULT_INTERFACE):
+        zeroconf = Zeroconf(interfaces=InterfaceChoice.Default)
+    else:
+        zeroconf = Zeroconf()
     zeroconf_name = f"{hass.config.location_name}.{ZEROCONF_TYPE}"
 
     params = {
