@@ -161,19 +161,17 @@ async def async_migrate_entry(
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
     if config_entry.version == 1:
-        config_entry.data = {
+        data = {
             CONF_RADIO_TYPE: config_entry.data[CONF_RADIO_TYPE],
             CONF_DEVICE: {CONF_DEVICE_PATH: config_entry.data[CONF_USB_PATH]},
         }
 
         baudrate = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {}).get(CONF_BAUDRATE)
-        if (
-            config_entry.data[CONF_RADIO_TYPE] != RadioType.deconz
-            and baudrate in BAUD_RATES
-        ):
-            config_entry.data[CONF_DEVICE][CONF_BAUDRATE] = baudrate
+        if data[CONF_RADIO_TYPE] != RadioType.deconz and baudrate in BAUD_RATES:
+            data[CONF_DEVICE][CONF_BAUDRATE] = baudrate
 
         config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, data=data)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True
