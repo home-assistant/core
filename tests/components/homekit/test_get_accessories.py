@@ -1,6 +1,4 @@
 """Package to test the get_accessory method."""
-from unittest.mock import Mock, patch
-
 import pytest
 
 import homeassistant.components.climate as climate
@@ -30,6 +28,8 @@ from homeassistant.const import (
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import State
+
+from tests.async_mock import Mock, patch
 
 
 def test_not_supported(caplog):
@@ -259,6 +259,18 @@ def test_type_switches(type_name, entity_id, state, attrs, config):
 )
 def test_type_vacuum(type_name, entity_id, state, attrs):
     """Test if vacuum types are associated correctly."""
+    mock_type = Mock()
+    with patch.dict(TYPES, {type_name: mock_type}):
+        entity_state = State(entity_id, state, attrs)
+        get_accessory(None, None, entity_state, 2, {})
+    assert mock_type.called
+
+
+@pytest.mark.parametrize(
+    "type_name, entity_id, state, attrs", [("Camera", "camera.basic", "on", {})],
+)
+def test_type_camera(type_name, entity_id, state, attrs):
+    """Test if camera types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
         entity_state = State(entity_id, state, attrs)

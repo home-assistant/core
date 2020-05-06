@@ -2,7 +2,13 @@
 from copy import copy
 from datetime import timedelta
 
-from aiounifi.controller import MESSAGE_CLIENT_REMOVED, SIGNAL_CONNECTION_STATE
+from aiounifi.controller import (
+    MESSAGE_CLIENT,
+    MESSAGE_CLIENT_REMOVED,
+    MESSAGE_DEVICE,
+    MESSAGE_EVENT,
+    SIGNAL_CONNECTION_STATE,
+)
 from aiounifi.websocket import SIGNAL_DATA, STATE_DISCONNECTED, STATE_RUNNING
 
 from homeassistant import config_entries
@@ -24,8 +30,10 @@ import homeassistant.util.dt as dt_util
 from .test_controller import ENTRY_CONFIG, setup_unifi_integration
 
 from tests.async_mock import patch
+from tests.common import async_fire_time_changed
 
 CLIENT_1 = {
+    "ap_mac": "00:00:00:00:02:01",
     "essid": "ssid",
     "hostname": "client_1",
     "ip": "10.0.0.1",
@@ -95,6 +103,38 @@ DEVICE_2 = {
     "version": "4.0.42.10433",
 }
 
+EVENT_CLIENT_1_WIRELESS_CONNECTED = {
+    "user": CLIENT_1["mac"],
+    "ssid": CLIENT_1["essid"],
+    "ap": CLIENT_1["ap_mac"],
+    "radio": "na",
+    "channel": "44",
+    "hostname": CLIENT_1["hostname"],
+    "key": "EVT_WU_Connected",
+    "subsystem": "wlan",
+    "site_id": "name",
+    "time": 1587753456179,
+    "datetime": "2020-04-24T18:37:36Z",
+    "msg": f'User{[CLIENT_1["mac"]]} has connected to AP[{CLIENT_1["ap_mac"]}] with SSID "{CLIENT_1["essid"]}" on "channel 44(na)"',
+    "_id": "5ea331fa30c49e00f90ddc1a",
+}
+
+EVENT_CLIENT_1_WIRELESS_DISCONNECTED = {
+    "user": CLIENT_1["mac"],
+    "ssid": CLIENT_1["essid"],
+    "hostname": CLIENT_1["hostname"],
+    "ap": CLIENT_1["ap_mac"],
+    "duration": 467,
+    "bytes": 459039,
+    "key": "EVT_WU_Disconnected",
+    "subsystem": "wlan",
+    "site_id": "name",
+    "time": 1587752927000,
+    "datetime": "2020-04-24T18:28:47Z",
+    "msg": f'User{[CLIENT_1["mac"]]} disconnected from "{CLIENT_1["essid"]}" (7m 47s connected, 448.28K bytes, last AP[{CLIENT_1["ap_mac"]}])',
+    "_id": "5ea32ff730c49e00f90dca1a",
+}
+
 
 async def test_platform_manually_configured(hass):
     """Test that nothing happens when configuring unifi through device tracker platform."""
@@ -112,6 +152,58 @@ async def test_no_clients(hass):
     await setup_unifi_integration(hass)
 
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 0
+
+
+async def test_tracked_wireless_clients(hass):
+    """Test the update_items function with some clients."""
+    controller = await setup_unifi_integration(hass, clients_response=[CLIENT_1])
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+    assert client_1.state == "not_home"
+
+    # State change signalling works without events
+    client_1_copy = copy(CLIENT_1)
+    client_1_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+    controller.api.websocket._data = {
+        "meta": {"message": MESSAGE_CLIENT},
+        "data": [client_1_copy],
+    }
+    controller.api.session_handler(SIGNAL_DATA)
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == "home"
+
+    # State change signalling works with events
+    controller.api.websocket._data = {
+        "meta": {"message": MESSAGE_EVENT},
+        "data": [EVENT_CLIENT_1_WIRELESS_DISCONNECTED],
+    }
+    controller.api.session_handler(SIGNAL_DATA)
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == "home"
+
+    async_fire_time_changed(hass, dt_util.utcnow() + controller.option_detection_time)
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == "not_home"
+
+    controller.api.websocket._data = {
+        "meta": {"message": MESSAGE_EVENT},
+        "data": [EVENT_CLIENT_1_WIRELESS_CONNECTED],
+    }
+    controller.api.session_handler(SIGNAL_DATA)
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == "home"
+
+    # test wired bug
 
 
 async def test_tracked_devices(hass):
@@ -157,11 +249,11 @@ async def test_tracked_devices(hass):
     # State change signalling works
     client_1_copy = copy(CLIENT_1)
     client_1_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
-    event = {"meta": {"message": "sta:sync"}, "data": [client_1_copy]}
+    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_copy]}
     controller.api.message_handler(event)
     device_1_copy = copy(DEVICE_1)
     device_1_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
-    event = {"meta": {"message": "device:sync"}, "data": [device_1_copy]}
+    event = {"meta": {"message": MESSAGE_DEVICE}, "data": [device_1_copy]}
     controller.api.message_handler(event)
     await hass.async_block_till_done()
 
@@ -174,7 +266,7 @@ async def test_tracked_devices(hass):
     # Disabled device is unavailable
     device_1_copy = copy(DEVICE_1)
     device_1_copy["disabled"] = True
-    event = {"meta": {"message": "device:sync"}, "data": [device_1_copy]}
+    event = {"meta": {"message": MESSAGE_DEVICE}, "data": [device_1_copy]}
     controller.api.message_handler(event)
     await hass.async_block_till_done()
 
@@ -395,7 +487,7 @@ async def test_option_ssid_filter(hass):
 
     client_3_copy = copy(CLIENT_3)
     client_3_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
-    event = {"meta": {"message": "sta:sync"}, "data": [client_3_copy]}
+    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_3_copy]}
     controller.api.message_handler(event)
     await hass.async_block_till_done()
 
@@ -407,7 +499,7 @@ async def test_option_ssid_filter(hass):
     hass.config_entries.async_update_entry(
         controller.config_entry, options={CONF_SSID_FILTER: []},
     )
-    event = {"meta": {"message": "sta:sync"}, "data": [client_3_copy]}
+    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_3_copy]}
     controller.api.message_handler(event)
     await hass.async_block_till_done()
 
@@ -433,7 +525,7 @@ async def test_wireless_client_go_wired_issue(hass):
 
     client_1_client["is_wired"] = True
     client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
-    event = {"meta": {"message": "sta:sync"}, "data": [client_1_client]}
+    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_client]}
     controller.api.message_handler(event)
     await hass.async_block_till_done()
 
@@ -444,7 +536,7 @@ async def test_wireless_client_go_wired_issue(hass):
     with patch.object(
         dt_util, "utcnow", return_value=(dt_util.utcnow() + timedelta(minutes=5)),
     ):
-        event = {"meta": {"message": "sta:sync"}, "data": [client_1_client]}
+        event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_client]}
         controller.api.message_handler(event)
         await hass.async_block_till_done()
 

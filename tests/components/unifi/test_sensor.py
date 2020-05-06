@@ -1,7 +1,7 @@
 """UniFi sensor platform tests."""
 from copy import deepcopy
 
-from aiounifi.controller import MESSAGE_CLIENT_REMOVED
+from aiounifi.controller import MESSAGE_CLIENT, MESSAGE_CLIENT_REMOVED
 from aiounifi.websocket import SIGNAL_DATA
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
@@ -99,7 +99,7 @@ async def test_sensors(hass):
     clients[1]["rx_bytes"] = 2345000000
     clients[1]["tx_bytes"] = 6789000000
 
-    event = {"meta": {"message": "sta:sync"}, "data": clients}
+    event = {"meta": {"message": MESSAGE_CLIENT}, "data": clients}
     controller.api.message_handler(event)
     await hass.async_block_till_done()
 

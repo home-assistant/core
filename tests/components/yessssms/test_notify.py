@@ -1,7 +1,6 @@
 """The tests for the notify yessssms platform."""
 import logging
 import unittest
-from unittest.mock import patch
 
 import pytest
 import requests_mock
@@ -15,6 +14,8 @@ from homeassistant.const import (
     HTTP_INTERNAL_SERVER_ERROR,
 )
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import patch
 
 
 @pytest.fixture(name="config")

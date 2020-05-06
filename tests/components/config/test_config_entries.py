@@ -390,7 +390,12 @@ async def test_get_progress_index(hass, hass_ws_client):
 
     assert response["success"]
     assert response["result"] == [
-        {"flow_id": form["flow_id"], "handler": "test", "context": {"source": "hassio"}}
+        {
+            "flow_id": form["flow_id"],
+            "handler": "test",
+            "step_id": "account",
+            "context": {"source": "hassio"},
+        }
     ]
 
 

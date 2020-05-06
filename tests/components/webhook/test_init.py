@@ -1,9 +1,9 @@
 """Test the webhook component."""
-from unittest.mock import Mock
-
 import pytest
 
 from homeassistant.setup import async_setup_component
+
+from tests.async_mock import Mock
 
 
 @pytest.fixture

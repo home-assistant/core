@@ -1,14 +1,17 @@
 """Support for ISY994 lights."""
-import logging
 from typing import Callable
 
-from homeassistant.components.light import DOMAIN, SUPPORT_BRIGHTNESS, LightEntity
+from homeassistant.components.light import (
+    DOMAIN as LIGHT,
+    SUPPORT_BRIGHTNESS,
+    LightEntity,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from . import ISY994_NODES, ISYDevice
-
-_LOGGER = logging.getLogger(__name__)
+from . import ISY994_NODES
+from .const import _LOGGER
+from .entity import ISYNodeEntity
 
 ATTR_LAST_BRIGHTNESS = "last_brightness"
 
@@ -18,13 +21,13 @@ def setup_platform(
 ):
     """Set up the ISY994 light platform."""
     devices = []
-    for node in hass.data[ISY994_NODES][DOMAIN]:
-        devices.append(ISYLightDevice(node))
+    for node in hass.data[ISY994_NODES][LIGHT]:
+        devices.append(ISYLightEntity(node))
 
     add_entities(devices)
 
 
-class ISYLightDevice(ISYDevice, LightEntity, RestoreEntity):
+class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
     """Representation of an ISY994 light device."""
 
     def __init__(self, node) -> None:

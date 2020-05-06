@@ -16,6 +16,7 @@ FLOWS = [
     "atag",
     "august",
     "axis",
+    "blebox",
     "braviatv",
     "brother",
     "cast",
@@ -50,6 +51,7 @@ FLOWS = [
     "harmony",
     "heos",
     "hisense_aehw4a1",
+    "home_connect",
     "homekit",
     "homekit_controller",
     "homematicip_cloud",
@@ -125,6 +127,7 @@ FLOWS = [
     "tado",
     "tellduslive",
     "tesla",
+    "tibber",
     "toon",
     "totalconnect",
     "tplink",
@@ -146,5 +149,6 @@ FLOWS = [
     "wwlln",
     "xiaomi_miio",
     "zha",
-    "zwave"
+    "zwave",
+    "zwave_mqtt"
 ]

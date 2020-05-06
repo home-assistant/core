@@ -9,6 +9,7 @@
         "step": {
             "user": {
                 "data": {
+                    "host": "Host",
                     "port": "Puerto (10000)"
                 },
                 "title": "Conectarse al dispositivo"

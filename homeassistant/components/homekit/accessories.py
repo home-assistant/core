@@ -164,13 +164,12 @@ def get_accessory(hass, driver, state, aid, config):
 
     elif state.domain == "media_player":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        feature_list = config.get(CONF_FEATURE_LIST)
+        feature_list = config.get(CONF_FEATURE_LIST, [])
 
         if device_class == DEVICE_CLASS_TV:
             a_type = "TelevisionMediaPlayer"
-        else:
-            if feature_list and validate_media_player_features(state, feature_list):
-                a_type = "MediaPlayer"
+        elif validate_media_player_features(state, feature_list):
+            a_type = "MediaPlayer"
 
     elif state.domain == "sensor":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
@@ -209,6 +208,9 @@ def get_accessory(hass, driver, state, aid, config):
     elif state.domain == "water_heater":
         a_type = "WaterHeater"
 
+    elif state.domain == "camera":
+        a_type = "Camera"
+
     if a_type is None:
         return None
 
@@ -220,10 +222,19 @@ class HomeAccessory(Accessory):
     """Adapter class for Accessory."""
 
     def __init__(
-        self, hass, driver, name, entity_id, aid, config, category=CATEGORY_OTHER
+        self,
+        hass,
+        driver,
+        name,
+        entity_id,
+        aid,
+        config,
+        *args,
+        category=CATEGORY_OTHER,
+        **kwargs,
     ):
         """Initialize a Accessory object."""
-        super().__init__(driver, name, aid=aid)
+        super().__init__(driver=driver, display_name=name, aid=aid, *args, **kwargs)
         model = split_entity_id(entity_id)[0].replace("_", " ").title()
         self.set_info_service(
             firmware_revision=__version__,
@@ -459,6 +470,18 @@ class HomeBridge(Bridge):
 
     def setup_message(self):
         """Prevent print of pyhap setup message to terminal."""
+
+    def get_snapshot(self, info):
+        """Get snapshot from accessory if supported."""
+        acc = self.accessories.get(info["aid"])
+        if acc is None:
+            raise ValueError("Requested snapshot for missing accessory")
+        if not hasattr(acc, "get_snapshot"):
+            raise ValueError(
+                "Got a request for snapshot, but the Accessory "
+                'does not define a "get_snapshot" method'
+            )
+        return acc.get_snapshot(info)
 
 
 class HomeDriver(AccessoryDriver):

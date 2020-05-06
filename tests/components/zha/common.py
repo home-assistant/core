@@ -1,6 +1,5 @@
 """Common test objects."""
 import time
-from unittest.mock import Mock
 
 from zigpy.device import Device as zigpy_dev
 from zigpy.endpoint import Endpoint as zigpy_ep
@@ -14,7 +13,7 @@ import zigpy.zdo.types
 import homeassistant.components.zha.core.const as zha_const
 from homeassistant.util import slugify
 
-from tests.async_mock import AsyncMock
+from tests.async_mock import AsyncMock, Mock
 
 
 class FakeEndpoint:
@@ -33,7 +32,7 @@ class FakeEndpoint:
         self.model = model
         self.profile_id = zigpy.profiles.zha.PROFILE_ID
         self.device_type = None
-        self.request = AsyncMock()
+        self.request = AsyncMock(return_value=[0])
 
     def add_input_cluster(self, cluster_id):
         """Add an input cluster."""
@@ -61,6 +60,7 @@ class FakeEndpoint:
 
 
 FakeEndpoint.add_to_group = zigpy_ep.add_to_group
+FakeEndpoint.remove_from_group = zigpy_ep.remove_from_group
 
 
 def patch_cluster(cluster):

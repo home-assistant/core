@@ -1,7 +1,6 @@
 """The tests for the MQTT discovery."""
 from pathlib import Path
 import re
-from unittest.mock import patch
 
 import pytest
 
@@ -13,7 +12,7 @@ from homeassistant.components.mqtt.abbreviations import (
 from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED, async_start
 from homeassistant.const import STATE_OFF, STATE_ON
 
-from tests.async_mock import AsyncMock
+from tests.async_mock import AsyncMock, patch
 from tests.common import (
     MockConfigEntry,
     async_fire_mqtt_message,

@@ -201,7 +201,7 @@ class EntityComponent:
         name: str,
         schema: Union[Dict[str, Any], vol.Schema],
         func: str,
-        required_features: Optional[int] = None,
+        required_features: Optional[List[int]] = None,
     ) -> None:
         """Register an entity service."""
         if isinstance(schema, dict):

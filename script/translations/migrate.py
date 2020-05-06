@@ -327,12 +327,25 @@ def find_frontend_states():
 def run():
     """Migrate translations."""
     # Import new common keys
-    migrate_project_keys_translations(
+    rename_keys(
         CORE_PROJECT_ID,
-        FRONTEND_PROJECT_ID,
         {
-            "common::state::off": "state::default::off",
-            "common::state::on": "state::default::on",
+            "component::netatmo::config::step::pick_implementation::title": "common::config_flow::title::oauth2_pick_implementation",
+            "component::doorbird::config::step::user::data::username": "common::config_flow::data::username",
+            "component::doorbird::config::step::user::data::password": "common::config_flow::data::password",
+            "component::adguard::config::step::user::data::host": "common::config_flow::data::host",
+            "component::adguard::config::step::user::data::port": "common::config_flow::data::port",
+            "component::zha::config::step::user::data::usb_path": "common::config_flow::data::usb_path",
+            "component::smartthings::config::step::pat::data::access_token": "common::config_flow::data::access_token",
+            "component::airvisual::config::step::geography::data::api_key": "common::config_flow::data::api_key",
+            "component::doorbird::config::error::invalid_auth": "common::config_flow::error::invalid_auth",
+            "component::airvisual::config::error::invalid_api_key": "common::config_flow::error::invalid_api_key",
+            "component::tibber::config::error::invalid_access_token": "common::config_flow::error::invalid_access_token",
+            "component::doorbird::config::error::unknown": "common::config_flow::error::unknown",
+            "component::life360::config::abort::user_already_configured": "common::config_flow::abort::already_configured_account",
+            "component::xiaomi_miio::config::abort::already_configured": "common::config_flow::abort::already_configured_device",
+            "component::netatmo::config::abort::missing_configuration": "common::config_flow::abort::oauth2_missing_configuration",
+            "component::netatmo::config::abort::authorize_url_timeout": "common::config_flow::abort::oauth2_authorize_url_timeout",
         },
     )
 

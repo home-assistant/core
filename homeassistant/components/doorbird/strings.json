@@ -12,10 +12,10 @@
       "user": {
         "title": "Connect to the DoorBird",
         "data": {
-          "password": "Password",
+          "password": "[%key:common::config_flow::data::password%]",
           "host": "Host (IP Address)",
           "name": "Device Name",
-          "username": "Username"
+          "username": "[%key:common::config_flow::data::username%]"
         }
       }
     },
@@ -26,9 +26,9 @@
     },
     "flow_title": "DoorBird {name} ({host})",
     "error": {
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error",
-      "cannot_connect": "Failed to connect, please try again"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   }
 }
