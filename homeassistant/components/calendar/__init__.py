@@ -36,7 +36,7 @@ async def async_setup(hass, config):
     hass.http.register_view(CalendarEventView(component))
 
     hass.components.frontend.async_register_built_in_panel(
-        'calendar', 'calendar', 'hass:calendar')
+        "calendar", "calendar", "hass:calendar")
 
     await component.async_setup(config)
     return True
