@@ -35,7 +35,7 @@ def find_value_in_config_entry(entry: ConfigEntry, key: str, default: str = None
     """Find the configured key/value in the held config_entry."""
     if key in entry.options:
         return entry.options[key]
-    elif key in entry.data:
+    if key in entry.data:
         return entry.data[key]
 
     return default
