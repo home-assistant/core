@@ -50,3 +50,4 @@ class BeckerFlowHandler(config_entries.ConfigFlow):
                 CONF_DEVICE: info.get(CONF_DEVICE),
             },
         )
+        
