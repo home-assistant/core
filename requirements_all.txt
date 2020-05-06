@@ -327,7 +327,7 @@ beautifulsoup4==4.9.0
 beewi_smartclim==0.0.7
 
 # homeassistant.components.zha
-bellows-homeassistant==0.15.2
+bellows==0.16.1
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.7.5
@@ -1557,6 +1557,7 @@ pysensibo==1.0.3
 pyserial-asyncio==0.4
 
 # homeassistant.components.acer_projector
+# homeassistant.components.zha
 pyserial==3.4
 
 # homeassistant.components.sesame
@@ -2217,19 +2218,19 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-cc==0.3.1
+zigpy-cc==0.4.2
 
 # homeassistant.components.zha
-zigpy-deconz==0.8.1
+zigpy-deconz==0.9.1
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.19.0
+zigpy-xbee==0.12.1
 
 # homeassistant.components.zha
-zigpy-xbee-homeassistant==0.11.0
+zigpy-zigate==0.6.1
 
 # homeassistant.components.zha
-zigpy-zigate==0.5.1
+zigpy==0.20.1
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0

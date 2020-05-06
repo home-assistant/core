@@ -2,6 +2,8 @@
 import enum
 import logging
 
+from zigpy.config import CONF_DEVICE_PATH  # noqa: F401 # pylint: disable=unused-import
+
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.cover import DOMAIN as COVER
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
@@ -92,8 +94,10 @@ CONF_BAUDRATE = "baudrate"
 CONF_DATABASE = "database_path"
 CONF_DEVICE_CONFIG = "device_config"
 CONF_ENABLE_QUIRKS = "enable_quirks"
+CONF_FLOWCONTROL = "flow_control"
 CONF_RADIO_TYPE = "radio_type"
 CONF_USB_PATH = "usb_path"
+CONF_ZIGPY = "zigpy_config"
 CONTROLLER = "controller"
 
 DATA_DEVICE_CONFIG = "zha_device_config"
@@ -145,11 +149,11 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 class RadioType(enum.Enum):
     """Possible options for radio type."""
 
-    deconz = "deconz"
     ezsp = "ezsp"
+    deconz = "deconz"
     ti_cc = "ti_cc"
-    xbee = "xbee"
     zigate = "zigate"
+    xbee = "xbee"
 
     @classmethod
     def list(cls):
@@ -258,7 +262,6 @@ ZHA_GW_MSG_GROUP_REMOVED = "group_removed"
 ZHA_GW_MSG_LOG_ENTRY = "log_entry"
 ZHA_GW_MSG_LOG_OUTPUT = "log_output"
 ZHA_GW_MSG_RAW_INIT = "raw_device_initialized"
-ZHA_GW_RADIO = "radio"
 ZHA_GW_RADIO_DESCRIPTION = "radio_description"
 
 EFFECT_BLINK = 0x00
