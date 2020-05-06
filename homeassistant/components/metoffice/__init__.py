@@ -52,6 +52,16 @@ async def metoffice_data_update_listener(hass, entry):
         await hass_data[METOFFICE_COORDINATOR].async_refresh()
 
 
+def find_value_in_config_entry(entry: ConfigEntry, key: str, default: str = None):
+    """Find the configured key/value in the held config_entry."""
+    if key in entry.options:
+        return entry.options[key]
+    elif key in entry.data:
+        return entry.data[key]
+
+    return default
+
+
 async def metoffice_data_update_listener(hass, entry):
     """Handle options update."""
     _LOGGER.debug(
