@@ -67,7 +67,7 @@ async def async_setup_entry(
 class AgentCamera(MjpegCamera):
     """Representation of an Agent Device Stream."""
 
-    def __init__(self, device, enabled_default: bool = True):
+    def __init__(self, device):
         """Initialize as a subclass of MjpegCamera."""
         self._servername = device.client.name
         self.server_url = device.client._server_url
