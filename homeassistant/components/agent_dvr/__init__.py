@@ -40,7 +40,7 @@ async def async_setup_entry(hass, config_entry):
     if not agent_client.is_available:
         raise ConfigEntryNotReady
 
-    agent_client.deviceList = await agent_client.get_devices()
+    await agent_client.get_devices()
 
     hass.data[AGENT_DOMAIN][config_entry.entry_id] = {CONNECTION: agent_client}
 
