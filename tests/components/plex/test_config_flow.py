@@ -554,6 +554,9 @@ async def test_multiple_servers_with_import(hass):
 
 async def test_manual_config(hass):
     """Test creating via manual configuration."""
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
 
     class WrongCertValidaitionException(requests.exceptions.SSLError):
         """Mock the exception showing an unmatched error."""
