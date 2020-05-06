@@ -324,8 +324,7 @@ class Remote:
     @property
     def state(self):
         """Return TV state."""
-        if self._control is not None:
-            return self._state
+        return self._state
 
     @property
     def app_name(self):
@@ -337,18 +336,21 @@ class Remote:
             if app_name in MAP_APP_NAME:
                 return MAP_APP_NAME[app_name]
             return app_name
+        return None
 
     @property
     def app_id(self):
         """Return ID of open app."""
         if self._app_info is not None:
             return self._app_info.split(":")[2].split("=")[1]
+        return None
 
     @property
     def app_image_url(self):
         """Return image URL of open app."""
         if self._app_id is not None:
             return f"http://{self._host}:{self._port}/nrc/app_icon/{self.app_id}"
+        return None
 
     @property
     def volume(self):
