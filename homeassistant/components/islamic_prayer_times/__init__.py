@@ -125,11 +125,11 @@ class IslamicPrayerClient:
         """
         _LOGGER.debug("Scheduling next update for Islamic prayer times")
 
-        now = dt_util.as_local(dt_util.now())
+        now = dt_util.now()
 
         midnight_dt = self.prayer_times_info["Midnight"]
 
-        if now > dt_util.as_local(midnight_dt):
+        if now > midnight_dt.astimezone(self.hass.config.time_zone):
             next_update_at = midnight_dt + timedelta(days=1, minutes=1)
             _LOGGER.debug(
                 "Midnight is after day the changes so schedule update for after Midnight the next day"
