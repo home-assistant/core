@@ -34,7 +34,7 @@ class PyBecker:
 
     @classmethod
     async def async_register_services(cls, hass):
-        """Registers component services."""
+        """Register component services."""
 
         hass.services.async_register(DOMAIN, "pair", cls.handle_pair, PAIR_SCHEMA)
         hass.services.async_register(DOMAIN, "log_units", cls.handle_log_units)
@@ -55,7 +55,7 @@ class PyBecker:
         # Apparently the SQLite results are implicitly returned in unit id
         # order. This seems pretty dirty to rely on.
         unit_id = 1
-        _LOGGER.info("Configured Becker centronix units:")
+        _LOGGER.info("Configured Becker centronic units:")
         for row in units:
             unit_code, increment = row[0:2]
             _LOGGER.info(
