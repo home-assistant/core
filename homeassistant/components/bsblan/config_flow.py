@@ -78,6 +78,4 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
         bsblan = BSBLan(
             host, passkey=passkey, port=port, session=session, loop=self.hass.loop
         )
-        test = await bsblan.info()
-        _LOGGER.debug("get bsblan.info: %s", test)
         return await bsblan.info()
