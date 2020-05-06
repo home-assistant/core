@@ -3,11 +3,12 @@ import logging
 from urllib.parse import urlparse
 
 import denonavr
+from getmac import get_mac_address
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.const import CONF_HOST, CONF_TIMEOUT
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT
 
 from .receiver import ConnectDenonAVR
 
@@ -50,6 +51,8 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the Denon AVR flow."""
         self.host = None
+        self.serial_number = None
+        self.model_name = None
         self.timeout = DEFAULT_TIMEOUT
         self.show_all_sources = DEFAULT_SHOW_SOURCES
         self.zone2 = DEFAULT_ZONE2
@@ -128,8 +131,21 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="connection_error")
         receiver = connect_denonavr.receiver
 
+        mac_address = get_mac_address(ip=self.host)
+        if not self.serial_number:
+            self.serial_number = receiver.serial_number
+        if not self.model_name:
+            self.model_name = receiver.model_name
+
+        if not self.serial_number:
+            _LOGGER.error(
+                "Could not get serial number of host %s, "
+                "using the mac_address as identification", self.host
+            )
+            self.serial_number = mac_address
+
         unique_id = self.construct_unique_id(
-            receiver.model_name, receiver.serial_number
+            self.model_name, self.serial_number
         )
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
@@ -138,6 +154,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             title=receiver.name,
             data={
                 CONF_HOST: self.host,
+                CONF_MAC: mac_address,
                 CONF_TIMEOUT: self.timeout,
                 CONF_SHOW_ALL_SOURCES: self.show_all_sources,
                 CONF_ZONE2: self.zone2,
@@ -166,11 +183,11 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="not_denonavr_missing")
 
-        model_name = discovery_info[ssdp.ATTR_UPNP_MODEL_NAME]
-        serial_number = discovery_info[ssdp.ATTR_UPNP_SERIAL]
+        self.model_name = discovery_info[ssdp.ATTR_UPNP_MODEL_NAME]
+        self.serial_number = discovery_info[ssdp.ATTR_UPNP_SERIAL]
         self.host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
 
-        unique_id = self.construct_unique_id(model_name, serial_number)
+        unique_id = self.construct_unique_id(self.model_name, self.serial_number)
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 

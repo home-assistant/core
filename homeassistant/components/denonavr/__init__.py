@@ -2,7 +2,7 @@
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_TIMEOUT
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MAC, CONF_TIMEOUT
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -68,6 +68,7 @@ async def async_setup_entry(
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.data[CONF_MAC])},
         identifiers={(DOMAIN, entry.data[CONF_RECEIVER_ID])},
         manufacturer=receiver.manufacturer,
         name=receiver.name,
