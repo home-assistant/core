@@ -15,6 +15,12 @@ def generic_data_fixture():
     return load_fixture(f"zwave_mqtt/generic_network_dump.csv")
 
 
+@pytest.fixture(name="light_data", scope="session")
+def light_data_fixture():
+    """Load light dimmer MQTT data and return it."""
+    return load_fixture(f"zwave_mqtt/light_network_dump.csv")
+
+
 @pytest.fixture(name="sent_messages")
 def sent_messages_fixture():
     """Fixture to capture sent messages."""
@@ -27,6 +33,17 @@ def sent_messages_fixture():
         ),
     ):
         yield sent_messages
+
+
+@pytest.fixture(name="light_msg")
+async def light_msg_fixture(hass):
+    """Return a mock MQTT msg with a light actuator message."""
+    light_json = json.loads(
+        await hass.async_add_executor_job(load_fixture, "zwave_mqtt/light.json")
+    )
+    message = MQTTMessage(topic=light_json["topic"], payload=light_json["payload"])
+    message.encode()
+    return message
 
 
 @pytest.fixture(name="switch_msg")
