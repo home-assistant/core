@@ -297,32 +297,45 @@ class _ScriptRunBase(ABC):
             self._action[CONF_EVENT], event_data, context=self._context
         )
 
-    async def _check_condition(self, cond):
+    async def _get_condition_config(self, cond):
         config_cache_key = frozenset((k, str(v)) for k, v in cond.items())
         config = self._config_cache.get(config_cache_key)
         if not config:
             config = await condition.async_from_config(self._hass, cond, False)
             self._config_cache[config_cache_key] = config
-
-        return config(self._hass, self._variables)
+        return config
 
     async def _async_condition_step(self):
         """Test if condition is matching."""
         self._script.last_action = self._action.get(
             CONF_ALIAS, self._action[CONF_CONDITION]
         )
-        check = await self._check_condition(self._action)
+        config = await self._get_condition_config(self._action)
+        check = config(self._hass, self._variables)
         self._log("Test condition %s: %s", self._script.last_action, check)
         if not check:
             raise _StopScript
 
     async def _async_branch_step(self):
         branches = self._action.get("branch", [])
-        for b in branches:
-            condition = b.get("if")
-            if not condition or await self._check_condition(condition):
-                for _, self._action in enumerate(b.get("sequence", {})):
-                    await self._async_step(log_exceptions=False)
+        conditions = [(
+            await self._get_condition_config(b["if"]) if b.get("if") else None,
+            b["sequence"]
+            ) for b in branches]
+
+        for (condition, sequence) in conditions:
+            if not condition or condition(self._hass, self._variables):
+                branch = Script(
+                        self._hass,
+                        sequence,
+                        self._script.name,
+                        self._script.change_listener,
+                        self._script._script_mode,
+                        getattr(self._script, "_queue_max", DEFAULT_QUEUE_MAX),
+                        self._script._logger,
+                        self._script._log_exceptions
+                        )
+                await branch.async_run(self._variables, self._context)
                 break
 
     def _log(self, msg, *args, level=logging.INFO):
