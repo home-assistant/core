@@ -82,7 +82,6 @@ class AgentCamera(MjpegCamera):
         self._name = f"{self._servername} {device.name}"
         self._stream_url = f"{self.server_url}{device.mp4_url}"
         self._unique_id = f"{device._client.unique}_{device.typeID}_{device.id}"
-        self._enabled_default = enabled_default
         super().__init__(device_info)
 
     @property
