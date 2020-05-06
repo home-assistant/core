@@ -23,7 +23,7 @@ class FlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    async def _create_entry(self, host, mac, key=None, uuid=None, password=None):
+    def _create_entry(self, host, mac, key=None, uuid=None, password=None):
         """Register new entry."""
         # Check if mac already is registered
         for entry in self._async_current_entries():
@@ -73,7 +73,7 @@ class FlowHandler(config_entries.ConfigFlow):
             return self.async_abort(reason="device_fail")
 
         mac = device.mac
-        return await self._create_entry(host, mac, key, uuid, password)
+        return self._create_entry(host, mac, key, uuid, password)
 
     async def async_step_user(self, user_input=None):
         """User initiated config flow."""
@@ -104,4 +104,4 @@ class FlowHandler(config_entries.ConfigFlow):
     async def async_step_discovery(self, user_input):
         """Initialize step from discovery."""
         _LOGGER.info("Discovered device: %s", user_input)
-        return await self._create_entry(user_input[KEY_IP], user_input[KEY_MAC])
+        return self._create_entry(user_input[KEY_IP], user_input[KEY_MAC])
