@@ -55,6 +55,7 @@ from .const import (
     KNOWN_CHROMECAST_INFO_KEY,
     SIGNAL_CAST_DISCOVERED,
     SIGNAL_CAST_REMOVED,
+    SIGNAL_HASS_CAST_APPLICATION,
     SIGNAL_HASS_CAST_SHOW_VIEW,
 )
 from .discovery import setup_internal_discovery
@@ -219,6 +220,9 @@ class CastDevice(MediaPlayerEntity):
 
         self._cast_view_remove_handler = async_dispatcher_connect(
             self.hass, SIGNAL_HASS_CAST_SHOW_VIEW, self._handle_signal_show_view
+        )
+        self._cast_view_remove_handler = async_dispatcher_connect(
+            self.hass, SIGNAL_HASS_CAST_APPLICATION, self._handle_signal_cast_function
         )
 
     async def async_will_remove_from_hass(self) -> None:
@@ -768,3 +772,19 @@ class CastDevice(MediaPlayerEntity):
             self._chromecast.register_handler(controller)
 
         self._hass_cast_controller.show_lovelace_view(view_path, url_path)
+
+    def _handle_signal_cast_function(
+        self, entity_id: str, action: str, data: dict,
+    ):
+        """Handle a cast signal. To stop, just use service turn_off."""
+        if entity_id != self.entity_id:
+            return
+
+        if action == "quick_play":
+            app_name = data.pop("app_name")
+            try:
+                quick_play(self._chromecast, app_name, data)
+            except NotImplementedError:
+                _LOGGER.error("App %s not supported", app_name)
+        elif action == "start_app":
+            self._chromecast.start_app(data["app_id"])
