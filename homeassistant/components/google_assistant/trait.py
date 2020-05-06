@@ -50,6 +50,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
+from homeassistant.helpers.network import async_get_url
 from homeassistant.util import color as color_util, temperature as temp_util
 
 from .const import (
@@ -248,7 +249,10 @@ class CameraStreamTrait(_Trait):
             self.state.entity_id, "hls"
         )
         self.stream_info = {
-            "cameraStreamAccessUrl": self.hass.config.api.base_url + url
+            "cameraStreamAccessUrl": async_get_url(
+                self.hass, allow_ip=False, require_ssl=True
+            )
+            + url
         }
 
 
