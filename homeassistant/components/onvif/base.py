@@ -2,7 +2,6 @@
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
 from .device import ONVIFDevice
 from .models import Profile
 
@@ -25,7 +24,6 @@ class ONVIFBaseEntity(Entity):
         """Return a device description for device registry."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self.device.info.mac)},
-            "identifiers": {(DOMAIN, self.device.info.mac)},
             "manufacturer": self.device.info.manufacturer,
             "model": self.device.info.model,
             "name": self.device.name,

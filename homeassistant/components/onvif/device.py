@@ -95,6 +95,13 @@ class ONVIFDevice:
 
             if self.capabilities.ptz:
                 self.device.create_ptz_service()
+
+            # Determine max resolution from profiles
+            self.max_resolution = max(
+                profile.video.resolution.width
+                for profile in self.profiles
+                if profile.video.encoding == "H264"
+            )
         except ClientConnectionError as err:
             LOGGER.warning(
                 "Couldn't connect to camera '%s', but will retry later. Error: %s",
@@ -110,13 +117,6 @@ class ONVIFDevice:
                 err,
             )
             return False
-
-        # Determine max resolution from profiles
-        self.max_resolution = max(
-            profile.video.resolution.width
-            for profile in self.profiles
-            if profile.video.encoding == "H264"
-        )
 
         return True
 
@@ -163,20 +163,18 @@ class ONVIFDevice:
 
                 cam_date_utc = cam_date.astimezone(dt_util.UTC)
 
-                LOGGER.debug("TimeZone for date/time: %s", tzone)
-
-                LOGGER.debug("Camera date/time: %s", cam_date)
-
-                LOGGER.debug("Camera date/time in UTC: %s", cam_date_utc)
-
-                LOGGER.debug("System date/time: %s", system_date)
+                LOGGER.debug(
+                    "Device date/time: %s | System date/time: %s",
+                    cam_date_utc,
+                    system_date,
+                )
 
                 dt_diff = cam_date - system_date
                 dt_diff_seconds = dt_diff.total_seconds()
 
                 if dt_diff_seconds > 5:
                     LOGGER.warning(
-                        "The date/time on the camera (UTC) is '%s', "
+                        "The date/time on the device (UTC) is '%s', "
                         "which is different from the system '%s', "
                         "this could lead to authentication issues",
                         cam_date_utc,
@@ -184,7 +182,7 @@ class ONVIFDevice:
                     )
         except ServerDisconnectedError as err:
             LOGGER.warning(
-                "Couldn't get camera '%s' date/time. Error: %s", self.name, err
+                "Couldn't get device '%s' date/time. Error: %s", self.name, err
             )
 
     async def async_get_device_info(self) -> DeviceInfo:
@@ -214,41 +212,41 @@ class ONVIFDevice:
         """Obtain media profiles for this device."""
         media_service = self.device.create_media_service()
         result = await media_service.GetProfiles()
-        profiles = [
-            Profile(
-                key,
-                profile.token,
-                profile.Name,
-                Video(
-                    profile.VideoEncoderConfiguration.Encoding,
-                    Resolution(
-                        profile.VideoEncoderConfiguration.Resolution.Width,
-                        profile.VideoEncoderConfiguration.Resolution.Height,
-                    ),
-                ),
-                PTZ(
-                    profile.PTZConfiguration.DefaultContinuousPanTiltVelocitySpace
-                    is not None,
-                    profile.PTZConfiguration.DefaultRelativePanTiltTranslationSpace
-                    is not None,
-                    profile.PTZConfiguration.DefaultAbsolutePantTiltPositionSpace
-                    is not None,
-                )
-                if profile.PTZConfiguration
-                else None,
-            )
-            for key, profile in enumerate(result)
-            if profile.VideoEncoderConfiguration.Encoding == "H264"
-        ]
-
-        for profile in profiles:
-            # Set PTZ information
-            if profile.ptz is None:
+        profiles = []
+        for key, onvif_profile in enumerate(result):
+            # Only add H264 profiles
+            if onvif_profile.VideoEncoderConfiguration.Encoding != "H264":
                 continue
 
-            ptz_service = self.device.create_ptz_service()
-            presets = await ptz_service.GetPresets(profile.token)
-            profile.ptz.presets = [preset.token for preset in presets]
+            profile = Profile(
+                key,
+                onvif_profile.token,
+                onvif_profile.Name,
+                Video(
+                    onvif_profile.VideoEncoderConfiguration.Encoding,
+                    Resolution(
+                        onvif_profile.VideoEncoderConfiguration.Resolution.Width,
+                        onvif_profile.VideoEncoderConfiguration.Resolution.Height,
+                    ),
+                ),
+            )
+
+            # Configure PTZ options
+            if onvif_profile.PTZConfiguration:
+                profile.ptz = PTZ(
+                    onvif_profile.PTZConfiguration.DefaultContinuousPanTiltVelocitySpace
+                    is not None,
+                    onvif_profile.PTZConfiguration.DefaultRelativePanTiltTranslationSpace
+                    is not None,
+                    onvif_profile.PTZConfiguration.DefaultAbsolutePantTiltPositionSpace
+                    is not None,
+                )
+
+                ptz_service = self.device.get_service("ptz")
+                presets = await ptz_service.GetPresets(profile.token)
+                profile.ptz.presets = [preset.token for preset in presets]
+
+            profiles.append(profile)
 
         return profiles
 
@@ -367,9 +365,10 @@ class ONVIFDevice:
                 # Guard against unsupported operation
                 if preset_val not in profile.ptz.presets:
                     LOGGER.warning(
-                        "PTZ preset '%s' does not exist on device '%s'",
+                        "PTZ preset '%s' does not exist on device '%s'. Available Presets: %s",
                         preset_val,
                         self.name,
+                        profile.ptz.presets.join(", "),
                     )
                     return
 
@@ -381,8 +380,7 @@ class ONVIFDevice:
                 await ptz_service.GotoPreset(req)
         except ONVIFError as err:
             if "Bad Request" in err.reason:
-                ptz_service = None
-                LOGGER.debug("Camera '%s' doesn't support PTZ.", self.name)
+                LOGGER.warning("Device '%s' doesn't support PTZ.", self.name)
             else:
                 LOGGER.error("Error trying to perform PTZ action: %s", err)
 

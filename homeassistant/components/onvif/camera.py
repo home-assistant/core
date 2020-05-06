@@ -142,7 +142,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
 
                 return None
 
-            image = await self.hass.async_add_job(fetch)
+            image = await self.hass.async_add_executor_job(fetch)
 
         if image is None:
             ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)

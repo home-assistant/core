@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_per_platform
 
 from .const import (
@@ -72,6 +73,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     if not await device.async_setup():
         return False
+
+    if not device.available:
+        raise ConfigEntryNotReady()
 
     hass.data[DOMAIN][entry.unique_id] = device
 
