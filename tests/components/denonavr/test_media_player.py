@@ -12,11 +12,12 @@ from homeassistant.components.denonavr.config_flow import (
     CONF_ZONE3,
     DOMAIN,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_TIMEOUT
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MAC, CONF_TIMEOUT
 
 from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
+TEST_MAC = "ab:cd:ef:gh"
 TEST_NAME = "Test_Receiver"
 TEST_MODEL = "model5"
 TEST_SERIALNUMBER = "123456789"
@@ -55,6 +56,7 @@ async def setup_denonavr(hass):
     """Initialize media_player for tests."""
     entry_data = {
         CONF_HOST: TEST_HOST,
+        CONF_MAC: TEST_MAC,
         CONF_TIMEOUT: TEST_TIMEOUT,
         CONF_SHOW_ALL_SOURCES: TEST_SHOW_ALL_SOURCES,
         CONF_ZONE2: TEST_ZONE2,

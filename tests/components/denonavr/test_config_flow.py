@@ -14,11 +14,12 @@ from homeassistant.components.denonavr.config_flow import (
     DEFAULT_ZONE3,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_TIMEOUT
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT
 
 from tests.async_mock import patch
 
 TEST_HOST = "1.2.3.4"
+TEST_MAC = "ab:cd:ef:gh"
 TEST_HOST2 = "5.6.7.8"
 TEST_NAME = "Test_Receiver"
 TEST_MODEL = "model5"
@@ -60,6 +61,9 @@ def denonavr_connect_fixture():
         "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.serial_number",
         TEST_SERIALNUMBER,
     ), patch(
+        "homeassistant.components.denonavr.config_flow.get_mac_address",
+        return_value=TEST_MAC,
+    ), patch(
         "homeassistant.components.denonavr.async_setup_entry", return_value=True
     ):
         yield
@@ -88,6 +92,7 @@ async def test_config_flow_manual_host_success(hass):
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
+        CONF_MAC: TEST_MAC,
         CONF_TIMEOUT: DEFAULT_TIMEOUT,
         CONF_SHOW_ALL_SOURCES: DEFAULT_SHOW_SOURCES,
         CONF_ZONE2: DEFAULT_ZONE2,
@@ -121,6 +126,7 @@ async def test_config_flow_manual_discover_1_success(hass):
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
+        CONF_MAC: TEST_MAC,
         CONF_TIMEOUT: DEFAULT_TIMEOUT,
         CONF_SHOW_ALL_SOURCES: DEFAULT_SHOW_SOURCES,
         CONF_ZONE2: DEFAULT_ZONE2,
@@ -162,6 +168,7 @@ async def test_config_flow_manual_discover_2_success(hass):
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST2,
+        CONF_MAC: TEST_MAC,
         CONF_TIMEOUT: DEFAULT_TIMEOUT,
         CONF_SHOW_ALL_SOURCES: DEFAULT_SHOW_SOURCES,
         CONF_ZONE2: DEFAULT_ZONE2,
@@ -222,6 +229,7 @@ async def test_config_flow_settings(hass):
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
+        CONF_MAC: TEST_MAC,
         CONF_TIMEOUT: 5,
         CONF_SHOW_ALL_SOURCES: True,
         CONF_ZONE2: True,
@@ -279,6 +287,7 @@ async def test_config_flow_ssdp(hass):
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
+        CONF_MAC: TEST_MAC,
         CONF_TIMEOUT: DEFAULT_TIMEOUT,
         CONF_SHOW_ALL_SOURCES: DEFAULT_SHOW_SOURCES,
         CONF_ZONE2: DEFAULT_ZONE2,

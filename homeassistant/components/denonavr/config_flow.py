@@ -1,4 +1,5 @@
 """Config flow to configure Denon AVR receivers using their HTTP interface."""
+from functools import partial
 import logging
 from urllib.parse import urlparse
 
@@ -132,7 +133,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         receiver = connect_denonavr.receiver
 
         mac_address = await self.hass.async_add_executor_job(
-            get_mac_address(ip=self.host)
+            partial(get_mac_address, **{"ip": self.host})
         )
 
         if not self.serial_number:
