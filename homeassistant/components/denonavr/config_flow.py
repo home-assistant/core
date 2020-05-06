@@ -132,9 +132,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="connection_error")
         receiver = connect_denonavr.receiver
 
-        mac_address = await self.hass.async_add_executor_job(
-            partial(get_mac_address, **{"ip": self.host})
-        )
+        mac_address = await self.async_get_mac(self.host)
 
         if not self.serial_number:
             self.serial_number = receiver.serial_number
@@ -202,3 +200,14 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def construct_unique_id(model_name, serial_number):
         """Construct the unique id from the ssdp discovery or user_step."""
         return f"{model_name}-{serial_number}"
+
+    async def async_get_mac(self, host):
+        """Get the mac address of the DenonAVR receiver."""
+        mac_address = await self.hass.async_add_executor_job(
+            partial(get_mac_address, **{"ip": host})
+        )
+        if not mac_address:
+            mac_address = await self.hass.async_add_executor_job(
+                partial(get_mac_address, **{"hostname": host})
+            )
+        return mac_address
