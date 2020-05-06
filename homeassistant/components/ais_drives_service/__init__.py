@@ -61,7 +61,7 @@ async def async_setup(hass, config):
     """Register the service."""
     _LOGGER.info("Initialize the folders and files list.")
     data = hass.data[DOMAIN] = LocalData(hass)
-    await data.async_load_all()
+    await data.async_load_all(hass)
 
     # register services
     def browse_path(call):
@@ -948,7 +948,7 @@ class LocalData:
             else:
                 self.say("Tej pozycji nie można usunąć")
 
-    async def async_load_all(self):
+    async def async_load_all(self, hass):
         """Load all the folders and files."""
 
         self.display_root_items(False)
@@ -964,9 +964,9 @@ class LocalData:
 
         # set client and secret
         try:
-            json_ws_resp = aisCloud.key("gdrive_client_id")
+            json_ws_resp = await aisCloud.async_key("gdrive_client_id", hass)
             G_DRIVE_CLIENT_ID = json_ws_resp["key"]
-            json_ws_resp = aisCloud.key("gdrive_secret")
+            json_ws_resp = await aisCloud.async_key("gdrive_secret", hass)
             G_DRIVE_SECRET = json_ws_resp["key"]
         except Exception as e:
             _LOGGER.error("Error " + str(e))

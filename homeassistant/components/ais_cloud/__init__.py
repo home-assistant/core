@@ -4,7 +4,7 @@ import json
 import logging
 import os
 
-import aiohttp
+import async_timeout
 import requests
 
 from homeassistant.components.ais_dom import ais_global
@@ -15,6 +15,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.util import slugify
 
@@ -387,12 +388,13 @@ class AisCloudWS:
         ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
         return ws_resp.json()
 
-    # async def async_key(self, service):
-    #     self.setCloudToken()
-    #     rest_url = self.url + "key?service=" + service
-    #     async with aiohttp.ClientSession() as session:
-    #         ws_resp = await session.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
-    #         return await ws_resp.json()
+    async def async_key(self, service, hass):
+        self.setCloudToken()
+        web_session = aiohttp_client.async_get_clientsession(hass)
+        rest_url = self.url + "key?service=" + service
+        with async_timeout.timeout(10):
+            ws_resp = await web_session.get(rest_url, headers=CLOUD_WS_HEADER)
+            return await ws_resp.json()
 
     # async def async_new_key(self, service, old_key):
     #     self.setCloudToken()
