@@ -179,7 +179,6 @@ class Remote:
         self.playing = False
 
         self._control = None
-        self._timeout = 5
 
     async def async_create_remote_control(self, during_setup=False):
         """Create remote control."""
@@ -213,7 +212,7 @@ class Remote:
             self.connected = True
         except (TimeoutError, URLError, SOAPError, OSError) as err:
             if during_setup:
-                _LOGGER.error("Could not establish remote connection: %s", err)
+                _LOGGER.debug("Could not establish remote connection: %s", err)
 
             self.available = self._on_action is not None
             self.connected = False
@@ -243,7 +242,7 @@ class Remote:
         if self._control is not None:
             for service in UPNP_SERVICES:
                 try:
-                    self._control.upnp_service_resubscribe(service, self._timeout)
+                    self._control.upnp_service_resubscribe(service)
                 except (TimeoutError, URLError, OSError):
                     _LOGGER.debug("Could resubscribe to service %s", service)
 
@@ -292,7 +291,7 @@ class Remote:
                 "The connection couldn't be encrypted. Please reconfigure your TV"
             )
         except (TimeoutError, URLError, SOAPError, OSError) as err:
-            _LOGGER.error("Could not establish remote connection: %s", err)
+            _LOGGER.debug("Could not establish remote connection: %s", err)
             if self._control is not None:
                 await self.shutdown()
             self.available = self._on_action is not None
