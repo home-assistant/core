@@ -1,4 +1,5 @@
 """Tracks the latency of a host by sending ICMP echo requests (ping)."""
+import asyncio
 from datetime import timedelta
 import logging
 import re
@@ -14,7 +15,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.process import kill_subprocess
 from .const import PING_TIMEOUT
 import asyncio
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -160,5 +160,5 @@ class PingData:
 
     async def async_update(self):
         """Retrieve the latest details from the host."""
-        self.data = await self.ping()
+        self.data = await self.async_ping()
         self.available = bool(self.data)
