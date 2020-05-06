@@ -50,15 +50,16 @@ async def validate_input(hass: core.HomeAssistant, data):
     return status
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Logitech Squeezebox."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     async def async_step_user(self, user_input=None):
-        """Handle the initial step."""
+        """Handle a flow initialized by the user."""
         errors = {}
+
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
@@ -77,6 +78,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_import(self, user_input):
+        """Import a config flow from configuration."""
+        try:
+            DATA_SCHEMA(user_input)
+            info = await validate_input(self.hass, user_input)
+            if "uuid" in info:
+                await self.async_set_unique_id(info["uuid"])
+                self.async_abort(reason="already_configured")
+            return self.async_create_entry(title=info.get("ip"), data=user_input)
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except InvalidAuth:
+            return self.async_abort(reason="invalid_auth")
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
 
 
 class CannotConnect(exceptions.HomeAssistantError):

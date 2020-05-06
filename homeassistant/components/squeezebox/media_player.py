@@ -5,6 +5,7 @@ import socket
 from pysqueezebox import Server
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
@@ -39,7 +40,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.dt import utcnow
 
-from .const import DEFAULT_PORT
+from .const import DEFAULT_PORT, DOMAIN
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
@@ -87,10 +88,19 @@ SQUEEZEBOX_MODE = {
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the squeezebox platform."""
-    _LOGGER.info(
-        "Setting up squeezebox platform in configuration.yaml is deprecated. Consider using config flow in frontend."
-    )
+    """Set up squeezebox platform from platform entry in configuration.yaml (deprecated)."""
+    _LOGGER.warning("Loading Squeezebox via platform config is deprecated.")
+    if config:
+        conf = {
+            CONF_HOST: config.get(CONF_HOST),
+            CONF_PORT: config.get(CONF_PORT) if config.get(CONF_PORT) else DEFAULT_PORT,
+        }
+        for attr in [CONF_USERNAME, CONF_PASSWORD]:
+            if attr in config:
+                conf.update(attr, config.get(attr))
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
+        )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
