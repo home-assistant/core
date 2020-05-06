@@ -14,6 +14,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
+from . import find_value_in_config_entry
 from .const import DOMAIN, MODE_3HOURLY, MODE_DAILY  # pylint: disable=unused-import
 from .data import MetOfficeData
 
@@ -98,12 +99,6 @@ class MetOfficeOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize."""
         self.config_entry = config_entry
 
-    def find_value_in_config_entry(self, key):
-        """Find the configured key/value in the held config_entry."""
-        if key in self.config_entry.options:
-            return self.config_entry.options[key]
-        return self.config_entry.data[key]
-
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
@@ -114,7 +109,10 @@ class MetOfficeOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_MODE, default=self.find_value_in_config_entry(CONF_MODE),
+                        CONF_MODE,
+                        default=find_value_in_config_entry(
+                            self.config_entry, CONF_MODE, MODE_3HOURLY
+                        ),
                     ): vol.In([MODE_3HOURLY, MODE_DAILY]),
                 },
                 extra=vol.ALLOW_EXTRA,
