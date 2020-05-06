@@ -32,7 +32,6 @@ ZONE_SENSORS = {
         "overlay",
         "early start",
         "open window",
-        "open window detected",
     ],
     TYPE_AIR_CONDITIONING: [
         "temperature",
