@@ -2,6 +2,7 @@
 import math
 
 from homeassistant.components.fan import (
+    DOMAIN as FAN_DOMAIN,
     SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
@@ -35,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities([fan])
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
-        async_dispatcher_connect(hass, "zwave_new_fan", async_add_fan)
+        async_dispatcher_connect(hass, f"{DOMAIN}_new_{FAN_DOMAIN}", async_add_fan)
     )
 
 
