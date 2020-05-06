@@ -80,3 +80,14 @@ async def async_setup_entry(
     )
 
     return True
+
+
+async def async_unload_entry(
+    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+):
+    """Unload a config entry."""
+    unload_ok = hass.config_entries.async_forward_entry_unload(entry, "media_player")
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok
