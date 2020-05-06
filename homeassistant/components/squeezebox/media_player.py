@@ -90,6 +90,17 @@ SQUEEZEBOX_MODE = {
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up squeezebox platform from platform entry in configuration.yaml (deprecated)."""
     _LOGGER.warning("Loading Squeezebox via platform config is deprecated.")
+
+    if discovery_info is not None:
+        # support for the deprecated discovery component
+        conf = {
+            CONF_HOST: discovery_info.get("host"),
+            CONF_PORT: discovery_info.get("port"),
+        }
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DISCOVERY}, data=conf
+        )
+
     if config:
         conf = {
             CONF_HOST: config.get(CONF_HOST),
@@ -119,10 +130,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     if DATA_SQUEEZEBOX not in hass.data:
         hass.data[DATA_SQUEEZEBOX] = []
-
-    # In case the port is not discovered
-    if port is None:
-        port = DEFAULT_PORT
 
     # Get IP of host, to prevent duplication of same host (different DNS names)
     try:
@@ -167,7 +174,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         hass.helpers.event.async_call_later(DISCOVERY_INTERVAL, _discovery)
 
-    _LOGGER.debug("Adding discovery job")
+    _LOGGER.debug("Adding player discovery job for LMS server: %s", ipaddr)
     hass.async_add_job(_discovery)
 
     platform = entity_platform.current_platform.get()

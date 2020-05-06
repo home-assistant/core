@@ -75,19 +75,59 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
+        data_schema = self.data_schema if self.data_schema else DATA_SCHEMA
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, config):
         """Import a config flow from configuration."""
         try:
-            DATA_SCHEMA(user_input)
-            info = await validate_input(self.hass, user_input)
+            DATA_SCHEMA(config)
+            info = await validate_input(self.hass, config)
             if "uuid" in info:
                 await self.async_set_unique_id(info["uuid"])
                 self.async_abort(reason="already_configured")
-            return self.async_create_entry(title=info.get("ip"), data=user_input)
+            return self.async_create_entry(title=info.get("ip"), data=config)
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except InvalidAuth:
+            return self.async_abort(reason="invalid_auth")
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
+    async def async_step_discovery(self, discovery_info):
+        """Handle discovery."""
+        _LOGGER.debug("Reached discovery flow with info: %s", discovery_info)
+        if self._async_in_progress():
+            return self.async_abort(reason="single_instance_allowed")
+        try:
+            DATA_SCHEMA(discovery_info)
+            info = await validate_input(self.hass, discovery_info)
+            if "uuid" in info:
+                await self.async_set_unique_id(info["uuid"])
+                self.async_abort(reason="already_configured")
+                self.data_schema = vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_HOST,
+                            description={
+                                "suggested_value": discovery_info.get(CONF_HOST)
+                            },
+                        ): str,
+                        vol.Required(
+                            CONF_PORT,
+                            default=DEFAULT_PORT,
+                            description={
+                                "suggested_value": discovery_info.get(CONF_PORT)
+                            },
+                        ): int,
+                        vol.Optional(CONF_USERNAME): str,
+                        vol.Optional(CONF_PASSWORD): str,
+                    }
+                )
+                return await self.async_step_user()
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
         except InvalidAuth:
