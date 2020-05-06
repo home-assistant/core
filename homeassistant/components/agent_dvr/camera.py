@@ -48,7 +48,7 @@ async def async_setup_entry(
     cameras = []
 
     server = hass.data[AGENT_DOMAIN][config_entry.entry_id][CONNECTION]
-    if not server.deviceList:
+    if not server.devices:
         _LOGGER.warning("Could not fetch cameras from Agent server")
         return
 
