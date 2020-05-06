@@ -108,9 +108,7 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     @property
     def media_image_url(self):
         """Image URL of current app."""
-        if self._remote.app_id:
-            return f"http://{self._remote._host}:{self._remote._port}/nrc/app_icon/{self._remote.app_id}"
-        return None
+        return self._remote.app_image_url
 
     @property
     def supported_features(self):

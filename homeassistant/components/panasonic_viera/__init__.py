@@ -58,7 +58,7 @@ PLATFORMS = [MEDIA_PLAYER_DOMAIN]
 URL_EVENT_0_DMR = "dmr/event_0"
 URL_EVENT_0_NRC = "nrc/event_0"
 
-UPNP_EVENTS = [URL_EVENT_0_DMR, URL_EVENT_0_NRC]
+UPNP_SERVICES = [URL_EVENT_0_DMR, URL_EVENT_0_NRC]
 
 MAP_APP_NAME = {"platinum": "Browser", "Amazon": "Prime Video"}
 
@@ -111,7 +111,7 @@ async def async_setup_entry(hass, config_entry):
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, remote._shutdown)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, remote.shutdown)
 
     return True
 
@@ -193,9 +193,9 @@ class Remote:
             await control.async_start_server()
             control.on_event = self.on_event
 
-            for event in UPNP_EVENTS:
+            for service in UPNP_SERVICES:
                 await self._hass.async_add_executor_job(
-                    partial(control.upnp_service_subscribe, event)
+                    partial(control.upnp_service_subscribe, service)
                 )
 
             self._control = control
@@ -222,8 +222,8 @@ class Remote:
         await self._handle_errors(self._update)
 
     def _update(self):
-        for event in UPNP_EVENTS:
-            self._control.upnp_service_resubscribe(event, self._timeout)
+        for service in UPNP_SERVICES:
+            self._control.upnp_service_resubscribe(service, self._timeout)
 
         self._volume = self._control.get_volume()
         self._mute = self._control.get_mute()
@@ -278,13 +278,13 @@ class Remote:
         except (TimeoutError, URLError, SOAPError, OSError) as err:
             _LOGGER.error("Could not establish remote connection: %s", err)
             if self._control is not None:
-                await self._shutdown()
+                await self.shutdown()
             self.available = self._on_action is not None
             self.connected = False
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("An unknown error occurred: %s", err)
             if self._control is not None:
-                await self._shutdown()
+                await self.shutdown()
             self.available = self._on_action is not None
             self.connected = False
 
@@ -308,19 +308,20 @@ class Remote:
             self._state = properties[2]["X_ScreenState"]
             self._app_info = properties[3]["X_AppInfo"]
 
-    async def _shutdown(self, *args):
+    async def shutdown(self, *args):
+        """Stop HTTP server and unsubscribe from UPnP services."""
         if self._control is not None:
             try:
                 await self._control.async_stop_server()
             except OSError:
                 _LOGGER.debug("Could not stop HTTP server")
-            for event in UPNP_EVENTS:
+            for service in UPNP_SERVICES:
                 try:
                     return await self._hass.async_add_executor_job(
-                        partial(self._control.upnp_service_unsubscribe, event)
+                        partial(self._control.upnp_service_unsubscribe, service)
                     )
                 except (TimeoutError, URLError, OSError):
-                    _LOGGER.debug("Could not unsubscribe from service %s", event)
+                    _LOGGER.debug("Could not unsubscribe from service %s", service)
 
     @property
     def state(self):
@@ -335,16 +336,21 @@ class Remote:
             app_name = self._app_info.split(":")[3]
             if app_name == "null":
                 return None
-            elif app_name in MAP_APP_NAME:
+            if app_name in MAP_APP_NAME:
                 return MAP_APP_NAME[app_name]
-            else:
-                return app_name
+            return app_name
 
     @property
     def app_id(self):
         """Return ID of open app."""
         if self._app_info is not None:
             return self._app_info.split(":")[2].split("=")[1]
+
+    @property
+    def app_image_url(self):
+        """Return image URL of open app."""
+        if self._app_id is not None:
+            return f"http://{self._host}:{self._port}/nrc/app_icon/{self.app_id}"
 
     @property
     def volume(self):
