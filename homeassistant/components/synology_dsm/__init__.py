@@ -23,7 +23,14 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_VOLUMES, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN
+from .const import (
+    CONF_VOLUMES,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SSL,
+    DOMAIN,
+    SYNO_API,
+    UNDO_UPDATE_LISTENER,
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -66,8 +73,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     await api.async_setup()
 
+    undo_listener = entry.add_update_listener(_async_update_listener)
+
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.unique_id] = api
+    hass.data[DOMAIN][entry.unique_id] = {
+        SYNO_API: api,
+        UNDO_UPDATE_LISTENER: undo_listener,
+    }
 
     # For SSDP compat
     if not entry.data.get(CONF_MAC):
@@ -75,9 +87,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_MAC: network.macs}
         )
-
-    if not entry.update_listeners:
-        entry.add_update_listener(_async_update_listener)
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")
@@ -88,9 +97,15 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload Synology DSM sensors."""
-    api = hass.data[DOMAIN][entry.unique_id]
-    await api.async_unload()
-    return await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+    unload_ok = await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+
+    if unload_ok:
+        entry_data = hass.data[DOMAIN][entry.unique_id]
+        entry_data[UNDO_UPDATE_LISTENER]()
+        await entry_data[SYNO_API].async_unload()
+        hass.data[DOMAIN].pop(entry.unique_id)
+
+    return unload_ok
 
 
 async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry):
