@@ -2,12 +2,14 @@
 
 import os
 
+import pytest
 import serial.tools.list_ports
 import zigpy.config
 
 from homeassistant import setup
 from homeassistant.components.zha import config_flow
 from homeassistant.components.zha.core.const import CONF_RADIO_TYPE, CONTROLLER, DOMAIN
+from homeassistant.components.zha.core.registries import RADIO_TYPES
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_SOURCE
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
@@ -154,17 +156,26 @@ async def test_user_port_config_fail(hass):
         assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_user_port_config(hass):
+@pytest.mark.parametrize(
+    "radio_type, orig_ctrl_cls",
+    ((name, r[CONTROLLER]) for name, r in RADIO_TYPES.items()),
+)
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_user_port_config(hass, radio_type, orig_ctrl_cls):
     """Test port config."""
     app_ctrl_cls = MagicMock()
-    app_ctrl_cls.SCHEMA_DEVICE = zigpy.config.SCHEMA_DEVICE
+    app_ctrl_cls.SCHEMA_DEVICE = orig_ctrl_cls.SCHEMA_DEVICE
     app_ctrl_cls.probe = AsyncMock(return_value=True)
+    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: "pick_radio"}, data={CONF_RADIO_TYPE: "ezsp"}
+        DOMAIN, context={CONF_SOURCE: "pick_radio"}, data={CONF_RADIO_TYPE: radio_type}
     )
 
-    with patch.dict(config_flow.RADIO_TYPES, {"ezsp": {CONTROLLER: app_ctrl_cls}}):
+    with patch.dict(
+        config_flow.RADIO_TYPES,
+        {radio_type: {CONTROLLER: app_ctrl_cls, "radio_description": "radio"}},
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"},
@@ -176,7 +187,7 @@ async def test_user_port_config(hass):
             result["data"][zigpy.config.CONF_DEVICE][zigpy.config.CONF_DEVICE_PATH]
             == "/dev/ttyUSB33"
         )
-        assert result["data"][CONF_RADIO_TYPE] == "ezsp"
+        assert result["data"][CONF_RADIO_TYPE] == radio_type
 
 
 def test_get_serial_by_id_no_dir():

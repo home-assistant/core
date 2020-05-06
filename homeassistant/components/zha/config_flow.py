@@ -9,6 +9,8 @@ from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from homeassistant import config_entries
 
 from .core.const import (  # pylint:disable=unused-import
+    CONF_BAUDRATE,
+    CONF_FLOWCONTROL,
     CONF_RADIO_TYPE,
     CONTROLLER,
     DOMAIN,
@@ -17,6 +19,10 @@ from .core.const import (  # pylint:disable=unused-import
 from .core.registries import RADIO_TYPES
 
 CONF_MANUAL_PATH = "Enter Manually"
+SUPPORTED_PORT_SETTINGS = (
+    CONF_BAUDRATE,
+    CONF_FLOWCONTROL,
+)
 
 
 class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -100,10 +106,16 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_DEVICE_PATH, default=self._device_path or vol.UNDEFINED
             ): str
         }
+        radio_schema = app_cls.SCHEMA_DEVICE.schema
+        if isinstance(radio_schema, vol.Schema):
+            radio_schema = radio_schema.schema
+
+        for param, value in radio_schema.items():
+            if param in SUPPORTED_PORT_SETTINGS:
+                schema[param] = value
+
         return self.async_show_form(
-            step_id="port_config",
-            data_schema=app_cls.SCHEMA_DEVICE.extend(schema),
-            errors=errors,
+            step_id="port_config", data_schema=vol.Schema(schema), errors=errors,
         )
 
 

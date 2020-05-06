@@ -2,6 +2,8 @@
 import enum
 import logging
 
+from zigpy.config import CONF_DEVICE_PATH  # noqa: F401 # pylint: disable=unused-import
+
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.cover import DOMAIN as COVER
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
@@ -92,6 +94,7 @@ CONF_BAUDRATE = "baudrate"
 CONF_DATABASE = "database_path"
 CONF_DEVICE_CONFIG = "device_config"
 CONF_ENABLE_QUIRKS = "enable_quirks"
+CONF_FLOWCONTROL = "flow_control"
 CONF_RADIO_TYPE = "radio_type"
 CONF_USB_PATH = "usb_path"
 CONF_ZIGPY = "zigpy_config"
