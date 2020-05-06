@@ -3,6 +3,7 @@ import asyncio
 import logging
 
 from haffmpeg.core import HAFFmpeg
+from jpegtran import JPEGImage
 from pyhap.camera import (
     VIDEO_CODEC_PARAM_LEVEL_TYPES,
     VIDEO_CODEC_PARAM_PROFILE_ID_TYPES,

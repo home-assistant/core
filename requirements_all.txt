@@ -403,6 +403,9 @@ buienradar==1.0.4
 # homeassistant.components.caldav
 caldav==0.6.1
 
+# homeassistant.components.homekit
+cffi==1.14.0
+
 # homeassistant.components.cisco_mobility_express
 ciscomobilityexpress==0.3.3
 
@@ -792,6 +795,9 @@ iperf3==0.1.11
 
 # homeassistant.components.route53
 ipify==1.0.0
+
+# homeassistant.components.homekit
+jpegtran-cffi==0.5.2
 
 # homeassistant.components.rest
 # homeassistant.components.verisure
