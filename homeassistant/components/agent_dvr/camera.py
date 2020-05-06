@@ -52,7 +52,7 @@ async def async_setup_entry(
         _LOGGER.warning("Could not fetch cameras from Agent server")
         return
 
-    for device in server.deviceList:
+    for device in server.devices:
         if device.typeID == 2:
             camera = AgentCamera(device)
             cameras.append(camera)
