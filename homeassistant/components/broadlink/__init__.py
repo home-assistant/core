@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 import re
 
+from broadlink.exceptions import BroadlinkException, ReadError
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
@@ -72,42 +73,28 @@ def async_setup_service(hass, host, device):
     if hass.services.has_service(DOMAIN, SERVICE_LEARN):
         return
 
-    async def _attempt(device, function, *args):
-        """Retry a socket-related function until it succeeds."""
-        for retry in range(DEFAULT_RETRY):
-            if retry and not await _connect(device):
-                continue
-            try:
-                await hass.async_add_executor_job(function, *args)
-            except OSError:
-                continue
-            return
-        raise ConnectionError
-
-    async def _connect(device):
-        """Connect to the remote."""
-        try:
-            auth = await hass.async_add_executor_job(device.auth)
-        except OSError:
-            auth = False
-        return auth
-
     async def _learn_command(call):
         """Learn a packet from remote."""
 
         device = hass.data[DOMAIN][call.data[CONF_HOST]]
 
         try:
-            await _attempt(device, device.enter_learning)
-        except ConnectionError:
-            _LOGGER.error("Failed to enter learning mode")
+            await device.async_request(device.api.enter_learning)
+        except BroadlinkException as err_msg:
+            _LOGGER.error("Failed to enter learning mode: %s", err_msg)
             return
 
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
         while (utcnow() - start_time) < timedelta(seconds=20):
-            packet = await hass.async_add_executor_job(device.check_data)
-            if packet:
+            try:
+                packet = await device.async_request(device.api.check_data)
+            except ReadError:
+                await asyncio.sleep(1)
+            except BroadlinkException as err_msg:
+                _LOGGER.error("Failed to learn: %s", err_msg)
+                return
+            else:
                 data = b64encode(packet).decode("utf8")
                 log_msg = f"Received packet is: {data}"
                 _LOGGER.info(log_msg)
@@ -115,11 +102,7 @@ def async_setup_service(hass, host, device):
                     log_msg, title="Broadlink switch"
                 )
                 return
-            await asyncio.sleep(1)
-        _LOGGER.error("No signal was received")
-        hass.components.persistent_notification.async_create(
-            "No signal was received", title="Broadlink switch"
-        )
+        _LOGGER.error("Failed to learn: No signal received")
 
     hass.services.async_register(
         DOMAIN, SERVICE_LEARN, _learn_command, schema=SERVICE_LEARN_SCHEMA
@@ -131,9 +114,9 @@ def async_setup_service(hass, host, device):
         packets = call.data[CONF_PACKET]
         for packet in packets:
             try:
-                await _attempt(device, device.send_data, packet)
-            except ConnectionError:
-                _LOGGER.error("Failed to send packet to device")
+                await device.async_request(device.api.send_data, packet)
+            except BroadlinkException as err_msg:
+                _LOGGER.error("Failed to send packet: %s", err_msg)
                 return
 
     hass.services.async_register(
