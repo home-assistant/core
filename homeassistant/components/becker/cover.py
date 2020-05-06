@@ -91,9 +91,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 class BeckerDevice(CoverDevice, RestoreEntity):
-    """
-    Representation of a Becker cover device.
-    """
+    """Representation of a Becker cover device."""
 
     def __init__(self, becker, name, channel, state_template, entity_ids, position=0):
         """Init the Becker device."""
@@ -119,16 +117,12 @@ class BeckerDevice(CoverDevice, RestoreEntity):
 
     @property
     def unique_id(self):
-        """Return the unique id of the device - the channel"""
+        """Return the unique id of the device - the channel."""
         return self._channel
 
     @property
     def current_cover_position(self):
-        """
-        Return current position of cover.
-
-        None is unknown, 0 is closed, 100 is fully open.
-        """
+        """Return current position of cover. None is unknown, 0 is closed, 100 is fully open."""
         return self._position
 
     @property
@@ -173,6 +167,7 @@ class BeckerDevice(CoverDevice, RestoreEntity):
         await self._becker.stop(self._channel)
 
     async def async_update(self):
+        """Update the position of the cover."""
         if self._template is not None:
             try:
                 state = self._template.async_render().lower()
