@@ -115,7 +115,7 @@ class AgentCamera(MjpegCamera):
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             "editable": False,
-            "enabled": self.enabled,
+            "enabled": self.is_on,
             "connected": self.connected,
             "detected": self.is_detected,
             "alerted": self.is_alerted,
