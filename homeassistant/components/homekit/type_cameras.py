@@ -3,6 +3,7 @@ import asyncio
 import logging
 
 from haffmpeg.core import HAFFmpeg
+from jpegtran import JPEGImage
 from pyhap.camera import (
     VIDEO_CODEC_PARAM_LEVEL_TYPES,
     VIDEO_CODEC_PARAM_PROFILE_ID_TYPES,
@@ -246,11 +247,17 @@ class Camera(HomeAccessory, PyhapCamera):
 
     def get_snapshot(self, image_size):
         """Return a jpeg of a snapshot from the camera."""
-        return (
-            asyncio.run_coroutine_threadsafe(
-                self.hass.components.camera.async_get_image(self.entity_id),
-                self.hass.loop,
-            )
-            .result()
-            .content
-        )
+        image = asyncio.run_coroutine_threadsafe(
+            self.hass.components.camera.async_get_image(self.entity_id), self.hass.loop,
+        ).result()
+
+        jpeg_image = JPEGImage(blob=image.content)
+        if (
+            jpeg_image.width < image_size["image-width"]
+            or jpeg_image.height < image_size["image-height"]
+        ):
+            return image.content
+
+        return jpeg_image.downscale(
+            image_size["image-width"], image_size["image-height"]
+        ).as_blob()
