@@ -56,7 +56,7 @@ SUPPORT_MEDIA_MODES = (
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Xiaomi Gateway Alarm from a config entry."""
+    """Set up the DenonAVR receiver from a config entry."""
     entities = []
     receiver = hass.data[DOMAIN][config_entry.entry_id]
     for receiver_zone in receiver.zones.values():
