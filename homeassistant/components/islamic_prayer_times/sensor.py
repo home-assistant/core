@@ -4,6 +4,7 @@ import logging
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt_util
 
 from .const import DATA_UPDATED, DOMAIN, PRAYER_TIMES_ICON, SENSOR_TYPES
 
@@ -50,7 +51,7 @@ class IslamicPrayerTimeSensor(Entity):
         """Return the state of the sensor."""
         return (
             self.client.prayer_times_info.get(self.sensor_type)
-            .astimezone(self.hass.config.time_zone)
+            .astimezone(dt_util.UTC)
             .isoformat()
         )
 
