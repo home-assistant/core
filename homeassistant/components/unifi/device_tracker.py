@@ -133,6 +133,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         """Set up tracked client."""
         super().__init__(client, controller)
 
+        self.schedule_update = False
         self.cancel_scheduled_update = None
         self._is_connected = False
         if self.client.last_seen:
@@ -142,9 +143,8 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
                 - dt_util.utc_from_timestamp(float(self.client.last_seen))
                 < self.controller.option_detection_time
             )
-        self.schedule_update = False
-        if self._is_connected:
-            self.schedule_update = True
+            if self._is_connected:
+                self.schedule_update = True
 
     @callback
     def async_update_callback(self) -> None:
@@ -191,10 +191,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
     @property
     def is_connected(self):
         """Return true if the client is connected to the network."""
-        # A client that has never been seen cannot be connected.
-        if self.client.last_seen is None:
-            return False
-
         # SSID filter
         if (
             not self.is_wired
