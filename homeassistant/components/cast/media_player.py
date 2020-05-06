@@ -204,6 +204,7 @@ class CastDevice(MediaPlayerEntity):
         self._add_remove_handler = None
         self._del_remove_handler = None
         self._cast_view_remove_handler = None
+        self._cast_function_remove_handler = None
 
     async def async_added_to_hass(self):
         """Create chromecast object when added to hass."""
@@ -221,7 +222,7 @@ class CastDevice(MediaPlayerEntity):
         self._cast_view_remove_handler = async_dispatcher_connect(
             self.hass, SIGNAL_HASS_CAST_SHOW_VIEW, self._handle_signal_show_view
         )
-        self._cast_view_remove_handler = async_dispatcher_connect(
+        self._cast_function_remove_handler = async_dispatcher_connect(
             self.hass, SIGNAL_HASS_CAST_APPLICATION, self._handle_signal_cast_function
         )
 
@@ -241,6 +242,9 @@ class CastDevice(MediaPlayerEntity):
         if self._cast_view_remove_handler:
             self._cast_view_remove_handler()
             self._cast_view_remove_handler = None
+        if self._cast_function_remove_handler:
+            self._cast_function_remove_handler()
+            self._cast_function_remove_handler = None
 
     async def async_set_cast_info(self, cast_info):
         """Set the cast information and set up the chromecast object."""
