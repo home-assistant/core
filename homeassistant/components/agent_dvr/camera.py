@@ -168,7 +168,7 @@ class AgentCamera(MjpegCamera):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        if self.enabled:
+        if self.is_on:
             return "mdi:camcorder"
         return "mdi:camcorder-off"
 
