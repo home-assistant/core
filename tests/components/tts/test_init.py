@@ -275,7 +275,7 @@ async def test_setup_component_and_test_service_with_service_options(
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
     assert (
         calls[0].data[ATTR_MEDIA_CONTENT_ID]
-        == "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{}_demo.mp3"
+        == f"http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_demo.mp3"
     )
     await hass.async_block_till_done()
     assert (
