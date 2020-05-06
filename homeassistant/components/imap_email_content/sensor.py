@@ -231,7 +231,7 @@ class EmailContentSensor(Entity):
 
         if email_message is None:
             self._message = None
-            self._state_attributes = { }
+            self._state_attributes = {}
             return
 
         if self.sender_allowed(email_message):
