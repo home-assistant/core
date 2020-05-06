@@ -106,11 +106,6 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         return self._remote.app_id
 
     @property
-    def media_image_url(self):
-        """Image URL of current app."""
-        return self._remote.app_image_url
-
-    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_VIERATV

@@ -1,5 +1,6 @@
 """The Panasonic Viera integration."""
 import asyncio
+from datetime import timedelta
 from functools import partial
 import logging
 from urllib.request import URLError
@@ -18,6 +19,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.script import Script
 
 from .const import (
@@ -62,6 +64,8 @@ UPNP_SERVICES = [URL_EVENT_0_DMR, URL_EVENT_0_NRC]
 
 MAP_APP_NAME = {"platinum": "Browser", "Amazon": "Prime Video"}
 
+RESUBSCRIBE_INTERVAL = timedelta(minutes=2)
+
 
 async def async_setup(hass, config):
     """Set up Panasonic Viera from configuration.yaml."""
@@ -88,6 +92,12 @@ async def async_setup_entry(hass, config_entry):
     host = config[CONF_HOST]
     port = config[CONF_PORT]
 
+    if CONF_LISTEN_PORT not in config:
+        config_entry = hass.config_entries.async_update_entry(
+            config_entry, data={**config, CONF_LISTEN_PORT: DEFAULT_PORT},
+        )
+        config = config_entry.data
+
     listen_port = config[CONF_LISTEN_PORT]
 
     on_action = config[CONF_ON_ACTION]
@@ -110,6 +120,7 @@ async def async_setup_entry(hass, config_entry):
         )
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, remote.shutdown)
+    async_track_time_interval(hass, remote.resubscribe_all, RESUBSCRIBE_INTERVAL)
 
     return True
 
@@ -212,7 +223,7 @@ class Remote:
             self.connected = False
 
     async def async_update(self):
-        """Update device data."""
+        """Update device data or try reconnectiion."""
         if not self.connected:
             await self.async_create_remote_control()
             return
@@ -220,14 +231,21 @@ class Remote:
         await self._handle_errors(self._update)
 
     def _update(self):
-        for service in UPNP_SERVICES:
-            self._control.upnp_service_resubscribe(service, self._timeout)
-
+        """Update device data."""
         self._volume = self._control.get_volume()
         self._mute = self._control.get_mute()
 
         self.available = True
         self.connected = True
+
+    def resubscribe_all(self):
+        """Resubscribe to all services."""
+        if self._control is not None:
+            for service in UPNP_SERVICES:
+                try:
+                    self._control.upnp_service_resubscribe(service, self._timeout)
+                except (TimeoutError, URLError, OSError):
+                    _LOGGER.debug("Could resubscribe to service %s", service)
 
     async def async_send_key(self, key):
         """Send a key to the TV and handle exceptions."""
@@ -343,13 +361,6 @@ class Remote:
         """Return ID of open app."""
         if self._app_info is not None:
             return self._app_info.split(":")[2].split("=")[1]
-        return None
-
-    @property
-    def app_image_url(self):
-        """Return image URL of open app."""
-        if self._app_id is not None:
-            return f"http://{self._host}:{self._port}/nrc/app_icon/{self.app_id}"
         return None
 
     @property

@@ -1,8 +1,6 @@
 """Constants for the Panasonic Viera integration."""
 DOMAIN = "panasonic_viera"
 
-DEVICE_MANUFACTURER = "Panasonic"
-
 CONF_LISTEN_PORT = "listen_port"
 CONF_ON_ACTION = "turn_on_action"
 CONF_APP_ID = "app_id"
