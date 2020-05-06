@@ -131,7 +131,10 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="connection_error")
         receiver = connect_denonavr.receiver
 
-        mac_address = get_mac_address(ip=self.host)
+        mac_address = await self.hass.async_add_executor_job(
+            get_mac_address(ip=self.host)
+        )
+
         if not self.serial_number:
             self.serial_number = receiver.serial_number
         if not self.model_name:
@@ -143,6 +146,8 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 "using the mac_address as identification",
                 self.host,
             )
+            if not mac_address:
+                return self.async_abort(reason="no_mac")
             self.serial_number = mac_address
 
         unique_id = self.construct_unique_id(self.model_name, self.serial_number)
