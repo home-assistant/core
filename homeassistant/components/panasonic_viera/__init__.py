@@ -88,8 +88,6 @@ async def async_setup_entry(hass, config_entry):
     host = config[CONF_HOST]
     port = config[CONF_PORT]
 
-    _LOGGER.error(config)
-
     listen_port = config[CONF_LISTEN_PORT]
 
     on_action = config[CONF_ON_ACTION]
