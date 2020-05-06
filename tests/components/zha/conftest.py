@@ -4,6 +4,7 @@ from unittest import mock
 import pytest
 import zigpy
 from zigpy.application import ControllerApplication
+import zigpy.config
 import zigpy.group
 import zigpy.types
 
@@ -49,12 +50,11 @@ def zigpy_radio():
 async def config_entry_fixture(hass):
     """Fixture representing a config entry."""
     entry = MockConfigEntry(
-        version=1,
+        version=2,
         domain=zha_const.DOMAIN,
         data={
-            zha_const.CONF_BAUDRATE: zha_const.DEFAULT_BAUDRATE,
+            zigpy.config.CONF_DEVICE: {zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB0"},
             zha_const.CONF_RADIO_TYPE: "MockRadio",
-            zha_const.CONF_USB_PATH: "/dev/ttyUSB0",
         },
     )
     entry.add_to_hass(hass)
@@ -65,10 +65,13 @@ async def config_entry_fixture(hass):
 def setup_zha(hass, config_entry, zigpy_app_controller, zigpy_radio):
     """Set up ZHA component."""
     zha_config = {zha_const.CONF_ENABLE_QUIRKS: False}
+    app_ctrl = mock.MagicMock()
+    app_ctrl.new = tests.async_mock.AsyncMock(return_value=zigpy_app_controller)
+    app_ctrl.SCHEMA = zigpy.config.CONFIG_SCHEMA
+    app_ctrl.SCHEMA_DEVICE = zigpy.config.SCHEMA_DEVICE
 
     radio_details = {
-        zha_const.ZHA_GW_RADIO: mock.MagicMock(return_value=zigpy_radio),
-        zha_const.CONTROLLER: mock.MagicMock(return_value=zigpy_app_controller),
+        zha_const.CONTROLLER: app_ctrl,
         zha_const.ZHA_GW_RADIO_DESCRIPTION: "mock radio",
     }
 
