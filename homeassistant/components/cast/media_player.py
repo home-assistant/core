@@ -486,6 +486,7 @@ class CastDevice(MediaPlayerEntity):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL."""
+        # We do not want this to be forwarded to a group
         if media_type == CAST_DOMAIN:
             try:
                 app_data = json.loads(media_id)
@@ -498,7 +499,6 @@ class CastDevice(MediaPlayerEntity):
             except NotImplementedError:
                 _LOGGER.error("App %s not supported", app_name)
         else:
-            # We do not want this to be forwarded to a group
             self._chromecast.media_controller.play_media(media_id, media_type)
 
     # ========== Properties ==========
