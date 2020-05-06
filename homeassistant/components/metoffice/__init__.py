@@ -31,6 +31,16 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor", "weather"]
 
 
+def find_value_in_config_entry(entry: ConfigEntry, key: str, default: str = None):
+    """Find the configured key/value in the held config_entry."""
+    if key in entry.options:
+        return entry.options[key]
+    elif key in entry.data:
+        return entry.data[key]
+
+    return default
+
+
 async def metoffice_data_update_listener(hass, entry):
     """Handle options update."""
     _LOGGER.debug(
@@ -50,21 +60,14 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up a Met Office entry."""
 
-    # need to migrate previous versions to have a mode, but also
-    # ensure options set after the initial setup is preserved
-    if CONF_MODE in entry.options:
-        mode = entry.options[CONF_MODE]
-    elif CONF_MODE in entry.data:
-        mode = entry.data[CONF_MODE]
-    else:
-        mode = MODE_3HOURLY
-
-    hass.config_entries.async_update_entry(entry, data={**entry.data, CONF_MODE: mode})
-
     api_key = entry.data[CONF_API_KEY]
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
-    mode = entry.data[CONF_MODE]
+    mode = find_value_in_config_entry(
+        entry,
+        CONF_MODE,
+        MODE_3HOURLY,  # default to original mode, so previous versions continue as before
+    )
 
     metoffice_data = MetOfficeData(hass, api_key, latitude, longitude, mode)
     await metoffice_data.async_update_site()
