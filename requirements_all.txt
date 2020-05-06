@@ -335,6 +335,9 @@ batinfo==0.4.2
 # homeassistant.components.scrape
 beautifulsoup4==4.9.1
 
+# homeassistant.components.becker
+pybecker==1.0.3
+
 # homeassistant.components.beewi_smartclim
 # beewi_smartclim==0.0.10
 
