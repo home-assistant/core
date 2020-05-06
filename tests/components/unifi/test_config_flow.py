@@ -31,6 +31,29 @@ from tests.common import MockConfigEntry
 
 CLIENTS = [{"mac": "00:00:00:00:00:01"}]
 
+DEVICES = [
+    {
+        "board_rev": 21,
+        "device_id": "mock-id",
+        "ip": "10.0.1.1",
+        "last_seen": 0,
+        "mac": "00:00:00:00:01:01",
+        "model": "U7PG2",
+        "name": "access_point",
+        "state": 1,
+        "type": "uap",
+        "version": "4.0.80.10875",
+        "wlan_overrides": [
+            {
+                "name": "SSID 3",
+                "radio": "na",
+                "radio_name": "wifi1",
+                "wlan_id": "012345678910111213141516",
+            },
+        ],
+    }
+]
+
 WLANS = [
     {"name": "SSID 1"},
     {"name": "SSID 2", "name_combine_enabled": False, "name_combine_suffix": "_IOT"},
@@ -317,7 +340,7 @@ async def test_flow_fails_unknown_problem(hass, aioclient_mock):
 async def test_advanced_option_flow(hass):
     """Test advanced config flow options."""
     controller = await setup_unifi_integration(
-        hass, clients_response=CLIENTS, wlans_response=WLANS
+        hass, clients_response=CLIENTS, devices_response=DEVICES, wlans_response=WLANS
     )
 
     result = await hass.config_entries.options.async_init(
@@ -333,7 +356,7 @@ async def test_advanced_option_flow(hass):
             CONF_TRACK_CLIENTS: False,
             CONF_TRACK_WIRED_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
-            CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT"],
+            CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3"],
             CONF_DETECTION_TIME: 100,
         },
     )
@@ -358,7 +381,7 @@ async def test_advanced_option_flow(hass):
         CONF_TRACK_CLIENTS: False,
         CONF_TRACK_WIRED_CLIENTS: False,
         CONF_TRACK_DEVICES: False,
-        CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT"],
+        CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3"],
         CONF_DETECTION_TIME: 100,
         CONF_IGNORE_WIRED_BUG: False,
         CONF_POE_CLIENTS: False,
