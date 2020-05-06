@@ -1,16 +1,18 @@
 """Support for Supla cover - curtains, rollershutters etc."""
+from datetime import timedelta
 import logging
 
+from homeassistant.components.ais_supla import SuplaChannel
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DEVICE_CLASS_GARAGE,
     CoverDevice,
 )
-from homeassistant.components.ais_supla import SuplaChannel
-from .const import DOMAIN, CONF_SERVER, CONF_CHANNELS
+
+from .const import CONF_CHANNELS, CONF_SERVER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
+SCAN_INTERVAL = timedelta(seconds=60)
 SUPLA_SHUTTER = "CONTROLLINGTHEROLLERSHUTTER"
 SUPLA_GATE = "CONTROLLINGTHEGATE"
 

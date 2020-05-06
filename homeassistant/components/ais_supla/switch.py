@@ -1,11 +1,14 @@
 """Support for Supla switch"""
+from datetime import timedelta
 import logging
 
-from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.ais_supla import SuplaChannel
-from .const import DOMAIN, CONF_SERVER, CONF_CHANNELS
+from homeassistant.components.switch import SwitchDevice
+
+from .const import CONF_CHANNELS, CONF_SERVER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = timedelta(seconds=60)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
