@@ -4,6 +4,7 @@ import pytest
 
 from homeassistant.components.alexa import messages, smart_home
 import homeassistant.components.camera as camera
+from homeassistant.components.cover import DEVICE_CLASS_GATE
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -2624,6 +2625,28 @@ async def test_cover_garage_door(hass):
     assert appliance["endpointId"] == "cover#test_garage_door"
     assert appliance["displayCategories"][0] == "GARAGE_DOOR"
     assert appliance["friendlyName"] == "Test cover garage door"
+
+    assert_endpoint_capabilities(
+        appliance, "Alexa.ModeController", "Alexa.EndpointHealth", "Alexa"
+    )
+
+
+async def test_cover_gate(hass):
+    """Test gate cover discovery."""
+    device = (
+        "cover.test_gate",
+        "off",
+        {
+            "friendly_name": "Test cover gate",
+            "supported_features": 3,
+            "device_class": DEVICE_CLASS_GATE,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "cover#test_gate"
+    assert appliance["displayCategories"][0] == "GARAGE_DOOR"
+    assert appliance["friendlyName"] == "Test cover gate"
 
     assert_endpoint_capabilities(
         appliance, "Alexa.ModeController", "Alexa.EndpointHealth", "Alexa"

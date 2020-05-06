@@ -61,7 +61,7 @@ async def async_setup_entry(
                 for sensor_type in STORAGE_DISK_SENSORS
             ]
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 class SynoNasSensor(Entity):
@@ -132,6 +132,10 @@ class SynoNasSensor(Entity):
         """No polling needed."""
         return False
 
+    async def async_update(self):
+        """Only used by the generic entity update service."""
+        await self._api.update()
+
     async def async_added_to_hass(self):
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
@@ -152,7 +156,7 @@ class SynoNasUtilSensor(SynoNasSensor):
         attr = getattr(self._api.utilisation, self.sensor_type)
         if callable(attr):
             attr = attr()
-        if not attr:
+        if attr is None:
             return None
 
         # Data (RAM)
@@ -173,7 +177,7 @@ class SynoNasStorageSensor(SynoNasSensor):
     def state(self):
         """Return the state."""
         attr = getattr(self._api.storage, self.sensor_type)(self.monitored_device)
-        if not attr:
+        if attr is None:
             return None
 
         # Data (disk space)

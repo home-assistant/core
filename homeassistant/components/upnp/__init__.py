@@ -16,7 +16,6 @@ from .const import (
     CONF_LOCAL_IP,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
-    DEFAULT_SCAN_INTERVAL,
     DISCOVERY_LOCATION,
     DISCOVERY_ST,
     DISCOVERY_UDN,
@@ -30,11 +29,7 @@ NOTIFICATION_ID = "upnp_notification"
 NOTIFICATION_TITLE = "UPnP/IGD Setup"
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),}
-        )
-    },
+    {DOMAIN: vol.Schema({vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string)})},
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -87,7 +82,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         "config": conf,
         "devices": {},
         "local_ip": conf.get(CONF_LOCAL_IP, local_ip),
-        "scan_interval": conf.get(CONF_SCAN_INTERVAL),
     }
 
     # Only start if set up via configuration.yaml.

@@ -40,7 +40,7 @@ class DaikinClimateSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"{self._api.mac}-{self._device_attribute}"
+        return f"{self._api.device.mac}-{self._device_attribute}"
 
     @property
     def icon(self):
