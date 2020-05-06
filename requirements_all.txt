@@ -1699,7 +1699,7 @@ python-ripple-api==0.0.3
 python-sochain-api==0.0.2
 
 # homeassistant.components.songpal
-python-songpal==0.11.2
+python-songpal==0.12
 
 # homeassistant.components.synology_dsm
 python-synology==0.8.0

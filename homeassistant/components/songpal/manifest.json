@@ -1,7 +1,14 @@
 {
   "domain": "songpal",
   "name": "Sony Songpal",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/songpal",
-  "requirements": ["python-songpal==0.11.2"],
-  "codeowners": ["@rytilahti"]
+  "requirements": ["python-songpal==0.12"],
+  "codeowners": ["@rytilahti", "@shenxn"],
+  "ssdp": [
+    {
+      "st": "urn:schemas-sony-com:service:ScalarWebAPI:1",
+      "manufacturer": "Sony Corporation"
+    }
+  ]
 }

@@ -13,7 +13,7 @@ from songpal import (
 )
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -22,6 +22,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_NAME,
@@ -30,18 +31,15 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN, SET_SOUND_SETTING
+from .const import CONF_ENDPOINT, DOMAIN, SET_SOUND_SETTING
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ENDPOINT = "endpoint"
-
 PARAM_NAME = "name"
 PARAM_VALUE = "value"
-
-PLATFORM = "songpal"
 
 SUPPORT_SONGPAL = (
     SUPPORT_VOLUME_SET
@@ -50,10 +48,6 @@ SUPPORT_SONGPAL = (
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_TURN_ON
     | SUPPORT_TURN_OFF
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_NAME): cv.string, vol.Required(CONF_ENDPOINT): cv.string}
 )
 
 SET_SOUND_SCHEMA = vol.Schema(
@@ -65,33 +59,37 @@ SET_SOUND_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Songpal platform."""
-    if PLATFORM not in hass.data:
-        hass.data[PLATFORM] = {}
+async def async_setup_platform(
+    hass: HomeAssistantType, config: dict, async_add_entities, discovery_info=None
+) -> None:
+    """Set up from legacy configuration file. Obsolete."""
+    _LOGGER.error(
+        "Configuring Songpal through media_player platform is no longer supported. Convert to songpal platform or UI configuration."
+    )
 
-    if discovery_info is not None:
-        name = discovery_info["name"]
-        endpoint = discovery_info["properties"]["endpoint"]
-        _LOGGER.debug("Got autodiscovered %s - endpoint: %s", name, endpoint)
 
-        device = SongpalDevice(name, endpoint)
-    else:
-        name = config.get(CONF_NAME)
-        endpoint = config.get(CONF_ENDPOINT)
-        device = SongpalDevice(name, endpoint, poll=False)
+async def async_setup_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up songpal media player."""
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
 
-    if endpoint in hass.data[PLATFORM]:
+    name = config_entry.data[CONF_NAME]
+    endpoint = config_entry.data[CONF_ENDPOINT]
+
+    if endpoint in hass.data[DOMAIN]:
         _LOGGER.debug("The endpoint exists already, skipping setup.")
         return
 
+    device = SongpalDevice(name, endpoint)
     try:
         await device.initialize()
     except SongpalException as ex:
         _LOGGER.error("Unable to get methods from songpal: %s", ex)
         raise PlatformNotReady
 
-    hass.data[PLATFORM][endpoint] = device
+    hass.data[DOMAIN][endpoint] = device
 
     async_add_entities([device], True)
 
@@ -102,7 +100,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
         }
 
-        for device in hass.data[PLATFORM].values():
+        for device in hass.data[DOMAIN].values():
             if device.entity_id == entity_id or entity_id is None:
                 _LOGGER.debug(
                     "Calling %s (entity: %s) with params %s", service, entity_id, params
@@ -127,6 +125,7 @@ class SongpalDevice(MediaPlayerEntity):
         self._poll = poll
         self.dev = Device(self._endpoint)
         self._sysinfo = None
+        self._model = None
 
         self._state = False
         self._available = False
@@ -150,6 +149,13 @@ class SongpalDevice(MediaPlayerEntity):
         """Initialize the device."""
         await self.dev.get_supported_methods()
         self._sysinfo = await self.dev.get_system_info()
+        interface_info = await self.dev.get_interface_information()
+        self._model = interface_info.modelName
+
+    async def async_will_remove_from_hass(self):
+        """Run when entity will be removed from hass."""
+        self.hass.data[DOMAIN].pop(self._endpoint)
+        await self.dev.stop_listen_notifications()
 
     async def async_activate_websocket(self):
         """Activate websocket for listening if wanted."""
@@ -220,6 +226,18 @@ class SongpalDevice(MediaPlayerEntity):
     def unique_id(self):
         """Return a unique ID."""
         return self._sysinfo.macAddr
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self._sysinfo.macAddr)},
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "manufacturer": "Sony Corporation",
+            "name": self.name,
+            "sw_version": self._sysinfo.version,
+            "model": self._model,
+        }
 
     @property
     def available(self):
