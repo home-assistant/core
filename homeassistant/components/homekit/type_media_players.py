@@ -93,6 +93,13 @@ MODE_FRIENDLY_NAME = {
     FEATURE_TOGGLE_MUTE: "Mute",
 }
 
+MEDIA_PLAYER_OFF_STATES = (
+    STATE_OFF,
+    STATE_UNKNOWN,
+    STATE_STANDBY,
+    "None",
+)
+
 
 @TYPES.register("MediaPlayer")
 class MediaPlayer(HomeAccessory):
@@ -187,12 +194,7 @@ class MediaPlayer(HomeAccessory):
         current_state = new_state.state
 
         if self.chars[FEATURE_ON_OFF]:
-            hk_state = current_state not in (
-                STATE_OFF,
-                STATE_UNKNOWN,
-                STATE_STANDBY,
-                "None",
-            )
+            hk_state = current_state not in MEDIA_PLAYER_OFF_STATES
             _LOGGER.debug(
                 '%s: Set current state for "on_off" to %s', self.entity_id, hk_state
             )
@@ -379,7 +381,7 @@ class TelevisionMediaPlayer(HomeAccessory):
 
         # Power state television
         hk_state = 0
-        if current_state not in ("None", STATE_OFF, STATE_UNKNOWN):
+        if current_state not in MEDIA_PLAYER_OFF_STATES:
             hk_state = 1
         _LOGGER.debug("%s: Set current active state to %s", self.entity_id, hk_state)
         if self.char_active.value != hk_state:
