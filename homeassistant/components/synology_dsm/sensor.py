@@ -13,7 +13,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.temperature import display_temp
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -232,7 +231,6 @@ class SynoNasSecuritySensor(SynoNasSensor):
 
         Remove entity if no entry in entity registry exist.
         Remove entity registry entry if no entry in device registry exist.
-        Remove device registry entry if there is only one linked entity (this entity).
         Remove entity registry entry if there are more than one entity linked to the device registry entry.
         """
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
@@ -245,10 +243,6 @@ class SynoNasSecuritySensor(SynoNasSensor):
         device_entry = device_registry.async_get(entity_entry.device_id)
         if not device_entry:
             entity_registry.async_remove(self.entity_id)
-            return
-
-        if len(async_entries_for_device(entity_registry, entity_entry.device_id)) == 1:
-            device_registry.async_remove_device(device_entry.id)
             return
 
         entity_registry.async_remove(self.entity_id)
