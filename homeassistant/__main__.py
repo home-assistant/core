@@ -6,7 +6,7 @@ import platform
 import subprocess
 import sys
 import threading
-from typing import List, Optional
+from typing import List
 
 import yarl
 
@@ -260,26 +260,14 @@ async def setup_and_run_hass(config_dir: str, args: argparse.Namespace) -> int:
 
     if args.open_ui:
         import webbrowser  # pylint: disable=import-outside-toplevel
-        from homeassistant.helpers import (
-            network,
-        )  # pylint: disable=import-outside-toplevel
 
-        url: Optional[str] = None
-        try:
-            url = network.async_get_url(hass)
-        except network.NoURLAvailableError:
-            pass
-
-        if url is None and hass.config.api is not None:
-            # Fallback to localhost
+        if hass.config.api is not None:
             scheme = "https" if hass.config.api.use_ssl else "http"
             url = str(
                 yarl.URL.build(
                     scheme=scheme, host="127.0.0.1", port=hass.config.api.port
                 )
             )
-
-        if url is not None:
             hass.add_job(webbrowser.open, url)
 
     return await hass.async_run()
