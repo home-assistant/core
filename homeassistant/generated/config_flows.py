@@ -120,6 +120,7 @@ FLOWS = [
     "solarlog",
     "soma",
     "somfy",
+    "songpal",
     "sonos",
     "spotify",
     "starline",

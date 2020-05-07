@@ -688,3 +688,36 @@ async def test_manual_config_with_token(hass):
     assert result["data"][CONF_SERVER_IDENTIFIER] == mock_plex_server.machineIdentifier
     assert result["data"][PLEX_SERVER_CONFIG][CONF_URL] == mock_plex_server._baseurl
     assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
+
+
+async def test_setup_with_limited_credentials(hass):
+    """Test setup with a user with limited permissions."""
+    mock_plex_server = MockPlexServer()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=DEFAULT_DATA,
+        options=DEFAULT_OPTIONS,
+        unique_id=DEFAULT_DATA["server_id"],
+    )
+
+    with patch(
+        "plexapi.server.PlexServer", return_value=mock_plex_server
+    ), patch.object(
+        mock_plex_server, "systemAccounts", side_effect=plexapi.exceptions.Unauthorized
+    ) as mock_accounts, patch(
+        "homeassistant.components.plex.PlexWebsocket.listen"
+    ) as mock_listen:
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_listen.called
+    assert mock_accounts.called
+
+    plex_server = hass.data[DOMAIN][SERVERS][mock_plex_server.machineIdentifier]
+    assert len(plex_server.accounts) == 0
+    assert plex_server.owner is None
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.state == ENTRY_STATE_LOADED
