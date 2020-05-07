@@ -15,7 +15,6 @@ from homeassistant.components.modbus.const import (
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
     DATA_TYPE_UINT,
-    DATA_TYPE_STRING,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 
