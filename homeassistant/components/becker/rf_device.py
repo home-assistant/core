@@ -3,10 +3,9 @@
 import logging
 
 import voluptuous as vol
-
 from pybecker.becker import Becker
 
-from .const import DOMAIN, DEFAULT_CONF_USB_STICK_PATH, CONF_CHANNEL, CONF_UNIT
+from .const import CONF_CHANNEL, CONF_UNIT, DEFAULT_CONF_USB_STICK_PATH, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +24,7 @@ class PyBecker:
 
     @classmethod
     def setup(cls, stick_path=None):
-        """Create becker instance."""
+        """Initiate becker instance."""
 
         if not stick_path:
             stick_path = DEFAULT_CONF_USB_STICK_PATH

@@ -2,32 +2,30 @@
 
 import logging
 
+import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-
 from homeassistant.components.cover import (
-    CoverDevice,
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_STOP,
-    SUPPORT_OPEN_TILT,
     SUPPORT_CLOSE_TILT,
+    SUPPORT_OPEN,
+    SUPPORT_OPEN_TILT,
+    SUPPORT_STOP,
+    CoverDevice,
 )
 from homeassistant.const import (
+    CONF_COVERS,
+    CONF_DEVICE,
     CONF_FRIENDLY_NAME,
     CONF_VALUE_TEMPLATE,
-    CONF_DEVICE,
-    CONF_COVERS,
     STATE_CLOSED,
     STATE_OPEN,
 )
-
-from .const import CONF_CHANNEL, DEVICE_CLASS
-
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers.restore_state import RestoreEntity
+
 from . import extract_entities, initialise_templates
+from .const import CONF_CHANNEL, DEVICE_CLASS
 from .rf_device import PyBecker
 
 _LOGGER = logging.getLogger(__name__)
