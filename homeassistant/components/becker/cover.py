@@ -2,8 +2,8 @@
 
 import logging
 
-import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
+
 from homeassistant.components.cover import (
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
@@ -22,6 +22,7 @@ from homeassistant.const import (
     STATE_OPEN,
 )
 from homeassistant.exceptions import TemplateError
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import extract_entities, initialise_templates
