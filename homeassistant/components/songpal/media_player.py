@@ -3,6 +3,7 @@ import asyncio
 from collections import OrderedDict
 import logging
 
+import async_timeout
 from songpal import (
     ConnectChange,
     ContentChange,
@@ -67,9 +68,13 @@ async def async_setup_entry(
 
     device = Device(endpoint)
     try:
-        await device.get_supported_methods()
-    except SongpalException as ex:
-        _LOGGER.error("Unable to get methods from songpal: %s", ex)
+        async with async_timeout.timeout(
+            10
+        ):  # set timeout to avoid blocking the setup process
+            await device.get_supported_methods()
+    except (SongpalException, asyncio.TimeoutError) as ex:
+        _LOGGER.warning("[%s(%s)] Unable to connect.", name, endpoint)
+        _LOGGER.debug("Unable to get methods from songpal: %s", ex)
         raise PlatformNotReady
 
     songpal_device = SongpalDevice(name, device)
@@ -141,9 +146,12 @@ class SongpalDevice(MediaPlayerEntity):
             self.async_write_ha_state()
 
         async def _try_reconnect(connect: ConnectChange):
-            _LOGGER.error(
-                "Got disconnected with %s, trying to reconnect.", connect.exception
+            _LOGGER.warning(
+                "[%s(%s)] Got disconnected, trying to reconnect.",
+                self.name,
+                self.dev.endpoint,
             )
+            _LOGGER.debug("Disconnected: %s", connect.exception)
             self._available = False
             self.dev.clear_notification_callbacks()
             self.async_write_ha_state()
@@ -154,12 +162,20 @@ class SongpalDevice(MediaPlayerEntity):
             while not self._available:
                 _LOGGER.debug("Trying to reconnect in %s seconds", delay)
                 await asyncio.sleep(delay)
-                # We need to inform HA about the state in case we are coming
-                # back from a disconnected state.
-                await self.async_update_ha_state(force_refresh=True)
-                delay = min(2 * delay, 300)
 
-            _LOGGER.info("Reconnected to %s", self.name)
+                try:
+                    await self.dev.get_supported_methods()
+                except SongpalException as ex:
+                    _LOGGER.debug("Failed to reconnect: %s", ex)
+                    delay = min(2 * delay, 300)
+                else:
+                    # We need to inform HA about the state in case we are coming
+                    # back from a disconnected state.
+                    await self.async_update_ha_state(force_refresh=True)
+
+            _LOGGER.warning(
+                "[%s(%s)] Connection reestablished.", self.name, self.dev.endpoint
+            )
 
         self.dev.on_notification(VolumeChange, _volume_changed)
         self.dev.on_notification(ContentChange, _source_changed)
