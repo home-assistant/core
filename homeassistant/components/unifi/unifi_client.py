@@ -2,7 +2,6 @@
 
 import logging
 
-from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .unifi_entity_base import UniFiBase
@@ -34,12 +33,6 @@ class UniFiClient(UniFiBase):
         """Disconnect client object when removed."""
         await super().async_will_remove_from_hass()
         self.client.remove_callback(self.async_update_callback)
-
-    @callback
-    def async_update_callback(self) -> None:
-        """Update the clients state."""
-        LOGGER.debug("Updating client %s (%s)", self.entity_id, self.client.mac)
-        self.async_write_ha_state()
 
     @property
     def is_wired(self):

@@ -163,6 +163,10 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
                 not self.is_wired and self.client.event.event in WIRELESS_CONNECTION
             ):
                 self._is_connected = True
+                self.schedule_update = False
+                if self.cancel_scheduled_update:
+                    self.cancel_scheduled_update()
+                    self.cancel_scheduled_update = None
 
             # Ignore extra scheduled update from wired bug
             elif not self.cancel_scheduled_update:
@@ -191,7 +195,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
     @property
     def is_connected(self):
         """Return true if the client is connected to the network."""
-        # SSID filter
         if (
             not self.is_wired
             and self.client.essid
@@ -235,6 +238,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         elif self.is_wired:
             if not self.controller.option_track_wired_clients:
                 await self.async_remove()
+
         else:
             if (
                 self.controller.option_ssid_filter
@@ -295,8 +299,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
                 dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 10),
             )
 
-        LOGGER.debug("Updating device %s (%s)", self.entity_id, self.device.mac)
-        self.async_write_ha_state()
+        super().async_update_callback()
 
     @property
     def is_connected(self):

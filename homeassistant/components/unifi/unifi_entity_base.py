@@ -69,9 +69,10 @@ class UniFiBase(Entity):
         entity_registry.async_remove(self.entity_id)
 
     @callback
-    def async_update_callback(self):
+    def async_update_callback(self) -> None:
         """Update the entity's state."""
-        raise NotImplementedError
+        LOGGER.debug("Updating %s entity %s (%s)", self.TYPE, self.entity_id, self.mac)
+        self.async_write_ha_state()
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
