@@ -685,7 +685,7 @@ async def async_handle_play_stream_service(camera, service_call):
     )
     data = {
         ATTR_ENTITY_ID: entity_ids,
-        ATTR_MEDIA_CONTENT_ID: f"{async_get_url(hass, require_ssl=True)}{url}",
+        ATTR_MEDIA_CONTENT_ID: f"{async_get_url(hass)}{url}",
         ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
     }
 
