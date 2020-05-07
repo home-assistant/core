@@ -73,7 +73,6 @@ class ISYEntity(Entity):
     @property
     def value(self) -> int:
         """Get the current value of the device."""
-        # pylint: disable=protected-access
         return self._node.status
 
     @property
@@ -104,7 +103,6 @@ class ISYNodeEntity(ISYEntity):
 
         # If a Group/Scene, set a property if the entire scene is on/off
         if hasattr(self._node, "group_all_on"):
-            # pylint: disable=protected-access
             attr["group_all_on"] = STATE_ON if self._node.group_all_on else STATE_OFF
 
         self._attrs.update(attr)
