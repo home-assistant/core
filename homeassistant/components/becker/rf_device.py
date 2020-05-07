@@ -2,8 +2,8 @@
 
 import logging
 
-import voluptuous as vol
 from pybecker.becker import Becker
+import voluptuous as vol
 
 from .const import CONF_CHANNEL, CONF_UNIT, DEFAULT_CONF_USB_STICK_PATH, DOMAIN
 
