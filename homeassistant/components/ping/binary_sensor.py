@@ -114,29 +114,18 @@ class PingData:
         self.available = False
 
         if sys.platform == "win32":
-            self._ping_cmd = [
-                "ping",
-                "-n",
-                str(self._count),
-                "-w",
-                "1000",
-                self._ip_address,
-            ]
+            self._ping_cmd = " ".join(
+                ["ping", "-n", str(self._count), "-w", "1000", self._ip_address]
+            )
         else:
-            self._ping_cmd = [
-                "ping",
-                "-n",
-                "-q",
-                "-c",
-                str(self._count),
-                "-W1",
-                self._ip_address,
-            ]
+            self._ping_cmd = " ".join(
+                ["ping", "-n", "-q", "-c", str(self._count), "-W1", self._ip_address]
+            )
 
     async def async_ping(self):
         """Send ICMP echo request and return details if success."""
         pinger = await asyncio.create_subprocess_shell(
-            " ".join(self._ping_cmd),
+            self._ping_cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
