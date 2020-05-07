@@ -18,8 +18,7 @@ def setup_platform(
     """Set up the ISY994 switch platform."""
     devices = []
     for node in hass.data[ISY994_NODES][SWITCH]:
-        if not node.dimmable:
-            devices.append(ISYSwitchEntity(node))
+        devices.append(ISYSwitchEntity(node))
 
     for name, status, actions in hass.data[ISY994_PROGRAMS][SWITCH]:
         devices.append(ISYSwitchProgramEntity(name, status, actions))

@@ -24,14 +24,14 @@ def setup_platform(
 ):
     """Set up the ISY994 binary sensor platform."""
     devices = []
-    devices_by_nid = {}
+    devices_by_address = {}
     child_nodes = []
 
     for node in hass.data[ISY994_NODES][BINARY_SENSOR]:
         if node.parent_node is None:
             device = ISYBinarySensorEntity(node)
             devices.append(device)
-            devices_by_nid[node.nid] = device
+            devices_by_address[node.address] = device
         else:
             # We'll process the child nodes last, to ensure all parent nodes
             # have been processed
@@ -39,17 +39,17 @@ def setup_platform(
 
     for node in child_nodes:
         try:
-            parent_device = devices_by_nid[node.parent_node.nid]
+            parent_device = devices_by_address[node.parent_node.address]
         except KeyError:
             _LOGGER.error(
                 "Node %s has a parent node %s, but no device "
                 "was created for the parent. Skipping.",
-                node.nid,
-                node.parent_nid,
+                node.address,
+                node.primary_node,
             )
         else:
             device_type = _detect_device_type(node)
-            subnode_id = int(node.nid[-1], 16)
+            subnode_id = int(node.address[-1], 16)
             if device_type in ("opening", "moisture"):
                 # These sensors use an optional "negative" subnode 2 to snag
                 # all state changes

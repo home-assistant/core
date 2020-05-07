@@ -76,7 +76,7 @@ def _check_for_insteon_type(
             # Hacky special-case just for FanLinc, which has a light module
             # as one of its nodes. Note that this special-case is not necessary
             # on ISY 5.x firmware as it uses the superior NodeDefs method
-            if platform == FAN and int(node.nid[-1]) == 1:
+            if platform == FAN and int(node.address[-1]) == 1:
                 hass.data[ISY994_NODES][LIGHT].append(node)
                 return True
 
