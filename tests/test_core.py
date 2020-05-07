@@ -1286,8 +1286,8 @@ def test_valid_entity_id():
         assert ha.valid_entity_id(valid), valid
 
 
-async def test_migration_base_url_internal(hass, hass_storage):
-    """Test that we migrate base url to internal url."""
+async def test_migration_base_url(hass, hass_storage):
+    """Test that we migrate base url to internal/external url."""
     config = ha.Config(hass)
     stored = {"version": 1, "data": {}}
     hass_storage[ha.CORE_STORAGE_KEY] = stored
