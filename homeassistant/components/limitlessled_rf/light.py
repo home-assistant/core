@@ -133,6 +133,7 @@ def _init_radio_lt8900(radio_config):
             "__DISABLED__debug_log_command": (
                 lambda message: _debug_log("LT8900", message)
             ),
+            "info_log_command": (lambda message: _info_log("LT8900", message)),
             "error_log_command": (lambda message: _error_log("LT8900", message)),
         },
     )
