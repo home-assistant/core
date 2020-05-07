@@ -158,15 +158,22 @@ async def test_camera_stream_source_configured(hass, run_driver, events):
         # Calling a second time should not throw
         await _async_stop_stream(hass, acc)
 
-    assert await hass.async_add_executor_job(
-        acc.get_snapshot, {"aid": 2, "image-width": 300, "image-height": 200}
+    turbo_jpeg = mock_turbo_jpeg(
+        first_width=16, first_height=12, second_width=300, second_height=200
     )
+    with patch(
+        "homeassistant.components.homekit.img_util.TurboJPEG", return_value=turbo_jpeg
+    ):
+        TurboJPEGSingleton()
+        assert await hass.async_add_executor_job(
+            acc.get_snapshot, {"aid": 2, "image-width": 300, "image-height": 200}
+        )
+        # Verify the bridge only forwards get_snapshot for
+        # cameras and valid accessory ids
+        assert await hass.async_add_executor_job(
+            bridge.get_snapshot, {"aid": 2, "image-width": 300, "image-height": 200}
+        )
 
-    # Verify the bridge only forwards get_snapshot for
-    # cameras and valid accessory ids
-    assert await hass.async_add_executor_job(
-        bridge.get_snapshot, {"aid": 2, "image-width": 300, "image-height": 200}
-    )
     with pytest.raises(ValueError):
         assert await hass.async_add_executor_job(
             bridge.get_snapshot, {"aid": 3, "image-width": 300, "image-height": 200}
