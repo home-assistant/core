@@ -1453,38 +1453,42 @@ class Config:
             CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True
         )
         data = await store.async_load()
-        if not data:
+
+        if data and "external_url" in data:
+            self._update(source=SOURCE_STORAGE, **data)
             return
 
         async def migrate_base_url(_: Event) -> None:
             """Migrate base_url to internal_url/external_url."""
-            if self.hass.config.api is not None:
-                base_url = yarl.URL(self.hass.config.api.base_url)
+            if self.hass.config.api is None:
+                return
 
-                # Check if this is an internal URL
-                if str(base_url.host).endswith(".local") or (
-                    network.is_ip_address(str(base_url.host))
-                    and network.is_private(ip_address(base_url.host))
-                ):
-                    await self.async_update(
-                        internal_url=network.normalize_url(str(base_url))
-                    )
-                    return
+            base_url = yarl.URL(self.hass.config.api.base_url)
 
-                # External, ensure this is not a loopback address
-                if not (
-                    network.is_ip_address(str(base_url.host))
-                    and network.is_loopback(ip_address(base_url.host))
-                ):
-                    await self.async_update(
-                        external_url=network.normalize_url(str(base_url))
-                    )
+            # Check if this is an internal URL
+            if str(base_url.host).endswith(".local") or (
+                network.is_ip_address(str(base_url.host))
+                and network.is_private(ip_address(base_url.host))
+            ):
+                await self.async_update(
+                    internal_url=network.normalize_url(str(base_url))
+                )
+                return
+
+            # External, ensure this is not a loopback address
+            if not (
+                network.is_ip_address(str(base_url.host))
+                and network.is_loopback(ip_address(base_url.host))
+            ):
+                await self.async_update(
+                    external_url=network.normalize_url(str(base_url))
+                )
 
         # Try to migrate base_url to internal_url/external_url
-        if "external_url" not in data:
-            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, migrate_base_url)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, migrate_base_url)
 
-        self._update(source=SOURCE_STORAGE, **data)
+        if data:
+            self._update(source=SOURCE_STORAGE, **data)
 
     async def async_store(self) -> None:
         """Store [homeassistant] core config."""
