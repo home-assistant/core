@@ -9,7 +9,6 @@ from pyhap.camera import (
     Camera as PyhapCamera,
 )
 from pyhap.const import CATEGORY_CAMERA
-from turbojpeg import TurboJPEG
 
 from homeassistant.components.camera.const import DOMAIN as DOMAIN_CAMERA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
@@ -35,6 +34,7 @@ from .img_util import scale_jpeg_camera_image
 from .util import CAMERA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
+
 
 VIDEO_OUTPUT = (
     "-map {v_map} -an "
