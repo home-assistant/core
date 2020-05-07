@@ -1,10 +1,44 @@
 """Map Z-Wave nodes and values to Home Assistant entities."""
 import openzwavemqtt.const as const_ozw
-from openzwavemqtt.const import CommandClass, ValueGenre, ValueType
+from openzwavemqtt.const import CommandClass, ValueGenre, ValueIndex, ValueType
 
 from . import const
 
 DISCOVERY_SCHEMAS = (
+    {  # Light
+        const.DISC_COMPONENT: "light",
+        const.DISC_GENERIC_DEVICE_CLASS: (
+            const_ozw.GENERIC_TYPE_SWITCH_MULTILEVEL,
+            const_ozw.GENERIC_TYPE_SWITCH_REMOTE,
+        ),
+        const.DISC_SPECIFIC_DEVICE_CLASS: (
+            const_ozw.SPECIFIC_TYPE_POWER_SWITCH_MULTILEVEL,
+            const_ozw.SPECIFIC_TYPE_SCENE_SWITCH_MULTILEVEL,
+            const_ozw.SPECIFIC_TYPE_NOT_USED,
+        ),
+        const.DISC_VALUES: {
+            const.DISC_PRIMARY: {
+                const.DISC_COMMAND_CLASS: (CommandClass.SWITCH_MULTILEVEL,),
+                const.DISC_INDEX: ValueIndex.SWITCH_MULTILEVEL_LEVEL,
+                const.DISC_TYPE: ValueType.BYTE,
+            },
+            "dimming_duration": {
+                const.DISC_COMMAND_CLASS: (CommandClass.SWITCH_MULTILEVEL,),
+                const.DISC_INDEX: ValueIndex.SWITCH_MULTILEVEL_DURATION,
+                const.DISC_OPTIONAL: True,
+            },
+            "color": {
+                const.DISC_COMMAND_CLASS: (CommandClass.SWITCH_COLOR,),
+                const.DISC_INDEX: ValueIndex.SWITCH_COLOR_COLOR,
+                const.DISC_OPTIONAL: True,
+            },
+            "color_channels": {
+                const.DISC_COMMAND_CLASS: (CommandClass.SWITCH_COLOR,),
+                const.DISC_INDEX: ValueIndex.SWITCH_COLOR_CHANNELS,
+                const.DISC_OPTIONAL: True,
+            },
+        },
+    },
     {  # All other text/numeric sensors
         const.DISC_COMPONENT: "sensor",
         const.DISC_VALUES: {
