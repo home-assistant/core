@@ -2,12 +2,13 @@
 
 from pyisy.constants import (
     COMMAND_FRIENDLY_NAME,
+    EMPTY_TIME,
     EVENT_PROPS_IGNORED,
     ISY_VALUE_UNKNOWN,
 )
 from pyisy.helpers import NodeProperty
 
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import Dict
 
@@ -104,7 +105,7 @@ class ISYNodeEntity(ISYEntity):
         # If a Group/Scene, set a property if the entire scene is on/off
         if hasattr(self._node, "group_all_on"):
             # pylint: disable=protected-access
-            attr["group_all_on"] = "on" if self._node.group_all_on else "off"
+            attr["group_all_on"] = STATE_ON if self._node.group_all_on else STATE_OFF
 
         self._attrs.update(attr)
         return self._attrs
@@ -125,15 +126,21 @@ class ISYProgramEntity(ISYEntity):
         attr = {}
         if self._actions:
             attr["actions_enabled"] = self._actions.enabled
-            attr["actions_last_finished"] = self._actions.last_finished
-            attr["actions_last_run"] = self._actions.last_run
-            attr["actions_last_update"] = self._actions.last_update
+            if attr["actions_last_finished"] != EMPTY_TIME:
+                attr["actions_last_finished"] = self._actions.last_finished
+            if attr["actions_last_run"] != EMPTY_TIME:
+                attr["actions_last_run"] = self._actions.last_run
+            if attr["actions_last_update"] != EMPTY_TIME:
+                attr["actions_last_update"] = self._actions.last_update
             attr["ran_else"] = self._actions.ran_else
             attr["ran_then"] = self._actions.ran_then
             attr["run_at_startup"] = self._actions.run_at_startup
             attr["running"] = self._actions.running
         attr["status_enabled"] = self._node.enabled
-        attr["status_last_finished"] = self._node.last_finished
-        attr["status_last_run"] = self._node.last_run
-        attr["status_last_update"] = self._node.last_update
+        if attr["status_last_finished"] != EMPTY_TIME:
+            attr["status_last_finished"] = self._node.last_finished
+        if attr["status_last_run"] != EMPTY_TIME:
+            attr["status_last_run"] = self._node.last_run
+        if attr["status_last_update"] != EMPTY_TIME:
+            attr["status_last_update"] = self._node.last_update
         return attr

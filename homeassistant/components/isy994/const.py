@@ -37,6 +37,7 @@ from homeassistant.const import (
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
+    LENGTH_MILES,
     MASS_KILOGRAMS,
     MASS_POUNDS,
     POWER_WATT,
@@ -284,12 +285,26 @@ UOM_FRIENDLY_NAME = {
     "90": FREQUENCY_HERTZ,
     "91": DEGREE,
     "92": f"{DEGREE} South",
+    "100": "",  # Range 0-255, no unit.
     "101": f"{DEGREE} (x2)",
     "102": "kWs",
     "103": "$",
     "104": "¢",
     "105": LENGTH_INCHES,
-    "106": "mm/day",
+    "106": f"mm/{TIME_DAYS}",
+    "107": "",  # raw 1-byte unsigned value
+    "108": "",  # raw 2-byte unsigned value
+    "109": "",  # raw 3-byte unsigned value
+    "110": "",  # raw 4-byte unsigned value
+    "111": "",  # raw 1-byte signed value
+    "112": "",  # raw 2-byte signed value
+    "113": "",  # raw 3-byte signed value
+    "114": "",  # raw 4-byte signed value
+    "116": LENGTH_MILES,
+    "117": "mb",
+    "118": "hPa",
+    "119": f"{POWER_WATT}{TIME_HOURS}",
+    "120": f"{LENGTH_INCHES}/{TIME_DAYS}",
 }
 
 UOM_TO_STATES = {
@@ -462,6 +477,21 @@ UOM_TO_STATES = {
         7: HVAC_MODE_AUTO,  # Program Cool-Set @ Local Device Only
     },
     "99": {7: FAN_ON, 8: FAN_AUTO},  # Insteon Thermostat Fan Mode
+    "115": {  # Most recent On style action taken for lamp control
+        0: "on",
+        1: "off",
+        2: "fade up",
+        3: "fade down",
+        4: "fade stop",
+        5: "fast on",
+        6: "fast off",
+        7: "triple press on",
+        8: "triple press off",
+        9: "4x press on",
+        10: "4x press off",
+        11: "5x press on",
+        12: "5x press off",
+    },
 }
 
 ISY_BIN_SENS_DEVICE_TYPES = {
