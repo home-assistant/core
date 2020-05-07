@@ -5,9 +5,16 @@ from homeassistant.components.homekit.img_util import (
     scale_jpeg_camera_image,
 )
 
+from .common import EMPTY_8_6_JPEG, mock_turbo_jpeg
+
 from tests.async_mock import patch
 
-EMPTY_16_12_JPEG = b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00\xff\xdb\x00C\x00\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xdb\x00C\x01\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xc0\x00\x11\x08\x00\x0c\x00\x10\x03\x01\x11\x00\x02\x11\x01\x03\x11\x01\xff\xc4\x00\x15\x00\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x03\xff\xc4\x00\x14\x10\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xc4\x00\x14\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xc4\x00\x14\x11\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xda\x00\x0c\x03\x01\x00\x02\x11\x03\x11\x00?\x00\xa0\x00\x00\x0f\xff\xd9"
+EMPTY_16_12_JPEG = b"empty_16_12"
+
+
+def test_turbojpeg_singleton():
+    """Verify the instance always gives back the same."""
+    assert TurboJPEGSingleton.instance() == TurboJPEGSingleton.instance()
 
 
 def test_scale_jpeg_camera_image():
@@ -15,16 +22,30 @@ def test_scale_jpeg_camera_image():
 
     camera_image = Image("image/jpeg", EMPTY_16_12_JPEG)
 
-    assert scale_jpeg_camera_image(camera_image, 16, 12) == EMPTY_16_12_JPEG
+    turbo_jpeg = mock_turbo_jpeg(first_width=16, first_height=12)
+    with patch(
+        "homeassistant.components.homekit.img_util.TurboJPEG", return_value=False
+    ):
+        TurboJPEGSingleton()
+        assert scale_jpeg_camera_image(camera_image, 16, 12) == camera_image.content
 
-    jpeg_bytes = scale_jpeg_camera_image(camera_image, 8, 6)
+    turbo_jpeg = mock_turbo_jpeg(first_width=16, first_height=12)
+    with patch(
+        "homeassistant.components.homekit.img_util.TurboJPEG", return_value=turbo_jpeg
+    ):
+        TurboJPEGSingleton()
+        assert scale_jpeg_camera_image(camera_image, 16, 12) == EMPTY_16_12_JPEG
 
-    turbo_jpeg = TurboJPEGSingleton.instance()
+    turbo_jpeg = mock_turbo_jpeg(
+        first_width=16, first_height=12, second_width=8, second_height=6
+    )
+    with patch(
+        "homeassistant.components.homekit.img_util.TurboJPEG", return_value=turbo_jpeg
+    ):
+        TurboJPEGSingleton()
+        jpeg_bytes = scale_jpeg_camera_image(camera_image, 8, 6)
 
-    (new_width, new_height, _, _) = turbo_jpeg.decode_header(jpeg_bytes)
-
-    assert new_width == 8
-    assert new_height == 6
+    assert jpeg_bytes == EMPTY_8_6_JPEG
 
 
 def test_turbojpeg_load_failure():
@@ -36,5 +57,6 @@ def test_turbojpeg_load_failure():
         TurboJPEGSingleton()
         assert TurboJPEGSingleton.instance() is False
 
-    TurboJPEGSingleton()
-    assert TurboJPEGSingleton.instance()
+    with patch("homeassistant.components.homekit.img_util.TurboJPEG"):
+        TurboJPEGSingleton()
+        assert TurboJPEGSingleton.instance()

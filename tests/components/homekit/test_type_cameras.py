@@ -15,10 +15,13 @@ from homeassistant.components.homekit.const import (
     CONF_VIDEO_CODEC,
     VIDEO_CODEC_COPY,
 )
+from homeassistant.components.homekit.img_util import TurboJPEGSingleton
 from homeassistant.components.homekit.type_cameras import Camera
 from homeassistant.components.homekit.type_switches import Switch
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
+
+from .common import mock_turbo_jpeg
 
 from tests.async_mock import AsyncMock, MagicMock, patch
 
@@ -135,15 +138,22 @@ async def test_camera_stream_source_configured(hass, run_driver, events):
         await acc.stop_stream(session_info)
         await hass.async_block_till_done()
 
-    assert await hass.async_add_executor_job(
-        acc.get_snapshot, {"aid": 2, "image-width": 300, "image-height": 200}
+    turbo_jpeg = mock_turbo_jpeg(
+        first_width=16, first_height=12, second_width=300, second_height=200
     )
+    with patch(
+        "homeassistant.components.homekit.img_util.TurboJPEG", return_value=turbo_jpeg
+    ):
+        TurboJPEGSingleton()
+        assert await hass.async_add_executor_job(
+            acc.get_snapshot, {"aid": 2, "image-width": 300, "image-height": 200}
+        )
+        # Verify the bridge only forwards get_snapshot for
+        # cameras and valid accessory ids
+        assert await hass.async_add_executor_job(
+            bridge.get_snapshot, {"aid": 2, "image-width": 300, "image-height": 200}
+        )
 
-    # Verify the bridge only forwards get_snapshot for
-    # cameras and valid accessory ids
-    assert await hass.async_add_executor_job(
-        bridge.get_snapshot, {"aid": 2, "image-width": 300, "image-height": 200}
-    )
     with pytest.raises(ValueError):
         assert await hass.async_add_executor_job(
             bridge.get_snapshot, {"aid": 3, "image-width": 300, "image-height": 200}
