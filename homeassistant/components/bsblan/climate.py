@@ -207,7 +207,7 @@ class BSBLanClimate(ClimateEntity):
             state: State = await self.bsblan.state()
         except BSBLanError:
             if self._available:
-                _LOGGER.error("An error occurred while updating the BSBLan device.")
+                _LOGGER.error("An error occurred while updating the BSBLan device")
             self._available = False
             return
 
