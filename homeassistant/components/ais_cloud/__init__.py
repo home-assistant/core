@@ -392,9 +392,15 @@ class AisCloudWS:
         self.setCloudToken()
         web_session = aiohttp_client.async_get_clientsession(hass)
         rest_url = self.url + "key?service=" + service
-        with async_timeout.timeout(10):
-            ws_resp = await web_session.get(rest_url, headers=CLOUD_WS_HEADER)
-            return await ws_resp.json()
+        try:
+            # during the system start lot of things is done 300 sec should be enough
+            with async_timeout.timeout(300):
+                ws_resp = await web_session.get(rest_url, headers=CLOUD_WS_HEADER)
+                return await ws_resp.json()
+        except Exception as e:
+            _LOGGER.error("Couldn't fetch data for: " + service + " " + str(e))
+            # import traceback
+            # traceback.print_exc()
 
     async def async_new_key(self, service, old_key, hass):
         self.setCloudToken()

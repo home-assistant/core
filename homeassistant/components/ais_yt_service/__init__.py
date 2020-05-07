@@ -54,7 +54,8 @@ class YouTubeData:
         try:
             json_ws_resp = await aisCloud.async_key("ytsearch", hass)
             self.yt_key = json_ws_resp["key"]
-        except:
+        except Exception as e:
+            _LOGGER.error("ais_yt_service async_get_key: " + str(e))
             ais_global.G_OFFLINE_MODE = True
 
     async def async_get_new_key(self, old_key, query, prev_page_token, next_page_token):

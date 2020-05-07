@@ -969,5 +969,4 @@ class LocalData:
             json_ws_resp = await aisCloud.async_key("gdrive_secret", hass)
             G_DRIVE_SECRET = json_ws_resp["key"]
         except Exception as e:
-            _LOGGER.error("Error " + str(e))
-            ais_global.G_OFFLINE_MODE = True
+            _LOGGER.error("Error ais_drives_service async_load_all: " + str(e))
