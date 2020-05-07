@@ -9,4 +9,8 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
         "tests.components.smartthings.test_init",
         "test_event_handler_dispatches_updated_devices",
     ),
+    (
+        "tests.components.unifi.test_controller",
+        "test_wireless_client_event_calls_update_wireless_devices",
+    ),
 ]
