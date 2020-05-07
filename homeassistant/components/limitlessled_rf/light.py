@@ -91,7 +91,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def _debug_log(source, message):
-     _LOGGER.debug("[" + source + "] " + message)
+    _LOGGER.debug("[" + source + "] " + message)
 
 
 def _info_log(source, message):
@@ -113,7 +113,7 @@ def _init_radio_lt8900(radio_config):
         # the GPIO port gets reconfigured as an input port
         # Note: broadcom pin numbers are used
         gpio_pin = int(gpio_pin)
-	def reset_module_via_gpio_func(gpio_pin):
+        def reset_module_via_gpio_func(gpio_pin):
             global reset_gpio
             reset_gpio = None
             reset_gpio = gpiozero.LED(gpio_pin)
