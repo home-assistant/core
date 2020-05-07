@@ -19,21 +19,26 @@ from homeassistant.helpers.entityfilter import (
 
 from .const import (
     CONF_AUTO_START,
+    CONF_ENTITY_CONFIG,
     CONF_FILTER,
     CONF_SAFE_MODE,
+    CONF_VIDEO_CODEC,
     CONF_ZEROCONF_DEFAULT_INTERFACE,
     DEFAULT_AUTO_START,
     DEFAULT_CONFIG_FLOW_PORT,
     DEFAULT_SAFE_MODE,
     DEFAULT_ZEROCONF_DEFAULT_INTERFACE,
     SHORT_BRIDGE_NAME,
+    VIDEO_CODEC_COPY,
 )
 from .const import DOMAIN  # pylint:disable=unused-import
 from .util import find_next_available_port
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_CAMERA_COPY = "camera_copy"
 CONF_DOMAINS = "domains"
+
 SUPPORTED_DOMAINS = [
     "alarm_control_panel",
     "automation",
@@ -183,6 +188,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
         self.homekit_options = {}
+        self.included_cameras = set()
 
     async def async_step_yaml(self, user_input=None):
         """No options for yaml managed entries."""
@@ -236,6 +242,38 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="advanced", data_schema=vol.Schema(schema_base)
         )
 
+    async def async_step_cameras(self, user_input=None):
+        """Choose camera config."""
+        if user_input is not None:
+            entity_config = self.homekit_options[CONF_ENTITY_CONFIG]
+            for entity_id in self.included_cameras:
+                if entity_id in user_input[CONF_CAMERA_COPY]:
+                    entity_config.setdefault(entity_id, {})[
+                        CONF_VIDEO_CODEC
+                    ] = VIDEO_CODEC_COPY
+                elif (
+                    entity_id in entity_config
+                    and CONF_VIDEO_CODEC in entity_config[entity_id]
+                ):
+                    del entity_config[entity_id][CONF_VIDEO_CODEC]
+            return await self.async_step_advanced()
+
+        cameras_with_copy = []
+        entity_config = self.homekit_options.setdefault(CONF_ENTITY_CONFIG, {})
+        for entity in self.included_cameras:
+            hk_entity_config = entity_config.get(entity, {})
+            if hk_entity_config.get(CONF_VIDEO_CODEC) == VIDEO_CODEC_COPY:
+                cameras_with_copy.append(entity)
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_CAMERA_COPY, default=cameras_with_copy,
+                ): cv.multi_select(self.included_cameras),
+            }
+        )
+        return self.async_show_form(step_id="cameras", data_schema=data_schema)
+
     async def async_step_exclude(self, user_input=None):
         """Choose entities to exclude from the domain."""
         if user_input is not None:
@@ -249,6 +287,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ),
                 CONF_EXCLUDE_ENTITIES: user_input[CONF_EXCLUDE_ENTITIES],
             }
+            for entity_id in user_input[CONF_EXCLUDE_ENTITIES]:
+                if entity_id in self.included_cameras:
+                    self.included_cameras.remove(entity_id)
+            if self.included_cameras:
+                return await self.async_step_cameras()
             return await self.async_step_advanced()
 
         entity_filter = self.homekit_options.get(CONF_FILTER, {})
@@ -257,6 +300,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self.hass,
             self.homekit_options[CONF_INCLUDE_DOMAINS],
         )
+        self.included_cameras = {
+            entity_id
+            for entity_id in all_supported_entities
+            if entity_id.startswith("camera.")
+        }
         data_schema = vol.Schema(
             {
                 vol.Optional(
