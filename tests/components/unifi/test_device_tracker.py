@@ -563,6 +563,25 @@ async def test_option_ssid_filter(hass):
     client_3 = hass.states.get("device_tracker.client_3")
     assert client_3.state == "home"
 
+    async_fire_time_changed(hass, dt_util.utcnow() + controller.option_detection_time)
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == "not_home"
+
+    # Client won't go away until after next update
+    client_3 = hass.states.get("device_tracker.client_3")
+    assert client_3.state == "home"
+
+    # Trigger update to get client marked as away
+    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [CLIENT_3]}
+    controller.api.message_handler(event)
+    async_fire_time_changed(hass, dt_util.utcnow() + controller.option_detection_time)
+    await hass.async_block_till_done()
+
+    client_3 = hass.states.get("device_tracker.client_3")
+    assert client_3.state == "not_home"
+
 
 async def test_wireless_client_go_wired_issue(hass):
     """Test the solution to catch wireless device go wired UniFi issue.
