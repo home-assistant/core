@@ -1,7 +1,6 @@
 """Test the songpal config flow."""
 import copy
 
-from asynctest import MagicMock, patch
 from songpal import SongpalException
 from songpal.containers import InterfaceInfo
 
@@ -15,6 +14,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
+from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 UDN = "uuid:1234"
