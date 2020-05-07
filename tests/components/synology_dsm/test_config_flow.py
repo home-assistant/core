@@ -385,6 +385,7 @@ async def test_form_ssdp(hass: HomeAssistantType, service: MagicMock):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["result"].unique_id == SERIAL
     assert result["title"] == "192.168.1.5"
     assert result["data"][CONF_HOST] == "192.168.1.5"
     assert result["data"][CONF_PORT] == 5001
