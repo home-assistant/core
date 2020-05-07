@@ -249,51 +249,6 @@ async def test_tracked_clients(hass):
     assert client_1.state == "home"
 
 
-async def test_tracked_clients(hass):
-    """Test the update_items function with some clients."""
-    client_4_copy = copy(CLIENT_4)
-    client_4_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
-
-    controller = await setup_unifi_integration(
-        hass,
-        options={CONF_SSID_FILTER: ["ssid"]},
-        clients_response=[CLIENT_1, CLIENT_2, CLIENT_3, CLIENT_5, client_4_copy],
-        devices_response=[DEVICE_1, DEVICE_2],
-        known_wireless_clients=([CLIENT_4["mac"]]),
-    )
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 6
-
-    client_1 = hass.states.get("device_tracker.client_1")
-    assert client_1 is not None
-    assert client_1.state == "not_home"
-
-    client_2 = hass.states.get("device_tracker.wired_client")
-    assert client_2 is not None
-    assert client_2.state == "not_home"
-
-    # Client on SSID not in SSID filter
-    client_3 = hass.states.get("device_tracker.client_3")
-    assert not client_3
-
-    # Wireless client with wired bug, if bug active on restart mark device away
-    client_4 = hass.states.get("device_tracker.client_4")
-    assert client_4 is not None
-    assert client_4.state == "not_home"
-
-    # A client that has never been seen should be marked away.
-    client_5 = hass.states.get("device_tracker.client_5")
-    assert client_5 is not None
-    assert client_5.state == "not_home"
-
-    # State change signalling works
-    client_1_copy = copy(CLIENT_1)
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_copy]}
-    controller.api.message_handler(event)
-
-    client_1 = hass.states.get("device_tracker.client_1")
-    assert client_1.state == "home"
-
-
 async def test_tracked_devices(hass):
     """Test the update_items function with some devices."""
     controller = await setup_unifi_integration(
@@ -558,31 +513,37 @@ async def test_option_ssid_filter(hass):
     client_3 = hass.states.get("device_tracker.client_3")
     assert client_3
 
-    # Set SSID filter
+    # Setting SSID filter will remove clients outside of filter
     hass.config_entries.async_update_entry(
         controller.config_entry, options={CONF_SSID_FILTER: ["ssid"]},
     )
     await hass.async_block_till_done()
 
+    # Not affected by SSID filter
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1.state == "home"
 
+    # Removed due to SSID filter
     client_3 = hass.states.get("device_tracker.client_3")
     assert not client_3
 
+    # Roams to SSID outside of filter
     client_1_copy = copy(CLIENT_1)
     client_1_copy["essid"] = "other_ssid"
     event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_copy]}
     controller.api.message_handler(event)
+    # Data update while SSID filter is in effect shouldn't create the client
     client_3_copy = copy(CLIENT_3)
     client_3_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
     event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_3_copy]}
     controller.api.message_handler(event)
     await hass.async_block_till_done()
 
+    # SSID filter marks client as away
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1.state == "not_home"
 
+    # SSID still outside of filter
     client_3 = hass.states.get("device_tracker.client_3")
     assert not client_3
 
@@ -777,7 +738,6 @@ async def test_dont_track_clients(hass):
 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1 is not None
-    assert device_1.state == "home"
 
     hass.config_entries.async_update_entry(
         controller.config_entry, options={CONF_TRACK_CLIENTS: True},
