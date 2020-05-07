@@ -3,13 +3,13 @@ import asyncio
 import logging
 
 from haffmpeg.core import HAFFmpeg
-from jpegtran import JPEGImage
 from pyhap.camera import (
     VIDEO_CODEC_PARAM_LEVEL_TYPES,
     VIDEO_CODEC_PARAM_PROFILE_ID_TYPES,
     Camera as PyhapCamera,
 )
 from pyhap.const import CATEGORY_CAMERA
+from turbojpeg import TurboJPEG
 
 from homeassistant.components.camera.const import DOMAIN as DOMAIN_CAMERA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
@@ -35,7 +35,6 @@ from .img_util import scale_jpeg_camera_image
 from .util import CAMERA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
-
 
 VIDEO_OUTPUT = (
     "-map {v_map} -an "
@@ -94,6 +93,7 @@ class Camera(HomeAccessory, PyhapCamera):
         """Initialize a Camera accessory object."""
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._camera = hass.data[DOMAIN_CAMERA]
+        self._turbo_jpeg = None
         config_w_defaults = CAMERA_SCHEMA(config)
 
         max_fps = config_w_defaults[CONF_MAX_FPS]
