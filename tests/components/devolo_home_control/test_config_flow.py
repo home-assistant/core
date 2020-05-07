@@ -1,8 +1,10 @@
 """Test the devolo_home_control config flow."""
-from homeassistant import config_entries, setup
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.devolo_home_control.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 
 from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass):
@@ -74,3 +76,27 @@ async def test_form_invalid_credentials(hass):
         )
 
         assert result["errors"] == {"base": "invalid_credentials"}
+
+
+async def test_form_already_configured(hass):
+    """Test if we get the error message on already configured."""
+    with patch(
+        "homeassistant.components.devolo_home_control.config_flow.Mydevolo.get_gateway_ids",
+        return_value=["1234567"],
+    ), patch(
+        "homeassistant.components.devolo_home_control.config_flow.Mydevolo.credentials_valid",
+        return_value=True,
+    ):
+        MockConfigEntry(domain=DOMAIN, unique_id="1234567", data={}).add_to_hass(hass)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={
+                "username": "test-username",
+                "password": "test-password",
+                "home_control_url": "https://homecontrol.mydevolo.com",
+                "mydevolo_url": "https://www.mydevolo.com",
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
