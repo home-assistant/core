@@ -78,10 +78,6 @@ async def async_setup_entry(
     name = config_entry.data[CONF_NAME]
     endpoint = config_entry.data[CONF_ENDPOINT]
 
-    if endpoint in hass.data[DOMAIN]:
-        _LOGGER.debug("The endpoint exists already, skipping setup.")
-        return
-
     device = SongpalDevice(name, endpoint)
     try:
         await device.initialize()
