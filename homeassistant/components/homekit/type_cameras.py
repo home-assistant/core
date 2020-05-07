@@ -3,13 +3,13 @@ import asyncio
 import logging
 
 from haffmpeg.core import HAFFmpeg
-from jpegtran import JPEGImage
 from pyhap.camera import (
     VIDEO_CODEC_PARAM_LEVEL_TYPES,
     VIDEO_CODEC_PARAM_PROFILE_ID_TYPES,
     Camera as PyhapCamera,
 )
 from pyhap.const import CATEGORY_CAMERA
+from turbojpeg import TurboJPEG
 
 from homeassistant.components.camera.const import DOMAIN as DOMAIN_CAMERA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
@@ -33,6 +33,8 @@ from .const import (
 from .util import CAMERA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
+
+SUPPORTED_SCALING_FACTORS = [(7, 8), (3, 4), (5, 8), (1, 2), (3, 8), (1, 4), (1, 8)]
 
 VIDEO_OUTPUT = (
     "-map {v_map} -an "
@@ -91,6 +93,7 @@ class Camera(HomeAccessory, PyhapCamera):
         """Initialize a Camera accessory object."""
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._camera = hass.data[DOMAIN_CAMERA]
+        self._turbo_jpeg = None
         config_w_defaults = CAMERA_SCHEMA(config)
 
         max_fps = config_w_defaults[CONF_MAX_FPS]
@@ -251,13 +254,36 @@ class Camera(HomeAccessory, PyhapCamera):
             self.hass.components.camera.async_get_image(self.entity_id), self.hass.loop,
         ).result()
 
-        jpeg_image = JPEGImage(blob=image.content)
+        if self._turbo_jpeg is None:
+            try:
+                self._turbo_jpeg = TurboJPEG()
+            except Exception:  # pylint: disable=broad-except
+                self._turbo_jpeg = 0
+                _LOGGER.exception(
+                    "libturbojpeg is not installed, cameras may impact HomeKit performance."
+                )
+
+        if not self._turbo_jpeg:
+            return image.content
+
+        (current_width, current_height, _, _) = self._turbo_jpeg.decode_header(
+            image.content
+        )
+
         if (
-            jpeg_image.width < image_size["image-width"]
-            or jpeg_image.height < image_size["image-height"]
+            current_width < image_size["image-width"]
+            or current_height < image_size["image-height"]
         ):
             return image.content
 
-        return jpeg_image.downscale(
-            image_size["image-width"], image_size["image-height"]
-        ).as_blob()
+        ratio = image_size["image-width"] / current_width
+
+        scaling_factor = SUPPORTED_SCALING_FACTORS[-1]
+        for supported_sf in SUPPORTED_SCALING_FACTORS:
+            if ratio >= (supported_sf[0] / supported_sf[1]):
+                scaling_factor = supported_sf
+                break
+
+        return self._turbo_jpeg.scale_with_quality(
+            image.content, scaling_factor=scaling_factor, quality=75,
+        )

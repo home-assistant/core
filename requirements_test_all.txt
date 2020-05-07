@@ -20,6 +20,9 @@ PyRMVtransport==0.2.9
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
 
+# homeassistant.components.homekit
+PyTurboJPEG==1.4.0
+
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
 
@@ -163,9 +166,6 @@ buienradar==1.0.4
 
 # homeassistant.components.caldav
 caldav==0.6.1
-
-# homeassistant.components.homekit
-cffi==1.14.0
 
 # homeassistant.components.coinmarketcap
 coinmarketcap==5.0.3
@@ -329,9 +329,6 @@ iaqualink==0.3.1
 
 # homeassistant.components.influxdb
 influxdb==5.2.3
-
-# homeassistant.components.homekit
-jpegtran-cffi==0.5.2
 
 # homeassistant.components.rest
 # homeassistant.components.verisure
