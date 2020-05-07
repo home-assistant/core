@@ -196,7 +196,14 @@ class Notion:
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
         for attr, result in zip(tasks, results):
             if isinstance(result, NotionError):
-                _LOGGER.error("There was an error while updating %s: %s", attr, result)
+                _LOGGER.error(
+                    "There was a Notion error while updating %s: %s", attr, result
+                )
+                continue
+            if isinstance(result, Exception):
+                _LOGGER.error(
+                    "There was an unknown error while updating %s: %s", attr, result
+                )
                 continue
 
             holding_pen = getattr(self, attr)
