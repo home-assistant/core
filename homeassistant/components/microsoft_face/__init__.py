@@ -331,7 +331,7 @@ class MicrosoftFace:
 
                 if response.status == 401:
                     raise HomeAssistantError(
-                        "Authentication failed. Please check the 'azure_region' and 'api_key'"
+                        "Authentication failed. Please check the 'azure_region' and the 'api_key'"
                     )
 
                 if response.status == 202:
