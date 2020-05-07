@@ -176,7 +176,15 @@ def _format_entity_name(remote_id, zone_id, remote_format, zone_format):
 
 
 def _find_bulb_by_event(remotes_zones, event):
-    remote_name = event.data.get("remote_name")
+    entity_id = event.data.get("entity_id")
+    if entity_id is None:
+        return None
+    entity_id = entity_id.split('.')
+    entity_type = entity_id[0]
+    if entity_type != "light":
+        return None
+
+    remote_name = entity_id[1]
     for remote in remotes_zones:
         if remote.name == remote_name:
             return remote
