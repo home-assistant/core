@@ -31,8 +31,8 @@ class UniFiClient(UniFiBase):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect client object when removed."""
-        await super().async_will_remove_from_hass()
         self.client.remove_callback(self.async_update_callback)
+        await super().async_will_remove_from_hass()
 
     @property
     def is_wired(self):

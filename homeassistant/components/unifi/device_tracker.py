@@ -146,6 +146,12 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             if self._is_connected:
                 self.schedule_update = True
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect object when removed."""
+        if self.cancel_scheduled_update:
+            self.cancel_scheduled_update()
+        await super().async_will_remove_from_hass()
+
     @callback
     def async_update_callback(self) -> None:
         """Update the clients state."""
@@ -273,8 +279,10 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
-        await super().async_will_remove_from_hass()
         self.device.remove_callback(self.async_update_callback)
+        if self.cancel_scheduled_update:
+            self.cancel_scheduled_update()
+        await super().async_will_remove_from_hass()
 
     @callback
     def async_update_callback(self):

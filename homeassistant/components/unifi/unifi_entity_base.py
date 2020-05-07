@@ -40,6 +40,7 @@ class UniFiBase(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
+        LOGGER.debug("Removing %s entity %s (%s)", self.TYPE, self.entity_id, self.mac)
         self.controller.entities[self.DOMAIN][self.TYPE].remove(self.mac)
 
     async def async_remove(self):
