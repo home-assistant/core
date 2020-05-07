@@ -61,7 +61,7 @@ def extract_entities(
 
 
 async def async_setup(hass, config):
-    """Setup the becker component."""
+    """Initiate becker component for home assistant."""
 
     await PyBecker.async_register_services(hass)
 
