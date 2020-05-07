@@ -98,9 +98,9 @@ class PingBinarySensor(BinarySensorEntity):
                 ATTR_ROUND_TRIP_TIME_MIN: self.ping.data["min"],
             }
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data."""
-        self.ping.update()
+        await self.ping.async_update()
 
 
 class PingData:
@@ -136,7 +136,9 @@ class PingData:
     async def async_ping(self):
         """Send ICMP echo request and return details if success."""
         pinger = await asyncio.create_subprocess_shell(
-            " ".join(self._ping_cmd), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            " ".join(self._ping_cmd),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
         )
         try:
             out = await pinger.communicate(timeout=self._count + PING_TIMEOUT)
