@@ -186,6 +186,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # If the previous instance hasn't cleaned up yet
     # we need to wait a bit
     if not await hass.async_add_executor_job(port_is_available, port):
+        _LOGGER.warning("The local port %s is in use.", port)
         raise ConfigEntryNotReady
 
     if CONF_ENTRY_INDEX in conf and conf[CONF_ENTRY_INDEX] == 0:
@@ -202,8 +203,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # These are yaml only
     ip_address = conf.get(CONF_IP_ADDRESS)
     advertise_ip = conf.get(CONF_ADVERTISE_IP)
-    entity_config = conf.get(CONF_ENTITY_CONFIG, {})
 
+    entity_config = options.get(CONF_ENTITY_CONFIG, {}).copy()
     auto_start = options.get(CONF_AUTO_START, DEFAULT_AUTO_START)
     safe_mode = options.get(CONF_SAFE_MODE, DEFAULT_SAFE_MODE)
     entity_filter = convert_filter(
