@@ -1,8 +1,9 @@
 {
     "title": "devolo Home Control",
     "config": {
-        "abort": {
-        },
+      "abort": {
+          "already_configured": "This Home Control Central is already configured."
+      },
         "error": {
             "invalid_credentials": "Incorrect user name and/or password."
         },

@@ -1,9 +1,10 @@
 {
     "config": {
-        "abort": {},
+        "abort": {
+            "already_configured": "This Home Control Central is already configured."
+        },
         "error": {
-            "invalid_credentials": "Incorrect user name and/or password.",
-            "gateway_already_added": "This gateway is already added."
+            "invalid_credentials": "Incorrect user name and/or password."
         },
         "step": {
             "user": {
