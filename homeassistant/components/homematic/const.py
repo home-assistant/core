@@ -146,7 +146,7 @@ HM_DEVICE_TYPES = {
         "IPShutterContactSabotage",
         "IPContact",
     ],
-    DISCOVER_COVER: ["Blind", "KeyBlind", "IPKeyBlind", "IPKeyBlindTilt"],
+    DISCOVER_COVER: ["Blind", "KeyBlind", "IPKeyBlind", "IPKeyBlindTilt", "IPGarage"],
     DISCOVER_LOCKS: ["KeyMatic"],
 }
 

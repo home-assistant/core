@@ -1,9 +1,12 @@
 """Support for  HomeMatic covers."""
 import logging
 
+from pyhomematic.devicetypes.actors import IPGarage
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    DEVICE_CLASS_GARAGE,
     CoverEntity,
 )
 
@@ -36,6 +39,9 @@ class HMCover(HMDevice, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
+        if isinstance(self._hmdevice, IPGarage):
+            # Garage covers do not support position
+            return None
         return int(self._hm_get_state() * 100)
 
     def set_cover_position(self, **kwargs):
@@ -48,10 +54,19 @@ class HMCover(HMDevice, CoverEntity):
 
     @property
     def is_closed(self):
-        """Return if the cover is closed."""
-        if self.current_cover_position is not None:
+        """Return whether the cover is closed."""
+        if isinstance(self._hmdevice, IPGarage):
+            return self._hmdevice.is_closed()
+        elif self.current_cover_position is not None:
             return self.current_cover_position == 0
         return None
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        if isinstance(self._hmdevice, IPGarage):
+            return DEVICE_CLASS_GARAGE
+        return super().device_class
 
     def open_cover(self, **kwargs):
         """Open the cover."""
