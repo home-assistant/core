@@ -43,7 +43,7 @@ class ISYSwitchEntity(ISYNodeEntity, SwitchEntity):
             _LOGGER.debug("Unable to turn off switch.")
 
     def turn_on(self, **kwargs) -> None:
-        """Send the turn oon command to the ISY994 switch."""
+        """Send the turn on command to the ISY994 switch."""
         if not self._node.turn_on():
             _LOGGER.debug("Unable to turn on switch.")
 
