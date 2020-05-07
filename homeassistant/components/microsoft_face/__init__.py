@@ -100,7 +100,7 @@ async def async_setup(hass, config):
         except HomeAssistantError as err:
             msg = f"Can't create group '{g_id}' with error: {err}"
             _LOGGER.error(msg)
-            raise HomeAssistantError(msg)
+            raise
 
     hass.services.async_register(
         DOMAIN, SERVICE_CREATE_GROUP, async_create_group, schema=SCHEMA_GROUP_SERVICE
@@ -119,7 +119,7 @@ async def async_setup(hass, config):
         except HomeAssistantError as err:
             msg = f"Can't delete group '{g_id}' with error: {err}"
             _LOGGER.error(msg)
-            raise HomeAssistantError(msg)
+            raise
 
     hass.services.async_register(
         DOMAIN, SERVICE_DELETE_GROUP, async_delete_group, schema=SCHEMA_GROUP_SERVICE
@@ -134,7 +134,7 @@ async def async_setup(hass, config):
         except HomeAssistantError as err:
             msg = f"Can't train group '{g_id}' with error: {err}"
             _LOGGER.error(msg)
-            raise HomeAssistantError(msg)
+            raise
 
     hass.services.async_register(
         DOMAIN, SERVICE_TRAIN_GROUP, async_train_group, schema=SCHEMA_TRAIN_SERVICE
@@ -155,7 +155,7 @@ async def async_setup(hass, config):
         except HomeAssistantError as err:
             msg = f"Can't create person '{name}' with error: {err}"
             _LOGGER.error(msg)
-            raise HomeAssistantError(msg)
+            raise
 
     hass.services.async_register(
         DOMAIN, SERVICE_CREATE_PERSON, async_create_person, schema=SCHEMA_PERSON_SERVICE
@@ -175,7 +175,7 @@ async def async_setup(hass, config):
         except HomeAssistantError as err:
             msg = f"Can't delete person '{p_id}' with error: {err}"
             _LOGGER.error(msg)
-            raise HomeAssistantError(msg)
+            raise
 
     hass.services.async_register(
         DOMAIN, SERVICE_DELETE_PERSON, async_delete_person, schema=SCHEMA_PERSON_SERVICE
@@ -217,7 +217,7 @@ async def async_setup(hass, config):
                 p_name, err
             )
             _LOGGER.error(msg)
-            raise HomeAssistantError(msg)
+            raise
 
     hass.services.async_register(
         DOMAIN, SERVICE_FACE_PERSON, async_face_person, schema=SCHEMA_FACE_SERVICE
@@ -350,11 +350,11 @@ class MicrosoftFace:
         except aiohttp.ClientError as err:
             msg = f"Can't connect to microsoft face api with error: {err}"
             _LOGGER.error(msg)
-            raise HomeAssistantError(msg)
+            raise
 
         except asyncio.TimeoutError:
             msg = f"Timeout from microsoft face api with '{response.url}'"
             _LOGGER.warning(msg)
-            raise HomeAssistantError(msg)
+            raise
 
         raise HomeAssistantError("Network error on microsoft face api.")
