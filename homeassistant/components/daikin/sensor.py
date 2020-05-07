@@ -5,6 +5,8 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_NAME,
     CONF_TYPE,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     POWER_KILO_WATT,
     TEMP_CELSIUS,
@@ -87,6 +89,11 @@ class DaikinSensor(Entity):
         raise NotImplementedError
 
     @property
+    def device_class(self):
+        """Return the class of this device."""
+        raise NotImplementedError
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         raise NotImplementedError
@@ -99,6 +106,29 @@ class DaikinSensor(Entity):
     def device_info(self):
         """Return a device description for device registry."""
         return self._api.device_info
+
+
+class DaikinClimateSensor(DaikinSensor):
+    """Representation of a Climate Sensor."""
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return TEMP_CELSIUS
+
+    @property
+    def device_class(self):
+        """Return the class of this device."""
+        return DEVICE_CLASS_TEMPERATURE
+
+    @property
+    def state(self):
+        """Return the internal state of the sensor."""
+        if self._device_attribute == ATTR_INSIDE_TEMPERATURE:
+            return self._api.device.inside_temperature
+        if self._device_attribute == ATTR_OUTSIDE_TEMPERATURE:
+            return self._api.device.outside_temperature
+        return None
 
 
 class DaikinPowerSensor(DaikinSensor):
@@ -114,6 +144,11 @@ class DaikinPowerSensor(DaikinSensor):
         return None
 
     @property
+    def device_class(self):
+        """Return the class of this device."""
+        return DEVICE_CLASS_POWER
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         if self._device_attribute == ATTR_TOTAL_POWER:
@@ -122,22 +157,4 @@ class DaikinPowerSensor(DaikinSensor):
             return self._api.device.last_hour_cool_power_consumption
         if self._device_attribute == ATTR_HEAT_ENERGY:
             return self._api.device.last_hour_heat_power_consumption
-        return None
-
-
-class DaikinClimateSensor(DaikinSensor):
-    """Representation of a Climate Sensor."""
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def state(self):
-        """Return the internal state of the sensor."""
-        if self._device_attribute == ATTR_INSIDE_TEMPERATURE:
-            return self._api.device.inside_temperature
-        if self._device_attribute == ATTR_OUTSIDE_TEMPERATURE:
-            return self._api.device.outside_temperature
         return None
