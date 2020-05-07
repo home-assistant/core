@@ -121,7 +121,6 @@ class SongpalDevice(MediaPlayerEntity):
 
     async def async_will_remove_from_hass(self):
         """Run when entity will be removed from hass."""
-        self.hass.data[DOMAIN].pop(self._endpoint)
         await self.dev.stop_listen_notifications()
 
     async def async_activate_websocket(self):
