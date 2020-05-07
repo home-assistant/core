@@ -7,7 +7,6 @@ import yarl
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
-from homeassistant.util import get_local_ip
 from homeassistant.util.network import (
     is_ip_address,
     is_local,
@@ -110,7 +109,7 @@ def _async_get_internal_url(
         require_ssl or hass.config.api is None or hass.config.api.use_ssl
     ):
         ip_url = yarl.URL.build(
-            scheme="http", host=get_local_ip(), port=hass.config.api.port
+            scheme="http", host=hass.config.api.local_ip, port=hass.config.api.port
         )
         if not is_loopback(ip_address(ip_url.host)) and (
             not require_standard_port or ip_url.is_default_port()

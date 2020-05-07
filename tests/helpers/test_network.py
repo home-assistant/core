@@ -16,15 +16,6 @@ from homeassistant.helpers.network import (
 from tests.async_mock import Mock, patch
 
 
-@pytest.fixture(autouse=True)
-def mock_local_ip():
-    """Mock the call to get_local_ip to return a fake internal IP address."""
-    with patch(
-        "homeassistant.helpers.network.get_local_ip", return_value="192.168.123.123"
-    ) as local_ip:
-        yield local_ip
-
-
 async def test_get_url_internal(hass: HomeAssistant):
     """Test getting an instance URL when the user has set an internal URL."""
     assert hass.config.internal_url is None
@@ -127,7 +118,9 @@ async def test_get_url_internal_fallback(hass: HomeAssistant):
     """Test getting an instance URL when the user has not set an internal URL."""
     assert hass.config.internal_url is None
 
-    hass.config.api = Mock(use_ssl=False, port=8123, base_url=None)
+    hass.config.api = Mock(
+        use_ssl=False, port=8123, base_url=None, local_ip="192.168.123.123"
+    )
     assert _async_get_internal_url(hass) == "http://192.168.123.123:8123"
 
     with pytest.raises(NoURLAvailableError):
@@ -139,7 +132,9 @@ async def test_get_url_internal_fallback(hass: HomeAssistant):
     with pytest.raises(NoURLAvailableError):
         _async_get_internal_url(hass, require_ssl=True)
 
-    hass.config.api = Mock(use_ssl=False, port=80, base_url=None)
+    hass.config.api = Mock(
+        use_ssl=False, port=80, base_url=None, local_ip="192.168.123.123"
+    )
     assert _async_get_internal_url(hass) == "http://192.168.123.123"
     assert (
         _async_get_internal_url(hass, require_standard_port=True)
@@ -166,21 +161,18 @@ async def test_get_url_internal_fallback(hass: HomeAssistant):
         _async_get_internal_url(hass, require_ssl=True)
 
     # Do no accept any local loopback address as fallback
-    with patch(
-        "homeassistant.helpers.network.get_local_ip", return_value="127.0.0.127"
-    ):
-        hass.config.api = Mock(use_ssl=False, port=80, base_url=None)
-        with pytest.raises(NoURLAvailableError):
-            _async_get_internal_url(hass)
+    hass.config.api = Mock(use_ssl=False, port=80, base_url=None, local_ip="127.0.0.1")
+    with pytest.raises(NoURLAvailableError):
+        _async_get_internal_url(hass)
 
-        with pytest.raises(NoURLAvailableError):
-            _async_get_internal_url(hass, require_standard_port=True)
+    with pytest.raises(NoURLAvailableError):
+        _async_get_internal_url(hass, require_standard_port=True)
 
-        with pytest.raises(NoURLAvailableError):
-            _async_get_internal_url(hass, allow_ip=False)
+    with pytest.raises(NoURLAvailableError):
+        _async_get_internal_url(hass, allow_ip=False)
 
-        with pytest.raises(NoURLAvailableError):
-            _async_get_internal_url(hass, require_ssl=True)
+    with pytest.raises(NoURLAvailableError):
+        _async_get_internal_url(hass, require_ssl=True)
 
 
 async def test_get_url_external(hass: HomeAssistant):
@@ -374,7 +366,9 @@ async def test_get_url(hass: HomeAssistant):
     with pytest.raises(NoURLAvailableError):
         async_get_url(hass)
 
-    hass.config.api = Mock(use_ssl=False, port=8123, base_url=None)
+    hass.config.api = Mock(
+        use_ssl=False, port=8123, base_url=None, local_ip="192.168.123.123"
+    )
     assert async_get_url(hass) == "http://192.168.123.123:8123"
     assert async_get_url(hass, prefer_external=True) == "http://192.168.123.123:8123"
 
@@ -568,7 +562,9 @@ async def test_get_deprecated_base_url_external(hass: HomeAssistant):
 
 async def test_get_internal_url_with_base_url_fallback(hass: HomeAssistant):
     """Test getting an internal instance URL with the deprecated base_url fallback."""
-    hass.config.api = Mock(use_ssl=False, port=8123, base_url=None)
+    hass.config.api = Mock(
+        use_ssl=False, port=8123, base_url=None, local_ip="192.168.123.123"
+    )
     assert hass.config.internal_url is None
     assert _async_get_internal_url(hass) == "http://192.168.123.123:8123"
 
