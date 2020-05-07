@@ -1,0 +1,7 @@
+{
+  "domain": "wilight",
+  "name": "WiLight",
+  "documentation": "https://www.home-assistant.io/integrations/wilight",
+  "requirements": ["wilight==0.0.50"],
+  "codeowners": ["@leofig-rj"]
+}
