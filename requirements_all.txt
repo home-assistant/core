@@ -800,7 +800,7 @@ lightwave==0.17
 limitlessled==1.1.3
 
 # homeassistant.components.limitlessled_rf
-limitlessled_rf==0.10
+limitlessled_rf==0.11
 
 # homeassistant.components.linode
 linode-api==4.1.9b1
@@ -821,7 +821,7 @@ logi_circle==0.2.2
 london-tube-status==0.2
 
 # homeassistant.components.limitlessled_rf
-lt8900_spi==2.3
+lt8900_spi==2.4
 
 # homeassistant.components.luftdaten
 luftdaten==0.6.3
