@@ -222,10 +222,6 @@ class SynoNasSecuritySensor(SynoNasSensor):
         """Return the state."""
         return getattr(self._api.security, self.sensor_type)
 
-    async def options_updated(self):
-        """Config entry options are updated, remove entity if option is disabled."""
-        await self.async_remove()
-
     async def async_remove(self):
         """Clean up when removing entity.
 
