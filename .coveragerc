@@ -509,7 +509,9 @@ omit =
     homeassistant/components/onewire/sensor.py
     homeassistant/components/onkyo/media_player.py
     homeassistant/components/onvif/__init__.py
+    homeassistant/components/onvif/base.py
     homeassistant/components/onvif/camera.py
+    homeassistant/components/onvif/device.py
     homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
     homeassistant/components/openexchangerates/sensor.py
@@ -677,7 +679,8 @@ omit =
     homeassistant/components/somfy/*
     homeassistant/components/somfy_mylink/*
     homeassistant/components/sonarr/sensor.py
-    homeassistant/components/songpal/*
+    homeassistant/components/songpal/__init__.py
+    homeassistant/components/songpal/media_player.py
     homeassistant/components/sonos/*
     homeassistant/components/sony_projector/switch.py
     homeassistant/components/spc/*
@@ -860,7 +863,6 @@ omit =
     homeassistant/components/zengge/light.py
     homeassistant/components/zeroconf/*
     homeassistant/components/zestimate/sensor.py
-    homeassistant/components/zha/__init__.py
     homeassistant/components/zha/api.py
     homeassistant/components/zha/core/channels/*
     homeassistant/components/zha/core/const.py

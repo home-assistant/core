@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_per_platform
 
 from .const import (
@@ -25,6 +26,7 @@ from .const import (
     DOMAIN,
     RTSP_TRANS_PROTOCOLS,
 )
+from .device import ONVIFDevice
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -61,8 +63,21 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up ONVIF from a config entry."""
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+
     if not entry.options:
         await async_populate_options(hass, entry)
+
+    device = ONVIFDevice(hass, entry)
+
+    if not await device.async_setup():
+        return False
+
+    if not device.available:
+        raise ConfigEntryNotReady()
+
+    hass.data[DOMAIN][entry.unique_id] = device
 
     for component in PLATFORMS:
         hass.async_create_task(

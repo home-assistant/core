@@ -1,20 +1,38 @@
 {
   "config": {
     "step": {
+      "user": {
+        "title": "Plex Media Server",
+        "description": "Continue to [plex.tv](https://plex.tv) to link a Plex server."
+      },
+      "user_advanced": {
+        "title": "Plex Media Server",
+        "data": {
+          "setup_method": "Setup method"
+        }
+      },
+      "manual_setup": {
+        "title": "Manual Plex Configuration",
+        "data": {
+          "host": "Host (Optional if Token provided)",
+          "port": "Port",
+          "ssl": "Use SSL",
+          "verify_ssl": "Verify SSL certificate",
+          "token": "Token (Optional)"
+        }
+      },
       "select_server": {
         "title": "Select Plex server",
         "description": "Multiple servers available, select one:",
         "data": { "server": "Server" }
-      },
-      "start_website_auth": {
-        "title": "Connect Plex server",
-        "description": "Continue to authorize at plex.tv."
       }
     },
     "error": {
-      "faulty_credentials": "Authorization failed",
-      "no_servers": "No servers linked to account",
-      "not_found": "Plex server not found"
+      "faulty_credentials": "Authorization failed, verify Token",
+      "host_or_token": "Must provide at least one of Host or Token",
+      "no_servers": "No servers linked to Plex account",
+      "not_found": "Plex server not found",
+      "ssl_error": "SSL certificate issue"
     },
     "abort": {
       "all_configured": "All linked servers already configured",

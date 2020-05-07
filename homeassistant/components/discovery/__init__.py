@@ -71,7 +71,6 @@ SERVICE_HANDLERS = {
     "openhome": ("media_player", "openhome"),
     "bose_soundtouch": ("media_player", "soundtouch"),
     "bluesound": ("media_player", "bluesound"),
-    "songpal": ("media_player", "songpal"),
     "kodi": ("media_player", "kodi"),
     "volumio": ("media_player", "volumio"),
     "lg_smart_device": ("media_player", "lg_soundbar"),
@@ -91,6 +90,7 @@ MIGRATED_SERVICE_HANDLERS = [
     "ikea_tradfri",
     "philips_hue",
     "sonos",
+    "songpal",
     SERVICE_WEMO,
 ]
 

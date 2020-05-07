@@ -124,26 +124,28 @@ class AsyncHandler:
         self.handler.set_name(name)  # type: ignore
 
 
+def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
+    """Log an exception with additional context."""
+    module = inspect.getmodule(inspect.stack()[1][0])
+    if module is not None:
+        module_name = module.__name__
+    else:
+        # If Python is unable to access the sources files, the call stack frame
+        # will be missing information, so let's guard.
+        # https://github.com/home-assistant/home-assistant/issues/24982
+        module_name = __name__
+
+    # Do not print the wrapper in the traceback
+    frames = len(inspect.trace()) - 1
+    exc_msg = traceback.format_exc(-frames)
+    friendly_msg = format_err(*args)
+    logging.getLogger(module_name).error("%s\n%s", friendly_msg, exc_msg)
+
+
 def catch_log_exception(
     func: Callable[..., Any], format_err: Callable[..., Any], *args: Any
 ) -> Callable[[], None]:
     """Decorate a callback to catch and log exceptions."""
-
-    def log_exception(*args: Any) -> None:
-        module = inspect.getmodule(inspect.stack()[1][0])
-        if module is not None:
-            module_name = module.__name__
-        else:
-            # If Python is unable to access the sources files, the call stack frame
-            # will be missing information, so let's guard.
-            # https://github.com/home-assistant/home-assistant/issues/24982
-            module_name = __name__
-
-        # Do not print the wrapper in the traceback
-        frames = len(inspect.trace()) - 1
-        exc_msg = traceback.format_exc(-frames)
-        friendly_msg = format_err(*args)
-        logging.getLogger(module_name).error("%s\n%s", friendly_msg, exc_msg)
 
     # Check for partials to properly determine if coroutine function
     check_func = func
@@ -159,7 +161,7 @@ def catch_log_exception(
             try:
                 await func(*args)
             except Exception:  # pylint: disable=broad-except
-                log_exception(*args)
+                log_exception(format_err, *args)
 
         wrapper_func = async_wrapper
     else:
@@ -170,7 +172,7 @@ def catch_log_exception(
             try:
                 func(*args)
             except Exception:  # pylint: disable=broad-except
-                log_exception(*args)
+                log_exception(format_err, *args)
 
         wrapper_func = wrapper
     return wrapper_func
@@ -186,20 +188,7 @@ def catch_log_coro_exception(
         try:
             return await target
         except Exception:  # pylint: disable=broad-except
-            module = inspect.getmodule(inspect.stack()[1][0])
-            if module is not None:
-                module_name = module.__name__
-            else:
-                # If Python is unable to access the sources files, the frame
-                # will be missing information, so let's guard.
-                # https://github.com/home-assistant/home-assistant/issues/24982
-                module_name = __name__
-
-            # Do not print the wrapper in the traceback
-            frames = len(inspect.trace()) - 1
-            exc_msg = traceback.format_exc(-frames)
-            friendly_msg = format_err(*args)
-            logging.getLogger(module_name).error("%s\n%s", friendly_msg, exc_msg)
+            log_exception(format_err, *args)
             return None
 
     return coro_wrapper()
