@@ -16,6 +16,7 @@ from homeassistant.util import get_local_ip
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
+    CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
     CONF_MAX_FPS,
@@ -24,6 +25,7 @@ from .const import (
     CONF_STREAM_ADDRESS,
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
+    CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
 )
@@ -33,7 +35,9 @@ _LOGGER = logging.getLogger(__name__)
 
 VIDEO_OUTPUT = (
     "-map {v_map} -an "
-    "-c:v libx264 -profile:v {v_profile} -tune zerolatency -pix_fmt yuv420p "
+    "-c:v {v_codec} "
+    "{v_profile}"
+    "-tune zerolatency -pix_fmt yuv420p "
     "-r {fps} "
     "-b:v {v_max_bitrate}k -bufsize {v_bufsize}k -maxrate {v_max_bitrate}k "
     "-payload_type 99 "
@@ -43,11 +47,10 @@ VIDEO_OUTPUT = (
     "localrtcpport={v_port}&pkt_size={v_pkt_size}"
 )
 
-AUDIO_ENCODER_OPUS = "libopus -application lowdelay"
-
 AUDIO_OUTPUT = (
     "-map {a_map} -vn "
     "-c:a {a_encoder} "
+    "{a_application}"
     "-ac 1 -ar {a_sample_rate}k "
     "-b:a {a_max_bitrate}k -bufsize {a_bufsize}k "
     "-payload_type 110 "
@@ -171,19 +174,31 @@ class Camera(HomeAccessory, PyhapCamera):
             return False
         if "-i " not in input_source:
             input_source = "-i " + input_source
+        video_profile = ""
+        if self.config[CONF_VIDEO_CODEC] != "copy":
+            video_profile = (
+                "-profile:v "
+                + VIDEO_PROFILE_NAMES[
+                    int.from_bytes(stream_config["v_profile_id"], byteorder="big")
+                ]
+                + " "
+            )
+        audio_application = ""
+        if self.config[CONF_AUDIO_CODEC] == "libopus":
+            audio_application = "-application lowdelay "
         output_vars = stream_config.copy()
         output_vars.update(
             {
-                "v_profile": VIDEO_PROFILE_NAMES[
-                    int.from_bytes(stream_config["v_profile_id"], byteorder="big")
-                ],
-                "v_bufsize": stream_config["v_max_bitrate"] * 2,
+                "v_profile": video_profile,
+                "v_bufsize": stream_config["v_max_bitrate"] * 4,
                 "v_map": self.config[CONF_VIDEO_MAP],
                 "v_pkt_size": self.config[CONF_VIDEO_PACKET_SIZE],
-                "a_bufsize": stream_config["a_max_bitrate"] * 2,
+                "v_codec": self.config[CONF_VIDEO_CODEC],
+                "a_bufsize": stream_config["a_max_bitrate"] * 4,
                 "a_map": self.config[CONF_AUDIO_MAP],
                 "a_pkt_size": self.config[CONF_AUDIO_PACKET_SIZE],
-                "a_encoder": AUDIO_ENCODER_OPUS,
+                "a_encoder": self.config[CONF_AUDIO_CODEC],
+                "a_application": audio_application,
             }
         )
         output = VIDEO_OUTPUT.format(**output_vars)
