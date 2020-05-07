@@ -76,9 +76,10 @@ async def test_properties(hass):
     """Test property values."""
     mocked_device = _create_mocked_device()
 
-    with _patch_media_player_device(mocked_device):
-        songpal_device = SongpalDevice(FRIENDLY_NAME, ENDPOINT)
-        await songpal_device.initialize()
+    songpal_device = SongpalDevice(FRIENDLY_NAME, mocked_device)
+    songpal_device.hass = hass
+    await songpal_device.async_update()
+    await hass.async_block_till_done()
 
     assert songpal_device.should_poll is False
     assert songpal_device.name == FRIENDLY_NAME
@@ -91,12 +92,6 @@ async def test_properties(hass):
         "sw_version": SW_VERSION,
         "model": MODEL,
     }
-    assert songpal_device.available is False
-
-    songpal_device.hass = hass
-    await songpal_device.async_update()
-    await hass.async_block_till_done()
-
     assert songpal_device.available is True
     assert songpal_device.source_list == ["title1", "title2"]
     assert songpal_device.state == STATE_ON
@@ -130,12 +125,10 @@ async def test_methods(hass):
     """Test method calls."""
     mocked_device = _create_mocked_device()
 
-    with _patch_media_player_device(mocked_device):
-        songpal_device = SongpalDevice(FRIENDLY_NAME, ENDPOINT)
-        await songpal_device.initialize()
-        songpal_device.hass = hass
-        await songpal_device.async_update()
-        await hass.async_block_till_done()
+    songpal_device = SongpalDevice(FRIENDLY_NAME, mocked_device)
+    songpal_device.hass = hass
+    await songpal_device.async_update()
+    await hass.async_block_till_done()
 
     await songpal_device.async_select_source("none")
     mocked_device.input1.activate.assert_not_called()
@@ -191,14 +184,12 @@ async def test_websocket_events(hass):
     """Test websocket events."""
     mocked_device = _create_mocked_device()
 
-    with _patch_media_player_device(mocked_device):
-        songpal_device = SongpalDevice(FRIENDLY_NAME, ENDPOINT)
-        await songpal_device.initialize()
-        songpal_device.hass = hass
-        songpal_device.async_write_ha_state = MagicMock()
-        songpal_device.async_update_ha_state = AsyncMock()
-        await songpal_device.async_update()
-        await hass.async_block_till_done()
+    songpal_device = SongpalDevice(FRIENDLY_NAME, mocked_device)
+    songpal_device.hass = hass
+    songpal_device.async_write_ha_state = MagicMock()
+    songpal_device.async_update_ha_state = AsyncMock()
+    await songpal_device.async_update()
+    await hass.async_block_till_done()
 
     mocked_device.listen_notifications.assert_called_once()
     assert mocked_device.on_notification.call_count == 4

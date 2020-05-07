@@ -65,14 +65,15 @@ async def async_setup_entry(
     name = config_entry.data[CONF_NAME]
     endpoint = config_entry.data[CONF_ENDPOINT]
 
-    device = SongpalDevice(name, endpoint)
+    device = Device(endpoint)
     try:
-        await device.initialize()
+        await device.get_supported_methods()
     except SongpalException as ex:
         _LOGGER.error("Unable to get methods from songpal: %s", ex)
         raise PlatformNotReady
 
-    async_add_entities([device], True)
+    songpal_device = SongpalDevice(name, device)
+    async_add_entities([songpal_device], True)
 
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
@@ -85,12 +86,11 @@ async def async_setup_entry(
 class SongpalDevice(MediaPlayerEntity):
     """Class representing a Songpal device."""
 
-    def __init__(self, name, endpoint, poll=False):
+    def __init__(self, name, device, poll=False):
         """Init."""
         self._name = name
-        self._endpoint = endpoint
         self._poll = poll
-        self.dev = Device(self._endpoint)
+        self.dev = device
         self._sysinfo = None
         self._model = None
 
@@ -111,13 +111,6 @@ class SongpalDevice(MediaPlayerEntity):
     def should_poll(self):
         """Return True if the device should be polled."""
         return self._poll
-
-    async def initialize(self):
-        """Initialize the device."""
-        await self.dev.get_supported_methods()
-        self._sysinfo = await self.dev.get_system_info()
-        interface_info = await self.dev.get_interface_information()
-        self._model = interface_info.modelName
 
     async def async_will_remove_from_hass(self):
         """Run when entity will be removed from hass."""
@@ -218,6 +211,13 @@ class SongpalDevice(MediaPlayerEntity):
     async def async_update(self):
         """Fetch updates from the device."""
         try:
+            if self._sysinfo is None:
+                self._sysinfo = await self.dev.get_system_info()
+
+            if self._model is None:
+                interface_info = await self.dev.get_interface_information()
+                self._model = interface_info.modelName
+
             volumes = await self.dev.get_volume_information()
             if not volumes:
                 _LOGGER.error("Got no volume controls, bailing out")
