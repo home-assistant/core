@@ -136,7 +136,7 @@ class PingData:
     async def async_ping(self):
         """Send ICMP echo request and return details if success."""
         pinger = await asyncio.create_subprocess_shell(
-            self._ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            " ".join(self._ping_cmd), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
         try:
             out = await pinger.communicate(timeout=self._count + PING_TIMEOUT)
