@@ -9,7 +9,6 @@ from pyhap.camera import (
     Camera as PyhapCamera,
 )
 from pyhap.const import CATEGORY_CAMERA
-from turbojpeg import TurboJPEG
 
 from homeassistant.components.camera.const import DOMAIN as DOMAIN_CAMERA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
@@ -30,11 +29,11 @@ from .const import (
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
 )
+from .img_util import scale_jpeg_camera_image
 from .util import CAMERA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_SCALING_FACTORS = [(7, 8), (3, 4), (5, 8), (1, 2), (3, 8), (1, 4), (1, 8)]
 
 VIDEO_OUTPUT = (
     "-map {v_map} -an "
@@ -250,40 +249,11 @@ class Camera(HomeAccessory, PyhapCamera):
 
     def get_snapshot(self, image_size):
         """Return a jpeg of a snapshot from the camera."""
-        image = asyncio.run_coroutine_threadsafe(
-            self.hass.components.camera.async_get_image(self.entity_id), self.hass.loop,
-        ).result()
-
-        if self._turbo_jpeg is None:
-            try:
-                self._turbo_jpeg = TurboJPEG()
-            except Exception:  # pylint: disable=broad-except
-                self._turbo_jpeg = 0
-                _LOGGER.exception(
-                    "libturbojpeg is not installed, cameras may impact HomeKit performance."
-                )
-
-        if not self._turbo_jpeg:
-            return image.content
-
-        (current_width, current_height, _, _) = self._turbo_jpeg.decode_header(
-            image.content
-        )
-
-        if (
-            current_width < image_size["image-width"]
-            or current_height < image_size["image-height"]
-        ):
-            return image.content
-
-        ratio = image_size["image-width"] / current_width
-
-        scaling_factor = SUPPORTED_SCALING_FACTORS[-1]
-        for supported_sf in SUPPORTED_SCALING_FACTORS:
-            if ratio >= (supported_sf[0] / supported_sf[1]):
-                scaling_factor = supported_sf
-                break
-
-        return self._turbo_jpeg.scale_with_quality(
-            image.content, scaling_factor=scaling_factor, quality=75,
+        return scale_jpeg_camera_image(
+            asyncio.run_coroutine_threadsafe(
+                self.hass.components.camera.async_get_image(self.entity_id),
+                self.hass.loop,
+            ).result(),
+            image_size["image-width"],
+            image_size["image-height"],
         )
