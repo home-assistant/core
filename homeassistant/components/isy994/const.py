@@ -1,7 +1,22 @@
 """Constants for the ISY994 Platform."""
 import logging
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_COLD,
+    DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_GAS,
+    DEVICE_CLASS_HEAT,
+    DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_PROBLEM,
+    DEVICE_CLASS_SAFETY,
+    DEVICE_CLASS_SMOKE,
+    DEVICE_CLASS_SOUND,
+    DEVICE_CLASS_VIBRATION,
+    DOMAIN as BINARY_SENSOR,
+)
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_FAN,
@@ -87,6 +102,7 @@ CONF_TLS_VER = "tls"
 DEFAULT_IGNORE_STRING = "{IGNORE ME}"
 DEFAULT_SENSOR_STRING = "sensor"
 DEFAULT_TLS_VERSION = 1.1
+DEFAULT_PROGRAM_STRING = "HA."
 
 KEY_ACTIONS = "actions"
 KEY_STATUS = "status"
@@ -104,33 +120,43 @@ ISY994_ISY = "isy"
 ISY994_NODES = "isy994_nodes"
 ISY994_PROGRAMS = "isy994_programs"
 
+FILTER_UOM = "uom"
+FILTER_STATES = "states"
+FILTER_NODE_DEF_ID = "node_def_id"
+FILTER_INSTEON_TYPE = "insteon_type"
+FILTER_ZWAVE_CAT = "zwave_cat"
+
 # Do not use the Home Assistant consts for the states here - we're matching exact API
 # responses, not using them for Home Assistant states
 NODE_FILTERS = {
     BINARY_SENSOR: {
-        "uom": [],
-        "states": [],
-        "node_def_id": [
+        FILTER_UOM: [],
+        FILTER_STATES: [],
+        FILTER_NODE_DEF_ID: [
             "BinaryAlarm",
             "BinaryAlarm_ADV",
             "BinaryControl",
             "BinaryControl_ADV",
             "EZIO2x4_Input",
             "EZRAIN_Input",
+            "KeypadButton",
+            "KeypadButton_ADV",
+            "RemoteLinc2",
+            "RemoteLinc2_ADV",
             "OnOffControl",
             "OnOffControl_ADV",
         ],
-        "insteon_type": [
+        FILTER_INSTEON_TYPE: [
             "7.0.",
             "7.13.",
             "16.",
         ],  # Does a startswith() match; include the dot
-        "zwave_cat": (["104", "112", "138"] + list(map(str, range(148, 180)))),
+        FILTER_ZWAVE_CAT: (["104", "112", "138"] + list(map(str, range(148, 180)))),
     },
     SENSOR: {
         # This is just a more-readable way of including MOST uoms between 1-100
         # (Remember that range() is non-inclusive of the stop value)
-        "uom": (
+        FILTER_UOM: (
             ["1"]
             + list(map(str, range(3, 11)))
             + list(map(str, range(12, 51)))
@@ -139,36 +165,36 @@ NODE_FILTERS = {
             + ["79"]
             + list(map(str, range(82, 97)))
         ),
-        "states": [],
-        "node_def_id": ["IMETER_SOLO", "EZIO2x4_Input_ADV"],
-        "insteon_type": ["9.0.", "9.7."],
-        "zwave_cat": (["118", "143"] + list(map(str, range(180, 185)))),
+        FILTER_STATES: [],
+        FILTER_NODE_DEF_ID: ["IMETER_SOLO", "EZIO2x4_Input_ADV"],
+        FILTER_INSTEON_TYPE: ["9.0.", "9.7."],
+        FILTER_ZWAVE_CAT: (["118", "143"] + list(map(str, range(180, 185)))),
     },
     LOCK: {
-        "uom": ["11"],
-        "states": ["locked", "unlocked"],
-        "node_def_id": ["DoorLock"],
-        "insteon_type": ["15.", "4.64."],
-        "zwave_cat": ["111"],
+        FILTER_UOM: ["11"],
+        FILTER_STATES: ["locked", "unlocked"],
+        FILTER_NODE_DEF_ID: ["DoorLock"],
+        FILTER_INSTEON_TYPE: ["15.", "4.64."],
+        FILTER_ZWAVE_CAT: ["111"],
     },
     FAN: {
-        "uom": [],
-        "states": ["off", "low", "med", "high"],
-        "node_def_id": ["FanLincMotor"],
-        "insteon_type": ["1.46."],
-        "zwave_cat": [],
+        FILTER_UOM: [],
+        FILTER_STATES: ["off", "low", "med", "high"],
+        FILTER_NODE_DEF_ID: ["FanLincMotor"],
+        FILTER_INSTEON_TYPE: ["1.46."],
+        FILTER_ZWAVE_CAT: [],
     },
     COVER: {
-        "uom": ["97"],
-        "states": ["open", "closed", "closing", "opening", "stopped"],
-        "node_def_id": [],
-        "insteon_type": [],
-        "zwave_cat": [],
+        FILTER_UOM: ["97"],
+        FILTER_STATES: ["open", "closed", "closing", "opening", "stopped"],
+        FILTER_NODE_DEF_ID: [],
+        FILTER_INSTEON_TYPE: [],
+        FILTER_ZWAVE_CAT: [],
     },
     LIGHT: {
-        "uom": ["51"],
-        "states": ["on", "off", "%"],
-        "node_def_id": [
+        FILTER_UOM: ["51"],
+        FILTER_STATES: ["on", "off", "%"],
+        FILTER_NODE_DEF_ID: [
             "BallastRelayLampSwitch",
             "BallastRelayLampSwitch_ADV",
             "DimmerLampOnly",
@@ -179,20 +205,18 @@ NODE_FILTERS = {
             "KeypadDimmer",
             "KeypadDimmer_ADV",
         ],
-        "insteon_type": ["1."],
-        "zwave_cat": ["109", "119"],
+        FILTER_INSTEON_TYPE: ["1."],
+        FILTER_ZWAVE_CAT: ["109", "119"],
     },
     SWITCH: {
-        "uom": ["2", "78"],
-        "states": ["on", "off"],
-        "node_def_id": [
+        FILTER_UOM: ["2", "78"],
+        FILTER_STATES: ["on", "off"],
+        FILTER_NODE_DEF_ID: [
             "AlertModuleArmed",
             "AlertModuleSiren",
             "AlertModuleSiren_ADV",
             "EZIO2x4_Output",
             "EZRAIN_Output",
-            "KeypadButton",
-            "KeypadButton_ADV",
             "KeypadRelay",
             "KeypadRelay_ADV",
             "RelayLampOnly",
@@ -201,14 +225,12 @@ NODE_FILTERS = {
             "RelayLampSwitch_ADV",
             "RelaySwitchOnlyPlusQuery",
             "RelaySwitchOnlyPlusQuery_ADV",
-            "RemoteLinc2",
-            "RemoteLinc2_ADV",
             "Siren",
             "Siren_ADV",
             "X10",
         ],
-        "insteon_type": ["0.16.", "2.", "7.3.255.", "9.10.", "9.11.", "113."],
-        "zwave_cat": ["121", "122", "123", "137", "141", "147"],
+        FILTER_INSTEON_TYPE: ["0.16.", "2.", "7.3.255.", "9.10.", "9.11.", "113."],
+        FILTER_ZWAVE_CAT: ["121", "122", "123", "137", "141", "147"],
     },
 }
 
@@ -501,24 +523,31 @@ UOM_TO_STATES = {
     },
 }
 
-ISY_BIN_SENS_DEVICE_TYPES = {
-    "moisture": ["16.8.", "16.13.", "16.14."],
-    "opening": ["16.9.", "16.6.", "16.7.", "16.2.", "16.17.", "16.20.", "16.21."],
-    "motion": ["16.1.", "16.4.", "16.5.", "16.3.", "16.22."],
-    "climate": ["5.11.", "5.10."],
+BINARY_SENSOR_DEVICE_TYPES_ISY = {
+    DEVICE_CLASS_MOISTURE: ["16.8.", "16.13.", "16.14."],
+    DEVICE_CLASS_OPENING: [
+        "16.9.",
+        "16.6.",
+        "16.7.",
+        "16.2.",
+        "16.17.",
+        "16.20.",
+        "16.21.",
+    ],
+    DEVICE_CLASS_MOTION: ["16.1.", "16.4.", "16.5.", "16.3.", "16.22."],
 }
 
-ZWAVE_BIN_SENS_DEVICE_TYPES = {
-    "safety": ["137", "172", "176", "177", "178"],
-    "smoke": ["138", "156"],
-    "problem": ["148", "149", "157", "158", "164", "174", "175"],
-    "gas": ["150", "151"],
-    "sound": ["153"],
-    "cold": ["152", "168"],
-    "heat": ["154", "166", "167"],
-    "moisture": ["159", "169"],
-    "door": ["160"],
-    "battery": ["162"],
-    "motion": ["155"],
-    "vibration": ["173"],
+BINARY_SENSOR_DEVICE_TYPES_ZWAVE = {
+    DEVICE_CLASS_SAFETY: ["137", "172", "176", "177", "178"],
+    DEVICE_CLASS_SMOKE: ["138", "156"],
+    DEVICE_CLASS_PROBLEM: ["148", "149", "157", "158", "164", "174", "175"],
+    DEVICE_CLASS_GAS: ["150", "151"],
+    DEVICE_CLASS_SOUND: ["153"],
+    DEVICE_CLASS_COLD: ["152", "168"],
+    DEVICE_CLASS_HEAT: ["154", "166", "167"],
+    DEVICE_CLASS_MOISTURE: ["159", "169"],
+    DEVICE_CLASS_DOOR: ["160"],
+    DEVICE_CLASS_BATTERY: ["162"],
+    DEVICE_CLASS_MOTION: ["155"],
+    DEVICE_CLASS_VIBRATION: ["173"],
 }
