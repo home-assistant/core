@@ -233,7 +233,7 @@ class BSBLanClimate(ClimateEntity):
         """Return device information about this BSBLan device."""
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self._info.device_identification)},
-            ATTR_NAME: self._info.controller_family,
+            ATTR_NAME: "BSBLan Device",
             ATTR_MANUFACTURER: "BSBLan",
             ATTR_MODEL: self._info.controller_variant,
         }
