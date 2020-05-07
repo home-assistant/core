@@ -81,7 +81,8 @@ class ZwaveDimmer(ZWaveDeviceEntity, LightEntity):
         """Flag supported features."""
         return self._supported_features
 
-    async def async_set_duration(self, **kwargs):
+    @callback
+    def async_set_duration(self, **kwargs):
         """Set the transition time for the brightness value.
 
         Zwave Dimming Duration values:
@@ -115,7 +116,7 @@ class ZwaveDimmer(ZWaveDeviceEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        await self.async_set_duration(**kwargs)
+        self.async_set_duration(**kwargs)
 
         # Zwave multilevel switches use a range of [0, 99] to control
         # brightness. Level 255 means to set it to previous value.
@@ -129,6 +130,6 @@ class ZwaveDimmer(ZWaveDeviceEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        await self.async_set_duration(**kwargs)
+        self.async_set_duration(**kwargs)
 
         self.values.primary.send_value(0)
