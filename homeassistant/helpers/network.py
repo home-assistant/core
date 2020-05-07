@@ -88,7 +88,7 @@ def _async_get_internal_url(
         if (
             (not require_ssl or internal_url.scheme == "https")
             and (not require_standard_port or internal_url.is_default_port())
-            and (allow_ip or not is_ip_address(internal_url.host))
+            and (allow_ip or not is_ip_address(str(internal_url.host)))
         ):
             return normalize_url(str(internal_url))
 
@@ -140,13 +140,13 @@ def _async_get_external_url(
     if hass.config.external_url:
         external_url = yarl.URL(hass.config.external_url)
         if (
-            (allow_ip or not is_ip_address(external_url.host))
+            (allow_ip or not is_ip_address(str(external_url.host)))
             and (not require_standard_port or external_url.is_default_port())
             and (
                 not require_ssl
                 or (
                     external_url.scheme == "https"
-                    and not is_ip_address(external_url.host)
+                    and not is_ip_address(str(external_url.host))
                 )
             )
         ):
@@ -201,7 +201,7 @@ def _async_get_deprecated_base_url(
     base_url = yarl.URL(hass.config.api.base_url)
     # Rules that apply to both internal and external
     if (
-        (allow_ip or not is_ip_address(base_url.host))
+        (allow_ip or not is_ip_address(str(base_url.host)))
         and (not require_ssl or base_url.scheme == "https")
         and (not require_standard_port or base_url.is_default_port())
     ):
@@ -209,7 +209,7 @@ def _async_get_deprecated_base_url(
         if internal and (
             str(base_url.host).endswith(".local")
             or (
-                is_ip_address(base_url.host)
+                is_ip_address(str(base_url.host))
                 and not is_loopback(ip_address(base_url.host))
                 and is_private(ip_address(base_url.host))
             )
@@ -221,7 +221,8 @@ def _async_get_deprecated_base_url(
             not internal
             and not str(base_url.host).endswith(".local")
             and not (
-                is_ip_address(base_url.host) and is_local(ip_address(base_url.host))
+                is_ip_address(str(base_url.host))
+                and is_local(ip_address(str(base_url.host)))
             )
         ):
             return normalize_url(str(base_url))

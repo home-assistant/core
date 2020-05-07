@@ -1,6 +1,6 @@
 """Network utilities."""
 from ipaddress import IPv4Address, IPv6Address, ip_address, ip_network
-from typing import Optional, Union
+from typing import Union
 
 import yarl
 
@@ -43,11 +43,8 @@ def is_local(address: Union[IPv4Address, IPv6Address]) -> bool:
     return is_loopback(address) or is_private(address)
 
 
-def is_ip_address(address: Optional[str]) -> bool:
+def is_ip_address(address: str) -> bool:
     """Check if a given string is an IP address."""
-    if address is None:
-        return False
-
     try:
         ip_address(address)
     except ValueError:
