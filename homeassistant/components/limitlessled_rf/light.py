@@ -91,8 +91,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def _debug_log(source, message):
-    # _LOGGER.debug("[" + source + "] " + message)
-    _LOGGER.info("[" + source + "] " + message)
+     _LOGGER.debug("[" + source + "] " + message)
 
 
 def _info_log(source, message):
