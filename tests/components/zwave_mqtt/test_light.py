@@ -4,9 +4,9 @@ from homeassistant.components.zwave_mqtt.light import byte_to_zwave_brightness
 from .common import setup_zwave
 
 
-async def test_light(hass, generic_data, light_msg, sent_messages):
+async def test_light(hass, light_data, light_msg, sent_messages):
     """Test setting up config entry."""
-    receive_message = await setup_zwave(hass, fixture=generic_data)
+    receive_message = await setup_zwave(hass, fixture=light_data)
 
     # Test loaded
     state = hass.states.get("light.led_bulb_6_multi_colour_level")
