@@ -122,6 +122,7 @@ def _init_radio_lt8900(radio_config):
             time.sleep(0.1)
             reset_gpio.on()
             time.sleep(0.1)
+
         reset_module_via_gpio = (lambda: reset_module_via_gpio_func(gpio_pin))
 
     # LT8900 compatible radio
@@ -180,7 +181,7 @@ def _find_bulb_by_event(remotes_zones, event):
     entity_id = event.data.get("entity_id")
     if entity_id is None:
         return None
-    entity_id = entity_id.split('.')
+    entity_id = entity_id.split(".")
     entity_type = entity_id[0]
     if entity_type != "light":
         return None
