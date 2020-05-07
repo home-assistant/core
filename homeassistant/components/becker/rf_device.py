@@ -25,7 +25,7 @@ class PyBecker:
 
     @classmethod
     def setup(cls, stick_path=None):
-        """Setup becker instance."""
+        """Create becker instance."""
 
         if not stick_path:
             stick_path = DEFAULT_CONF_USB_STICK_PATH
