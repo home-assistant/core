@@ -82,7 +82,7 @@ async def test_show_form_two_hubs(hass, mock_hub_discover):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "user"
 
     # Check we performed the discovery
     assert len(mock_hub_discover.mock_calls) == 1

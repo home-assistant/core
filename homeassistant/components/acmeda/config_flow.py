@@ -66,7 +66,7 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovered_hubs = {hub.id: hub for hub in hubs}
 
         return self.async_show_form(
-            step_id="init",
+            step_id="user",
             data_schema=vol.Schema(
                 {vol.Required("id"): vol.In({hub.id: hub.host for hub in hubs})}
             ),
