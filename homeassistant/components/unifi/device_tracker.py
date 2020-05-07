@@ -1,5 +1,8 @@
 """Track devices using UniFi controllers."""
+from datetime import timedelta
 import logging
+
+from aiounifi.api import SOURCE_DATA
 
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
@@ -243,6 +246,9 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         self.device = device
         super().__init__(controller)
 
+        self._is_connected = self.device.state == 1
+        self.cancel_scheduled_update = None
+
     @property
     def mac(self):
         """Return MAC of device."""
@@ -260,20 +266,34 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
 
     @callback
     def async_update_callback(self):
-        """Update the sensor's state."""
+        """Update the devices' state."""
+
+        @callback
+        def _no_heartbeat(now):
+            """No heart beat by device."""
+            self._is_connected = False
+            self.cancel_scheduled_update = None
+            self.async_write_ha_state()
+
+        if self.device.last_updated == SOURCE_DATA:
+            self._is_connected = True
+
+            if self.cancel_scheduled_update:
+                self.cancel_scheduled_update()
+
+            self.cancel_scheduled_update = async_track_point_in_utc_time(
+                self.hass,
+                _no_heartbeat,
+                dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 10),
+            )
+
         LOGGER.debug("Updating device %s (%s)", self.entity_id, self.device.mac)
         self.async_write_ha_state()
 
     @property
     def is_connected(self):
         """Return true if the device is connected to the network."""
-        if self.device.state == 1 and (
-            dt_util.utcnow() - dt_util.utc_from_timestamp(float(self.device.last_seen))
-            < self.controller.option_detection_time
-        ):
-            return True
-
-        return False
+        return self._is_connected
 
     @property
     def source_type(self):
@@ -333,3 +353,8 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.controller.option_track_devices:
             await self.async_remove()
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
