@@ -93,7 +93,6 @@ class Camera(HomeAccessory, PyhapCamera):
         """Initialize a Camera accessory object."""
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._camera = hass.data[DOMAIN_CAMERA]
-        self._turbo_jpeg = None
         config_w_defaults = CAMERA_SCHEMA(config)
 
         max_fps = config_w_defaults[CONF_MAX_FPS]
