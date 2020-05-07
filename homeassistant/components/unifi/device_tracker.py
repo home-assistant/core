@@ -245,12 +245,11 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             if not self.controller.option_track_wired_clients:
                 await self.async_remove()
 
-        else:
-            if (
-                self.controller.option_ssid_filter
-                and self.client.essid not in self.controller.option_ssid_filter
-            ):
-                await self.async_remove()
+        elif (
+            self.controller.option_ssid_filter
+            and self.client.essid not in self.controller.option_ssid_filter
+        ):
+            await self.async_remove()
 
 
 class UniFiDeviceTracker(UniFiBase, ScannerEntity):
