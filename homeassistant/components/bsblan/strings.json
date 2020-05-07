@@ -17,7 +17,6 @@
     },
     "abort": {
       "already_configured": "Device is already configured",
-      "connection_error": "Failed to connect to BSB-Lan device."
     }
   }
 }
