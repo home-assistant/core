@@ -103,8 +103,6 @@ class BSBLanClimate(ClimateEntity):
     @property
     def name(self) -> str:
         """Return the name of the entity."""
-        if not self._info.device_identification:
-            return self._info.controller_family
         return self._info.device_identification
 
     @property
