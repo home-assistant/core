@@ -259,4 +259,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
             except ConnectionFailure:
                 self._notify_callback()
                 raise
+            except WebSocketException:
+                self._remote = None
         return self._remote
