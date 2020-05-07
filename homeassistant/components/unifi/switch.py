@@ -241,11 +241,6 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
         if not self.controller.option_poe_clients:
             await self.async_remove()
 
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return True
-
 
 class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
     """Representation of a blockable client."""
