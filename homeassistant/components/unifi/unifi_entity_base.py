@@ -85,4 +85,4 @@ class UniFiBase(Entity):
     @property
     def should_poll(self) -> bool:
         """No polling needed."""
-        return True
+        return False

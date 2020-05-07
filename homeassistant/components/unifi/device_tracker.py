@@ -242,11 +242,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             ):
                 await self.async_remove()
 
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
 
 class UniFiDeviceTracker(UniFiBase, ScannerEntity):
     """Representation of a network infrastructure device."""
@@ -366,8 +361,3 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.controller.option_track_devices:
             await self.async_remove()
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
