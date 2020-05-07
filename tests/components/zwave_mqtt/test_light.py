@@ -14,7 +14,8 @@ async def test_light(hass, light_data, light_msg, sent_messages):
     assert state.state == "off"
 
     # Test turning on
-    new_brightness = 45
+    # Beware that due to rounding, a roundtrip conversion does not always work
+    new_brightness = 44
     await hass.services.async_call(
         "light",
         "turn_on",
@@ -34,7 +35,7 @@ async def test_light(hass, light_data, light_msg, sent_messages):
 
     # Feedback on state
     light_msg.decode()
-    light_msg.payload["Value"] = 99
+    light_msg.payload["Value"] = byte_to_zwave_brightness(new_brightness)
     light_msg.encode()
     receive_message(light_msg)
     await hass.async_block_till_done()
@@ -42,7 +43,7 @@ async def test_light(hass, light_data, light_msg, sent_messages):
     state = hass.states.get("light.led_bulb_6_multi_colour_level")
     assert state is not None
     assert state.state == "on"
-    assert state.attributes["brightness"] == 255
+    assert state.attributes["brightness"] == new_brightness
 
     # Test turning off
     await hass.services.async_call(
@@ -52,6 +53,74 @@ async def test_light(hass, light_data, light_msg, sent_messages):
         blocking=True,
     )
     assert len(sent_messages) == 2
-    msg = sent_messages[1]
+    msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": 0, "ValueIDKey": 659128337}
+
+    # Feedback on state
+    light_msg.decode()
+    light_msg.payload["Value"] = 0
+    light_msg.encode()
+    receive_message(light_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.led_bulb_6_multi_colour_level")
+    assert state is not None
+    assert state.state == "off"
+
+    # Test turn on without brightness
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": "light.led_bulb_6_multi_colour_level"},
+        blocking=True,
+    )
+    assert len(sent_messages) == 3
+    msg = sent_messages[-1]
+    assert msg["topic"] == "OpenZWave/1/command/setvalue/"
+    assert msg["payload"] == {
+        "Value": 255,
+        "ValueIDKey": 659128337,
+    }
+
+    # Feedback on state
+    light_msg.decode()
+    light_msg.payload["Value"] = byte_to_zwave_brightness(new_brightness)
+    light_msg.encode()
+    receive_message(light_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.led_bulb_6_multi_colour_level")
+    assert state is not None
+    assert state.state == "on"
+    assert state.attributes["brightness"] == new_brightness
+
+    # Test set brightness to 0
+    new_brightness = 0
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": "light.led_bulb_6_multi_colour_level",
+            "brightness": new_brightness,
+        },
+        blocking=True,
+    )
+    assert len(sent_messages) == 4
+    msg = sent_messages[-1]
+    assert msg["topic"] == "OpenZWave/1/command/setvalue/"
+    assert msg["payload"] == {
+        "Value": byte_to_zwave_brightness(new_brightness),
+        "ValueIDKey": 659128337,
+    }
+
+    # Feedback on state
+    light_msg.decode()
+    light_msg.payload["Value"] = byte_to_zwave_brightness(new_brightness)
+    light_msg.encode()
+    receive_message(light_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.led_bulb_6_multi_colour_level")
+    assert state is not None
+    assert state.state == "off"
