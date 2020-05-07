@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass, config):
     """Register the service."""
     data = hass.data[DOMAIN] = YouTubeData(hass)
-    await data.async_get_key()
+    await data.async_get_key(hass)
 
     async def async_search(service):
         """search service about audio"""
@@ -50,16 +50,16 @@ class YouTubeData:
         self.hass = hass
         self.yt_key = None
 
-    async def async_get_key(self):
+    async def async_get_key(self, hass):
         try:
-            json_ws_resp = aisCloud.key("ytsearch")
+            json_ws_resp = await aisCloud.async_key("ytsearch", hass)
             self.yt_key = json_ws_resp["key"]
         except:
             ais_global.G_OFFLINE_MODE = True
 
     async def async_get_new_key(self, old_key, query, prev_page_token, next_page_token):
         try:
-            json_ws_resp = aisCloud.new_key("ytsearch", old_key)
+            json_ws_resp = await aisCloud.async_new_key("ytsearch", old_key, self.hass)
             self.yt_key = json_ws_resp["key"]
         except Exception as e:
             _LOGGER.error("YouTube " + str(e))
@@ -146,7 +146,7 @@ class YouTubeData:
             for error in data["error"]["errors"]:
                 if error["reason"] == "quotaExceeded":
                     # get the new token and try again
-                    await self.get_new_key(
+                    await self.async_get_new_key(
                         self.yt_key, query, prev_page_token, next_page_token
                     )
                     return
