@@ -164,10 +164,14 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME].split("(", 1)[0].strip()
         )
 
+        mac = discovery_info[ssdp.ATTR_UPNP_SERIAL].upper()
         # Synology NAS can broadcast on multiple IP addresses, since they can be connected to multiple ethernets.
         # The serial of the NAS is actually its MAC address.
-        if self._mac_already_configured(discovery_info[ssdp.ATTR_UPNP_SERIAL].upper()):
+        if self._mac_already_configured(mac):
             return self.async_abort(reason="already_configured")
+
+        await self.async_set_unique_id(mac)
+        self._abort_if_unique_id_configured()
 
         self.discovered_conf = {
             CONF_NAME: friendly_name,
