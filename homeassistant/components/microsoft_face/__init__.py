@@ -98,8 +98,7 @@ async def async_setup(hass, config):
             entities[g_id] = MicrosoftFaceGroupEntity(hass, face, g_id, name)
             entities[g_id].async_write_ha_state()
         except HomeAssistantError as err:
-            msg = f"Can't create group '{g_id}' with error: {err}"
-            _LOGGER.error(msg)
+            _LOGGER.error("Can't create group '%s' with error: %s", g_id, err)
             raise
 
     hass.services.async_register(
@@ -117,8 +116,7 @@ async def async_setup(hass, config):
             entity = entities.pop(g_id)
             hass.states.async_remove(entity.entity_id, service.context)
         except HomeAssistantError as err:
-            msg = f"Can't delete group '{g_id}' with error: {err}"
-            _LOGGER.error(msg)
+            _LOGGER.error("Can't delete group '%s' with error: %s", g_id, err)
             raise
 
     hass.services.async_register(
@@ -132,8 +130,7 @@ async def async_setup(hass, config):
         try:
             await face.call_api("post", f"persongroups/{g_id}/train")
         except HomeAssistantError as err:
-            msg = f"Can't train group '{g_id}' with error: {err}"
-            _LOGGER.error(msg)
+            _LOGGER.error("Can't train group '%s' with error: %s", g_id, err)
             raise
 
     hass.services.async_register(
@@ -153,8 +150,7 @@ async def async_setup(hass, config):
             face.store[g_id][name] = user_data["personId"]
             entities[g_id].async_write_ha_state()
         except HomeAssistantError as err:
-            msg = f"Can't create person '{name}' with error: {err}"
-            _LOGGER.error(msg)
+            _LOGGER.error("Can't create person '%s' with error: %s", name, err)
             raise
 
     hass.services.async_register(
@@ -173,8 +169,7 @@ async def async_setup(hass, config):
             face.store[g_id].pop(name)
             entities[g_id].async_write_ha_state()
         except HomeAssistantError as err:
-            msg = f"Can't delete person '{p_id}' with error: {err}"
-            _LOGGER.error(msg)
+            _LOGGER.error("Can't delete person '%s' with error: %s", p_id, err)
             raise
 
     hass.services.async_register(
@@ -213,10 +208,9 @@ async def async_setup(hass, config):
                 binary=True,
             )
         except HomeAssistantError as err:
-            msg = "Can't add an image of the person '{}' with error: {}".format(
-                p_name, err
+            _LOGGER.error(
+                "Can't add an image of the person '%s' with error: %s", p_name, err
             )
-            _LOGGER.error(msg)
             raise
 
     hass.services.async_register(
@@ -348,13 +342,11 @@ class MicrosoftFace:
             raise HomeAssistantError(answer["error"]["message"])
 
         except aiohttp.ClientError as err:
-            msg = f"Can't connect to microsoft face api with error: {err}"
-            _LOGGER.error(msg)
+            _LOGGER.error("Can't connect to microsoft face api with error: %s", err)
             raise
 
         except asyncio.TimeoutError:
-            msg = f"Timeout from microsoft face api with '{response.url}'"
-            _LOGGER.warning(msg)
+            _LOGGER.warning("Timeout from microsoft face api with '%s'", response.url)
             raise
 
         raise HomeAssistantError("Network error on microsoft face api.")
