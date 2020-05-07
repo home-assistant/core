@@ -102,9 +102,15 @@ class IRobotEntity(Entity):
         """Register callback function."""
         self.vacuum.register_on_message_callback(self.on_message)
 
+    def new_state_filter(self, new_state):
+        """Filter the new state."""
+        raise NotImplementedError
+
     def on_message(self, json_data):
         """Update state on message change."""
-        self.schedule_update_ha_state()
+        state = json_data.get("state", {}).get("reported", {})
+        if self.new_state_filter(state):
+            self.schedule_update_ha_state()
 
 
 class IRobotVacuum(IRobotEntity, StateVacuumEntity):
@@ -212,6 +218,11 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
 
     def on_message(self, json_data):
         """Update state on message change."""
+        new_state = json_data.get("state", {}).get("reported", {})
+        if (
+            len(new_state) == 1 and "signal" in new_state
+        ):  # filter out wifi stat messages
+            return
         _LOGGER.debug("Got new state from the vacuum: %s", json_data)
         self.vacuum_state = roomba_reported_state(self.vacuum)
         self.schedule_update_ha_state()
