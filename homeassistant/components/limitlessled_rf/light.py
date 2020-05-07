@@ -108,20 +108,20 @@ def _init_radio_lt8900(radio_config):
     spi_dev = radio_config.get(CONF_RADIO_SPI_DEV, 0)
 
     reset_module_via_gpio = None
-    reset_gpio = None
     if gpio_pin is not None:
         # Need to keep this attached to drive the line high -- if the object disappears then
         # the GPIO port gets reconfigured as an input port
         # Note: broadcom pin numbers are used
         gpio_pin = int(gpio_pin)
-        reset_gpio = gpiozero.LED(gpio_pin)
-        reset_gpio.on()
-
-        def reset_module_via_gpio():
+	def reset_module_via_gpio_func(gpio_pin):
+            global reset_gpio
+            reset_gpio = None
+            reset_gpio = gpiozero.LED(gpio_pin)
             reset_gpio.off()
             time.sleep(0.1)
             reset_gpio.on()
             time.sleep(0.1)
+        reset_module_via_gpio = (lambda: reset_module_via_gpio_func(gpio_pin))
 
     # LT8900 compatible radio
     radio = lt8900_spi.Radio(
@@ -129,7 +129,6 @@ def _init_radio_lt8900(radio_config):
         spi_dev,
         config={
             "reset_command": reset_module_via_gpio,
-            "reset_command_gpio": reset_gpio,
             "use_software_tx_queue": True,
             "__DISABLED__debug_log_command": (
                 lambda message: _debug_log("LT8900", message)
