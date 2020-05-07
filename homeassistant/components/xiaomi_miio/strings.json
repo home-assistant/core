@@ -20,10 +20,12 @@
     },
     "error": {
       "connect_error": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_device_selected": "No device selected, please select one device."
+      "no_device_selected": "No device selected, please select one device.",
+      "no_host": "No IP adress specified, please configure one."
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "not_xiaomi_miio": "Not a Xiaomi Miio device."
     }
   }
 }
