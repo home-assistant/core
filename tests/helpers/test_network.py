@@ -119,7 +119,7 @@ async def test_get_url_internal_fallback(hass: HomeAssistant):
     assert hass.config.internal_url is None
 
     hass.config.api = Mock(
-        use_ssl=False, port=8123, base_url=None, local_ip="192.168.123.123"
+        use_ssl=False, port=8123, deprecated_base_url=None, local_ip="192.168.123.123"
     )
     assert _async_get_internal_url(hass) == "http://192.168.123.123:8123"
 
@@ -133,7 +133,7 @@ async def test_get_url_internal_fallback(hass: HomeAssistant):
         _async_get_internal_url(hass, require_ssl=True)
 
     hass.config.api = Mock(
-        use_ssl=False, port=80, base_url=None, local_ip="192.168.123.123"
+        use_ssl=False, port=80, deprecated_base_url=None, local_ip="192.168.123.123"
     )
     assert _async_get_internal_url(hass) == "http://192.168.123.123"
     assert (
@@ -147,7 +147,7 @@ async def test_get_url_internal_fallback(hass: HomeAssistant):
     with pytest.raises(NoURLAvailableError):
         _async_get_internal_url(hass, require_ssl=True)
 
-    hass.config.api = Mock(use_ssl=True, port=443, base_url=None)
+    hass.config.api = Mock(use_ssl=True, port=443, deprecated_base_url=None)
     with pytest.raises(NoURLAvailableError):
         _async_get_internal_url(hass)
 
@@ -161,7 +161,9 @@ async def test_get_url_internal_fallback(hass: HomeAssistant):
         _async_get_internal_url(hass, require_ssl=True)
 
     # Do no accept any local loopback address as fallback
-    hass.config.api = Mock(use_ssl=False, port=80, base_url=None, local_ip="127.0.0.1")
+    hass.config.api = Mock(
+        use_ssl=False, port=80, deprecated_base_url=None, local_ip="127.0.0.1"
+    )
     with pytest.raises(NoURLAvailableError):
         _async_get_internal_url(hass)
 
@@ -367,7 +369,7 @@ async def test_get_url(hass: HomeAssistant):
         async_get_url(hass)
 
     hass.config.api = Mock(
-        use_ssl=False, port=8123, base_url=None, local_ip="192.168.123.123"
+        use_ssl=False, port=8123, deprecated_base_url=None, local_ip="192.168.123.123"
     )
     assert async_get_url(hass) == "http://192.168.123.123:8123"
     assert async_get_url(hass, prefer_external=True) == "http://192.168.123.123:8123"
@@ -409,7 +411,7 @@ async def test_get_url(hass: HomeAssistant):
 async def test_get_deprecated_base_url_internal(hass: HomeAssistant):
     """Test getting an internal instance URL from the deprecated base_url."""
     # Test with SSL local URL
-    hass.config.api = Mock(base_url="https://example.local")
+    hass.config.api = Mock(deprecated_base_url="https://example.local")
     assert (
         _async_get_deprecated_base_url(hass, internal=True) == "https://example.local"
     )
@@ -427,7 +429,7 @@ async def test_get_deprecated_base_url_internal(hass: HomeAssistant):
     )
 
     # Test with no SSL, local IP URL
-    hass.config.api = Mock(base_url="http://10.10.10.10:8123")
+    hass.config.api = Mock(deprecated_base_url="http://10.10.10.10:8123")
     assert (
         _async_get_deprecated_base_url(hass, internal=True) == "http://10.10.10.10:8123"
     )
@@ -442,7 +444,7 @@ async def test_get_deprecated_base_url_internal(hass: HomeAssistant):
         _async_get_deprecated_base_url(hass, internal=True, require_standard_port=True)
 
     # Test with SSL, local IP URL
-    hass.config.api = Mock(base_url="https://10.10.10.10")
+    hass.config.api = Mock(deprecated_base_url="https://10.10.10.10")
     assert _async_get_deprecated_base_url(hass, internal=True) == "https://10.10.10.10"
     assert (
         _async_get_deprecated_base_url(hass, internal=True, require_ssl=True)
@@ -454,7 +456,7 @@ async def test_get_deprecated_base_url_internal(hass: HomeAssistant):
     )
 
     # Test external URL
-    hass.config.api = Mock(base_url="https://example.com")
+    hass.config.api = Mock(deprecated_base_url="https://example.com")
     with pytest.raises(NoURLAvailableError):
         _async_get_deprecated_base_url(hass, internal=True)
 
@@ -468,7 +470,7 @@ async def test_get_deprecated_base_url_internal(hass: HomeAssistant):
         _async_get_deprecated_base_url(hass, internal=True, allow_ip=False)
 
     # Test with loopback
-    hass.config.api = Mock(base_url="https://127.0.0.42")
+    hass.config.api = Mock(deprecated_base_url="https://127.0.0.42")
     with pytest.raises(NoURLAvailableError):
         assert _async_get_deprecated_base_url(hass, internal=True)
 
@@ -485,7 +487,7 @@ async def test_get_deprecated_base_url_internal(hass: HomeAssistant):
 async def test_get_deprecated_base_url_external(hass: HomeAssistant):
     """Test getting an external instance URL from the deprecated base_url."""
     # Test with SSL and external domain on standard port
-    hass.config.api = Mock(base_url="https://example.com:443/")
+    hass.config.api = Mock(deprecated_base_url="https://example.com:443/")
     assert _async_get_deprecated_base_url(hass) == "https://example.com"
     assert (
         _async_get_deprecated_base_url(hass, require_ssl=True) == "https://example.com"
@@ -496,7 +498,7 @@ async def test_get_deprecated_base_url_external(hass: HomeAssistant):
     )
 
     # Test without SSL and external domain on non-standard port
-    hass.config.api = Mock(base_url="http://example.com:8123/")
+    hass.config.api = Mock(deprecated_base_url="http://example.com:8123/")
     assert _async_get_deprecated_base_url(hass) == "http://example.com:8123"
 
     with pytest.raises(NoURLAvailableError):
@@ -506,7 +508,7 @@ async def test_get_deprecated_base_url_external(hass: HomeAssistant):
         _async_get_deprecated_base_url(hass, require_standard_port=True)
 
     # Test SSL on external IP
-    hass.config.api = Mock(base_url="https://1.1.1.1")
+    hass.config.api = Mock(deprecated_base_url="https://1.1.1.1")
     assert _async_get_deprecated_base_url(hass) == "https://1.1.1.1"
     assert _async_get_deprecated_base_url(hass, require_ssl=True) == "https://1.1.1.1"
     assert (
@@ -518,7 +520,7 @@ async def test_get_deprecated_base_url_external(hass: HomeAssistant):
         _async_get_deprecated_base_url(hass, allow_ip=False)
 
     # Test with private IP
-    hass.config.api = Mock(base_url="https://10.10.10.10")
+    hass.config.api = Mock(deprecated_base_url="https://10.10.10.10")
     with pytest.raises(NoURLAvailableError):
         assert _async_get_deprecated_base_url(hass)
 
@@ -532,7 +534,7 @@ async def test_get_deprecated_base_url_external(hass: HomeAssistant):
         _async_get_deprecated_base_url(hass, require_standard_port=True)
 
     # Test with local domain
-    hass.config.api = Mock(base_url="https://example.local")
+    hass.config.api = Mock(deprecated_base_url="https://example.local")
     with pytest.raises(NoURLAvailableError):
         assert _async_get_deprecated_base_url(hass)
 
@@ -546,7 +548,7 @@ async def test_get_deprecated_base_url_external(hass: HomeAssistant):
         _async_get_deprecated_base_url(hass, require_standard_port=True)
 
     # Test with loopback
-    hass.config.api = Mock(base_url="https://127.0.0.42")
+    hass.config.api = Mock(deprecated_base_url="https://127.0.0.42")
     with pytest.raises(NoURLAvailableError):
         assert _async_get_deprecated_base_url(hass)
 
@@ -563,7 +565,7 @@ async def test_get_deprecated_base_url_external(hass: HomeAssistant):
 async def test_get_internal_url_with_base_url_fallback(hass: HomeAssistant):
     """Test getting an internal instance URL with the deprecated base_url fallback."""
     hass.config.api = Mock(
-        use_ssl=False, port=8123, base_url=None, local_ip="192.168.123.123"
+        use_ssl=False, port=8123, deprecated_base_url=None, local_ip="192.168.123.123"
     )
     assert hass.config.internal_url is None
     assert _async_get_internal_url(hass) == "http://192.168.123.123:8123"
@@ -578,7 +580,9 @@ async def test_get_internal_url_with_base_url_fallback(hass: HomeAssistant):
         _async_get_internal_url(hass, require_ssl=True)
 
     # Add base_url
-    hass.config.api = Mock(use_ssl=False, port=8123, base_url="https://example.local")
+    hass.config.api = Mock(
+        use_ssl=False, port=8123, deprecated_base_url="https://example.local"
+    )
     assert _async_get_internal_url(hass) == "https://example.local"
     assert _async_get_internal_url(hass, allow_ip=False) == "https://example.local"
     assert (
@@ -626,14 +630,14 @@ async def test_get_internal_url_with_base_url_fallback(hass: HomeAssistant):
 
 async def test_get_external_url_with_base_url_fallback(hass: HomeAssistant):
     """Test getting an external instance URL with the deprecated base_url fallback."""
-    hass.config.api = Mock(use_ssl=False, port=8123, base_url=None)
+    hass.config.api = Mock(use_ssl=False, port=8123, deprecated_base_url=None)
     assert hass.config.internal_url is None
 
     with pytest.raises(NoURLAvailableError):
         _async_get_external_url(hass)
 
     # Test with SSL and external domain on standard port
-    hass.config.api = Mock(base_url="https://example.com:443/")
+    hass.config.api = Mock(deprecated_base_url="https://example.com:443/")
     assert _async_get_external_url(hass) == "https://example.com"
     assert _async_get_external_url(hass, allow_ip=False) == "https://example.com"
     assert _async_get_external_url(hass, require_ssl=True) == "https://example.com"
