@@ -6,6 +6,7 @@
         "data": {
           "name": "Name",
           "host": "Host",
+          "limit": "Limit",
           "username": "Username",
           "password": "Password",
           "port": "Port"

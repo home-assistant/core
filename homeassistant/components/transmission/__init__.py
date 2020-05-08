@@ -24,8 +24,10 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     ATTR_DELETE_DATA,
     ATTR_TORRENT,
+    CONF_LIMIT,
     DATA_UPDATED,
     DEFAULT_DELETE_DATA,
+    DEFAULT_LIMIT,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
@@ -57,6 +59,7 @@ TRANS_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_HOST): cv.string,
+            vol.Required(CONF_LIMIT, default=DEFAULT_LIMIT): int,
             vol.Optional(CONF_PASSWORD): cv.string,
             vol.Optional(CONF_USERNAME): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,

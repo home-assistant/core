@@ -13,13 +13,21 @@ from homeassistant.const import (
 from homeassistant.core import callback
 
 from . import get_api
-from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    CONF_LIMIT,
+    DEFAULT_LIMIT,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 from .errors import AuthenticationError, CannotConnect, UnknownError
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST): str,
+        vol.Required(CONF_LIMIT, default=DEFAULT_LIMIT): int,
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
@@ -72,6 +80,7 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Import from Transmission client config."""
+        import_config[CONF_LIMIT] = import_config[CONF_LIMIT]
         import_config[CONF_SCAN_INTERVAL] = import_config[CONF_SCAN_INTERVAL].seconds
         return await self.async_step_user(user_input=import_config)
 
