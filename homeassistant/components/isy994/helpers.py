@@ -1,7 +1,9 @@
 """Sorting helpers for ISY994 device classifications."""
-from collections import namedtuple
+from typing import Union
 
-from PyISY.Nodes import Group
+from pyisy.constants import PROTO_GROUP, PROTO_INSTEON, PROTO_PROGRAM, TAG_FOLDER
+from pyisy.nodes import Group, Node, Nodes
+from pyisy.programs import Programs
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.fan import DOMAIN as FAN
@@ -13,22 +15,17 @@ from .const import (
     _LOGGER,
     ISY994_NODES,
     ISY994_PROGRAMS,
-    ISY994_WEATHER,
     ISY_GROUP_PLATFORM,
     KEY_ACTIONS,
-    KEY_FOLDER,
-    KEY_MY_PROGRAMS,
     KEY_STATUS,
     NODE_FILTERS,
     SUPPORTED_PLATFORMS,
     SUPPORTED_PROGRAM_PLATFORMS,
 )
 
-WeatherNode = namedtuple("WeatherNode", ("status", "name", "uom"))
-
 
 def _check_for_node_def(
-    hass: HomeAssistantType, node, single_platform: str = None
+    hass: HomeAssistantType, node: Union[Group, Node], single_platform: str = None
 ) -> bool:
     """Check if the node matches the node_def_id for any platforms.
 
@@ -52,7 +49,7 @@ def _check_for_node_def(
 
 
 def _check_for_insteon_type(
-    hass: HomeAssistantType, node, single_platform: str = None
+    hass: HomeAssistantType, node: Union[Group, Node], single_platform: str = None
 ) -> bool:
     """Check if the node matches the Insteon type for any platforms.
 
@@ -60,6 +57,8 @@ def _check_for_insteon_type(
     works for Insteon device. "Node Server" (v5+) and Z-Wave and others will
     not have a type.
     """
+    if not hasattr(node, "protocol") or node.protocol != PROTO_INSTEON:
+        return False
     if not hasattr(node, "type") or node.type is None:
         # Node doesn't have a type (non-Insteon device most likely)
         return False
@@ -77,7 +76,7 @@ def _check_for_insteon_type(
             # Hacky special-case just for FanLinc, which has a light module
             # as one of its nodes. Note that this special-case is not necessary
             # on ISY 5.x firmware as it uses the superior NodeDefs method
-            if platform == FAN and int(node.nid[-1]) == 1:
+            if platform == FAN and int(node.address[-1]) == 1:
                 hass.data[ISY994_NODES][LIGHT].append(node)
                 return True
 
@@ -88,7 +87,10 @@ def _check_for_insteon_type(
 
 
 def _check_for_uom_id(
-    hass: HomeAssistantType, node, single_platform: str = None, uom_list: list = None
+    hass: HomeAssistantType,
+    node: Union[Group, Node],
+    single_platform: str = None,
+    uom_list: list = None,
 ) -> bool:
     """Check if a node's uom matches any of the platforms uom filter.
 
@@ -116,7 +118,10 @@ def _check_for_uom_id(
 
 
 def _check_for_states_in_uom(
-    hass: HomeAssistantType, node, single_platform: str = None, states_list: list = None
+    hass: HomeAssistantType,
+    node: Union[Group, Node],
+    single_platform: str = None,
+    states_list: list = None,
 ) -> bool:
     """Check if a list of uoms matches two possible filters.
 
@@ -168,7 +173,10 @@ def _is_sensor_a_binary_sensor(hass: HomeAssistantType, node) -> bool:
 
 
 def _categorize_nodes(
-    hass: HomeAssistantType, nodes, ignore_identifier: str, sensor_identifier: str
+    hass: HomeAssistantType,
+    nodes: Nodes,
+    ignore_identifier: str,
+    sensor_identifier: str,
 ) -> None:
     """Sort the nodes to their proper platforms."""
     for (path, node) in nodes:
@@ -177,7 +185,7 @@ def _categorize_nodes(
             # Don't import this node as a device at all
             continue
 
-        if isinstance(node, Group):
+        if hasattr(node, "protocol") and node.protocol == PROTO_GROUP:
             hass.data[ISY994_NODES][ISY_GROUP_PLATFORM].append(node)
             continue
 
@@ -203,47 +211,37 @@ def _categorize_nodes(
             continue
 
 
-def _categorize_programs(hass: HomeAssistantType, programs: dict) -> None:
+def _categorize_programs(hass: HomeAssistantType, programs: Programs) -> None:
     """Categorize the ISY994 programs."""
     for platform in SUPPORTED_PROGRAM_PLATFORMS:
-        try:
-            folder = programs[KEY_MY_PROGRAMS][f"HA.{platform}"]
-        except KeyError:
+        folder = programs.get_by_name(f"HA.{platform}")
+        if not folder:
             continue
+
         for dtype, _, node_id in folder.children:
-            if dtype != KEY_FOLDER:
+            if dtype != TAG_FOLDER:
                 continue
             entity_folder = folder[node_id]
-            try:
-                status = entity_folder[KEY_STATUS]
-                assert status.dtype == "program", "Not a program"
-                if platform != BINARY_SENSOR:
-                    actions = entity_folder[KEY_ACTIONS]
-                    assert actions.dtype == "program", "Not a program"
-                else:
-                    actions = None
-            except (AttributeError, KeyError, AssertionError):
+
+            actions = None
+            status = entity_folder.get_by_name(KEY_STATUS)
+            if not status or not status.protocol == PROTO_PROGRAM:
                 _LOGGER.warning(
-                    "Program entity '%s' not loaded due "
-                    "to invalid folder structure.",
+                    "Program %s entity '%s' not loaded, invalid/missing status program.",
+                    platform,
                     entity_folder.name,
                 )
                 continue
 
+            if platform != BINARY_SENSOR:
+                actions = entity_folder.get_by_name(KEY_ACTIONS)
+                if not actions or not actions.protocol == PROTO_PROGRAM:
+                    _LOGGER.warning(
+                        "Program %s entity '%s' not loaded, invalid/missing actions program.",
+                        platform,
+                        entity_folder.name,
+                    )
+                    continue
+
             entity = (entity_folder.name, status, actions)
             hass.data[ISY994_PROGRAMS][platform].append(entity)
-
-
-def _categorize_weather(hass: HomeAssistantType, climate) -> None:
-    """Categorize the ISY994 weather data."""
-    climate_attrs = dir(climate)
-    weather_nodes = [
-        WeatherNode(
-            getattr(climate, attr),
-            attr.replace("_", " "),
-            getattr(climate, f"{attr}_units"),
-        )
-        for attr in climate_attrs
-        if f"{attr}_units" in climate_attrs
-    ]
-    hass.data[ISY994_WEATHER].extend(weather_nodes)

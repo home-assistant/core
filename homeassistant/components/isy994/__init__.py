@@ -1,7 +1,7 @@
 """Support the ISY-994 controllers."""
 from urllib.parse import urlparse
 
-import PyISY
+from pyisy import ISY
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -16,7 +16,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     _LOGGER,
-    CONF_ENABLE_CLIMATE,
     CONF_IGNORE_STRING,
     CONF_SENSOR_STRING,
     CONF_TLS_VER,
@@ -25,11 +24,10 @@ from .const import (
     DOMAIN,
     ISY994_NODES,
     ISY994_PROGRAMS,
-    ISY994_WEATHER,
     SUPPORTED_PLATFORMS,
     SUPPORTED_PROGRAM_PLATFORMS,
 )
-from .helpers import _categorize_nodes, _categorize_programs, _categorize_weather
+from .helpers import _categorize_nodes, _categorize_programs
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -45,7 +43,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_SENSOR_STRING, default=DEFAULT_SENSOR_STRING
                 ): cv.string,
-                vol.Optional(CONF_ENABLE_CLIMATE, default=True): cv.boolean,
             }
         )
     },
@@ -59,8 +56,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for platform in SUPPORTED_PLATFORMS:
         hass.data[ISY994_NODES][platform] = []
 
-    hass.data[ISY994_WEATHER] = []
-
     hass.data[ISY994_PROGRAMS] = {}
     for platform in SUPPORTED_PROGRAM_PLATFORMS:
         hass.data[ISY994_PROGRAMS][platform] = []
@@ -73,7 +68,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     host = urlparse(isy_config.get(CONF_HOST))
     ignore_identifier = isy_config.get(CONF_IGNORE_STRING)
     sensor_identifier = isy_config.get(CONF_SENSOR_STRING)
-    enable_climate = isy_config.get(CONF_ENABLE_CLIMATE)
 
     if host.scheme == "http":
         https = False
@@ -86,7 +80,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     # Connect to ISY controller.
-    isy = PyISY.ISY(
+    isy = ISY(
         host.hostname,
         port,
         username=user,
@@ -100,9 +94,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     _categorize_nodes(hass, isy.nodes, ignore_identifier, sensor_identifier)
     _categorize_programs(hass, isy.programs)
-
-    if enable_climate and isy.configuration.get("Weather Information"):
-        _categorize_weather(hass, isy.climate)
 
     def stop(event: object) -> None:
         """Stop ISY auto updates."""
