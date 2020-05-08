@@ -115,12 +115,11 @@ class AgentCamera(MjpegCamera):
             ATTR_ATTRIBUTION: ATTRIBUTION,
             "editable": False,
             "enabled": self.is_on,
-            "connected": self.connected,
+            "streaming": self.is_streaming,
             "detected": self.is_detected,
             "alerted": self.is_alerted,
             "recording": self.is_recording,
             "has_ptz": self.device.has_ptz,
-            "motion_detection_enabled": self.device.detector_active,
             "alerts_enabled": self.device.alerts_active,
         }
 
@@ -145,14 +144,14 @@ class AgentCamera(MjpegCamera):
         return self.device.detected
 
     @property
+    def is_streaming(self) -> bool:
+        """Return whether the monitor is online."""
+        return self.device.connected
+
+    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.device.client.is_available
-
-    @property
-    def connected(self) -> bool:
-        """Return True if entity is connected."""
-        return self.device.connected
 
     @property
     def supported_features(self) -> int:
