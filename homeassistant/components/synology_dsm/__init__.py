@@ -1,5 +1,7 @@
 """The Synology DSM component."""
+import asyncio
 from datetime import timedelta
+from typing import Dict
 
 from synology_dsm import SynologyDSM
 from synology_dsm.api.core.security import SynoCoreSecurity
@@ -10,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
     CONF_DISKS,
     CONF_HOST,
     CONF_MAC,
@@ -20,18 +23,25 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
+    BASE_NAME,
     CONF_SECURITY,
     CONF_VOLUMES,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SECURITY,
     DEFAULT_SSL,
     DOMAIN,
+    PLATFORMS,
     SYNO_API,
+    TEMP_SENSORS_KEYS,
     UNDO_UPDATE_LISTENER,
 )
 
@@ -51,6 +61,8 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [CONFIG_SCHEMA]))},
     extra=vol.ALLOW_EXTRA,
 )
+
+ATTRIBUTION = "Data provided by Synology"
 
 
 async def async_setup(hass, config):
@@ -91,16 +103,24 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             entry, data={**entry.data, CONF_MAC: network.macs}
         )
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload Synology DSM sensors."""
-    unload_ok = await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+    )
 
     if unload_ok:
         entry_data = hass.data[DOMAIN][entry.unique_id]
@@ -177,3 +197,116 @@ class SynoApi:
         """Update function for updating API information."""
         await self._hass.async_add_executor_job(self.dsm.update)
         async_dispatcher_send(self._hass, self.signal_sensor_update)
+
+
+class SynologyDSMEntity(Entity):
+    """Representation of a Synology NAS entry."""
+
+    def __init__(
+        self,
+        api: SynoApi,
+        entity_type: str,
+        entity_info: Dict[str, str],
+        device_id: str = None,
+    ):
+        """Initialize the Synology DSM entity."""
+        self._api = api
+        self.entity_type = entity_type
+        self._name = BASE_NAME
+        self._unit = entity_info[1]
+        self._icon = entity_info[2]
+        self._unique_id = f"{self._api.information.serial}_{entity_type}"
+        self._device_id = device_id
+        self._device_name = None
+        self._device_manufacturer = None
+        self._device_model = None
+        self._device_firmware = None
+        self._device_type = None
+
+        if self._device_id:
+            if "volume" in entity_type:
+                volume = self._api.storage._get_volume(self._device_id)
+                # Volume does not have a name
+                self._device_name = volume["id"].replace("_", " ").capitalize()
+                self._device_manufacturer = "Synology"
+                self._device_model = self._api.information.model
+                self._device_firmware = self._api.information.version_string
+                self._device_type = (
+                    volume["device_type"]
+                    .replace("_", " ")
+                    .replace("raid", "RAID")
+                    .replace("shr", "SHR")
+                )
+            elif "disk" in entity_type:
+                disk = self._api.storage._get_disk(self._device_id)
+                self._device_name = disk["name"]
+                self._device_manufacturer = disk["vendor"]
+                self._device_model = disk["model"].strip()
+                self._device_firmware = disk["firm"]
+                self._device_type = disk["diskType"]
+            self._name += f" {self._device_name}"
+            self._unique_id += f"_{self._device_id}"
+
+        self._name += f" {entity_info[0]}"
+
+        self._unsub_dispatcher = None
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
+    def name(self) -> str:
+        """Return the name."""
+        return self._name
+
+    @property
+    def icon(self) -> str:
+        """Return the icon."""
+        return self._icon
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit the value is expressed in."""
+        if self.entity_type in TEMP_SENSORS_KEYS:
+            return self._api.temp_unit
+        return self._unit
+
+    @property
+    def device_state_attributes(self) -> Dict[str, any]:
+        """Return the state attributes."""
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
+
+    @property
+    def device_info(self) -> Dict[str, any]:
+        """Return the device information."""
+        return {
+            "identifiers": {(DOMAIN, self._api.information.serial)},
+            "name": "Synology NAS",
+            "manufacturer": "Synology",
+            "model": self._api.information.model,
+            "sw_version": self._api.information.version_string,
+        }
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
+
+    async def async_update(self):
+        """Only used by the generic entity update service."""
+        if not self.enabled:
+            return
+
+        await self._api.async_update()
+
+    async def async_added_to_hass(self):
+        """Register state update callback."""
+        self._unsub_dispatcher = async_dispatcher_connect(
+            self.hass, self._api.signal_sensor_update, self.async_write_ha_state
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Clean up after entity before removal."""
+        self._unsub_dispatcher()

@@ -1,9 +1,8 @@
-"""Support for Synology DSM Sensors."""
+"""Support for Synology DSM sensors."""
 from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_DISKS,
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
@@ -11,14 +10,11 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import display_temp
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import SynoApi
+from . import SynologyDSMEntity
 from .const import (
-    BASE_NAME,
     CONF_VOLUMES,
     DOMAIN,
     SECURITY_SENSORS,
@@ -28,8 +24,6 @@ from .const import (
     TEMP_SENSORS_KEYS,
     UTILISATION_SENSORS,
 )
-
-ATTRIBUTION = "Data provided by Synology"
 
 
 async def async_setup_entry(
@@ -73,96 +67,13 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class SynoNasSensor(Entity):
-    """Representation of a Synology NAS sensor."""
-
-    def __init__(
-        self,
-        api: SynoApi,
-        sensor_type: str,
-        sensor_info: Dict[str, str],
-        monitored_device: str = None,
-    ):
-        """Initialize the sensor."""
-        self._api = api
-        self.sensor_type = sensor_type
-        self._name = f"{BASE_NAME} {sensor_info[0]}"
-        self._unit = sensor_info[1]
-        self._icon = sensor_info[2]
-        self.monitored_device = monitored_device
-        self._unique_id = f"{self._api.information.serial}_{sensor_info[0]}"
-
-        if self.monitored_device:
-            self._name += f" ({self.monitored_device})"
-            self._unique_id += f"_{self.monitored_device}"
-
-        self._unsub_dispatcher = None
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit the value is expressed in."""
-        if self.sensor_type in TEMP_SENSORS_KEYS:
-            return self.hass.config.units.temperature_unit
-        return self._unit
-
-    @property
-    def device_state_attributes(self) -> Dict[str, any]:
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def device_info(self) -> Dict[str, any]:
-        """Return the device information."""
-        return {
-            "identifiers": {(DOMAIN, self._api.information.serial)},
-            "name": "Synology NAS",
-            "manufacturer": "Synology",
-            "model": self._api.information.model,
-            "sw_version": self._api.information.version_string,
-        }
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    async def async_update(self):
-        """Only used by the generic entity update service."""
-        await self._api.async_update()
-
-    async def async_added_to_hass(self):
-        """Register state update callback."""
-        self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, self._api.signal_sensor_update, self.async_write_ha_state
-        )
-
-    async def async_will_remove_from_hass(self):
-        """Clean up after entity before removal."""
-        self._unsub_dispatcher()
-
-
-class SynoNasUtilSensor(SynoNasSensor):
+class SynoNasUtilSensor(SynologyDSMEntity):
     """Representation a Synology Utilisation sensor."""
 
     @property
     def state(self):
         """Return the state."""
-        attr = getattr(self._api.utilisation, self.sensor_type)
+        attr = getattr(self._api.utilisation, self.entity_type)
         if callable(attr):
             attr = attr()
         if attr is None:
@@ -179,13 +90,13 @@ class SynoNasUtilSensor(SynoNasSensor):
         return attr
 
 
-class SynoNasStorageSensor(SynoNasSensor):
+class SynoNasStorageSensor(SynologyDSMEntity):
     """Representation a Synology Storage sensor."""
 
     @property
     def state(self):
         """Return the state."""
-        attr = getattr(self._api.storage, self.sensor_type)(self.monitored_device)
+        attr = getattr(self._api.storage, self.entity_type)(self._device_id)
         if attr is None:
             return None
 
@@ -203,24 +114,22 @@ class SynoNasStorageSensor(SynoNasSensor):
     def device_info(self) -> Dict[str, any]:
         """Return the device information."""
         return {
-            "identifiers": {
-                (DOMAIN, self._api.information.serial, self.monitored_device)
-            },
-            "name": f"Synology NAS ({self.monitored_device})",
-            "manufacturer": "Synology",
-            "model": self._api.information.model,
-            "sw_version": self._api.information.version_string,
+            "identifiers": {(DOMAIN, self._api.information.serial, self._device_id)},
+            "name": f"Synology NAS ({self._device_name} {self._device_type})",
+            "manufacturer": self._device_manufacturer,
+            "model": self._device_model,
+            "sw_version": self._device_firmware,
             "via_device": (DOMAIN, self._api.information.serial),
         }
 
 
-class SynoNasSecuritySensor(SynoNasSensor):
+class SynoNasSecuritySensor(SynologyDSMEntity):
     """Representation a Synology Security sensor."""
 
     @property
     def state(self):
         """Return the state."""
-        return getattr(self._api.security, self.sensor_type)
+        return getattr(self._api.security, self.entity_type)
 
     async def async_remove(self):
         """Clean up when removing entity.

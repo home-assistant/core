@@ -7,6 +7,8 @@ from homeassistant.const import (
 )
 
 DOMAIN = "synology_dsm"
+PLATFORMS = ["binary_sensor", "sensor"]
+
 BASE_NAME = "Synology"
 
 # Entry keys
@@ -44,7 +46,6 @@ UTILISATION_SENSORS = {
 }
 STORAGE_VOL_SENSORS = {
     "volume_status": ["Status", None, "mdi:checkbox-marked-circle-outline"],
-    "volume_device_type": ["Type", None, "mdi:harddisk"],
     "volume_size_total": ["Total Size", DATA_TERABYTES, "mdi:chart-pie"],
     "volume_size_used": ["Used Space", DATA_TERABYTES, "mdi:chart-pie"],
     "volume_percentage_used": ["Volume Used", UNIT_PERCENTAGE, "mdi:chart-pie"],
@@ -52,13 +53,13 @@ STORAGE_VOL_SENSORS = {
     "volume_disk_temp_max": ["Maximum Disk Temp", None, "mdi:thermometer"],
 }
 STORAGE_DISK_SENSORS = {
-    "disk_name": ["Name", None, "mdi:harddisk"],
-    "disk_device": ["Device", None, "mdi:dots-horizontal"],
     "disk_smart_status": ["Status (Smart)", None, "mdi:checkbox-marked-circle-outline"],
     "disk_status": ["Status", None, "mdi:checkbox-marked-circle-outline"],
+    "disk_temp": ["Temperature", None, "mdi:thermometer"],
+}
+STORAGE_DISK_BINARY_SENSORS = {
     "disk_exceed_bad_sector_thr": ["Exceeded Max Bad Sectors", None, "mdi:test-tube"],
     "disk_below_remain_life_thr": ["Below Min Remaining Life", None, "mdi:test-tube"],
-    "disk_temp": ["Temperature", None, "mdi:thermometer"],
 }
 
 SECURITY_SENSORS = {
