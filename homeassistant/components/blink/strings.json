@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Sign-in with Blink account",
+        "data": { "username": "Username", "password": "Password"}
+      },
+      "2fa": {
+        "title": "Two-factor authentication",
+        "data": { "2fa": "Two-factor code" },
+        "description": "Enter the pin sent to your email. If the email does not contain a pin, enter 'None'"
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": { "already_configured": "Device is already configured" }
+  }
+}

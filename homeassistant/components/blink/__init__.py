@@ -80,6 +80,21 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Blink via config entry."""
+    if DOMAIN not in hass.data:
+        username = entry.data[CONF_USERNAME]
+        password = entry.data[CONF_PASSWORD]
+        scan_interval = entry.data[CONF_SCAN_INTERVAL]
+        hass.data[DOMAIN] = blinkpy.Blink(
+            username=username,
+            password=password,
+            motion_interval=DEFAULT_OFFSET,
+            legacy_subdomain=False,
+            no_prompt=True,
+            device_id="Home Assistant",
+        )
+        hass.data[DOMAIN].refresh_rate = scan_interval
+        await hass.async_add_executor_job(hass.data[DOMAIN].start)
+
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
