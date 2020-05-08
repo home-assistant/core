@@ -21,7 +21,6 @@ GATEWAY_SETTINGS = {
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
     vol.Optional(CONF_NAME, default=DEFAULT_GATEWAY_NAME): str,
 }
-
 GATEWAY_CONFIG = vol.Schema({vol.Required(CONF_HOST): str}).extend(GATEWAY_SETTINGS)
 
 CONFIG_SCHEMA = vol.Schema({vol.Optional(CONF_GATEWAY, default=False): bool})
@@ -74,6 +73,11 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_gateway()
 
         # Discovered device is not yet supported
+        _LOGGER.debug(
+            "Not yet suported Xiaomi Miio device '%s' discovered with host %s",
+            name,
+            host,
+        )
         return self.async_abort(reason="not_xiaomi_miio")
 
     async def async_step_gateway(self, user_input=None):
