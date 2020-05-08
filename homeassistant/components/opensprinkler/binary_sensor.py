@@ -42,7 +42,7 @@ def _create_entities(hass: HomeAssistant, config: dict, discovery_info: dict):
                 f"{name} Rain Sensor 1", device, "moisture", "rain_sensor_1",
             )
         )
-        if hwv / 30 >= 1:
+        if hwv >= 30:
             entities.append(
                 DeviceBinarySensor(
                     f"{name} Rain Sensor 2", device, "moisture", "rain_sensor_2",

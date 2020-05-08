@@ -5,6 +5,7 @@ from typing import Callable
 
 import pytz
 
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
@@ -83,6 +84,11 @@ class LastRunSensor(OpensprinklerSensor, Entity):
         super().__init__()
 
     @property
+    def device_class(self):
+        """Return the device class."""
+        return DEVICE_CLASS_TIMESTAMP
+
+    @property
     def icon(self) -> str:
         """Return icon."""
         return "mdi:history"
@@ -96,7 +102,7 @@ class LastRunSensor(OpensprinklerSensor, Entity):
         """Retrieve latest state."""
         last_run = self._device.device.last_run
         utc_time = datetime.fromtimestamp(last_run, UTC_TZ)
-        return utc_time.strftime("%d/%m %H:%M")
+        return utc_time.isoformat()
 
 
 class RainDelayStopTimeSensor(OpensprinklerSensor, Entity):
@@ -107,6 +113,11 @@ class RainDelayStopTimeSensor(OpensprinklerSensor, Entity):
         self._name = name
         self._device = device
         super().__init__()
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return DEVICE_CLASS_TIMESTAMP
 
     @property
     def icon(self) -> str:
@@ -125,7 +136,7 @@ class RainDelayStopTimeSensor(OpensprinklerSensor, Entity):
             return "Not in effect"
 
         utc_time = datetime.fromtimestamp(rdst, UTC_TZ)
-        return utc_time.strftime("%d/%m %H:%M")
+        return utc_time.isoformat()
 
 
 class StationSensor(OpensprinklerSensor, Entity):
