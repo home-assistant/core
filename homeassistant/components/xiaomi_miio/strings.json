@@ -20,8 +20,7 @@
     },
     "error": {
       "connect_error": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_device_selected": "No device selected, please select one device.",
-      "no_host": "No IP adress specified, please configure one."
+      "no_device_selected": "No device selected, please select one device."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
