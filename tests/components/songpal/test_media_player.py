@@ -12,11 +12,8 @@ from songpal import (
 
 from homeassistant.components import media_player, songpal
 from homeassistant.components.songpal.const import SET_SOUND_SETTING
-from homeassistant.components.songpal.media_player import (
-    STATE_OFF,
-    STATE_ON,
-    SUPPORT_SONGPAL,
-)
+from homeassistant.components.songpal.media_player import SUPPORT_SONGPAL
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -251,10 +248,14 @@ async def test_disconnected(hass, caplog):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
+    async def _assert_state():
+        state = hass.states.get(ENTITY_ID)
+        assert state.state == STATE_UNAVAILABLE
+
     connect_change = MagicMock()
     connect_change.exception = "disconnected"
     type(mocked_device).get_supported_methods = AsyncMock(
-        side_effect=[SongpalException(""), SongpalException(""), None]
+        side_effect=[SongpalException(""), SongpalException(""), _assert_state]
     )
     notification_callbacks = mocked_device.notification_callbacks
     with patch("homeassistant.components.songpal.media_player.INITIAL_RETRY_DELAY", 0):
