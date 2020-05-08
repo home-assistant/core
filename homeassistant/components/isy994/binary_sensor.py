@@ -184,16 +184,17 @@ def _detect_device_type_and_class(node: Union[Group, Node]) -> (str, str):
                 in BINARY_SENSOR_DEVICE_TYPES_ZWAVE[device_class]
             ):
                 return device_class, device_type
-    else:  # Other devices (incl Insteon.)
-        for device_class in [*BINARY_SENSOR_DEVICE_TYPES_ISY]:
-            if any(
-                [
-                    device_type.startswith(t)
-                    for t in set(BINARY_SENSOR_DEVICE_TYPES_ISY[device_class])
-                ]
-            ):
-                return device_class, device_type
+        return (None, device_type)
 
+    # Other devices (incl Insteon.)
+    for device_class in [*BINARY_SENSOR_DEVICE_TYPES_ISY]:
+        if any(
+            [
+                device_type.startswith(t)
+                for t in set(BINARY_SENSOR_DEVICE_TYPES_ISY[device_class])
+            ]
+        ):
+            return device_class, device_type
     return (None, device_type)
 
 
@@ -230,7 +231,7 @@ class ISYBinarySensorEntity(ISYNodeEntity, BinarySensorEntity):
 
 
 class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
-    """Representation of an ISY994 binary sensor device.
+    """Representation of an ISY994 Insteon binary sensor device.
 
     Often times, a single device is represented by multiple nodes in the ISY,
     allowing for different nuances in how those devices report their on and
@@ -240,7 +241,7 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
 
     def __init__(self, node, force_device_class=None, unknown_state=None) -> None:
         """Initialize the ISY994 binary sensor device."""
-        super().__init__(node)
+        super().__init__(node, force_device_class)
         self._negative_node = None
         self._heartbeat_device = None
         if self._node.status == ISY_VALUE_UNKNOWN:
