@@ -290,9 +290,9 @@ class BayesianBinarySensor(BinarySensorEntity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
 
-        attr_observations_list = list(
+        attr_observations_list = [
             obs.copy() for obs in self.current_observations.values() if obs is not None
-        )
+        ]
 
         for item in attr_observations_list:
             item.pop("value_template", None)
