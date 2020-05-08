@@ -1,9 +1,11 @@
 """Class to hold all camera accessories."""
 import asyncio
 import logging
+import os
 
 from haffmpeg.core import HAFFmpeg
 from pyhap.camera import (
+    STREAMING_STATUS,
     VIDEO_CODEC_PARAM_LEVEL_TYPES,
     VIDEO_CODEC_PARAM_PROFILE_ID_TYPES,
     Camera as PyhapCamera,
@@ -84,6 +86,8 @@ RESOLUTIONS = [
 
 VIDEO_PROFILE_NAMES = ["baseline", "main", "high"]
 
+FFMPEG_EXEC_TIME = 4
+
 
 @TYPES.register("Camera")
 class Camera(HomeAccessory, PyhapCamera):
@@ -159,11 +163,14 @@ class Camera(HomeAccessory, PyhapCamera):
         if stream_source:
             return stream_source
         try:
-            return await camera.stream_source()
+            stream_source = await camera.stream_source()
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Failed to get stream source - this could be a transient error or your camera might not be compatible with HomeKit yet"
             )
+        if stream_source:
+            self.config[CONF_STREAM_SOURCE] = stream_source
+        return stream_source
 
     async def start_stream(self, session_info, stream_config):
         """Start a new stream with the given configuration."""
@@ -210,6 +217,7 @@ class Camera(HomeAccessory, PyhapCamera):
             output = output + " " + AUDIO_OUTPUT.format(**output_vars)
         _LOGGER.debug("FFmpeg output settings: %s", output)
         stream = HAFFmpeg(self._ffmpeg.binary, loop=self.driver.loop)
+        self.streaming_status = STREAMING_STATUS["STREAMING"]
         opened = await stream.open(
             cmd=[], input_source=input_source, output=output, stdout_pipe=False
         )
@@ -222,6 +230,27 @@ class Camera(HomeAccessory, PyhapCamera):
             session_info["id"],
             stream.process.pid,
         )
+
+        if not await self._ensure_ffmpeg_stream_started(
+            session_info["id"], stream.process.pid
+        ):
+            return False
+
+        return True
+
+    async def _ensure_ffmpeg_stream_started(self, session_id, pid):
+        """Check to make sure ffmpeg did not terminate right away."""
+        await asyncio.sleep(FFMPEG_EXEC_TIME)
+        try:
+            os.kill(pid, 0)
+        except OSError:
+            _LOGGER.info(
+                "[%s] Streaming process terminated soon after starting - PID %d",
+                session_id,
+                pid,
+            )
+            self.streaming_status = STREAMING_STATUS["AVAILABLE"]
+            return False
         return True
 
     async def stop_stream(self, session_info):
