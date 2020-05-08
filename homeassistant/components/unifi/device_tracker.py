@@ -136,12 +136,12 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         self.schedule_update = False
         self.cancel_scheduled_update = None
         self._is_connected = False
-        if self.client.last_seen:
+        if client.last_seen:
             self._is_connected = (
-                self.is_wired == self.client.is_wired
+                self.is_wired == client.is_wired
                 and dt_util.utcnow()
-                - dt_util.utc_from_timestamp(float(self.client.last_seen))
-                < self.controller.option_detection_time
+                - dt_util.utc_from_timestamp(float(client.last_seen))
+                < controller.option_detection_time
             )
             if self._is_connected:
                 self.schedule_update = True
@@ -260,25 +260,18 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
 
     def __init__(self, device, controller):
         """Set up tracked device."""
-        self.device = device
-        super().__init__(controller)
+        super().__init__(device, controller)
 
-        self._is_connected = self.device.state == 1
+        self._is_connected = device.state == 1
         self.cancel_scheduled_update = None
 
     @property
-    def mac(self):
-        """Return MAC of device."""
-        return self.device.mac
-
-    async def async_added_to_hass(self):
-        """Subscribe to device events."""
-        await super().async_added_to_hass()
-        self.device.register_callback(self.async_update_callback)
+    def device(self):
+        """Wrap item."""
+        return self._item
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
-        self.device.remove_callback(self.async_update_callback)
         if self.cancel_scheduled_update:
             self.cancel_scheduled_update()
         await super().async_will_remove_from_hass()
