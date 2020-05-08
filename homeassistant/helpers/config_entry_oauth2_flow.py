@@ -21,6 +21,7 @@ from yarl import URL
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.network import async_get_url
 
 from .aiohttp_client import async_get_clientsession
 
@@ -117,7 +118,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     @property
     def redirect_uri(self) -> str:
         """Return the redirect uri."""
-        return f"{self.hass.config.api.base_url}{AUTH_CALLBACK_PATH}"  # type: ignore
+        return f"{async_get_url(self.hass)}{AUTH_CALLBACK_PATH}"
 
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
