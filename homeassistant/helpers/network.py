@@ -4,7 +4,7 @@ from typing import cast
 
 import yarl
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.util.network import (
@@ -24,8 +24,7 @@ class NoURLAvailableError(HomeAssistantError):
 
 
 @bind_hass
-@callback
-def async_get_url(
+def get_url(
     hass: HomeAssistant,
     *,
     require_ssl: bool = False,
@@ -47,7 +46,7 @@ def async_get_url(
 
         if allow_internal and url_type == TYPE_URL_INTERNAL:
             try:
-                return _async_get_internal_url(
+                return _get_internal_url(
                     hass,
                     allow_ip=allow_ip,
                     require_ssl=require_ssl,
@@ -58,7 +57,7 @@ def async_get_url(
 
         if allow_external and url_type == TYPE_URL_EXTERNAL:
             try:
-                return _async_get_external_url(
+                return _get_external_url(
                     hass,
                     allow_cloud=allow_cloud,
                     allow_ip=allow_ip,
@@ -74,8 +73,7 @@ def async_get_url(
 
 
 @bind_hass
-@callback
-def _async_get_internal_url(
+def _get_internal_url(
     hass: HomeAssistant,
     *,
     allow_ip: bool = True,
@@ -94,7 +92,7 @@ def _async_get_internal_url(
 
     # Fallback to old base_url
     try:
-        return _async_get_deprecated_base_url(
+        return _get_deprecated_base_url(
             hass,
             internal=True,
             allow_ip=allow_ip,
@@ -120,8 +118,7 @@ def _async_get_internal_url(
 
 
 @bind_hass
-@callback
-def _async_get_external_url(
+def _get_external_url(
     hass: HomeAssistant,
     *,
     allow_cloud: bool = True,
@@ -133,7 +130,7 @@ def _async_get_external_url(
     """Get external URL of this instance."""
     if prefer_cloud and allow_cloud:
         try:
-            return _async_get_cloud_url(hass)
+            return _get_cloud_url(hass)
         except NoURLAvailableError:
             pass
 
@@ -153,7 +150,7 @@ def _async_get_external_url(
             return normalize_url(str(external_url))
 
     try:
-        return _async_get_deprecated_base_url(
+        return _get_deprecated_base_url(
             hass,
             allow_ip=allow_ip,
             require_ssl=require_ssl,
@@ -164,7 +161,7 @@ def _async_get_external_url(
 
     if allow_cloud:
         try:
-            return _async_get_cloud_url(hass)
+            return _get_cloud_url(hass)
         except NoURLAvailableError:
             pass
 
@@ -172,8 +169,7 @@ def _async_get_external_url(
 
 
 @bind_hass
-@callback
-def _async_get_cloud_url(hass: HomeAssistant) -> str:
+def _get_cloud_url(hass: HomeAssistant) -> str:
     """Get external Home Assistant Cloud URL of this instance."""
     if "cloud" in hass.config.components:
         try:
@@ -185,8 +181,7 @@ def _async_get_cloud_url(hass: HomeAssistant) -> str:
 
 
 @bind_hass
-@callback
-def _async_get_deprecated_base_url(
+def _get_deprecated_base_url(
     hass: HomeAssistant,
     *,
     internal: bool = False,

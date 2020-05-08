@@ -22,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.network import NoURLAvailableError, async_get_url
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,12 +73,12 @@ def setup(hass, config):
     }
 
     try:
-        params["external_url"] = async_get_url(hass, allow_internal=False)
+        params["external_url"] = get_url(hass, allow_internal=False)
     except NoURLAvailableError:
         pass
 
     try:
-        params["internal_url"] = async_get_url(hass, allow_external=False)
+        params["internal_url"] = get_url(hass, allow_external=False)
     except NoURLAvailableError:
         pass
 

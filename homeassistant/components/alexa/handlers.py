@@ -1535,7 +1535,7 @@ async def async_api_initialize_camera_stream(hass, config, directive, context):
     camera_image = hass.states.get(entity.entity_id).attributes["entity_picture"]
 
     try:
-        external_url = network.async_get_url(
+        external_url = network.get_url(
             hass,
             allow_internal=False,
             allow_ip=False,
