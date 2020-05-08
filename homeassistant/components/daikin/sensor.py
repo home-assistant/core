@@ -1,11 +1,26 @@
 """Support for Daikin AC sensors."""
 import logging
 
-from homeassistant.const import CONF_ICON, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_ICON,
+    CONF_NAME,
+    CONF_TYPE,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 from homeassistant.helpers.entity import Entity
 
-from . import DOMAIN as DAIKIN_DOMAIN
-from .const import ATTR_INSIDE_TEMPERATURE, ATTR_OUTSIDE_TEMPERATURE, SENSOR_TYPES
+from . import DOMAIN as DAIKIN_DOMAIN, DaikinApi
+from .const import (
+    ATTR_COOL_ENERGY,
+    ATTR_HEAT_ENERGY,
+    ATTR_INSIDE_TEMPERATURE,
+    ATTR_OUTSIDE_TEMPERATURE,
+    ATTR_TOTAL_POWER,
+    SENSOR_TYPE_POWER,
+    SENSOR_TYPE_TEMPERATURE,
+    SENSOR_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,13 +39,26 @@ async def async_setup_entry(hass, entry, async_add_entities):
     sensors = [ATTR_INSIDE_TEMPERATURE]
     if daikin_api.device.support_outside_temperature:
         sensors.append(ATTR_OUTSIDE_TEMPERATURE)
-    async_add_entities([DaikinClimateSensor(daikin_api, sensor) for sensor in sensors])
+    if daikin_api.device.support_energy_consumption:
+        sensors.append(ATTR_TOTAL_POWER)
+        sensors.append(ATTR_COOL_ENERGY)
+        sensors.append(ATTR_HEAT_ENERGY)
+    async_add_entities([DaikinSensor.factory(daikin_api, sensor) for sensor in sensors])
 
 
-class DaikinClimateSensor(Entity):
+class DaikinSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, api, monitored_state) -> None:
+    @staticmethod
+    def factory(api: DaikinApi, monitored_state: str):
+        """Initialize any DaikinSensor."""
+        cls = {
+            SENSOR_TYPE_TEMPERATURE: DaikinClimateSensor,
+            SENSOR_TYPE_POWER: DaikinPowerSensor,
+        }[SENSOR_TYPES[monitored_state][CONF_TYPE]]
+        return cls(api, monitored_state)
+
+    def __init__(self, api: DaikinApi, monitored_state: str) -> None:
         """Initialize the sensor."""
         self._api = api
         self._sensor = SENSOR_TYPES[monitored_state]
@@ -43,11 +71,6 @@ class DaikinClimateSensor(Entity):
         return f"{self._api.device.mac}-{self._device_attribute}"
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._sensor[CONF_ICON]
-
-    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
@@ -55,16 +78,22 @@ class DaikinClimateSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._device_attribute == ATTR_INSIDE_TEMPERATURE:
-            return self._api.device.inside_temperature
-        if self._device_attribute == ATTR_OUTSIDE_TEMPERATURE:
-            return self._api.device.outside_temperature
-        return None
+        raise NotImplementedError
+
+    @property
+    def device_class(self):
+        """Return the class of this device."""
+        return self._sensor.get(CONF_DEVICE_CLASS)
+
+    @property
+    def icon(self):
+        """Return the icon of this device."""
+        return self._sensor.get(CONF_ICON)
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        return self._sensor[CONF_UNIT_OF_MEASUREMENT]
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -74,3 +103,31 @@ class DaikinClimateSensor(Entity):
     def device_info(self):
         """Return a device description for device registry."""
         return self._api.device_info
+
+
+class DaikinClimateSensor(DaikinSensor):
+    """Representation of a Climate Sensor."""
+
+    @property
+    def state(self):
+        """Return the internal state of the sensor."""
+        if self._device_attribute == ATTR_INSIDE_TEMPERATURE:
+            return self._api.device.inside_temperature
+        if self._device_attribute == ATTR_OUTSIDE_TEMPERATURE:
+            return self._api.device.outside_temperature
+        return None
+
+
+class DaikinPowerSensor(DaikinSensor):
+    """Representation of a power/energy consumption sensor."""
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        if self._device_attribute == ATTR_TOTAL_POWER:
+            return self._api.device.current_total_power_consumption
+        if self._device_attribute == ATTR_COOL_ENERGY:
+            return self._api.device.last_hour_cool_power_consumption
+        if self._device_attribute == ATTR_HEAT_ENERGY:
+            return self._api.device.last_hour_heat_power_consumption
+        return None
