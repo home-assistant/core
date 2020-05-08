@@ -11,7 +11,7 @@ ATTR_VIDEO_CLIP = "video"
 ATTR_IMAGE = "image"
 
 
-async def asaync_setup_entry(hass, config, async_add_entities):
+async def async_setup_entry(hass, config, async_add_entities):
     """Set up a Blink Camera."""
     data = hass.data[DOMAIN]
     devs = []
