@@ -2,16 +2,16 @@
   "title": "Mill",
   "config": {
     "abort": {
-      "already_configured": "The Mill account is already configured."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
-      "connection_error": "Error connecting to Mill"
+      "connection_error": "[%key:common::config_flow::abort::cannot_connect%]"
     },
     "step": {
       "user": {
         "data": {
-          "username": "Username",
-          "password": "Password"
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "description": "Connect to Mill",
         "title": "Mill"
