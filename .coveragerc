@@ -147,6 +147,9 @@ omit =
     homeassistant/components/denon/media_player.py
     homeassistant/components/denonavr/media_player.py
     homeassistant/components/deutsche_bahn/sensor.py
+    homeassistant/components/devolo_home_control/__init__.py
+    homeassistant/components/devolo_home_control/const.py
+    homeassistant/components/devolo_home_control/switch.py
     homeassistant/components/dht/sensor.py
     homeassistant/components/digital_ocean/*
     homeassistant/components/digitalloggers/switch.py
