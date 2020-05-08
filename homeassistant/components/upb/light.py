@@ -73,7 +73,7 @@ class UpbLight(UpbAttachedEntity, Light):
         """Turn on the light."""
         flash = kwargs.get(ATTR_FLASH)
         if flash:
-            self.light_blink(0.5 if flash == "short" else 1.5)
+            self.async_light_blink(0.5 if flash == "short" else 1.5)
         else:
             rate = kwargs.get(ATTR_TRANSITION, -1)
             brightness = kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55
