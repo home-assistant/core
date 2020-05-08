@@ -24,11 +24,6 @@ class UniFiClient(UniFiBase):
         return self._item
 
     @property
-    def mac(self):
-        """Return MAC of client."""
-        return self.client.mac
-
-    @property
     def is_wired(self):
         """Return if the client is wired.
 

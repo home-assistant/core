@@ -270,11 +270,6 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         """Wrap item."""
         return self._item
 
-    @property
-    def mac(self):
-        """Return MAC of device."""
-        return self.device.mac
-
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         if self.cancel_scheduled_update:
