@@ -2,14 +2,11 @@
 import logging
 
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_NAME,
     CONF_TYPE,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_KILO_WATT,
-    TEMP_CELSIUS,
+    CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -74,11 +71,6 @@ class DaikinSensor(Entity):
         return f"{self._api.device.mac}-{self._device_attribute}"
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._sensor[CONF_ICON]
-
-    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
@@ -91,12 +83,17 @@ class DaikinSensor(Entity):
     @property
     def device_class(self):
         """Return the class of this device."""
-        raise NotImplementedError
+        return self._sensor.get(CONF_DEVICE_CLASS)
+
+    @property
+    def icon(self):
+        """Return the icon of this device."""
+        return self._sensor.get(CONF_ICON)
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        raise NotImplementedError
+        return self._sensor[CONF_UNIT_OF_MEASUREMENT]
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -112,16 +109,6 @@ class DaikinClimateSensor(DaikinSensor):
     """Representation of a Climate Sensor."""
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return DEVICE_CLASS_TEMPERATURE
-
-    @property
     def state(self):
         """Return the internal state of the sensor."""
         if self._device_attribute == ATTR_INSIDE_TEMPERATURE:
@@ -133,20 +120,6 @@ class DaikinClimateSensor(DaikinSensor):
 
 class DaikinPowerSensor(DaikinSensor):
     """Representation of a power/energy consumption sensor."""
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        if self._device_attribute == ATTR_TOTAL_POWER:
-            return POWER_KILO_WATT
-        if self._device_attribute in (ATTR_COOL_ENERGY, ATTR_HEAT_ENERGY):
-            return ENERGY_KILO_WATT_HOUR
-        return None
-
-    @property
-    def device_class(self):
-        """Return the class of this device."""
-        return DEVICE_CLASS_POWER
 
     @property
     def state(self):
