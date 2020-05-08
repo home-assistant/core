@@ -11,7 +11,7 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST,
     HTTP_UNAUTHORIZED,
 )
-from homeassistant.helpers.network import async_get_url
+from homeassistant.helpers.network import get_url
 
 from . import (
     CONF_ALLOWED_CHAT_IDS,
@@ -34,7 +34,7 @@ async def async_setup_platform(hass, config):
 
     current_status = await hass.async_add_job(bot.getWebhookInfo)
     base_url = config.get(
-        CONF_URL, async_get_url(hass, require_ssl=True, allow_internal=False)
+        CONF_URL, get_url(hass, require_ssl=True, allow_internal=False)
     )
 
     # Some logging of Bot current status:
