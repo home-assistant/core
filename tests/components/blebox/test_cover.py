@@ -1,8 +1,11 @@
 """BleBox cover entities tests."""
 
+import logging
+
 import blebox_uniapi
 import pytest
 
+from homeassistant.components.blebox.cover import BleBoxCoverEntity
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
@@ -30,7 +33,7 @@ from homeassistant.const import (
 
 from .conftest import async_setup_entity, mock_feature
 
-from tests.async_mock import ANY, AsyncMock, PropertyMock, call, patch
+from tests.async_mock import AsyncMock, PropertyMock
 
 ALL_COVER_FIXTURES = ["gatecontroller", "shutterbox", "gatebox"]
 FIXTURES_SUPPORTING_STOP = ["gatecontroller", "shutterbox"]
@@ -188,11 +191,11 @@ async def test_init_gatebox(gatebox, hass, config):
     assert device.sw_version == "1.23"
 
 
-@pytest.mark.parametrize("wrapper", ALL_COVER_FIXTURES, indirect=["wrapper"])
-async def test_open(wrapper, hass, config):
+@pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
+async def test_open(feature, hass, config):
     """Test cover opening."""
 
-    feature_mock, entity_id = wrapper
+    feature_mock, entity_id = feature
 
     def initial_update():
         feature_mock.state = 3  # manually stopped
@@ -213,11 +216,11 @@ async def test_open(wrapper, hass, config):
     assert hass.states.get(entity_id).state == STATE_OPENING
 
 
-@pytest.mark.parametrize("wrapper", ALL_COVER_FIXTURES, indirect=["wrapper"])
-async def test_close(wrapper, hass, config):
+@pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
+async def test_close(feature, hass, config):
     """Test cover closing."""
 
-    feature_mock, entity_id = wrapper
+    feature_mock, entity_id = feature
 
     def initial_update():
         feature_mock.state = 4  # open
@@ -251,11 +254,11 @@ def opening_to_stop_feature_mock(feature_mock):
     feature_mock.async_stop = AsyncMock(side_effect=stop)
 
 
-@pytest.mark.parametrize("wrapper", FIXTURES_SUPPORTING_STOP, indirect=["wrapper"])
-async def test_stop(wrapper, hass, config):
+@pytest.mark.parametrize("feature", FIXTURES_SUPPORTING_STOP, indirect=["feature"])
+async def test_stop(feature, hass, config):
     """Test cover stopping."""
 
-    feature_mock, entity_id = wrapper
+    feature_mock, entity_id = feature
     opening_to_stop_feature_mock(feature_mock)
 
     await async_setup_entity(hass, config, entity_id)
@@ -268,11 +271,11 @@ async def test_stop(wrapper, hass, config):
     assert hass.states.get(entity_id).state == STATE_OPEN
 
 
-@pytest.mark.parametrize("wrapper", ALL_COVER_FIXTURES, indirect=["wrapper"])
-async def test_update(wrapper, hass, config):
+@pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
+async def test_update(feature, hass, config):
     """Test cover updating."""
 
-    feature_mock, entity_id = wrapper
+    feature_mock, entity_id = feature
 
     def initial_update():
         feature_mock.current = 29  # inverted
@@ -288,12 +291,12 @@ async def test_update(wrapper, hass, config):
 
 
 @pytest.mark.parametrize(
-    "wrapper", ["gatecontroller", "shutterbox"], indirect=["wrapper"]
+    "feature", ["gatecontroller", "shutterbox"], indirect=["feature"]
 )
-async def test_set_position(wrapper, hass, config):
+async def test_set_position(feature, hass, config):
     """Test cover position setting."""
 
-    feature_mock, entity_id = wrapper
+    feature_mock, entity_id = feature
 
     def initial_update():
         feature_mock.state = 3  # closed
@@ -365,17 +368,33 @@ async def test_with_no_stop(gatebox, hass, config):
     assert not supported_features & SUPPORT_STOP
 
 
-@pytest.mark.parametrize("wrapper", ALL_COVER_FIXTURES, indirect=["wrapper"])
-async def test_update_failure(wrapper, hass, config):
+@pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
+async def test_update_failure(feature, hass, config, caplog):
     """Test that update failures are logged."""
 
-    feature_mock, entity_id = wrapper
+    caplog.set_level(logging.ERROR)
 
+    feature_mock, entity_id = feature
     feature_mock.async_update = AsyncMock(side_effect=blebox_uniapi.error.ClientError)
-    name = feature_mock.full_name
+    await async_setup_entity(hass, config, entity_id)
 
-    with patch("homeassistant.components.blebox._LOGGER.error") as error:
-        await async_setup_entity(hass, config, entity_id)
+    assert f"Updating '{feature_mock.full_name}' failed: " in caplog.text
 
-        error.assert_has_calls([call("Updating '%s' failed: %s", name, ANY)])
-        assert isinstance(error.call_args[0][2], blebox_uniapi.error.ClientError)
+
+@pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
+async def test_entity_properties(feature, hass, config):
+    """Test that entity properties work."""
+
+    feature_mock, entity_id = feature
+
+    # NOTE: I don't know how to test these other than directly through an entity
+    entity = BleBoxCoverEntity(feature_mock)
+
+    feature_mock.state = 1
+    assert entity.is_opening is True
+
+    feature_mock.state = 0
+    assert entity.is_closing is True
+
+    feature_mock.state = 3
+    assert entity.is_closed is True
