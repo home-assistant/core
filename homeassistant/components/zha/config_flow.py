@@ -12,11 +12,9 @@ from .core.const import (  # pylint:disable=unused-import
     CONF_BAUDRATE,
     CONF_FLOWCONTROL,
     CONF_RADIO_TYPE,
-    CONTROLLER,
     DOMAIN,
     RadioType,
 )
-from .core.registries import RADIO_TYPES
 
 CONF_MANUAL_PATH = "Enter Manually"
 SUPPORTED_PORT_SETTINGS = (
@@ -75,7 +73,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Select radio type."""
 
         if user_input is not None:
-            self._radio_type = user_input[CONF_RADIO_TYPE]
+            self._radio_type = RadioType.get_by_description(user_input[CONF_RADIO_TYPE])
             return await self.async_step_port_config()
 
         schema = {vol.Required(CONF_RADIO_TYPE): vol.In(sorted(RadioType.list()))}
@@ -86,7 +84,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_port_config(self, user_input=None):
         """Enter port settings specific for this type of radio."""
         errors = {}
-        app_cls = RADIO_TYPES[self._radio_type][CONTROLLER]
+        app_cls = RadioType[self._radio_type].controller
 
         if user_input is not None:
             self._device_path = user_input.get(CONF_DEVICE_PATH)
@@ -121,11 +119,10 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
 async def detect_radios(dev_path: str) -> Optional[Dict[str, Any]]:
     """Probe all radio types on the device port."""
-    for radio in RadioType.list():
-        app_cls = RADIO_TYPES[radio][CONTROLLER]
-        dev_config = app_cls.SCHEMA_DEVICE({CONF_DEVICE_PATH: dev_path})
-        if await app_cls.probe(dev_config):
-            return {CONF_RADIO_TYPE: radio, CONF_DEVICE: dev_config}
+    for radio in RadioType:
+        dev_config = radio.controller.SCHEMA_DEVICE({CONF_DEVICE_PATH: dev_path})
+        if await radio.controller.probe(dev_config):
+            return {CONF_RADIO_TYPE: radio.name, CONF_DEVICE: dev_config}
 
     return None
 
