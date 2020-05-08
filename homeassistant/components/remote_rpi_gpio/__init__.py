@@ -40,11 +40,7 @@ def setup_input(address, port, pull_mode, bouncetime):
         pull_gpio_up = False
 
     try:
-        return Button(
-            port,
-            pull_up=pull_gpio_up,
-            pin_factory=PiGPIOFactory(address),
-        )
+        return Button(port, pull_up=pull_gpio_up, pin_factory=PiGPIOFactory(address))
     except (ValueError, IndexError, KeyError, OSError):
         return None
 
