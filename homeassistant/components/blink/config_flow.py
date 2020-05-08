@@ -30,7 +30,7 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
-            return self.async_abort(reason="one_instance_only")
+            return self.async_abort(reason="already_configured")
 
         stored_username = ""
         stored_password = ""
