@@ -4,7 +4,7 @@ import logging
 
 from agent import AgentError
 
-from homeassistant.components.camera import SUPPORT_ON_OFF, SUPPORT_STREAM
+from homeassistant.components.camera import SUPPORT_ON_OFF
 from homeassistant.components.mjpeg.camera import (
     CONF_MJPEG_URL,
     CONF_STILL_IMAGE_URL,
@@ -80,7 +80,6 @@ class AgentCamera(MjpegCamera):
         self.device = device
         self._removed = False
         self._name = f"{self._servername} {device.name}"
-        self._stream_url = f"{self.server_url}{device.mp4_url}"
         self._unique_id = f"{device._client.unique}_{device.typeID}_{device.id}"
         super().__init__(device_info)
 
@@ -115,7 +114,7 @@ class AgentCamera(MjpegCamera):
             ATTR_ATTRIBUTION: ATTRIBUTION,
             "editable": False,
             "enabled": self.is_on,
-            "streaming": self.is_streaming,
+            "connected": self.connected,
             "detected": self.is_detected,
             "alerted": self.is_alerted,
             "recording": self.is_recording,
@@ -144,19 +143,19 @@ class AgentCamera(MjpegCamera):
         return self.device.detected
 
     @property
-    def is_streaming(self) -> bool:
-        """Return whether the monitor is online."""
-        return self.device.connected
-
-    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.device.client.is_available
 
     @property
+    def connected(self) -> bool:
+        """Return True if entity is connected."""
+        return self.device.connected
+
+    @property
     def supported_features(self) -> int:
         """Return supported features."""
-        return SUPPORT_ON_OFF | SUPPORT_STREAM
+        return SUPPORT_ON_OFF
 
     @property
     def is_on(self) -> bool:
@@ -170,9 +169,10 @@ class AgentCamera(MjpegCamera):
             return "mdi:camcorder"
         return "mdi:camcorder-off"
 
-    async def stream_source(self) -> str:
-        """Return the mp4 stream source."""
-        return self._stream_url
+    @property
+    def motion_detection_enabled(self):
+        """Return the camera motion detection status."""
+        return self.device.detector_active
 
     @property
     def unique_id(self) -> str:
