@@ -165,7 +165,7 @@ class RadioType(enum.Enum):
         zigpy_deconz.zigbee.application.ControllerApplication,
     )
     ti_cc = (
-        "TI_CC: Radios based on Texas Instruments chips using ZNP protocol",
+        "TI_CC: CC2531, CC2530, CC2652R, CC1352 etc, Texas Instruments ZNP protocol",
         zigpy_cc.zigbee.application.ControllerApplication,
     )
     zigate = "ZiGate Radio", zigpy_zigate.zigbee.application.ControllerApplication
