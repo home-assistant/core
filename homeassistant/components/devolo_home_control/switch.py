@@ -116,12 +116,12 @@ class DevoloSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Switch on the device."""
         self._is_on = True
-        self._binary_switch_property.set_binary_switch(state=True)
+        self._binary_switch_property.set(state=True)
 
     def turn_off(self, **kwargs):
         """Switch off the device."""
         self._is_on = False
-        self._binary_switch_property.set_binary_switch(state=False)
+        self._binary_switch_property.set(state=False)
 
     def sync(self, message=None):
         """Update the binary switch state and consumption."""
