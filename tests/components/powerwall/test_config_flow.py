@@ -1,6 +1,5 @@
 """Test the Powerwall config flow."""
 
-from asynctest import patch
 from tesla_powerwall import APIChangedError, PowerwallUnreachableError
 
 from homeassistant import config_entries, setup
@@ -8,6 +7,8 @@ from homeassistant.components.powerwall.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 
 from .mocks import _mock_powerwall_side_effect, _mock_powerwall_site_name
+
+from tests.async_mock import patch
 
 
 async def test_form_source_user(hass):

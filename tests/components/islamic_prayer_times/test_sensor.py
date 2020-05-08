@@ -1,10 +1,10 @@
 """The tests for the Islamic prayer times sensor platform."""
-from unittest.mock import patch
-
 from homeassistant.components import islamic_prayer_times
+import homeassistant.util.dt as dt_util
 
 from . import NOW, PRAYER_TIMES, PRAYER_TIMES_TIMESTAMPS
 
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -23,6 +23,8 @@ async def test_islamic_prayer_times_sensors(hass):
 
         for prayer in PRAYER_TIMES:
             assert (
-                hass.states.get(f"sensor.{prayer}_prayer").state
-                == PRAYER_TIMES_TIMESTAMPS[prayer].isoformat()
+                hass.states.get(
+                    f"sensor.{prayer}_{islamic_prayer_times.const.SENSOR_TYPES[prayer]}"
+                ).state
+                == PRAYER_TIMES_TIMESTAMPS[prayer].astimezone(dt_util.UTC).isoformat()
             )

@@ -26,7 +26,7 @@ If your light doesn't support white value feature, omit `white_value_template`.
 
 If your light doesn't support RGB feature, omit `(red|green|blue)_template`.
 """
-from asynctest import patch
+import pytest
 
 from homeassistant.components import light
 from homeassistant.const import (
@@ -60,6 +60,7 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
+from tests.async_mock import patch
 from tests.common import assert_setup_component, async_fire_mqtt_message
 from tests.components.light import common
 
@@ -902,6 +903,7 @@ async def test_discovery_update_light(hass, mqtt_mock, caplog):
     )
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
@@ -962,6 +964,15 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 
 async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
-    await help_test_entity_debug_info_message(
-        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG
-    )
+    config = {
+        light.DOMAIN: {
+            "platform": "mqtt",
+            "schema": "template",
+            "name": "test",
+            "command_topic": "test-topic",
+            "command_on_template": "on,{{ transition }}",
+            "command_off_template": "off,{{ transition|d }}",
+            "state_template": '{{ value.split(",")[0] }}',
+        }
+    }
+    await help_test_entity_debug_info_message(hass, mqtt_mock, light.DOMAIN, config)

@@ -3,6 +3,7 @@ import asyncio
 import logging
 
 from homeassistant.components.vacuum import (
+    ATTR_STATUS,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
@@ -16,6 +17,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_SEND_COMMAND,
     SUPPORT_START,
     SUPPORT_STATE,
+    SUPPORT_STATUS,
     SUPPORT_STOP,
     StateVacuumEntity,
 )
@@ -40,6 +42,7 @@ SUPPORT_IROBOT = (
     | SUPPORT_SEND_COMMAND
     | SUPPORT_START
     | SUPPORT_STATE
+    | SUPPORT_STATUS
     | SUPPORT_STOP
     | SUPPORT_LOCATE
 )
@@ -99,9 +102,15 @@ class IRobotEntity(Entity):
         """Register callback function."""
         self.vacuum.register_on_message_callback(self.on_message)
 
+    def new_state_filter(self, new_state):
+        """Filter the new state."""
+        raise NotImplementedError
+
     def on_message(self, json_data):
         """Update state on message change."""
-        self.schedule_update_ha_state()
+        state = json_data.get("state", {}).get("reported", {})
+        if self.new_state_filter(state):
+            self.schedule_update_ha_state()
 
 
 class IRobotVacuum(IRobotEntity, StateVacuumEntity):
@@ -143,7 +152,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
             state = STATE_MAP[phase]
         except KeyError:
             return STATE_ERROR
-        if cycle != "none" and state != STATE_CLEANING and state != STATE_RETURNING:
+        if cycle != "none" and state in (STATE_IDLE, STATE_DOCKED):
             state = STATE_PAUSED
         return state
 
@@ -172,6 +181,9 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
 
         # Set properties that are to appear in the GUI
         state_attrs = {ATTR_SOFTWARE_VERSION: software_version}
+
+        # Set legacy status to avoid break changes
+        state_attrs[ATTR_STATUS] = self.vacuum.current_state
 
         # Only add cleaning time and cleaned area attrs when the vacuum is
         # currently on
@@ -206,6 +218,11 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
 
     def on_message(self, json_data):
         """Update state on message change."""
+        new_state = json_data.get("state", {}).get("reported", {})
+        if (
+            len(new_state) == 1 and "signal" in new_state
+        ):  # filter out wifi stat messages
+            return
         _LOGGER.debug("Got new state from the vacuum: %s", json_data)
         self.vacuum_state = roomba_reported_state(self.vacuum)
         self.schedule_update_ha_state()

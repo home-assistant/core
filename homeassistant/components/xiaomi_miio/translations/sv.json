@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "connect_error": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen",
+            "no_device_selected": "Ingen enhet har valts, v\u00e4lj en enhet."
+        },
+        "step": {
+            "gateway": {
+                "data": {
+                    "host": "IP-adress",
+                    "name": "Namnet p\u00e5 Gatewayen",
+                    "token": "API  Token"
+                },
+                "description": "Du beh\u00f6ver en API token, se https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token f\u00f6r mer instruktioner.",
+                "title": "Anslut till en Xiaomi Gateway"
+            },
+            "user": {
+                "data": {
+                    "gateway": "Anslut till en Xiaomi Gateway"
+                },
+                "description": "V\u00e4lj den enhet som du vill ansluta till."
+            }
+        }
+    }
+}

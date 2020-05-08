@@ -70,6 +70,12 @@ SSDP = {
             "st": "urn:samsung.com:device:RemoteControlReceiver:1"
         }
     ],
+    "songpal": [
+        {
+            "manufacturer": "Sony Corporation",
+            "st": "urn:schemas-sony-com:service:ScalarWebAPI:1"
+        }
+    ],
     "sonos": [
         {
             "st": "urn:schemas-upnp-org:device:ZonePlayer:1"

@@ -15,7 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
+                    "host": "Nazwa hosta lub adres IP",
                     "port": "Port"
                 },
                 "title": "Freebox"

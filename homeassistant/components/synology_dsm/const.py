@@ -2,16 +2,24 @@
 from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
+    DATA_TERABYTES,
     UNIT_PERCENTAGE,
 )
 
 DOMAIN = "synology_dsm"
 BASE_NAME = "Synology"
 
+# Entry keys
+SYNO_API = "syno_api"
+UNDO_UPDATE_LISTENER = "undo_update_listener"
+
+# Configuration
 CONF_VOLUMES = "volumes"
 DEFAULT_SSL = True
 DEFAULT_PORT = 5000
 DEFAULT_PORT_SSL = 5001
+# Options
+DEFAULT_SCAN_INTERVAL = 15  # min
 
 UTILISATION_SENSORS = {
     "cpu_other_load": ["CPU Load (Other)", UNIT_PERCENTAGE, "mdi:chip"],
@@ -34,8 +42,8 @@ UTILISATION_SENSORS = {
 STORAGE_VOL_SENSORS = {
     "volume_status": ["Status", None, "mdi:checkbox-marked-circle-outline"],
     "volume_device_type": ["Type", None, "mdi:harddisk"],
-    "volume_size_total": ["Total Size", None, "mdi:chart-pie"],
-    "volume_size_used": ["Used Space", None, "mdi:chart-pie"],
+    "volume_size_total": ["Total Size", DATA_TERABYTES, "mdi:chart-pie"],
+    "volume_size_used": ["Used Space", DATA_TERABYTES, "mdi:chart-pie"],
     "volume_percentage_used": ["Volume Used", UNIT_PERCENTAGE, "mdi:chart-pie"],
     "volume_disk_temp_avg": ["Average Disk Temp", None, "mdi:thermometer"],
     "volume_disk_temp_max": ["Maximum Disk Temp", None, "mdi:thermometer"],

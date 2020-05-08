@@ -32,7 +32,12 @@ from .const import (
     LOGGER,
 )
 from .controller import get_controller
-from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
+from .errors import (
+    AlreadyConfigured,
+    AuthenticationRequired,
+    CannotConnect,
+    NoLocalUser,
+)
 
 DEFAULT_PORT = 8443
 DEFAULT_SITE_ID = "default"
@@ -129,6 +134,8 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
                 for site in self.sites.values():
                     if desc == site["desc"]:
+                        if "role" not in site:
+                            raise NoLocalUser
                         self.config[CONF_SITE_ID] = site["name"]
                         break
 
@@ -146,6 +153,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
             except AlreadyConfigured:
                 return self.async_abort(reason="already_configured")
+
+            except NoLocalUser:
+                return self.async_abort(reason="no_local_user")
 
         if len(self.sites) == 1:
             self.desc = next(iter(self.sites.values()))["desc"]
@@ -175,7 +185,43 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the UniFi options."""
         self.controller = self.hass.data[UNIFI_DOMAIN][self.config_entry.entry_id]
         self.options[CONF_BLOCK_CLIENT] = self.controller.option_block_clients
-        return await self.async_step_device_tracker()
+
+        if self.show_advanced_options:
+            return await self.async_step_device_tracker()
+
+        return await self.async_step_simple_options()
+
+    async def async_step_simple_options(self, user_input=None):
+        """For simple Jack."""
+        if user_input is not None:
+            self.options.update(user_input)
+            return await self._update_options()
+
+        clients_to_block = {}
+
+        for client in self.controller.api.clients.values():
+            clients_to_block[
+                client.mac
+            ] = f"{client.name or client.hostname} ({client.mac})"
+
+        return self.async_show_form(
+            step_id="simple_options",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_TRACK_CLIENTS,
+                        default=self.controller.option_track_clients,
+                    ): bool,
+                    vol.Optional(
+                        CONF_TRACK_DEVICES,
+                        default=self.controller.option_track_devices,
+                    ): bool,
+                    vol.Optional(
+                        CONF_BLOCK_CLIENT, default=self.options[CONF_BLOCK_CLIENT]
+                    ): cv.multi_select(clients_to_block),
+                }
+            ),
+        )
 
     async def async_step_device_tracker(self, user_input=None):
         """Manage the device tracker options."""
@@ -183,7 +229,20 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             self.options.update(user_input)
             return await self.async_step_client_control()
 
-        ssid_filter = {wlan: wlan for wlan in self.controller.api.wlans}
+        ssids = (
+            set(self.controller.api.wlans)
+            | {
+                f"{wlan.name}{wlan.name_combine_suffix}"
+                for wlan in self.controller.api.wlans.values()
+                if not wlan.name_combine_enabled
+            }
+            | {
+                wlan["name"]
+                for ap in self.controller.api.devices.values()
+                for wlan in ap.wlan_overrides
+            }
+        )
+        ssid_filter = {ssid: ssid for ssid in sorted(list(ssids))}
 
         return self.async_show_form(
             step_id="device_tracker",

@@ -3,6 +3,7 @@ import logging
 import ssl
 from urllib.parse import urlparse
 
+from plexapi.exceptions import Unauthorized
 import plexapi.myplex
 import plexapi.playqueue
 import plexapi.server
@@ -131,26 +132,31 @@ class PlexServer:
                         )
                         _update_plexdirect_hostname()
                         config_entry_update_needed = True
+                    else:
+                        raise
                 else:
                     raise
         else:
             _connect_with_token()
 
-        self._accounts = [
-            account.name
-            for account in self._plex_server.systemAccounts()
-            if account.name
-        ]
-        _LOGGER.debug("Linked accounts: %s", self.accounts)
+        try:
+            system_accounts = self._plex_server.systemAccounts()
+        except Unauthorized:
+            _LOGGER.warning(
+                "Plex account has limited permissions, shared account filtering will not be available."
+            )
+        else:
+            self._accounts = [
+                account.name for account in system_accounts if account.name
+            ]
+            _LOGGER.debug("Linked accounts: %s", self.accounts)
 
-        owner_account = [
-            account.name
-            for account in self._plex_server.systemAccounts()
-            if account.accountID == 1
-        ]
-        if owner_account:
-            self._owner_username = owner_account[0]
-            _LOGGER.debug("Server owner found: '%s'", self._owner_username)
+            owner_account = [
+                account.name for account in system_accounts if account.accountID == 1
+            ]
+            if owner_account:
+                self._owner_username = owner_account[0]
+                _LOGGER.debug("Server owner found: '%s'", self._owner_username)
 
         self._version = self._plex_server.version
 

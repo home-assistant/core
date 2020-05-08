@@ -210,6 +210,9 @@ async def async_get_component_strings(
         else:
             files_to_load[loaded] = path
 
+    if not files_to_load:
+        return translations
+
     # Load files
     load_translations_job = hass.async_add_executor_job(
         load_translations_files, files_to_load
@@ -218,12 +221,12 @@ async def async_get_component_strings(
     loaded_translations = await load_translations_job
 
     # Translations that miss "title" will get integration put in.
-    for loaded, translations in loaded_translations.items():
+    for loaded, loaded_translation in loaded_translations.items():
         if "." in loaded:
             continue
 
-        if "title" not in translations:
-            translations["title"] = integrations[loaded].name
+        if "title" not in loaded_translation:
+            loaded_translation["title"] = integrations[loaded].name
 
     translations.update(loaded_translations)
 

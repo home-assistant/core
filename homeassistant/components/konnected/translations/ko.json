@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
-            "already_in_progress": "\uae30\uae30 \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589\uc911\uc785\ub2c8\ub2e4.",
+            "already_in_progress": "\uae30\uae30 \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589 \uc911\uc785\ub2c8\ub2e4.",
             "not_konn_panel": "\uc778\uc2dd\ub41c Konnected.io \uae30\uae30\uac00 \uc544\ub2d9\ub2c8\ub2e4",
             "unknown": "\uc54c \uc218 \uc5c6\ub294 \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
@@ -43,7 +43,7 @@
                     "type": "\uc774\uc9c4 \uc13c\uc11c \uc720\ud615"
                 },
                 "description": "{zone} \uc5d0 \uc5f0\uacb0\ub41c \uc774\uc9c4 \uc13c\uc11c\uc5d0 \ub300\ud55c \uc635\uc158\uc744 \uc120\ud0dd\ud574\uc8fc\uc138\uc694",
-                "title": "\uc774\uc9c4 \uc13c\uc11c \uad6c\uc131"
+                "title": "\uc774\uc9c4 \uc13c\uc11c \uad6c\uc131\ud558\uae30"
             },
             "options_digital": {
                 "data": {
@@ -52,7 +52,7 @@
                     "type": "\uc13c\uc11c \uc720\ud615"
                 },
                 "description": "{zone} \uc5d0 \uc5f0\uacb0\ub41c \ub514\uc9c0\ud138 \uc13c\uc11c\uc5d0 \ub300\ud55c \uc635\uc158\uc744 \uc120\ud0dd\ud574\uc8fc\uc138\uc694",
-                "title": "\ub514\uc9c0\ud138 \uc13c\uc11c \uad6c\uc131"
+                "title": "\ub514\uc9c0\ud138 \uc13c\uc11c \uad6c\uc131\ud558\uae30"
             },
             "options_io": {
                 "data": {
@@ -66,7 +66,7 @@
                     "out": "\uc678\ubd80"
                 },
                 "description": "{host} \uc5d0\uc11c {model} \uc744(\ub97c) \ubc1c\uacac\ud588\uc2b5\ub2c8\ub2e4. \uc774\uc9c4 \uc13c\uc11c(\uac1c\ud3d0 \uc811\uc810), \ub514\uc9c0\ud138 \uc13c\uc11c(dht \ubc0f ds18b20) \ub610\ub294 \uc2a4\uc704\uce58\uac00 \uac00\ub2a5\ud55c \uc13c\uc11c\uc758 I/O \uc5d0 \ub530\ub77c \uc544\ub798\uc5d0\uc11c \uac01 I/O \uc758 \uae30\ubcf8 \uad6c\uc131\uc744 \uc120\ud0dd\ud574\uc8fc\uc138\uc694. \ub2e4\uc74c \ub2e8\uacc4\uc5d0\uc11c \uc138\ubd80 \uc635\uc158\uc744 \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.",
-                "title": "I/O \uad6c\uc131"
+                "title": "I/O \uad6c\uc131\ud558\uae30"
             },
             "options_io_ext": {
                 "data": {
@@ -80,7 +80,7 @@
                     "out1": "\ucd9c\ub825 1"
                 },
                 "description": "\uc544\ub798\uc758 \ub098\uba38\uc9c0 I/O \uad6c\uc131\uc744 \uc120\ud0dd\ud574\uc8fc\uc138\uc694. \ub2e4\uc74c \ub2e8\uacc4\uc5d0\uc11c \uc138\ubd80 \uc635\uc158\uc744 \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.",
-                "title": "\ud655\uc7a5 I/O \uad6c\uc131"
+                "title": "\ud655\uc7a5 I/O \uad6c\uc131\ud558\uae30"
             },
             "options_misc": {
                 "data": {
@@ -89,7 +89,7 @@
                     "override_api_host": "\uae30\ubcf8 Home Assistant API \ud638\uc2a4\ud2b8 \ud328\ub110 URL \uc7ac\uc815\uc758"
                 },
                 "description": "\ud328\ub110\uc5d0 \uc6d0\ud558\ub294 \ub3d9\uc791\uc744 \uc120\ud0dd\ud574\uc8fc\uc138\uc694",
-                "title": "\uae30\ud0c0 \uad6c\uc131"
+                "title": "\uae30\ud0c0 \uc124\uc815 \uad6c\uc131\ud558\uae30"
             },
             "options_switch": {
                 "data": {
@@ -101,7 +101,7 @@
                     "repeat": "\ubc18\ubcf5 \uc2dc\uac04 (-1 = \ubb34\ud55c) (\uc120\ud0dd \uc0ac\ud56d)"
                 },
                 "description": "{zone} \uad6c\uc5ed\uc5d0 \ub300\ud55c \ucd9c\ub825 \uc635\uc158\uc744 \uc120\ud0dd\ud574\uc8fc\uc138\uc694: \uc0c1\ud0dc {state}",
-                "title": "\uc2a4\uc704\uce58 \ucd9c\ub825 \uad6c\uc131"
+                "title": "\uc2a4\uc704\uce58 \ucd9c\ub825 \uad6c\uc131\ud558\uae30"
             }
         }
     }

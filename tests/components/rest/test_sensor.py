@@ -1,6 +1,5 @@
 """The tests for the REST sensor platform."""
 import unittest
-from unittest.mock import Mock, patch
 
 import pytest
 from pytest import raises
@@ -16,6 +15,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.config_validation import template
 from homeassistant.setup import setup_component
 
+from tests.async_mock import Mock, patch
 from tests.common import assert_setup_component, get_test_home_assistant
 
 

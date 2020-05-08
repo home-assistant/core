@@ -7,7 +7,6 @@ The Entity Registry will persist itself 10 seconds after a new entity is
 registered. Registering a new entity while a timer is in progress resets the
 timer.
 """
-import asyncio
 from collections import OrderedDict
 import logging
 from typing import (
@@ -35,10 +34,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, callback, split_entity_id, valid_entity_id
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
-from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 from homeassistant.util.yaml import load_yaml
 
+from .singleton import singleton
 from .typing import HomeAssistantType
 
 if TYPE_CHECKING:
@@ -429,6 +428,12 @@ class EntityRegistry:
 
         if data is not None:
             for entity in data["entities"]:
+                # Some old installations can have some bad entities.
+                # Filter them out as they cause errors down the line.
+                # Can be removed in Jan 2021
+                if not valid_entity_id(entity["entity_id"]):
+                    continue
+
                 entities[entity["entity_id"]] = RegistryEntry(
                     entity_id=entity["entity_id"],
                     config_entry_id=entity.get("config_entry_id"),
@@ -491,27 +496,12 @@ class EntityRegistry:
             self.async_remove(entity_id)
 
 
-@bind_hass
+@singleton(DATA_REGISTRY)
 async def async_get_registry(hass: HomeAssistantType) -> EntityRegistry:
-    """Return entity registry instance."""
-    reg_or_evt = hass.data.get(DATA_REGISTRY)
-
-    if not reg_or_evt:
-        evt = hass.data[DATA_REGISTRY] = asyncio.Event()
-
-        reg = EntityRegistry(hass)
-        await reg.async_load()
-
-        hass.data[DATA_REGISTRY] = reg
-        evt.set()
-        return reg
-
-    if isinstance(reg_or_evt, asyncio.Event):
-        evt = reg_or_evt
-        await evt.wait()
-        return cast(EntityRegistry, hass.data.get(DATA_REGISTRY))
-
-    return cast(EntityRegistry, reg_or_evt)
+    """Create entity registry."""
+    reg = EntityRegistry(hass)
+    await reg.async_load()
+    return reg
 
 
 @callback
@@ -621,4 +611,4 @@ async def async_migrate_entries(
         updates = entry_callback(entry)
 
         if updates is not None:
-            ent_reg.async_update_entity(entry.entity_id, **updates)  # type: ignore
+            ent_reg.async_update_entity(entry.entity_id, **updates)

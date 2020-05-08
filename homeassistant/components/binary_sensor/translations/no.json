@@ -109,8 +109,8 @@
             "on": "V\u00e5t"
         },
         "problem": {
-            "off": "OK",
-            "on": "Problem"
+            "off": "",
+            "on": ""
         },
         "safety": {
             "off": "Sikker",

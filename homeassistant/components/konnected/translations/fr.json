@@ -6,8 +6,12 @@
             "not_konn_panel": "Non reconnu comme appareil Konnected.io",
             "unknown": "Une erreur inconnue s'est produite"
         },
+        "error": {
+            "cannot_connect": "Impossible de se connecter \u00e0 Konnected Panel sur {host} : {port}"
+        },
         "step": {
             "confirm": {
+                "description": "Model: {model} \n ID: {id} \n Host: {host} \n Port: {port} \n\nVous pouvez configurer le comportement des E/S et du panneau dans les param\u00e8tres de Konnected Alarm Panel.",
                 "title": "Appareil Konnected pr\u00eat"
             },
             "import_confirm": {
@@ -15,12 +19,18 @@
             },
             "user": {
                 "data": {
-                    "host": "Adresse IP de l\u2019appareil Konnected"
-                }
+                    "host": "Adresse IP de l\u2019appareil Konnected",
+                    "port": "Port de l'appareil Konnected"
+                },
+                "description": "Veuillez saisir les informations de l\u2019h\u00f4te de votre panneau Konnected.",
+                "title": "D\u00e9couverte d\u2019appareil Konnected"
             }
         }
     },
     "options": {
+        "abort": {
+            "not_konn_panel": "Non reconnu comme appareil Konnected.io"
+        },
         "error": {
             "one": "Vide",
             "other": "Vide"
