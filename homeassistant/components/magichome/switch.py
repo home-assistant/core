@@ -1,4 +1,4 @@
-"""Support for MagicHome switches."""
+"""Platform for MagicHome switches integration."""
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
 
 from . import DATA_MAGICHOME, MagicHomeDevice

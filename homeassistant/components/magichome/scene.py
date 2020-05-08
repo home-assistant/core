@@ -1,4 +1,4 @@
-"""Support for the MagicHome scenes."""
+"""Platform for MagicHome scenes integration."""
 from homeassistant.components.scene import DOMAIN, Scene
 
 from . import DATA_MAGICHOME, MagicHomeDevice

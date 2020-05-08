@@ -5,7 +5,12 @@ import logging
 from magichome import MagicHomeApi
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_PLATFORM,
+    CONF_USERNAME,
+    CONF_ENTITIES,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -61,12 +66,12 @@ def setup(hass, config):
             dev_type = device.device_type()
             if (
                 dev_type in MAGICHOME_TYPE_TO_HA
-                and device.object_id() not in hass.data[DOMAIN]["entities"]
+                and device.object_id() not in hass.data[DOMAIN][CONF_ENTITIES]
             ):
                 if dev_type not in device_type_dict:
                     device_type_dict.setdefault(dev_type, [])
                 device_type_dict[dev_type].append(device.object_id())
-                hass.data[DOMAIN]["entities"][device.object_id()] = None
+                hass.data[DOMAIN][CONF_ENTITIES][device.object_id()] = None
         for dev_type, dev_ids in device_type_dict.items():
             discovery.load_platform(
                 hass, dev_type, DOMAIN, {"dev_ids": dev_ids}, config
@@ -86,10 +91,10 @@ def setup(hass, config):
         newlist_ids = []
         for device in device_list:
             newlist_ids.append(device.object_id())
-        for dev_id in list(hass.data[DOMAIN]["entities"]):
+        for dev_id in list(hass.data[DOMAIN][CONF_ENTITIES]):
             if dev_id not in newlist_ids:
                 dispatcher_send(hass, SIGNAL_DELETE_ENTITY, dev_id)
-                hass.data[DOMAIN]["entities"].pop(dev_id)
+                hass.data[DOMAIN][CONF_ENTITIES].pop(dev_id)
 
     track_time_interval(hass, poll_devices_update, timedelta(minutes=5))
 
@@ -114,7 +119,7 @@ class MagicHomeDevice(Entity):
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
         dev_id = self.magichome.object_id()
-        self.hass.data[DOMAIN]["entities"][dev_id] = self.entity_id
+        self.hass.data[DOMAIN][CONF_ENTITIES][dev_id] = self.entity_id
         async_dispatcher_connect(self.hass, SIGNAL_DELETE_ENTITY, self._delete_callback)
         async_dispatcher_connect(self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback)
 

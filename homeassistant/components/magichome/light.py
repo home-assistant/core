@@ -1,4 +1,4 @@
-"""Support for the MagicHome lights."""
+"""Platform for MagicHome lights integration."""
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
