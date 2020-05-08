@@ -19,6 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import (
     CONF_CLIENT_IDENTIFIER,
     CONF_IGNORE_NEW_SHARED_USERS,
+    CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
     CONF_SERVER,
     CONF_USE_EPISODE_ART,
@@ -50,6 +51,7 @@ class PlexServer:
         """Initialize a Plex server instance."""
         self.hass = hass
         self._plex_server = None
+        self._created_clients = set()
         self._known_clients = set()
         self._known_idle = set()
         self._url = server_config.get(CONF_URL)
@@ -217,7 +219,23 @@ class PlexServer:
             self._known_idle.discard(device.machineIdentifier)
             available_clients.setdefault(device.machineIdentifier, {"device": device})
 
-            if device.machineIdentifier not in self._known_clients:
+            if device.machineIdentifier not in ignored_clients:
+                if self.option_ignore_plexweb_clients and device.product == "Plex Web":
+                    ignored_clients.add(device.machineIdentifier)
+                    if device.machineIdentifier not in self._known_clients:
+                        _LOGGER.debug(
+                            "Ignoring %s %s: %s",
+                            "Plex Web",
+                            source,
+                            device.machineIdentifier,
+                        )
+                    return
+
+            if (
+                device.machineIdentifier not in self._created_clients
+                and device.machineIdentifier not in ignored_clients
+                and device.machineIdentifier not in new_clients
+            ):
                 new_clients.add(device.machineIdentifier)
                 _LOGGER.debug(
                     "New %s %s: %s", device.product, source, device.machineIdentifier
@@ -250,6 +268,7 @@ class PlexServer:
                 continue
             if client_id in new_clients:
                 new_entity_configs.append(client_data)
+                self._created_clients.add(client_id)
             else:
                 self.async_refresh_entity(
                     client_id, client_data["device"], client_data.get("session")
@@ -326,6 +345,11 @@ class PlexServer:
     def option_monitored_users(self):
         """Return dict of monitored users option."""
         return self.options[MP_DOMAIN].get(CONF_MONITORED_USERS, {})
+
+    @property
+    def option_ignore_plexweb_clients(self):
+        """Return ignore_plex_web_clients option."""
+        return self.options[MP_DOMAIN].get(CONF_IGNORE_PLEX_WEB_CLIENTS, False)
 
     @property
     def library(self):
