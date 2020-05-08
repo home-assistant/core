@@ -30,10 +30,3 @@ light_blink:
     rate:
       description: Number of seconds between 0 and 4.25 that the link flashes on.
       example: 4.2
-
-light_update_status:
-  description: Cause a light to report its current status.
-  fields:
-    entity_id:
-      description: Name(s) of lights to refresh their status
-      example: "light.kitchen, light.family_room"
