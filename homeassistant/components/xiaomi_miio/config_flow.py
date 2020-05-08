@@ -64,9 +64,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Check which device is discovered.
         if name.startswith(ZEROCONF_GATEWAY):
-            model = name.split("_")[0].replace("-", ".")
-
-            unique_id = f"{model}-{mac_address}-gateway"
+            unique_id = f"{mac_address}"
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
@@ -94,9 +92,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             gateway_info = connect_gateway_class.gateway_info
 
             if gateway_info is not None:
-                unique_id = (
-                    f"{gateway_info.model}-{gateway_info.mac_address}-gateway"
-                )
+                unique_id = f"{gateway_info.mac_address}"
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
@@ -105,7 +101,6 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_FLOW_TYPE: CONF_GATEWAY,
                         CONF_HOST: self.host,
                         CONF_TOKEN: token,
-                        "gateway_id": unique_id,
                         "model": gateway_info.model,
                         "mac": gateway_info.mac_address,
                     },
