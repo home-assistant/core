@@ -89,7 +89,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL,
-                ): vol.All(vol.Coerce(int), vol.Range(min=30))
+                ): vol.All(vol.Coerce(int), vol.Range(min=30)),
             }
         )
         return self.async_show_form(step_id="user", data_schema=data_schema,)
