@@ -148,7 +148,7 @@ class MaxCubeClimate(ClimateEntity):
 
         if hvac_mode == HVAC_MODE_OFF:
             temp = OFF_TEMPERATURE
-        else:
+        elif hvac_mode != HVAC_MODE_HEAT:
             # Reset the temperature to a sane value.
             # Ideally, we should send 0 and the device will set its
             # temperature according to the schedule. However, current
