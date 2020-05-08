@@ -144,14 +144,11 @@ class MaxCubeClimate(ClimateEntity):
         """Set new target hvac mode."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
         temp = device.target_temperature
-        mode = device.mode
+        mode = MAX_DEVICE_MODE_MANUAL
 
         if hvac_mode == HVAC_MODE_OFF:
             temp = OFF_TEMPERATURE
-            mode = MAX_DEVICE_MODE_MANUAL
-        elif hvac_mode == HVAC_MODE_HEAT:
-            mode = MAX_DEVICE_MODE_MANUAL
-        else:
+        elif hvac_mode != HVAC_MODE_HEAT:
             # Reset the temperature to a sane value.
             # Ideally, we should send 0 and the device will set its
             # temperature according to the schedule. However, current
