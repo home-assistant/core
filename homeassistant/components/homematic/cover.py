@@ -1,8 +1,6 @@
 """Support for  HomeMatic covers."""
 import logging
 
-from pyhomematic.devicetypes.actors import IPGarage
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -14,6 +12,8 @@ from .const import ATTR_DISCOVER_DEVICES
 from .entity import HMDevice
 
 _LOGGER = logging.getLogger(__name__)
+
+HM_GARAGE = ("IPGarage",)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -39,7 +39,7 @@ class HMCover(HMDevice, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if isinstance(self._hmdevice, IPGarage):
+        if self._hmdevice.__class__.__name__ in HM_GARAGE:
             # Garage covers do not support position
             return None
         return int(self._hm_get_state() * 100)
@@ -55,16 +55,16 @@ class HMCover(HMDevice, CoverEntity):
     @property
     def is_closed(self):
         """Return whether the cover is closed."""
-        if isinstance(self._hmdevice, IPGarage):
-            return self._hmdevice.is_closed()
-        elif self.current_cover_position is not None:
+        if self._hmdevice.__class__.__name__ in HM_GARAGE:
+            return self._hmdevice.is_closed(self._hm_get_state())
+        if self.current_cover_position is not None:
             return self.current_cover_position == 0
         return None
 
     @property
     def device_class(self):
         """Return the device class."""
-        if isinstance(self._hmdevice, IPGarage):
+        if self._hmdevice.__class__.__name__ in HM_GARAGE:
             return DEVICE_CLASS_GARAGE
         return super().device_class
 
@@ -82,7 +82,10 @@ class HMCover(HMDevice, CoverEntity):
 
     def _init_data_struct(self):
         """Generate a data dictionary (self._data) from metadata."""
-        self._state = "LEVEL"
+        if self._hmdevice.__class__.__name__ in HM_GARAGE:
+            self._state = "DOOR_STATE"
+        else:
+            self._state = "LEVEL"
         self._data.update({self._state: None})
         if "LEVEL_2" in self._hmdevice.WRITENODE:
             self._data.update({"LEVEL_2": None})
