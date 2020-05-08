@@ -605,7 +605,6 @@ class SonosEntity(MediaPlayerEntity):
                     variables = event and event.variables
                     self.update_media_radio(variables, track_info)
                 else:
-                    variables = event and event.variables
                     self.update_media_music(update_position, track_info)
 
         self.schedule_update_ha_state()
