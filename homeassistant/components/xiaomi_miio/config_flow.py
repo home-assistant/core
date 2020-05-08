@@ -88,33 +88,30 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if user_input.get(CONF_HOST):
                 self.host = user_input[CONF_HOST]
 
-            if self.host:
-                # Try to connect to a Xiaomi Gateway.
-                connect_gateway_class = ConnectXiaomiGateway(self.hass)
-                await connect_gateway_class.async_connect_gateway(self.host, token)
-                gateway_info = connect_gateway_class.gateway_info
+            # Try to connect to a Xiaomi Gateway.
+            connect_gateway_class = ConnectXiaomiGateway(self.hass)
+            await connect_gateway_class.async_connect_gateway(self.host, token)
+            gateway_info = connect_gateway_class.gateway_info
 
-                if gateway_info is not None:
-                    unique_id = (
-                        f"{gateway_info.model}-{gateway_info.mac_address}-gateway"
-                    )
-                    await self.async_set_unique_id(unique_id)
-                    self._abort_if_unique_id_configured()
-                    return self.async_create_entry(
-                        title=user_input[CONF_NAME],
-                        data={
-                            CONF_FLOW_TYPE: CONF_GATEWAY,
-                            CONF_HOST: self.host,
-                            CONF_TOKEN: token,
-                            "gateway_id": unique_id,
-                            "model": gateway_info.model,
-                            "mac": gateway_info.mac_address,
-                        },
-                    )
+            if gateway_info is not None:
+                unique_id = (
+                    f"{gateway_info.model}-{gateway_info.mac_address}-gateway"
+                )
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME],
+                    data={
+                        CONF_FLOW_TYPE: CONF_GATEWAY,
+                        CONF_HOST: self.host,
+                        CONF_TOKEN: token,
+                        "gateway_id": unique_id,
+                        "model": gateway_info.model,
+                        "mac": gateway_info.mac_address,
+                    },
+                )
 
-                errors["base"] = "connect_error"
-            else:
-                errors["base"] = "no_host"
+            errors["base"] = "connect_error"
 
         if self.host:
             return self.async_show_form(
