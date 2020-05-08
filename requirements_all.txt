@@ -365,7 +365,7 @@ bomradarloop==0.1.4
 boto3==1.9.252
 
 # homeassistant.components.braviatv
-bravia-tv==1.0.3
+bravia-tv==1.0.4
 
 # homeassistant.components.broadlink
 broadlink==0.13.2
