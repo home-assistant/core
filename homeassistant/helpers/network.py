@@ -195,10 +195,10 @@ def _async_get_deprecated_base_url(
     require_standard_port: bool = False,
 ) -> str:
     """Work with the deprecated `base_url`, used as fallback."""
-    if hass.config.api is None or not hass.config.api.base_url:
+    if hass.config.api is None or not hass.config.api.deprecated_base_url:
         raise NoURLAvailableError
 
-    base_url = yarl.URL(hass.config.api.base_url)
+    base_url = yarl.URL(hass.config.api.deprecated_base_url)
     # Rules that apply to both internal and external
     if (
         (allow_ip or not is_ip_address(str(base_url.host)))
