@@ -438,7 +438,7 @@ plexapi==3.4.0
 plexauth==0.0.5
 
 # homeassistant.components.plex
-plexwebsocket==0.0.7
+plexwebsocket==0.0.8
 
 # homeassistant.components.mhz19
 # homeassistant.components.serial_pm
