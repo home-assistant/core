@@ -3,6 +3,7 @@ from ipaddress import ip_network
 import logging
 import os
 import ssl
+from traceback import extract_stack
 from typing import Optional, cast
 
 from aiohttp import web
@@ -119,14 +120,66 @@ class ApiConfig:
 
         host = host.rstrip("/")
         if host.startswith(("http://", "https://")):
-            self.base_url = host
+            self.deprecated_base_url = host
         elif use_ssl:
-            self.base_url = f"https://{host}"
+            self.deprecated_base_url = f"https://{host}"
         else:
-            self.base_url = f"http://{host}"
+            self.deprecated_base_url = f"http://{host}"
 
         if port is not None:
-            self.base_url += f":{port}"
+            self.deprecated_base_url += f":{port}"
+
+    @property
+    def base_url(self) -> str:
+        """Proxy property to find caller of this deprecated property."""
+        found_frame = None
+        for frame in reversed(extract_stack()):
+            for path in ("custom_components/", "homeassistant/components/"):
+                try:
+                    index = frame.filename.index(path)
+
+                    # Skip webhook from the stack
+                    if frame.filename[index:].startswith(
+                        "homeassistant/components/webhook/"
+                    ):
+                        continue
+
+                    found_frame = frame
+                    break
+                except ValueError:
+                    continue
+
+            if found_frame is not None:
+                break
+
+        # Did not source from an integration? Hard error.
+        if found_frame is None:
+            raise RuntimeError(
+                "Detected use of deprecated `base_url` property in the Home Assistant core. Please report this issue."
+            )
+
+        # If a frame was found, it originated from an integration
+        if found_frame:
+            start = index + len(path)
+            end = found_frame.filename.index("/", start)
+
+            integration = found_frame.filename[start:end]
+
+            if path == "custom_components/":
+                extra = " to the custom component author"
+            else:
+                extra = ""
+
+            _LOGGER.warning(
+                "Detected use of deprecated `base_url` property, use `homeassistant.helpers.network.async_get_url` method instead. Please report issue%s for %s using this method at %s, line %s: %s",
+                extra,
+                integration,
+                found_frame.filename[index:],
+                found_frame.lineno,
+                found_frame.line.strip(),
+            )
+
+        return self.deprecated_base_url
 
 
 async def async_setup(hass, config):

@@ -1463,7 +1463,7 @@ class Config:
             if self.hass.config.api is None:
                 return
 
-            base_url = yarl.URL(self.hass.config.api.base_url)
+            base_url = yarl.URL(self.hass.config.api.deprecated_base_url)
 
             # Check if this is an internal URL
             if str(base_url.host).endswith(".local") or (
