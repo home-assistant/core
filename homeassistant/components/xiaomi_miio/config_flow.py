@@ -76,7 +76,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug(
             "Not yet suported Xiaomi Miio device '%s' discovered with host %s",
             name,
-            host,
+            self.host,
         )
         return self.async_abort(reason="not_xiaomi_miio")
 
