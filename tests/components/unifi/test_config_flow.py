@@ -50,6 +50,17 @@ DEVICES = [
                 "radio_name": "wifi1",
                 "wlan_id": "012345678910111213141516",
             },
+            {
+                "name": "",
+                "radio": "na",
+                "radio_name": "wifi1",
+                "wlan_id": "012345678910111213141516",
+            },
+            {
+                "radio": "na",
+                "radio_name": "wifi1",
+                "wlan_id": "012345678910111213141516",
+            },
         ],
     }
 ]
@@ -349,6 +360,9 @@ async def test_advanced_option_flow(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "device_tracker"
+    assert set(
+        result["data_schema"].schema[CONF_SSID_FILTER].options.keys()
+    ).intersection(("SSID 1", "SSID 2", "SSID 2_IOT", "SSID 3"))
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
