@@ -15,33 +15,33 @@ class UniFiBase(Entity):
     DOMAIN = ""
     TYPE = ""
 
-    def __init__(self, controller) -> None:
+    def __init__(self, item, controller) -> None:
         """Set up UniFi entity base.
 
         Register mac to controller entities to cover disabled entities.
         """
+        self._item = item
         self.controller = controller
-        self.controller.entities[self.DOMAIN][self.TYPE].add(self.mac)
-
-    @property
-    def mac(self):
-        """Return MAC of entity."""
-        raise NotImplementedError
+        self.controller.entities[self.DOMAIN][self.TYPE].add(item.mac)
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
-        LOGGER.debug("New %s entity %s (%s)", self.TYPE, self.entity_id, self.mac)
+        LOGGER.debug("New %s entity %s (%s)", self.TYPE, self.entity_id, self._item.mac)
         for signal, method in (
             (self.controller.signal_reachable, self.async_update_callback),
             (self.controller.signal_options_update, self.options_updated),
             (self.controller.signal_remove, self.remove_item),
         ):
             self.async_on_remove(async_dispatcher_connect(self.hass, signal, method))
+        self._item.register_callback(self.async_update_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
-        LOGGER.debug("Removing %s entity %s (%s)", self.TYPE, self.entity_id, self.mac)
-        self.controller.entities[self.DOMAIN][self.TYPE].remove(self.mac)
+        LOGGER.debug(
+            "Removing %s entity %s (%s)", self.TYPE, self.entity_id, self._item.mac
+        )
+        self._item.remove_callback(self.async_update_callback)
+        self.controller.entities[self.DOMAIN][self.TYPE].remove(self._item.mac)
 
     async def async_remove(self):
         """Clean up when removing entity.
@@ -72,7 +72,9 @@ class UniFiBase(Entity):
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        LOGGER.debug("Updating %s entity %s (%s)", self.TYPE, self.entity_id, self.mac)
+        LOGGER.debug(
+            "Updating %s entity %s (%s)", self.TYPE, self.entity_id, self._item.mac
+        )
         self.async_write_ha_state()
 
     async def options_updated(self) -> None:
@@ -81,7 +83,7 @@ class UniFiBase(Entity):
 
     async def remove_item(self, mac_addresses: set) -> None:
         """Remove entity if MAC is part of set."""
-        if self.mac in mac_addresses:
+        if self._item.mac in mac_addresses:
             await self.async_remove()
 
     @property

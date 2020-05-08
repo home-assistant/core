@@ -14,25 +14,14 @@ class UniFiClient(UniFiBase):
 
     def __init__(self, client, controller) -> None:
         """Set up client."""
-        self.client = client
-        super().__init__(controller)
+        super().__init__(client, controller)
 
-        self._is_wired = self.client.mac not in controller.wireless_clients
+        self._is_wired = client.mac not in controller.wireless_clients
 
     @property
-    def mac(self):
-        """Return MAC of client."""
-        return self.client.mac
-
-    async def async_added_to_hass(self) -> None:
-        """Client entity created."""
-        await super().async_added_to_hass()
-        self.client.register_callback(self.async_update_callback)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect client object when removed."""
-        self.client.remove_callback(self.async_update_callback)
-        await super().async_will_remove_from_hass()
+    def client(self):
+        """Wrap item."""
+        return self._item
 
     @property
     def is_wired(self):

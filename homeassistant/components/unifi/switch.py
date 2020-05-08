@@ -158,7 +158,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
         super().__init__(client, controller)
 
         self.poe_mode = None
-        if self.client.sw_port and self.port.poe_mode != "off":
+        if client.sw_port and self.port.poe_mode != "off":
             self.poe_mode = self.port.poe_mode
 
     async def async_added_to_hass(self):
@@ -252,7 +252,7 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
         """Set up block switch."""
         super().__init__(client, controller)
 
-        self._is_blocked = self.client.blocked
+        self._is_blocked = client.blocked
 
     @callback
     def async_update_callback(self) -> None:
