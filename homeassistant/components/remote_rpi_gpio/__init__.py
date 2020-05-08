@@ -43,7 +43,6 @@ def setup_input(address, port, pull_mode, bouncetime):
         return Button(
             port,
             pull_up=pull_gpio_up,
-            bounce_time=bouncetime,
             pin_factory=PiGPIOFactory(address),
         )
     except (ValueError, IndexError, KeyError, OSError):
