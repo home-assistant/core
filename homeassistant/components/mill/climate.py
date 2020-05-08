@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     TEMP_CELSIUS,
 )
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -57,8 +58,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         websession=async_get_clientsession(hass),
     )
     if not await mill_data_connection.connect():
-        _LOGGER.error("Failed to connect to Mill")
-        return
+        raise ConfigEntryNotReady
 
     await mill_data_connection.find_all_heaters()
 
