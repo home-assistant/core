@@ -126,6 +126,20 @@ FILTER_NODE_DEF_ID = "node_def_id"
 FILTER_INSTEON_TYPE = "insteon_type"
 FILTER_ZWAVE_CAT = "zwave_cat"
 
+# Generic Insteon Type Categories for Filters
+TYPE_CATEGORY_CONTROLLERS = "0."
+TYPE_CATEGORY_DIMMABLE = "1."
+TYPE_CATEGORY_SWITCHED = "2."
+TYPE_CATEGORY_IRRIGATION = "4."
+TYPE_CATEGORY_CLIMATE = "5."
+TYPE_CATEGORY_POOL_CTL = "6."
+TYPE_CATEGORY_SENSOR_ACTUATORS = "7."
+TYPE_CATEGORY_ENERGY_MGMT = "9."
+TYPE_CATEGORY_COVER = "14."
+TYPE_CATEOGRY_LOCK = "15."
+TYPE_CATEGORY_SAFETY = "16."
+TYPE_CATEGORY_X10 = "113."
+
 # Do not use the Home Assistant consts for the states here - we're matching exact API
 # responses, not using them for Home Assistant states
 NODE_FILTERS = {
@@ -139,17 +153,13 @@ NODE_FILTERS = {
             "BinaryControl_ADV",
             "EZIO2x4_Input",
             "EZRAIN_Input",
-            "KeypadButton",
-            "KeypadButton_ADV",
-            "RemoteLinc2",
-            "RemoteLinc2_ADV",
             "OnOffControl",
             "OnOffControl_ADV",
         ],
         FILTER_INSTEON_TYPE: [
             "7.0.",
             "7.13.",
-            "16.",
+            TYPE_CATEGORY_SAFETY,
         ],  # Does a startswith() match; include the dot
         FILTER_ZWAVE_CAT: (["104", "112", "138"] + list(map(str, range(148, 180)))),
     },
@@ -166,15 +176,22 @@ NODE_FILTERS = {
             + list(map(str, range(82, 97)))
         ),
         FILTER_STATES: [],
-        FILTER_NODE_DEF_ID: ["IMETER_SOLO", "EZIO2x4_Input_ADV"],
-        FILTER_INSTEON_TYPE: ["9.0.", "9.7."],
+        FILTER_NODE_DEF_ID: [
+            "IMETER_SOLO",
+            "EZIO2x4_Input_ADV",
+            "KeypadButton",
+            "KeypadButton_ADV",
+            "RemoteLinc2",
+            "RemoteLinc2_ADV",
+        ],
+        FILTER_INSTEON_TYPE: ["0.16.", "0.17.", "0.18.", "9.0.", "9.7."],
         FILTER_ZWAVE_CAT: (["118", "143"] + list(map(str, range(180, 185)))),
     },
     LOCK: {
         FILTER_UOM: ["11"],
         FILTER_STATES: ["locked", "unlocked"],
         FILTER_NODE_DEF_ID: ["DoorLock"],
-        FILTER_INSTEON_TYPE: ["15.", "4.64."],
+        FILTER_INSTEON_TYPE: [TYPE_CATEOGRY_LOCK, "4.64."],
         FILTER_ZWAVE_CAT: ["111"],
     },
     FAN: {
@@ -205,7 +222,7 @@ NODE_FILTERS = {
             "KeypadDimmer",
             "KeypadDimmer_ADV",
         ],
-        FILTER_INSTEON_TYPE: ["1."],
+        FILTER_INSTEON_TYPE: [TYPE_CATEGORY_DIMMABLE],
         FILTER_ZWAVE_CAT: ["109", "119"],
     },
     SWITCH: {
@@ -229,7 +246,13 @@ NODE_FILTERS = {
             "Siren_ADV",
             "X10",
         ],
-        FILTER_INSTEON_TYPE: ["0.16.", "2.", "7.3.255.", "9.10.", "9.11.", "113."],
+        FILTER_INSTEON_TYPE: [
+            TYPE_CATEGORY_SWITCHED,
+            "7.3.255.",
+            "9.10.",
+            "9.11.",
+            TYPE_CATEGORY_X10,
+        ],
         FILTER_ZWAVE_CAT: ["121", "122", "123", "137", "141", "147"],
     },
 }
