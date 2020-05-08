@@ -23,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.network import async_get_url
 from homeassistant.util import dt as dt_util, slugify
 
 from .const import CONF_EVENTS, DOMAIN, DOOR_STATION, DOOR_STATION_INFO, PLATFORMS
@@ -252,7 +253,7 @@ class ConfiguredDoorBird:
     def register_events(self, hass):
         """Register events on device."""
         # Get the URL of this server
-        hass_url = hass.config.api.base_url
+        hass_url = async_get_url(hass)
 
         # Override url if another is specified in the configuration
         if self.custom_url is not None:

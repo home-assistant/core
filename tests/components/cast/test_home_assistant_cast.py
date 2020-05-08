@@ -7,7 +7,7 @@ from tests.common import MockConfigEntry, async_mock_signal
 
 async def test_service_show_view(hass):
     """Test we don't set app id in prod."""
-    hass.config.api = Mock(base_url="http://example.com")
+    hass.config.api = Mock(base_url="https://example.com")
     await home_assistant_cast.async_setup_ha_cast(hass, MockConfigEntry())
     calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
 
@@ -20,7 +20,7 @@ async def test_service_show_view(hass):
 
     assert len(calls) == 1
     controller, entity_id, view_path, url_path = calls[0]
-    assert controller.hass_url == "http://example.com"
+    assert controller.hass_url == "https://example.com"
     assert controller.client_id is None
     # Verify user did not accidentally submit their dev app id
     assert controller.supporting_app_id == "B12CE3CA"
@@ -31,7 +31,7 @@ async def test_service_show_view(hass):
 
 async def test_service_show_view_dashboard(hass):
     """Test casting a specific dashboard."""
-    hass.config.api = Mock(base_url="http://example.com")
+    hass.config.api = Mock(base_url="https://example.com")
     await home_assistant_cast.async_setup_ha_cast(hass, MockConfigEntry())
     calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
 
@@ -56,12 +56,14 @@ async def test_service_show_view_dashboard(hass):
 async def test_use_cloud_url(hass):
     """Test that we fall back to cloud url."""
     hass.config.api = Mock(base_url="http://example.com")
+    hass.config.components.add("cloud")
+
     await home_assistant_cast.async_setup_ha_cast(hass, MockConfigEntry())
     calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
 
     with patch(
         "homeassistant.components.cloud.async_remote_ui_url",
-        return_value="https://something.nabu.acas",
+        return_value="https://something.nabu.casa",
     ):
         await hass.services.async_call(
             "cast",
@@ -72,4 +74,4 @@ async def test_use_cloud_url(hass):
 
     assert len(calls) == 1
     controller = calls[0][0]
-    assert controller.hass_url == "https://something.nabu.acas"
+    assert controller.hass_url == "https://something.nabu.casa"

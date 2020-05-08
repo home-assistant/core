@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant import config_entries, core
 from homeassistant.components.almond import const
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -39,8 +40,9 @@ async def test_set_up_oauth_remote_url(hass, aioclient_mock):
 
     assert entry.state == config_entries.ENTRY_STATE_LOADED
 
+    hass.config.components.add("cloud")
     with patch("homeassistant.components.almond.ALMOND_SETUP_DELAY", 0), patch(
-        "homeassistant.helpers.network.async_get_external_url",
+        "homeassistant.helpers.network.async_get_url",
         return_value="https://example.nabu.casa",
     ), patch("pyalmond.WebAlmondAPI.async_create_device") as mock_create_device:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -93,7 +95,13 @@ async def test_set_up_hassio(hass, aioclient_mock):
 
 
 async def test_set_up_local(hass, aioclient_mock):
-    """Test we do not set up Almond to connect to HA if we use Hass.io."""
+    """Test we do not set up Almond to connect to HA if we use local."""
+
+    # Set up an internal URL, as Almond won't be set up if there is no URL available
+    await async_process_ha_core_config(
+        hass, {"internal_url": "https://192.168.0.1"},
+    )
+
     entry = MockConfigEntry(
         domain="almond",
         data={"type": const.TYPE_LOCAL, "host": "http://localhost:9999"},

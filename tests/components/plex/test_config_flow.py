@@ -20,6 +20,7 @@ from homeassistant.components.plex.const import (
     PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
 )
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ENTRY_STATE_LOADED
 from homeassistant.const import (
     CONF_HOST,
@@ -30,7 +31,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.setup import async_setup_component
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
 from .mock_classes import MockPlexAccount, MockPlexServer
@@ -41,6 +41,9 @@ from tests.common import MockConfigEntry
 
 async def test_bad_credentials(hass):
     """Test when provided credentials are rejected."""
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -111,6 +114,9 @@ async def test_import_bad_hostname(hass):
 
 async def test_unknown_exception(hass):
     """Test when an unknown exception is encountered."""
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -137,7 +143,9 @@ async def test_unknown_exception(hass):
 async def test_no_servers_found(hass):
     """Test when no servers are on an account."""
 
-    await async_setup_component(hass, "http", {"http": {}})
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -169,7 +177,9 @@ async def test_single_available_server(hass):
 
     mock_plex_server = MockPlexServer()
 
-    await async_setup_component(hass, "http", {"http": {}})
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -206,7 +216,9 @@ async def test_multiple_servers_with_selection(hass):
 
     mock_plex_server = MockPlexServer()
 
-    await async_setup_component(hass, "http", {"http": {}})
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -251,7 +263,9 @@ async def test_adding_last_unconfigured_server(hass):
 
     mock_plex_server = MockPlexServer()
 
-    await async_setup_component(hass, "http", {"http": {}})
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
 
     MockConfigEntry(
         domain=DOMAIN,
@@ -325,7 +339,9 @@ async def test_already_configured(hass):
 async def test_all_available_servers_configured(hass):
     """Test when all available servers are already configured."""
 
-    await async_setup_component(hass, "http", {"http": {}})
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
 
     MockConfigEntry(
         domain=DOMAIN,
@@ -467,7 +483,9 @@ async def test_option_flow_new_users_available(hass, caplog):
 async def test_external_timed_out(hass):
     """Test when external flow times out."""
 
-    await async_setup_component(hass, "http", {"http": {}})
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -494,7 +512,9 @@ async def test_external_timed_out(hass):
 async def test_callback_view(hass, aiohttp_client):
     """Test callback view."""
 
-    await async_setup_component(hass, "http", {"http": {}})
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -534,6 +554,9 @@ async def test_multiple_servers_with_import(hass):
 
 async def test_manual_config(hass):
     """Test creating via manual configuration."""
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
 
     class WrongCertValidaitionException(requests.exceptions.SSLError):
         """Mock the exception showing an unmatched error."""
