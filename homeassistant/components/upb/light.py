@@ -22,31 +22,34 @@ SERVICE_LIGHT_BLINK = "light_blink"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the UPB light based on a config entry."""
 
-    upb = hass.data[DOMAIN]["upb"]
-    async_add_entities(UpbLight(upb.devices[dev], upb) for dev in upb.devices)
+    upb = hass.data[DOMAIN][config_entry.entry_id]["upb"]
+    unique_id = config_entry.entry_id
+    async_add_entities(
+        UpbLight(upb.devices[dev], unique_id, upb) for dev in upb.devices
+    )
 
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
-        SERVICE_LIGHT_FADE_START, UPB_BRIGHTNESS_RATE_SCHEMA, "light_fade_start"
+        SERVICE_LIGHT_FADE_START, UPB_BRIGHTNESS_RATE_SCHEMA, "async_light_fade_start"
     )
     platform.async_register_entity_service(
-        SERVICE_LIGHT_FADE_STOP, {}, "light_fade_stop"
+        SERVICE_LIGHT_FADE_STOP, {}, "async_light_fade_stop"
     )
     platform.async_register_entity_service(
-        SERVICE_LIGHT_UPDATE_STATUS, {}, "light_update_status"
+        SERVICE_LIGHT_UPDATE_STATUS, {}, "async_light_update_status"
     )
     platform.async_register_entity_service(
-        SERVICE_LIGHT_BLINK, UPB_BLINK_RATE_SCHEMA, "light_blink"
+        SERVICE_LIGHT_BLINK, UPB_BLINK_RATE_SCHEMA, "async_light_blink"
     )
 
 
 class UpbLight(UpbAttachedEntity, Light):
     """Representation of an UPB Light."""
 
-    def __init__(self, element, upb):
+    def __init__(self, element, unique_id, upb):
         """Initialize an UpbLight."""
-        super().__init__(element, upb)
+        super().__init__(element, unique_id, upb)
         self._brightness = self._element.status
 
     @property
@@ -81,22 +84,22 @@ class UpbLight(UpbAttachedEntity, Light):
         rate = kwargs.get(ATTR_TRANSITION, -1)
         self._element.turn_off(rate)
 
-    async def light_fade_start(self, rate, brightness=None, brightness_pct=None):
+    async def async_light_fade_start(self, rate, brightness=None, brightness_pct=None):
         """Start dimming of device."""
         if brightness:
             brightness_pct = brightness / 2.55
         self._element.fade_start(brightness_pct, rate)
 
-    async def light_fade_stop(self):
+    async def async_light_fade_stop(self):
         """Stop dimming of device."""
         self._element.fade_stop()
 
-    async def light_blink(self, blink_rate):
+    async def async_light_blink(self, blink_rate):
         """Request device to blink."""
         blink_rate = int(blink_rate * 60)  # Convert seconds to 60 hz pulses
         self._element.blink(blink_rate)
 
-    async def light_update_status(self):
+    async def async_light_update_status(self):
         """Request the device to update its status."""
         self._element.update_status()
 

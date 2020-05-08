@@ -29,7 +29,8 @@ async def async_setup_entry(hass, config_entry):
 
     upb = upb_lib.UpbPim({"url": url, "UPStartExportFile": file})
     upb.connect()
-    hass.data[DOMAIN] = {"upb": upb}
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][config_entry.entry_id] = {"upb": upb}
 
     for component in UPB_PLATFORMS:
         hass.async_create_task(
@@ -52,9 +53,9 @@ async def async_unload_entry(hass, config_entry):
     )
 
     if unload_ok:
-        upb = hass.data[DOMAIN]["upb"]
+        upb = hass.data[DOMAIN][config_entry.entry_id]["upb"]
         upb.disconnect()
-        hass.data.pop(DOMAIN)
+        hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
 
@@ -62,11 +63,13 @@ async def async_unload_entry(hass, config_entry):
 class UpbEntity(Entity):
     """Base class for all UPB entities."""
 
-    def __init__(self, element, upb):
+    def __init__(self, element, unique_id, upb):
         """Initialize the base of all UPB devices."""
         self._upb = upb
         self._element = element
-        self._unique_id = f"{self.__class__.__name__.lower()}_{element.index}"
+        self._unique_id = (
+            f"{unique_id}_{self.__class__.__name__.lower()}_{element.addr}"
+        )
 
     @property
     def name(self):
@@ -100,7 +103,7 @@ class UpbEntity(Entity):
     def _element_callback(self, element, changeset):
         """Handle callback from an UPB element that has changed."""
         self._element_changed(element, changeset)
-        self.async_schedule_update_ha_state(True)
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Register callback for UPB changes and update entity state."""
