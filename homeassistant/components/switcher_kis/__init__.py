@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.auth.permissions.const import POLICY_EDIT
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import CONF_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback, split_entity_id
 from homeassistant.exceptions import Unauthorized, UnknownUser
 from homeassistant.helpers import config_validation as cv
@@ -62,7 +62,7 @@ CONFIG_SCHEMA = vol.Schema(
 SERVICE_SET_AUTO_OFF_NAME = "set_auto_off"
 SERVICE_SET_AUTO_OFF_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_AUTO_OFF): cv.time_period_str,
     }
 )
@@ -135,7 +135,7 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
             """Use for handling setting device auto-off service calls."""
 
             await _validate_edit_permission(
-                hass, service.context, service.data[CONF_ENTITY_ID]
+                hass, service.context, service.data[ATTR_ENTITY_ID]
             )
 
             async with SwitcherV2Api(
@@ -144,10 +144,10 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
                 await swapi.set_auto_shutdown(service.data[CONF_AUTO_OFF])
 
         async def async_turn_on_with_timer_service(service: ServiceCallType) -> None:
-            """Use for handling setting device auto-off service calls."""
+            """Use for handling turning device on with a timer service calls."""
 
             await _validate_edit_permission(
-                hass, service.context, service.data[CONF_ENTITY_ID]
+                hass, service.context, service.data[ATTR_ENTITY_ID]
             )
 
             async with SwitcherV2Api(
