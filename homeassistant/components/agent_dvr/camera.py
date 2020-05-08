@@ -117,7 +117,6 @@ class AgentCamera(MjpegCamera):
             "connected": self.connected,
             "detected": self.is_detected,
             "alerted": self.is_alerted,
-            "recording": self.is_recording,
             "has_ptz": self.device.has_ptz,
             "alerts_enabled": self.device.alerts_active,
         }

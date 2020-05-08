@@ -3,7 +3,6 @@
   "name": "Agent DVR",
   "documentation": "https://www.home-assistant.io/integrations/agent_dvr/",
   "requirements": ["agent-py==0.0.20"],
-  "dependencies": [],
   "config_flow": true,
   "codeowners": ["@ispysoftware"]
 }
