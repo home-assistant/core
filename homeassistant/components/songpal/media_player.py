@@ -77,8 +77,8 @@ async def async_setup_entry(
         _LOGGER.debug("Unable to get methods from songpal: %s", ex)
         raise PlatformNotReady
 
-    songpal_device = SongpalDevice(name, device)
-    async_add_entities([songpal_device], True)
+    songpal_entity = SongpalEntity(name, device)
+    async_add_entities([songpal_entity], True)
 
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
@@ -88,7 +88,7 @@ async def async_setup_entry(
     )
 
 
-class SongpalDevice(MediaPlayerEntity):
+class SongpalEntity(MediaPlayerEntity):
     """Class representing a Songpal device."""
 
     def __init__(self, name, device, poll=False):
