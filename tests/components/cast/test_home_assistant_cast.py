@@ -1,13 +1,16 @@
 """Test Home Assistant Cast."""
 from homeassistant.components.cast import home_assistant_cast
+from homeassistant.config import async_process_ha_core_config
 
-from tests.async_mock import Mock, patch
+from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_mock_signal
 
 
 async def test_service_show_view(hass):
     """Test we don't set app id in prod."""
-    hass.config.api = Mock(base_url="https://example.com")
+    await async_process_ha_core_config(
+        hass, {"external_url": "https://example.com"},
+    )
     await home_assistant_cast.async_setup_ha_cast(hass, MockConfigEntry())
     calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
 
@@ -31,7 +34,9 @@ async def test_service_show_view(hass):
 
 async def test_service_show_view_dashboard(hass):
     """Test casting a specific dashboard."""
-    hass.config.api = Mock(base_url="https://example.com")
+    await async_process_ha_core_config(
+        hass, {"external_url": "https://example.com"},
+    )
     await home_assistant_cast.async_setup_ha_cast(hass, MockConfigEntry())
     calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
 
@@ -55,7 +60,9 @@ async def test_service_show_view_dashboard(hass):
 
 async def test_use_cloud_url(hass):
     """Test that we fall back to cloud url."""
-    hass.config.api = Mock(base_url="http://example.com")
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://example.local:8123"},
+    )
     hass.config.components.add("cloud")
 
     await home_assistant_cast.async_setup_ha_cast(hass, MockConfigEntry())

@@ -9,7 +9,7 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
+from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONF_WEBHOOK_URL = "webhook_url"
@@ -47,9 +47,11 @@ def mock_not_supports_encryption():
         yield
 
 
-def init_config_flow(hass):
+async def init_config_flow(hass):
     """Init a configuration flow."""
-    hass.config.api = Mock(base_url=BASE_URL)
+    await async_process_ha_core_config(
+        hass, {"external_url": BASE_URL},
+    )
     flow = config_flow.OwnTracksFlow()
     flow.hass = hass
     return flow
@@ -57,7 +59,7 @@ def init_config_flow(hass):
 
 async def test_user(hass, webhook_id, secret):
     """Test user step."""
-    flow = init_config_flow(hass)
+    flow = await init_config_flow(hass)
 
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -74,7 +76,7 @@ async def test_user(hass, webhook_id, secret):
 
 async def test_import(hass, webhook_id, secret):
     """Test import step."""
-    flow = init_config_flow(hass)
+    flow = await init_config_flow(hass)
 
     result = await flow.async_step_import({})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -99,7 +101,7 @@ async def test_import_setup(hass):
 
 async def test_abort_if_already_setup(hass):
     """Test that we can't add more than one instance."""
-    flow = init_config_flow(hass)
+    flow = await init_config_flow(hass)
 
     MockConfigEntry(domain=DOMAIN, data={}).add_to_hass(hass)
     assert hass.config_entries.async_entries(DOMAIN)
@@ -117,7 +119,7 @@ async def test_abort_if_already_setup(hass):
 
 async def test_user_not_supports_encryption(hass, not_supports_encryption):
     """Test user step."""
-    flow = init_config_flow(hass)
+    flow = await init_config_flow(hass)
 
     result = await flow.async_step_user({})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
