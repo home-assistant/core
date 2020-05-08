@@ -323,26 +323,20 @@ class AisCloudWS:
         )
         return ws_resp
 
-    def ask_gh(self, question):
+    async def async_ask_json_gh(self, question, hass):
         self.setCloudToken()
-        payload = {"question": question}
-        ws_resp = requests.get(
-            self.url_gh + "ask", headers=CLOUD_WS_HEADER, params=payload, timeout=5
-        )
-        return ws_resp
-
-    def ask_json_gh(self, question):
-        self.setCloudToken()
+        web_session = aiohttp_client.async_get_clientsession(hass)
         payload = {
             "command": question,
             "user": ais_global.get_sercure_android_id_dom(),
             "broadcast": False,
             "converse": True,
         }
-        ws_resp = requests.post(
-            self.url_gh + "ask_json", json=payload, headers=CLOUD_WS_HEADER, timeout=5
-        )
-        return ws_resp
+        with async_timeout.timeout(5):
+            ws_resp = await web_session.post(
+                self.url_gh + "ask_json", headers=CLOUD_WS_HEADER
+            )
+            return await ws_resp.json()
 
     def ask(self, question, org_answer):
         self.setCloudToken()
