@@ -182,17 +182,13 @@ async def async_setup(hass, config):
         p_name = service.data[ATTR_PERSON]
 
         if g_id not in face.store:
-            msg = "Can't add an image of the person '{}' with error: Unknown group '{}'".format(
-                p_name, g_id
-            )
+            msg = f"Can't add an image of the person '{p_name}' with error: Unknown group '{g_id}'"
             _LOGGER.error(msg)
             raise HomeAssistantError(msg)
 
         p_id = face.store[g_id].get(p_name)
         if p_id is None:
-            msg = "Can't add an image of the person '{}' with error: Person unknown in group '{}'".format(
-                p_name, g_id
-            )
+            msg = f"Can't add an image of the person '{p_name}' with error: Person unknown in group '{g_id}'"
             _LOGGER.error(msg)
             raise HomeAssistantError(msg)
 
