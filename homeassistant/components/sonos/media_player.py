@@ -325,9 +325,7 @@ def soco_error(errorcodes=None):
             try:
                 return funct(*args, **kwargs)
             except SoCoUPnPException as err:
-                if errorcodes and err.error_code in errorcodes:
-                    pass
-                else:
+                if not errorcodes or err.error_code not in errorcodes:
                     _LOGGER.error("Error on %s with %s", funct.__name__, err)
             except SoCoException as err:
                 _LOGGER.error("Error on %s with %s", funct.__name__, err)
