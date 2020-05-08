@@ -2,7 +2,13 @@
 from datetime import timedelta
 import logging
 
-from aiounifi.api import SOURCE_DATA
+from aiounifi.api import SOURCE_DATA, SOURCE_EVENT
+from aiounifi.events import (
+    WIRED_CLIENT_CONNECTED,
+    WIRELESS_CLIENT_CONNECTED,
+    WIRELESS_CLIENT_ROAM,
+    WIRELESS_CLIENT_ROAMRADIO,
+)
 
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
@@ -18,6 +24,9 @@ from .unifi_client import UniFiClient
 from .unifi_entity_base import UniFiBase
 
 LOGGER = logging.getLogger(__name__)
+
+CLIENT_TRACKER = "client"
+DEVICE_TRACKER = "device"
 
 CLIENT_CONNECTED_ATTRIBUTES = [
     "_is_guest_by_uap",
@@ -41,8 +50,12 @@ CLIENT_STATIC_ATTRIBUTES = [
     "oui",
 ]
 
-CLIENT_TRACKER = "client"
-DEVICE_TRACKER = "device"
+WIRED_CONNECTION = (WIRED_CLIENT_CONNECTED,)
+WIRELESS_CONNECTION = (
+    WIRELESS_CLIENT_CONNECTED,
+    WIRELESS_CLIENT_ROAM,
+    WIRELESS_CLIENT_ROAMRADIO,
+)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -120,79 +133,83 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         """Set up tracked client."""
         super().__init__(client, controller)
 
+        self.schedule_update = False
         self.cancel_scheduled_update = None
-        self.is_disconnected = None
-        self.wired_bug = None
-        if self.is_wired != self.client.is_wired:
-            self.wired_bug = dt_util.utcnow() - self.controller.option_detection_time
+        self._is_connected = False
+        if self.client.last_seen:
+            self._is_connected = (
+                self.is_wired == self.client.is_wired
+                and dt_util.utcnow()
+                - dt_util.utc_from_timestamp(float(self.client.last_seen))
+                < self.controller.option_detection_time
+            )
+            if self._is_connected:
+                self.schedule_update = True
 
-    @property
-    def is_connected(self):
-        """Return true if the client is connected to the network.
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect object when removed."""
+        if self.cancel_scheduled_update:
+            self.cancel_scheduled_update()
+        await super().async_will_remove_from_hass()
 
-        If connected to unwanted ssid return False.
-        If is_wired and client.is_wired differ it means that the device is offline and UniFi bug shows device as wired.
-        """
+    @callback
+    def async_update_callback(self) -> None:
+        """Update the clients state."""
 
         @callback
-        def _scheduled_update(now):
-            """Scheduled callback for update."""
-            self.is_disconnected = True
+        def _make_disconnected(now):
+            """Mark client as disconnected."""
+            self._is_connected = False
             self.cancel_scheduled_update = None
             self.async_write_ha_state()
 
-        if (self.is_wired and self.wired_connection) or (
-            not self.is_wired and self.wireless_connection
-        ):
+        if self.client.last_updated == SOURCE_EVENT:
+
+            if (self.is_wired and self.client.event.event in WIRED_CONNECTION) or (
+                not self.is_wired and self.client.event.event in WIRELESS_CONNECTION
+            ):
+                self._is_connected = True
+                self.schedule_update = False
+                if self.cancel_scheduled_update:
+                    self.cancel_scheduled_update()
+                    self.cancel_scheduled_update = None
+
+            # Ignore extra scheduled update from wired bug
+            elif not self.cancel_scheduled_update:
+                self.schedule_update = True
+
+        elif not self.client.event and self.client.last_updated == SOURCE_DATA:
+
+            if self.is_wired == self.client.is_wired:
+                self._is_connected = True
+                self.schedule_update = True
+
+        if self.schedule_update:
+            self.schedule_update = False
+
             if self.cancel_scheduled_update:
                 self.cancel_scheduled_update()
-                self.cancel_scheduled_update = None
 
-            self.is_disconnected = False
+            self.cancel_scheduled_update = async_track_point_in_utc_time(
+                self.hass,
+                _make_disconnected,
+                dt_util.utcnow() + self.controller.option_detection_time,
+            )
 
-        if (self.is_wired and self.wired_connection is False) or (
-            not self.is_wired and self.wireless_connection is False
-        ):
-            if not self.is_disconnected and not self.cancel_scheduled_update:
-                self.cancel_scheduled_update = async_track_point_in_utc_time(
-                    self.hass,
-                    _scheduled_update,
-                    dt_util.utcnow() + self.controller.option_detection_time,
-                )
+        super().async_update_callback()
 
-        # SSID filter
+    @property
+    def is_connected(self):
+        """Return true if the client is connected to the network."""
         if (
             not self.is_wired
             and self.client.essid
             and self.controller.option_ssid_filter
             and self.client.essid not in self.controller.option_ssid_filter
-            and not self.cancel_scheduled_update
         ):
             return False
 
-        # A client that has never been seen cannot be connected.
-        if self.client.last_seen is None:
-            return False
-
-        if self.is_disconnected is not None:
-            return not self.is_disconnected
-
-        if self.is_wired != self.client.is_wired:
-            if not self.wired_bug:
-                self.wired_bug = dt_util.utcnow()
-            since_last_seen = dt_util.utcnow() - self.wired_bug
-
-        else:
-            self.wired_bug = None
-
-            since_last_seen = dt_util.utcnow() - dt_util.utc_from_timestamp(
-                float(self.client.last_seen)
-            )
-
-        if since_last_seen < self.controller.option_detection_time:
-            return True
-
-        return False
+        return self._is_connected
 
     @property
     def source_type(self):
@@ -213,7 +230,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
         for variable in CLIENT_STATIC_ATTRIBUTES + CLIENT_CONNECTED_ATTRIBUTES:
             if variable in self.client.raw:
-                if self.is_disconnected and variable in CLIENT_CONNECTED_ATTRIBUTES:
+                if not self.is_connected and variable in CLIENT_CONNECTED_ATTRIBUTES:
                     continue
                 attributes[variable] = self.client.raw[variable]
 
@@ -227,12 +244,12 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         elif self.is_wired:
             if not self.controller.option_track_wired_clients:
                 await self.async_remove()
-        else:
-            if (
-                self.controller.option_ssid_filter
-                and self.client.essid not in self.controller.option_ssid_filter
-            ):
-                await self.async_remove()
+
+        elif (
+            self.controller.option_ssid_filter
+            and self.client.essid not in self.controller.option_ssid_filter
+        ):
+            await self.async_remove()
 
 
 class UniFiDeviceTracker(UniFiBase, ScannerEntity):
@@ -261,8 +278,10 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
-        await super().async_will_remove_from_hass()
         self.device.remove_callback(self.async_update_callback)
+        if self.cancel_scheduled_update:
+            self.cancel_scheduled_update()
+        await super().async_will_remove_from_hass()
 
     @callback
     def async_update_callback(self):
@@ -287,8 +306,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
                 dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 10),
             )
 
-        LOGGER.debug("Updating device %s (%s)", self.entity_id, self.device.mac)
-        self.async_write_ha_state()
+        super().async_update_callback()
 
     @property
     def is_connected(self):
@@ -353,8 +371,3 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.controller.option_track_devices:
             await self.async_remove()
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
