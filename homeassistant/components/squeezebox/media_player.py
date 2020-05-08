@@ -157,7 +157,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if entity and not entity.available:
                 # check if previously unavailable player has connected
                 await player.async_update()
-                entity.available = player.available
+                entity.available = player.connected
             if not entity:
                 _LOGGER.debug("Adding new entity: %s", player)
                 entity = SqueezeBoxEntity(player)
