@@ -99,9 +99,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus sensors."""
     sensors = []
-    data_types = {DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"}}
-    data_types[DATA_TYPE_UINT] = {1: "H", 2: "I", 4: "Q"}
-    data_types[DATA_TYPE_FLOAT] = {1: "e", 2: "f", 4: "d"}
+    data_types = {
+        DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"},
+        DATA_TYPE_UINT: {1: "H", 2: "I", 4: "Q"},
+        DATA_TYPE_FLOAT: {1: "e", 2: "f", 4: "d"},
+    }
 
     for register in config[CONF_REGISTERS]:
         structure = ">i"
