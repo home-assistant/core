@@ -26,6 +26,7 @@ from homeassistant.const import (
     DATA_ZETTABYTES,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
@@ -39,11 +40,11 @@ from .const import (
     CONF_UPCOMING_DAYS,
     CONF_URLBASE,
     CONF_WANTED_MAX_ITEMS,
+    DATA_SONARR,
     DEFAULT_BASE_PATH,
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_SSL,
-    DEFAULT_WANTED_MAX_ITEMS,
     DOMAIN,
 )
 
@@ -66,9 +67,9 @@ DEFAULT_DAYS = "1"
 DEFAULT_UNIT = DATA_GIGABYTES
 
 PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_INCLUDED, invalidation_version="0.111"),
-    cv.deprecated(CONF_MONITORED_CONDITIONS, invalidation_version="0.111"),
-    cv.deprecated(CONF_UNIT, invalidation_version="0.111"),
+    cv.deprecated(CONF_INCLUDED, invalidation_version="0.112"),
+    cv.deprecated(CONF_MONITORED_CONDITIONS, invalidation_version="0.112"),
+    cv.deprecated(CONF_UNIT, invalidation_version="0.112"),
     PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_API_KEY): cv.string,
@@ -92,11 +93,13 @@ async def async_setup_platform(
     discovery_info: Any = None,
 ) -> None:
     """Import the platform into a config entry."""
+    if len(hass.config_entries.async_entries(DOMAIN)) > 0:
+        return True
+
     config[CONF_BASE_PATH] = f"{config[CONF_URLBASE]}{DEFAULT_BASE_PATH}"
-    config[CONF_WANTED_MAX_ITEMS] = DEFAULT_WANTED_MAX_ITEMS
     config[CONF_UPCOMING_DAYS] = int(config[CONF_DAYS])
     config[CONF_VERIFY_SSL] = False
-    
+
     del config[CONF_DAYS]
     del config[CONF_INCLUDED]
     del config[CONF_MONITORED_CONDITIONS]
@@ -115,21 +118,25 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up Sonarr sensors based on a config entry."""
-    config = entry.data
-    sonarr = hass.data[DOMAIN][entry.entry_id]
+    options = entry.options
+    sonarr = hass.data[DOMAIN][entry.entry_id][DATA_SONARR]
     unique_id = entry.unique_id
 
     if unique_id is None:
         unique_id = entry.entry_id
 
     entities = [
-        SonarrCommandsSensor(sonarr, unique_id),
-        SonarrDiskspaceSensor(sonarr, unique_id),
-        SonarrQueueSensor(sonarr, unique_id),
-        SonarrSeriesSensor(sonarr, unique_id),
-        SonarrStatusSensor(sonarr, unique_id),
-        SonarrUpcomingSensor(sonarr, unique_id, days=config[CONF_UPCOMING_DAYS],),
-        SonarrWantedSensor(sonarr, unique_id, max_items=config[CONF_WANTED_MAX_ITEMS]),
+        SonarrCommandsSensor(sonarr, entry.entry_id, unique_id),
+        SonarrDiskspaceSensor(sonarr, entry.entry_id, unique_id),
+        SonarrQueueSensor(sonarr, entry.entry_id, unique_id),
+        SonarrSeriesSensor(sonarr, entry.entry_id, unique_id),
+        SonarrStatusSensor(sonarr, entry.entry_id, unique_id),
+        SonarrUpcomingSensor(
+            sonarr, entry.entry_id, unique_id, days=options[CONF_UPCOMING_DAYS]
+        ),
+        SonarrWantedSensor(
+            sonarr, entry.entry_id, unique_id, max_items=options[CONF_WANTED_MAX_ITEMS]
+        ),
     ]
 
     async_add_entities(entities, True)
@@ -165,6 +172,7 @@ class SonarrSensor(SonarrEntity):
         self,
         *,
         sonarr: Sonarr,
+        entry_id: str,
         unique_id: str,
         enabled_default: bool = True,
         icon: str,
@@ -183,6 +191,7 @@ class SonarrSensor(SonarrEntity):
 
         super().__init__(
             sonarr=sonarr,
+            entry_id=entry_id,
             device_id=unique_id,
             name=name,
             icon=icon,
@@ -208,12 +217,13 @@ class SonarrSensor(SonarrEntity):
 class SonarrCommandsSensor(SonarrSensor):
     """Defines a Sonarr Commands sensor."""
 
-    def __init__(self, sonarr: Sonarr, unique_id: str) -> None:
+    def __init__(self, sonarr: Sonarr, entry_id: str, unique_id: str) -> None:
         """Initialize Sonarr Commands sensor."""
         self._commands = []
 
         super().__init__(
             sonarr=sonarr,
+            entry_id=entry_id,
             unique_id=unique_id,
             icon="mdi:code-braces",
             key="commands",
@@ -246,13 +256,14 @@ class SonarrCommandsSensor(SonarrSensor):
 class SonarrDiskspaceSensor(SonarrSensor):
     """Defines a Sonarr Disk Space sensor."""
 
-    def __init__(self, sonarr: Sonarr, unique_id: str) -> None:
+    def __init__(self, sonarr: Sonarr, entry_id: str, unique_id: str) -> None:
         """Initialize Sonarr Disk Space sensor."""
         self._disks = []
         self._total_free = 0
 
         super().__init__(
             sonarr=sonarr,
+            entry_id=entry_id,
             unique_id=unique_id,
             icon="mdi:harddisk",
             key="diskspace",
@@ -298,12 +309,13 @@ class SonarrDiskspaceSensor(SonarrSensor):
 class SonarrQueueSensor(SonarrSensor):
     """Defines a Sonarr Queue sensor."""
 
-    def __init__(self, sonarr: Sonarr, unique_id: str) -> None:
+    def __init__(self, sonarr: Sonarr, entry_id: str, unique_id: str) -> None:
         """Initialize Sonarr Queue sensor."""
         self._queue = []
 
         super().__init__(
             sonarr=sonarr,
+            entry_id=entry_id,
             unique_id=unique_id,
             icon="mdi:download",
             key="queue",
@@ -339,12 +351,13 @@ class SonarrQueueSensor(SonarrSensor):
 class SonarrSeriesSensor(SonarrSensor):
     """Defines a Sonarr Series sensor."""
 
-    def __init__(self, sonarr: Sonarr, unique_id: str) -> None:
+    def __init__(self, sonarr: Sonarr, entry_id: str, unique_id: str) -> None:
         """Initialize Sonarr Series sensor."""
         self._items = []
 
         super().__init__(
             sonarr=sonarr,
+            entry_id=entry_id,
             unique_id=unique_id,
             icon="mdi:television",
             key="series",
@@ -377,17 +390,18 @@ class SonarrSeriesSensor(SonarrSensor):
 class SonarrStatusSensor(SonarrSensor):
     """Defines a Sonarr Status sensor."""
 
-    def __init__(self, sonarr: Sonarr, unique_id: str) -> None:
+    def __init__(self, sonarr: Sonarr, entry_id: str, unique_id: str) -> None:
         """Initialize Sonarr Status sensor."""
         self._version = None
 
         super().__init__(
             sonarr=sonarr,
+            entry_id=entry_id,
             unique_id=unique_id,
             icon="mdi:information",
             key="status",
             name=f"{sonarr.app.info.app_name} Status",
-            unit_of_measurement="Status",
+            unit_of_measurement=None,
             enabled_default=False,
         )
 
@@ -406,18 +420,33 @@ class SonarrStatusSensor(SonarrSensor):
 class SonarrUpcomingSensor(SonarrSensor):
     """Defines a Sonarr Upcoming sensor."""
 
-    def __init__(self, sonarr: Sonarr, unique_id: str, days: int) -> None:
+    def __init__(
+        self, sonarr: Sonarr, entry_id: str, unique_id: str, days: int,
+    ) -> None:
         """Initialize Sonarr Upcoming sensor."""
         self._days = days
         self._upcoming = []
 
         super().__init__(
             sonarr=sonarr,
+            entry_id=entry_id,
             unique_id=unique_id,
             icon="mdi:television",
             key="upcoming",
             name=f"{sonarr.app.info.app_name} Upcoming",
             unit_of_measurement="Episodes",
+        )
+
+    async def async_added_to_hass(self):
+        """Listen for signals."""
+        await super().async_added_to_hass()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"sonarr.{self._entry_id}.entry_options_update",
+                self.async_update_entry_options,
+            )
         )
 
     @sonarr_exception_handler
@@ -429,6 +458,10 @@ class SonarrUpcomingSensor(SonarrSensor):
         self._upcoming = await self.sonarr.calendar(
             start=start.isoformat(), end=end.isoformat()
         )
+
+    async def async_update_entry_options(self, options: dict) -> None:
+        """Update sensor settings when config entry options are update."""
+        self._days = options[CONF_UPCOMING_DAYS]
 
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
@@ -449,7 +482,9 @@ class SonarrUpcomingSensor(SonarrSensor):
 class SonarrWantedSensor(SonarrSensor):
     """Defines a Sonarr Wanted sensor."""
 
-    def __init__(self, sonarr: Sonarr, unique_id: str, max_items: int = 10) -> None:
+    def __init__(
+        self, sonarr: Sonarr, entry_id: str, unique_id: str, max_items: int = 10,
+    ) -> None:
         """Initialize Sonarr Wanted sensor."""
         self._max_items = max_items
         self._results = None
@@ -457,6 +492,7 @@ class SonarrWantedSensor(SonarrSensor):
 
         super().__init__(
             sonarr=sonarr,
+            entry_id=entry_id,
             unique_id=unique_id,
             icon="mdi:television",
             key="wanted",
@@ -465,11 +501,27 @@ class SonarrWantedSensor(SonarrSensor):
             enabled_default=False,
         )
 
+    async def async_added_to_hass(self):
+        """Listen for signals."""
+        await super().async_added_to_hass()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"sonarr.{self._entry_id}.entry_options_update",
+                self.async_update_entry_options,
+            )
+        )
+
     @sonarr_exception_handler
     async def async_update(self) -> None:
         """Update entity."""
         self._results = await self.sonarr.wanted(page_size=self._max_items)
         self._total = self._results.total
+
+    async def async_update_entry_options(self, options: dict) -> None:
+        """Update sensor settings when config entry options are update."""
+        self._max_items = options[CONF_WANTED_MAX_ITEMS]
 
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:

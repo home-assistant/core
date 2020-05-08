@@ -795,7 +795,7 @@ solaredge==0.0.2
 somecomfort==0.5.2
 
 # homeassistant.components.sonarr
-sonarr==0.2.0
+sonarr==0.2.1
 
 # homeassistant.components.marytts
 speak2mary==1.4.0

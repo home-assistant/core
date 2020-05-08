@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 from sonarr import Sonarr, SonarrAccessRestricted, SonarrError
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
@@ -42,8 +43,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_BASE_PATH, default=DEFAULT_BASE_PATH): str,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
-        vol.Optional(CONF_UPCOMING_DAYS, default=DEFAULT_UPCOMING_DAYS): int,
-        vol.Optional(CONF_WANTED_MAX_ITEMS, default=DEFAULT_WANTED_MAX_ITEMS): int,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
 )
@@ -77,6 +76,12 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return SonarrOptionsFlowHandler(config_entry)
+
     async def async_step_import(
         self, user_input: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
@@ -107,3 +112,33 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors or {},
         )
+
+
+class SonarrOptionsFlowHandler(OptionsFlow):
+    """Handle Sonarr client options."""
+
+    def __init__(self, config_entry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input: Optional[ConfigType] = None):
+        """Manage Sonarr options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        options = {
+            vol.Optional(
+                CONF_UPCOMING_DAYS,
+                default=self.config_entry.options.get(
+                    CONF_UPCOMING_DAYS, DEFAULT_UPCOMING_DAYS
+                ),
+            ): int,
+            vol.Optional(
+                CONF_WANTED_MAX_ITEMS,
+                default=self.config_entry.options.get(
+                    CONF_WANTED_MAX_ITEMS, DEFAULT_WANTED_MAX_ITEMS
+                ),
+            ): int,
+        }
+
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

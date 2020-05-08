@@ -4,9 +4,8 @@ from datetime import timedelta
 from typing import Any, Dict
 
 from sonarr import Sonarr, SonarrError
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
     CONF_API_KEY,
@@ -16,8 +15,8 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -28,44 +27,11 @@ from .const import (
     CONF_BASE_PATH,
     CONF_UPCOMING_DAYS,
     CONF_WANTED_MAX_ITEMS,
-    DEFAULT_BASE_PATH,
-    DEFAULT_PORT,
-    DEFAULT_SSL,
+    DATA_SONARR,
+    DATA_UNDO_UPDATE_LISTENER,
     DEFAULT_UPCOMING_DAYS,
-    DEFAULT_VERIFY_SSL,
     DEFAULT_WANTED_MAX_ITEMS,
     DOMAIN,
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Required(CONF_API_KEY): cv.string,
-                        vol.Optional(
-                            CONF_BASE_PATH, default=DEFAULT_BASE_PATH
-                        ): cv.string,
-                        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-                        vol.Optional(
-                            CONF_UPCOMING_DAYS, default=DEFAULT_UPCOMING_DAYS
-                        ): cv.positive_int,
-                        vol.Optional(
-                            CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
-                        ): cv.boolean,
-                        vol.Optional(
-                            CONF_WANTED_MAX_ITEMS, default=DEFAULT_WANTED_MAX_ITEMS
-                        ): cv.positive_int,
-                    }
-                )
-            ],
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
 )
 
 PLATFORMS = ["sensor"]
@@ -75,20 +41,22 @@ SCAN_INTERVAL = timedelta(seconds=30)
 async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
     """Set up the Sonarr component."""
     hass.data.setdefault(DOMAIN, {})
-
-    if DOMAIN in config:
-        for entry_config in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config,
-                )
-            )
-
     return True
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up Sonarr from a config entry."""
+    if not entry.options:
+        options = {
+            CONF_UPCOMING_DAYS: entry.data.get(
+                CONF_UPCOMING_DAYS, DEFAULT_UPCOMING_DAYS
+            ),
+            CONF_WANTED_MAX_ITEMS: entry.data.get(
+                CONF_WANTED_MAX_ITEMS, DEFAULT_WANTED_MAX_ITEMS
+            ),
+        }
+        hass.config_entries.async_update_entry(entry, options=options)
+
     sonarr = Sonarr(
         host=entry.data[CONF_HOST],
         port=entry.data[CONF_PORT],
@@ -104,7 +72,12 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     except SonarrError:
         raise ConfigEntryNotReady
 
-    hass.data[DOMAIN][entry.entry_id] = sonarr
+    undo_listener = entry.add_update_listener(_async_update_listener)
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_SONARR: sonarr,
+        DATA_UNDO_UPDATE_LISTENER: undo_listener,
+    }
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -125,10 +98,19 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
         )
     )
 
+    hass.data[DOMAIN][entry.entry_id][DATA_UNDO_UPDATE_LISTENER]()
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    async_dispatcher_send(
+        hass, f"sonarr.{entry.entry_id}.entry_options_update", entry.options
+    )
 
 
 class SonarrEntity(Entity):
@@ -138,12 +120,14 @@ class SonarrEntity(Entity):
         self,
         *,
         sonarr: Sonarr,
+        entry_id: str,
         device_id: str,
         name: str,
         icon: str,
         enabled_default: bool = True,
     ) -> None:
         """Initialize the Sonar entity."""
+        self._entry_id = entry_id
         self._device_id = device_id
         self._enabled_default = enabled_default
         self._icon = icon
@@ -176,4 +160,5 @@ class SonarrEntity(Entity):
             ATTR_NAME: "Activity Sensor",
             ATTR_MANUFACTURER: "Sonarr",
             ATTR_SOFTWARE_VERSION: self.sonarr.app.info.version,
+            "entry_type": "service",
         }

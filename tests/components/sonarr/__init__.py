@@ -26,6 +26,13 @@ PORT = 8989
 BASE_PATH = "/api"
 API_KEY = "MOCK_API_KEY"
 
+MOCK_SENSOR_CONFIG = {
+    "platform": DOMAIN,
+    "host": HOST,
+    "api_key": API_KEY,
+    "days": 3,
+}
+
 MOCK_USER_INPUT = {
     CONF_HOST: HOST,
     CONF_PORT: PORT,

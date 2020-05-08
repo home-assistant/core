@@ -1,7 +1,11 @@
 """Test the Sonarr config flow."""
-from asynctest import patch
-
-from homeassistant.components.sonarr.const import DOMAIN
+from homeassistant.components.sonarr.const import (
+    CONF_UPCOMING_DAYS,
+    CONF_WANTED_MAX_ITEMS,
+    DEFAULT_UPCOMING_DAYS,
+    DEFAULT_WANTED_MAX_ITEMS,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_SOURCE
 from homeassistant.data_entry_flow import (
@@ -11,14 +15,37 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
+from tests.async_mock import patch
 from tests.components.sonarr import (
     HOST,
     MOCK_USER_INPUT,
     mock_connection,
     mock_connection_error,
     mock_connection_invalid_auth,
+    setup_integration,
 )
 from tests.test_util.aiohttp import AiohttpClientMocker
+
+
+async def test_options(hass, aioclient_mock: AiohttpClientMocker):
+    """Test updating options."""
+    entry = await setup_integration(hass, aioclient_mock)
+    assert entry.options[CONF_UPCOMING_DAYS] == DEFAULT_UPCOMING_DAYS
+    assert entry.options[CONF_WANTED_MAX_ITEMS] == DEFAULT_WANTED_MAX_ITEMS
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_UPCOMING_DAYS: 2, CONF_WANTED_MAX_ITEMS: 100},
+    )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_UPCOMING_DAYS] == 2
+    assert result["data"][CONF_WANTED_MAX_ITEMS] == 100
 
 
 async def test_show_user_form(hass: HomeAssistantType) -> None:
@@ -96,6 +123,10 @@ async def test_full_import_flow_implementation(
 
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
+
+    assert result["result"]
+    assert result["result"].options[CONF_UPCOMING_DAYS] == DEFAULT_UPCOMING_DAYS
+    assert result["result"].options[CONF_WANTED_MAX_ITEMS] == DEFAULT_WANTED_MAX_ITEMS
 
 
 async def test_full_user_flow_implementation(

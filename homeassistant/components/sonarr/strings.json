@@ -11,9 +11,7 @@
           "base_path": "Path to API",
           "port": "Port",
           "ssl": "Sonarr uses a SSL certificate",
-          "verify_ssl": "Sonarr uses a proper certificate",
-          "upcoming_days": "Number of upcoming days to display",
-          "wanted_max_items": "Max number of wanted items to display"
+          "verify_ssl": "Sonarr uses a proper certificate"
         }
       }
     },
@@ -24,6 +22,16 @@
     "abort": {
       "already_configured": "Sonarr is already configured",
       "unknown": "Unexpected error"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "upcoming_days": "Number of upcoming days to display",
+          "wanted_max_items": "Max number of wanted items to display"
+        }
+      }
     }
   }
 }
