@@ -6,7 +6,8 @@ from homeassistant.const import CONF_NAME
 
 from tests.async_mock import AsyncMock, MagicMock, patch
 
-FRIENDLY_NAME = "friendly name"
+FRIENDLY_NAME = "name"
+ENTITY_ID = f"media_player.{FRIENDLY_NAME}"
 HOST = "0.0.0.0"
 ENDPOINT = f"http://{HOST}:10000/sony"
 MODEL = "model"
@@ -46,8 +47,15 @@ def _create_mocked_device(throw_exception=False):
     volume1.is_muted = False
     volume1.set_volume = AsyncMock()
     volume1.set_mute = AsyncMock()
+    volume2 = MagicMock()
+    volume2.maxVolume = 100
+    volume2.minVolume = 0
+    volume2.volume = 20
+    volume2.is_muted = True
     mocked_device.volume1 = volume1
-    type(mocked_device).get_volume_information = AsyncMock(return_value=[volume1])
+    type(mocked_device).get_volume_information = AsyncMock(
+        return_value=[volume1, volume2]
+    )
 
     power = MagicMock()
     power.status = True
