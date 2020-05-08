@@ -1,4 +1,5 @@
 """Config flow to configure Blink."""
+from datetime import timedelta
 import logging
 
 from blinkpy import blinkpy
@@ -11,11 +12,18 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
-from homeassistant.helpers import config_validation as cv
 
 from .const import DEFAULT_OFFSET, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def validate_input(data):
+    """Validate the scan interval."""
+    try:
+        return timedelta(seconds=data[CONF_SCAN_INTERVAL])
+    except TypeError:
+        return data[CONF_SCAN_INTERVAL]
 
 
 class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -28,7 +36,7 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the blink flow."""
         self.blink = None
 
-    async def async_step_user(self, user_input=None):
+    def step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="one_instance_only")
@@ -43,7 +51,8 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             stored_interval = self.hass.data[DOMAIN].get(CONF_SCAN_INTERVAL)
 
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_USERNAME])
+            user_input[CONF_SCAN_INTERVAL] = validate_input(user_input)
+            self.async_set_unique_id(user_input[CONF_USERNAME])
             self.blink = blinkpy.Blink(
                 username=user_input[CONF_USERNAME],
                 password=user_input[CONF_PASSWORD],
@@ -54,44 +63,54 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             self.blink.refresh_rate = user_input[CONF_SCAN_INTERVAL].total_seconds()
 
-            await self.hass.async_add_executor_job(self._blink.start())
+            self.blink.start()
 
             if not self.blink.key_required:
                 # No key required, we're good
-                return await self.async_create_entry(
+                return self.async_create_entry(
                     title=DOMAIN,
-                    data={CONF_USERNAME: self.blink.login_handler.data["username"]},
+                    data={
+                        CONF_USERNAME: user_input["username"],
+                        CONF_PASSWORD: user_input["password"],
+                        CONF_SCAN_INTERVAL: user_input["scan_interval"],
+                    },
                 )
-
-            return await self.async_step_2fa()
+            return self.step_2fa()
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=stored_username): cv.string,
-                    vol.Required(CONF_PASSWORD, default=stored_password): cv.string,
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL, default=stored_interval
-                    ): cv.time_period,
+                    vol.Required(CONF_USERNAME, default=stored_username): str,
+                    vol.Required(CONF_PASSWORD, default=stored_password): str,
+                    vol.Optional(CONF_SCAN_INTERVAL, default=stored_interval): int,
                 }
             ),
             errors={},
         )
 
-    async def async_step_2fa(self, user_input=None):
+    def step_2fa(self, user_input=None):
         """Handle 2FA step."""
         if user_input:
-            await self.hass.async_add_executor_job(self.blink.setup_post_verify())
-            return await self.async_create_entry(
-                title=DOMAIN,
-                data={CONF_USERNAME: self.blink.login_handler.data["username"]},
-            )
+            pin = user_input[CONF_PIN]
+            if not pin:
+                pin = None
+            if self.blink.login_handler.send_auth_key(self.blink, pin):
+                self.blink.setup_post_verify()
+                blink_data = self.blink.login_handler.data
+                return self.async_create_entry(
+                    title=DOMAIN,
+                    data={
+                        CONF_USERNAME: blink_data["username"],
+                        CONF_PASSWORD: blink_data["password"],
+                        CONF_SCAN_INTERVAL: self.blink.refresh_rate,
+                    },
+                )
 
         return self.async_show_form(
-            step_id="2FA", data_schema=vol.Schema({CONF_PIN: str})
+            step_id="2fa", data_schema=vol.Schema({vol.Optional(CONF_PIN): str}),
         )
 
     async def async_step_import(self, import_data):
         """Import blink config from configuration.yaml."""
-        return await self.async_step_user(import_data)
+        return await self.hass.async_add_executor_job(self.step_user(import_data))

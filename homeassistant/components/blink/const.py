@@ -1,6 +1,4 @@
 """Constants for Blink."""
-from datetime import timedelta
-
 DOMAIN = "blink"
 BLINK_CONFIG = "blink"
 
@@ -9,7 +7,7 @@ CONF_ALARM_CONTROL_PANEL = "alarm_control_panel"
 
 DEFAULT_BRAND = "Blink"
 DEFAULT_ATTRIBUTION = "Data provided by immedia-semi.com"
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=300)
+DEFAULT_SCAN_INTERVAL = 300
 DEFAULT_OFFSET = 1
 SIGNAL_UPDATE_BLINK = "blink_update"
 
