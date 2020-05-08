@@ -91,10 +91,9 @@ async def async_setup_entry(
 class SongpalEntity(MediaPlayerEntity):
     """Class representing a Songpal device."""
 
-    def __init__(self, name, device, poll=False):
+    def __init__(self, name, device):
         """Init."""
         self._name = name
-        self._poll = poll
         self.dev = device
         self._sysinfo = None
         self._model = None
@@ -115,7 +114,11 @@ class SongpalEntity(MediaPlayerEntity):
     @property
     def should_poll(self):
         """Return True if the device should be polled."""
-        return self._poll
+        return False
+
+    async def async_added_to_hass(self):
+        """Run when entity is added to hass."""
+        await self.async_activate_websocket()
 
     async def async_will_remove_from_hass(self):
         """Run when entity will be removed from hass."""
@@ -153,7 +156,6 @@ class SongpalEntity(MediaPlayerEntity):
             )
             _LOGGER.debug("Disconnected: %s", connect.exception)
             self._available = False
-            self.dev.clear_notification_callbacks()
             self.async_write_ha_state()
 
             # Try to reconnect forever, a successful reconnect will initialize
@@ -173,6 +175,7 @@ class SongpalEntity(MediaPlayerEntity):
                     # back from a disconnected state.
                     await self.async_update_ha_state(force_refresh=True)
 
+            self.hass.loop.create_task(self.dev.listen_notifications())
             _LOGGER.warning(
                 "[%s(%s)] Connection reestablished.", self.name, self.dev.endpoint
             )
@@ -182,15 +185,12 @@ class SongpalEntity(MediaPlayerEntity):
         self.dev.on_notification(PowerChange, _power_changed)
         self.dev.on_notification(ConnectChange, _try_reconnect)
 
-        async def listen_events():
-            await self.dev.listen_notifications()
-
         async def handle_stop(event):
             await self.dev.stop_listen_notifications()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
 
-        self.hass.loop.create_task(listen_events())
+        self.hass.loop.create_task(self.dev.listen_notifications())
 
     @property
     def name(self):
@@ -269,9 +269,6 @@ class SongpalEntity(MediaPlayerEntity):
 
             self._available = True
 
-            # activate notifications if wanted
-            if not self._poll:
-                await self.hass.async_create_task(self.async_activate_websocket())
         except SongpalException as ex:
             _LOGGER.error("Unable to update: %s", ex)
             self._available = False

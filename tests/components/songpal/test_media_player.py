@@ -242,13 +242,6 @@ async def test_websocket_events(hass):
     await notification_callbacks[PowerChange](power_change)
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
-    connect_change = MagicMock()
-    connect_change.exception = "disconnected"
-    with patch("asyncio.sleep", side_effect=AsyncMock()) as sleep:
-        await notification_callbacks[ConnectChange](connect_change)
-    sleep.assert_called_once()
-    mocked_device.clear_notification_callbacks.assert_called_once()
-
 
 async def test_disconnected(hass):
     """Test disconnected behavior."""
