@@ -1,7 +1,13 @@
 """Sorting helpers for ISY994 device classifications."""
 from typing import Union
 
-from pyisy.constants import PROTO_GROUP, PROTO_INSTEON, PROTO_PROGRAM, TAG_FOLDER
+from pyisy.constants import (
+    PROTO_GROUP,
+    PROTO_INSTEON,
+    PROTO_PROGRAM,
+    PROTO_ZWAVE,
+    TAG_FOLDER,
+)
 from pyisy.nodes import Group, Node, Nodes
 from pyisy.programs import Programs
 
@@ -9,10 +15,17 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     _LOGGER,
+    DEFAULT_PROGRAM_STRING,
+    FILTER_INSTEON_TYPE,
+    FILTER_NODE_DEF_ID,
+    FILTER_STATES,
+    FILTER_UOM,
+    FILTER_ZWAVE_CAT,
     ISY994_NODES,
     ISY994_PROGRAMS,
     ISY_GROUP_PLATFORM,
@@ -21,7 +34,17 @@ from .const import (
     NODE_FILTERS,
     SUPPORTED_PLATFORMS,
     SUPPORTED_PROGRAM_PLATFORMS,
+    TYPE_CATEGORY_SENSOR_ACTUATORS,
 )
+
+BINARY_SENSOR_UOMS = ["2", "78"]
+BINARY_SENSOR_ISY_STATES = ["on", "off"]
+
+TYPE_EZIO2X4 = "7.3.255."
+
+SUBNODE_EZIO2X4_SENSORS = [9, 10, 11, 12]
+SUBNODE_FANLINC_LIGHT = 1
+SUBNODE_IOLINC_RELAY = 2
 
 
 def _check_for_node_def(
@@ -40,11 +63,10 @@ def _check_for_node_def(
 
     platforms = SUPPORTED_PLATFORMS if not single_platform else [single_platform]
     for platform in platforms:
-        if node_def_id in NODE_FILTERS[platform]["node_def_id"]:
+        if node_def_id in NODE_FILTERS[platform][FILTER_NODE_DEF_ID]:
             hass.data[ISY994_NODES][platform].append(node)
             return True
 
-    _LOGGER.warning("Unsupported node: %s, type: %s", node.name, node.type)
     return False
 
 
@@ -69,16 +91,68 @@ def _check_for_insteon_type(
         if any(
             [
                 device_type.startswith(t)
-                for t in set(NODE_FILTERS[platform]["insteon_type"])
+                for t in set(NODE_FILTERS[platform][FILTER_INSTEON_TYPE])
             ]
         ):
 
-            # Hacky special-case just for FanLinc, which has a light module
-            # as one of its nodes. Note that this special-case is not necessary
+            # Hacky special-cases for certain devices with different platforms
+            # included as subnodes. Note that special-cases are not necessary
             # on ISY 5.x firmware as it uses the superior NodeDefs method
-            if platform == FAN and int(node.address[-1]) == 1:
+            subnode_id = int(node.address.split(" ")[-1], 16)
+
+            # FanLinc, which has a light module as one of its nodes.
+            if platform == FAN and subnode_id == SUBNODE_FANLINC_LIGHT:
                 hass.data[ISY994_NODES][LIGHT].append(node)
                 return True
+
+            # IOLincs which have a sensor and relay on 2 different nodes
+            if (
+                platform == BINARY_SENSOR
+                and device_type.startswith(TYPE_CATEGORY_SENSOR_ACTUATORS)
+                and subnode_id == SUBNODE_IOLINC_RELAY
+            ):
+                hass.data[ISY994_NODES][SWITCH].append(node)
+                return True
+
+            # Smartenit EZIO2X4
+            if (
+                platform == SWITCH
+                and device_type.startswith(TYPE_EZIO2X4)
+                and subnode_id in SUBNODE_EZIO2X4_SENSORS
+            ):
+                hass.data[ISY994_NODES][BINARY_SENSOR].append(node)
+                return True
+
+            hass.data[ISY994_NODES][platform].append(node)
+            return True
+
+    return False
+
+
+def _check_for_zwave_cat(
+    hass: HomeAssistantType, node: Union[Group, Node], single_platform: str = None
+) -> bool:
+    """Check if the node matches the ISY Z-Wave Category for any platforms.
+
+    This is for (presumably) every version of the ISY firmware, but only
+    works for Z-Wave Devices with the devtype.cat property.
+    """
+    if not hasattr(node, "protocol") or node.protocol != PROTO_ZWAVE:
+        return False
+
+    if not hasattr(node, "zwave_props") or node.zwave_props is None:
+        # Node doesn't have a device type category (non-Z-Wave device)
+        return False
+
+    device_type = node.zwave_props.category
+    platforms = SUPPORTED_PLATFORMS if not single_platform else [single_platform]
+    for platform in platforms:
+        if any(
+            [
+                device_type.startswith(t)
+                for t in set(NODE_FILTERS[platform][FILTER_ZWAVE_CAT])
+            ]
+        ):
 
             hass.data[ISY994_NODES][platform].append(node)
             return True
@@ -97,22 +171,26 @@ def _check_for_uom_id(
     This is used for versions of the ISY firmware that report uoms as a single
     ID. We can often infer what type of device it is by that ID.
     """
-    if not hasattr(node, "uom") or node.uom is None:
+    if not hasattr(node, "uom") or node.uom in [None, ""]:
         # Node doesn't have a uom (Scenes for example)
         return False
 
-    node_uom = set(map(str.lower, node.uom))
+    # Backwards compatibility for ISYv4 Firmware:
+    node_uom = node.uom
+    if isinstance(node.uom, list):
+        node_uom = node.uom[0]
 
     if uom_list:
-        if node_uom.intersection(uom_list):
+        if node_uom in uom_list:
             hass.data[ISY994_NODES][single_platform].append(node)
             return True
-    else:
-        platforms = SUPPORTED_PLATFORMS if not single_platform else [single_platform]
-        for platform in platforms:
-            if node_uom.intersection(NODE_FILTERS[platform]["uom"]):
-                hass.data[ISY994_NODES][platform].append(node)
-                return True
+        return False
+
+    platforms = SUPPORTED_PLATFORMS if not single_platform else [single_platform]
+    for platform in platforms:
+        if node_uom in NODE_FILTERS[platform][FILTER_UOM]:
+            hass.data[ISY994_NODES][platform].append(node)
+            return True
 
     return False
 
@@ -129,8 +207,12 @@ def _check_for_states_in_uom(
     possible "human readable" states. This filter passes if all of the possible
     states fit inside the given filter.
     """
-    if not hasattr(node, "uom") or node.uom is None:
+    if not hasattr(node, "uom") or node.uom in [None, ""]:
         # Node doesn't have a uom (Scenes for example)
+        return False
+
+    # This only works for ISYv4 Firmware where uom is a list of states:
+    if not isinstance(node.uom, list):
         return False
 
     node_uom = set(map(str.lower, node.uom))
@@ -139,17 +221,20 @@ def _check_for_states_in_uom(
         if node_uom == set(states_list):
             hass.data[ISY994_NODES][single_platform].append(node)
             return True
-    else:
-        platforms = SUPPORTED_PLATFORMS if not single_platform else [single_platform]
-        for platform in platforms:
-            if node_uom == set(NODE_FILTERS[platform]["states"]):
-                hass.data[ISY994_NODES][platform].append(node)
-                return True
+        return False
+
+    platforms = SUPPORTED_PLATFORMS if not single_platform else [single_platform]
+    for platform in platforms:
+        if node_uom == set(NODE_FILTERS[platform][FILTER_STATES]):
+            hass.data[ISY994_NODES][platform].append(node)
+            return True
 
     return False
 
 
-def _is_sensor_a_binary_sensor(hass: HomeAssistantType, node) -> bool:
+def _is_sensor_a_binary_sensor(
+    hass: HomeAssistantType, node: Union[Group, Node]
+) -> bool:
     """Determine if the given sensor node should be a binary_sensor."""
     if _check_for_node_def(hass, node, single_platform=BINARY_SENSOR):
         return True
@@ -161,11 +246,11 @@ def _is_sensor_a_binary_sensor(hass: HomeAssistantType, node) -> bool:
     # checks in the context of already knowing that this is definitely a
     # sensor device.
     if _check_for_uom_id(
-        hass, node, single_platform=BINARY_SENSOR, uom_list=["2", "78"]
+        hass, node, single_platform=BINARY_SENSOR, uom_list=BINARY_SENSOR_UOMS
     ):
         return True
     if _check_for_states_in_uom(
-        hass, node, single_platform=BINARY_SENSOR, states_list=["on", "off"]
+        hass, node, single_platform=BINARY_SENSOR, states_list=BINARY_SENSOR_ISY_STATES
     ):
         return True
 
@@ -205,16 +290,21 @@ def _categorize_nodes(
             continue
         if _check_for_insteon_type(hass, node):
             continue
+        if _check_for_zwave_cat(hass, node):
+            continue
         if _check_for_uom_id(hass, node):
             continue
         if _check_for_states_in_uom(hass, node):
             continue
 
+        # Fallback as as sensor, e.g. for un-sortable items like NodeServer nodes.
+        hass.data[ISY994_NODES][SENSOR].append(node)
+
 
 def _categorize_programs(hass: HomeAssistantType, programs: Programs) -> None:
     """Categorize the ISY994 programs."""
     for platform in SUPPORTED_PROGRAM_PLATFORMS:
-        folder = programs.get_by_name(f"HA.{platform}")
+        folder = programs.get_by_name(f"{DEFAULT_PROGRAM_STRING}{platform}")
         if not folder:
             continue
 
