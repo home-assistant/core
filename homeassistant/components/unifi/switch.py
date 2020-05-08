@@ -1,6 +1,14 @@
 """Support for devices connected to UniFi POE."""
 import logging
 
+from aiounifi.api import SOURCE_EVENT
+from aiounifi.events import (
+    WIRED_CLIENT_BLOCKED,
+    WIRED_CLIENT_UNBLOCKED,
+    WIRELESS_CLIENT_BLOCKED,
+    WIRELESS_CLIENT_UNBLOCKED,
+)
+
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -13,6 +21,9 @@ LOGGER = logging.getLogger(__name__)
 
 BLOCK_SWITCH = "block"
 POE_SWITCH = "poe"
+
+CLIENT_BLOCKED = (WIRED_CLIENT_BLOCKED, WIRELESS_CLIENT_BLOCKED)
+CLIENT_UNBLOCKED = (WIRED_CLIENT_UNBLOCKED, WIRELESS_CLIENT_UNBLOCKED)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -237,10 +248,26 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
     DOMAIN = DOMAIN
     TYPE = BLOCK_SWITCH
 
+    def __init__(self, client, controller):
+        """Set up block switch."""
+        super().__init__(client, controller)
+
+        self._is_blocked = self.client.blocked
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Update the clients state."""
+        if self.client.last_updated == SOURCE_EVENT:
+
+            if self.client.event.event in CLIENT_BLOCKED + CLIENT_UNBLOCKED:
+                self._is_blocked = self.client.event.event in CLIENT_BLOCKED
+
+        super().async_update_callback()
+
     @property
     def is_on(self):
         """Return true if client is allowed to connect."""
-        return not self.is_blocked
+        return not self._is_blocked
 
     async def async_turn_on(self, **kwargs):
         """Turn on connectivity for client."""
@@ -253,7 +280,7 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        if self.is_blocked:
+        if self._is_blocked:
             return "mdi:network-off"
         return "mdi:network"
 
