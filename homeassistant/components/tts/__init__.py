@@ -438,9 +438,8 @@ class SpeechManager:
         album = provider.name
         artist = language
 
-        if options is not None:
-            if options.get("voice") is not None:
-                artist = options.get("voice")
+        if options is not None and options.get("voice") is not None:
+            artist = options.get("voice")
 
         try:
             tts_file = mutagen.File(data_bytes, easy=True)
