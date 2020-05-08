@@ -97,8 +97,7 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=DOMAIN, data=config_data,)
 
         return self.async_show_form(
-            step_id="2fa",
-            data_schema=vol.Schema({vol.Required("pin", default="None"): str}),
+            step_id="2fa", data_schema=vol.Schema({vol.Required("pin"): str}),
         )
 
     async def async_step_import(self, import_data):
