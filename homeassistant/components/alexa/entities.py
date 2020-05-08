@@ -799,7 +799,7 @@ class CameraCapabilities(AlexaEntity):
             return False
 
         try:
-            network.async_get_url(
+            network.get_url(
                 self.hass,
                 allow_internal=False,
                 allow_ip=False,
