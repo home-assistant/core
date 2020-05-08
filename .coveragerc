@@ -16,6 +16,10 @@ omit =
     homeassistant/components/adguard/switch.py
     homeassistant/components/ads/*
     homeassistant/components/aftership/sensor.py
+    homeassistant/components/agent_dvr/__init__.py
+    homeassistant/components/agent_dvr/camera.py
+    homeassistant/components/agent_dvr/const.py
+    homeassistant/components/agent_dvr/helpers.py
     homeassistant/components/airly/__init__.py
     homeassistant/components/airly/air_quality.py
     homeassistant/components/airly/sensor.py
