@@ -171,7 +171,7 @@ class ApiConfig:
                 extra = ""
 
             _LOGGER.warning(
-                "Detected use of deprecated `base_url` property, use `homeassistant.helpers.network.async_get_url` method instead. Please report issue%s for %s using this method at %s, line %s: %s",
+                "Detected use of deprecated `base_url` property, use `homeassistant.helpers.network.get_url` method instead. Please report issue%s for %s using this method at %s, line %s: %s",
                 extra,
                 integration,
                 found_frame.filename[index:],

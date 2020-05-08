@@ -33,7 +33,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.network import async_get_url
+from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_prepare_setup_platform
 
@@ -115,7 +115,7 @@ async def async_setup(hass, config):
         use_cache = conf.get(CONF_CACHE, DEFAULT_CACHE)
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
         time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
-        base_url = conf.get(CONF_BASE_URL) or async_get_url(hass)
+        base_url = conf.get(CONF_BASE_URL) or get_url(hass)
 
         await tts.async_init_cache(use_cache, cache_dir, time_memory, base_url)
     except (HomeAssistantError, KeyError) as err:
@@ -162,7 +162,7 @@ async def async_setup(hass, config):
             options = service.data.get(ATTR_OPTIONS)
 
             try:
-                url = await tts.async_get_url(
+                url = await tts.get_url(
                     p_type, message, cache=cache, language=language, options=options
                 )
             except HomeAssistantError as err:
@@ -273,9 +273,7 @@ class SpeechManager:
             provider.name = engine
         self.providers[engine] = provider
 
-    async def async_get_url(
-        self, engine, message, cache=None, language=None, options=None
-    ):
+    async def get_url(self, engine, message, cache=None, language=None, options=None):
         """Get URL for play message.
 
         This method is a coroutine.
@@ -549,7 +547,7 @@ class TextToSpeechUrlView(HomeAssistantView):
         options = data.get(ATTR_OPTIONS)
 
         try:
-            url = await self.tts.async_get_url(
+            url = await self.tts.get_url(
                 p_type, message, cache=cache, language=language, options=options
             )
             resp = self.json({"url": url}, HTTP_OK)

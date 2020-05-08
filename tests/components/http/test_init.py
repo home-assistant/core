@@ -327,7 +327,7 @@ async def test_use_of_base_url_integration(hass, caplog):
         assert hass.config.api.base_url == "http://127.0.0.1:8123"
 
     assert (
-        "Detected use of deprecated `base_url` property, use `homeassistant.helpers.network.async_get_url` method instead. Please report issue for example using this method at homeassistant/components/example/__init__.py, line 42: url = hass.config.api.base_url"
+        "Detected use of deprecated `base_url` property, use `homeassistant.helpers.network.get_url` method instead. Please report issue for example using this method at homeassistant/components/example/__init__.py, line 42: url = hass.config.api.base_url"
         in caplog.text
     )
 
@@ -351,7 +351,7 @@ async def test_use_of_base_url_integration_webhook(hass, caplog):
             Mock(
                 filename="/home/frenck/homeassistant/components/webhook/__init__.py",
                 lineno="42",
-                line="return async_get_url(hass)",
+                line="return get_url(hass)",
             ),
             Mock(
                 filename="/home/frenck/example/client.py",
@@ -363,7 +363,7 @@ async def test_use_of_base_url_integration_webhook(hass, caplog):
         assert hass.config.api.base_url == "http://127.0.0.1:8123"
 
     assert (
-        "Detected use of deprecated `base_url` property, use `homeassistant.helpers.network.async_get_url` method instead. Please report issue for example using this method at homeassistant/components/example/__init__.py, line 42: url = hass.config.api.base_url"
+        "Detected use of deprecated `base_url` property, use `homeassistant.helpers.network.get_url` method instead. Please report issue for example using this method at homeassistant/components/example/__init__.py, line 42: url = hass.config.api.base_url"
         in caplog.text
     )
 
@@ -394,6 +394,6 @@ async def test_use_of_base_url_custom_component(hass, caplog):
         assert hass.config.api.base_url == "http://127.0.0.1:8123"
 
     assert (
-        "Detected use of deprecated `base_url` property, use `homeassistant.helpers.network.async_get_url` method instead. Please report issue to the custom component author for example using this method at custom_components/example/__init__.py, line 42: url = hass.config.api.base_url"
+        "Detected use of deprecated `base_url` property, use `homeassistant.helpers.network.get_url` method instead. Please report issue to the custom component author for example using this method at custom_components/example/__init__.py, line 42: url = hass.config.api.base_url"
         in caplog.text
     )

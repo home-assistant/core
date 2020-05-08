@@ -22,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.network import async_get_url
+from homeassistant.helpers.network import get_url
 
 from .const import (  # pylint: disable=unused-import
     AUTH_CALLBACK_NAME,
@@ -280,9 +280,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         self.plexauth = PlexAuth(payload, session)
         await self.plexauth.initiate_auth()
-        forward_url = (
-            f"{async_get_url(self.hass)}{AUTH_CALLBACK_PATH}?flow_id={self.flow_id}"
-        )
+        forward_url = f"{get_url(self.hass)}{AUTH_CALLBACK_PATH}?flow_id={self.flow_id}"
         auth_url = self.plexauth.auth_url(forward_url)
         return self.async_external_step(step_id="obtain_token", url=auth_url)
 
