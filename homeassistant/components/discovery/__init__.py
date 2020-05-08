@@ -66,7 +66,6 @@ SERVICE_HANDLERS = {
     SERVICE_OCTOPRINT: ("octoprint", None),
     SERVICE_FREEBOX: ("freebox", None),
     SERVICE_YEELIGHT: ("yeelight", None),
-    "panasonic_viera": ("media_player", "panasonic_viera"),
     "yamaha": ("media_player", "yamaha"),
     "logitech_mediaserver": ("media_player", "squeezebox"),
     "denonavr": ("media_player", "denonavr"),
