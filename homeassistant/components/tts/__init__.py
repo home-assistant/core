@@ -162,7 +162,7 @@ async def async_setup(hass, config):
             options = service.data.get(ATTR_OPTIONS)
 
             try:
-                url = await tts.get_url(
+                url = await tts.async_get_url(
                     p_type, message, cache=cache, language=language, options=options
                 )
             except HomeAssistantError as err:
@@ -273,7 +273,9 @@ class SpeechManager:
             provider.name = engine
         self.providers[engine] = provider
 
-    async def get_url(self, engine, message, cache=None, language=None, options=None):
+    async def async_get_url(
+        self, engine, message, cache=None, language=None, options=None
+    ):
         """Get URL for play message.
 
         This method is a coroutine.
@@ -547,7 +549,7 @@ class TextToSpeechUrlView(HomeAssistantView):
         options = data.get(ATTR_OPTIONS)
 
         try:
-            url = await self.tts.get_url(
+            url = await self.tts.async_get_url(
                 p_type, message, cache=cache, language=language, options=options
             )
             resp = self.json({"url": url}, HTTP_OK)
