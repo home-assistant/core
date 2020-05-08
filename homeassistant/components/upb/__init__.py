@@ -1,6 +1,5 @@
 """Support the UPB PIM."""
 import asyncio
-import logging
 
 import upb_lib
 
@@ -11,9 +10,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
-UPB_PLATFORMS = ["light"]
-
-_LOGGER = logging.getLogger(__name__)
+UPB_PLATFORMS = ["light", "scene"]
 
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
