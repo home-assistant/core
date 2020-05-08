@@ -3,11 +3,13 @@ from ipaddress import ip_network
 import logging
 import unittest
 
+import pytest
+
 import homeassistant.components.http as http
 from homeassistant.setup import async_setup_component
 from homeassistant.util.ssl import server_context_intermediate, server_context_modern
 
-from tests.async_mock import patch
+from tests.async_mock import Mock, patch
 
 
 class TestView(http.HomeAssistantView):
@@ -271,3 +273,127 @@ async def test_storing_config(hass, aiohttp_client, aiohttp_unused_port):
     restored["trusted_proxies"][0] = ip_network(restored["trusted_proxies"][0])
 
     assert restored == http.HTTP_SCHEMA(config)
+
+
+async def test_use_of_base_url(hass):
+    """Test detection base_url usage when called without integration context."""
+    await async_setup_component(hass, "http", {"http": {}})
+    with patch(
+        "homeassistant.components.http.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/frenck/homeassistant/core.py",
+                lineno="21",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/frenck/homeassistant/core.py",
+                lineno="42",
+                line="url = hass.config.api.base_url",
+            ),
+            Mock(
+                filename="/home/frenck/example/client.py",
+                lineno="21",
+                line="something()",
+            ),
+        ],
+    ), pytest.raises(RuntimeError):
+        hass.config.api.base_url
+
+
+async def test_use_of_base_url_integration(hass, caplog):
+    """Test detection base_url usage when called with integration context."""
+    await async_setup_component(hass, "http", {"http": {}})
+    with patch(
+        "homeassistant.components.http.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/frenck/homeassistant/core.py",
+                lineno="21",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/frenck/homeassistant/components/example/__init__.py",
+                lineno="42",
+                line="url = hass.config.api.base_url",
+            ),
+            Mock(
+                filename="/home/frenck/example/client.py",
+                lineno="21",
+                line="something()",
+            ),
+        ],
+    ):
+        assert hass.config.api.base_url == "http://127.0.0.1:8123"
+
+    assert (
+        "Detected use of deprecated `base_url` property, use `homeassistant.helpers.network.async_get_url` method instead. Please report issue for example using this method at homeassistant/components/example/__init__.py, line 42: url = hass.config.api.base_url"
+        in caplog.text
+    )
+
+
+async def test_use_of_base_url_integration_webhook(hass, caplog):
+    """Test detection base_url usage when called with integration context."""
+    await async_setup_component(hass, "http", {"http": {}})
+    with patch(
+        "homeassistant.components.http.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/frenck/homeassistant/core.py",
+                lineno="21",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/frenck/homeassistant/components/example/__init__.py",
+                lineno="42",
+                line="url = hass.config.api.base_url",
+            ),
+            Mock(
+                filename="/home/frenck/homeassistant/components/webhook/__init__.py",
+                lineno="42",
+                line="return async_get_url(hass)",
+            ),
+            Mock(
+                filename="/home/frenck/example/client.py",
+                lineno="21",
+                line="something()",
+            ),
+        ],
+    ):
+        assert hass.config.api.base_url == "http://127.0.0.1:8123"
+
+    assert (
+        "Detected use of deprecated `base_url` property, use `homeassistant.helpers.network.async_get_url` method instead. Please report issue for example using this method at homeassistant/components/example/__init__.py, line 42: url = hass.config.api.base_url"
+        in caplog.text
+    )
+
+
+async def test_use_of_base_url_custom_component(hass, caplog):
+    """Test detection base_url usage when called with custom component context."""
+    await async_setup_component(hass, "http", {"http": {}})
+    with patch(
+        "homeassistant.components.http.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/frenck/homeassistant/core.py",
+                lineno="21",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/frenck/.homeassistant/custom_components/example/__init__.py",
+                lineno="42",
+                line="url = hass.config.api.base_url",
+            ),
+            Mock(
+                filename="/home/frenck/example/client.py",
+                lineno="21",
+                line="something()",
+            ),
+        ],
+    ):
+        assert hass.config.api.base_url == "http://127.0.0.1:8123"
+
+    assert (
+        "Detected use of deprecated `base_url` property, use `homeassistant.helpers.network.async_get_url` method instead. Please report issue to the custom component author for example using this method at custom_components/example/__init__.py, line 42: url = hass.config.api.base_url"
+        in caplog.text
+    )

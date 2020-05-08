@@ -1310,12 +1310,12 @@ async def test_migration_base_url(hass, hass_storage):
     assert mock_listen.mock_calls[0][1][0] == EVENT_HOMEASSISTANT_START
 
     # External
-    hass.config.api = Mock(base_url="https://loaded-example.com")
+    hass.config.api = Mock(deprecated_base_url="https://loaded-example.com")
     await mock_listen.mock_calls[0][1][1](None)
     assert config.external_url == "https://loaded-example.com"
 
     # Internal
     for internal in ("http://hass.local", "http://192.168.1.100:8123"):
-        hass.config.api = Mock(base_url=internal)
+        hass.config.api = Mock(deprecated_base_url=internal)
         await mock_listen.mock_calls[0][1][1](None)
         assert config.internal_url == internal
