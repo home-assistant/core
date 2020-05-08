@@ -55,11 +55,8 @@ GOOGLE_SERVICE_ACCOUNT = vol.Schema(
 
 
 def _check_report_state(data):
-    if data[CONF_REPORT_STATE]:
-        if CONF_SERVICE_ACCOUNT not in data:
-            raise vol.Invalid(
-                "If report state is enabled, a service account must exist"
-            )
+    if data[CONF_REPORT_STATE] and CONF_SERVICE_ACCOUNT not in data:
+        raise vol.Invalid("If report state is enabled, a service account must exist")
     return data
 
 
