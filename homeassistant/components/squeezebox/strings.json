@@ -3,7 +3,13 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to LMS",
+	"title": "Configure Logitech Media Server",
+	"data": {
+	  "host": "Host (optional - leave blank to discover)"
+	}
+      },
+      "edit": {
+        "title": "Edit connection information",
         "data": {
           "host": "Host",
 	  "port": "Port",
@@ -18,7 +24,8 @@
       "unknown": "Unexpected error"
     },
     "abort": {
-      "already_configured": "Device is already configured"
+      "already_configured": "Device is already configured",
+      "no_server_found": "No LMS server found"
     }
   }
 }

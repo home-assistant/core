@@ -721,7 +721,7 @@ pysonos==0.0.31
 pyspcwebgw==0.4.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.1.7
+pysqueezebox==0.2.0
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.5

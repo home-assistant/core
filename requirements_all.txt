@@ -1640,6 +1640,7 @@ pyspcwebgw==0.4.0
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 pysqueezebox==0.2.1
 =======
 pysqueezebox==0.1.5
@@ -1650,6 +1651,9 @@ pysqueezebox==0.1.6
 =======
 pysqueezebox==0.1.7
 >>>>>>> Improved error message for auth failure
+=======
+pysqueezebox==0.2.0
+>>>>>>> Internal server discovery
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
