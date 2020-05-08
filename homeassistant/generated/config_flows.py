@@ -141,6 +141,7 @@ FLOWS = [
     "twentemilieu",
     "twilio",
     "unifi",
+    "upb",
     "upnp",
     "velbus",
     "vera",
