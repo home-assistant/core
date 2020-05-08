@@ -49,9 +49,6 @@ PyEssent==0.13
 # homeassistant.components.github
 PyGithub==1.43.8
 
-# homeassistant.components.isy994
-PyISY==1.1.2
-
 # homeassistant.components.mvglive
 PyMVGLive==1.1.4
 
@@ -1379,6 +1376,9 @@ pyirishrail==0.0.2
 
 # homeassistant.components.iss
 pyiss==1.0.1
+
+# homeassistant.components.isy994
+pyisy==2.0.2
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
