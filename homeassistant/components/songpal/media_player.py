@@ -49,6 +49,8 @@ SUPPORT_SONGPAL = (
     | SUPPORT_TURN_OFF
 )
 
+INITIAL_RETRY_DELAY = 10
+
 
 async def async_setup_platform(
     hass: HomeAssistantType, config: dict, async_add_entities, discovery_info=None
@@ -160,7 +162,7 @@ class SongpalEntity(MediaPlayerEntity):
 
             # Try to reconnect forever, a successful reconnect will initialize
             # the websocket connection again.
-            delay = 10
+            delay = INITIAL_RETRY_DELAY
             while not self._available:
                 _LOGGER.debug("Trying to reconnect in %s seconds", delay)
                 await asyncio.sleep(delay)

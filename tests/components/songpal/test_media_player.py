@@ -1,5 +1,6 @@
 """Test songpal media_player."""
 from datetime import timedelta
+import logging
 
 from songpal import (
     ConnectChange,
@@ -68,34 +69,31 @@ async def test_setup_platform(hass):
     assert len(all_states) == 0
 
 
-async def test_setup_failed(hass):
+async def test_setup_failed(hass, caplog):
     """Test failed to set up the entity."""
     mocked_device = _create_mocked_device(throw_exception=True)
     entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
     entry.add_to_hass(hass)
 
-    logger_warning = MagicMock()
-    logger_error = MagicMock()
-    with patch("logging.Logger.warning", side_effect=logger_warning), patch(
-        "logging.Logger.error", side_effect=logger_error
-    ):
-        with _patch_media_player_device(mocked_device):
-            await hass.config_entries.async_setup(entry.entry_id)
-            await hass.async_block_till_done()
-        all_states = hass.states.async_all()
-        assert len(all_states) == 0
-        assert logger_warning.call_count == 2
-        logger_warning.reset_mock()
+    with _patch_media_player_device(mocked_device):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    all_states = hass.states.async_all()
+    assert len(all_states) == 0
+    warning_records = [x for x in caplog.records if x.levelno == logging.WARNING]
+    assert len(warning_records) == 2
+    assert not any(x.levelno == logging.ERROR for x in caplog.records)
+    caplog.clear()
 
-        utcnow = dt_util.utcnow()
-        type(mocked_device).get_supported_methods = AsyncMock()
-        with _patch_media_player_device(mocked_device):
-            async_fire_time_changed(hass, utcnow + timedelta(seconds=30))
-            await hass.async_block_till_done()
-        all_states = hass.states.async_all()
-        assert len(all_states) == 1
-        logger_warning.assert_not_called()
-        logger_error.assert_not_called()
+    utcnow = dt_util.utcnow()
+    type(mocked_device).get_supported_methods = AsyncMock()
+    with _patch_media_player_device(mocked_device):
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=30))
+        await hass.async_block_till_done()
+    all_states = hass.states.async_all()
+    assert len(all_states) == 1
+    assert not any(x.levelno == logging.WARNING for x in caplog.records)
+    assert not any(x.levelno == logging.ERROR for x in caplog.records)
 
 
 async def test_state(hass):
@@ -243,7 +241,7 @@ async def test_websocket_events(hass):
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
 
-async def test_disconnected(hass):
+async def test_disconnected(hass, caplog):
     """Test disconnected behavior."""
     mocked_device = _create_mocked_device()
     entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
@@ -253,28 +251,16 @@ async def test_disconnected(hass):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    logger_warning = MagicMock()
-    logger_error = MagicMock()
     connect_change = MagicMock()
     connect_change.exception = "disconnected"
     type(mocked_device).get_supported_methods = AsyncMock(
-        side_effect=SongpalException("disconnected")
+        side_effect=[SongpalException(""), SongpalException(""), None]
     )
     notification_callbacks = mocked_device.notification_callbacks
-
-    async def _mocked_sleep(delay):
-        if delay == 10:  # first sleep
-            logger_warning.assert_called_once()
-            logger_warning.reset_mock()
-        elif delay == 20:  # second sleep
-            logger_warning.assert_not_called()
-            type(mocked_device).get_supported_methods = AsyncMock()
-        else:
-            assert False  # should never be here
-
-    with patch("asyncio.sleep", side_effect=_mocked_sleep), patch(
-        "logging.Logger.warning", side_effect=logger_warning
-    ), patch("logging.Logger.error", side_effect=logger_error):
+    with patch("homeassistant.components.songpal.media_player.INITIAL_RETRY_DELAY", 0):
         await notification_callbacks[ConnectChange](connect_change)
-    logger_warning.assert_called_once()
-    logger_error.assert_not_called()
+    warning_records = [x for x in caplog.records if x.levelno == logging.WARNING]
+    assert len(warning_records) == 2
+    assert warning_records[0].message.endswith("Got disconnected, trying to reconnect.")
+    assert warning_records[1].message.endswith("Connection reestablished.")
+    assert not any(x.levelno == logging.ERROR for x in caplog.records)
