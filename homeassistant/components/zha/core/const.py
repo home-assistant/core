@@ -157,7 +157,7 @@ class RadioType(enum.Enum):
     """Possible options for radio type."""
 
     ezsp = (
-        "ESZP: Radio based on Silabs chip using EmberZNet protocol",
+        "ESZP: HUSBZB-1, Elelabs, Telegesis, Silabs EmberZNet protocol",
         bellows.zigbee.application.ControllerApplication,
     )
     deconz = (
