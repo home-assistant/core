@@ -62,27 +62,27 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=DOMAIN,
                     data={CONF_USERNAME: self.blink.login_handler.data["username"]},
                 )
-            else:
-                return await self.async_step_2fa()
 
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_USERNAME, default=stored_username): cv.string,
-                        vol.Required(CONF_PASSWORD, default=stored_password): cv.string,
-                        vol.Optional(
-                            CONF_SCAN_INTERVAL, default=stored_interval
-                        ): cv.time_period,
-                    }
-                ),
-                errors={},
-            )
+            return await self.async_step_2fa()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME, default=stored_username): cv.string,
+                    vol.Required(CONF_PASSWORD, default=stored_password): cv.string,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=stored_interval
+                    ): cv.time_period,
+                }
+            ),
+            errors={},
+        )
 
     async def async_step_2fa(self, user_input=None):
         """Handle 2FA step."""
         if user_input:
-            await self.blink.setup_post_verify()
+            await self.hass.async_add_executor_job(self.blink.setup_post_verify())
             return await self.async_create_entry(
                 title=DOMAIN,
                 data={CONF_USERNAME: self.blink.login_handler.data["username"]},
@@ -91,3 +91,7 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="2FA", data_schema=vol.Schema({CONF_PIN: str})
         )
+
+    async def async_step_import(self, import_data):
+        """Import blink config from configuration.yaml."""
+        return await self.async_step_user(import_data)

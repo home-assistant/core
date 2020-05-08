@@ -50,6 +50,9 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up a config entry."""
+    if DOMAIN not in config:
+        return True
+
     hass.data[DOMAIN] = config.get(DOMAIN, {})
 
     if not hass.config_entries.async_entries(DOMAIN) and hass.data[DOMAIN]:
