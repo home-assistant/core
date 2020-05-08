@@ -176,7 +176,7 @@ class RadioType(enum.Enum):
 
     @classmethod
     def list(cls) -> List[str]:
-        """Return list of enum's values."""
+        """Return a list of descriptions."""
         return [e.description for e in RadioType]
 
     @classmethod
