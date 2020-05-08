@@ -7,6 +7,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SEEK,
+    SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
@@ -15,31 +16,43 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 
-DOMAIN = "forked_daapd"  # key for hass.data
-DEFAULT_PORT = 3689
-CONF_TTS_PAUSE_TIME = "tts_pause_time"
-CONF_TTS_VOLUME = "tts_volume"
+CALLBACK_TIMEOUT = 8  # max time between command and callback from forked-daapd server
+CONFIG_FLOW_UNIQUE_ID = "forked-daapd"
 CONF_PIPE_CONTROL = "pipe_control"
 CONF_PIPE_CONTROL_PORT = "pipe_control_port"
-FD_NAME = "forked-daapd"
+CONF_TTS_PAUSE_TIME = "tts_pause_time"
+CONF_TTS_VOLUME = "tts_volume"
 DEFAULT_PIPE_CONTROL_PORT = 24879
+DEFAULT_PORT = 3689
 DEFAULT_SERVER_NAME = "My Server"
 DEFAULT_TTS_PAUSE_TIME = 1.2
 DEFAULT_TTS_VOLUME = 0.8
-SERVER_UNIQUE_ID = "server"
 DEFAULT_UNMUTE_VOLUME = 0.6
-CONFIG_FLOW_UNIQUE_ID = "forked-daapd"
-TTS_TIMEOUT = 20  # max time to wait between TTS getting sent and starting to play
-CALLBACK_TIMEOUT = 8  # max time between command and callback from forked-daapd server
+DOMAIN = "forked_daapd"  # key for hass.data
+FD_NAME = "forked-daapd"
 HASS_DATA_REMOVE_LISTENERS_KEY = "REMOVE_LISTENERS"
 HASS_DATA_OUTPUTS_KEY = "OUTPUTS"
 HASS_DATA_UPDATER_KEY = "UPDATER"
+KNOWN_PIPES = {"librespot-java"}
+PIPE_FUNCTION_MAP = {
+    "librespot-java": {
+        "async_media_play": "player_resume",
+        "async_media_pause": "player_pause",
+        "async_media_stop": "player_pause",
+        "async_media_previous_track": "player_prev",
+        "async_media_next_track": "player_next",
+    }
+}
+SERVER_UNIQUE_ID = "server"
 SIGNAL_ADD_ZONES = "forked-daapd_add_zones"
+SIGNAL_CONFIG_OPTIONS_UPDATE = "forked-daapd_config_options_update"
+SIGNAL_UPDATE_DATABASE = "forked-daapd_update_database"
 SIGNAL_UPDATE_MASTER = "forked-daapd_update_master"
 SIGNAL_UPDATE_OUTPUTS = "forked-daapd_update_outputs"
 SIGNAL_UPDATE_PLAYER = "forked-daapd_update_player"
 SIGNAL_UPDATE_QUEUE = "forked-daapd_update_queue"
-SIGNAL_CONFIG_OPTIONS_UPDATE = "forked-daapd_config_options_update"
+SOURCE_NAME_CLEAR = "Clear queue"
+SOURCE_NAME_DEFAULT = "Default (no pipe)"
 STARTUP_DATA = {
     "player": {
         "state": "stop",
@@ -64,6 +77,7 @@ SUPPORTED_FEATURES = (
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_NEXT_TRACK
     | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_SELECT_SOURCE
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_TURN_ON
     | SUPPORT_TURN_OFF
@@ -72,3 +86,4 @@ SUPPORTED_FEATURES = (
 SUPPORTED_FEATURES_ZONE = (
     SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 )
+TTS_TIMEOUT = 20  # max time to wait between TTS getting sent and starting to play

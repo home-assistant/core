@@ -9,6 +9,8 @@ from homeassistant.components.forked_daapd.const import (
     CONF_TTS_VOLUME,
     CONFIG_FLOW_UNIQUE_ID,
     DOMAIN,
+    SOURCE_NAME_CLEAR,
+    SOURCE_NAME_DEFAULT,
     SUPPORTED_FEATURES,
     SUPPORTED_FEATURES_ZONE,
 )
@@ -21,6 +23,7 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
     SERVICE_PLAY_MEDIA,
+    SERVICE_SELECT_SOURCE,
     SERVICE_SHUFFLE_SET,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -29,6 +32,7 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_SET,
 )
 from homeassistant.components.media_player.const import (
+    ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_ARTIST,
     ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ARTIST,
@@ -229,6 +233,19 @@ SAMPLE_OUTPUTS_UNSELECTED = [
     },
 ]
 
+SAMPLE_PIPES = [
+    {
+        "id": 1,
+        "title": "librespot-java",
+        "media_kind": "music",
+        "data_kind": "pipe",
+        "path": "/music/srv/input.pipe",
+        "uri": "library:track:1",
+    }
+]
+
+SAMPLE_PLAYLISTS = [{"id": 7, "name": "test_playlist", "uri": "library:playlist:2"}]
+
 
 @pytest.fixture(name="config_entry")
 def config_entry_fixture():
@@ -278,6 +295,8 @@ async def mock_api_object_fixture(hass, config_entry, get_request_return_values)
     ) as mock_api:
         mock_api.return_value.get_request.side_effect = get_request_side_effect
         mock_api.return_value.full_url.return_value = ""
+        mock_api.return_value.get_pipes.return_value = SAMPLE_PIPES
+        mock_api.return_value.get_playlists.return_value = SAMPLE_PLAYLISTS
         config_entry.add_to_hass(hass)
         await config_entry.async_setup(hass)
         await hass.async_block_till_done()
@@ -288,7 +307,9 @@ async def mock_api_object_fixture(hass, config_entry, get_request_return_values)
     await updater_update(["player", "outputs", "queue"])
     await hass.async_block_till_done()
 
-    async def add_to_queue_side_effect(uris, playback, playback_from_position=None):
+    async def add_to_queue_side_effect(
+        uris, playback=None, playback_from_position=None, clear=None
+    ):
         await updater_update(["queue", "player"])
 
     mock_api.return_value.add_to_queue.side_effect = (
@@ -557,6 +578,30 @@ async def test_async_play_media_tts_timeout(hass, mock_api_object):
         assert state.last_updated > initial_state.last_updated
 
 
+async def test_use_pipe_control_with_no_api(hass, mock_api_object):
+    """Test using pipe control with no api set."""
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_INPUT_SOURCE: "librespot-java (pipe)"},
+    )
+    await _service_call(hass, TEST_MASTER_ENTITY_NAME, SERVICE_MEDIA_PLAY)
+    assert mock_api_object.start_playback.call_count == 0
+
+
+async def test_clear_source(hass, mock_api_object):
+    """Test changing source to clear."""
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_INPUT_SOURCE: SOURCE_NAME_CLEAR},
+    )
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.attributes[ATTR_INPUT_SOURCE] == SOURCE_NAME_DEFAULT
+
+
 @pytest.fixture(name="pipe_control_api_object")
 async def pipe_control_api_object_fixture(
     hass, config_entry, get_request_return_values, mock_api_object
@@ -577,12 +622,22 @@ async def pipe_control_api_object_fixture(
         await updater_update(["player"])
 
     pipe_control_api.return_value.player_pause.side_effect = pause_side_effect
+
+    await updater_update(["database"])  # load in sources
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_INPUT_SOURCE: "librespot-java (pipe)"},
+    )
+
     return pipe_control_api.return_value
 
 
 async def test_librespot_java_stuff(hass, pipe_control_api_object):
     """Test options update and librespot-java stuff."""
-
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.attributes[ATTR_INPUT_SOURCE] == "librespot-java (pipe)"
     # call some basic services
     await _service_call(hass, TEST_MASTER_ENTITY_NAME, SERVICE_MEDIA_STOP)
     await _service_call(hass, TEST_MASTER_ENTITY_NAME, SERVICE_MEDIA_PREVIOUS_TRACK)
@@ -592,6 +647,15 @@ async def test_librespot_java_stuff(hass, pipe_control_api_object):
     pipe_control_api_object.player_prev.assert_called_once()
     pipe_control_api_object.player_next.assert_called_once()
     pipe_control_api_object.player_resume.assert_called_once()
+    # switch away
+    await _service_call(
+        hass,
+        TEST_MASTER_ENTITY_NAME,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_INPUT_SOURCE: SOURCE_NAME_DEFAULT},
+    )
+    state = hass.states.get(TEST_MASTER_ENTITY_NAME)
+    assert state.attributes[ATTR_INPUT_SOURCE] == SOURCE_NAME_DEFAULT
 
 
 async def test_librespot_java_play_media(hass, pipe_control_api_object):
@@ -637,7 +701,7 @@ async def test_unsupported_update(hass, mock_api_object):
     """Test unsupported update type."""
     last_updated = hass.states.get(TEST_MASTER_ENTITY_NAME).last_updated
     updater_update = mock_api_object.start_websocket_handler.call_args[0][2]
-    await updater_update(["database"])
+    await updater_update(["config"])
     await hass.async_block_till_done()
     assert hass.states.get(TEST_MASTER_ENTITY_NAME).last_updated == last_updated
 

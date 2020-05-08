@@ -40,13 +40,18 @@ from .const import (
     HASS_DATA_OUTPUTS_KEY,
     HASS_DATA_REMOVE_LISTENERS_KEY,
     HASS_DATA_UPDATER_KEY,
+    KNOWN_PIPES,
+    PIPE_FUNCTION_MAP,
     SERVER_UNIQUE_ID,
     SIGNAL_ADD_ZONES,
     SIGNAL_CONFIG_OPTIONS_UPDATE,
+    SIGNAL_UPDATE_DATABASE,
     SIGNAL_UPDATE_MASTER,
     SIGNAL_UPDATE_OUTPUTS,
     SIGNAL_UPDATE_PLAYER,
     SIGNAL_UPDATE_QUEUE,
+    SOURCE_NAME_CLEAR,
+    SOURCE_NAME_DEFAULT,
     STARTUP_DATA,
     SUPPORTED_FEATURES,
     SUPPORTED_FEATURES_ZONE,
@@ -55,7 +60,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-WS_NOTIFY_EVENT_TYPES = ["player", "outputs", "volume", "options", "queue"]
+WS_NOTIFY_EVENT_TYPES = ["player", "outputs", "volume", "options", "queue", "database"]
 WEBSOCKET_RECONNECT_TIME = 30  # seconds
 
 
@@ -227,7 +232,7 @@ class ForkedDaapdMaster(MediaPlayerDevice):
         self._last_outputs = None  # used for device on/off
         self._last_volume = DEFAULT_UNMUTE_VOLUME
         self._player_last_updated = None
-        self._pipe_control_api = None
+        self._pipe_control_api = {}
         self._ip_address = (
             ip_address  # need to save this because pipe control is on same ip
         )
@@ -241,8 +246,10 @@ class ForkedDaapdMaster(MediaPlayerDevice):
         self._clientsession = clientsession
         self._config_entry = config_entry
         self.update_options(config_entry.options)
-        self._tts_paused_event = asyncio.Event()
-        self._tts_pause_requested = False
+        self._paused_event = asyncio.Event()
+        self._pause_requested = False
+        self._sources_uris = {}
+        self._source = SOURCE_NAME_DEFAULT
 
     async def async_added_to_hass(self):
         """Use lifecycle hooks."""
@@ -269,6 +276,11 @@ class ForkedDaapdMaster(MediaPlayerDevice):
                 self.hass, SIGNAL_CONFIG_OPTIONS_UPDATE, self.update_options
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_DATABASE, self._update_database
+            )
+        )
 
     @callback
     def _update_callback(self, available):
@@ -280,11 +292,9 @@ class ForkedDaapdMaster(MediaPlayerDevice):
     def update_options(self, options):
         """Update forked-daapd server options."""
         if options.get(CONF_PIPE_CONTROL) == "librespot-java":
-            self._pipe_control_api = LibrespotJavaAPI(
+            self._pipe_control_api["librespot-java"] = LibrespotJavaAPI(
                 self._clientsession, self._ip_address, options[CONF_PIPE_CONTROL_PORT]
             )
-        else:
-            self._pipe_control_api = None
         if CONF_TTS_PAUSE_TIME in options:
             self._tts_pause_time = options[CONF_TTS_PAUSE_TIME]
         if CONF_TTS_VOLUME in options:
@@ -298,9 +308,9 @@ class ForkedDaapdMaster(MediaPlayerDevice):
         if self._tts_queued:
             self._tts_playing_event.set()
             self._tts_queued = False
-        if self._tts_pause_requested:
-            self._tts_paused_event.set()
-            self._tts_pause_requested = False
+        if self._pause_requested:
+            self._paused_event.set()
+            self._pause_requested = False
         event.set()
 
     @callback
@@ -321,6 +331,26 @@ class ForkedDaapdMaster(MediaPlayerDevice):
         if event:  # Calling without event is meant for zone, so ignore
             self._outputs = outputs
             event.set()
+
+    @callback
+    def _update_database(self, pipes, playlists, event):
+        self._sources_uris = {SOURCE_NAME_CLEAR: None, SOURCE_NAME_DEFAULT: None}
+        if pipes:
+            self._sources_uris.update(
+                dict(
+                    (pipe["title"] + " (pipe)", pipe["uri"])
+                    for pipe in pipes
+                    if pipe["title"] in KNOWN_PIPES
+                )
+            )
+        if playlists:
+            self._sources_uris.update(
+                dict(
+                    (playlist["name"] + " (playlist)", playlist["uri"])
+                    for playlist in playlists
+                )
+            )
+        event.set()
 
     def _update_track_info(self):  # run during every player or queue update
         try:
@@ -475,6 +505,16 @@ class ForkedDaapdMaster(MediaPlayerDevice):
         """Flag media player features that are supported."""
         return SUPPORTED_FEATURES
 
+    @property
+    def source(self):
+        """Name of the current input source."""
+        return self._source
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return [*self._sources_uris]
+
     async def async_mute_volume(self, mute):
         """Mute the volume."""
         if mute:
@@ -492,36 +532,38 @@ class ForkedDaapdMaster(MediaPlayerDevice):
 
     async def async_media_play(self):
         """Start playback."""
-        if self._pipe_control_api:
-            await self._pipe_control_api.player_resume()
+        if self._use_pipe_control():
+            await self._pipe_call(self._use_pipe_control(), "async_media_play")
         else:
             await self._api.start_playback()
 
     async def async_media_pause(self):
         """Pause playback."""
-        if self._pipe_control_api:
-            await self._pipe_control_api.player_pause()
+        if self._use_pipe_control():
+            await self._pipe_call(self._use_pipe_control(), "async_media_pause")
         else:
             await self._api.pause_playback()
 
     async def async_media_stop(self):
         """Stop playback."""
-        if self._pipe_control_api:
-            await self._pipe_control_api.player_pause()
+        if self._use_pipe_control():
+            await self._pipe_call(self._use_pipe_control(), "async_media_stop")
         else:
             await self._api.stop_playback()
 
     async def async_media_previous_track(self):
         """Skip to previous track."""
-        if self._pipe_control_api:
-            await self._pipe_control_api.player_prev()
+        if self._use_pipe_control():
+            await self._pipe_call(
+                self._use_pipe_control(), "async_media_previous_track"
+            )
         else:
             await self._api.previous_track()
 
     async def async_media_next_track(self):
         """Skip to next track."""
-        if self._pipe_control_api:
-            await self._pipe_control_api.player_next()
+        if self._use_pipe_control():
+            await self._pipe_call(self._use_pipe_control(), "async_media_next_track")
         else:
             await self._api.next_track()
 
@@ -557,22 +599,29 @@ class ForkedDaapdMaster(MediaPlayerDevice):
             await asyncio.wait(futures)
             await self._api.set_volume(volume=self._tts_volume * 100)
 
+    async def _pause_and_wait_for_callback(self):
+        """Send pause and wait for the pause callback to be received."""
+        self._pause_requested = True
+        await self.async_media_pause()
+        try:
+            await asyncio.wait_for(
+                self._paused_event.wait(), timeout=CALLBACK_TIMEOUT
+            )  # wait for paused
+        except asyncio.TimeoutError:
+            self._pause_requested = False
+        self._paused_event.clear()
+
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a URI."""
         if media_type == MEDIA_TYPE_MUSIC:
             saved_state = self.state  # save play state
-            self._tts_pause_requested = True
-            await self.async_turn_off()  # pauses and saves output states
+            if any([output["selected"] for output in self._outputs]):  # save outputs
+                self._last_outputs = self._outputs
+            await self._api.set_enabled_outputs([])  # turn off outputs
             sleep_future = asyncio.create_task(
                 asyncio.sleep(self._tts_pause_time)
             )  # start timing now, but not exact because of fd buffer + tts latency
-            try:
-                await asyncio.wait_for(
-                    self._tts_paused_event.wait(), timeout=CALLBACK_TIMEOUT
-                )  # wait for paused
-            except asyncio.TimeoutError:
-                self._tts_pause_requested = False
-            self._tts_paused_event.clear()
+            await self._pause_and_wait_for_callback()
             await self._set_tts_volumes()
             # save position
             saved_song_position = self._player["item_progress_ms"]
@@ -585,10 +634,9 @@ class ForkedDaapdMaster(MediaPlayerDevice):
                     for i, item in enumerate(saved_queue["items"])
                     if item["id"] == self._player["item_id"]
                 )
-                await self._api.clear_queue()
             self._tts_requested = True
             await sleep_future
-            await self._api.add_to_queue(uris=media_id, playback="start")
+            await self._api.add_to_queue(uris=media_id, playback="start", clear=True)
             try:
                 await asyncio.wait_for(
                     self._tts_playing_event.wait(), timeout=TTS_TIMEOUT
@@ -605,8 +653,10 @@ class ForkedDaapdMaster(MediaPlayerDevice):
             self._tts_playing_event.clear()
             # TTS done, return to normal
             await self.async_turn_on()  # restores outputs
-            await self._api.clear_queue()
-            if self._pipe_control_api:  # resume pipe
+            if self._use_pipe_control():  # resume pipe
+                await self._api.add_to_queue(
+                    uris=self._sources_uris[self._source], clear=True
+                )
                 if saved_state == STATE_PLAYING:
                     await self.async_media_play()
             else:  # restore stashed queue
@@ -618,6 +668,7 @@ class ForkedDaapdMaster(MediaPlayerDevice):
                         uris=uris,
                         playback="start",
                         playback_from_position=saved_queue_position,
+                        clear=True,
                     )
                     await self._api.seek(position_ms=saved_song_position)
                     if saved_state == STATE_PAUSED:
@@ -626,6 +677,42 @@ class ForkedDaapdMaster(MediaPlayerDevice):
                         await self.async_media_stop()
         else:
             _LOGGER.debug("Media type '%s' not supported", media_type)
+
+    async def select_source(self, source):
+        """Change source.
+
+        Source name reflects whether in default mode or pipe mode.
+        Selecting playlists/clear sets the playlists/clears but ends up in default mode.
+        """
+        if source != self._source:
+            if (
+                self._use_pipe_control()
+            ):  # if pipe was playing, we need to stop it first
+                await self._pause_and_wait_for_callback()
+            self._source = source
+            if not self._use_pipe_control():  # playlist or clear ends up at default
+                self._source = SOURCE_NAME_DEFAULT
+            if self._sources_uris.get(source):  # load uris for pipes or playlists
+                await self._api.add_to_queue(
+                    uris=self._sources_uris[source], clear=True
+                )
+            elif source == SOURCE_NAME_CLEAR:  # clear playlist
+                await self._api.clear_queue()
+            self.async_write_ha_state()
+
+    def _use_pipe_control(self):
+        """Return which pipe control from KNOWN_PIPES to use."""
+        if self._source[-7:] == " (pipe)":
+            return self._source[:-7]
+        return ""
+
+    async def _pipe_call(self, pipe_name, base_function_name):
+        if self._pipe_control_api.get(pipe_name):
+            return await getattr(
+                self._pipe_control_api[pipe_name],
+                PIPE_FUNCTION_MAP[pipe_name][base_function_name],
+            )()
+        _LOGGER.warning("No pipe control available for %s", pipe_name)
 
 
 class ForkedDaapdUpdater:
@@ -682,12 +769,20 @@ class ForkedDaapdUpdater:
                 self.hass, SIGNAL_UPDATE_OUTPUTS, outputs, update_events["outputs"]
             )
             self._add_zones(outputs)
-        if not {"database", "update", "config"}.isdisjoint(
-            update_types
-        ):  # not supported
-            _LOGGER.debug(
-                "database/update notifications neither requested nor supported"
+        if not {"database"}.isdisjoint(update_types):
+            pipes, playlists = await asyncio.gather(
+                self._api.get_pipes(), self._api.get_playlists()
             )
+            update_events["database"] = asyncio.Event()
+            async_dispatcher_send(
+                self.hass,
+                SIGNAL_UPDATE_DATABASE,
+                pipes,
+                playlists,
+                update_events["database"],
+            )
+        if not {"update", "config"}.isdisjoint(update_types):  # not supported
+            _LOGGER.debug("update/config notifications neither requested nor supported")
         if not {"player", "options", "volume"}.isdisjoint(
             update_types
         ):  # update player
