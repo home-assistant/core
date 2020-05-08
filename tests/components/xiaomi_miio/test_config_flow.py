@@ -17,7 +17,7 @@ TEST_TOKEN = "12345678901234567890123456789012"
 TEST_NAME = "Test_Gateway"
 TEST_MODEL = "model5"
 TEST_MAC = "AB-CD-EF-GH-IJ-KL"
-TEST_GATEWAY_ID = f"{TEST_MODEL}-{TEST_MAC}-gateway"
+TEST_GATEWAY_ID = f"{TEST_MAC}"
 TEST_HARDWARE_VERSION = "AB123"
 TEST_FIRMWARE_VERSION = "1.2.3_456"
 TEST_ZEROCONF_NAME = "lumi-gateway-v3_miio12345678._miio._udp.local."
@@ -125,7 +125,6 @@ async def test_config_flow_gateway_success(hass):
         config_flow.CONF_FLOW_TYPE: config_flow.CONF_GATEWAY,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        "gateway_id": TEST_GATEWAY_ID,
         "model": TEST_MODEL,
         "mac": TEST_MAC,
     }
@@ -165,7 +164,6 @@ async def test_zeroconf_gateway_success(hass):
         config_flow.CONF_FLOW_TYPE: config_flow.CONF_GATEWAY,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        "gateway_id": TEST_GATEWAY_ID,
         "model": TEST_MODEL,
         "mac": TEST_MAC,
     }
