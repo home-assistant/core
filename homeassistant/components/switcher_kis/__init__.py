@@ -70,7 +70,7 @@ SERVICE_SET_AUTO_OFF_SCHEMA = vol.Schema(
 SERVICE_TURN_ON_WITH_TIMER_NAME = "turn_on_with_timer"
 SERVICE_TURN_ON_WITH_TIMER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TIMER_MINUTES): vol.All(
             cv.positive_int, vol.Range(min=1, max=90)
         ),
