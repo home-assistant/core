@@ -44,7 +44,7 @@ _ENVIRONMENT = "template.environment"
 
 _RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
 _RE_GET_ENTITIES = re.compile(
-    r"(?:(?:states\.|(?:is_state|is_state_attr|state_attr|states)"
+    r"(?:(?:states\.|(is_state|is_state_attr|state_attr|states|expand)"
     r"\((?:[\ \'\"]?))([\w]+\.[\w]+)|([\w]+))",
     re.I | re.M,
 )
@@ -76,7 +76,9 @@ def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
 
 
 def extract_entities(
-    template: Optional[str], variables: Optional[Dict[str, Any]] = None
+    hass: HomeAssistantType,
+    template: Optional[str],
+    variables: Optional[Dict[str, Any]] = None,
 ) -> Union[str, List[str]]:
     """Extract all entities for state_changed listener from template string."""
     if template is None or _RE_JINJA_DELIMITERS.search(template) is None:
@@ -90,22 +92,26 @@ def extract_entities(
 
     for result in extraction:
         if (
-            result[0] == "trigger.entity_id"
+            result[1] == "trigger.entity_id"
             and variables
             and "trigger" in variables
             and "entity_id" in variables["trigger"]
         ):
             extraction_final.append(variables["trigger"]["entity_id"])
-        elif result[0]:
-            extraction_final.append(result[0])
+        elif result[1]:
+            if result[0] == "expand":
+                for entity in expand(hass, result[1]):
+                    extraction_final.append(entity.entity_id)
+
+            extraction_final.append(result[1])
 
         if (
             variables
-            and result[1] in variables
-            and isinstance(variables[result[1]], str)
-            and valid_entity_id(variables[result[1]])
+            and result[2] in variables
+            and isinstance(variables[result[2]], str)
+            and valid_entity_id(variables[result[2]])
         ):
-            extraction_final.append(variables[result[1]])
+            extraction_final.append(variables[result[2]])
 
     if extraction_final:
         return list(set(extraction_final))
@@ -197,7 +203,7 @@ class Template:
         self, variables: Optional[Dict[str, Any]] = None
     ) -> Union[str, List[str]]:
         """Extract all entities for state_changed listener."""
-        return extract_entities(self.template, variables)
+        return extract_entities(self.hass, self.template, variables)
 
     def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
         """Render given template."""
