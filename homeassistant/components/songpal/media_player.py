@@ -96,7 +96,7 @@ class SongpalEntity(MediaPlayerEntity):
     def __init__(self, name, device):
         """Init."""
         self._name = name
-        self.dev = device
+        self._dev = device
         self._sysinfo = None
         self._model = None
 
@@ -124,7 +124,7 @@ class SongpalEntity(MediaPlayerEntity):
 
     async def async_will_remove_from_hass(self):
         """Run when entity will be removed from hass."""
-        await self.dev.stop_listen_notifications()
+        await self._dev.stop_listen_notifications()
 
     async def async_activate_websocket(self):
         """Activate websocket for listening if wanted."""
@@ -154,7 +154,7 @@ class SongpalEntity(MediaPlayerEntity):
             _LOGGER.warning(
                 "[%s(%s)] Got disconnected, trying to reconnect.",
                 self.name,
-                self.dev.endpoint,
+                self._dev.endpoint,
             )
             _LOGGER.debug("Disconnected: %s", connect.exception)
             self._available = False
@@ -168,7 +168,7 @@ class SongpalEntity(MediaPlayerEntity):
                 await asyncio.sleep(delay)
 
                 try:
-                    await self.dev.get_supported_methods()
+                    await self._dev.get_supported_methods()
                 except SongpalException as ex:
                     _LOGGER.debug("Failed to reconnect: %s", ex)
                     delay = min(2 * delay, 300)
@@ -177,22 +177,22 @@ class SongpalEntity(MediaPlayerEntity):
                     # back from a disconnected state.
                     await self.async_update_ha_state(force_refresh=True)
 
-            self.hass.loop.create_task(self.dev.listen_notifications())
+            self.hass.loop.create_task(self._dev.listen_notifications())
             _LOGGER.warning(
-                "[%s(%s)] Connection reestablished.", self.name, self.dev.endpoint
+                "[%s(%s)] Connection reestablished.", self.name, self._dev.endpoint
             )
 
-        self.dev.on_notification(VolumeChange, _volume_changed)
-        self.dev.on_notification(ContentChange, _source_changed)
-        self.dev.on_notification(PowerChange, _power_changed)
-        self.dev.on_notification(ConnectChange, _try_reconnect)
+        self._dev.on_notification(VolumeChange, _volume_changed)
+        self._dev.on_notification(ContentChange, _source_changed)
+        self._dev.on_notification(PowerChange, _power_changed)
+        self._dev.on_notification(ConnectChange, _try_reconnect)
 
         async def handle_stop(event):
-            await self.dev.stop_listen_notifications()
+            await self._dev.stop_listen_notifications()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
 
-        self.hass.loop.create_task(self.dev.listen_notifications())
+        self.hass.loop.create_task(self._dev.listen_notifications())
 
     @property
     def name(self):
@@ -224,19 +224,19 @@ class SongpalEntity(MediaPlayerEntity):
     async def async_set_sound_setting(self, name, value):
         """Change a setting on the device."""
         _LOGGER.debug("Calling set_sound_setting with %s: %s", name, value)
-        await self.dev.set_sound_settings(name, value)
+        await self._dev.set_sound_settings(name, value)
 
     async def async_update(self):
         """Fetch updates from the device."""
         try:
             if self._sysinfo is None:
-                self._sysinfo = await self.dev.get_system_info()
+                self._sysinfo = await self._dev.get_system_info()
 
             if self._model is None:
-                interface_info = await self.dev.get_interface_information()
+                interface_info = await self._dev.get_interface_information()
                 self._model = interface_info.modelName
 
-            volumes = await self.dev.get_volume_information()
+            volumes = await self._dev.get_volume_information()
             if not volumes:
                 _LOGGER.error("Got no volume controls, bailing out")
                 self._available = False
@@ -254,11 +254,11 @@ class SongpalEntity(MediaPlayerEntity):
             self._volume_control = volume
             self._is_muted = self._volume_control.is_muted
 
-            status = await self.dev.get_power()
+            status = await self._dev.get_power()
             self._state = status.status
             _LOGGER.debug("Got state: %s", status)
 
-            inputs = await self.dev.get_inputs()
+            inputs = await self._dev.get_inputs()
             _LOGGER.debug("Got ins: %s", inputs)
 
             self._sources = OrderedDict()
@@ -324,11 +324,11 @@ class SongpalEntity(MediaPlayerEntity):
 
     async def async_turn_on(self):
         """Turn the device on."""
-        return await self.dev.set_power(True)
+        return await self._dev.set_power(True)
 
     async def async_turn_off(self):
         """Turn the device off."""
-        return await self.dev.set_power(False)
+        return await self._dev.set_power(False)
 
     async def async_mute_volume(self, mute):
         """Mute or unmute the device."""
