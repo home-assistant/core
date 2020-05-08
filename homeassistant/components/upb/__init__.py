@@ -67,9 +67,8 @@ class UpbEntity(Entity):
         """Initialize the base of all UPB devices."""
         self._upb = upb
         self._element = element
-        self._unique_id = (
-            f"{unique_id}_{self.__class__.__name__.lower()}_{element.addr}"
-        )
+        element_type = "link" if element.addr.is_link else "device"
+        self._unique_id = f"{unique_id}_{element_type}_{element.addr}"
 
     @property
     def name(self):
