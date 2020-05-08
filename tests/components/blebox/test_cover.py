@@ -5,7 +5,6 @@ import logging
 import blebox_uniapi
 import pytest
 
-from homeassistant.components.blebox.cover import BleBoxCoverEntity
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
@@ -382,19 +381,42 @@ async def test_update_failure(feature, hass, config, caplog):
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
-async def test_entity_properties(feature, hass, config):
+async def test_opening_state(feature, hass, config):
     """Test that entity properties work."""
 
     feature_mock, entity_id = feature
 
-    # NOTE: I don't know how to test these other than directly through an entity
-    entity = BleBoxCoverEntity(feature_mock)
+    def initial_update():
+        feature_mock.state = 1  # opening
 
-    feature_mock.state = 1
-    assert entity.state == STATE_OPENING
+    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    await async_setup_entity(hass, config, entity_id)
+    assert hass.states.get(entity_id).state == STATE_OPENING
 
-    feature_mock.state = 0
-    assert entity.state == STATE_CLOSING
 
-    feature_mock.state = 3
-    assert entity.state == STATE_CLOSED
+@pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
+async def test_closing_state(feature, hass, config):
+    """Test that entity properties work."""
+
+    feature_mock, entity_id = feature
+
+    def initial_update():
+        feature_mock.state = 0  # closing
+
+    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    await async_setup_entity(hass, config, entity_id)
+    assert hass.states.get(entity_id).state == STATE_CLOSING
+
+
+@pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
+async def test_closed_state(feature, hass, config):
+    """Test that entity properties work."""
+
+    feature_mock, entity_id = feature
+
+    def initial_update():
+        feature_mock.state = 3  # closed
+
+    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    await async_setup_entity(hass, config, entity_id)
+    assert hass.states.get(entity_id).state == STATE_CLOSED
