@@ -47,7 +47,7 @@ homeassistant/components/avea/* @pattyland
 homeassistant/components/avri/* @timvancann
 homeassistant/components/awair/* @danielsjf
 homeassistant/components/aws/* @awarecan @robbiet480
-homeassistant/components/axis/* @kane610
+homeassistant/components/axis/* @Kane610
 homeassistant/components/azure_event_hub/* @eavanvalkenburg
 homeassistant/components/azure_service_bus/* @hfurubotten
 homeassistant/components/beewi_smartclim/* @alemuro
@@ -83,7 +83,7 @@ homeassistant/components/cpuspeed/* @fabaff
 homeassistant/components/cups/* @fabaff
 homeassistant/components/daikin/* @fredrike
 homeassistant/components/darksky/* @fabaff
-homeassistant/components/deconz/* @kane610
+homeassistant/components/deconz/* @Kane610
 homeassistant/components/delijn/* @bollewolle
 homeassistant/components/demo/* @home-assistant/core
 homeassistant/components/denonavr/* @scarface-4711 @starkillerOG
@@ -417,7 +417,7 @@ homeassistant/components/twentemilieu/* @frenck
 homeassistant/components/twilio_call/* @robbiet480
 homeassistant/components/twilio_sms/* @robbiet480
 homeassistant/components/ubee/* @mzdrale
-homeassistant/components/unifi/* @kane610
+homeassistant/components/unifi/* @Kane610
 homeassistant/components/unifiled/* @florisvdk
 homeassistant/components/upc_connect/* @pvizeli
 homeassistant/components/upcloud/* @scop
