@@ -16,4 +16,4 @@ turn_on_with_timer:
       example: "switch.switcher_kis_boiler"
     timer_minutes:
       description: 'Minutes to turn on (valid range from 1 to 90)'
-      example: '30' 
+      example: '30'
