@@ -24,8 +24,7 @@
       "no_host": "No IP adress specified, please configure one."
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "not_xiaomi_miio": "Not a Xiaomi Miio device."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }
