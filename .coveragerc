@@ -793,6 +793,9 @@ omit =
     homeassistant/components/ubus/device_tracker.py
     homeassistant/components/ue_smart_radio/media_player.py
     homeassistant/components/unifiled/*
+    homeassistant/components/upb/__init__.py
+    homeassistant/components/upb/const.py
+    homeassistant/components/upb/light.py
     homeassistant/components/upcloud/*
     homeassistant/components/upnp/*
     homeassistant/components/upc_connect/*
