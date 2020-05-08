@@ -353,7 +353,12 @@ omit =
     homeassistant/components/itach/remote.py
     homeassistant/components/itunes/media_player.py
     homeassistant/components/joaoapps_join/*
-    homeassistant/components/juicenet/*
+    homeassistant/components/juicenet/__init__.py
+    homeassistant/components/juicenet/const.py
+    homeassistant/components/juicenet/device.py
+    homeassistant/components/juicenet/entity.py
+    homeassistant/components/juicenet/sensor.py
+    homeassistant/components/juicenet/switch.py
     homeassistant/components/kaiterra/*
     homeassistant/components/kankun/switch.py
     homeassistant/components/keba/*
