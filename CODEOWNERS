@@ -420,6 +420,7 @@ homeassistant/components/twilio_sms/* @robbiet480
 homeassistant/components/ubee/* @mzdrale
 homeassistant/components/unifi/* @Kane610
 homeassistant/components/unifiled/* @florisvdk
+homeassistant/components/upb/* @gwww
 homeassistant/components/upc_connect/* @pvizeli
 homeassistant/components/upcloud/* @scop
 homeassistant/components/updater/* @home-assistant/core
