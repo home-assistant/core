@@ -4,6 +4,7 @@ import copy
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.plex.const import (
     CONF_IGNORE_NEW_SHARED_USERS,
+    CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
     DOMAIN,
     PLEX_UPDATE_PLATFORMS_SIGNAL,
@@ -94,7 +95,7 @@ async def test_new_ignored_users_available(hass, caplog):
         ignored_client = [
             x.players[0]
             for x in mock_plex_server.sessions()
-            if x.usernames[0] in ignored_users
+            if x.usernames[0] == ignored_user
         ][0]
         assert (
             f"Ignoring {ignored_client.product} client owned by '{ignored_user}'"
@@ -208,3 +209,38 @@ async def test_new_ignored_users_available(hass, caplog):
 #             await self.advance(DEBOUNCE_TIMEOUT)
 #             await hass.async_block_till_done()
 #             assert mock_update.call_count == 3
+
+
+async def test_ignore_plex_web_client(hass):
+    """Test option to ignore Plex Web clients."""
+
+    OPTIONS = copy.deepcopy(DEFAULT_OPTIONS)
+    OPTIONS[MP_DOMAIN][CONF_IGNORE_PLEX_WEB_CLIENTS] = True
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=DEFAULT_DATA,
+        options=OPTIONS,
+        unique_id=DEFAULT_DATA["server_id"],
+    )
+
+    mock_plex_server = MockPlexServer(config_entry=entry)
+
+    with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
+        "homeassistant.components.plex.PlexWebsocket.listen"
+    ):
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    server_id = mock_plex_server.machineIdentifier
+
+    async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+    await hass.async_block_till_done()
+
+    sensor = hass.states.get("sensor.plex_plex_server_1")
+    assert sensor.state == str(len(mock_plex_server.accounts))
+
+    media_players = hass.states.async_entity_ids("media_player")
+
+    assert len(media_players) == int(sensor.state) - 1

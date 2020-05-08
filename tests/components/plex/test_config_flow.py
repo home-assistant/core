@@ -10,6 +10,7 @@ from homeassistant.components.plex import config_flow
 from homeassistant.components.plex.const import (
     AUTOMATIC_SETUP_STRING,
     CONF_IGNORE_NEW_SHARED_USERS,
+    CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
@@ -428,6 +429,7 @@ async def test_option_flow(hass):
             CONF_MONITORED_USERS: {
                 user: {"enabled": True} for user in mock_plex_server.accounts
             },
+            CONF_IGNORE_PLEX_WEB_CLIENTS: False,
         }
     }
 

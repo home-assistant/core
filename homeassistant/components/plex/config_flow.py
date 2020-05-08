@@ -30,6 +30,7 @@ from .const import (  # pylint: disable=unused-import
     AUTOMATIC_SETUP_STRING,
     CONF_CLIENT_IDENTIFIER,
     CONF_IGNORE_NEW_SHARED_USERS,
+    CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
@@ -329,6 +330,9 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
             self.options[MP_DOMAIN][CONF_IGNORE_NEW_SHARED_USERS] = user_input[
                 CONF_IGNORE_NEW_SHARED_USERS
             ]
+            self.options[MP_DOMAIN][CONF_IGNORE_PLEX_WEB_CLIENTS] = user_input[
+                CONF_IGNORE_PLEX_WEB_CLIENTS
+            ]
 
             account_data = {
                 user: {"enabled": bool(user in user_input[CONF_MONITORED_USERS])}
@@ -372,6 +376,10 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(
                         CONF_IGNORE_NEW_SHARED_USERS,
                         default=plex_server.option_ignore_new_shared_users,
+                    ): bool,
+                    vol.Required(
+                        CONF_IGNORE_PLEX_WEB_CLIENTS,
+                        default=plex_server.option_ignore_plexweb_clients,
                     ): bool,
                 }
             ),
