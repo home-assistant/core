@@ -6,7 +6,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.helpers import config_validation as cv
 
 from .const import (  # pylint: disable=unused-import
     CONFIG_ENTRY_SCAN_INTERVAL,
@@ -89,8 +88,8 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     }
                 ),
                 vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.positive_int,
+                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL,
+                ): vol.All(vol.Coerce(int), vol.Range(min=30))
             }
         )
         return self.async_show_form(step_id="user", data_schema=data_schema,)
