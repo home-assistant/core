@@ -10,6 +10,7 @@ from homeassistant.components.http.const import KEY_REAL_IP
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import HTTP_OK
 from homeassistant.core import callback
+from homeassistant.helpers.network import async_get_url
 from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,7 +56,10 @@ def async_generate_id():
 @bind_hass
 def async_generate_url(hass, webhook_id):
     """Generate the full URL for a webhook_id."""
-    return "{}{}".format(hass.config.api.base_url, async_generate_path(webhook_id))
+    return "{}{}".format(
+        async_get_url(hass, prefer_external=True, allow_cloud=False),
+        async_generate_path(webhook_id),
+    )
 
 
 @callback

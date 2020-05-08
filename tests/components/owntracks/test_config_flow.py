@@ -5,6 +5,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components.owntracks import config_flow
 from homeassistant.components.owntracks.config_flow import CONF_CLOUDHOOK, CONF_SECRET
 from homeassistant.components.owntracks.const import DOMAIN
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
 
@@ -86,6 +87,10 @@ async def test_import(hass, webhook_id, secret):
 
 async def test_import_setup(hass):
     """Test that we automatically create a config flow."""
+    await async_process_ha_core_config(
+        hass, {"external_url": "http://example.com"},
+    )
+
     assert not hass.config_entries.async_entries(DOMAIN)
     assert await async_setup_component(hass, DOMAIN, {"owntracks": {}})
     await hass.async_block_till_done()
@@ -124,6 +129,10 @@ async def test_user_not_supports_encryption(hass, not_supports_encryption):
 
 async def test_unload(hass):
     """Test unloading a config flow."""
+    await async_process_ha_core_config(
+        hass, {"external_url": "http://example.com"},
+    )
+
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup"
     ) as mock_forward:

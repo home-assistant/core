@@ -27,7 +27,9 @@ from homeassistant.const import (
     CONF_CUSTOMIZE_DOMAIN,
     CONF_CUSTOMIZE_GLOB,
     CONF_ELEVATION,
+    CONF_EXTERNAL_URL,
     CONF_ID,
+    CONF_INTERNAL_URL,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
@@ -73,10 +75,6 @@ SCENE_CONFIG_PATH = "scenes.yaml"
 DEFAULT_CONFIG = f"""
 # Configure a default setup of Home Assistant (frontend, api, etc)
 default_config:
-
-# Uncomment this if you are using SSL/TLS, running in Docker container, etc.
-# http:
-#   base_url: example.duckdns.org:8123
 
 # Text to speech
 tts:
@@ -183,6 +181,8 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend(
         vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
         CONF_UNIT_SYSTEM: cv.unit_system,
         CONF_TIME_ZONE: cv.time_zone,
+        vol.Optional(CONF_INTERNAL_URL): cv.url,
+        vol.Optional(CONF_EXTERNAL_URL): cv.url,
         vol.Optional(CONF_WHITELIST_EXTERNAL_DIRS):
         # pylint: disable=no-value-for-parameter
         vol.All(cv.ensure_list, [vol.IsDir()]),
@@ -478,6 +478,8 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
             CONF_ELEVATION,
             CONF_TIME_ZONE,
             CONF_UNIT_SYSTEM,
+            CONF_EXTERNAL_URL,
+            CONF_INTERNAL_URL,
         ]
     ):
         hac.config_source = SOURCE_YAML
@@ -487,6 +489,8 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
         (CONF_LONGITUDE, "longitude"),
         (CONF_NAME, "location_name"),
         (CONF_ELEVATION, "elevation"),
+        (CONF_INTERNAL_URL, "internal_url"),
+        (CONF_EXTERNAL_URL, "external_url"),
     ):
         if key in config:
             setattr(hac, attr, config[key])
@@ -529,10 +533,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
             hac.units = METRIC_SYSTEM
     elif CONF_TEMPERATURE_UNIT in config:
         unit = config[CONF_TEMPERATURE_UNIT]
-        if unit == TEMP_CELSIUS:
-            hac.units = METRIC_SYSTEM
-        else:
-            hac.units = IMPERIAL_SYSTEM
+        hac.units = METRIC_SYSTEM if unit == TEMP_CELSIUS else IMPERIAL_SYSTEM
         _LOGGER.warning(
             "Found deprecated temperature unit in core "
             "configuration expected unit system. Replace '%s: %s' "

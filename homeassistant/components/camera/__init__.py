@@ -46,6 +46,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.network import async_get_url
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_when_setup
 
@@ -684,7 +685,7 @@ async def async_handle_play_stream_service(camera, service_call):
     )
     data = {
         ATTR_ENTITY_ID: entity_ids,
-        ATTR_MEDIA_CONTENT_ID: f"{hass.config.api.base_url}{url}",
+        ATTR_MEDIA_CONTENT_ID: f"{async_get_url(hass)}{url}",
         ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
     }
 
