@@ -66,10 +66,6 @@ class PlexSensor(Entity):
                 PLEX_UPDATE_PLATFORMS_SIGNAL.format(self._server.machine_identifier),
             )
 
-        def get_season_episode(session):
-            """Wrap property that sometimes makes I/O calls."""
-            return session.seasonEpisode
-
         now_playing = []
         for sess in self.sessions:
             if sess.TYPE == "photo":
@@ -94,7 +90,7 @@ class PlexSensor(Entity):
                 if show.year is not None:
                     season_title += f" ({show.year!s})"
                 season_episode = await self.hass.async_add_executor_job(
-                    get_season_episode, sess
+                    getattr, sess, "seasonEpisode"
                 )
                 episode_title = sess.title
                 now_playing_title = (
