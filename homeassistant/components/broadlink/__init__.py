@@ -10,7 +10,6 @@ from broadlink.exceptions import BroadlinkException, ReadError
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
@@ -65,15 +64,14 @@ SERVICE_SEND_SCHEMA = vol.Schema(
 SERVICE_LEARN_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
 
 
-@callback
-def async_setup_service(hass, host, device):
+async def async_setup_service(hass, host, device):
     """Register a device for given host for use in services."""
     hass.data.setdefault(DOMAIN, {})[host] = device
 
     if hass.services.has_service(DOMAIN, SERVICE_LEARN):
         return
 
-    async def _learn_command(call):
+    async def async_learn_command(call):
         """Learn a packet from remote."""
 
         device = hass.data[DOMAIN][call.data[CONF_HOST]]
@@ -103,12 +101,15 @@ def async_setup_service(hass, host, device):
                 )
                 return
         _LOGGER.error("Failed to learn: No signal received")
+        hass.components.persistent_notification.async_create(
+            "No signal was received", title="Broadlink switch"
+        )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_LEARN, _learn_command, schema=SERVICE_LEARN_SCHEMA
+        DOMAIN, SERVICE_LEARN, async_learn_command, schema=SERVICE_LEARN_SCHEMA
     )
 
-    async def _send_packet(call):
+    async def async_send_packet(call):
         """Send a packet."""
         device = hass.data[DOMAIN][call.data[CONF_HOST]]
         packets = call.data[CONF_PACKET]
@@ -120,5 +121,5 @@ def async_setup_service(hass, host, device):
                 return
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SEND, _send_packet, schema=SERVICE_SEND_SCHEMA
+        DOMAIN, SERVICE_SEND, async_send_packet, schema=SERVICE_SEND_SCHEMA
     )

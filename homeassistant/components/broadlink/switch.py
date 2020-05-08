@@ -110,12 +110,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if model in RM_TYPES:
         api = blk.rm((host, DEFAULT_PORT), mac_addr, None)
         broadlink_device = BroadlinkDevice(hass, api)
-        hass.add_job(async_setup_service, hass, host, broadlink_device)
+        hass.async_create_task(async_setup_service(hass, host, broadlink_device))
         switches = generate_rm_switches(devices, broadlink_device)
     elif model in RM4_TYPES:
         api = blk.rm4((host, DEFAULT_PORT), mac_addr, None)
         broadlink_device = BroadlinkDevice(hass, api)
-        hass.add_job(async_setup_service, hass, host, broadlink_device)
+        hass.async_create_task(async_setup_service(hass, host, broadlink_device))
         switches = generate_rm_switches(devices, broadlink_device)
     elif model in SP1_TYPES:
         api = blk.sp1((host, DEFAULT_PORT), mac_addr, None)
