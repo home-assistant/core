@@ -391,10 +391,10 @@ async def test_entity_properties(feature, hass, config):
     entity = BleBoxCoverEntity(feature_mock)
 
     feature_mock.state = 1
-    assert entity.is_opening is True
+    assert entity.state == STATE_OPENING
 
     feature_mock.state = 0
-    assert entity.is_closing is True
+    assert entity.state == STATE_CLOSING
 
     feature_mock.state = 3
-    assert entity.is_closed is True
+    assert entity.state == STATE_CLOSED
