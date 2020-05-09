@@ -60,10 +60,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
     if not conf:
         return True
 
-    for deviceConfig in conf[CONF_DEVICES]:
+    for device_config in conf[CONF_DEVICES]:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=deviceConfig
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=device_config
             )
         )
 
