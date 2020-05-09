@@ -78,8 +78,6 @@ async def test_form(hass: HomeAssistantType):
     assert result2["result"].unique_id == MOCK_UUID
     assert result2["data"] == MOCK_USER_INPUT
     await hass.async_block_till_done()
-    # assert len(mock_connection_class.mock_calls) == 3
-    # assert len(mock_config_class.mock_calls) == 1
 
 
 async def test_form_invalid_host(hass: HomeAssistantType):
