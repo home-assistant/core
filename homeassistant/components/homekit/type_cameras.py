@@ -1,5 +1,6 @@
 """Class to hold all camera accessories."""
 import asyncio
+from datetime import timedelta
 import logging
 import os
 
@@ -87,7 +88,7 @@ RESOLUTIONS = [
 
 VIDEO_PROFILE_NAMES = ["baseline", "main", "high"]
 
-FFMPEG_WATCH_INTERVAL = 5
+FFMPEG_WATCH_INTERVAL = timedelta(seconds=5)
 FFMPEG_WATCHER = "ffmpeg_watcher"
 FFMPEG_PID = "ffmpeg_pid"
 SESSION_ID = "session_id"
@@ -236,23 +237,28 @@ class Camera(HomeAccessory, PyhapCamera):
             stream.process.pid,
         )
 
+        ffmpeg_watcher = async_track_time_interval(
+            self.hass, self._ensure_ffmpeg_stream_alive, FFMPEG_WATCH_INTERVAL
+        )
         self._current_session = {
-            FFMPEG_WATCHER: async_track_time_interval(
-                self.hass, self._ensure_ffmpeg_stream_alive, FFMPEG_WATCH_INTERVAL
-            ),
+            FFMPEG_WATCHER: ffmpeg_watcher,
             FFMPEG_PID: stream.process.pid,
             SESSION_ID: session_info["id"],
         }
-        return True
 
-    async def _ensure_ffmpeg_stream_alive(self):
+        return await self._ensure_ffmpeg_stream_alive(0)
+
+    async def _ensure_ffmpeg_stream_alive(self, _):
         """Check to make sure ffmpeg is still running."""
         ffmpeg_pid = self._current_session[FFMPEG_PID]
         try:
             os.kill(ffmpeg_pid, 0)
+            return True
         except OSError:
-            _LOGGER.info("Streaming process ended unexpectedly - PID %d", ffmpeg_pid)
-            self._async_clean_session()
+            pass
+        _LOGGER.info("Streaming process ended unexpectedly - PID %d", ffmpeg_pid)
+        self._async_clean_session()
+        return False
 
     @callback
     def _async_clean_session(self):
@@ -264,7 +270,6 @@ class Camera(HomeAccessory, PyhapCamera):
         session_id = self._current_session[SESSION_ID]
 
         # Free the session so they can start another
-        # stream
         self.streaming_status = STREAMING_STATUS["AVAILABLE"]
         if session_id in self.sessions:
             del self.sessions[session_id]
@@ -277,8 +282,8 @@ class Camera(HomeAccessory, PyhapCamera):
         stream = session_info.get("stream")
         if not stream:
             _LOGGER.debug("No stream for session ID %s", session_id)
+            return
         _LOGGER.info("[%s] Stopping stream.", session_id)
-
         try:
             await stream.close()
             return
@@ -290,8 +295,6 @@ class Camera(HomeAccessory, PyhapCamera):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Failed to forcefully close stream.")
         _LOGGER.debug("Stream process stopped forcefully.")
-
-        self._async_clean_session()
 
     async def reconfigure_stream(self, session_info, stream_config):
         """Reconfigure the stream so that it uses the given ``stream_config``."""
