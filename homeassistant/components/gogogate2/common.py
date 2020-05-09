@@ -1,32 +1,124 @@
 """Common code for GogoGate2 component."""
+from datetime import datetime, timedelta
 import logging
+from typing import Callable, NamedTuple, Optional, Union
 
-from pygogogate2 import Gogogate2API
+from gogogate2_api import GogoGate2Api, InfoResponse
+from gogogate2_api.common import Door, get_configured_doors
 
+from homeassistant.components.gogogate2.const import (
+    DATA_MANAGERS,
+    DATA_UPDATED_SIGNAL,
+    DOMAIN,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_api(config_data: dict) -> Gogogate2API:
+class StateData(NamedTuple):
+    """State data for a cover entity."""
+
+    unique_id: str
+    door: Door
+
+
+class DataManager:
+    """Manage data retrieval and update from gogogate2 devices."""
+
+    def __init__(
+        self, hass: HomeAssistant, api: GogoGate2Api, config_entry: ConfigEntry
+    ) -> None:
+        """Initialize the object."""
+        self._hass = hass
+        self._api = api
+        self._config_entry = config_entry
+        self._cancel_polling_func: Optional[Callable] = None
+
+    @property
+    def api(self) -> GogoGate2Api:
+        """Get the api."""
+        return self._api
+
+    def start_polling(self) -> None:
+        """Start polling for data."""
+
+        async def runner(now: datetime) -> None:
+            await self.async_update()
+
+        self._cancel_polling_func = async_track_time_interval(
+            self._hass, runner, timedelta(seconds=5)
+        )
+
+    def stop_polling(self) -> None:
+        """Stop polling for data."""
+        if self._cancel_polling_func:
+            self._cancel_polling_func()
+
+        self._cancel_polling_func = None
+
+    async def async_update(self) -> None:
+        """Update data from the gogogate2 device."""
+        data = await self._hass.async_add_executor_job(self._api.info)
+
+        for door in get_configured_doors(data):
+            self.async_update_door(door)
+
+    def async_update_door(self, door: Door) -> None:
+        """Dispatch new state data to a cover entity."""
+        async_dispatcher_send(
+            self._hass,
+            DATA_UPDATED_SIGNAL,
+            StateData(unique_id=cover_unique_id(self._config_entry, door), door=door),
+        )
+
+
+def cover_unique_id(config_entry: ConfigEntry, door: Door) -> str:
+    """Generate a cover entity unique id."""
+    return f"{config_entry.unique_id}_{door.door_id}"
+
+
+def create_data_manager(
+    hass: HomeAssistant, config_entry: ConfigEntry, api: GogoGate2Api
+) -> DataManager:
+    """Create a data manager."""
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN].setdefault(DATA_MANAGERS, {})
+    hass.data[DOMAIN][DATA_MANAGERS].setdefault(
+        config_entry.unique_id, DataManager(hass, api, config_entry)
+    )
+
+    return hass.data[DOMAIN][DATA_MANAGERS][config_entry.unique_id]
+
+
+def get_data_manager(hass: HomeAssistant, config_entry: ConfigEntry) -> DataManager:
+    """Get an existing data manager."""
+    return hass.data[DOMAIN][DATA_MANAGERS][config_entry.unique_id]
+
+
+def get_api(config_data: dict) -> GogoGate2Api:
     """Get an api object for config data."""
-    return Gogogate2API(
+    return GogoGate2Api(
+        config_data[CONF_IP_ADDRESS],
         config_data[CONF_USERNAME],
         config_data[CONF_PASSWORD],
-        config_data[CONF_IP_ADDRESS],
     )
 
 
-async def async_can_connect(hass: HomeAssistant, api: Gogogate2API) -> bool:
-    """Check if the device is accessible."""
+async def async_test_if_is_accessible(
+    hass: HomeAssistant, api: GogoGate2Api
+) -> Union[InfoResponse, bool]:
+    """Check if the device is accessible.
+
+    Returns InfoResponse if accessible, False otherwise.
+    """
     try:
-        devices = await hass.async_add_executor_job(api.get_devices)
-        if devices is False:
-            return False
+        return await hass.async_add_executor_job(api.info)
 
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Failed to connect")
         return False
-
-    return True

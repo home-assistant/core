@@ -1,9 +1,21 @@
 """Tests for the GogoGate2 component."""
-from unittest.mock import MagicMock
+from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
 
-from pygogogate2 import Gogogate2API
+from gogogate2_api import GogoGate2Api
+from gogogate2_api.common import (
+    ActivateResponse,
+    Door,
+    DoorMode,
+    DoorStatus,
+    InfoResponse,
+    Network,
+    Outputs,
+    Wifi,
+)
 
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -11,8 +23,9 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_USERNAME,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OPEN,
-    STATE_UNAVAILABLE,
+    STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant
 
@@ -21,18 +34,114 @@ from .common import ComponentFactory
 
 async def test_import(hass: HomeAssistant, component_factory: ComponentFactory) -> None:
     """Test importing of file based config."""
-    api0 = MagicMock(spec=Gogogate2API)
-    api0.get_devices.return_value = [
-        {"door": 0, "name": "door0", "status": "open"},
-    ]
-    api1 = MagicMock(spec=Gogogate2API)
-    api1.get_devices.return_value = [{"door": 1, "name": "door1", "status": "closed"}]
+    api0 = MagicMock(spec=GogoGate2Api)
+    api0.info.return_value = InfoResponse(
+        user="user1",
+        gogogatename="gogogatename0",
+        model="",
+        apiversion="",
+        remoteaccessenabled=False,
+        remoteaccess="abc123.blah.blah",
+        firmwareversion="",
+        apicode="",
+        door1=Door(
+            door_id=1,
+            permission=True,
+            name="Door1",
+            mode=DoorMode.GARAGE,
+            status=DoorStatus.OPENED,
+            sensor=True,
+            sensorid=None,
+            camera=False,
+            events=2,
+            temperature=None,
+        ),
+        door2=Door(
+            door_id=2,
+            permission=True,
+            name=None,
+            mode=DoorMode.GARAGE,
+            status=DoorStatus.UNDEFINED,
+            sensor=True,
+            sensorid=None,
+            camera=False,
+            events=0,
+            temperature=None,
+        ),
+        door3=Door(
+            door_id=3,
+            permission=True,
+            name=None,
+            mode=DoorMode.GARAGE,
+            status=DoorStatus.UNDEFINED,
+            sensor=True,
+            sensorid=None,
+            camera=False,
+            events=0,
+            temperature=None,
+        ),
+        outputs=Outputs(output1=True, output2=False, output3=True),
+        network=Network(ip=""),
+        wifi=Wifi(SSID="", linkquality="", signal=""),
+    )
 
-    def new_api(username: str, password: str, ip_address: str) -> Gogogate2API:
+    api1 = MagicMock(spec=GogoGate2Api)
+    api1.info.return_value = InfoResponse(
+        user="user1",
+        gogogatename="gogogatename0",
+        model="",
+        apiversion="",
+        remoteaccessenabled=False,
+        remoteaccess="321bca.blah.blah",
+        firmwareversion="",
+        apicode="",
+        door1=Door(
+            door_id=1,
+            permission=True,
+            name="Door1",
+            mode=DoorMode.GARAGE,
+            status=DoorStatus.CLOSED,
+            sensor=True,
+            sensorid=None,
+            camera=False,
+            events=2,
+            temperature=None,
+        ),
+        door2=Door(
+            door_id=2,
+            permission=True,
+            name=None,
+            mode=DoorMode.GARAGE,
+            status=DoorStatus.UNDEFINED,
+            sensor=True,
+            sensorid=None,
+            camera=False,
+            events=0,
+            temperature=None,
+        ),
+        door3=Door(
+            door_id=3,
+            permission=True,
+            name=None,
+            mode=DoorMode.GARAGE,
+            status=DoorStatus.UNDEFINED,
+            sensor=True,
+            sensorid=None,
+            camera=False,
+            events=0,
+            temperature=None,
+        ),
+        outputs=Outputs(output1=True, output2=False, output3=True),
+        network=Network(ip=""),
+        wifi=Wifi(SSID="", linkquality="", signal=""),
+    )
+
+    def new_api(ip_address: str, username: str, password: str) -> GogoGate2Api:
         if ip_address == "127.0.1.0":
             return api0
         if ip_address == "127.0.1.1":
             return api1
+        raise Exception(f"Untested ip address {ip_address}")
 
     component_factory.api_class_mock.side_effect = new_api
 
@@ -57,18 +166,19 @@ async def test_import(hass: HomeAssistant, component_factory: ComponentFactory) 
     entity_ids = hass.states.async_entity_ids(COVER_DOMAIN)
     assert entity_ids is not None
     assert len(entity_ids) == 2
-    assert "cover.cover0" in entity_ids
-    assert "cover.cover1" in entity_ids
+    assert "cover.door1" in entity_ids
+    assert "cover.door1_2" in entity_ids
 
     await component_factory.unload()
 
 
-async def test_cover(hass: HomeAssistant, component_factory: ComponentFactory) -> None:
+async def test_cover_update(
+    hass: HomeAssistant, component_factory: ComponentFactory
+) -> None:
     """Test cover."""
     await component_factory.configure_component()
-    api_mock = await component_factory.run_config_flow(
+    component_data = await component_factory.run_config_flow(
         config_data={
-            CONF_NAME: "cover0",
             CONF_IP_ADDRESS: "127.0.0.2",
             CONF_USERNAME: "user0",
             CONF_PASSWORD: "password0",
@@ -77,93 +187,125 @@ async def test_cover(hass: HomeAssistant, component_factory: ComponentFactory) -
 
     assert hass.states.async_entity_ids(COVER_DOMAIN)
 
-    state = hass.states.get("cover.cover0")
+    state = hass.states.get("cover.door1")
     assert state
-    assert state.state == STATE_UNAVAILABLE
-    assert state.attributes["friendly_name"] == "cover0"
+    assert state.state == STATE_OPEN
+    assert state.attributes["friendly_name"] == "Door1"
     assert state.attributes["supported_features"] == 3
     assert state.attributes["device_class"] == "garage"
 
-    await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": "cover.cover0"}
+    component_data.data_manager.async_update_door(
+        Door(
+            door_id=1,
+            permission=True,
+            name="Door1",
+            mode=DoorMode.GARAGE,
+            status=DoorStatus.OPENED,
+            sensor=True,
+            sensorid=None,
+            camera=False,
+            events=2,
+            temperature=None,
+        )
     )
     await hass.async_block_till_done()
-    state = hass.states.get("cover.cover0")
+    state = hass.states.get("cover.door1")
     assert state
     assert state.state == STATE_OPEN
 
-    api_mock.get_status.side_effect = None
-    api_mock.get_status.return_value = "closed"
-    await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": "cover.cover0"}
+    component_data.data_manager.async_update_door(
+        Door(
+            door_id=1,
+            permission=True,
+            name="Door1",
+            mode=DoorMode.GARAGE,
+            status=DoorStatus.CLOSED,
+            sensor=True,
+            sensorid=None,
+            camera=False,
+            events=2,
+            temperature=None,
+        )
     )
     await hass.async_block_till_done()
-    state = hass.states.get("cover.cover0")
+    state = hass.states.get("cover.door1")
     assert state
     assert state.state == STATE_CLOSED
 
-    api_mock.get_status.side_effect = Exception("ERROR")
+
+async def test_open_close(
+    hass: HomeAssistant, component_factory: ComponentFactory
+) -> None:
+    """Test open and close."""
+    closed_door = Door(
+        door_id=1,
+        permission=True,
+        name="Door1",
+        mode=DoorMode.GARAGE,
+        status=DoorStatus.CLOSED,
+        sensor=True,
+        sensorid=None,
+        camera=False,
+        events=2,
+        temperature=None,
+    )
+
+    await component_factory.configure_component()
+    assert hass.states.get("cover.door1") is None
+
+    component_data = await component_factory.run_config_flow(
+        config_data={
+            CONF_IP_ADDRESS: "127.0.0.2",
+            CONF_USERNAME: "user0",
+            CONF_PASSWORD: "password0",
+        }
+    )
+
+    component_data.api.activate.return_value = ActivateResponse(result=True)
+
+    assert hass.states.get("cover.door1").state == STATE_OPEN
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": "cover.cover0"}
+        COVER_DOMAIN, "close_cover", service_data={"entity_id": "cover.door1"},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("cover.cover0")
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
-    api_mock.get_status.side_effect = None
-    api_mock.get_status.return_value = "open"
+    component_data.api.close_door.assert_called_with(1)
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": "cover.cover0"}
+        HA_DOMAIN, "update_entity", service_data={"entity_id": "cover.door1"},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("cover.cover0")
-    assert state
-    assert state.state == STATE_OPEN
+    assert hass.states.get("cover.door1").state == STATE_CLOSING
 
-    api_mock.get_status.side_effect = Exception("ERROR")
+    component_data.data_manager.async_update_door(closed_door)
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.door1").state == STATE_CLOSED
+
+    # Assert mid state changed when new status is received.
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": "cover.cover0"}
+        COVER_DOMAIN, "open_cover", service_data={"entity_id": "cover.door1"},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("cover.cover0")
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
-    api_mock.get_status.side_effect = None
-    api_mock.get_status.return_value = "open"
+    component_data.api.open_door.assert_called_with(1)
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": "cover.cover0"}
+        HA_DOMAIN, "update_entity", service_data={"entity_id": "cover.door1"},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("cover.cover0")
-    assert state
-    assert state.state == STATE_OPEN
+    assert hass.states.get("cover.door1").state == STATE_OPENING
 
-    api_mock.close_device.reset_mock()
-    api_mock.open_device.reset_mock()
-    api_mock.get_status.side_effect = None
-    api_mock.get_status.return_value = "closed"
+    # Assert the mid state does not change when the same status is returned.
+    component_data.data_manager.async_update_door(closed_door)
+    component_data.data_manager.async_update_door(closed_door)
     await hass.services.async_call(
-        "cover", "close_cover", {"entity_id": "cover.cover0"}
+        HA_DOMAIN, "update_entity", service_data={"entity_id": "cover.door1"},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("cover.cover0")
-    assert state
-    assert state.state == STATE_CLOSED
-    api_mock.close_device.assert_called()
-    api_mock.open_device.assert_not_called()
+    assert hass.states.get("cover.door1").state == STATE_OPENING
 
-    api_mock.close_device.reset_mock()
-    api_mock.open_device.reset_mock()
-    api_mock.get_status.side_effect = None
-    api_mock.get_status.return_value = "open"
-    await hass.services.async_call("cover", "open_cover", {"entity_id": "cover.cover0"})
-    await hass.async_block_till_done()
-    state = hass.states.get("cover.cover0")
-    assert state
-    assert state.state == STATE_OPEN
-    api_mock.close_device.assert_not_called()
-    api_mock.open_device.assert_called()
-
-    await component_factory.unload()
+    # Assert the mid state times out.
+    with patch("homeassistant.components.gogogate2.cover.datetime") as datetime_mock:
+        datetime_mock.now.return_value = datetime.now() + timedelta(seconds=60.1)
+        component_data.data_manager.async_update_door(closed_door)
+        await hass.services.async_call(
+            HA_DOMAIN, "update_entity", service_data={"entity_id": "cover.door1"},
+        )
+        await hass.async_block_till_done()
+        assert hass.states.get("cover.door1").state == STATE_CLOSED

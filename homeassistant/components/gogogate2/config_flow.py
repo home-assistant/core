@@ -1,14 +1,16 @@
 """Config flow for Gogogate2."""
 import logging
-from typing import Optional
+import re
+from typing import Awaitable, Callable, Optional
 
+from gogogate2_api.common import InfoResponse
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
-from .common import async_can_connect, get_api
+from .common import async_test_if_is_accessible, get_api
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +26,6 @@ def data_schema(data: dict = None) -> vol.Schema:
     data = data or {}
     return vol.Schema(
         {
-            vol.Required(CONF_NAME, **row_kwargs(data.get(CONF_NAME))): str,
             vol.Required(CONF_IP_ADDRESS, **row_kwargs(data.get(CONF_IP_ADDRESS))): str,
             vol.Required(CONF_USERNAME, **row_kwargs(data.get(CONF_USERNAME))): str,
             vol.Required(CONF_PASSWORD, **row_kwargs(data.get(CONF_PASSWORD))): str,
@@ -33,18 +34,23 @@ def data_schema(data: dict = None) -> vol.Schema:
 
 
 async def async_handle_data_updated(
-    flow_handler: data_entry_flow.FlowHandler, user_input: dict
+    flow_handler: data_entry_flow.FlowHandler,
+    user_input: dict,
+    async_before_create_entry: Optional[Callable[[InfoResponse], Awaitable]] = None,
 ) -> dict:
     """Handle data being updated."""
     api = get_api(user_input)
-
-    if not await async_can_connect(flow_handler.hass, api):
+    data = await async_test_if_is_accessible(flow_handler.hass, api)
+    if data is False:
         return flow_handler.async_abort(
             reason="cannot_connect",
             description_placeholders={CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]},
         )
 
-    return flow_handler.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+    if async_before_create_entry:
+        await async_before_create_entry(data)
+
+    return flow_handler.async_create_entry(title=data.gogogatename, data=user_input)
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
@@ -87,4 +93,12 @@ class Gogogate2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_finish(self, user_input: dict):
         """Validate and create config entry."""
-        return await async_handle_data_updated(self, user_input)
+
+        async def async_before_create_entry(data: InfoResponse) -> None:
+            nonlocal self
+            await self.async_set_unique_id(re.sub("\\..*$", "", data.remoteaccess))
+            self._abort_if_unique_id_configured()
+
+        return await async_handle_data_updated(
+            self, user_input, async_before_create_entry
+        )

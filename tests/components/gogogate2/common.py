@@ -1,20 +1,79 @@
 """Common test code."""
-from typing import List, Optional
+from typing import List, NamedTuple, Optional
 from unittest.mock import MagicMock, Mock
 
-from pygogogate2 import Gogogate2API
+from gogogate2_api import GogoGate2Api, InfoResponse
+from gogogate2_api.common import Door, DoorMode, DoorStatus, Network, Outputs, Wifi
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.gogogate2 import async_unload_entry
+from homeassistant.components.gogogate2.common import DataManager, get_data_manager
 import homeassistant.components.gogogate2.const as const
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC, STATE_OPEN
+from homeassistant.const import CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 from homeassistant.setup import async_setup_component
+
+INFO_RESPONSE = InfoResponse(
+    user="user1",
+    gogogatename="gogogatename1",
+    model="",
+    apiversion="",
+    remoteaccessenabled=False,
+    remoteaccess="abcdefg.my-gogogate.com",
+    firmwareversion="",
+    apicode="API_CODE",
+    door1=Door(
+        door_id=1,
+        permission=True,
+        name="Door1",
+        mode=DoorMode.GARAGE,
+        status=DoorStatus.OPENED,
+        sensor=True,
+        sensorid=None,
+        camera=False,
+        events=2,
+        temperature=None,
+    ),
+    door2=Door(
+        door_id=2,
+        permission=True,
+        name=None,
+        mode=DoorMode.GARAGE,
+        status=DoorStatus.OPENED,
+        sensor=True,
+        sensorid=None,
+        camera=False,
+        events=2,
+        temperature=None,
+    ),
+    door3=Door(
+        door_id=3,
+        permission=True,
+        name="Door3",
+        mode=DoorMode.GARAGE,
+        status=DoorStatus.OPENED,
+        sensor=True,
+        sensorid=None,
+        camera=False,
+        events=2,
+        temperature=None,
+    ),
+    outputs=Outputs(output1=True, output2=False, output3=True),
+    network=Network(ip=""),
+    wifi=Wifi(SSID="", linkquality="", signal=""),
+)
+
+
+class ComponentData(NamedTuple):
+    """Test data for a mocked component."""
+
+    api: GogoGate2Api
+    data_manager: DataManager
 
 
 class ComponentFactory:
@@ -49,15 +108,12 @@ class ComponentFactory:
         await self._hass.async_block_till_done()
 
     async def run_config_flow(
-        self, config_data: dict, api_mock: Optional[Gogogate2API] = None
-    ) -> Gogogate2API:
+        self, config_data: dict, api_mock: Optional[GogoGate2Api] = None
+    ) -> ComponentData:
         """Run a config flow."""
         if api_mock is None:
-            api_mock: Gogogate2API = MagicMock(spec=Gogogate2API)
-            api_mock.get_devices.return_value = [
-                {"door": 0, "name": "door0", "status": "open"}
-            ]
-            api_mock.get_status.return_value = STATE_OPEN
+            api_mock: GogoGate2Api = MagicMock(spec=GogoGate2Api)
+            api_mock.info.return_value = INFO_RESPONSE
 
         self._gogogate_api_mock.reset_mocks()
         self._gogogate_api_mock.return_value = api_mock
@@ -78,7 +134,17 @@ class ComponentFactory:
 
         await self._hass.async_block_till_done()
 
-        return api_mock
+        config_entry = next(
+            iter(
+                entry
+                for entry in self._hass.config_entries.async_entries(const.DOMAIN)
+                if entry.unique_id == "abcdefg"
+            )
+        )
+
+        return ComponentData(
+            api=api_mock, data_manager=get_data_manager(self._hass, config_entry)
+        )
 
     async def unload(self) -> None:
         """Unload all config entries."""

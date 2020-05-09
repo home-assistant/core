@@ -8,7 +8,6 @@
         "title": "Setup GogoGate2",
         "description": "Provide requisite information below.",
         "data": {
-          "name": "Name or Location",
           "ip_address": "IP Address",
           "username": "Username",
           "password": "Password"
@@ -22,7 +21,6 @@
         "title": "GogoGate2 options",
         "description": "Update values below.",
         "data": {
-          "name": "Name or Location",
           "ip_address": "IP Address",
           "username": "Username",
           "password": "Password"

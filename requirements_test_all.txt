@@ -275,6 +275,9 @@ gios==0.1.1
 # homeassistant.components.glances
 glances_api==0.2.0
 
+# homeassistant.components.gogogate2
+gogogate2-api==1.0.2
+
 # homeassistant.components.google
 google-api-python-client==1.6.4
 
@@ -559,9 +562,6 @@ pyfttt==0.3
 # homeassistant.components.bluetooth_le_tracker
 # homeassistant.components.skybeacon
 pygatt[GATTTOOL]==4.0.5
-
-# homeassistant.components.gogogate2
-pygogogate2==0.2.6
 
 # homeassistant.components.version
 pyhaversion==3.3.0
