@@ -35,7 +35,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_PASSWORD,
-    CONF_REGION,
     CONF_USERNAME,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -49,14 +48,12 @@ ATTR_FAN_ACTION = "fan_action"
 CONF_COOL_AWAY_TEMPERATURE = "away_cool_temperature"
 CONF_HEAT_AWAY_TEMPERATURE = "away_heat_temperature"
 CONF_USE_SCHEDULES = "use_schedules"
-CONF_SCHEDULE_HVAC_MODE = "schedule_hvac_moe"
+CONF_SCHEDULE_HVAC_MODE = "schedule_hvac_mode"
 
 DEFAULT_COOL_AWAY_TEMPERATURE = 88
 DEFAULT_HEAT_AWAY_TEMPERATURE = 61
-DEFAULT_REGION = "eu"
 DEFAULT_SCHEDULE_HVAC_MODE = None
 SCHEDULE_HVAC_MODES = [None, HVAC_MODE_HEAT_COOL, HVAC_MODE_HEAT, HVAC_MODE_COOL]
-REGIONS = ["eu", "us"]
 
 HOLD_MODE_TEMPORARY = "temporary"
 HOLD_MODE_PERMANENT = "permanent"
@@ -78,7 +75,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(
             CONF_SCHEDULE_HVAC_MODE, default=DEFAULT_SCHEDULE_HVAC_MODE
         ): vol.In(SCHEDULE_HVAC_MODES),
-        vol.Optional(CONF_REGION, default=DEFAULT_REGION): vol.In(REGIONS),
     }
 )
 
@@ -119,53 +115,45 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    if config.get(CONF_REGION) == "us":
-        try:
-            client = somecomfort.SomeComfort(username, password)
-        except somecomfort.AuthError:
-            _LOGGER.error("Failed to login to honeywell account %s", username)
-            return
-        except somecomfort.SomeComfortError:
-            _LOGGER.error(
-                "Failed to initialize the Honeywell client: "
-                "Check your configuration (username, password), "
-                "or maybe you have exceeded the API rate limit?"
-            )
-            return
-
-        dev_id = config.get("thermostat")
-        loc_id = config.get("location")
-        cool_away_temp = config.get(CONF_COOL_AWAY_TEMPERATURE)
-        heat_away_temp = config.get(CONF_HEAT_AWAY_TEMPERATURE)
-        use_schedules = config.get(CONF_USE_SCHEDULES)
-        schedule_hvac_mode = config.get(CONF_SCHEDULE_HVAC_MODE)
-
-        add_entities(
-            [
-                HoneywellUSThermostat(
-                    client,
-                    device,
-                    cool_away_temp,
-                    heat_away_temp,
-                    use_schedules,
-                    schedule_hvac_mode,
-                    username,
-                    password,
-                )
-                for location in client.locations_by_id.values()
-                for device in location.devices_by_id.values()
-                if (
-                    (not loc_id or location.locationid == loc_id)
-                    and (not dev_id or device.deviceid == dev_id)
-                )
-            ]
+    try:
+        client = somecomfort.SomeComfort(username, password)
+    except somecomfort.AuthError:
+        _LOGGER.error("Failed to login to honeywell account %s", username)
+        return
+    except somecomfort.SomeComfortError:
+        _LOGGER.error(
+            "Failed to initialize the Honeywell client: "
+            "Check your configuration (username, password), "
+            "or maybe you have exceeded the API rate limit?"
         )
         return
 
-    _LOGGER.warning(
-        "The honeywell component has been deprecated for EU (i.e. non-US) "
-        "systems. For EU-based systems, use the evohome component, "
-        "see: https://www.home-assistant.io/integrations/evohome"
+    dev_id = config.get("thermostat")
+    loc_id = config.get("location")
+    cool_away_temp = config.get(CONF_COOL_AWAY_TEMPERATURE)
+    heat_away_temp = config.get(CONF_HEAT_AWAY_TEMPERATURE)
+    use_schedules = config.get(CONF_USE_SCHEDULES)
+    schedule_hvac_mode = config.get(CONF_SCHEDULE_HVAC_MODE)
+
+    add_entities(
+        [
+            HoneywellUSThermostat(
+                client,
+                device,
+                cool_away_temp,
+                heat_away_temp,
+                use_schedules,
+                schedule_hvac_mode,
+                username,
+                password,
+            )
+            for location in client.locations_by_id.values()
+            for device in location.devices_by_id.values()
+            if (
+                (not loc_id or location.locationid == loc_id)
+                and (not dev_id or device.deviceid == dev_id)
+            )
+        ]
     )
 
 
