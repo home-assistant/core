@@ -6,7 +6,13 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import CONF_LIMIT, CONF_ORDER, DOMAIN, STATE_ATTR_TORRENT_INFO
+from .const import (
+    CONF_LIMIT,
+    CONF_ORDER,
+    DOMAIN,
+    STATE_ATTR_TORRENT_INFO,
+    SUPPORTED_ORDER_MODES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -173,7 +179,8 @@ def _filter_torrents(torrents, statuses=None):
 
 def _torrents_info(torrents, order, statuses=None):
     infos = {}
-    # sort torrents here
+    torrents = _filter_torrents(torrents, statuses)
+    torrents = SUPPORTED_ORDER_MODES[order](torrents)
     for torrent in _filter_torrents(torrents, statuses):
         info = infos[torrent.name] = {
             "added_date": torrent.addedDate,

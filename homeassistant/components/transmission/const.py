@@ -10,14 +10,18 @@ ORDER_ID_DESC = "id_desc"
 ORDER_RATIO = "ratio"
 ORDER_RATIO_DESC = "ratio_desc"
 
-SUPPORTED_ORDER_MODES = [
-    ORDER_AGE,
-    ORDER_AGE_DESC,
-    ORDER_ID,
-    ORDER_ID_DESC,
-    ORDER_RATIO,
-    ORDER_RATIO_DESC,
-]
+SUPPORTED_ORDER_MODES = {
+    ORDER_AGE: lambda torrents: sorted(
+        torrents, key=lambda t: t.addedDate, reverse=True
+    ),
+    ORDER_AGE_DESC: lambda torrents: sorted(torrents, key=lambda t: t.addedDate),
+    ORDER_ID: lambda torrents: sorted(torrents, key=lambda t: t.id),
+    ORDER_ID_DESC: lambda torrents: sorted(torrents, key=lambda t: t.id, reverse=True),
+    ORDER_RATIO: lambda torrents: sorted(torrents, key=lambda t: t.ratio),
+    ORDER_RATIO_DESC: lambda torrents: sorted(
+        torrents, key=lambda t: t.ratio, reverse=True
+    ),
+}
 
 CONF_LIMIT = "limit"
 CONF_ORDER = "order"

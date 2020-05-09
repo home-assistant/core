@@ -66,7 +66,7 @@ TRANS_SCHEMA = vol.All(
                 vol.Coerce(int), vol.Range(min=1, max=500)
             ),
             vol.Required(CONF_ORDER, default=DEFAULT_ORDER): vol.All(
-                vol.Coerce(str), vol.In(SUPPORTED_ORDER_MODES)
+                vol.Coerce(str), vol.In(SUPPORTED_ORDER_MODES.keys())
             ),
             vol.Optional(CONF_PASSWORD): cv.string,
             vol.Optional(CONF_USERNAME): cv.string,
