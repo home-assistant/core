@@ -78,7 +78,7 @@ SUPPORT_LIMITLESSLED_RGBWW = (
 
 def rewrite_legacy(config):
     """Rewrite legacy configuration to new format."""
-    bridges = config.get(CONF_BRIDGES, [config])
+    bridges = config.get(CONF_BRIDGES, [])
     new_bridges = []
     for bridge_conf in bridges:
         groups = []
@@ -112,13 +112,17 @@ def rewrite_legacy(config):
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LimitlessLED lights."""
 
+    # Short-circuit:  If there are no bridges, do not rewrite config, etc
+    if CONF_BRIDGES not in config:
+        return None
+
     # Two legacy configuration formats are supported to maintain backwards
     # compatibility.
     config = rewrite_legacy(config)
 
     # Use the expanded configuration format.
     lights = []
-    for bridge_conf in config.get(CONF_BRIDGES):
+    for bridge_conf in config.get(CONF_BRIDGES, []):
         bridge = Bridge(
             bridge_conf.get(CONF_HOST),
             port=bridge_conf.get(CONF_PORT, DEFAULT_PORT),

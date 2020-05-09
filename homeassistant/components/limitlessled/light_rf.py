@@ -166,6 +166,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Configure Home Assistant to be aware of all entities specified in the configuration file."""
     remotes_zones = []
 
+    # Short-circuit:  If there are no remotes configured, do not setup the radio
+    if CONF_REMOTES_SECTION not in config:
+        return None
+
     # Initialize the radio
     radio_config = config.get(CONF_RADIO_SECTION, {})
     radio_type = radio_config.get("type", "lt8900")
