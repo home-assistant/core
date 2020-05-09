@@ -162,7 +162,7 @@ async def test_abort_on_connection_error(hass):
             }
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "not_found"
+        assert result["reason"] == "conn_error"
 
         result = await flow.async_step_import(
             {
@@ -173,4 +173,4 @@ async def test_abort_on_connection_error(hass):
             }
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "not_found"
+        assert result["reason"] == "conn_error"

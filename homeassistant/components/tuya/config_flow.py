@@ -21,8 +21,13 @@ DATA_SCHEMA_USER = vol.Schema(
 )
 
 RESULT_AUTH_FAILED = "auth_failed"
-RESULT_NOT_FOUND = "not_found"
+RESULT_CONN_ERROR = "conn_error"
 RESULT_SUCCESS = "success"
+
+RESULT_LOG_MESSAGE = {
+    RESULT_AUTH_FAILED: "Invalid credential",
+    RESULT_CONN_ERROR: "Connection error",
+}
 
 
 class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -58,7 +63,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._username, self._password, self._country_code, self._platform
             )
         except (TuyaNetException, TuyaServerException):
-            return RESULT_NOT_FOUND
+            return RESULT_CONN_ERROR
         except TuyaAPIException:
             return RESULT_AUTH_FAILED
 
@@ -89,7 +94,10 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self._get_entry()
             if result != RESULT_AUTH_FAILED or self._is_import:
                 if self._is_import:
-                    _LOGGER.error("Error importing configuration")
+                    _LOGGER.error(
+                        "Error importing from configuration.yaml: %s",
+                        RESULT_LOG_MESSAGE.get(result, "Generic Error")
+                    )
                 return self.async_abort(reason=result)
             errors["base"] = result
 
