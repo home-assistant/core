@@ -4,8 +4,10 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.denonavr.config_flow import (
-    CONF_RECEIVER_ID,
+    CONF_MANUFACTURER,
+    CONF_MODEL,
     CONF_SHOW_ALL_SOURCES,
+    CONF_TYPE,
     CONF_ZONE2,
     CONF_ZONE3,
     DEFAULT_SHOW_SOURCES,
@@ -23,6 +25,7 @@ TEST_MAC = "ab:cd:ef:gh"
 TEST_HOST2 = "5.6.7.8"
 TEST_NAME = "Test_Receiver"
 TEST_MODEL = "model5"
+TEST_RECEIVER_TYPE = "avr-x"
 TEST_SERIALNUMBER = "123456789"
 TEST_MANUFACTURER = "Denon"
 TEST_SSDP_LOCATION = f"http://{TEST_HOST}/"
@@ -61,6 +64,12 @@ def denonavr_connect_fixture():
         "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.serial_number",
         TEST_SERIALNUMBER,
     ), patch(
+        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.manufacturer",
+        TEST_MANUFACTURER,
+    ), patch(
+        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.receiver_type",
+        TEST_RECEIVER_TYPE,
+    ), patch(
         "homeassistant.components.denonavr.config_flow.get_mac_address",
         return_value=TEST_MAC,
     ), patch(
@@ -97,7 +106,9 @@ async def test_config_flow_manual_host_success(hass):
         CONF_SHOW_ALL_SOURCES: DEFAULT_SHOW_SOURCES,
         CONF_ZONE2: DEFAULT_ZONE2,
         CONF_ZONE3: DEFAULT_ZONE3,
-        CONF_RECEIVER_ID: TEST_UNIQUE_ID,
+        CONF_MODEL: TEST_MODEL,
+        CONF_TYPE: TEST_RECEIVER_TYPE,
+        CONF_MANUFACTURER: TEST_MANUFACTURER,
     }
 
 
@@ -131,7 +142,9 @@ async def test_config_flow_manual_discover_1_success(hass):
         CONF_SHOW_ALL_SOURCES: DEFAULT_SHOW_SOURCES,
         CONF_ZONE2: DEFAULT_ZONE2,
         CONF_ZONE3: DEFAULT_ZONE3,
-        CONF_RECEIVER_ID: TEST_UNIQUE_ID,
+        CONF_MODEL: TEST_MODEL,
+        CONF_TYPE: TEST_RECEIVER_TYPE,
+        CONF_MANUFACTURER: TEST_MANUFACTURER,
     }
 
 
@@ -173,7 +186,9 @@ async def test_config_flow_manual_discover_2_success(hass):
         CONF_SHOW_ALL_SOURCES: DEFAULT_SHOW_SOURCES,
         CONF_ZONE2: DEFAULT_ZONE2,
         CONF_ZONE3: DEFAULT_ZONE3,
-        CONF_RECEIVER_ID: TEST_UNIQUE_ID,
+        CONF_MODEL: TEST_MODEL,
+        CONF_TYPE: TEST_RECEIVER_TYPE,
+        CONF_MANUFACTURER: TEST_MANUFACTURER,
     }
 
 
@@ -234,7 +249,9 @@ async def test_config_flow_settings(hass):
         CONF_SHOW_ALL_SOURCES: True,
         CONF_ZONE2: True,
         CONF_ZONE3: True,
-        CONF_RECEIVER_ID: TEST_UNIQUE_ID,
+        CONF_MODEL: TEST_MODEL,
+        CONF_TYPE: TEST_RECEIVER_TYPE,
+        CONF_MANUFACTURER: TEST_MANUFACTURER,
     }
 
 
@@ -258,6 +275,33 @@ async def test_config_flow_manual_host_connection_error(hass):
     with patch(
         "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.get_device_info",
         side_effect=ConnectionError,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "connection_error"
+
+
+async def test_config_flow_manual_host_no_device_info(hass):
+    """Test a failed config flow manually initialized by the user with the host specified and no device info (due to receiver power off)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "settings"
+
+    with patch(
+        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.receiver_type",
+        None,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
 
@@ -292,7 +336,9 @@ async def test_config_flow_ssdp(hass):
         CONF_SHOW_ALL_SOURCES: DEFAULT_SHOW_SOURCES,
         CONF_ZONE2: DEFAULT_ZONE2,
         CONF_ZONE3: DEFAULT_ZONE3,
-        CONF_RECEIVER_ID: TEST_UNIQUE_ID,
+        CONF_MODEL: TEST_MODEL,
+        CONF_TYPE: TEST_RECEIVER_TYPE,
+        CONF_MANUFACTURER: TEST_MANUFACTURER,
     }
 
 

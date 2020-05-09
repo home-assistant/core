@@ -6,8 +6,10 @@ import pytest
 from homeassistant.components import media_player
 from homeassistant.components.denonavr import ATTR_COMMAND, SERVICE_GET_COMMAND
 from homeassistant.components.denonavr.config_flow import (
-    CONF_RECEIVER_ID,
+    CONF_MANUFACTURER,
+    CONF_MODEL,
     CONF_SHOW_ALL_SOURCES,
+    CONF_TYPE,
     CONF_ZONE2,
     CONF_ZONE3,
     DOMAIN,
@@ -61,7 +63,9 @@ async def setup_denonavr(hass):
         CONF_SHOW_ALL_SOURCES: TEST_SHOW_ALL_SOURCES,
         CONF_ZONE2: TEST_ZONE2,
         CONF_ZONE3: TEST_ZONE3,
-        CONF_RECEIVER_ID: TEST_UNIQUE_ID,
+        CONF_TYPE: TEST_RECEIVER_TYPE,
+        CONF_MODEL: TEST_MODEL,
+        CONF_MANUFACTURER: TEST_MANAFACTURER,
     }
 
     mock_entry = MockConfigEntry(
