@@ -97,7 +97,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if self._is_import:
                     _LOGGER.error(
                         "Error importing from configuration.yaml: %s",
-                        RESULT_LOG_MESSAGE.get(result, "Generic Error")
+                        RESULT_LOG_MESSAGE.get(result, "Generic Error"),
                     )
                 return self.async_abort(reason=result)
             errors["base"] = result
