@@ -36,6 +36,7 @@ DOMAIN = "insteon"
 
 INSTEON_COMPONENTS = [
     "binary_sensor",
+    "climate",
     "cover",
     "fan",
     "light",
@@ -76,10 +77,12 @@ SRV_RESPONDER = "responder"
 SRV_HOUSECODE = "housecode"
 SRV_SCENE_ON = "scene_on"
 SRV_SCENE_OFF = "scene_off"
+SRV_ADD_DEFAULT_LINKS = "add_default_links"
 
 SIGNAL_LOAD_ALDB = "load_aldb"
 SIGNAL_PRINT_ALDB = "print_aldb"
 SIGNAL_SAVE_DEVICES = "save_devices"
+SIGNAL_ADD_DEFAULT_LINKS = "add_default_links"
 
 HOUSECODES = [
     "a",

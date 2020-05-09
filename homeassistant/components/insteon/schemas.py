@@ -147,3 +147,6 @@ X10_HOUSECODE_SCHEMA = vol.Schema({vol.Required(SRV_HOUSECODE): vol.In(HOUSECODE
 TRIGGER_SCENE_SCHEMA = vol.Schema(
     {vol.Required(SRV_ALL_LINK_GROUP): vol.Range(min=0, max=255)}
 )
+
+
+ADD_DEFAULT_LINKS_SCHEMA = vol.Schema({vol.Required(CONF_ENTITY_ID): cv.entity_id})
