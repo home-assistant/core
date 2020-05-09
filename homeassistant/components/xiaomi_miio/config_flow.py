@@ -62,6 +62,11 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not name or not self.host or not mac_address:
             return self.async_abort(reason="not_xiaomi_miio")
 
+        # format mac (include semicolns and make uppercase)
+        if len(mac_address) == 12:
+            mac_address = ":".join(mac_address[i : i + 2] for i in range(0, 12, 2))
+        mac_address = mac_address.upper()
+
         # Check which device is discovered.
         if name.startswith(ZEROCONF_GATEWAY):
             unique_id = f"{mac_address}"
