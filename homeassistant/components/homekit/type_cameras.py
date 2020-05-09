@@ -292,18 +292,15 @@ class Camera(HomeAccessory, PyhapCamera):
             _LOGGER.info("[%s] Stream already stopped.", session_id)
             return True
 
-        _LOGGER.info("[%s] Stopping stream.", session_id)
-        try:
-            await stream.close()
-            return
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Failed to gracefully close stream.")
-
-        try:
-            await stream.kill()
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Failed to forcefully close stream.")
-        _LOGGER.debug("Stream process stopped forcefully.")
+        for shutdown_method in ["close", "kill"]:
+            _LOGGER.info("[%s] %s stream.", session_id, shutdown_method)
+            try:
+                await getattr(stream, shutdown_method)
+                return
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception(
+                    "[%s] Failed to %s stream.", session_id, shutdown_method
+                )
 
     async def reconfigure_stream(self, session_info, stream_config):
         """Reconfigure the stream so that it uses the given ``stream_config``."""
