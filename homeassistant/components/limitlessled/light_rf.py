@@ -78,7 +78,7 @@ def _init_radio_lt8900(radio_config):
             reset_gpio.on()
             time.sleep(0.1)
 
-        reset_module_via_gpio = (lambda: reset_module_via_gpio_func(gpio_pin))
+        reset_module_via_gpio = lambda: reset_module_via_gpio_func(gpio_pin)
 
     # LT8900 compatible radio
     radio = lt8900_spi.Radio(
@@ -194,8 +194,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         remote_id_count = remote_config.get(CONF_REMOTE_COUNT, 1)
 
         # Include compatibility with "light_bridge":
-        if remote_type == 'white':
-            remote_type = 'cct'
+        if remote_type == "white":
+            remote_type = "cct"
 
         # Compute naming format strings for this remote, which may
         # either be the default or a remote-specific one
