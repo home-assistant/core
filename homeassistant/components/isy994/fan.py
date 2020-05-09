@@ -41,7 +41,7 @@ async def async_setup_entry(
     devices = []
 
     for node in hass_isy_data[ISY994_NODES][FAN]:
-        devices.append(ISYFanDevice(node))
+        devices.append(ISYFanEntity(node))
 
     for name, status, actions in hass_isy_data[ISY994_PROGRAMS][FAN]:
         devices.append(ISYFanProgramEntity(name, status, actions))
@@ -50,7 +50,7 @@ async def async_setup_entry(
     async_add_entities(devices)
 
 
-class ISYFanDevice(ISYNodeEntity, FanEntity):
+class ISYFanEntity(ISYNodeEntity, FanEntity):
     """Representation of an ISY994 fan device."""
 
     @property

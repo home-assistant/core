@@ -64,13 +64,6 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         """Get the brightness of the ISY994 light."""
         return STATE_UNKNOWN if self.value == ISY_VALUE_UNKNOWN else int(self.value)
 
-    @property
-    def device_state_attributes(self) -> Dict:
-        """Return the light attributes."""
-        attribs = super().device_state_attributes
-        attribs[ATTR_LAST_BRIGHTNESS] = self._last_brightness
-        return attribs
-
     def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 light device."""
         self._last_brightness = self.brightness
@@ -90,6 +83,13 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
             brightness = self._last_brightness
         if not self._node.turn_on(val=brightness):
             _LOGGER.debug("Unable to turn on light")
+
+    @property
+    def device_state_attributes(self) -> Dict:
+        """Return the light attributes."""
+        attribs = super().device_state_attributes
+        attribs[ATTR_LAST_BRIGHTNESS] = self._last_brightness
+        return attribs
 
     @property
     def supported_features(self):
