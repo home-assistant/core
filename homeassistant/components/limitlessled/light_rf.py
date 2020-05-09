@@ -6,14 +6,12 @@ import time
 import gpiozero
 import limitlessled_rf
 import lt8900_spi
-import voluptuous
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
-    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
@@ -45,49 +43,6 @@ CONF_REMOTE_TYPE = "type"
 CONF_REMOTE_COUNT = "count"
 CONF_REMOTE_ZONES = "zones"
 CONF_REMOTE_RETRIES = "retries"
-
-# Validation of the user's configuration
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        voluptuous.Optional(CONF_RADIO_SECTION): voluptuous.All(
-            {
-                voluptuous.Optional(
-                    CONF_RADIO_GPIO_PIN
-                ): config_validation.positive_int,
-                voluptuous.Optional(CONF_RADIO_SPI_BUS): config_validation.positive_int,
-                voluptuous.Optional(CONF_RADIO_SPI_DEV): config_validation.positive_int,
-                voluptuous.Optional(CONF_RADIO_TYPE): config_validation.string,
-            }
-        ),
-        voluptuous.Optional(CONF_REMOTE_RETRIES): config_validation.positive_int,
-        voluptuous.Optional(CONF_REMOTE_FORMAT): config_validation.match_all,
-        voluptuous.Optional(CONF_ZONE_FORMAT): config_validation.match_all,
-        voluptuous.Optional(CONF_REMOTES_SECTION): voluptuous.All(
-            config_validation.ensure_list,
-            [
-                {
-                    voluptuous.Optional(
-                        CONF_REMOTE_START
-                    ): config_validation.positive_int,
-                    voluptuous.Optional(CONF_REMOTE_TYPE): config_validation.string,
-                    voluptuous.Optional(
-                        CONF_REMOTE_COUNT
-                    ): config_validation.positive_int,
-                    voluptuous.Optional(
-                        CONF_REMOTE_ZONES
-                    ): config_validation.ensure_list,
-                    voluptuous.Optional(
-                        CONF_REMOTE_RETRIES
-                    ): config_validation.positive_int,
-                    voluptuous.Optional(
-                        CONF_REMOTE_FORMAT
-                    ): config_validation.match_all,
-                    voluptuous.Optional(CONF_ZONE_FORMAT): config_validation.match_all,
-                }
-            ],
-        ),
-    }
-)
 
 
 def _debug_log(source, message):
