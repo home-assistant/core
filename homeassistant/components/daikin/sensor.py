@@ -17,6 +17,7 @@ from .const import (
     ATTR_INSIDE_TEMPERATURE,
     ATTR_OUTSIDE_TEMPERATURE,
     ATTR_TOTAL_POWER,
+    SENSOR_TYPE_ENERGY,
     SENSOR_TYPE_POWER,
     SENSOR_TYPE_TEMPERATURE,
     SENSOR_TYPES,
@@ -55,6 +56,7 @@ class DaikinSensor(Entity):
         cls = {
             SENSOR_TYPE_TEMPERATURE: DaikinClimateSensor,
             SENSOR_TYPE_POWER: DaikinPowerSensor,
+            SENSOR_TYPE_ENERGY: DaikinPowerSensor,
         }[SENSOR_TYPES[monitored_state][CONF_TYPE]]
         return cls(api, monitored_state)
 
