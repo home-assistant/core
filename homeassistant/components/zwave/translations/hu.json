@@ -26,8 +26,8 @@
             "sleeping": "Alv\u00e1s"
         },
         "query_stage": {
-            "dead": "Halott ({query_stage})",
-            "initializing": "Inicializ\u00e1l\u00e1s ({query_stage})"
+            "dead": "Halott",
+            "initializing": "Inicializ\u00e1l\u00e1s"
         }
     }
 }

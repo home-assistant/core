@@ -1,4 +1,12 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_off": "{entity_name} est\u00e1 desligada",
+            "is_on": "{entity_name} est\u00e1 ligada",
+            "is_paused": "{entity_name} est\u00e1 em pausa",
+            "is_playing": "{entity_name} est\u00e1 a reproduzir"
+        }
+    },
     "state": {
         "_": {
             "idle": "Em espera",

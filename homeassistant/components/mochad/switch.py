@@ -5,7 +5,7 @@ from pymochad import device
 from pymochad.exceptions import MochadException
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 
@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class MochadSwitch(SwitchDevice):
+class MochadSwitch(SwitchEntity):
     """Representation of a X10 switch over Mochad."""
 
     def __init__(self, hass, ctrl, dev):

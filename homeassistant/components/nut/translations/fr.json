@@ -1,5 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
+            "unknown": "Erreur inattendue"
+        },
         "step": {
             "resources": {
                 "data": {
@@ -13,6 +20,23 @@
                     "resources": "Ressources"
                 },
                 "title": "Choisir l'UPS \u00e0 surveiller"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "password": "Mot de passe",
+                    "port": "Port",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "Ressources"
+                }
             }
         }
     }

@@ -4,14 +4,36 @@
             "already_configured": "Esta clave API ya est\u00e1 en uso."
         },
         "error": {
-            "invalid_api_key": "Clave API inv\u00e1lida"
+            "general_error": "Se ha producido un error desconocido.",
+            "invalid_api_key": "Clave API inv\u00e1lida",
+            "unable_to_connect": "No se puede conectar a la unidad Node/Pro."
         },
         "step": {
-            "user": {
+            "geography": {
                 "data": {
                     "api_key": "Clave API",
                     "latitude": "Latitud",
                     "longitude": "Longitud"
+                },
+                "description": "Utilizar la API en la nube de AirVisual para monitorizar una ubicaci\u00f3n geogr\u00e1fica.",
+                "title": "Configurar una Geograf\u00eda"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "Direcci\u00f3n IP/Nombre de host de la Unidad",
+                    "password": "Contrase\u00f1a de la Unidad"
+                },
+                "description": "Monitorizar una unidad personal AirVisual. La contrase\u00f1a puede ser recuperada desde la interfaz de la unidad.",
+                "title": "Configurar un AirVisual Node/Pro"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Clave API",
+                    "cloud_api": "Ubicaci\u00f3n Geogr\u00e1fica",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "node_pro": "AirVisual Node Pro",
+                    "type": "Tipo de Integraci\u00f3n"
                 },
                 "description": "Monitorizar la calidad del aire en una ubicaci\u00f3n geogr\u00e1fica.",
                 "title": "Configurar AirVisual"

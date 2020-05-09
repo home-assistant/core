@@ -1,0 +1,24 @@
+{
+    "config": {
+        "step": {
+            "geography": {
+                "data": {
+                    "api_key": "API-avain",
+                    "latitude": "Leveysaste",
+                    "longitude": "Pituusaste"
+                }
+            },
+            "node_pro": {
+                "data": {
+                    "password": "Salasana"
+                }
+            },
+            "user": {
+                "data": {
+                    "cloud_api": "Maantieteellinen sijainti",
+                    "type": "Integrointityyppi"
+                }
+            }
+        }
+    }
+}

@@ -7,8 +7,8 @@
         "error": {
             "cant_connect": "Konnt sech net mam Apparat verbannen. [Iwwerpr\u00e9ift Dokumentatioun] (https://www.home-assistant.io/integrations/vizio/) a stellt s\u00e9cher dass:\n- Den Apparat ass un\n- Den Apparat ass mam Netzwierk verbonnen\n- D'Optiounen d\u00e9i dir aginn hutt si korrekt\nier dir d'Verbindung nees prob\u00e9iert",
             "complete_pairing failed": "Feeler beim ofschl\u00e9isse vun der Kopplung. Iwwerpr\u00e9if dass de PIN korrekt an da de Fernsee nach \u00ebmmer ugeschalt a mam Netzwierk verbonnen ass ier de n\u00e4chste Versuch gestart g\u00ebtt.",
-            "host_exists": "Vizio Apparat mat d\u00ebsem Host ass scho konfigur\u00e9iert.",
-            "name_exists": "Vizio Apparat mat d\u00ebsen Numm ass scho konfigur\u00e9iert."
+            "host_exists": "VIZIO Apparat mat d\u00ebsem Host ass scho konfigur\u00e9iert.",
+            "name_exists": "VIZIO Apparat mat d\u00ebsen Numm ass scho konfigur\u00e9iert."
         },
         "step": {
             "pair_tv": {
@@ -19,11 +19,11 @@
                 "title": "Kopplungs Prozess ofschl\u00e9issen"
             },
             "pairing_complete": {
-                "description": "D\u00e4in Visio SmartCast Apparat ass elo mam Home Assistant verbonnen.",
+                "description": "D\u00e4in VIZIO SmartCast Apparat ass elo mam Home Assistant verbonnen.",
                 "title": "Kopplung ofgeschloss"
             },
             "pairing_complete_import": {
-                "description": "D\u00e4in Visio SmartCast Apparat ass elo mam Home Assistant verbonnen.\n\nD\u00e4in Acc\u00e8s Jeton ass '**{access_token}**'.",
+                "description": "D\u00e4in VIZIO SmartCast Apparat ass elo mam Home Assistant verbonnen.\n\nD\u00e4in Acc\u00e8s Jeton ass '**{access_token}**'.",
                 "title": "Kopplung ofgeschloss"
             },
             "user": {
@@ -34,7 +34,7 @@
                     "name": "Numm"
                 },
                 "description": "Een Access Jeton g\u00ebtt nn\u00ebmme fir Fernseher gebraucht. Wann Dir e Fernseh konfigur\u00e9iert a keen Access Jeton hutt, da loosst et eidel fir duerch dee Pairing Prozess ze goen.",
-                "title": "Vizo Smartcast Apparat ariichten"
+                "title": "VIZIO Smartcast Apparat ariichten"
             }
         }
     },
@@ -47,7 +47,7 @@
                     "volume_step": "Lautst\u00e4erkt Schr\u00ebtt Gr\u00e9isst"
                 },
                 "description": "Falls du ee Smart TV hues kanns du d'Quelle L\u00ebscht optionell filteren andeems du d'Apps auswiels d\u00e9i soll mat abegraff oder ausgeschloss ginn.",
-                "title": "Vizo Smartcast Optiounen aktualis\u00e9ieren"
+                "title": "VIZIO Smartcast Optiounen aktualis\u00e9ieren"
             }
         }
     }

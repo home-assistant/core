@@ -1,14 +1,15 @@
 """Support for ISY994 locks."""
-import logging
 from typing import Callable
 
-from homeassistant.components.lock import DOMAIN, LockDevice
+from pyisy.constants import ISY_VALUE_UNKNOWN
+
+from homeassistant.components.lock import DOMAIN as LOCK, LockEntity
 from homeassistant.const import STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED
 from homeassistant.helpers.typing import ConfigType
 
-from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
-
-_LOGGER = logging.getLogger(__name__)
+from . import ISY994_NODES, ISY994_PROGRAMS
+from .const import _LOGGER
+from .entity import ISYNodeEntity, ISYProgramEntity
 
 VALUE_TO_STATE = {0: STATE_UNLOCKED, 100: STATE_LOCKED}
 
@@ -18,22 +19,17 @@ def setup_platform(
 ):
     """Set up the ISY994 lock platform."""
     devices = []
-    for node in hass.data[ISY994_NODES][DOMAIN]:
-        devices.append(ISYLockDevice(node))
+    for node in hass.data[ISY994_NODES][LOCK]:
+        devices.append(ISYLockEntity(node))
 
-    for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
-        devices.append(ISYLockProgram(name, status, actions))
+    for name, status, actions in hass.data[ISY994_PROGRAMS][LOCK]:
+        devices.append(ISYLockProgramEntity(name, status, actions))
 
     add_entities(devices)
 
 
-class ISYLockDevice(ISYDevice, LockDevice):
+class ISYLockEntity(ISYNodeEntity, LockEntity):
     """Representation of an ISY994 lock device."""
-
-    def __init__(self, node) -> None:
-        """Initialize the ISY994 lock device."""
-        super().__init__(node)
-        self._conn = node.parent.parent.conn
 
     @property
     def is_locked(self) -> bool:
@@ -43,41 +39,27 @@ class ISYLockDevice(ISYDevice, LockDevice):
     @property
     def state(self) -> str:
         """Get the state of the lock."""
-        if self.is_unknown():
-            return None
+        if self.value == ISY_VALUE_UNKNOWN:
+            return STATE_UNKNOWN
         return VALUE_TO_STATE.get(self.value, STATE_UNKNOWN)
 
     def lock(self, **kwargs) -> None:
         """Send the lock command to the ISY994 device."""
-        # Hack until PyISY is updated
-        req_url = self._conn.compileURL(["nodes", self.unique_id, "cmd", "SECMD", "1"])
-        response = self._conn.request(req_url)
-
-        if response is None:
+        if not self._node.secure_lock():
             _LOGGER.error("Unable to lock device")
 
         self._node.update(0.5)
 
     def unlock(self, **kwargs) -> None:
         """Send the unlock command to the ISY994 device."""
-        # Hack until PyISY is updated
-        req_url = self._conn.compileURL(["nodes", self.unique_id, "cmd", "SECMD", "0"])
-        response = self._conn.request(req_url)
-
-        if response is None:
+        if not self._node.secure_unlock():
             _LOGGER.error("Unable to lock device")
 
         self._node.update(0.5)
 
 
-class ISYLockProgram(ISYLockDevice):
+class ISYLockProgramEntity(ISYProgramEntity, LockEntity):
     """Representation of a ISY lock program."""
-
-    def __init__(self, name: str, node, actions) -> None:
-        """Initialize the lock."""
-        super().__init__(node)
-        self._name = name
-        self._actions = actions
 
     @property
     def is_locked(self) -> bool:
@@ -91,10 +73,10 @@ class ISYLockProgram(ISYLockDevice):
 
     def lock(self, **kwargs) -> None:
         """Lock the device."""
-        if not self._actions.runThen():
+        if not self._actions.run_then():
             _LOGGER.error("Unable to lock device")
 
     def unlock(self, **kwargs) -> None:
         """Unlock the device."""
-        if not self._actions.runElse():
+        if not self._actions.run_else():
             _LOGGER.error("Unable to unlock device")

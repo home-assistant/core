@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Deze locatie is al geregistreerd."
+        },
         "step": {
             "user": {
                 "data": {

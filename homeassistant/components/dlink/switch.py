@@ -6,7 +6,7 @@ import urllib
 from pyW215.pyW215 import SmartPlug
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([SmartPlugSwitch(hass, data, name)], True)
 
 
-class SmartPlugSwitch(SwitchDevice):
+class SmartPlugSwitch(SwitchEntity):
     """Representation of a D-Link Smart Plug switch."""
 
     def __init__(self, hass, data, name):

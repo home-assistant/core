@@ -4,7 +4,11 @@
       "user": {
         "title": "Configure Daikin AC",
         "description": "Enter IP address of your Daikin AC.",
-        "data": { "host": "Host" }
+        "data": {
+          "host": "Host",
+          "key": "Authentication key (only used by BRP072C/Zena devices)",
+          "password": "Device password (only used by SKYFi devices)"
+        } 
       }
     },
     "abort": {

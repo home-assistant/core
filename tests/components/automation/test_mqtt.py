@@ -57,7 +57,7 @@ async def test_if_fires_on_topic_match(hass, calls):
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, "test-topic", "test_payload")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_fires_on_topic_and_payload_match(hass, calls):
@@ -79,7 +79,7 @@ async def test_if_fires_on_topic_and_payload_match(hass, calls):
 
     async_fire_mqtt_message(hass, "test-topic", "hello")
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_if_not_fires_on_topic_but_no_payload_match(hass, calls):
@@ -101,7 +101,7 @@ async def test_if_not_fires_on_topic_but_no_payload_match(hass, calls):
 
     async_fire_mqtt_message(hass, "test-topic", "no-hello")
     await hass.async_block_till_done()
-    assert 0 == len(calls)
+    assert len(calls) == 0
 
 
 async def test_encoding_default(hass, calls):

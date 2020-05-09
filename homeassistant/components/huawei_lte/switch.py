@@ -8,7 +8,7 @@ import attr
 from homeassistant.components.switch import (
     DEVICE_CLASS_SWITCH,
     DOMAIN as SWITCH_DOMAIN,
-    SwitchDevice,
+    SwitchEntity,
 )
 from homeassistant.const import CONF_URL
 
@@ -30,7 +30,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 @attr.s
-class HuaweiLteBaseSwitch(HuaweiLteBaseEntity, SwitchDevice):
+class HuaweiLteBaseSwitch(HuaweiLteBaseEntity, SwitchEntity):
     """Huawei LTE switch device base class."""
 
     key: str

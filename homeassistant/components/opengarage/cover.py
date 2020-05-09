@@ -9,7 +9,7 @@ from homeassistant.components.cover import (
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
-    CoverDevice,
+    CoverEntity,
 )
 from homeassistant.const import (
     CONF_COVERS,
@@ -74,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(covers, True)
 
 
-class OpenGarageCover(CoverDevice):
+class OpenGarageCover(CoverEntity):
     """Representation of a OpenGarage cover."""
 
     def __init__(self, args):

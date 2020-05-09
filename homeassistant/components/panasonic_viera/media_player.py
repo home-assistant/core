@@ -1,11 +1,9 @@
-"""Support for interface with a Panasonic Viera TV."""
-from functools import partial
+"""Media player support for Panasonic Viera TV."""
 import logging
-from urllib.request import URLError
 
-from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
+from panasonic_viera import Keys
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_URL,
     SUPPORT_NEXT_TRACK,
@@ -20,10 +18,9 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
-from homeassistant.helpers.script import Script
+from homeassistant.const import CONF_NAME
 
-from .const import CONF_APP_ID, CONF_ENCRYPTION_KEY, CONF_ON_ACTION
+from .const import ATTR_REMOTE, DOMAIN
 
 SUPPORT_VIERATV = (
     SUPPORT_PAUSE
@@ -47,42 +44,25 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     config = config_entry.data
 
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
+    remote = hass.data[DOMAIN][config_entry.entry_id][ATTR_REMOTE]
     name = config[CONF_NAME]
 
-    on_action = config[CONF_ON_ACTION]
-    if on_action is not None:
-        on_action = Script(hass, on_action)
-
-    params = {}
-    if CONF_APP_ID in config and CONF_ENCRYPTION_KEY in config:
-        params["app_id"] = config[CONF_APP_ID]
-        params["encryption_key"] = config[CONF_ENCRYPTION_KEY]
-
-    remote = Remote(hass, host, port, on_action, **params)
-    await remote.async_create_remote_control(during_setup=True)
-
-    tv_device = PanasonicVieraTVDevice(remote, name)
-
+    tv_device = PanasonicVieraTVEntity(remote, name)
     async_add_entities([tv_device])
 
 
-class PanasonicVieraTVDevice(MediaPlayerDevice):
+class PanasonicVieraTVEntity(MediaPlayerEntity):
     """Representation of a Panasonic Viera TV."""
 
-    def __init__(
-        self, remote, name, uuid=None,
-    ):
-        """Initialize the Panasonic device."""
-        # Save a reference to the imported class
+    def __init__(self, remote, name, uuid=None):
+        """Initialize the entity."""
         self._remote = remote
         self._name = name
         self._uuid = uuid
 
     @property
-    def unique_id(self) -> str:
-        """Return the unique ID of this Viera TV."""
+    def unique_id(self):
+        """Return the unique ID of the device."""
         return self._uuid
 
     @property
@@ -97,7 +77,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
 
     @property
     def available(self):
-        """Return if True the device is available."""
+        """Return True if the device is available."""
         return self._remote.available
 
     @property
@@ -176,125 +156,8 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play media."""
-        await self._remote.async_play_media(media_type, media_id)
-
-
-class Remote:
-    """The Remote class. It stores the TV properties and the remote control connection itself."""
-
-    def __init__(
-        self, hass, host, port, on_action=None, app_id=None, encryption_key=None,
-    ):
-        """Initialize the Remote class."""
-        self._hass = hass
-
-        self._host = host
-        self._port = port
-
-        self._on_action = on_action
-
-        self._app_id = app_id
-        self._encryption_key = encryption_key
-
-        self.state = None
-        self.available = False
-        self.volume = 0
-        self.muted = False
-        self.playing = True
-
-        self._control = None
-
-    async def async_create_remote_control(self, during_setup=False):
-        """Create remote control."""
-        control_existed = self._control is not None
-        try:
-            params = {}
-            if self._app_id and self._encryption_key:
-                params["app_id"] = self._app_id
-                params["encryption_key"] = self._encryption_key
-
-            self._control = await self._hass.async_add_executor_job(
-                partial(RemoteControl, self._host, self._port, **params)
-            )
-
-            self.state = STATE_ON
-            self.available = True
-        except (TimeoutError, URLError, SOAPError, OSError) as err:
-            if control_existed or during_setup:
-                _LOGGER.error("Could not establish remote connection: %s", err)
-
-            self._control = None
-            self.state = STATE_OFF
-            self.available = self._on_action is not None
-        except Exception as err:  # pylint: disable=broad-except
-            if control_existed or during_setup:
-                _LOGGER.exception("An unknown error occurred: %s", err)
-                self._control = None
-                self.state = STATE_OFF
-                self.available = self._on_action is not None
-
-    async def async_update(self):
-        """Update device data."""
-        if self._control is None:
-            await self.async_create_remote_control()
-            return
-
-        await self._handle_errors(self._update)
-
-    async def _update(self):
-        """Retrieve the latest data."""
-        self.muted = self._control.get_mute()
-        self.volume = self._control.get_volume() / 100
-
-        self.state = STATE_ON
-        self.available = True
-
-    async def async_send_key(self, key):
-        """Send a key to the TV and handle exceptions."""
-        await self._handle_errors(self._control.send_key, key)
-
-    async def async_turn_on(self):
-        """Turn on the TV."""
-        if self._on_action is not None:
-            await self._on_action.async_run()
-            self.state = STATE_ON
-        elif self.state != STATE_ON:
-            await self.async_send_key(Keys.power)
-            self.state = STATE_ON
-
-    async def async_turn_off(self):
-        """Turn off the TV."""
-        if self.state != STATE_OFF:
-            await self.async_send_key(Keys.power)
-            self.state = STATE_OFF
-            await self.async_update()
-
-    async def async_set_mute(self, enable):
-        """Set mute based on 'enable'."""
-        await self._handle_errors(self._control.set_mute, enable)
-
-    async def async_set_volume(self, volume):
-        """Set volume level, range 0..1."""
-        volume = int(volume * 100)
-        await self._handle_errors(self._control.set_volume, volume)
-
-    async def async_play_media(self, media_type, media_id):
-        """Play media."""
-        _LOGGER.debug("Play media: %s (%s)", media_id, media_type)
-
         if media_type != MEDIA_TYPE_URL:
             _LOGGER.warning("Unsupported media_type: %s", media_type)
             return
 
-        await self._handle_errors(self._control.open_webpage, media_id)
-
-    async def _handle_errors(self, func, *args):
-        """Handle errors from func, set available and reconnect if needed."""
-        try:
-            await self._hass.async_add_executor_job(func, *args)
-        except EncryptionRequired:
-            _LOGGER.error("The connection couldn't be encrypted")
-        except (TimeoutError, URLError, SOAPError, OSError):
-            self.state = STATE_OFF
-            self.available = self._on_action is not None
-            await self.async_create_remote_control()
+        await self._remote.async_play_media(media_type, media_id)

@@ -9,7 +9,7 @@ import signal
 import pexpect
 
 from homeassistant import util
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_NEXT_TRACK,
@@ -72,12 +72,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([pandora])
 
 
-class PandoraMediaPlayer(MediaPlayerDevice):
+class PandoraMediaPlayer(MediaPlayerEntity):
     """A media player that uses the Pianobar interface to Pandora."""
 
     def __init__(self, name):
         """Initialize the Pandora device."""
-        MediaPlayerDevice.__init__(self)
         self._name = name
         self._player_state = STATE_OFF
         self._station = ""

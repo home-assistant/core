@@ -1,4 +1,5 @@
 """The test for the bayesian sensor platform."""
+import json
 import unittest
 
 from homeassistant.components.bayesian import binary_sensor as bayesian
@@ -76,7 +77,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         assert setup_component(self.hass, "binary_sensor", config)
 
         state = self.hass.states.get("binary_sensor.test_binary")
-        assert state.attributes.get("observations") == [None]
+        assert state.attributes.get("observations") == []
 
     def test_sensor_numeric_state(self):
         """Test sensor on numeric state platform observations."""
@@ -112,7 +113,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         state = self.hass.states.get("binary_sensor.test_binary")
 
-        assert [None, None] == state.attributes.get("observations")
+        assert [] == state.attributes.get("observations")
         assert 0.2 == state.attributes.get("probability")
 
         assert state.state == "off"
@@ -177,7 +178,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         state = self.hass.states.get("binary_sensor.test_binary")
 
-        assert [None] == state.attributes.get("observations")
+        assert [] == state.attributes.get("observations")
         assert 0.2 == state.attributes.get("probability")
 
         assert state.state == "off"
@@ -231,7 +232,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         state = self.hass.states.get("binary_sensor.test_binary")
 
-        assert [None] == state.attributes.get("observations")
+        assert [] == state.attributes.get("observations")
         assert 0.2 == state.attributes.get("probability")
 
         assert state.state == "off"
@@ -322,7 +323,9 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         state = self.hass.states.get("binary_sensor.test_binary")
 
-        assert [None, None] == state.attributes.get("observations")
+        for key, attrs in state.attributes.items():
+            json.dumps(attrs)
+        assert [] == state.attributes.get("observations")
         assert 0.2 == state.attributes.get("probability")
 
         assert state.state == "off"
@@ -422,3 +425,57 @@ class TestBayesianBinarySensor(unittest.TestCase):
         assert ["sensor.test_monitored", "sensor.test_monitored1"] == sorted(
             state.attributes.get("occurred_observation_entities")
         )
+
+    def test_state_attributes_are_serializable(self):
+        """Test sensor on observed entities."""
+        config = {
+            "binary_sensor": {
+                "name": "Test_Binary",
+                "platform": "bayesian",
+                "observations": [
+                    {
+                        "platform": "state",
+                        "entity_id": "sensor.test_monitored",
+                        "to_state": "off",
+                        "prob_given_true": 0.9,
+                        "prob_given_false": 0.4,
+                    },
+                    {
+                        "platform": "template",
+                        "value_template": "{{is_state('sensor.test_monitored1','on') and is_state('sensor.test_monitored','off')}}",
+                        "prob_given_true": 0.9,
+                    },
+                ],
+                "prior": 0.2,
+                "probability_threshold": 0.32,
+            }
+        }
+
+        assert setup_component(self.hass, "binary_sensor", config)
+
+        self.hass.states.set("sensor.test_monitored", "on")
+        self.hass.block_till_done()
+        self.hass.states.set("sensor.test_monitored1", "off")
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("binary_sensor.test_binary")
+        assert [] == state.attributes.get("occurred_observation_entities")
+
+        self.hass.states.set("sensor.test_monitored", "off")
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("binary_sensor.test_binary")
+        assert ["sensor.test_monitored"] == state.attributes.get(
+            "occurred_observation_entities"
+        )
+
+        self.hass.states.set("sensor.test_monitored1", "on")
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("binary_sensor.test_binary")
+        assert ["sensor.test_monitored", "sensor.test_monitored1"] == sorted(
+            state.attributes.get("occurred_observation_entities")
+        )
+
+        for key, attrs in state.attributes.items():
+            json.dumps(attrs)

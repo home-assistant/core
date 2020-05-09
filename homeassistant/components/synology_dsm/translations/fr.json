@@ -4,11 +4,20 @@
             "already_configured": "H\u00f4te d\u00e9j\u00e0 configur\u00e9"
         },
         "error": {
+            "connection": "Erreur de connexion: veuillez v\u00e9rifier votre h\u00f4te, port et SSL",
             "login": "Erreur de connexion: veuillez v\u00e9rifier votre nom d'utilisateur et votre mot de passe",
-            "missing_data": "Donn\u00e9es manquantes: veuillez r\u00e9essayer plus tard ou utilisez une autre configuration"
+            "missing_data": "Donn\u00e9es manquantes: veuillez r\u00e9essayer plus tard ou utilisez une autre configuration",
+            "otp_failed": "\u00c9chec de l'authentification en deux \u00e9tapes, r\u00e9essayez avec un nouveau code d'acc\u00e8s",
+            "unknown": "Erreur inconnue: veuillez consulter les journaux pour obtenir plus de d\u00e9tails"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Code"
+                },
+                "title": "Synology DSM: authentification en deux \u00e9tapes"
+            },
             "link": {
                 "data": {
                     "api_version": "Version du DSM",
