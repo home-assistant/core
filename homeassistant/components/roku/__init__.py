@@ -37,7 +37,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [MEDIA_PLAYER_DOMAIN, REMOTE_DOMAIN]
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=20)
 _LOGGER = logging.getLogger(__name__)
 
 
