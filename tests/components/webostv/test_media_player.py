@@ -1,5 +1,4 @@
 """The tests for the LG webOS media player platform."""
-import sys
 
 import pytest
 
@@ -27,10 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-if sys.version_info >= (3, 8, 0):
-    from tests.async_mock import patch, MagicMock
-else:
-    from tests.async_mock import patch, MagicMock
+from tests.async_mock import MagicMock, patch
 
 NAME = "fake"
 ENTITY_ID = f"{media_player.DOMAIN}.{NAME}"
@@ -48,7 +44,7 @@ def client_fixture():
         yield client
 
 
-class AsyncMock(MagicMock):
+class _AsyncMock(MagicMock):
     """Async Mock object which can be awaited when called."""
 
     async def __call__(self, *args, **kwargs):
@@ -56,19 +52,15 @@ class AsyncMock(MagicMock):
         return super().__call__(*args, **kwargs)
 
 
-async def setup_webostv(hass):
+async def setup_webostv(hass, consecutive_volume_steps_delay=None):
     """Initialize webostv and media_player for tests."""
-    assert await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: {
-                CONF_HOST: "fake",
-                CONF_NAME: NAME,
-                CONF_CONSECUTIVE_VOLUME_STEPS_DELAY: 10000,
-            }
-        },
-    )
+    domain = {
+        CONF_HOST: "fake",
+        CONF_NAME: NAME,
+    }
+    if consecutive_volume_steps_delay is not None:
+        domain[CONF_CONSECUTIVE_VOLUME_STEPS_DELAY] = consecutive_volume_steps_delay
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: domain},)
     await hass.async_block_till_done()
 
 
@@ -155,7 +147,30 @@ async def test_consecutive_volume_steps(hass, client, num_consecutive_calls):
     """Test that media player sleeps between consecutive volume step calls."""
     with patch(
         "homeassistant.components.webostv.media_player.LgWebOSMediaPlayerEntity._sleep_between_consecutive_volume_steps",
-        new_callable=AsyncMock,
+        new_callable=_AsyncMock,
+    ) as sleep_mock:
+
+        await setup_webostv(hass, consecutive_volume_steps_delay=1000)
+
+        data = {
+            ATTR_ENTITY_ID: ENTITY_ID,
+        }
+        for _ in range(num_consecutive_calls):
+            await hass.services.async_call(media_player.DOMAIN, SERVICE_VOLUME_UP, data)
+        await hass.async_block_till_done()
+
+        assert sleep_mock.call_count == num_consecutive_calls
+        client.volume_up.call_count == num_consecutive_calls
+
+
+@pytest.mark.parametrize("num_consecutive_calls", [5])
+async def test_consecutive_volume_step_without_delay(
+    hass, client, num_consecutive_calls
+):
+    """Test that media player doesn't sleeps between consecutive volume step calls if not configured to do so."""
+    with patch(
+        "homeassistant.components.webostv.media_player.LgWebOSMediaPlayerEntity._sleep_between_consecutive_volume_steps",
+        new_callable=_AsyncMock,
     ) as sleep_mock:
 
         await setup_webostv(hass)
@@ -167,5 +182,5 @@ async def test_consecutive_volume_steps(hass, client, num_consecutive_calls):
             await hass.services.async_call(media_player.DOMAIN, SERVICE_VOLUME_UP, data)
         await hass.async_block_till_done()
 
-        assert sleep_mock.call_count == num_consecutive_calls
+        sleep_mock.assert_not_called()
         client.volume_up.call_count == num_consecutive_calls
