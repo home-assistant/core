@@ -148,3 +148,7 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
             self._state = None
 
         _LOGGER.debug("State value: %s", self._state)
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        await self.async_update()
