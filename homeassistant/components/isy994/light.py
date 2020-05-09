@@ -1,11 +1,14 @@
 """Support for ISY994 lights."""
-from typing import Callable
+from typing import Callable, Dict
+
+from pyisy.constants import ISY_VALUE_UNKNOWN
 
 from homeassistant.components.light import (
     DOMAIN as LIGHT,
     SUPPORT_BRIGHTNESS,
     LightEntity,
 )
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
@@ -38,24 +41,24 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
     @property
     def is_on(self) -> bool:
         """Get whether the ISY994 light is on."""
-        if self.is_unknown():
+        if self.value == ISY_VALUE_UNKNOWN:
             return False
-        return self.value != 0
+        return int(self.value) != 0
 
     @property
     def brightness(self) -> float:
         """Get the brightness of the ISY994 light."""
-        return None if self.is_unknown() else self.value
+        return STATE_UNKNOWN if self.value == ISY_VALUE_UNKNOWN else int(self.value)
 
     def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 light device."""
         self._last_brightness = self.brightness
-        if not self._node.off():
+        if not self._node.turn_off():
             _LOGGER.debug("Unable to turn off light")
 
     def on_update(self, event: object) -> None:
         """Save brightness in the update event from the ISY994 Node."""
-        if not self.is_unknown() and self.value != 0:
+        if self.value not in (0, ISY_VALUE_UNKNOWN):
             self._last_brightness = self.value
         super().on_update(event)
 
@@ -64,7 +67,7 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         """Send the turn on command to the ISY994 light device."""
         if brightness is None and self._last_brightness:
             brightness = self._last_brightness
-        if not self._node.on(val=brightness):
+        if not self._node.turn_on(val=brightness):
             _LOGGER.debug("Unable to turn on light")
 
     @property
@@ -73,9 +76,11 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         return SUPPORT_BRIGHTNESS
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict:
         """Return the light attributes."""
-        return {ATTR_LAST_BRIGHTNESS: self._last_brightness}
+        attribs = super().device_state_attributes
+        attribs[ATTR_LAST_BRIGHTNESS] = self._last_brightness
+        return attribs
 
     async def async_added_to_hass(self) -> None:
         """Restore last_brightness on restart."""

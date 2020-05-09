@@ -244,6 +244,11 @@ class Integration:
         return cast(str, self.manifest.get("documentation"))
 
     @property
+    def issue_tracker(self) -> Optional[str]:
+        """Return issue tracker link."""
+        return cast(str, self.manifest.get("issue_tracker"))
+
+    @property
     def quality_scale(self) -> Optional[str]:
         """Return Integration Quality Scale."""
         return cast(str, self.manifest.get("quality_scale"))

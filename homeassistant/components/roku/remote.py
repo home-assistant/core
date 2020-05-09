@@ -1,17 +1,12 @@
 """Support for the Roku remote."""
 from typing import Callable, List
 
-from requests.exceptions import (
-    ConnectionError as RequestsConnectionError,
-    ReadTimeout as RequestsReadTimeout,
-)
-from roku import RokuException
-
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DATA_CLIENT, DEFAULT_MANUFACTURER, DOMAIN
+from . import RokuDataUpdateCoordinator, RokuEntity
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -20,75 +15,38 @@ async def async_setup_entry(
     async_add_entities: Callable[[List, bool], None],
 ) -> bool:
     """Load Roku remote based on a config entry."""
-    roku = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
-    async_add_entities([RokuRemote(roku)], True)
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    unique_id = coordinator.data.info.serial_number
+    async_add_entities([RokuRemote(unique_id, coordinator)], True)
 
 
-class RokuRemote(RemoteEntity):
+class RokuRemote(RokuEntity, RemoteEntity):
     """Device that sends commands to an Roku."""
 
-    def __init__(self, roku):
+    def __init__(self, unique_id: str, coordinator: RokuDataUpdateCoordinator) -> None:
         """Initialize the Roku device."""
-        self.roku = roku
-        self._available = False
-        self._device_info = {}
+        super().__init__(
+            device_id=unique_id,
+            name=coordinator.data.info.name,
+            coordinator=coordinator,
+        )
 
-    def update(self):
-        """Retrieve latest state."""
-        if not self.enabled:
-            return
-
-        try:
-            self._device_info = self.roku.device_info
-            self._available = True
-        except (RequestsConnectionError, RequestsReadTimeout, RokuException):
-            self._available = False
+        self._unique_id = unique_id
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        if self._device_info.user_device_name:
-            return self._device_info.user_device_name
-        return f"Roku {self._device_info.serial_num}"
+    def unique_id(self) -> str:
+        """Return the unique ID for this entity."""
+        return self._unique_id
 
     @property
-    def available(self):
-        """Return if able to retrieve information from device or not."""
-        return self._available
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._device_info.serial_num
-
-    @property
-    def device_info(self):
-        """Return device specific attributes."""
-        return {
-            "name": self.name,
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "manufacturer": DEFAULT_MANUFACTURER,
-            "model": self._device_info.model_num,
-            "sw_version": self._device_info.software_version,
-        }
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
-        return True
+        return not self.coordinator.data.state.standby
 
-    @property
-    def should_poll(self):
-        """No polling needed for Roku."""
-        return False
-
-    def send_command(self, command, **kwargs):
+    async def async_send_command(self, command: List, **kwargs) -> None:
         """Send a command to one device."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]
 
         for _ in range(num_repeats):
             for single_command in command:
-                if not hasattr(self.roku, single_command):
-                    continue
-
-                getattr(self.roku, single_command)()
+                await self.coordinator.roku.remote(single_command)

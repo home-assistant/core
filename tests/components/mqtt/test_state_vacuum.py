@@ -2,6 +2,8 @@
 from copy import deepcopy
 import json
 
+import pytest
+
 from homeassistant.components import vacuum
 from homeassistant.components.mqtt import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC
 from homeassistant.components.mqtt.vacuum import CONF_SCHEMA, schema_state as mqttvacuum
@@ -298,6 +300,7 @@ async def test_no_fan_vacuum(hass, mqtt_mock):
     assert state.attributes.get(ATTR_BATTERY_LEVEL) == 61
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_status_invalid_json(hass, mqtt_mock):
     """Test to make sure nothing breaks if the vacuum sends bad JSON."""
     config = deepcopy(DEFAULT_CONFIG)
@@ -406,6 +409,7 @@ async def test_discovery_update_vacuum(hass, mqtt_mock, caplog):
     )
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "schema": "state", "name": "Beer",' '  "command_topic": "test_topic#"}'
@@ -460,5 +464,5 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, vacuum.DOMAIN, DEFAULT_CONFIG_2
+        hass, mqtt_mock, vacuum.DOMAIN, DEFAULT_CONFIG_2, payload="{}"
     )

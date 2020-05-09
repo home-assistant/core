@@ -428,6 +428,12 @@ class EntityRegistry:
 
         if data is not None:
             for entity in data["entities"]:
+                # Some old installations can have some bad entities.
+                # Filter them out as they cause errors down the line.
+                # Can be removed in Jan 2021
+                if not valid_entity_id(entity["entity_id"]):
+                    continue
+
                 entities[entity["entity_id"]] = RegistryEntry(
                     entity_id=entity["entity_id"],
                     config_entry_id=entity.get("config_entry_id"),

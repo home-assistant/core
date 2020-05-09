@@ -153,6 +153,8 @@ light:
   payload_off: "off"
 
 """
+import pytest
+
 from homeassistant.components import light, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON
@@ -1420,6 +1422,7 @@ async def test_discovery_update_light(hass, mqtt_mock, caplog):
     )
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'

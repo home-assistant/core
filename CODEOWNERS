@@ -15,6 +15,7 @@ homeassistant/scripts/check_config.py @kellerza
 # Integrations
 homeassistant/components/abode/* @shred86
 homeassistant/components/adguard/* @frenck
+homeassistant/components/agent_dvr/* @ispysoftware
 homeassistant/components/airly/* @bieniu
 homeassistant/components/airvisual/* @bachya
 homeassistant/components/alarmdecoder/* @ajschmidt8
@@ -47,7 +48,7 @@ homeassistant/components/avea/* @pattyland
 homeassistant/components/avri/* @timvancann
 homeassistant/components/awair/* @danielsjf
 homeassistant/components/aws/* @awarecan @robbiet480
-homeassistant/components/axis/* @kane610
+homeassistant/components/axis/* @Kane610
 homeassistant/components/azure_event_hub/* @eavanvalkenburg
 homeassistant/components/azure_service_bus/* @hfurubotten
 homeassistant/components/beewi_smartclim/* @alemuro
@@ -83,12 +84,13 @@ homeassistant/components/cpuspeed/* @fabaff
 homeassistant/components/cups/* @fabaff
 homeassistant/components/daikin/* @fredrike
 homeassistant/components/darksky/* @fabaff
-homeassistant/components/deconz/* @kane610
+homeassistant/components/deconz/* @Kane610
 homeassistant/components/delijn/* @bollewolle
 homeassistant/components/demo/* @home-assistant/core
 homeassistant/components/denonavr/* @scarface-4711 @starkillerOG
 homeassistant/components/derivative/* @afaucogney
 homeassistant/components/device_automation/* @home-assistant/core
+homeassistant/components/devolo_home_control/* @2Fake @Shutgun
 homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/directv/* @ctalkington
 homeassistant/components/discogs/* @thibmaek
@@ -362,7 +364,7 @@ homeassistant/components/solax/* @squishykid
 homeassistant/components/soma/* @ratsept
 homeassistant/components/somfy/* @tetienne
 homeassistant/components/sonarr/* @ctalkington
-homeassistant/components/songpal/* @rytilahti
+homeassistant/components/songpal/* @rytilahti @shenxn
 homeassistant/components/sonos/* @amelchio
 homeassistant/components/spaceapi/* @fabaff
 homeassistant/components/speedtestdotnet/* @rohankapoorcom
@@ -416,8 +418,9 @@ homeassistant/components/twentemilieu/* @frenck
 homeassistant/components/twilio_call/* @robbiet480
 homeassistant/components/twilio_sms/* @robbiet480
 homeassistant/components/ubee/* @mzdrale
-homeassistant/components/unifi/* @kane610
+homeassistant/components/unifi/* @Kane610
 homeassistant/components/unifiled/* @florisvdk
+homeassistant/components/upb/* @gwww
 homeassistant/components/upc_connect/* @pvizeli
 homeassistant/components/upcloud/* @scop
 homeassistant/components/updater/* @home-assistant/core
