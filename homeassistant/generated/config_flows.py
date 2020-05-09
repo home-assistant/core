@@ -150,6 +150,7 @@ FLOWS = [
     "wled",
     "wwlln",
     "xiaomi_miio",
+    "zerproc",
     "zha",
     "zwave",
     "zwave_mqtt"
