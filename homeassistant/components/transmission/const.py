@@ -3,15 +3,28 @@ DOMAIN = "transmission"
 
 SWITCH_TYPES = {"on_off": "Switch", "turtle_mode": "Turtle Mode"}
 
+ORDER_AGE = "age"
+ORDER_AGE_DESC = "age_desc"
+ORDER_ID = "id"
+ORDER_ID_DESC = "id_desc"
+ORDER_RATIO = "ratio"
+ORDER_RATIO_DESC = "ratio_desc"
 
-SUPPORTED_ORDER_MODES = ["age", "age_desc", "id", "id_desc", "ratio", "ratio_desc"]
+SUPPORTED_ORDER_MODES = [
+    ORDER_AGE,
+    ORDER_AGE_DESC,
+    ORDER_ID,
+    ORDER_ID_DESC,
+    ORDER_RATIO,
+    ORDER_RATIO_DESC,
+]
 
 CONF_LIMIT = "limit"
 CONF_ORDER = "order"
 
 DEFAULT_DELETE_DATA = False
 DEFAULT_LIMIT = 10
-DEFAULT_ORDER = "age_desc"
+DEFAULT_ORDER = ORDER_AGE_DESC
 DEFAULT_NAME = "Transmission"
 DEFAULT_PORT = 9091
 DEFAULT_SCAN_INTERVAL = 120
