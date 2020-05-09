@@ -6,10 +6,10 @@ from magichome import MagicHomeApi
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_ENTITIES,
     CONF_PASSWORD,
     CONF_PLATFORM,
     CONF_USERNAME,
-    CONF_ENTITIES,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, discovery
