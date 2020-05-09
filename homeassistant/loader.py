@@ -26,7 +26,6 @@ from typing import (
 )
 
 # Typing imports that create a circular dependency
-# pylint: disable=unused-import
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
