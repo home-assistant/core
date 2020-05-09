@@ -18,6 +18,12 @@ from .utils import async_add_insteon_entities
 
 _LOGGER = logging.getLogger(__name__)
 FAN_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+SPEED_TO_VALUE = {
+    SPEED_OFF: FanSpeed.OFF,
+    SPEED_LOW: FanSpeed.LOW,
+    SPEED_MEDIUM: FanSpeed.MEDIUM,
+    SPEED_HIGH: FanSpeed.HIGH,
+}
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -63,7 +69,7 @@ class InsteonFanEntity(InsteonEntity, FanEntity):
 
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
-        fan_speed = getattr(FanSpeed, speed.upper())
+        fan_speed = SPEED_TO_VALUE[speed]
         if fan_speed == FanSpeed.OFF:
             self._insteon_device.fan_off()
         else:
