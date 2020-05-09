@@ -3,8 +3,11 @@
   "name": "Opensprinkler",
   "documentation": "https://www.home-assistant.io/integrations/opensprinkler",
   "requirements": [
-    "pyopensprinkler==0.3.6"
+    "pyopensprinkler==0.4.1"
   ],
   "dependencies": [],
-  "codeowners": ["@vinteo"]
+  "codeowners": [
+    "@vinteo"
+  ],
+  "config_flow": true
 }

@@ -1,36 +1,29 @@
 """Opensprinkler integration."""
 import logging
-from typing import Callable
+from typing import Any, Callable
 
 from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant
 
-from .const import DATA_DEVICES, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: dict,
-    async_add_entities: Callable,
-    discovery_info: dict,
+async def async_setup_entry(
+    hass: HomeAssistant, config: dict, async_add_entities: Callable,
 ):
     """Set up the opensprinkler scenes."""
-    entities = await hass.async_add_executor_job(
-        _create_entities, hass, config, discovery_info
-    )
+    entities = _create_entities(hass, config)
     async_add_entities(entities)
 
 
-def _create_entities(hass: HomeAssistant, config: dict, discovery_info: dict):
+def _create_entities(hass: HomeAssistant, config: dict):
     entities = []
 
-    name = discovery_info["name"]
-    device = hass.data[DOMAIN][DATA_DEVICES][name]
-
+    device = hass.data[DOMAIN][config.entry_id]
     for program in device.programs:
-        entities.append(ProgramScene(program, device))
+        entities.append(ProgramScene(config.entry_id, program, device))
 
     return entities
 
@@ -38,10 +31,12 @@ def _create_entities(hass: HomeAssistant, config: dict, discovery_info: dict):
 class ProgramScene(Scene):
     """Represent a scene for a program."""
 
-    def __init__(self, program, device):
+    def __init__(self, entry_id, program, device):
         """Set up a new opensprinkler scene."""
+        self._entry_id = entry_id
         self._program = program
         self._device = device
+        self._entity_type = "scene"
 
     @property
     def name(self) -> str:
@@ -53,6 +48,11 @@ class ProgramScene(Scene):
         """Return that polling is not necessary."""
         return False
 
-    async def async_activate(self) -> None:
+    @property
+    def unique_id(self) -> str:
+        """Return a unique, Home Assistant friendly identifier for this entity."""
+        return f"{self._entry_id}_{self._entity_type}_program_{self._program.name}"
+
+    async def async_activate(self, **kwargs: Any) -> None:
         """Run the program."""
         await self.hass.async_add_executor_job(self._program.run)

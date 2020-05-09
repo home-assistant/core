@@ -638,6 +638,9 @@ pynws==0.10.4
 # homeassistant.components.nx584
 pynx584==0.4
 
+# homeassistant.components.opensprinkler
+pyopensprinkler==0.4.1
+
 # homeassistant.components.openuv
 pyopenuv==1.0.9
 

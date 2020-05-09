@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, please try again",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Device Name",
+                    "password": "MD5 Password",
+                    "port": "Port",
+                    "run_seconds": "Station Run Time (seconds)"
+                },
+                "title": "Connect to the device"
+            }
+        }
+    },
+    "title": "Opensprinkler"
+}

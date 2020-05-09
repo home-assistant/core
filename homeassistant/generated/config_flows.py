@@ -103,6 +103,7 @@ FLOWS = [
     "nut",
     "nws",
     "onvif",
+    "opensprinkler",
     "opentherm_gw",
     "openuv",
     "owntracks",

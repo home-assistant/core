@@ -3,40 +3,41 @@ import logging
 from typing import Callable
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
-from . import OpensprinklerBinarySensor
-from .const import DATA_DEVICES, DOMAIN
+from . import OpensprinklerBinarySensor, OpensprinklerCoordinator
+from .const import CONF_RUN_SECONDS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: dict,
-    async_add_entities: Callable,
-    discovery_info: dict,
+async def async_setup_entry(
+    hass: HomeAssistant, config: dict, async_add_entities: Callable,
 ):
     """Set up the opensprinkler switches."""
-    entities = await hass.async_add_executor_job(
-        _create_entities, hass, config, discovery_info
-    )
+    entities = _create_entities(hass, config)
     async_add_entities(entities)
 
 
-def _create_entities(hass: HomeAssistant, config: dict, discovery_info: dict):
+def _create_entities(hass: HomeAssistant, config: dict):
     entities = []
 
-    name = discovery_info["name"]
-    device = hass.data[DOMAIN][DATA_DEVICES][name]
-    entities.append(DeviceSwitch(name, device))
+    device = hass.data[DOMAIN][config.entry_id]
+    name = config.data[CONF_NAME]
+    coordinator = OpensprinklerCoordinator(hass, device)
+    entities.append(DeviceSwitch(config.entry_id, name, device, coordinator))
 
     for program in device.programs:
-        entities.append(ProgramSwitch(program, device))
+        entities.append(ProgramSwitch(config.entry_id, program, device, coordinator))
 
-    default_seconds = discovery_info["default_seconds"]
+    default_seconds = config.data[CONF_RUN_SECONDS]
     for station in device.stations:
-        entities.append(StationSwitch(station, device, default_seconds))
+        entities.append(
+            StationSwitch(
+                config.entry_id, station, device, coordinator, default_seconds
+            )
+        )
 
     return entities
 
@@ -44,16 +45,23 @@ def _create_entities(hass: HomeAssistant, config: dict, discovery_info: dict):
 class DeviceSwitch(OpensprinklerBinarySensor, SwitchEntity):
     """Represent a switch that reflects whether device is enabled."""
 
-    def __init__(self, name, device):
+    def __init__(self, entry_id, name, device, coordinator):
         """Set up a new opensprinkler device switch."""
+        self._entry_id = entry_id
         self._name = name
         self._device = device
-        super().__init__()
+        self._entity_type = "switch"
+        super().__init__(coordinator)
 
     @property
     def name(self) -> str:
         """Return the name of this switch including the device name."""
         return self._name
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique, Home Assistant friendly identifier for this entity."""
+        return f"{self._entry_id}_{self._entity_type}_{self.name}"
 
     def _get_state(self) -> bool:
         """Retrieve latest state."""
@@ -71,16 +79,23 @@ class DeviceSwitch(OpensprinklerBinarySensor, SwitchEntity):
 class ProgramSwitch(OpensprinklerBinarySensor, SwitchEntity):
     """Represent a switch that reflects whether program is enabled."""
 
-    def __init__(self, program, device):
+    def __init__(self, entry_id, program, device, coordinator):
         """Set up a new opensprinkler program switch."""
+        self._entry_id = entry_id
         self._program = program
         self._device = device
-        super().__init__()
+        self._entity_type = "switch"
+        super().__init__(coordinator)
 
     @property
     def name(self) -> str:
         """Return the name of this switch."""
         return self._program.name
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique, Home Assistant friendly identifier for this entity."""
+        return f"{self._entry_id}_{self._entity_type}_program_{self.name}"
 
     def _get_state(self) -> bool:
         """Retrieve latest state."""
@@ -98,17 +113,24 @@ class ProgramSwitch(OpensprinklerBinarySensor, SwitchEntity):
 class StationSwitch(OpensprinklerBinarySensor, SwitchEntity):
     """Represent a switch that reflects whether station is running."""
 
-    def __init__(self, station, device, default_seconds):
+    def __init__(self, entry_id, station, device, coordinator, default_seconds):
         """Set up a new opensprinkler station switch."""
+        self._entry_id = entry_id
         self._station = station
         self._device = device
         self._default_seconds = default_seconds
-        super().__init__()
+        self._entity_type = "switch"
+        super().__init__(coordinator)
 
     @property
     def name(self) -> str:
         """Return the name of this switch."""
         return self._station.name
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique, Home Assistant friendly identifier for this entity."""
+        return f"{self._entry_id}_{self._entity_type}_station_{self.name}"
 
     def _get_state(self) -> bool:
         """Retrieve latest state."""
