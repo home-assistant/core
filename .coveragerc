@@ -796,6 +796,7 @@ omit =
     homeassistant/components/upb/__init__.py
     homeassistant/components/upb/const.py
     homeassistant/components/upb/light.py
+    homeassistant/components/upb/scene.py
     homeassistant/components/upcloud/*
     homeassistant/components/upnp/*
     homeassistant/components/upc_connect/*

@@ -10,7 +10,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
-UPB_PLATFORMS = ["light"]
+UPB_PLATFORMS = ["light", "scene"]
 
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
