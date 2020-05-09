@@ -238,7 +238,7 @@ class Camera(HomeAccessory, PyhapCamera):
         )
 
         ffmpeg_watcher = async_track_time_interval(
-            self.hass, self._async_watch_ffmpeg, FFMPEG_WATCH_INTERVAL
+            self.hass, self._async_ffmpeg_watch, FFMPEG_WATCH_INTERVAL
         )
         self._current_session = {
             FFMPEG_WATCHER: ffmpeg_watcher,
@@ -246,9 +246,9 @@ class Camera(HomeAccessory, PyhapCamera):
             SESSION_ID: session_info["id"],
         }
 
-        return await self._async_watch_ffmpeg(0)
+        return await self._async_ffmpeg_watch(0)
 
-    async def _async_watch_ffmpeg(self, _):
+    async def _async_ffmpeg_watch(self, _):
         """Check to make sure ffmpeg is still running and cleanup if not."""
         ffmpeg_pid = self._current_session[FFMPEG_PID]
         if pid_is_alive(ffmpeg_pid):
@@ -256,12 +256,12 @@ class Camera(HomeAccessory, PyhapCamera):
 
         _LOGGER.warning("Streaming process ended unexpectedly - PID %d", ffmpeg_pid)
         session_id = self._current_session[SESSION_ID]
-        self._async_clean_session()
+        self._async_stop_ffmpeg_watch()
         self._async_set_streaming_available(session_id)
         return False
 
     @callback
-    def _async_clean_session(self):
+    def _async_stop_ffmpeg_watch(self):
         """Cleanup a streaming session after stopping."""
         if not self._current_session:
             return
@@ -286,7 +286,7 @@ class Camera(HomeAccessory, PyhapCamera):
             _LOGGER.debug("No stream for session ID %s", session_id)
             return
 
-        self._async_clean_session()
+        self._async_stop_ffmpeg_watch()
 
         if not pid_is_alive(stream.process.pid):
             _LOGGER.info("[%s] Stream already stopped.", session_id)
