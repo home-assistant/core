@@ -25,10 +25,12 @@ from .const import (
     ATTR_DELETE_DATA,
     ATTR_TORRENT,
     CONF_LIMIT,
+    CONF_ORDER,
     DATA_UPDATED,
     DEFAULT_DELETE_DATA,
     DEFAULT_LIMIT,
     DEFAULT_NAME,
+    DEFAULT_ORDER,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -37,6 +39,7 @@ from .const import (
     EVENT_STARTED_TORRENT,
     SERVICE_ADD_TORRENT,
     SERVICE_REMOVE_TORRENT,
+    SUPPORTED_ORDER_MODES,
 )
 from .errors import AuthenticationError, CannotConnect, UnknownError
 
@@ -59,7 +62,12 @@ TRANS_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_HOST): cv.string,
-            vol.Required(CONF_LIMIT, default=DEFAULT_LIMIT): int,
+            vol.Required(CONF_LIMIT, default=DEFAULT_LIMIT): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=500)
+            ),
+            vol.Required(CONF_ORDER, default=DEFAULT_ORDER): vol.All(
+                vol.Coerce(str), vol.In(SUPPORTED_ORDER_MODES)
+            ),
             vol.Optional(CONF_PASSWORD): cv.string,
             vol.Optional(CONF_USERNAME): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,

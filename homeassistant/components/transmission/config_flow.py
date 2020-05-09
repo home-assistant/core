@@ -15,11 +15,14 @@ from homeassistant.core import callback
 from . import get_api
 from .const import (
     CONF_LIMIT,
+    CONF_ORDER,
     DEFAULT_LIMIT,
     DEFAULT_NAME,
+    DEFAULT_ORDER,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    SUPPORTED_ORDER_MODES,
 )
 from .errors import AuthenticationError, CannotConnect, UnknownError
 
@@ -27,7 +30,12 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_LIMIT, default=DEFAULT_LIMIT): int,
+        vol.Required(CONF_LIMIT, default=DEFAULT_LIMIT): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=500)
+        ),
+        vol.Required(CONF_ORDER, default=DEFAULT_ORDER): vol.All(
+            vol.Coerce(str), vol.In(SUPPORTED_ORDER_MODES)
+        ),
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
@@ -81,6 +89,7 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config):
         """Import from Transmission client config."""
         import_config[CONF_LIMIT] = import_config[CONF_LIMIT]
+        import_config[CONF_ORDER] = import_config[CONF_ORDER]
         import_config[CONF_SCAN_INTERVAL] = import_config[CONF_SCAN_INTERVAL].seconds
         return await self.async_step_user(user_input=import_config)
 
@@ -103,7 +112,15 @@ class TransmissionOptionsFlowHandler(config_entries.OptionsFlow):
                 default=self.config_entry.options.get(
                     CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                 ),
-            ): int
+            ): int,
+            vol.Required(
+                CONF_LIMIT,
+                default=self.config_entry.options.get(CONF_LIMIT, DEFAULT_LIMIT),
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=500)),
+            vol.Required(
+                CONF_ORDER,
+                default=self.config_entry.options.get(CONF_ORDER, DEFAULT_ORDER),
+            ): vol.All(vol.Coerce(str), vol.In(SUPPORTED_ORDER_MODES)),
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

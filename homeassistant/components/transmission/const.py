@@ -1,13 +1,17 @@
 """Constants for the Transmission Bittorent Client component."""
-
 DOMAIN = "transmission"
 
 SWITCH_TYPES = {"on_off": "Switch", "turtle_mode": "Turtle Mode"}
 
+
+SUPPORTED_ORDER_MODES = ["age", "age_desc", "id", "id_desc", "ratio", "ratio_desc"]
+
 CONF_LIMIT = "limit"
+CONF_ORDER = "order"
 
 DEFAULT_DELETE_DATA = False
 DEFAULT_LIMIT = 10
+DEFAULT_ORDER = "age_desc"
 DEFAULT_NAME = "Transmission"
 DEFAULT_PORT = 9091
 DEFAULT_SCAN_INTERVAL = 120
