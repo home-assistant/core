@@ -193,6 +193,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         remote_id_start = remote_config.get(CONF_REMOTE_START, 1)
         remote_id_count = remote_config.get(CONF_REMOTE_COUNT, 1)
 
+        # Include compatibility with "light_bridge":
+        if remote_type == 'white':
+            remote_type = 'cct'
+
         # Compute naming format strings for this remote, which may
         # either be the default or a remote-specific one
         remote_format = remote_config.get(CONF_REMOTE_FORMAT, default_remote_format)
