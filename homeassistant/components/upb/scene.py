@@ -1,4 +1,6 @@
 """Platform for UPB link integration."""
+from typing import Any
+
 from homeassistant.components.scene import Scene
 from homeassistant.helpers import entity_platform
 
@@ -40,11 +42,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class UpbLink(UpbEntity, Scene):
     """Representation of an UPB Link."""
 
-    def __init__(self, element, unique_id, upb):
-        """Initialize an UpbLink."""
-        super().__init__(element, unique_id, upb)
-
-    async def async_activate(self):
+    async def async_activate(self, **kwargs: Any) -> None:
         """Activate the task."""
         self._element.activate()
 

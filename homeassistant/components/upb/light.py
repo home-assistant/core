@@ -6,7 +6,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
-    Light,
+    LightEntity,
 )
 from homeassistant.helpers import entity_platform
 
@@ -40,7 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class UpbLight(UpbAttachedEntity, Light):
+class UpbLight(UpbAttachedEntity, LightEntity):
     """Representation of an UPB Light."""
 
     def __init__(self, element, unique_id, upb):
