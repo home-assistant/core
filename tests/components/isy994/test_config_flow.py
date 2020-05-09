@@ -74,7 +74,7 @@ async def test_form(hass: HomeAssistantType):
         PATCH_ASYNC_SETUP_ENTRY, return_value=True,
     ) as mock_setup_entry:
         isy_conn = mock_connection_class.return_value
-        isy_conn.get_config.return_value = "<xml></xml>"
+        isy_conn.get_config.return_value = None
         mock_config_class.return_value = MOCK_VALIDATED_RESPONSE
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOCK_USER_INPUT,
@@ -154,7 +154,7 @@ async def test_form_existing_config_entry(hass: HomeAssistantType):
         PATCH_CONNECTION
     ) as mock_connection_class:
         isy_conn = mock_connection_class.return_value
-        isy_conn.get_config.return_value = "<xml></xml>"
+        isy_conn.get_config.return_value = None
         mock_config_class.return_value = MOCK_VALIDATED_RESPONSE
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOCK_USER_INPUT,
@@ -170,7 +170,7 @@ async def test_import_flow_some_fields(hass: HomeAssistantType) -> None:
         PATCH_ASYNC_SETUP_ENTRY, return_value=True,
     ):
         isy_conn = mock_connection_class.return_value
-        isy_conn.get_config.return_value = "<xml></xml>"
+        isy_conn.get_config.return_value = None
         mock_config_class.return_value = MOCK_VALIDATED_RESPONSE
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_BASIC_CONFIG,
@@ -190,7 +190,7 @@ async def test_import_flow_all_fields(hass: HomeAssistantType) -> None:
         PATCH_ASYNC_SETUP_ENTRY, return_value=True,
     ):
         isy_conn = mock_connection_class.return_value
-        isy_conn.get_config.return_value = "<xml></xml>"
+        isy_conn.get_config.return_value = None
         mock_config_class.return_value = MOCK_VALIDATED_RESPONSE
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_FULL_CONFIG,
