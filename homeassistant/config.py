@@ -1,5 +1,4 @@
 """Module to help with parsing and generating configuration files."""
-# pylint: disable=no-name-in-module
 from collections import OrderedDict
 from distutils.version import LooseVersion  # pylint: disable=import-error
 import logging
