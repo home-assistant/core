@@ -743,7 +743,7 @@ def create_hue_success_response(entity_number, attr, value):
 
 
 def create_config_model(config, request):
-    """Create a config resource"""
+    """Create a config resource."""
     return {
         "mac": "00:00:00:00:00:00",
         "swversion": "01003542",
