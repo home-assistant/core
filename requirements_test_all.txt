@@ -191,7 +191,7 @@ datadog==0.15.0
 defusedxml==0.6.0
 
 # homeassistant.components.denonavr
-denonavr==0.8.1
+denonavr==0.9.0
 
 # homeassistant.components.directv
 directv==0.3.0
