@@ -127,9 +127,9 @@ class DaikinPowerSensor(DaikinSensor):
     def state(self):
         """Return the state of the sensor."""
         if self._device_attribute == ATTR_TOTAL_POWER:
-            return self._api.device.current_total_power_consumption
+            return round(self._api.device.current_total_power_consumption, 3)
         if self._device_attribute == ATTR_COOL_ENERGY:
-            return self._api.device.last_hour_cool_power_consumption
+            return round(self._api.device.last_hour_cool_power_consumption, 3)
         if self._device_attribute == ATTR_HEAT_ENERGY:
-            return self._api.device.last_hour_heat_power_consumption
+            return round(self._api.device.last_hour_heat_power_consumption, 3)
         return None
