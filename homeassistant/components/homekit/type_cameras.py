@@ -21,6 +21,7 @@ from homeassistant.util import get_local_ip
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
+    CHAR_STREAMING_STRATUS,
     CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
@@ -33,6 +34,7 @@ from .const import (
     CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
+    SERV_CAMERA_RTP_STREAM_MANAGEMENT,
 )
 from .img_util import scale_jpeg_camera_image
 from .util import CAMERA_SCHEMA
@@ -223,7 +225,6 @@ class Camera(HomeAccessory, PyhapCamera):
             output = output + " " + AUDIO_OUTPUT.format(**output_vars)
         _LOGGER.debug("FFmpeg output settings: %s", output)
         stream = HAFFmpeg(self._ffmpeg.binary, loop=self.driver.loop)
-        self.streaming_status = STREAMING_STATUS["STREAMING"]
         opened = await stream.open(
             cmd=[], input_source=input_source, output=output, stdout_pipe=False
         )
@@ -238,7 +239,7 @@ class Camera(HomeAccessory, PyhapCamera):
         )
 
         ffmpeg_watcher = async_track_time_interval(
-            self.hass, self._ensure_ffmpeg_stream_alive, FFMPEG_WATCH_INTERVAL
+            self.hass, self._ffmpeg_stream_alive, FFMPEG_WATCH_INTERVAL
         )
         self._current_session = {
             FFMPEG_WATCHER: ffmpeg_watcher,
@@ -246,17 +247,17 @@ class Camera(HomeAccessory, PyhapCamera):
             SESSION_ID: session_info["id"],
         }
 
-        return await self._ensure_ffmpeg_stream_alive(0)
+        return await self._ffmpeg_stream_alive(0)
 
-    async def _ensure_ffmpeg_stream_alive(self, _):
-        """Check to make sure ffmpeg is still running."""
+    async def _ffmpeg_stream_alive(self, _):
+        """Check to make sure ffmpeg is still running and cleanup if not."""
         ffmpeg_pid = self._current_session[FFMPEG_PID]
         try:
             os.kill(ffmpeg_pid, 0)
             return True
         except OSError:
             pass
-        _LOGGER.info("Streaming process ended unexpectedly - PID %d", ffmpeg_pid)
+        _LOGGER.warning("Streaming process ended unexpectedly - PID %d", ffmpeg_pid)
         self._async_clean_session()
         return False
 
@@ -276,6 +277,10 @@ class Camera(HomeAccessory, PyhapCamera):
 
         self._current_session = None
 
+        self.get_service(SERV_CAMERA_RTP_STREAM_MANAGEMENT).get_characteristic(
+            CHAR_STREAMING_STRATUS
+        ).notify()
+
     async def stop_stream(self, session_info):
         """Stop the stream for the given ``session_id``."""
         session_id = session_info["id"]
@@ -283,6 +288,7 @@ class Camera(HomeAccessory, PyhapCamera):
         if not stream:
             _LOGGER.debug("No stream for session ID %s", session_id)
             return
+
         _LOGGER.info("[%s] Stopping stream.", session_id)
         try:
             await stream.close()
