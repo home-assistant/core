@@ -65,12 +65,12 @@ class InsteonFanEntity(InsteonEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off the fan."""
-        await self.async_set_speed(str(FanSpeed.OFF))
+        await self._insteon_device.async_fan_off()
 
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         fan_speed = SPEED_TO_VALUE[speed]
         if fan_speed == FanSpeed.OFF:
-            self._insteon_device.fan_off()
+            await self._insteon_device.async_fan_off()
         else:
-            self._insteon_device.fan_on(on_level=fan_speed)
+            await self._insteon_device.async_fan_on(on_level=fan_speed)
