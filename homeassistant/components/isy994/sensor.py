@@ -5,7 +5,7 @@ from pyisy.constants import ISY_VALUE_UNKNOWN
 
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
@@ -13,7 +13,10 @@ from .const import (
     DOMAIN as ISY994_DOMAIN,
     ISY994_NODES,
     ISY994_VARIABLES,
+    UOM_DOUBLE_TEMP,
     UOM_FRIENDLY_NAME,
+    UOM_INDEX,
+    UOM_ON_OFF,
     UOM_TO_STATES,
 )
 from .entity import ISYEntity, ISYNodeEntity
@@ -53,42 +56,52 @@ class ISYSensorEntity(ISYNodeEntity):
         # Backwards compatibility for ISYv4 Firmware:
         if isinstance(uom, list):
             return UOM_FRIENDLY_NAME.get(uom[0], uom[0])
+        # Special case for ISY UOM 101 0.5-precision degrees and index units:
+        if uom in (UOM_DOUBLE_TEMP, UOM_INDEX, UOM_ON_OFF):
+            return uom
         return UOM_FRIENDLY_NAME.get(uom)
 
     @property
     def state(self) -> str:
         """Get the state of the ISY994 sensor device."""
-        if self.value == ISY_VALUE_UNKNOWN:
-            return STATE_UNKNOWN
+        value = self._node.status
+        if value == ISY_VALUE_UNKNOWN:
+            return None
 
-        uom = self._node.uom
-        # Backwards compatibility for ISYv4 Firmware:
-        if isinstance(uom, list):
-            uom = uom[0]
-        if not uom:
-            return STATE_UNKNOWN
+        uom = self.raw_unit_of_measurement
+        if (
+            uom in [None, UOM_INDEX, UOM_ON_OFF]
+            and hasattr(self._node, "formatted")
+            and not self._node.formatted == ISY_VALUE_UNKNOWN
+        ):
+            # Use the ISY-provided formatted value if the UOM is an index-type.
+            return self._node.formatted
 
         states = UOM_TO_STATES.get(uom)
-        if states and states.get(self.value):
-            return states.get(self.value)
-        if self._node.prec and int(self._node.prec) != 0:
-            str_val = str(self.value)
+        if states and states.get(value) is not None:
+            return states.get(value)
+
+        if self._node.prec != "0":
             int_prec = int(self._node.prec)
-            decimal_part = str_val[-int_prec:]
-            whole_part = str_val[: len(str_val) - int_prec]
-            val = float(f"{whole_part}.{decimal_part}")
-            raw_units = self.raw_unit_of_measurement
-            if raw_units in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
-                val = self.hass.config.units.temperature(val, raw_units)
-            return val
-        return self.value
+            value = round(float(value) / 10 ** int_prec, int_prec)
+
+        if uom in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
+            value = self.hass.config.units.temperature(value, uom)
+        elif uom == UOM_DOUBLE_TEMP:
+            # Special case for ISY UOM 101 0.5-precision degrees unit
+            # Assume the same temp unit as Hass. Not reported by ISY.
+            value = round(float(value) / 2.0, 1)
+
+        return value
 
     @property
     def unit_of_measurement(self) -> str:
         """Get the unit of measurement for the ISY994 sensor device."""
         raw_units = self.raw_unit_of_measurement
-        if raw_units in (TEMP_FAHRENHEIT, TEMP_CELSIUS):
+        if raw_units in (TEMP_FAHRENHEIT, TEMP_CELSIUS, UOM_DOUBLE_TEMP):
             return self.hass.config.units.temperature_unit
+        if raw_units in (UOM_INDEX, UOM_ON_OFF):
+            return None
         return raw_units
 
 
