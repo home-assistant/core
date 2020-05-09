@@ -78,6 +78,7 @@ async def async_setup_platforms(hass, config):
     register_new_device_callback(hass, config)
     async_register_services(hass)
 
+    # Cannot be done concurrently due to issues with the underlying protocol.
     for address in devices:
         await devices[address].async_status()
     await async_id_unknown_devices(hass.config.config_dir)
