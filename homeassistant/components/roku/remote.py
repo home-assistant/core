@@ -43,6 +43,14 @@ class RokuRemote(RokuEntity, RemoteEntity):
         """Return true if device is on."""
         return not self.coordinator.data.state.standby
 
+    async def async_turn_on(self, **kwargs) -> None:
+        """Turn the device on."""
+        await self.coordinator.roku.remote("poweron")
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Turn the device off."""
+        await self.coordinator.roku.remote("poweroff")
+
     async def async_send_command(self, command: List, **kwargs) -> None:
         """Send a command to one device."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]
