@@ -23,8 +23,9 @@ _LOGGER = logging.getLogger(__name__)
 class StateData(NamedTuple):
     """State data for a cover entity."""
 
-    unique_id: str
-    door: Door
+    config_unique_id: str
+    unique_id: Optional[str]
+    door: Optional[Door]
 
 
 class DataManager:
@@ -63,17 +64,25 @@ class DataManager:
 
     async def async_update(self) -> None:
         """Update data from the gogogate2 device."""
-        data = await self._hass.async_add_executor_job(self._api.info)
+        data = await async_api_info_or_false(self._hass, self._api)
+        if data is False:
+            self.async_update_door(None)
+        else:
+            for door in get_configured_doors(data):
+                self.async_update_door(door)
 
-        for door in get_configured_doors(data):
-            self.async_update_door(door)
-
-    def async_update_door(self, door: Door) -> None:
+    def async_update_door(self, door: Optional[Door]) -> None:
         """Dispatch new state data to a cover entity."""
         async_dispatcher_send(
             self._hass,
             DATA_UPDATED_SIGNAL,
-            StateData(unique_id=cover_unique_id(self._config_entry, door), door=door),
+            StateData(
+                config_unique_id=self._config_entry.unique_id,
+                unique_id=None
+                if door is None
+                else cover_unique_id(self._config_entry, door),
+                door=door,
+            ),
         )
 
 
@@ -109,7 +118,7 @@ def get_api(config_data: dict) -> GogoGate2Api:
     )
 
 
-async def async_test_if_is_accessible(
+async def async_api_info_or_false(
     hass: HomeAssistant, api: GogoGate2Api
 ) -> Union[InfoResponse, bool]:
     """Check if the device is accessible.

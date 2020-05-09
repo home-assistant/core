@@ -75,11 +75,19 @@ class Gogogate2Cover(CoverEntity):
         self, config_entry: ConfigEntry, data_manager: DataManager, door: Door
     ) -> None:
         """Initialize the object."""
+        self._config_entry = config_entry
+        self._data_manager = data_manager
         self._api = data_manager.api
         self._door = door
         self._unique_id = cover_unique_id(config_entry, door)
-        self._mid_state: Optional[str] = None
-        self._mid_state_start: Optional[datetime] = None
+        self._is_available = True
+        self._transition_state: Optional[str] = None
+        self._transition_state_start: Optional[datetime] = None
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._is_available
 
     @property
     def should_poll(self) -> bool:
@@ -93,7 +101,7 @@ class Gogogate2Cover(CoverEntity):
 
     @property
     def name(self):
-        """Return the name of the garage door if any."""
+        """Return the name of the door."""
         return self._door.name
 
     @property
@@ -109,12 +117,12 @@ class Gogogate2Cover(CoverEntity):
     @property
     def is_opening(self):
         """Return if the cover is opening or not."""
-        return self._mid_state == STATE_OPENING
+        return self._transition_state == STATE_OPENING
 
     @property
     def is_closing(self):
         """Return if the cover is closing or not."""
-        return self._mid_state == STATE_CLOSING
+        return self._transition_state == STATE_CLOSING
 
     @property
     def device_class(self):
@@ -129,14 +137,14 @@ class Gogogate2Cover(CoverEntity):
     async def async_open_cover(self, **kwargs):
         """Open the door."""
         await self.hass.async_add_executor_job(self._api.open_door, self._door.door_id)
-        self._mid_state = STATE_OPENING
-        self._mid_state_start = datetime.now()
+        self._transition_state = STATE_OPENING
+        self._transition_state_start = datetime.now()
 
     async def async_close_cover(self, **kwargs):
         """Close the door."""
         await self.hass.async_add_executor_job(self._api.close_door, self._door.door_id)
-        self._mid_state = STATE_CLOSING
-        self._mid_state_start = datetime.now()
+        self._transition_state = STATE_CLOSING
+        self._transition_state_start = datetime.now()
 
     @property
     def state_attributes(self):
@@ -148,18 +156,36 @@ class Gogogate2Cover(CoverEntity):
     @callback
     def receive_data(self, state_data: StateData) -> None:
         """Receive data from data dispatcher."""
+        # Check if door is controlled by a different device.
+        if self._config_entry.unique_id != state_data.config_unique_id:
+            return
+
+        # Set the availability of the entity.
+        if state_data.door is None:
+            self._is_available = False
+            self.async_write_ha_state()
+            return
+
+        self._is_available = True
+
+        # Check the state applies tp this entity.
         if self._unique_id != state_data.unique_id:
             return
 
-        if self._mid_state:
-            is_mid_state_expired = (datetime.now() - self._mid_state_start) > timedelta(
-                seconds=60
-            )
+        # Check if the transition state should expire.
+        if self._transition_state:
+            is_transition_state_expired = (
+                datetime.now() - self._transition_state_start
+            ) > timedelta(seconds=60)
 
-            if is_mid_state_expired or self._door.status != state_data.door.status:
-                self._mid_state = None
-                self._mid_state_start = None
+            if (
+                is_transition_state_expired
+                or self._door.status != state_data.door.status
+            ):
+                self._transition_state = None
+                self._transition_state_start = None
 
+        # Set the state.
         self._door = state_data.door
         self.async_write_ha_state()
 

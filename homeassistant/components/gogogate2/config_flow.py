@@ -10,7 +10,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
-from .common import async_test_if_is_accessible, get_api
+from .common import async_api_info_or_false, get_api
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +40,7 @@ async def async_handle_data_updated(
 ) -> dict:
     """Handle data being updated."""
     api = get_api(user_input)
-    data = await async_test_if_is_accessible(flow_handler.hass, api)
+    data = await async_api_info_or_false(flow_handler.hass, api)
     if data is False:
         return flow_handler.async_abort(
             reason="cannot_connect",
@@ -66,13 +66,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return await async_handle_data_updated(self, user_input)
 
         return self.async_show_form(
-            step_id="init", data_schema=data_schema(self._config_entry.data),
+            step_id="init", data_schema=data_schema(self._config_entry.options),
         )
 
 
 @config_entries.HANDLERS.register(DOMAIN)
 class Gogogate2FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Gogogate2 config flow."""
+
+    VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback

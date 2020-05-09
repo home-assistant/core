@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 
@@ -309,3 +310,42 @@ async def test_open_close(
         )
         await hass.async_block_till_done()
         assert hass.states.get("cover.door1").state == STATE_CLOSED
+
+
+async def test_availability(
+    hass: HomeAssistant, component_factory: ComponentFactory
+) -> None:
+    """Test open and close."""
+    closed_door = Door(
+        door_id=1,
+        permission=True,
+        name="Door1",
+        mode=DoorMode.GARAGE,
+        status=DoorStatus.CLOSED,
+        sensor=True,
+        sensorid=None,
+        camera=False,
+        events=2,
+        temperature=None,
+    )
+
+    await component_factory.configure_component()
+    assert hass.states.get("cover.door1") is None
+
+    component_data = await component_factory.run_config_flow(
+        config_data={
+            CONF_IP_ADDRESS: "127.0.0.2",
+            CONF_USERNAME: "user0",
+            CONF_PASSWORD: "password0",
+        }
+    )
+    assert hass.states.get("cover.door1").state == STATE_OPEN
+
+    component_data.api.info.side_effect = Exception("Error")
+    component_data.data_manager.async_update_door(None)
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.door1").state == STATE_UNAVAILABLE
+
+    component_data.data_manager.async_update_door(closed_door)
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.door1").state == STATE_CLOSED

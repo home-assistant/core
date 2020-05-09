@@ -1,4 +1,6 @@
 """Tests for the GogoGate2 component."""
+import voluptuous as vol
+
 from homeassistant.components.gogogate2.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -35,6 +37,17 @@ async def test_options_change(
     assert result
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
+    schema: vol.Schema = result["data_schema"]
+    defaults = {
+        field.schema: field.default()
+        for field in schema.schema
+        if isinstance(field, vol.Required)
+    }
+    assert defaults == {
+        CONF_IP_ADDRESS: "127.0.1.0",
+        CONF_USERNAME: "user0",
+        CONF_PASSWORD: "password0",
+    }
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
