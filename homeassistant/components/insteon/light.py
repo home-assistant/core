@@ -19,12 +19,12 @@ MAX_BRIGHTNESS = 255
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Insteon component."""
     async_add_insteon_entities(
-        hass, DOMAIN, InsteonDimmerDevice, async_add_entities, discovery_info
+        hass, DOMAIN, InsteonDimmerEntity, async_add_entities, discovery_info
     )
 
 
-class InsteonDimmerDevice(InsteonEntity, LightEntity):
-    """A Class for an Insteon device."""
+class InsteonDimmerEntity(InsteonEntity, LightEntity):
+    """A Class for an Insteon light entity."""
 
     @property
     def brightness(self):
@@ -42,7 +42,7 @@ class InsteonDimmerDevice(InsteonEntity, LightEntity):
         return SUPPORT_BRIGHTNESS
 
     async def async_turn_on(self, **kwargs):
-        """Turn device on."""
+        """Turn light on."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(kwargs[ATTR_BRIGHTNESS])
             await self._insteon_device.async_on(
@@ -52,5 +52,5 @@ class InsteonDimmerDevice(InsteonEntity, LightEntity):
             await self._insteon_device.async_on(group=self._insteon_device_group.group)
 
     async def async_turn_off(self, **kwargs):
-        """Turn device off."""
+        """Turn light off."""
         await self._insteon_device.async_off(self._insteon_device_group.group)

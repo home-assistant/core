@@ -17,17 +17,18 @@ from .insteon_entity import InsteonEntity
 from .utils import async_add_insteon_entities
 
 _LOGGER = logging.getLogger(__name__)
+FAN_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the INSTEON device class for the hass platform."""
+    """Set up the INSTEON entity class for the hass platform."""
     async_add_insteon_entities(
-        hass, DOMAIN, InsteonFan, async_add_entities, discovery_info
+        hass, DOMAIN, InsteonFanEntity, async_add_entities, discovery_info
     )
 
 
-class InsteonFan(InsteonEntity, FanEntity):
-    """An INSTEON fan component."""
+class InsteonFanEntity(InsteonEntity, FanEntity):
+    """An INSTEON fan entity."""
 
     @property
     def speed(self) -> str:
@@ -43,7 +44,7 @@ class InsteonFan(InsteonEntity, FanEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        return [str(speed) for speed in FanSpeed]
+        return FAN_SPEEDS
 
     @property
     def supported_features(self) -> int:
@@ -51,13 +52,13 @@ class InsteonFan(InsteonEntity, FanEntity):
         return SUPPORT_SET_SPEED
 
     async def async_turn_on(self, speed: str = None, **kwargs) -> None:
-        """Turn on the entity."""
+        """Turn on the fan."""
         if speed is None:
             speed = str(FanSpeed.MEDIUM)
         await self.async_set_speed(speed)
 
     async def async_turn_off(self, **kwargs) -> None:
-        """Turn off the entity."""
+        """Turn off the fan."""
         await self.async_set_speed(str(FanSpeed.OFF))
 
     async def async_set_speed(self, speed: str) -> None:

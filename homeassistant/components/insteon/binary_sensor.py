@@ -51,14 +51,14 @@ SENSOR_TYPES = {
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the INSTEON device class for the hass platform."""
+    """Set up the INSTEON entity class for the hass platform."""
     async_add_insteon_entities(
-        hass, DOMAIN, InsteonBinarySensor, async_add_entities, discovery_info
+        hass, DOMAIN, InsteonBinarySensorEntity, async_add_entities, discovery_info
     )
 
 
-class InsteonBinarySensor(InsteonEntity, BinarySensorEntity):
-    """A Class for an Insteon device entity."""
+class InsteonBinarySensorEntity(InsteonEntity, BinarySensorEntity):
+    """A Class for an Insteon binary sensor entity."""
 
     def __init__(self, device, group):
         """Initialize the INSTEON binary sensor."""

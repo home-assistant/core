@@ -22,12 +22,12 @@ SUPPORTED_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Insteon platform."""
     async_add_insteon_entities(
-        hass, DOMAIN, InsteonCoverDevice, async_add_entities, discovery_info
+        hass, DOMAIN, InsteonCoverEntity, async_add_entities, discovery_info
     )
 
 
-class InsteonCoverDevice(InsteonEntity, CoverEntity):
-    """A Class for an Insteon device."""
+class InsteonCoverEntity(InsteonEntity, CoverEntity):
+    """A Class for an Insteon cover entity."""
 
     @property
     def current_cover_position(self):
@@ -45,11 +45,11 @@ class InsteonCoverDevice(InsteonEntity, CoverEntity):
         return bool(self.current_cover_position)
 
     async def async_open_cover(self, **kwargs):
-        """Open device."""
+        """Open cover."""
         await self._insteon_device.async_open()
 
     async def async_close_cover(self, **kwargs):
-        """Close device."""
+        """Close cover."""
         await self._insteon_device.async_close()
 
     async def async_set_cover_position(self, **kwargs):

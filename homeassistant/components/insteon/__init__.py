@@ -105,18 +105,17 @@ async def async_setup(hass, config):
         _LOGGER.info("Connecting to Insteon PLM on %s", port)
 
     try:
-        if not await async_connect(
+        await async_connect(
             device=port,
             host=host,
             port=ip_port,
             username=username,
             password=password,
             hub_version=hub_version,
-        ):
-            return True
+        )
     except ConnectionError:
         _LOGGER.error("Could not connect to Insteon modem")
-        return True
+        return False
     _LOGGER.info("Connection to Insteon modem successful")
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_insteon_connection)

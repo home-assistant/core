@@ -2,7 +2,10 @@
 import logging
 
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -25,7 +28,7 @@ class InsteonEntity(Entity):
         self._insteon_device = device
 
     def __hash__(self):
-        """Return the has of the Insteon Entity."""
+        """Return the hash of the Insteon Entity."""
         return hash(self._insteon_device)
 
     @property
@@ -89,20 +92,16 @@ class InsteonEntity(Entity):
         self._insteon_device_group.subscribe(self.async_entity_update)
         load_signal = f"{self.entity_id}_{SIGNAL_LOAD_ALDB}"
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, load_signal, self._load_aldb)
+            async_dispatcher_connect(self.hass, load_signal, self._async_read_aldb)
         )
         print_signal = f"{self.entity_id}_{SIGNAL_PRINT_ALDB}"
         async_dispatcher_connect(self.hass, print_signal, self._print_aldb)
-
-    def _load_aldb(self, async_add_job, reload=False):
-        """Load the device All-Link Database."""
-        async_add_job(self._async_read_aldb, reload)
 
     async def _async_read_aldb(self, reload):
         """Call device load process and print to log."""
         await self._insteon_device.aldb.async_load(refresh=reload)
         self._print_aldb()
-        dispatcher_send(self.hass, SIGNAL_SAVE_DEVICES)
+        async_dispatcher_send(self.hass, SIGNAL_SAVE_DEVICES)
 
     def _print_aldb(self):
         """Print the device ALDB to the log file."""

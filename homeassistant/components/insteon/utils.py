@@ -87,7 +87,7 @@ def add_on_off_event_device(hass, device):
         if name == OFF_FAST_EVENT:
             event = EVENT_GROUP_OFF_FAST
         _LOGGER.debug("Firing event %s with %s", event, schema)
-        hass.bus.fire(event, schema)
+        hass.bus.async_fire(event, schema)
 
     for group in device.events:
         if isinstance(group, int):
@@ -115,7 +115,7 @@ def register_new_device_callback(hass, config):
     @callback
     def async_new_insteon_device(address=None):
         """Detect device from transport to be delegated to platform."""
-        _LOGGER.info(
+        _LOGGER.debug(
             "Adding new INSTEON device to Home Assistant with address %s", address
         )
         hass.async_add_job(devices.async_save, hass.config.config_dir)
@@ -168,7 +168,7 @@ def async_register_services(hass):
     def _send_load_aldb_signal(entity_id, reload):
         """Send the load All-Link database signal to INSTEON entity."""
         signal = f"{entity_id}_{SIGNAL_LOAD_ALDB}"
-        dispatcher_send(hass, signal, hass.async_add_job, reload)
+        dispatcher_send(hass, signal, reload)
 
     async def _load_aldb_all(reload):
         """Load the All-Link database for all devices."""
