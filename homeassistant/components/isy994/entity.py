@@ -57,6 +57,13 @@ class ISYEntity(Entity):
     def unique_id(self) -> str:
         """Get the unique identifier of the device."""
         if hasattr(self._node, "address"):
+            return f"{self._node.isy.configuration['uuid']}_{self._node.address}"
+        return None
+
+    @property
+    def old_unique_id(self) -> str:
+        """Get the old unique identifier of the device."""
+        if hasattr(self._node, "address"):
             return self._node.address
         return None
 

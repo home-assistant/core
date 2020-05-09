@@ -98,9 +98,11 @@ MANUFACTURER = "Universal Devices, Inc"
 CONF_IGNORE_STRING = "ignore_string"
 CONF_SENSOR_STRING = "sensor_string"
 CONF_TLS_VER = "tls"
+CONF_RESTORE_LIGHT_STATE = "restore_light_state"
 
 DEFAULT_IGNORE_STRING = "{IGNORE ME}"
 DEFAULT_SENSOR_STRING = "sensor"
+DEFAULT_RESTORE_LIGHT_STATE = False
 DEFAULT_TLS_VERSION = 1.1
 DEFAULT_PROGRAM_STRING = "HA."
 
@@ -136,12 +138,16 @@ TYPE_CATEGORY_POOL_CTL = "6."
 TYPE_CATEGORY_SENSOR_ACTUATORS = "7."
 TYPE_CATEGORY_ENERGY_MGMT = "9."
 TYPE_CATEGORY_COVER = "14."
-TYPE_CATEOGRY_LOCK = "15."
+TYPE_CATEGORY_LOCK = "15."
 TYPE_CATEGORY_SAFETY = "16."
 TYPE_CATEGORY_X10 = "113."
 
+UNDO_UPDATE_LISTENER = "undo_update_listener"
+
 # Do not use the Home Assistant consts for the states here - we're matching exact API
 # responses, not using them for Home Assistant states
+# Insteon Types: https://www.universal-devices.com/developers/wsdk/5.0.4/1_fam.xml
+# Z-Wave Categories: https://www.universal-devices.com/developers/wsdk/5.0.4/4_fam.xml
 NODE_FILTERS = {
     BINARY_SENSOR: {
         FILTER_UOM: [],
@@ -191,7 +197,7 @@ NODE_FILTERS = {
         FILTER_UOM: ["11"],
         FILTER_STATES: ["locked", "unlocked"],
         FILTER_NODE_DEF_ID: ["DoorLock"],
-        FILTER_INSTEON_TYPE: [TYPE_CATEOGRY_LOCK, "4.64."],
+        FILTER_INSTEON_TYPE: [TYPE_CATEGORY_LOCK, "4.64."],
         FILTER_ZWAVE_CAT: ["111"],
     },
     FAN: {
