@@ -68,6 +68,7 @@ FLOWS = [
     "ipp",
     "iqvia",
     "islamic_prayer_times",
+    "isy994",
     "izone",
     "juicenet",
     "konnected",

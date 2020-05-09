@@ -8,35 +8,49 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import ISY994_NODES
-from .const import _LOGGER
+from .const import (
+    _LOGGER,
+    CONF_RESTORE_LIGHT_STATE,
+    DOMAIN as ISY994_DOMAIN,
+    ISY994_NODES,
+)
 from .entity import ISYNodeEntity
+from .helpers import migrate_old_unique_ids
 
 ATTR_LAST_BRIGHTNESS = "last_brightness"
 
 
-def setup_platform(
-    hass, config: ConfigType, add_entities: Callable[[list], None], discovery_info=None
-):
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[list], None],
+) -> bool:
     """Set up the ISY994 light platform."""
-    devices = []
-    for node in hass.data[ISY994_NODES][LIGHT]:
-        devices.append(ISYLightEntity(node))
+    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
+    isy_options = entry.options
+    restore_light_state = isy_options.get(CONF_RESTORE_LIGHT_STATE, False)
 
-    add_entities(devices)
+    devices = []
+    for node in hass_isy_data[ISY994_NODES][LIGHT]:
+        devices.append(ISYLightEntity(node, restore_light_state))
+
+    await migrate_old_unique_ids(hass, LIGHT, devices)
+    async_add_entities(devices)
 
 
 class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
     """Representation of an ISY994 light device."""
 
-    def __init__(self, node) -> None:
+    def __init__(self, node, restore_light_state) -> None:
         """Initialize the ISY994 light device."""
         super().__init__(node)
         self._last_brightness = None
+        self._restore_light_state = restore_light_state
 
     @property
     def is_on(self) -> bool:
@@ -65,15 +79,10 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
     # pylint: disable=arguments-differ
     def turn_on(self, brightness=None, **kwargs) -> None:
         """Send the turn on command to the ISY994 light device."""
-        if brightness is None and self._last_brightness:
+        if self._restore_light_state and brightness is None and self._last_brightness:
             brightness = self._last_brightness
         if not self._node.turn_on(val=brightness):
             _LOGGER.debug("Unable to turn on light")
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
 
     @property
     def device_state_attributes(self) -> Dict:
@@ -81,6 +90,11 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         attribs = super().device_state_attributes
         attribs[ATTR_LAST_BRIGHTNESS] = self._last_brightness
         return attribs
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_BRIGHTNESS
 
     async def async_added_to_hass(self) -> None:
         """Restore last_brightness on restart."""
