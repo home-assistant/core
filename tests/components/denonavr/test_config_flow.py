@@ -275,6 +275,9 @@ async def test_config_flow_manual_host_connection_error(hass):
     with patch(
         "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.get_device_info",
         side_effect=ConnectionError,
+    ), patch(
+        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.receiver_type",
+        None,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
 
