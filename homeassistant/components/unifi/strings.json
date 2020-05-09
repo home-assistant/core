@@ -4,24 +4,23 @@
       "user": {
         "title": "Set up UniFi Controller",
         "data": {
-          "host": "Host",
-          "username": "User name",
-          "password": "Password",
-          "port": "Port",
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
           "site": "Site ID",
           "verify_ssl": "Controller using proper certificate"
         }
       }
     },
     "error": {
-      "faulty_credentials": "Bad user credentials",
-      "service_unavailable": "No service available",
+      "faulty_credentials": "[%key:common::config_flow::error::invalid_auth%]",
+      "service_unavailable": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown_client_mac": "No client available on that MAC address"
     },
     "abort": {
       "already_configured": "Controller site is already configured",
-      "no_local_user": "No local user found, configure a local account on controller and try again",
-      "user_privilege": "User needs to be administrator"
+      "no_local_user": "No local user found, configure a local account on controller and try again"
     }
   },
   "options": {
