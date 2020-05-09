@@ -28,7 +28,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DEVICES = "devices"
-PLATFORMS = ["binary_sensor", "scene", "sensor", "switch"]
+PLATFORMS = ["sensor"]
 
 DEVICE_SCHEMA = vol.Schema(
     {
