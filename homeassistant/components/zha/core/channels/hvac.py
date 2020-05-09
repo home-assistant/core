@@ -288,7 +288,7 @@ class ThermostatChannel(ZigbeeChannel):
         self.debug(
             "Attribute report '%s'[%s] = %s", self.cluster.name, attr_name, value
         )
-        setattr(self, "_{}".format(attr_name), value)
+        setattr(self, f"_{attr_name}", value)
         self.async_send_signal(
             f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
             AttributeUpdateRecord(attrid, attr_name, value),
@@ -304,7 +304,7 @@ class ThermostatChannel(ZigbeeChannel):
                 if attr in fail:
                     continue
                 if isinstance(attr, str):
-                    setattr(self, "_{}".format(attr), res[attr])
+                    setattr(self, f"_{attr}", res[attr])
                 self.async_send_signal(
                     f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
                     AttributeUpdateRecord(None, attr, res[attr]),
@@ -328,7 +328,7 @@ class ThermostatChannel(ZigbeeChannel):
             try:
                 res = await self.cluster.configure_reporting_multiple(attrs, **kwargs)
                 self._configure_reporting_status(attrs, res[0])
-            except (zigpy.exceptions.DeliveryError, asyncio.TimeoutError) as ex:
+            except (ZigbeeException, asyncio.TimeoutError) as ex:
                 self.debug(
                     "failed to set reporting on '%s' cluster for: %s",
                     self.cluster.ep_attribute,
@@ -377,34 +377,15 @@ class ThermostatChannel(ZigbeeChannel):
     @retryable_req(delays=(1, 1, 3, 6, 15, 30))
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        from zigpy import types as t
-        from zigpy.zcl.foundation import ReadReportingConfigRecord
 
         cached = [a for a, cached in self._init_attrs.items() if cached]
         uncached = [a for a, cached in self._init_attrs.items() if not cached]
 
         await self._chunk_attr_read(cached, cached=True)
         await self._chunk_attr_read(uncached, cached=False)
-        read_attr_report_req = []
-        attr_report_config_2_read = (
-            0x0001,
-            0x0002,
-            0x0007,
-            0x0008,
-            0x0011,
-            0x0012,
-            0x0013,
-            0x0014,
-        )
-        for attr in attr_report_config_2_read:
-            rec = ReadReportingConfigRecord()
-            rec.direction = t.uint8_t(0)
-            rec.attrid = t.uint16_t(attr)
-            read_attr_report_req.append(rec)
-
         await super().async_initialize(from_cache)
 
-    async def async_set_operation_mode(self, mode) -> None:
+    async def async_set_operation_mode(self, mode) -> bool:
         """Set Operation mode."""
         if not await self.write_attributes({"system_mode": mode}):
             self.debug("couldn't set '%s' operation mode", mode)
@@ -460,14 +441,14 @@ class ThermostatChannel(ZigbeeChannel):
                 return None
             self._occupancy = res["occupancy"]
             return bool(self.occupancy)
-        except zigpy.exceptions.ZigbeeException as ex:
+        except ZigbeeException as ex:
             self.debug("Couldn't read 'occupancy' attribute: %s", ex)
 
     async def write_attributes(self, data, **kwargs):
         """Write attributes helper."""
         try:
             res = await self.cluster.write_attributes(data, **kwargs)
-        except zigpy.exceptions.ZigbeeException as exc:
+        except ZigbeeException as exc:
             self.debug("couldn't write %s: %s", data, exc)
             return False
 
@@ -481,12 +462,6 @@ class ThermostatChannel(ZigbeeChannel):
             return False
 
         return all([record.status == Status.SUCCESS for record in res[0]])
-
-    def log(self, level, msg, *args) -> None:
-        """Log helper."""
-        msg = "%s: " + msg
-        args = (self.unique_id,) + args
-        _LOGGER.log(level, msg, *args)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.UserInterface.cluster_id)
