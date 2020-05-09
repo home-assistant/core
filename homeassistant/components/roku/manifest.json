@@ -2,7 +2,7 @@
   "domain": "roku",
   "name": "Roku",
   "documentation": "https://www.home-assistant.io/integrations/roku",
-  "requirements": ["rokuecp==0.2.0"],
+  "requirements": ["rokuecp==0.2.1"],
   "ssdp": [
     {
       "st": "roku:ecp",
