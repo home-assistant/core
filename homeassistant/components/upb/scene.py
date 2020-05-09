@@ -53,13 +53,13 @@ class UpbLink(UpbEntity, Scene):
     async def async_link_goto(self, rate, brightness=None, brightness_pct=None):
         """Activate the task."""
         if brightness is not None:
-            brightness_pct = brightness / 2.55
+            brightness_pct = round(brightness / 2.55)
         self._element.goto(brightness_pct, rate)
 
     async def async_link_fade_start(self, rate, brightness=None, brightness_pct=None):
         """Start dimming a link."""
         if brightness is not None:
-            brightness_pct = brightness / 2.55
+            brightness_pct = round(brightness / 2.55)
         self._element.fade_start(brightness_pct, rate)
 
     async def async_link_fade_stop(self):
