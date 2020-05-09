@@ -1772,29 +1772,33 @@ states.sensor.pick_humidity.state ~ „ %“
         )
     )
 
+    assert ["test_domain.entity"] == template.Template(
+        '{{ is_state("test_domain.entity", "on") }}', hass
+    ).extract_entities()
+
 
 def test_extract_entities_with_variables(hass):
     """Test extract entities function with variables and entities stuff."""
     hass.states.async_set("input_boolean.switch", "on")
-    assert {"input_boolean.switch"} == extract_entities(
+    assert ["input_boolean.switch"] == template.extract_entities(
         hass, "{{ is_state('input_boolean.switch', 'off') }}", {}
     )
 
-    assert {"input_boolean.switch"} == extract_entities(
+    assert ["input_boolean.switch"] == template.extract_entities(
         hass,
         "{{ is_state(trigger.entity_id, 'off') }}",
         {"trigger": {"entity_id": "input_boolean.switch"}},
     )
 
-    assert {"no_state"} == extract_entities(
+    assert MATCH_ALL == template.extract_entities(
         hass, "{{ is_state(data, 'off') }}", {"data": "no_state"}
     )
 
-    assert {"input_boolean.switch"} == extract_entities(
+    assert ["input_boolean.switch"] == template.extract_entities(
         hass, "{{ is_state(data, 'off') }}", {"data": "input_boolean.switch"}
     )
 
-    assert {"input_boolean.switch"} == extract_entities(
+    assert ["input_boolean.switch"] == template.extract_entities(
         hass,
         "{{ is_state(trigger.entity_id, 'off') }}",
         {"trigger": {"entity_id": "input_boolean.switch"}},
