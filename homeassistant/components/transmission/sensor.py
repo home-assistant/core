@@ -6,7 +6,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, STATE_ATTR_TORRENT_INFO
+from .const import CONF_LIMIT, CONF_ORDER, DOMAIN, STATE_ATTR_TORRENT_INFO
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -146,7 +146,11 @@ class TransmissionTorrentsSensor(TransmissionSensor):
         info = _torrents_info(
             self._tm_client.api.torrents, self.SUBTYPE_MODES[self._sub_type]
         )
-        return {STATE_ATTR_TORRENT_INFO: info}
+        return {
+            STATE_ATTR_TORRENT_INFO: info,
+            CONF_LIMIT: self._tm_client.config_entry.options[CONF_LIMIT],
+            CONF_ORDER: self._tm_client.config_entry.options[CONF_ORDER],
+        }
 
     def update(self):
         """Get the latest data from Transmission and updates the state."""

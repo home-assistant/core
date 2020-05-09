@@ -277,9 +277,9 @@ class TransmissionClient:
     @staticmethod
     async def async_options_updated(hass, entry):
         """Triggered by config entry options updates."""
-        hass.data[DOMAIN][entry.entry_id].set_scan_interval(
-            entry.options[CONF_SCAN_INTERVAL]
-        )
+        tm_client = hass.data[DOMAIN][entry.entry_id]
+        tm_client.set_scan_interval(entry.options[CONF_SCAN_INTERVAL])
+        await hass.async_add_executor_job(tm_client.api.update)
 
 
 class TransmissionData:
