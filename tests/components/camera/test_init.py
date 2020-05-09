@@ -9,6 +9,7 @@ from homeassistant.components import camera
 from homeassistant.components.camera.const import DOMAIN, PREF_PRELOAD_STREAM
 from homeassistant.components.camera.prefs import CameraEntityPreferences
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -241,6 +242,9 @@ async def test_play_stream_service_no_source(hass, mock_camera, mock_stream):
 
 async def test_handle_play_stream_service(hass, mock_camera, mock_stream):
     """Test camera play_stream service."""
+    await async_process_ha_core_config(
+        hass, {"external_url": "https://example.com"},
+    )
     await async_setup_component(hass, "media_player", {})
     with patch(
         "homeassistant.components.camera.request_stream"

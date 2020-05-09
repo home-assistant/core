@@ -5,7 +5,7 @@
         "title": "Configure a Geography",
         "description": "Use the AirVisual cloud API to monitor a geographical location.",
         "data": {
-          "api_key": "API Key",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "latitude": "Latitude",
           "longitude": "Longitude"
         }

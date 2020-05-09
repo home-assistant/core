@@ -46,3 +46,7 @@ class RoombaBattery(IRobotEntity):
     def state(self):
         """Return the state of the sensor."""
         return roomba_reported_state(self.vacuum).get("batPct")
+
+    def new_state_filter(self, new_state):
+        """Filter the new state."""
+        return "batPct" in new_state

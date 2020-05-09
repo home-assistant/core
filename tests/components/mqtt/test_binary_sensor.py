@@ -3,6 +3,8 @@ import copy
 from datetime import datetime, timedelta
 import json
 
+import pytest
+
 from homeassistant.components import binary_sensor, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import (
@@ -182,6 +184,43 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "test-topic", "OFF")
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_OFF
+
+
+async def test_invalid_sensor_value_via_mqtt_message(hass, mqtt_mock, caplog):
+    """Test the setting of the value via MQTT."""
+    assert await async_setup_component(
+        hass,
+        binary_sensor.DOMAIN,
+        {
+            binary_sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "payload_on": "ON",
+                "payload_off": "OFF",
+            }
+        },
+    )
+
+    state = hass.states.get("binary_sensor.test")
+
+    assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, "test-topic", "0N")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
+    assert "No matching payload found for entity" in caplog.text
+    caplog.clear()
+    assert "No matching payload found for entity" not in caplog.text
+
+    async_fire_mqtt_message(hass, "test-topic", "ON")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_ON
+
+    async_fire_mqtt_message(hass, "test-topic", "0FF")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_ON
+    assert "No matching payload found for entity" in caplog.text
 
 
 async def test_setting_sensor_value_via_mqtt_message_and_template(hass, mqtt_mock):
@@ -548,6 +587,7 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer",' '  "off_delay": -1 }'

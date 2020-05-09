@@ -10,7 +10,7 @@
     "error": {
       "invalid_username": "Invalid username",
       "invalid_credentials": "Invalid credentials",
-      "user_already_configured": "Account has already been configured",
+      "user_already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "unexpected": "Unexpected error communicating with Life360 server"
     },
     "create_entry": {
@@ -18,7 +18,7 @@
     },
     "abort": {
       "invalid_credentials": "Invalid credentials",
-      "user_already_configured": "Account has already been configured"
+      "user_already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
   }
 }

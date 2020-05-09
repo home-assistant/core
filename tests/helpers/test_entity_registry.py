@@ -241,11 +241,19 @@ async def test_loading_extra_values(hass, hass_storage):
                     "unique_id": "disabled-hass",
                     "disabled_by": "hass",
                 },
+                {
+                    "entity_id": "test.invalid__entity",
+                    "platform": "super_platform",
+                    "unique_id": "invalid-hass",
+                    "disabled_by": "hass",
+                },
             ]
         },
     }
 
     registry = await entity_registry.async_get_registry(hass)
+
+    assert len(registry.entities) == 4
 
     entry_with_name = registry.async_get_or_create(
         "test", "super_platform", "with-name"

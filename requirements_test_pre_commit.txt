@@ -7,5 +7,5 @@ flake8-docstrings==1.5.0
 flake8==3.7.9
 isort==4.3.21
 pydocstyle==5.0.2
-pyupgrade==2.2.1
+pyupgrade==2.3.0
 yamllint==1.23.0

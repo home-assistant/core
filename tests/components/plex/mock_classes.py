@@ -134,6 +134,7 @@ class MockPlexClient:
         """Initialize the object."""
         self.machineIdentifier = f"client-{index+1}"
         self._baseurl = url
+        self._index = index
 
     def url(self, key):
         """Mock the url method."""
@@ -152,6 +153,8 @@ class MockPlexClient:
     @property
     def product(self):
         """Mock the product attribute."""
+        if self._index == 1:
+            return "Plex Web"
         return "PRODUCT"
 
     @property

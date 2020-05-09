@@ -31,7 +31,7 @@ def validate_integration(config: Config, integration: Integration):
         return
 
     needs_unique_id = integration.domain not in UNIQUE_ID_IGNORE and any(
-        key in integration.manifest
+        bool(integration.manifest.get(key))
         for keys in DISCOVERY_INTEGRATIONS.values()
         for key in keys
     )
