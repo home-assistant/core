@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 
+# pylint:disable=unused-import
 from .const import CONF_COUNTRYCODE, DOMAIN, TUYA_PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
