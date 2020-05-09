@@ -1,143 +1,160 @@
 """Device tracker for Synology SRM routers."""
 import logging
 
-import synology_srm
-import voluptuous as vol
+from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA,
-    DeviceScanner,
-)
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
-import homeassistant.helpers.config_validation as cv
+from .const import DEVICE_ATTRIBUTE_ALIAS, DEVICE_ICON, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_USERNAME = "admin"
-DEFAULT_PORT = 8001
-DEFAULT_SSL = True
-DEFAULT_VERIFY_SSL = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    }
-)
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up device tracker for the Synology SRM component."""
+    router = hass.data[DOMAIN][entry.unique_id]
+    devices = set()
 
-ATTRIBUTE_ALIAS = {
-    "band": None,
-    "connection": None,
-    "current_rate": None,
-    "dev_type": None,
-    "hostname": None,
-    "ip6_addr": None,
-    "ip_addr": None,
-    "is_baned": "is_banned",
-    "is_beamforming_on": None,
-    "is_guest": None,
-    "is_high_qos": None,
-    "is_low_qos": None,
-    "is_manual_dev_type": None,
-    "is_manual_hostname": None,
-    "is_online": None,
-    "is_parental_controled": "is_parental_controlled",
-    "is_qos": None,
-    "is_wireless": None,
-    "mac": None,
-    "max_rate": None,
-    "mesh_node_id": None,
-    "rate_quality": None,
-    "signalstrength": "signal_strength",
-    "transferRXRate": "transfer_rx_rate",
-    "transferTXRate": "transfer_tx_rate",
-}
+    @callback
+    def async_add_new_devices():
+        """Add new devices from the router to Hass."""
+        async_add_new_entities(router, async_add_entities, devices)
+
+    router.listeners.append(
+        async_dispatcher_connect(hass, router.signal_devices_new, async_add_new_devices)
+    )
+
+    # Add initial devices
+    async_add_new_devices()
 
 
-def get_scanner(hass, config):
-    """Validate the configuration and return Synology SRM scanner."""
-    scanner = SynologySrmDeviceScanner(config[DOMAIN])
+@callback
+def async_add_new_entities(router, async_add_entities, devices):
+    """Add only new devices entities from the router."""
+    new_devices = []
 
-    return scanner if scanner.success_init else None
+    for device in router.devices:
+        if device["mac"] in devices:
+            continue
+
+        new_devices.append(SynologySrmEntity(router, device))
+        devices.add(device["mac"])
+
+    if new_devices:
+        async_add_entities(new_devices, True)
 
 
-class SynologySrmDeviceScanner(DeviceScanner):
-    """This class scans for devices connected to a Synology SRM router."""
+class SynologySrmEntity(ScannerEntity):
+    """Representation of a device connected to the Synology SRM router."""
 
-    def __init__(self, config):
-        """Initialize the scanner."""
+    def __init__(self, router, device):
+        """Initialize a Synology SRM device."""
+        self.router = router
+        self.device = device
 
-        self.client = synology_srm.Client(
-            host=config[CONF_HOST],
-            port=config[CONF_PORT],
-            username=config[CONF_USERNAME],
-            password=config[CONF_PASSWORD],
-            https=config[CONF_SSL],
-        )
+        self.mac = device["mac"]
 
-        if not config[CONF_VERIFY_SSL]:
-            self.client.http.disable_https_verify()
+        self.update_dispatcher = None
+        self.delete_dispatcher = None
 
-        self.devices = []
-        self.success_init = self._update_info()
+    def _get(self, parameter=None, default=None):
+        """Get internal parameter stored in the router."""
+        if not parameter:
+            return self.device
 
-        _LOGGER.info("Synology SRM scanner initialized")
+        if not self.device or parameter not in self.device:
+            return default
 
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
+        return self.device[parameter]
 
-        return [device["mac"] for device in self.devices]
+    @property
+    def unique_id(self):
+        """Return a unique identifier (the MAC address)."""
+        return self._get("mac")
 
-    def get_extra_attributes(self, device) -> dict:
-        """Get the extra attributes of a device."""
-        device = next(
-            (result for result in self.devices if result["mac"] == device), None
-        )
+    @property
+    def name(self):
+        """Return the name of the entity."""
+        return self._get("hostname")
+
+    @property
+    def is_connected(self):
+        """Return true if the device is connected to the network."""
+        return self._get("is_online")
+
+    @property
+    def source_type(self):
+        """Return the source type of the entity."""
+        return SOURCE_TYPE_ROUTER
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
         filtered_attributes = {}
-        if not device:
-            return filtered_attributes
-        for attribute, alias in ATTRIBUTE_ALIAS.items():
+        device = self._get()
+
+        for attribute, alias in DEVICE_ATTRIBUTE_ALIAS.items():
             value = device.get(attribute)
             if value is None:
                 continue
             attr = alias or attribute
             filtered_attributes[attr] = value
+
         return filtered_attributes
 
-    def get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-        filter_named = [
-            result["hostname"] for result in self.devices if result["mac"] == device
-        ]
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        # 1 - Synology device types
+        device_type = self._get("dev_type")
+        if device_type in DEVICE_ICON:
+            return DEVICE_ICON[device_type]
 
-        if filter_named:
-            return filter_named[0]
+        # 2 - Wi-Fi signal strength
+        if self._get("connection") == "wifi":
+            strength = self._get("signalstrength", 100)
+            thresholds = [70, 50, 30, 0]
+            for idx, threshold in enumerate(thresholds):
+                if strength >= threshold:
+                    return "mdi:wifi-strength-{}".format(len(thresholds) - idx)
 
-        return None
+        # Fallback to a classical icon
+        return "mdi:ethernet"
 
-    def _update_info(self):
-        """Check the router for connected devices."""
-        _LOGGER.debug("Scanning for connected devices")
+    @property
+    def should_poll(self):
+        """No need to poll. Updates are managed by the router."""
+        return False
 
-        try:
-            self.devices = self.client.core.get_network_nsm_device({"is_online": True})
-        except synology_srm.http.SynologyException as ex:
-            _LOGGER.error("Error with the Synology SRM: %s", ex)
-            return False
+    async def async_update(self):
+        """Update the current device."""
+        device = self.router.get_device(self.mac)
+        if device:
+            self.device = device
 
-        _LOGGER.debug("Found %d device(s) connected to the router", len(self.devices))
+    async def async_added_to_hass(self):
+        """Register state update/delete callback."""
+        self.update_dispatcher = async_dispatcher_connect(
+            self.hass, self.router.signal_devices_update, self._async_update_callback
+        )
 
-        return True
+        self.delete_dispatcher = async_dispatcher_connect(
+            self.hass, self.router.signal_devices_delete, self._async_delete_callback
+        )
+
+    async def _async_update_callback(self):
+        """Call update method."""
+        self.async_schedule_update_ha_state(True)
+
+    async def _async_delete_callback(self):
+        """Remove this entity."""
+        if not self.router.get_device(self.mac):
+            # Remove this entity if parameters are not
+            # present in the router anymore
+            self.hass.async_create_task(self.async_remove())
+
+    async def async_will_remove_from_hass(self):
+        """Call when entity will be removed from hass."""
+        self.update_dispatcher()
+        self.delete_dispatcher()

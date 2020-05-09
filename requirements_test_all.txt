@@ -816,6 +816,9 @@ stringcase==1.2.0
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
 
+# homeassistant.components.synology_srm
+synology-srm==0.2.0
+
 # homeassistant.components.tellduslive
 tellduslive==0.10.10
 
