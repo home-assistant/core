@@ -105,6 +105,7 @@ virtualization/vagrant/config
 .vscode/*
 !.vscode/cSpell.json
 !.vscode/extensions.json
+!.vscode/launch.json
 !.vscode/tasks.json
 
 # Built docs
