@@ -70,7 +70,7 @@ async def async_discover(hass):
     for server_data in gdm.entries:
         await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=server_data,
         )
 
@@ -279,7 +279,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Imported Plex configuration")
         return await self.async_step_server_validate(import_config)
 
-    async def async_step_discovery(self, discovery_info):
+    async def async_step_integration_discovery(self, discovery_info):
         """Handle GDM discovery."""
         machine_identifier = discovery_info["data"]["Resource-Identifier"]
         await self.async_set_unique_id(machine_identifier)
