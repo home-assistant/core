@@ -249,7 +249,13 @@ class TransmissionClient:
             scan_interval = self.config_entry.data.get(
                 CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
             )
-            options = {CONF_SCAN_INTERVAL: scan_interval}
+            limit = self.config_entry.data.get(CONF_LIMIT, DEFAULT_LIMIT)
+            order = self.config_entry.data.get(CONF_ORDER, DEFAULT_ORDER)
+            options = {
+                CONF_SCAN_INTERVAL: scan_interval,
+                CONF_LIMIT: limit,
+                CONF_ORDER: order,
+            }
 
             self.hass.config_entries.async_update_entry(
                 self.config_entry, options=options
