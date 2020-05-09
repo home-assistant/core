@@ -53,6 +53,8 @@ MOCK_VALIDATED_RESPONSE = {"name": MOCK_DEVICE_NAME, "uuid": MOCK_UUID}
 
 PATCH_CONFIGURATION = "homeassistant.components.isy994.config_flow.Configuration"
 PATCH_CONNECTION = "homeassistant.components.isy994.config_flow.Connection"
+PATCH_ASYNC_SETUP = "homeassistant.components.isy994.async_setup"
+PATCH_ASYNC_SETUP_ENTRY = "homeassistant.components.isy994.async_setup_entry"
 
 
 async def test_form(hass: HomeAssistantType):
@@ -66,7 +68,11 @@ async def test_form(hass: HomeAssistantType):
 
     with patch(PATCH_CONFIGURATION) as mock_config_class, patch(
         PATCH_CONNECTION
-    ) as mock_connection_class:
+    ) as mock_connection_class, patch(
+        PATCH_ASYNC_SETUP, return_value=True
+    ) as mock_setup, patch(
+        PATCH_ASYNC_SETUP_ENTRY, return_value=True,
+    ) as mock_setup_entry:
         isy_conn = mock_connection_class.return_value
         isy_conn.get_config.return_value = "<xml></xml>"
         mock_config_class.return_value = MOCK_VALIDATED_RESPONSE
@@ -78,6 +84,8 @@ async def test_form(hass: HomeAssistantType):
     assert result2["result"].unique_id == MOCK_UUID
     assert result2["data"] == MOCK_USER_INPUT
     await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_invalid_host(hass: HomeAssistantType):
@@ -158,7 +166,9 @@ async def test_import_flow_some_fields(hass: HomeAssistantType) -> None:
     """Test import config flow with just the basic fields."""
     with patch(PATCH_CONFIGURATION) as mock_config_class, patch(
         PATCH_CONNECTION
-    ) as mock_connection_class:
+    ) as mock_connection_class, patch(PATCH_ASYNC_SETUP, return_value=True), patch(
+        PATCH_ASYNC_SETUP_ENTRY, return_value=True,
+    ):
         isy_conn = mock_connection_class.return_value
         isy_conn.get_config.return_value = "<xml></xml>"
         mock_config_class.return_value = MOCK_VALIDATED_RESPONSE
@@ -176,7 +186,9 @@ async def test_import_flow_all_fields(hass: HomeAssistantType) -> None:
     """Test import config flow with all fields."""
     with patch(PATCH_CONFIGURATION) as mock_config_class, patch(
         PATCH_CONNECTION
-    ) as mock_connection_class:
+    ) as mock_connection_class, patch(PATCH_ASYNC_SETUP, return_value=True), patch(
+        PATCH_ASYNC_SETUP_ENTRY, return_value=True,
+    ):
         isy_conn = mock_connection_class.return_value
         isy_conn.get_config.return_value = "<xml></xml>"
         mock_config_class.return_value = MOCK_VALIDATED_RESPONSE
