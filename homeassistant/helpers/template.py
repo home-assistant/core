@@ -44,8 +44,8 @@ _ENVIRONMENT = "template.environment"
 
 _RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
 _RE_GET_ENTITIES = re.compile(
-    r"(?:(?:states\.|(is_state|is_state_attr|state_attr|states|expand)"
-    r"\((?:[\ \'\"]?))([\w]+\.[\w]+)|([\w]+))",
+    r"(?:(?:states\.|(?P<func>is_state|is_state_attr|state_attr|states|expand)"
+    r"\((?:[\ \'\"]?))(?P<entity_id>[\w]+\.[\w]+)|(?P<variable>[\w]+))",
     re.I | re.M,
 )
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{")
@@ -87,31 +87,30 @@ def extract_entities(
     if _RE_NONE_ENTITIES.search(template):
         return MATCH_ALL
 
-    extraction = _RE_GET_ENTITIES.findall(template)
     extraction_final = []
 
-    for result in extraction:
+    for result in _RE_GET_ENTITIES.finditer(template):
         if (
-            result[1] == "trigger.entity_id"
+            result.group("entity_id") == "trigger.entity_id"
             and variables
             and "trigger" in variables
             and "entity_id" in variables["trigger"]
         ):
             extraction_final.append(variables["trigger"]["entity_id"])
-        elif result[1]:
-            if result[0] == "expand":
-                for entity in expand(hass, result[1]):
+        elif result.group("entity_id"):
+            if result.group("func") == "expand":
+                for entity in expand(hass, result.group("entity_id")):
                     extraction_final.append(entity.entity_id)
 
-            extraction_final.append(result[1])
+            extraction_final.append(result.group("entity_id"))
 
         if (
             variables
-            and result[2] in variables
-            and isinstance(variables[result[2]], str)
-            and valid_entity_id(variables[result[2]])
+            and result.group("variable") in variables
+            and isinstance(variables[result.group("variable")], str)
+            and valid_entity_id(variables[result.group("variable")])
         ):
-            extraction_final.append(variables[result[2]])
+            extraction_final.append(variables[result.group("variable")])
 
     if extraction_final:
         return list(set(extraction_final))
