@@ -4,12 +4,12 @@ from datetime import timedelta
 import logging
 
 import aiohttp
-from asynctest import CoroutineMock, Mock
 import pytest
 
 from homeassistant.helpers import update_coordinator
 from homeassistant.util.dt import utcnow
 
+from tests.async_mock import AsyncMock, Mock
 from tests.common import async_fire_time_changed
 
 LOGGER = logging.getLogger(__name__)
@@ -41,6 +41,8 @@ async def test_async_refresh(crd):
     await crd.async_refresh()
     assert crd.data == 1
     assert crd.last_update_success is True
+    # Make sure we didn't schedule a refresh because we have 0 listeners
+    assert crd._unsub_refresh is None
 
     updates = []
 
@@ -50,6 +52,7 @@ async def test_async_refresh(crd):
     unsub = crd.async_add_listener(update_callback)
     await crd.async_refresh()
     assert updates == [2]
+    assert crd._unsub_refresh is not None
 
     # Test unsubscribing through function
     unsub()
@@ -86,7 +89,7 @@ async def test_request_refresh(crd):
 )
 async def test_refresh_known_errors(err_msg, crd, caplog):
     """Test raising known errors."""
-    crd.update_method = CoroutineMock(side_effect=err_msg[0])
+    crd.update_method = AsyncMock(side_effect=err_msg[0])
 
     await crd.async_refresh()
 
@@ -99,7 +102,7 @@ async def test_refresh_fail_unknown(crd, caplog):
     """Test raising unknown error."""
     await crd.async_refresh()
 
-    crd.update_method = CoroutineMock(side_effect=ValueError)
+    crd.update_method = AsyncMock(side_effect=ValueError)
 
     await crd.async_refresh()
 

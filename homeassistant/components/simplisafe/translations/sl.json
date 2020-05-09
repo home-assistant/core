@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ta ra\u010dun SimpliSafe je \u017ee v uporabi."
+        },
+        "error": {
+            "identifier_exists": "Ra\u010dun je \u017ee registriran",
+            "invalid_credentials": "Neveljavne poverilnice"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Geslo",
+                    "username": "E-po\u0161tni naslov"
+                },
+                "title": "Izpolnite svoje podatke"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Koda (uporablja se v uporabni\u0161kem vmesniku Home Assistant)"
+                },
+                "title": "Konfigurirajte SimpliSafe"
+            }
+        }
+    }
+}

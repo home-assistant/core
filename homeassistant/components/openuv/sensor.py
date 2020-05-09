@@ -1,7 +1,7 @@
 """Support for OpenUV sensors."""
 import logging
 
-from homeassistant.const import TIME_MINUTES, UNIT_UV_INDEX
+from homeassistant.const import TIME_MINUTES, UV_INDEX
 from homeassistant.core import callback
 from homeassistant.util.dt import as_local, parse_datetime
 
@@ -43,9 +43,9 @@ UV_LEVEL_LOW = "Low"
 
 SENSORS = {
     TYPE_CURRENT_OZONE_LEVEL: ("Current Ozone Level", "mdi:vector-triangle", "du"),
-    TYPE_CURRENT_UV_INDEX: ("Current UV Index", "mdi:weather-sunny", UNIT_UV_INDEX),
+    TYPE_CURRENT_UV_INDEX: ("Current UV Index", "mdi:weather-sunny", UV_INDEX),
     TYPE_CURRENT_UV_LEVEL: ("Current UV Level", "mdi:weather-sunny", None),
-    TYPE_MAX_UV_INDEX: ("Max UV Index", "mdi:weather-sunny", UNIT_UV_INDEX),
+    TYPE_MAX_UV_INDEX: ("Max UV Index", "mdi:weather-sunny", UV_INDEX),
     TYPE_SAFE_EXPOSURE_TIME_1: (
         "Skin Type 1 Safe Exposure Time",
         "mdi:timer",

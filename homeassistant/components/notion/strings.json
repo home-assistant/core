@@ -1,21 +1,15 @@
 {
-  "title": "Notion",
   "config": {
     "step": {
       "user": {
         "title": "Fill in your information",
-        "data": {
-          "username": "Username/Email Address",
-          "password": "Password"
-        }
+        "data": { "username": "Username/Email Address", "password": "Password" }
       }
     },
     "error": {
       "invalid_credentials": "Invalid username or password",
       "no_devices": "No devices found in account"
     },
-    "abort": {
-      "already_configured": "This username is already in use."
-    }
+    "abort": { "already_configured": "This username is already in use." }
   }
 }

@@ -1,0 +1,46 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar, por favor, int\u00e9ntalo de nuevo",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "resources": {
+                "data": {
+                    "resources": "Recursos"
+                },
+                "title": "Selecciona los recursos a monitorizar"
+            },
+            "ups": {
+                "data": {
+                    "alias": "Alias",
+                    "resources": "Recursos"
+                },
+                "title": "Selecciona el UPS a monitorizar"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "username": "Usuario"
+                },
+                "title": "Conectar con el servidor NUT"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "Recursos",
+                    "scan_interval": "Intervalo de escaneo (segundos)"
+                },
+                "description": "Elegir Recursos del Sensor"
+            }
+        }
+    }
+}

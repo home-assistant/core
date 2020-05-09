@@ -1,14 +1,9 @@
 {
-  "title": "OpenTherm Gateway",
   "config": {
     "step": {
       "init": {
         "title": "OpenTherm Gateway",
-        "data": {
-          "name": "Name",
-          "device": "Path or URL",
-          "id": "ID"
-        }
+        "data": { "name": "Name", "device": "Path or URL", "id": "ID" }
       }
     },
     "error": {

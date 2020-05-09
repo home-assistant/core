@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
-    AlarmControlPanel,
+    AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -74,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class AlarmDecoderAlarmPanel(AlarmControlPanel):
+class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
     """Representation of an AlarmDecoder-based alarm panel."""
 
     def __init__(self, auto_bypass, code_arm_required):

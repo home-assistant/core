@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "\u5168\u90e8\u98de\u5229\u6d66 Hue \u6865\u63a5\u5668\u5df2\u914d\u7f6e",
+            "already_configured": "\u98de\u5229\u6d66 Hue Bridge \u5df2\u914d\u7f6e\u5b8c\u6210",
+            "already_in_progress": "\u7f51\u6865\u7684\u914d\u7f6e\u6d41\u5df2\u5728\u8fdb\u884c\u4e2d\u3002",
+            "cannot_connect": "\u65e0\u6cd5\u8fde\u63a5\u5230 \u98de\u5229\u6d66 Hue Bridge",
+            "discover_timeout": "\u65e0\u6cd5\u55c5\u63a2\u5230 Hue \u6865\u63a5\u5668",
+            "no_bridges": "\u672a\u53d1\u73b0\u98de\u5229\u6d66 Hue Bridge",
+            "unknown": "\u51fa\u73b0\u672a\u77e5\u7684\u9519\u8bef"
+        },
+        "error": {
+            "linking": "\u53d1\u751f\u672a\u77e5\u7684\u8fde\u63a5\u9519\u8bef\u3002",
+            "register_failed": "\u6ce8\u518c\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "\u4e3b\u673a"
+                },
+                "title": "\u9009\u62e9 Hue Bridge"
+            },
+            "link": {
+                "description": "\u8bf7\u6309\u4e0b\u6865\u63a5\u5668\u4e0a\u7684\u6309\u94ae\uff0c\u4ee5\u5728 Home Assistant \u4e0a\u6ce8\u518c\u98de\u5229\u6d66 Hue\u3002\n\n![\u6865\u63a5\u5668\u6309\u94ae\u4f4d\u7f6e](/static/images/config_philips_hue.jpg)",
+                "title": "\u8fde\u63a5\u4e2d\u67a2"
+            }
+        }
+    }
+}

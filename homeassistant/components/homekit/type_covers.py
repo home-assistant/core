@@ -26,8 +26,7 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 
-from . import TYPES
-from .accessories import HomeAccessory, debounce
+from .accessories import TYPES, HomeAccessory, debounce
 from .const import (
     CHAR_CURRENT_DOOR_STATE,
     CHAR_CURRENT_POSITION,

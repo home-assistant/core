@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from pizone import Controller, Zone
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
     FAN_HIGH,
@@ -100,7 +100,7 @@ def _return_on_connection_error(ret=None):
     return wrap
 
 
-class ControllerDevice(ClimateDevice):
+class ControllerDevice(ClimateEntity):
     """Representation of iZone Controller."""
 
     def __init__(self, controller: Controller) -> None:
@@ -399,7 +399,7 @@ class ControllerDevice(ClimateDevice):
         await self.wrap_and_catch(self._controller.set_on(True))
 
 
-class ZoneDevice(ClimateDevice):
+class ZoneDevice(ClimateEntity):
     """Representation of iZone Zone."""
 
     def __init__(self, controller: ControllerDevice, zone: Zone) -> None:

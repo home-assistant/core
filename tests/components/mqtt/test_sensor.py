@@ -1,7 +1,8 @@
 """The tests for the MQTT sensor platform."""
 from datetime import datetime, timedelta
 import json
-from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.discovery import async_start
@@ -37,6 +38,7 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
+from tests.async_mock import patch
 from tests.common import (
     MockConfigEntry,
     async_fire_mqtt_message,
@@ -361,6 +363,7 @@ async def test_discovery_update_sensor(hass, mqtt_mock, caplog):
     )
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer",' '  "state_topic": "test_topic#" }'

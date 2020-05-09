@@ -3,7 +3,7 @@ import logging
 
 from pyotgw import vars as gw_vars
 
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
+from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
@@ -51,7 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(ents)
 
 
-class OpenThermClimate(ClimateDevice):
+class OpenThermClimate(ClimateEntity):
     """Representation of a climate device."""
 
     def __init__(self, gw_dev, options):

@@ -7,7 +7,7 @@ from amcrest import AmcrestError
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_MOTION,
-    BinarySensorDevice,
+    BinarySensorEntity,
 )
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_NAME
 from homeassistant.core import callback
@@ -63,7 +63,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class AmcrestBinarySensor(BinarySensorDevice):
+class AmcrestBinarySensor(BinarySensorEntity):
     """Binary sensor for Amcrest camera."""
 
     def __init__(self, name, device, sensor_type):

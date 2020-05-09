@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "De API-sleutel voor het Rachio-account."
+                },
+                "description": "U heeft de API-sleutel nodig van https://app.rach.io/. Selecteer 'Accountinstellingen en klik vervolgens op' GET API KEY '.",
+                "title": "Maak verbinding met uw Rachio-apparaat"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual_run_mins": "Hoe lang, in minuten, om een station in te schakelen wanneer de schakelaar is ingeschakeld."
+                }
+            }
+        }
+    }
+}

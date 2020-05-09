@@ -1,10 +1,11 @@
 """The tests for reproduction of state."""
 
 from asyncio import Future
-from unittest.mock import patch
 
 from homeassistant.components.group.reproduce_state import async_reproduce_states
 from homeassistant.core import Context, State
+
+from tests.async_mock import patch
 
 
 async def test_reproduce_group(hass):
@@ -39,7 +40,7 @@ async def test_reproduce_group(hass):
 
         state = State("group.test", "on")
 
-        await async_reproduce_states(hass, [state], context)
+        await async_reproduce_states(hass, [state], context=context)
 
         fun.assert_called_once_with(
             hass,
@@ -48,6 +49,6 @@ async def test_reproduce_group(hass):
                 clone_state(state, "light.test2"),
                 clone_state(state, "switch.test1"),
             ],
-            blocking=True,
             context=context,
+            reproduce_options=None,
         )

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Du kan bara konfigurera ett Soma-konto.",
+            "authorize_url_timeout": "Timeout vid generering av auktoriserings-url.",
+            "connection_error": "Det gick inte att ansluta till SOMA Connect.",
+            "missing_configuration": "Soma-komponenten \u00e4r inte konfigurerad. F\u00f6lj dokumentationen.",
+            "result_error": "SOMA Connect svarade med felstatus."
+        },
+        "create_entry": {
+            "default": "Lyckad autentisering med Soma."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "port": "Port"
+                },
+                "description": "Ange anslutningsinst\u00e4llningar f\u00f6r din SOMA Connect.",
+                "title": "SOMA Connect"
+            }
+        }
+    }
+}

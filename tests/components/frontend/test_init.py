@@ -1,7 +1,6 @@
 """The tests for Home Assistant frontend."""
 import re
 
-from asynctest import patch
 import pytest
 
 from homeassistant.components.frontend import (
@@ -14,9 +13,11 @@ from homeassistant.components.frontend import (
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import HTTP_NOT_FOUND
+from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_capture_events, mock_coro
+from tests.async_mock import patch
+from tests.common import async_capture_events
 
 CONFIG_THEMES = {DOMAIN: {CONF_THEMES: {"happy": {"primary-color": "red"}}}}
 
@@ -283,10 +284,17 @@ async def test_get_translations(hass, hass_ws_client):
 
     with patch(
         "homeassistant.components.frontend.async_get_translations",
-        side_effect=lambda hass, lang: mock_coro({"lang": lang}),
+        side_effect=lambda hass, lang, category, integration, config_flow: {
+            "lang": lang
+        },
     ):
         await client.send_json(
-            {"id": 5, "type": "frontend/get_translations", "language": "nl"}
+            {
+                "id": 5,
+                "type": "frontend/get_translations",
+                "language": "nl",
+                "category": "lang",
+            }
         )
         msg = await client.receive_json()
 
@@ -329,3 +337,24 @@ async def test_auth_authorize(mock_http_client):
     resp = await mock_http_client.get(authorizejs.groups(0)[0])
     assert resp.status == 200
     assert "public" in resp.headers.get("cache-control")
+
+
+async def test_get_version(hass, hass_ws_client):
+    """Test get_version command."""
+    frontend = await async_get_integration(hass, "frontend")
+    cur_version = next(
+        req.split("==", 1)[1]
+        for req in frontend.requirements
+        if req.startswith("home-assistant-frontend==")
+    )
+
+    await async_setup_component(hass, "frontend", {})
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 5, "type": "frontend/get_version"})
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"] == {"version": cur_version}

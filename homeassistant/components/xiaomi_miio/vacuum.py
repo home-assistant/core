@@ -25,7 +25,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_START,
     SUPPORT_STATE,
     SUPPORT_STOP,
-    StateVacuumDevice,
+    StateVacuumEntity,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -229,7 +229,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
 
-class MiroboVacuum(StateVacuumDevice):
+class MiroboVacuum(StateVacuumEntity):
     """Representation of a Xiaomi Vacuum cleaner robot."""
 
     def __init__(self, name, vacuum):

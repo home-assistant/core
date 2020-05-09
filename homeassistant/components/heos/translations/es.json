@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Solo puedes configurar una \u00fanica conexi\u00f3n Heos, ya que admitir\u00e1 todos los dispositivos de la red."
+        },
+        "error": {
+            "connection_failure": "No se puede conectar al host especificado."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Host",
+                    "host": "Host"
+                },
+                "description": "Introduce el nombre de host o direcci\u00f3n IP de un dispositivo Heos (preferiblemente conectado por cable a la red).",
+                "title": "Conectar a Heos"
+            }
+        }
+    }
+}

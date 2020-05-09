@@ -1,5 +1,4 @@
 {
-  "title": "Google Hangouts",
   "config": {
     "abort": {
       "already_configured": "Google Hangouts is already configured",
@@ -20,9 +19,7 @@
         "title": "Google Hangouts Login"
       },
       "2fa": {
-        "data": {
-          "2fa": "2FA Pin"
-        },
+        "data": { "2fa": "2FA Pin" },
         "title": "2-Factor-Authentication"
       }
     }

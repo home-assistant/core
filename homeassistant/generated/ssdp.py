@@ -17,6 +17,11 @@ SSDP = {
             "manufacturer": "DIRECTV"
         }
     ],
+    "fritzbox": [
+        {
+            "st": "urn:schemas-upnp-org:device:fritzbox:1"
+        }
+    ],
     "harmony": [
         {
             "deviceType": "urn:myharmony-com:device:harmony:1",
@@ -63,6 +68,12 @@ SSDP = {
     "samsungtv": [
         {
             "st": "urn:samsung.com:device:RemoteControlReceiver:1"
+        }
+    ],
+    "songpal": [
+        {
+            "manufacturer": "Sony Corporation",
+            "st": "urn:schemas-sony-com:service:ScalarWebAPI:1"
         }
     ],
     "sonos": [
