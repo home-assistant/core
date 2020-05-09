@@ -239,7 +239,7 @@ class Camera(HomeAccessory, PyhapCamera):
         )
 
         ffmpeg_watcher = async_track_time_interval(
-            self.hass, self._ffmpeg_stream_alive, FFMPEG_WATCH_INTERVAL
+            self.hass, self._async_ffmpeg_stream_alive, FFMPEG_WATCH_INTERVAL
         )
         self._current_session = {
             FFMPEG_WATCHER: ffmpeg_watcher,
@@ -247,9 +247,9 @@ class Camera(HomeAccessory, PyhapCamera):
             SESSION_ID: session_info["id"],
         }
 
-        return await self._ffmpeg_stream_alive(0)
+        return await self._async_ffmpeg_stream_alive(0)
 
-    async def _ffmpeg_stream_alive(self, _):
+    async def _async_ffmpeg_stream_alive(self, _):
         """Check to make sure ffmpeg is still running and cleanup if not."""
         ffmpeg_pid = self._current_session[FFMPEG_PID]
         try:
