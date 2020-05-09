@@ -258,7 +258,9 @@ class Camera(HomeAccessory, PyhapCamera):
         except OSError:
             pass
         _LOGGER.warning("Streaming process ended unexpectedly - PID %d", ffmpeg_pid)
+        session_id = self._current_session[SESSION_ID]
         self._async_clean_session()
+        self._async_set_streaming_available(session_id)
         return False
 
     @callback
@@ -266,17 +268,15 @@ class Camera(HomeAccessory, PyhapCamera):
         """Cleanup a streaming session after stopping."""
         if not self._current_session:
             return
-
         self._current_session[FFMPEG_WATCHER]()
         self._current_session = None
 
-        session_id = self._current_session[SESSION_ID]
-
-        # Free the session so they can start another
-        self.streaming_status = STREAMING_STATUS["AVAILABLE"]
+    @callback
+    def _async_set_streaming_available(self, session_id):
+        """Free the session so they can start another."""
         if session_id in self.sessions:
             del self.sessions[session_id]
-
+        self.streaming_status = STREAMING_STATUS["AVAILABLE"]
         self.get_service(SERV_CAMERA_RTP_STREAM_MANAGEMENT).get_characteristic(
             CHAR_STREAMING_STRATUS
         ).notify()
@@ -289,9 +289,7 @@ class Camera(HomeAccessory, PyhapCamera):
             _LOGGER.debug("No stream for session ID %s", session_id)
             return
 
-        if self._current_session:
-            self._current_session[FFMPEG_WATCHER]()
-            self._current_session = None
+        self._async_clean_session()
 
         _LOGGER.info("[%s] Stopping stream.", session_id)
         try:
