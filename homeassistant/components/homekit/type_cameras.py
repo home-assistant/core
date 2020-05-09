@@ -268,14 +268,14 @@ class Camera(HomeAccessory, PyhapCamera):
             return
 
         self._current_session[FFMPEG_WATCHER]()
+        self._current_session = None
+
         session_id = self._current_session[SESSION_ID]
 
         # Free the session so they can start another
         self.streaming_status = STREAMING_STATUS["AVAILABLE"]
         if session_id in self.sessions:
             del self.sessions[session_id]
-
-        self._current_session = None
 
         self.get_service(SERV_CAMERA_RTP_STREAM_MANAGEMENT).get_characteristic(
             CHAR_STREAMING_STRATUS
@@ -288,6 +288,10 @@ class Camera(HomeAccessory, PyhapCamera):
         if not stream:
             _LOGGER.debug("No stream for session ID %s", session_id)
             return
+
+        if self._current_session:
+            self._current_session[FFMPEG_WATCHER]()
+            self._current_session = None
 
         _LOGGER.info("[%s] Stopping stream.", session_id)
         try:
