@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .common import (
-    async_api_info_or_false,
+    async_api_info_or_none,
     create_data_manager,
     get_api,
     get_data_manager,
@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     config_entry.add_update_listener(async_options_updated)
 
     api = get_api(config_entry.options)
-    if await async_api_info_or_false(hass, api) is False:
+    if await async_api_info_or_none(hass, api) is None:
         raise ConfigEntryNotReady()
 
     data_manager = create_data_manager(hass, config_entry, api)

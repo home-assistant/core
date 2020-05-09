@@ -10,7 +10,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
-from .common import async_api_info_or_false, get_api
+from .common import async_api_info_or_none, get_api
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,8 +40,8 @@ async def async_handle_data_updated(
 ) -> dict:
     """Handle data being updated."""
     api = get_api(user_input)
-    data = await async_api_info_or_false(flow_handler.hass, api)
-    if data is False:
+    data = await async_api_info_or_none(flow_handler.hass, api)
+    if data is None:
         return flow_handler.async_abort(
             reason="cannot_connect",
             description_placeholders={CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]},

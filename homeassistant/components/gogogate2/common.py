@@ -1,7 +1,7 @@
 """Common code for GogoGate2 component."""
 from datetime import datetime, timedelta
 import logging
-from typing import Callable, NamedTuple, Optional, Union
+from typing import Callable, NamedTuple, Optional
 
 from gogogate2_api import GogoGate2Api, InfoResponse
 from gogogate2_api.common import Door, get_configured_doors
@@ -64,8 +64,8 @@ class DataManager:
 
     async def async_update(self) -> None:
         """Update data from the gogogate2 device."""
-        data = await async_api_info_or_false(self._hass, self._api)
-        if data is False:
+        data = await async_api_info_or_none(self._hass, self._api)
+        if data is None:
             self.async_update_door(None)
         else:
             for door in get_configured_doors(data):
@@ -118,9 +118,9 @@ def get_api(config_data: dict) -> GogoGate2Api:
     )
 
 
-async def async_api_info_or_false(
+async def async_api_info_or_none(
     hass: HomeAssistant, api: GogoGate2Api
-) -> Union[InfoResponse, bool]:
+) -> Optional[InfoResponse]:
     """Check if the device is accessible.
 
     Returns InfoResponse if accessible, False otherwise.
@@ -130,4 +130,4 @@ async def async_api_info_or_false(
 
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Failed to connect")
-        return False
+        return None
