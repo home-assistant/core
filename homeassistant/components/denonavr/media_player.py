@@ -60,7 +60,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     receiver = hass.data[DOMAIN][config_entry.entry_id]
     for receiver_zone in receiver.zones.values():
-        receiver_device_id = config_entry.data["receiver_id"]
+        receiver_device_id = config_entry.unique_id
         unique_id = f"{receiver_device_id}-{receiver_zone.zone}"
         entities.append(DenonDevice(receiver_zone, receiver_device_id, unique_id))
     _LOGGER.info(

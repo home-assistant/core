@@ -3,13 +3,14 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MAC, CONF_TIMEOUT
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .config_flow import (
-    CONF_RECEIVER_ID,
+    CONF_MANUFACTURER,
+    CONF_MODEL,
     CONF_SHOW_ALL_SOURCES,
+    CONF_TYPE,
     CONF_ZONE2,
     CONF_ZONE3,
     DOMAIN,
@@ -59,8 +60,7 @@ async def async_setup_entry(
         entry.data[CONF_ZONE2],
         entry.data[CONF_ZONE3],
     )
-    if not await connect_denonavr.async_connect_receiver():
-        raise ConfigEntryNotReady
+    await connect_denonavr.async_connect_receiver()
     receiver = connect_denonavr.receiver
 
     hass.data[DOMAIN][entry.entry_id] = receiver
@@ -69,10 +69,10 @@ async def async_setup_entry(
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, entry.data[CONF_MAC])},
-        identifiers={(DOMAIN, entry.data[CONF_RECEIVER_ID])},
-        manufacturer=receiver.manufacturer,
-        name=receiver.name,
-        model=f"{receiver.model_name}-{receiver.receiver_type}",
+        identifiers={(DOMAIN, entry.unique_id)},
+        manufacturer=entry.data[CONF_MANUFACTURER],
+        name=entry.title,
+        model=f"{entry.data[CONF_MODEL]}-{entry.data[CONF_TYPE]}",
     )
 
     hass.async_create_task(

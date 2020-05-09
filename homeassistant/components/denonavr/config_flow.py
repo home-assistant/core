@@ -22,7 +22,9 @@ SUPPORTED_MANUFACTURERS = ["Denon", "DENON", "Marantz"]
 CONF_SHOW_ALL_SOURCES = "show_all_sources"
 CONF_ZONE2 = "zone2"
 CONF_ZONE3 = "zone3"
-CONF_RECEIVER_ID = "receiver_id"
+CONF_TYPE = "type"
+CONF_MODEL = "model"
+CONF_MANUFACTURER = "manufacturer"
 
 DEFAULT_SHOW_SOURCES = False
 DEFAULT_TIMEOUT = 2
@@ -162,7 +164,9 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_SHOW_ALL_SOURCES: self.show_all_sources,
                 CONF_ZONE2: self.zone2,
                 CONF_ZONE3: self.zone3,
-                CONF_RECEIVER_ID: unique_id,
+                CONF_TYPE: receiver.receiver_type,
+                CONF_MODEL: self.model_name,
+                CONF_MANUFACTURER: receiver.manufacturer,
             },
         )
 

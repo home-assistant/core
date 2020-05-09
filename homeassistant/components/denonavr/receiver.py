@@ -33,13 +33,23 @@ class ConnectDenonAVR:
         if not await self._hass.async_add_executor_job(self.init_receiver_class):
             return False
 
+        if (
+            self._receiver.manufacturer is None
+            or self._receiver.name is None
+            or self._receiver.model_name is None
+            or self._receiver.serial_number is None
+            or self._receiver.receiver_type is None
+        ):
+            return False
+
         _LOGGER.debug(
-            "%s receiver %s at host %s connected, model %s, serial %s",
+            "%s receiver %s at host %s connected, model %s, serial %s, type %s",
             self._receiver.manufacturer,
             self._receiver.name,
             self._receiver.host,
             self._receiver.model_name,
             self._receiver.serial_number,
+            self._receiver.receiver_type,
         )
 
         return True
