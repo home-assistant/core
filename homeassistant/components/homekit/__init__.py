@@ -88,6 +88,8 @@ STATUS_RUNNING = 1
 STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
+PLATFORMS = ["sensor"]
+
 
 def _has_all_unique_names_and_ports(bridges):
     """Validate that each homekit bridge configured has a unique name."""
@@ -234,7 +236,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         safe_mode,
         advertise_ip,
         interface_choice,
-        entry.entry_id,
+        entry,
     )
     await hass.async_add_executor_job(homekit.setup)
 
@@ -271,7 +273,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     homekit = hass.data[DOMAIN][entry.entry_id][HOMEKIT]
 
     if homekit.status == STATUS_RUNNING:
-        await homekit.async_stop()
+        unload_ok = await homekit.async_stop()
 
     for _ in range(0, SHUTDOWN_TIMEOUT):
         if not await hass.async_add_executor_job(
@@ -280,9 +282,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             _LOGGER.info("Waiting for the HomeKit server to shutdown.")
             await asyncio.sleep(1)
 
-    hass.data[DOMAIN].pop(entry.entry_id)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
 
-    return True
+    return unload_ok
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -389,7 +392,7 @@ class HomeKit:
         safe_mode,
         advertise_ip=None,
         interface_choice=None,
-        entry_id=None,
+        config_entry=None,
     ):
         """Initialize a HomeKit object."""
         self.hass = hass
@@ -401,7 +404,8 @@ class HomeKit:
         self._safe_mode = safe_mode
         self._advertise_ip = advertise_ip
         self._interface_choice = interface_choice
-        self._entry_id = entry_id
+        self._config_entry = config_entry
+        self._entry_id = config_entry.entry_id
         self.status = STATUS_READY
 
         self.bridge = None
@@ -513,11 +517,19 @@ class HomeKit:
         await self.hass.async_add_executor_job(self._start, bridged_states)
         await self._async_register_bridge()
 
+        for component in PLATFORMS:
+            self.hass.async_create_task(
+                self.hass.config_entries.async_forward_entry_setup(
+                    self._config_entry, component
+                )
+            )
+
     async def _async_register_bridge(self):
         """Register the bridge as a device so homekit_controller and exclude it from discovery."""
         registry = await device_registry.async_get_registry(self.hass)
         registry.async_get_or_create(
             config_entry_id=self._entry_id,
+            identifiers={(DOMAIN, self.driver.state.mac)},
             connections={
                 (device_registry.CONNECTION_NETWORK_MAC, self.driver.state.mac)
             },
@@ -565,6 +577,16 @@ class HomeKit:
         self.status = STATUS_STOPPED
         _LOGGER.debug("Driver stop for %s", self._name)
         self.hass.add_job(self.driver.stop)
+        return all(
+            await asyncio.gather(
+                *[
+                    self.hass.config_entries.async_forward_entry_unload(
+                        self._config_entry, component
+                    )
+                    for component in PLATFORMS
+                ]
+            )
+        )
 
     @callback
     def _async_configure_linked_battery_sensors(self, ent_reg, device_lookup, state):

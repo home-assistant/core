@@ -246,6 +246,7 @@ class HomeAccessory(Accessory):
         self.config = config or {}
         self.entity_id = entity_id
         self.hass = hass
+        self.name = name
         self.debounce = {}
         self._char_battery = None
         self._char_charging = None
