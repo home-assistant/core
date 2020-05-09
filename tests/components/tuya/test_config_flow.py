@@ -1,6 +1,6 @@
 """Tests for the Tuya config flow."""
-from tuyaha.tuyaapi import TuyaAPIException, TuyaNetException
 import pytest
+from tuyaha.tuyaapi import TuyaAPIException, TuyaNetException
 
 from homeassistant import data_entry_flow
 from homeassistant.components.tuya import config_flow

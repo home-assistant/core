@@ -1,5 +1,6 @@
 """Config flow for Tuya."""
 import logging
+
 from tuyaha import TuyaApi
 from tuyaha.tuyaapi import TuyaAPIException, TuyaNetException, TuyaServerException
 import voluptuous as vol
