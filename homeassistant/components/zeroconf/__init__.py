@@ -56,7 +56,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
-    if config.get(CONF_DEFAULT_INTERFACE):
+    if DOMAIN in config and config[DOMAIN].get(CONF_DEFAULT_INTERFACE):
         zeroconf = Zeroconf(interfaces=InterfaceChoice.Default)
     else:
         zeroconf = Zeroconf()
