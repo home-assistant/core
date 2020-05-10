@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "name": "Name",
+          "api_key": "API key (Optional)",
+          "ssl": "Use SSL",
+          "verify_ssl": "Verify SSL certificate"
+        }
+      }
+    },
+    "error": {
+      "connection": "Connection failed",
+      "duplicated_name": "Name already existed"
+    },
+    "abort": {
+      "already_configured": "The Pi-hole server is already configured"
+    }
+  }
+}
