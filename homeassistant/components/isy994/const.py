@@ -271,6 +271,18 @@ NODE_FILTERS = {
     },
 }
 
+UOM_ISYV4_DEGREES = "degrees"
+UOM_ISYV4_NONE = "n/a"
+
+UOM_ISY_CELSIUS = 1
+UOM_ISY_FAHRENHEIT = 2
+
+UOM_DOUBLE_TEMP = "101"
+UOM_HVAC_ACTIONS = "66"
+UOM_HVAC_MODE_GENERIC = "67"
+UOM_HVAC_MODE_INSTEON = "98"
+UOM_FAN_MODES = "99"
+
 UOM_FRIENDLY_NAME = {
     "1": "A",
     "3": f"btu/{TIME_HOURS}",
@@ -408,7 +420,7 @@ UOM_TO_STATES = {
         26: "hardware failure",
         27: "factory reset",
     },
-    "66": {  # Thermostat Heat/Cool State
+    UOM_HVAC_ACTIONS: {  # Thermostat Heat/Cool State
         0: CURRENT_HVAC_IDLE,
         1: CURRENT_HVAC_HEAT,
         2: CURRENT_HVAC_COOL,
@@ -423,7 +435,7 @@ UOM_TO_STATES = {
         10: CURRENT_HVAC_HEAT,
         11: CURRENT_HVAC_HEAT,
     },
-    "67": {  # Thermostat Mode
+    UOM_HVAC_MODE_GENERIC: {  # Thermostat Mode
         0: HVAC_MODE_OFF,
         1: HVAC_MODE_HEAT,
         2: HVAC_MODE_COOL,
@@ -532,7 +544,7 @@ UOM_TO_STATES = {
             b: f"{b} %" for a, b in enumerate(list(range(1, 100)))
         },  # 1-99 are percentage open
     },
-    "98": {  # Insteon Thermostat Mode
+    UOM_HVAC_MODE_INSTEON: {  # Insteon Thermostat Mode
         0: HVAC_MODE_OFF,
         1: HVAC_MODE_HEAT,
         2: HVAC_MODE_COOL,
@@ -542,7 +554,7 @@ UOM_TO_STATES = {
         6: HVAC_MODE_AUTO,  # Program Heat-Set @ Local Device Only
         7: HVAC_MODE_AUTO,  # Program Cool-Set @ Local Device Only
     },
-    "99": {7: FAN_ON, 8: FAN_AUTO},  # Insteon Thermostat Fan Mode
+    UOM_FAN_MODES: {7: FAN_ON, 8: FAN_AUTO},  # Insteon Thermostat Fan Mode
     "115": {  # Most recent On style action taken for lamp control
         0: "on",
         1: "off",
