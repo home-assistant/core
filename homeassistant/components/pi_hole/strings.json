@@ -3,20 +3,20 @@
     "step": {
       "user": {
         "data": {
-          "host": "Host",
-          "port": "Port",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
           "name": "Name",
-          "api_key": "API key (Optional)",
+          "api_key": "[%key:common::config_flow::data::api_key%] (Optional)",
           "ssl": "Use SSL",
           "verify_ssl": "Verify SSL certificate"
         }
       }
     },
     "error": {
-      "connection": "Connection failed"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "The Pi-hole server is already configured",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "duplicated_name": "Name already existed"
     }
   }

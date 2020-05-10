@@ -88,8 +88,8 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug("Connection failed: %s", ex)
                 if is_import:
                     _LOGGER.error("Failed to import: %s", ex)
-                    return self.async_abort(reason="connection")
-                errors["base"] = "connection"
+                    return self.async_abort(reason="cannot_connect")
+                errors["base"] = "cannot_connect"
 
         user_input = user_input or {}
         return self.async_show_form(

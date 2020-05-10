@@ -73,7 +73,7 @@ async def test_flow_import_invalid(hass, caplog):
             DOMAIN, context={"source": SOURCE_IMPORT}, data=CONF_DATA
         )
         assert result["type"] == RESULT_TYPE_ABORT
-        assert result["reason"] == "connection"
+        assert result["reason"] == "cannot_connect"
         assert len([x for x in caplog.records if x.levelno == logging.ERROR]) == 1
 
 
@@ -122,4 +122,4 @@ async def test_flow_user_invalid(hass):
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "connection"}
+        assert result["errors"] == {"base": "cannot_connect"}
