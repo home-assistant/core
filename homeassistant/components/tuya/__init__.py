@@ -51,16 +51,19 @@ TUYA_TYPE_TO_HA = {
 TUYA_TRACKER = "tuya_tracker"
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_COUNTRYCODE): cv.string,
-                vol.Optional(CONF_PLATFORM, default="tuya"): cv.string,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_COUNTRYCODE): cv.string,
+                    vol.Optional(CONF_PLATFORM, default="tuya"): cv.string,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -261,6 +264,6 @@ class TuyaDevice(Entity):
                 await self.async_remove()
 
     @callback
-    async def _update_callback(self):
+    def _update_callback(self):
         """Call update method."""
         self.async_schedule_update_ha_state(True)
