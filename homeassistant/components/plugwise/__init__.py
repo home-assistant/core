@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     except Smile.PlugwiseError:
         _LOGGER.error("Error while communicating to device")
-        raise PlatformNotReady
+        raise ConfigEntryNotReady
 
     except asyncio.TimeoutError:
         _LOGGER.error("Timeout while connecting to Smile")
