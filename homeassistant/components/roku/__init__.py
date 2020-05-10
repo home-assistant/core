@@ -12,12 +12,15 @@ from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_NAME, CONF_HOST
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.dt import utcnow
 
 from .const import (
     ATTR_IDENTIFIERS,
@@ -100,18 +103,51 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize global Roku data updater."""
         self.roku = Roku(host=host, session=async_get_clientsession(hass))
 
+        self.full_update_interval = timedelta(minutes=15)
+        self.full_update_required = True
+        self._unsub_full_update: Optional[CALLBACK_TYPE] = None
+
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL,
         )
 
     async def _async_update_data(self) -> Device:
         """Fetch data from Roku."""
-        full_update = self.data is None
+        full_update = self.full_update_required
 
         try:
-            return await self.roku.update(full_update=full_update)
+            data = await self.roku.update(full_update=full_update)
+
+            if full_update:
+                self.full_update_required = False
+                self._schedule_full_update()
+
+            return data
         except RokuError as error:
             raise UpdateFailed(f"Invalid response from API: {error}")
+
+    @callback
+    def _schedule_full_update(self) -> None:
+        """Schedule a full update."""
+        if self._unsub_full_update:
+            self._unsub_full_update()
+            self._unsub_full_update = None
+
+        # We _floor_ utcnow to create a schedule on a rounded second,
+        # minimizing the time between the point and the real activation.
+        # That way we obtain a constant update frequency,
+        # as long as the update process takes less than a second
+        self._unsub_full_update = async_track_point_in_utc_time(
+            self.hass,
+            self._handle_full_update_interval,
+            utcnow().replace(microsecond=0) + self.full_update_interval,
+        )
+
+    async def _handle_full_update_interval(self, _now: datetime) -> None:
+        """Handle a full update interval occurrence."""
+        self._unsub_full_update = None
+        self.full_update_required = True
+        await self.async_request_refresh()
 
 
 class RokuEntity(Entity):
