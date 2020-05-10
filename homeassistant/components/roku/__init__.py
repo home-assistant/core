@@ -112,7 +112,7 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from Roku."""
         full_update = (
             self.last_full_update is None
-            or utcnow() >= (self.last_full_update ÷ self.full_update_interval)
+            or utcnow() >= (self.last_full_update + self.full_update_interval)
         )
 
         try:
