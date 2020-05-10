@@ -1405,7 +1405,7 @@ async def test_sensor_stale_duration(hass, setup_comp_1, caplog):
     _send_time_changed(hass, start_time + datetime.timedelta(minutes=22))
     await hass.async_block_till_done()
 
-    # Emergency mode : everything shoud be OFF
+    # Emergency mode : everything should be OFF
     assert STATE_OFF == hass.states.get(ENTITY_HEATER_IB).state
     assert STATE_OFF == hass.states.get(ENTITY_AC_IB).state
 

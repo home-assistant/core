@@ -656,7 +656,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
 
     async def _activate_emergency_stop(self):
         """Send an emergency OFF order to HVAC devices"""
-        _LOGGER.debug("Emergency OFF oder send to devices")
+        _LOGGER.debug("Emergency OFF order send to devices")
         self._emergency_stop = True
         if self._hvac_mode == HVAC_MODE_HEAT:
             await self._async_heater_turn_off(True)
