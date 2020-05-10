@@ -62,3 +62,25 @@ async def test_flow_entry_already_exists(hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+
+
+async def test_connection_error(hass):
+    """Test connection error."""
+
+    test_data = {
+        CONF_USERNAME: "user",
+        CONF_PASSWORD: "pswd",
+    }
+
+    first_entry = MockConfigEntry(
+        domain="mill", data=test_data, unique_id=test_data[CONF_USERNAME],
+    )
+    first_entry.add_to_hass(hass)
+
+    with patch("mill.Mill.connect", return_value=False):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=test_data
+        )
+
+    assert result["type"] == "form"
+    assert result["errors"]["connection_error"] == "connection_error"
