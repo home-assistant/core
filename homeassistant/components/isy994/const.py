@@ -98,6 +98,7 @@ MANUFACTURER = "Universal Devices, Inc"
 
 CONF_IGNORE_STRING = "ignore_string"
 CONF_SENSOR_STRING = "sensor_string"
+CONF_VAR_SENSOR_STRING = "variable_sensor_string"
 CONF_TLS_VER = "tls"
 CONF_RESTORE_LIGHT_STATE = "restore_light_state"
 
@@ -106,6 +107,7 @@ DEFAULT_SENSOR_STRING = "sensor"
 DEFAULT_RESTORE_LIGHT_STATE = False
 DEFAULT_TLS_VERSION = 1.1
 DEFAULT_PROGRAM_STRING = "HA."
+DEFAULT_VAR_SENSOR_STRING = "HA."
 
 KEY_ACTIONS = "actions"
 KEY_STATUS = "status"
@@ -122,6 +124,7 @@ ISY_GROUP_PLATFORM = SWITCH
 ISY994_ISY = "isy"
 ISY994_NODES = "isy994_nodes"
 ISY994_PROGRAMS = "isy994_programs"
+ISY994_VARIABLES = "isy994_variables"
 
 FILTER_UOM = "uom"
 FILTER_STATES = "states"

@@ -7,6 +7,7 @@ from homeassistant.components.isy994.const import (
     CONF_RESTORE_LIGHT_STATE,
     CONF_SENSOR_STRING,
     CONF_TLS_VER,
+    CONF_VAR_SENSOR_STRING,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -25,6 +26,7 @@ MOCK_TLS_VERSION = 1.2
 MOCK_IGNORE_STRING = "{IGNOREME}"
 MOCK_RESTORE_LIGHT_STATE = True
 MOCK_SENSOR_STRING = "IMASENSOR"
+MOCK_VARIABLE_SENSOR_STRING = "HomeAssistant."
 
 MOCK_USER_INPUT = {
     "host": f"http://{MOCK_HOSTNAME}",
@@ -45,6 +47,7 @@ MOCK_IMPORT_FULL_CONFIG = {
     CONF_RESTORE_LIGHT_STATE: MOCK_RESTORE_LIGHT_STATE,
     CONF_SENSOR_STRING: MOCK_SENSOR_STRING,
     CONF_TLS_VER: MOCK_TLS_VERSION,
+    CONF_VAR_SENSOR_STRING: MOCK_VARIABLE_SENSOR_STRING,
 }
 
 MOCK_DEVICE_NAME = "Name of the device"
@@ -203,4 +206,5 @@ async def test_import_flow_all_fields(hass: HomeAssistantType) -> None:
     assert result["data"][CONF_IGNORE_STRING] == MOCK_IGNORE_STRING
     assert result["data"][CONF_RESTORE_LIGHT_STATE] == MOCK_RESTORE_LIGHT_STATE
     assert result["data"][CONF_SENSOR_STRING] == MOCK_SENSOR_STRING
+    assert result["data"][CONF_VAR_SENSOR_STRING] == MOCK_VARIABLE_SENSOR_STRING
     assert result["data"][CONF_TLS_VER] == MOCK_TLS_VERSION
