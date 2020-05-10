@@ -198,17 +198,6 @@ async def async_unload_entry(hass, entry):
     return unload_ok
 
 
-async def cleanup_device_registry(hass, device_id):
-    """Remove device registry entry if there are no remaining entities."""
-
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    if device_id and not hass.helpers.entity_registry.async_entries_for_device(
-        entity_registry, device_id
-    ):
-        device_registry.async_remove_device(device_id)
-
-
 class TuyaDevice(Entity):
     """Tuya base device."""
 
@@ -267,9 +256,7 @@ class TuyaDevice(Entity):
                 await self.hass.helpers.entity_registry.async_get_registry()
             )
             if entity_registry.async_is_registered(self.entity_id):
-                entity_entry = entity_registry.async_get(self.entity_id)
                 entity_registry.async_remove(self.entity_id)
-                await cleanup_device_registry(self.hass, entity_entry.device_id)
             else:
                 await self.async_remove()
 
