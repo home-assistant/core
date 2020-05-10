@@ -253,16 +253,6 @@ class Integration:
         return cast(str, self.manifest.get("quality_scale"))
 
     @property
-    def logo(self) -> Optional[str]:
-        """Return Integration Logo."""
-        return cast(str, self.manifest.get("logo"))
-
-    @property
-    def icon(self) -> Optional[str]:
-        """Return Integration Icon."""
-        return cast(str, self.manifest.get("icon"))
-
-    @property
     def is_built_in(self) -> bool:
         """Test if package is a built-in integration."""
         return self.pkg_path.startswith(PACKAGE_BUILTIN)

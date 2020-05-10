@@ -61,6 +61,14 @@ class EDL21:
         # D=17: Time integral 7
         # E=0: Total
         "1-0:1.17.0*255": "Last signed positive active energy total",
+        # C=2: Active power -
+        # D=8: Time integral 1
+        # E=0: Total
+        "1-0:2.8.0*255": "Negative active energy total",
+        # E=1: Rate 1
+        "1-0:2.8.1*255": "Negative active energy in tariff T1",
+        # E=2: Rate 2
+        "1-0:2.8.2*255": "Negative active energy in tariff T2",
         # C=15: Active power absolute
         # D=7: Instantaneous value
         # E=0: Total

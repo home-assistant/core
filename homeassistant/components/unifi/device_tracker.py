@@ -4,6 +4,9 @@ import logging
 
 from aiounifi.api import SOURCE_DATA, SOURCE_EVENT
 from aiounifi.events import (
+    ACCESS_POINT_UPGRADED,
+    GATEWAY_UPGRADED,
+    SWITCH_UPGRADED,
     WIRED_CLIENT_CONNECTED,
     WIRELESS_CLIENT_CONNECTED,
     WIRELESS_CLIENT_ROAM,
@@ -49,6 +52,8 @@ CLIENT_STATIC_ATTRIBUTES = [
     "name",
     "oui",
 ]
+
+DEVICE_UPGRADED = (ACCESS_POINT_UPGRADED, GATEWAY_UPGRADED, SWITCH_UPGRADED)
 
 WIRED_CONNECTION = (WIRED_CLIENT_CONNECTED,)
 WIRELESS_CONNECTION = (
@@ -299,6 +304,13 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
                 dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 10),
             )
 
+        elif (
+            self.device.last_updated == SOURCE_EVENT
+            and self.device.event.event in DEVICE_UPGRADED
+        ):
+            self.hass.async_create_task(self.async_update_device_registry())
+            return
+
         super().async_update_callback()
 
     @property
@@ -340,6 +352,14 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
             info["name"] = self.device.name
 
         return info
+
+    async def async_update_device_registry(self) -> None:
+        """Update device registry."""
+        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+
+        device_registry.async_get_or_create(
+            config_entry_id=self.controller.config_entry.entry_id, **self.device_info
+        )
 
     @property
     def device_state_attributes(self):
