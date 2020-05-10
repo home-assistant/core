@@ -18,6 +18,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_NAME,
     CONF_ZONE,
     SERVICE_TURN_ON,
@@ -31,6 +32,7 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from .const import (
     DOMAIN,
     DOMAIN_DATA_ENTRIES,
+    EVENT_TURN_ON,
     SIGNAL_CLIENT_DATA,
     SIGNAL_CLIENT_STARTED,
     SIGNAL_CLIENT_STOPPED,
@@ -78,6 +80,7 @@ class ArcamFmj(MediaPlayerEntity):
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_STEP
             | SUPPORT_TURN_OFF
+            | SUPPORT_TURN_ON
         )
         if state.zn == 1:
             self._support |= SUPPORT_SELECT_SOUND_MODE
@@ -124,10 +127,7 @@ class ArcamFmj(MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        support = self._support
-        if self._state.get_power() is not None or self._turn_on:
-            support |= SUPPORT_TURN_ON
-        return support
+        return self._support
 
     async def async_added_to_hass(self):
         """Once registered, add listener for events."""
@@ -230,7 +230,8 @@ class ArcamFmj(MediaPlayerEntity):
                 validate_config=False,
             )
         else:
-            _LOGGER.error("Unable to turn on")
+            _LOGGER.debug("Firing event to turn on device")
+            self.hass.bus.async_fire(EVENT_TURN_ON, {ATTR_ENTITY_ID: self.entity_id})
 
     async def async_turn_off(self):
         """Turn the media player off."""
