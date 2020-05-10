@@ -452,6 +452,7 @@ omit =
     homeassistant/components/miflora/sensor.py
     homeassistant/components/mikrotik/hub.py
     homeassistant/components/mikrotik/device_tracker.py
+    homeassistant/components/mill/__init__.py
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/const.py
     homeassistant/components/minecraft_server/__init__.py
