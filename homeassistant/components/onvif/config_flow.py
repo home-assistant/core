@@ -1,16 +1,13 @@
 """Config flow for ONVIF."""
-import os
 from pprint import pformat
 from typing import List
 from urllib.parse import urlparse
 
-import onvif
-from onvif import ONVIFCamera, exceptions
+from onvif.exceptions import ONVIFError
 import voluptuous as vol
 from wsdiscovery.discovery import ThreadedWSDiscovery as WSDiscovery
 from wsdiscovery.scope import Scope
 from wsdiscovery.service import Service
-from zeep.asyncio import AsyncTransport
 from zeep.exceptions import Fault
 
 from homeassistant import config_entries
@@ -23,12 +20,10 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 # pylint: disable=unused-import
 from .const import (
     CONF_DEVICE_ID,
-    CONF_PROFILE,
     CONF_RTSP_TRANSPORT,
     DEFAULT_ARGUMENTS,
     DEFAULT_PORT,
@@ -36,6 +31,7 @@ from .const import (
     LOGGER,
     RTSP_TRANS_PROTOCOLS,
 )
+from .device import get_device
 
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
@@ -219,23 +215,21 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             )
 
-            if not self.onvif_config.get(CONF_PROFILE):
-                self.onvif_config[CONF_PROFILE] = []
-                media_service = device.create_media_service()
-                profiles = await media_service.GetProfiles()
-                LOGGER.debug("Media Profiles %s", pformat(profiles))
-                for key, profile in enumerate(profiles):
-                    if profile.VideoEncoderConfiguration.Encoding != "H264":
-                        continue
-                    self.onvif_config[CONF_PROFILE].append(key)
+            # Verify there is an H264 profile
+            media_service = device.create_media_service()
+            profiles = await media_service.GetProfiles()
+            h264 = any(
+                profile.VideoEncoderConfiguration.Encoding == "H264"
+                for profile in profiles
+            )
 
-            if not self.onvif_config[CONF_PROFILE]:
+            if not h264:
                 return self.async_abort(reason="no_h264")
 
             title = f"{self.onvif_config[CONF_NAME]} - {self.device_id}"
             return self.async_create_entry(title=title, data=self.onvif_config)
 
-        except exceptions.ONVIFError as err:
+        except ONVIFError as err:
             LOGGER.error(
                 "Couldn't setup ONVIF device '%s'. Error: %s",
                 self.onvif_config[CONF_NAME],
@@ -292,17 +286,3 @@ class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
                 }
             ),
         )
-
-
-def get_device(hass, host, port, username, password) -> ONVIFCamera:
-    """Get ONVIFCamera instance."""
-    session = async_get_clientsession(hass)
-    transport = AsyncTransport(None, session=session)
-    return ONVIFCamera(
-        host,
-        port,
-        username,
-        password,
-        f"{os.path.dirname(onvif.__file__)}/wsdl/",
-        transport=transport,
-    )

@@ -20,29 +20,32 @@ _LOGGER = logging.getLogger(__name__)
 
 @bind_hass
 async def async_migrator(
-    hass,
-    old_path,
-    store,
-    *,
-    old_conf_load_func=json_util.load_json,
-    old_conf_migrate_func=None,
+    hass, old_path, store, *, old_conf_load_func=None, old_conf_migrate_func=None,
 ):
     """Migrate old data to a store and then load data.
 
     async def old_conf_migrate_func(old_data)
     """
+    store_data = await store.async_load()
+
+    # If we already have store data we have already migrated in the past.
+    if store_data is not None:
+        return store_data
 
     def load_old_config():
         """Load old config."""
         if not os.path.isfile(old_path):
             return None
 
-        return old_conf_load_func(old_path)
+        if old_conf_load_func is not None:
+            return old_conf_load_func(old_path)
+
+        return json_util.load_json(old_path)
 
     config = await hass.async_add_executor_job(load_old_config)
 
     if config is None:
-        return await store.async_load()
+        return None
 
     if old_conf_migrate_func is not None:
         config = await old_conf_migrate_func(config)

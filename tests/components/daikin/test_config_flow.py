@@ -9,7 +9,7 @@ from homeassistant.components.daikin import config_flow
 from homeassistant.components.daikin.const import KEY_IP, KEY_MAC
 from homeassistant.const import CONF_HOST
 
-from tests.async_mock import patch
+from tests.async_mock import PropertyMock, patch
 from tests.common import MockConfigEntry
 
 MAC = "AABBCCDDEEFF"
@@ -27,13 +27,13 @@ def init_config_flow(hass):
 def mock_daikin():
     """Mock pydaikin."""
 
-    async def mock_daikin_init():
+    async def mock_daikin_factory(*args, **kwargs):
         """Mock the init function in pydaikin."""
-        pass
+        return Appliance
 
     with patch("homeassistant.components.daikin.config_flow.Appliance") as Appliance:
-        Appliance().values.get.return_value = "AABBCCDDEEFF"
-        Appliance().init = mock_daikin_init
+        type(Appliance).mac = PropertyMock(return_value="AABBCCDDEEFF")
+        Appliance.factory.side_effect = mock_daikin_factory
         yield Appliance
 
 
@@ -95,7 +95,7 @@ async def test_discovery(hass, mock_daikin):
 async def test_device_abort(hass, mock_daikin, s_effect, reason):
     """Test device abort."""
     flow = init_config_flow(hass)
-    mock_daikin.side_effect = s_effect
+    mock_daikin.factory.side_effect = s_effect
 
     result = await flow.async_step_user({CONF_HOST: HOST})
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
