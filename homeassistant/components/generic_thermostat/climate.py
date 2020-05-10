@@ -69,45 +69,40 @@ CONF_HYSTERESIS_TOLERANCE_OFF = "hysteresis_tolerance_off"
 CONF_HVAC_MODE_MIN_TEMP = "min_temp"
 CONF_HVAC_MODE_MAX_TEMP = "max_temp"
 CONF_HVAC_MODE_INIT_TEMP = "initial_target_temp"
-CONF_ENABLED_PRESETS = "enabled_presets"
 CONF_AWAY_TEMP = "away_temp"
 CONF_ECO_SHIFT = "eco_shift"
 CONF_COMFORT_SHIFT = "comfort_shift"
 CONF_MIN_CYCLE_DURATION = "min_cycle_duration"
 CONF_ENABLE_OLD_STATE = "restore_from_old_state"
+CONF_STALE_DURATION = "sensor_stale_duration"
 
 SUPPORTED_HVAC_MODES = [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_OFF]
 SUPPORTED_PRESET_MODES = [PRESET_NONE, PRESET_AWAY, PRESET_ECO, PRESET_COMFORT]
 
 
-def check_enabled_if_initial_preset(*keys: str) -> Callable:
-    """If the initial_preset_key is set, then the enabled preset must be set."""
-
-    def validate(obj: Dict) -> Dict:
-        """Check this condition."""
-        if CONF_INITIAL_PRESET_MODE in obj and CONF_ENABLED_PRESETS not in obj:
-            raise vol.Invalid(
-                "There is no enabled presets and yet an initial_preset has been set {obj[CONF_INITIAL_PRESET_MODE]}"
-            )
-        return obj
-
-    return validate
-
-
 def validate_initial_preset_mode(*keys: str) -> Callable:
-    """If an initial preset mode has been set, check if this mode has been enabled."""
+    """If an initial preset mode has been set, check if the values are set in both modes"""
+
+    def validate_by_mode(obj: Dict, preset: str, config_preset: str):
+        """Helper to validate mode by mode."""
+        if HVAC_MODE_HEAT in obj.keys() and config_preset not in obj[HVAC_MODE_HEAT]:
+            raise vol.Invalid(
+                "The preset {preset} has been set as initial preset but the {config_preset} is not present on {HVAC_MODE_HEAT} mode"
+            )
+        if HVAC_MODE_COOL in obj.keys() and config_preset not in obj[HVAC_MODE_COOL]:
+            raise vol.Invalid(
+                "The preset {preset} has been set as initial preset but the {config_preset} is not present on {HVAC_MODE_COOL} mode"
+            )
 
     def validate(obj: Dict) -> Dict:
         """Check this condition."""
-        if (
-            CONF_INITIAL_PRESET_MODE in obj
-            and CONF_ENABLED_PRESETS in obj
-            and obj[CONF_INITIAL_PRESET_MODE] != "none"
-            and obj[CONF_INITIAL_PRESET_MODE] not in obj[CONF_ENABLED_PRESETS]
-        ):
-            raise vol.Invalid(
-                "This preset is not enabled and yet it has been set has an initial_preset : {obj[CONF_INITIAL_PRESET_MODE]}"
-            )
+        if CONF_INITIAL_PRESET_MODE in obj and obj[CONF_INITIAL_PRESET_MODE] != "none":
+            if obj[CONF_INITIAL_PRESET_MODE] == PRESET_AWAY:
+                validate_by_mode(obj, PRESET_AWAY, CONF_AWAY_TEMP)
+            elif obj[CONF_INITIAL_PRESET_MODE] == PRESET_COMFORT:
+                validate_by_mode(obj, PRESET_COMFORT, CONF_COMFORT_SHIFT)
+            elif obj[CONF_INITIAL_PRESET_MODE] == PRESET_ECO:
+                validate_by_mode(obj, PRESET_ECO, CONF_ECO_SHIFT)
         return obj
 
     return validate
@@ -131,92 +126,37 @@ def validate_initial_hvac_mode(*keys: str) -> Callable:
     return validate
 
 
-def check_if_presets_are_configured(*keys: str) -> Callable:
-    """If a preset has been enabled, check if it has been configured."""
+def check_presets_in_both_modes(*keys: str) -> Callable:
+    """If one preset is set on one mode, then this preset is enabled and check it on the other modes."""
 
-    def _validate_by_mode(obj: Dict, mode: str) -> Dict:
-        """Validate the condition for one mode."""
-
-        if PRESET_AWAY in obj[CONF_ENABLED_PRESETS] and CONF_AWAY_TEMP not in obj[mode]:
+    def validate_by_preset(obj: Dict, conf: str):
+        """Check this condition."""
+        if conf in obj[HVAC_MODE_HEAT] and conf not in obj[HVAC_MODE_COOL]:
             raise vol.Invalid(
-                "For hvac mode {mode}, PRESET_AWAY is enabled but {CONF_AWAY_TEMP} is not set"
+                "{preset} is set for {HVAC_MODE_HEAT} but not for {HVAC_MODE_COOL}"
             )
-
-        if PRESET_ECO in obj[CONF_ENABLED_PRESETS] and CONF_ECO_SHIFT not in obj[mode]:
+        if conf in obj[HVAC_MODE_COOL] and conf not in obj[HVAC_MODE_HEAT]:
             raise vol.Invalid(
-                "For hvac mode {mode}, PRESET_ECO is enabled but {CONF_ECO_SHIFT} is not set"
+                "{preset} is set for {HVAC_MODE_COOL} but not for {HVAC_MODE_HEAT}"
             )
-        if (
-            PRESET_COMFORT in obj[CONF_ENABLED_PRESETS]
-            and CONF_COMFORT_SHIFT not in obj[mode]
-        ):
-            raise vol.Invalid(
-                "For hvac mode {mode}, PRESET_COMFORT is enabled but {CONF_COMFORT_SHIFT} is not set"
-            )
-        return obj
+        return
 
     def validate(obj: Dict) -> Dict:
-        """Check this condition."""
-
-        if HVAC_MODE_HEAT in obj.keys() and CONF_ENABLED_PRESETS in obj:
-            return _validate_by_mode(obj, HVAC_MODE_HEAT)
-        if HVAC_MODE_COOL in obj.keys() and CONF_ENABLED_PRESETS in obj:
-            return _validate_by_mode(obj, HVAC_MODE_COOL)
-        return obj
-
-    return validate
-
-
-def check_if_presets_have_been_configured(*keys: str) -> Callable:
-    """Check if the preset are enabled when they are configured."""
-
-    def _validate_by_mode(obj: Dict, mode: str) -> Dict:
-        """Validate the condition for one mode."""
-
-        if CONF_AWAY_TEMP in obj[mode] and (
-            CONF_ENABLED_PRESETS not in obj
-            or PRESET_AWAY not in obj[CONF_ENABLED_PRESETS]
-        ):
-            raise vol.Invalid(
-                "For hvac mode {mode}, PRESET_AWAY is configured but it's not enabled"
-            )
-
-        if CONF_COMFORT_SHIFT in obj[mode] and (
-            CONF_ENABLED_PRESETS not in obj
-            or PRESET_COMFORT not in obj[CONF_ENABLED_PRESETS]
-        ):
-            raise vol.Invalid(
-                "For hvac mode {mode}, PRESET_COMFORT is configured but it's not enabled"
-            )
-
-        if CONF_ECO_SHIFT in obj[mode] and (
-            CONF_ENABLED_PRESETS not in obj
-            or PRESET_ECO not in obj[CONF_ENABLED_PRESETS]
-        ):
-            raise vol.Invalid(
-                "For hvac mode {mode}, PRESET_ECO is configured but it's not enabled"
-            )
+        if HVAC_MODE_HEAT in obj.keys() and HVAC_MODE_COOL in obj.keys():
+            validate_by_preset(obj, CONF_AWAY_TEMP)
+            validate_by_preset(obj, CONF_ECO_SHIFT)
+            validate_by_preset(obj, CONF_COMFORT_SHIFT)
 
         return obj
-
-    def validate(obj: Dict) -> Dict:
-        """Check this condition."""
-
-        if HVAC_MODE_HEAT in obj.keys():
-            return _validate_by_mode(obj, HVAC_MODE_HEAT)
-        if HVAC_MODE_COOL in obj.keys():
-            return _validate_by_mode(obj, HVAC_MODE_COOL)
 
     return validate
 
 
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(HVAC_MODE_HEAT, HVAC_MODE_COOL),
-    check_enabled_if_initial_preset(),
-    validate_initial_preset_mode(),
     validate_initial_hvac_mode(),
-    check_if_presets_are_configured(),
-    check_if_presets_have_been_configured(),
+    check_presets_in_both_modes(),
+    validate_initial_preset_mode(),
     PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_SENSOR): cv.entity_id,
@@ -270,10 +210,10 @@ PLATFORM_SCHEMA = vol.All(
                     vol.Optional(CONF_COMFORT_SHIFT): vol.Coerce(float),
                 }
             ),
-            vol.Optional(CONF_ENABLED_PRESETS, default=[]): vol.All(
-                cv.ensure_list, SUPPORTED_PRESET_MODES
-            ),
             vol.Optional(CONF_MIN_CYCLE_DURATION): vol.All(
+                cv.time_period, cv.positive_timedelta
+            ),
+            vol.Optional(CONF_STALE_DURATION): vol.All(
                 cv.time_period, cv.positive_timedelta
             ),
             vol.Optional(CONF_ENABLE_OLD_STATE, default=DEFAULT_OLD_STATE): cv.boolean,
@@ -292,8 +232,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     tolerance_on = config.get(CONF_HYSTERESIS_TOLERANCE_ON)
     tolerance_off = config.get(CONF_HYSTERESIS_TOLERANCE_OFF)
     keep_alive = config.get(CONF_KEEP_ALIVE)
-    enabled_presets = config.get(CONF_ENABLED_PRESETS)
     min_cycle_duration = config.get(CONF_MIN_CYCLE_DURATION)
+    sensor_stale_duration = config.get(CONF_STALE_DURATION)
     enable_old_state = config.get(CONF_ENABLE_OLD_STATE)
     heat_conf = config.get(HVAC_MODE_HEAT)
     cool_conf = config.get(HVAC_MODE_COOL)
@@ -316,12 +256,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 keep_alive,
                 heat_conf,
                 cool_conf,
-                enabled_presets,
                 enabled_hvac_modes,
                 initial_hvac_mode,
                 initial_preset_mode,
                 min_cycle_duration,
                 enable_old_state,
+                sensor_stale_duration,
             )
         ]
     )
@@ -340,19 +280,18 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         keep_alive,
         heat_conf,
         cool_conf,
-        enabled_presets,
         enabled_hvac_modes,
         initial_hvac_mode,
         initial_preset_mode,
         min_cycle_duration,
         enable_old_state,
+        sensor_stale_duration,
     ):
         """Initialize the thermostat."""
         self._name = name
         self._sensor_entity_id = sensor_entity_id
         self._hvac_mode = initial_hvac_mode
         self._preset_mode = initial_preset_mode
-        self._enabled_presets = enabled_presets
         self._enabled_hvac_mode = enabled_hvac_modes
         self._min_cycle_duration = min_cycle_duration
         self._enable_old_state = enable_old_state
@@ -360,6 +299,8 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         self._tolerance_off = tolerance_off
         self._unit = unit
         self._keep_alive = keep_alive
+        self._sensor_stale_duration = sensor_stale_duration
+        self._emergency_stop = False
 
         if self._is_heat_enabled:
             self._heat_conf = heat_conf
@@ -412,6 +353,13 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
                 self.hass, self._ac_entity_id, self._async_switch_device_changed
             )
 
+        if self._sensor_stale_duration:
+            async_track_time_interval(
+                self.hass,
+                self._async_check_sensor_not_responding,
+                self._sensor_stale_duration,
+            )
+
         if self._keep_alive:
             async_track_time_interval(self.hass, self._async_operate, self._keep_alive)
 
@@ -421,7 +369,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
             sensor_state = self.hass.states.get(self._sensor_entity_id)
             if sensor_state and sensor_state.state != STATE_UNKNOWN:
                 self._async_update_current_temp(sensor_state)
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
 
@@ -467,7 +415,6 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
                         self._target_temp_heat = old_temperature
 
         await self._async_operate()
-        await self.async_update_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set hvac mode."""
@@ -482,7 +429,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         await self._async_operate()
 
         # Ensure we update the current operation after changing the mode
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -493,7 +440,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
             hvac_mode = self._hvac_mode
         elif hvac_mode not in self.hvac_modes:
             _LOGGER.warning(
-                "Try to update temperature to %s for mode %s but this mode is not enabled. Skipping.",
+                "Try to update temperature to %s for mode %s but this mode is not enabled",
                 temperature,
                 hvac_mode,
             )
@@ -521,17 +468,30 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
             return
 
         await self._async_operate()
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def _async_sensor_temperature_changed(self, entity_id, old_state, new_state):
         """Handle temperature changes."""
         _LOGGER.debug("Sensor temperature updated to %s", new_state.state)
         if new_state.state is None or new_state.state == "None":
+            await self._activate_emergency_stop()
             return
 
         self._async_update_current_temp(new_state)
         await self._async_operate(sensor_changed=True)
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
+
+    async def _async_check_sensor_not_responding(self, now=None):
+        """Check if the sensor has emitted a value during the allowed stale period"""
+
+        sensor_state = self.hass.states.get(self._sensor_entity_id)
+
+        if sensor_state.last_updated < now - self._sensor_stale_duration:
+            _LOGGER.debug("Time is %s, last changed is %s, stale duration is %s")
+            _LOGGER.debug("Sensor is stalled, call the emergency stop")
+            await self._activate_emergency_stop()
+
+        return
 
     @callback
     def _async_switch_device_changed(self, entity_id, old_state, new_state):
@@ -541,13 +501,14 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         )
         if new_state.state is None or new_state.state == "None":
             return
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def _async_update_current_temp(self, state):
         """Update thermostat with latest state from sensor."""
         try:
             _LOGGER.debug("Current temperature updated to %s", float(state.state))
+            self._emergency_stop = False
             self._current_temperature = float(state.state)
         except ValueError as ex:
             _LOGGER.error("Unable to update from sensor: %s", ex)
@@ -555,8 +516,17 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
     async def _async_operate(self, time=None, sensor_changed=False):
         """Check if we need to turn heating on or off."""
         async with self._temp_lock:
+
             # time is passed by to the callback the async_track_time_interval function , and is set to "now"
             keepalive = time is not None
+
+            if self._emergency_stop:
+                if keepalive:
+                    _LOGGER.debug("Keepalive in emergency stop = resend emergency stop")
+                    await self._activate_emergency_stop()
+                else:
+                    _LOGGER.debug("Cannot operate in emergency stop state")
+                return
 
             # If the mode is OFF and the device is ON, turn it OFF and exit, else, just exit
             if self._hvac_mode == HVAC_MODE_OFF:
@@ -617,7 +587,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
             current_temp = self._current_temperature
 
             _LOGGER.debug(
-                "Operate - target_temp_min %s, target_temp_max %s, current_temp %s, target_temp %s, shift %s, keepalive %s",
+                "Operate - tg_min %s, tg_max %s, current %s, tg %s, shift %s, ka %s",
                 target_temp_min,
                 target_temp_max,
                 current_temp,
@@ -684,21 +654,30 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         _LOGGER.debug("Order OFF sent to AC device %s", self._ac_entity_id)
         await self.hass.services.async_call(HA_DOMAIN, SERVICE_TURN_OFF, data)
 
+    async def _activate_emergency_stop(self):
+        """Send an emergency OFF order to HVAC devices"""
+        _LOGGER.debug("Emergency OFF oder send to devices")
+        self._emergency_stop = True
+        if self._hvac_mode == HVAC_MODE_HEAT:
+            await self._async_heater_turn_off(True)
+        elif self._hvac_mode == HVAC_MODE_COOL:
+            await self._async_ac_turn_off(True)
+
     async def async_set_preset_mode(self, preset_mode: str):
         """Set new preset mode.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        if preset_mode in self.preset_modes or preset_mode == PRESET_NONE:
-            self._preset_mode = preset_mode
-            _LOGGER.debug("Set preset mode to %s", preset_mode)
-            await self._async_operate()
-            await self.async_update_ha_state()
-        else:
+        if preset_mode not in self.preset_modes and preset_mode != PRESET_NONE:
             _LOGGER.error(
                 "This preset (%s) is not enabled (see the configuration)", preset_mode
             )
             return
+
+        self._preset_mode = preset_mode
+        _LOGGER.debug("Set preset mode to %s", preset_mode)
+        await self._async_operate()
+        self.async_write_ha_state()
 
     @property
     def shift(self):
@@ -744,9 +723,10 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        if self._enabled_presets:
+        if self.preset_modes == [PRESET_NONE]:
+            return SUPPORT_TARGET_TEMPERATURE
+        else:
             return SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
-        return SUPPORT_TARGET_TEMPERATURE
 
     @property
     def temperature_unit(self):
@@ -858,4 +838,23 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
     @property
     def preset_modes(self):
         """Return a list of available preset modes."""
-        return self._enabled_presets + [PRESET_NONE]
+        modes = [PRESET_NONE]
+
+        if HVAC_MODE_HEAT in self.hvac_modes and CONF_AWAY_TEMP in self._heat_conf:
+            modes = modes + [PRESET_AWAY]
+        elif HVAC_MODE_COOL in self.hvac_modes and CONF_AWAY_TEMP in self._cool_conf:
+            modes = modes + [PRESET_AWAY]
+
+        if HVAC_MODE_HEAT in self.hvac_modes and CONF_COMFORT_SHIFT in self._heat_conf:
+            modes = modes + [PRESET_COMFORT]
+        elif (
+            HVAC_MODE_COOL in self.hvac_modes and CONF_COMFORT_SHIFT in self._cool_conf
+        ):
+            modes = modes + [PRESET_COMFORT]
+
+        if HVAC_MODE_HEAT in self.hvac_modes and CONF_ECO_SHIFT in self._heat_conf:
+            modes = modes + [PRESET_ECO]
+        elif HVAC_MODE_COOL in self.hvac_modes and CONF_ECO_SHIFT in self._cool_conf:
+            modes = modes + [PRESET_ECO]
+
+        return modes

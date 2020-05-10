@@ -90,91 +90,6 @@ async def test_setup_wrong_init_hvac_conf(hass, caplog):
     )
 
 
-async def test_setup_missing_preset_away_conf(hass, caplog):
-    """Test set up generic_thermostat with missing config values."""
-    with assert_setup_component(0, "climate"):
-        await async_setup_component(
-            hass,
-            "climate",
-            {
-                "climate": {
-                    "platform": "generic_thermostat",
-                    "name": "test",
-                    "sensor": ENTITY_SENSOR,
-                    "heat": {"entity_id": ENTITY_HEATER},
-                    "enabled_presets": [PRESET_AWAY],
-                }
-            },
-        )
-
-
-async def test_setup_missing_preset_comfort_conf(hass, caplog):
-    """Test set up generic_thermostat with missing config values."""
-    with assert_setup_component(0, "climate"):
-        await async_setup_component(
-            hass,
-            "climate",
-            {
-                "climate": {
-                    "platform": "generic_thermostat",
-                    "name": "test",
-                    "sensor": ENTITY_SENSOR,
-                    "cool": {"entity_id": ENTITY_AC},
-                    "enabled_presets": [PRESET_COMFORT],
-                }
-            },
-        )
-
-
-async def test_setup_missing_preset_eco_conf(hass, caplog):
-    """Test set up generic_thermostat with missing config values."""
-    with assert_setup_component(0, "climate"):
-        await async_setup_component(
-            hass,
-            "climate",
-            {
-                "climate": {
-                    "platform": "generic_thermostat",
-                    "name": "test",
-                    "sensor": ENTITY_SENSOR,
-                    "heat": {"entity_id": ENTITY_AC},
-                    "enabled_presets": ["eco"],
-                }
-            },
-        )
-
-
-async def test_setup_preset_defined_but_not_enabled(hass, caplog):
-    """The preset has been configured but is not enabled."""
-    with assert_setup_component(0, "climate"):
-        await async_setup_component(
-            hass,
-            "climate",
-            {
-                "climate": [
-                    {
-                        "platform": "generic_thermostat",
-                        "name": "test",
-                        "sensor": ENTITY_SENSOR,
-                        "heat": {"entity_id": ENTITY_AC, "away_temp": 12},
-                    },
-                    {
-                        "platform": "generic_thermostat",
-                        "name": "test",
-                        "sensor": ENTITY_SENSOR,
-                        "heat": {"entity_id": ENTITY_AC, "eco_shift": 12},
-                    },
-                    {
-                        "platform": "generic_thermostat",
-                        "name": "test",
-                        "sensor": ENTITY_SENSOR,
-                        "heat": {"entity_id": ENTITY_AC, "comfort_shift": 12},
-                    },
-                ]
-            },
-        )
-
-
 async def test_setup_no_heat_device_conf(hass, caplog):
     """Test set up generic_thermostat with missing config values."""
     with assert_setup_component(0, "climate"):
@@ -219,16 +134,44 @@ async def test_setup_missing_preset_conf(hass, caplog):
                         "platform": "generic_thermostat",
                         "name": "test",
                         "sensor": ENTITY_SENSOR,
-                        "heat": {"entity_id": "switch.test"},
+                        "heat": {"entity_id": ENTITY_HEATER},
                         "initial_preset_mode": "away",
                     },
                     {
                         "platform": "generic_thermostat",
                         "name": "test",
                         "sensor": ENTITY_SENSOR,
-                        "heat": {"entity_id": "switch.test"},
+                        "cool": {"entity_id": ENTITY_AC},
+                        "initial_preset_mode": "comfort",
+                    },
+                ]
+            },
+        )
+
+
+async def test_setup_missing_preset_conf_2_modes(hass, caplog):
+    """Test set up generic_thermostat with missing config values."""
+    with assert_setup_component(0, "climate"):
+        await async_setup_component(
+            hass,
+            "climate",
+            {
+                "climate": [
+                    {
+                        "platform": "generic_thermostat",
+                        "name": "test 1",
+                        "sensor": ENTITY_SENSOR,
+                        "heat": {"entity_id": ENTITY_HEATER, "away_temp": 12},
+                        "cool": {"entity_id": ENTITY_AC},
                         "initial_preset_mode": "away",
-                        "enabled_presets": ["eco"],
+                    },
+                    {
+                        "platform": "generic_thermostat",
+                        "name": "test 2",
+                        "sensor": ENTITY_SENSOR,
+                        "heat": {"entity_id": ENTITY_HEATER},
+                        "cool": {"entity_id": ENTITY_AC, "comfort_shift": 3},
+                        "initial_preset_mode": "comfort",
                     },
                 ]
             },
@@ -259,7 +202,7 @@ async def test_valid_conf(hass, caplog):
                         "restore_from_old_state": True,
                         "keep_alive": {"minutes": 3},
                         "min_cycle_duration": {"minutes": 5},
-                        "enabled_presets": [PRESET_AWAY, PRESET_ECO, PRESET_COMFORT],
+                        "sensor_stale_duration": {"minutes": 120},
                         "heat": {
                             "entity_id": ENTITY_HEATER,
                             "min_temp": 15,
@@ -314,7 +257,7 @@ async def setup_input_booleans(hass):
 
 def _set_sensor_value(hass, temp):
     """Set up the test sensor."""
-    hass.states.async_set(ENTITY_SENSOR, temp)
+    hass.states.async_set(ENTITY_SENSOR, temp, force_update=True)
 
 
 async def test_heater_input_boolean(hass, setup_comp_1, caplog):
@@ -489,7 +432,6 @@ async def test_set_wrong_preset_mode(hass, setup_comp_1, caplog):
                 "sensor": ENTITY_SENSOR,
                 "cool": {"entity_id": ENTITY_AC_IB, "away_temp": 31},
                 "initial_hvac_mode": HVAC_MODE_OFF,
-                "enabled_presets": ["away"],
             }
         },
     )
@@ -610,7 +552,6 @@ async def test_preset_mode_away(hass, setup_comp_1, caplog):
                 "cool": {"entity_id": ENTITY_AC_IB, "away_temp": 30},
                 "heat": {"entity_id": ENTITY_HEATER_IB, "away_temp": 30},
                 "initial_hvac_mode": HVAC_MODE_COOL,
-                "enabled_presets": [PRESET_AWAY],
             }
         },
     )
@@ -697,7 +638,7 @@ async def test_set_wrong_temperature(hass, setup_comp_1, caplog):
     )
     await hass.async_block_till_done()
     assert (
-        "Try to update temperature to 24.0 for mode cool but this mode is not enabled. Skipping."
+        "Try to update temperature to 24.0 for mode cool but this mode is not enabled"
         in caplog.text
     )
     assert hass.states.get(CLIMATE_ENTITY).attributes.get(ATTR_TEMPERATURE) == 25
@@ -752,6 +693,8 @@ async def test_set_wrong_current_temperature(hass, setup_comp_1, caplog):
         "Unable to update from sensor: could not convert string to float: 'False'"
         in caplog.text
     )
+    # The thermostat should go into emergency mode
+    assert "emergency" in caplog.text
 
 
 async def test_set_wrong_switch_state(hass, setup_comp_1, caplog):
@@ -972,7 +915,6 @@ async def test_heat_comfort_eco(hass, setup_comp_1, caplog):
                 },
                 "initial_hvac_mode": HVAC_MODE_HEAT,
                 "initial_preset_mode": PRESET_COMFORT,
-                "enabled_presets": [PRESET_AWAY, PRESET_COMFORT, PRESET_ECO],
             }
         },
     )
@@ -1051,7 +993,6 @@ async def test_cool_comfort_eco(hass, setup_comp_1, caplog):
                 },
                 "initial_hvac_mode": HVAC_MODE_COOL,
                 "initial_preset_mode": PRESET_ECO,
-                "enabled_presets": [PRESET_AWAY, PRESET_COMFORT, PRESET_ECO],
             }
         },
     )
@@ -1109,6 +1050,7 @@ async def test_keep_alive_interval(hass, setup_comp_1, caplog):
                 "hysteresis_tolerance_on": 0,
                 "hysteresis_tolerance_off": 0,
                 "keep_alive": {"minutes": 10},
+                "sensor_stale_duration": {"minutes": 19},
                 "heat": {"entity_id": ENTITY_HEATER_IB, "initial_target_temp": 21},
                 "initial_hvac_mode": HVAC_MODE_HEAT,
             }
@@ -1135,6 +1077,11 @@ async def test_keep_alive_interval(hass, setup_comp_1, caplog):
     _send_time_changed(hass, start_time + datetime.timedelta(minutes=11))
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+    # we enter in emergency mode, but the keep alive should continue send OFF
+    _send_time_changed(hass, start_time + datetime.timedelta(minutes=21))
+    await hass.async_block_till_done()
+    assert len(calls) == 3  # one more because of the trigger of emergency mode
 
     assert "ERROR" not in caplog.text
 
@@ -1354,7 +1301,6 @@ async def test_b4dpxl_case(hass, setup_comp_1, caplog):
                 "heat": {"entity_id": ENTITY_HEATER_IB, "away_temp": 12},
                 "initial_hvac_mode": HVAC_MODE_HEAT,
                 "initial_preset_mode": PRESET_AWAY,
-                "enabled_presets": [PRESET_AWAY],
             }
         },
     )
@@ -1388,5 +1334,87 @@ async def test_b4dpxl_case(hass, setup_comp_1, caplog):
 
     # The device should turn ON
     assert STATE_ON == hass.states.get(ENTITY_HEATER_IB).state
+
+    assert "ERROR" not in caplog.text
+
+
+async def test_sensor_stale_duration(hass, setup_comp_1, caplog):
+    """Test min cycle duration feature (enabled)."""
+
+    await setup_input_booleans(hass)
+
+    # Set the temperature to 18
+    _set_sensor_value(hass, 18)
+
+    start_time = datetime.datetime.now(pytz.UTC)
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "sensor": ENTITY_SENSOR,
+                "hysteresis_tolerance_on": 0,
+                "hysteresis_tolerance_off": 0,
+                "sensor_stale_duration": {"minutes": 10},
+                "heat": {"entity_id": ENTITY_HEATER_IB, "initial_target_temp": 21},
+                "cool": {"entity_id": ENTITY_AC_IB, "initial_target_temp": 26},
+                "initial_hvac_mode": HVAC_MODE_HEAT,
+            }
+        },
+    )
+
+    # We should be heating since the temperature is too low
+    assert STATE_ON == hass.states.get(ENTITY_HEATER_IB).state
+    assert STATE_OFF == hass.states.get(ENTITY_AC_IB).state
+
+    # Wait 11 minutes
+    _send_time_changed(hass, start_time + datetime.timedelta(minutes=11))
+    await hass.async_block_till_done()
+
+    # 11 minutes later, no news from the sensor : emergency cut off
+    assert STATE_OFF == hass.states.get(ENTITY_HEATER_IB).state
+    assert STATE_OFF == hass.states.get(ENTITY_AC_IB).state
+    assert "emergency" in caplog.text
+
+    # Reset the temperature to 18
+    _set_sensor_value(hass, 18)
+    await hass.async_block_till_done()
+
+    # A new value has arrived, the heater should go ON
+    assert STATE_ON == hass.states.get(ENTITY_HEATER_IB).state
+    assert STATE_OFF == hass.states.get(ENTITY_AC_IB).state
+
+    # Switch to cool, all devices should turn OFF
+    await common.async_set_hvac_mode(hass, HVAC_MODE_COOL, entity_id=CLIMATE_ENTITY)
+    await hass.async_block_till_done()
+    assert STATE_OFF == hass.states.get(ENTITY_HEATER_IB).state
+    assert STATE_OFF == hass.states.get(ENTITY_AC_IB).state
+
+    # Set the temperature to 28
+    _set_sensor_value(hass, 28)
+    await hass.async_block_till_done()
+
+    # The AC should turn ON
+    assert STATE_OFF == hass.states.get(ENTITY_HEATER_IB).state
+    assert STATE_ON == hass.states.get(ENTITY_AC_IB).state
+
+    # Wait 11 minutes
+    _send_time_changed(hass, start_time + datetime.timedelta(minutes=22))
+    await hass.async_block_till_done()
+
+    # Emergency mode : everything shoud be OFF
+    assert STATE_OFF == hass.states.get(ENTITY_HEATER_IB).state
+    assert STATE_OFF == hass.states.get(ENTITY_AC_IB).state
+
+    # Reset the temperature to 28
+    _set_sensor_value(hass, 28)
+    await hass.async_block_till_done()
+
+    # A new value has arrived, the AC should go ON
+    assert STATE_OFF == hass.states.get(ENTITY_HEATER_IB).state
+    assert STATE_ON == hass.states.get(ENTITY_AC_IB).state
 
     assert "ERROR" not in caplog.text
