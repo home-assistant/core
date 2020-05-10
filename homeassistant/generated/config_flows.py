@@ -36,6 +36,7 @@ FLOWS = [
     "elkm1",
     "emulated_roku",
     "esphome",
+    "flick_electric",
     "flume",
     "flunearyou",
     "freebox",

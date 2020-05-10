@@ -46,6 +46,9 @@ OPi.GPIO==0.4.0
 # homeassistant.components.essent
 PyEssent==0.13
 
+# homeassistant.components.flick_electric
+PyFlick==0.0.2
+
 # homeassistant.components.github
 PyGithub==1.43.8
 
