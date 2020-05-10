@@ -92,6 +92,19 @@ async def test_setup_with_default_interface(hass, mock_zeroconf):
     assert mock_zeroconf.called_with(interface_choice=InterfaceChoice.Default)
 
 
+async def test_setup_without_default_interface(hass, mock_zeroconf):
+    """Test without default interface config."""
+    with patch.object(hass.config_entries.flow, "async_init"), patch.object(
+        zeroconf, "ServiceBrowser", side_effect=service_update_mock
+    ):
+        mock_zeroconf.get_service_info.side_effect = get_service_info_mock
+        assert await async_setup_component(
+            hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {CONF_DEFAULT_INTERFACE: False}}
+        )
+
+    assert mock_zeroconf.called_with()
+
+
 async def test_homekit_match_partial_space(hass, mock_zeroconf):
     """Test configured options for a device are loaded via config entry."""
     with patch.dict(
