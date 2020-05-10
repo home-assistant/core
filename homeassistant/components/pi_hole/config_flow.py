@@ -51,14 +51,14 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = (
-                user_input.get(CONF_HOST)
+                user_input[CONF_HOST]
                 if is_import
-                else f"{user_input.get(CONF_HOST)}:{user_input.get(CONF_PORT)}"
+                else f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
             )
-            name = user_input.get(CONF_NAME)
-            location = user_input.get(CONF_LOCATION)
-            tls = user_input.get(CONF_SSL)
-            verify_tls = user_input.get(CONF_VERIFY_SSL)
+            name = user_input[CONF_NAME]
+            location = user_input[CONF_LOCATION]
+            tls = user_input[CONF_SSL]
+            verify_tls = user_input[CONF_VERIFY_SSL]
             api_token = user_input.get(CONF_API_KEY)
             endpoint = f"{host}/{location}"
 
