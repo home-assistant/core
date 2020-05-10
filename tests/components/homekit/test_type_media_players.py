@@ -219,6 +219,14 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     await hass.async_block_till_done()
     assert acc.char_active.value == 0
 
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert acc.char_active.value == 1
+
+    hass.states.async_set(entity_id, STATE_STANDBY)
+    await hass.async_block_till_done()
+    assert acc.char_active.value == 0
+
     hass.states.async_set(entity_id, STATE_ON, {ATTR_INPUT_SOURCE: "HDMI 2"})
     await hass.async_block_till_done()
     assert acc.char_input_source.value == 1
