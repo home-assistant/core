@@ -976,3 +976,25 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
         }
     }
     await help_test_entity_debug_info_message(hass, mqtt_mock, light.DOMAIN, config)
+
+
+async def test_max_mireds(hass, mqtt_mock):
+    """Test setting min_mireds and max_mireds."""
+    config = {
+        light.DOMAIN: {
+            "platform": "mqtt",
+            "schema": "template",
+            "name": "test",
+            "command_topic": "test_max_mireds/set",
+            "command_on_template": "on",
+            "command_off_template": "off",
+            "color_temp_template": "{{ value }}",
+            "max_mireds": 370,
+        }
+    }
+
+    assert await async_setup_component(hass, light.DOMAIN, config)
+
+    state = hass.states.get("light.test")
+    assert state.attributes.get("min_mireds") == 153
+    assert state.attributes.get("max_mireds") == 370
