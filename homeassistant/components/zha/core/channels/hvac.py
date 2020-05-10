@@ -374,7 +374,7 @@ class ThermostatChannel(ZigbeeChannel):
             res,
         )
 
-    @retryable_req(delays=(1, 1, 3, 6, 15, 30))
+    @retryable_req(delays=(1, 1, 3))
     async def async_initialize(self, from_cache):
         """Initialize channel."""
 
