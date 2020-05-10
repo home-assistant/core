@@ -109,7 +109,7 @@ def _check_for_insteon_type(
                 return True
 
             # Thermostats, which has a "Heat" and "Cool" sub-node on address 2 and 3
-            if platform == CLIMATE and str(node.address[-1]) in [
+            if platform == CLIMATE and subnode_id in [
                 SUBNODE_CLIMATE_COOL,
                 SUBNODE_CLIMATE_HEAT,
             ]:
