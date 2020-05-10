@@ -69,10 +69,10 @@ set_variable:
       description: The variable type, 1 = Integer, 2 = State.
       example: 2
     name:
-      description: The ISY name of the variable to set (optional, use instead of type/address are not provided).
-      name: my_variable_name
+      description: (Optional) The name of the variable to set (use instead of type/address).
+      example: "my_variable_name"
     init:
-      description: (Optional) If True, the initial value will be updated instead of the current value.
+      description: (Optional) If True, the initial (init) value will be updated instead of the current value.
       example: false
     value:
       description: The integer value to be sent.
