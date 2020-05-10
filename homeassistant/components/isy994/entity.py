@@ -5,12 +5,16 @@ from pyisy.constants import (
     EMPTY_TIME,
     EVENT_PROPS_IGNORED,
     ISY_VALUE_UNKNOWN,
+    PROTO_GROUP,
+    PROTO_ZWAVE,
 )
 from pyisy.helpers import NodeProperty
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import Dict
+
+from .const import DOMAIN
 
 
 class ISYEntity(Entity):
@@ -52,6 +56,53 @@ class ISYEntity(Entity):
             self.schedule_update_ha_state()
 
         self.hass.bus.fire("isy994_control", event_data)
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        if hasattr(self._node, "protocol") and self._node.protocol == PROTO_GROUP:
+            # not a device
+            return None
+        uuid = self._node.isy.configuration["uuid"]
+        node = self._node
+        basename = self.name
+
+        if hasattr(self._node, "parent_node") and self._node.parent_node is not None:
+            # This is not the parent node, get the parent node.
+            node = self._node.parent_node
+            basename = node.name
+
+        device_info = {
+            "name": basename,
+            "identifiers": {},
+            "model": "Unknown",
+            "manufacturer": "Unknown",
+            "via_device": (DOMAIN, uuid),
+        }
+
+        if hasattr(node, "address"):
+            device_info["name"] += f" ({node.address})"
+        if hasattr(node, "primary_node"):
+            device_info["identifiers"] = {(DOMAIN, f"{uuid}_{node.address}")}
+        # ISYv5 Device Types
+        if hasattr(node, "node_def_id") and node.node_def_id is not None:
+            device_info["model"] = node.node_def_id
+            # Numerical Device Type
+            if hasattr(node, "type") and node.type is not None:
+                device_info["model"] += f" {node.type}"
+        if hasattr(node, "protocol"):
+            device_info["manufacturer"] = node.protocol
+            if node.protocol == PROTO_ZWAVE:
+                # Get extra information for Z-Wave Devices
+                device_info["manufacturer"] += f" MfrID:{node.zwave_props.mfr_id}"
+                device_info["model"] += (
+                    f" Type:{node.zwave_props.devtype_gen} "
+                    f"ProductTypeID:{node.zwave_props.prod_type_id} "
+                    f"ProductID:{node.zwave_props.product_id}"
+                )
+        # Note: sw_version is not exposed by the ISY for the individual devices.
+
+        return device_info
 
     @property
     def unique_id(self) -> str:
