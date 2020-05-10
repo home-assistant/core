@@ -90,27 +90,21 @@ class OpenIdAuthProvider(AuthProvider):
     _configuration: Dict[str, Any]
     _jwks: Dict[str, Any]
 
-    async def async_get_configuration(self) -> None:
-        """Cache discovery document for openid."""
-        if hasattr(self, "._configuration"):
-            return
-
+    async def async_get_configuration(self) -> Dict[str, Any]:
+        """Get discovery document for openid."""
         session = async_get_clientsession(self.hass)
         async with session.get(self.config[CONF_CONFIGURATION]) as response:
             await raise_for_status(response)
             data = await response.json()
+        return cast(Dict[str, Any], OPENID_CONFIGURATION_SCHEMA(data))
 
-        self._configuration = OPENID_CONFIGURATION_SCHEMA(data)
-
-    async def async_get_jwks(self) -> None:
-        """Cache the keys for id verification."""
-        if hasattr(self, "._jwks"):
-            return
-
+    async def async_get_jwks(self) -> Dict[str, Any]:
+        """Get the keys for id verification."""
         session = async_get_clientsession(self.hass)
         async with session.get(self._configuration["jwks_uri"]) as response:
             await raise_for_status(response)
-            self._jwks = cast(Dict[str, Any], await response.json())
+            data = await response.json()
+        return cast(Dict[str, Any], data)
 
     @property
     def redirect_uri(self) -> str:
@@ -120,8 +114,11 @@ class OpenIdAuthProvider(AuthProvider):
     async def async_login_flow(self, context: Optional[Dict]) -> LoginFlow:
         """Return a flow to login."""
 
-        await self.async_get_configuration()
-        await self.async_get_jwks()
+        if not hasattr(self, "_configuration"):
+            self._configuration = await self.async_get_configuration()
+
+        if not hasattr(self, "_jwks"):
+            self._jwks = await self.async_get_jwks()
 
         async_register_view(self.hass)
 
