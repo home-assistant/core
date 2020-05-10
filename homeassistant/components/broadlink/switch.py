@@ -327,7 +327,7 @@ class BroadlinkMP1Switch:
     async def async_update(self):
         """Update the state of the device."""
         try:
-            states = self.device.async_request(self.device.api.check_power)
+            states = await self.device.async_request(self.device.api.check_power)
         except BroadlinkException as err_msg:
             _LOGGER.error("Failed to update state: %s", err_msg)
         self._states = states
